@@ -1,0 +1,429 @@
+#!/usr/bin/env python3
+
+__author__ = "Altertech Group, http://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2017 Altertech Group"
+__license__ = "See http://www.eva-ics.com/"
+__version__ = "3.0.0"
+
+import os
+import sys
+import getopt
+import jsonpickle
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+from eva.client import apiclient
+
+from eva.tools import print_json
+
+def usage():
+    print()
+    print('EVA LM Decision Matrix Rules CLI version %s' % (apiclient.version))
+    print("""
+Usage: lm-rules <command> [rule_id] [args] [-U API uri] [-K key] [-T sec] [-d]
+
+    -U   specify API uri (http://host:port), if no uri specified, API will be
+         called in local mode (with data from ../etc/lm.ini and lm_apikeys.ini)
+    -K   key, if no key specified, local master key will be used (if local API)
+         All commands require master key
+    -T   API request timeout
+    -D   Enable debug messages
+
+    -y   Save rule changes after modification
+
+Commands:
+
+    list                            List rules
+
+    enable <rule_id> [-y]           Enable rule
+
+    disable <rule_id> [-y]          Disable rule
+
+    delete <rule_id>                Delete rule
+
+    add [args] [-y]                 Create new rule
+
+    edit <rule_id> [args] [-y]      Edit existing rule
+
+
+Args for add and edit:
+
+    -E                              Enable rule after creation (for 'add'
+                                    command)
+
+    -p <priority>                   Set rule priority
+
+    -d <description>                Set rule description
+
+    -x <status|value>               Set property to monitor (status or value)
+
+    -c <chillout_time>              Set rule chillout time (in seconds)
+
+    --type <unit|sensor|lvar|#>     Item type to monitor (# - any type)
+
+    --group <group>                 Item group (# - all groups, you may use
+                                    mqtt-style wildcards)
+
+    --item <item_id>                Item ID (# - any ID)
+
+    --gt <value>                    Matches when prop value is greater than
+                                    specified, null or none to remove
+
+    --ge <value>                    Matches when prop value is greater or equal
+                                    than specified, null or none to remove
+
+    --lt <value>                    Matches when prop value is less than
+                                    specified, null or none to remove
+
+    --le <value>                    Matches when prop value is less or equal
+                                    than specified, null or none to remove
+
+    --eq <value>                    Matches when prop value is equal, value may
+                                    be string
+
+    --exp                           Matches when item is expired (monitor
+                                    status <= -1)
+
+    --nocond                        Removes rule condition
+
+    --initial <only|skip|any>       Match initial item prop value
+
+                                    only  - rule is for initial only (when
+                                            unit/sensor state is being loaded
+                                            for a first time)
+                                    skip  - skip rule for initial
+                                    any   - for any state
+
+    -m <macro>                      Macro to execute if rule match, 'none' to
+                                    remove
+
+    -a <macro_args>                 Arguments for macro, 'none' for no args
+
+    --brk                           Break condition checking and don't check
+                                    the other rules if the rule match
+
+    --nobrk                         Don't Break condition checking and don't
+                                    check the other rules if the rule match
+
+    """)
+
+
+def n2a(s):
+    return '#' if s is None else s
+
+def bool2yn(b):
+    return 'Y' if b else 'N'
+
+def s_for_init(s):
+    return s if s in [ 'only', 'skip'] else 'any'
+
+def code_ok(code):
+    if code == apiclient.result_ok:
+        return True
+    elif code == apiclient.result_func_failed:
+        print('Failed')
+    elif code == apiclient.result_not_found:
+        print('Error: Object not found')
+    elif code == apiclient.result_forbidden:
+        print('Error: Forbidden')
+    elif code == apiclient.result_api_error:
+        print('Error: API error')
+    elif code == apiclient.result_not_ready:
+        print('Error: API not ready')
+    elif code == apiclient.result_func_unknown:
+        usage()
+    elif code == apiclient.result_server_error:
+        print('Error: Server error')
+    elif code == apiclient.result_server_timeout:
+        print('Error: Server timeout')
+    elif code == apiclient.result_bad_data:
+        print('Error: Bad data')
+    else:
+        print('Error: Unknown error')
+    return False
+
+
+cmd_list = [ 'list', 'l' ]
+cmd_add = [ 'add' ]
+cmd_edit = [ 'edit' ]
+cmd_delete = [ 'delete', 'del' ]
+cmd_enable = [ 'enable', 'e' ]
+cmd_disable = [ 'disable', 'd' ] 
+
+
+xparams = {}
+timeout = None
+apikey = None
+apiuri = None
+
+debug = False
+
+rule_id = None
+apifunc = None
+
+enable_after = False
+
+apply_props = {}
+
+try:
+    func = sys.argv[1]
+    if func not in cmd_list + cmd_add:
+        rule_id = sys.argv[2]
+        opts = sys.argv[3:]
+    else:
+        opts = sys.argv[2:]
+    o, a = getopt.getopt(opts,
+            'K:T:U:d:x:p:c:m:a:EyzD',
+            [
+                'type=',
+                'group=',
+                'item=',
+                'gt=',
+                'ge=',
+                'lt=',
+                'le=',
+                'eq=',
+                'exp',
+                'nocond',
+                'initial=',
+                'brk',
+                'nobrk',
+            ])
+except:
+    usage()
+    sys.exit(99)
+
+
+for i, v in o:
+    if i == '-y' and func in cmd_add + cmd_enable + cmd_disable + cmd_edit:
+        xparams['save'] = '1'
+    elif i == '-T':
+        try:
+            timeout = float(v)
+        except:
+            usage()
+            sys.exit(99)
+    elif i == '-U':
+        apiuri = v
+        if apiuri[-1] == '/': apiuri = apiuri[:-1]
+    elif i == '-K':
+        apikey = v
+    elif i == '-D':
+        debug = True
+    elif i == '-E':
+        enable_after = True
+    elif i == '--type':
+        if v not in [ 'U', 'S', 'LV', 'unit', 'sensor', 'lvar', '#', 'none' ]:
+            usage()
+            sys.exit(99)
+        apply_props['for_item_type'] = v
+    elif i == '--group':
+        apply_props['for_item_group'] = v
+    elif i == '--item':
+        apply_props['for_item_id'] = v
+    elif i == '-d':
+        apply_props['description'] = v
+    elif i == '-x':
+        if v not in [ 'status', 'value' ]:
+            usage()
+            sys.exit(99)
+        apply_props['for_prop'] = v
+    elif i == '-p':
+        try:
+            apply_props['priority'] = str(int(v))
+        except:
+            usage()
+            sys.exit(99)
+    elif i == '--gt' or i == '--ge':
+        try:
+            if v.lower() not in [ 'null', 'none', '' ]:
+                apply_props['in_range_min'] = str(float(v))
+            else:
+                apply_props['in_range_min'] = ''
+        except:
+            usage()
+            sys.exit(99)
+        if i == '--gt':
+            apply_props['in_range_min_eq'] = 'False'
+        else:
+            apply_props['in_range_min_eq'] = 'True'
+    elif i == '--lt' or i == '--le':
+        try:
+            if v.lower() not in [ 'null', 'none', '' ]:
+                apply_props['in_range_max'] = str(float(v))
+            else:
+                apply_props['in_range_max'] = ''
+        except:
+            usage()
+            sys.exit(99)
+        if i == '--lt':
+            apply_props['in_range_max_eq'] = 'False'
+        else:
+            apply_props['in_range_max_eq'] = 'True'
+    elif i == '--eq':
+        try:
+            apply_props['in_range_max'] = str(float(v))
+            apply_props['in_range_min'] = str(float(v))
+            apply_props['in_range_max_eq'] = 'True'
+            apply_props['in_range_min_eq'] = 'True'
+        except:
+            apply_props['in_range_max'] = 'none'
+            apply_props['in_range_max_eq'] = 'False'
+            apply_props['in_range_min'] = v
+            apply_props['in_range_min_eq'] = 'True'
+    elif i == '--exp':
+        apply_props['for_expire'] = 'Y'
+    elif i == '--nocond':
+        apply_props['in_range_min'] = ''
+        apply_props['in_range_max'] = ''
+    elif i == '--initial':
+        if v not in [ 'only', 'skip', 'any', 'none', 'None' ]:
+            usage()
+            sys.exit(99)
+        apply_props['for_initial'] = v
+    elif i == '-c':
+        try:
+            apply_props['chillout_time'] = str(float(v))
+        except:
+            usage()
+            sys.exit(99)
+    elif i == '--brk':
+        apply_props['break_after_exec'] = 'Y'
+    elif i == '--nobrk':
+        apply_props['break_after_exec'] = 'N'
+    elif i == '-m':
+        apply_props['macro'] = v
+    elif i == '-a':
+        apply_props['macro_args'] = v
+if not apiuri:
+    try:
+        api = apiclient.APIClientLocal('lm')
+    except:
+        print('Can not init API, lm.ini or lm_apikeys.ini missing?')
+        sys.exit(98)
+else:
+    api = apiclient.APIClient()
+    api.set_uri(apiuri)
+    api.set_product('lm')
+
+if apikey is not None:
+    api.set_key(apikey)
+
+api.ssl_verify(False)
+
+params = {}
+
+if func in cmd_list:
+    apifunc = 'list_rules'
+elif func in cmd_delete:
+    apifunc = 'destroy_rule'
+    params['i'] = rule_id
+elif func in cmd_enable + cmd_disable:
+    apifunc = 'set_rule_prop'
+    params['i'] = rule_id
+    params['p'] = 'enabled'
+    params['v'] = str(func in cmd_enable)
+elif func in cmd_add:
+    apifunc = 'create_rule'
+elif func in cmd_edit:
+    p = { 'i': rule_id }
+    p.update(xparams)
+    if 'save' in p: del p['save']
+    code, result = api.call('list_rule_props', p, timeout, _debug = debug)
+    if not code_ok(code):
+        sys.exit(code)
+    enable_after = result['enabled']
+    apifunc = 'set_rule_prop'
+    params['i'] = rule_id
+    params['p'] = 'enabled'
+    params['v'] = '0'
+else:
+    usage()
+    sys.exit(99)
+
+params.update(xparams)
+
+if apifunc:
+    code, result = api.call(apifunc, params, timeout, _debug = debug)
+    if not code_ok(code):
+        sys.exit(code)
+
+if func in cmd_list:
+    print(' %s %s%s%s%s%s%s%s' % \
+            (
+                'E'.rjust(1),
+                'Prio'.rjust(6),
+                'Condition'.rjust(20),
+                'Initial'.rjust(10),
+                'Chillout'.rjust(18),
+                'Brk'.rjust(5),
+                'Macro'.rjust(25),
+                'Args'.rjust(20)
+            )
+        )
+    print('-' * 108)
+    for r in result:
+        print('%s  %s' % (r['id'], r['description']))
+        print(' %s:%s/%s/%s' % \
+                (
+                    n2a(r['for_item_type']),
+                    n2a(r['for_item_group']),
+                    n2a(r['for_item_id']),
+                    n2a(r['for_prop'])
+                )
+            )
+        exp = ''
+        if r['for_prop'] == 'status' and \
+                r['in_range_min'] is None and \
+                r['in_range_max'] == -1 and \
+                r['in_range_max_eq']:
+                    exp = ' (expire)'
+        print(' %s %s%s%s%s%s%s%s' % \
+                (
+                    bool2yn(r['enabled']).rjust(1),
+                    str(r['priority']).rjust(6),
+                    (r['condition'] + exp).rjust(20),
+                    s_for_init(r['for_initial']).rjust(10),
+                    ('%.2f/%.2f' % \
+                            (r['chillout_time'],
+                                r['chillout_ends_in'])).rjust(18),
+                    bool2yn(r['break_after_exec']).rjust(5),
+                    str(r['macro']).rjust(25),
+                    str(r['macro_args']).rjust(20)
+                )
+            )
+        print()
+elif func in cmd_delete:
+    print('Deleted: %s' % rule_id)
+elif func in cmd_enable:
+    print('Enabled: %s' % rule_id)
+elif func in cmd_disable:
+    print('Disabled: %s' % rule_id)
+elif func in cmd_add:
+    rule_id = result['rule_id']
+    print('Rule created, id: %s' % rule_id)
+
+if func in cmd_add + cmd_edit:
+    if func in cmd_edit:
+        print('Modifying rule %s' % rule_id)
+    for i, v in apply_props.items():
+        p = { 'i': rule_id }
+        p.update(xparams)
+        p['p'] = i
+        if v.lower() != 'none':
+            p['v'] = v
+        code, result = api.call('set_rule_prop', p, timeout, _debug = debug)
+        if not code_ok(code):
+            sys.exit(code)
+        print('%s = %s' % (i, v))
+    if enable_after:
+        p = { 'i': rule_id }
+        p.update(xparams)
+        p['p'] = 'enabled'
+        p['v'] = '1'
+        code, result = api.call('set_rule_prop', p, timeout, _debug = debug)
+        if not code_ok(code):
+            sys.exit(code)
+        print('Enabled: %s' % rule_id)
+sys.exit(code)

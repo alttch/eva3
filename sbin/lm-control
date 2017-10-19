@@ -1,0 +1,66 @@
+#!/bin/sh
+
+PYTHON=python3
+
+D=`realpath $0`
+cd `dirname ${D}`/..
+
+WAIT_TO_KILL=40 # sec * 2 before kill -KILL
+
+export EVA_DIR=`pwd`
+
+PIDFILE=${EVA_DIR}/var/lm.pid
+LM=${EVA_DIR}/sbin/lmserv.py
+LM_ARGS=
+SAFE_RUN_PIDFILE=${EVA_DIR}/var/lm_safe.pid
+SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
+
+case $1 in
+start)
+    echo 'Starting LM server'
+    ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${LM} ${LM_ARGS} > /dev/null &
+    ;;
+launch)
+    ${PYTHON} ${LM} ${LM_ARGS}
+    ;;
+stop)
+    [ -f ${PIDFILE} ] || exit 1
+    echo -n 'Stopping LM server '
+    PID_SAFE_RUN=
+    PID_LM=
+    [ -f ${SAFE_RUN_PIDFILE} ] && PID_SAFE_RUN=`cat ${SAFE_RUN_PIDFILE}`
+    [ -f ${PIDFILE} ] && PID_LM=`cat ${PIDFILE}`
+    if [ "x${PID_SAFE_RUN}" != "x" ]; then
+        kill ${PID_SAFE_RUN} > /dev/null 2>&1
+        rm -f ${SAFE_RUN_PIDFILE}
+    fi
+    if [ "x${PID_LM}" != "x" ]; then
+        kill ${PID_LM} > /dev/null 2>&1
+        I=0
+        while kill -0 ${PID_LM} > /dev/null 2>&1; do
+            echo -n '.'
+            sleep 0.5
+            I=`expr ${I} + 1`
+            if [ ${I} -ge ${WAIT_TO_KILL} ]; then
+                echo -n  'killing '
+                kill -KILL ${PID_LM}
+                break
+            fi
+        done
+        rm -f ${PIDFILE}
+    fi
+    echo ' stopped'
+    ;;
+restart)
+    ./sbin/lm-control stop $2
+    ./sbin/lm-control start $2
+    ;;
+logrotate)
+    [ -f ${PIDFILE} ] && kill -HUP `cat ${PIDFILE}`
+    ;;
+version)
+    ${PYTHON} ${LM} -V
+    ;;
+*)
+    echo "Usage: lm-control start|stop|restart|logrotate|version"
+esac

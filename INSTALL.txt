@@ -1,0 +1,30 @@
+Install pip3, libjpeg-dev, libjpeg8-dev, run sh install.sh it will do the rest
+
+if you are not planning to run LM or SFA as user another than root, change runtime/lm* and runtime/sfa* ownership
+
+Patch the following libs:
+
+ws4py
+    manager.py - patch logger.error to info
+    websocket.py - patch logger.error to info
+
+urllib3
+    connectionpool.py - remove warning
+        Unverified HTTPS request is being made
+        remove ssl verify https://urllib3.readthedocs.org/en/latest/security.html
+
+if PID files are modified in configs, change them in sbin/*-control
+
+for UC: Edit etc/uc.ini and etc/uc_apikeys.ini, run sbin/uc-control start
+for LM: Edit etc/lm.ini and etc/lm_apikeys.ini, run sbin/lm-control start
+for SFA: Edit etc/sfa.ini and etc/sfa_apikeys, run sbin/sfa-control start
+
+Rotate log/uc.log, log/lm.log, log/sfa.log, i.e. with logrotate, after rotation launch "*-control logrotate"
+
+if installed on the same server, launch UC first, then (after i.e. 3-5 seconds delay) LM PLC, then after same delay SFA
+
+or 
+
+use ./sbin/eva-control (requires bash). Before using this script, edit ./etc/eva_servers (use ./etc/eva_servers-dist as a template) and set
+required servers to yes
+

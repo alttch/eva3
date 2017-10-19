@@ -1,0 +1,60 @@
+[server]
+; system name (default - hostname)
+; name = eva3-lm1
+; system polldelay
+polldelay = 0.01
+; pid file (default var/lm.pid)
+pid_file = var/lm.pid
+; log file (default log/lm.log)
+log_file = log/lm.log
+; db updates - instant, manual or on_exit
+db_update = instant
+; db file, default runtime/db/lm.db
+db_file = runtime/db/lm.db
+; user db file, default = db_file
+; you specify one local userdb_file for multiple servers
+;userdb_file = runtime/db/users.db
+; keep action history in seconds
+keep_action_history = 86400
+; keep memory log in seconds
+keep_logmem = 86400
+; notify state on start
+notify_on_start = yes
+; debug mode
+debug = no
+; default timeout
+timeout = 5
+
+; exec commands before/after config/db save,
+; i.e. mount -o remount,rw / (then back to ro)
+
+;exec_before_save =
+;
+;exec_after_save =
+
+; default mqtt notifier for updates for new items
+;mqtt_update_default = eva_1:2
+
+[sysapi]
+; enable remote file management functions
+;file_management = yes
+
+[webapi]
+; web api listen on IP/port
+listen = 0.0.0.0:817
+;ssl_listen = 0.0.0.0:818
+;ssl_module = builtin
+;ssl_cert = test.crt
+;ssl_key = test.key
+;ssl_chain = test.pam
+; session timeout
+;session_timeout = 3600
+; server thread pool
+;thread_pool = 15
+
+[mailer]
+; mailer for mail() macro function
+smtp = localhost
+from = eva@eva3-lm1
+default_rcp = admin@localhost, root@localhost
+

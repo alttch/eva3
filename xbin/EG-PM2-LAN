@@ -1,0 +1,43 @@
+#!/bin/sh
+
+IP=$1
+SOCKET=$2
+MODE=$3
+
+[ "x${IP}" = "x" ] && exit 3
+
+D=`realpath $0`
+cd `dirname ${D}`/..
+
+export EVA_DIR=`pwd`
+
+# read password from password file EVA_DIR/etc/passwd.EG-PM-LAN2
+# password file format is:
+# IP address:PASSWORD
+# IP address:PASSWORD
+# .............
+
+PW_FILE=${EVA_DIR}/etc/passwd.EG-PM-LAN2
+
+if [ ! -f ${PW_FILE} ]; then
+    echo "Password file ${PW_FILE} not found"
+    cat <<EOF
+
+Create pasword file in format:
+
+IP address:PASSWORD
+IP address:PASSWORD
+
+EOF
+    exit 1
+fi
+
+PASSWORD=`grep ^${IP}: ${PW_FILE} | cut -d: -f2-`
+
+if [ "x${MODE}" != "x" ]; then
+    curl -X POST --data "pw=${PASSWORD}" http://${IP}/login.html > /dev/null 2>&1
+    curl -X POST --data "cte${SOCKET}=${MODE}" "http://${IP}/status.html?sn=${SOCKET}" > /dev/null 2>&1
+    else
+    curl -X POST --data "pw=${PASSWORD}" http://${IP}/login.html 2>&1|tr ">" "\n"|grep states|awk '{ print $4 }'|cut -d\[ -f2|cut -d\] -f1 | tr "," "\n"
+fi
+curl http://${IP}/login.html > /dev/null 2>&1

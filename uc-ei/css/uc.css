@@ -1,0 +1,291 @@
+div { outline: none; }
+
+.board { min-height: 280px; }
+
+
+.chBox {
+    display: none;
+}
+
+.notavail { font-size: 20px; text-align: center; padding-top: 10px; }
+
+
+.chBox:CHECKED+label:BEFORE {
+    background: #ff6633;
+    background: url('../i/check.png') 1px 1px no-repeat;
+}
+
+
+.chBox + label:BEFORE {
+    content: "";
+    border: 1px solid #758e9a;
+    width: 18px;
+    height: 18px;
+    display: inline-block;
+    position: relative;
+    margin-right: 12px;
+    top: 3px;
+}
+
+
+.chBox + label {
+    font-weight: normal;
+    font-size: 14px;
+}
+
+
+img.tbtn.disabled {
+    webkit-filter: grayscale(100%); /* Safari 6.0 - 9.0 */
+    filter: grayscale(100%);
+    cursor: default;
+    }
+
+
+.device { font-size: 24px; font-weight: bold; color: #4D4D4D }
+
+.device-error { color: #EE0000; }
+
+.device-desc { font-size: 16px; color: #5E5E5E }
+
+.sval { font-size: 25px; }
+
+.sensor_s1 { color: #009900; }
+
+.sensor_s0 { color: #999999; }
+
+.sensor_s-1 { color: #EE0000; }
+	
+
+.row-device {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+
+.bg1 { background-color: #E5E5E5 }
+.bg0 { background-color: #F0F0F0 }
+
+
+.vcenter {
+  min-height: 100%;  /* Fallback for browsers do NOT support vh unit */
+  min-height: 100vh; /* These two lines are counted as one :-)       */
+  display: flex;
+  align-items: center;
+}
+
+
+.glyphicon-toolmenu {
+    font-size: 40px; font-weight: normal; padding-right: 10px; color: #3ab0ea;
+}
+
+
+#sysinfo { color: #4D4D4D; font-size: 12px; }
+
+#version_info { color: #4D4D4D; font-size: 12px; margin-top: 10px; }
+
+#log_toolbar { color: #4D4D4D }
+
+
+#logr {
+    outline: none;
+    width: 100%;
+    height: 60% !important;
+    font-size: 11px;
+    overflow: scroll;
+    overflow-x: hidden;
+    margin-bottom: 10px;
+    border-style : Solid;
+    border-color : #3ab0ea;
+    border-color : rgba(58, 176, 234, 1);
+    border-width : 2px;
+    border-radius : 5px;
+    -moz-border-radius : 5px;
+    -webkit-border-radius : 5px;
+    }
+
+
+.logentry.logentry_color_10 { color: grey }
+
+.logentry.logentry_color_20 { color: black }
+
+
+.logentry.logentry_color_30 {
+    color: orange;
+    font-weight: bold;
+    font-size: 14px
+}
+
+
+.logentry.logentry_color_40 {
+    color: red;
+    font-weight: bold;
+    font-size: 16px
+}
+
+
+.logentry.logentry_color_50 {
+    color: red;
+    font-weight: bold;
+    font-size: 20px;
+    animation: blinker 0.5s linear infinite;
+}
+
+
+@keyframes blinker {  
+  50% { opacity: 0; }
+}
+
+
+.tbtn {
+    width: 46px;
+    height: 46px;
+    margin-left: 10px;
+    border-style : Solid;
+    border-color : #3ab0ea;
+    border-color : rgba(58, 176, 234, 1);
+    border-width : 0px;
+    border-radius : 12px;
+    -moz-border-radius : 12px;
+    -webkit-border-radius : 12px;
+    cursor: pointer;
+    outline: none;
+    margin-top: 8px;
+    }
+
+
+@media(max-width: 991px){
+
+    #toolmenu_btn {
+        position: absolute;
+        padding-top: 0px;
+        top: 0px; right: 0px;
+    }
+
+
+    #toolmenu {
+        width: 65px;
+        height: 400px;
+        position: absolute;
+        padding-top: 10px;
+        top: -27px; right: 0px;
+        border: 2px solid #3ab0ea;
+        background: white;
+        z-index: 999;
+        border-radius : 12px;
+        -moz-border-radius : 12px;
+        -webkit-border-radius : 12px;
+        display: none;
+    }
+
+
+    .tbtn { margin-right: 20px; margin-top: 20px; }
+}
+
+
+.st0 {
+	text-align: center;
+	background : #ffffff;
+	background : rgba(255,255,255, 1);
+	width: 95px;
+	height: 44px;
+	color: #3ab0ea;
+	font-size: 14px;
+	border-style : Solid;
+	border-color : #3ab0ea;
+	border-color : rgba(58, 176, 234, 1);
+	border-width : 2px;
+	border-radius : 32px;
+	-moz-border-radius : 32px;
+	-webkit-border-radius : 32px;
+	cursor: pointer;
+	margin-bottom: 10px;
+    outline: none;
+}
+
+
+.tbselect {
+    text-align: center;
+    background : #ffffff;
+    background : rgba(255,255,255, 1);
+    color: #3ab0ea;
+    height: 25px;
+    font-size: 14px;
+    border-style : Solid;
+    border-color : #3ab0ea;
+    border-color : rgba(58, 176, 234, 1);
+    border-width : 2px;
+    border-radius : 32px;
+    -moz-border-radius : 32px;
+    -webkit-border-radius : 32px;
+    cursor: pointer;
+    outline: none;
+}
+
+
+.st0.input {
+    width: 220px;
+    border-radius : 12px;
+    -moz-border-radius : 12px;
+    -webkit-border-radius : 12px;
+    cursor: default;
+    margin-right: 5px;
+    font-size: 20px;
+    text-align: left;
+    padding-left: 10px;
+    
+    }
+
+
+.st1 {
+/*    margin: 50px;
+    width: 559px;*/
+    height: 54px;
+    padding: 5px 65px 5px 25px;
+    font-size: 24px;
+    color: #4d4d4d;
+    border: 2px solid #3ab0ea;
+    border-radius: 32px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: url('../i/drop-arrow.png') 95% 60% no-repeat #ffffff;
+    outline: none;
+}
+
+
+.st1::-ms-expand { 
+    display: none; /* remove default arrow on ie10 and ie11 */
+}
+
+
+/* target Internet Explorer 9 to undo the custom arrow */
+@media screen and (min-width:0\0) {
+    .st1 {
+        background:none\9;
+        padding: 5px\9;
+    } 
+}
+
+
+.st0.active {
+	color: #ffffff;
+	background : #3ab0ea;
+	background : rgba(58, 176, 234, 1);
+	border-radius : 32px;
+	-moz-border-radius : 32px;
+	-webkit-border-radius : 32px;
+}
+
+
+.st0.disabled {
+	color: #ffffff;
+	background : #cccccc;
+	background : rgba(204, 204, 204, 1);
+	border-radius : 32px;
+	-moz-border-radius : 32px;
+	-webkit-border-radius : 32px;
+	border: none;
+	cursor: auto;
+}

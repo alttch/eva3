@@ -1,0 +1,19 @@
+#!/bin/sh
+
+TIMEOUT=3
+
+PORT=6722
+
+IP=$1
+SOCKET=$2
+MODE=$3
+
+[ "x${IP}" == "x" ] && exit 3
+
+if [ "x${MODE}" != "x" ]; then
+    [ "x${MODE}" == "x0" ] && M=2 || M=1
+    RESULT=`echo -n ${M}${SOCKET} | nc -w ${TIMEOUT} ${IP} ${PORT} | cut -c${SOCKET}`
+    [ "x${RESULT}" == "x${M}" ] && exit 0 || exit 1
+    else
+    echo -n 00 | nc -w ${TIMEOUT} ${IP} ${PORT} | sed 's/\(.\)/\1\n/g'
+fi

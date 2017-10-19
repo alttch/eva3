@@ -1,0 +1,66 @@
+#!/bin/sh
+
+PYTHON=python3
+
+D=`realpath $0`
+cd `dirname ${D}`/..
+
+WAIT_TO_KILL=40 # sec * 2 before kill -KILL
+
+export EVA_DIR=`pwd`
+
+PIDFILE=${EVA_DIR}/var/sfa.pid
+SFA=${EVA_DIR}/sbin/sfaserv.py
+SFA_ARGS=
+SAFE_RUN_PIDFILE=${EVA_DIR}/var/sfa_safe.pid
+SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
+
+case $1 in
+start)
+    echo 'Starting SFA server'
+    ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${SFA} ${SFA_ARGS} > /dev/null &
+    ;;
+launch)
+    ${PYTHON} ${SFA} ${SFA_ARGS}
+    ;;
+stop)
+    [ -f ${PIDFILE} ] || exit 1
+    echo -n 'Stopping SFA server '
+    PID_SAFE_RUN=
+    PID_SFA=
+    [ -f ${SAFE_RUN_PIDFILE} ] && PID_SAFE_RUN=`cat ${SAFE_RUN_PIDFILE}`
+    [ -f ${PIDFILE} ] && PID_SFA=`cat ${PIDFILE}`
+    if [ "x${PID_SAFE_RUN}" != "x" ]; then
+        kill ${PID_SAFE_RUN} > /dev/null 2>&1
+        rm -f ${SAFE_RUN_PIDFILE}
+    fi
+    if [ "x${PID_SFA}" != "x" ]; then
+        kill ${PID_SFA} > /dev/null 2>&1
+        I=0
+        while kill -0 ${PID_SFA} > /dev/null 2>&1; do
+            echo -n '.'
+            sleep 0.5
+            I=`expr ${I} + 1`
+            if [ ${I} -ge ${WAIT_TO_KILL} ]; then
+                echo -n  'killing '
+                kill -KILL ${PID_SFA}
+                break
+            fi
+        done
+        rm -f ${PIDFILE}
+    fi
+    echo ' stopped'
+    ;;
+restart)
+    ./sbin/sfa-control stop $2
+    ./sbin/sfa-control start $2
+    ;;
+logrotate)
+    [ -f ${PIDFILE} ] && kill -HUP `cat ${PIDFILE}`
+    ;;
+version)
+    ${PYTHON} ${SFA} -V
+    ;;
+*)
+    echo "Usage: sfa-control start|stop|restart|logrotate|version"
+esac

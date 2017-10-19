@@ -1,0 +1,10 @@
+pvt dir is used by EVA SFA to serve private content (camera images, room plans, unit/rule IDs etc.)
+securely and avoid loading it with the main UI until the user is logged in
+
+You should always use /pvt function of SFA API unless SFA server is additionally secured by frontend
+or run in a 100% trusted environment
+
+PVT dir permissions are controlled by 'pvt' option in sfa_apikeys.ini
+
+Read more at http://wiki.eva-ics.com/
+

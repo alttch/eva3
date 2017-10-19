@@ -1,0 +1,113 @@
+#!/bin/bash
+
+D=`realpath $0`
+cd `dirname ${D}`/..
+
+export EVA_DIR=`pwd`
+if [ ! -f ./etc/eva_servers ]; then
+    echo "${EVA_DIR}/etc/eva_servers missing"
+    exit 2
+fi
+source ./etc/eva_servers
+
+case $1 in
+start)
+    echo 'Starting EVA'
+    if [ "x${UC_ENABLED}" == "xyes" ]; then
+        ./sbin/uc-control start
+        I=0
+        sleep 0.5
+        ./bin/uc-cmd test > /dev/null 2>&1
+        R=$?
+        if [ $R -eq 98 ]; then
+            echo " configs missing!"
+            exit 1
+        fi
+        echo -n "UC: ."
+        while [ $R -ne 0 ]; do
+            if [ $R -eq 2 ]; then
+                echo "WARNING: forbidden for local"
+                break
+            fi
+            if [ $I -gt 60 ]; then
+                echo " failed to start!"
+                break
+            fi
+            I=`expr $I + 1`
+            sleep 0.5
+            echo -n "."
+            ./bin/uc-cmd test > /dev/null 2>&1
+            R=$?
+        done
+        echo " started"
+    fi
+    if [ "x${LM_ENABLED}" == "xyes" ]; then
+        ./sbin/lm-control start
+        I=0
+        sleep 0.5
+        ./bin/lm-cmd test > /dev/null 2>&1
+        R=$?
+        if [ $R -eq 98 ]; then
+            echo " configs missing!"
+            exit 1
+        fi
+        echo -n "LM: ."
+        while [ $R -ne 0 ]; do
+            if [ $R -eq 2 ]; then
+                echo "WARNING: forbidden for local"
+                break
+            fi
+            if [ $I -gt 60 ]; then
+                echo " failed to start!"
+                break
+            fi
+            I=`expr $I + 1`
+            sleep 0.5
+            echo -n "."
+            ./bin/lm-cmd test > /dev/null 2>&1
+            R=$?
+        done
+        echo " started"
+    fi
+    if [ "x${SFA_ENABLED}" == "xyes" ]; then
+        ./sbin/sfa-control start
+        I=0
+        sleep 0.5
+        ./bin/sfa-cmd test > /dev/null 2>&1
+        R=$?
+        if [ $R -eq 98 ]; then
+            echo " configs missing!"
+            exit 1
+        fi
+        echo -n "SFA: ."
+        while [ $R -ne 0 ]; do
+            if [ $R -eq 2 ]; then
+                echo "WARNING: forbidden for local"
+                break
+            fi
+            if [ $I -gt 60 ]; then
+                echo " failed to start!"
+                break
+            fi
+            I=`expr $I + 1`
+            sleep 0.5
+            echo -n "."
+            ./bin/sfa-cmd test > /dev/null 2>&1
+            R=$?
+        done
+        echo " started"
+    fi
+    ;;
+stop)
+    echo 'Stopping EVA'
+    [ "x${SFA_ENABLED}" == "xyes" ] && ./sbin/sfa-control stop
+    [ "x${LM_ENABLED}" == "xyes" ] && ./sbin/lm-control stop
+    [ "x${UC_ENABLED}" == "xyes" ] && ./sbin/uc-control stop
+    ;;
+restart)
+    ./sbin/eva-control stop $2
+    ./sbin/eva-control start $2
+    ;;
+*)
+    echo "Usage: eva-control start|stop|restart"
+esac

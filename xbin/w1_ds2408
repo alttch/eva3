@@ -1,0 +1,31 @@
+#!/usr/bin/perl
+
+use strict;
+
+my ($dev, $u, $cmd) = @ARGV;
+
+if (not defined $dev) { exit 2; }
+
+my $output = "/sys/bus/w1/devices/".$dev."/output";
+
+if (not defined $u) {
+    open(FILE, '<:raw', $output) or exit 3;
+    read(FILE, $b, 1);
+    close(FILE);
+    my $s = reverse sprintf("%.8b", unpack("C*", $b) ^ 0xFF);
+    $s =~ s/.\K(?=.)/\n/sg;
+    print $s;
+} else {
+    if ($u > 8 or $u < 1) { exit 4; }
+    open (FILE, '+<', $output) or exit 3;
+    flock (FILE, 2);
+    binmode(FILE);
+    read(FILE, $b, 1);
+    my $s = unpack("C*", $b);
+    my $s_new;
+    if ($cmd == 0) { $s_new = $s | (1 << ($u - 1)); } else { $s_new = $s & ((1 << ($u - 1)) ^ 0xFF); }
+    seek (FILE, 0, 0);
+    print FILE pack("C*", $s_new) or exit 1;
+    close(FILE);
+}
+exit 0;

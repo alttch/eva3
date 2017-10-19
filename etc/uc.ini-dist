@@ -1,0 +1,67 @@
+[server]
+; system name (default - hostname)
+; name = eva-uc1
+; system polldelay
+polldelay = 0.01
+; pid file (default var/uc.pid)
+pid_file = var/uc.pid
+; log file (default log/uc.log)
+log_file = log/uc.log
+; db updates - instant, manual or on_exit
+db_update = instant
+; db file, default runtime/db/uc.db
+db_file = runtime/db/uc.db
+; user db file, default = db_file
+; you specify one local userdb_file for multiple servers
+;userdb_file = runtime/db/users.db
+; keep action history in seconds
+keep_action_history = 86400
+; keep memory log in seconds
+keep_logmem = 86400
+; notify state on start
+notify_on_start = yes
+; debug mode
+debug = no
+; default timeout
+timeout = 5
+
+; exec commands before/after config/db save,
+; i.e. mount -o remount,rw / (then back to ro)
+
+;exec_before_save =
+;
+;exec_after_save =
+
+; default mqtt notifier for updates for new items
+;mqtt_update_default = eva_1:2
+
+[sysapi]
+; enable remote file management functions
+;file_management = yes 
+
+[webapi]
+; web api listen on IP/port
+listen = 0.0.0.0:812
+;ssl_listen = 0.0.0.0:813
+;ssl_module = builtin
+;ssl_cert = test.crt
+;ssl_key = test.key
+;ssl_chain = test.pam
+; session timeout
+;session_timeout = 3600
+; server thread pool                                                                                                                                                                                                                     
+;thread_pool = 15
+
+[snmptrap]
+; snmp trap handler, default community is eva
+listen = 127.0.0.1:162
+community = eva
+; hosts, allowed to send snmp traps
+hosts_allow = 127.0.0.0/8
+
+[udpapi]
+; udp api
+listen = 127.0.0.1:8881
+; hosts, allowed to send UDP commands
+hosts_allow = 127.0.0.0/8
+

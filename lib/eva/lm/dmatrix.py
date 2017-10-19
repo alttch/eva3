@@ -1,0 +1,462 @@
+__author__ = "Altertech Group, http://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2017 Altertech Group"
+__license__ = "See http://www.eva-ics.com/"
+__version__ = "3.0.0"
+
+import logging
+import uuid
+import eva.item
+import eva.core
+import time
+
+from eva.tools import val_to_boolean
+
+
+class DecisionMatrix(object):
+
+    def __init__(self):
+        self.rules = []
+
+    def process(self, item):
+        if item.prv_status == item.status and \
+                item.prv_value == item.value: return False
+        event_code = '%s/dme-%f' % (item.full_id, time.time())
+        logging.debug('Decision matrix event %s %s, ' % \
+                (item.item_type, item.full_id) + \
+                'status = %s -> %s, ' % (item.prv_status, item.status) + \
+                'value = "%s" -> "%s", ' % (item.prv_value, item.value) + \
+                'assigned code = %s' % event_code)
+        for rule in self.rules.copy():
+            if not rule.enabled: continue
+            if rule.for_item_type and rule.for_item_type != '#' and \
+                    rule.for_item_type != item.item_type:
+                        continue
+            if rule.for_item_id is not None and rule.for_item_id != '#' and \
+                    rule.for_item_id != item.item_id:
+                        continue
+            if rule.for_item_group is not None and \
+                    not eva.item.item_match(item, [], [ rule.for_item_group ]):
+                continue
+            pv = None
+            v = None
+            if rule.for_prop == 'status':
+                try:
+                    pv = float(item.prv_status)
+                except:
+                    pv = None
+                try:
+                    v = float(item.status)
+                except:
+                    v = None
+            elif rule.for_prop == 'value':
+                if item.prv_value is not None:
+                    try:
+                        pv = float(item.prv_value)
+                    except:
+                        pv = item.prv_value
+                try:
+                    v = float(item.value)
+                except:
+                    v = item.value
+            if (pv is None and rule.for_initial == 'skip') or \
+                    (pv is not None and \
+                        rule.for_initial == 'only') or \
+                    v is None or \
+                    pv == v:
+                        continue
+            if pv is not None:
+                if not isinstance(pv, float):
+                    if rule.in_range_min is not None and \
+                            pv == rule.in_range_min:
+                                continue
+                else:
+                    if (rule.in_range_min is not None and \
+                            not isinstance(rule.in_range_min, float)) or \
+                        (rule.in_range_max is not None and \
+                            not isinstance(rule.in_range_max, float)):
+                            continue
+                    if rule.in_range_min is not None and \
+                            rule.in_range_max is not None:
+                        if ((rule.in_range_min_eq and \
+                                    pv >= rule.in_range_min) or \
+                            (not rule.in_range_min_eq and \
+                                    pv > rule.in_range_min)) and \
+                            ((rule.in_range_max_eq and \
+                                    pv <= rule.in_range_max) or \
+                            (not rule.in_range_max_eq and \
+                                pv < rule.in_range_max)):
+                                continue
+                    elif rule.in_range_min is not None:
+                        if (rule.in_range_min_eq and \
+                                    pv >= rule.in_range_min) or \
+                            (not rule.in_range_min_eq and \
+                                pv > rule.in_range_min):
+                                continue 
+                    elif rule.in_range_max is not None:
+                        if ((rule.in_range_max_eq and \
+                                pv <= rule.in_range_max) or \
+                        (not rule.in_range_max_eq and \
+                            pv < rule.in_range_max)):
+                            continue
+            if not isinstance(v, float):
+                if rule.in_range_min is not None and \
+                        v != rule.in_range_min:
+                            continue
+            else:
+                if (rule.in_range_min is not None and \
+                        not isinstance(rule.in_range_min, float)) or \
+                    (rule.in_range_max is not None and \
+                        not isinstance(rule.in_range_max, float)):
+                        continue
+                if rule.in_range_min is not None:
+                    if rule.in_range_min_eq:
+                        if v < rule.in_range_min:
+                            continue
+                    else:
+                        if v <= rule.in_range_min:
+                            continue
+                if rule.in_range_max is not None:
+                    if rule.in_range_max_eq:
+                        if v > rule.in_range_max:
+                            continue
+                    else:
+                        if v >= rule.in_range_max:
+                            continue
+            if eva.core.development:
+                rule_id = rule.item_id
+            else:
+                rule_id = rule.item_id[:14] + '...'
+            logging.debug('Decision matrix rule %s match event %s' % \
+                    (rule_id, event_code))
+            if rule.chillout_time and \
+                    (time.time() - rule.last_matched) < rule.chillout_time:
+                logging.debug(
+                    'Decision matrix rule ' + \
+                            '%s event %s skipped due to chillout time' % \
+                            (rule_id, event_code) + \
+                            ', chillot ending in %f sec' % \
+                            (rule.chillout_time + rule.last_matched - \
+                                time.time()))
+                continue
+            rule.last_matched = time.time()
+            if rule.macro:
+                if not eva.lm.controller.exec_macro(macro = rule.macro,
+                        argv = rule.macro_args,
+                        source = item):
+                    logging.error('Decision matrix can not exec macro' + \
+                            ' %s for event %s' % (rule.macro, event_code))
+            if rule.break_after_exec:
+                logging.debug('Decision matrix rule ' + \
+                        '%s is an event %s breaker, stopping event' % \
+                        (rule_id, event_code))
+                break
+        return True
+
+
+    def append_rule(self, d_rule, do_sort = True):
+        if d_rule in self.rules: return False
+        r = self.rules.copy()
+        r.append(d_rule)
+        if do_sort:
+            r = self.sort_rule_array(r)
+        self.rules = r
+        return True
+
+
+    def sort(self):
+        self.rules = self.sort_rule_array(self.rules.copy())
+
+
+    def sort_rule_array(self, rule_array):
+        r = sorted(rule_array, key=lambda v: v.item_id)
+        r = sorted(rule_array, key=lambda v: v.description)
+        r = sorted(r, key=lambda v: v.priority)
+        return r
+
+
+    def remove_rule(self, d_rule):
+        if not d_rule in self.rules: return False
+        self.rules.remove(d_rule)
+
+
+class DecisionRule(eva.item.Item):
+
+    def __init__(self, rule_uuid = None):
+        self.priority = 100
+        if not rule_uuid:
+            _uuid = str(uuid.uuid1())
+        else:
+            _uuid = rule_uuid
+        self.enabled = False
+        self.for_item_type = None
+        self.for_item_id = None
+        self.for_item_group = None
+        self.for_prop = 'status'
+        self.for_initial = 'skip'
+        self.in_range_min = None
+        self.in_range_max = None
+        self.in_range_min_eq = False
+        self.in_range_max_eq = False
+        self.macro = None
+        self.macro_args = None
+        self.break_after_exec = False
+        self.chillout_time = 0
+        self.last_matched = 0
+        super().__init__(_uuid, 'dmatrix_rule')
+        super().update_config({'group': 'dm_rules'})
+
+
+    def serialize(self, full = False, config = False,
+            info = False, props = False, notify = False):
+        d = {}
+        if info or full:
+            c = self.chillout_time + self.last_matched - time.time()
+            if c < 0: c = 0
+            d['chillout_ends_in'] = c
+        d['enabled'] = self.enabled
+        d['priority'] = self.priority
+        d['for_item_type'] = self.for_item_type
+        d['for_item_id'] = self.for_item_id
+        d['for_item_group'] = self.for_item_group
+        d['for_prop'] = self.for_prop
+        d['for_initial'] = self.for_initial
+        d['in_range_min'] = self.in_range_min
+        d['in_range_max'] = self.in_range_max
+        d['in_range_min_eq'] = self.in_range_min_eq
+        d['in_range_max_eq'] = self.in_range_max_eq
+        d['macro'] = self.macro
+        if self.macro_args:
+            d['macro_args'] = ' '.join(self.macro_args)
+        else:
+            d['macro_args'] = None
+        d['break_after_exec'] = self.break_after_exec
+        d['chillout_time'] = self.chillout_time
+        condition = ''
+        cond_eq = False
+        if self.in_range_min is not None:
+            if isinstance(self.in_range_min, float):
+                try:
+                    if self.for_prop == 'status': m = int(self.in_range_min)
+                    else: m = self.in_range_min
+                except:
+                    m = self.in_range_min
+                if self.in_range_min == self.in_range_max and \
+                        self.in_range_min_eq and \
+                        self.in_range_max_eq:
+                            cond_eq = True
+                            condition = 'x == %s' % m
+                else:
+                    condition = str(m) + ' <'
+                    if self.in_range_min_eq: condition += '='
+                    condition += ' x'
+            else:
+                condition = 'x == \'%s\'' % self.in_range_min
+                cond_eq = True
+        if (self.in_range_min is not None and \
+                isinstance(self.in_range_min, float) or \
+                self.in_range_min is None) and \
+                not cond_eq and \
+                self.in_range_max is not None and \
+                isinstance(self.in_range_max, float):
+                    if not condition: condition = 'x'
+                    condition += ' <'
+                    if self.in_range_max_eq: condition += '='
+                    if self.for_prop == 'status': m = int(self.in_range_max)
+                    else: m = self.in_range_max
+                    condition += ' ' + str(m)
+        d['condition'] = condition
+        d.update(super().serialize(full = full, config = config,
+            info = info, props = props, notify = notify))
+        if 'group' in d: del d['group']
+        if 'full_id' in d: del d['full_id']
+        return d
+
+
+    def update_config(self, data):
+        if 'enabled' in data:
+            self.enabled = data['enabled']
+        if 'priority' in data:
+            self.priority = data['priority']
+        if 'for_item_type' in data:
+            self.for_item_type = data['for_item_type']
+        if 'for_item_id' in data:
+            self.for_item_id = data['for_item_id']
+        if 'for_item_group' in data:
+            self.for_item_group = data['for_item_group']
+        if 'for_prop' in data:
+            self.for_prop = data['for_prop']
+        if 'for_initial' in data:
+            self.for_initial = data['for_initial']
+        if 'in_range_min' in data:
+            self.in_range_min = data['in_range_min']
+        if 'in_range_max' in data:
+            self.in_range_max = data['in_range_max']
+        if 'in_range_min_eq' in data:
+            self.in_range_min_eq = data['in_range_min_eq']
+        if 'in_range_max_eq' in data:
+            self.in_range_max_eq = data['in_range_max_eq']
+        if 'macro' in data:
+            self.macro = data['macro']
+        if 'macro_args' in data:
+            m = data['macro_args']
+            if m is not None:
+                m = m.split(' ')
+            self.macro_args = m
+        if 'break_after_exec' in data:
+            self.break_after_exec = data['break_after_exec']
+        if 'chillout_time' in data:
+            self.chillout_time = data['chillout_time']
+        super().update_config(data)
+
+
+    def set_prop(self, prop, val = None, save = False):
+        if prop == 'enabled':
+            v = val_to_boolean(val)
+            if v is not None:
+                if self.enabled != v:
+                    self.enabled = v
+                    self.set_modified(save)
+                return True
+            else:
+                return False
+        elif prop == 'for_expire':
+            if not self.in_range_max_eq or \
+                    self.in_range_min_eq or \
+                    self.in_range_min is not None or \
+                    self.in_range_max != -1 or \
+                    self.for_prop != 'status' or \
+                    not isinstance(self.in_range_max, float):
+                self.in_range_min_eq = False
+                self.in_range_max_eq = True
+                self.in_range_min = None
+                self.in_range_max = -1.0
+                self.for_prop = 'status'
+                self.set_modified(save)
+            return True
+        elif prop == 'priority':
+            try:
+                v = int(val)
+                if v <= 0: return False
+            except:
+                return False
+            if self.priority != v:
+                self.priority = v
+                self.set_modified(save)
+            return True
+        elif prop == 'for_item_type':
+            if val is not None:
+                if val == 'U': v = 'unit'
+                elif val == 'S': v = 'sensor'
+                elif val == 'LV': v = 'lvar'
+                else: v = val
+                if not v in [ '#', 'unit', 'sensor', 'lvar' ]:
+                    return False
+            else: v = None
+            if self.for_item_type != v:
+                self.for_item_type = v
+                self.set_modified(save)
+            return True
+        elif prop == 'for_item_id':
+            if self.for_item_id != val:
+                self.for_item_id = val
+                self.set_modified(save)
+            return True
+        elif prop == 'for_item_group':
+            if self.for_item_group != val:
+                self.for_item_group = val
+                self.set_modified(save)
+            return True
+        elif prop == 'for_prop':
+            if val not in [ 'status', 'value' ]: return False
+            if self.for_prop != val:
+                self.for_prop = val
+                self.set_modified(save)
+            return True
+        elif prop == 'for_initial':
+            if val is not None and \
+                    val not in [ 'only', 'skip', 'any', 'none', 'None' ]:
+                        return False
+            v = val
+            if v in [ 'any', 'none', 'None' ]:
+                v = None
+            if self.for_initial != v:
+                self.for_initial = v
+                self.set_modified(save)
+            return True
+        elif prop == 'in_range_min':
+            if val is not None and val != '':
+                try:
+                    v = float(val)
+                except:
+                    if self.for_prop == 'status': return False
+                    v = val
+            else:
+                v = None
+            if self.in_range_min != v:
+                self.in_range_min = v
+                self.set_modified(save)
+            return True
+        elif prop == 'in_range_max':
+            if val is not None and val != '':
+                try:
+                    v = float(val)
+                except:
+                    if self.for_prop == 'status': return False
+                    v = val
+            else:
+                v = None
+            if self.in_range_max != v:
+                self.in_range_max = v
+                self.set_modified(save)
+            return True
+        elif prop == 'in_range_min_eq':
+            v = val_to_boolean(val)
+            if v is not None:
+                if self.in_range_min_eq != v:
+                    self.in_range_min_eq = v
+                    self.set_modified(save)
+                return True
+            else:
+                return False
+        elif prop == 'in_range_max_eq':
+            v = val_to_boolean(val)
+            if v is not None:
+                if self.in_range_max_eq != v:
+                    self.in_range_max_eq = v
+                    self.set_modified(save)
+                return True
+            else:
+                return False
+        elif prop == 'macro':
+            if self.macro != val:
+                self.macro = val
+                self.set_modified(save)
+            return True
+        elif prop == 'macro_args':
+            if val is not None:
+                v = val.split(' ')
+            else:
+                v = None
+            if self.macro_args != v:
+                self.macro_args = v
+                self.set_modified(save)
+            return True
+        elif prop == 'break_after_exec':
+            v = val_to_boolean(val)
+            if v is not None:
+                if self.break_after_exec != v:
+                    self.break_after_exec = v
+                    self.set_modified(save)
+                return True
+            else:
+                return False
+        elif prop == 'chillout_time':
+            try:
+                v = float(val)
+            except:
+                return False
+            if self.chillout_time != v:
+                self.chillout_time = v
+                self.set_modified(save)
+            return True
+        return super().set_prop(prop, val, save)

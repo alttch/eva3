@@ -1,0 +1,24 @@
+[masterkey]
+; the default master key is eva, change it!
+key = eva
+master = yes
+hosts_allow = 127.0.0.1
+
+;[key1]
+;key = key1secret
+;groups = group1/#, group2, group3/+/somegroup
+;hosts_allow = 0.0.0.0/0
+
+;[key2]
+;key = key2secret
+;items = macro1, lvar1, lvar2
+;sysfunc = yes
+;allow = cmd, dm_rule_props, dm_rules_list
+;hosts_allow = 0.0.0.0/0
+
+;[sfa]
+;key = sfasecret
+;groups = #
+;allow = dm_rule_props, dm_rules_list
+;hosts_allow = 127.0.0.1, 192.168.0.0/16
+

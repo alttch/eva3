@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import importlib
+
+
+mods = [
+    'cherrypy',
+    'collections',
+    'configparser',
+    'copy',
+    'getopt',
+    'glob',
+    'hashlib',
+    'json',
+    'jsonpickle',
+    'logging',
+    'netaddr',
+    'paho.mqtt.client',
+    'PIL',
+    'platform',
+    'psutil',
+    'pysnmp',
+    'queue',
+    're',
+    'readline',
+    'requests',
+    'signal',
+    'socket',
+    'sqlite3',
+    'struct',
+    'subprocess',
+    'threading',
+    'time',
+    'traceback',
+    'uuid',
+    'ws4py',
+    ]
+
+if len(sys.argv)>1 and sys.argv[1] == 'install': install = True
+else: install = False
+
+for m in mods:
+    print (m.ljust(20),end = '')
+    try:
+        importlib.import_module(m)
+        print ('OK')
+    except:
+        print ('MISSING!')
+        if install:
+            if m == 'paho.mqtt.client': mod = 'paho-mqtt'
+            elif m == 'PIL': mod = 'pillow'
+            else: mod = m
+            os.system('pip3 install %s' % mod)
+            try:
+                importlib.import_module(m)
+            except:
+                print('Failed to install, Aborting')
+                sys.exit(1)

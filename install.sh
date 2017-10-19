@@ -1,0 +1,23 @@
+#!/bin/sh
+
+which realpath > /dev/null
+if [ $? != 0 ]; then
+    echo 'please install realpath'
+    exit 1
+fi
+
+D=`realpath $0`
+cd `dirname ${D}`
+
+echo "Preparing Universal Controller"
+sh install-uc.sh || exit 1
+echo "Preparing Logic Manager"
+sh install-lm.sh || exit 1
+echo "Preparing SCADA Final Aggregator"
+sh install-sfa.sh || exit
+echo ""
+echo "All done!"
+echo ""
+echo "Now edit etc/*.ini and etc/eva_servers"
+echo ""
+echo "After you may start EVA with sbin/eva-control start"
