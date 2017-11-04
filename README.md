@@ -4,7 +4,7 @@ Builds: https://www.eva-ics.com/download/3.0.0/stable/
 
 Documentation: https://wiki.eva-ics.com/
 
-License: https://wiki.eva-ics.com/en/Copyright
+License: https://wiki.eva-ics.com/en/EULA
 
 (c) 2017 Altertech Group https://www.altertech.com/
 
