@@ -331,7 +331,6 @@ def clone_item(item_id, new_item_id = None, group = None, save = False):
     if 'description' in cfg: del cfg['description']
     ni.update_config(cfg)
     if save: ni.save()
-    ni.start_processors()
     return ni
 
 
