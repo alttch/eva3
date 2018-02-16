@@ -23,16 +23,22 @@ class Item(object):
     def __init__(self, item_id, item_type):
         self.item_id = item_id
         self.item_type = item_type
-        self.group = 'nogroup'
-        self.full_id = self.group + '/' + self.item_id
+        self.set_group('nogroup')
         self.description = ''
         self._destroyed = False
         self.config_changed = False
         self.config_file_exists = False
 
 
+    def set_group(self, group = None):
+        if group: self.group = group
+        else: self.group = 'nogroup'
+        self.full_id = self.group + '/' + self.item_id
+
+
     def update_config(self, data):
         if 'group' in data:
+            self.set_group(data['group'])
             self.group = data['group']
             self.full_id = self.group + '/' + self.item_id
         if 'description' in data:

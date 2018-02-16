@@ -110,6 +110,7 @@ _api_func = {
                     'create_unit',
                     'create_sensor',
                     'create_mu',
+                    'clone',
                     'destroy',
                     'login',
                     'logout'
@@ -127,6 +128,7 @@ _api_func = {
                     'create_unit',
                     'create_sensor',
                     'create_mu',
+                    'clone',
                     'destroy',
                     'login',
                     'logout'

@@ -258,6 +258,12 @@ class UC_API(GenericAPI):
                 group = group, virtual = virtual, save = save)
 
 
+    def clone(self, k = None, i = None, n = None, g = None, save = False):
+        if not apikey.check(k, master = True): return None
+        return eva.uc.controller.clone_item(item_id = i, new_item_id = n,
+                group = g, save = save)
+
+
     def destroy(self, k = None, i = None):
         if not apikey.check(k, master = True): return None
         return eva.uc.controller.destroy_item(i)
@@ -292,6 +298,8 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.create_unit.exposed = True
         UC_HTTP_API.create_sensor.exposed = True
         UC_HTTP_API.create_mu.exposed = True
+
+        UC_HTTP_API.clone.exposed = True
 
         UC_HTTP_API.destroy.exposed = True
 
@@ -472,6 +480,11 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         cp_need_master(k)
         return http_api_result_ok() if super().create_mu(
                 k, i, g, virtual, save) else http_api_result_error()
+
+    def clone(self, k = None, i = None, n = None, g = None, save = None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().clone(
+                k, i, n, g, save) else http_api_result_error()
 
 
     def destroy(self, k = None, i = None):

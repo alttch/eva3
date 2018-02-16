@@ -304,7 +304,7 @@ def create_item(item_id, item_type, group = None,
     append_item(item, start = True, load = False)
     if save: item.save()
     logging.info('created new %s %s' % (item.item_type, item.full_id))
-    return True
+    return item
 
 
 def create_unit(unit_id, group = None, virtual = False, save = False):
@@ -320,6 +320,19 @@ def create_sensor(sensor_id, group = None, virtual = False, save = False):
 def create_mu(mu_id, group = None, virtual = False, save = False):
     return create_item(item_id = mu_id, item_type = 'MU', group = group,
             virtual = virtual, save = save)
+
+
+def clone_item(item_id, new_item_id = None, group = None, save = False):
+    i = get_item(item_id)
+    ni = get_item(new_item_id)
+    if not i or not new_item_id or ni or i.is_destroyed(): return False
+    ni = create_item(new_item_id, i.item_type, group, save = False)
+    cfg = i.serialize(props = True)
+    if 'description' in cfg: del cfg['description']
+    ni.update_config(cfg)
+    if save: ni.save()
+    ni.start_processors()
+    return ni
 
 
 def destroy_item(item):

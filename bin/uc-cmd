@@ -177,6 +177,13 @@ Configure items (requires master key):
                                                      after creation
                                                  -z  create virtual item
 
+    clone <-i id> <-n new_id> [-g group] [-y]
+                                              clone item, put a new item into
+                                              the group if specified
+
+                                                 -y  save item config right
+                                                     after creation
+
     destroy <-i id>                           destroy an item
 
 File management in runtime (requires master key):
@@ -289,6 +296,7 @@ api.ssl_verify(False)
 params = {}
 
 if ( func == 'set_prop' or \
+        func == 'clone' or \
         func == 'create_unit' or \
         func == 'create_sensor' or \
         func == 'create_mu' ) and \
