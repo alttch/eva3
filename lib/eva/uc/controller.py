@@ -271,7 +271,7 @@ def load_sensors(start = False):
 
 
 def create_item(item_id, item_type, group = None,
-        virtual = False, save = False):
+        virtual = False, start = True, save = False):
     if not item_id: return False
     if group and item_id.find('/') != -1: return False
     if item_id.find('/') == -1:
@@ -301,7 +301,7 @@ def create_item(item_id, item_type, group = None,
     if eva.core.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.mqtt_update_default
     item.update_config(cfg)
-    append_item(item, start = True, load = False)
+    append_item(item, start = start, load = False)
     if save: item.save()
     logging.info('created new %s %s' % (item.item_type, item.full_id))
     return item
@@ -309,28 +309,30 @@ def create_item(item_id, item_type, group = None,
 
 def create_unit(unit_id, group = None, virtual = False, save = False):
     return create_item(item_id = unit_id, item_type = 'U', group = group,
-            virtual = virtual, save = save)
+            virtual = virtual, start = True, save = save)
 
 
 def create_sensor(sensor_id, group = None, virtual = False, save = False):
     return create_item(item_id = sensor_id, item_type = 'S', group = group,
-            virtual = virtual, save = save)
+            virtual = virtual, start = True, save = save)
 
 
 def create_mu(mu_id, group = None, virtual = False, save = False):
     return create_item(item_id = mu_id, item_type = 'MU', group = group,
-            virtual = virtual, save = save)
+            virtual = virtual, start = True, save = save)
 
 
 def clone_item(item_id, new_item_id = None, group = None, save = False):
     i = get_item(item_id)
     ni = get_item(new_item_id)
     if not i or not new_item_id or ni or i.is_destroyed(): return False
-    ni = create_item(new_item_id, i.item_type, group, save = False)
+    ni = create_item(new_item_id, i.item_type, group, start = False,
+            save = False)
     cfg = i.serialize(props = True)
     if 'description' in cfg: del cfg['description']
     ni.update_config(cfg)
     if save: ni.save()
+    ni.start_processors()
     return ni
 
 
