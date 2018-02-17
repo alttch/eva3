@@ -351,6 +351,13 @@ def clone_group(group = None, new_group = None,\
     return True
 
 
+def destroy_group(group = None):
+    if group is None: return False
+    for i in items_by_group[group].copy():
+        if not destroy_item(i): return False
+    return True
+
+
 def destroy_item(item):
     try:
         if isinstance(item, str):

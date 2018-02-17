@@ -270,9 +270,10 @@ class UC_API(GenericAPI):
                 prefix = p, new_prefix = r, save = save)
 
 
-    def destroy(self, k = None, i = None):
+    def destroy(self, k = None, i = None, g = None):
         if not apikey.check(k, master = True): return None
-        return eva.uc.controller.destroy_item(i)
+        return eva.uc.controller.destroy_item(i) if i \
+                else eva.uc.controller.destroy_group(g)
 
 
 class UC_HTTP_API(GenericHTTP_API, UC_API):
@@ -500,9 +501,9 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
                 k, g, n, p, r, save) else http_api_result_error()
 
 
-    def destroy(self, k = None, i = None):
+    def destroy(self, k = None, i = None, g = None):
         cp_need_master(k)
-        return http_api_result_ok() if super().destroy(k, i) \
+        return http_api_result_ok() if super().destroy(k, i, g) \
                 else http_api_result_error()
 
 

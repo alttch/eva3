@@ -66,6 +66,7 @@ class Item(object):
             'EVA_ITEM_ID' : self.item_id,
             'EVA_ITEM_TYPE' : self.item_type,
             'EVA_ITEM_GROUP' : self.group,
+            'EVA_ITEM_PARENT_GROUP': self.group.split('/')[-1],
             'EVA_ITEM_ID_FULL' : self.group + '/' + self.item_id
             }
         return e
