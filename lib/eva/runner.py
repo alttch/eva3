@@ -41,6 +41,12 @@ class ExternalProcess(object):
         if args: self.args += args
         if env: self.env.update(env)
         self.env.update(eva.core.env)
+        cvars = eva.core.cvars.copy()
+        for c in cvars.keys():
+            if c.find('/') == -1:
+                self.env[c] = cvars[c]
+            elif item and item.group == '/'.join(c.split('/')[:-1]):
+                self.env[c.split('/')[-1]] = cvars[c]
         self.xc = None
         self.termflag = threading.Event()
         self.term = None

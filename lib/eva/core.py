@@ -435,7 +435,6 @@ def load_cvars(fname = None):
         return False
     for i, v in _cvars.items():
         logging.debug('custom var %s = "%s"' % (i, v))
-    _env.update(_cvars)
     env = _env
     cvars = _cvars
     cvars_modified = False
@@ -461,12 +460,10 @@ def get_cvar(var):
 def set_cvar(var, value = None):
     if not var: return False
     if value is not None:
-        env[var] = value
         cvars[var] = value
     else:
         try:
             del cvars[var]
-            del env[var]
         except:
             return False
     if db_update == 1: save_cvars()
