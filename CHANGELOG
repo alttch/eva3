@@ -6,9 +6,9 @@
         - EVA_ITEM_PARENT_GROUP variable in script ENV which contains the parent group of the item
 
         - cvars now can be set as global or assigned to the specified item group
-          i.e. 'VAR1' - global cvar, available for the all scripts/macros, 'group1/VAR2' - variable available
-          only to scripts/macros from group 'group1' (as 'VAR2'), 'group2/VAR2' - variable available only
-          for group 'group2' (also as 'VAR2')
+          i.e. 'VAR1' - global cvar, available to the all scripts, 'group1/VAR2' - variable available
+          only to scripts from group 'group1' (as 'VAR2'), 'group2/VAR2' - variable available only
+          to group 'group2' (also as 'VAR2'). Used by UC scripts to let one script manage different items
 
     Universal Controller
 
@@ -28,7 +28,7 @@
 
     SCADA Final Aggregator
 
-        - (TODO) access SFA_CVARS from sfa framework
+        - (TODO) access SFA cvars from sfa framework (read-only)
         - (TODO) optional 'q' (queue delay) param for 'action' SFA API call
 
 3.0.0
