@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, http://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2017 Altertech Group"
 __license__ = "See http://www.eva-ics.com/"
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 
 import sys
 import os
@@ -44,7 +44,7 @@ for production use uc-control only to start/stop UC
 """)
 
 
-product_build = 2017101701
+product_build = 2018021701
 
 product_code = 'uc'
 

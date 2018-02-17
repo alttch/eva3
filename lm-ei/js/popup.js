@@ -2,7 +2,7 @@
  * Author: Altertech Group, http://www.altertech.com/
  * Copyright: (C) 2012-2017 Altertech Group
  * License: See http://www.eva-ics.com/
- * Version: 3.0.0
+ * Version: 3.0.1
  */
 
 function popup(pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
