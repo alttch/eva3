@@ -222,7 +222,7 @@ class UpdatableItem(Item):
         if 'update_timeout' in data:
             self.update_timeout = data['update_timeout']
             self._update_timeout = data['update_timeout']
-        if 'mqtt_update' in data:
+        if 'mqtt_update' in data and data['mqtt_update']:
             self.mqtt_update = data['mqtt_update']
             params = data['mqtt_update'].split(':')
             n = params[0]

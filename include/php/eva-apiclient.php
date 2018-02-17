@@ -112,6 +112,7 @@ $_eva_api_func = array(
                     'create_sensor',
                     'create_mu',
                     'clone',
+                    'clone_group',
                     'destroy',
                     'login',
                     'logout'
@@ -129,6 +130,7 @@ $_eva_api_func = array(
                     'create_sensor',
                     'create_mu',
                     'clone',
+                    'clone_group',
                     'destroy',
                     'login',
                     'logout'

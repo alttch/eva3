@@ -325,7 +325,7 @@ def create_mu(mu_id, group = None, virtual = False, save = False):
 def clone_item(item_id, new_item_id = None, group = None, save = False):
     i = get_item(item_id)
     ni = get_item(new_item_id)
-    if not i or not new_item_id or ni or i.is_destroyed(): return False
+    if not i or not new_item_id or ni or i.is_destroyed(): return None
     ni = create_item(new_item_id, i.item_type, group, start = False,
             save = False)
     cfg = i.serialize(props = True)
@@ -334,6 +334,21 @@ def clone_item(item_id, new_item_id = None, group = None, save = False):
     if save: ni.save()
     ni.start_processors()
     return ni
+
+
+def clone_group(group = None, new_group = None,\
+        prefix = None, new_prefix = None, save = False):
+    if not group or not group in items_by_group \
+            or not prefix or not new_prefix: return False
+    to_clone = []
+    for i in items_by_group[group].copy():
+        if i[:len(prefix)] == prefix:
+            new_id = i.replace(prefix, new_prefix, 1)
+            if get_item(new_id): return False
+            to_clone.append([i, new_id])
+    for i in to_clone:
+        if not clone_item(i[0], i[1], new_group, save): return False
+    return True
 
 
 def destroy_item(item):
