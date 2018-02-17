@@ -184,6 +184,17 @@ Configure items (requires master key):
                                                  -y  save item config right
                                                      after creation
 
+    clone_group <-g group> <-n new_group>
+                <-p item_prefix> <-r new_item_prefix> [-y]
+
+                                              clone all items with id starting
+                                              with item_prefix in group into a
+                                              new group, replace item_prefix to
+                                              new_item_prefix
+
+                                                 -y  save item config right
+                                                     after creation
+
     destroy <-i id>                           destroy an item
 
 File management in runtime (requires master key):
