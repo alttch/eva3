@@ -23,7 +23,7 @@
 
     Logic Manager
 
-        - (TODO) item id in LM rules match by simple mask (i.e. '*id*' or 'id*')
+        - item id in LM rules match by simple mask (i.e. '*id*' or 'id*' or '*id')
 
 3.0.0
     First public release

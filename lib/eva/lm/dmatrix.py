@@ -31,12 +31,22 @@ class DecisionMatrix(object):
             if rule.for_item_type and rule.for_item_type != '#' and \
                     rule.for_item_type != item.item_type:
                         continue
-            if rule.for_item_id is not None and rule.for_item_id != '#' and \
-                    rule.for_item_id != item.item_id:
-                        continue
+            if rule.for_item_id and rule.for_item_id != '#' and \
+                rule.for_item_id != item.item_id and \
+                not (rule.for_item_id[0] == '*' and \
+                    rule.for_item_id[1:] == \
+                        item.item_id[-len(rule.for_item_id)+1:]) and \
+                not (rule.for_item_id[-1] == '*' and \
+                    rule.for_item_id[:-1] == \
+                        item.item_id[:len(rule.for_item_id)-1]) and \
+                not (rule.for_item_id[0] == '*' and \
+                    rule.for_item_id[-1] == '*' and \
+                    item.item_id.find(rule.for_item_id[1:-1]) > -1
+                    ):
+                                continue
             if rule.for_item_group is not None and \
                     not eva.item.item_match(item, [], [ rule.for_item_group ]):
-                continue
+                        continue
             pv = None
             v = None
             if rule.for_prop == 'status':
