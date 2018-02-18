@@ -42,7 +42,7 @@ for production use uc-control only to start/stop UC
 """)
 
 
-product_build = 2018021801
+product_build = 2018021802
 
 product_code = 'sfa'
 
