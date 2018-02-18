@@ -326,7 +326,9 @@ def clone_item(item_id, new_item_id = None, group = None, save = False):
     i = get_item(item_id)
     ni = get_item(new_item_id)
     if not i or not new_item_id or ni or i.is_destroyed(): return None
-    ni = create_item(new_item_id, i.item_type, group, start = False,
+    if group is None: _g = i.group
+    else: _g = group
+    ni = create_item(new_item_id, i.item_type, _g, start = False,
             save = False)
     cfg = i.serialize(props = True)
     if 'description' in cfg: del cfg['description']
