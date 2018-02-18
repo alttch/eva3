@@ -195,7 +195,8 @@ Configure items (requires master key):
                                                  -y  save item config right
                                                      after creation
 
-    destroy <-i id>                           destroy an item
+    destroy <-i id|-g group>                  destroy an item or all items in
+                                              the group
 
 File management in runtime (requires master key):
 

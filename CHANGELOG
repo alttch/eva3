@@ -12,7 +12,7 @@
 
     Universal Controller
 
-        - (TODO) 'update_delay' - item passive update may start with a delay to prevent multiple updates
+        - 'update_delay' - item passive update may start with a delay to prevent multiple updates
           run simultaneously producing high system load
 
         UC API and uc-cmd:
@@ -24,12 +24,6 @@
     Logic Manager
 
         - (TODO) item id in LM rules match by simple mask (i.e. '*id*' or 'id*')
-        - (TODO) optional 'q' (queue delay) param for 'action' LM API call
-
-    SCADA Final Aggregator
-
-        - (TODO) access SFA cvars from sfa framework (read-only)
-        - (TODO) optional 'q' (queue delay) param for 'action' SFA API call
 
 3.0.0
     First public release

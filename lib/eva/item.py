@@ -182,6 +182,7 @@ class UpdatableItem(Item):
         super().__init__(item_id, item_type)
         self.update_exec = None
         self.update_interval = 0
+        self.update_delay = 0
         self.update_timeout = eva.core.timeout
         self._update_timeout = None
         self.update_processor = None
@@ -220,6 +221,8 @@ class UpdatableItem(Item):
             self.update_exec = data['update_exec']
         if 'update_interval' in data:
             self.update_interval = data['update_interval']
+        if 'update_delay' in data:
+            self.update_delay = data['update_delay']
         if 'update_timeout' in data:
             self.update_timeout = data['update_timeout']
             self._update_timeout = data['update_timeout']
@@ -298,6 +301,26 @@ class UpdatableItem(Item):
                     self.stop_update_scheduler()
                 else:
                     self.start_update_scheduler()
+            return True
+        elif prop == 'update_delay':
+            if val is None:
+                if self.update_delay:
+                    self.update_delay = 0
+                    logging.info('set %s.update_delay = %s' % \
+                        (self.full_id, self.update_delay))
+                    self.set_modified(save)
+            else:
+                try:
+                    update_delay = float(val)
+                except:
+                    return False
+                if update_delay < 0: return False
+                if self.update_delay != update_delay:
+                    self.update_delay = update_delay
+                    self.update_delay = update_delay
+                    logging.info('set %s.update_delay = %s' % \
+                        (self.full_id, self.update_delay))
+                    self.set_modified(save)
             return True
         elif prop == 'update_timeout':
             if val is None:
@@ -528,7 +551,7 @@ class UpdatableItem(Item):
         if self.update_processor_active:
             self.update_processor_active = False
             self.disable_updates()
-            self.do_update()
+            self.need_update.set()
 
 
     def start_update_scheduler(self):
@@ -588,14 +611,23 @@ class UpdatableItem(Item):
 
 
     def do_update(self):
-        self.need_update.set()
+        i = 0
+        while i < self.update_delay and self.update_scheduler_active:
+            time.sleep(eva.core.sleep_step); i += eva.core.sleep_step
+        if self.update_scheduler_active:
+            self.need_update.set()
 
 
     def _t_update_scheduler(self):
         logging.debug('%s update scheduler started' % self.full_id)
         while self.update_scheduler_active and self.update_interval:
             if self.updates_allowed():
-                self.do_update()
+                if self.update_delay:
+                    t  = threading.Thread(target = self.do_update,
+                            name = 'do_update_%s_%f' % \
+                                    (self.item_id, time.time()))
+                    t.start()
+                else: self.do_update()
             i = 0
             while i < self.update_interval and self.update_scheduler_active:
                 time.sleep(eva.core.sleep_step); i += eva.core.sleep_step
@@ -809,6 +841,7 @@ class UpdatableItem(Item):
                 elif props:
                     d['mqtt_update'] = None
             d['update_interval'] = self.update_interval
+            d['update_delay'] = self.update_delay
             if self._update_timeout:
                 d['update_timeout'] = self._update_timeout
             elif props:
