@@ -1161,7 +1161,7 @@ class ActiveItem(Item):
             self.action_enabled = data['action_enabled']
         if 'action_exec' in data:
             self.action_exec = data['action_exec']
-        if 'mqtt_control' in data:
+        if 'mqtt_control' in data and data['mqtt_control'] is not None:
             self.mqtt_control = data['mqtt_control']
             params = data['mqtt_control'].split(':')
             self.mqtt_control_notifier = params[0]

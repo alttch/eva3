@@ -325,7 +325,8 @@ def create_mu(mu_id, group = None, virtual = False, save = False):
 def clone_item(item_id, new_item_id = None, group = None, save = False):
     i = get_item(item_id)
     ni = get_item(new_item_id)
-    if not i or not new_item_id or ni or i.is_destroyed(): return None
+    if not i or not new_item_id or ni or i.is_destroyed() or \
+            i.item_type not in ['unit', 'sensor']: return None
     if group is None: _g = i.group
     else: _g = group
     ni = create_item(new_item_id, i.item_type, _g, start = False,
@@ -344,6 +345,8 @@ def clone_group(group = None, new_group = None,\
             or not prefix or not new_prefix: return False
     to_clone = []
     for i in items_by_group[group].copy():
+        io = get_item(i)
+        if io.item_type not in ['unit', 'sensor']: continue
         if i[:len(prefix)] == prefix:
             new_id = i.replace(prefix, new_prefix, 1)
             if get_item(new_id): return False
