@@ -24,6 +24,7 @@ echo "Installing EVA LM PLC to `pwd`"
 
 echo "Creating dirs"
 mkdir -p ./etc || exit 1
+chmod 700 ./etc
 mkdir -p ./var || exit 1
 mkdir -p ./log || exit 1
 mkdir -p ./runtime || exit 1

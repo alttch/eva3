@@ -98,14 +98,14 @@ function load_sys_info() {
 function redraw_lvar_state(i) {
     for (a = -1 ; a <= 1; a++) {
         if (items[i].status != a) {
-        $('#lname_' + i).removeClass('lvar_s' + a)
+        $('[id="lname_' + i + '"]').removeClass('lvar_s' + a)
         } else {
-        $('#lname_' + i).addClass('lvar_s' + a)
+        $('[id="lname_' + i + '"]').addClass('lvar_s' + a)
         }   
     }   
-    $('#lval_' + i).html(items[i].value)
+    $('[id="lval_' + i + '"]').html(items[i].value)
     if (items[i].status != -1 && items[i].value != 'null')
-        $('#lval_expires_' + i).html(
+        $('[id="lval_expires_' + i + '"]').html(
                 format_expire_time(items[i].set_time, items[i].expires))
 }
 
@@ -142,14 +142,14 @@ function update_lvar_timers() {
     $.each(items, function(k, i) {
         if (i.status != -1 && i.value != 'null') {
             if (i.expires > 0) {
-                $('#lval_expires_' + k).html(
+                $('[id="lval_expires_' + k + '"]').html(
                         format_expire_time(i.set_time, i.expires)
                         )
                 }
         } else {
-            e = $('#lval_expires_' + k).html()
+            e = $('[id="lval_expires_' + k + '"]').html()
             if ($.isNumeric(e) && e > 0)
-                $('#lval_expires_' + k).html(Number(0).toFixed(1))
+                $('[id="lval_expires_' + k + '"]').html(Number(0).toFixed(1))
         }
     })
 }
@@ -351,7 +351,7 @@ function prepare_macro_run(i) {
 
 
 function run_macro(i) {
-    var btn = $('#btn_macro_run_' + i)
+    var btn = $('[id="btn_macro_run_' + i + '"]')
     var args = $('#macro_run_args').val()
     btn.attr('disabled','disabled')
     btn.addClass('disabled')
@@ -381,8 +381,8 @@ function enable_disable_macro(i, e) {
             '&p=action_enabled&v=' + e,
             function (data) {
                 if (data && data.result == 'OK') {
-                    var btn = $('#btn_macro_enable_' + i)
-                    var runbtn = $('#btn_macro_run_' + i)
+                    var btn = $('[id="btn_macro_enable_' + i + '"]')
+                    var runbtn = $('[id="btn_macro_run_' + i + '"]')
                     if (e == 1) {
                         btn.addClass('active')
                         runbtn.removeClass('disabled')

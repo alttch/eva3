@@ -46,7 +46,7 @@ function show_board(name) {
 
 
 function btn_action(uid, s) {
-    var btn = $('#btn_' + uid + '_' + s)
+    var btn = $('[id="btn_' + uid + '_' + s + '"]')
     btn.attr('disabled','disabled')
     btn.addClass('disabled')
     $.getJSON( '/uc-api/action?k=' + apikey + '&i=' +
@@ -118,13 +118,13 @@ function enable_disable_actions(i, e) {
 // redraw unit buttons
 function redraw_unit(uid) {
     $('button[id^=btn_' + uid + '_]').removeClass('active')
-    $('#btn_' + uid + '_' + items[uid].status).addClass('active')
+    $('[id="btn_' + uid + '_' + items[uid].status + '"]').addClass('active')
     if (items[uid].status != -1) {
-        $('#uname_' + uid).removeClass('device-error')
+        $('[id="uname_' + uid + '"]').removeClass('device-error')
     } else {
-        $('#uname_' + uid).addClass('device-error')
+        $('[id="uname_' + uid + '"]').addClass('device-error')
     }
-    var eb = $('#btn_enable_' + uid)
+    var eb = $('[id="btn_enable_' + uid + '"]')
     if (items[uid].action_enabled) {
         eb.html('ENABLED')
         eb.addClass('active')
@@ -478,13 +478,13 @@ function load_sensors() {
 function redraw_sensor_state(i) {
     for (a = -1 ; a <= 1; a++) {
         if (items[i].status != a) {
-        $('#sname_' + i).removeClass('sensor_s' + a)
+        $('[id="sname_' + i + '"]').removeClass('sensor_s' + a)
         } else {
-        $('#sname_' + i).addClass('sensor_s' + a)
+        $('[id="sname_' + i + '"]').addClass('sensor_s' + a)
         }
     }
-    $('#sval_' + i).html(items[i].value)
-    var b = $('#btn_s_enable_' + i)
+    $('[id="sval_' + i + '"]').html(items[i].value)
+    var b = $('[id="btn_s_enable_' + i + '"]')
     if (items[i].status == 0) {
         b.removeClass('active')
         b.attr('onclick', 'set_sensor_status("' + i + '", 1)')
