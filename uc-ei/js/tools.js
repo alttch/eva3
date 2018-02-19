@@ -14,20 +14,20 @@ function load_animation(o) {
 
 
 function get_arg(name) {
-    url = window.location.href;
-    name = name.replace(/[\[\]]/g, '\\$&');
-    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-        results = regex.exec(url);
-    if (!results) return null;
-    if (!results[2]) return '';
-    return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    url = window.location.href
+    name = name.replace(/[\[\]]/g, '\\$&')
+    var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)')
+        results = regex.exec(url)
+    if (!results) return null
+    if (!results[2]) return ''
+    return decodeURIComponent(results[2].replace(/\+/g, ' '))
 }
 
 
 function pad(num, size) {
     var s = num +'';
-    while (s.length < size) s = '0' + s;
-    return s;
+    while (s.length < size) s = '0' + s
+    return s
 }
 
 
@@ -42,4 +42,18 @@ function time_converter(UNIX_timestamp){
     var time = year + '-' + pad(month,2) + '-' + pad(date,2) + ' ' +
         pad(hour,2) + ':' + pad(min,2) + ':' + pad(sec,2) ;
     return time;
+}
+
+
+function dynamic_sort(property) {
+    var sortOrder = 1;
+    if(property[0] === "-") {
+        sortOrder = -1;
+        property = property.substr(1);
+    }
+    return function (a,b) {
+        var result = (a[property] < 
+			b[property]) ? -1 : (a[property] > b[property]) ? 1 : 0
+        return result * sortOrder
+    }
 }

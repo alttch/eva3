@@ -334,7 +334,7 @@ function load_units() {
         function( data ) {
             var bg = 1
             $('#b_units').html('')
-            $.each( Object(data).sort(),
+            $.each( Object(data).sort(dynamic_sort('id')),
                 function( _k ) {
                     var uid = data[_k]['id']
                     var val = data[_k]
@@ -433,7 +433,7 @@ function load_sensors() {
         function( data ) {
             var bg = 1
             $('#b_sensors').html('')
-            $.each( Object(data).sort(),
+            $.each( Object(data).sort(dynamic_sort('id')),
                 function( _k ) {
                     var uid = data[_k]['id']
                     var val = data[_k]

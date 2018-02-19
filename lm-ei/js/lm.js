@@ -285,7 +285,7 @@ function load_lvars() {
         function( data ) {
             var bg = 1
             $('#b_lvars').html('')
-            $.each( Object(data).sort(),
+            $.each( Object(data).sort(dynamic_sort('id')),
                 function( _k ) {
                     var uid = data[_k]['id']
                     var val = data[_k]
@@ -435,7 +435,7 @@ function load_macros() {
         function( data ) {
             var bg = 1
             $('#b_macros').html('')
-            $.each( data,
+            $.each( data.sort(dynamic_sort('id')),
                 function( _k ) {
                     var uid = data[_k]['id']
                     var val = data[_k]
@@ -905,7 +905,7 @@ function load_rules() {
             var bg = 1
             show_toolbar('rules')
             $('#b_rules').html('')
-            $.each( data,
+            $.each( data.sort(dynamic_sort('priority')),
                 function( _k ) {
                     var uid = data[_k]['id']
                     var val = data[_k]
