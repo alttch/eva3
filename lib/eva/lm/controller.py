@@ -194,6 +194,11 @@ def save_lvar_state(item):
     except:
         logging.critical('db error')
         eva.core.log_traceback()
+        try:
+            c.close()
+            db.close()
+        except:
+            pass
         return False
 
 
