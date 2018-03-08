@@ -1,6 +1,6 @@
 E.V.A. ICS v3. https://www.eva-ics.com/
 
-Builds: https://www.eva-ics.com/download/3.0.0/stable/
+Builds: https://www.eva-ics.com/download/3.0.1/stable/
 
 Documentation: https://wiki.eva-ics.com/
 
