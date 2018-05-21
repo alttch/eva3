@@ -338,8 +338,8 @@ function load_units() {
                 function( _k ) {
                     var uid = data[_k]['id']
                     var val = data[_k]
-                    _unit = $('<div />', { 'class': 'col-xs-3'})
-                    _unit_actions = $('<div />', { 'class': 'col-xs-5'})
+                    _unit = $('<div />', { 'class': 'col-md-5 col-sm-8 col-xs-12'})
+                    _unit_actions = $('<div />', { 'class': 'col-md-3 col-sm-2 col-xs-12'})
                     items[uid] = val
                     as_labels[uid] = new Object()
                     $.each(data[_k].status_labels,
@@ -355,7 +355,7 @@ function load_units() {
                                             btn_action(uid, st)
                                         }).appendTo(_unit_actions)
                     })
-                    _unit_buttons = $('<div />', { 'class': 'col-xs-4'})
+                    _unit_buttons = $('<div />', { 'class': 'col-md-4 col-sm-2 col-xs-12'})
                     //if (master) {
                         //$('<button />', { 'class': 'st0',
                             //html: 'CFG' }).appendTo(_unit_buttons)
@@ -438,11 +438,11 @@ function load_sensors() {
                     var uid = data[_k]['id']
                     var val = data[_k]
                     items[uid] = val
-                    _sensor = $('<div />', { 'class': 'col-xs-5'})
-                    _sensor_state = $('<div />', { 'class': 'col-xs-3'})
+                    _sensor = $('<div />', { 'class': 'col-sm-7 col-xs-12'})
+                    _sensor_state = $('<div />', { 'class': 'col-sm-3 col-xs-12'})
                     $('<span />', { id: 'sval_' + uid, 'class': 'sval' ,
                         html: val.value }).appendTo(_sensor_state)
-                    _sensor_buttons = $('<div />', { 'class': 'col-xs-4'})
+                    _sensor_buttons = $('<div />', { 'class': 'col-sm-2 col-xs-12', 'style': 'text-align:center;'})
                     //if (master) {
                         //$('<button />', { 'class': 'st0',
                             //html: 'CFG' }).appendTo(_sensor_buttons)

@@ -38,11 +38,11 @@ def usage(version_only = False):
  -f config_file     start with an alternative config file
  -d                 run in background
 
-for production use uc-control only to start/stop UC
+for production use sfa-control only to start/stop SFA
 """)
 
 
-product_build = 2018022101
+product_build = 2018052101
 
 product_code = 'sfa'
 

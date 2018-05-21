@@ -520,7 +520,7 @@ def wait_for(func, wait_timeout = None, delay = None, wait_for_false = False):
 def log_traceback(display = False, notifier = False, force = False):
     if (show_traceback or force) and not display:
         pfx = '.' if notifier else ''
-        logging.debug(pfx + traceback.format_exc())
+        logging.error(pfx + traceback.format_exc())
     elif display:
         print(traceback.format_exc())
 

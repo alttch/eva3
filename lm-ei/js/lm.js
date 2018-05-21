@@ -247,9 +247,9 @@ function set_lvar_state(uid) {
 function select_lvar_state(uid) {
     var html = '<form class="form-horizontal">' +
                 '<div class="form-group">' +
-                    '<label class="col-xs-6 control-label"' +
+                    '<label class="col-xs-4 control-label"' +
                        ' for="lvar_status">Status</label>' +
-                    '<div class="col-xs-6">' +
+                    '<div class="col-xs-8 col-sm-6">' +
                         '<select class="form-control" id="lvar_status">'
     $.each(lvar_state_labels, function (_k, v) {
         html += '<option value="' + _k + '"'
@@ -260,9 +260,9 @@ function select_lvar_state(uid) {
     if (value == 'null') value = ''
     html += '</select></div></div>' + 
             '<div class="form-group">' +
-                '<label class="col-xs-6 control-label"' +
+                '<label class="col-xs-4 control-label"' +
                     ' for="lvar_value">Value</label>' +
-                '<div class="col-xs-6">' +
+                '<div class="col-xs-8 col-sm-6">' +
                 '<input class="form-control" type="text" size="5"' +
                     'id="lvar_value" value="' + value +
                     '" /></div></div></form>'
@@ -289,9 +289,9 @@ function load_lvars() {
                 function( _k ) {
                     var uid = data[_k]['id']
                     var val = data[_k]
-                    _lvar = $('<div />', { 'class': 'col-xs-3'})
-                    _lvar_expires = $('<div />', { 'class': 'col-xs-2'})
-                    _lvar_state = $('<div />', { 'class': 'col-xs-3'})
+                    _lvar = $('<div />', { 'class': 'col-sm-4 col-xs-12'})
+                    _lvar_expires = $('<div />', { 'class': 'col-sm-2 col-xs-12'})
+                    _lvar_state = $('<div />', { 'class': 'col-sm-4 col-xs-12'})
                     var _e_label = ''
                     if (val.expires > 0) {
                         _e_label = '<span class="hidden-xs">E: </span>'
@@ -307,7 +307,7 @@ function load_lvars() {
                     $('<span />', { id: 'lval_' + uid, 'class': 'lval' ,
                         html: val.value }).appendTo(_lvar_state)
                     items[uid] = val
-                    _lvar_buttons = $('<div />', { 'class': 'col-xs-4'})
+                    _lvar_buttons = $('<div />', { 'class': 'col-sm-2 col-xs-12', 'style': 'text-align:center;'})
                     $('<button />', { 'class': 'st0',
                             html: 'SET' }).attr(
                                 'onclick','select_lvar_state("' +
@@ -439,8 +439,8 @@ function load_macros() {
                 function( _k ) {
                     var uid = data[_k]['id']
                     var val = data[_k]
-                    _macro = $('<div />', { 'class': 'col-xs-6'})
-                    _macro_buttons = $('<div />', { 'class': 'col-xs-6'})
+                    _macro = $('<div />', { 'class': 'col-md-9 col-sm-8 col-xs-12'})
+                    _macro_buttons = $('<div />', { 'class': 'col-md-3 col-sm-4 col-xs-12', 'style': 'text-align:center;'})
                     if (master) {
                         $('<button />', {
                             id: 'btn_macro_enable_' + uid,
@@ -691,33 +691,33 @@ function edit_rule_dialog(i) {
     // row 1
     var html = '<form class="form-horizontal">'
     html += '<div class="form-group">' +
-                '<label class="col-xs-3 control-label" id="l_rule_priority"' +
+                '<label class="col-xs-5 col-sm-3 control-label" id="l_rule_priority"' +
                 ' for="rule_priority">Priority</label>' +
-                '<div class="col-xs-3">' + 
+                '<div class="col-xs-7 col-sm-3">' + 
                 '<input class="form-control" type="text" size="5"' +
                 'id="rule_priority" value="' + _priority + '">' +
             '</div>'
     html += '' +
-                '<label class="col-xs-3 control-label" id="l_rule_chillout"' +
+                '<label class="col-xs-5 col-sm-3 control-label" id="l_rule_chillout"' +
                     ' for="rule_chillout">Chillout</label>' +
-                '<div class="col-xs-3">' +
+                '<div class="col-xs-7 col-sm-3">' +
                 '<input class="form-control" type="text" size="5"' +
                     'id="rule_chillout" value="' + _chillout +
                     '" /></div></div>'
     // row 2
     html += '<div class="form-group">' +
-                    '<label class="col-xs-3 control-label"' +
+                    '<label class="col-xs-5 col-sm-3 control-label"' +
                        ' for="rule_description">Descr' +
                            '<span class="hidden-xs">iption</span></label>' +
-                    '<div class="col-xs-9">' + 
+                    '<div class="col-xs-7 col-sm-9">' + 
                     '<input class="form-control" type="text" size="15"' +
                         'id="rule_description" value="' + _description + '">' +
             '</div></div>'
     // row 3
     html += '<div class="form-group">' +
-                    '<label class="col-xs-3 control-label"' +
+                    '<label class="col-xs-5 col-sm-3 control-label"' +
                        ' for="rule_for_prop">Property</label>' +
-                    '<div class="col-xs-3">' +
+                    '<div class="col-xs-7 col-sm-3">' +
                         '<select class="form-control" id="rule_for_prop">'
     $.each(dm_rule_for_props, function (_k, v) {
         html += '<option value="' + v + '"'
@@ -726,9 +726,9 @@ function edit_rule_dialog(i) {
         })
     html += '</select></div>'
     html += '' +
-                    '<label class="col-xs-3 control-label"' +
+                    '<label class="col-xs-5 col-sm-3 control-label"' +
                        ' for="rule_item_type">For&nbsp;item</label>' +
-                    '<div class="col-xs-3">' +
+                    '<div class="col-xs-7 col-sm-3">' +
                         '<select class="form-control" id="rule_item_type">'
     $.each(dm_rule_item_types, function (_k, v) {
         html += '<option value="' + v + '"'
@@ -738,24 +738,24 @@ function edit_rule_dialog(i) {
     html += '</select></div></div>'
     // row 4
     html += '<div class="form-group">' +
-                '<label class="col-xs-3 control-label"' +
+                '<label class="col-xs-5 col-sm-3 control-label"' +
                     ' for="rule_for_group">Group</label>' +
-                '<div class="col-xs-4">' +
+                '<div class="col-xs-7 col-sm-4">' +
                 '<input class="form-control" type="text" size="5"' +
                     'id="rule_for_group" value="' + _for_group +
                     '" /></div>'
     html += '' +
-                '<label class="col-xs-2 control-label"' +
+                '<label class="col-xs-5 col-sm-2 control-label"' +
                     ' for="rule_for_item_id">ID</label>' +
-                '<div class="col-xs-3">' +
+                '<div class="col-xs-7 col-sm-3">' +
                 '<input class="form-control" type="text" size="5"' +
                     'id="rule_for_item_id" value="' + _for_item_id +
                     '" /></div></div>'
     // row 5
     html += '<div class="form-group">' +
-                    '<label class="col-xs-3 control-label"' +
+                    '<label class="col-xs-5 col-sm-3 control-label"' +
                        ' for="rule_condition">Condition</label>' +
-                    '<div class="col-xs-3">' +
+                    '<div class="col-xs-7 col-sm-3">' +
                         '<select class="form-control" id="rule_condition"' +
                         ' onchange="rule_form_condition_switch()">'
     $.each(dm_rule_conditions, function (_k, v) {
@@ -766,10 +766,10 @@ function edit_rule_dialog(i) {
     html += '</select></div>'
         // condition forms
         // equals
-    html += '<label class="hidden col-xs-3 control-label"' +
+    html += '<label class="hidden col-xs-5 col-sm-3 control-label"' +
                        ' for="rule_in_range_min" id="l_rule_cond_eq">' + 
                        'x&nbsp;==</label>' +
-                    '<div class="hidden col-xs-3" id="d_rule_cond_eq">' +
+                    '<div class="hidden col-xs-7 col-sm-3" id="d_rule_cond_eq">' +
                         '<input class="form-control" type="text" size="5"' +
                         'id="rule_in_range_min" value="' + _in_range_min +
                     '"></div>'
@@ -781,7 +781,7 @@ function edit_rule_dialog(i) {
     html += '<div class="col-xs-4 col-sm-2" id="d_rule_cond_range_min">' +
                         '<input class="form-control" type="text" size="2"' +
                         'id="rule_in_range_min_r" value="' + _in_range_min +
-                    '"></div><div class="col-xs-3 col-sm-2"' + 
+                    '"></div><div class="col-xs-4 col-sm-2"' + 
                     ' id="d_rule_cond_range_min_eq">'
     html += '<select class="form-control" id="rule_in_range_min_eq">'
     html += '<option value="0">&lt;</option>'
@@ -789,10 +789,14 @@ function edit_rule_dialog(i) {
                 '>&lt;=</option>'
     html += '</select>'
     html += '</div>'
-    html += '<label class="col-xs-1 col-sm-1 control-label" ' + 
+    html += '<label class="col-xs-4 visible-xs control-label" ' +
+                    'id="l_rule_cond_range"  ' +
+                    'for="rule_in_range_min_r" ' +
+                    'style="margin-top:7px">x</label>'
+    html += '<label class="col-xs-4 col-sm-1 control-label" ' + 
                     'id="l_rule_cond_range" ' +
-                    ' for="rule_in_range_min_r">x</label>' +
-                    '<div class="col-xs-3 col-sm-2"' +
+                    ' for="rule_in_range_max_r">x</label>' +
+                    '<div class="col-xs-4 col-sm-2"' +
                     ' id="d_rule_cond_range_max_eq">'
     html += '<select class="form-control" id="rule_in_range_max_eq">'
     html += '<option value="0">&lt;</option>'
@@ -806,9 +810,9 @@ function edit_rule_dialog(i) {
                     '"></div></div>'
     // row 6
     html += '<div class="form-group">' +
-                    '<label class="col-xs-3 control-label"' +
+                    '<label class="col-xs-5 col-sm-3 control-label"' +
                        ' for="rule_for_initial">Initial</label>' +
-                    '<div class="col-xs-3">' +
+                    '<div class="col-xs-7 col-sm-3">' +
                         '<select class="form-control" id="rule_for_initial">'
     $.each(dm_rule_for_initial, function (_k, v) {
         html += '<option value="' + v + '"'
@@ -817,9 +821,9 @@ function edit_rule_dialog(i) {
         })
     html += '</select></div>'
     html += '' +
-                    '<label class="col-xs-3 control-label"' +
+                    '<label class="col-xs-5 col-sm-3 control-label"' +
                        ' for="rule_break">Break</label>' +
-                    '<div class="col-xs-3">' +
+                    '<div class="col-xs-7 col-sm-3">' +
                         '<select class="form-control" id="rule_break">'
     $.each(dm_rule_break, function (_k, v) {
         html += '<option value="' + v + '"'
@@ -829,16 +833,16 @@ function edit_rule_dialog(i) {
     html += '</select></div></div>'
     // row 7
     html += '<div class="form-group">' +
-                '<label class="col-xs-3 control-label"' +
+                '<label class="col-xs-5 col-sm-3 control-label"' +
                     ' for="rule_macro">Macro</label>' +
-                '<div class="col-xs-3">' +
+                '<div class="col-xs-7 col-sm-3">' +
                 '<input class="form-control" type="text" size="5"' +
                     'id="rule_macro" value="' + _macro +
                     '" /></div>'
     html += '' +
-                '<label class="col-xs-3 control-label"' +
+                '<label class="col-xs-5 col-sm-3 control-label"' +
                     ' for="rule_macro_args">Args</label>' +
-                '<div class="col-xs-3">' +
+                '<div class="col-xs-7 col-sm-3">' +
                 '<input class="form-control" type="text" size="5"' +
                     'id="rule_macro_args" value="' + _macro_args +
                     '" /></div></div>'
@@ -910,9 +914,9 @@ function load_rules() {
                     var uid = data[_k]['id']
                     var val = data[_k]
                     dm_rules[uid] = val
-                    _rule = $('<div />', { 'class': 'col-xs-5'})
-                    _rule_info = $('<div />', { 'class': 'col-xs-3'})
-                    _rule_buttons = $('<div />', { 'class': 'col-xs-4'})
+                    _rule = $('<div />', { 'class': 'col-md-5 col-sm-6 col-xs-12'})
+                    _rule_info = $('<div />', { 'class': 'col-md-3 col-sm-4 col-xs-12'})
+                    _rule_buttons = $('<div />', { 'class': 'col-md-4 col-sm-2 col-xs-12', 'style': 'text-align:center;'})
                     $('<button />', {
                         id: 'btn_rule_enable_' + uid,
                         'class': 'st0' +

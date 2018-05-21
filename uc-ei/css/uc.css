@@ -1,3 +1,8 @@
+body {
+    word-break: break-word;
+    word-break: break-all;
+}
+
 div { outline: none; }
 
 .board { min-height: 280px; }
@@ -288,4 +293,16 @@ img.tbtn.disabled {
 	-webkit-border-radius : 32px;
 	border: none;
 	cursor: auto;
+}
+
+@media (max-width: 767px) {
+    .row-device button {
+        margin: 10px 2px 0px;
+    }
+}
+
+@media(max-width:450px) {
+    #toolbar_log {
+        padding: 8px 5px;
+    }
 }

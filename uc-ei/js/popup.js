@@ -36,12 +36,12 @@ function popup(pclass, title, msg, btn1, btn2, btn1a, btn2a) {
         btn2.appendTo($('#popup_btn_2'))
         $('#popup_btn_1').removeClass()
         $('#popup_btn_2').removeClass()
-        $('#popup_btn_1').addClass('col-xs-4')
-        $('#popup_btn_2').addClass('col-xs-4')
+        $('#popup_btn_1').addClass('col-xs-5 col-sm-4')
+        $('#popup_btn_2').addClass('col-xs-5 col-sm-4')
         $('#popup_btn_2').show()
     } else {
         $('#popup_btn_1').removeClass()
-        $('#popup_btn_1').addClass('col-xs-8')
+        $('#popup_btn_1').addClass('col-xs-10 col-sm-8')
         $('#popup_btn_2').hide()
     }
     safe_close_tool_menu()
