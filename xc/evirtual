@@ -1,0 +1,400 @@
+#!/usr/bin/env python3
+
+__author__ = "Altertech Group, http://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2017 Altertech Group"
+__license__ = "See http://www.eva-ics.com/"
+__version__ = "3.0.1"
+
+import jsonpickle
+import os
+import sys
+import time
+import glob
+import logging
+
+version = __version__
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+dir_config = os.path.dirname(os.path.realpath(__file__)) + \
+        '/../runtime/virtual'
+
+import eva.core
+from eva.tools import format_json
+
+class VirtualItem(object):
+
+    def __init__(self, item_id, item_type = None):
+        self.item_id = item_id
+        self.item_type = item_type
+        self.status = 0
+        self.value = 'null'
+        self.item_ids = []
+        self.items = []
+        self.delay = 0
+        self.update_delay = 0
+        self.exitcode = 0
+        self.update_exitcode = 0
+        self.accept_status = True
+        self.accept_value = True
+        self.active = False
+
+
+    def load(self):
+        fname_full = self.get_fname()
+        try:
+            raw = ''.join(open(fname_full).readlines())
+        except:
+            print('can not load %s. init it first' % self.item_id)
+            return False
+        try:
+            data = jsonpickle.decode(raw)
+        except:
+            print('can not load %s. bad config, reinit it' % self.item_id)
+            sys.exit(99)
+        if data['id'] != self.item_id:
+            raise Exception('id mismatch, file %s' % fname_full)
+        self.item_type = data['item_type']
+        self.status = data['status']
+        self.value = data['value']
+        try:
+            self.active = data['active']
+        except:
+            self.active = False
+        self.delay = data['delay']
+        self.update_delay = data['update_delay']
+        self.exitcode = data['exitcode']
+        self.update_exitcode = data['update_exitcode']
+        self.accept_status = data['accept_status']
+        self.accept_value = data['accept_value']
+        self.item_ids = data['items']
+        if self.item_type == 'mu':
+            for i in self.item_ids:
+                v = VirtualItem(i)
+                if v.load(): self.items.append(v)
+                else:
+                    print('problem in config %s, sub item %s not found' % \
+                            (self.item_id, i))
+        return True
+
+
+    def get_fname(self):
+        return dir_config + '/' + self.item_id + '.json'
+
+
+    def set_state(self, status, value):
+        self.status = status
+        self.value = value
+        self.update_if_active()
+
+
+    def save(self):
+        fname_full = self.get_fname()
+        data = self.serialize()
+        open(fname_full,'w').write(format_json(data, minimal = False))
+
+
+    def update_if_active(self):
+        if not self.active: return
+        import eva.client.apiclient
+        api = eva.client.apiclient.APIClientLocal('uc')
+        if self.value is not None:
+            _value = self.value
+        else:
+            _value = 'null'
+        params = {
+                'i': self.item_id,
+                's': self.status,
+                'v': _value,
+                'force_virtual': 1
+                }
+        code, result = api.call('update', params)
+        if code == eva.client.apiclient.result_ok:
+            print('Active item state reported to UC')
+        else:
+            print('Active item reporting failed!')
+        return
+
+
+    def run_update(self):
+        time.sleep(self.update_delay)
+        result = ''
+        if self.item_type == 'unit' or self.item_type == 'sensor':
+            result = str(self.status)
+            if self.value is not None:
+                result += ' ' + self.value
+        elif self.item_type == 'mu':
+            for i in self.items:
+                result += str(i.status) + ' ' + str(i.value)
+                result += '\n'
+            result = result.strip()
+        print(result)
+        sys.exit(self.update_exitcode)
+
+
+    def run_action(self, nstatus, nvalue):
+        if self.item_type != 'unit':
+            print('no actions for %s\n' % self.item_type)
+            return
+        print('virtual %s %s, status = %s, value = \'%s\'' % \
+                (self.item_type, self.item_id, self.status, self.value),
+                end = '|')
+        print('action status = %s, value = \'%s\'' % \
+                (nstatus, nvalue), end = '|')
+        if self.delay:
+            print('delaying %f seconds' % self.delay, end = '|')
+            time.sleep(self.delay)
+        if self.accept_status:
+            print('SET status = %u' % nstatus, end = '|')
+            self.status = nstatus
+        else:
+            print('IGNORE status', end = '|')
+        if self.accept_value:
+            print('SET value = \'%s\'' % nvalue, end = '|')
+            self.value = nvalue
+        else:
+            print('IGNORE value', end = '|')
+        self.save()
+        print('exit code %u' % self.exitcode)
+        self.update_if_active()
+        sys.exit(self.exitcode)
+
+
+    def serialize(self):
+        d = {}
+        d['id'] = self.item_id
+        d['item_type'] = self.item_type
+        d['status'] = self.status
+        d['value'] = self.value
+        d['items'] = self.item_ids
+        d['active'] = self.active
+        d['delay'] = self.delay
+        d['update_delay'] = self.update_delay
+        d['exitcode'] = self.exitcode
+        d['update_exitcode'] = self.update_exitcode
+        d['accept_status'] = self.accept_status
+        d['accept_value'] = self.accept_value
+        return d
+
+
+    def show(self):
+        print(self.item_type + ' ' + self.item_id)
+        if self.item_type == 'unit' or self.item_type == 'sensor':
+            print('status = %s, value = "%s"' % (self.status, self.value),
+                    end = ' ')
+            if self.active: print('A', end = '')
+            print()
+        elif self.item_type ==  'mu':
+            for i in self.items:
+                print('%s status = %s, value = "%s"' %
+                        (i.item_id, i.status, i.value))
+        print('----------------------------')
+        if self.item_type == 'unit':
+            print('on action: ')
+            if self.delay > 0: print ('--> delay %f' % self.delay)
+            if self.exitcode:
+                print('--> exit with code %u' % self.exitcode)
+            print()
+            if self.accept_status:
+                print('SET status')
+            else:
+                print('IGNORE status')
+            if self.accept_value:
+                print('SET value')
+            else:
+                print('IGNORE value')
+            print('----------------------------')
+        print('on update: ')
+        if self.update_delay > 0: print ('--> delay %f' % self.update_delay)
+        if self.update_exitcode:
+            print('--> exit with code %u' % self.update_exitcode)
+
+
+def usage():
+    print()
+    print('EVA virtual simulation app version %s' % version)
+    print("""
+Usage:
+
+    evirtual list                          list virtual items
+
+    evirtual <unit|sensor|mu> <id>         show item properties
+
+Unit/sensor:
+
+    evirtual [unit|sensor] <unit_id> init [status] [value]
+                                           create a unit/sensor, set
+                                           initial state
+
+    evirtual <unit|sensor> <id> set <status> [value]
+                                           set unit status/sensor status and
+                                           value
+
+    evirtual unit <unit_id> <status> [value]
+                                           perform unit action
+
+                                           status can be "on", "off" or just
+                                           integer, "on" and "off" will be
+                                           converted to 1 and 0
+
+    evirtual <unit|sensor> <id> x          set item active (auto status report)
+
+    evirtual <unit|sensor> <id> nx         set item inactive
+
+
+Multi update:
+
+    evirtual mu <id> init <item1,item2...> create multi update
+
+Remove virtual configuration:
+
+    evirtual <type> <id> rm                remove an item
+
+Delay/failure simulation:
+
+    evirtual unit <id> as                  accept status after action
+    evirtual unit <id> is                  ignore status without any error
+                                           (equipment failure simulation)
+    evirtual unit <id> av                  accept value after action
+    evirtual unit <id> iv                  ignore value
+    evirtual unit <id> a                   accept everything after action
+    evirtual unit <id> i                   ignore everything
+
+    evirtual unit <id> d <n>               <n> seconds delay when running an
+                                           action (use 0.xxx for milliseconds)
+
+    evirtual unit <id> e <code>            exit action with a code,
+                                           0 for normal, other for failed
+
+Update behavior (common):
+
+    evirtual <type> <id> ud <n>            n seconds delay when running
+                                           status/value update
+
+    evirtual <type> <id> ue <code>         exit update with a code,
+                                           0 for normal, other for failed
+
+    to use with EVA, item must also be set to virtual mode ("virtual": true)
+    in item config/property
+    """)
+
+
+try:
+    item_type = sys.argv[1]
+except:
+    usage()
+    sys.exit(99)
+
+if item_type == 'l' or item_type == 'list':
+    items = []
+    for i in glob.glob(dir_config + '/' + '*.json'):
+        d = os.path.basename(i).split('.')
+        try:
+            item_id = '.'.join(d[:len(d)-1])
+        except:
+            item_id = d[0]
+        v = VirtualItem(item_id)
+        if v.load():
+            items.append(v)
+        else:
+            print('bad config %s' % item_id)
+    items = sorted(items, key=lambda k: k.item_id) 
+    items = sorted(items, key=lambda k: k.item_type) 
+    for i in items:
+        print('%s %s' % (i.item_type, i.item_id), end = '')
+        if i.item_type == 'unit' or i.item_type == 'sensor':
+            print(' : s = %s, v = "%s"' % (i.status, i.value), end = ' ')
+            if i.active: print ('A', end = '')
+        print()
+    sys.exit()
+
+try:
+    item_id = sys.argv[2]
+except:
+    usage()
+    sys.exit(99)
+try: item_cmd = sys.argv[3]
+except: item_cmd = None
+try: item_arg1 = sys.argv[4]
+except: item_arg1 = None
+try: item_arg2 = sys.argv[5]
+except: item_arg2 = None
+
+v = VirtualItem(item_id, item_type)
+
+if item_cmd == 'init':
+    if item_type == 'unit' or item_type == 'sensor':
+        if item_arg1 is not None:
+            if item_arg1 == 'on': cmd = 1
+            elif item_arg1 == 'off': cmd = 0
+            v.status = int(item_arg1)
+        if item_arg2 is not None: v.value = item_arg2
+    elif item_type == 'mu':
+        if item_arg1 is None:
+            print ('no items to work on')
+            sys.exit(99)
+        v.item_ids = item_arg1.split(',')
+        v.save()
+        v.load()
+    else:
+        print('unknown type')
+        sys.exit(99)
+    v.show()
+    if item_type[:3] != 'mu': v.save()
+    sys.exit()
+
+if not v.load(): sys.exit(99)
+
+if item_cmd is None:
+    v.show()
+    sys.exit()
+elif item_cmd == 'update':
+    v.run_update()
+    sys.exit()
+elif item_cmd == 'x':
+    v.active = True
+elif item_cmd == 'nx':
+    v.active = False
+elif item_cmd == 'd':
+    v.delay = float(item_arg1)
+elif item_cmd == 'ud':
+    v.update_delay = float(item_arg1)
+elif item_cmd == 'e':
+    v.exitcode = int(item_arg1)
+elif item_cmd == 'ue':
+    v.update_exitcode = int(item_arg1)
+elif item_cmd == 'as':
+    v.accept_status = True
+elif item_cmd == 'is':
+    v.accept_status = False
+elif item_cmd == 'av':
+    v.accept_value = True
+elif item_cmd == 'iv':
+    v.accept_value = False
+elif item_cmd == 'a':
+    v.accept_status = True
+    v.accept_value = True
+elif item_cmd == 'i':
+    v.accept_status = False
+    v.accept_value = False
+elif item_cmd == 'set':
+    if item_type == 'unit' or item_type == 'sensor':
+        if item_arg2 is None: item_arg2 = ''
+        if item_arg1 == 'on': cmd = 1
+        elif item_arg1 == 'off': cmd = 0
+        else: cmd = item_arg1
+        v.set_state(int(cmd), item_arg2)
+elif item_cmd == 'rm':
+    print('removing %s' % item_id)
+    os.unlink(dir_config + '/' + item_id + '.json')
+    sys.exit()
+else:
+    if item_cmd == 'on': cmd = 1
+    elif item_cmd == 'off': cmd = 0
+    else: cmd = int(item_cmd)
+    if item_arg1 is None: item_arg1 = ''
+    v.run_action(cmd, item_arg1)
+
+v.save()
+v.show()
