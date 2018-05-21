@@ -50,6 +50,10 @@ def load(fname = None):
         for ks in cfg.sections():
             try:
                 k = cfg.get(ks, 'key')
+                if k in _keys.keys():
+                    logging.warning(
+                            'duplicate key %s, problems might occur' % \
+                                    k)
                 key = APIKey(k, ks)
                 try: key.master = (cfg.get(ks, 'master') == 'yes')
                 except: pass
@@ -99,7 +103,6 @@ def load(fname = None):
                 except: pass
                 _keys[k] = key
                 _keys_by_id[ks] = key
-                logging.debug('+ API KEY %s' % k)
                 if key.master and not _masterkey:
                     _masterkey = k
                     logging.info('+ masterkey loaded')
