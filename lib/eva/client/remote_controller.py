@@ -98,18 +98,21 @@ class RemoteController(eva.item.Item):
         if prop == 'uri' and val:
             if self.api._uri != val:
                 self.api.set_uri(val)
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'key':
             if self._key != val:
                 self._key = val
                 self.api.set_key(eva.apikey.format_key(val))
+                self.log_set(prop, '*****')
                 self.set_modified(save)
             return True
         elif prop == 'timeout':
             if val is not None:
                 try:
                     self.api.set_timeout(int(val))
+                    self.log_set(prop, val)
                     self.set_modified(save)
                     return True
                 except:
@@ -125,6 +128,7 @@ class RemoteController(eva.item.Item):
                     if v is None: return False
                     if self.api._ssl_verify != v:
                         self.api.ssl_verify(v)
+                        self.log_set(prop, v)
                         self.set_modified(save)
                     return True
                 except:
@@ -139,6 +143,7 @@ class RemoteController(eva.item.Item):
                 if self.pool:
                     self.pool.remove(self.item_id)
                     self.pool.append(self)
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'reload_interval':
@@ -146,6 +151,7 @@ class RemoteController(eva.item.Item):
                 v = float(val)
                 if self.reload_interval != v:
                     self.reload_interval = v
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             except:

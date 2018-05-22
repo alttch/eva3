@@ -91,8 +91,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if v is not None:
                 if self.action_always_exec != v:
                     self.action_always_exec = v
-                    logging.info('set %s.action_always_exec = %s' % \
-                            (self.full_id, self.action_always_exec))
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -102,8 +101,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if v is not None:
                 if self.update_exec_after_action != v:
                     self.update_exec_after_action = v
-                    logging.info('set %s.update_exec_after_action = %s' % \
-                            (self.full_id, self.update_exec_after_action))
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -113,8 +111,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if v is not None:
                 if self.update_state_after_action != v:
                     self.update_state_after_action = v
-                    logging.info('set %s.update_state_after_action = %s' % \
-                            (self.full_id, self.update_state_after_action))
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -124,8 +121,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if v is not None:
                 if self.update_if_action != v:
                     self.update_if_action = v
-                    logging.info('set %s.update_if_action = %s' % \
-                            (self.full_id, self.update_if_action))
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -141,8 +137,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if auto_off < 0: return False
             if self.auto_off != auto_off:
                 self.auto_off = auto_off
-                logging.info('set %s.auto_off = %s' % \
-                        (self.full_id, self.auto_off))
+                self.log_set(prop, auto_off)
                 self.set_modified(save)
                 if not auto_off:
                     self.stop_auto_processor()
@@ -158,14 +153,17 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if s == '0' and (val is None or val == ''):
                 if self.status_labels['0'] != status_label_off:
                     self.status_labels['0'] = status_label_off
+                    self.log_set('status_labels[0]', status_label_off)
                     self.set_modified(save)
             elif s == '1' and (val is None or val == ''):
                 if self.status_labels['1'] != status_label_on:
                     self.status_labels['1'] = status_label_on
+                    self.log_set('status_labels[1]', status_label_on)
                     self.set_modified(save)
             elif val is not None and val != '':
                 if not s in self.status_labels or self.status_labels[s] != val:
                     self.status_labels[s] = val
+                    self.log_set('status_labels[' + s + ']', val)
                     self.set_modified(save)
             else:
                 if not s in self.status_labels: return False

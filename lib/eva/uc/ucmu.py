@@ -18,8 +18,7 @@ class UCMultiUpdate(eva.item.MultiUpdate):
                     return False
                 else:
                     self.append(item)
-                    logging.info('set %s.items += %s' % \
-                            (self.full_id, item.item_id))
+                    self.log_set(prop, item.oid)
                     self.set_modified(save)
                 return True
             else:
@@ -30,8 +29,7 @@ class UCMultiUpdate(eva.item.MultiUpdate):
                     (item.item_type == 'unit' or item.item_type == 'sensor'):
                 result = self.remove(item)
                 if result:
-                    logging.info('set %s.items -= %s' % \
-                            (self.full_id, item.item_id))
+                    self.log_set(prop, item.oid)
                     self.set_modified(save)
                     return True
                 else:
@@ -51,6 +49,7 @@ class UCMultiUpdate(eva.item.MultiUpdate):
                 if not item or item in i2u: return False
                 i2u.append(item)
             self.items_to_update = i2u
+            self.log_set(prop, val)
             self.set_modified(save)
             return True
         else:

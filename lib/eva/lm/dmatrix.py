@@ -325,6 +325,7 @@ class DecisionRule(eva.item.Item):
             if v is not None:
                 if self.enabled != v:
                     self.enabled = v
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -341,6 +342,7 @@ class DecisionRule(eva.item.Item):
                 self.in_range_min = None
                 self.in_range_max = -1.0
                 self.for_prop = 'status'
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'priority':
@@ -351,6 +353,7 @@ class DecisionRule(eva.item.Item):
                 return False
             if self.priority != v:
                 self.priority = v
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         elif prop == 'for_item_type':
@@ -364,22 +367,26 @@ class DecisionRule(eva.item.Item):
             else: v = None
             if self.for_item_type != v:
                 self.for_item_type = v
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         elif prop == 'for_item_id':
             if self.for_item_id != val:
                 self.for_item_id = val
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'for_item_group':
             if self.for_item_group != val:
                 self.for_item_group = val
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'for_prop':
             if val not in [ 'status', 'value' ]: return False
             if self.for_prop != val:
                 self.for_prop = val
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'for_initial':
@@ -391,6 +398,7 @@ class DecisionRule(eva.item.Item):
                 v = None
             if self.for_initial != v:
                 self.for_initial = v
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         elif prop == 'in_range_min':
@@ -404,6 +412,7 @@ class DecisionRule(eva.item.Item):
                 v = None
             if self.in_range_min != v:
                 self.in_range_min = v
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         elif prop == 'in_range_max':
@@ -417,6 +426,7 @@ class DecisionRule(eva.item.Item):
                 v = None
             if self.in_range_max != v:
                 self.in_range_max = v
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         elif prop == 'in_range_min_eq':
@@ -424,6 +434,7 @@ class DecisionRule(eva.item.Item):
             if v is not None:
                 if self.in_range_min_eq != v:
                     self.in_range_min_eq = v
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -433,6 +444,7 @@ class DecisionRule(eva.item.Item):
             if v is not None:
                 if self.in_range_max_eq != v:
                     self.in_range_max_eq = v
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -440,6 +452,7 @@ class DecisionRule(eva.item.Item):
         elif prop == 'macro':
             if self.macro != val:
                 self.macro = val
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'macro_args':
@@ -449,6 +462,7 @@ class DecisionRule(eva.item.Item):
                 v = None
             if self.macro_args != v:
                 self.macro_args = v
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'break_after_exec':
@@ -456,6 +470,7 @@ class DecisionRule(eva.item.Item):
             if v is not None:
                 if self.break_after_exec != v:
                     self.break_after_exec = v
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -467,6 +482,7 @@ class DecisionRule(eva.item.Item):
                 return False
             if self.chillout_time != v:
                 self.chillout_time = v
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         return super().set_prop(prop, val, save)

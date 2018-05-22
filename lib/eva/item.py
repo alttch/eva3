@@ -34,13 +34,12 @@ class Item(object):
         if group: self.group = group
         else: self.group = 'nogroup'
         self.full_id = self.group + '/' + self.item_id
+        self.oid = self.item_type + ':' + self.full_id
 
 
     def update_config(self, data):
         if 'group' in data:
             self.set_group(data['group'])
-            self.group = data['group']
-            self.full_id = self.group + '/' + self.item_id
         if 'description' in data:
             self.description = data['description']
         self.config_changed = True
@@ -54,11 +53,14 @@ class Item(object):
                 v = val
             if self.description != v:
                 self.description = v
-                logging.info('set %s.description = "%s"' % \
-                        (self.full_id, self.description))
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         return False
+
+
+    def log_set(self, prop, val):
+        logging.info('set %s.%s = %s' % (self.oid, prop, val))
 
 
     def item_env(self):
@@ -96,6 +98,7 @@ class Item(object):
             d['config_changed'] = self.config_changed
         if info:
             d['full_id'] = self.full_id
+            d['oid'] = self.oid
         return d
 
 
@@ -252,8 +255,7 @@ class UpdatableItem(Item):
             if v is not None:
                 if self.virtual != v:
                     self.virtual = v
-                    logging.info('set %s.virtual = %s' % \
-                            (self.full_id, self.virtual))
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -268,8 +270,7 @@ class UpdatableItem(Item):
                     return False
             if self.expires != expires:
                 self.expires = expires
-                logging.info('set %s.expires = %s' % \
-                        (self.full_id, self.expires))
+                self.log_set(prop, expires)
                 self.set_modified(save)
                 if not expires:
                     self.stop_expiration_checker()
@@ -279,8 +280,7 @@ class UpdatableItem(Item):
         elif prop == 'update_exec':
             if self.update_exec != val:
                 self.update_exec = val
-                logging.info('set %s.update_exec = %s' % \
-                        (self.full_id, self.update_exec))
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'update_interval':
@@ -294,8 +294,7 @@ class UpdatableItem(Item):
             if update_interval < 0: return False
             if self.update_interval != update_interval:
                 self.update_interval = update_interval
-                logging.info('set %s.update_interval = %s' % \
-                        (self.full_id, self.update_interval))
+                self.log_set(prop, update_interval)
                 self.set_modified(save)
                 if not update_interval:
                     self.stop_update_scheduler()
@@ -306,8 +305,7 @@ class UpdatableItem(Item):
             if val is None:
                 if self.update_delay:
                     self.update_delay = 0
-                    logging.info('set %s.update_delay = %s' % \
-                        (self.full_id, self.update_delay))
+                    self.log_set(prop, 0)
                     self.set_modified(save)
             else:
                 try:
@@ -317,9 +315,7 @@ class UpdatableItem(Item):
                 if update_delay < 0: return False
                 if self.update_delay != update_delay:
                     self.update_delay = update_delay
-                    self.update_delay = update_delay
-                    logging.info('set %s.update_delay = %s' % \
-                        (self.full_id, self.update_delay))
+                    self.log_set(prop, update_delay)
                     self.set_modified(save)
             return True
         elif prop == 'update_timeout':
@@ -327,8 +323,7 @@ class UpdatableItem(Item):
                 if self._update_timeout is not None:
                     self.update_timeout = eva.core.timeout
                     self._update_timeout = None
-                    logging.info('set %s.update_timeout = %s' % \
-                        (self.full_id, self.update_timeout))
+                    self.log_set(prop, None)
                     self.set_modified(save)
             else:
                 try:
@@ -339,14 +334,14 @@ class UpdatableItem(Item):
                 if self._update_timeout != update_timeout:
                     self._update_timeout = update_timeout
                     self.update_timeout = update_timeout
-                    logging.info('set %s.update_timeout = %s' % \
-                        (self.full_id, self.update_timeout))
+                    self.log_set(prop, update_timeout)
                     self.set_modified(save)
             return True
         elif prop == 'snmp_trap' and self._snmp_traps_allowed:
             if val is None:
                 self.snmp_trap = None
                 self.unsubscribe_snmp_traps()
+                self.log_set(prop, None)
                 self.set_modified(save)
                 return True
             return False
@@ -355,6 +350,7 @@ class UpdatableItem(Item):
                 if self.snmp_trap and 'ident_vars' in self.snmp_trap:
                     del self.snmp_trap['ident_vars']
                     if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    self.log_set('snmp_trap.ident_vars', None)
                     self.set_modified(save)
                 return True
             else:
@@ -368,6 +364,7 @@ class UpdatableItem(Item):
                 if not self.snmp_trap: self.snmp_trap = {}
                 self.snmp_trap['ident_vars'] = ivars
                 self.subscribe_snmp_traps()
+                self.log_set('snmp_trap.ident_vars', val)
                 self.set_modified(save)
                 return True
         elif prop == 'snmp_trap.set_down' and self._snmp_traps_allowed:
@@ -375,6 +372,7 @@ class UpdatableItem(Item):
                 if self.snmp_trap and 'set_down' in self.snmp_trap:
                     del self.snmp_trap['set_down']
                     if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    self.log_set('snmp_trap.set_down', None)
                     self.set_modified(save)
                 return True
             else:
@@ -387,6 +385,7 @@ class UpdatableItem(Item):
                     return False
                 if not self.snmp_trap: self.snmp_trap = {}
                 self.snmp_trap['set_down'] = ivars
+                self.log_set('snmp_trap.set_down', val)
                 self.subscribe_snmp_traps()
                 self.set_modified(save)
                 return True
@@ -395,12 +394,14 @@ class UpdatableItem(Item):
                 if self.snmp_trap and 'set_status' in self.snmp_trap:
                     del self.snmp_trap['set_status']
                     if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    self.log_set('snmp_trap.set_status', None)
                     self.set_modified(save)
                 return True
             else:
                 if not self.snmp_trap: self.snmp_trap = {}
                 self.snmp_trap['set_status'] = val
                 self.subscribe_snmp_traps()
+                self.log_set('snmp_trap.set_status', val)
                 self.set_modified(save)
                 return True
         elif prop == 'snmp_trap.set_value' and self._snmp_traps_allowed:
@@ -408,18 +409,21 @@ class UpdatableItem(Item):
                 if self.snmp_trap and 'set_value' in self.snmp_trap:
                     del self.snmp_trap['set_value']
                     if not self.snmp_trap: self.unsubscribe_snmp_traps()
+                    self.log_set('snmp_trap.set_value', None)
                     self.set_modified(save)
                 return True
             else:
                 if not self.snmp_trap: self.snmp_trap = {}
                 self.snmp_trap['set_value'] = val
                 self.subscribe_snmp_traps()
+                self.log_set('snmp_trap.set_value', val)
                 self.set_modified(save)
                 return True
         elif prop == 'snmp_trap.set_if' and self._snmp_traps_allowed:
             if val is None:
                 if self.snmp_trap and 'set_if' in self.snmp_trap:
                     del self.snmp_trap['set_if']
+                    self.log_set('snmp_trap.set_if', None)
                     self.set_modified(save)
                     if not self.snmp_trap: self.unsubscribe_snmp_traps()
                 return True
@@ -438,6 +442,7 @@ class UpdatableItem(Item):
                     r['status'] = int(s)
                 if va != 'null':
                     r['value'] = va
+                self.log_set('snmp_trap.set_if+', val)
                 self.snmp_trap['set_if'].append(r)
             except:
                 return False
@@ -451,8 +456,7 @@ class UpdatableItem(Item):
                     self.mqtt_update = None
                     self.mqtt_update_notifier = None
                     self.mqtt_update_qos = 1
-                    logging.info('set %s.mqtt_update = %s' % \
-                        (self.full_id, self.mqtt_update))
+                    self.log_set(prop, None)
                     self.set_modified(save)
             else:
                 params = val.split(':')
@@ -474,8 +478,7 @@ class UpdatableItem(Item):
                     self.mqtt_update_notifier = n
                     self.mqtt_update_qos = qos
                     self.subscribe_mqtt_update()
-                    logging.info('set %s.mqtt_update = %s' % \
-                        (self.full_id, self.mqtt_update))
+                    self.log_set(prop, val)
                     self.set_modified(save)
             return True
         else:
@@ -1191,8 +1194,7 @@ class ActiveItem(Item):
             if v is not None:
                 if self.action_enabled != v:
                     self.action_enabled = v
-                    logging.info('set %s.action_enabled = %s' % \
-                            (self.full_id, self.action_enabled))
+                    self.log_set(prop, v)
                     self.notify()
                     self.set_modified(save)
                 return True
@@ -1201,8 +1203,7 @@ class ActiveItem(Item):
         elif prop == 'action_exec':
             if self.action_exec != val:
                 self.action_exec = val
-                logging.info('set %s.action_exec = %s' % \
-                        (self.full_id, self.action_exec))
+                self.log_set(prop, val)
                 self.set_modified(save)
             return True
         elif prop == 'mqtt_control':
@@ -1210,11 +1211,9 @@ class ActiveItem(Item):
                 if self.mqtt_control is not None:
                     self.unsubscribe_mqtt_control()
                     self.mqtt_control = None
-
                     self.mqtt_control_notifier = None
                     self.mqtt_control_qos = 1
-                    logging.info('set %s.mqtt_control = %s' % \
-                        (self.full_id, self.mqtt_control))
+                    self.log_set(prop, None)
                     self.set_modified(save)
             else:
                 params = val.split(':')
@@ -1236,8 +1235,7 @@ class ActiveItem(Item):
                     self.mqtt_control_notifier = n
                     self.mqtt_control_qos = qos
                     self.subscribe_mqtt_control()
-                    logging.info('set %s.mqtt_control = %s' % \
-                        (self.full_id, self.mqtt_control))
+                    self.log_set(prop, val)
                     self.set_modified(save)
             return True
         elif prop == 'action_queue':
@@ -1248,8 +1246,7 @@ class ActiveItem(Item):
             if not 0 <= v <= 2: return False
             if self.action_queue != v:
                 self.action_queue = v
-                logging.info('set %s.action_queue = %s' % \
-                    (self.full_id, self.action_queue))
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         elif prop == 'action_allow_termination':
@@ -1257,8 +1254,7 @@ class ActiveItem(Item):
             if v is not None:
                 if self.action_allow_termination != v:
                     self.action_allow_termination = v
-                    logging.info('set %s.action_allow_termination = %s' % \
-                            (self.full_id, self.action_allow_termination))
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -1268,8 +1264,7 @@ class ActiveItem(Item):
                 if self._action_timeout is not None:
                     self.action_timeout = eva.core.timeout
                     self._action_timeout = None
-                    logging.info('set %s.action_timeout = %s' % \
-                        (self.full_id, self.action_timeout))
+                    self.log_set(prop, None)
                     self.set_modified(save)
             else:
                 try:
@@ -1280,8 +1275,7 @@ class ActiveItem(Item):
                 if self._action_timeout != action_timeout:
                     self._action_timeout = action_timeout
                     self.action_timeout = action_timeout
-                    logging.info('set %s.action_timeout = %s' % \
-                        (self.full_id, self.action_timeout))
+                    self.log_set(prop, action_timeout)
                     self.set_modified(save)
             return True
         elif prop == 'term_kill_interval':
@@ -1289,8 +1283,7 @@ class ActiveItem(Item):
                 if self._term_kill_interval is not None:
                     self.term_kill_interval = eva.core.timeout
                     self._term_kill_interval = None
-                    logging.info('set %s.term_kill_interval = %s' % \
-                        (self.full_id, self.term_kill_interval))
+                    self.log_set(prop, None)
                     self.set_modified(save)
             else:
                 try:
@@ -1301,8 +1294,7 @@ class ActiveItem(Item):
                 if self._term_kill_interval != term_kill_interval:
                     self._term_kill_interval = term_kill_interval
                     self.term_kill_interval = term_kill_interval
-                    logging.info('set %s.term_kill_interval = %s' % \
-                        (self.full_id, self.term_kill_interval))
+                    self.log_set(prop, term_kill_interval)
                     self.set_modified(save)
             return True
         else:
@@ -1648,8 +1640,7 @@ class MultiUpdate(UpdatableItem):
             if val is not None:
                 if self.update_allow_check != val:
                     self.update_allow_check = val
-                    logging.info('set %s.update_allow_check = %s' % \
-                            (self.full_id, self.update_allow_check))
+                    self.log_set(prop, val)
                     self.set_modified(save)
                 return True
             else:

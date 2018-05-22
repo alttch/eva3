@@ -175,6 +175,7 @@ class Macro(eva.item.ActiveItem):
             if v is not None:
                 if self.api.pass_errors != v:
                     self.api.pass_errors = v
+                    self.log_set(prop, v)
                     self.set_modified(save)
                 return True
             else:
@@ -186,6 +187,7 @@ class Macro(eva.item.ActiveItem):
                 v = 'nogroup'
             if self.group != v:
                 self.update_config({'group': v})
+                self.log_set(prop, v)
                 self.set_modified(save)
             return True
         return super().set_prop(prop, val, save)
