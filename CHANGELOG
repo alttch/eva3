@@ -12,35 +12,37 @@
 
     Core
 
-        - each set_prop call now logs what's actually changed
-        - added item oid (type:group/item_id) - reserved for the future releases
+    fixes: remove empty controller group when all objects are deleted
+
+    - each set_prop call now logs what's actually changed
+    - added item oid (type:group/item_id) - reserved for the future releases
 
 3.0.1
     Minor release with some urgent features
 
     Core
 
-        - EVA_ITEM_PARENT_GROUP variable in script ENV which contains the parent group of the item
+    - EVA_ITEM_PARENT_GROUP variable in script ENV which contains the parent group of the item
 
-        - cvars now can be set as global or assigned to the specified item group
-          i.e. 'VAR1' - global cvar, available to the all scripts, 'group1/VAR2' - variable available
-          only to scripts from group 'group1' (as 'VAR2'), 'group2/VAR2' - variable available only
-          to group 'group2' (also as 'VAR2'). Used by UC scripts to let one script manage different items
+    - cvars now can be set as global or assigned to the specified item group
+        i.e. 'VAR1' - global cvar, available to the all scripts, 'group1/VAR2' - variable available
+         only to scripts from group 'group1' (as 'VAR2'), 'group2/VAR2' - variable available only
+         to group 'group2' (also as 'VAR2'). Used by UC scripts to let one script manage different items
 
     Universal Controller
 
-        - 'update_delay' - item passive update may start with a delay to prevent multiple updates
-          run simultaneously producing high system load
+    - 'update_delay' - item passive update may start with a delay to prevent multiple updates
+        run simultaneously producing high system load
 
-        UC API and uc-cmd:
+    UC API and uc-cmd:
 
-        - 'clone' function in UC API and uc-cmd to clone items
-        - 'clone_group' function in UC API and uc-cmd for cloning all matching items in a group
-        - 'destroy_group' function destroys all items in the specified group
+    - 'clone' function in UC API and uc-cmd to clone items
+    - 'clone_group' function in UC API and uc-cmd for cloning all matching items in a group
+    - 'destroy_group' function destroys all items in the specified group
 
     Logic Manager
 
-        - item id in LM rules match by simple mask (i.e. '*id*' or 'id*' or '*id')
+    - item id in LM rules match by simple mask (i.e. '*id*' or 'id*' or '*id')
 
 3.0.0
     First public release

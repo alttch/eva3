@@ -516,6 +516,8 @@ def destroy_item(item):
             del lvars_by_id[i.item_id]
             del lvars_by_full_id[i.full_id]
             del lvars_by_group[i.group][i.item_id]
+            if not lvars_by_group[i.group]:
+                del lvars_by_group[i.group]
         i.destroy()
         if eva.core.db_update == 1 and i.config_file_exists:
             try:

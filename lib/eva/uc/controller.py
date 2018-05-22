@@ -382,14 +382,20 @@ def destroy_item(item):
             del units_by_id[i.item_id]
             del units_by_full_id[i.full_id]
             del units_by_group[i.group][i.item_id]
+            if not units_by_group[i.group]:
+                del units_by_group[i.group]
         if i.item_type == 'sensor':
             del sensors_by_id[i.item_id]
             del sensors_by_full_id[i.full_id]
             del sensors_by_group[i.group][i.item_id]
+            if not sensors_by_group[i.group]:
+                del sensors_by_group[i.group]
         if i.item_type == 'mu':
             del mu_by_id[i.item_id]
             del mu_by_full_id[i.full_id]
             del mu_by_group[i.group][i.item_id]
+            if not mu_by_group[i.group]:
+                del mu_by_group[i.group]
         i.destroy()
         if eva.core.db_update == 1 and i.config_file_exists:
             try:
