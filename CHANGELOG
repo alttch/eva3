@@ -1,3 +1,20 @@
+3.0.2
+
+    Emergency interfaces
+
+     fixes: correct display of long item names
+     fixed: removed js minimalization (users got bugs and wrong behavor on some systems) until fixed
+     fixes: various bug fixes
+
+    LM EI
+
+    - reset button and expire timer in LM EI show/hide when prop changed
+
+    Core
+
+        - each set_prop call now logs what's actually changed
+        - added item oid (type:group/item_id) - reserved for the future releases
+
 3.0.1
     Minor release with some urgent features
 
