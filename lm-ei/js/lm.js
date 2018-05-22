@@ -96,10 +96,18 @@ function redraw_lvar_state(i) {
     }
   }
   $('[id="lval_' + i + '"]').html(items[i].value);
-  if (items[i].status != -1 && items[i].value != 'null')
-    $('[id="lval_expires_' + i + '"]').html(
-      format_expire_time(items[i].set_time, items[i].expires),
-    );
+  var _e_label = '';
+  var rb = $('[id="lval_rb_' + i + '"]');
+  if (items[i].expires > 0) {
+    _e_label = '<span class="hidden-xs">E: </span>';
+    rb.show();
+  } else {
+    rb.hide();
+  }
+  $('[id="lval_expires_' + i + '"]').html(
+    format_expire_time(items[i].set_time, items[i].expires),
+  );
+  $('[id="lval_expires_e_' + i + '"]').html(_e_label);
 }
 
 function load_lvar_state() {
@@ -291,6 +299,7 @@ function load_lvars() {
           _e_label = '<span class="hidden-xs">E: </span>';
         }
         $('<span />', {
+          id: 'lval_expires_e_' + uid,
           class: 'lval',
           html: _e_label,
         }).appendTo(_lvar_expires);
@@ -319,14 +328,13 @@ function load_lvars() {
         })
           .attr('onclick', 'select_lvar_state("' + uid + '")')
           .appendTo(_lvar_buttons);
-        if (val.expires > 0) {
-          $('<button />', {
-            class: 'st0',
-            html: 'RESET',
-          })
-            .attr('onclick', 'reset_lvar("' + uid + '")')
-            .appendTo(_lvar_buttons);
-        }
+        var rb = $('<button />', {
+          id: 'lval_rb_' + uid,
+          class: 'st0',
+          html: 'RESET',
+        }).attr('onclick', 'reset_lvar("' + uid + '")');
+        if (val.expires <= 0) rb.hide();
+        rb.appendTo(_lvar_buttons);
         var _r = $('<div />', {class: 'row row-device bg' + bg});
         var iname = uid;
         $('<div />', {
