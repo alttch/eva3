@@ -74,7 +74,7 @@ def get_mu(mu_id):
     return None
 
 
-def append_item(item, start = False, load = True):
+def append_item(item, start=False, load=True):
     try:
         if load and not item.load(): return False
     except:
@@ -148,7 +148,7 @@ def save_item_state(item):
         db = eva.core.get_db()
         c = db.cursor()
         c.execute('update state set status=?, value=? where id=?',
-                (item.status, item.value, item.item_id))
+                  (item.status, item.value, item.item_id))
         if not c.rowcount:
             c.close()
             tp = ''
@@ -178,15 +178,14 @@ def save_item_state(item):
         return False
 
 
-def load_db_state(items, item_type, clean = False, create = True):
+def load_db_state(items, item_type, clean=False, create=True):
     _db_loaded_ids = []
     _db_to_clean_ids = []
     db = eva.core.get_db()
     c = db.cursor()
     try:
-        c.execute(
-                'select id, status, value from state where tp = ?',
-                (item_type,))
+        c.execute('select id, status, value from state where tp = ?',
+                  (item_type,))
         try:
             for d in c:
                 if d[0] in items.keys():
@@ -205,7 +204,7 @@ def load_db_state(items, item_type, clean = False, create = True):
                     _db_to_clean_ids.append(d[0])
             c.close()
             c = db.cursor()
-            for i,v in items.items():
+            for i, v in items.items():
                 if i not in _db_loaded_ids:
                     c.execute(
                         'insert into state (id, tp, status, value) ' + \
@@ -214,7 +213,7 @@ def load_db_state(items, item_type, clean = False, create = True):
                     logging.debug('%s state inserted into db' % v.full_id)
             if clean:
                 for i in _db_to_clean_ids:
-                    c.execute('delete from state where id=?' , (i,))
+                    c.execute('delete from state where id=?', (i,))
                     logging.debug('%s state removed from db' % i)
         except:
             logging.critical('db error')
@@ -229,11 +228,11 @@ def load_db_state(items, item_type, clean = False, create = True):
             c.close()
             logging.info('No state table in db, creating new')
             create_state_table()
-            load_db_state(items, item_type, clean, create = False)
+            load_db_state(items, item_type, clean, create=False)
     db.close()
 
 
-def load_units(start = False):
+def load_units(start=False):
     _loaded = {}
     logging.info('Loading units')
     try:
@@ -242,11 +241,12 @@ def load_units(start = False):
         for ucfg in glob.glob(fnames):
             unit_id = os.path.splitext(os.path.basename(ucfg))[0]
             u = eva.uc.unit.Unit(unit_id)
-            if append_item(u, start = False):
+            if append_item(u, start=False):
                 _loaded[unit_id] = u
-        load_db_state(_loaded, 'U', clean = True)
+        load_db_state(_loaded, 'U', clean=True)
         if start:
-            for i, v in _loaded.items(): v.start_processors()
+            for i, v in _loaded.items():
+                v.start_processors()
         return True
     except:
         logging.error('Units load error')
@@ -254,7 +254,7 @@ def load_units(start = False):
         return False
 
 
-def load_sensors(start = False):
+def load_sensors(start=False):
     _loaded = {}
     logging.info('Loading sensors')
     try:
@@ -263,11 +263,12 @@ def load_sensors(start = False):
         for ucfg in glob.glob(fnames):
             sensor_id = os.path.splitext(os.path.basename(ucfg))[0]
             u = eva.uc.sensor.Sensor(sensor_id)
-            if append_item(u, start = False):
+            if append_item(u, start=False):
                 _loaded[sensor_id] = u
-        load_db_state(_loaded, 'S', clean = True)
+        load_db_state(_loaded, 'S', clean=True)
         if start:
-            for i, v in _loaded.items(): v.start_processors()
+            for i, v in _loaded.items():
+                v.start_processors()
         return True
     except:
         logging.error('sensors load error')
@@ -275,8 +276,12 @@ def load_sensors(start = False):
         return False
 
 
-def create_item(item_id, item_type, group = None,
-        virtual = False, start = True, save = False):
+def create_item(item_id,
+                item_type,
+                group=None,
+                virtual=False,
+                start=True,
+                save=False):
     if not item_id: return False
     if group and item_id.find('/') != -1: return False
     if item_id.find('/') == -1:
@@ -289,7 +294,7 @@ def create_item(item_id, item_type, group = None,
         grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
-            return False
+        return False
     i_full = grp + '/' + i
     if i in items_by_id or i_full in items_by_full_id: return False
     item = None
@@ -302,41 +307,56 @@ def create_item(item_id, item_type, group = None,
     if not item: return False
     if virtual: virt = True
     else: virt = False
-    cfg = { 'group': grp, 'virtual': virt }
+    cfg = {'group': grp, 'virtual': virt}
     if eva.core.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.mqtt_update_default
     item.update_config(cfg)
-    append_item(item, start = start, load = False)
+    append_item(item, start=start, load=False)
     if save: item.save()
     logging.info('created new %s %s' % (item.item_type, item.full_id))
     return item
 
 
-def create_unit(unit_id, group = None, virtual = False, save = False):
-    return create_item(item_id = unit_id, item_type = 'U', group = group,
-            virtual = virtual, start = True, save = save)
+def create_unit(unit_id, group=None, virtual=False, save=False):
+    return create_item(
+        item_id=unit_id,
+        item_type='U',
+        group=group,
+        virtual=virtual,
+        start=True,
+        save=save)
 
 
-def create_sensor(sensor_id, group = None, virtual = False, save = False):
-    return create_item(item_id = sensor_id, item_type = 'S', group = group,
-            virtual = virtual, start = True, save = save)
+def create_sensor(sensor_id, group=None, virtual=False, save=False):
+    return create_item(
+        item_id=sensor_id,
+        item_type='S',
+        group=group,
+        virtual=virtual,
+        start=True,
+        save=save)
 
 
-def create_mu(mu_id, group = None, virtual = False, save = False):
-    return create_item(item_id = mu_id, item_type = 'MU', group = group,
-            virtual = virtual, start = True, save = save)
+def create_mu(mu_id, group=None, virtual=False, save=False):
+    return create_item(
+        item_id=mu_id,
+        item_type='MU',
+        group=group,
+        virtual=virtual,
+        start=True,
+        save=save)
 
 
-def clone_item(item_id, new_item_id = None, group = None, save = False):
+def clone_item(item_id, new_item_id=None, group=None, save=False):
     i = get_item(item_id)
     ni = get_item(new_item_id)
     if not i or not new_item_id or ni or i.is_destroyed() or \
-            i.item_type not in ['unit', 'sensor']: return None
+            i.item_type not in ['unit', 'sensor']:
+        return None
     if group is None: _g = i.group
     else: _g = group
-    ni = create_item(new_item_id, i.item_type, _g, start = False,
-            save = False)
-    cfg = i.serialize(props = True)
+    ni = create_item(new_item_id, i.item_type, _g, start=False, save=False)
+    cfg = i.serialize(props=True)
     if 'description' in cfg: del cfg['description']
     ni.update_config(cfg)
     if save: ni.save()
@@ -347,7 +367,8 @@ def clone_item(item_id, new_item_id = None, group = None, save = False):
 def clone_group(group = None, new_group = None,\
         prefix = None, new_prefix = None, save = False):
     if not group or not group in items_by_group \
-            or not prefix or not new_prefix: return False
+            or not prefix or not new_prefix:
+        return False
     to_clone = []
     for i in items_by_group[group].copy():
         io = get_item(i)
@@ -361,7 +382,7 @@ def clone_group(group = None, new_group = None,\
     return True
 
 
-def destroy_group(group = None):
+def destroy_group(group=None):
     if group is None: return False
     for i in items_by_group[group].copy():
         if not destroy_item(i): return False
@@ -411,7 +432,7 @@ def destroy_item(item):
         eva.core.log_traceback()
 
 
-def load_mu(start = False):
+def load_mu(start=False):
     logging.info('Loading multi updates')
     try:
         fnames = eva.core.format_cfg_fname(eva.core.product_code + \
@@ -421,7 +442,7 @@ def load_mu(start = False):
             u = eva.uc.ucmu.UCMultiUpdate(mu_id)
             u.get_item_func = get_item
             if u.load():
-                append_item(u, start = False)
+                append_item(u, start=False)
                 if start: u.start_processors()
         return True
     except:
@@ -465,29 +486,29 @@ def notify_all_sensors():
 
 def serialize():
     d = {}
-    d['units'] = serialize_units(full = True)
-    d['units_config'] = serialize_units(config = True)
-    d['sensors'] = serialize_sensors(full = True)
-    d['sensors_config'] = serialize_sensors(config = True)
-    d['mu_config'] = serialize_mu(config = True)
+    d['units'] = serialize_units(full=True)
+    d['units_config'] = serialize_units(config=True)
+    d['sensors'] = serialize_sensors(full=True)
+    d['sensors_config'] = serialize_sensors(config=True)
+    d['mu_config'] = serialize_mu(config=True)
     return d
 
 
-def serialize_units(full = False, config = False):
+def serialize_units(full=False, config=False):
     d = {}
     for i, u in units_by_id.items():
         d[i] = u.serialize(full, config)
     return d
 
 
-def serialize_sensors(full = False, config = False):
+def serialize_sensors(full=False, config=False):
     d = {}
     for i, u in sensors_by_id.items():
         d[i] = u.serialize(full, config)
     return d
 
 
-def serialize_mu(full = False, config = False):
+def serialize_mu(full=False, config=False):
     d = {}
     for i, u in mu_by_id.items():
         d[i] = u.serialize(full, config)
@@ -531,16 +552,21 @@ def exec_mqtt_unit_action(unit, msg):
         logging.debug('mqtt cmd msg status = %s' % status)
         logging.debug('mqtt cmd msg value = "%s"' % value)
         logging.debug('mqtt cmd msg priority = "%s"' % priority)
-        exec_unit_action(unit = unit, nstatus = status,
-                nvalue = value, priority = priority)
+        exec_unit_action(
+            unit=unit, nstatus=status, nvalue=value, priority=priority)
         return
     except:
         logging.error('%s got bad mqtt action msg' % unit.full_id)
         eva.core.log_traceback()
 
 
-def exec_unit_action(unit, nstatus, nvalue = None, priority = None,
-        q_timeout = None, wait = 0, action_uuid = None):
+def exec_unit_action(unit,
+                     nstatus,
+                     nvalue=None,
+                     priority=None,
+                     q_timeout=None,
+                     wait=0,
+                     action_uuid=None):
     if isinstance(unit, str):
         u = get_unit(unit)
     else:
@@ -557,16 +583,16 @@ def exec_unit_action(unit, nstatus, nvalue = None, priority = None,
     return a
 
 
-def dump(item_id = None):
+def dump(item_id=None):
     if item_id: return items_by_id[item_id]
-    else: return {
+    else:
+        return {
             'uc_items': items_by_full_id,
             'uc_actions': Q.actions_by_item_full_id
-            }
+        }
 
 
 def init():
     eva.core.append_save_func(save)
     eva.core.append_dump_func('uc', dump)
     eva.core.append_stop_func(stop)
-

@@ -18,6 +18,7 @@ from eva.client import apiclient
 import eva.core
 from eva.tools import print_json
 
+
 def usage():
     print()
     print('EVA LM CLI version %s' % (apiclient.version))
@@ -307,6 +308,7 @@ the exit codes are equal to the return codes of API client:
     99  if no command specified
     """)
 
+
 xparams = {}
 timeout = None
 apikey = None
@@ -317,7 +319,7 @@ debug = False
 try:
     func = sys.argv[1]
     o, a = getopt.getopt(sys.argv[2:],
-            'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:s:v:w:yzD')
+                         'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:s:v:w:yzD')
 except:
     usage()
     sys.exit(99)
@@ -371,7 +373,7 @@ if ( func == 'set_prop' or \
         func == 'create_lvar' ) \
         and 'full' in xparams and xparams['full'] == '1':
     del xparams['full']
-    params['save'] = '1' 
+    params['save'] = '1'
 
 if func == 'debug':
     params['debug'] = 1
@@ -379,7 +381,7 @@ if func == 'debug':
 elif func == 'nodebug':
     params['debug'] = 0
     func = 'set_debug'
-else: 
+else:
     params.update(xparams)
 
 if func == 'file_put':
@@ -394,8 +396,7 @@ if func == 'file_put':
             print('Can\'t read local file %s' % params['l'])
             sys.exit(apiclient.result_not_found)
 
-
-code, result = api.call(func, params, timeout, _debug = debug)
+code, result = api.call(func, params, timeout, _debug=debug)
 
 if code != apiclient.result_ok and \
         code != apiclient.result_func_failed:
@@ -422,10 +423,10 @@ else:
     if func in ['run'] and \
         'status' in result and \
         result['status'] == 'completed':
-            t1 = result['time']['created']
-            t2 = result['time']['completed']
-            xtime = t2 - t1
-            print('Exec time: %f sec  ( %f ms )' % (xtime, xtime*1000))
+        t1 = result['time']['created']
+        t2 = result['time']['completed']
+        xtime = t2 - t1
+        print('Exec time: %f sec  ( %f ms )' % (xtime, xtime * 1000))
     print_json(result)
 
 sys.exit(code)

@@ -15,7 +15,6 @@ from eva.tools import parse_host_port
 
 import eva.users
 
-
 host = None
 ssl_host = None
 
@@ -34,17 +33,19 @@ thread_pool = 15
 
 session_timeout = 3600
 
+
 def http_api_result(result, env):
-    result = { 'result' : result }
+    result = {'result': result}
     if env:
         result.update(env)
     return result
 
 
-def http_api_result_ok(env = None):
+def http_api_result_ok(env=None):
     return http_api_result('OK', env)
 
-def http_api_result_error(env = None):
+
+def http_api_result_error(env=None):
     return http_api_result('ERROR', env)
 
 
@@ -64,8 +65,10 @@ def update_config(cfg):
         ssl_host, ssl_port = parse_host_port(cfg.get('webapi', 'ssl_listen'))
         if not ssl_port:
             ssl_port = default_ssl_port
-        try: ssl_module = cfg.get('webapi', 'ssl_module')
-        except: ssl_module = 'builtin'
+        try:
+            ssl_module = cfg.get('webapi', 'ssl_module')
+        except:
+            ssl_module = 'builtin'
         ssl_cert = cfg.get('webapi', 'ssl_cert')
         if ssl_cert[0] != '/': ssl_cert = eva.core.dir_etc + '/' + ssl_cert
         ssl_key = cfg.get('webapi', 'ssl_key')
@@ -73,7 +76,8 @@ def update_config(cfg):
         logging.debug('webapi.ssl_listen = %s:%u' % (ssl_host, ssl_port))
         ssl_chain = cfg.get('webapi', 'ssl_chain')
         if ssl_chain[0] != '/': ssl_chain = eva.core.dir_etc + '/' + ssl_chain
-    except: pass
+    except:
+        pass
     try:
         session_timeout = int(cfg.get('webapi', 'session_timeout'))
     except:
@@ -87,8 +91,7 @@ def update_config(cfg):
     return True
 
 
-def log_api_request(func, auth = None, info = None,
-        dev = False, debug = False):
+def log_api_request(func, auth=None, info=None, dev=False, debug=False):
     msg = 'API request '
     if auth:
         msg += auth + ':'
@@ -114,18 +117,19 @@ def log_api_request(func, auth = None, info = None,
 def http_real_ip():
     if 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
-                ip = cherrypy.request.headers['X-Real-IP']
-    else: ip = cherrypy.request.remote.ip
+        ip = cherrypy.request.headers['X-Real-IP']
+    else:
+        ip = cherrypy.request.remote.ip
     return ip
 
 
-def http_remote_info(k = None):
+def http_remote_info(k=None):
     return '%s@%s' % (apikey.key_id(k), http_real_ip())
 
 
 class GenericAPI(object):
 
-    def test(self, k = None):
+    def test(self, k=None):
         """
         API test, key test and info request, k = any valid key
         """
@@ -137,8 +141,8 @@ class GenericAPI(object):
             'product_name': eva.core.product_name,
             'product_code': eva.core.product_code,
             'product_build': eva.core.product_build
-            })
-        if apikey.check(k, sysfunc = True):
+        })
+        if apikey.check(k, sysfunc=True):
             result['debug'] = eva.core.debug
             result['db_update'] = eva.core.db_update
             result['polldelay'] = eva.core.polldelay
@@ -146,32 +150,27 @@ class GenericAPI(object):
                 result['development'] = True
         return result
 
-
-    def dev_cvars(self, k = None) :
+    def dev_cvars(self, k=None):
         """ get only custom vars from ENV
         """
         return eva.core.cvars
 
-
-    def dev_env(self, k = None):
+    def dev_env(self, k=None):
         """ get ENV (env is used for external scripts)
         """
         return eva.core.env
 
-
-    def dev_k(self, k = None):
+    def dev_k(self, k=None):
         """ get all API keys
         """
         return apikey.keys
 
-    
-    def dev_n(self, k = None, id = None):
+    def dev_n(self, k=None, id=None):
         """ get all notifiers
         """
         return eva.notify.dump(id)
 
-
-    def dev_t(self, k = None):
+    def dev_t(self, k=None):
         """ get list of all threads
         """
         result = {}
@@ -185,32 +184,34 @@ class GenericAPI(object):
 
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
-    return format_json(value,
-            minimal = not eva.core.development).encode('utf-8')
+    return format_json(value, minimal=not eva.core.development).encode('utf-8')
 
 
 def cp_forbidden_key():
     return cherrypy.HTTPError('403 API Forbidden', 'API Key access error')
 
-def cp_api_error(msg = ''):
+
+def cp_api_error(msg=''):
     return cherrypy.HTTPError('500 API Error', msg)
 
-def cp_api_404(msg = ''):
+
+def cp_api_404(msg=''):
     return cherrypy.HTTPError('404 API Object Not Found', msg)
 
+
 def cp_need_master(k):
-    if not eva.apikey.check(k, master = True): raise cp_forbidden_key()
+    if not eva.apikey.check(k, master=True): raise cp_forbidden_key()
+
 
 class GenericHTTP_API(GenericAPI):
 
     _cp_config = {
-          'tools.json_out.on': True,
-          'tools.json_out.handler': cp_json_handler,
-          'tools.auth.on': True,
-          'tools.sessions.on': True,
-          'tools.sessions.timeout': session_timeout
-          }
-
+        'tools.json_out.on': True,
+        'tools.json_out.handler': cp_json_handler,
+        'tools.auth.on': True,
+        'tools.sessions.on': True,
+        'tools.sessions.timeout': session_timeout
+    }
 
     def cp_check_perm(self):
         if 'k' in cherrypy.serving.request.params:
@@ -226,15 +227,14 @@ class GenericHTTP_API(GenericAPI):
         p = cherrypy.serving.request.params.copy()
         if not eva.core.development and 'k' in p: del (p['k'])
         log_api_request(cherrypy.serving.request.path_info[1:],
-                http_remote_info(k), p, dev)
-        if apikey.check(k,
-                    master = dev, ip = http_real_ip()): return
+                        http_remote_info(k), p, dev)
+        if apikey.check(k, master=dev, ip=http_real_ip()):
+            return
         raise cp_forbidden_key()
 
-
     def __init__(self):
-        cherrypy.tools.auth = cherrypy.Tool('before_handler',
-                                self.cp_check_perm, priority=60)
+        cherrypy.tools.auth = cherrypy.Tool(
+            'before_handler', self.cp_check_perm, priority=60)
         GenericAPI.test.exposed = True
         GenericHTTP_API.login.exposed = True
         GenericHTTP_API.logout.exposed = True
@@ -245,24 +245,22 @@ class GenericHTTP_API(GenericAPI):
             GenericAPI.dev_n.exposed = True
             GenericAPI.dev_t.exposed = True
 
-
-    def login(self, k = None, u = None, p = None):
+    def login(self, k=None, u=None, p=None):
         if not u and k:
             if k in apikey.keys:
                 cherrypy.session['k'] = k
-                return http_api_result_ok({ 'key': apikey.key_id(k)})
+                return http_api_result_ok({'key': apikey.key_id(k)})
             else:
                 cherrypy.session['k'] = ''
                 raise cp_forbidden_key()
         key = eva.users.authenticate(u, p)
-        if eva.apikey.check(apikey.key_by_id(key), ip = http_real_ip()):
+        if eva.apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
             cherrypy.session['k'] = apikey.key_by_id(key)
-            return http_api_result_ok({ 'key': key})
+            return http_api_result_ok({'key': key})
         cherrypy.session['k'] = ''
         raise cp_forbidden_key()
 
-
-    def logout(self, k = None):
+    def logout(self, k=None):
         cherrypy.session['k'] = ''
         return http_api_result_ok()
 
@@ -296,9 +294,10 @@ def start():
         cherrypy.log.access_log.propagate = False
         cherrypy.log.error_log.propagate = False
     else:
-        cherrypy.config.update({ 'global': { 'engine.autoreload.on' : False }})
+        cherrypy.config.update({'global': {'engine.autoreload.on': False}})
     eva.core.append_stop_func(stop)
     cherrypy.engine.start()
+
 
 def stop():
     cherrypy.engine.exit()

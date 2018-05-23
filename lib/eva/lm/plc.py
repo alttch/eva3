@@ -11,17 +11,17 @@ import logging
 
 from eva.tools import val_to_boolean
 
+
 class PLC(eva.item.ActiveItem):
 
     def __init__(self):
         super().__init__(eva.core.system_name, 'plc')
-        self.update_config (
-                { 'group' : 'lm',
-                  'action_enabled': True,
-                  'action_queue' : 1,
-                  'action_allow_termination': False,
-                })
-
+        self.update_config({
+            'group': 'lm',
+            'action_enabled': True,
+            'action_queue': 1,
+            'action_allow_termination': False,
+        })
 
     def _t_action_processor(self):
         logging.debug('%s action processor started' % self.full_id)
@@ -32,9 +32,9 @@ class PLC(eva.item.ActiveItem):
                 a = self.q_get_task()
                 self.action_after_get_task(a)
                 if not a or not a.item: continue
-                if not self.queue_lock.acquire(timeout = eva.core.timeout):
+                if not self.queue_lock.acquire(timeout=eva.core.timeout):
                     logging.critical(
-                            'ActiveItem::_t_action_processor locking broken')
+                        'ActiveItem::_t_action_processor locking broken')
                     continue
                 self.current_action = a
                 if not self.action_enabled:
@@ -69,16 +69,14 @@ class PLC(eva.item.ActiveItem):
                         '%s action processor got an error, restarting' % \
                                 (self.full_id))
                 eva.core.log_traceback()
-            if not self.queue_lock.acquire(timeout = eva.core.timeout):
+            if not self.queue_lock.acquire(timeout=eva.core.timeout):
                 logging.critical(
-                        'ActiveItem::_t_action_processor locking broken')
+                    'ActiveItem::_t_action_processor locking broken')
                 continue
             self.current_action = None
             self.action_xc = None
             self.queue_lock.release()
         logging.debug('%s action processor stopped' % self.full_id)
-
-
 
     def _t_action(self, a):
         self.action_log_run(a)
@@ -94,60 +92,45 @@ class PLC(eva.item.ActiveItem):
         env_globals['_0'] = a.item.item_id
         env_globals['_00'] = a.item.full_id
         for i, v in eva.core.cvars.copy().items():
-            try: env_globals[i] = float(v)
-            except: env_globals[i] = v
-        for i in range(1,9):
+            try:
+                env_globals[i] = float(v)
+            except:
+                env_globals[i] = v
+        for i in range(1, 9):
             try:
                 env_globals['_%u' % i] = a.argv[i - 1]
             except:
                 env_globals['_%u' % i] = ''
-        xc = eva.runner.PyThread(
-                item = a.item,
-                env_globals = env_globals
-                )
+        xc = eva.runner.PyThread(item=a.item, env_globals=env_globals)
         self.queue_lock.release()
         xc.run()
         self.action_after_run(a, xc)
         if xc.exitcode < 0:
-            a.set_terminated(
-                    exitcode = xc.exitcode,
-                    out = xc.out,
-                    err = xc.err
-                    )
+            a.set_terminated(exitcode=xc.exitcode, out=xc.out, err=xc.err)
             logging.error('macro %s action %s terminated' % \
                     (a.item.full_id, a.uuid))
         elif xc.exitcode == 0:
-            a.set_completed(
-                exitcode = xc.exitcode,
-                out = xc.out,
-                err = xc.err
-                )
+            a.set_completed(exitcode=xc.exitcode, out=xc.out, err=xc.err)
             logging.debug('macro %s action %s completed' % \
                     (a.item.full_id, a.uuid))
         else:
-            a.set_failed(
-                exitcode = xc.exitcode,
-                out = xc.out,
-                err = xc.err
-                )
+            a.set_failed(exitcode=xc.exitcode, out=xc.out, err=xc.err)
             logging.error('macro %s action %s failed, code: %u' % \
                     (a.item.full_id, a.uuid, xc.exitcode))
         self.action_after_finish(a, xc)
 
 
-
 class MacroAction(eva.item.ItemAction):
 
-    def __init__(self, item, argv = [], priority = None, action_uuid = None,
-            source = None):
+    def __init__(self,
+                 item,
+                 argv=[],
+                 priority=None,
+                 action_uuid=None,
+                 source=None):
         self.argv = argv
         self.source = source
-        super().__init__(
-                item = item,
-                priority = priority,
-                action_uuid = action_uuid
-                )
-
+        super().__init__(item=item, priority=priority, action_uuid=action_uuid)
 
     def serialize(self):
         d = super().serialize()
@@ -155,21 +138,18 @@ class MacroAction(eva.item.ItemAction):
         return d
 
 
-
 class Macro(eva.item.ActiveItem):
 
     def __init__(self, item_id):
         super().__init__(item_id, 'lmacro')
-        self.api = eva.lm.macro_api.MacroAPI(pass_errors = False)
-
+        self.api = eva.lm.macro_api.MacroAPI(pass_errors=False)
 
     def update_config(self, data):
         if 'pass_errors' in data:
             self.api.pass_errors = data['pass_errors']
         super().update_config(data)
 
-
-    def set_prop(self, prop, val = None, save = False):
+    def set_prop(self, prop, val=None, save=False):
         if prop == 'pass_errors':
             v = val_to_boolean(val)
             if v is not None:
@@ -192,14 +172,17 @@ class Macro(eva.item.ActiveItem):
             return True
         return super().set_prop(prop, val, save)
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
         d = {}
         if full or config or props:
             d['pass_errors'] = self.api.pass_errors
-        d.update(super().serialize(full = full, config = config,
-            info = info, props = props, notify = notify))
+        d.update(super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify))
         if not notify:
             d['action_enabled'] = self.action_enabled
         else:

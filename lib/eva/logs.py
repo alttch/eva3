@@ -25,9 +25,9 @@ class MemoryLogHandler(logging.Handler):
         log_append(record)
 
 
-def log_append(record = None, rd = None, skip_mqtt = False):
+def log_append(record=None, rd=None, skip_mqtt=False):
     if record:
-        _r = {} 
+        _r = {}
         _r['t'] = record.created
         _r['msg'] = record.getMessage()
         _r['l'] = record.levelno
@@ -42,16 +42,13 @@ def log_append(record = None, rd = None, skip_mqtt = False):
     if not _mute and _r['msg'] and _r['msg'][0] != '.' and \
             _r['mod'] != '_cplogging':
         _log_records.append(_r)
-        eva.notify.notify(
-                'log',
-                [ _r ],
-                skip_mqtt = skip_mqtt
-                )
+        eva.notify.notify('log', [_r], skip_mqtt=skip_mqtt)
 
 
 def mute():
     global _mute
     _mute = True
+
 
 def unmute():
     global _mute
@@ -62,8 +59,8 @@ def start():
     global _log_cleaner
     global _log_cleaner_active
     eva.core.append_stop_func(stop)
-    _log_cleaner = threading.Thread(target = _t_log_cleaner,
-            name = '_t_log_cleaner')
+    _log_cleaner = threading.Thread(
+        target=_t_log_cleaner, name='_t_log_cleaner')
     _log_cleaner_active = True
     _log_cleaner.start()
 
@@ -75,7 +72,7 @@ def stop():
         _log_cleaner.join()
 
 
-def log_get(logLevel = 0, t = 0, n = None):
+def log_get(logLevel=0, t=0, n=None):
     _lr = []
     if n:
         max_entries = n
@@ -87,7 +84,7 @@ def log_get(logLevel = 0, t = 0, n = None):
         _t = 0
     for r in reversed(_log_records):
         if r['t'] > _t and r['l'] >= logLevel:
-            _lr = [ r ] + _lr
+            _lr = [r] + _lr
             if n and len(_lr) >= n:
                 break
     return _lr
@@ -104,6 +101,6 @@ def _t_log_cleaner():
             eva.core.log_traceback()
         i = 0
         while i < log_cleaner_delay and _log_cleaner_active:
-            time.sleep(eva.core.sleep_step); i += eva.core.sleep_step
+            time.sleep(eva.core.sleep_step)
+            i += eva.core.sleep_step
     logging.debug('memlog cleaner stopped')
-

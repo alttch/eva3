@@ -8,7 +8,7 @@ import os
 import logging
 import getopt
 
-logging.basicConfig(level = logging.WARNING)
+logging.basicConfig(level=logging.WARNING)
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -20,10 +20,11 @@ from eva.tools import print_json
 
 eva.core.set_product(os.environ['EVA_PRODUCT'], '-1')
 
+
 def usage():
     print()
-    print('EVA notifier manager version %s for %s' % (eva.core.version,
-        eva.core.product_code.upper()))
+    print('EVA notifier manager version %s for %s' %
+          (eva.core.version, eva.core.product_code.upper()))
     print()
     print("Usage: %s-notifier <command> [args]" % eva.core.product_code)
     print("""
@@ -133,6 +134,7 @@ Configure notifier:
     destroy <-i id>         destroy notifier
     """)
 
+
 eva.apikey.load()
 
 notifier_id = None
@@ -154,10 +156,7 @@ log_level = None
 
 enable = False
 
-notifier_status = {
-        True: 'Enabled',
-        False: 'Disabled'
-        }
+notifier_status = {True: 'Enabled', False: 'Disabled'}
 
 try:
     func = sys.argv[1]
@@ -198,34 +197,33 @@ except:
     usage()
     sys.exit(99)
 
-
 if func == 'list':
-    eva.notify.load(test = False, connect = False)
-    print('%s %s %s %s' % ('Type'.ljust(15), 'ID'.ljust(15),
-        'Status'.ljust(12), 'Target'))
+    eva.notify.load(test=False, connect=False)
+    print('%s %s %s %s' % ('Type'.ljust(15), 'ID'.ljust(15), 'Status'.ljust(12),
+                           'Target'))
     print('-' * 78)
-    for n in sorted(sorted(eva.notify.get_notifiers(),
-        key = lambda k: k.notifier_id), key = lambda k: k.notifier_type):
-        print('%s %s %s' %  (
-            n.notifier_type.ljust(15),
-            n.notifier_id.ljust(15),
-            notifier_status[n.enabled].ljust(12)
-            ), end = '')
+    for n in sorted(
+            sorted(eva.notify.get_notifiers(), key=lambda k: k.notifier_id),
+            key=lambda k: k.notifier_type):
+        print(
+            '%s %s %s' % (n.notifier_type.ljust(15), n.notifier_id.ljust(15),
+                          notifier_status[n.enabled].ljust(12)),
+            end='')
         if isinstance(n, eva.notify.HTTPNotifier) or \
                 isinstance(n, eva.notify.HTTP_POSTNotifier):
-            print(' %s' % n.uri, end = '')
+            print(' %s' % n.uri, end='')
         elif isinstance(n, eva.notify.MQTTNotifier):
             if n.username is not None and n.password is not None:
-                print(' %s:%s@' % (n.username, n.password), end = '')
+                print(' %s:%s@' % (n.username, n.password), end='')
             else:
-                print(' ', end = '')
-            print('%s:%u' % (n.host, n.port), end = '')
+                print(' ', end='')
+            print('%s:%u' % (n.host, n.port), end='')
         print()
     print()
     sys.exit()
 elif func == 'destroy':
     if notifier_id is None:
-        print ('notifier id not specified')
+        print('notifier id not specified')
         sys.exit(1)
     notifier_fname = eva.core.format_cfg_fname('%s_notify.d/%s.json' % \
             (eva.core.product_code, notifier_id), runtime = True)
@@ -237,36 +235,48 @@ elif func == 'destroy':
         sys.exit(1)
     sys.exit()
 elif func == 'create':
-    eva.notify.load(test = False, connect = False)
+    eva.notify.load(test=False, connect=False)
     n = eva.notify.get_notifier(notifier_id)
     if n:
         print('notifier %s already exist' % notifier_id)
         sys.exit(1)
     if notifier_id is None:
-        print ('notifier id not specified')
+        print('notifier id not specified')
         sys.exit(1)
     if notifier_type == 'http':
         if not uri:
             print('uri not specified')
             sys.exit(1)
-        n = eva.notify.HTTPNotifier(notifier_id = notifier_id, uri = uri,
-                notify_key = notify_key, space = space, timeout = timeout)
+        n = eva.notify.HTTPNotifier(
+            notifier_id=notifier_id,
+            uri=uri,
+            notify_key=notify_key,
+            space=space,
+            timeout=timeout)
     elif notifier_type == 'http-post':
         if not uri:
             print('uri not specified')
             sys.exit(1)
-        n = eva.notify.HTTP_POSTNotifier(notifier_id = notifier_id, uri = uri,
-                notify_key = notify_key, space = space, timeout = timeout)
+        n = eva.notify.HTTP_POSTNotifier(
+            notifier_id=notifier_id,
+            uri=uri,
+            notify_key=notify_key,
+            space=space,
+            timeout=timeout)
     elif notifier_type == 'mqtt':
         if not host:
             print('host not specified')
             sys.exit(1)
-        n = eva.notify.MQTTNotifier(notifier_id = notifier_id,
-                host = host, port = port,
-                username = username, password = password,
-                space = space, timeout = timeout)
+        n = eva.notify.MQTTNotifier(
+            notifier_id=notifier_id,
+            host=host,
+            port=port,
+            username=username,
+            password=password,
+            space=space,
+            timeout=timeout)
     else:
-        if not notifier_type: print ('notifier type not specified')
+        if not notifier_type: print('notifier type not specified')
         else: print('notifier type unknown %s' % notifier_type)
         sys.exit(1)
     n.enabled = enable
@@ -280,8 +290,7 @@ if not notifier_id:
     sys.exit(99)
 
 try:
-    n = eva.notify.load_notifier(notifier_id, test = False,
-            connect = False)
+    n = eva.notify.load_notifier(notifier_id, test=False, connect=False)
 except:
     print('can not load notifier %s' % notifier_id)
     sys.exit(1)
@@ -290,7 +299,7 @@ if func == 'get_config':
     print_json(n.serialize())
     sys.exit()
 elif func == 'list_props':
-    print_json(n.serialize(props = True))
+    print_json(n.serialize(props=True))
     sys.exit()
 elif func == 'test':
     if n.test(): print('notifier %s test passed' % notifier_id)
@@ -311,11 +320,11 @@ elif func == 'set_prop':
     if not n.set_prop(prop, value):
         print('failed to set property')
         sys.exit(1)
-    c = n.serialize(props = True)
+    c = n.serialize(props=True)
     if prop.find('.') == -1: v = c[prop]
     else:
         try:
-            a,b = prop.split('.')
+            a, b = prop.split('.')
             v = c[a][b]
         except:
             v = 'null'
@@ -332,18 +341,19 @@ elif func == 'subscribe':
     else:
         itypes = []
     if n.subscribe(
-            subject = prop,
-            items = items,
-            groups = groups,
-            item_types = itypes,
-            action_status = astatus,
-            log_level = log_level):
+            subject=prop,
+            items=items,
+            groups=groups,
+            item_types=itypes,
+            action_status=astatus,
+            log_level=log_level):
         eva.notify.save_notifier(notifier_id)
         for d in n.serialize()['events']:
             if d['subject'] == prop:
                 print_json(d)
     else:
         print('subscribe error')
+        sys.exit(2)
 else:
     usage()
     sys.exit(99)

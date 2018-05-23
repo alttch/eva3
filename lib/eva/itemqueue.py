@@ -13,8 +13,7 @@ import time
 
 class ActiveItemQueue(object):
 
-    def __init__(self, queue_id, keep_history = None,
-            default_priority = 100):
+    def __init__(self, queue_id, keep_history=None, default_priority=100):
         self.default_priority = default_priority
         self.q_id = queue_id
         if keep_history: self.keep_history = keep_history
@@ -35,8 +34,7 @@ class ActiveItemQueue(object):
         self.action_cleaner_active = False
         self.q = PriorityQueue()
 
-
-    def put_task(self, action, priority = None):
+    def put_task(self, action, priority=None):
         if priority: p = priority
         else: p = self.default_priority
         self.history_append(action)
@@ -45,22 +43,19 @@ class ActiveItemQueue(object):
             return True
         return False
 
-
     def serialize(self):
         d = []
-        if not self.actions_lock.acquire(timeout = eva.core.timeout):
-                logging.critical(
-                        'ActiveItemQueue::serialize_action locking broken')
-                return
+        if not self.actions_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('ActiveItemQueue::serialize_action locking broken')
+            return
         try:
             _actions = self.actions.copy()
         except:
             eva.core.log_traceback()
         self.actions_lock.release()
         for a in _actions:
-                d.append(a.serialize())
+            d.append(a.serialize())
         return d
-
 
     def history_get(self, action_uuid):
         try:
@@ -69,12 +64,10 @@ class ActiveItemQueue(object):
         except:
             return None
 
-
     def history_append(self, action):
-        if not self.actions_lock.acquire(timeout = eva.core.timeout):
-                logging.critical(
-                        'ActiveItemQueue::history_append locking broken')
-                return False
+        if not self.actions_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('ActiveItemQueue::history_append locking broken')
+            return False
         try:
             self.actions.append(action)
             self.actions_by_id[action.uuid] = action
@@ -82,7 +75,7 @@ class ActiveItemQueue(object):
                 self.actions_by_item_id[action.item.item_id] = []
             self.actions_by_item_id[action.item.item_id].append(action)
             if not action.item.full_id in self.actions_by_item_full_id:
-               self.actions_by_item_full_id[action.item.full_id] = []
+                self.actions_by_item_full_id[action.item.full_id] = []
             self.actions_by_item_full_id[action.item.full_id].append(action)
         except:
             self.actions_lock.release()
@@ -91,12 +84,10 @@ class ActiveItemQueue(object):
         self.actions_lock.release()
         return True
 
-
     def history_remove(self, action):
-        if not self.actions_lock.acquire(timeout = eva.core.timeout):
-                logging.critical(
-                        'ActiveItemQueue::history_remove locking broken')
-                return False
+        if not self.actions_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('ActiveItemQueue::history_remove locking broken')
+            return False
         try:
             self.actions_by_item_id[action.item.item_id].remove(action)
             self.actions_by_item_full_id[action.item.full_id].remove(action)
@@ -109,18 +100,18 @@ class ActiveItemQueue(object):
         self.actions_lock.release()
         return True
 
-
     def _t_action_cleaner(self):
         logging.debug('%s item queue cleaner started' % self.q_id)
         while self.action_cleaner_active:
             try:
-                if not self.actions_lock.acquire(
-                        timeout = eva.core.timeout):
+                if not self.actions_lock.acquire(timeout=eva.core.timeout):
                     logging.critical(
-                      'ActiveItemQueue::_t_action_cleanup locking broken')
+                        'ActiveItemQueue::_t_action_cleanup locking broken')
                     continue
-                try: _actions = self.actions.copy()
-                except: eva.core.log_traceback()
+                try:
+                    _actions = self.actions.copy()
+                except:
+                    eva.core.log_traceback()
                 self.actions_lock.release()
                 for a in _actions:
                     try:
@@ -129,8 +120,10 @@ class ActiveItemQueue(object):
                         eva.core.log_traceback()
                     maxtime = 0
                     for t in tk:
-                        try: maxtime = max(maxtime, a.time[t])
-                        except: pass
+                        try:
+                            maxtime = max(maxtime, a.time[t])
+                        except:
+                            pass
                     if maxtime and \
                             maxtime < time.time() - self.keep_history:
                         if a.is_finished():
@@ -148,27 +141,26 @@ class ActiveItemQueue(object):
             i = 0
             while i < self.action_cleaner_delay and \
                     self.action_cleaner_active:
-                time.sleep(eva.core.sleep_step); i += eva.core.sleep_step
+                time.sleep(eva.core.sleep_step)
+                i += eva.core.sleep_step
         logging.debug('%s item queue cleaner stopped' % self.q_id)
 
-
-    def start(self, loop = True):
+    def start(self, loop=True):
         if loop:
             eva.core.append_stop_func(self.stop)
             self.action_processor = threading.Thread(
-                    target=self._t_action_processor,
-                    name = '_t_itemqueue_processor_' + self.q_id,
-                    args = (True,))
+                target=self._t_action_processor,
+                name='_t_itemqueue_processor_' + self.q_id,
+                args=(True,))
             self.action_processor_active = True
             self.action_processor.start()
             self.action_cleaner = threading.Thread(
-                    target = self._t_action_cleaner,
-                    name = '_t_itemqueue_cleaner_' + self.q_id)
+                target=self._t_action_cleaner,
+                name='_t_itemqueue_cleaner_' + self.q_id)
             self.action_cleaner_active = True
             self.action_cleaner.start()
         else:
             self._t_action_processor(False)
-
 
     def stop(self):
         if self.action_cleaner_active:
@@ -180,10 +172,8 @@ class ActiveItemQueue(object):
             self.q.put(a)
             self.action_processor.join()
 
-
     def process_action(self, action):
         return action.item.q_put_task(action)
-
 
     def _t_action_processor(self, loop):
         logging.debug('%s item queue processor started' % self.q_id)
@@ -206,4 +196,3 @@ class ActiveItemQueue(object):
             except:
                 eva.core.log_traceback()
         logging.debug('%s item queue processor stopped' % self.q_id)
-

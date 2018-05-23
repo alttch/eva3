@@ -60,7 +60,7 @@ def get_controller(controller_id):
     if not controller_id: return None
     if controller_id.find('/') > -1:
         i = controller_id.split('/')
-        if len(i)>2 or i[0] != 'uc': return None
+        if len(i) > 2 or i[0] != 'uc': return None
         if i[1] in remote_ucs: return remote_ucs[i[1]]
     else:
         if controller_id in remote_ucs: return remote_ucs[controller_id]
@@ -91,7 +91,7 @@ def get_lvar(lvar_id):
     return None
 
 
-def append_item(item, start = False, load = True):
+def append_item(item, start=False, load=True):
     try:
         if load and not item.load(): return False
     except:
@@ -202,14 +202,13 @@ def save_lvar_state(item):
         return False
 
 
-def load_lvar_db_state(items, clean = False, create = True):
+def load_lvar_db_state(items, clean=False, create=True):
     _db_loaded_ids = []
     _db_to_clean_ids = []
     db = eva.core.get_db()
     c = db.cursor()
     try:
-        c.execute(
-                'select id, set_time, status, value from lvar_state')
+        c.execute('select id, set_time, status, value from lvar_state')
         try:
             for d in c:
                 if d[0] in items.keys():
@@ -228,7 +227,7 @@ def load_lvar_db_state(items, clean = False, create = True):
                     _db_to_clean_ids.append(d[0])
             c.close()
             c = db.cursor()
-            for i,v in items.items():
+            for i, v in items.items():
                 if i not in _db_loaded_ids:
                     c.execute(
                         'insert into lvar_state (id, set_time,' + \
@@ -237,7 +236,7 @@ def load_lvar_db_state(items, clean = False, create = True):
                     logging.debug('%s state inserted into db' % v.full_id)
             if clean:
                 for i in _db_to_clean_ids:
-                    c.execute('delete from lvar_state where id=?' , (i,))
+                    c.execute('delete from lvar_state where id=?', (i,))
                     logging.debug('%s state removed from db' % i)
         except:
             logging.critical('db error')
@@ -252,11 +251,11 @@ def load_lvar_db_state(items, clean = False, create = True):
             c.close()
             logging.info('No lvar_state table in db, creating new')
             create_lvar_state_table()
-            load_lvar_db_state(items, clean, create = False)
+            load_lvar_db_state(items, clean, create=False)
     db.close()
 
 
-def load_lvars(start = False):
+def load_lvars(start=False):
     _loaded = {}
     logging.info('Loading lvars')
     try:
@@ -265,11 +264,12 @@ def load_lvars(start = False):
         for ucfg in glob.glob(fnames):
             unit_id = os.path.splitext(os.path.basename(ucfg))[0]
             u = eva.lm.lvar.LVar(unit_id)
-            if append_item(u, start = False):
+            if append_item(u, start=False):
                 _loaded[unit_id] = u
-        load_lvar_db_state(_loaded, clean = True)
+        load_lvar_db_state(_loaded, clean=True)
         if start:
-            for i, v in _loaded.items(): v.start_processors()
+            for i, v in _loaded.items():
+                v.start_processors()
         return True
     except:
         logging.error('LVars load error')
@@ -335,7 +335,7 @@ def load_dm_rules():
         return False
 
 
-def create_macro(m_id, group = None, save = False):
+def create_macro(m_id, group=None, save=False):
     if not m_id: return False
     if group and m_id.find('/') != -1: return False
     if m_id.find('/') == -1:
@@ -346,7 +346,7 @@ def create_macro(m_id, group = None, save = False):
         grp = '/'.join(m_id.split('/')[:-1])
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
-            return False
+        return False
     i_full = grp + '/' + i
     if i in macros_by_id or i_full in macros_by_full_id: return False
     m = eva.lm.plc.Macro(i)
@@ -373,8 +373,8 @@ def destroy_macro(m_id):
                     eva.core.log_traceback()
             elif i.config_file_exists:
                 configs_to_remove.add(i.get_fname())
-            del(macros_by_id[i.item_id])
-            del(macros_by_full_id[i.full_id])
+            del (macros_by_id[i.item_id])
+            del (macros_by_full_id[i.full_id])
             logging.info('macro "%s" removed' % i.full_id)
             return True
         except:
@@ -382,7 +382,7 @@ def destroy_macro(m_id):
     return False
 
 
-def create_dm_rule(save = False):
+def create_dm_rule(save=False):
     r = eva.lm.dmatrix.DecisionRule()
     dm_rules[r.item_id] = r
     if save: r.save()
@@ -406,7 +406,7 @@ def destroy_dm_rule(r_id):
                     eva.core.log_traceback()
             elif i.config_file_exists:
                 configs_to_remove.add(i.get_fname())
-            del(dm_rules[r_id])
+            del (dm_rules[r_id])
             logging.info('DM rule %s removed' % r_id)
             return True
         except:
@@ -414,8 +414,12 @@ def destroy_dm_rule(r_id):
     return False
 
 
-def append_controller(uri, key = None, mqtt_update = None,
-        ssl_verify = True, timeout = None, save = False):
+def append_controller(uri,
+                      key=None,
+                      mqtt_update=None,
+                      ssl_verify=True,
+                      timeout=None,
+                      save=False):
     api = eva.client.apiclient.APIClient()
     api.set_product('uc')
     if key is not None: api.set_key(eva.apikey.format_key(key))
@@ -425,13 +429,12 @@ def append_controller(uri, key = None, mqtt_update = None,
         except:
             return False
         api.set_timeout(t)
-    else: api.set_timeout(eva.core.timeout)
+    else:
+        api.set_timeout(eva.core.timeout)
     api.set_uri(uri)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
-    u = eva.lm.lremote.LRemoteUC(None,
-            api = api,
-            mqtt_update = mqu)
+    u = eva.lm.lremote.LRemoteUC(None, api=api, mqtt_update=mqu)
     u._key = key
     if not uc_pool.append(u): return False
     remote_ucs[u.item_id] = u
@@ -454,7 +457,7 @@ def remove_controller(controller_id):
                     eva.core.log_traceback()
             elif i.config_file_exists:
                 configs_to_remove.add(i.get_fname())
-            del(remote_ucs[controller_id])
+            del (remote_ucs[controller_id])
             logging.info('controller %s removed' % controller_id)
             return True
         except:
@@ -462,8 +465,7 @@ def remove_controller(controller_id):
     return False
 
 
-def create_item(item_id, item_type, group = None,
-        virtual = False, save = False):
+def create_item(item_id, item_type, group=None, virtual=False, save=False):
     if not item_id: return False
     if group and item_id.find('/') != -1: return False
     if item_id.find('/') == -1:
@@ -476,7 +478,7 @@ def create_item(item_id, item_type, group = None,
         grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
-            return False
+        return False
     i_full = grp + '/' + i
     if i in items_by_id or i_full in items_by_full_id: return False
     item = None
@@ -485,11 +487,11 @@ def create_item(item_id, item_type, group = None,
     if not item: return False
     if virtual: virt = True
     else: virt = False
-    cfg = { 'group': grp, 'virtual': virt }
+    cfg = {'group': grp, 'virtual': virt}
     if eva.core.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.mqtt_update_default
     item.update_config(cfg)
-    append_item(item, start = True, load = False)
+    append_item(item, start=True, load=False)
     if save: item.save()
     if item_type == 'LV' or item_type == 'lvar':
         item.notify()
@@ -497,9 +499,9 @@ def create_item(item_id, item_type, group = None,
     return True
 
 
-def create_lvar(lvar_id, group = None, save = False):
-    return create_item(item_id = lvar_id, item_type = 'LV', group = group,
-            virtual = False, save = save)
+def create_lvar(lvar_id, group=None, save=False):
+    return create_item(
+        item_id=lvar_id, item_type='LV', group=group, virtual=False, save=save)
 
 
 def destroy_item(item):
@@ -539,23 +541,23 @@ def save_lvars():
         u.save()
 
 
-def notify_all(skip_subscribed_mqtt = False):
-    notify_all_lvars(skip_subscribed_mqtt = skip_subscribed_mqtt)
+def notify_all(skip_subscribed_mqtt=False):
+    notify_all_lvars(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 
-def notify_all_lvars(skip_subscribed_mqtt = False):
+def notify_all_lvars(skip_subscribed_mqtt=False):
     for i, u in lvars_by_id.items():
-        u.notify(skip_subscribed_mqtt = skip_subscribed_mqtt)
+        u.notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 
 def serialize():
     d = {}
-    d['lvars'] = serialize_lvars(full = True)
-    d['lvars_config'] = serialize_lvars(config = True)
+    d['lvars'] = serialize_lvars(full=True)
+    d['lvars_config'] = serialize_lvars(config=True)
     return d
 
 
-def serialize_lvars(full = False, config = False):
+def serialize_lvars(full=False, config=False):
     d = {}
     for i, u in lvars_by_id.items():
         d[i] = u.serialize(full, config)
@@ -576,7 +578,7 @@ def start():
     Q.start()
     DM = eva.lm.dmatrix.DecisionMatrix()
     for i, r in dm_rules.items():
-        DM.append_rule(r, do_sort = False)
+        DM.append_rule(r, do_sort=False)
     DM.sort()
     plc = eva.lm.plc.PLC()
     plc.start_processors()
@@ -603,8 +605,13 @@ def stop():
     if Q: Q.stop()
 
 
-def exec_macro(macro, argv = [], priority = None,
-        q_timeout = None, wait = 0, action_uuid = None, source = None):
+def exec_macro(macro,
+               argv=[],
+               priority=None,
+               q_timeout=None,
+               wait=0,
+               action_uuid=None,
+               source=None):
     if isinstance(macro, str):
         m = get_macro(macro)
     else:
@@ -620,9 +627,12 @@ def exec_macro(macro, argv = [], priority = None,
             _argvf.append(float(x))
         except:
             _argvf.append(x)
-    a = eva.lm.plc.MacroAction(m, argv = _argvf,
-            priority = priority, action_uuid = action_uuid,
-            source = source)
+    a = eva.lm.plc.MacroAction(
+        m,
+        argv=_argvf,
+        priority=priority,
+        action_uuid=action_uuid,
+        source=source)
     Q.put_task(a)
     if not eva.core.wait_for(a.is_processed, q_timeout):
         if a.set_dead():
@@ -631,21 +641,21 @@ def exec_macro(macro, argv = [], priority = None,
     return a
 
 
-def dump(item_id = None):
+def dump(item_id=None):
     if item_id: return items_by_id[item_id]
     rcs = {}
     for i, v in remote_ucs.copy().items():
         rcs[i] = v.serialize()
-    else: return {
+    else:
+        return {
             'lm_items': items_by_full_id,
             'remote_ucs': rcs,
             'macros': macros_by_full_id,
             'dm_rules': dm_rules
-            }
+        }
 
 
 def init():
     eva.core.append_save_func(save)
     eva.core.append_dump_func('lm', dump)
     eva.core.append_stop_func(stop)
-

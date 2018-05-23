@@ -19,7 +19,8 @@ class DecisionMatrix(object):
 
     def process(self, item):
         if item.prv_status == item.status and \
-                item.prv_value == item.value: return False
+                item.prv_value == item.value:
+            return False
         event_code = '%s/dme-%f' % (item.full_id, time.time())
         logging.debug('Decision matrix event %s %s, ' % \
                 (item.item_type, item.full_id) + \
@@ -30,7 +31,7 @@ class DecisionMatrix(object):
             if not rule.enabled: continue
             if rule.for_item_type and rule.for_item_type != '#' and \
                     rule.for_item_type != item.item_type:
-                        continue
+                continue
             if rule.for_item_id and rule.for_item_id != '#' and \
                 rule.for_item_id != item.item_id and \
                 not (rule.for_item_id[0] == '*' and \
@@ -43,10 +44,10 @@ class DecisionMatrix(object):
                     rule.for_item_id[-1] == '*' and \
                     item.item_id.find(rule.for_item_id[1:-1]) > -1
                     ):
-                                continue
+                continue
             if rule.for_item_group is not None and \
                     not eva.item.item_match(item, [], [ rule.for_item_group ]):
-                        continue
+                continue
             pv = None
             v = None
             if rule.for_prop == 'status':
@@ -73,18 +74,18 @@ class DecisionMatrix(object):
                         rule.for_initial == 'only') or \
                     v is None or \
                     pv == v:
-                        continue
+                continue
             if pv is not None:
                 if not isinstance(pv, float):
                     if rule.in_range_min is not None and \
                             pv == rule.in_range_min:
-                                continue
+                        continue
                 else:
                     if (rule.in_range_min is not None and \
                             not isinstance(rule.in_range_min, float)) or \
                         (rule.in_range_max is not None and \
                             not isinstance(rule.in_range_max, float)):
-                            continue
+                        continue
                     if rule.in_range_min is not None and \
                             rule.in_range_max is not None:
                         if ((rule.in_range_min_eq and \
@@ -95,13 +96,13 @@ class DecisionMatrix(object):
                                     pv <= rule.in_range_max) or \
                             (not rule.in_range_max_eq and \
                                 pv < rule.in_range_max)):
-                                continue
+                            continue
                     elif rule.in_range_min is not None:
                         if (rule.in_range_min_eq and \
                                     pv >= rule.in_range_min) or \
                             (not rule.in_range_min_eq and \
                                 pv > rule.in_range_min):
-                                continue 
+                            continue
                     elif rule.in_range_max is not None:
                         if ((rule.in_range_max_eq and \
                                 pv <= rule.in_range_max) or \
@@ -111,13 +112,13 @@ class DecisionMatrix(object):
             if not isinstance(v, float):
                 if rule.in_range_min is not None and \
                         v != rule.in_range_min:
-                            continue
+                    continue
             else:
                 if (rule.in_range_min is not None and \
                         not isinstance(rule.in_range_min, float)) or \
                     (rule.in_range_max is not None and \
                         not isinstance(rule.in_range_max, float)):
-                        continue
+                    continue
                 if rule.in_range_min is not None:
                     if rule.in_range_min_eq:
                         if v < rule.in_range_min:
@@ -150,9 +151,8 @@ class DecisionMatrix(object):
                 continue
             rule.last_matched = time.time()
             if rule.macro:
-                if not eva.lm.controller.exec_macro(macro = rule.macro,
-                        argv = rule.macro_args,
-                        source = item):
+                if not eva.lm.controller.exec_macro(
+                        macro=rule.macro, argv=rule.macro_args, source=item):
                     logging.error('Decision matrix can not exec macro' + \
                             ' %s for event %s' % (rule.macro, event_code))
             if rule.break_after_exec:
@@ -162,8 +162,7 @@ class DecisionMatrix(object):
                 break
         return True
 
-
-    def append_rule(self, d_rule, do_sort = True):
+    def append_rule(self, d_rule, do_sort=True):
         if d_rule in self.rules: return False
         r = self.rules.copy()
         r.append(d_rule)
@@ -172,17 +171,14 @@ class DecisionMatrix(object):
         self.rules = r
         return True
 
-
     def sort(self):
         self.rules = self.sort_rule_array(self.rules.copy())
-
 
     def sort_rule_array(self, rule_array):
         r = sorted(rule_array, key=lambda v: v.item_id)
         r = sorted(rule_array, key=lambda v: v.description)
         r = sorted(r, key=lambda v: v.priority)
         return r
-
 
     def remove_rule(self, d_rule):
         if not d_rule in self.rules: return False
@@ -191,7 +187,7 @@ class DecisionMatrix(object):
 
 class DecisionRule(eva.item.Item):
 
-    def __init__(self, rule_uuid = None):
+    def __init__(self, rule_uuid=None):
         self.priority = 100
         if not rule_uuid:
             _uuid = str(uuid.uuid1())
@@ -215,9 +211,12 @@ class DecisionRule(eva.item.Item):
         super().__init__(_uuid, 'dmatrix_rule')
         super().update_config({'group': 'dm_rules'})
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
         d = {}
         if info or full:
             c = self.chillout_time + self.last_matched - time.time()
@@ -253,8 +252,8 @@ class DecisionRule(eva.item.Item):
                 if self.in_range_min == self.in_range_max and \
                         self.in_range_min_eq and \
                         self.in_range_max_eq:
-                            cond_eq = True
-                            condition = 'x == %s' % m
+                    cond_eq = True
+                    condition = 'x == %s' % m
                 else:
                     condition = str(m) + ' <'
                     if self.in_range_min_eq: condition += '='
@@ -268,19 +267,18 @@ class DecisionRule(eva.item.Item):
                 not cond_eq and \
                 self.in_range_max is not None and \
                 isinstance(self.in_range_max, float):
-                    if not condition: condition = 'x'
-                    condition += ' <'
-                    if self.in_range_max_eq: condition += '='
-                    if self.for_prop == 'status': m = int(self.in_range_max)
-                    else: m = self.in_range_max
-                    condition += ' ' + str(m)
+            if not condition: condition = 'x'
+            condition += ' <'
+            if self.in_range_max_eq: condition += '='
+            if self.for_prop == 'status': m = int(self.in_range_max)
+            else: m = self.in_range_max
+            condition += ' ' + str(m)
         d['condition'] = condition
-        d.update(super().serialize(full = full, config = config,
-            info = info, props = props, notify = notify))
+        d.update(super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify))
         if 'group' in d: del d['group']
         if 'full_id' in d: del d['full_id']
         return d
-
 
     def update_config(self, data):
         if 'enabled' in data:
@@ -318,8 +316,7 @@ class DecisionRule(eva.item.Item):
             self.chillout_time = data['chillout_time']
         super().update_config(data)
 
-
-    def set_prop(self, prop, val = None, save = False):
+    def set_prop(self, prop, val=None, save=False):
         if prop == 'enabled':
             v = val_to_boolean(val)
             if v is not None:
@@ -362,9 +359,10 @@ class DecisionRule(eva.item.Item):
                 elif val == 'S': v = 'sensor'
                 elif val == 'LV': v = 'lvar'
                 else: v = val
-                if not v in [ '#', 'unit', 'sensor', 'lvar' ]:
+                if not v in ['#', 'unit', 'sensor', 'lvar']:
                     return False
-            else: v = None
+            else:
+                v = None
             if self.for_item_type != v:
                 self.for_item_type = v
                 self.log_set(prop, v)
@@ -383,7 +381,7 @@ class DecisionRule(eva.item.Item):
                 self.set_modified(save)
             return True
         elif prop == 'for_prop':
-            if val not in [ 'status', 'value' ]: return False
+            if val not in ['status', 'value']: return False
             if self.for_prop != val:
                 self.for_prop = val
                 self.log_set(prop, val)
@@ -392,9 +390,9 @@ class DecisionRule(eva.item.Item):
         elif prop == 'for_initial':
             if val is not None and \
                     val not in [ 'only', 'skip', 'any', 'none', 'None' ]:
-                        return False
+                return False
             v = val
-            if v in [ 'any', 'none', 'None' ]:
+            if v in ['any', 'none', 'None']:
                 v = None
             if self.for_initial != v:
                 self.for_initial = v

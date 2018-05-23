@@ -15,7 +15,6 @@ from eva.tools import netacl_match
 
 from netaddr import IPNetwork
 
-
 subscribed_items = set()
 
 host = None
@@ -32,6 +31,7 @@ _t_dispatcher_active = False
 
 _t_dispatcher = None
 
+
 def update_config(cfg):
     global host, port, community, hosts_allow
     try:
@@ -39,10 +39,12 @@ def update_config(cfg):
         if not port:
             port = default_port
         logging.debug('snmptrap.listen = %s:%u' % (host, port))
-    except: return False
+    except:
+        return False
     try:
         community = cfg.get('snmptrap', 'community')
-    except: community = default_community
+    except:
+        community = default_community
     logging.debug('snmptrap.community = %s' % community)
     try:
         _ha = cfg.get('snmptrap', 'hosts_allow')
@@ -50,9 +52,9 @@ def update_config(cfg):
         _ha = None
     if _ha:
         try:
-            _hosts_allow = list(filter(None,
-                [x.strip() for x in _ha.split(',')]))
-            hosts_allow = [ IPNetwork(h) for h in _hosts_allow ]
+            _hosts_allow = list(
+                filter(None, [x.strip() for x in _ha.split(',')]))
+            hosts_allow = [IPNetwork(h) for h in _hosts_allow]
         except:
             logging.error('snmptrap bad host acl!')
             host = None
@@ -81,8 +83,8 @@ def unsubscribe(item):
     return True
 
 
-def __cbFun(snmpEngine, stateReference, contextEngineId, contextName,
-          varBinds, cbCtx):
+def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
+            cbCtx):
     transportDomain, transportAddress = \
             snmpEngine.msgAndPduDsp.getTransportInfo(stateReference)
     host = transportAddress[0]
@@ -90,7 +92,7 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName,
     if hosts_allow:
         if not netacl_match(host, hosts_allow):
             logging.warning(
-                    'snmp trap from %s denied by server configuration' % host)
+                'snmp trap from %s denied by server configuration' % host)
             return
     data = {}
     for name, val in varBinds:
@@ -112,21 +114,19 @@ def start():
     if not community: _community = default_community
     else: _community = community
 
-    config.addTransport(
-        snmpEngine,
-        udp.domainName + (1,),
-        udp.UdpTransport().openServerMode((host, _port))
-    )
-    
+    config.addTransport(snmpEngine, udp.domainName + (1,),
+                        udp.UdpTransport().openServerMode((host, _port)))
+
     logging.info('Starting SNMP trap handler, listening at %s:%u' % \
             (host, _port))
     config.addV1System(snmpEngine, eva.core.product_code, _community)
     ntfrcv.NotificationReceiver(snmpEngine, __cbFun)
     snmpEngine.transportDispatcher.jobStarted(1)
     eva.core.append_stop_func(stop)
-    _t_dispatcher = threading.Thread(target = _t_dispatcher,
-            name = 'traphandler_t_dispatcher',
-            args = (snmpEngine,))
+    _t_dispatcher = threading.Thread(
+        target=_t_dispatcher,
+        name='traphandler_t_dispatcher',
+        args=(snmpEngine,))
     _t_dispatcher_active = True
     _t_dispatcher.start()
     return True
@@ -151,4 +151,3 @@ def _t_dispatcher(snmpEngine):
             logging.error('SNMP trap dispatcher crashed, restarting')
             eva.core.log_traceback()
     logging.debug('SNMP trap dispatcher stopped')
-

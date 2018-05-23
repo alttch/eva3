@@ -20,22 +20,22 @@ import eva.lm.controller
 
 
 def cp_need_dm_rules_list(k):
-    if not eva.apikey.check(k, allow = [ 'dm_rules_list' ]):
+    if not eva.apikey.check(k, allow=['dm_rules_list']):
         raise cp_forbidden_key()
 
+
 def cp_need_dm_rule_props(k):
-    if not eva.apikey.check(k, allow = [ 'dm_rule_props' ]):
+    if not eva.apikey.check(k, allow=['dm_rule_props']):
         raise cp_forbidden_key()
 
 
 class LM_API(GenericAPI):
 
-    def dev_lm_i(self, k = None, i = None):
+    def dev_lm_i(self, k=None, i=None):
         return eva.lm.controller.dump(i)
 
-
-    def groups(self, k = None, tp = None):
-        if apikey.check(k, master = True):
+    def groups(self, k=None, tp=None):
+        if apikey.check(k, master=True):
             if tp == 'LV' or tp == 'lvar':
                 return sorted(eva.lm.controller.lvars_by_group.keys())
             else:
@@ -53,14 +53,12 @@ class LM_API(GenericAPI):
             else:
                 return []
 
-
-    def state(self, k = None, i = None, full = False,
-            group = None, tp = 'LV'):
-        if tp not in [ 'LV', 'lvar' ]: return None
+    def state(self, k=None, i=None, full=False, group=None, tp='LV'):
+        if tp not in ['LV', 'lvar']: return None
         if i:
             item = eva.lm.controller.get_lvar(i)
             if not item or not apikey.check(k, item): return None
-            return item.serialize(full = full)
+            return item.serialize(full=full)
         else:
             gi = eva.lm.controller.lvars_by_id
             result = []
@@ -68,42 +66,44 @@ class LM_API(GenericAPI):
                 if apikey.check(k, v) and \
                         (not group or \
                             eva.item.item_match(v, [], [group])):
-                    r = v.serialize(full = full)
+                    r = v.serialize(full=full)
                     result.append(r)
             return sorted(result, key=lambda k: k['id'])
 
-
-    def set(self, k = None, i = None, status = None, value = None):
+    def set(self, k=None, i=None, status=None, value=None):
         item = eva.lm.controller.get_lvar(i)
         if not item or not apikey.check(k, item): return None
         if status and not -1 <= status <= 1: return False
         if value is None: v = 'null'
         else: v = value
-        return item.update_set_state(status = status, value = v)
+        return item.update_set_state(status=status, value=v)
 
-
-    def reset(self, k = None, i = None):
+    def reset(self, k=None, i=None):
         return self.set(k, i, 1, "1")
 
-
-    def run(self, k = None, i = None, args = None, priority = None,
-            q_timeout = None, wait = 0, uuid = None):
+    def run(self,
+            k=None,
+            i=None,
+            args=None,
+            priority=None,
+            q_timeout=None,
+            wait=0,
+            uuid=None):
         macro = eva.lm.controller.get_macro(i)
         if not macro or not eva.apikey.check(k, macro): return False
         if args is None:
             ar = []
         else:
             ar = args.split(' ')
-        return eva.lm.controller.exec_macro(macro = macro,
-                argv = ar,
-                priority = priority,
-                q_timeout = q_timeout,
-                wait = wait,
-                action_uuid = uuid)
+        return eva.lm.controller.exec_macro(
+            macro=macro,
+            argv=ar,
+            priority=priority,
+            q_timeout=q_timeout,
+            wait=wait,
+            action_uuid=uuid)
 
-
-    def result(self, k = None, uuid = None, item_id = None,
-            group = None, state = None):
+    def result(self, k=None, uuid=None, item_id=None, group=None, state=None):
         if uuid:
             a = eva.lm.controller.Q.history_get(uuid)
             if not a or not apikey.check(k, a.item): return None
@@ -116,7 +116,8 @@ class LM_API(GenericAPI):
                 if not apikey.check(k, item): return None
                 if item_id.find('/') > -1:
                     if item_id in eva.lm.controller.Q.actions_by_item_full_id:
-                      ar = eva.lm.controller.Q.actions_by_item_full_id[item_id]
+                        ar = eva.lm.controller.Q.actions_by_item_full_id[
+                            item_id]
                 else:
                     if item_id in eva.lm.controller.Q.actions_by_item_id:
                         ar = eva.lm.controller.Q.actions_by_item_id[item_id]
@@ -127,73 +128,73 @@ class LM_API(GenericAPI):
                 if not apikey.check(k, a.item): continue
                 if group and \
                         not eva.item.item_match(a.item, [], [ group ]):
-                        continue
+                    continue
                 if (state == 'Q' or state =='queued') and \
-                        not a.is_status_queued(): continue
+                        not a.is_status_queued():
+                    continue
                 elif (state == 'R' or state == 'running') and \
-                        not a.is_status_running(): continue
+                        not a.is_status_running():
+                    continue
                 elif (state == 'F' or state == 'finished') and \
-                        not a.is_finished(): continue
+                        not a.is_finished():
+                    continue
                 result.append(a)
             return result
 
 # dm rules functions
-
 
     def _set_rule_prop_batch(self, k, i, data, save):
         rule = eva.lm.controller.get_dm_rule(i)
         if not rule: return False
         enable_after = rule.enabled
         if not self.set_rule_prop(k, i, 'enabled', False):
-                return False
+            return False
         for x, y in data.items():
             if not self.set_rule_prop(k, i, x, y):
                 return False
         if not self.set_rule_prop(k, i, 'enabled', enable_after):
-                return False
+            return False
         if save: rule.save()
         return True
 
-
-    def list_rule_props(self, k = None, i = None):
+    def list_rule_props(self, k=None, i=None):
         item = eva.lm.controller.get_dm_rule(i)
         if not item:
             return None
         if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
-                not apikey.check(k, item): return None
-        result = item.serialize(props = True)
-        if not apikey.check(k, master = True):
+                not apikey.check(k, item):
+            return None
+        result = item.serialize(props=True)
+        if not apikey.check(k, master=True):
             for i in result.copy():
                 if i[:9] != 'in_range_' and \
                         i not in [ 'enabled', 'chillout_time', 'condition' ]:
-                            del result[i]
+                    del result[i]
         return result
 
-
-    def set_rule_prop(self, k = None, i = None,
-            p = None, v = None, save = False):
+    def set_rule_prop(self, k=None, i=None, p=None, v=None, save=False):
         item = eva.lm.controller.get_dm_rule(i)
         if not item: return None
-        if p[:9] == 'in_range_' or p in [ 'enabled', 'chillout_time' ]:
+        if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
             if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
-                    not apikey.check(k, item): return None
+                    not apikey.check(k, item):
+                return None
         else:
-            if not apikey.check(k, master = True): return None
+            if not apikey.check(k, master=True): return None
         result = item.set_prop(p, v, save)
         if result and item.config_changed and save:
             item.save()
-        if p in [ 'priority', 'description' ]:
+        if p in ['priority', 'description']:
             eva.lm.controller.DM.sort()
         return result
 
-
-    def list_rules(self, k = None):
-        rmas = apikey.check(k, allow = [ 'dm_rules_list' ])
+    def list_rules(self, k=None):
+        rmas = apikey.check(k, allow=['dm_rules_list'])
         result = []
         for i in eva.lm.controller.DM.rules.copy():
             if rmas or apikey.check(k, i):
-                d = i.serialize(info = True)
-                if not apikey.check(k, master = True):
+                d = i.serialize(info=True)
+                if not apikey.check(k, master=True):
                     for x in d.copy():
                         if x[:9] != 'in_range_' and \
                                 x not in [
@@ -204,58 +205,53 @@ class LM_API(GenericAPI):
                                         'enabled',
                                         'chillout_time'
                                         ]:
-                                    del d[x]
+                            del d[x]
                 result.append(d)
         return result
 
 
 # master functions for item configuration
 
-    def create_rule(self, k = None, save = False):
-        if not apikey.check(k, master = True): return None
+    def create_rule(self, k=None, save=False):
+        if not apikey.check(k, master=True): return None
         return eva.lm.controller.create_dm_rule(save)
 
-
-    def destroy_rule(self, k = None, i = None):
-        if not apikey.check(k, master = True): return None
+    def destroy_rule(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
         return eva.lm.controller.destroy_dm_rule(i)
 
-
-    def groups_macro(self, k = None):
+    def groups_macro(self, k=None):
         result = []
         for i, v in eva.lm.controller.macros_by_id.copy().items():
             if apikey.check(k, v) and \
-                    v.group not in result: result.append(v.group)
+                    v.group not in result:
+                result.append(v.group)
         return sorted(result)
 
-
-    def get_config(self, k = None, i = None):
-        if not apikey.check(k, master = True): return None
+    def get_config(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_item(i)
-        return item.serialize(config = True) if item else None
+        return item.serialize(config=True) if item else None
 
-
-    def save_config(self, k = None, i = None):
-        if not apikey.check(k, master = True): return None
+    def save_config(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_item(i)
         return item.save() if item else None
 
-
-    def list(self, k = None, group = None, tp = None):
-        if not apikey.check(k, master = True): return None
+    def list(self, k=None, group=None, tp=None):
+        if not apikey.check(k, master=True): return None
         result = {}
         if tp == 'LV' or tp == 'lvar':
             items = eva.lm.controller.lvars_by_id
         else:
             items = eva.lm.controller.items_by_id
         for i, v in items.copy().items():
-            if not group or eva.item.item_match(v, [], [ group ]):
-                result[i] = v.serialize(info = True)
+            if not group or eva.item.item_match(v, [], [group]):
+                result[i] = v.serialize(info=True)
         return result
 
-
-    def list_remote(self, k = None, i = None, group = None, tp = None):
-        if not apikey.check(k, master = True): return None
+    def list_remote(self, k=None, i=None, group=None, tp=None):
+        if not apikey.check(k, master=True): return None
         result = {}
         items = []
         if i:
@@ -267,7 +263,7 @@ class LM_API(GenericAPI):
                 if not c_id in eva.lm.controller.uc_pool.units_by_controller:
                     return None
                 items.append(
-                        eva.lm.controller.uc_pool.units_by_controller[c_id])
+                    eva.lm.controller.uc_pool.units_by_controller[c_id])
             else:
                 items.append(eva.lm.controller.uc_pool.units_by_controller)
         if tp is None or tp in ['S', 'sensor', '#']:
@@ -275,7 +271,7 @@ class LM_API(GenericAPI):
                 if not c_id in eva.lm.controller.uc_pool.sensors_by_controller:
                     return None
                 items.append(
-                        eva.lm.controller.uc_pool.sensors_by_controller[c_id])
+                    eva.lm.controller.uc_pool.sensors_by_controller[c_id])
             else:
                 items.append(eva.lm.controller.uc_pool.sensors_by_controller)
         if not items:
@@ -284,7 +280,7 @@ class LM_API(GenericAPI):
             result[c_id] = {}
             for x in items:
                 for a, v in x.copy().items():
-                    if not group or eva.item.item_match(v, [], [ group ]):
+                    if not group or eva.item.item_match(v, [], [group]):
                         result[c_id][a] = v.serialize()
         else:
             result = {}
@@ -293,83 +289,78 @@ class LM_API(GenericAPI):
                     if not c in result:
                         result[c] = {}
                     for a, v in d.copy().items():
-                        if not group or eva.item.item_match(v, [], [ group ]):
+                        if not group or eva.item.item_match(v, [], [group]):
                             result[c][a] = v.serialize()
         return result
 
-
-    def list_controllers(self, k = None):
-        if not apikey.check(k, master = True): return None
+    def list_controllers(self, k=None):
+        if not apikey.check(k, master=True): return None
         result = []
         for i, v in eva.lm.controller.remote_ucs.copy().items():
-            result.append(v.serialize(info = True))
+            result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['full_id'])
 
-
-    def list_macros(self, k = None, group = None):
+    def list_macros(self, k=None, group=None):
         result = []
         for i, v in eva.lm.controller.macros_by_id.copy().items():
             if apikey.check(k, v) and \
                     (not group or eva.item.item_match(v, [], [ group ])):
-                result.append(v.serialize(info = True))
+                result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['full_id'])
 
-
-    def create_macro(self, k = None, i = None, g = None, save = False):
-        if not apikey.check(k, master = True): return None
+    def create_macro(self, k=None, i=None, g=None, save=False):
+        if not apikey.check(k, master=True): return None
         return eva.lm.controller.create_macro(i, g, save)
 
-
-    def destroy_macro(self, k = None, i = None):
-        if not apikey.check(k, master = True): return None
+    def destroy_macro(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
         return eva.lm.controller.destroy_macro(i)
 
-
-    def append_controller(self, k = None, uri = None, key = None,
-            mqtt_update = None, ssl_verify = True, timeout = None,
-            save = False):
-        if not apikey.check(k, master = True) or not uri: return None
+    def append_controller(self,
+                          k=None,
+                          uri=None,
+                          key=None,
+                          mqtt_update=None,
+                          ssl_verify=True,
+                          timeout=None,
+                          save=False):
+        if not apikey.check(k, master=True) or not uri: return None
         return eva.lm.controller.append_controller(
-                uri = uri,
-                key = key,
-                mqtt_update = mqtt_update,
-                ssl_verify = ssl_verify,
-                timeout = timeout,
-                save = save)
+            uri=uri,
+            key=key,
+            mqtt_update=mqtt_update,
+            ssl_verify=ssl_verify,
+            timeout=timeout,
+            save=save)
 
-
-    def remove_controller(self, k = None, controller_id = None):
-        if not apikey.check(k, master = True) or not controller_id:
+    def remove_controller(self, k=None, controller_id=None):
+        if not apikey.check(k, master=True) or not controller_id:
             return False
         if controller_id.find('/') > -1:
             c = controller_id.split('/')
-            if len(c)>2 or c[0] != 'uc': return None
+            if len(c) > 2 or c[0] != 'uc': return None
             _i = c[1]
         else:
             _i = controller_id
         return eva.lm.controller.remove_controller(_i)
 
-
-    def list_props(self, k = None, i = None):
-        if not apikey.check(k, master = True): return None
+    def list_props(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_item(i)
-        return item.serialize(props = True) if item else None
+        return item.serialize(props=True) if item else None
 
-
-    def list_macro_props(self, k = None, i = None):
-        if not apikey.check(k, master = True): return None
+    def list_macro_props(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_macro(i)
-        return item.serialize(props = True) if item else None
+        return item.serialize(props=True) if item else None
 
-
-    def list_controller_props(self, k = None, i = None):
-        if not apikey.check(k, master = True): return None
+    def list_controller_props(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_controller(i)
-        return item.serialize(props = True) if item else None
+        return item.serialize(props=True) if item else None
 
-
-    def set_prop(self, k = None, i = None, p = None, v = None, save = False):
-        if not apikey.check(k, master = True): return None
+    def set_prop(self, k=None, i=None, p=None, v=None, save=False):
+        if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_item(i)
         if item:
             result = item.set_prop(p, v, save)
@@ -379,10 +370,8 @@ class LM_API(GenericAPI):
         else:
             return None
 
-
-    def set_controller_prop(self, k = None, i = None,
-            p = None, v = None, save = False):
-        if not apikey.check(k, master = True): return None
+    def set_controller_prop(self, k=None, i=None, p=None, v=None, save=False):
+        if not apikey.check(k, master=True): return None
         controller = eva.lm.controller.get_controller(i)
         if controller:
             result = controller.set_prop(p, v, save)
@@ -392,10 +381,8 @@ class LM_API(GenericAPI):
         else:
             return None
 
-
-    def set_macro_prop(self, k = None, i = None,
-            p = None, v = None, save = False):
-        if not apikey.check(k, master = True): return None
+    def set_macro_prop(self, k=None, i=None, p=None, v=None, save=False):
+        if not apikey.check(k, master=True): return None
         macro = eva.lm.controller.get_macro(i)
         if macro:
             result = macro.set_prop(p, v, save)
@@ -405,13 +392,12 @@ class LM_API(GenericAPI):
         else:
             return None
 
-
-    def reload_controller(self, k = None, i = None):
-        if not apikey.check(k, master = True): return False
+    def reload_controller(self, k=None, i=None):
+        if not apikey.check(k, master=True): return False
         if not i: return False
         if i.find('/') > -1:
             c = i.split('/')
-            if len(c)>2 or c[0] != 'uc': return None
+            if len(c) > 2 or c[0] != 'uc': return None
             _i = c[1]
         else:
             _i = i
@@ -420,13 +406,12 @@ class LM_API(GenericAPI):
 
     def create_lvar(self, k = None, lvar_id = None, \
             group = None, save = False):
-        if not apikey.check(k, master = True): return None
-        return eva.lm.controller.create_lvar(lvar_id = lvar_id, 
-                group = group, save = save)
+        if not apikey.check(k, master=True): return None
+        return eva.lm.controller.create_lvar(
+            lvar_id=lvar_id, group=group, save=save)
 
-
-    def destroy_lvar(self, k = None, i = None):
-        if not apikey.check(k, master = True): return None
+    def destroy_lvar(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
         return eva.lm.controller.destroy_item(i)
 
 
@@ -473,13 +458,10 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.create_lvar.exposed = True
         LM_HTTP_API.destroy_lvar.exposed = True
 
-
-    def groups(self, k = None, p = None):
+    def groups(self, k=None, p=None):
         return super().groups(k, p)
 
-
-    def state(self, k = None, i = None, full = None,
-            g = None, p = 'LV'):
+    def state(self, k=None, i=None, full=None, g=None, p='LV'):
         if full:
             _full = True
         else:
@@ -489,8 +471,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
             raise cp_api_404()
         return result
 
-
-    def set(self, k = None, i = None, s = None, v = None):
+    def set(self, k=None, i=None, s=None, v=None):
         if s is None:
             _s = None
         else:
@@ -503,16 +484,13 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
             raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-
-    def reset(self, k = None, i = None):
+    def reset(self, k=None, i=None):
         if super().reset(k, i):
             return http_api_result_ok()
         else:
             raise cp_api_404()
 
-
-    def run(self, k = None, i = None, u = None, a = None,
-            p = None, q = None, w = 0):
+    def run(self, k=None, i=None, u=None, a=None, p=None, q=None, w=0):
         if w:
             try:
                 _w = float(w)
@@ -535,50 +513,38 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         else:
             _q = None
         a = super().run(
-                k = k,
-                i = i,
-                args = a,
-                priority = _p,
-                q_timeout = _q,
-                wait = _w,
-                uuid = u
-                )
+            k=k, i=i, args=a, priority=_p, q_timeout=_q, wait=_w, uuid=u)
         if not a:
             raise cp_api_404()
         if a.is_status_dead():
             raise cp_api_error('queue error, action is dead')
         return a.serialize()
 
-
-    def result(self, k = None, u = None, i = None, g = None, s = None):
+    def result(self, k=None, u=None, i=None, g=None, s=None):
         a = super().result(k, u, i, g, s)
         if a is None:
             raise cp_api_404()
         if isinstance(a, list):
-            return [ x.serialize() for x in a ]
+            return [x.serialize() for x in a]
         else:
             return a.serialize()
 
-
-    def list_rules(self, k = None):
+    def list_rules(self, k=None):
         return super().list_rules(k)
 
-
-    def list_rule_props(self, k = None, i = None):
+    def list_rule_props(self, k=None, i=None):
         result = super().list_rule_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-
-    def set_rule_prop(self, k = None, i = None,
-            p = None, v = None, save = None, _j = None):
+    def set_rule_prop(self, k=None, i=None, p=None, v=None, save=None, _j=None):
         if save:
             _save = True
         else:
             _save = False
         if _j is None:
             return http_api_result_ok() if super().set_rule_prop(
-                    k, i, p, v, _save) else http_api_result_error()
+                k, i, p, v, _save) else http_api_result_error()
         else:
             try:
                 data = jsonpickle.decode(_j)
@@ -588,9 +554,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
                     self._set_rule_prop_batch(k, i, data, _save) \
                     else http_api_result_error()
 
-
-
-    def create_rule(self, k = None, save = None, _j = None):
+    def create_rule(self, k=None, save=None, _j=None):
         cp_need_master(k)
         if save:
             _save = True
@@ -603,7 +567,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         rule_id = super().create_rule(k, _save_ac)
         if not rule_id: return http_api_result_error()
         if _j is None:
-            return http_api_result_ok({'rule_id': rule_id })
+            return http_api_result_ok({'rule_id': rule_id})
         else:
             try:
                 data = jsonpickle.decode(_j)
@@ -613,104 +577,94 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
                     self._set_rule_prop_batch(k, rule_id, data, _save) \
                     else http_api_result_error()
 
-
-    def destroy_rule(self, k = None, i = None):
+    def destroy_rule(self, k=None, i=None):
         cp_need_master(k)
         return http_api_result_ok() if super().destroy_rule(k, i) \
                 else http_api_result_error()
 
-
-    def groups_macro(self, k = None):
+    def groups_macro(self, k=None):
         return super().groups_macro(k)
 
-
-    def get_config(self, k = None, i = None):
+    def get_config(self, k=None, i=None):
         cp_need_master(k)
         result = super().get_config(k, i)
         if not result: raise cp_api_404()
         return result
 
-
-    def save_config(self, k = None, i = None):
+    def save_config(self, k=None, i=None):
         cp_need_master(k)
         return http_api_result_ok() if super().save_config(k, i) \
                 else http_api_result_error()
 
-
-    def list(self, k = None, g = None, p = None):
+    def list(self, k=None, g=None, p=None):
         cp_need_master(k)
         result = super().list(k, g, p)
         if result is None: raise cp_api_404()
         return result
 
-
-    def list_remote(self, k = None, i = None, g = None, p = None):
+    def list_remote(self, k=None, i=None, g=None, p=None):
         result = super().list_remote(k, i, g, p)
         if result is None: raise cp_api_404()
         return result
 
-
-    def list_controllers(self, k = None):
+    def list_controllers(self, k=None):
         cp_need_master(k)
         result = super().list_controllers(k)
         if not result: raise cp_api_404()
         return result
 
-
-    def list_macros(self, k = None, g = None):
+    def list_macros(self, k=None, g=None):
         result = super().list_macros(k, g)
         if result is None: raise cp_api_404()
         return result
 
-
-    def create_macro(self, k = None, i = None, g = None, save = None):
+    def create_macro(self, k=None, i=None, g=None, save=None):
         cp_need_master(k)
         return http_api_result_ok() if super().create_macro(k, i, g, save) \
                 else http_api_result_error()
 
-
-    def destroy_macro(self, k = None, i = None):
+    def destroy_macro(self, k=None, i=None):
         cp_need_master(k)
         return http_api_result_ok() if super().destroy_macro(k, i) \
                 else http_api_result_error()
 
-
-    def append_controller(self, k = None, u = None, a = None, m = None,
-            s = None, t = None, save = None):
+    def append_controller(self,
+                          k=None,
+                          u=None,
+                          a=None,
+                          m=None,
+                          s=None,
+                          t=None,
+                          save=None):
         cp_need_master(k)
         sv = eva.tools.val_to_boolean(s)
         return http_api_result_ok() if super().append_controller(
-                k, u, a, m, sv, t, save) else http_api_result_error()
+            k, u, a, m, sv, t, save) else http_api_result_error()
 
-
-    def remove_controller(self, k = None, i = None):
+    def remove_controller(self, k=None, i=None):
         cp_need_master(k)
         return http_api_result_ok() if super().remove_controller(k, i) \
                 else http_api_result_error()
 
-
-    def list_props(self, k = None, i = None):
+    def list_props(self, k=None, i=None):
         cp_need_master(k)
         result = super().list_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-
-    def list_macro_props(self, k = None, i = None):
+    def list_macro_props(self, k=None, i=None):
         cp_need_master(k)
         result = super().list_macro_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-
-    def list_controller_props(self, k = None, i = None):
+    def list_controller_props(self, k=None, i=None):
         cp_need_master(k)
         result = super().list_controller_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-
-    def set_prop(self, k = None, i = None, p = None, v = None, save = None):
+    def set_prop(self, k=None, i=None, p=None, v=None, save=None):
         cp_need_master(k)
         if save:
             _save = True
@@ -719,20 +673,16 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
-
-    def set_macro_prop(self, k = None, i = None, p = None,
-            v = None, save = None):
+    def set_macro_prop(self, k=None, i=None, p=None, v=None, save=None):
         cp_need_master(k)
         if save:
             _save = True
         else:
             _save = False
-        return http_api_result_ok() if super().set_macro_prop(k,
-                i, p, v, _save) else http_api_result_error()
+        return http_api_result_ok() if super().set_macro_prop(
+            k, i, p, v, _save) else http_api_result_error()
 
-
-    def set_controller_prop(self, k = None, i = None,
-            p = None, v = None, save = None):
+    def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
         cp_need_master(k)
         if save:
             _save = True
@@ -742,26 +692,24 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
                 super().set_controller_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
-
-    def reload_controller(self, k = None, i = None):
+    def reload_controller(self, k=None, i=None):
         cp_need_master(k)
         return http_api_result_ok() if super().reload_controller(k, i) \
                 else http_api_result_error()
 
-
-    def create_lvar(self, k = None, i = None, g = None, save = None):
+    def create_lvar(self, k=None, i=None, g=None, save=None):
         cp_need_master(k)
         return http_api_result_ok() if super().create_lvar(
-                k, i, g, save) else http_api_result_error()
+            k, i, g, save) else http_api_result_error()
 
-
-    def destroy_lvar(self, k = None, i = None):
+    def destroy_lvar(self, k=None, i=None):
         cp_need_master(k)
         return http_api_result_ok() if super().destroy_lvar(k, i) \
                 else http_api_result_error()
 
 
 class LM_HTTP_Root:
+
     @cherrypy.expose
     def index(self):
         raise cherrypy.HTTPRedirect('/lm-ei/')
@@ -769,17 +717,25 @@ class LM_HTTP_Root:
 
 def start():
     cherrypy.tree.mount(LM_HTTP_API(), '/lm-api')
-    cherrypy.tree.mount(LM_HTTP_Root(), '/', config = {
+    cherrypy.tree.mount(
+        LM_HTTP_Root(),
+        '/',
+        config={
             '/favicon.ico': {
-                'tools.staticfile.on': True,
+                'tools.staticfile.on':
+                True,
                 'tools.staticfile.filename':
-                    eva.core.dir_eva + '/lib/eva/i/favicon.ico'
-            }})
-    
-    cherrypy.tree.mount(object(),'/lm-ei',config =
-        {'/': {
-            'tools.staticdir.dir': eva.core.dir_eva + '/lm-ei',
-            'tools.staticdir.on': True,
-            'tools.staticdir.index': 'index.html',
+                eva.core.dir_eva + '/lib/eva/i/favicon.ico'
+            }
+        })
+
+    cherrypy.tree.mount(
+        object(),
+        '/lm-ei',
+        config={
+            '/': {
+                'tools.staticdir.dir': eva.core.dir_eva + '/lm-ei',
+                'tools.staticdir.on': True,
+                'tools.staticdir.index': 'index.html',
             }
         })

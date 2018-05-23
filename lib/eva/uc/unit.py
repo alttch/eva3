@@ -12,7 +12,6 @@ import time
 
 from eva.tools import val_to_boolean
 
-
 status_label_off = 'OFF'
 status_label_on = 'ON'
 
@@ -33,11 +32,14 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
         self.auto_processor_active = False
         self.auto_processor = None
         # labels have string keys to be JSON compatible
-        self.status_labels = { '0': status_label_off, '1': status_label_on }
+        self.status_labels = {'0': status_label_off, '1': status_label_on}
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
         d = {}
         if config or props:
             d['action_always_exec'] = self.action_always_exec
@@ -53,19 +55,19 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
         if not info and not props:
             d['nstatus'] = self.nstatus
             d['nvalue'] = self.nvalue
-        d.update(super().serialize(full = full, config = config,
-            info = info, props = props, notify = notify))
+        d.update(super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify))
         return d
 
-
-    def create_action(self, nstatus, nvalue = 'null', priority = None,
-            action_uuid = None):
+    def create_action(self,
+                      nstatus,
+                      nvalue='null',
+                      priority=None,
+                      action_uuid=None):
         return UnitAction(self, nstatus, nvalue, priority, action_uuid)
-
 
     def mqtt_action(self, msg):
         eva.uc.controller.exec_mqtt_unit_action(self, msg)
-
 
     def update_config(self, data):
         if 'action_always_exec' in data:
@@ -84,8 +86,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             self.status_labels = data['status_labels']
         super().update_config(data)
 
-
-    def set_prop(self, prop, val = None, save = False):
+    def set_prop(self, prop, val=None, save=False):
         if prop == 'action_always_exec':
             v = val_to_boolean(val)
             if v is not None:
@@ -172,16 +173,13 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
         else:
             return super().set_prop(prop, val, save)
 
-
     def start_processors(self):
         super().start_processors()
         self.start_auto_processor()
 
-
     def stop_processors(self):
         super().stop_processors()
         self.stop_auto_processor()
-
 
     def start_auto_processor(self):
         self.auto_processor_active = True
@@ -196,12 +194,10 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
                 )
         self.auto_processor.start()
 
-
     def stop_auto_processor(self):
         if self.auto_processor_active:
             self.auto_processor_active = False
             self.auto_processor.join()
-
 
     def _t_auto_processor(self):
         logging.debug('%s auto processor started' % self.full_id)
@@ -210,14 +206,13 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if self.last_action and \
                     self.status != 0 and \
                     time.time() - self.last_action > self.auto_off:
-                        logging.debug('%s auto off after %u seconds' % \
-                                (self.full_id, self.auto_off))
-                        self.last_action = time.time()
-                        eva.uc.controller.exec_unit_action(self, 0, None,
-                                wait = eva.core.timeout)
+                logging.debug('%s auto off after %u seconds' % \
+                        (self.full_id, self.auto_off))
+                self.last_action = time.time()
+                eva.uc.controller.exec_unit_action(
+                    self, 0, None, wait=eva.core.timeout)
         self.auto_processor_active = False
         logging.debug('%s auto processor stopped' % self.full_id)
-
 
     def action_may_run(self, action):
         nv = action.nvalue
@@ -225,14 +220,12 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
         return self.action_always_exec or \
             action.nstatus != self.status or \
             nv != self.value
- 
 
     def action_log_run(self, action):
         logging.info(
             '%s executing action %s pr=%u, status=%s, value="%s"' % \
              (self.full_id, action.uuid, action.priority,
                  action.nstatus, action.nvalue))
-
 
     def action_run_args(self, action):
         nstatus = str(action.nstatus)
@@ -242,24 +235,23 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             nvalue = 'null'
         return (nstatus, nvalue)
 
-
     def action_before_get_task(self):
         self.enable_updates()
-
 
     def action_before_run(self, action):
         if not self.update_if_action:
             self.disable_updates()
-
 
     def action_after_run(self, action, xc):
         self.last_action = time.time()
         if self.update_exec_after_action: self.do_update()
         self.enable_updates()
 
-
-    def update_set_state(self, status = None, value = None,
-            from_mqtt = False, force_virtual = 0):
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_virtual=0):
         if self._destroyed: return False
         if self.virtual and not force_virtual:
             logging.debug('%s skipping update - it\'s virtual' % \
@@ -272,7 +264,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             logging.error('update %s returned bad data' % self.full_id)
             eva.core.log_traceback()
             return False
-        if not self.queue_lock.acquire(timeout = eva.core.timeout):
+        if not self.queue_lock.acquire(timeout=eva.core.timeout):
             logging.critical('Unit::update_set_state locking broken')
         if self.current_action and self.current_action.is_status_running():
             nstatus = None
@@ -281,14 +273,21 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             nstatus = _status
             nvalue = value
         self.update_expiration()
-        self.set_state(status = _status, value = value,
-                nstatus = nstatus, nvalue = nvalue, from_mqtt = from_mqtt)
+        self.set_state(
+            status=_status,
+            value=value,
+            nstatus=nstatus,
+            nvalue=nvalue,
+            from_mqtt=from_mqtt)
         self.queue_lock.release()
         return True
 
-
-    def set_state(self, status = None, value = None,
-            nstatus = None,nvalue = None, from_mqtt = False):
+    def set_state(self,
+                  status=None,
+                  value=None,
+                  nstatus=None,
+                  nvalue=None,
+                  from_mqtt=False):
         if self._destroyed: return False
         need_notify = False
         if status is not None:
@@ -315,9 +314,8 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if eva.core.db_update == 1: eva.uc.controller.save_item_state(self)
             if self.status == -1:
                 logging.error('%s status is -1 (failed)', self.full_id)
-            self.notify(skip_subscribed_mqtt = from_mqtt)
+            self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
-
 
     def set_expired(self):
         if super().set_expired():
@@ -326,14 +324,11 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
             if eva.core.db_update == 1:
                 eva.uc.controller.save_item_state(self)
 
-
     def reset_nstate(self):
-        self.set_state(nstatus = self.status, nvalue = self.value)
+        self.set_state(nstatus=self.status, nvalue=self.value)
 
-    
     def set_state_to_n(self):
-        self.set_state(status = self.nstatus, value = self.nvalue)
-
+        self.set_state(status=self.nstatus, value=self.nvalue)
 
     def destroy(self):
         self.nstatus = None
@@ -342,36 +337,35 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
         super().destroy()
 
 
-
 class UnitAction(eva.item.ItemAction):
 
-    def __init__(self, unit, nstatus, nvalue = None, priority = None,
-            action_uuid = None):
+    def __init__(self,
+                 unit,
+                 nstatus,
+                 nvalue=None,
+                 priority=None,
+                 action_uuid=None):
         self.unit_action_lock = threading.Lock()
-        if not self.unit_action_lock.acquire(timeout = eva.core.timeout):
+        if not self.unit_action_lock.acquire(timeout=eva.core.timeout):
             logging.critical('UnitAction::__init__ locking broken')
             return False
         self.nstatus = nstatus
         self.nvalue = nvalue
-        super().__init__(item = unit,
-                priority = priority,
-                action_uuid = action_uuid)
+        super().__init__(item=unit, priority=priority, action_uuid=action_uuid)
         self.unit_action_lock.release()
 
-
-    def set_status(self, status, exitcode = None,
-            out = None, err = None, lock = True):
+    def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
         if lock:
-            if not self.unit_action_lock.acquire(timeout = eva.core.timeout):
+            if not self.unit_action_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('UnitAction::set_status locking broken')
                 return False
-        result = super().set_status(status = status,
-                exitcode = exitcode, out = out, err = err, lock = lock)
+        result = super().set_status(
+            status=status, exitcode=exitcode, out=out, err=err, lock=lock)
         if not result:
             if lock: self.unit_action_lock.release()
             return False
         if self.is_status_running():
-            self.item.set_state(nstatus = self.nstatus, nvalue = self.nvalue)
+            self.item.set_state(nstatus=self.nstatus, nvalue=self.nvalue)
         elif self.is_status_failed() or self.is_status_terminated():
             self.item.reset_nstate()
         elif self.is_status_completed():
@@ -383,27 +377,21 @@ class UnitAction(eva.item.ItemAction):
                 self.item.update_expiration()
                 self.item.set_state_to_n()
                 smsg = 'status=%u value="%s"' % (self.item.status,
-                        self.item.value)
-            logging.debug('action %s completed, %s %s' % (self.uuid,
-                self.item.full_id, smsg))
+                                                 self.item.value)
+            logging.debug('action %s completed, %s %s' %
+                          (self.uuid, self.item.full_id, smsg))
         if lock: self.unit_action_lock.release()
         return True
-
 
     def action_env(self):
         if self.nvalue is not None: nvalue = self.nvalue
         else: nvalue = 'null'
-        e = {
-            'EVA_NSTATUS': str(self.nstatus),
-            'EVA_NVALUE': str(nvalue)
-            }
+        e = {'EVA_NSTATUS': str(self.nstatus), 'EVA_NVALUE': str(nvalue)}
         e.update(super().action_env())
         return e
-
 
     def serialize(self):
         d = super().serialize()
         d['nstatus'] = self.nstatus
         d['nvalue'] = self.nvalue
         return d
-

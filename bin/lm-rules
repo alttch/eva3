@@ -18,6 +18,7 @@ from eva.client import apiclient
 import eva.core
 from eva.tools import print_json
 
+
 def usage():
     print()
     print('EVA LM Decision Matrix Rules CLI version %s' % (apiclient.version))
@@ -113,11 +114,14 @@ Args for add and edit:
 def n2a(s):
     return '#' if s is None else s
 
+
 def bool2yn(b):
     return 'Y' if b else 'N'
 
+
 def s_for_init(s):
-    return s if s in [ 'only', 'skip'] else 'any'
+    return s if s in ['only', 'skip'] else 'any'
+
 
 def code_ok(code):
     if code == apiclient.result_ok:
@@ -145,13 +149,12 @@ def code_ok(code):
     return False
 
 
-cmd_list = [ 'list', 'l' ]
-cmd_add = [ 'add' ]
-cmd_edit = [ 'edit' ]
-cmd_delete = [ 'delete', 'del' ]
-cmd_enable = [ 'enable', 'e' ]
-cmd_disable = [ 'disable', 'd' ] 
-
+cmd_list = ['list', 'l']
+cmd_add = ['add']
+cmd_edit = ['edit']
+cmd_delete = ['delete', 'del']
+cmd_enable = ['enable', 'e']
+cmd_disable = ['disable', 'd']
 
 xparams = {}
 timeout = None
@@ -174,27 +177,24 @@ try:
         opts = sys.argv[3:]
     else:
         opts = sys.argv[2:]
-    o, a = getopt.getopt(opts,
-            'K:T:U:d:x:p:c:m:a:EyzD',
-            [
-                'type=',
-                'group=',
-                'item=',
-                'gt=',
-                'ge=',
-                'lt=',
-                'le=',
-                'eq=',
-                'exp',
-                'nocond',
-                'initial=',
-                'brk',
-                'nobrk',
-            ])
+    o, a = getopt.getopt(opts, 'K:T:U:d:x:p:c:m:a:EyzD', [
+        'type=',
+        'group=',
+        'item=',
+        'gt=',
+        'ge=',
+        'lt=',
+        'le=',
+        'eq=',
+        'exp',
+        'nocond',
+        'initial=',
+        'brk',
+        'nobrk',
+    ])
 except:
     usage()
     sys.exit(99)
-
 
 for i, v in o:
     if i == '-y' and func in cmd_add + cmd_enable + cmd_disable + cmd_edit:
@@ -215,7 +215,7 @@ for i, v in o:
     elif i == '-E':
         enable_after = True
     elif i == '--type':
-        if v not in [ 'U', 'S', 'LV', 'unit', 'sensor', 'lvar', '#', 'none' ]:
+        if v not in ['U', 'S', 'LV', 'unit', 'sensor', 'lvar', '#', 'none']:
             usage()
             sys.exit(99)
         apply_props['for_item_type'] = v
@@ -226,7 +226,7 @@ for i, v in o:
     elif i == '-d':
         apply_props['description'] = v
     elif i == '-x':
-        if v not in [ 'status', 'value' ]:
+        if v not in ['status', 'value']:
             usage()
             sys.exit(99)
         apply_props['for_prop'] = v
@@ -238,7 +238,7 @@ for i, v in o:
             sys.exit(99)
     elif i == '--gt' or i == '--ge':
         try:
-            if v.lower() not in [ 'null', 'none', '' ]:
+            if v.lower() not in ['null', 'none', '']:
                 apply_props['in_range_min'] = str(float(v))
             else:
                 apply_props['in_range_min'] = ''
@@ -251,7 +251,7 @@ for i, v in o:
             apply_props['in_range_min_eq'] = 'True'
     elif i == '--lt' or i == '--le':
         try:
-            if v.lower() not in [ 'null', 'none', '' ]:
+            if v.lower() not in ['null', 'none', '']:
                 apply_props['in_range_max'] = str(float(v))
             else:
                 apply_props['in_range_max'] = ''
@@ -279,7 +279,7 @@ for i, v in o:
         apply_props['in_range_min'] = ''
         apply_props['in_range_max'] = ''
     elif i == '--initial':
-        if v not in [ 'only', 'skip', 'any', 'none', 'None' ]:
+        if v not in ['only', 'skip', 'any', 'none', 'None']:
             usage()
             sys.exit(99)
         apply_props['for_initial'] = v
@@ -328,10 +328,10 @@ elif func in cmd_enable + cmd_disable:
 elif func in cmd_add:
     apifunc = 'create_rule'
 elif func in cmd_edit:
-    p = { 'i': rule_id }
+    p = {'i': rule_id}
     p.update(xparams)
     if 'save' in p: del p['save']
-    code, result = api.call('list_rule_props', p, timeout, _debug = debug)
+    code, result = api.call('list_rule_props', p, timeout, _debug=debug)
     if not code_ok(code):
         sys.exit(code)
     enable_after = result['enabled']
@@ -346,7 +346,7 @@ else:
 params.update(xparams)
 
 if apifunc:
-    code, result = api.call(apifunc, params, timeout, _debug = debug)
+    code, result = api.call(apifunc, params, timeout, _debug=debug)
     if not code_ok(code):
         sys.exit(code)
 
@@ -379,7 +379,7 @@ if func in cmd_list:
                 r['in_range_min'] is None and \
                 r['in_range_max'] == -1 and \
                 r['in_range_max_eq']:
-                    exp = ' (expire)'
+            exp = ' (expire)'
         print(' %s %s%s%s%s%s%s%s' % \
                 (
                     bool2yn(r['enabled']).rjust(1),
@@ -409,21 +409,21 @@ if func in cmd_add + cmd_edit:
     if func in cmd_edit:
         print('Modifying rule %s' % rule_id)
     for i, v in apply_props.items():
-        p = { 'i': rule_id }
+        p = {'i': rule_id}
         p.update(xparams)
         p['p'] = i
         if v.lower() != 'none':
             p['v'] = v
-        code, result = api.call('set_rule_prop', p, timeout, _debug = debug)
+        code, result = api.call('set_rule_prop', p, timeout, _debug=debug)
         if not code_ok(code):
             sys.exit(code)
         print('%s = %s' % (i, v))
     if enable_after:
-        p = { 'i': rule_id }
+        p = {'i': rule_id}
         p.update(xparams)
         p['p'] = 'enabled'
         p['v'] = '1'
-        code, result = api.call('set_rule_prop', p, timeout, _debug = debug)
+        code, result = api.call('set_rule_prop', p, timeout, _debug=debug)
         if not code_ok(code):
             sys.exit(code)
         print('Enabled: %s' % rule_id)

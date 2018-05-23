@@ -14,15 +14,14 @@ def crypt_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
 
-def authenticate(user = None, password = None):
+def authenticate(user=None, password=None):
     if user is None or password is None:
         return None
     db = eva.core.get_user_db()
     c = db.cursor()
     try:
-        c.execute(
-                'select k from users where u = ? and p = ?',
-                    (user, crypt_password(password)))
+        c.execute('select k from users where u = ? and p = ?',
+                  (user, crypt_password(password)))
         row = c.fetchone()
         db.commit()
         c.close()
@@ -60,20 +59,19 @@ def list_users():
         db.commit()
         c.close()
         db.close()
-        return sorted(result, key = lambda k: k['user'])
+        return sorted(result, key=lambda k: k['user'])
     except:
         return []
 
 
-def create_user(user = None, password = None, key = None, create = True):
+def create_user(user=None, password=None, key=None, create=True):
     if user is None or password is None or key is None or \
             key not in apikey.keys_by_id:
         return False
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
-        c.execute(
-                'select k from users where u = ?', (user,))
+        c.execute('select k from users where u = ?', (user,))
         row = c.fetchone()
         db.commit()
         c.close()
@@ -89,12 +87,12 @@ def create_user(user = None, password = None, key = None, create = True):
         else:
             logging.info('No user table in db, creating new')
             create_user_table()
-            create_user(user = user, create = False)
+            create_user(user=user, create=False)
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
-        c.execute('insert into users(u, p, k) values (?, ?, ?)', 
-            (user, crypt_password(password), key))
+        c.execute('insert into users(u, p, k) values (?, ?, ?)',
+                  (user, crypt_password(password), key))
         db.commit()
         c.close()
         db.close()
@@ -105,14 +103,13 @@ def create_user(user = None, password = None, key = None, create = True):
         eva.core.log_traceback()
 
 
-def set_user_password(user = None, password = None):
+def set_user_password(user=None, password=None):
     if user is None or password is None:
         return
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
-        c.execute(
-                'select k from users where u = ?', (user,))
+        c.execute('select k from users where u = ?', (user,))
         row = c.fetchone()
         db.commit()
         c.close()
@@ -122,7 +119,7 @@ def set_user_password(user = None, password = None):
             return False
         c = db.cursor()
         c.execute('update users set p = ? where u = ?',
-                (crypt_password(password), user))
+                  (crypt_password(password), user))
         db.commit()
         c.close()
         db.close()
@@ -133,14 +130,13 @@ def set_user_password(user = None, password = None):
         eva.core.log_traceback()
 
 
-def set_user_key(user = None, key = None):
+def set_user_key(user=None, key=None):
     if user is None or key is None or key not in apikey.keys_by_id:
         return
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
-        c.execute(
-                'select k from users where u = ?', (user,))
+        c.execute('select k from users where u = ?', (user,))
         row = c.fetchone()
         db.commit()
         c.close()
@@ -149,8 +145,7 @@ def set_user_key(user = None, key = None):
                     (user))
             return False
         c = db.cursor()
-        c.execute('update users set k = ? where u = ?',
-                (key, user))
+        c.execute('update users set k = ? where u = ?', (key, user))
         db.commit()
         c.close()
         db.close()
@@ -161,14 +156,13 @@ def set_user_key(user = None, key = None):
         eva.core.log_traceback()
 
 
-def destroy_user(user = None):
+def destroy_user(user=None):
     if user is None:
         return
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
-        c.execute(
-                'select k from users where u = ?', (user,))
+        c.execute('select k from users where u = ?', (user,))
         row = c.fetchone()
         db.commit()
         c.close()
@@ -177,8 +171,7 @@ def destroy_user(user = None):
                     (user))
             return False
         c = db.cursor()
-        c.execute('delete from users where u = ?',
-                (user, ))
+        c.execute('delete from users where u = ?', (user,))
         db.commit()
         c.close()
         db.close()

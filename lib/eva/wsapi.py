@@ -14,15 +14,16 @@ from eva.notify import WSNotifier_Client
 
 from ws4py.server.cherrypyserver import WebSocketPlugin, WebSocketTool
 
+
 class WS_API(object):
 
     @cherrypy.expose
-    def default(self, k = None):
+    def default(self, k=None):
         _k = k
         if _k is None:
             _k = cherrypy.session.get('k')
             if _k is None: _k = eva.apikey.key_by_ip_address(http_real_ip())
-        if not apikey.check(_k, ip = http_real_ip()): raise cp_forbidden_key()
+        if not apikey.check(_k, ip=http_real_ip()): raise cp_forbidden_key()
         handler = cherrypy.request.ws_handler
         client = WSNotifier_Client('ws_' + eva.core.product_code + '_' + \
                 cherrypy.request.remote.ip + '_' + \
@@ -33,13 +34,14 @@ class WS_API(object):
 def start():
     WebSocketPlugin(cherrypy.engine).subscribe()
     cherrypy.tools.websocket = WebSocketTool()
-    cherrypy.tree.mount(WS_API(), '/ws',
+    cherrypy.tree.mount(
+        WS_API(),
+        '/ws',
         config={
             '/': {
-             'tools.websocket.on': True,
-             'tools.websocket.handler_cls': NWebSocket,
-             'tools.sessions.on': True,
-             'tools.sessions.timeout': session_timeout
-             }
+                'tools.websocket.on': True,
+                'tools.websocket.handler_cls': NWebSocket,
+                'tools.sessions.on': True,
+                'tools.sessions.timeout': session_timeout
             }
-        )
+        })

@@ -12,11 +12,11 @@ import subprocess
 import time
 import jsonpickle
 
-dir_eva  = '/'.join(
-        os.path.dirname(os.path.realpath(__file__)).split('/')[:-1])
-dir_runtime  = dir_eva + '/runtime'
+dir_eva = '/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1])
+dir_runtime = dir_eva + '/runtime'
 
 cvars = {}
+
 
 def usage():
     print("""
@@ -26,9 +26,10 @@ Usage: test-uc-xc <xc> [args]
     """)
     sys.exit(99)
 
+
 cvars_fname = dir_runtime + '/uc_cvars.json'
 
-if len(sys.argv)<2: usage()
+if len(sys.argv) < 2: usage()
 print('Reading custom vars from %s' % cvars_fname)
 print()
 
@@ -36,7 +37,7 @@ raw = ''.join(open(cvars_fname).readlines())
 cvars = jsonpickle.decode(raw)
 
 for x in sorted(cvars.keys()):
-    print ('%s = "%s"' % (x, cvars[x]))
+    print('%s = "%s"' % (x, cvars[x]))
 
 env = os.environ.copy()
 if not 'PATH' in env: env['PATH'] = ''
@@ -51,25 +52,26 @@ print('stime: %f' % stime)
 
 c = sys.argv[1]
 
-if c[0]!='.' and c[0]!='/': c = './' + c
+if c[0] != '.' and c[0] != '/': c = './' + c
 
-cmd = [ c ]
+cmd = [c]
 
-if len(sys.argv)>1: cmd += sys.argv[2:]
+if len(sys.argv) > 1: cmd += sys.argv[2:]
 
 try:
-    p = subprocess.Popen(args = cmd,
-            stdin = subprocess.PIPE,
-            stdout = subprocess.PIPE,
-            stderr = subprocess.STDOUT,
-            close_fds = True,
-            env = env)
+    p = subprocess.Popen(
+        args=cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        close_fds=True,
+        env=env)
     p.wait()
 except:
     print()
     print('Command execution failed')
     sys.exit(2)
-out,err = p.communicate()
+out, err = p.communicate()
 etime = time.time()
 diff = etime - stime
 print('etime: %f' % etime)
@@ -81,4 +83,3 @@ if out: print(out.decode())
 print("---- STDERR ----")
 if err: print(err.decode())
 print("----------------")
-

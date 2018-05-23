@@ -25,11 +25,12 @@ uc_pool = None
 
 lm_pool = None
 
+
 def get_controller(controller_id):
     if not controller_id: return None
     if controller_id.find('/') > -1:
         i = controller_id.split('/')
-        if len(i)>2: return None
+        if len(i) > 2: return None
         if i[0] == 'uc' and i[1] in remote_ucs:
             return remote_ucs[i[1]]
         if i[0] == 'lm' and i[1] in remote_lms:
@@ -45,6 +46,7 @@ def get_uc(controller_id):
     else:
         if controller_id in remote_ucs:
             return remote_ucs[controller_id]
+
 
 def get_lm(controller_id):
     if not controller_id: return None
@@ -116,8 +118,12 @@ def load_remote_lms():
         return False
 
 
-def append_uc(uri, key = None, mqtt_update = None,
-        ssl_verify = True, timeout = None, save = False):
+def append_uc(uri,
+              key=None,
+              mqtt_update=None,
+              ssl_verify=True,
+              timeout=None,
+              save=False):
     api = eva.client.apiclient.APIClient()
     api.set_product('uc')
     if key is not None: api.set_key(eva.apikey.format_key(key))
@@ -127,13 +133,12 @@ def append_uc(uri, key = None, mqtt_update = None,
         except:
             return False
         api.set_timeout(t)
-    else: api.set_timeout(eva.core.timeout)
+    else:
+        api.set_timeout(eva.core.timeout)
     api.set_uri(uri)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
-    u = eva.client.remote_controller.RemoteUC(None,
-            api = api,
-            mqtt_update = mqu)
+    u = eva.client.remote_controller.RemoteUC(None, api=api, mqtt_update=mqu)
     u._key = key
     if not uc_pool.append(u): return False
     remote_ucs[u.item_id] = u
@@ -156,7 +161,7 @@ def remove_uc(controller_id):
                     eva.core.log_traceback()
             elif i.config_file_exists:
                 configs_to_remove.add(i.get_fname())
-            del(remote_ucs[controller_id])
+            del (remote_ucs[controller_id])
             logging.info('controller %s removed' % controller_id)
             return True
         except:
@@ -164,8 +169,12 @@ def remove_uc(controller_id):
     return False
 
 
-def append_lm(uri, key = None, mqtt_update = None,
-        ssl_verify = True, timeout = None, save = False):
+def append_lm(uri,
+              key=None,
+              mqtt_update=None,
+              ssl_verify=True,
+              timeout=None,
+              save=False):
     api = eva.client.apiclient.APIClient()
     api.set_product('lm')
     if key is not None: api.set_key(eva.apikey.format_key(key))
@@ -175,13 +184,12 @@ def append_lm(uri, key = None, mqtt_update = None,
         except:
             return False
         api.set_timeout(t)
-    else: api.set_timeout(eva.core.timeout)
+    else:
+        api.set_timeout(eva.core.timeout)
     api.set_uri(uri)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
-    u = eva.client.remote_controller.RemoteLM(None,
-            api = api,
-            mqtt_update = mqu)
+    u = eva.client.remote_controller.RemoteLM(None, api=api, mqtt_update=mqu)
     u._key = key
     if not lm_pool.append(u): return False
     remote_lms[u.item_id] = u
@@ -204,7 +212,7 @@ def remove_lm(controller_id):
                     eva.core.log_traceback()
             elif i.config_file_exists:
                 configs_to_remove.add(i.get_fname())
-            del(remote_lms[controller_id])
+            del (remote_lms[controller_id])
             logging.info('controller %s removed' % controller_id)
             return True
         except:
@@ -254,14 +262,14 @@ def dump():
         r_ucs[i] = v.serialize()
     for i, v in remote_lms.copy().items():
         r_lms[i] = v.serialize()
-    else: return {
+    else:
+        return {
             'remote_ucs': r_ucs,
             'remote_lms': r_lms,
-            }
+        }
 
 
 def init():
     eva.core.append_save_func(save)
     eva.core.append_dump_func('sfa', dump)
     eva.core.append_stop_func(stop)
-

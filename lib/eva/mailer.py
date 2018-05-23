@@ -14,9 +14,10 @@ _from = 'eva@' + platform.node()
 
 _smtp_host = 'localhost'
 _smtp_port = 25
-_default_rcp = [ 'root' ]
+_default_rcp = ['root']
 
 default_port = 25
+
 
 def update_config(cfg):
     global _smtp_host, _smtp_port, _from, _default_rcp
@@ -34,14 +35,17 @@ def update_config(cfg):
         _from = 'eva@' + platform.node()
     logging.debug('mailer.from = %s' % _from)
     try:
-        _default_rcp = list(filter(None,
-            [x.strip() for x in cfg.get('mailer', 'default_rcp').split(',')]))
+        _default_rcp = list(
+            filter(None, [
+                x.strip() for x in cfg.get('mailer', 'default_rcp').split(',')
+            ]))
     except:
-        _default_rcp = [ 'root' ]
+        _default_rcp = ['root']
     logging.debug('mailer.default_rcp = %s' % ', '.join(_default_rcp))
     return True
 
-def send(subject = None, text = None, rcp = None):
+
+def send(subject=None, text=None, rcp=None):
 
     if subject is None: s = ''
     else: s = subject
@@ -58,7 +62,7 @@ def send(subject = None, text = None, rcp = None):
         if not _default_rcp: return False
         else: _rcp = _default_rcp
     else:
-        if isinstance(_rcp, str): _rcp = [ rcp ]
+        if isinstance(_rcp, str): _rcp = [rcp]
         else: _rcp = rcp
 
     if len(_rcp) == 1:

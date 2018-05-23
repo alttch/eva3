@@ -15,11 +15,9 @@ class Sensor(eva.item.VariableItem):
     def __init__(self, sensor_id):
         super().__init__(sensor_id, 'sensor')
 
-
-    def notify(self, skip_subscribed_mqtt = False):
-        super().notify(skip_subscribed_mqtt = skip_subscribed_mqtt)
+    def notify(self, skip_subscribed_mqtt=False):
+        super().notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
         if eva.core.db_update == 1: eva.uc.controller.save_item_state(self)
-
 
     def set_expired(self):
         if super().set_expired():

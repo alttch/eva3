@@ -22,7 +22,6 @@ from eva.tools import wait_for as _wait_for
 
 from eva.logs import MemoryLogHandler
 
-
 version = __version__
 
 timeout = 5
@@ -59,7 +58,7 @@ db_update = 0
 
 sleep_step = 0.1
 
-db_update_codes = [ 'manual', 'instant', 'on_exit' ]
+db_update_codes = ['manual', 'instant', 'on_exit']
 
 notify_on_start = True
 
@@ -115,7 +114,7 @@ def sighandler_term(signum, frame):
     sys.exit(0)
 
 
-def save(func = None):
+def save(func=None):
     result = True
     if exec_before_save:
         logging.debug('executing before save command "%s"' % \
@@ -197,11 +196,10 @@ def create_dump():
         for i, f in _dump_func.items():
             dump[i] = f()
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
-                '.dump.json';
-        open(filename,'w')
+                '.dump.json'
+        open(filename, 'w')
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
-        open(filename,'a').write(format_json(dump,
-            minimal = not development))
+        open(filename, 'a').write(format_json(dump, minimal=not development))
     except:
         log_traceback()
         return None
@@ -227,8 +225,8 @@ def serialize():
     d['db_update'] = db_update
     d['notify_on_start'] = notify_on_start
     d['dir_eva'] = dir_eva
-    d['userdb_file']= userdb_file
-    d['db_file']= db_file
+    d['userdb_file'] = userdb_file
+    d['db_file'] = db_file
     d['pid_file'] = pid_file
     d['log_file'] = log_file
     d['threads'] = {}
@@ -249,9 +247,11 @@ def set_product(code, build):
     primary_config = '%s/etc/%s.ini' % (dir_eva, product_code)
     db_file = '%s/db/%s.db' % (dir_runtime, product_code)
 
+
 def get_db():
     db = sqlite3.connect(db_file)
     return db
+
 
 def get_user_db():
     if userdb_file:
@@ -261,14 +261,18 @@ def get_user_db():
     db = sqlite3.connect(f)
     return db
 
-def reset_log(initial = False):
+
+def reset_log(initial=False):
     global logger, log_file_handler
     if logger and not log_file: return
     logger = logging.getLogger()
-    try: log_file_handler.stream.close()
-    except: pass
+    try:
+        log_file_handler.stream.close()
+    except:
+        pass
     if initial:
-        for h in logger.handlers: logger.removeHandler(h)
+        for h in logger.handlers:
+            logger.removeHandler(h)
     else:
         logger.removeHandler(log_file_handler)
     if not development:
@@ -286,8 +290,7 @@ def reset_log(initial = False):
         logger.addHandler(MemoryLogHandler())
 
 
-
-def load(fname = None, initial = False, init_log = True):
+def load(fname=None, initial=False, init_log=True):
     global system_name, log_file, pid_file, debug, development, show_traceback
     global notify_on_start, db_file, userdb_file
     global polldelay, db_update, keep_action_history, keep_logmem
@@ -313,14 +316,17 @@ def load(fname = None, initial = False, init_log = True):
                         (product_name, fname_full), end = '')
                 print('Another process is already running')
                 return None
-            except: log_traceback()
-            try: log_file = cfg.get('server', 'log_file')
-            except: log_file = None
+            except:
+                log_traceback()
+            try:
+                log_file = cfg.get('server', 'log_file')
+            except:
+                log_file = None
             if log_file and log_file[0] != '/':
                 log_file = dir_eva + '/' + log_file
             if init_log: reset_log(initial)
             try:
-                development = (cfg.get('server','development') == 'yes')
+                development = (cfg.get('server', 'development') == 'yes')
                 if development:
                     show_traceback = True
             except:
@@ -333,26 +339,29 @@ def load(fname = None, initial = False, init_log = True):
             else:
                 try:
                     show_traceback = (cfg.get('server',
-                                        'show_traceback') == 'yes')
+                                              'show_traceback') == 'yes')
                 except:
                     show_traceback = False
             if not development and not debug:
                 try:
-                    debug = (cfg.get('server','debug') == 'yes')
+                    debug = (cfg.get('server', 'debug') == 'yes')
                     if debug: debug_on()
                 except:
                     pass
                 if not debug:
-                        logging.basicConfig(level=logging.INFO)
-                        if logger: logger.setLevel(logging.INFO)
-            try: system_name = cfg.get('server', 'name')
-            except: pass
+                    logging.basicConfig(level=logging.INFO)
+                    if logger: logger.setLevel(logging.INFO)
+            try:
+                system_name = cfg.get('server', 'name')
+            except:
+                pass
             logging.info('Loading server config')
             logging.debug('server.pid_file = %s' % pid_file)
             try:
-                notify_on_start = (
-                        cfg.get('server','notify_on_start') == 'yes')
-            except: pass
+                notify_on_start = (cfg.get('server',
+                                           'notify_on_start') == 'yes')
+            except:
+                pass
             try:
                 db_file = cfg.get('server', 'db_file')
                 if db_file and db_file[0] != '/':
@@ -370,41 +379,53 @@ def load(fname = None, initial = False, init_log = True):
             else: f = userdb_file
             logging.debug('server.userdb_file = %s' % f)
             try:
-                notify_on_start = (
-                        cfg.get('server','notify_on_start') == 'yes')
-            except: pass
+                notify_on_start = (cfg.get('server',
+                                           'notify_on_start') == 'yes')
+            except:
+                pass
             logging.debug('server.notify_on_start = %s' % ('yes' \
                                         if notify_on_start else 'no'))
-        try: polldelay = float(cfg.get('server', 'polldelay'))
-        except: pass
-        try: timeout = float(cfg.get('server', 'timeout'))
-        except: pass
+        try:
+            polldelay = float(cfg.get('server', 'polldelay'))
+        except:
+            pass
+        try:
+            timeout = float(cfg.get('server', 'timeout'))
+        except:
+            pass
         logging.debug('server.timeout = %s' % timeout)
         logging.debug('server.polldelay = %s  ( %s msec )' % \
                                             (polldelay, int(polldelay * 1000)))
-        try: db_update = db_update_codes.index(cfg.get('server', 'db_update'))
-        except: pass
+        try:
+            db_update = db_update_codes.index(cfg.get('server', 'db_update'))
+        except:
+            pass
         logging.debug('server.db_update = %s' % db_update_codes[db_update])
         try:
             keep_action_history = int(cfg.get('server', 'keep_action_history'))
-        except: pass
+        except:
+            pass
         logging.debug('server.keep_action_history = %s sec' % \
                 keep_action_history)
         try:
             keep_logmem = int(cfg.get('server', 'keep_logmem'))
-        except: pass
+        except:
+            pass
         logging.debug('server.keep_logmem = %s sec' % keep_logmem)
         try:
             exec_before_save = cfg.get('server', 'exec_before_save')
-        except: pass
+        except:
+            pass
         logging.debug('server.exec_before_save = %s' % exec_before_save)
         try:
             exec_after_save = cfg.get('server', 'exec_after_save')
-        except: pass
+        except:
+            pass
         logging.debug('server.exec_after_save = %s' % exec_after_save)
         try:
             mqtt_update_default = cfg.get('server', 'mqtt_update_default')
-        except: pass
+        except:
+            pass
         logging.debug('server.mqtt_update_default = %s' % mqtt_update_default)
         return cfg
     except:
@@ -413,9 +434,9 @@ def load(fname = None, initial = False, init_log = True):
     return False
 
 
-def load_cvars(fname = None):
+def load_cvars(fname=None):
     global env, cvars
-    fname_full = format_cfg_fname(fname, 'cvars', ext = 'json', runtime = True)
+    fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
     if not fname_full:
         logging.warning('No file or product specified,' + \
                             ' skipping loading custom variables')
@@ -441,11 +462,11 @@ def load_cvars(fname = None):
     return True
 
 
-def save_cvars(fname = None):
-    fname_full = format_cfg_fname(fname, 'cvars', ext = 'json', runtime = True)
+def save_cvars(fname=None):
+    fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
     logging.info('Saving custom vars to %s' % fname_full)
     try:
-        open(fname_full,'w').write(format_json(cvars, minimal = False))
+        open(fname_full, 'w').write(format_json(cvars, minimal=False))
     except:
         logging.error('can not save custom vars into %s' % fname_full)
         log_traceback()
@@ -457,7 +478,7 @@ def get_cvar(var):
     return cvars[var] if var in cvars else None
 
 
-def set_cvar(var, value = None):
+def set_cvar(var, value=None):
     if not var: return False
     if value is not None:
         cvars[var] = value
@@ -491,12 +512,14 @@ def debug_off():
 
 
 def fork():
-    if os.fork(): time.sleep(1);sys.exit()
+    if os.fork():
+        time.sleep(1)
+        sys.exit()
 
 
 def write_pid_file():
     try:
-        open(pid_file,'w').write(str(os.getpid()))
+        open(pid_file, 'w').write(str(os.getpid()))
     except:
         log_traceback()
 
@@ -508,16 +531,16 @@ def unlink_pid_file():
         log_traceback()
 
 
-def wait_for(func, wait_timeout = None, delay = None, wait_for_false = False):
+def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     if wait_timeout: t = wait_timeout
     else: t = timeout
     if delay: p = delay
     else: p = polldelay
-    return _wait_for(func = func, wait_timeout = t, delay = p,
-            wait_for_false = wait_for_false)
+    return _wait_for(
+        func=func, wait_timeout=t, delay=p, wait_for_false=wait_for_false)
 
 
-def log_traceback(display = False, notifier = False, force = False):
+def log_traceback(display=False, notifier=False, force=False):
     if (show_traceback or force) and not display:
         pfx = '.' if notifier else ''
         logging.error(pfx + traceback.format_exc())
@@ -525,10 +548,10 @@ def log_traceback(display = False, notifier = False, force = False):
         print(traceback.format_exc())
 
 
-def format_xc_fname(item = None, xc_type = '', fname = None, update = False):
+def format_xc_fname(item=None, xc_type='', fname=None, update=False):
     path = dir_xc + '/' + product_code
     if fname:
-        return fname if fname[0]=='/' else path + '/' + fname
+        return fname if fname[0] == '/' else path + '/' + fname
     if not item: return None
     fname = item.item_id
     if update: fname += '_update'
@@ -536,8 +559,7 @@ def format_xc_fname(item = None, xc_type = '', fname = None, update = False):
     return path + '/' + fname
 
 
-def format_cfg_fname(fname, cfg = None, ext = 'ini', path = None,
-        runtime = False):
+def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
     if path: _path = path
     else:
         if runtime: _path = dir_runtime
@@ -547,9 +569,12 @@ def format_cfg_fname(fname, cfg = None, ext = 'ini', path = None,
         else: sfx = ''
         if product_code:
             return '%s/%s%s.%s' % (_path, product_code, sfx, ext)
-        else: return None
-    elif fname[0]!='.' and fname[0]!='/': return _path + '/' + fname
-    else: return fname
+        else:
+            return None
+    elif fname[0] != '.' and fname[0] != '/':
+        return _path + '/' + fname
+    else:
+        return fname
 
 
 def init():
@@ -557,4 +582,3 @@ def init():
     append_dump_func('eva-core', serialize)
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
-

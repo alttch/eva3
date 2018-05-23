@@ -7,9 +7,10 @@ import logging
 import eva.item
 import eva.uc.controller
 
+
 class UCMultiUpdate(eva.item.MultiUpdate):
 
-    def set_prop(self, prop, val = None, save = False):
+    def set_prop(self, prop, val=None, save=False):
         if prop == 'item+':
             item = eva.uc.controller.get_item(val)
             if item and \

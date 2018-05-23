@@ -14,7 +14,9 @@ from netaddr import IPNetwork, IPAddress
 
 import eva.core
 
+
 class MultiOrderedDict(OrderedDict):
+
     def __setitem__(self, key, value):
         if isinstance(value, list) and key in self:
             self[key].extend(value)
@@ -27,14 +29,14 @@ def config_error(fname, section, key, value):
             (fname, key, value, section))
 
 
-def format_json(obj, minimal = False):
+def format_json(obj, minimal=False):
     return json.dumps(json.loads(jsonpickle.encode(obj,
             unpicklable = False)), indent = 4, sort_keys = True) \
                 if not minimal else jsonpickle.encode(obj, unpicklable = False)
 
 
 def fname_remove_unsafe(fname):
-    return fname.replace('/','').replace('..','')
+    return fname.replace('/', '').replace('..', '')
 
 
 def print_json(obj):
@@ -58,7 +60,7 @@ def netacl_match(host, acl):
     return False
 
 
-def wait_for(func, wait_timeout, delay, wait_for_false = False):
+def wait_for(func, wait_timeout, delay, wait_for_false=False):
     a = 0
     if wait_for_false:
         while func() and a < wait_timeout / delay:
@@ -74,7 +76,6 @@ def wait_for(func, wait_timeout, delay, wait_for_false = False):
 def val_to_boolean(s):
     if s is None: return None
     val = str(s)
-    if val.lower() in [ '1', 'true', 'yes', 'on', 'y' ]: return True
-    if val.lower() in [ '0', 'false', 'no', 'off', 'n' ]: return False
+    if val.lower() in ['1', 'true', 'yes', 'on', 'y']: return True
+    if val.lower() in ['0', 'false', 'no', 'off', 'n']: return False
     return None
-

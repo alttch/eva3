@@ -29,13 +29,11 @@ class Item(object):
         self.config_changed = False
         self.config_file_exists = False
 
-
-    def set_group(self, group = None):
+    def set_group(self, group=None):
         if group: self.group = group
         else: self.group = 'nogroup'
         self.full_id = self.group + '/' + self.item_id
         self.oid = self.item_type + ':' + self.full_id
-
 
     def update_config(self, data):
         if 'group' in data:
@@ -44,8 +42,7 @@ class Item(object):
             self.description = data['description']
         self.config_changed = True
 
-
-    def set_prop(self, prop, val = None, save = False):
+    def set_prop(self, prop, val=None, save=False):
         if prop == 'description':
             if val is None:
                 v = ''
@@ -58,35 +55,37 @@ class Item(object):
             return True
         return False
 
-
     def log_set(self, prop, val):
         logging.info('set %s.%s = %s' % (self.oid, prop, val))
 
-
     def item_env(self):
         e = {
-            'EVA_ITEM_ID' : self.item_id,
-            'EVA_ITEM_TYPE' : self.item_type,
-            'EVA_ITEM_GROUP' : self.group,
+            'EVA_ITEM_ID': self.item_id,
+            'EVA_ITEM_TYPE': self.item_type,
+            'EVA_ITEM_GROUP': self.group,
             'EVA_ITEM_PARENT_GROUP': self.group.split('/')[-1],
-            'EVA_ITEM_ID_FULL' : self.group + '/' + self.item_id
-            }
+            'EVA_ITEM_ID_FULL': self.group + '/' + self.item_id
+        }
         return e
-
 
     def copy(self):
         return copy.copy(self)
 
-
-    def notify(self, retain = None, skip_subscribed_mqtt = False):
+    def notify(self, retain=None, skip_subscribed_mqtt=False):
         if skip_subscribed_mqtt: s = self
         else: s = None
-        eva.notify.notify('state', data = self.copy(), retain = retain,
-                skip_subscribed_mqtt_item = s)
+        eva.notify.notify(
+            'state',
+            data=self.copy(),
+            retain=retain,
+            skip_subscribed_mqtt_item=s)
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
         d = {}
         if not props:
             d['id'] = self.item_id
@@ -101,8 +100,7 @@ class Item(object):
             d['oid'] = self.oid
         return d
 
-
-    def get_fname(self, fname = None):
+    def get_fname(self, fname=None):
         if fname:
             return fname
         else:
@@ -110,8 +108,7 @@ class Item(object):
                     '_%s.d/' % self.item_type + self.item_id + '.json', \
                     cfg = None, runtime = True)
 
-
-    def load(self, fname = None):
+    def load(self, fname=None):
         fname_full = self.get_fname(fname)
         try:
             raw = ''.join(open(fname_full).readlines())
@@ -137,23 +134,21 @@ class Item(object):
         self.config_file_exists = True
         return True
 
-
-    def save(self, fname = None):
-        u = self.serialize(config = True)
+    def save(self, fname=None):
+        u = self.serialize(config=True)
         fname_full = self.get_fname(fname)
-        data = self.serialize(config = True)
+        data = self.serialize(config=True)
         logging.debug('Saving %s configuration' % self.item_id)
         try:
-            open(fname_full,'w').write(format_json(data, minimal = False))
+            open(fname_full, 'w').write(format_json(data, minimal=False))
             self.config_changed = False
         except:
             logging.error('can not save %s config into %s' % \
-				(self.item_id,fname_full))
+    (self.item_id,fname_full))
             eva.core.log_traceback()
             return False
         self.config_file_exists = True
         return True
-
 
     def set_modified(self, save):
         if save:
@@ -161,19 +156,16 @@ class Item(object):
         else:
             self.config_changed = True
 
-
     def start_processors(self):
         logging.debug('%s processors started' % self.full_id)
 
     def stop_processors(self):
         logging.debug('%s processors stopped' % self.full_id)
 
-
     def destroy(self):
         self._destroyed = True
         self.stop_processors()
         # eva.notify.unsubscribe_item(self)
-
 
     def is_destroyed(self):
         return self._destroyed
@@ -206,12 +198,11 @@ class UpdatableItem(Item):
         self.mqtt_update = None
         self.mqtt_update_notifier = None
         self.mqtt_update_qos = 1
-        self.mqtt_update_topics = [ 'status', 'value' ]
+        self.mqtt_update_topics = ['status', 'value']
         self.virtual = False
         self._virtual_allowed = True
         self._mqtt_updates_allowed = True
         self._snmp_traps_allowed = True
-
 
     def update_config(self, data):
         if 'virtual' in data and self._virtual_allowed:
@@ -239,7 +230,7 @@ class UpdatableItem(Item):
                         (self.full_id, n))
             else:
                 self.mqtt_update_notifier = n
-                if len(params)>1:
+                if len(params) > 1:
                     try:
                         self.mqtt_update_qos = int(params[1])
                     except:
@@ -248,8 +239,7 @@ class UpdatableItem(Item):
                         eva.core.log_traceback()
         super().update_config(data)
 
-
-    def set_prop(self, prop, val = None, save = False):
+    def set_prop(self, prop, val=None, save=False):
         if prop == 'virtual' and self._virtual_allowed:
             v = val_to_boolean(val)
             if v is not None:
@@ -330,7 +320,7 @@ class UpdatableItem(Item):
                     update_timeout = float(val)
                 except:
                     return False
-                if update_timeout <=0: return False
+                if update_timeout <= 0: return False
                 if self._update_timeout != update_timeout:
                     self._update_timeout = update_timeout
                     self.update_timeout = update_timeout
@@ -437,7 +427,7 @@ class UpdatableItem(Item):
                 if not self.snmp_trap: self.snmp_trap = {}
                 if not 'set_if' in self.snmp_trap:
                     self.snmp_trap['set_if'] = []
-                r = { 'vars': ivars }
+                r = {'vars': ivars}
                 if s != 'null':
                     r['status'] = int(s)
                 if va != 'null':
@@ -484,7 +474,6 @@ class UpdatableItem(Item):
         else:
             return super().set_prop(prop, val, save)
 
-
     def start_processors(self):
         self.subscribe_mqtt_update()
         self.subscribe_snmp_traps()
@@ -492,7 +481,6 @@ class UpdatableItem(Item):
         self.start_update_scheduler()
         self.start_expiration_checker()
         super().start_processors()
-
 
     def stop_processors(self):
         self.unsubscribe_mqtt_update()
@@ -502,21 +490,19 @@ class UpdatableItem(Item):
         self.stop_expiration_checker()
         super().stop_processors()
 
-
     def subscribe_snmp_traps(self):
         if self.snmp_trap and self._snmp_traps_allowed:
             eva.traphandler.subscribe(self)
-
 
     def unsubscribe_snmp_traps(self):
         if self._snmp_traps_allowed:
             eva.traphandler.unsubscribe(self)
 
-
     def subscribe_mqtt_update(self):
         if not self.mqtt_update or \
-                not self._mqtt_updates_allowed: return False
-        notifier = eva.notify.get_notifier(self.mqtt_update_notifier)  
+                not self._mqtt_updates_allowed:
+            return False
+        notifier = eva.notify.get_notifier(self.mqtt_update_notifier)
         if not notifier or notifier.notifier_type[:4] != 'mqtt': return False
         try:
             notifier.update_item_append(self)
@@ -526,11 +512,11 @@ class UpdatableItem(Item):
             return False
         return True
 
-
     def unsubscribe_mqtt_update(self):
         if not self.mqtt_update or \
-                not self._mqtt_updates_allowed: return False
-        notifier = eva.notify.get_notifier(self.mqtt_update_notifier)  
+                not self._mqtt_updates_allowed:
+            return False
+        notifier = eva.notify.get_notifier(self.mqtt_update_notifier)
         if not notifier or notifier.notifier_type[:4] != 'mqtt': return False
         try:
             notifier.update_item_remove(self)
@@ -538,7 +524,6 @@ class UpdatableItem(Item):
             eva.core.log_traceback()
             return False
         return True
-
 
     def start_update_processor(self):
         self.update_processor_active = True
@@ -549,13 +534,11 @@ class UpdatableItem(Item):
                 name = '_t_update_processor_' + self.item_id)
         self.update_processor.start()
 
-
     def stop_update_processor(self):
         if self.update_processor_active:
             self.update_processor_active = False
             self.disable_updates()
             self.need_update.set()
-
 
     def start_update_scheduler(self):
         self.update_scheduler_active = True
@@ -570,12 +553,11 @@ class UpdatableItem(Item):
                 name = '_t_update_scheduler_' + self.item_id)
         self.update_scheduler.start()
 
-
     def start_expiration_checker(self):
         self.expiration_checker_active = True
         if (self.expiration_checker and \
-                self.expiration_checker.is_alive()): \
-            return
+                self.expiration_checker.is_alive()):             \
+                        return
         if not self.expires:
             self.expiration_checker_active = False
             return
@@ -584,42 +566,35 @@ class UpdatableItem(Item):
                 name = '_t_expiration_checker_' + self.item_id)
         self.expiration_checker.start()
 
-
     def stop_update_scheduler(self):
         if self.update_scheduler_active:
             self.update_scheduler_active = False
             self.update_scheduler.join()
-
 
     def stop_expiration_checker(self):
         if self.expiration_checker_active:
             self.expiration_checker_active = False
             self.expiration_checker.join()
 
-
     def updates_allowed(self):
         return self._updates_allowed
-
 
     def disable_updates(self):
         self._updates_allowed = False
 
-
     def enable_updates(self):
         self._updates_allowed = True
-
 
     def update_run_args(self):
         return ()
 
-
     def do_update(self):
         i = 0
         while i < self.update_delay and self.update_scheduler_active:
-            time.sleep(eva.core.sleep_step); i += eva.core.sleep_step
+            time.sleep(eva.core.sleep_step)
+            i += eva.core.sleep_step
         if self.update_scheduler_active:
             self.need_update.set()
-
 
     def _t_update_scheduler(self):
         logging.debug('%s update scheduler started' % self.full_id)
@@ -630,13 +605,14 @@ class UpdatableItem(Item):
                             name = 'do_update_%s_%f' % \
                                     (self.item_id, time.time()))
                     t.start()
-                else: self.do_update()
+                else:
+                    self.do_update()
             i = 0
             while i < self.update_interval and self.update_scheduler_active:
-                time.sleep(eva.core.sleep_step); i += eva.core.sleep_step
+                time.sleep(eva.core.sleep_step)
+                i += eva.core.sleep_step
         self.update_scheduler_active = False
         logging.debug('%s update scheduler stopped' % self.full_id)
-
 
     def _t_update_processor(self):
         logging.debug('%s update processor started' % self.full_id)
@@ -646,7 +622,6 @@ class UpdatableItem(Item):
             if self.update_processor_active:
                 self._perform_update()
         logging.debug('%s update processor stopped' % self.full_id)
-
 
     def _t_expiration_checker(self):
         logging.debug('%s expiration checker started' % self.full_id)
@@ -660,30 +635,26 @@ class UpdatableItem(Item):
         self.expiration_checker_active = False
         logging.debug('%s expiration checker stopped' % self.full_id)
 
-
     def is_expired(self):
         if not self.expires: return False
         return time.time() - self.set_time > self.expires
 
-
     def set_expired(self):
         if self.status == -1 and self.value == 'null': return False
-        self.update_set_state(status = -1,
-                value = 'null', force_virtual = True)
+        self.update_set_state(status=-1, value='null', force_virtual=True)
         return True
-
 
     def _perform_update(self):
         try:
             self.update_log_run()
             self.update_before_run()
             xc = eva.runner.ExternalProcess(
-                fname = self.update_exec,
-                item = self,
-                env = self.update_env(),
-                update = True,
-                args = self.update_run_args(),
-                timeout = self.update_timeout)
+                fname=self.update_exec,
+                item=self,
+                env=self.update_env(),
+                update=True,
+                args=self.update_run_args(),
+                timeout=self.update_timeout)
             self.update_xc = xc
             xc.run()
             if xc.exitcode < 0:
@@ -697,22 +668,18 @@ class UpdatableItem(Item):
             logging.error('update %s failed' % self.full_id)
             eva.core.log_traceback()
 
-
     def update_env(self):
         return {}
-
 
     def update_log_run(self):
         logging.debug('updating %s' % self.full_id)
 
-
-    def update_before_run(self): pass
-
+    def update_before_run(self):
+        pass
 
     def update_expiration(self):
         self.set_time = time.time()
         self.start_expiration_checker()
-
 
     def update_after_run(self, update_out):
         if self._destroyed: return
@@ -727,8 +694,7 @@ class UpdatableItem(Item):
             logging.error('update %s returned bad data' % self.full_id)
             eva.core.log_traceback()
             return False
-        return self.update_set_state(status, value, force_virtual = True)
-
+        return self.update_set_state(status, value, force_virtual=True)
 
     def process_snmp_trap(self, data):
         if not self.snmp_trap: return
@@ -739,20 +705,20 @@ class UpdatableItem(Item):
                         return
             _set = True
             if 'set_down' in self.snmp_trap:
-                for i,v in self.snmp_trap['set_down'].items():
+                for i, v in self.snmp_trap['set_down'].items():
                     if not i in data or data[i] != v:
                         _set = False
                         break
             if _set:
                 logging.debug('%s according to the trap has failed' % \
                         self.full_id)
-                self.update_set_state(status = -1)
+                self.update_set_state(status=-1)
                 return
             if 'set_if' in self.snmp_trap:
                 for cond in self.snmp_trap['set_if']:
                     if 'vars' in cond:
                         _set = True
-                        for i,v in cond['vars'].items():
+                        for i, v in cond['vars'].items():
                             if not i in data or data[i] != v:
                                 _set = False
                                 break
@@ -771,34 +737,35 @@ class UpdatableItem(Item):
             value = None
             if 'set_status' in self.snmp_trap and \
                     self.snmp_trap['set_status'] in data:
-                        try:
-                            status = \
-                                int(data[self.snmp_trap['set_status']])
-                        except:
-                            logging.error(
-                                '%s bad status integer in snmp trap' % \
-                                        self.full_id)
+                try:
+                    status = \
+                        int(data[self.snmp_trap['set_status']])
+                except:
+                    logging.error(
+                        '%s bad status integer in snmp trap' % \
+                                self.full_id)
             if 'set_value' in self.snmp_trap and \
                     self.snmp_trap['set_value'] in data:
-                        value = data[self.snmp_trap['set_value']]
+                value = data[self.snmp_trap['set_value']]
             if status is not None or value is not None:
                 self.update_set_state(status, value)
         except:
             eva.core.log_traceback()
 
-
     def mqtt_set_state(self, topic, data):
         try:
             if topic.endswith('/status'):
-                self.update_set_state(status = data, from_mqtt = True)
+                self.update_set_state(status=data, from_mqtt=True)
             elif topic.endswith('/value'):
-                self.update_set_state(value = data, from_mqtt = True)
+                self.update_set_state(value=data, from_mqtt=True)
         except:
             eva.core.log_traceback()
 
-
-    def update_set_state(self, status = None, value = None,
-            from_mqtt = False, force_virtual = False):
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_virtual=False):
         if self.virtual and not force_virtual:
             logging.debug('%s skipping update - it\'s virtual' % \
                     self.full_id)
@@ -820,12 +787,15 @@ class UpdatableItem(Item):
             if self.value != v: need_notify = True
             self.value = v
         if need_notify:
-            self.notify(skip_subscribed_mqtt = from_mqtt)
+            self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
         d = {}
         if config or props:
             if self._snmp_traps_allowed:
@@ -854,21 +824,16 @@ class UpdatableItem(Item):
             d['value'] = self.value
         if (full or config or props) and self._virtual_allowed:
             d['virtual'] = self.virtual
-        d.update(super().serialize(full = full, config = config,
-            info = info, props = props, notify = notify))
+        d.update(super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify))
         return d
-
 
     def item_env(self):
         if self.value is not None: value = self.value
         else: value = 'null'
-        e = {
-            'EVA_ITEM_STATUS' : str(self.status),
-            'EVA_ITEM_VALUE' : str(value)
-            }
+        e = {'EVA_ITEM_STATUS': str(self.status), 'EVA_ITEM_VALUE': str(value)}
         e.update(super().item_env())
         return e
-
 
     def destroy(self):
         super().destroy()
@@ -902,23 +867,19 @@ class ActiveItem(Item):
         self.mqtt_control_notifier = None
         self.mqtt_control_qos = 1
 
-
     def q_is_task(self):
         return not self.queue.empty()
 
-
-    def q_get_task(self, timeout = None):
-        return self.queue.get(timeout = timeout)
-
+    def q_get_task(self, timeout=None):
+        return self.queue.get(timeout=timeout)
 
     def q_get_task_nowait(self):
         return self.queue.get_nowait()
 
-
     def q_put_task(self, action):
         if self.action_queue == 2:
             self.kill()
-        if not self.queue_lock.acquire(timeout = eva.core.timeout):
+        if not self.queue_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ActiveItem::q_put_task locking broken')
             return False
         if action.item and not self.action_enabled or (
@@ -929,22 +890,23 @@ class ActiveItem(Item):
             self.queue_lock.release()
             return False
         if action.item and not action.set_queued():
-                self.queue_lock.release()
-                return False
+            self.queue_lock.release()
+            return False
         self.queue.put(action)
         self.queue_lock.release()
         return True
 
-
-    def q_clean(self, lock = True):
+    def q_clean(self, lock=True):
         if lock:
-            if not self.queue_lock.acquire(timeout = eva.core.timeout):
+            if not self.queue_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('ActiveItem::q_clean locking broken')
                 return False
         i = 0
         while self.q_is_task():
-            try: a = self.q_get_task_nowait()
-            except: a = None
+            try:
+                a = self.q_get_task_nowait()
+            except:
+                a = None
             if a is not None:
                 a.set_canceled()
                 i += 1
@@ -952,10 +914,9 @@ class ActiveItem(Item):
         if lock: self.queue_lock.release()
         return True
 
-
-    def terminate(self, lock = True):
+    def terminate(self, lock=True):
         if lock:
-            if not self.queue_lock.acquire(timeout = eva.core.timeout):
+            if not self.queue_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('ActiveItem::terminate locking broken')
                 return False
         if self.action_xc and not self.action_xc.is_finished():
@@ -972,28 +933,24 @@ class ActiveItem(Item):
         if lock: self.queue_lock.release()
         return None
 
-
     def kill(self):
-        if not self.queue_lock.acquire(timeout = eva.core.timeout):
+        if not self.queue_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ActiveItem::kill locking broken')
             return False
-        self.q_clean(lock = False)
-        self.terminate(lock = False)
+        self.q_clean(lock=False)
+        self.terminate(lock=False)
         self.queue_lock.release()
         return True
-
 
     def start_processors(self):
         self.subscribe_mqtt_control()
         self.start_action_processor()
         super().start_processors()
 
-
     def stop_processors(self):
         self.unsubscribe_mqtt_control()
         self.stop_action_processor()
         super().stop_processors()
-
 
     def start_action_processor(self):
         self.action_processor_active = True
@@ -1004,17 +961,15 @@ class ActiveItem(Item):
                 name = '_t_action_processor_' + self.item_id)
         self.action_processor.start()
 
-    
     def stop_action_processor(self):
         if self.action_processor_active:
             self.action_processor_active = False
             a = ItemAction(None)
             self.q_put_task(a)
 
-
     def subscribe_mqtt_control(self):
         if not self.mqtt_control: return False
-        notifier = eva.notify.get_notifier(self.mqtt_control_notifier)  
+        notifier = eva.notify.get_notifier(self.mqtt_control_notifier)
         if not notifier or notifier.notifier_type[:4] != 'mqtt': return False
         try:
             notifier.control_item_append(self)
@@ -1025,7 +980,7 @@ class ActiveItem(Item):
 
     def unsubscribe_mqtt_control(self):
         if not self.mqtt_control: return False
-        notifier = eva.notify.get_notifier(self.mqtt_control_notifier)  
+        notifier = eva.notify.get_notifier(self.mqtt_control_notifier)
         if not notifier or notifier.notifier_type[:4] != 'mqtt': return False
         try:
             notifier.control_item_remove(self)
@@ -1034,10 +989,8 @@ class ActiveItem(Item):
             return False
         return True
 
-
     def action_may_run(self, action):
         return True
-
 
     def action_log_run(self, action):
         logging.info(
@@ -1047,24 +1000,23 @@ class ActiveItem(Item):
     def action_run_args(self, action):
         return ()
 
+    def action_before_get_task(self):
+        pass
 
-    def action_before_get_task(self): pass
+    def action_after_get_task(self, action):
+        pass
 
+    def action_before_run(self, action):
+        pass
 
-    def action_after_get_task(self, action): pass
+    def action_after_run(self, action, xc):
+        pass
 
+    def action_after_finish(self, action, xc):
+        pass
 
-    def action_before_run(self, action): pass
-
-
-    def action_after_run(self, action, xc): pass
-
-
-    def action_after_finish(self, action, xc): pass
-
-
-    def mqtt_action(self, msg): pass
-
+    def mqtt_action(self, msg):
+        pass
 
     def _t_action_processor(self):
         logging.debug('%s action processor started' % self.full_id)
@@ -1075,9 +1027,9 @@ class ActiveItem(Item):
                 a = self.q_get_task()
                 self.action_after_get_task(a)
                 if not a or not a.item: continue
-                if not self.queue_lock.acquire(timeout = eva.core.timeout):
+                if not self.queue_lock.acquire(timeout=eva.core.timeout):
                     logging.critical(
-                            'ActiveItem::_t_action_processor locking broken')
+                        'ActiveItem::_t_action_processor locking broken')
                     continue
                 # dirty fix for action_queue == 0
                 if not self.action_queue:
@@ -1108,12 +1060,12 @@ class ActiveItem(Item):
                         self.action_log_run(a)
                         self.action_before_run(a)
                         xc = eva.runner.ExternalProcess(
-                                fname = self.action_exec,
-                                item = self,
-                                env = a.action_env(),
-                                update = False,
-                                args = self.action_run_args(a),
-                                timeout = self.action_timeout)
+                            fname=self.action_exec,
+                            item=self,
+                            env=a.action_env(),
+                            update=False,
+                            args=self.action_run_args(a),
+                            timeout=self.action_timeout)
                         self.action_xc = xc
                         self.queue_lock.release()
                         xc.set_tki(self.term_kill_interval)
@@ -1121,24 +1073,15 @@ class ActiveItem(Item):
                         self.action_after_run(a, xc)
                         if xc.exitcode < 0:
                             a.set_terminated(
-                                    exitcode = xc.exitcode,
-                                    out = xc.out,
-                                    err = xc.err
-                                    )
+                                exitcode=xc.exitcode, out=xc.out, err=xc.err)
                             logging.error('action %s terminated' % a.uuid)
                         elif xc.exitcode == 0:
                             a.set_completed(
-                                exitcode = xc.exitcode,
-                                out = xc.out,
-                                err = xc.err
-                                )
+                                exitcode=xc.exitcode, out=xc.out, err=xc.err)
                             logging.debug('action %s completed' % a.uuid)
                         else:
                             a.set_failed(
-                                exitcode = xc.exitcode,
-                                out = xc.out,
-                                err = xc.err
-                                )
+                                exitcode=xc.exitcode, out=xc.out, err=xc.err)
                             logging.error('action %s failed, code: %u' % \
                                     (a.uuid, xc.exitcode))
                         self.action_after_finish(a, xc)
@@ -1149,15 +1092,14 @@ class ActiveItem(Item):
                         '%s action processor got an error, restarting' % \
                                 (self.full_id))
                 eva.core.log_traceback()
-            if not self.queue_lock.acquire(timeout = eva.core.timeout):
+            if not self.queue_lock.acquire(timeout=eva.core.timeout):
                 logging.critical(
-                        'ActiveItem::_t_action_processor locking broken')
+                    'ActiveItem::_t_action_processor locking broken')
                 continue
             self.current_action = None
             self.action_xc = None
             self.queue_lock.release()
         logging.debug('%s action processor stopped' % self.full_id)
-
 
     def update_config(self, data):
         if 'action_enabled' in data:
@@ -1168,7 +1110,7 @@ class ActiveItem(Item):
             self.mqtt_control = data['mqtt_control']
             params = data['mqtt_control'].split(':')
             self.mqtt_control_notifier = params[0]
-            if len(params)>1:
+            if len(params) > 1:
                 try:
                     self.mqtt_control_qos = int(params[1])
                 except:
@@ -1186,9 +1128,7 @@ class ActiveItem(Item):
             self._term_kill_interval = data['term_kill_interval']
         super().update_config(data)
 
-
-
-    def set_prop(self, prop, val = None, save = False):
+    def set_prop(self, prop, val=None, save=False):
         if prop == 'action_enabled':
             v = val_to_boolean(val)
             if v is not None:
@@ -1271,7 +1211,7 @@ class ActiveItem(Item):
                     action_timeout = float(val)
                 except:
                     return False
-                if action_timeout <=0: return False
+                if action_timeout <= 0: return False
                 if self._action_timeout != action_timeout:
                     self._action_timeout = action_timeout
                     self.action_timeout = action_timeout
@@ -1290,7 +1230,7 @@ class ActiveItem(Item):
                     term_kill_interval = float(val)
                 except:
                     return False
-                if term_kill_interval <=0: return False
+                if term_kill_interval <= 0: return False
                 if self._term_kill_interval != term_kill_interval:
                     self._term_kill_interval = term_kill_interval
                     self.term_kill_interval = term_kill_interval
@@ -1300,9 +1240,12 @@ class ActiveItem(Item):
         else:
             return super().set_prop(prop, val, save)
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
         d = {}
         if not info:
             d['action_enabled'] = self.action_enabled
@@ -1325,28 +1268,25 @@ class ActiveItem(Item):
                 d['term_kill_interval'] = self._term_kill_interval
             elif props:
                 d['term_kill_interval'] = None
-        d.update(super().serialize(full = full, config = config,
-            info = info, props = props, notify = notify))
+        d.update(super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify))
         return d
-
 
     def disable_actions(self):
         if not self.action_enabled: return True
-        self.update_config({'action_enabled' : False})
+        self.update_config({'action_enabled': False})
         logging.info('%s actions disabled' % self.full_id)
         self.notify()
         if eva.core.db_update == 1: self.save()
         return True
 
-
     def enable_actions(self):
         if self.action_enabled: return True
-        self.update_config({'action_enabled' : True})
+        self.update_config({'action_enabled': True})
         logging.info('%s actions enabled' % self.full_id)
         self.notify()
         if eva.core.db_update == 1: self.save()
         return True
-
 
     def destroy(self):
         self.action_enabled = None
@@ -1354,46 +1294,37 @@ class ActiveItem(Item):
         super().destroy()
 
 
-ia_status_created = 0 # action just created
-ia_status_pending = 1 # put in global queue
-ia_status_queued = 2 # queued in item action processor queue
-ia_status_refused = 3 # refused to queue (item doesn't support queues)
-ia_status_dead = 4 # queueing into item queue took too long
-ia_status_canceled = 5 # canceled for some reason
-ia_status_ignored = 6 # queued but ignored to run (item already in state)
-ia_status_running = 7 # currently running
-ia_status_failed = 8 # failed to run
-ia_status_terminated = 9 # executed but terminated
-ia_status_completed = 10 # executed and finished successfully
+ia_status_created = 0  # action just created
+ia_status_pending = 1  # put in global queue
+ia_status_queued = 2  # queued in item action processor queue
+ia_status_refused = 3  # refused to queue (item doesn't support queues)
+ia_status_dead = 4  # queueing into item queue took too long
+ia_status_canceled = 5  # canceled for some reason
+ia_status_ignored = 6  # queued but ignored to run (item already in state)
+ia_status_running = 7  # currently running
+ia_status_failed = 8  # failed to run
+ia_status_terminated = 9  # executed but terminated
+ia_status_completed = 10  # executed and finished successfully
 
 ia_status_names = [
-        'created',
-        'pending',
-        'queued',
-        'refused',
-        'dead',
-        'canceled',
-        'ignored',
-        'running',
-        'failed',
-        'terminated',
-        'completed'
-        ]
+    'created', 'pending', 'queued', 'refused', 'dead', 'canceled', 'ignored',
+    'running', 'failed', 'terminated', 'completed'
+]
 
 ia_default_priority = 100
 
 
 class ItemAction(object):
 
-    def __init__(self, item, priority = None, action_uuid = None):
+    def __init__(self, item, priority=None, action_uuid=None):
         self.item_action_lock = threading.Lock()
-        if not self.item_action_lock.acquire(timeout = eva.core.timeout):
+        if not self.item_action_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::__init___ locking broken')
             return False
         self.status = ia_status_created
         if priority: self.priority = priority
         else: self.priority = ia_default_priority
-        self.time = { ia_status_created: time.time() }
+        self.time = {ia_status_created: time.time()}
         self.item = item
         if action_uuid:
             self.uuid = action_uuid
@@ -1409,7 +1340,6 @@ class ItemAction(object):
             eva.notify.notify('action', self.copy())
         self.item_action_lock.release()
 
-
     def __cmp__(self, other):
         return cmp(self.priority, other.priority)
 
@@ -1422,11 +1352,9 @@ class ItemAction(object):
     def get_status_name(self):
         return ia_status_names[self.status]
 
-
-    def set_status(self, status, exitcode = None,
-            out = None, err = None, lock = True):
+    def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
         if lock:
-            if not self.item_action_lock.acquire(timeout = eva.core.timeout):
+            if not self.item_action_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('ItemAction::set_status locking broken')
                 return False
         if self.is_status_dead():
@@ -1458,25 +1386,16 @@ class ItemAction(object):
         if lock: self.item_action_lock.release()
         return True
 
-
     def is_processed(self):
-        return not self.status in [
-                ia_status_created,
-                ia_status_pending
-                ]
-
+        return not self.status in [ia_status_created, ia_status_pending]
 
     def is_finished(self):
         return self.status in [
-                eva.item.ia_status_refused,
-                eva.item.ia_status_dead,
-                eva.item.ia_status_canceled,
-                eva.item.ia_status_ignored,
-                eva.item.ia_status_failed,
-                eva.item.ia_status_terminated,
-                eva.item.ia_status_completed
-                ]
-
+            eva.item.ia_status_refused, eva.item.ia_status_dead,
+            eva.item.ia_status_canceled, eva.item.ia_status_ignored,
+            eva.item.ia_status_failed, eva.item.ia_status_terminated,
+            eva.item.ia_status_completed
+        ]
 
     def is_status_created(self):
         return self.status == ia_status_created
@@ -1523,19 +1442,19 @@ class ItemAction(object):
     def is_status_running(self):
         return self.status == ia_status_running
 
-    def set_failed(self, exitcode = None, out = None, err = None):
+    def set_failed(self, exitcode=None, out=None, err=None):
         return self.set_status(ia_status_failed, exitcode, out, err)
 
     def is_status_failed(self):
         return self.status == ia_status_failed
 
-    def set_terminated(self, exitcode = None, out = None, err = None):
+    def set_terminated(self, exitcode=None, out=None, err=None):
         return self.set_status(ia_status_terminated, exitcode, out, err)
 
     def is_status_terminated(self):
         return self.status == ia_status_terminated
 
-    def set_completed(self, exitcode = None, out = None, err = None):
+    def set_completed(self, exitcode=None, out=None, err=None):
         return self.set_status(ia_status_completed, exitcode, out, err)
 
     def is_status_completed(self):
@@ -1544,33 +1463,30 @@ class ItemAction(object):
     def action_env(self):
         return {}
 
-
     def copy(self):
         result = copy.copy(self)
         result.item = copy.copy(self.item)
         return result
 
-
     def kill(self):
-        if not self.item_action_lock.acquire(timeout = eva.core.timeout):
+        if not self.item_action_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::terminate locking broken')
             return False
-        if not self.item.queue_lock.acquire(timeout = eva.core.timeout):
+        if not self.item.queue_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::terminate locking(2) broken')
             self.item_action_lock.release()
             return False
         if self.is_finished(): return None
         if self.is_status_running():
-            result = self.item.terminate(lock = False)
+            result = self.item.terminate(lock=False)
             self.item.queue_lock.release()
             self.item_action_lock.release()
         else:
-            result = self.set_status(eva.core.item.ia_status_canceled,
-                    lock = False)
+            result = self.set_status(
+                eva.core.item.ia_status_canceled, lock=False)
             self.item.queue_lock.release()
             self.item_action_lock.release()
         return result
-
 
     def serialize(self):
         d = {}
@@ -1598,13 +1514,11 @@ class MultiUpdate(UpdatableItem):
         self.update_allow_check = True
         self.get_item_func = None
 
-
     def updates_allowed(self):
         if not self.update_allow_check: return True
         for i in self.items_to_update:
             if not i.updates_allowed(): return False
         return True
-
 
     def update_after_run(self, update_out):
         if self._destroyed: return
@@ -1614,9 +1528,8 @@ class MultiUpdate(UpdatableItem):
                     '%s have %u items to update, got only %u in result' % \
                     (self.full_id, len(self.items_to_update),
                         len(result)))
-        for i in range(0,min(len(result), len(self.items_to_update))):
+        for i in range(0, min(len(result), len(self.items_to_update))):
             self.items_to_update[i].update_after_run(result[i])
-
 
     def update_config(self, data):
         super().update_config(data)
@@ -1633,8 +1546,7 @@ class MultiUpdate(UpdatableItem):
                             '%s can not add %s, item not found' % \
                                     (self.full_id, i))
 
-
-    def set_prop(self, prop, val = None, save = False):
+    def set_prop(self, prop, val=None, save=False):
         if prop == 'update_allow_check':
             val = val_to_boolean(val)
             if val is not None:
@@ -1648,7 +1560,6 @@ class MultiUpdate(UpdatableItem):
         else:
             return super().set_prop(prop, val, save)
 
-
     def append(self, item):
         if not item in self.items_to_update:
             self.items_to_update.append(item)
@@ -1656,7 +1567,6 @@ class MultiUpdate(UpdatableItem):
             return True
         else:
             return False
-
 
     def remove(self, item):
         if not item in self.items_to_update:
@@ -1668,22 +1578,23 @@ class MultiUpdate(UpdatableItem):
         self.set_update_run_args()
         return True
 
-
     def update_run_args(self):
         return self._update_run_args
-
 
     def set_update_run_args(self):
         ids = []
         for i in self.items_to_update:
             ids.append(i.item_id)
-        self._update_run_args = ( ','.join(ids), )
+        self._update_run_args = (','.join(ids),)
 
-
-    def serialize(self, full = False, config = False, info = False,
-            props = False, notify = False):
-        d = super().serialize(full = full, config = config,
-                info = info, props = props, notify = notify)
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify)
         if 'mqtt_update' in d:
             del d['mqtt_update']
         if 'snmp_trap' in d:
@@ -1698,18 +1609,18 @@ class MultiUpdate(UpdatableItem):
             d['items'] = ids
         return d
 
-
     def destroy(self):
         self._destroyed = True
         self.stop_processors()
 
 
-
 class VariableItem(UpdatableItem):
 
-
-    def update_set_state(self, status = None, value = None,
-            from_mqtt = False, force_virtual = False):
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_virtual=False):
         if self._destroyed: return False
         if self.virtual and not force_virtual:
             logging.debug('%s skipping update - it\'s virtual' % \
@@ -1743,19 +1654,21 @@ class VariableItem(UpdatableItem):
             logging.debug(
                 '%s status = %u, value = "%s"' % \
                         (self.full_id, self.status, self.value))
-            self.notify(skip_subscribed_mqtt = from_mqtt)
+            self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
-
 
     def is_expired(self):
         if not self.status: return False
         return super().is_expired()
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
-        d = super().serialize(full = full, config = config,
-                info = info, props = props, notify = notify)
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify)
         if notify and 'value' in d and \
                 self.status == -1 and \
                 self.value != 'null' and \
@@ -1764,11 +1677,10 @@ class VariableItem(UpdatableItem):
         return d
 
 
-
-def item_match(item, item_ids, groups = None):
+def item_match(item, item_ids, groups=None):
     if (groups and ('#' in groups) or (item.group in groups)) \
             or '#' in item_ids or item.item_id in item_ids:
-                return True
+        return True
     if groups:
         for g in groups:
             p = g.find('#')
@@ -1778,10 +1690,9 @@ def item_match(item, item_ids, groups = None):
                 g2 = item.group.split('/')
                 if len(g1) == len(g2):
                     match = True
-                    for i in range(0,len(g1)):
+                    for i in range(0, len(g1)):
                         if g1[i] != '+' and g1[i] != g2[i]:
                             match = False
                             break
                     if match: return True
     return False
-

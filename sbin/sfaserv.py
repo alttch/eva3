@@ -23,7 +23,7 @@ import eva.sysapi
 import eva.wsapi
 
 
-def usage(version_only = False):
+def usage(version_only=False):
     if not version_only: print()
     print('%s version %s build %s ' % \
             (
@@ -33,7 +33,7 @@ def usage(version_only = False):
             )
         )
     if version_only: return
-    print ("""Usage: sfaserv.py [-f config_file ] [-d]
+    print("""Usage: sfaserv.py [-f config_file ] [-d]
 
  -f config_file     start with an alternative config file
  -d                 run in background
@@ -63,13 +63,13 @@ for o, a in optlist:
     if o == '-d': _fork = True
     if o == '-f': _eva_ini = a
     if o == '-V':
-        usage(version_only = True)
+        usage(version_only=True)
         sys.exit()
     if o == '-h':
         usage()
         sys.exit()
 
-cfg = eva.core.load(fname = _eva_ini, initial = True)
+cfg = eva.core.load(fname=_eva_ini, initial=True)
 if not cfg: sys.exit(2)
 
 if _fork: eva.core.fork()
@@ -82,7 +82,7 @@ eva.sysapi.update_config(cfg)
 
 eva.core.load_cvars()
 
-eva.apikey.allows = [ 'cmd', 'dm_rules_props', 'dm_rules_list' ]
+eva.apikey.allows = ['cmd', 'dm_rules_props', 'dm_rules_list']
 eva.apikey.load()
 
 eva.notify.init()

@@ -2,7 +2,6 @@ __author__ = "Altertech Group, http://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2017 Altertech Group"
 __license__ = "See http://www.eva-ics.com/"
 __version__ = "3.0.1"
-
 """
 Simple UDP API for controlling and updating
 
@@ -56,6 +55,7 @@ _t_dispatcher_active = False
 
 server_socket = None
 
+
 def update_config(cfg):
     global host, port, hosts_allow
     try:
@@ -63,16 +63,17 @@ def update_config(cfg):
         if not port:
             port = default_port
         logging.debug('udpapi.listen = %s:%u' % (host, port))
-    except: return False
+    except:
+        return False
     try:
         _ha = cfg.get('udpapi', 'hosts_allow')
     except:
         _ha = None
     if _ha:
         try:
-            _hosts_allow = list(filter(None,
-                [x.strip() for x in _ha.split(',')]))
-            hosts_allow = [ IPNetwork(h) for h in _hosts_allow ]
+            _hosts_allow = list(
+                filter(None, [x.strip() for x in _ha.split(',')]))
+            hosts_allow = [IPNetwork(h) for h in _hosts_allow]
         except:
             logging.error('udpapi bad host acl!')
             host = None
@@ -94,9 +95,8 @@ def start():
 
     logging.info('Starting UDP API, listening at %s:%u' % (host, _port))
     eva.core.append_stop_func(stop)
-    _t = threading.Thread(target = _t_dispatcher,
-            name = 'udpapi_t_dispatcher',
-            args = (host, _port))
+    _t = threading.Thread(
+        target=_t_dispatcher, name='udpapi_t_dispatcher', args=(host, _port))
     _t_dispatcher_active = True
     _t.setDaemon(True)
     _t.start()
@@ -158,7 +158,7 @@ def _t_dispatcher(host, port):
                 if not item:
                     logging.warning('UDP API item unknown %s' % item_id)
                     continue
-                if not item.item_type in [ 'unit', 'sensor' ]:
+                if not item.item_type in ['unit', 'sensor']:
                     logging.warning(
                             'UDP API: item %s must be unit or sensor' % \
                                     item_id)
@@ -166,12 +166,12 @@ def _t_dispatcher(host, port):
                 if update:
                     item.update_set_state(status, value)
                 else:
-                    if item.item_type in [ 'unit' ]:
+                    if item.item_type in ['unit']:
                         if status is None:
                             logging.warning('UDP API no status - no action')
                         else:
-                            eva.uc.controller.exec_unit_action(item_id, status,
-                                    value, priority)
+                            eva.uc.controller.exec_unit_action(
+                                item_id, status, value, priority)
                     else:
                         logging.warning(
                                 'UDP API no action for %s' % \
@@ -184,4 +184,3 @@ def _t_dispatcher(host, port):
             logging.critical('UDP API dispatcher crashed, restarting')
             eva.core.log_traceback()
     logging.debug('UDP API dispatcher stopped')
-

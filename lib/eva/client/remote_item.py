@@ -32,13 +32,14 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.status = state['status']
         self.value = state['value']
 
+    def notify(self, retain=None, skip_subscribed_mqtt=False):
+        super().notify(skip_subscribed_mqtt=True)
 
-    def notify(self, retain = None, skip_subscribed_mqtt = False):
-        super().notify(skip_subscribed_mqtt = True)
+    def start_expiration_checker(self):
+        pass
 
-    def start_expiration_checker(self): pass
-
-    def start_update_processor(self): pass
+    def start_update_processor(self):
+        pass
 
     def update_expiration(self):
         pass
@@ -55,7 +56,6 @@ class RemoteLVar(RemoteUpdatableItem):
         self.mqtt_update_topics.append('expires')
         self.mqtt_update_topics.append('set_time')
 
-
     def mqtt_set_state(self, topic, data):
         super().mqtt_set_state(topic, data)
         try:
@@ -68,11 +68,14 @@ class RemoteLVar(RemoteUpdatableItem):
         except:
             eva.core.log_traceback()
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
-        d = super().serialize(full = full, config = config,
-                info = info, props = props, notify = notify)
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify)
         d['expires'] = self.expires
         d['set_time'] = self.set_time
         return d
@@ -95,7 +98,6 @@ class RemoteUnit(RemoteUpdatableItem):
         self.nvalue = self.value
         self.action_enabled = True
 
-
     def mqtt_set_state(self, topic, data):
         super().mqtt_set_state(topic, data)
         try:
@@ -111,15 +113,15 @@ class RemoteUnit(RemoteUpdatableItem):
         except:
             eva.core.log_traceback()
 
-
-    def serialize(self, full = False, config = False,
-            info = False, props = False, notify = False):
-        d = {
-            'nstatus': self.nstatus,
-            'nvalue': self.nvalue
-            }
-        d.update(super().serialize(full = full, config = config,
-            info = info, props = props, notify = notify))
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = {'nstatus': self.nstatus, 'nvalue': self.nvalue}
+        d.update(super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify))
         return d
 
 
@@ -128,4 +130,3 @@ class RemoteMacro(eva.item.Item):
     def __init__(self, macro_id, controller):
         super().__init__(macro_id, 'lmacro')
         self.controller = controller
-
