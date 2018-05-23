@@ -44,6 +44,7 @@ class LVar(eva.item.VariableItem):
         if not self.status and status != 1: return False
         if not self.update_lock.acquire(timeout=eva.core.timeout):
             logging.critical('LVar::update_set_state locking broken')
+            eva.core.critical()
             return False
         t = self.set_time
         _status = self.status

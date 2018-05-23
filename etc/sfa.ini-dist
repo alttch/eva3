@@ -22,6 +22,8 @@ keep_logmem = 86400
 notify_on_start = yes
 ; debug mode
 debug = no
+; stop server on critical errors (will be restarted via safe-run)
+stop_on_critical = yes
 ; default timeout
 timeout = 5
 

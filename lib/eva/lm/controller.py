@@ -123,6 +123,7 @@ def create_lvar_state_table():
         c.close()
     except:
         logging.critical('unable to create lvar_state table in db')
+        eva.core.critical()
     db.close()
 
 
@@ -193,7 +194,7 @@ def save_lvar_state(item):
         return True
     except:
         logging.critical('db error')
-        eva.core.log_traceback()
+        eva.core.critical()
         try:
             c.close()
             db.close()
@@ -240,13 +241,13 @@ def load_lvar_db_state(items, clean=False, create=True):
                     logging.debug('%s state removed from db' % i)
         except:
             logging.critical('db error')
-            eva.core.log_traceback()
+            eva.core.critical()
         db.commit()
         c.close()
     except:
         if not create:
             logging.critical('db error')
-            eva.core.log_traceback()
+            eva.core.critical()
         else:
             c.close()
             logging.info('No lvar_state table in db, creating new')

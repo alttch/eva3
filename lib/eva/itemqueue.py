@@ -47,6 +47,7 @@ class ActiveItemQueue(object):
         d = []
         if not self.actions_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ActiveItemQueue::serialize_action locking broken')
+            eva.core.critical()
             return
         try:
             _actions = self.actions.copy()
@@ -67,6 +68,7 @@ class ActiveItemQueue(object):
     def history_append(self, action):
         if not self.actions_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ActiveItemQueue::history_append locking broken')
+            eva.core.critical()
             return False
         try:
             self.actions.append(action)
@@ -87,6 +89,7 @@ class ActiveItemQueue(object):
     def history_remove(self, action):
         if not self.actions_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ActiveItemQueue::history_remove locking broken')
+            eva.core.critical()
             return False
         try:
             self.actions_by_item_id[action.item.item_id].remove(action)
@@ -107,6 +110,7 @@ class ActiveItemQueue(object):
                 if not self.actions_lock.acquire(timeout=eva.core.timeout):
                     logging.critical(
                         'ActiveItemQueue::_t_action_cleanup locking broken')
+                    eva.core.critical()
                     continue
                 try:
                     _actions = self.actions.copy()

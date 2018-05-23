@@ -46,6 +46,8 @@ development = False
 
 show_traceback = False
 
+stop_on_critical = True
+
 env = os.environ.copy()
 
 cvars = {}
@@ -219,6 +221,7 @@ def serialize():
     d['debug'] = debug
     d['development'] = development
     d['show_traceback'] = show_traceback
+    d['stop_on_critical'] = stop_on_critical
     d['cvars'] = cvars
     d['env'] = env
     d['polldelay'] = polldelay
@@ -292,6 +295,7 @@ def reset_log(initial=False):
 
 def load(fname=None, initial=False, init_log=True):
     global system_name, log_file, pid_file, debug, development, show_traceback
+    global stop_on_critical
     global notify_on_start, db_file, userdb_file
     global polldelay, db_update, keep_action_history, keep_logmem
     global timeout
@@ -362,6 +366,15 @@ def load(fname=None, initial=False, init_log=True):
                                            'notify_on_start') == 'yes')
             except:
                 pass
+            logging.debug('server.notify_on_start = %s' % ('yes' \
+                                        if notify_on_start else 'no'))
+            try:
+                stop_on_critical = (cfg.get('server',
+                                            'stop_on_critical') == 'yes')
+            except:
+                pass
+            logging.debug('server.stop_on_critical = %s' % ('yes' \
+                                        if stop_on_critical else 'no'))
             try:
                 db_file = cfg.get('server', 'db_file')
                 if db_file and db_file[0] != '/':
@@ -383,8 +396,6 @@ def load(fname=None, initial=False, init_log=True):
                                            'notify_on_start') == 'yes')
             except:
                 pass
-            logging.debug('server.notify_on_start = %s' % ('yes' \
-                                        if notify_on_start else 'no'))
         try:
             polldelay = float(cfg.get('server', 'polldelay'))
         except:
@@ -546,6 +557,13 @@ def log_traceback(display=False, notifier=False, force=False):
         logging.error(pfx + traceback.format_exc())
     elif display:
         print(traceback.format_exc())
+
+
+def critical():
+    log_traceback(force=True)
+    if stop_on_critical:
+        logging.warning('got critical exception, shutting down')
+        sighandler_term(None, None)
 
 
 def format_xc_fname(item=None, xc_type='', fname=None, update=False):

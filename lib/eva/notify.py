@@ -264,6 +264,7 @@ class GenericNotifier(object):
                         if not self.lse_lock.acquire(timeout=eva.core.timeout):
                             logging.critical(
                                 'GenericNotifier::format_data locking broken')
+                            eva.core.critical()
                             return None
                         need_notify = False
                         dts = d.serialize(notify=True)

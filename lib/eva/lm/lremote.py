@@ -3,6 +3,7 @@ __copyright__ = "Copyright (C) 2012-2017 Altertech Group"
 __license__ = "See http://www.eva-ics.com/"
 __version__ = "3.0.1"
 
+import eva.core
 import eva.client.remote_controller
 import eva.client.remote_item
 import eva.lm.controller
@@ -37,6 +38,7 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
                          force_virtual=False):
         if not self.update_lock.acquire(timeout=eva.core.timeout):
             logging.critical('LRemoteUnit::update_set_state locking broken')
+            eva.core.critical()
             return False
         _status = self.status
         _value = self.value
@@ -73,6 +75,7 @@ class LRemoteSensor(eva.client.remote_item.RemoteSensor):
                          force_virtual=False):
         if not self.update_lock.acquire(timeout=eva.core.timeout):
             logging.critical('LRemoteSensor::update_set_state locking broken')
+            eva.core.critical()
             return False
         _status = self.status
         _value = self.value

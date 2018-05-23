@@ -556,8 +556,8 @@ class UpdatableItem(Item):
     def start_expiration_checker(self):
         self.expiration_checker_active = True
         if (self.expiration_checker and \
-                self.expiration_checker.is_alive()):             \
-                        return
+                self.expiration_checker.is_alive()):                         \
+                                    return
         if not self.expires:
             self.expiration_checker_active = False
             return
@@ -881,6 +881,7 @@ class ActiveItem(Item):
             self.kill()
         if not self.queue_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ActiveItem::q_put_task locking broken')
+            eva.core.critical()
             return False
         if action.item and not self.action_enabled or (
                 not self.action_queue and \
@@ -900,6 +901,7 @@ class ActiveItem(Item):
         if lock:
             if not self.queue_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('ActiveItem::q_clean locking broken')
+                eva.core.critical()
                 return False
         i = 0
         while self.q_is_task():
@@ -918,6 +920,7 @@ class ActiveItem(Item):
         if lock:
             if not self.queue_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('ActiveItem::terminate locking broken')
+                eva.core.critical()
                 return False
         if self.action_xc and not self.action_xc.is_finished():
             if not self.action_allow_termination:
@@ -936,6 +939,7 @@ class ActiveItem(Item):
     def kill(self):
         if not self.queue_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ActiveItem::kill locking broken')
+            eva.core.critical()
             return False
         self.q_clean(lock=False)
         self.terminate(lock=False)
@@ -1030,6 +1034,7 @@ class ActiveItem(Item):
                 if not self.queue_lock.acquire(timeout=eva.core.timeout):
                     logging.critical(
                         'ActiveItem::_t_action_processor locking broken')
+                    eva.core.critical()
                     continue
                 # dirty fix for action_queue == 0
                 if not self.action_queue:
@@ -1095,6 +1100,7 @@ class ActiveItem(Item):
             if not self.queue_lock.acquire(timeout=eva.core.timeout):
                 logging.critical(
                     'ActiveItem::_t_action_processor locking broken')
+                eva.core.critical()
                 continue
             self.current_action = None
             self.action_xc = None
@@ -1320,6 +1326,7 @@ class ItemAction(object):
         self.item_action_lock = threading.Lock()
         if not self.item_action_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::__init___ locking broken')
+            eva.core.critical()
             return False
         self.status = ia_status_created
         if priority: self.priority = priority
@@ -1356,6 +1363,7 @@ class ItemAction(object):
         if lock:
             if not self.item_action_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('ItemAction::set_status locking broken')
+                eva.core.critical()
                 return False
         if self.is_status_dead():
             if lock: self.item_action_lock.release()
@@ -1471,9 +1479,11 @@ class ItemAction(object):
     def kill(self):
         if not self.item_action_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::terminate locking broken')
+            eva.core.critical()
             return False
         if not self.item.queue_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::terminate locking(2) broken')
+            eva.core.critical()
             self.item_action_lock.release()
             return False
         if self.is_finished(): return None

@@ -6,6 +6,7 @@ __version__ = "3.0.1"
 import logging
 import sys
 import os
+import eva.core
 import eva.sysapi
 import eva.mailer
 import eva.lm.controller
@@ -20,6 +21,7 @@ _shared_lock = threading.Lock()
 def shared(name):
     if not _shared_lock.acquire(timeout=eva.core.timeout):
         logging.critical('macro_api shared locking broken')
+        eva.core.critical()
         return None
     value = _shared[name] if name in _shared else None
     _shared_lock.release()
@@ -29,6 +31,7 @@ def shared(name):
 def set_shared(name, value=None):
     if not _shared_lock.acquire(timeout=eva.core.timeout):
         logging.critical('macro_api set_shared locking broken')
+        eva.core.critical()
         return None
     if value is None:
         if name in _shared: del _shared[name]
