@@ -344,6 +344,7 @@ def create_macro(m_id, group=None, save=False):
     else:
         i = m_id.split('/')[-1]
         grp = '/'.join(m_id.split('/')[:-1])
+    if not grp: grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
         return False
