@@ -5,7 +5,7 @@
  * EVA API Client
  *
  * @author      Altertech Group, http://www.altertech.com/
- * @copyright   Copyright (C) 2012-2017 Altertech Group
+ * @copyright   Copyright (C) 2012-2018 Altertech Group
  * @license     See http://www.eva-ics.com/
  * @version     3.0.2
  */
