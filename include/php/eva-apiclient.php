@@ -7,10 +7,10 @@
  * @author      Altertech Group, http://www.altertech.com/
  * @copyright   Copyright (C) 2012-2017 Altertech Group
  * @license     See http://www.eva-ics.com/
- * @version     3.0.1
+ * @version     3.0.2
  */
 
-$eva_version = '3.0.1';
+$eva_version = '3.0.2';
 
 $eva_result_ok = 0;
 $eva_result_not_found = 1;

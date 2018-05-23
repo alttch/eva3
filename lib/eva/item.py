@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, http://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2017 Altertech Group"
 __license__ = "See http://www.eva-ics.com/"
-__version__ = "3.0.1"
+__version__ = "3.0.2"
 
 import copy
 import os
@@ -556,8 +556,8 @@ class UpdatableItem(Item):
     def start_expiration_checker(self):
         self.expiration_checker_active = True
         if (self.expiration_checker and \
-                self.expiration_checker.is_alive()):                         \
-                                    return
+                self.expiration_checker.is_alive()):                                     \
+                                                return
         if not self.expires:
             self.expiration_checker_active = False
             return
