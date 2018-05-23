@@ -735,8 +735,10 @@ class GenericMQTTNotifier(GenericNotifier):
         if port: self.port = port
         else: self.port = 1883
         self._port = port
-        if keepalive: self.keepalive = keepalive
-        else: self.keepalive = 60
+        try:
+            self.keepalive = int(keepalive)
+        except:
+            self.keepalive = 60
         self._keepalive = keepalive
         self.mq = mqtt.Client()
         self.mq.on_publish = self.on_publish_msg
@@ -996,7 +998,7 @@ class GenericMQTTNotifier(GenericNotifier):
                 self._keepalive = None
                 return True
             try:
-                self._keepalive = float(value)
+                self._keepalive = int(value)
             except:
                 return False
             return True
