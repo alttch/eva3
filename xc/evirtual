@@ -23,9 +23,10 @@ dir_config = os.path.dirname(os.path.realpath(__file__)) + \
 import eva.core
 from eva.tools import format_json
 
+
 class VirtualItem(object):
 
-    def __init__(self, item_id, item_type = None):
+    def __init__(self, item_id, item_type=None):
         self.item_id = item_id
         self.item_type = item_type
         self.status = 0
@@ -39,7 +40,6 @@ class VirtualItem(object):
         self.accept_status = True
         self.accept_value = True
         self.active = False
-
 
     def load(self):
         fname_full = self.get_fname()
@@ -78,22 +78,18 @@ class VirtualItem(object):
                             (self.item_id, i))
         return True
 
-
     def get_fname(self):
         return dir_config + '/' + self.item_id + '.json'
-
 
     def set_state(self, status, value):
         self.status = status
         self.value = value
         self.update_if_active()
 
-
     def save(self):
         fname_full = self.get_fname()
         data = self.serialize()
-        open(fname_full,'w').write(format_json(data, minimal = False))
-
+        open(fname_full, 'w').write(format_json(data, minimal=False))
 
     def update_if_active(self):
         if not self.active: return
@@ -104,18 +100,17 @@ class VirtualItem(object):
         else:
             _value = 'null'
         params = {
-                'i': self.item_id,
-                's': self.status,
-                'v': _value,
-                'force_virtual': 1
-                }
+            'i': self.item_id,
+            's': self.status,
+            'v': _value,
+            'force_virtual': 1
+        }
         code, result = api.call('update', params)
         if code == eva.client.apiclient.result_ok:
             print('Active item state reported to UC')
         else:
             print('Active item reporting failed!')
         return
-
 
     def run_update(self):
         time.sleep(self.update_delay)
@@ -132,7 +127,6 @@ class VirtualItem(object):
         print(result)
         sys.exit(self.update_exitcode)
 
-
     def run_action(self, nstatus, nvalue):
         if self.item_type != 'unit':
             print('no actions for %s\n' % self.item_type)
@@ -143,23 +137,22 @@ class VirtualItem(object):
         print('action status = %s, value = \'%s\'' % \
                 (nstatus, nvalue), end = '|')
         if self.delay:
-            print('delaying %f seconds' % self.delay, end = '|')
+            print('delaying %f seconds' % self.delay, end='|')
             time.sleep(self.delay)
         if self.accept_status:
-            print('SET status = %u' % nstatus, end = '|')
+            print('SET status = %u' % nstatus, end='|')
             self.status = nstatus
         else:
-            print('IGNORE status', end = '|')
+            print('IGNORE status', end='|')
         if self.accept_value:
-            print('SET value = \'%s\'' % nvalue, end = '|')
+            print('SET value = \'%s\'' % nvalue, end='|')
             self.value = nvalue
         else:
-            print('IGNORE value', end = '|')
+            print('IGNORE value', end='|')
         self.save()
         print('exit code %u' % self.exitcode)
         self.update_if_active()
         sys.exit(self.exitcode)
-
 
     def serialize(self):
         d = {}
@@ -177,22 +170,22 @@ class VirtualItem(object):
         d['accept_value'] = self.accept_value
         return d
 
-
     def show(self):
         print(self.item_type + ' ' + self.item_id)
         if self.item_type == 'unit' or self.item_type == 'sensor':
-            print('status = %s, value = "%s"' % (self.status, self.value),
-                    end = ' ')
-            if self.active: print('A', end = '')
+            print(
+                'status = %s, value = "%s"' % (self.status, self.value),
+                end=' ')
+            if self.active: print('A', end='')
             print()
-        elif self.item_type ==  'mu':
+        elif self.item_type == 'mu':
             for i in self.items:
-                print('%s status = %s, value = "%s"' %
-                        (i.item_id, i.status, i.value))
+                print('%s status = %s, value = "%s"' % (i.item_id, i.status,
+                                                        i.value))
         print('----------------------------')
         if self.item_type == 'unit':
             print('on action: ')
-            if self.delay > 0: print ('--> delay %f' % self.delay)
+            if self.delay > 0: print('--> delay %f' % self.delay)
             if self.exitcode:
                 print('--> exit with code %u' % self.exitcode)
             print()
@@ -206,7 +199,7 @@ class VirtualItem(object):
                 print('IGNORE value')
             print('----------------------------')
         print('on update: ')
-        if self.update_delay > 0: print ('--> delay %f' % self.update_delay)
+        if self.update_delay > 0: print('--> delay %f' % self.update_delay)
         if self.update_exitcode:
             print('--> exit with code %u' % self.update_exitcode)
 
@@ -291,7 +284,7 @@ if item_type == 'l' or item_type == 'list':
     for i in glob.glob(dir_config + '/' + '*.json'):
         d = os.path.basename(i).split('.')
         try:
-            item_id = '.'.join(d[:len(d)-1])
+            item_id = '.'.join(d[:len(d) - 1])
         except:
             item_id = d[0]
         v = VirtualItem(item_id)
@@ -299,13 +292,13 @@ if item_type == 'l' or item_type == 'list':
             items.append(v)
         else:
             print('bad config %s' % item_id)
-    items = sorted(items, key=lambda k: k.item_id) 
-    items = sorted(items, key=lambda k: k.item_type) 
+    items = sorted(items, key=lambda k: k.item_id)
+    items = sorted(items, key=lambda k: k.item_type)
     for i in items:
-        print('%s %s' % (i.item_type, i.item_id), end = '')
+        print('%s %s' % (i.item_type, i.item_id), end='')
         if i.item_type == 'unit' or i.item_type == 'sensor':
-            print(' : s = %s, v = "%s"' % (i.status, i.value), end = ' ')
-            if i.active: print ('A', end = '')
+            print(' : s = %s, v = "%s"' % (i.status, i.value), end=' ')
+            if i.active: print('A', end='')
         print()
     sys.exit()
 
@@ -314,12 +307,18 @@ try:
 except:
     usage()
     sys.exit(99)
-try: item_cmd = sys.argv[3]
-except: item_cmd = None
-try: item_arg1 = sys.argv[4]
-except: item_arg1 = None
-try: item_arg2 = sys.argv[5]
-except: item_arg2 = None
+try:
+    item_cmd = sys.argv[3]
+except:
+    item_cmd = None
+try:
+    item_arg1 = sys.argv[4]
+except:
+    item_arg1 = None
+try:
+    item_arg2 = sys.argv[5]
+except:
+    item_arg2 = None
 
 v = VirtualItem(item_id, item_type)
 
@@ -332,7 +331,7 @@ if item_cmd == 'init':
         if item_arg2 is not None: v.value = item_arg2
     elif item_type == 'mu':
         if item_arg1 is None:
-            print ('no items to work on')
+            print('no items to work on')
             sys.exit(99)
         v.item_ids = item_arg1.split(',')
         v.save()
