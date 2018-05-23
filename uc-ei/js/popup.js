@@ -1,6 +1,6 @@
 /*
  * Author: Altertech Group, http://www.altertech.com/
- * Copyright: (C) 2012-2017 Altertech Group
+ * Copyright: (C) 2012-2018 Altertech Group
  * License: See http://www.eva-ics.com/
  * Version: 3.0.2
  */
