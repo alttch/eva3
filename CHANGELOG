@@ -20,6 +20,8 @@
     - added item oid (type:group/item_id) - reserved for the future releases
     - added stop_on_critical option in config (default: yes),
        server will be restarted via safe-run if critical exception occur
+    - uptime in dump and test API function, last 100 exceptions are now stored in a dump,
+       dumps are now compressed with gzip
 
 3.0.1
     Minor release with some urgent features
