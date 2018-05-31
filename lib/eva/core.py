@@ -16,6 +16,7 @@ import jsonpickle
 import signal
 import psutil
 import threading
+import gzip
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -60,6 +61,12 @@ db_update = 0
 
 sleep_step = 0.1
 
+keep_exceptions = 100
+
+_exceptions = []
+
+_exception_log_lock = threading.Lock()
+
 db_update_codes = ['manual', 'instant', 'on_exit']
 
 notify_on_start = True
@@ -94,6 +101,8 @@ _dump_func = {}
 _stop_func = set()
 
 _sigterm_sent = False
+
+start_time = time.time()
 
 
 def sighandler_hup(signum, frame):
@@ -198,10 +207,11 @@ def create_dump():
         for i, f in _dump_func.items():
             dump[i] = f()
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
-                '.dump.json'
-        open(filename, 'w')
+                '.dump.gz'
+        gzip.open(filename, 'w')
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
-        open(filename, 'a').write(format_json(dump, minimal=not development))
+        gzip.open(filename, 'a').write(
+            format_json(dump, minimal=not development).encode())
     except:
         log_traceback()
         return None
@@ -215,7 +225,7 @@ def serialize():
     d['system_name'] = system_name
     d['product_name'] = product_name
     d['product_code'] = product_code
-    d['product_buld'] = product_build
+    d['product_build'] = product_build
     d['keep_logmem'] = keep_logmem
     d['keep_action_history'] = keep_action_history
     d['debug'] = debug
@@ -233,6 +243,8 @@ def serialize():
     d['pid_file'] = pid_file
     d['log_file'] = log_file
     d['threads'] = {}
+    d['uptime'] = int(time.time() - start_time)
+    d['exceptions'] = _exceptions
     for t in threading.enumerate().copy():
         d['threads'][t.name] = {}
         d['threads'][t.name]['daemon'] = t.daemon
@@ -552,15 +564,25 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
 
 
 def log_traceback(display=False, notifier=False, force=False):
+    e_msg = traceback.format_exc()
     if (show_traceback or force) and not display:
         pfx = '.' if notifier else ''
-        logging.error(pfx + traceback.format_exc())
+        logging.error(pfx + e_msg)
     elif display:
-        print(traceback.format_exc())
+        print(e_msg)
+    if not _exception_log_lock.acquire(timeout=timeout):
+        logging.critical('log_traceback locking broken')
+        critical(log=False)
+        return
+    e = {'t': time.strftime('%Y/%m/%d %H:%M:%S %z'), 'e': e_msg}
+    _exceptions.append(e)
+    if len(_exceptions) > keep_exceptions:
+        del _exceptions[0]
+    _exception_log_lock.release()
 
 
-def critical():
-    log_traceback(force=True)
+def critical(log=True):
+    if log: log_traceback(force=True)
     if stop_on_critical:
         logging.warning('got critical exception, shutting down')
         sighandler_term(None, None)
@@ -597,6 +619,6 @@ def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
 
 def init():
     append_save_func(save_modified)
-    append_dump_func('eva-core', serialize)
+    append_dump_func('eva_core', serialize)
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
