@@ -556,8 +556,8 @@ class UpdatableItem(Item):
     def start_expiration_checker(self):
         self.expiration_checker_active = True
         if (self.expiration_checker and \
-                self.expiration_checker.is_alive()):                                     \
-                                                return
+                self.expiration_checker.is_alive()):
+            return
         if not self.expires:
             self.expiration_checker_active = False
             return
