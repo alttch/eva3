@@ -135,13 +135,22 @@ class GenericAPI(object):
         API test, key test and info request, k = any valid key
         """
         result = http_api_result_ok({
-            'acl': apikey.serialized_acl(k),
-            'system': eva.core.system_name,
-            'time': time.time(),
-            'version': eva.core.version,
-            'product_name': eva.core.product_name,
-            'product_code': eva.core.product_code,
-            'product_build': eva.core.product_build
+            'acl':
+            apikey.serialized_acl(k),
+            'system':
+            eva.core.system_name,
+            'time':
+            time.time(),
+            'version':
+            eva.core.version,
+            'product_name':
+            eva.core.product_name,
+            'product_code':
+            eva.core.product_code,
+            'product_build':
+            eva.core.product_build,
+            'uptime':
+            int(time.time() - eva.core.start_time)
         })
         if apikey.check(k, sysfunc=True):
             result['debug'] = eva.core.debug
