@@ -23,6 +23,10 @@
     - uptime in dump and test API function, last 100 exceptions are now stored in a dump,
        dumps are now compressed with gzip
 
+    LM PLC:
+
+    - result function in macro api. terminate and result function accept action uuid as a param
+
 3.0.1
     Minor release with some urgent features
 
