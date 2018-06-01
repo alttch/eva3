@@ -240,14 +240,14 @@ class LM_API(GenericAPI):
 
     def list(self, k=None, group=None, tp=None):
         if not apikey.check(k, master=True): return None
-        result = {}
+        result = []
         if tp == 'LV' or tp == 'lvar':
             items = eva.lm.controller.lvars_by_id
         else:
             items = eva.lm.controller.items_by_id
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
-                result[i] = v.serialize(info=True)
+                result.append(v.serialize(info=True))
         return result
 
     def list_remote(self, k=None, i=None, group=None, tp=None):
