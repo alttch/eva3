@@ -79,7 +79,19 @@ class LM_API(GenericAPI):
         return item.update_set_state(status=status, value=v)
 
     def reset(self, k=None, i=None):
-        return self.set(k, i, 1, "1")
+        return self.set(k, i, 1, '1')
+
+    def clear(self, k=None, i=None):
+        return self.set(k, i, 1, '0')
+
+    def toggle(self, k=None, i=None):
+        item = eva.lm.controller.get_lvar(i)
+        if not item or not apikey.check(k, item): return None
+        v = item.value
+        if v != '0':
+            return self.clear(k, i)
+        else:
+            return self.reset(k, i)
 
     def run(self,
             k=None,
@@ -425,6 +437,8 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.state.exposed = True
         LM_HTTP_API.set.exposed = True
         LM_HTTP_API.reset.exposed = True
+        LM_HTTP_API.clear.exposed = True
+        LM_HTTP_API.toggle.exposed = True
         LM_HTTP_API.run.exposed = True
         LM_HTTP_API.result.exposed = True
 
@@ -486,6 +500,18 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
 
     def reset(self, k=None, i=None):
         if super().reset(k, i):
+            return http_api_result_ok()
+        else:
+            raise cp_api_404()
+
+    def clear(self, k=None, i=None):
+        if super().clear(k, i):
+            return http_api_result_ok()
+        else:
+            raise cp_api_404()
+
+    def toggle(self, k=None, i=None):
+        if super().toggle(k, i):
             return http_api_result_ok()
         else:
             raise cp_api_404()

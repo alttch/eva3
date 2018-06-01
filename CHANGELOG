@@ -28,6 +28,7 @@
     - result function in macro api. terminate and result function accept action uuid as a param
     - list_remote controller items return now array instead of dict
     - on_set lm rule (status changed to 1)
+    - new LM API and macro functions: clear (set lvar value to 0), toggle (toggles lvar value between 0 and 1)
 
 3.0.1
     Minor release with some urgent features

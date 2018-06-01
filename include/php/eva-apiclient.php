@@ -152,6 +152,8 @@ $_eva_api_func = array(
                     'groups_macro',
                     'set',
                     'reset',
+                    'clear',
+                    'toggle',
                     'run',
                     'result',
                     'get_config',
@@ -184,6 +186,8 @@ $_eva_api_func = array(
                 'cr' => array(
                     'set',
                     'reset',
+                    'clear',
+                    'toggle',
                     'save_config',
                     'set_prop',
                     'set_macro_prop',

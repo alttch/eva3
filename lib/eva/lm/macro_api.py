@@ -83,6 +83,8 @@ class MacroAPI(object):
             'set': self.set,
             'value': self.lvar_value,
             'reset': self.reset,
+            'clear': self.clear,
+            'toggle': self.toggle,
             'expires': self.expires,
             'action': self.action,
             'result': self.result,
@@ -242,6 +244,17 @@ class MacroAPI(object):
 
     def reset(self, lvar_id):
         return self.set(lvar_id=lvar_id, value=1)
+
+    def clear(self, lvar_id):
+        return self.set(lvar_id=lvar_id, value=0)
+
+    def toggle(self, lvar_id):
+        v = self.lvar_value(lvar_id)
+        if v is None: return False
+        if v:
+            return self.clear(lvar_id)
+        else:
+            return self.reset(lvar_id)
 
     def expires(self, lvar_id, expires=0):
         lvar = eva.lm.controller.get_lvar(lvar_id)
