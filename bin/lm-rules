@@ -87,6 +87,9 @@ Args for add and edit:
     --exp                           Matches when item is expired (monitor
                                     status <= -1)
 
+    --set                           Matches when item is set (monitor
+                                    status == 1)
+
     --nocond                        Removes rule condition
 
     --initial <only|skip|any>       Match initial item prop value
@@ -187,6 +190,7 @@ try:
         'le=',
         'eq=',
         'exp',
+        'set',
         'nocond',
         'initial=',
         'brk',
@@ -275,6 +279,8 @@ for i, v in o:
             apply_props['in_range_min_eq'] = 'True'
     elif i == '--exp':
         apply_props['for_expire'] = 'Y'
+    elif i == '--set':
+        apply_props['for_set'] = 'Y'
     elif i == '--nocond':
         apply_props['in_range_min'] = ''
         apply_props['in_range_max'] = ''
@@ -374,17 +380,26 @@ if func in cmd_list:
                     n2a(r['for_prop'])
                 )
             )
-        exp = ''
+        m = ''
         if r['for_prop'] == 'status' and \
+                isinstance(r['in_range_max'], float) and \
                 r['in_range_min'] is None and \
                 r['in_range_max'] == -1 and \
                 r['in_range_max_eq']:
-            exp = ' (expire)'
+            m = ' (expire)'
+        elif r['for_prop'] == 'status' and \
+                isinstance(r['in_range_min'], float) and \
+                isinstance(r['in_range_max'], float) and \
+                r['in_range_min'] == 1 and \
+                r['in_range_max'] == 1 and \
+                r['in_range_min_eq'] and \
+                r['in_range_max_eq']:
+            m = ' (set)'
         print(' %s %s%s%s%s%s%s%s' % \
                 (
                     bool2yn(r['enabled']).rjust(1),
                     str(r['priority']).rjust(6),
-                    (r['condition'] + exp).rjust(20),
+                    (r['condition'] + m).rjust(20),
                     s_for_init(r['for_initial']).rjust(10),
                     ('%.2f/%.2f' % \
                             (r['chillout_time'],

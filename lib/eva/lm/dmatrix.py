@@ -342,6 +342,22 @@ class DecisionRule(eva.item.Item):
                 self.log_set(prop, val)
                 self.set_modified(save)
             return True
+        elif prop == 'for_set':
+            if not self.in_range_max_eq or \
+                    not self.in_range_min_eq or \
+                    self.in_range_min != 1 or \
+                    self.in_range_max != 1 or \
+                    self.for_prop != 'status' or \
+                    not isinstance(self.in_range_min, float) or \
+                    not isinstance(self.in_range_max, float):
+                self.in_range_min_eq = True
+                self.in_range_max_eq = True
+                self.in_range_min = 1.0
+                self.in_range_max = 1.0
+                self.for_prop = 'status'
+                self.log_set(prop, val)
+                self.set_modified(save)
+            return True
         elif prop == 'priority':
             try:
                 v = int(val)
