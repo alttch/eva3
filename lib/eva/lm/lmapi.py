@@ -277,20 +277,20 @@ class LM_API(GenericAPI):
         if not items:
             return None
         if i:
-            result[c_id] = {}
+            result = []
             for x in items:
                 for a, v in x.copy().items():
                     if not group or eva.item.item_match(v, [], [group]):
-                        result[c_id][a] = v.serialize()
+                        result.append(v.serialize())
         else:
             result = {}
             for x in items:
                 for c, d in x.copy().items():
                     if not c in result:
-                        result[c] = {}
+                        result[c] = []
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result[c][a] = v.serialize()
+                            result[c].append(v.serialize())
         return result
 
     def list_controllers(self, k=None):
