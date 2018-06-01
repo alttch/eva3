@@ -229,6 +229,7 @@ def start():
     global uc_pool
     global lm_pool
     uc_pool = eva.client.remote_controller.RemoteUCPool()
+    uc_pool.start()
     for i, v in remote_ucs.items():
         if uc_pool.append(v):
             logging.info('%s added to the controller pool' % \

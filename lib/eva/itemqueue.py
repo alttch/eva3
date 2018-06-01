@@ -115,6 +115,7 @@ class ActiveItemQueue(object):
                 try:
                     _actions = self.actions.copy()
                 except:
+                    _actions = []
                     eva.core.log_traceback()
                 self.actions_lock.release()
                 for a in _actions:
@@ -132,7 +133,7 @@ class ActiveItemQueue(object):
                             maxtime < time.time() - self.keep_history:
                         if a.is_finished():
                             logging.debug(
-                                    '%s actions %s too old, removing' % \
+                                    '%s action %s too old, removing' % \
                                     (self.q_id, a.uuid))
                             self.history_remove(a)
                         else:

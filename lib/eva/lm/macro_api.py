@@ -85,6 +85,7 @@ class MacroAPI(object):
             'reset': self.reset,
             'expires': self.expires,
             'action': self.action,
+            'result': self.result,
             'start': self.action_start,
             'stop': self.action_stop,
             'terminate': self.terminate,
@@ -278,6 +279,15 @@ class MacroAPI(object):
             uuid=uuid,
             priority=priority)
 
+    def result(self, unit_id = None, uuid = None):
+        if unit_id:
+            unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+            if not unit:
+                if not self.pass_errors:
+                    raise Exception('unit unknown: ' + unit_id)
+                return None
+        return eva.lm.controller.uc_pool.result(unit_id, uuid)
+
     def action_start(self,
                      unit_id,
                      value=None,
@@ -302,16 +312,17 @@ class MacroAPI(object):
             uuid=uuid,
             priority=priority)
 
-    def terminate(self, unit_id):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
-        if not unit:
+    def terminate(self, unit_id = None, uuid = None):
+        if unit_id:
+            unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+            if not unit:
+                if not self.pass_errors:
+                    raise Exception('unit unknown: ' + unit_id)
+                return None
+        result = eva.lm.controller.uc_pool.terminate(unit_id, uuid)
+        if not result or 'result' not in result or result['result'] != 'OK':
             if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
-        result = eva.lm.controller.uc_pool.terminate(unit_id=unit_id)
-        if 'result' not in result or result['result'] != 'OK':
-            if not self.pass_errors:
-                raise Exception('terminate error, unit ' + unit_id)
+                raise Exception('terminate error')
             return False
         return True
 

@@ -362,6 +362,51 @@ class RemoteUCPool(RemoteControllerPool):
         self.controllers_by_unit = {}
         self.sensors = {}
         self.sensors_by_controller = {}
+        self.action_history_by_id = {}
+        self.action_history_lock = threading.Lock()
+        self.action_cleaner = None
+        self.action_cleaner_active = False
+        self.action_cleaner_delay = 3600
+
+    def start(self):
+        if not eva.core.keep_action_history:
+            return
+        eva.core.append_stop_func(self.stop)
+        self.action_cleaner = threading.Thread(
+            target=self._t_action_cleaner,
+            name='_t_remote_uc_pool_action_cleaner')
+        self.action_cleaner_active = True
+        self.action_cleaner.start()
+
+    def stop(self):
+        if self.action_cleaner_active:
+            self.action_cleaner_active = False
+            self.action_cleaner.join()
+
+    def _t_action_cleaner(self):
+        logging.debug('uc pool action cleaner started')
+        while self.action_cleaner_active:
+            try:
+                if not self.action_history_lock.acquire(
+                        timeout=eva.core.timeout):
+                    logging.critical(
+                        'RemoteUCPool::_t_action_cleaner locking broken')
+                    eva.core.critical()
+                    continue
+                _actions = self.action_history_by_id.copy()
+                self.action_history_lock.release()
+                for u, a in _actions.items():
+                    if a['t'] < time.time() - eva.core.keep_action_history:
+                        logging.debug('action %s too old, removing' % u)
+                        self.action_history_remove(a)
+            except:
+                eva.core.log_traceback()
+            i = 0
+            while i < self.action_cleaner_delay and \
+                    self.action_cleaner_active:
+                time.sleep(eva.core.sleep_step)
+                i += eva.core.sleep_step
+        logging.debug('uc pool action cleaner stopped')
 
     def get_unit(self, unit_id):
         return self.units[unit_id] if unit_id in self.units \
@@ -385,12 +430,93 @@ class RemoteUCPool(RemoteControllerPool):
         if wait: p['w'] = wait
         if uuid: p['u'] = uuid
         if priority: p['p'] = priority
-        return uc.api_call('action', p)
+        result = uc.api_call('action', p)
+        if result and \
+                'item_id' in result and \
+                'item_group' in result and \
+                'uuid' in result:
+            a = {
+                'uuid': result['uuid'],
+                'i': '%s/%s' % (result['item_group'], result['item_id']),
+                't': time.time()
+            }
+            self.action_history_append(a)
+        return result
 
-    def terminate(self, unit_id):
-        if not unit_id in self.controllers_by_unit: return None
-        uc = self.controllers_by_unit[unit_id]
-        p = {'i': unit_id}
+    def action_history_append(self, a):
+        if not eva.core.keep_action_history:
+            return True
+        if not self.action_history_lock.acquire(timeout=eva.core.timeout):
+            logging.critical(
+                'RemoteUCPool::action_history_append locking broken')
+            eva.core.critical()
+            return False
+        try:
+            self.action_history_by_id[a['uuid']] = a
+        except:
+            eva.core.log_traceback()
+            self.action_history_lock.release()
+            return False
+        self.action_history_lock.release()
+        return True
+
+    def action_history_remove(self, a):
+        if not self.action_history_lock.acquire(timeout=eva.core.timeout):
+            logging.critical(
+                'RemoteUCPool::action_history_remove locking broken')
+            eva.core.critical()
+            return False
+        try:
+            del self.action_history_by_id[a['uuid']]
+        except:
+            eva.core.log_traceback()
+            self.action_history_lock.release()
+            return False
+        self.action_history_lock.release()
+        return True
+
+    def action_history_get(self, uuid):
+        if not self.action_history_lock.acquire(timeout=eva.core.timeout):
+            logging.critical(
+                'RemoteUCPool::action_history_get locking broken')
+            eva.core.critical()
+            return None
+        a = self.action_history_by_id.get(uuid)
+        self.action_history_lock.release()
+        return a
+
+    def result(self, unit_id = None, uuid = None):
+        if unit_id:
+            i = unit_id
+            p = {'i': unit_id}
+        elif uuid:
+            a = self.action_history_get(uuid)
+            if a:
+                i = a['i']
+                p = {'u': uuid}
+            else:
+                i = None
+        else:
+            i = None
+        if not i or not i in self.controllers_by_unit: return None
+        uc = self.controllers_by_unit[i]
+        return uc.api_call('result', p)
+
+    def terminate(self, unit_id = None, uuid = None):
+        if unit_id:
+            i = unit_id
+            p = {'i': unit_id}
+        elif uuid:
+            a = self.action_history_get(uuid)
+            if a:
+                i = a['i']
+                p = {'u': uuid}
+            else:
+                i = None
+        else:
+            i = None
+        if not i or not i in self.controllers_by_unit: return None
+        uc = self.controllers_by_unit[i]
         return uc.api_call('terminate', p)
 
     def q_clean(self, unit_id):
