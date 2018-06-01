@@ -91,6 +91,7 @@ class Item(object):
             d['id'] = self.item_id
             d['type'] = self.item_type
             d['group'] = self.group
+            d['full_id'] = self.group + '/' + self.item_id
         if full or config or info or props:
             d['description'] = self.description
         if full:
