@@ -6,6 +6,7 @@ __version__ = "3.0.2"
 import cherrypy
 import os
 import glob
+import logging
 from cherrypy.lib.static import serve_file
 from eva.tools import format_json
 import eva.core
@@ -610,9 +611,11 @@ class SFA_HTTP_Root:
             if _k is None: _k = eva.apikey.key_by_ip_address(http_real_ip())
         else:
             _k = k
+        _r = '%s@%s' % (apikey.key_id(k), http_real_ip())
         if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
             raise cp_api_404()
         if not apikey.check(_k, pvt_file=f, ip=http_real_ip()):
+            logging.warning('pvt %s file %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
         _f = eva.core.dir_eva + '/pvt/' + f
         _f_alt = None
@@ -638,6 +641,7 @@ class SFA_HTTP_Root:
                     })
                 cherrypy.response.headers['Content-Type'] = 'application/json'
                 if nocache: self._no_cache()
+                logging.info('pvt %s file list %s' % (_r, f))
                 return format_json(sorted(l, key=lambda k: k['name'])).encode()
             else:
                 raise cp_api_error()
@@ -662,12 +666,15 @@ class SFA_HTTP_Root:
                         result = image.tobytes(fmt, 'RGB', q)
                     cherrypy.response.headers['Content-Type'] = 'image/' + fmt
                     if nocache: self._no_cache()
+                    logging.info('pvt %s file access %s' % (_r, f))
                     return result
                 else:
+                    logging.error('pvt %s file %s resize error' % (_r, f))
                     raise
             except:
                 raise cp_api_error()
         if nocache: self._no_cache()
+        logging.info('pvt %s file access %s' % (_r, f))
         return serve_file(_f)
 
 

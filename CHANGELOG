@@ -34,6 +34,7 @@
     SFA:
 
     - append_controller now tries to autodetect controller type if no type specified
+    - sfa pvt access logs
 
 3.0.1
     Minor release with some urgent features
