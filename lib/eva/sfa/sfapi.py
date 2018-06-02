@@ -324,17 +324,17 @@ class SFA_API(GenericAPI):
             for x in items_uc:
                 for c, d in x.copy().items():
                     if not 'uc/' + c in result:
-                        result['uc/' + c] = {}
+                        result['uc/' + c] = []
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result['uc/' + c][a] = v.serialize()
+                            result['uc/' + c].append(v.serialize())
             for x in items_lm:
                 for c, d in x.copy().items():
                     if not 'lm/' + c in result:
-                        result['lm/' + c] = {}
+                        result['lm/' + c] = []
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result['lm/' + c][a] = v.serialize()
+                            result['lm/' + c].append(v.serialize())
         return result
 
     def list_rule_props(self, k=None, i=None):
