@@ -174,7 +174,7 @@ Controller management in runtime (requires master key):
                                               config if the property got the
                                               new value
 
-    append_controller <-u URI> <-g uc|lm> [-a apikey] [-m mqtt_notifier]
+    append_controller <-u URI> [-g uc|lm] [-a apikey] [-m mqtt_notifier]
                       [-s ssl_verify] [-t timeout] [-y]
                                               append controller by API URI
                                               -a  remote controller apikey

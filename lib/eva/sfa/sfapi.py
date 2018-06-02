@@ -194,15 +194,19 @@ class SFA_API(GenericAPI):
                           timeout=None,
                           save=False):
         if not apikey.check(k, master=True) or not uri: return None
-        if group == 'uc':
-            return eva.sfa.controller.append_uc(
+        if group == 'uc' or group is None:
+            result = eva.sfa.controller.append_uc(
                 uri=uri,
                 key=key,
                 mqtt_update=mqtt_update,
                 ssl_verify=ssl_verify,
                 timeout=timeout,
                 save=save)
-        if group == 'lm':
+            if group is not None and not result:
+                return result
+            elif result:
+                return result
+        if group == 'lm' or group is None:
             return eva.sfa.controller.append_lm(
                 uri=uri,
                 key=key,
@@ -210,6 +214,10 @@ class SFA_API(GenericAPI):
                 ssl_verify=ssl_verify,
                 timeout=timeout,
                 save=save)
+            if group is not None and not result:
+                return result
+            elif result:
+                return result
         return False
 
     def remove_controller(self, k=None, controller_id=None):

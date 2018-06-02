@@ -31,6 +31,10 @@
     - new LM API and macro functions: clear (set lvar value to 0), toggle (toggles lvar value between 0 and 1)
     - cmd macro function now accepts full controller ids (uc/controller_id) as well as short
 
+    SFA:
+
+    - append_controller now tries to autodetect controller type if no type specified
+
 3.0.1
     Minor release with some urgent features
 
