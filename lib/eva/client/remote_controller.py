@@ -477,15 +477,14 @@ class RemoteUCPool(RemoteControllerPool):
 
     def action_history_get(self, uuid):
         if not self.action_history_lock.acquire(timeout=eva.core.timeout):
-            logging.critical(
-                'RemoteUCPool::action_history_get locking broken')
+            logging.critical('RemoteUCPool::action_history_get locking broken')
             eva.core.critical()
             return None
         a = self.action_history_by_id.get(uuid)
         self.action_history_lock.release()
         return a
 
-    def result(self, unit_id = None, uuid = None):
+    def result(self, unit_id=None, uuid=None):
         if unit_id:
             i = unit_id
             p = {'i': unit_id}
@@ -502,7 +501,7 @@ class RemoteUCPool(RemoteControllerPool):
         uc = self.controllers_by_unit[i]
         return uc.api_call('result', p)
 
-    def terminate(self, unit_id = None, uuid = None):
+    def terminate(self, unit_id=None, uuid=None):
         if unit_id:
             i = unit_id
             p = {'i': unit_id}
@@ -625,6 +624,22 @@ class RemoteUCPool(RemoteControllerPool):
             logging.error('Failed to reload sensors from %s' % controller_id)
             return False
         return True
+
+    def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
+        if controller_id.find('/') == -1:
+            _controller_id = controller_id
+        else:
+            try:
+                t, _controller_id = controller_id.split('/')
+                if t != 'uc': return None
+            except:
+                return None
+        return super().cmd(
+            controller_id=_controller_id,
+            command=command,
+            args=args,
+            wait=wait,
+            timeout=timeout)
 
 
 class RemoteLMPool(RemoteControllerPool):
