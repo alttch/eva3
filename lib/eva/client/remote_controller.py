@@ -30,7 +30,6 @@ class RemoteController(eva.item.Item):
             self.api.set_timeout(eva.core.timeout)
             self._key = None
         self.product_build = None
-        self.controller_type = None
         self.version = None
         self.pool = None
         self.mqtt_update = mqtt_update
@@ -184,7 +183,6 @@ class RemoteUC(RemoteController):
 
     def __init__(self, uc_id=None, api=None, mqtt_update=None):
         super().__init__(uc_id, 'remote_uc', api, mqtt_update)
-        self.controller_type = 'uc'
         self.api.set_product('uc')
 
     def create_remote_unit(self, state):
@@ -222,7 +220,6 @@ class RemoteLM(RemoteController):
 
     def __init__(self, lm_id=None, api=None, mqtt_update=None):
         super().__init__(lm_id, 'remote_lm', api, mqtt_update)
-        self.controller_type = 'lm'
         self.api.set_product('lm')
 
     def create_remote_lvar(self, state):
