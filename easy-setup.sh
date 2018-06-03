@@ -179,8 +179,12 @@ if [ $INSTALL_UC -eq 1 ]; then
     echo "UC_ENABLED=yes" >> etc/eva_servers
     echo
     UC_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    UC_LM_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    UC_SFA_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
     if [ $INTERACTIVE -eq 1 ]; then
         echo "Your UC operator key: ${UC_OPKEY}"
+        echo "Your UC integration key for LM PLCs: ${UC_LM_KEY}"
+        echo "Your UC integration key for SFA: ${UC_SFA_KEY}"
         echo
     fi
     askUser "Enter the user account to run under (root is recommended for UC)" ${DEFAULT_USER}
@@ -205,8 +209,18 @@ groups = #
 allow = cmd
 hosts_allow = 0.0.0.0/0
 
+[lm]
+key = ${UC_LM_KEY}
+groups = #
+allow = cmd
+hosts_allow = 0.0.0.0/0
+
+[sfa]
+key = ${UC_SFA_KEY}
+groups = #
+hosts_allow = 0.0.0.0/0
+
 EOF
-    chown ${USER} etc/uc_apikeys.ini
     chmod 600 etc/uc_apikeys.ini
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
@@ -227,6 +241,8 @@ if [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; the
     exit 0
 fi
 
+# COMPLETED
+
 echo "Install completed!"
 
 echo
@@ -235,6 +251,8 @@ echo "MASTERKEY: ${MASTERKEY}"
 
 if [ $INSTALL_UC -eq 1 ]; then
     echo "UC_OPERATOR_KEY: ${UC_OPKEY}"
+    echo "UC_LM_KEY: ${UC_LM_KEY}"
+    echo "UC_SFA_KEY: ${UC_SFA_KEY}"
 fi
 
 exit 0

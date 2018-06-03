@@ -54,6 +54,8 @@ function set_runtime_permissions {
     fi
     exec_cmd chown -R ${u} runtime/${p}*
     exec_cmd chown -R ${u} runtime/db/${p}*.db
+    exec_cmd chown ${u} etc/${p}_apikeys.ini
+    exec_cmd chmod 600 etc/${p}_apikeys.ini
     [ -f log/${p}.log ] && mv -f log/${p}.log log/${p}.log.bak
     return 0
 }
@@ -98,19 +100,16 @@ cd `dirname ${D}` || exit 4
 case ${PRODUCT} in
 uc)
     check_file_access etc/${PRODUCT}.ini ${USER} || exit 1
-    check_file_access etc/${PRODUCT}_apikeys.ini ${USER} || exit 1
     set_runtime_permissions uc ${USER} || exit 1
     set_user UC ${USER}
     ;;
 lm)
     check_file_access etc/${PRODUCT}.ini ${USER} || exit 1
-    check_file_access etc/${PRODUCT}_apikeys.ini ${USER} || exit 1
     set_runtime_permissions lm ${USER} || exit 1
     set_user LM ${USER}
     ;;
 sfa)
     check_file_access etc/${PRODUCT}.ini ${USER} || exit 1
-    check_file_access etc/${PRODUCT}_apikeys.ini ${USER} || exit 1
     set_runtime_permissions sfa ${USER} || exit 1
     set_user SFA ${USER}
     ;;
