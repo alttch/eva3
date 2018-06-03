@@ -415,9 +415,10 @@ class MacroAPI(object):
         _f = max(fls, key=os.path.getmtime)
         fls.remove(_f)
         if fls: _f_alt = max(fls, key=os.path.getmtime)
+        else: _f_alt = None
         try:
             o = open(_f, mode)
         except:
-            if not alt: raise
+            if not alt or not _f_alt: raise
             o = open(_f_alt, mode)
         return o
