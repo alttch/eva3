@@ -46,7 +46,7 @@ function usage {
         echo " --mqtt user:password@host:port/prefix"
         echo "                          specify MQTT server access"
         echo
-        echo " -p {uc,lm,sfa,all}        specify which controller to set up or all, may be used"
+        echo " -p {uc,lm,sfa,all}       specify which controller to set up or all, may be used"
         echo "                          several times"
     echo
 }
@@ -483,12 +483,15 @@ hosts_allow = 127.0.0.1
 key = ${SFA_OPKEY}
 groups = #
 pvt = #
+allow = dm_rule_props, dm_rules_list
 hosts_allow = 0.0.0.0/0
 
 EOF
     chmod 600 etc/sfa_apikeys.ini
     create_notifier sfa || exit 1
-    ./bin/sfa-notifier set_prop -i eva_1 -p collect_logs -v 1 || exit 1
+    if [ "x$MQTT_HOST" != "x" ]; then
+        ./bin/sfa-notifier set_prop -i eva_1 -p collect_logs -v 1 || exit 1
+    fi
     SFA_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db

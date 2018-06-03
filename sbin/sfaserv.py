@@ -82,7 +82,7 @@ eva.sysapi.update_config(cfg)
 
 eva.core.load_cvars()
 
-eva.apikey.allows = ['cmd', 'dm_rules_props', 'dm_rules_list']
+eva.apikey.allows = ['cmd', 'dm_rule_props', 'dm_rules_list']
 eva.apikey.load()
 
 eva.notify.init()
