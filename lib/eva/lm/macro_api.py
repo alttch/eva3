@@ -6,6 +6,7 @@ __version__ = "3.0.2"
 import logging
 import sys
 import os
+import glob
 import eva.core
 import eva.sysapi
 import eva.mailer
@@ -95,7 +96,10 @@ class MacroAPI(object):
             'kill': self.kill,
             'run': self.run,
             'cmd': self.cmd,
-            'system': os.system
+            'system': os.system,
+            'ls': self.ls,
+            'open_oldest': self.open_oldest,
+            'open_newest': self.open_newest
         }
 
     def debug(self, msg):
@@ -292,7 +296,7 @@ class MacroAPI(object):
             uuid=uuid,
             priority=priority)
 
-    def result(self, unit_id = None, uuid = None):
+    def result(self, unit_id=None, uuid=None):
         if unit_id:
             unit = eva.lm.controller.uc_pool.get_unit(unit_id)
             if not unit:
@@ -325,7 +329,7 @@ class MacroAPI(object):
             uuid=uuid,
             priority=priority)
 
-    def terminate(self, unit_id = None, uuid = None):
+    def terminate(self, unit_id=None, uuid=None):
         if unit_id:
             unit = eva.lm.controller.uc_pool.get_unit(unit_id)
             if not unit:
@@ -385,3 +389,35 @@ class MacroAPI(object):
             args=args,
             wait=wait,
             timeout=timeout)
+
+    def ls(self, mask):
+        fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
+        l = []
+        for x in fls:
+            l.append({
+                'name': os.path.basename(x),
+                'size': os.path.getsize(x),
+                'time': {
+                    'created': os.path.getctime(x),
+                    'modified': os.path.getmtime(x)
+                }
+            })
+        return l
+
+    def open_oldest(self, mask, mode='r'):
+        fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
+        if not fls: return None
+        return open(min(fls, key=os.path.getmtime), mode)
+
+    def open_newest(self, mask, mode='r', alt=True):
+        fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
+        if not fls: return None
+        _f = max(fls, key=os.path.getmtime)
+        fls.remove(_f)
+        if fls: _f_alt = max(fls, key=os.path.getmtime)
+        try:
+            o = open(_f, mode)
+        except:
+            if not alt: raise
+            o = open(_f_alt, mode)
+        return o
