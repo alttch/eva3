@@ -330,6 +330,7 @@ hosts_allow = ${REMOTES}
 EOF
     chmod 600 etc/uc_apikeys.ini
     create_notifier uc || exit 1
+    UC_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
         ./set-run-under-user.sh uc ${USER} || exit 1
@@ -395,6 +396,7 @@ hosts_allow = ${REMOTES}
 EOF
     chmod 600 etc/lm_apikeys.ini
     create_notifier lm || exit 1
+    LM_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
         ./set-run-under-user.sh lm ${USER} || exit 1
@@ -407,9 +409,86 @@ EOF
         ./sbin/eva-control stop
         exit 5
     fi
-    if [ $LINK -eq 1 ]; then
+    if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
         ./bin/lm-cmd append_controller -u http://localhost:8812 -a ${UC_LM_KEY} -m eva_1 -y
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
+    fi
+fi
+
+# INSTALL SFA
+
+echo
+askYN "Install SCADA Final Aggregator on this host"
+[ $VALUE == "1" ] && INSTALL_SFA=1
+
+echo
+
+if [ $INSTALL_SFA -eq 1 ]; then
+    echo "Installing EVA SFA"
+    sh install-sfa.sh || exit 1
+    echo "SFA_ENABLED=yes" >> etc/eva_servers
+    echo
+    SFA_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    if [ $INTERACTIVE -eq 1 ]; then
+        echo "Your SFA operator key: ${SFA_OPKEY}"
+        echo
+    fi
+    askUser "Enter the user account to run under (root is not recommended!)" ${DEFAULT_USER}
+    id ${USER} > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Invalid user: ${USER}"
+        exit 2
+    fi
+    [ ! -f etc/sfa.ini ] && cp etc/sfa.ini-dist etc/sfa.ini
+    chmod 644 etc/sfa.ini
+    echo "Generating sfa_apikeys.ini"
+    rm -f etc/sfa_apikeys.ini
+    cat > etc/sfa_apikeys.ini << EOF
+[masterkey]
+key = ${MASTERKEY}
+master = yes
+hosts_allow = 127.0.0.1
+
+[operator]
+key = ${SFA_OPKEY}
+groups = #
+pvt = #
+hosts_allow = 0.0.0.0/0
+
+EOF
+    chmod 600 etc/sfa_apikeys.ini
+    create_notifier sfa || exit 1
+    ./bin/sfa-notifier set_prop -i eva_1 -p collect_logs -v 1 || exit 1
+    SFA_USER=${USER}
+    if [ "x$USER" != "xroot" ]; then
+        chmod 777 runtime/db
+        ./set-run-under-user.sh sfa ${USER} || exit 1
+    fi
+    ./sbin/sfa-control start
+    sleep 3
+    ./bin/sfa-cmd test > /dev/null 2>&1
+    if [ $? != 0 ]; then
+        echo "Unable to test SFA"
+        ./sbin/eva-control stop
+        exit 5
+    fi
+    if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
+        echo "Linking local UC to SFA"
+        ./bin/sfa-cmd append_controller -g uc -u http://localhost:8812 -a ${UC_SFA_KEY} -m eva_1 -y
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
+    fi
+    if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
+        echo "Linking local LM PLC to SFA"
+        ./bin/sfa-cmd append_controller -g lm -u http://localhost:8817 -a ${LM_SFA_KEY} -m eva_1 -y
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -424,6 +503,29 @@ if [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; the
     echo "No products selected, nothing was installed"
     exit 0
 fi
+
+USERS=
+
+[ "x${UC_USER}" != "x" ] && [ "x${UC_USER}" != "xroot" ] && USERS="${USERS} ${UC_USER}"
+[ "x${LM_USER}" != "x" ] && [ "x${LM_USER}" != "xroot" ] && USERS="${USERS} ${LM_USER}"
+[ "x${SFA_USER}" != "x" ] && [ "x${SFA_USER}" != "xroot" ] && USERS="${USERS} ${SFA_USER}"
+
+X=
+
+for u in ${USERS}; do
+    if [ "x$X" != "x" ] && [ "x$X" != "x$u" ]; then
+        X=
+        break
+    fi
+    X=$u
+done
+
+if [ "x$X" != "x" ]; then
+    chown ${X} runtime/db
+    chmod 700 runtime/db
+fi
+
+echo
 
 echo "Setup completed!"
 
