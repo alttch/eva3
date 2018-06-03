@@ -41,6 +41,7 @@
 
     Common:
 
+    - easy-setup.sh - an interactive/automatic script to quickly set up the current host
     - ability to run controllers under restricted user
 
 3.0.1

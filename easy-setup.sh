@@ -22,7 +22,32 @@ REQUIRED="realpath python3 pip3 jq sha256sum mosquitto_pub"
 function usage {
     echo
     echo "Usage: easy-setup.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
-        echo "          [--mqtt user:password@host:port/prefix] [-p {uc,lm,sfa,all}] [--link]"
+        echo "          [--link] [--mqtt user:password@host:port/prefix] [-p {uc,lm,sfa,all}]"
+        echo
+        echo " Options:"
+        echo
+        echo " --force                  force install even if configs are already present"
+        echo " --clear                  clear runtime (recommended with --force,"
+        echo "                          WARNING!!! destroys all data)"
+        echo " --auto                   perform automatic (unattended) setup"
+        echo
+        echo " Options for automatic setup:"
+        echo
+        echo " --local-only             accept API keys (except operator) only from local host"
+        echo " --u USER                 set up all controllers to run under specified user"
+        echo
+        echo " --link                   link all controllers together (requires --mqtt)"
+        echo "                          WARNING: it's not possible to change controller id"
+        echo "                          after linking. IDs of all controllers are automatically"
+        echo "                          set to the current host name. If you want to use different"
+        echo "                          IDs, prepare etc/uc.ini and etc/lm.ini files first and"
+        echo "                          set 'name' key there"
+        echo
+        echo " --mqtt user:password@host:port/prefix"
+        echo "                          specify MQTT server access"
+        echo
+        echo " -p {uc,lm,sfa,all}        specify which controller to set up or all, may be used"
+        echo "                          several times"
     echo
 }
 
@@ -545,6 +570,11 @@ fi
 if [ $INSTALL_LM -eq 1 ]; then
     echo "LM_OPERATOR_KEY: ${LM_OPKEY}"
     echo "LM_SFA_KEY: ${LM_SFA_KEY}"
+    echo
+fi
+
+if [ $INSTALL_SFA -eq 1 ]; then
+    echo "SFA_OPERATOR_KEY: ${SFA_OPKEY}"
     echo
 fi
 
