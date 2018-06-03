@@ -24,7 +24,7 @@ echo "Installing EVA UC to `pwd`"
 
 echo "Creating dirs"
 mkdir -p ./etc || exit 1
-chmod 700 ./etc
+chmod 755 ./etc
 mkdir -p ./var || exit 1
 mkdir -p ./log || exit 1
 mkdir -p ./runtime || exit 1
@@ -35,6 +35,7 @@ mkdir -p ./runtime/uc_unit.d || exit 1
 mkdir -p ./runtime/uc_sensor.d || exit 1
 mkdir -p ./runtime/uc_mu.d || exit 1
 mkdir -p ./runtime/db || exit 1
+touch runtime/db/uc.db || exit 1
 mkdir -p ./runtime/xc || exit 1
 mkdir -p ./runtime/xc/uc || exit 1
 mkdir -p ./xc/cmd || exit 1

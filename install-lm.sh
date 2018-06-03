@@ -24,7 +24,7 @@ echo "Installing EVA LM PLC to `pwd`"
 
 echo "Creating dirs"
 mkdir -p ./etc || exit 1
-chmod 700 ./etc
+chmod 755 ./etc
 mkdir -p ./var || exit 1
 mkdir -p ./log || exit 1
 mkdir -p ./runtime || exit 1
@@ -37,6 +37,7 @@ mkdir -p ./runtime/lm_lvar.d || exit 1
 mkdir -p ./runtime/lm_remote_uc.d || exit 1
 chmod 700 ./runtime/lm_remote_uc.d || exit 1
 mkdir -p ./runtime/db || exit 1
+touch runtime/db/lm.db || exit 1
 mkdir -p ./runtime/xc/lm || exit 1
 mkdir -p ./xc/cmd || exit 1
 
