@@ -114,8 +114,13 @@ def start():
     if not community: _community = default_community
     else: _community = community
 
-    config.addTransport(snmpEngine, udp.domainName + (1,),
-                        udp.UdpTransport().openServerMode((host, _port)))
+    try:
+        config.addTransport(snmpEngine, udp.domainName + (1,),
+                            udp.UdpTransport().openServerMode((host, _port)))
+    except:
+        logging.error('Can not bind SNMP handler to %s:%s' % (host, _port))
+        eva.core.log_traceback()
+        return False
 
     logging.info('Starting SNMP trap handler, listening at %s:%u' % \
             (host, _port))
