@@ -17,7 +17,7 @@ REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 pip3 jq sha256sum mosquitto_pub"
+REQUIRED="realpath python3 pip3 sha256sum mosquitto_pub"
 
 function usage {
     echo
