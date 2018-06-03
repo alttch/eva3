@@ -21,7 +21,7 @@ REQUIRED="realpath python3 pip3 jq sha256sum mosquitto_pub"
 
 function usage {
     echo
-    echo "Usage: easy-install.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
+    echo "Usage: easy-setup.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
         echo "          [--mqtt user:password@host:port/prefix] [-p {uc,lm,sfa,all}] [--link]"
     echo
 }
@@ -299,6 +299,7 @@ if [ $INSTALL_UC -eq 1 ]; then
     [ ! -f etc/uc.ini ] && cp etc/uc.ini-dist etc/uc.ini
     chmod 644 etc/uc.ini
     echo "Generating uc_apikeys.ini"
+    rm -f etc/uc_apikeys.ini
     cat > etc/uc_apikeys.ini << EOF
 [masterkey]
 key = ${MASTERKEY}
