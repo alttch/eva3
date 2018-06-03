@@ -43,8 +43,8 @@ timeout = 5
 
 [webapi]
 ; web api listen on IP/port
-listen = 0.0.0.0:828
-;ssl_listen = 0.0.0.0:829
+listen = 0.0.0.0:8828
+;ssl_listen = 0.0.0.0:8829
 ;ssl_module = builtin
 ;ssl_cert = test.crt
 ;ssl_key = test.key
