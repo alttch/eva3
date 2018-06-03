@@ -90,6 +90,7 @@ function set_user {
 
 check_dir_access log ${USER} || exit 1
 check_dir_access var ${USER} || exit 1
+check_dir_access runtime/db ${USER} || exit 1
 
 D=`realpath $0`
 cd `dirname ${D}` || exit 4

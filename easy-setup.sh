@@ -9,11 +9,12 @@ INSTALL_SFA=0
 
 VALUE=
 
-REQUIRED="realpath python3 pip3 jq sha256sum"
+REQUIRED="realpath python3 pip3 jq sha256sum mosquitto_pub sqlite3"
 
 function usage {
     echo
-    echo "Usage: easy-install.sh [--force] [--auto] [-u USER] [-p {uc,lm,sfa,all}]"
+    echo "Usage: easy-install.sh [--force] [--clear] [--auto] [-u USER] [-p {uc,lm,sfa,all}]"
+    echo
 }
 
 function option_error {
@@ -23,7 +24,7 @@ function option_error {
 
 function check_required_exec {
     local p=$1
-    echo -n "Checking for $p => "
+    echo -n "Checking $p => "
     RESULT=`which $p 2>&1`
     if [ $? != 0 ]; then
         echo "Missing! Please install"
@@ -108,6 +109,12 @@ do
             echo "Warning: using force installation, stopping EVA and removing old configs"
             FORCE=1
             ./sbin/eva-control stop
+            shift
+        ;;
+        --clear)
+            echo "Warning: asked to clear runtime. Doing"
+            ./sbin/eva-control stop
+            rm -rf runtime/*
             shift
         ;;
         -h|--help)
@@ -202,6 +209,7 @@ EOF
     chown ${USER} etc/uc_apikeys.ini
     chmod 600 etc/uc_apikeys.ini
     if [ "x$USER" != "xroot" ]; then
+        chmod 777 runtime/db
         ./set_run_under_user.sh uc ${USER} || exit 1
     fi
     ./sbin/uc-control start
