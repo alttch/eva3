@@ -54,7 +54,7 @@ function set_runtime_permissions {
     fi
     exec_cmd chown -R ${u} runtime/${p}*
     exec_cmd chown -R ${u} runtime/db/${p}*.db
-    [ -f log/${p}/log ] && mv -f log/${p}.log log/${p}.log.bak
+    [ -f log/${p}.log ] && mv -f log/${p}.log log/${p}.log.bak
     return 0
 }
 
@@ -88,7 +88,6 @@ function set_user {
     echo
 }
 
-check_dir_access runtime/db ${USER} || exit 1
 check_dir_access log ${USER} || exit 1
 check_dir_access var ${USER} || exit 1
 
