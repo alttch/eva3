@@ -5,6 +5,7 @@
     Emergency interfaces
 
      fixes: correct display of long item names
+    fixed: dm_rule_props acl in SFA
      fixed: removed js minimalization (users got bugs and wrong behavor on some systems) until fixed
      fixes: various bug fixes
 
