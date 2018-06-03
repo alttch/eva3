@@ -15,13 +15,23 @@ LM_ARGS=
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/lm_safe.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
 
+source ./etc/eva_servers
+
+function exec_cmd {
+    if [ "x${LM_USER}" == "x" ]; then
+        $*
+    else
+        su ${LM_USER} -c "$*"
+    fi
+}
+
 case $1 in
 start)
     echo 'Starting LM server'
-    ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${LM} ${LM_ARGS} > /dev/null &
+    exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${LM} ${LM_ARGS} > /dev/null &
     ;;
 launch)
-    ${PYTHON} ${LM} ${LM_ARGS}
+    exec_cmd ${PYTHON} ${LM} ${LM_ARGS}
     ;;
 stop)
     [ -f ${PIDFILE} ] || exit 1
@@ -59,7 +69,7 @@ logrotate)
     [ -f ${PIDFILE} ] && kill -HUP `cat ${PIDFILE}`
     ;;
 version)
-    ${PYTHON} ${LM} -V
+    exec_cmd ${PYTHON} ${LM} -V
     ;;
 *)
     echo "Usage: lm-control start|stop|restart|logrotate|version"

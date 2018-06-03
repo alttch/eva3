@@ -15,13 +15,23 @@ SFA_ARGS=
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/sfa_safe.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
 
+source ./etc/eva_servers
+
+function exec_cmd {
+    if [ "x${SFA_USER}" == "x" ]; then
+        $*
+    else
+        su ${SFA_USER} -c "$*"
+    fi
+}
+
 case $1 in
 start)
     echo 'Starting SFA server'
-    ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${SFA} ${SFA_ARGS} > /dev/null &
+    exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${SFA} ${SFA_ARGS} > /dev/null &
     ;;
 launch)
-    ${PYTHON} ${SFA} ${SFA_ARGS}
+    exec_cmd ${PYTHON} ${SFA} ${SFA_ARGS}
     ;;
 stop)
     [ -f ${PIDFILE} ] || exit 1
@@ -59,7 +69,7 @@ logrotate)
     [ -f ${PIDFILE} ] && kill -HUP `cat ${PIDFILE}`
     ;;
 version)
-    ${PYTHON} ${SFA} -V
+    exec_cmd ${PYTHON} ${SFA} -V
     ;;
 *)
     echo "Usage: sfa-control start|stop|restart|logrotate|version"

@@ -15,13 +15,23 @@ UC_ARGS=
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/uc_safe.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
 
+source ./etc/eva_servers
+
+function exec_cmd {
+    if [ "x${UC_USER}" == "x" ]; then
+        $*
+    else
+        su ${UC_USER} -c "$*"
+    fi
+}
+
 case $1 in
 start)
     echo 'Starting UC server'
-    ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${UC} ${UC_ARGS} > /dev/null &
+    exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${UC} ${UC_ARGS} > /dev/null &
     ;;
 launch)
-    ${PYTHON} ${UC} ${UC_ARGS}
+    exec_cmd ${PYTHON} ${UC} ${UC_ARGS}
     ;;
 stop)
     [ -f ${PIDFILE} ] || exit 1
@@ -59,7 +69,7 @@ logrotate)
     [ -f ${PIDFILE} ] && kill -HUP `cat ${PIDFILE}`
     ;;
 version)
-    ${PYTHON} ${UC} -V
+    exec_cmd ${PYTHON} ${UC} -V
     ;;
 *)
     echo "Usage: uc-control start|stop|restart|logrotate|version"
