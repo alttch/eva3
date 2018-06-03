@@ -6,6 +6,14 @@ DEFAULT_USER=root
 INSTALL_UC=0
 INSTALL_LM=0
 INSTALL_SFA=0
+MQTT_HOST=
+MQTT_PORT=
+MQTT_USER=
+MQTT_PASSWORD=
+MQTT_PREFIX=
+LINK=0
+
+REMOTES='0.0.0.0/0'
 
 VALUE=
 
@@ -13,13 +21,24 @@ REQUIRED="realpath python3 pip3 jq sha256sum mosquitto_pub"
 
 function usage {
     echo
-    echo "Usage: easy-install.sh [--force] [--clear] [--auto] [-u USER] [-p {uc,lm,sfa,all}]"
+    echo "Usage: easy-install.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
+        echo "          [--mqtt user:password@host:port/prefix] [-p {uc,lm,sfa,all}] [--link]"
     echo
 }
 
 function option_error {
     usage
     exit 2
+}
+
+function create_notifier {
+    [ "x$MQTT_HOST" = "x" ] && return 0
+    local T=$1
+    echo "Creating notifier for ${T}"
+    ./bin/$T-notifier create -i eva_1 -p mqtt -h ${MQTT_HOST} -P ${MQTT_PORT} -A ${MQTT_USER}:${MQTT_PASSWORD} -y || return 1
+    ./bin/$T-notifier subscribe -i eva_1 -p state -v '#' -g '#' || return 1
+    ./bin/$T-notifier subscribe -i eva_1 -p log -L 20 || return 1
+    return 0
 }
 
 function check_required_exec {
@@ -41,7 +60,7 @@ function askYN {
     fi
     local v=
     while [ "x$v" == "x" ]; do
-        echo -n "$1 "
+        echo -n "$1 (Y/N)? "
         read a
         case $a in
             y|Y)
@@ -53,6 +72,50 @@ function askYN {
         esac
     done
     VALUE=$v
+}
+
+function askMQTT {
+    while [ 1 ]; do
+        if [ $INTERACTIVE -eq 1 ]; then
+            echo -n "MQTT host, required for linking (use empty value to skip MQTT connection for now): "
+            read MQTT_HOST
+            if [ "x${MQTT_HOST}"  = "x" ]; then
+                return
+            fi
+            echo -n "MQTT port [1883]: "
+            read MQTT_PORT
+            [ "x${MQTT_PORT}" = "x" ] && MQTT_PORT=1883
+            MQTT_USER=
+            while [ 1 ]; do
+                echo -n "MQTT user: "
+                read MQTT_USER
+                [ "x$MQTT_USER" != "x" ]; break
+            done
+            MQTT_PASSWORD=
+            while [ 1 ]; do
+                echo -n "MQTT password: "
+                read -s MQTT_PASSWORD
+                echo
+                [ "x$MQTT_PASSWORD" != "x" ]; break
+            done
+            echo -n "MQTT prefix (empty for the root hive): "
+            read MQTT_PREFIX
+        else
+            if [ "x${MQTT_HOST}"  = "x" ]; then
+                return
+            fi
+        fi
+        local s="test"
+        [ "x${MQTT_PREFIX}" != "x" ] && local s="${MQTT_PREFIX}/test"
+        mosquitto_pub -d -h ${MQTT_HOST} -p ${MQTT_PORT} -u ${MQTT_USER} -P ${MQTT_PASSWORD} -t ${s} -m  passed
+        if [ $? -ne 0 ]; then
+            if [ ${INTERACTIVE} -ne 1 ]; then
+                exit 5
+            fi
+        else
+            return
+        fi
+    done
 }
 
 function askUser {
@@ -77,6 +140,22 @@ while [[ $# -gt 0 ]]
 do
     key="$1"
     case $key in
+        --link)
+            LINK=1
+            shift
+        ;;
+        --mqtt)
+            M="$2"
+            MQTT_USER=`echo $M|cut -d@ -f1|cut -d: -f1`
+            MQTT_PASSWORD=`echo $M|cut -d@ -f1|cut -d: -f2`
+            MQTT_HOST=`echo $M|cut -d@ -f2|cut -d: -f1|cut -d/ -f1`
+            MQTT_PORT=`echo $M|cut -d@ -f2 |cut -d/ -f1|cut -d: -f2`
+            [ "x$MQTT_PORT" = "x" ] && MQTT_PORT=1883
+            [ "x$MQTT_PORT" = "x$MQTT_HOST" ] && MQTT_PORT=1883
+            MQTT_PREFIX=`echo $M|cut -d/ -f2`
+            shift
+            shift
+        ;;
         -u)
             DEFAULT_USER="$2"
             shift
@@ -105,6 +184,11 @@ do
             shift
             shift
         ;;
+    --local-only)
+            echo "This controller will be installed with local-only key access"
+            REMOTES="127.0.0.1"
+            shift
+        ;;
         --force)
             echo "Warning: using force installation, stopping EVA and removing old configs"
             FORCE=1
@@ -131,6 +215,11 @@ do
         ;;
     esac
 done
+
+if [ $LINK -eq 1 ] && [ "x$MQTT_HOST" = "x" ]; then
+    echo "Linking requested but no MQTT HOST specified"
+    option_error
+fi
 
 e=0
 for r in ${REQUIRED}; do
@@ -163,10 +252,24 @@ if [ $INTERACTIVE -eq 1 ]; then
     echo
 fi
 
+# ASK SOME QUESTIONS
+
+echo
+askYN "Should this controller grant API access for local instances only"
+[ $VALUE == "1" ] && REMOTES="127.0.0.1"
+
+askMQTT
+
+if [ "x$MQTT_HOST" != "x" ]; then
+    echo
+    askYN "Link controllers together"
+    [ $VALUE == "1" ] && LINK=1
+fi
+
 # INSTALL UC
 
 echo
-askYN "Install EVA Universal Controller on this host(Y/N)?"
+askYN "Install EVA Universal Controller on this host"
 [ $VALUE == "1" ] && INSTALL_UC=1
 
 echo
@@ -213,15 +316,16 @@ hosts_allow = 0.0.0.0/0
 key = ${UC_LM_KEY}
 groups = #
 allow = cmd
-hosts_allow = 0.0.0.0/0
+hosts_allow = ${REMOTES}
 
 [sfa]
 key = ${UC_SFA_KEY}
 groups = #
-hosts_allow = 0.0.0.0/0
+hosts_allow = ${REMOTES}
 
 EOF
     chmod 600 etc/uc_apikeys.ini
+    create_notifier uc || exit 1
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
         ./set_run_under_user.sh uc ${USER} || exit 1
@@ -243,7 +347,7 @@ fi
 
 # COMPLETED
 
-echo "Install completed!"
+echo "Setup completed!"
 
 echo
 
