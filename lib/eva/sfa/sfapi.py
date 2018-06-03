@@ -266,7 +266,7 @@ class SFA_API(GenericAPI):
 
     def list_remote(self, k=None, i=None, group=None, tp=None):
         if not apikey.check(k, master=True): return None
-        result = {}
+        result = []
         items_uc = []
         items_lm = []
         if i:
@@ -309,33 +309,28 @@ class SFA_API(GenericAPI):
         if not items_uc and not items_lm:
             return None
         if i:
-            result[c_fid] = {}
+            # result[c_fid] = {}
             if items_uc:
                 for x in items_uc:
                     for a, v in x.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result[c_fid][a] = v.serialize()
+                            result.append(v.serialize())
             if items_lm:
                 for x in items_lm:
                     for a, v in x.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result[c_fid][a] = v.serialize()
+                            result.append(v.serialize())
         else:
-            result = {}
             for x in items_uc:
                 for c, d in x.copy().items():
-                    if not 'uc/' + c in result:
-                        result['uc/' + c] = []
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result['uc/' + c].append(v.serialize())
+                            result.append(v.serialize())
             for x in items_lm:
                 for c, d in x.copy().items():
-                    if not 'lm/' + c in result:
-                        result['lm/' + c] = []
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result['lm/' + c].append(v.serialize())
+                            result.append(v.serialize())
         return result
 
     def list_rule_props(self, k=None, i=None):

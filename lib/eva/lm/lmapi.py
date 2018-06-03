@@ -264,7 +264,7 @@ class LM_API(GenericAPI):
 
     def list_remote(self, k=None, i=None, group=None, tp=None):
         if not apikey.check(k, master=True): return None
-        result = {}
+        result = []
         items = []
         if i:
             controller = eva.lm.controller.get_controller(i)
@@ -289,20 +289,16 @@ class LM_API(GenericAPI):
         if not items:
             return None
         if i:
-            result = []
             for x in items:
                 for a, v in x.copy().items():
                     if not group or eva.item.item_match(v, [], [group]):
                         result.append(v.serialize())
         else:
-            result = {}
             for x in items:
                 for c, d in x.copy().items():
-                    if not c in result:
-                        result[c] = []
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result[c].append(v.serialize())
+                            result.append(v.serialize())
         return result
 
     def list_controllers(self, k=None):

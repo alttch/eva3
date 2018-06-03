@@ -48,6 +48,17 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self._destroyed = True
         self.stop_processors()
 
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify)
+        d['controller_id'] = self.controller.full_id
+        return d
+
 
 class RemoteLVar(RemoteUpdatableItem):
 
@@ -130,3 +141,14 @@ class RemoteMacro(eva.item.Item):
     def __init__(self, macro_id, controller):
         super().__init__(macro_id, 'lmacro')
         self.controller = controller
+
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify)
+        d['controller_id'] = self.controller.full_id
+        return d
