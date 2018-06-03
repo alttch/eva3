@@ -357,58 +357,69 @@ if apifunc:
         sys.exit(code)
 
 if func in cmd_list:
-    print(' %s %s%s%s%s%s%s%s' % \
-            (
-                'E'.rjust(1),
-                'Prio'.rjust(6),
-                'Condition'.rjust(20),
-                'Initial'.rjust(10),
-                'Chillout'.rjust(18),
-                'Brk'.rjust(5),
-                'Macro'.rjust(25),
-                'Args'.rjust(20)
-            )
-        )
-    print('-' * 108)
+    import pandas as pd
+    pd.options.display.max_colwidth = 100
+    data2 = []
+    data3 = []
     for r in result:
-        print('%s  %s' % (r['id'], r['description']))
-        print(' %s:%s/%s/%s' % \
-                (
-                    n2a(r['for_item_type']),
-                    n2a(r['for_item_group']),
-                    n2a(r['for_item_id']),
-                    n2a(r['for_prop'])
-                )
-            )
+        args = []
+        if r['macro_args']:
+            for o in r['macro_args'].split(' '):
+                args.append('\'' + o + '\'')
         m = ''
         if r['for_prop'] == 'status' and \
-                isinstance(r['in_range_max'], float) and \
-                r['in_range_min'] is None and \
-                r['in_range_max'] == -1 and \
-                r['in_range_max_eq']:
+            isinstance(r['in_range_max'], float) and \
+            r['in_range_min'] is None and \
+            r['in_range_max'] == -1 and \
+            r['in_range_max_eq']:
             m = ' (expire)'
         elif r['for_prop'] == 'status' and \
-                isinstance(r['in_range_min'], float) and \
-                isinstance(r['in_range_max'], float) and \
-                r['in_range_min'] == 1 and \
-                r['in_range_max'] == 1 and \
-                r['in_range_min_eq'] and \
-                r['in_range_max_eq']:
+            isinstance(r['in_range_min'], float) and \
+            isinstance(r['in_range_max'], float) and \
+            r['in_range_min'] == 1 and \
+            r['in_range_max'] == 1 and \
+            r['in_range_min_eq'] and \
+            r['in_range_max_eq']:
             m = ' (set)'
-        print(' %s %s%s%s%s%s%s%s' % \
-                (
-                    bool2yn(r['enabled']).rjust(1),
-                    str(r['priority']).rjust(6),
-                    (r['condition'] + m).rjust(20),
-                    s_for_init(r['for_initial']).rjust(10),
-                    ('%.2f/%.2f' % \
-                            (r['chillout_time'],
-                                r['chillout_ends_in'])).rjust(18),
-                    bool2yn(r['break_after_exec']).rjust(5),
-                    str(r['macro']).rjust(25),
-                    str(r['macro_args']).rjust(20)
-                )
-            )
+        if r['macro']:
+            macro = r['macro'] + '(' + ', '.join(args) + ')'
+        else:
+            macro = ''
+        data2.append({
+            'for_oid': r['for_oid'],
+            'macro': macro
+        })
+        data3.append({
+            'id':
+            r['id'],
+            'E':
+            bool2yn(r['enabled']),
+            'Prio':
+            r['priority'],
+            'Condition':
+            r['condition'] + m,
+            'Initial':
+            r['for_initial'],
+            'Chillout':
+            '%.2f/%.2f' % (r['chillout_time'], r['chillout_ends_in']),
+            'Brk':
+            bool2yn(r['break_after_exec']),
+            'description':
+            r['description']
+        })
+    df2 = pd.DataFrame(data2)
+    df2.set_index('for_oid', inplace=True)
+    df3 = pd.DataFrame(data3)
+    df3 = df3.ix[:,
+                 ['id', 'E', 'Prio', 'Condition', 'Initial', 'Chillout', 'Brk']]
+    df3.set_index('id', inplace=True)
+    out2 = df2.to_string().split('\n')
+    out3 = df3.to_string().split('\n')
+    print(out3[0])
+    print('-' * max(len(out2[0]), len(out3[0])))
+    for i in range(0, len(data2)):
+        print(out3[i + 2])
+        print(' ' + out2[i + 2])
         print()
 elif func in cmd_delete:
     print('Deleted: %s' % rule_id)

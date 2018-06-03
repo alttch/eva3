@@ -18,6 +18,7 @@ mods = [
     'logging',
     'netaddr',
     'paho.mqtt.client',
+    'pandas',
     'PIL',
     'platform',
     'psutil',
