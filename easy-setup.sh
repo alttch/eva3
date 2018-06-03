@@ -238,7 +238,7 @@ if [ $FORCE -eq 0 ]; then
     CFGS="eva_servers uc_apikeys.ini lm_apikeys.ini sfa_apikeys.ini"
     for c in ${CFGS}; do
         if [ -f etc/$c ]; then
-            echo "Error: etc/$c already present. Remove configs or use --force option"
+            echo "Error: etc/$c already present. Remove configs or use --force option. Use --force --clear to perform absolutely clean install"
             exit 2
         fi
     done
@@ -255,7 +255,7 @@ fi
 # ASK SOME QUESTIONS
 
 echo
-askYN "Should this controller grant API access for local instances only"
+askYN "Should this controller grant API access for the local instances only"
 [ $VALUE == "1" ] && REMOTES="127.0.0.1"
 
 askMQTT
@@ -266,6 +266,8 @@ if [ "x$MQTT_HOST" != "x" ]; then
     [ $VALUE == "1" ] && LINK=1
 fi
 
+echo -n > etc/eva_servers
+
 # INSTALL UC
 
 echo
@@ -274,11 +276,9 @@ askYN "Install EVA Universal Controller on this host"
 
 echo
 
-echo -n > etc/eva_servers
-
 if [ $INSTALL_UC -eq 1 ]; then
     echo "Installing EVA Universal Controller"
-    sh install-uc.sh
+    sh install-uc.sh || exit 1
     echo "UC_ENABLED=yes" >> etc/eva_servers
     echo
     UC_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
@@ -310,7 +310,6 @@ hosts_allow = 127.0.0.1
 key = ${UC_OPKEY}
 sysfunc = yes
 groups = #
-allow = cmd
 hosts_allow = 0.0.0.0/0
 
 [lm]
@@ -341,12 +340,86 @@ EOF
     fi
 fi
 
+# INSTALL LM
+
+echo
+askYN "Install EVA Logical Manager PLC on this host"
+[ $VALUE == "1" ] && INSTALL_LM=1
+
+echo
+
+if [ $INSTALL_LM -eq 1 ]; then
+    echo "Installing EVA LM PLC"
+    sh install-lm.sh || exit 1
+    echo "LM_ENABLED=yes" >> etc/eva_servers
+    echo
+    LM_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    LM_SFA_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    if [ $INTERACTIVE -eq 1 ]; then
+        echo "Your LM operator key: ${LM_OPKEY}"
+        echo "Your LM integration key for SFA: ${LM_SFA_KEY}"
+        echo
+    fi
+    askUser "Enter the user account to run under (root is recommended for LM PLC only if you are sure)" ${DEFAULT_USER}
+    id ${USER} > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Invalid user: ${USER}"
+        exit 2
+    fi
+    [ ! -f etc/lm.ini ] && cp etc/lm.ini-dist etc/lm.ini
+    chmod 644 etc/lm.ini
+    echo "Generating lm_apikeys.ini"
+    rm -f etc/lm_apikeys.ini
+    cat > etc/lm_apikeys.ini << EOF
+[masterkey]
+key = ${MASTERKEY}
+master = yes
+hosts_allow = 127.0.0.1
+
+[operator]
+key = ${LM_OPKEY}
+sysfunc = yes
+groups = #
+hosts_allow = 0.0.0.0/0
+
+[sfa]
+key = ${LM_SFA_KEY}
+groups = #
+allow = dm_rule_props, dm_rules_list
+hosts_allow = ${REMOTES}
+
+EOF
+    chmod 600 etc/lm_apikeys.ini
+    create_notifier lm || exit 1
+    if [ "x$USER" != "xroot" ]; then
+        chmod 777 runtime/db
+        ./set_run_under_user.sh lm ${USER} || exit 1
+    fi
+    ./sbin/lm-control start
+    sleep 3
+    ./bin/lm-cmd test > /dev/null 2>&1
+    if [ $? != 0 ]; then
+        echo "Unable to test LM"
+        ./sbin/eva-control stop
+        exit 5
+    fi
+    if [ $LINK -eq 1 ]; then
+        echo "Linking local UC to LM PLC"
+        ./bin/lm-cmd append_controller -u http://localhost:8812 -a ${UC_LM_KEY} -m eva_1 -y
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
+    fi
+fi
+
+# COMPLETED
+
 if [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; then
     echo "No products selected, nothing was installed"
     exit 0
 fi
-
-# COMPLETED
 
 echo "Setup completed!"
 
@@ -354,10 +427,19 @@ echo
 
 echo "MASTERKEY: ${MASTERKEY}"
 
+echo
+
 if [ $INSTALL_UC -eq 1 ]; then
     echo "UC_OPERATOR_KEY: ${UC_OPKEY}"
     echo "UC_LM_KEY: ${UC_LM_KEY}"
     echo "UC_SFA_KEY: ${UC_SFA_KEY}"
+    echo
+fi
+
+if [ $INSTALL_LM -eq 1 ]; then
+    echo "LM_OPERATOR_KEY: ${LM_OPKEY}"
+    echo "LM_SFA_KEY: ${LM_SFA_KEY}"
+    echo
 fi
 
 exit 0
