@@ -93,10 +93,10 @@ _api_func = {
         'func': [
             'test', 'state', 'state_all', 'groups', 'action', 'terminate',
             'kill', 'q_clean', 'disable_actions', 'enable_actions', 'set',
-            'reset', 'list_remote_macros', 'groups_macro', 'run',
-            'list_controllers', 'append_controller', 'remove_controller',
-            'list_controller_props', 'set_controller_prop', 'reload_controller',
-            'list_remote', 'list_rule_props', 'set_rule_prop', 'login', 'logout'
+            'reset', 'list_macros', 'groups_macro', 'run', 'list_controllers',
+            'append_controller', 'remove_controller', 'list_controller_props',
+            'set_controller_prop', 'reload_controller', 'list_remote',
+            'list_rule_props', 'set_rule_prop', 'login', 'logout'
         ],
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',

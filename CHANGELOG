@@ -34,8 +34,7 @@
     SFA:
 
     - list_remote returns array instead of dict + controller_id proprety
-    - list_macros renamed to list_remote_macros (list_macros reserved for the future local macros)
-    - list_remote_macros contains now controller property
+    - list_macros contains now controller property
     - append_controller now tries to autodetect controller type if no type specified
     - sfa pvt access logs
 

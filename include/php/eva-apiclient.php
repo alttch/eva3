@@ -228,7 +228,7 @@ $_eva_api_func = array(
                     'enable_actions',
                     'set',
                     'reset',
-                    'list_remote_macros',
+                    'list_macros',
                     'groups_macro',
                     'run',
                     'list_controllers',

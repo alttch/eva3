@@ -122,8 +122,9 @@ SFA commands:
     reset <-i id>                             reset lvar when used as timer,
                                               set status = 1, value = "1"
 
-    list_remote_macros [-g group]             list loaded remote macros, filter
-                                              by group if specified
+    list_macros [-g group] [-i controller_id] list available macros, filter
+                                              by group and/or controller_id
+                                              if specified
 
     run <-i macro_id> [-a args] [-p priority] [-w sec] [-u uuid]
                                               execute macro with args specified

@@ -131,7 +131,7 @@ class SFA_API(GenericAPI):
     def reset(self, k=None, i=None):
         return self.set(k, i, 1, "1")
 
-    def list_remote_macros(self, k=None, controller_id=None, group=None):
+    def list_macros(self, k=None, controller_id=None, group=None):
         result = []
         if not controller_id:
             for c, d in \
@@ -377,7 +377,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         SFA_HTTP_API.set.exposed = True
         SFA_HTTP_API.reset.exposed = True
 
-        SFA_HTTP_API.list_remote_macros.exposed = True
+        SFA_HTTP_API.list_macros.exposed = True
         SFA_HTTP_API.groups_macro.exposed = True
         SFA_HTTP_API.run.exposed = True
 
@@ -495,8 +495,8 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         else:
             raise cp_api_404()
 
-    def list_remote_macros(self, k=None, i=None, g=None):
-        result = super().list_remote_macros(k, i, g)
+    def list_macros(self, k=None, i=None, g=None):
+        result = super().list_macros(k, i, g)
         if result is None: raise cp_api_404()
         return result
 
