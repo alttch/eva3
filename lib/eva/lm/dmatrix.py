@@ -240,6 +240,14 @@ class DecisionRule(eva.item.Item):
             d['macro_args'] = None
         d['break_after_exec'] = self.break_after_exec
         d['chillout_time'] = self.chillout_time
+        for_oid = self.for_item_type if self.for_item_type else '#'
+        for_oid += ':'
+        for_oid += self.for_item_group if self.for_item_group else '#'
+        for_oid += '/'
+        for_oid += self.for_item_id if self.for_item_id else '#'
+        for_oid += '/'
+        for_oid += self.for_prop if self.for_prop else '#'
+        d['for_oid'] = for_oid
         condition = ''
         cond_eq = False
         if self.in_range_min is not None:
