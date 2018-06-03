@@ -60,16 +60,20 @@ function askYN {
     fi
     local v=
     while [ "x$v" == "x" ]; do
-        echo -n "$1 (Y/N)? "
+        echo -n "$1 (Y/N, default Y)? "
         read a
-        case $a in
-            y|Y)
-                v=1
-            ;;
-            n|N)
-                v=0
-            ;;
-        esac
+        if [ "x$a" = "x" ]; then
+            v=1
+        else
+            case $a in
+                y|Y)
+                    v=1
+                ;;
+                n|N)
+                    v=0
+                ;;
+            esac
+        fi
     done
     VALUE=$v
 }
@@ -238,7 +242,7 @@ if [ $FORCE -eq 0 ]; then
     CFGS="eva_servers uc_apikeys.ini lm_apikeys.ini sfa_apikeys.ini"
     for c in ${CFGS}; do
         if [ -f etc/$c ]; then
-            echo "Error: etc/$c already present. Remove configs or use --force option. Use --force --clear to perform absolutely clean install"
+            echo "Error: etc/$c already present. Remove configs or use --force option. Use --force --clear to perform a clean install"
             exit 2
         fi
     done
@@ -328,7 +332,7 @@ EOF
     create_notifier uc || exit 1
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
-        ./set_run_under_user.sh uc ${USER} || exit 1
+        ./set-run-under-user.sh uc ${USER} || exit 1
     fi
     ./sbin/uc-control start
     sleep 3
@@ -360,7 +364,7 @@ if [ $INSTALL_LM -eq 1 ]; then
         echo "Your LM integration key for SFA: ${LM_SFA_KEY}"
         echo
     fi
-    askUser "Enter the user account to run under (root is recommended for LM PLC only if you are sure)" ${DEFAULT_USER}
+    askUser "Enter the user account to run under (use root only if you are sure)" ${DEFAULT_USER}
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "Invalid user: ${USER}"
@@ -393,7 +397,7 @@ EOF
     create_notifier lm || exit 1
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
-        ./set_run_under_user.sh lm ${USER} || exit 1
+        ./set-run-under-user.sh lm ${USER} || exit 1
     fi
     ./sbin/lm-control start
     sleep 3

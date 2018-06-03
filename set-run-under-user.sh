@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 
 PRODUCT=$1
 USER=$2
 
 function usage {
-    echo "Usage: set_run_under_user.sh <product> <user>"
+    echo "Usage: set-run-under-user.sh <product> <user>"
     echo
     echo " where product can be uc, lm, sfa or all"
 }
