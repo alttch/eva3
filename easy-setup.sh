@@ -9,7 +9,7 @@ INSTALL_SFA=0
 
 VALUE=
 
-REQUIRED="realpath python3 pip3 jq sha256sum mosquitto_pub sqlite3"
+REQUIRED="realpath python3 pip3 jq sha256sum mosquitto_pub"
 
 function usage {
     echo
