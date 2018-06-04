@@ -26,8 +26,10 @@ function usage {
     echo " Options:"
     echo
     echo " --force                  force install even if configs are already present"
+    echo
     echo " --clear                  clear runtime (recommended with --force,"
     echo "                          WARNING!!! destroys all data)"
+    echo
     echo " --auto                   perform automatic (unattended) setup"
     echo
     echo " Options for the automatic setup:"
