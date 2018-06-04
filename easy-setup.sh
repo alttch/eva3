@@ -136,7 +136,7 @@ function askMQTT {
         fi
         local s="test"
         [ "x${MQTT_PREFIX}" != "x" ] && local s="${MQTT_PREFIX}/test"
-        mosquitto_pub -d -h ${MQTT_HOST} -p ${MQTT_PORT} -u ${MQTT_USER} -P ${MQTT_PASSWORD} -t ${s} -m  passed
+        mosquitto_pub -d -h ${MQTT_HOST} -p ${MQTT_PORT} -u ${MQTT_USER} -P ${MQTT_PASSWORD} -t ${s} -m passed
         if [ $? -ne 0 ]; then
             if [ ${INTERACTIVE} -ne 1 ]; then
                 exit 5
