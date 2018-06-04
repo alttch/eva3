@@ -10,7 +10,7 @@ MQTT_HOST=
 MQTT_PORT=
 MQTT_USER=
 MQTT_PASSWORD=
-MQTT_PREFIX=
+MQTT_SPACE=
 LINK=0
 
 REMOTES='0.0.0.0/0'
@@ -22,7 +22,7 @@ REQUIRED="realpath python3 pip3 sha256sum mosquitto_pub"
 function usage {
     echo
     echo "Usage: easy-setup.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
-        echo "          [--link] [--mqtt user:password@host:port/prefix] [-p {uc,lm,sfa,all}]"
+        echo "          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]"
         echo
         echo " Options:"
         echo
@@ -43,7 +43,7 @@ function usage {
         echo "                          IDs, prepare etc/uc.ini and etc/lm.ini files first and"
         echo "                          set 'name' key there"
         echo
-        echo " --mqtt user:password@host:port/prefix"
+        echo " --mqtt user:password@host:port/space"
         echo "                          specify MQTT server access"
         echo
         echo " -p {uc,lm,sfa,all}       specify which controller to set up or all, may be used"
@@ -60,7 +60,9 @@ function create_notifier {
     [ "x$MQTT_HOST" = "x" ] && return 0
     local T=$1
     echo "Creating notifier for ${T}"
-    ./bin/$T-notifier create -i eva_1 -p mqtt -h ${MQTT_HOST} -P ${MQTT_PORT} -A ${MQTT_USER}:${MQTT_PASSWORD} -y || return 1
+    local sp=
+    [ "x${MQTT_SPACE}" != "x" ] && local sp="-s ${MQTT_SPACE}"
+    ./bin/$T-notifier create -i eva_1 -p mqtt -h ${MQTT_HOST} -P ${MQTT_PORT} -A ${MQTT_USER}:${MQTT_PASSWORD} $sp -y || return 1
     ./bin/$T-notifier subscribe -i eva_1 -p state -v '#' -g '#' || return 1
     ./bin/$T-notifier subscribe -i eva_1 -p log -L 20 || return 1
     return 0
@@ -127,15 +129,15 @@ function askMQTT {
                 echo
                 [ "x$MQTT_PASSWORD" != "x" ]; break
             done
-            echo -n "MQTT prefix (empty for the root hive): "
-            read MQTT_PREFIX
+            echo -n "MQTT space (empty for the root hive): "
+            read MQTT_SPACE
         else
             if [ "x${MQTT_HOST}"  = "x" ]; then
                 return
             fi
         fi
         local s="test"
-        [ "x${MQTT_PREFIX}" != "x" ] && local s="${MQTT_PREFIX}/test"
+        [ "x${MQTT_SPACE}" != "x" ] && local s="${MQTT_SPACE}/test"
         mosquitto_pub -d -h ${MQTT_HOST} -p ${MQTT_PORT} -u ${MQTT_USER} -P ${MQTT_PASSWORD} -t ${s} -m passed
         if [ $? -ne 0 ]; then
             if [ ${INTERACTIVE} -ne 1 ]; then
@@ -178,10 +180,9 @@ do
             MQTT_USER=`echo $M|cut -d@ -f1|cut -d: -f1`
             MQTT_PASSWORD=`echo $M|cut -d@ -f1|cut -d: -f2`
             MQTT_HOST=`echo $M|cut -d@ -f2|cut -d: -f1|cut -d/ -f1`
-            MQTT_PORT=`echo $M|cut -d@ -f2 |cut -d/ -f1|cut -d: -f2`
+            MQTT_PORT=`echo $M|cut -d@ -f2 |cut -d/ -f1|awk -F: '{ print $2 }'`
             [ "x$MQTT_PORT" = "x" ] && MQTT_PORT=1883
-            [ "x$MQTT_PORT" = "x$MQTT_HOST" ] && MQTT_PORT=1883
-            MQTT_PREFIX=`echo $M|cut -d/ -f2`
+            MQTT_SPACE=`echo $M|awk -F/ '{ print $2 }'`
             shift
             shift
         ;;
@@ -368,11 +369,11 @@ EOF
         ./sbin/eva-control stop
         exit 5
     fi
+    echo
 fi
 
 # INSTALL LM
 
-echo
 askYN "Install EVA Logical Manager PLC on this host"
 [ $VALUE == "1" ] && INSTALL_LM=1
 
@@ -443,11 +444,11 @@ EOF
             exit 5
         fi
     fi
+    echo
 fi
 
 # INSTALL SFA
 
-echo
 askYN "Install SCADA Final Aggregator on this host"
 [ $VALUE == "1" ] && INSTALL_SFA=1
 
@@ -523,6 +524,7 @@ EOF
             exit 5
         fi
     fi
+    echo
 fi
 
 # COMPLETED
@@ -552,8 +554,6 @@ if [ "x$X" != "x" ]; then
     chown ${X} runtime/db
     chmod 700 runtime/db
 fi
-
-echo
 
 echo "Setup completed!"
 
