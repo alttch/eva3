@@ -5,17 +5,10 @@
     Emergency interfaces
 
     fixes: correct display of long item names
-    fixed: dm_rule_props acl in SFA
     fixes: various bug fixes
 
-    UC EI
-
-    - refresh buttons for units and sensors
-
-    LM EI
-
-    - reset button and expire timer in LM EI show/hide when prop changed
-    - refresh buttons for lvars, macros and rules
+    - refresh buttons for every item
+    - LM EI: reset button and expire timer in LM EI show/hide when prop changed
 
     Core
 
@@ -38,6 +31,8 @@
     - new macro functions: ls, open_oldest, open_newest
 
     SFA:
+
+    fixes: dm_rule_props acl in SFA
 
     - list_remote returns array instead of dict + controller_id proprety
     - list_macros contains now controller property
