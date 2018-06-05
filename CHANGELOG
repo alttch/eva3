@@ -21,6 +21,10 @@
     - uptime in dump and test API function, last 100 exceptions are now stored in a dump,
       dumps are now compressed with gzip
 
+    UC:
+
+    - action_toggle function to quickly toggle status of the simple units 
+
     LM PLC:
 
     - list_remote returns array instead of dict + controller_id proprety
