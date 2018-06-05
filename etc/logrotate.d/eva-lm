@@ -1,0 +1,13 @@
+/opt/eva/log/lm.log {
+    daily
+    missingok
+    rotate 7
+    compress
+    delaycompress
+    notifempty
+    create 640 root adm
+    sharedscripts
+    postrotate
+        /opt/eva/sbin/lm-control logrotate
+    endscript
+}
