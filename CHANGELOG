@@ -4,9 +4,9 @@
 
     Emergency interfaces
 
-     fixes: correct display of long item names
+    fixes: correct display of long item names
     fixed: dm_rule_props acl in SFA
-     fixes: various bug fixes
+    fixes: various bug fixes
 
     UC EI
 
