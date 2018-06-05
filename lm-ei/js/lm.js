@@ -166,6 +166,7 @@ function load_lvar_data() {
       .find('option')
       .remove()
       .end();
+    $('#s_lvar_group').show();
     var ng = false;
     var gf = false;
     $.each(data, function(uid, val) {
@@ -183,9 +184,14 @@ function load_lvar_data() {
       if (page == 'lvars') show_toolbar('lvars');
       load_lvars();
     } else {
+      $('#s_lvar_group').hide();
       $('#b_lvars').html('<div class="notavail">No LVars available</div>');
     }
   });
+}
+
+function reload_macros() {
+  load_macros_data();
 }
 
 function load_macros_data() {
@@ -199,6 +205,7 @@ function load_macros_data() {
       .find('option')
       .remove()
       .end();
+    $('#s_macro_group').show();
     var ng = false;
     var gf = false;
     $.each(data, function(uid, val) {
@@ -216,6 +223,7 @@ function load_macros_data() {
       if (page == 'macros') show_toolbar('macros');
       load_macros();
     } else {
+      $('#s_macro_group').hide();
       $('#b_macros').html('<div class="notavail">No macros available</div>');
     }
   });
@@ -280,6 +288,10 @@ function format_expire_time(s, e) {
   var t = e - new Date().getTime() / 1000 + tsdiff + s;
   if (t < 0) return '0.0';
   return Number(Math.round(t * 10) / 10).toFixed(1);
+}
+
+function reload_lvars() {
+  load_lvar_data();
 }
 
 function load_lvars() {
@@ -1027,11 +1039,16 @@ function set_rule_props_ae(i) {
   });
 }
 
+function reload_rules() {
+  load_rules();
+}
+
 function load_rules() {
+  load_animation('b_rules');
   $.getJSON('/lm-api/list_rules?k=' + apikey, function(data) {
+    $('#b_rules').html('');
     var bg = 1;
     show_toolbar('rules');
-    $('#b_rules').html('');
     $.each(data.sort(dynamic_sort('priority')), function(_k) {
       var uid = data[_k]['id'];
       var val = data[_k];
@@ -1425,20 +1442,14 @@ function invalid_api_key() {
 function show_lvars() {
   page = 'lvars';
   show_board('lvars');
-  if (lvars_loaded) {
-    show_toolbar('lvars');
-  } else {
-    show_toolbar('blank');
-  }
+  show_toolbar('lvars');
 }
 
 function show_macros() {
   page = 'macros';
   show_board('macros');
-  if (macros_loaded) {
-    show_toolbar('macros');
-  } else {
-    show_toolbar('blank');
+  show_toolbar('macros');
+  if (!macros_loaded) {
     load_macros_data();
   }
 }

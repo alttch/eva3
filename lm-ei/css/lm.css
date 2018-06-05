@@ -173,6 +173,20 @@ img.tbtn.disabled {
     margin-top: 8px;
     }
 
+.tbtn_l {
+    width: 54px;
+    height: 54px;
+    border-style : Solid;
+    border-color : #3ab0ea;
+    border-color : rgba(58, 176, 234, 1);
+    border-width : 0px;
+    border-radius : 12px;
+    -moz-border-radius : 12px;
+    -webkit-border-radius : 12px;
+    cursor: pointer;
+    outline: none;
+    }
+
 
 @media(max-width: 991px){
 

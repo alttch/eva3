@@ -44,17 +44,26 @@
                                         style="display: none">
             <select id="s_lvar_group" data-role="none" class="st1"
                                 onchange="load_lvars()"></select>
+            <img id="tbtn_reload_lvars" src="i/reload.png" class="tbtn_l"
+                    alt="Reload" title="Reload"
+                    onclick="reload_lvars()" />
         </div>
         <div class="col-xs-10 col-sm-7" id="toolbar_macros"
                                         style="display: none">
             <select id="s_macro_group" data-role="none" class="st1"
                                 onchange="load_macros()"></select>
+            <img id="tbtn_reload_macros" src="i/reload.png" class="tbtn_l"
+                    alt="Reload" title="Reload"
+                    onclick="reload_macros()" />
         </div>
         <div class="col-xs-10 col-sm-7" id="toolbar_rules"
                                         style="display: none">
             <button class="st0"
                 onclick='edit_rule_dialog()'
                 style="width: 120px; font-weight: bold;">NEW RULE</button>
+            <img id="tbtn_reload_rules" src="i/reload.png" class="tbtn_l"
+                    alt="Reload" title="Reload"
+                    onclick="reload_rules()" />
         </div>
         <div class="col-xs-10 col-sm-7" id="toolbar_log"
              style="display: none; height: 54px; padding-top: 25px;">

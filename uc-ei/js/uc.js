@@ -223,6 +223,7 @@ function load_unit_data() {
       .find('option')
       .remove()
       .end();
+    $('#s_unit_group').show();
     var ng = false;
     var gf = false;
     $.each(data, function(uid, val) {
@@ -240,6 +241,7 @@ function load_unit_data() {
       if (page == 'units') show_toolbar('units');
       load_units();
     } else {
+      $('#s_unit_group').hide();
       $('#b_units').html('<div class="notavail">No units available</div>');
     }
   });
@@ -256,6 +258,7 @@ function load_sensor_data() {
       .find('option')
       .remove()
       .end();
+    $('#s_sensor_group').show();
     var ng = false;
     var gf = false;
     $.each(data, function(uid, val) {
@@ -273,6 +276,7 @@ function load_sensor_data() {
       if (page == 'sensors') show_toolbar('sensors');
       load_sensors();
     } else {
+      $('#s_sensor_group').hide();
       $('#b_sensors').html('<div class="notavail">No sensors available</div>');
     }
   });
@@ -335,6 +339,10 @@ function select_unit_state(uid) {
     'update_unit_state("' + uid + '")',
   );
   $('#unit_status').focus();
+}
+
+function reload_units() {
+  load_unit_data();
 }
 
 function load_units() {
@@ -451,6 +459,10 @@ function set_sensor_status(i, st) {
   ).fail(function() {
     popup('error', 'ERROR', 'Server error');
   });
+}
+
+function reload_sensors() {
+  load_sensor_data();
 }
 
 function load_sensors() {
@@ -816,20 +828,14 @@ function invalid_api_key() {
 function show_units() {
   page = 'units';
   show_board('units');
-  if (units_loaded) {
-    show_toolbar('units');
-  } else {
-    show_toolbar('blank');
-  }
+  show_toolbar('units');
 }
 
 function show_sensors() {
   page = 'sensors';
   show_board('sensors');
-  if (sensors_loaded) {
-    show_toolbar('sensors');
-  } else {
-    show_toolbar('blank');
+  show_toolbar('sensors');
+  if (!sensors_loaded) {
     load_sensor_data();
   }
 }
