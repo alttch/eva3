@@ -357,6 +357,9 @@ if apifunc:
         sys.exit(code)
 
 if func in cmd_list:
+    if not result:
+        print('no data')
+        sys.exit()
     import pandas as pd
     pd.options.display.max_colwidth = 100
     data2 = []
