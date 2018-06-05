@@ -97,17 +97,21 @@ start)
         done
         echo " started"
     fi
+    exit 0
     ;;
 stop)
     echo 'Stopping EVA'
     [ "x${SFA_ENABLED}" == "xyes" ] && ./sbin/sfa-control stop
     [ "x${LM_ENABLED}" == "xyes" ] && ./sbin/lm-control stop
     [ "x${UC_ENABLED}" == "xyes" ] && ./sbin/uc-control stop
+    exit 0
     ;;
 restart)
     ./sbin/eva-control stop $2
     ./sbin/eva-control start $2
+    exit 0
     ;;
 *)
     echo "Usage: eva-control start|stop|restart"
+    exit 1
 esac
