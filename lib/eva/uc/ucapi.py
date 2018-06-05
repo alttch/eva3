@@ -110,6 +110,24 @@ class UC_API(GenericAPI):
             wait=wait,
             action_uuid=action_uuid)
 
+    def action_toggle(self,
+                      k=None,
+                      i=None,
+                      action_uuid=None,
+                      priority=None,
+                      q_timeout=None,
+                      wait=0):
+        item = eva.uc.controller.get_unit(i)
+        if not item or not apikey.check(k, item): return None
+        nstatus = 0 if item.status else 1
+        return eva.uc.controller.exec_unit_action(
+            unit=item,
+            nstatus=nstatus,
+            priority=priority,
+            q_timeout=q_timeout,
+            wait=wait,
+            action_uuid=action_uuid)
+
     def disable_actions(self, k=None, i=None):
         item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): return None
@@ -285,6 +303,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.state.exposed = True
         UC_HTTP_API.update.exposed = True
         UC_HTTP_API.action.exposed = True
+        UC_HTTP_API.action_toggle.exposed = True
         UC_HTTP_API.result.exposed = True
         UC_HTTP_API.terminate.exposed = True
         UC_HTTP_API.kill.exposed = True
@@ -372,6 +391,36 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             priority=_p,
             q_timeout=_q,
             wait=_w)
+        if not a:
+            raise cp_api_404()
+        if a.is_status_dead():
+            raise cp_api_error('queue error, action is dead')
+        return a.serialize()
+
+    def action_toggle(self, k=None, i=None, u=None, p=None, q=None, w=0):
+        if w:
+            try:
+                _w = float(w)
+            except:
+                raise cp_api_error('wait is not a float')
+        else:
+            _w = None
+        if p:
+            try:
+                _p = int(p)
+            except:
+                raise cp_api_error('priority is not an integer')
+        else:
+            _p = None
+        if q:
+            try:
+                _q = float(q)
+            except:
+                raise cp_api_error('q_timeout is not a float')
+        else:
+            _q = None
+        a = super().action_toggle(
+            k=k, i=i, action_uuid=u, priority=_p, q_timeout=_q, wait=_w)
         if not a:
             raise cp_api_404()
         if a.is_status_dead():

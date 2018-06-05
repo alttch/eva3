@@ -562,7 +562,7 @@ def exec_mqtt_unit_action(unit, msg):
 
 def exec_unit_action(unit,
                      nstatus,
-                     nvalue=None,
+                     nvalue='',
                      priority=None,
                      q_timeout=None,
                      wait=0,
