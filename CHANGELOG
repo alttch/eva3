@@ -7,7 +7,7 @@
     fixes: correct display of long item names
     fixes: various bug fixes
 
-    - refresh buttons for every item
+    - refresh buttons on item pages
     - LM EI: reset button and expire timer in LM EI show/hide when prop changed
 
     Core
