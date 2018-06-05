@@ -30,7 +30,7 @@ var dm_rule_for_initial = ['skip', 'only', 'any'];
 
 var dm_rule_break = {'0': 'NO', '1': 'YES'};
 
-var dm_rule_conditions = ['none', 'range', 'equals', 'expire'];
+var dm_rule_conditions = ['none', 'range', 'equals', 'set', 'expire'];
 
 var tsdiff = 0;
 
@@ -549,6 +549,19 @@ function dm_rule_for_expire(rule) {
   return false;
 }
 
+
+function dm_rule_for_set(rule) {
+  if (
+    rule.for_prop == 'status' &&
+    rule.in_range_min == 1 &&
+    rule.in_range_max == 1 &&
+    rule.in_range_max_eq &&
+    rule.in_range_min_eq
+  )
+    return true;
+  return false;
+}
+
 function rule_form_condition_switch() {
   $('#l_rule_cond_eq').addClass('hidden');
   $('#d_rule_cond_range').addClass('hidden');
@@ -583,7 +596,7 @@ function ask_del_rule(i) {
   popup(
     'warning',
     'DELETE RULE',
-    'Rule ' + i + ' will be deleted. Please confirm',
+    'Rule ' + i + ' will be deleted.<br />Please confirm',
     'DELETE',
     'CANCEL',
     'del_rule("' + i + '")',
@@ -621,6 +634,12 @@ function rule_from_edit_dialog() {
     rule.in_range_max_eq = true;
     rule.in_range_min = null;
     rule.in_range_min_eq = false;
+  } else if (cond == 'set') {
+    rule.for_prop = 'status';
+    rule.in_range_max = 1;
+    rule.in_range_max_eq = true;
+    rule.in_range_min = 1;
+    rule.in_range_min_eq = true;
   } else if (cond == 'equals') {
     var m = $('#rule_in_range_min')
       .val()
@@ -733,10 +752,12 @@ function edit_rule_dialog(i) {
     _for_initial = rs_for_init(dm_rules[i].for_initial);
     _break = dm_rules[i].break_after_exec ? '1' : '0';
     if (dm_rules[i].in_range_min != null || dm_rules[i].in_range_max != null) {
-      if (dm_rules[i].condition.indexOf(' == ') > -1) {
-        _condition = 'equals';
-      } else if (dm_rule_for_expire(dm_rules[i])) {
+      if (dm_rule_for_expire(dm_rules[i])) {
         _condition = 'expire';
+      } else if (dm_rule_for_set(dm_rules[i])) {
+        _condition = 'set';
+      } else if (dm_rules[i].condition.indexOf(' == ') > -1) {
+        _condition = 'equals';
       } else {
         _condition = 'range';
       }
@@ -974,6 +995,9 @@ function set_rule_props_ae(i) {
     }
   } else if (rule._cond == 'expire') {
     rule.in_range_max = Number(rule.in_range_max);
+  } else if (rule._cond == 'set') {
+    rule.in_range_min = Number(rule.in_range_min);
+    rule.in_range_max = Number(rule.in_range_max);
   }
   delete rule._cond;
   var j = JSON.stringify(rule);
@@ -1073,11 +1097,15 @@ function load_rules() {
           '/' +
           rn2a(val['for_prop']),
       }).appendTo(_rule);
-      var exp = '';
-      if (dm_rule_for_expire(val)) exp = ' (expire)';
+      var rem = '';
+      if (dm_rule_for_expire(val)) {
+        rem = ' (expire)';
+      } else if (dm_rule_for_set(val)) {
+        rem = ' (set)';
+      }
       $('<div />', {
         class: 'rule-condition',
-        html: val['condition'] + exp,
+        html: val['condition'] + rem,
       }).appendTo(_rule_info);
       $('<div />', {
         class: 'rule-info',
