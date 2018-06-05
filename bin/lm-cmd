@@ -88,9 +88,14 @@ LM commands:
     set <-i id> [-s status] [-v value]        set lvar state,
                                               status = -1 , 0 or 1
 
-    reset <-i id>                             reset lvar when used as timer,
+    reset <-i id>                             reset lvar when used as a timer,
                                               set status = 1, value = "1"
 
+    clear <-i id>                             clears lvar when used as a flag,
+                                              set status = 1, value ="0"
+
+    toggle <-i id>                            toggles lvar when used as a flag
+                                              value between "0" and "1"
 
     list_macros [-g group]                    list available macros, filter
                                               by group if specified
