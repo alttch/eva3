@@ -549,7 +549,6 @@ function dm_rule_for_expire(rule) {
   return false;
 }
 
-
 function dm_rule_for_set(rule) {
   if (
     rule.for_prop == 'status' &&
@@ -1426,7 +1425,11 @@ function invalid_api_key() {
 function show_lvars() {
   page = 'lvars';
   show_board('lvars');
-  if (lvars_loaded) show_toolbar('lvars');
+  if (lvars_loaded) {
+    show_toolbar('lvars');
+  } else {
+    show_toolbar('blank');
+  }
 }
 
 function show_macros() {

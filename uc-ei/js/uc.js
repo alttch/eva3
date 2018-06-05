@@ -816,7 +816,11 @@ function invalid_api_key() {
 function show_units() {
   page = 'units';
   show_board('units');
-  if (units_loaded) show_toolbar('units');
+  if (units_loaded) {
+    show_toolbar('units');
+  } else {
+    show_toolbar('blank');
+  }
 }
 
 function show_sensors() {
