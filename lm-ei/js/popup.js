@@ -34,12 +34,12 @@ function popup(pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
   }
   var btn1 = $('<div />', {
     class: 'popup_btn popup_btn_' + _pclass,
-    html: btn1text,
+    html: btn1text
   });
   if (btn1a) {
     btn1.attr(
       'onclick',
-      'if (_popup_validated()) {' + 'close_popup();' + btn1a + ';}',
+      'if (_popup_validated()) {' + 'close_popup();' + btn1a + ';}'
     );
   } else {
     btn1.attr('onclick', 'close_popup()');
@@ -48,7 +48,7 @@ function popup(pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
   if (btn2) {
     var btn2 = $('<div />', {
       class: 'popup_btn popup_btn_' + _pclass,
-      html: btn2,
+      html: btn2
     });
     if (btn2a) {
       btn2.attr('onclick', btn2a);

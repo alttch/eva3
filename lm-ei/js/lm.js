@@ -105,7 +105,7 @@ function redraw_lvar_state(i) {
     rb.hide();
   }
   $('[id="lval_expires_' + i + '"]').html(
-    format_expire_time(items[i].set_time, items[i].expires),
+    format_expire_time(items[i].set_time, items[i].expires)
   );
   $('[id="lval_expires_e_' + i + '"]').html(_e_label);
 }
@@ -135,7 +135,7 @@ function load_lvar_state() {
           redraw_lvar_state(uid);
         }
       });
-    },
+    }
   );
 }
 
@@ -144,7 +144,7 @@ function update_lvar_timers() {
     if (i.status != -1 && i.value != 'null') {
       if (i.expires > 0) {
         $('[id="lval_expires_' + k + '"]').html(
-          format_expire_time(i.set_time, i.expires),
+          format_expire_time(i.set_time, i.expires)
         );
       }
     } else {
@@ -242,7 +242,7 @@ function set_lvar_state(uid) {
       } else {
         popup('error', 'ERROR', 'LVar not changed. Result: ' + data.result);
       }
-    },
+    }
   ).fail(function() {
     popup('error', 'ERROR', 'Server error. LVar not changed');
   });
@@ -279,7 +279,7 @@ function select_lvar_state(uid) {
     html,
     'SET',
     'CANCEL',
-    'set_lvar_state("' + uid + '")',
+    'set_lvar_state("' + uid + '")'
   );
 }
 
@@ -313,37 +313,37 @@ function load_lvars() {
         $('<span />', {
           id: 'lval_expires_e_' + uid,
           class: 'lval',
-          html: _e_label,
+          html: _e_label
         }).appendTo(_lvar_expires);
         $('<span />', {
           id: 'lval_expires_' + uid,
           class: 'lval',
-          html: format_expire_time(val.set_time, val.expires),
+          html: format_expire_time(val.set_time, val.expires)
         }).appendTo(_lvar_expires);
         $('<span />', {
           class: 'lval',
-          html: 'V=',
+          html: 'V='
         }).appendTo(_lvar_state);
         $('<span />', {
           id: 'lval_' + uid,
           class: 'lval',
-          html: val.value,
+          html: val.value
         }).appendTo(_lvar_state);
         items[uid] = val;
         _lvar_buttons = $('<div />', {
           class: 'col-sm-2 col-xs-12',
-          style: 'text-align:center;',
+          style: 'text-align:center;'
         });
         $('<button />', {
           class: 'st0',
-          html: 'SET',
+          html: 'SET'
         })
           .attr('onclick', 'select_lvar_state("' + uid + '")')
           .appendTo(_lvar_buttons);
         var rb = $('<button />', {
           id: 'lval_rb_' + uid,
           class: 'st0',
-          html: 'RESET',
+          html: 'RESET'
         }).attr('onclick', 'reset_lvar("' + uid + '")');
         if (val.expires <= 0) rb.hide();
         rb.appendTo(_lvar_buttons);
@@ -352,11 +352,11 @@ function load_lvars() {
         $('<div />', {
           class: 'device lvar_s' + val.status,
           id: 'lname_' + uid,
-          html: iname,
+          html: iname
         }).appendTo(_lvar);
         $('<div />', {
           class: 'device-descr',
-          html: val['description'],
+          html: val['description']
         }).appendTo(_lvar);
         _lvar.appendTo(_r);
         _lvar_expires.appendTo(_r);
@@ -367,7 +367,7 @@ function load_lvars() {
         else bg = 1;
       });
       lvars_loaded = true;
-    },
+    }
   );
 }
 
@@ -386,7 +386,7 @@ function prepare_macro_run(i) {
     html,
     'RUN',
     'CANCEL',
-    'run_macro("' + i + '")',
+    'run_macro("' + i + '")'
   );
   $('#macro_run_args').focus();
 }
@@ -411,7 +411,7 @@ function run_macro(i) {
         btn.removeAttr('disabled');
         btn.removeClass('disabled');
       }
-    },
+    }
   );
 }
 
@@ -438,17 +438,17 @@ function enable_disable_macro(i, e) {
         }
         btn.attr(
           'onclick',
-          'enable_disable_macro("' + i + '", ' + (e == 0 ? 1 : 0) + ')',
+          'enable_disable_macro("' + i + '", ' + (e == 0 ? 1 : 0) + ')'
         );
         btn.html(e == 0 ? 'DISABLED' : 'ENABLED');
       } else {
         popup(
           'error',
           'ERROR',
-          'Parameter not changed. Result: ' + data.result,
+          'Parameter not changed. Result: ' + data.result
         );
       }
-    },
+    }
   ).fail(function() {
     popup('error', 'ERROR', 'Server error. Parameter not changed');
   });
@@ -467,17 +467,17 @@ function enable_disable_rule(i, e) {
         }
         btn.attr(
           'onclick',
-          'enable_disable_rule("' + i + '", ' + (e == 0 ? 1 : 0) + ')',
+          'enable_disable_rule("' + i + '", ' + (e == 0 ? 1 : 0) + ')'
         );
         btn.html(e == 0 ? 'DISABLED' : 'ENABLED');
       } else {
         popup(
           'error',
           'ERROR',
-          'Parameter not changed. Result: ' + data.result,
+          'Parameter not changed. Result: ' + data.result
         );
       }
-    },
+    }
   ).fail(function() {
     popup('error', 'ERROR', 'Server error. Parameter not changed');
   });
@@ -495,7 +495,7 @@ function load_macros() {
         _macro = $('<div />', {class: 'col-md-9 col-sm-8 col-xs-12'});
         _macro_buttons = $('<div />', {
           class: 'col-md-3 col-sm-4 col-xs-12',
-          style: 'text-align:center;',
+          style: 'text-align:center;'
         });
         if (master) {
           $('<button />', {
@@ -507,14 +507,14 @@ function load_macros() {
               '", ' +
               (val.action_enabled == 0 ? 1 : 0) +
               ')',
-            html: val.action_enabled == 0 ? 'DISABLED' : 'ENABLED',
+            html: val.action_enabled == 0 ? 'DISABLED' : 'ENABLED'
           }).appendTo(_macro_buttons);
         }
         var runbtn = $('<button />', {
           id: 'btn_macro_run_' + uid,
           class: 'st0',
           onclick: 'prepare_macro_run("' + uid + '")',
-          html: 'RUN',
+          html: 'RUN'
         });
         if (val.action_enabled == 0) {
           runbtn.attr('disabled', 'disabled');
@@ -525,11 +525,11 @@ function load_macros() {
         $('<div />', {
           id: 'macro_name_' + uid,
           class: 'device',
-          html: uid,
+          html: uid
         }).appendTo(_macro);
         $('<div />', {
           class: 'device-descr',
-          html: val['description'],
+          html: val['description']
         }).appendTo(_macro);
         _macro.appendTo(_r);
         _macro_buttons.appendTo(_r);
@@ -538,7 +538,7 @@ function load_macros() {
         else bg = 1;
       });
       macros_loaded = true;
-    },
+    }
   );
 }
 
@@ -610,7 +610,7 @@ function ask_del_rule(i) {
     'Rule ' + i + ' will be deleted.<br />Please confirm',
     'DELETE',
     'CANCEL',
-    'del_rule("' + i + '")',
+    'del_rule("' + i + '")'
   );
 }
 
@@ -980,7 +980,7 @@ function edit_rule_dialog(i) {
     'CANCEL',
     'set_rule_props_ae("' + i + '")',
     null,
-    validate_rule_dialog,
+    validate_rule_dialog
   );
   rule_form_condition_switch();
   $('#rule_priority').focus();
@@ -1032,7 +1032,7 @@ function set_rule_props_ae(i) {
       }
       load_rules();
     },
-    (dataType = 'json'),
+    (dataType = 'json')
   ).fail(function() {
     popup('error', 'ERROR', 'Server error. Unable to process rule');
     load_rules();
@@ -1057,7 +1057,7 @@ function load_rules() {
       _rule_info = $('<div />', {class: 'col-md-3 col-sm-4 col-xs-12'});
       _rule_buttons = $('<div />', {
         class: 'col-md-4 col-sm-2 col-xs-12',
-        style: 'text-align:center;',
+        style: 'text-align:center;'
       });
       $('<button />', {
         id: 'btn_rule_enable_' + uid,
@@ -1068,39 +1068,39 @@ function load_rules() {
           '", ' +
           (val.enabled == 0 ? 1 : 0) +
           ')',
-        html: val.enabled == 0 ? 'DISABLED' : 'ENABLED',
+        html: val.enabled == 0 ? 'DISABLED' : 'ENABLED'
       }).appendTo(_rule_buttons);
       var editbtn = $('<button />', {
         id: 'btn_rule_edit_' + uid,
         class: 'st0',
         onclick: 'edit_rule_dialog("' + uid + '")',
-        html: 'EDIT',
+        html: 'EDIT'
       });
       editbtn.appendTo(_rule_buttons);
       var delbtn = $('<button />', {
         id: 'btn_rule_edit_' + uid,
         class: 'st0',
         onclick: 'ask_del_rule("' + uid + '")',
-        html: 'DELETE',
+        html: 'DELETE'
       });
       delbtn.appendTo(_rule_buttons);
       var _r = $('<div />', {
         id: 'rule_' + uid,
-        class: 'row row-device bg' + bg,
+        class: 'row row-device bg' + bg
       });
       $('<div />', {
         id: 'rule_priority_' + uid,
         class: 'rule-priority',
-        html: val.priority,
+        html: val.priority
       }).appendTo(_rule);
       $('<div />', {
         id: 'rule_id_' + uid,
         class: 'rule-id',
-        html: uid,
+        html: uid
       }).appendTo(_rule);
       $('<div />', {
         class: 'rule-desc',
-        html: val['description'],
+        html: val['description']
       }).appendTo(_rule);
       $('<div />', {
         class: 'device-desc',
@@ -1111,7 +1111,7 @@ function load_rules() {
           '/' +
           rn2a(val['for_item_id']) +
           '/' +
-          rn2a(val['for_prop']),
+          rn2a(val['for_prop'])
       }).appendTo(_rule);
       var rem = '';
       if (dm_rule_for_expire(val)) {
@@ -1121,7 +1121,7 @@ function load_rules() {
       }
       $('<div />', {
         class: 'rule-condition',
-        html: val['condition'] + rem,
+        html: val['condition'] + rem
       }).appendTo(_rule_info);
       $('<div />', {
         class: 'rule-info',
@@ -1130,11 +1130,11 @@ function load_rules() {
           rs_for_init(val['for_initial']) +
           '</b>. Break: <b>' +
           (val['break_after_exec'] ? 'Y' : 'N') +
-          '</b>',
+          '</b>'
       }).appendTo(_rule_info);
       $('<div />', {
         class: 'rule-info',
-        html: 'Chillout: <b>' + val['chillout_time'] + '</b> sec',
+        html: 'Chillout: <b>' + val['chillout_time'] + '</b> sec'
       }).appendTo(_rule_info);
       if (val['macro'] != null) {
         var m = '<b>' + val['macro'] + '</b>';
@@ -1143,7 +1143,7 @@ function load_rules() {
         }
         $('<div />', {
           class: 'rule-info',
-          html: 'Macro: "' + m + '"',
+          html: 'Macro: "' + m + '"'
         }).appendTo(_rule_info);
       }
       _rule.appendTo(_r);
@@ -1198,7 +1198,7 @@ function start_ws(reload) {
   };
   ws.onclose = function() {
     $('#i_connection').html(
-      '<b><span style="color: red">' + 'WS connecting' + '</span></b>',
+      '<b><span style="color: red">' + 'WS connecting' + '</span></b>'
     );
     log_first_load = true;
     lvars_loaded = false;
@@ -1234,7 +1234,7 @@ function init_dashboard(reload) {
   if (ws_mode) {
     if (!reload) {
       $('#i_connection').html(
-        '<b><span style="color: red">' + 'WS connecting' + '</span></b>',
+        '<b><span style="color: red">' + 'WS connecting' + '</span></b>'
       );
       start_ws(false);
     }
@@ -1244,7 +1244,7 @@ function init_dashboard(reload) {
       '<b><span style="color: orange">' +
         jrInterval / 1000 +
         ' sec' +
-        '</span></b>',
+        '</span></b>'
     );
     if (!reload) {
       setInterval(load_lvar_state, jrInterval);
@@ -1263,16 +1263,16 @@ function set_debug_mode(mode) {
         popup(
           'info',
           'DEBUG',
-          'Debug mode is now ' + (debug_mode ? 'enabled' : 'disabled'),
+          'Debug mode is now ' + (debug_mode ? 'enabled' : 'disabled')
         );
       } else {
         popup(
           'error',
           'ERROR',
-          'Debug mode not changed<br />Result: ' + data.result,
+          'Debug mode not changed<br />Result: ' + data.result
         );
       }
-    },
+    }
   ).fail(function() {
     popup('error', 'ERROR', 'Server error');
   });
@@ -1286,7 +1286,7 @@ function save() {
       popup(
         'error',
         'ERROR',
-        'Unable to update system data<br />Result: ' + data.result,
+        'Unable to update system data<br />Result: ' + data.result
       );
     }
   }).fail(function(data) {
@@ -1382,7 +1382,7 @@ function login(k, remember_k, initial, reload) {
     master = data.acl.master;
     $('#i_key').html('<b>' + data.acl.key_id + '</b>');
     $('#i_master').html(
-      data.acl.master ? '<font color="red"><b>yes</b></font>' : 'no',
+      data.acl.master ? '<font color="red"><b>yes</b></font>' : 'no'
     );
     $('#i_version').html(data.version);
     var dev = '';
@@ -1435,7 +1435,7 @@ function invalid_api_key() {
     'OK',
     '',
     'show_login_form()',
-    '',
+    ''
   );
 }
 

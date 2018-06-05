@@ -131,7 +131,7 @@ function eva_sfa_start_rule_monitor() {
   }
   eva_sfa_rule_reload = setInterval(
     eva_sfa_rule_monitor,
-    eva_sfa_rule_monitor_interval * 1000,
+    eva_sfa_rule_monitor_interval * 1000
   );
 }
 
@@ -254,7 +254,7 @@ function eva_sfa_run(
   priority,
   uuid,
   cb_success,
-  cb_error,
+  cb_error
 ) {
   var q = '';
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
@@ -298,7 +298,7 @@ function eva_sfa_action(
   priority,
   uuid,
   cb_success,
-  cb_error,
+  cb_error
 ) {
   var q = '';
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
@@ -342,7 +342,7 @@ function eva_sfa_action_toggle(
   priority,
   uuid,
   cb_success,
-  cb_error,
+  cb_error
 ) {
   var cstatus = eva_sfa_status('unit:' + unit_id);
   if (cstatus === undefined) return false;
@@ -355,7 +355,7 @@ function eva_sfa_action_toggle(
     priority,
     uuid,
     cb_success,
-    cb_error,
+    cb_error
   );
   return true;
 }
@@ -482,7 +482,7 @@ function eva_sfa_set_rule_prop(
   value,
   save,
   cb_success,
-  cb_error,
+  cb_error
 ) {
   var q = '';
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
@@ -529,7 +529,7 @@ function eva_sfa_after_login(data) {
     }
     eva_sfa_ajax_reload = setInterval(
       eva_sfa_load_initial_states,
-      eva_sfa_ajax_reload_interval * 1000,
+      eva_sfa_ajax_reload_interval * 1000
     );
   } else {
     if (eva_sfa_ajax_reload !== null) {
@@ -546,7 +546,7 @@ function eva_sfa_after_login(data) {
   }
   eva_sfa_heartbeat_reload = setInterval(
     eva_sfa_heartbeat,
-    eva_sfa_heartbeat_interval * 1000,
+    eva_sfa_heartbeat_interval * 1000
   );
 }
 

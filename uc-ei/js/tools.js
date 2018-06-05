@@ -10,7 +10,7 @@ function load_animation(o) {
     '<div class="cssload-square"><div ' +
       'class="cssload-square-part cssload-square-green">' +
       '</div><div class="cssload-square-part cssload-square-pink">' +
-      '</div><div class="cssload-square-blend"></div></div>',
+      '</div><div class="cssload-square-blend"></div></div>'
   );
 }
 

@@ -10,7 +10,7 @@ var log_level_name = {
   20: 'INFO',
   30: 'WARNING',
   40: 'ERROR',
-  50: 'CRITICAL',
+  50: 'CRITICAL'
 };
 
 function load_log_entries(r, scroll) {
@@ -50,7 +50,7 @@ function load_log_entries(r, scroll) {
       if (log_first_load) {
         log_first_load = false;
       }
-    },
+    }
   ).error(function(data) {
     if ((!ws_mode && log_first_load) || r) {
       setTimeout(function() {
@@ -135,7 +135,7 @@ function ask_debug_mode() {
       'YES',
       'NO',
       'set_debug_mode(true)',
-      '',
+      ''
     );
   }
 }

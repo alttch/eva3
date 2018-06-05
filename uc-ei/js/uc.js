@@ -63,7 +63,7 @@ function btn_action(uid, s) {
         btn.removeAttr('disabled');
         btn.removeClass('disabled');
       }
-    },
+    }
   );
 }
 
@@ -75,7 +75,7 @@ function ask_kill(uid) {
     'YES',
     'NO',
     'kill_unit("' + uid + '")',
-    '',
+    ''
   );
 }
 
@@ -97,7 +97,7 @@ function kill_unit(i) {
       popup(
         'error',
         'ERROR',
-        'Kill command failed for ' + i + '. Result: ' + data.result,
+        'Kill command failed for ' + i + '. Result: ' + data.result
       );
     }
   }).fail(function() {
@@ -107,7 +107,7 @@ function kill_unit(i) {
 
 function enable_disable_actions(i, e) {
   $.getJSON('/uc-api/' + e + '_actions?k=' + apikey + '&i=' + i, function(
-    data,
+    data
   ) {
     if (data && data.result == 'OK') {
       items[i].action_enabled = e == 'enable' ? true : false;
@@ -184,7 +184,7 @@ function load_unit_state() {
           redraw_unit(uid);
         }
       });
-    },
+    }
   );
 }
 
@@ -208,7 +208,7 @@ function load_sensor_state() {
           redraw_sensor_state(uid);
         }
       });
-    },
+    }
   );
 }
 
@@ -296,10 +296,10 @@ function update_unit_state(uid) {
         popup(
           'error',
           'ERROR',
-          'Unit state not changed. Result: ' + data.result,
+          'Unit state not changed. Result: ' + data.result
         );
       }
-    },
+    }
   ).fail(function() {
     popup('error', 'ERROR', 'Server error');
   });
@@ -336,7 +336,7 @@ function select_unit_state(uid) {
     html,
     'SET',
     'CANCEL',
-    'update_unit_state("' + uid + '")',
+    'update_unit_state("' + uid + '")'
   );
   $('#unit_status').focus();
 }
@@ -369,7 +369,7 @@ function load_units() {
           $('<button />', {
             class: 'st0' + (val.status == st ? ' active' : ''),
             id: 'btn_' + uid + '_' + st,
-            html: lb,
+            html: lb
           })
             .click(function() {
               btn_action(uid, st);
@@ -385,7 +385,7 @@ function load_units() {
           $('<button />', {
             class: 'st0 active',
             id: 'btn_enable_' + uid,
-            html: 'ENABLED',
+            html: 'ENABLED'
           })
             .attr('onclick', 'enable_disable_actions("' + uid + '", "disable")')
             .appendTo(_unit_buttons);
@@ -393,7 +393,7 @@ function load_units() {
           $('<button />', {
             class: 'st0',
             id: 'btn_enable_' + uid,
-            html: 'DISABLED',
+            html: 'DISABLED'
           })
             .attr('onclick', 'enable_disable_actions("' + uid + '", "enable")')
             .appendTo(_unit_buttons);
@@ -401,14 +401,14 @@ function load_units() {
         if (!val.virtual) {
           $('<button />', {
             class: 'st0',
-            html: 'SET',
+            html: 'SET'
           })
             .attr('onclick', 'select_unit_state("' + uid + '")')
             .appendTo(_unit_buttons);
         }
         $('<button />', {
           class: 'st0',
-          html: 'KILL',
+          html: 'KILL'
         })
           .attr('onclick', 'ask_kill("' + uid + '")')
           .appendTo(_unit_buttons);
@@ -420,11 +420,11 @@ function load_units() {
         $('<div />', {
           class: 'device' + (val.status == -1 ? ' device-error' : ''),
           id: 'uname_' + uid,
-          html: iname,
+          html: iname
         }).appendTo(_unit);
         $('<div />', {
           class: 'device-descr',
-          html: val['description'],
+          html: val['description']
         }).appendTo(_unit);
         _unit.appendTo(_r);
         _unit_actions.appendTo(_r);
@@ -437,7 +437,7 @@ function load_units() {
         else bg = 1;
       });
       units_loaded = true;
-    },
+    }
   );
 }
 
@@ -452,10 +452,10 @@ function set_sensor_status(i, st) {
         popup(
           'error',
           'ERROR',
-          'Sensor status not changed. Result: ' + data.result,
+          'Sensor status not changed. Result: ' + data.result
         );
       }
-    },
+    }
   ).fail(function() {
     popup('error', 'ERROR', 'Server error');
   });
@@ -484,11 +484,11 @@ function load_sensors() {
         $('<span />', {
           id: 'sval_' + uid,
           class: 'sval',
-          html: val.value,
+          html: val.value
         }).appendTo(_sensor_state);
         _sensor_buttons = $('<div />', {
           class: 'col-sm-2 col-xs-12',
-          style: 'text-align:center;',
+          style: 'text-align:center;'
         });
         //if (master) {
         //$('<button />', { 'class': 'st0',
@@ -503,7 +503,7 @@ function load_sensors() {
             '", ' +
             (val.status == 0 ? 1 : 0) +
             ')',
-          html: val.status == 0 ? 'DISABLED' : 'ENABLED',
+          html: val.status == 0 ? 'DISABLED' : 'ENABLED'
         }).appendTo(_sensor_buttons);
         var _r = $('<div />', {class: 'row row-device bg' + bg});
         var iname = uid;
@@ -513,11 +513,11 @@ function load_sensors() {
         $('<div />', {
           id: 'sname_' + uid,
           class: 'device sensor_s' + val.status,
-          html: iname,
+          html: iname
         }).appendTo(_sensor);
         $('<div />', {
           class: 'device-descr',
-          html: val['description'],
+          html: val['description']
         }).appendTo(_sensor);
         _sensor.appendTo(_r);
         _sensor_state.appendTo(_r);
@@ -527,7 +527,7 @@ function load_sensors() {
         else bg = 1;
       });
       sensors_loaded = true;
-    },
+    }
   );
 }
 
@@ -598,7 +598,7 @@ function start_ws(reload) {
   };
   ws.onclose = function() {
     $('#i_connection').html(
-      '<b><span style="color: red">' + 'WS connecting' + '</span></b>',
+      '<b><span style="color: red">' + 'WS connecting' + '</span></b>'
     );
     log_first_load = true;
     sensor_first_load = true;
@@ -637,7 +637,7 @@ function init_dashboard(reload) {
   if (ws_mode) {
     if (!reload) {
       $('#i_connection').html(
-        '<b><span style="color: red">' + 'WS connecting' + '</span></b>',
+        '<b><span style="color: red">' + 'WS connecting' + '</span></b>'
       );
       start_ws(false);
     }
@@ -647,7 +647,7 @@ function init_dashboard(reload) {
       '<b><span style="color: orange">' +
         jrInterval / 1000 +
         ' sec' +
-        '</span></b>',
+        '</span></b>'
     );
     if (!reload) {
       setInterval(load_unit_state, jrInterval);
@@ -667,16 +667,16 @@ function set_debug_mode(mode) {
         popup(
           'info',
           'DEBUG',
-          'Debug mode is now ' + (debug_mode ? 'enabled' : 'disabled'),
+          'Debug mode is now ' + (debug_mode ? 'enabled' : 'disabled')
         );
       } else {
         popup(
           'error',
           'ERROR',
-          'Debug mode not changed<br />Result: ' + data.result,
+          'Debug mode not changed<br />Result: ' + data.result
         );
       }
-    },
+    }
   ).fail(function() {
     popup('error', 'ERROR', 'Server error');
   });
@@ -690,7 +690,7 @@ function save() {
       popup(
         'error',
         'ERROR',
-        'Unable to update system data<br />Result: ' + data.result,
+        'Unable to update system data<br />Result: ' + data.result
       );
     }
   }).fail(function(data) {
@@ -773,7 +773,7 @@ function login(k, remember_k, initial, reload) {
     master = data.acl.master;
     $('#i_key').html('<b>' + data.acl.key_id + '</b>');
     $('#i_master').html(
-      data.acl.master ? '<font color="red"><b>yes</b></font>' : 'no',
+      data.acl.master ? '<font color="red"><b>yes</b></font>' : 'no'
     );
     $('#i_version').html(data.version);
     var dev = '';
@@ -821,7 +821,7 @@ function invalid_api_key() {
     'OK',
     '',
     'show_login_form()',
-    '',
+    ''
   );
 }
 
