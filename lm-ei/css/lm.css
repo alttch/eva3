@@ -185,6 +185,7 @@ img.tbtn.disabled {
     -webkit-border-radius : 12px;
     cursor: pointer;
     outline: none;
+    margin-bottom: 8px;
     }
 
 
