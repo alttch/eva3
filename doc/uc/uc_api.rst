@@ -2,12 +2,13 @@ UC API
 ======
 
 :doc:`Universal Controller<uc>` UC API is called through URL request
-http://<IP_address_UC:Port>/uc-api/command?parameters If SSL is allowed in the
-controller configuration file, you can also use https calls.
+
+*\http://<IP_address_UC:Port>/uc-api/function?parameters*
+
+If SSL is allowed in the controller configuration file, you can also use https
+calls.
 
 All functions can be called using GET and POST methods.
-
-UC API commands:
 
 test - test API/key and get system info
 ---------------------------------------
@@ -18,7 +19,7 @@ Parameters:
 
 * k - valid API key
 
-Returns JSON-hashmap with system info and current API key permissions (for
+Returns JSON-dict with system info and current API key permissions (for
 masterkey only  'master':true is returned)
 
 .. code-block:: json
@@ -67,21 +68,23 @@ Parameters:
 * full=1 - display extended item info, optional (config_changed, description,
   virtual, status_labels and action_enabled for unit)
 
-Returns item status to JSON-hashmap:
+Returns item status in JSON-dict or array of dicts:
 
 .. code-block:: json
 
-    {
-        "action_enabled": true,
-        "full_id": "hall/lamps/lamp1",
-        "group": "hall/lamps",
-        "id": "lamp1",
-        "nstatus": 1,
-        "nvalue": "",
-        "status": 1,
-        "type": "unit",
-        "value": ""
-    }
+    [
+        {
+            "action_enabled": true,
+            "full_id": "hall/lamps/lamp1",
+            "group": "hall/lamps",
+            "id": "lamp1",
+            "nstatus": 1,
+            "nvalue": "",
+            "status": 1,
+            "type": "unit",
+            "value": ""
+        }
+    ]
 
 where status and value - current item state, nstatus and nvalue (for unit) -
 expected status and value.  Current and new status and value are different in

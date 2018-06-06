@@ -5,26 +5,26 @@ EVA Universal Controller (UC) is a control and monitoring subsystem.
 
 It should be installed if you actually want to control something. You can use it
 independently (not involving other subsystems). UC is controlled via 
-`/uc/uc_ei` web interface or `/uc/uc-cmd` console application. Additionally, it
-can be integrated into other subsystems and third-party programs using
-`/uc/uc_api`
+:doc:`uc_ei` web interface or :doc:`uc-cmd</cli>` console application.
+Additionally, it can be integrated into other subsystems and third-party
+programs using :doc:`uc_api`.
 
-`Units</items>` receive control actions, the controller forms them into
+:doc:`Units</items>` receive control actions, the controller forms them into
 :ref:`queues<queues>` and executes them using an external scripts. If necessary,
 it terminates the current script and keeps the command history.
 
 Additionally, Universal Controller collects the data from the connected
-`items</items>` using active and passive status updates.
+:doc:`items</items>` using active and passive status updates.
 
 Item status and values are stored in the local database. Other subsystems
-or third-party programs can read them using `/uc/uc_api`
+or third-party programs can read them using :doc:`uc_api`.
 
-Units and sensors are controlled via `/uc/uc_ei` interface, configured via
-`/uc/uc_api` and `/item_configurations`. Item status is controlled and updated
-using `/item_scripts`.
+Units and sensors are controlled via :doc:`uc_ei` interface,
+:doc:`configured</item_configurations>` via :doc:`uc_api`. States are
+controlled and updated using :doc:`item scripts</item_scripts>`.
 
 All changes of item status, current control commands, and progress logs are
-sent to the `/notifiers`.
+sent to the :doc:`notification system</notifiers>`.
 
 UC POLL DELAY
 -------------
@@ -40,8 +40,8 @@ Reducing POLL DELAY will increase the CPU load on the server; in turn, if
 increased, the UC reaction time will be longer. Recommended values: 0.1 for
 home and office, 0.01 and less - for industrial applications.
 
-The optimum value of POLL DELAY for UC can be set via `/uc/uc-cmd`, or by
-manually calling `/uc/uc_api` functions and comparing reaction/execution time
+The optimum value of POLL DELAY for UC can be set via :doc:`uc-cmd</cli>`, or by
+manually calling :doc:`uc_api` functions and comparing reaction/execution time
 of the commands.
 
 The minimum value of POLL DELAY is 0.001 (1 millisecond).
@@ -58,7 +58,7 @@ runtime/uc_cvars.json variables file
 ------------------------------------
 
 uc_cvars.json - file containing user variables passed to all commands and
-`/items_scripts` within the system environment.
+:doc:`item scripts</items_scripts>` within the system environment.
 
 File - normal JSON directory, format:
 
@@ -70,8 +70,8 @@ File - normal JSON directory, format:
      ..............
     }
 
-Variables can be changed while the server is run via `/sys_api`  as well as
-`/uc/uc-cmd` get_cvar and set_cvar commands.
+Variables can be changed while the server is run via :doc:`/sys_api` as well as
+:doc:`uc-cmd</cli>` get_cvar and set_cvar commands.
 
 For example, let's create a variable:
 
@@ -124,7 +124,7 @@ Queued action can have the following statuses:
 
 * created - action has just been created and has not been queued yet
 * pending - the action is placed in the global queue. The previous action
-  status, as well as this one, are rarely found because `/uc/uc_api` waits for
+  status, as well as this one, are rarely found because :doc:`uc_api` waits for
   the command to be placed in the queue of a certain unit and then returns the
   result
 * queued - the action has already passed the global queue and is now waiting to
