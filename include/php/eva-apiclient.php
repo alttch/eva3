@@ -97,6 +97,7 @@ $_eva_api_func = array(
                     'groups',
                     'update',
                     'action',
+                    'action_toggle',
                     'result',
                     'terminate',
                     'q_clean',
@@ -136,7 +137,8 @@ $_eva_api_func = array(
                     'logout'
                     ),
                 'ce' => array(
-                    'action'
+                    'action',
+                    'action_toggle'
                     ),
                 'post' => array(
                     )
