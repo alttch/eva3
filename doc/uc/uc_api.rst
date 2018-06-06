@@ -80,6 +80,7 @@ Returns item status in JSON-dict or array of dicts:
             "id": "lamp1",
             "nstatus": 1,
             "nvalue": "",
+            "oid": "unit:hall/lamps/lamp1",
             "status": 1,
             "type": "unit",
             "value": ""

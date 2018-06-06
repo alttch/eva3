@@ -43,7 +43,7 @@ Architecture of EVA provides a high scalability: one system can support dozens
 and even hundreds of thousands of devices through processing events via separate
 subsystems and collecting all data to the unified database. 
 
-The latest EVA ICS version is 3.0.2. :doc:`CHANGELOG</changelog>`
+The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 
 System documentation
 --------------------

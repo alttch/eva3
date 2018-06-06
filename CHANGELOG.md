@@ -2,6 +2,7 @@ EVA ICS CHANGELOG
 =================
 
 3.0.2
+-----
 
     Bugfix release, some new urgent features, stability improvements
 
@@ -57,6 +58,7 @@ EVA ICS CHANGELOG
     - ability to run controllers under restricted user
 
 3.0.1
+-----
 
     Minor release with some urgent features
 
@@ -87,5 +89,6 @@ EVA ICS CHANGELOG
     - item id in LM rules match by simple mask (i.e. '*id*' or 'id*' or '*id')
 
 3.0.0
+-----
 
     First public release
