@@ -56,7 +56,7 @@ The minimum value of POLL DELAY is 0.001 (1 millisecond).
 etc/uc.ini configuration file
 -----------------------------
 
-uc.ini - basic configuration file of UC server
+uc.ini - primary configuration file of UC server
 
 .. literalinclude:: ../../etc/uc.ini-dist
     :language: ini
