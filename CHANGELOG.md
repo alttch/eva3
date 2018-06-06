@@ -14,7 +14,7 @@ EVA ICS CHANGELOG
     - refresh buttons on item pages
     - LM EI: reset button and expire timer in LM EI show/hide when prop changed
 
-    Core
+    Core:
 
     fixes: remove empty controller group when all objects are deleted
 
@@ -62,7 +62,7 @@ EVA ICS CHANGELOG
 
     Minor release with some urgent features
 
-    Core
+    Core:
 
     - EVA_ITEM_PARENT_GROUP variable in script ENV which contains the parent
       group of the item
@@ -73,7 +73,7 @@ EVA ICS CHANGELOG
       'group2/VAR2' - variable available only to group 'group2' (also as 'VAR2').
       Used by UC scripts to let one script manage different items
 
-    Universal Controller
+    Universal Controller:
 
     - 'update_delay' - item passive update may start with a delay to prevent
       multiple updates run simultaneously producing high system load
@@ -84,7 +84,7 @@ EVA ICS CHANGELOG
     - 'clone_group' function in UC API and uc-cmd for cloning all matching items in a group
     - 'destroy_group' function destroys all items in the specified group
 
-    Logic Manager
+    Logic Manager:
 
     - item id in LM rules match by simple mask (i.e. '*id*' or 'id*' or '*id')
 
