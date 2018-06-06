@@ -3,11 +3,18 @@ Universal Controller
 
 EVA Universal Controller (UC) is a control and monitoring subsystem.
 
-It should be installed if you actually want to control something. You can use it
-independently (not involving other subsystems). UC is controlled via 
-:doc:`uc_ei` web interface or :doc:`uc-cmd</cli>` console application.
-Additionally, it can be integrated into other subsystems and third-party
-programs using :doc:`uc_api`.
+It should be installed if you actually want to control something. UC is
+controlled via :doc:`uc_ei` web interface or :doc:`uc-cmd</cli>` console
+application.  Additionally, it can be integrated into other subsystems and
+third-party programs using :doc:`uc_api`.
+
+.. figure:: uc.png
+    :scale: 50%
+    :alt: Universal Controller subsystem
+    
+    You may use Universal Controller independently or integrate it with
+    other EVA subsystems.
+
 
 :doc:`Units</items>` receive control actions, the controller forms them into
 :ref:`queues<queues>` and executes them using an external scripts. If necessary,
