@@ -104,7 +104,7 @@ amendments concern.
        use of the Product with certain versions of operating systems,
        browsers and other programs for which the Product is designed.
 
-4.Property right
+4. Property right
 
     1. The Product and the Documentation are the intellectual property of the
        Supplier, which is protected by copyright laws, international
