@@ -14,7 +14,7 @@ include them in the final product. Virtual items allow you to:
 * Debug various configurations before embedding
 * Check how the system responses to the emergencies
 
-:any:`Units<unit>`, :any:`Sensors:<sensor>` and :any:`multiupdates<multiupdate>`
+:any:`Units<unit>`, :any:`sensors<sensor>` and :any:`multiupdates<multiupdate>`
 can be virtual and have the following features:
 
 * The virtual unit runs the action commands just like the real one
