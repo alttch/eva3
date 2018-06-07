@@ -1,6 +1,46 @@
 Control and monitoring items
 ============================
 
+Item in EVA mean any object which can be controlled or monitored.
+:doc:`/uc/uc` has 2 native item types: :ref:`unit<unit>` and
+:ref:`sensor<sensor>`, plus :ref:`multiupdates<multiupdate>`, which may
+contain multiple items at once.
+
+:doc:`/lm/lm` has one native item type :ref:`lvar<lvar>` (logic variable) plus
+loads remote units and sensors from connected UCs.:doc:`/sfa/sfa` has no native
+item types and loads everything from the connected remote controllers.
+
+The configurations of items are stored in runtime folder, from where the
+controllers loads .json files. Each item has multiple parameters which may be
+predefined or customized. All customized parameters can be displayed with the
+help of API list_props or :doc:`EVA console tools</cli>` In case the
+configuration file settings are changed manually or by 3rd party software,
+controller should be restarted to reload the configurations.
+
+Common item parameters
+----------------------
+
+* id - item ID, i.e. 'lamp1'. Must be unique within one controller. even if
+  items are in the different groups. This makes some complications when
+  designing the whole installation architecture but allows to keep EVA
+  configuration and item scripts organized in a simple way and makes system
+  administration and support much easier.
+
+* group - item group, i.e. 'hall/lamps'. Assigned at the time of the item
+  creation, the group can't be changed later to avoid synchronization problems.
+
+* full_id - full item id (i.e. 'hall/lamps/lamp1'), read-only
+
+* oid - object id, unique within the whole installation, same as full_id, but
+  also contains the item type: 'unit:hall/lamps/lamp1', read-only
+
+* description - item description
+
+* virtual - boolean (true/false) param which says is the item
+  :ref:`virtual<virtual>` or real.
+
+.. _unit:
+
 Unit
 ----
 
@@ -14,7 +54,7 @@ i.e. the garage door often requires two relays: the first one starts the motor,
 the second one chooses the direction of movement). However, the door is one
 unit with "opened" or "closed" statuses.
 
-All units are connected to :doc:`Universal Controller</uc/uc.rst>` subsystems,
+All units are connected to :doc:`Universal Controller</uc/uc>` subsystems,
 which control them and form the single "unit" with one or several
 relays/programmable switches using a :doc:`control scripts</item_scripts>`. One
 Universal Controller can work with multiple units, but one unit should be
@@ -28,7 +68,7 @@ uppercase and lowercase Latin characters and some special characters like minus
 (-) or dot (.).
 
 Unit parameters are set via configuration. The unit can be either physical or
-:doc:`virtual</virtual_items>`.
+:ref:`virtual<virtual>`.
 
 Status of the unit state
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,6 +101,94 @@ values separating them with a special characters for further processing.
 The blank value is "null". It is not recommended to use "" (blank) value,
 because such values cannot be transmitted via MQTT correctly. In most cases,
 the system itself replaces the blank value with "null".
+
+Unit parameters
+~~~~~~~~~~~~~~~
+
+* expires - interger value, time (seconds) after which the item state is
+  considered "expired". If the item state was not updated during this period,
+  the state automatically is set to -1 (error), value is deleted (set to null).
+  If 'expires' param is set to 0, this feature is disabled. The minimum
+  expiration step is 0.1 sec.
+
+* mqtt_update = "notifier:qos" - if set, the item may receive active state
+  updates through the notification from the specified :doc:`MQTT
+  server</notifiers>`. Example: "eva_1:2".
+
+* snmp_trap - if set, the item may receive active state updates via
+  :doc:`/snmp_traps`.
+
+* update_exec - a :doc:`script</items_scripts>` for passive update of the item
+  state, "xc/uc/ITEMID_update" by default.
+
+* update_interval - integer value, time (seconds) interval between the calls
+  for passive update of the item. Set 0 to disable passive updates. Minimum
+  step is 0.1 sec.
+
+* update_delay - interger value, delay (in seconds) before the next call of the
+  passive update, may be used to avoid multiple update scripts of the different
+  items run simultaneously.
+
+* update_timeout - integer, value, time (seconds) in which the script of the
+  passive update should finish it's work or it will be terminated.
+
+* action_allow_termination - boolean, allow the currect running action
+  termination by external request.
+
+* action_always_exec - boolean, :doc:`always execute</always_exec>` the
+  actions, even if the intended status is similar to the current one
+
+* action_enabled - boolean, allow or deny new actions queue/execution
+
+* action_exec - a :doc:`script</items_scripts>` which performs the action,
+  "xc/uc/ITEMID" by default.
+
+* action_queue={0|1|2}
+
+  * 0 - action queue is disabled, if the action is running, new actions are not
+    accepted
+  * 1 - action queue is enabled, all new actions are put in queue and executed
+    in a normal way
+  * 2 - queue is disabled, new action terminates the current running one and
+    then is being executed
+
+* action_timeout - integer, value, time (seconds) in which the script of the
+  action should finish it's work or it will be terminated.
+
+* auto_off - integer, the simple automation parameter: the command to turn the
+  unit off (call an action to set status = 0) will be executed after the
+  indicated period of time (in seconds) after the last action performed for
+  this unit. Set 0 to disable this feature. Minimum step is 0.1 sec.
+
+* mqtt_control = "notifier:qos" - item gets actions through the notifications
+  from the specified :doc:`MQTT server</notifiers>`, for example "eva_1:2",
+  actions should be sent to path/to/unit/control (i.e.
+  unit/hall/lamps/lamp1/control) in a form of the text messages "status [value]
+  [priority]". If you want to skip value, but keep priority, set it to null,
+  i.e. "status 0 null 50".
+
+* status_labels -  "labels" used to display the unit statuses by the interfaces.
+  Labels may be changed via :doc:`/uc/uc_api` or :doc:`uc-cmd</cli>`, in the
+  following way: status:number = label, i.e. "status:0" = "stop". By default the
+  unit has labels "status:0" = "OFF", "status:1" = "ON".
+
+* term_kill_interval - integer, difference (in seconds) between stopping and
+  forceful stopping the action script. Tip: sometimes it is useful to catch
+  SIGTERM in the script to exit it gracefully. Cannot exceed the value of
+  timeout - 2, where timeout - default timeout, set in a controller config.
+
+* update_exec_after_action - boolean, start passive update immediately
+  after the action is completed (to ensure the unit state has been changed
+  correctly)
+
+* update_if_action - boolean, allow or deny passive updates while the action is
+  being executed
+
+* update_state_after_action - boolean, if action completed successfully, the
+  controller assumes that its actual unit state has ben changed correctly and
+  sets it without calling/waiting for the state update.
+
+.. _sensor:
 
 Sensor
 ------
@@ -98,16 +226,24 @@ the system itself. Why it works that way? According to the logic of the system,
 the sensor error is an emergency situation that should affect it's status even
 if it is disabled and requires an immediate attention of the user. If you want
 the sensor not to respond to the external state updates - set it to the
-:doc:`virtual state</virtual_items>`
+:ref:`virtual state<virtual>`
 
 Sensors (and sometimes units) can be placed on the same detector, controller or
 bus queried by the single command. EVA can use
-:doc:`multiupdates</item_scripts>` in order to update several items at once.
+:ref:`multiupdates<multiupdate>` in order to update several items at once.
 
 Since the system does not control, but only monitor the sensor, it can
 be easily connected to several :doc:`Universal Controllers</uc/uc>` at once if
 the equipment allows making parallel queries of the state or sending the active
 updates to several addresses at once.
+
+Sensor parameters
+~~~~~~~~~~~~~~~~~
+
+Sensors have the same parameters as :ref:`units<unit>`, except the don't have
+action_*, auto_off, mqtt_control, status_labels and term_kill_interval.
+
+.. _lvar:
 
 Logic variables
 ---------------
@@ -160,3 +296,43 @@ controller is installed.
 
 However, When used in industrial configurations, it is recommended to
 synchronize the time on all computers without any additional software hotfixes.
+
+LVar parameters
+~~~~~~~~~~~~~~~
+
+As LVars behavior is simpilar to :ref:`sensors<sensor>` except the values are
+set by user/system, they have the same parameters, except lvars can't be
+updated via SNMP traps and can't be virtual (lvar is actually virtual by
+default).
+
+.. _multiupdate:
+
+Multiupdates
+------------
+
+Multiupdates allow updating the state of several items with the use of one
+:doc:`script</item_scripts>`. This could be reasonable in case all items are
+placed on the same bus or external controller and queried by a single command.
+
+Multiupdate is an independant item in the system with it's own configuration
+and without status and value. In turn, it updates statuses of the included
+items. Multiupdate can be :ref:`virtual<virtual>`.
+
+Multiupdate parameters
+~~~~~~~~~~~~~~~~~~~~~~
+
+Multiupdates have the same parameters as :ref:`sensors<sensor>`, except
+"expires", "mqtt_update" and "snmp_trap", plus some additional:
+
+* items = item1, item2, item3... - the list of items for updating, may be
+  changed via :doc:`/uc/uc_api` and :doc:`uc-cmd</cli>` as follows:
+
+    * -p "item+" -v "item_id" - add item for update
+    * -p "item-" -v "item_id" - delete item
+    * -p "items" -v "item1,item2,item3..." - replace the whole list
+
+* update_allow_check - boolean, the multiupdate will be performed only in case
+  the passive state updates are currently allowed for all included items (i.e.
+  if some of them run actions at this moment and have update_if_action=False,
+  multiupdate will be not executed)
+

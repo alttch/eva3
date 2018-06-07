@@ -491,7 +491,7 @@ Parameters:
 
 optionally:
 
-* virtual=1 - unit is created as :doc:`virtual</virtual_items>`
+* virtual=1 - unit is created as :doc:`virtual</items>`
 * save=1 - save unit configuration on the disk immediately after creation
 
 Returns result="OK if the unit was created, or result="ERROR", if the error
@@ -516,7 +516,7 @@ Parameters:
 
 optionally:
 
-* virtual=1 - sensor is created as :doc:`virtual</virtual_items>`
+* virtual=1 - sensor is created as :doc:`virtual</items>`
 * save=1 - save sensor configuration on the disk immediately after creation
 
 Returns result="OK if the sensor was created, or result="ERROR", if the error
@@ -531,7 +531,7 @@ Errors:
 create_mu - create multiupdate
 ------------------------------
 
-Creates new :doc:`multiupdate</items_scripts>`.
+Creates new :doc:`multiupdate</items>`.
 
 Parameters:
 
@@ -541,7 +541,7 @@ Parameters:
 
 optionally:
 
-* virtual=1 - multiupdate is created as :doc:`virtual</virtual_items>`
+* virtual=1 - multiupdate is created as :doc:`virtual</items>`
 * save=1 - save multiupdate configuration on the disk immediately after creation
 
 Returns result="OK if the multiupdate was created, or result="ERROR", if the
