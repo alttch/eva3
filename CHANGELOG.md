@@ -86,7 +86,7 @@ EVA ICS CHANGELOG
 
     Logic Manager:
 
-    - item id in LM rules match by simple mask (i.e. '*id*' or 'id*' or '*id')
+    - item id in LM rules match by simple mask (i.e. '\*id\*' or 'id\*' or '\*id')
 
 3.0.0
 -----

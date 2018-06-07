@@ -158,6 +158,8 @@ html_static_path = ['_static']
 # template names.
 #html_additional_pages = {}
 
+html_add_permalinks = False
+
 # If false, no module index is generated.
 #html_domain_indices = True
 
