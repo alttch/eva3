@@ -69,7 +69,7 @@ Parameters:
 * k - valid API key
 * i=ID - item ID
 * p=TYPE - item type (short forms U for unit, S for sensor may be used)
-* g - group filter, optional :doc:`mqtt</notifiers>` masks can be used, for
+* g - group filter, optional :ref:`mqtt<mqtt>` masks can be used, for
   example group1/#, group1/+/lamps)
 * full=1 - display extended item info, optional (config_changed, description,
   virtual, status_labels and action_enabled for unit)
@@ -481,7 +481,7 @@ Errors:
 create_unit - create new unit
 -----------------------------
 
-Creates new :doc:`unit</items>`.
+Creates new :ref:`unit<unit>`.
 
 Parameters:
 
@@ -491,7 +491,7 @@ Parameters:
 
 optionally:
 
-* virtual=1 - unit is created as :doc:`virtual</items>`
+* virtual=1 - unit is created as :doc:`virtual</virtual>`
 * save=1 - save unit configuration on the disk immediately after creation
 
 Returns result="OK if the unit was created, or result="ERROR", if the error
@@ -506,7 +506,7 @@ Errors:
 create_sensor - create new sensor
 ---------------------------------
 
-Creates new :doc:`sensor</items>`.
+Creates new :ref:`sensor<sensor>`.
 
 Parameters:
 
@@ -516,7 +516,7 @@ Parameters:
 
 optionally:
 
-* virtual=1 - sensor is created as :doc:`virtual</items>`
+* virtual=1 - sensor is created as :doc:`virtual</virtual>`
 * save=1 - save sensor configuration on the disk immediately after creation
 
 Returns result="OK if the sensor was created, or result="ERROR", if the error
@@ -531,7 +531,7 @@ Errors:
 create_mu - create multiupdate
 ------------------------------
 
-Creates new :doc:`multiupdate</items>`.
+Creates new :ref:`multiupdate<multiupdate>`.
 
 Parameters:
 
@@ -541,7 +541,7 @@ Parameters:
 
 optionally:
 
-* virtual=1 - multiupdate is created as :doc:`virtual</items>`
+* virtual=1 - multiupdate is created as :doc:`virtual</virtual>`
 * save=1 - save multiupdate configuration on the disk immediately after creation
 
 Returns result="OK if the multiupdate was created, or result="ERROR", if the
