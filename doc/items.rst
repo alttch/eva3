@@ -246,8 +246,8 @@ action_*, auto_off, mqtt_control, status_labels and term_kill_interval.
 
 .. _lvar:
 
-Logic variables
----------------
+Logic variable
+--------------
 
 EVA :doc:`Logic Manager</lm/lm>` uses the logic variables (lvars) to make
 decisions and organize the production cycle timers.
