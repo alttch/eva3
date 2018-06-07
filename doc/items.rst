@@ -7,7 +7,7 @@ Item in EVA mean any object which can be controlled or monitored.
 contain multiple items at once.
 
 :doc:`/lm/lm` has one native item type :ref:`lvar<lvar>` (logic variable) plus
-loads remote units and sensors from connected UCs.:doc:`/sfa/sfa` has no native
+loads remote units and sensors from connected UCs. :doc:`/sfa/sfa` has no native
 item types and loads everything from the connected remote controllers.
 
 The configurations of items are stored in runtime folder, from where the
