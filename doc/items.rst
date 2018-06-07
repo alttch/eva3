@@ -37,7 +37,7 @@ Common item parameters
 * description - item description
 
 * virtual - boolean (true/false) param which says is the item
-  :any:`virtual<virtual>` or real.
+  :doc:`virtual<virtual>` or real.
 
 .. _unit:
 
@@ -68,7 +68,7 @@ uppercase and lowercase Latin characters and some special characters like minus
 (-) or dot (.).
 
 Unit parameters are set via configuration. The unit can be either physical or
-:any:`virtual<virtual>`.
+:doc:`virtual<virtual>`.
 
 Status of the unit state
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -227,7 +227,7 @@ the system itself. Why it works that way? According to the logic of the system,
 the sensor error is an emergency situation that should affect it's status even
 if it is disabled and requires an immediate attention of the user. If you want
 the sensor not to respond to the external state updates - set it to the
-:any:`virtual state<virtual>`
+:doc:`virtual state<virtual>`
 
 Sensors (and sometimes units) can be placed on the same detector, controller or
 bus queried by the single command. EVA can use
@@ -317,7 +317,7 @@ placed on the same bus or external controller and queried by a single command.
 
 Multiupdate is an independant item in the system with it's own configuration
 and without status and value. In turn, it updates statuses of the included
-items. Multiupdate can be :any:`virtual<virtual>`.
+items. Multiupdate can be :doc:`virtual<virtual>`.
 
 Multiupdate parameters
 ~~~~~~~~~~~~~~~~~~~~~~
