@@ -407,7 +407,7 @@ Errors:
 get_config - get item configuration
 -----------------------------------
 
-Returns complete :doc:`item configuration</item_configurations>`
+Returns complete :doc:`item configuration</items>`
 
 Parameters:
 
@@ -442,7 +442,7 @@ list_props - get editable item parameters
 -----------------------------------------
 
 Allows to get all editable parameters of the
-:doc:`item configuration</item_configurations>`
+:doc:`item configuration</items>`
 
 Parameters:
 

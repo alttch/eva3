@@ -27,7 +27,7 @@ Item status and values are stored in the local database. Other subsystems
 or third-party programs can read them using :doc:`uc_api`.
 
 Units and sensors are controlled via :doc:`uc_ei` interface,
-:doc:`configured</item_configurations>` via :doc:`uc_api`. States are
+:doc:`configured</items>` via :doc:`uc_api`. States are
 controlled and updated using :doc:`item scripts</item_scripts>`.
 
 All changes of item status, current control commands, and progress logs are
