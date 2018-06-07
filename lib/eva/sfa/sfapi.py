@@ -309,7 +309,6 @@ class SFA_API(GenericAPI):
         if not items_uc and not items_lm:
             return None
         if i:
-            # result[c_fid] = {}
             if items_uc:
                 for x in items_uc:
                     for a, v in x.copy().items():
