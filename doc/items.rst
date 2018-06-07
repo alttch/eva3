@@ -311,9 +311,10 @@ default).
 Multiupdates
 ------------
 
-Multiupdates allow updating the state of several items with the use of one
-:doc:`script</item_scripts>`. This could be reasonable in case all items are
-placed on the same bus or external controller and queried by a single command.
+Multiupdates allow :doc:`/uc/uc` updating the state of several items with the
+use of one :doc:`script</item_scripts>`. This could be reasonable in case all
+items are placed on the same bus or external controller and queried by a single
+command.
 
 Multiupdate is an independant item in the system with it's own configuration
 and without status and value. In turn, it updates statuses of the included
