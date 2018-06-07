@@ -54,7 +54,15 @@ System documentation
 
 * :doc:`Practical application and usage examples</tutorial/intro>`
 
-* System components: :doc:`/uc/uc`, :doc:`/lm/lm`, :doc:`/sfa/sfa`
+* System components
+
+  * :doc:`/uc/uc`
+  * :doc:`/lm/lm`
+  * :doc:`/sfa/sfa`
+
+* :doc:`items`
+
+* :doc:`virtual`
 
 * :doc:`User interfaces (SFA Framework)</sfa/sfa_framework>`
 

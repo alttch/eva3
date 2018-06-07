@@ -17,7 +17,7 @@ All functions can be called using GET and POST methods.
 test - test API/key and get system info
 ---------------------------------------
 
-Test can be executed with any valid API KEY
+Test can be executed with any valid :ref:`API KEY<uc_apikey>`
 
 Parameters:
 

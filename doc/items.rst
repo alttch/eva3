@@ -37,7 +37,7 @@ Common item parameters
 * description - item description
 
 * virtual - boolean (true/false) param which says is the item
-  :ref:`virtual<virtual>` or real.
+  :any:`virtual<virtual>` or real.
 
 .. _unit:
 
@@ -61,14 +61,14 @@ Universal Controller can work with multiple units, but one unit should be
 connected to only one Universal Controller in order to avoid conflicts.
 Nevertheless, for the reliability, one unit can be connected to several
 controllers, if it's state is correctly synchronized via
-:doc:`MQTT</notifiers>`.
+:ref:`MQTT<mqtt>`.
 
 Each unit has its unique ID, for example "lamp1". ID can include numbers,
 uppercase and lowercase Latin characters and some special characters like minus
 (-) or dot (.).
 
 Unit parameters are set via configuration. The unit can be either physical or
-:ref:`virtual<virtual>`.
+:any:`virtual<virtual>`.
 
 Status of the unit state
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -99,8 +99,8 @@ EVA does not use the unit value for the internal control and monitoring logic
 values separating them with a special characters for further processing.
 
 The blank value is "null". It is not recommended to use "" (blank) value,
-because such values cannot be transmitted via MQTT correctly. In most cases,
-the system itself replaces the blank value with "null".
+because such values cannot be transmitted via :ref:`MQTT<mqtt>` correctly. In
+most cases, the system itself replaces the blank value with "null".
 
 Unit parameters
 ~~~~~~~~~~~~~~~
@@ -112,8 +112,8 @@ Unit parameters
   expiration step is 0.1 sec.
 
 * mqtt_update = "notifier:qos" - if set, the item may receive active state
-  updates through the notification from the specified :doc:`MQTT
-  server</notifiers>`. Example: "eva_1:2".
+  updates through the notification from the specified :ref:`MQTT
+  server<mqtt>`. Example: "eva_1:2".
 
 * snmp_trap - if set, the item may receive active state updates via
   :doc:`/snmp_traps`.
@@ -161,7 +161,7 @@ Unit parameters
   this unit. Set 0 to disable this feature. Minimum step is 0.1 sec.
 
 * mqtt_control = "notifier:qos" - item gets actions through the notifications
-  from the specified :doc:`MQTT server</notifiers>`, for example "eva_1:2",
+  from the specified :ref:`MQTT server<mqtt>`, for example "eva_1:2",
   actions should be sent to path/to/unit/control (i.e.
   unit/hall/lamps/lamp1/control) in a form of the text messages "status [value]
   [priority]". If you want to skip value, but keep priority, set it to null,
@@ -203,7 +203,8 @@ the environment.
 
 As regards the system itself, unit and sensor are similar items: both have
 status and value, the item status is monitored actively (by :doc:`/uc/uc_api`,
-MQTT message, SNMP traps) or passively (by calling the external script).
+:ref:`MQTT message<mqtt>`, SNMP traps) or passively (by calling the external
+script).
 
 The sensor can have 3 statuses:
 
@@ -226,7 +227,7 @@ the system itself. Why it works that way? According to the logic of the system,
 the sensor error is an emergency situation that should affect it's status even
 if it is disabled and requires an immediate attention of the user. If you want
 the sensor not to respond to the external state updates - set it to the
-:ref:`virtual state<virtual>`
+:any:`virtual state<virtual>`
 
 Sensors (and sometimes units) can be placed on the same detector, controller or
 bus queried by the single command. EVA can use
@@ -271,8 +272,8 @@ The same logic variable may be declared on several logic controllers, but the
 processes it autonomously. The variable becomes "expired" once it is declared
 as such by any controller.
 
-The logic variable values may be synchronized via MQTT server or set via API or
-external scripts - similar to sensors.
+The logic variable values may be synchronized via :ref:`MQTT server<mqtt>` or
+set via API or external scripts - similar to sensors.
 
 You can use several logic variables as timers in order to organize the
 production cycles. For example, there are three cycles: the pump No.1 operates
@@ -316,7 +317,7 @@ placed on the same bus or external controller and queried by a single command.
 
 Multiupdate is an independant item in the system with it's own configuration
 and without status and value. In turn, it updates statuses of the included
-items. Multiupdate can be :ref:`virtual<virtual>`.
+items. Multiupdate can be :any:`virtual<virtual>`.
 
 Multiupdate parameters
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -335,4 +336,3 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except
   the passive state updates are currently allowed for all included items (i.e.
   if some of them run actions at this moment and have update_if_action=False,
   multiupdate will be not executed)
-

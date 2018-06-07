@@ -16,7 +16,7 @@ third-party programs using :doc:`uc_api`.
     other EVA subsystems.
 
 
-:doc:`Units</items>` receive control actions, the controller forms them into
+:any:`Units<unit>` receive control actions, the controller forms them into
 :ref:`queues<queues>` and executes them using an external scripts. If necessary,
 it terminates the current script and keeps the command history.
 
@@ -26,7 +26,7 @@ Additionally, Universal Controller collects the data from the connected
 Item status and values are stored in the local database. Other subsystems
 or third-party programs can read them using :doc:`uc_api`.
 
-Units and sensors are controlled via :doc:`uc_ei` interface,
+Units and :any:`sensors<sensor>` are controlled via :doc:`uc_ei` interface,
 :doc:`configured</items>` via :doc:`uc_api`. States are
 controlled and updated using :doc:`item scripts</item_scripts>`.
 
@@ -97,6 +97,8 @@ unit management script on the port 2 of the given relay will be the following:
 It's possible to assign the different values for the variables used for the
 different object groups with the same names, i.e. group1/VAR1, group2/VAR1 etc.
 In this case the variable will be available only for the specified group.
+
+.. _uc_apikey:
 
 etc/uc_apikeys.ini API keys file
 --------------------------------
