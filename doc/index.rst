@@ -52,7 +52,7 @@ System documentation
 
 * :doc:`Security recommendations</security>`
 
-* :doc:`Practical application and usage examples</tutorial/intro>`
+* :doc:`Tutorial</tutorial/intro>`
 
 * System components
 
@@ -62,12 +62,35 @@ System documentation
 
 * :doc:`items`
 
-* :doc:`virtual`
+* API and system objects
 
-* :doc:`User interfaces (SFA Framework)</sfa/sfa_framework>`
+  * :doc:`/sys_api` - common API for all subsystems
+  * :doc:`/notifiers` - a link between subsystems and third-party applications
+  * :doc:`/uc/uc` - a  management and monitoring controller
 
-* :doc:`API and system objects</api>`
+    * :doc:`/uc/uc_api` - API of the Universal Controller subsystem
+    * :ref:`unit` - controlled item
+    * :ref:`sensor` - monitoring item
+    * :doc:`/item_scripts` - action and update scripts
+    * :doc:`/virtual`
+
+  * :doc:`/lm/lm` - a programmable logic controller
+
+    * :doc:`/lm/lm_api` - API of the Logic Manager subsystem
+    * :ref:`lvar` -  item used by system components to exchange information
+    * :doc:`/lm/macros`
+    * :doc:`/lm/decision_matrix`
+
+ * :doc:`/sfa/sfa` server
+
+    * :doc:`/sfa/sfa_api` - API of the Scada Final Aggregator
+    * :doc:`/sfa/sfa_pvt` - Private data web server
 
 * :doc:`/cli`
+
+* Application development
+
+    * :doc:`/api_clients`
+    * :doc:`/sfa/sfa_framework`
 
 * :doc:`/faq`
