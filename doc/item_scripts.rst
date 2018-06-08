@@ -22,7 +22,7 @@ configuration with param *term_kill_interval*)
 Script or program always gets the environment variables:
 
 * all variables from the controller var file (:ref:`uc_cvars<uc_cvars>` or
-  :ref:`lm_cvars`<lm_cvars>`)
+  :ref:`lm_cvars<lm_cvars>`)
 * **PATH** variable with additional EVA bin and xbin subfolders
 * **EVA_ITEM_ID** item ID which the script is being executed for
 * **EVA_ITEM_TYPE** item type: unit, sensor or lvar, (lvars can also be

@@ -8,6 +8,7 @@ import eva.core
 import logging
 import threading
 import time
+import jsonpickle
 
 from eva import apikey
 from eva.tools import format_json
@@ -128,6 +129,20 @@ def http_remote_info(k=None):
     return '%s@%s' % (apikey.key_id(k), http_real_ip())
 
 
+def cp_json_pre():
+    ct = cherrypy.request.headers.get('Content-Type')
+    if ct == 'application/json':
+        try:
+            cl = int(cherrypy.request.headers.get('Content-Length'))
+            rawbody = cherrypy.request.body.read(cl)
+            d = jsonpickle.decode(rawbody.decode())
+            for k, v in d.items():
+                cherrypy.serving.request.params[k] = v
+        except:
+            raise cp_api_error('invalid JSON data')
+    return
+
+
 class GenericAPI(object):
 
     def test(self, k=None):
@@ -216,6 +231,7 @@ def cp_need_master(k):
 class GenericHTTP_API(GenericAPI):
 
     _cp_config = {
+        'tools.json_pre.on': True,
         'tools.json_out.on': True,
         'tools.json_out.handler': cp_json_handler,
         'tools.auth.on': True,
@@ -243,6 +259,8 @@ class GenericHTTP_API(GenericAPI):
         raise cp_forbidden_key()
 
     def __init__(self):
+        cherrypy.tools.json_pre = cherrypy.Tool(
+            'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.auth = cherrypy.Tool(
             'before_handler', self.cp_check_perm, priority=60)
         GenericAPI.test.exposed = True

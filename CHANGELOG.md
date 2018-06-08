@@ -24,6 +24,7 @@ EVA ICS CHANGELOG
        server will be restarted via safe-run if critical exception occur
     - uptime in dump and test API function, last 100 exceptions are now stored
        in a dump, dumps are now compressed with gzip
+    - API functions JSON requests
 
     UC:
 
