@@ -20,23 +20,23 @@ controller should be restarted to reload the configurations.
 Common item parameters
 ----------------------
 
-* id - item ID, i.e. 'lamp1'. Must be unique within one controller. even if
+* **id** item ID, i.e. 'lamp1'. Must be unique within one controller, even if
   items are in the different groups. This makes some complications when
   designing the whole installation architecture but allows to keep EVA
   configuration and item scripts organized in a simple way and makes system
   administration and support much easier.
 
-* group - item group, i.e. 'hall/lamps'. Assigned at the time of the item
+* **group** item group, i.e. 'hall/lamps'. Assigned at the time of the item
   creation, the group can't be changed later to avoid synchronization problems.
 
-* full_id - full item id (i.e. 'hall/lamps/lamp1'), read-only
+* **full_id** full item id (i.e. 'hall/lamps/lamp1'), read-only
 
-* oid - object id, unique within the whole installation, same as full_id, but
+* **oid** object id, unique within the whole installation, same as full_id, but
   also contains the item type: 'unit:hall/lamps/lamp1', read-only
 
-* description - item description
+* **description** item description
 
-* virtual - boolean (true/false) param which says is the item
+* **virtual** boolean (true/false) param which says is the item
   :doc:`virtual<virtual>` or real.
 
 .. _unit:
@@ -105,86 +105,88 @@ most cases, the system itself replaces the blank value with "null".
 Unit parameters
 ~~~~~~~~~~~~~~~
 
-* expires - interger value, time (seconds) after which the item state is
+* **expires** interger value, time (seconds) after which the item state is
   considered "expired". If the item state was not updated during this period,
   the state automatically is set to -1 (error), value is deleted (set to null).
   If 'expires' param is set to 0, this feature is disabled. The minimum
   expiration step is 0.1 sec.
 
-* mqtt_update = "notifier:qos" - if set, the item may receive active state
+* **mqtt_update = "notifier:qos"** if set, the item may receive active state
   updates through the notification from the specified :ref:`MQTT
   server<mqtt>`. Example: "eva_1:2".
 
-* snmp_trap - if set, the item may receive active state updates via
+* **snmp_trap** if set, the item may receive active state updates via
   :doc:`/snmp_traps`.
 
-* update_exec - a :doc:`script</items_scripts>` for passive update of the item
+* **update_exec** a :doc:`script</items_scripts>` for passive update of the item
   state, "xc/uc/ITEMID_update" by default.
 
-* update_interval - integer value, time (seconds) interval between the calls
+* **update_interval** integer value, time (seconds) interval between the calls
   for passive update of the item. Set 0 to disable passive updates. Minimum
   step is 0.1 sec.
 
-* update_delay - interger value, delay (in seconds) before the next call of the
-  passive update, may be used to avoid multiple update scripts of the different
+* **update_delay** interger value, delay (in seconds) before the next call of
+  the passive update, may be used to avoid multiple update scripts of the
+  different
   items run simultaneously.
 
-* update_timeout - integer, value, time (seconds) in which the script of the
+* **update_timeout** integer, value, time (seconds) in which the script of the
   passive update should finish it's work or it will be terminated.
 
-* action_allow_termination - boolean, allow the currect running action
+* **action_allow_termination** boolean, allow the currect running action
   termination by external request.
 
-* action_always_exec - boolean, :doc:`always execute</always_exec>` the
+* **action_always_exec** boolean, :doc:`always execute</always_exec>` the
   actions, even if the intended status is similar to the current one
 
-* action_enabled - boolean, allow or deny new actions queue/execution
+* **action_enabled** boolean, allow or deny new actions queue/execution
 
-* action_exec - a :doc:`script</items_scripts>` which performs the action,
+* **action_exec** a :doc:`script</items_scripts>` which performs the action,
   "xc/uc/ITEMID" by default.
 
-* action_queue={0|1|2}
+* **action_queue={0|1|2}
 
-  * 0 - action queue is disabled, if the action is running, new actions are not
-    accepted
-  * 1 - action queue is enabled, all new actions are put in queue and executed
+  * **0** action queue is disabled, if the action is running, new actions are
+    not accepted
+  * **1** action queue is enabled, all new actions are put in queue and executed
     in a normal way
-  * 2 - queue is disabled, new action terminates the current running one and
+  * **2** queue is disabled, new action terminates the current running one and
     then is being executed
 
-* action_timeout - integer, value, time (seconds) in which the script of the
+* **action_timeout** integer, value, time (seconds) in which the script of the
   action should finish it's work or it will be terminated.
 
-* auto_off - integer, the simple automation parameter: the command to turn the
+* **auto_off** integer, the simple automation parameter: the command to turn the
   unit off (call an action to set status = 0) will be executed after the
   indicated period of time (in seconds) after the last action performed for
   this unit. Set 0 to disable this feature. Minimum step is 0.1 sec.
 
-* mqtt_control = "notifier:qos" - item gets actions through the notifications
+* **mqtt_control = "notifier:qos"** item gets actions through the notifications
   from the specified :ref:`MQTT server<mqtt>`, for example "eva_1:2",
   actions should be sent to path/to/unit/control (i.e.
   unit/hall/lamps/lamp1/control) in a form of the text messages "status [value]
   [priority]". If you want to skip value, but keep priority, set it to null,
   i.e. "status 0 null 50".
 
-* status_labels -  "labels" used to display the unit statuses by the interfaces.
-  Labels may be changed via :doc:`/uc/uc_api` or :doc:`uc-cmd</cli>`, in the
-  following way: status:number = label, i.e. "status:0" = "stop". By default the
-  unit has labels "status:0" = "OFF", "status:1" = "ON".
+* **status_labels**  "labels" used to display the unit statuses by the
+  interfaces.  Labels may be changed via :doc:`/uc/uc_api` or
+  :doc:`uc-cmd</cli>`, in the following way: status:number = label, i.e.
+  "status:0" = "stop". By default the unit has labels "status:0" = "OFF",
+  "status:1" = "ON".
 
-* term_kill_interval - integer, difference (in seconds) between stopping and
-  forceful stopping the action script. Tip: sometimes it is useful to catch
-  SIGTERM in the script to exit it gracefully. Cannot exceed the value of
-  timeout - 2, where timeout - default timeout, set in a controller config.
+* **term_kill_interval** integer, difference (in seconds) between stopping and
+  forceful stopping the action or update script. Tip: sometimes it is useful to
+  catch SIGTERM in the script to exit it gracefully. Cannot exceed the value of
+  timeout** 2, where timeout** default timeout, set in a controller config.
 
-* update_exec_after_action - boolean, start passive update immediately
+* **update_exec_after_action** boolean, start passive update immediately
   after the action is completed (to ensure the unit state has been changed
   correctly)
 
-* update_if_action - boolean, allow or deny passive updates while the action is
-  being executed
+* **update_if_action** boolean, allow or deny passive updates while the action
+  is being executed
 
-* update_state_after_action - boolean, if action completed successfully, the
+* **update_state_after_action** boolean, if action completed successfully, the
   controller assumes that its actual unit state has ben changed correctly and
   sets it without calling/waiting for the state update.
 
@@ -208,10 +210,10 @@ script).
 
 The sensor can have 3 statuses:
 
-* 1 - sensor is working and collecting data
-* 0 - sensor is disabled, the value updates are ignored (this status may be set
+* **1** sensor is working and collecting data
+* **0** sensor is disabled, the value updates are ignored (this status may be set
   via API or by the user)
-* -1 - sensor error ("expires" timer went off, the status was set because the
+* **-1** sensor error ("expires" timer went off, the status was set because the
   connection with a physical sensor got lost during passive or active update
   etc), when the sensor is in this status, it's value is not sent via the
   notification system to let the other components work with the last valid data.
@@ -242,7 +244,7 @@ Sensor parameters
 ~~~~~~~~~~~~~~~~~
 
 Sensors have the same parameters as :ref:`units<unit>`, except the don't have
-action_*, auto_off, mqtt_control, status_labels and term_kill_interval.
+action_*, auto_off, mqtt_control and status_labels.
 
 .. _lvar:
 
@@ -329,9 +331,9 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except
 * items = item1, item2, item3... - the list of items for updating, may be
   changed via :doc:`/uc/uc_api` and :doc:`uc-cmd</cli>` as follows:
 
-    * -p "item+" -v "item_id" - add item for update
-    * -p "item-" -v "item_id" - delete item
-    * -p "items" -v "item1,item2,item3..." - replace the whole list
+    * **-p "item+" -v "item_id"** add item for update
+    * **-p "item-" -v "item_id"** delete item
+    * **-p "items" -v "item1,item2,item3..."** replace the whole list
 
 * update_allow_check - boolean, the multiupdate will be performed only in case
   the passive state updates are currently allowed for all included items (i.e.

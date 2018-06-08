@@ -3,7 +3,7 @@ UC API
 
 :doc:`Universal Controller<uc>` UC API is called through URL request
 
-*\http://<IP_address_UC:Port>/uc-api/function?parameters*
+**\http://<IP_address_UC:Port>/uc-api/function?parameters**
 
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
@@ -21,7 +21,7 @@ Test can be executed with any valid :ref:`API KEY<uc_apikey>`
 
 Parameters:
 
-* k - valid API key
+* **k** valid API key
 
 Returns JSON dict with system info and current API key permissions (for
 masterkey only  'master':true is returned)
@@ -54,24 +54,24 @@ masterkey only  'master':true is returned)
 
 Errors:
 
-* 403 Forbidden if the key has no access to the API.
+* **403 Forbidden** if the key has no access to the API.
 
 .. _state:
 
 state - get item state
 ----------------------
 
-Status of the :doc:`item</items>` or all items of the specified type can be
+State of the :doc:`item</items>` or all items of the specified type can be
 obtained using *state* command.
 
 Parameters:
 
-* k - valid API key
-* i=ID - item ID
-* p=TYPE - item type (short forms U for unit, S for sensor may be used)
-* g - group filter, optional :ref:`mqtt<mqtt>` masks can be used, for
+* **k** valid API key
+* **i=ID** item ID
+* **p=TYPE** item type (short forms U for unit, S for sensor may be used)
+* **g** group filter, optional :ref:`mqtt<mqtt>` masks can be used, for
   example group1/#, group1/+/lamps)
-* full=1 - display extended item info, optional (config_changed, description,
+* **full=1** display extended item info, optional (config_changed, description,
   virtual, status_labels and action_enabled for unit)
 
 Returns item status in JSON dict or array of dicts:
@@ -93,15 +93,15 @@ Returns item status in JSON dict or array of dicts:
         }
     ]
 
-where status and value - current item state, nstatus and nvalue (for unit) -
+where status and value** current item state, nstatus and nvalue (for unit) -
 expected status and value.  Current and new status and value are different in
 case the action is executed for the unit at the moment. In all other cases,
 they are the same.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - item doesn't exist, or the key has no access to the item
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** item doesn't exist, or the key has no access to the item
 
 .. _action:
 
@@ -112,22 +112,22 @@ Create unit control action and put it into the queue of the controller.
 
 Parameters:
 
-* k - valid API key
-* ID - unique unit ID
-* s - new unit status
-* v - new unit value
+* **k** valid API key
+* **ID** unique unit ID
+* **s** new unit status
+* **v** new unit value
 
 optionally:
 
-* p=PRIORITY - action priority in queue (the less value is - the higher priority
-  is, default is 100)
-* u=UUID - unique action ID (use this option only if you know what you do, the
+* **p=PRIORITY** action priority in queue (the less value is** the higher
+  priority is, default is 100)
+* **u=UUID** unique action ID (use this option only if you know what you do, the
   system assigns the unique ID by default)
-* w=sec - the API request will wait for the completion of the action for the
+* **w=sec** the API request will wait for the completion of the action for the
   specified number of seconds
-* q=sec - timeout for action processing in the public queue
+* **q=sec** timeout for action processing in the public queue
 
-Returns JSON dict with the following data (time - UNIX_TIMESTAMP):
+Returns JSON dict with the following data (time** UNIX_TIMESTAMP):
 
 .. code-block:: json
 
@@ -153,8 +153,8 @@ Returns JSON dict with the following data (time - UNIX_TIMESTAMP):
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - item doesn't exist, or the key has no access to the item
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** item doesn't exist, or the key has no access to the item
 
 In case the parameter 'w' is not present or action is not terminated in the
 specified wait time, it will continue running, and it's status may be checked
@@ -172,18 +172,18 @@ simple units.
 
 Parameters:
 
-* k - valid API key
-* ID - unique unit ID
+* **k** valid API key
+* **ID** unique unit ID
 
 optionally:
 
-* p=PRIORITY - action priority in queue (the less value is - the higher priority
-  is, default is 100)
-* u=UUID - unique action ID (use this option only if you know what you do, the
+* **p=PRIORITY** action priority in queue (the less value is** the higher
+  priority is, default is 100)
+* **u=UUID** unique action ID (use this option only if you know what you do, the
   system assigns the unique ID by default)
-* w=sec - the API request will wait for the completion of the action for the
+* **w=sec** the API request will wait for the completion of the action for the
   specified number of seconds
-* q=sec - timeout for action processing in the public queue
+* **q=sec** timeout for action processing in the public queue
 
 Returns and behaviour:
 
@@ -191,8 +191,8 @@ Same as :ref:`action<action>`
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - item doesn't exist, or the key has no access to the item
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** item doesn't exist, or the key has no access to the item
 
 .. _result:
 
@@ -204,14 +204,14 @@ specified unit.
 
 Parameters:
 
-* k - valid API key
-* u - action UUID or
-* i - unit ID
+* **k** valid API key
+* **u** action UUID or
+* **i** unit ID
 
 Additionally results may be filtered by:
 
-* g=GROUP - unit group
-* s=STATE - action status (Q - queued, R - running, F - finished)
+* **g=GROUP** unit group
+* **s=STATE** action status (Q** queued, R** running, F** finished)
 
 Returns:
 
@@ -219,8 +219,8 @@ Same JSON dict as :ref:`action<action>`
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, action with the specified UUID doesn't
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, action with the specified UUID doesn't
   exist, or the key has no access to them
 
 .. _terminate:
@@ -232,8 +232,8 @@ Terminate action execution or cancel the action if it's still queued
 
 Parameters:
 
-* k - valid API key
-* u - action UUID
+* **k** valid API key
+* **u** action UUID
 
 Returns:
 
@@ -243,8 +243,8 @@ termination is disabled in unit configuration.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - action with the specified UUID doesn't exist (or already
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** action with the specified UUID doesn't exist (or already
   compelted), or the key has no access to it
 
 .. _q_clean:
@@ -256,15 +256,15 @@ Cancel all queued actions, keep the current action running
 
 Parameters:
 
-* k - valid API key
-* i - unit ID
+* **k** valid API key
+* **i** unit ID
 
 Returns JSON dict result="OK", if queue is cleaned.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, or the key has no access to it
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, or the key has no access to it
 
 .. _kill:
 
@@ -276,8 +276,8 @@ current running action.
 
 Parameters:
 
-* k - valid API key
-* i - unit ID
+* **k** valid API key
+* **i** unit ID
 
 Returns JSON dict result="OK", if the command completed successfully. If the
 current action of the unit cannot be terminated by configuration, the notice
@@ -286,44 +286,46 @@ running)
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, or the key has no access to it
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, or the key has no access to it
 
 .. _disable_actions:
 
 disable_actions - disable actions for the unit
 ----------------------------------------------
+
 Disables unit to run and queue new actions.
 
 Parameters:
 
-* k - valid API key
-* i - unit ID
+* **k** valid API key
+* **i** unit ID
 
 Returns JSON dict result="OK", if actions are disabled.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, or the key has no access to it
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, or the key has no access to it
 
 .. _enable_actions:
 
 enable_actions - enable actions for the unit
 --------------------------------------------
+
 Enables unit to run and queue new actions.
 
 Parameters:
 
-* k - valid API key
-* i - unit ID
+* **k** valid API key
+* **i** unit ID
 
 Returns JSON dict result="OK", if actions are enabled.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, or the key has no access to it
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, or the key has no access to it
 
 .. _update:
 
@@ -335,17 +337,17 @@ of the passive state update, for example with the use of the external controller
 
 Parameters:
 
-* k - valid API key
-* i - unit ID
-* s - unit status (integer, optional)
-* v - unit value (optional)
+* **k** valid API key
+* **i** unit ID
+* **s** unit status (integer, optional)
+* **v** unit value (optional)
 
 Returns JSON dict result="OK", if the state was updated successfully.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, or the key has no access to it
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, or the key has no access to it
 
 .. _groups:
 
@@ -356,7 +358,7 @@ Returns the list of the item groups. Useful i.e. for the custom interfaces.
 
 Parameters:
 
-* k - valid API key
+* **k** valid API key
 
 Returns JSON array:
 
@@ -370,7 +372,7 @@ Returns JSON array:
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
 .. _list:
 
@@ -381,7 +383,7 @@ Returns the list of all items available
 
 Parameters:
 
-* k - masterkey
+* **k** masterkey
 
 Returns JSON array:
 
@@ -399,7 +401,7 @@ Returns JSON array:
     
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
 
 .. _get_config:
@@ -411,11 +413,11 @@ Returns complete :doc:`item configuration</items>`
 
 Parameters:
 
-* k - masterkey
+* **k** masterkey
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
 .. _save_config:
 
@@ -426,15 +428,15 @@ Saves item configuration on disk (even if it wasn't changed)
 
 Parameters:
 
-* k - masterkey
-* i - unit ID
+* **k** masterkey
+* **i** unit ID
 
 Returns JSON dict result="OK", if the configuration was saved successfully.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, or the key has no access to it
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, or the key has no access to it
 
 .. _list_props:
 
@@ -446,13 +448,13 @@ Allows to get all editable parameters of the
 
 Parameters:
 
-* k - masterkey
-* i - unit ID
+* **k** masterkey
+* **i** unit ID
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, or the key has no access to it
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, or the key has no access to it
 
 .. _set_prop:
 
@@ -463,18 +465,18 @@ Allows to set configuration parameters of the item.
 
 Parameters:
 
-* k - masterkey
-* i - unit ID
-* p - item configuration param
-* v - param value
+* **k** masterkey
+* **i** unit ID
+* **p** item configuration param
+* **v** param value
 
 Returns result="OK if the parameter is set, or result="ERROR", if an error
 occurs.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
-* 404 Not Found - unit doesn't exist, or the key has no access to it
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** unit doesn't exist, or the key has no access to it
 
 .. _create_unit:
 
@@ -485,21 +487,21 @@ Creates new :ref:`unit<unit>`.
 
 Parameters:
 
-* k - masterkey
-* i - unit ID
-* g - unit group
+* **k** masterkey
+* **i** unit ID
+* **g** unit group
 
 optionally:
 
-* virtual=1 - unit is created as :doc:`virtual</virtual>`
-* save=1 - save unit configuration on the disk immediately after creation
+* **virtual=1** unit is created as :doc:`virtual</virtual>`
+* **save=1** save unit configuration on the disk immediately after creation
 
 Returns result="OK if the unit was created, or result="ERROR", if the error
 occurred.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
 .. _create_sensor:
 
@@ -510,21 +512,21 @@ Creates new :ref:`sensor<sensor>`.
 
 Parameters:
 
-* k - masterkey
-* i - sensor ID
-* g - sensor group
+* **k** masterkey
+* **i** sensor ID
+* **g** sensor group
 
 optionally:
 
-* virtual=1 - sensor is created as :doc:`virtual</virtual>`
-* save=1 - save sensor configuration on the disk immediately after creation
+* **virtual=1** sensor is created as :doc:`virtual</virtual>`
+* **save=1** save sensor configuration on the disk immediately after creation
 
 Returns result="OK if the sensor was created, or result="ERROR", if the error
 occurred.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
 .. _create_mu:
 
@@ -535,21 +537,22 @@ Creates new :ref:`multiupdate<multiupdate>`.
 
 Parameters:
 
-* k - masterkey
-* i - multiupdate ID
-* g - multiupdate group
+* **k** masterkey
+* **i** multiupdate ID
+* **g** multiupdate group
 
 optionally:
 
-* virtual=1 - multiupdate is created as :doc:`virtual</virtual>`
-* save=1 - save multiupdate configuration on the disk immediately after creation
+* **virtual=1** multiupdate is created as :doc:`virtual</virtual>`
+* **save=1** save multiupdate configuration on the disk immediately after
+  creation
 
 Returns result="OK if the multiupdate was created, or result="ERROR", if the
 error occurred.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
 .. _clone:
 
@@ -560,21 +563,21 @@ Creates a copy of the :doc:`item</items>`.
 
 Parameters:
 
-* k - masterkey
-* i - item ID
-* n - new item ID
-* g - group for the new item
+* **k** masterkey
+* **i** item ID
+* **n** new item ID
+* **g** group for the new item
 
 optionally:
 
-* save=1 - save item configuration on the disk immediately after creation
+* **save=1** save item configuration on the disk immediately after creation
 
 Returns result="OK if the item was loned, or result="ERROR", if the error
 occurred.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
 .. _clone_group:
 
@@ -585,15 +588,15 @@ Creates a copy of the all items from the group.
 
 Parameters:
 
-* k - masterkey
-* g - group to clone
-* n - new group to clone to
-* p - item ID prefix, i.e. device1. for device1.temp1, device1.fan1 
-* r - iem ID prefix in the new group, i.e. device2
+* **k** masterkey
+* **g** group to clone
+* **n** new group to clone to
+* **p** item ID prefix, i.e. device1. for device1.temp1, device1.fan1 
+* **r** iem ID prefix in the new group, i.e. device2
 
 optionally:
 
-* save=1 - save cloned items configurations on the disk immediately after
+* **save=1** save cloned items configurations on the disk immediately after
   creation.
 
 Returns result="OK if the items were cloned, or result="ERROR", if error
@@ -601,7 +604,7 @@ occurred. Only items with type unit and sensor are cloned.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
 .. _destroy:
 
@@ -625,9 +628,9 @@ restarting the server.
 
 Errors:
 
-* 403 Forbidden - invalid API KEY
+* **403 Forbidden** invalid API KEY
 
-.. _users:
+.. _uc-users:
 
 User authorization using login/password
 ---------------------------------------
@@ -635,7 +638,7 @@ User authorization using login/password
 Third-party apps may authorize :doc:`users</sys_api>` using login and password
 as an alternative for authorization via API key.
 
-.. _login:
+.. _uc-login:
 
 login - user authorization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -652,17 +655,17 @@ IP addresses.
 
 Parameters:
 
-* u - user name
-* p - user password
+* **u** user name
+* **p** user password
 
 Returns JSON dict { "result" "OK", "key": "APIKEY_ID" }, if the user is
 authorized.
 
 Errors:
 
-* 403 Forbidden - invalid user name / password
+* **403 Forbidden** invalid user name / password
 
-.. _logout:
+.. _uc-logout:
 
 logout
 ~~~~~~
@@ -675,7 +678,7 @@ Returns JSON dict { "result" : "OK" }
 
 Errors:
 
-* 403 Forbidden - no session available / session is already finished
+* **403 Forbidden** no session available / session is already finished
 
 .. _udp_api:
 
@@ -693,14 +696,14 @@ To update the status of the item send the following UDP packet to API port:
 
     ID u <status> [value]
 
-(ID - item ID, value - optional parameter).
+(ID** item ID, value** optional parameter).
 
 To send :ref:`action<action>` for the unit send the following UDP packet to
 API port:
 
     ID <status> [value] [priority]
 
-(value and priority - optional parameters).
+(value and priority** optional parameters).
 
 
 If you needs to skip the parameter, set it to 'None'. For example:

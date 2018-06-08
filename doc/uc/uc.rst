@@ -61,6 +61,8 @@ uc.ini - primary configuration file of UC server
 .. literalinclude:: ../../etc/uc.ini-dist
     :language: ini
 
+.. _uc_cvars:
+
 runtime/uc_cvars.json variables file
 ------------------------------------
 
@@ -131,38 +133,38 @@ priority is 100. The lower means the higher priority of queued action execution.
 
 Queued action can have the following statuses:
 
-* created - action has just been created and has not been queued yet
-* pending - the action is placed in the global queue. The previous action
+* **created** action has just been created and has not been queued yet
+* **pending** the action is placed in the global queue. The previous action
   status, as well as this one, are rarely found because :doc:`uc_api` waits for
   the command to be placed in the queue of a certain unit and then returns the
   result
-* queued - the action has already passed the global queue and is now waiting to
-  be executed in the queue of a certain unit
-* refused - unit rejected the action execution because the item configuration
-  value *action_enabled = False*
-* dead - API failed to wait until the action is placed to the queue of a
+* **queued** the action has already passed the global queue and is now waiting
+  to be executed in the queue of a certain unit
+* **refused** unit rejected the action execution because the item configuration
+  value *action_enabled=False*
+* **dead** API failed to wait until the action is placed to the queue of a
   certain unit and, therefore, marked it as "dead". Virtually, such status
   clearly indicates that server is seriously overloaded
-* canceled  - the command is canceled either from the outside or due to either
-  unit already running the other action (in case *action_queue = 0* and queue
-  is disabled) or the unit got new action to execute and *action_queue = 2*
+* **canceled** the command is canceled either from the outside or due to either
+  unit already running the other action (in case *action_queue=0* and queue
+  is disabled) or the unit got new action to execute and *action_queue=2*
   (cancel and terminate the pending actions after getting a new one)
-* ignored - the unit rejected the action execution, because its status/value are
-  the same as requested to be changed to, and *action_always_exec = False*
-* running - the action is being executed
-* failed - the controller failed to execute the command
-* terminated - the controller terminated the action execution due to timeout or
-  by the external request
-* completed - the action finished successfully
+* **ignored** the unit rejected the action execution, because its status/value
+  are the same as requested to be changed to, and *action_always_exec=False*
+* **running** the action is being executed
+* **failed** the controller failed to execute the command
+* **terminated** the controller terminated the action execution due to timeout
+  or by the external request
+* **completed** the action finished successfully
 
 Startup and shutdown
 --------------------
 
 To manage UC server use ./sbin/uc-control script with the following options:
 
-* start - start UC server
-* stop - stop UC server
-* restart - restart UC server
-* logrotate - call after log rotatino to restart the logging
-* version - display the server version
+* **start** start UC server
+* **stop** stop UC server
+* **restart** restart UC server
+* **logrotate** call after log rotatino to restart the logging
+* **version** display the server version
 
