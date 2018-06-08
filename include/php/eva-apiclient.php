@@ -81,12 +81,6 @@ $_eva_sysapi_func_ce = array(
         'cmd'
         );
 
-$_eva_sysapi_func_post = array(
-        'create_user',
-        'set_user_password',
-        'file_put'
-        );
-
 $_eva_api_func = array(
         'uc' =>
             array(
@@ -139,8 +133,6 @@ $_eva_api_func = array(
                 'ce' => array(
                     'action',
                     'action_toggle'
-                    ),
-                'post' => array(
                     )
                 ),
         'lm' =>
@@ -209,8 +201,6 @@ $_eva_api_func = array(
                     ),
                 'ce' => array(
                     'run'
-                    ),
-                'post' => array (
                     )
             ),
         'sfa' =>
@@ -264,8 +254,6 @@ $_eva_api_func = array(
                 'ce' => array(
                     'action',
                     'run'
-                    ),
-                'post' => array (
                     )
             )
         );
@@ -308,7 +296,6 @@ class EVA_APIClient {
         $api_uri = null;
         $check_result = false;
         $check_exitcode = false;
-        $post = false;
         if ($this->_product_code &&
             array_key_exists(
                 $this->_product_code, $GLOBALS['_eva_api_func']) &&
@@ -322,9 +309,6 @@ class EVA_APIClient {
                 if (in_array($func,
                     $GLOBALS['_eva_api_func'][$this->_product_code]['ce']))
                         $check_exitcode = true;
-                if (in_array($func,
-                    $GLOBALS['_eva_api_func'][$this->_product_code]['post']))
-                        $post = true;
         }
         elseif (in_array($func, $GLOBALS['_eva_sysapi_func'])) {
             $api_uri = $GLOBALS['_eva_sysapi_uri'];
@@ -332,8 +316,6 @@ class EVA_APIClient {
                 $check_result = true;
             if (in_array($func, $GLOBALS['_eva_sysapi_func_ce']))
                 $check_exitcode = true;
-            if (in_array($func, $GLOBALS['_eva_sysapi_func_post']))
-                $post = true;
         }
         if (!$api_uri)
             return array($GLOBALS['eva_result_func_unknown'], array());
@@ -348,14 +330,9 @@ class EVA_APIClient {
             if ($q) $q .= '&';
             $q .= $k.'='.urlencode($v);
         }
-        if ($post) {
-            curl_setopt($ch, CURLOPT_URL, $this->_uri.$api_uri.$func);
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
-        } else {
-            curl_setopt($ch, CURLOPT_URL,
-                $this->_uri.$api_uri.'/'.$func.'?'.$q);
-        }
+        curl_setopt($ch, CURLOPT_URL, $this->_uri.$api_uri.$func);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $q);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, $t);
         $response = curl_exec($ch);

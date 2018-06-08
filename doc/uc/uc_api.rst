@@ -8,7 +8,9 @@ UC API
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
-All functions can be called using GET and POST methods.
+All functions can be called using GET and POST methods. When POST method is
+being used, the parameters can be passed to functions eitner as www-form or as
+JSON.
 
 .. contents::
 

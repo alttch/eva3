@@ -41,8 +41,6 @@ _sysapi_func_cr = [
 
 _sysapi_func_ce = ['cmd']
 
-_sysapi_func_post = ['create_user', 'set_user_password', 'file_put']
-
 _api_func = {
     'uc': {
         'uri':
@@ -60,8 +58,7 @@ _api_func = {
             'create_sensor', 'create_mu', 'clone', 'clone_group', 'destroy',
             'login', 'logout'
         ],
-        'ce': ['action', 'action_toggle'],
-        'post': []
+        'ce': ['action', 'action_toggle']
     },
     'lm': {
         'uri':
@@ -84,8 +81,7 @@ _api_func = {
             'reload_controller', 'create_lvar', 'destroy_lvar', 'set_rule_prop',
             'create_rule', 'destroy_rule', 'login', 'logout'
         ],
-        'ce': ['run'],
-        'post': []
+        'ce': ['run']
     },
     'sfa': {
         'uri':
@@ -104,8 +100,7 @@ _api_func = {
             'remove_controller', 'reload_controller', 'set_rule_prop', 'login',
             'logout'
         ],
-        'ce': ['action', 'run'],
-        'post': []
+        'ce': ['action', 'run']
     }
 }
 
@@ -159,7 +154,6 @@ class APIClient(object):
         api_uri = None
         check_result = False
         check_exitcode = False
-        post = False
         if not _api_uri:
             if self._product_code and \
                     self._product_code in _api_func and \
@@ -169,16 +163,12 @@ class APIClient(object):
                     check_result = True
                 if func in _api_func[self._product_code]['ce']:
                     check_exitcode = True
-                if func in _api_func[self._product_code]['post']:
-                    post = True
             elif func in _sysapi_func:
                 api_uri = _sysapi_uri
                 if func in _sysapi_func_cr:
                     check_result = True
                 if func in _sysapi_func_ce:
                     check_exitcode = True
-                if func in _sysapi_func_post:
-                    post = True
             if not api_uri: return (result_func_unknown, {})
         else:
             api_uri = _api_uri
@@ -189,18 +179,11 @@ class APIClient(object):
         if self._key is not None and 'k' not in p:
             p['k'] = self._key
         try:
-            if post:
-                r = requests.post(
-                    self._uri + api_uri + func,
-                    data=p,
-                    timeout=t,
-                    verify=self._ssl_verify)
-            else:
-                r = requests.get(
-                    self._uri + api_uri + func,
-                    params=p,
-                    timeout=t,
-                    verify=self._ssl_verify)
+            r = requests.post(
+                self._uri + api_uri + func,
+                data=p,
+                timeout=t,
+                verify=self._ssl_verify)
         except requests.Timeout:
             return (result_server_timeout, {}) if \
                     not _return_raw else (-1, {})
