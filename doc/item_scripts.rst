@@ -2,8 +2,8 @@ Item scripts
 ============
 
 Item scripts are used to update :doc:`items'<items>` state and execute actions.
-Scripts are placed in xc folder (**xc/uc** for `/uc/uc`, **xc/lm** for
-`/lm/lm`) and may be either written in any scripting language or be binary
+Scripts are placed in xc folder (**xc/uc** for :doc:`/uc/uc`, **xc/lm** for
+:doc:`/lm/lm`) and may be either written in any scripting language or be binary
 executables. The script file should have exec permissions.
 
 All the examples provided in this documentation are written in the classic
