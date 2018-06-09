@@ -38,7 +38,7 @@ status data is updated correctly and sensor is back online or until the data is
 expired.
 
 action - unit and macro action events
-~~~~~~~~~~~~~~~~~~~~~~~~~~~----------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Every time the :ref:`unit<unit>` :ref:`action<uc_action>` or :doc:`macro
 action</lm/macros>` changes its :ref:`status<uc_queues>`, the notification
