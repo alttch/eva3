@@ -102,6 +102,22 @@ The blank value is "null". It is not recommended to use "" (blank) value,
 because such values cannot be transmitted via :ref:`MQTT<mqtt>` correctly. In
 most cases, the system itself replaces the blank value with "null".
 
+Units in EVA hive
+~~~~~~~~~~~~~~~~~
+
+All units have oids like **unit:group/unit_id** i.e. *unit:light/room1/lamp1*
+
+For the synchronization via :ref:`mqtt<MQTT>`, the following topics are used
+for units
+
+* **[prefix/]unit/<group>/<unit_id>/status**  unit status, integer
+* **[prefix/]unit/<group>/<unit_id>/value**  unit value
+* **[prefix/]unit/<group>/<unit_id>/nstatus**  new unit status (different from
+  status if action is started), integer
+* **[prefix/]unit/<group>/<unit_id>/nvalue** new unit value
+* **[prefix/]unit/<group>/<unit_id>/action_enabled** are actions enabled for the
+  unit or not (boolean, True/False)
+
 Unit parameters
 ~~~~~~~~~~~~~~~
 
@@ -240,6 +256,17 @@ be easily connected to several :doc:`Universal Controllers</uc/uc>` at once if
 the equipment allows making parallel queries of the state or sending the active
 updates to several addresses at once.
 
+Sensors in EVA hive
+~~~~~~~~~~~~~~~~~~~
+
+All sensors have oids like **sensor:group/sensor_id** i.e. *sensor:temp/t1*
+
+For the synchronization via :ref:`mqtt<MQTT>`, the following topics are used
+for units
+
+* **[prefix/]sensor/<group>/<sensor_id>/status** sensor status, integer
+* **[prefix/]sensor/<group>/<sensor_id>/value** sensor value
+
 Sensor parameters
 ~~~~~~~~~~~~~~~~~
 
@@ -300,6 +327,20 @@ controller is installed.
 However, When used in industrial configurations, it is recommended to
 synchronize the time on all computers without any additional software hotfixes.
 
+LVars in EVA hive
+~~~~~~~~~~~~~~~~~
+
+All logic variables have oids like **lvar:group/lvar_id** i.e.
+*lvar:service/var1*
+
+For the synchronization via :ref:`mqtt<MQTT>`, the following topics are used
+for units
+
+* **[prefix/]lvar/<group>/<lvar_id>/status** lvar status, integer
+* **[prefix/]lvar/<group>/<lvar_id>/value** lvar value
+* **[prefix/]lvar/<group>/<lvar_id>/set_time** last set time (unix timestamp)
+* **[prefix/]lvar/<group>/<lvar_id>/expires** value expiration time (seconds)
+
 LVar parameters
 ~~~~~~~~~~~~~~~
 
@@ -321,6 +362,14 @@ command.
 Multiupdate is an independant item in the system with it's own configuration
 and without status and value. In turn, it updates statuses of the included
 items. Multiupdate can be :doc:`virtual<virtual>`.
+
+Multiupdates in EVA hive
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+All multiupdates have oids like **mu:group/mu_id** i.e.
+*mu:environment/mu1*
+
+Multiupdates don't have own state, so they are not synchronized between servers.
 
 Multiupdate parameters
 ~~~~~~~~~~~~~~~~~~~~~~
