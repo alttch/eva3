@@ -110,12 +110,12 @@ All units have oids like **unit:group/unit_id** i.e. *unit:light/room1/lamp1*
 For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
 for units
 
-* **[prefix/]unit/<group>/<unit_id>/status**  unit status, integer
-* **[prefix/]unit/<group>/<unit_id>/value**  unit value
-* **[prefix/]unit/<group>/<unit_id>/nstatus**  new unit status (different from
+* **[space/]unit/<group>/<unit_id>/status**  unit status, integer
+* **[space/]unit/<group>/<unit_id>/value**  unit value
+* **[space/]unit/<group>/<unit_id>/nstatus**  new unit status (different from
   status if action is started), integer
-* **[prefix/]unit/<group>/<unit_id>/nvalue** new unit value
-* **[prefix/]unit/<group>/<unit_id>/action_enabled** are actions enabled for the
+* **[space/]unit/<group>/<unit_id>/nvalue** new unit value
+* **[space/]unit/<group>/<unit_id>/action_enabled** are actions enabled for the
   unit or not (boolean, True/False)
 
 Unit parameters
@@ -264,8 +264,8 @@ All sensors have oids like **sensor:group/sensor_id** i.e. *sensor:temp/t1*
 For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
 for units
 
-* **[prefix/]sensor/<group>/<sensor_id>/status** sensor status, integer
-* **[prefix/]sensor/<group>/<sensor_id>/value** sensor value
+* **[space/]sensor/<group>/<sensor_id>/status** sensor status, integer
+* **[space/]sensor/<group>/<sensor_id>/value** sensor value
 
 Sensor parameters
 ~~~~~~~~~~~~~~~~~
@@ -336,10 +336,10 @@ All logic variables have oids like **lvar:group/lvar_id** i.e.
 For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
 for units
 
-* **[prefix/]lvar/<group>/<lvar_id>/status** lvar status, integer
-* **[prefix/]lvar/<group>/<lvar_id>/value** lvar value
-* **[prefix/]lvar/<group>/<lvar_id>/set_time** last set time (unix timestamp)
-* **[prefix/]lvar/<group>/<lvar_id>/expires** value expiration time (seconds)
+* **[space/]lvar/<group>/<lvar_id>/status** lvar status, integer
+* **[space/]lvar/<group>/<lvar_id>/value** lvar value
+* **[space/]lvar/<group>/<lvar_id>/set_time** last set time (unix timestamp)
+* **[space/]lvar/<group>/<lvar_id>/expires** value expiration time (seconds)
 
 LVar parameters
 ~~~~~~~~~~~~~~~
