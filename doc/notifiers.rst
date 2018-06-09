@@ -45,7 +45,7 @@ action</lm/macros>` changes its :ref:`status<uc_queues>`, the notification
 server receives "action" event notification.
 
 The notification sends data similar to ones that can be obtained using UC API
-ref:`result<uc_result>` command.
+:ref:`result<uc_result>` command.
 
 log - logged event
 ~~~~~~~~~~~~~~~~~~
@@ -188,7 +188,7 @@ To subscribe notifier to the new subject, run:
     (where subject is "state", "log" or "action")
 
 When subscribing notifier to logs, you may use optional *-l LEVEL* param (10 -
-DEBUG, 20 - INFO (by default), 30 - WARNING, 40 - ERROR, 50 - CRITICAL).
+DEBUG, 20 - INFO, default, 30 - WARNING, 40 - ERROR, 50 - CRITICAL).
 
 When subscribing notifier to state changes, you may also always specify item
 types (comma separated) or use '#' for all types with *-v TYPES* param, groups
