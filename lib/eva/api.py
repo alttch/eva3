@@ -135,9 +135,8 @@ def cp_json_pre():
         try:
             cl = int(cherrypy.request.headers.get('Content-Length'))
             rawbody = cherrypy.request.body.read(cl)
-            d = jsonpickle.decode(rawbody.decode())
-            for k, v in d.items():
-                cherrypy.serving.request.params[k] = v
+            cherrypy.serving.request.params.update(
+                jsonpickle.decode(rawbody.decode()))
         except:
             raise cp_api_error('invalid JSON data')
     return
