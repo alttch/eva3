@@ -17,8 +17,8 @@ third-party programs using :doc:`uc_api`.
 
 
 :any:`Units<unit>` receive control actions, the controller forms them into
-:ref:`queues<queues>` and executes them using an external scripts. If necessary,
-it terminates the current script and keeps the command history.
+:ref:`queues<uc_queues>` and executes them using an external scripts. If
+necessary, it terminates the current script and keeps the command history.
 
 Additionally, Universal Controller collects the data from the connected
 :doc:`items</items>` using active and passive status updates.
@@ -67,7 +67,7 @@ runtime/uc_cvars.json variables file
 ------------------------------------
 
 uc_cvars.json - file containing user variables passed to all commands and
-:doc:`item scripts</items_scripts>` within the system environment.
+:doc:`item scripts</item_scripts>` within the system environment.
 
 File - normal JSON directory, format:
 
@@ -115,7 +115,7 @@ host only.
 .. literalinclude:: ../../etc/uc_apikeys.ini-dist
     :language: ini
 
-.. _queues:
+.. _uc_queues:
 
 Action queues
 -------------

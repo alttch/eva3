@@ -107,12 +107,12 @@ script requires more action_timeout in unit config):
        ;;
     esac
 
-In the :ref:`queue<queues>` history script is marked as completed if it
+In the :ref:`queue<uc_queues>` history script is marked as completed if it
 completed independently with 0 code, failed - if the code differs from 0.
 
 The script or program can display anything on stdout/stderr. This data, as well
 the exit code, will be recorded in "out" and "err" fields of the
-:ref:`result<result>` dict.
+:ref:`result<uc_result>` dict.
 
 Sometimes it is useful to catch SIGTERM in the script/program, i.e. if you
 operate the motor that must be stopped after the script gets a termination
@@ -235,7 +235,7 @@ Commands
 Commands are used if you need to run some commands remotely on the server where
 EVA controller is installed. Commands are executed with :doc:`controller cli
 tools</cli>`, with SYS API function :`ref`:`cmd<cmd>` or with :ref:`macro
-function<m-cmd>`.
+function<m_cmd>`.
 
 For command scripts:
 

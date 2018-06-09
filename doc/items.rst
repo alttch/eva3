@@ -107,7 +107,7 @@ Units in EVA hive
 
 All units have oids like **unit:group/unit_id** i.e. *unit:light/room1/lamp1*
 
-For the synchronization via :ref:`mqtt<MQTT>`, the following topics are used
+For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
 for units
 
 * **[prefix/]unit/<group>/<unit_id>/status**  unit status, integer
@@ -134,7 +134,7 @@ Unit parameters
 * **snmp_trap** if set, the item may receive active state updates via
   :doc:`/snmp_traps`.
 
-* **update_exec** a :doc:`script</items_scripts>` for passive update of the item
+* **update_exec** a :doc:`script</item_scripts>` for passive update of the item
   state, "xc/uc/ITEMID_update" by default.
 
 * **update_interval** integer value, time (seconds) interval between the calls
@@ -157,7 +157,7 @@ Unit parameters
 
 * **action_enabled** boolean, allow or deny new actions queue/execution
 
-* **action_exec** a :doc:`script</items_scripts>` which performs the action,
+* **action_exec** a :doc:`script</item_scripts>` which performs the action,
   "xc/uc/ITEMID" by default.
 
 * **action_queue={0|1|2}
@@ -261,7 +261,7 @@ Sensors in EVA hive
 
 All sensors have oids like **sensor:group/sensor_id** i.e. *sensor:temp/t1*
 
-For the synchronization via :ref:`mqtt<MQTT>`, the following topics are used
+For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
 for units
 
 * **[prefix/]sensor/<group>/<sensor_id>/status** sensor status, integer
@@ -333,7 +333,7 @@ LVars in EVA hive
 All logic variables have oids like **lvar:group/lvar_id** i.e.
 *lvar:service/var1*
 
-For the synchronization via :ref:`mqtt<MQTT>`, the following topics are used
+For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
 for units
 
 * **[prefix/]lvar/<group>/<lvar_id>/status** lvar status, integer

@@ -14,7 +14,7 @@ JSON.
 
 .. contents::
 
-.. _test:
+.. _uc_test:
 
 test - test API/key and get system info
 ---------------------------------------
@@ -58,7 +58,7 @@ Errors:
 
 * **403 Forbidden** if the key has no access to the API.
 
-.. _state:
+.. _uc_state:
 
 state - get item state
 ----------------------
@@ -105,7 +105,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** item doesn't exist, or the key has no access to the item
 
-.. _action:
+.. _uc_action:
 
 action - unit control actions
 -----------------------------
@@ -164,7 +164,7 @@ in with assigned uuid. If the action is terminated, out and err will have not
 null values and the process exit code will be available at 'exitcode'.
 Additionally, 'time' will be appended by "completed", "failed" or "terminated".
 
-.. _action_toggle:
+.. _uc_action_toggle:
 
 action_toggle - simple unit control
 -----------------------------------
@@ -189,14 +189,14 @@ optionally:
 
 Returns and behaviour:
 
-Same as :ref:`action<action>`
+Same as :ref:`action<uc_action>`
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** item doesn't exist, or the key has no access to the item
 
-.. _result:
+.. _uc_result:
 
 result - get action status
 --------------------------
@@ -217,7 +217,7 @@ Additionally results may be filtered by:
 
 Returns:
 
-Same JSON dict as :ref:`action<action>`
+Same JSON dict as :ref:`action<uc_action>`
 
 Errors:
 
@@ -225,7 +225,7 @@ Errors:
 * **404 Not Found** unit doesn't exist, action with the specified UUID doesn't
   exist, or the key has no access to them
 
-.. _terminate:
+.. _uc_terminate:
 
 terminate - terminate action
 ----------------------------
@@ -249,7 +249,7 @@ Errors:
 * **404 Not Found** action with the specified UUID doesn't exist (or already
   compelted), or the key has no access to it
 
-.. _q_clean:
+.. _uc_q_clean:
 
 q_clean - clean up the action queue
 -----------------------------------
@@ -268,7 +268,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** unit doesn't exist, or the key has no access to it
 
-.. _kill:
+.. _uc_kill:
 
 kill - clean up the queue and terminate the actions
 ---------------------------------------------------
@@ -291,7 +291,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** unit doesn't exist, or the key has no access to it
 
-.. _disable_actions:
+.. _uc_disable_actions:
 
 disable_actions - disable actions for the unit
 ----------------------------------------------
@@ -310,7 +310,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** unit doesn't exist, or the key has no access to it
 
-.. _enable_actions:
+.. _uc_enable_actions:
 
 enable_actions - enable actions for the unit
 --------------------------------------------
@@ -329,7 +329,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** unit doesn't exist, or the key has no access to it
 
-.. _update:
+.. _uc_update:
 
 update - set item status
 ------------------------
@@ -351,7 +351,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** unit doesn't exist, or the key has no access to it
 
-.. _groups:
+.. _uc_groups:
 
 groups - get item group list
 ----------------------------
@@ -376,7 +376,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-.. _list:
+.. _uc_list:
 
 list - get item list
 --------------------
@@ -406,7 +406,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 
-.. _get_config:
+.. _uc_get_config:
 
 get_config - get item configuration
 -----------------------------------
@@ -421,7 +421,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-.. _save_config:
+.. _uc_save_config:
 
 save_config - save item configuration on disk
 ---------------------------------------------
@@ -440,7 +440,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** unit doesn't exist, or the key has no access to it
 
-.. _list_props:
+.. _uc_list_props:
 
 list_props - get editable item parameters
 -----------------------------------------
@@ -458,7 +458,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** unit doesn't exist, or the key has no access to it
 
-.. _set_prop:
+.. _uc_set_prop:
 
 set_prop - set item parameters
 ------------------------------
@@ -480,7 +480,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** unit doesn't exist, or the key has no access to it
 
-.. _create_unit:
+.. _uc_create_unit:
 
 create_unit - create new unit
 -----------------------------
@@ -505,7 +505,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-.. _create_sensor:
+.. _uc_create_sensor:
 
 create_sensor - create new sensor
 ---------------------------------
@@ -530,7 +530,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-.. _create_mu:
+.. _uc_create_mu:
 
 create_mu - create multiupdate
 ------------------------------
@@ -556,7 +556,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-.. _clone:
+.. _uc_clone:
 
 clone - clone item
 ------------------
@@ -581,7 +581,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-.. _clone_group:
+.. _uc_clone_group:
 
 clone_group - clone all items in the group
 ------------------------------------------
@@ -608,7 +608,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-.. _destroy:
+.. _uc_destroy:
 
 destroy - delete item or group
 ------------------------------
@@ -682,7 +682,7 @@ Errors:
 
 * **403 Forbidden** no session available / session is already finished
 
-.. _udp_api:
+.. _uc_udp_api:
 
 UDP API
 -------
@@ -700,7 +700,7 @@ To update the status of the item send the following UDP packet to API port:
 
 (ID** item ID, value** optional parameter).
 
-To send :ref:`action<action>` for the unit send the following UDP packet to
+To send :ref:`action<uc_action>` for the unit send the following UDP packet to
 API port:
 
     ID <status> [value] [priority]
