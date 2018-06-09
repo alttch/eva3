@@ -1,5 +1,5 @@
-EVA ICS End User License Agreement
-==================================
+EVA ICS License Agreement
+=========================
 
 Basic provisions, briefly
 -------------------------

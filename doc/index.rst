@@ -8,7 +8,7 @@ monitoring systems development, for any needs, from home/office to the
 industrial setups. It is completely free for non-commercial use as well as for
 commercial, on condition that enterprise integrates it on its own. The product
 is distributed as open source software and available under
-:doc:`EVA EULA</license>`.
+:doc:`EVA License</license>`.
 
 Automated control systems are facing a new stage of evolution: IoT-devices
 become interesting for those, who have never dealt with automatization, cheap
