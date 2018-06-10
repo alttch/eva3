@@ -38,7 +38,7 @@ EVA ICS CHANGELOG
     - on_set lm rule (status changed to 1)
     - new LM API and macro functions: clear (set lvar value to 0), toggle
        (toggles lvar value between 0 and 1)
-    - cmd macro function now accepts full controller ids (uc/controller_id) as
+    - cmd macro function now accepts full controller id (uc/controller_id) as
       well as short
     - new macro functions: ls, open_oldest, open_newest
 
