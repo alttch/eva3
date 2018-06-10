@@ -2,7 +2,7 @@ SYS API
 =======
 
 SYS API is a common API present in all EVA controllers. SYS API functions are
-made to manager controller itself.
+used to manage controller itself.
 
 SYS API is called through URL request
 
@@ -67,12 +67,12 @@ Errors:
 cmd - execute a remote command
 ------------------------------
 
-Executes a remote :ref:`command script<cmd>` on :doc:`/uc/uc` or :doc:`/lm/lm`.
-The API key should be masterkey or have 'allow = cmd' permission.
+Executes a :ref:`command script<cmd>` on the server where the controller is
+installed.
 
 Parameters:
 
-* **k** valid API key
+* **k** API key with "allow=cmd" permission
 * **c** name of the command script
 * **a** command arguments (passed to the script)
 * **w** wait (in seconds) before API call sends a response. This allows to try
@@ -323,4 +323,253 @@ Errors:
 
 * **403 Forbidden** the API key has no access to this function
 
+User management
+---------------
 
+Apart from the authorization via API keys, requests to API can be authorized
+using login/password. Each user is being assigned to a specific API key
+(multiple users can be assigned to the same key) and his permissions are stored
+during login session.
+
+The key assigned to user is used to authorize all the operations unless the
+other key is specified in the request.
+
+Each EVA controller has its own user list written in the local database of the
+certain server by default. If you set same *userdb_file* value in the
+controllers' configurations, they will use a common user list.
+
+As far as controllers don't write anything to the database during user
+authorization tasks, it can easily be stored on the network drive and used by
+EVA controllers running on the different hosts.
+
+.. _s_list_keys:
+
+list_keys - get API keys list
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get the list of the available API keys
+
+Parameters:
+
+* **k** API key with masterkey permissions
+
+returns JSON array of the API keys available on the controller.
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+.. _s_list_users:
+
+list_users - get users list
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get the list of the defined users and API keys assigned to them
+
+Parameters:
+
+* **k** API key with masterkey permissions
+
+returns JSON array:
+
+.. code-block:: json
+
+	[
+        {
+            "key": "masterkey",
+            "user": "admin"
+        },
+        {
+            "key": "key1",
+            "user": "eva"
+        },
+        {
+           "key": "key1",
+            "user": "john"
+        },
+        {
+            "key": "op",
+            "user": "operator"
+        }
+    ]
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+.. _s_create_user:
+
+create_user - create new user
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Creates a new user in the database
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **u** user login
+* **p** user password
+* **a** API key to assign
+
+returns JSON dict { "result" : "OK"}
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+.. _s_set_user_password:
+
+set_user_password - change user password
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Changes user password
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **u** user login
+* **p** new password
+
+returns JSON dict { "result" : "OK"}
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+.. _s_set_user_key:
+
+set_user_key - change assigned API key
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Assigns another API key to user
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **u** user login
+* **a** API key to assign
+
+returns JSON dict { "result" : "OK"}
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+.. _s_destroy_user:
+
+destroy_user - delete user
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Deletes user from the database
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **u** user login
+
+returns JSON dict { "result" : "OK"}
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+File operations in runtime
+--------------------------
+
+SYS API allows the operations with any text files in "runtime" folder.
+According to the program architecture, all the files in this folder (except the
+databases) are text(JSON). To simplify the work with a files via API calls all
+requests and replies are made in text(JSON) format and no binary data is
+transferred.
+
+For safety reasons these API functions must be enabled before with
+*file_management=yes* param in "sysapi" section of the controller's
+configuration file.
+
+.. _s_file_get:
+
+file_get - get file from runtime
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Gets a content of the file from runtime folder.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **i** path to file, relatively to runtime root, without / at the beginning
+
+returns JSON dict:
+
+.. code-block:: json
+
+    {
+        "data": "<FILE_CONTENT>",
+        "file": "<FILE_NAME>",
+        "result": "OK"
+    }
+
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+* **404 Not Found** the file doesn't exist
+
+.. _s_file_put:
+
+file_put - upload file into runtime
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Puts a new file into runtime folder. If the file with such name exist, it will
+be overwritten.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **i** path to file, relatively to runtime root, without / at the beginning
+* **m** file content
+
+returns JSON dict { "result" : "OK"}
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+.. _s_file_set_exec:
+
+file_set_exec - file exec permission management
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sets a file permissions to allow it being executed.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **i** path to file, relatively to runtime root, without / at the beginning
+* **e** 0 to prohibit the file execution (permissions 0644), 1 - to allow
+        (permissions 0755)
+
+returns JSON dict { "result" : "OK"}
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+* **404 Not Found** the file doesn't exist
+
+.. _s_file_unlink:
+
+file_unlink - file exec permission management
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Deletes the file from the runtime folder.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **i** path to file, relatively to runtime root, without / at the beginning
+
+returns JSON dict { "result" : "OK"}
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+* **404 Not Found** the file doesn't exist
