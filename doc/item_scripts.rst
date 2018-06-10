@@ -145,7 +145,7 @@ separated by space, i.e.
 
     0 NEW_VALUE
 
-For the sensor, it's data should be printed as:
+For the sensor, its data should be printed as:
 
     1 VALUE
 

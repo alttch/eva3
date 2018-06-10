@@ -296,9 +296,9 @@ sending and receiving messages.
 external controller can send active notifications under this protocol.
 
 The items change their state to the state received from MQTT, if someone sends
-it's state update to EVA hive with "status" or "value" subtopics.
+its state update to EVA hive with "status" or "value" subtopics.
 
-To let the item receive MQTT state updates, set it's **mqtt_update**
+To let the item receive MQTT state updates, set its **mqtt_update**
 configuration param to the local MQTT notificator ID, as well additionally
 Optionally specify MQTT QoS using a semicolon (i.e. *eva_1:2*). QoS=1 is used by
 default.
@@ -330,7 +330,7 @@ MQTT, because MQTT can only guarantee that the action has been received by MQTT
 server, but not by the target :doc:`/uc/uc`. Additionally, you cannot obtain
 action uuid and further monitor it.
 
-To let unit responding to MQTT control messages, set it's configuration param
+To let unit responding to MQTT control messages, set its configuration param
 **mqtt_control** to the local MQTT ID. You may specify QoS as well via
 semicolon, similary as for **mqtt_update**.
 
