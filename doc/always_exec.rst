@@ -1,3 +1,6 @@
+Always exec
+===========
+
 Any automation project more complex than a simple relay request features
 interfaces and subsystems that independently store the :ref:`unit<unit>` states
 and keep them in sync with the real hardware equipment. But sometimes
