@@ -85,8 +85,8 @@ Status -1 indicates that unit has an error status. It is set from the outside
 or by the system itself if the unit wasn't updated for more than "expires"
 (value from item config) seconds.
 
-Value of the unit stat
-~~~~~~~~~~~~~~~~~~~~~~
+Value of the unit state
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Sometimes it's not necesseary to create multiple new statuses for the unit. For
 such cases, the unit also has a "value" parameter (which can include both
