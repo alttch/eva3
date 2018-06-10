@@ -31,7 +31,7 @@ start)
     exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${UC} ${UC_ARGS} > /dev/null &
     ;;
 launch)
-    exec_cmd ${PYTHON} ${UC} ${UC_ARGS}
+    ${PYTHON} ${UC} ${UC_ARGS}
     ;;
 stop)
     [ -f ${PIDFILE} ] || exit 1
