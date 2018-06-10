@@ -64,7 +64,7 @@ What you get with EVA
 * collect everything and control the whole your setup with the
   :doc:`aggregator controllers</sfa/sfa>`
 * :doc:`/api_clients` to quickly connect controllers' API to your apps
-* develop a powerful real-time websocket-powered SCADA web applications with
+* develop a modern real-time websocket-powered SCADA web applications with
   :doc:`/sfa/sfa_framework`
 * and much more
 
