@@ -10,7 +10,7 @@ Event structure
 
 Each event includes the following data:
 
-* **Event subject** (not to be confused with :ref:`MQTT<mqtt>` subject)
+* **Event subject** (not to be confused with :ref:`MQTT<mqtt_>` subject)
 * **Notification space** May be used to divide the controlled structure into
   sectors, e. g. city1/office1, plant1 etc. By dividing spaces you can separate
   one EVA installation from another using the same notification server, e. g. to
@@ -143,13 +143,13 @@ Except endpoint configuration, notifiers have some additional params:
   (the controller keeps the notifier active but puts error into the log)
 * **notify_key** notification key for custom http endpoints
 * **collect_logs** this should be set to "true" for :doc:`/sfa/sfa`
-  :ref:`MQTT<mqtt>` notifiers if you want to collect the logs of the other
+  :ref:`MQTT<mqtt_>` notifiers if you want to collect the logs of the other
   controllers and have the records available locally in SFA.
 
 Setting up MQTT QoS
 ~~~~~~~~~~~~~~~~~~~
 
-You may specify different :ref:`MQTT<mqtt>` QoS for the events with the
+You may specify different :ref:`MQTT<mqtt_>` QoS for the events with the
 different subjects.
 
 To set the same QoS for all events, use command:
@@ -229,10 +229,10 @@ To unsubscribe the notifier from the subject, run:
 if the subject is not specified, the notifier will be unsubscribed from all
 notification subjects.
 
-The countroller should be restarted to apply the new subscriptions
+The controller should be restarted to apply the new subscriptions
 configuration.
 
-.. _mqtt:
+.. _mqtt_:
 
 MQTT (mqtt)
 -----------

@@ -71,7 +71,7 @@ Parameters:
 * **k** valid API key
 * **i=ID** item ID
 * **p=TYPE** item type (short forms U for unit, S for sensor may be used)
-* **g** group filter, optional :ref:`mqtt<mqtt>` masks can be used, for
+* **g** group filter, optional :ref:`mqtt<mqtt_>` masks can be used, for
   example group1/#, group1/+/lamps)
 * **full=1** display extended item info, optional (config_changed, description,
   virtual, status_labels and action_enabled for unit)

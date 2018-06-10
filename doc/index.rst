@@ -50,13 +50,14 @@ What you get with EVA
 
 * write a simple :doc:`scripts</item_scripts>` for your automation hardware and
   keep them organized, queued and safely executed with :doc:`/uc/uc`
-* easily collect a data from the hardware using :ref:`MQTT<mqtt>` or :doc:`SNMP
+* easily collect a data from the hardware using :ref:`MQTT<mqtt_>` or :doc:`SNMP
   traps</snmp_traps>` with the built-in SNMP trap handler server
 * collect the data from your microcontrollers with a simple
   :ref:`UDP API<uc_udp_api>`
 * test and monitor the initial setup with contollers' EI web interfaces
-* exchange all the automation data between multiple servers with EVA controllers
-  and your own apps via :ref:`MQTT<mqtt>`
+* exchange all the automation data between multiple servers with EVA
+  controllers and your own apps via :ref:`MQTT<mqtt_>` server or :doc:`HTTP
+  notifiers</notifiers>`
 * use EVA :doc:`/lm/lm` to write a powerful :doc:`macros</lm/macros>` which can
   be run automatically on events in order to :doc:`decision
   rules</lm/decision_matrix>` you set up
@@ -99,7 +100,8 @@ System documentation
   * :doc:`/lm/lm` - a programmable logic controller
 
     * :doc:`/lm/lm_api` - API of the Logic Manager subsystem
-    * :ref:`lvar` -  item used by system components to exchange information
+    * :ref:`lvar` -  item used by system components to exchange logic data
+
     * :doc:`/lm/macros`
     * :doc:`/lm/decision_matrix`
 

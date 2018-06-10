@@ -4,7 +4,7 @@ SYS API
 SYS API is a common API present in all EVA controllers. SYS API functions are
 made to manager controller itself.
 
-:doc:`Universal Controller<uc>` UC API is called through URL request
+SYS API is called through URL request
 
 **\http://<IP_address:Port>/sys-api/function?parameters**
 

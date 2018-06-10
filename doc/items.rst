@@ -61,7 +61,7 @@ Universal Controller can work with multiple units, but one unit should be
 connected to only one Universal Controller in order to avoid conflicts.
 Nevertheless, for the reliability, one unit can be connected to several
 controllers, if it's state is correctly synchronized via
-:ref:`MQTT<mqtt>`.
+:ref:`MQTT<mqtt_>`.
 
 Each unit has its unique ID, for example "lamp1". ID can include numbers,
 uppercase and lowercase Latin characters and some special characters like minus
@@ -99,7 +99,7 @@ EVA does not use the unit value for the internal control and monitoring logic
 values separating them with a special characters for further processing.
 
 The blank value is "null". It is not recommended to use "" (blank) value,
-because such values cannot be transmitted via :ref:`MQTT<mqtt>` correctly. In
+because such values cannot be transmitted via :ref:`MQTT<mqtt_>` correctly. In
 most cases, the system itself replaces the blank value with "null".
 
 Units in EVA hive
@@ -107,7 +107,7 @@ Units in EVA hive
 
 All units have oids like **unit:group/unit_id** i.e. *unit:light/room1/lamp1*
 
-For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
+For the synchronization via :ref:`MQTT<mqtt_>`, the following subjects are used
 for units
 
 * **[space/]unit/<group>/<unit_id>/status**  unit status, integer
@@ -129,7 +129,7 @@ Unit parameters
 
 * **mqtt_update = "notifier:qos"** if set, the item may receive active state
   updates through the notification from the specified :ref:`MQTT
-  server<mqtt>`. Example: "eva_1:2".
+  server<mqtt_>`. Example: "eva_1:2".
 
 * **snmp_trap** if set, the item may receive active state updates via
   :doc:`/snmp_traps`.
@@ -178,7 +178,7 @@ Unit parameters
   this unit. Set 0 to disable this feature. Minimum step is 0.1 sec.
 
 * **mqtt_control = "notifier:qos"** item gets actions through the notifications
-  from the specified :ref:`MQTT server<mqtt>`, for example "eva_1:2",
+  from the specified :ref:`MQTT server<mqtt_>`, for example "eva_1:2",
   actions should be sent to path/to/unit/control (i.e.
   unit/hall/lamps/lamp1/control) in a form of the text messages "status [value]
   [priority]". If you want to skip value, but keep priority, set it to null,
@@ -221,14 +221,14 @@ the environment.
 
 As regards the system itself, unit and sensor are similar items: both have
 status and value, the item status is monitored actively (by :doc:`/uc/uc_api`,
-:ref:`MQTT message<mqtt>`, SNMP traps) or passively (by calling the external
+:ref:`MQTT message<mqtt_>`, SNMP traps) or passively (by calling the external
 script).
 
 The sensor can have 3 statuses:
 
 * **1** sensor is working and collecting data
-* **0** sensor is disabled, the value updates are ignored (this status may be set
-  via API or by the user)
+* **0** sensor is disabled, the value updates are ignored (this status may be
+  set via API or by the user)
 * **-1** sensor error ("expires" timer went off, the status was set because the
   connection with a physical sensor got lost during passive or active update
   etc), when the sensor is in this status, it's value is not sent via the
@@ -261,7 +261,7 @@ Sensors in EVA hive
 
 All sensors have oids like **sensor:group/sensor_id** i.e. *sensor:temp/t1*
 
-For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
+For the synchronization via :ref:`MQTT<mqtt_>`, the following subjects are used
 for units
 
 * **[space/]sensor/<group>/<sensor_id>/status** sensor status, integer
@@ -301,7 +301,7 @@ The same logic variable may be declared on several logic controllers, but the
 processes it autonomously. The variable becomes "expired" once it is declared
 as such by any controller.
 
-The logic variable values may be synchronized via :ref:`MQTT server<mqtt>` or
+The logic variable values may be synchronized via :ref:`MQTT server<mqtt_>` or
 set via API or external scripts - similar to sensors.
 
 You can use several logic variables as timers in order to organize the
@@ -333,7 +333,7 @@ LVars in EVA hive
 All logic variables have oids like **lvar:group/lvar_id** i.e.
 *lvar:service/var1*
 
-For the synchronization via :ref:`mqtt<MQTT>`, the following subjects are used
+For the synchronization via :ref:`MQTT<mqtt_>`, the following subjects are used
 for units
 
 * **[space/]lvar/<group>/<lvar_id>/status** lvar status, integer
