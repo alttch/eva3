@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ( kill -0 `cat $1` ) > /dev/null 2>&1
 if [ "x$?" = "x0" ]; then

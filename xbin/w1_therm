@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 DATA=`cat /sys/bus/w1/devices/$1/w1_slave 2>&1` || exit 1
 echo ${DATA} | grep -E " crc=[a-z0-9]+ YES" > /dev/null 2>&1 || exit 2

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 IP=$1
 SOCKET=$2

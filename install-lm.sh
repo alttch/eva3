@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 which realpath > /dev/null
 if [ $? != 0 ]; then
