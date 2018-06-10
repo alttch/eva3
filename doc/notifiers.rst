@@ -240,9 +240,9 @@ MQTT (mqtt)
 MQTT is a major endpoint type used to link several EVA subsystems. For
 instance, it enables :doc:`/lm/lm` and :doc:`/sfa/sfa` controllers to
 receive the latest item status from :doc:`/uc/uc` servers. We test and use EVA
-with `mosquitto http://mosquitto.org/`_ server, but you can use any server
-supporting `MQTT http://mqtt.org/`_ protocol.  As far as MQTT is the major type
-of the EVA notification system, let us examine it detailed.
+with `mosquitto <http://mosquitto.org/>`_ server, but you can use any server
+supporting `MQTT <http://mqtt.org/>`_ protocol.  As far as MQTT is the major
+type of the EVA notification system, let us examine it detailed.
 
 MQTT and state notifications
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
