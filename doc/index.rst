@@ -45,6 +45,28 @@ subsystems and collecting all data to the unified database.
 
 The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 
+What you get with EVA
+---------------------
+
+* write simple :doc:`/item_scripts<scripts>` for your automation hardware and
+  keep them organized, queued and safely executed with :doc:`/uc/uc`
+* easily collect a data from the hardware using :ref:`MQTT<mqtt>` or :doc:`SNMP
+  traps</snmp_traps>` with the built-in SNMP trap handler server
+* collect the data from your microcontrollers with a simple
+  :ref:`UDP API<uc_udp_api>`
+* test and monitor the initial setup with contollers' EI web interfaces
+* exchange all the automation data between multiple servers with EVA controllers
+  and your own apps via :ref:`MQTT<mqtt>`
+* use EVA :doc:`/lm/lm` to write a powerful :doc:`macros</lm/macros>` which can
+  be run automatically on events in order to :doc:`decision
+  rules</lm/decision_matrix>` you set up
+* collect everything and control the whole your setup with the
+  :doc:`aggregator controllers</sfa/sfa>`
+* :doc:`/api_clients` to quickly connect controllers' API to your apps
+* develop a powerful real-time websocket-powered SCADA web applications with
+  :doc:`/sfa/sfa_framework`
+* and much more
+
 System documentation
 --------------------
 
