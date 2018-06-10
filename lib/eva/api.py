@@ -205,6 +205,12 @@ class GenericAPI(object):
                 result[t.name]['alive'] = t.is_alive()
         return result
 
+    def dev_test_critical(self, k=None):
+        """ test critical
+        """
+        eva.core.critical()
+        return 'called core critical'
+
 
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
