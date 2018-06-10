@@ -17,6 +17,7 @@ import signal
 import psutil
 import threading
 import gzip
+import inspect
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -48,6 +49,8 @@ development = False
 show_traceback = False
 
 stop_on_critical = True
+
+dump_on_critical = True
 
 env = os.environ.copy()
 
@@ -201,8 +204,8 @@ def remove_stop_func(func):
         log_traceback()
 
 
-def create_dump():
-    dump = {}
+def create_dump(e='request', msg=''):
+    dump = {'reason': {'event': e, 'info': str(msg)}}
     try:
         for i, f in _dump_func.items():
             dump[i] = f()
@@ -212,6 +215,8 @@ def create_dump():
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
         gzip.open(filename, 'a').write(
             format_json(dump, minimal=not development).encode())
+        logging.warning(
+            'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
     except:
         log_traceback()
         return None
@@ -307,7 +312,7 @@ def reset_log(initial=False):
 
 def load(fname=None, initial=False, init_log=True):
     global system_name, log_file, pid_file, debug, development, show_traceback
-    global stop_on_critical
+    global stop_on_critical, dump_on_critical
     global notify_on_start, db_file, userdb_file
     global polldelay, db_update, keep_action_history, keep_logmem
     global timeout
@@ -333,7 +338,7 @@ def load(fname=None, initial=False, init_log=True):
                 print('Another process is already running')
                 return None
             except:
-                log_traceback()
+                pass
             try:
                 log_file = cfg.get('server', 'log_file')
             except:
@@ -387,6 +392,13 @@ def load(fname=None, initial=False, init_log=True):
                 pass
             logging.debug('server.stop_on_critical = %s' % ('yes' \
                                         if stop_on_critical else 'no'))
+            try:
+                dump_on_critical = (cfg.get('server',
+                                            'dump_on_critical') == 'yes')
+            except:
+                pass
+            logging.debug('server.dump_on_critical = %s' % ('yes' \
+                                        if dump_on_critical else 'no'))
             try:
                 db_file = cfg.get('server', 'db_file')
                 if db_file and db_file[0] != '/':
@@ -582,9 +594,18 @@ def log_traceback(display=False, notifier=False, force=False):
 
 
 def critical(log=True):
+    try:
+        caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
+        caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
+                                    caller.function)
+    except:
+        caller_info = ''
     if log: log_traceback(force=True)
+    if dump_on_critical:
+        logging.critical('critical exception. dump file: %s' % create_dump(
+            'critical', caller_info))
     if stop_on_critical:
-        logging.warning('got critical exception, shutting down')
+        logging.critical('critical exception, shutting down')
         sighandler_term(None, None)
 
 

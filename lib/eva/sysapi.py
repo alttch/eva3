@@ -382,6 +382,7 @@ class SysHTTP_API(SysAPI):
             GenericAPI.dev_k.exposed = True
             GenericAPI.dev_n.exposed = True
             GenericAPI.dev_t.exposed = True
+            GenericAPI.dev_test_critical.exposed = True
             LockAPI.dev_locks.exposed = True
 
         GenericAPI.test.exposed = True

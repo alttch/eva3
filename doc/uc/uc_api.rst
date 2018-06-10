@@ -56,7 +56,7 @@ masterkey only  'master':true is returned)
 
 Errors:
 
-* **403 Forbidden** if the key has no access to the API.
+* **403 Forbidden** the key has no access to the API
 
 .. _uc_state:
 

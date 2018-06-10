@@ -229,6 +229,8 @@ The script output will be as approximately follows:
 where each row contains the status of the unit connected to the corresponding
 relay port.
 
+.. _cmd:
+
 Commands
 --------
 
