@@ -48,7 +48,7 @@ The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 What you get with EVA
 ---------------------
 
-* write simple :doc:`/item_scripts<scripts>` for your automation hardware and
+* write a simple :doc:`scripts</item_scripts>` for your automation hardware and
   keep them organized, queued and safely executed with :doc:`/uc/uc`
 * easily collect a data from the hardware using :ref:`MQTT<mqtt>` or :doc:`SNMP
   traps</snmp_traps>` with the built-in SNMP trap handler server
