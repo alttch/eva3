@@ -17,6 +17,7 @@ EVA ICS CHANGELOG
     Core:
 
     fixes: remove empty controller group when all objects are deleted
+    fixes: remote items correctly display state in list_remote
 
     - each set_prop call now logs what's actually changed
     - added item oid (type:group/item_id) - reserved for the future releases
