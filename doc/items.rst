@@ -367,8 +367,8 @@ Examples using LVars
 You may use lvar as a
 
 * **Variable** To use lvar as a shared variable to exchange some information
-  between the controllers, just set its value (and status if you want) and
-  that's it.
+  between the controllers, apps and SCADA interfaces, just set its value (and
+  status if you want) and that's it.
 * **Timer**
 
   * Set **expires** configuration param
