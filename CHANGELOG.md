@@ -18,6 +18,7 @@ EVA ICS CHANGELOG
 
     fixes: remove empty controller group when all objects are deleted
     fixes: remote items correctly display state in list_remote
+    fixes: disabled sensors and lvars shouldn't react to an expiration
 
     - each set_prop call now logs what's actually changed
     - added item oid (type:group/item_id) - reserved for the future releases
@@ -41,7 +42,8 @@ EVA ICS CHANGELOG
        (toggles lvar value between 0 and 1)
     - cmd macro function now accepts full controller id (uc/controller_id) as
       well as short
-    - new macro functions: ls, open_oldest, open_newest
+    - new macro functions: ls, open_oldest, open_newest for the file management
+    - new macro functions for lvar management: toggle, clear, disable
 
     SFA:
 

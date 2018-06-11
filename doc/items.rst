@@ -381,6 +381,7 @@ You may use lvar as a
     True/False, yes/no, enabled/disabled and etc.
   * Use **reset** to set lvar value to 1 which should be considered as *True*
   * Use **clear** to set lvar value to 0 which should be considered as *False*
+  * Use **toggle** to toggle lvar value between 0 and 1
   * Use constructions like *if value('lvar_id'):* in :doc:`macros</lm/macros>`
     to determine is the 'flag' lvar set or not.
 
