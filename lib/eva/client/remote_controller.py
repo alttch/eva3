@@ -443,6 +443,30 @@ class RemoteUCPool(RemoteControllerPool):
             self.action_history_append(a)
         return result
 
+    def action_toggle(self,
+               unit_id,
+               wait=0,
+               uuid=None,
+               priority=None):
+        if not unit_id in self.controllers_by_unit: return None
+        uc = self.controllers_by_unit[unit_id]
+        p = {'i': unit_id }
+        if wait: p['w'] = wait
+        if uuid: p['u'] = uuid
+        if priority: p['p'] = priority
+        result = uc.api_call('action_toggle', p)
+        if result and \
+                'item_id' in result and \
+                'item_group' in result and \
+                'uuid' in result:
+            a = {
+                'uuid': result['uuid'],
+                'i': '%s/%s' % (result['item_group'], result['item_id']),
+                't': time.time()
+            }
+            self.action_history_append(a)
+        return result
+
     def action_history_append(self, a):
         if not eva.core.keep_action_history:
             return True
@@ -768,6 +792,7 @@ class RemoteLMPool(RemoteControllerPool):
                 if not u.full_id in self.lvars or \
                         self.lvars[u.full_id].is_destroyed():
                     self.lvars[u.full_id] = u
+                    self.controllers_by_lvar[u.full_id] = lm
                     u.start_processors()
                 p[u.full_id] = u
             if controller_id in self.lvars_by_controller:
@@ -776,6 +801,7 @@ class RemoteLMPool(RemoteControllerPool):
                         self.lvars[i].destroy()
                         try:
                             del (self.lvars[i])
+                            del (self.controllers_by_lvar[i])
                             del (self.lvars_by_controller[controller_id][i])
                         except:
                             eva.core.log_traceback()
