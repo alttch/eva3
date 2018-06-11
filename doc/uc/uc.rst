@@ -53,6 +53,8 @@ of the commands.
 
 The minimum value of POLL DELAY is 0.001 (1 millisecond).
 
+.. _uc_ini:
+
 etc/uc.ini configuration file
 -----------------------------
 
@@ -76,7 +78,6 @@ File - normal JSON directory, format:
     {
      "VAR1": "value1",
      "VAR2": "value2"
-     ..............
     }
 
 Variables can be changed while the server is run via :doc:`/sys_api` as well as

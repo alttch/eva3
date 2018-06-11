@@ -160,7 +160,7 @@ Unit parameters
 * **action_exec** a :doc:`script</item_scripts>` which performs the action,
   "xc/uc/ITEMID" by default.
 
-* **action_queue={0|1|2}
+* **action_queue={0|1|2}**
 
   * **0** action queue is disabled, if the action is running, new actions are
     not accepted
