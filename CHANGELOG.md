@@ -42,7 +42,7 @@ EVA ICS CHANGELOG
        (toggles lvar value between 0 and 1)
     - cmd macro function now accepts full controller id (uc/controller_id) as
       well as short
-    - new macro functions: ls, open_oldest, open_newest for the file management
+    - new macro functions for the file management: ls, open_oldest, open_newest
     - new macro functions for lvar management: toggle, clear
 
     SFA:
