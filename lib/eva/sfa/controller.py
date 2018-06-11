@@ -143,7 +143,7 @@ def append_uc(uri,
     if not uc_pool.append(u): return False
     remote_ucs[u.item_id] = u
     if save: u.save()
-    logging.info('controller %s added to pool' % u.item_id)
+    logging.info('controller %s added to pool' % u.full_id)
     return True
 
 
@@ -162,7 +162,7 @@ def remove_uc(controller_id):
             elif i.config_file_exists:
                 configs_to_remove.add(i.get_fname())
             del (remote_ucs[controller_id])
-            logging.info('controller %s removed' % controller_id)
+            logging.info('controller uc/%s removed' % controller_id)
             return True
         except:
             eva.core.log_traceback()
@@ -194,7 +194,7 @@ def append_lm(uri,
     if not lm_pool.append(u): return False
     remote_lms[u.item_id] = u
     if save: u.save()
-    logging.info('controller %s added to pool' % u.item_id)
+    logging.info('controller %s added to pool' % u.full_id)
     return True
 
 
@@ -213,7 +213,7 @@ def remove_lm(controller_id):
             elif i.config_file_exists:
                 configs_to_remove.add(i.get_fname())
             del (remote_lms[controller_id])
-            logging.info('controller %s removed' % controller_id)
+            logging.info('controller lm/%s removed' % controller_id)
             return True
         except:
             eva.core.log_traceback()
@@ -233,18 +233,18 @@ def start():
     for i, v in remote_ucs.items():
         if uc_pool.append(v):
             logging.info('%s added to the controller pool' % \
-                    v.item_id)
+                    v.full_id)
         else:
             logging.error('Failed to add %s to the controller pool' % \
-                    v.item_id)
+                    v.full_id)
     lm_pool = eva.client.remote_controller.RemoteLMPool()
     for i, v in remote_lms.items():
         if lm_pool.append(v):
             logging.info('%s added to the controller pool' % \
-                    v.item_id)
+                    v.full_id)
         else:
             logging.error('Failed to add %s to the controller pool' % \
-                    v.item_id)
+                    v.full_id)
 
 
 def stop():

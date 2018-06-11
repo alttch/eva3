@@ -65,7 +65,7 @@ class RemoteController(eva.item.Item):
         self.config_changed = True
         self.set_group(result['product_code'])
         self.product_build = result['product_build']
-        logging.info('controller %s loaded' % self.item_id)
+        logging.info('controller %s loaded' % self.full_id)
         self.version = result['version']
         msg = '%s time diff is %f sec' % (self.item_id, time_diff)
         if time_diff > _warning_time_diff:
@@ -246,7 +246,7 @@ class RemoteLM(RemoteController):
         if not self.item_id: return None
         macros = self.api_call('list_macros')
         result = []
-        if macros:
+        if macros is not None:
             for m in macros:
                 if 'id' in m and (not skip_system or \
                         ('group' in m and \
@@ -262,7 +262,7 @@ class RemoteLM(RemoteController):
         if not self.item_id: return None
         rules = self.api_call('list_rules')
         result = []
-        if rules:
+        if rules is not None:
             for r in rules:
                 rule = eva.client.remote_item.RemoteDMRule(self, r['id'])
                 result.append(rule)
