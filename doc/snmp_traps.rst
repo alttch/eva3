@@ -59,8 +59,8 @@ Result:
 
 To reset **ident_vars** variable, run the command without -v key.
 
-set_down - processing the failures
-----------------------------------
+set_down - handling the failures
+--------------------------------
 
 When the controller receives the trap notification indicating that the item is
 not available or disabled, its status is set to -1.
@@ -148,20 +148,20 @@ Result:
 
     {
     "snmp_trap": {
-       "set_status": "1.3.6.1.4.1.3855.1.7.17.2"
+       "set_value": "1.3.6.1.4.1.3855.1.7.17.2"
        }
     }
 
 To reset **set_value** variable, run the command without -v key. 
 
-set_if - setting status/value according to the condition
---------------------------------------------------------
+set_if - conditional state updates
+----------------------------------
 
 If the received trap notification contains certain variables but none of them
 can be used to set status and/or value as-is, you can define own rules and set
 the item status/value according to them.
 
-This operates similarly to **set_down**, the only difference is that
+This operates similary to **set_down**, the only difference is that
 **set_down** sets the item status to -1, while **set_if** allows you to set the
 status and/or value on your own.
 
@@ -172,6 +172,8 @@ The variable is set as follows:
 If you don't need to set status or value, set it to null when defining.
 
 For example, let's add two conditions: 
+
+.. code-block:: bash
 
     uc-cmd set_prop -i unit1 -p snmp_trap.set_if -v 1,null:1.3.6.1.4.1.3855.1.7.1.0=4
     uc-cmd set_prop -i unit1 -p snmp_trap.set_if -v null,10:1.3.6.1.4.1.3855.1.7.1.0=2
@@ -185,26 +187,28 @@ Result:
 .. code-block:: json
 
     {
-    "set_if": [
-        {
-               "value": "10",
-               "vars": {
-                   "1.3.6.1.4.1.3855.1.7.1.0": "2"
+    "snmp_trap": {
+        "set_if": [
+            {
+                   "value": "10",
+                   "vars": {
+                       "1.3.6.1.4.1.3855.1.7.1.0": "2"
+                    }
+            },
+            {
+                "status": 1,
+                "vars": {
+                    "1.3.6.1.4.1.3855.1.7.1.0": "4"
                 }
-        },
-        {
-            "status": 1,
-            "vars": {
-                "1.3.6.1.4.1.3855.1.7.1.0": "4"
-            }
-        }]
+            }]
+        }
     }
 
 When the controller receives a trap with OID *1.3.6.1.4.1.3855.1.7.1.0=2*, the
 value of the item is set to 10. When OID *1.3.6.1.4.1.3855.1.7.1.0=4*, the
 status is set to 1.
 
-One item can have multiple *set_if* conditions but they can only be added. You
+One item can have multiple **set_if** conditions but they can only be added. You
 can delete the condition only by deleting the entire **set_if** variable by
 running the command without -v key.
 
