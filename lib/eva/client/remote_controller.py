@@ -299,7 +299,8 @@ class RemoteControllerPool(object):
             controller.pool = self
             t = threading.Thread(
                 target=self._t_reload_controller,
-                name='_t_reload_controller_' + controller.item_id,
+                name='_t_reload_controller_' + controller.item_type + '_' +
+                controller.item_id,
                 args=(controller.item_id,))
             self.reload_thread_flags[controller.item_id] = True
             self.reload_threads[controller.item_id] = t
@@ -584,15 +585,21 @@ class RemoteUCPool(RemoteControllerPool):
                     u.start_processors()
                 p[u.full_id] = u
             if controller_id in self.units_by_controller:
-                for i in self.units_by_controller[controller_id].keys():
+                for i in self.units_by_controller[controller_id].copy().keys():
                     if i not in p:
                         self.units[i].destroy()
                         try:
                             del (self.units[i])
                             del (self.controllers_by_unit[i])
+                            del (self.units_by_controller[controller_id][i])
                         except:
                             eva.core.log_traceback()
-            self.units_by_controller[controller_id] = p
+                for u in units:
+                    if u.full_id not in self.units_by_controller[
+                            controller_id].keys():
+                        self.units_by_controller[controller_id][u.full_id] = u
+            else:
+                self.units_by_controller[controller_id] = p
             logging.debug('Loaded %u units from %s' % (len(p), controller_id))
         else:
             logging.error('Failed to reload units from %s' % controller_id)
@@ -609,14 +616,21 @@ class RemoteUCPool(RemoteControllerPool):
                     u.start_processors()
                 p[u.full_id] = u
             if controller_id in self.sensors_by_controller:
-                for i in self.sensors_by_controller[controller_id].keys():
+                for i in self.sensors_by_controller[
+                        controller_id].copy().keys():
                     if i not in p:
                         self.sensors[i].destroy()
                         try:
                             del (self.sensors[i])
+                            del (self.sensors_by_controller[controller_id][i])
                         except:
                             eva.core.log_traceback()
-            self.sensors_by_controller[controller_id] = p
+                for u in sensors:
+                    if u.full_id not in self.sensors_by_controller[
+                            controller_id].keys():
+                        self.sensors_by_controller[controller_id][u.full_id] = u
+            else:
+                self.sensors_by_controller[controller_id] = p
             logging.debug('Loaded %u sensors from %s' % \
                     (len(p), controller_id))
         else:
@@ -754,19 +768,23 @@ class RemoteLMPool(RemoteControllerPool):
                 if not u.full_id in self.lvars or \
                         self.lvars[u.full_id].is_destroyed():
                     self.lvars[u.full_id] = u
-                    self.controllers_by_lvar[u.full_id] = lm
                     u.start_processors()
                 p[u.full_id] = u
             if controller_id in self.lvars_by_controller:
-                for i in self.lvars_by_controller[controller_id].keys():
+                for i in self.lvars_by_controller[controller_id].copy().keys():
                     if i not in p:
                         self.lvars[i].destroy()
                         try:
                             del (self.lvars[i])
-                            del (self.controllers_by_lvar[i])
+                            del (self.lvars_by_controller[controller_id][i])
                         except:
                             eva.core.log_traceback()
-            self.lvars_by_controller[controller_id] = p
+                for u in lvars:
+                    if u.full_id not in self.lvars_by_controller[
+                            controller_id].keys():
+                        self.lvars_by_controller[controller_id][u.full_id] = u
+            else:
+                self.lvars_by_controller[controller_id] = p
             logging.debug('Loaded %u lvars from %s' % (len(p), controller_id))
         else:
             logging.error('Failed to reload lvars from %s' % controller_id)
@@ -784,15 +802,21 @@ class RemoteLMPool(RemoteControllerPool):
                     u.start_processors()
                 p[u.full_id] = u
             if controller_id in self.macros_by_controller:
-                for i in self.macros_by_controller[controller_id].keys():
+                for i in self.macros_by_controller[controller_id].copy().keys():
                     if i not in p:
                         self.macros[i].destroy()
                         try:
                             del (self.macros[i])
                             del (self.controllers_by_macro[i])
+                            del (self.macros_by_controller[controller_id][i])
                         except:
                             eva.core.log_traceback()
-            self.macros_by_controller[controller_id] = p
+                for u in macros:
+                    if u.full_id not in self.macros_by_controller[
+                            controller_id].keys():
+                        self.macros_by_controller[controller_id][u.full_id] = u
+            else:
+                self.macros_by_controller[controller_id] = p
             logging.debug('Loaded %u macros from %s' % (len(p), controller_id))
         else:
             logging.error('Failed to reload macros from %s' % controller_id)
@@ -801,21 +825,28 @@ class RemoteLMPool(RemoteControllerPool):
         if rules is not None:
             p = {}
             for u in rules:
-                if u.item_id in self.rules and u.controller != lm:
-                    self.rules[u.item_id].destroy()
-                if not u.item_id in self.rules:
-                    self.rules[u.item_id] = u
-                    self.controllers_by_rule[u.item_id] = lm
-                p[u.item_id] = u
+                if u.full_id in self.rules and u.controller != lm:
+                    self.rules[u.full_id].destroy()
+                if not u.full_id in self.rules or \
+                        self.rules[u.full_id].is_destroyed():
+                    self.rules[u.full_id] = u
+                    u.start_processors()
+                p[u.full_id] = u
             if controller_id in self.rules_by_controller:
-                for i in self.rules_by_controller[controller_id].keys():
+                for i in self.rules_by_controller[controller_id].copy().keys():
                     if i not in p:
+                        self.rules[i].destroy()
                         try:
                             del (self.rules[i])
-                            del (self.controllers_by_rule[i])
+                            del (self.rules_by_controller[controller_id][i])
                         except:
                             eva.core.log_traceback()
-            self.rules_by_controller[controller_id] = p
+                for u in rules:
+                    if u.full_id not in self.rules_by_controller[
+                            controller_id].keys():
+                        self.rules_by_controller[controller_id][u.full_id] = u
+            else:
+                self.rules_by_controller[controller_id] = p
             logging.debug('Loaded %u DM rules from %s' % \
                     (len(p), controller_id))
         return True

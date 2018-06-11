@@ -775,12 +775,12 @@ class UpdatableItem(Item):
             return
         self.update_expiration()
         need_notify = False
-        if status is not None:
+        if status is not None and status != '':
             try:
                 self.status = int(status)
             except:
                 logging.info('%s status "%s" is not number, can not set' % \
-                        self.full_id, status)
+                        (self.full_id, status))
                 eva.core.log_traceback()
                 return False
             need_notify = True

@@ -14,6 +14,19 @@ class RemoteDMRule(object):
         self.controller = controller
         self.group = 'dm_rules'
         self.full_id = self.group + '/' + rule_id
+        self._destroyed = False
+
+    def start_processors(self):
+        return True
+
+    def stop_processors(self):
+        return True
+
+    def destroy(self):
+        self._destroyed = True
+
+    def is_destroyed(self):
+        return self._destroyed
 
 
 class RemoteUpdatableItem(eva.item.UpdatableItem):
@@ -71,11 +84,17 @@ class RemoteLVar(RemoteUpdatableItem):
         super().mqtt_set_state(topic, data)
         try:
             if topic.endswith('/expires'):
-                self.expires = float(data)
-                self.notify()
+                try:
+                    self.expires = float(data)
+                    self.notify()
+                except:
+                    pass
             if topic.endswith('/set_time'):
-                self.set_time = float(data)
-                self.notify()
+                try:
+                    self.set_time = float(data)
+                    self.notify()
+                except:
+                    pass
         except:
             eva.core.log_traceback()
 
@@ -113,8 +132,11 @@ class RemoteUnit(RemoteUpdatableItem):
         super().mqtt_set_state(topic, data)
         try:
             if topic.endswith('/nstatus'):
-                self.nstatus = int(data)
-                self.notify()
+                try:
+                    self.nstatus = int(data)
+                    self.notify()
+                except:
+                    pass
             elif topic.endswith('/nvalue'):
                 self.nvalue = data
                 self.notify()
