@@ -97,6 +97,17 @@ class SFA_API(GenericAPI):
             uuid=action_uuid,
             priority=priority)
 
+    def action_toggle(self,
+                      k=None,
+                      i=None,
+                      action_uuid=None,
+                      priority=None,
+                      wait=0):
+        unit = eva.sfa.controller.uc_pool.get_unit(i)
+        if not unit or not apikey.check(k, unit): return None
+        return eva.sfa.controller.uc_pool.action_toggle(
+            unit_id=i, wait=wait, uuid=action_uuid, priority=priority)
+
     def disable_actions(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(i)
         if not unit or not apikey.check(k, unit): return None
@@ -367,6 +378,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         SFA_HTTP_API.state_all.exposed = True
         SFA_HTTP_API.groups.exposed = True
         SFA_HTTP_API.action.exposed = True
+        SFA_HTTP_API.action_toggle.exposed = True
         SFA_HTTP_API.terminate.exposed = True
         SFA_HTTP_API.kill.exposed = True
         SFA_HTTP_API.q_clean.exposed = True
@@ -445,6 +457,33 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
             _q = None
         a = super().action(
             k=k, i=i, action_uuid=u, nstatus=_s, nvalue=v, priority=_p, wait=_w)
+        if not a:
+            raise cp_api_404()
+        return a
+
+    def action_toggle(self, k=None, i=None, u=None, p=None, q=None, w=0):
+        if w:
+            try:
+                _w = float(w)
+            except:
+                raise cp_api_error('wait is not a float')
+        else:
+            _w = None
+        if p:
+            try:
+                _p = int(p)
+            except:
+                raise cp_api_error('priority is not an integer')
+        else:
+            _p = None
+        if q:
+            try:
+                _q = float(q)
+            except:
+                raise cp_api_error('q_timeout is not a float')
+        else:
+            _q = None
+        a = super().action_toggle(k=k, i=i, action_uuid=u, priority=_p, wait=_w)
         if not a:
             raise cp_api_404()
         return a

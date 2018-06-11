@@ -213,6 +213,7 @@ $_eva_api_func = array(
                     'state_all',
                     'groups',
                     'action',
+                    'action_toggle',
                     'terminate',
                     'kill',
                     'q_clean',
@@ -253,6 +254,7 @@ $_eva_api_func = array(
                     ),
                 'ce' => array(
                     'action',
+                    'action_toggle',
                     'run'
                     )
             )
