@@ -84,6 +84,9 @@ class LM_API(GenericAPI):
     def clear(self, k=None, i=None):
         return self.set(k, i, 1, '0')
 
+    def disable(self, k=None, i=None):
+        return self.set(k, i, 0)
+
     def toggle(self, k=None, i=None):
         item = eva.lm.controller.get_lvar(i)
         if not item or not apikey.check(k, item): return None
@@ -434,6 +437,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.set.exposed = True
         LM_HTTP_API.reset.exposed = True
         LM_HTTP_API.clear.exposed = True
+        LM_HTTP_API.disable.exposed = True
         LM_HTTP_API.toggle.exposed = True
         LM_HTTP_API.run.exposed = True
         LM_HTTP_API.result.exposed = True
@@ -502,6 +506,12 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
 
     def clear(self, k=None, i=None):
         if super().clear(k, i):
+            return http_api_result_ok()
+        else:
+            raise cp_api_404()
+
+    def disable(self, k=None, i=None):
+        if super().disable(k, i):
             return http_api_result_ok()
         else:
             raise cp_api_404()

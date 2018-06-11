@@ -60,7 +60,7 @@ relays/programmable switches using a :doc:`control scripts</item_scripts>`. One
 Universal Controller can work with multiple units, but one unit should be
 connected to only one Universal Controller in order to avoid conflicts.
 Nevertheless, for the reliability, one unit can be connected to several
-controllers, if it's state is correctly synchronized via
+controllers, if its state is correctly synchronized via
 :ref:`MQTT<mqtt_>`.
 
 Each unit has its unique ID, for example "lamp1". ID can include numbers,
@@ -147,7 +147,7 @@ Unit parameters
   items run simultaneously.
 
 * **update_timeout** integer, value, time (seconds) in which the script of the
-  passive update should finish it's work or it will be terminated.
+  passive update should finish its work or it will be terminated.
 
 * **action_allow_termination** boolean, allow the currect running action
   termination by external request.
@@ -170,7 +170,7 @@ Unit parameters
     then is being executed
 
 * **action_timeout** integer, value, time (seconds) in which the script of the
-  action should finish it's work or it will be terminated.
+  action should finish its work or it will be terminated.
 
 * **auto_off** integer, the simple automation parameter: the command to turn the
   unit off (call an action to set status = 0) will be executed after the
@@ -231,7 +231,7 @@ The sensor can have 3 statuses:
   set via API or by the user)
 * **-1** sensor error ("expires" timer went off, the status was set because the
   connection with a physical sensor got lost during passive or active update
-  etc), when the sensor is in this status, it's value is not sent via the
+  etc), when the sensor is in this status, its value is not sent via the
   notification system to let the other components work with the last valid data.
 
 .. note::
@@ -242,7 +242,7 @@ The sensor can have 3 statuses:
 Important: the sensor error may be set even if the sensor is disabled. It means
 that the disabled sensor may be switched to "error" and then to "work" mode by
 the system itself. Why it works that way? According to the logic of the system,
-the sensor error is an emergency situation that should affect it's status even
+the sensor error is an emergency situation that should affect its status even
 if it is disabled and requires an immediate attention of the user. If you want
 the sensor not to respond to the external state updates - set it to the
 :doc:`virtual state<virtual>`
@@ -255,6 +255,11 @@ Since the system does not control, but only monitor the sensor, it can
 be easily connected to several :doc:`Universal Controllers</uc/uc>` at once if
 the equipment allows making parallel queries of the state or sending the active
 updates to several addresses at once.
+
+.. note::
+
+    The sensor doesn't set its status to '-1' on *expires* if its status is 0
+    (disabled)
 
 Sensors in EVA hive
 ~~~~~~~~~~~~~~~~~~~
@@ -290,7 +295,7 @@ Actually lvars are similar to sensors, but with the following differences:
   itself. 
 * The logic variables, as well as the sensors, have statuses -1, 0 and 1.
   However, if the status is 0 (variable is disabled) it stops responding to any
-  changes.
+  value-only changes.
 * The logic variables exchange two more parameters with the notification system:
   "expires" (time in seconds after the variable is set, and then takes the null
   value and -1 status) and set_time - a time when the value was set for the
@@ -300,6 +305,11 @@ The same logic variable may be declared on several logic controllers, but the
 "expires" configuration value should remain the same because each controller
 processes it autonomously. The variable becomes "expired" once it is declared
 as such by any controller.
+
+.. note::
+
+    LVar doesn't set its status to '-1' on *expires* if it's status is 0
+    (disabled)
 
 The logic variable values may be synchronized via :ref:`MQTT server<mqtt_>` or
 set via API or external scripts - similar to sensors.
@@ -349,6 +359,31 @@ set by user/system, they have the same parameters, except lvars can't be
 updated via SNMP traps and can't be virtual (lvar is actually virtual by
 default).
 
+.. _lvar_examples:
+
+Examples using LVars
+~~~~~~~~~~~~~~~~~~~~
+
+You may use lvar as a
+
+* **Variable** To use lvar as a shared variable to exchange some information
+  between the controllers, just set its value (and status if you want) and
+  that's it.
+* **Timer**
+  * Set **expires** configuration param
+  * Use **reset** to set lvar status/value to 1 and reset the expiration timer
+  * Use **disable** to set lvar status to 0 and stop it reacting to expiration
+  * Use :doc:`decision rules</lm/decision_matrix>` with the conditions
+    **on_set** and **on_expire** to run the :doc:`macros</lm/macros>` when the
+    timer is set/expired.
+* **Flag**
+  * Use lvar as a simple boolean variable to exchange the information
+    True/False, yes/no, enabled/disabled and etc.
+  * Use **reset** to set lvar value to 1 which should be considered as *True*
+  * Use **clear** to set lvar value to 0 which should be considered as *False*
+  * Use constructions like *if value('lvar_id'):* in :doc:`macros</lm/macros>`
+    to determine is the 'flag' lvar set or not.
+
 .. _multiupdate:
 
 Multiupdates
@@ -359,7 +394,7 @@ use of one :doc:`script</item_scripts>`. This could be reasonable in case all
 items are placed on the same bus or external controller and queried by a single
 command.
 
-Multiupdate is an independant item in the system with it's own configuration
+Multiupdate is an independant item in the system with its own configuration
 and without status and value. In turn, it updates statuses of the included
 items. Multiupdate can be :doc:`virtual<virtual>`.
 

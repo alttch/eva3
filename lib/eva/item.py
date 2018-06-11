@@ -206,6 +206,7 @@ class UpdatableItem(Item):
         self._virtual_allowed = True
         self._mqtt_updates_allowed = True
         self._snmp_traps_allowed = True
+        self._expire_on_any = False
 
     def update_config(self, data):
         if 'virtual' in data and self._virtual_allowed:
@@ -630,7 +631,9 @@ class UpdatableItem(Item):
         logging.debug('%s expiration checker started' % self.full_id)
         while self.expiration_checker_active and self.expires:
             time.sleep(eva.core.polldelay)
-            if self.status != -1 and self.is_expired():
+            if self.status != -1 and \
+                    (self.status != 0 or self._expire_on_any) and \
+                    self.is_expired():
                 logging.debug('%s expired, resetting status/value' % \
                         self.full_id)
                 self.set_expired()
@@ -869,6 +872,7 @@ class ActiveItem(Item):
         self.mqtt_control = None
         self.mqtt_control_notifier = None
         self.mqtt_control_qos = 1
+        self._expire_on_any = True
 
     def q_is_task(self):
         return not self.queue.empty()

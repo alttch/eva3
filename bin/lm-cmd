@@ -91,6 +91,9 @@ LM commands:
     reset <-i id>                             reset lvar when used as a timer,
                                               set status = 1, value = "1"
 
+    disable <-i id>                           disables lvar when used as a
+                                              timer, set status = 0
+
     clear <-i id>                             clears lvar when used as a flag,
                                               set status = 1, value ="0"
 
