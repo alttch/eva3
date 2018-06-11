@@ -372,10 +372,12 @@ You may use lvar as a
 * **Timer**
   * Set **expires** configuration param
   * Use **reset** to set lvar status/value to 1 and reset the expiration timer
-  * Use **disable** to set lvar status to 0 and stop it reacting to expiration
+  * Use **clear** to set lvar status to 0 and stop it reacting to expiration
+    (when used with lvar which have *expires* param set, **clear** changes it's
+    status instead of value)
   * Use :doc:`decision rules</lm/decision_matrix>` with the conditions
     **on_set** and **on_expire** to run the :doc:`macros</lm/macros>` when the
-    timer is set/expired.
+    timer is set/expired
 * **Flag**
   * Use lvar as a simple boolean variable to exchange the information
     True/False, yes/no, enabled/disabled and etc.

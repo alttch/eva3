@@ -85,7 +85,6 @@ class MacroAPI(object):
             'value': self.lvar_value,
             'reset': self.reset,
             'clear': self.clear,
-            'disable': self.disable,
             'toggle': self.toggle,
             'expires': self.expires,
             'action': self.action,
@@ -251,20 +250,19 @@ class MacroAPI(object):
         return self.set(lvar_id=lvar_id, value=1)
 
     def clear(self, lvar_id):
-        return self.set(lvar_id=lvar_id, value=0)
-
-    def disable(self, lvar_id):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
             if not self.pass_errors:
                 raise Exception('lvar unknown: ' + lvar_id)
             return False
-        lvar.update_set_state(status=0)
-        if lvar.status != 0:
-            if not self.pass_errors:
-                raise Exception('lvar disable error: %s' % lvar_id)
-            return False
-        return True
+        if lvar.expires > 0:
+            lvar.update_set_state(status=0)
+            if lvar.status != 0:
+                raise Exception('lvar clear error: %s' % lvar_id)
+                return False
+            return True
+        else:
+            return self.set(lvar_id=lvar_id, value=0)
 
     def toggle(self, lvar_id):
         v = self.lvar_value(lvar_id)

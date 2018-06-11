@@ -65,18 +65,18 @@ _api_func = {
         '/lm-api/',
         'func': [
             'test', 'state', 'groups', 'groups_macro', 'set', 'reset', 'clear',
-            'disable', 'toggle', 'run', 'result', 'get_config', 'save_config',
-            'list', 'list_remote', 'list_controllers', 'list_macros',
-            'create_macro', 'destroy_macro', 'append_controller',
-            'remove_controller', 'list_props', 'list_macro_props',
-            'list_controller_props', 'set_prop', 'set_macro_prop',
-            'set_controller_prop', 'reload_controller', 'create_lvar',
-            'destroy_lvar', 'list_rules', 'list_rule_props', 'set_rule_prop',
-            'create_rule', 'destroy_rule', 'login', 'logout'
+            'toggle', 'run', 'result', 'get_config', 'save_config', 'list',
+            'list_remote', 'list_controllers', 'list_macros', 'create_macro',
+            'destroy_macro', 'append_controller', 'remove_controller',
+            'list_props', 'list_macro_props', 'list_controller_props',
+            'set_prop', 'set_macro_prop', 'set_controller_prop',
+            'reload_controller', 'create_lvar', 'destroy_lvar', 'list_rules',
+            'list_rule_props', 'set_rule_prop', 'create_rule', 'destroy_rule',
+            'login', 'logout'
         ],
         'cr': [
-            'set', 'reset', 'clear', 'disable', 'toggle', 'save_config',
-            'set_prop', 'set_macro_prop', 'set_controller_prop', 'create_macro',
+            'set', 'reset', 'clear', 'toggle', 'save_config', 'set_prop',
+            'set_macro_prop', 'set_controller_prop', 'create_macro',
             'destroy_macro', 'append_controller', 'remove_controller',
             'reload_controller', 'create_lvar', 'destroy_lvar', 'set_rule_prop',
             'create_rule', 'destroy_rule', 'login', 'logout'
