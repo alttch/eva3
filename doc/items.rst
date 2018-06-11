@@ -370,6 +370,7 @@ You may use lvar as a
   between the controllers, just set its value (and status if you want) and
   that's it.
 * **Timer**
+
   * Set **expires** configuration param
   * Use **reset** to set lvar status/value to 1 and reset the expiration timer
   * Use **clear** to set lvar status to 0 and stop it reacting to expiration
@@ -379,6 +380,7 @@ You may use lvar as a
     **on_set** and **on_expire** to run the :doc:`macros</lm/macros>` when the
     timer is set/expired
 * **Flag**
+
   * Use lvar as a simple boolean variable to exchange the information
     True/False, yes/no, enabled/disabled and etc.
   * Use **reset** to set lvar value to 1 which should be considered as *True*

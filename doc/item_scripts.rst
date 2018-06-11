@@ -176,7 +176,7 @@ AE <http://denkovi.com/relay-boards>`_
 
     #!/bin/sh
 
-    ${RELAY1_UPDATE_CMD}.2.0|awk -F\  '{ print $4 
+    ${RELAY1_UPDATE_CMD}.2.0|awk -F\  '{ print $4 }'
 
 where in :ref:`uc_cvars<uc_cvars>`:
 
