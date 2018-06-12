@@ -71,7 +71,7 @@ runtime/uc_cvars.json variables file
 uc_cvars.json - file containing user variables passed to all commands and
 :doc:`item scripts</item_scripts>` within the system environment.
 
-File - normal JSON directory, format:
+The file contais a JSON dict:
 
 .. code-block:: json
 
@@ -81,7 +81,7 @@ File - normal JSON directory, format:
     }
 
 Variables can be changed while the server is run via :doc:`/sys_api` as well as
-:doc:`uc-cmd</cli>` get_cvar and set_cvar commands.
+:doc:`uc-cmd</cli>` **get_cvar** and **set_cvar** commands.
 
 For example, let's create a variable:
 
@@ -161,11 +161,13 @@ Queued action can have the following statuses:
 Startup and shutdown
 --------------------
 
-To manage UC server use ./sbin/uc-control script with the following options:
+To manage UC server use **./sbin/uc-control** script with the following options:
 
 * **start** start UC server
 * **stop** stop UC server
 * **restart** restart UC server
-* **logrotate** call after log rotatino to restart the logging
+* **logrotate** call after log rotation to restart the logging
 * **version** display the server version
 
+The controller startup/shutdown is also performed by **./sbin/eva-control**
+which's configured during the :doc:`system setup</install>`.
