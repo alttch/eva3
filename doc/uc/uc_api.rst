@@ -12,6 +12,16 @@ All functions can be called using GET and POST methods. When POST method is
 being used, the parameters can be passed to functions eitner as www-form or as
 JSON.
 
+.. note::
+
+    Object creation and modification functions don't save configurations
+    automatically unless you specify **save** parameter in API request. The
+    system is designed to work in this way to let you discard the changes in
+    case of the serious problems by killing the controller process.
+
+    If you need to save any changes made without this parameter, restart the
+    controller gracefully or use :doc:`/sys_api` **save** function.
+
 .. contents::
 
 .. _uc_test:

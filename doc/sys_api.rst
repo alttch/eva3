@@ -309,9 +309,9 @@ save - save database and runtime configuration
 ----------------------------------------------
 
 All modified items, their status, and configuration will be written to the
-disk. *exec_before_save* command defined in the controller's configuration file
-is called before recording and *exec_after_save* after (i.e. to switch the
-partition to write mode and back to read-only).
+disk. If **exec_before_save** command is defined in the controller's
+configuration file is called before saving and **exec_after_save** after (i.e.
+to switch the partition to write mode and back to read-only).
 
 Parameters:
 
@@ -374,7 +374,7 @@ returns JSON array:
 
 .. code-block:: json
 
-	[
+    [
         {
             "key": "masterkey",
             "user": "admin"
