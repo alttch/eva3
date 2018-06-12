@@ -11,18 +11,17 @@ https://eva-ics.readthedocs.io
 
 Emergency interfaces
 
-    * _fixes_: correct display of long item names
-    * _fixes_: various bug _fixes_
-    
+    * fixes: correct display of long item names
+    * fixes: various bug fixes
     * refresh buttons on item pages
     * LM EI: reset button and expire timer in LM EI show/hide when prop changed
 
 Core:
 
-    * _fixes_: remove empty controller group when all objects are deleted
-    * _fixes_: remote items correctly display state in list_remote
-    * _fixes_: disabled sensors and lvars shouldn**t react to an expiration
-    * each set_prop call now logs what**s actually changed
+    * fixes: remove empty controller group when all objects are deleted
+    * fixes: remote items correctly display state in list_remote
+    * fixes: disabled sensors and lvars shouldn't react to an expiration
+    * each set_prop call now logs what's actually changed
     * added item oid (type:group/item_id) - reserved for the future releases
     * added stop_on_critical option in config (default: yes),
        server will be restarted via safe-run if critical exception occur
@@ -49,7 +48,7 @@ LM PLC:
 
 SFA:
 
-    * _fixes_: dm_rule_props acl in SFA
+    * fixes: dm_rule_props acl in SFA
     * list_remote returns array instead of dict + controller_id proprety
     * list_macros contains now controller property
     * append_controller now tries to autodetect controller type if no type
@@ -72,28 +71,28 @@ Core:
     * EVA_ITEM_PARENT_GROUP variable in script ENV which contains the parent
        group of the item
     * cvars now can be set as global or assigned to the specified item group
-       i.e. **VAR1** - global cvar, available to the all scripts,
-       **group1/VAR2** - variable available only to scripts from group
-       **group1** (as **VAR2**), **group2/VAR2** - variable available only to
-       group **group2** (also as **VAR2**).  Used by UC scripts to let one
+       i.e. 'VAR1' - global cvar, available to the all scripts,
+       'group1/VAR2' - variable available only to scripts from group
+       'group1' (as 'VAR2'), 'group2/VAR2' - variable available only to
+       group 'group2' (also as 'VAR2').  Used by UC scripts to let one
        script manage different items
 
 Universal Controller:
 
-    * **update_delay** - item passive update may start with a delay to prevent
+    * 'update_delay' - item passive update may start with a delay to prevent
        multiple updates run simultaneously producing high system load
 
 UC API and uc-cmd:
 
-    * **clone** function in UC API and uc-cmd to clone items
-    * **clone_group** function in UC API and uc-cmd for cloning all matching
+    * 'clone' function in UC API and uc-cmd to clone items
+    * 'clone_group' function in UC API and uc-cmd for cloning all matching
        items in a group
-    * **destroy_group** function destroys all items in the specified group
+    * 'destroy_group' function destroys all items in the specified group
 
 Logic Manager:
 
-    * item id in LM rules match by simple mask (i.e. **\*id\*** or **id\*** or
-       **\*id**)
+    * item id in LM rules match by simple mask (i.e. '\*id\'* or 'id\'* or
+       '\*id')
 
 3.0.0
 -----
