@@ -7,7 +7,7 @@ EVA ICS CHANGELOG
     Bugfix release, some new urgent features, stability improvements
 
     EVA documentation is now available in reStructuredText format and at
-    http://eva-ics.readthedocs.io
+    https://eva-ics.readthedocs.io
 
     Emergency interfaces
 
