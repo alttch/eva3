@@ -241,7 +241,7 @@ params:
 Returns status (integer) of logic variable, *None* if variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
-config and the variale is not found.
+config and the variable is not found.
 
 lvar_value, value - get logic variable value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -260,7 +260,7 @@ Returns value (float if the value is numeric) of logic variable, *None* if
 variable is not found. If the value is *null*, returns an empty string.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
-config and the variale is not found.
+config and the variable is not found.
 
 set - set logic variable value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -277,7 +277,7 @@ params:
 Returns *True* on success, *False* if variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
-config and the variale is not found.
+config and the variable is not found.
 
 .. _m_clear:
 
@@ -301,7 +301,7 @@ params:
 Returns *True* on success, *False* if variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
-config and the variale is not found.
+config and the variable is not found.
 
 toggle - toggle a flag value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -320,7 +320,7 @@ params:
 Returns *True* on success, *False* if variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
-config and the variale is not found.
+config and the variable is not found.
 
 expires - set the lvar expiration time
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -345,7 +345,7 @@ back after the timer reset (not before!).
 Returns *True* on success, *False* if variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
-config and the variale is not found.
+config and the variable is not found.
 
 is_expired - check timer expiration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -365,7 +365,7 @@ Returns *True* if lvar has expired status (timer is finished), equal to checking
 *status==1 and value==''*, *False* if lvar is not expired or not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
-config and the variale is not found.
+config and the variable is not found.
 
 unit_status - get unit status
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -478,7 +478,8 @@ params:
 * **value** unit new value
 * **wait** wait (seconds) for the action execution
 * **uuid** set action uuid (generated automatically if not set)
-* **priority** action priority on the controller (default 100, lower is higher)
+* **priority** action priority on the controller (default 100, lower value
+  means higher priority)
 
 Returns result in the same dict format as UC API :ref:`action<uc_action>`
 function, *None* if unit is not found.
@@ -511,6 +512,12 @@ action with the specified uuid.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
+
+.. note::
+
+    macro **result** function returns the execution result of unit action,
+    while :ref:`result<lm_result>` function of LM API returns the execution
+    results of local macros only.
 
 terminate - terminate the current action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -604,8 +611,7 @@ params:
 * **sensor_id** :ref:`sensor<sensor>` id (full)
 
 Returns value (float if the value is numeric) of sensor state, *None* if sensor
-is not found. If the value is *null*, returns an empty string.  Returns value
-(integer) of sensor, *None* if sensor is not found.
+is not found. If the value is *null*, returns an empty string.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the sensor is not found.
@@ -613,3 +619,117 @@ config and the sensor is not found.
 System functions
 ----------------
 
+.. _m_sleep:
+
+sleep - pause operations
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    # alias for python time.sleep
+    sleep(seconds.milliseconds)
+
+
+mail - send email message
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    mail(subject=None, text=None, rcp=None)
+
+params:
+
+* **subject** email subject
+* **text** email text
+* **rcp** recipient or array of the recipients
+
+The function use **[mailer]** section of the :ref:`LM PLC
+configuration<lm_ini>` to get sender address and list of the recipients (if not
+specified).
+
+Returns *True* if the message is sent successfully.
+
+get - HTTP/GET request
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    # alias for requests.get
+    get(uri, args)
+
+See `requests <http://docs.python-requests.org/en/master/>`_ documentation for
+more info.
+
+post - HTTP/POST request
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    # alias for requests.post
+    post(uri, args)
+
+See `requests <http://docs.python-requests.org/en/master/>`_ documentation for
+more info.
+
+system - execute OS command
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    # alias for python os.system
+    system(command)
+
+
+.. _m_cmd:
+
+cmd - execute command script
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Executes a :ref:`command script<cmd>` on the chosen controller.
+
+.. code-block:: python
+
+    cmd(controller_id, command, args=None, wait=None, timeout=None)
+
+params:
+
+* **controller_id** controller id where the script is located (full or short)
+* **command** script command name
+* **args** script command arguments (array or separated with spaces in a
+  string)
+* **wait** wait for the command result (in seconds)
+* **timeout** max command execution time
+
+Returns the result equal to the result of SYS API :ref:`cmd<s_cmd>` function.
+
+.. _m_run:
+
+run - execute another local macro
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    run(macro_id, argv=None, wait=0, uuid=None, priority=None)
+
+params:
+
+* **macro_id** local macro id (full or short)
+* **argv** execution arguments
+* **wait** wait (in seconds) for the result
+* **uuid** macro action uuid (generated automatically if not set)
+* **priority** action priority (default 100, lower value means higher priority)
+
+Returns the result equal to the result of LM API :ref:`run<lm_run>` function.
+
+exit - exit macro
+~~~~~~~~~~~~~~~~~
+
+Finishes macro execution
+
+.. code-block:: python
+
+    exit(code=0)
+
+params:
+
+* **code** macro exit code (0 - no errors)
