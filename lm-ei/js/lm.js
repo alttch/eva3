@@ -105,7 +105,7 @@ function redraw_lvar_state(i) {
     rb.hide();
   }
   $('[id="lval_expires_' + i + '"]').html(
-    format_expire_time(items[i].set_time, items[i].expires)
+    format_expire_time(items[i])
   );
   $('[id="lval_expires_e_' + i + '"]').html(_e_label);
 }
@@ -141,10 +141,10 @@ function load_lvar_state() {
 
 function update_lvar_timers() {
   $.each(items, function(k, i) {
-    if (i.status != -1 && i.value != 'null') {
+    if (i.status == 1 && i.value != 'null') {
       if (i.expires > 0) {
         $('[id="lval_expires_' + k + '"]').html(
-          format_expire_time(i.set_time, i.expires)
+          format_expire_time(i)
         );
       }
     } else {
@@ -283,9 +283,10 @@ function select_lvar_state(uid) {
   );
 }
 
-function format_expire_time(s, e) {
-  if (e == 0) return '';
-  var t = e - new Date().getTime() / 1000 + tsdiff + s;
+function format_expire_time(i) {
+  if (i.expires == 0) return '';
+  if (i.status == 0) return '0.0';
+  var t = i.expires - new Date().getTime() / 1000 + tsdiff + i.set_time;
   if (t < 0) return '0.0';
   return Number(Math.round(t * 10) / 10).toFixed(1);
 }
@@ -318,7 +319,7 @@ function load_lvars() {
         $('<span />', {
           id: 'lval_expires_' + uid,
           class: 'lval',
-          html: format_expire_time(val.set_time, val.expires)
+          html: format_expire_time(val)
         }).appendTo(_lvar_expires);
         $('<span />', {
           class: 'lval',
