@@ -113,8 +113,8 @@ should take into account the following: if macro runs other macros via
 :ref:`run<m_run>` function, these macros will be executed even if the API key
 allows to run only the initial macro.
 
-Macro functions and variables
------------------------------
+Macros built-ins
+----------------
 
 Macros can execute any Python functions or use Python modules installed on the
 local server. In addition macros have a set of the built-in functions and
@@ -125,8 +125,8 @@ functions as well as :doc:`lm_api` and :doc:`/uc/uc_api`. While calling API
 function, item id is always transmitted in full. For calling other macros and
 working with logic variables it is possible to use the short ids only.
 
-Macro variables
-~~~~~~~~~~~~~~~
+Variables
+---------
 
 Macros have the following built-in variables:
 
@@ -153,3 +153,68 @@ Macros have the following built-in variables:
     into float type
 
 
+Log messaging functions
+-----------------------
+
+Macros may send messages to the log systems with the following functions:
+
+* **debug(msg)** send DEBUG level message
+* **info(msg)** send INFO level message
+* **warning(msg)** send WARNING message
+* **error(msg)** send ERROR message
+* **critical(msg)** send  CRITICAL message
+
+In addition, **print** function is an alias of **info**.
+
+Shared variables
+----------------
+
+Apart from from the :ref:`logic variables<lvar>` macros can exchange variables
+within the single controller with the following functions:
+
+* **shared(varname)** get value of the shared variable
+* **set_shared(varname, value)** set value of the shared variable
+
+Shared variables are not saved in case the controller is restarted.
+
+Locking features
+----------------
+
+These functions implement internal locking which may be used i.e. to block
+other macros to run until the current one is finished.
+
+.. _m_lock:
+
+lock - lock token request
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    lock(lock_id, timeout=None, expires=None)
+
+params:
+
+* **lock_id** unique lock id (defined by user)
+* **timeout** lock request timeout (in seconds)
+* **expires** time (seconds) after which lock is automatically released
+
+Returns *True*, if lock has been requested successfully, *False* in case of the
+failure.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the locking wasn't successful.
+
+.. _m_unlock:
+
+unlock - release lock token
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    unlock(lock_id)
+
+params:
+
+* **lock_id** unique lock id (defined by user)
+
+Unlike the SYS API :ref:`unlock<s_unlock>` function, always returns True, even if lock doesn't exist.
