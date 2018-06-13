@@ -379,6 +379,9 @@ You may use lvar as a
   * Use :doc:`decision rules</lm/decision_matrix>` with the conditions
     **on_set** and **on_expire** to run the :doc:`macros</lm/macros>` when the
     timer is set/expired
+  * if the timer has status set to *1*, it's running
+  * if status is *0*, it's disabled with **clear** function
+  * if status is *-1* and value is *null* (empty), the timer is expired
 * **Flag**
 
   * Use lvar as a simple boolean variable to exchange the information
