@@ -35,7 +35,7 @@ UC:
 
 LM PLC:
 
-    * list_remote returns array instead of dict + controller_id proprety
+    * list_remote returns array + controller_id proprety instead of dict
     * result function in macro api. terminate and result function accept action
        uuid as a param
     * on_set lm rule (status changed to 1)

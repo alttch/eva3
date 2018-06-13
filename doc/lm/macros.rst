@@ -220,4 +220,268 @@ params:
 * **lock_id** unique lock id (defined by user)
 
 Unlike the SYS API :ref:`unlock<s_unlock>` function, this one always returns
-True, even if lock doesn't exist.
+*True*, even if lock doesn't exist.
+
+Item functions
+--------------
+
+The following functions are used to control the :doc:`items</items>`:
+
+lvar_status - get logic variable status
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    lvar_status(lvar_id)
+
+params:
+
+* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+
+Returns status (integer) of logic variable, *None* if variable is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the variale is not found.
+
+lvar_value, value - get logic variable value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    lvar_value(lvar_id)
+    # is equal to
+    value(lvar_id)
+
+params:
+
+* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+
+Returns value (float if the value is numeric) of logic variable, *None* if
+variable is not found. If the value is *null*, returns an empty string.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the variale is not found.
+
+set - set logic variable value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    set(lvar_id, value=None)
+
+params:
+
+* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **value** value to set. If not specified, variable is set to *null*
+
+Returns *True* on success, *False* if variable is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the variale is not found.
+
+.. _m_clear:
+
+clear - stop timer/flag clear
+-----------------------------
+
+If lvar is being used as a timer and has **expires** set, this function sets
+it's status to *0* which works like a timer stop.
+
+If lvar is being used as a flag and has no expiration, this sets it's value to
+*0* which works like setting flag to *False*
+
+.. code-block:: python
+
+    clear(lvar_id)
+
+params:
+
+* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+
+Returns *True* on success, *False* if variable is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the variale is not found.
+
+toggle - toggle a flag value
+----------------------------
+
+Sets lvar value to *1* if it has value *"0"*, otherwise *"1"*. If lvar is being
+used as a flag, this works like a switching between *False* and *True*.
+
+.. code-block:: python
+
+    toggle(lvar_id)
+
+params:
+
+* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+
+Returns *True* on success, *False* if variable is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the variale is not found.
+
+expires - set the lvar expiration time
+--------------------------------------
+
+Function is used to set/change lvar expiration time and is useful for changing
+timers' durations.
+
+.. code-block:: python
+
+    expires(lvar_id, etime=0)
+
+params:
+
+* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **etime** new expiration time (in seconds)
+
+If expires is not defined or set to zero, the function stops a timer, but apart
+from :ref:`clear<m_clear>` completely disables a timer by setting it's
+expiration to 0. To return the timer back to work, set it's expiration time
+back after the timer reset (not before!).
+
+Returns *True* on success, *False* if variable is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the variale is not found.
+
+is_expired - check timer expiration
+-----------------------------------
+
+Function is useful when lvar is being used as a timer to quickly check is it
+still running or not.
+
+.. code-block:: python
+
+    is_expired(lvar_id)
+
+params:
+
+* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+
+Returns *True* if lvar has expired status (timer is finished), equal to checking
+*status==1 and value==''*, *False* if lvar is not expired or not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the variale is not found.
+
+unit_status - get unit status
+-----------------------------
+
+.. code-block:: python
+
+    unit_status(unit_id)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+
+Returns status (integer) of unit, *None* if unit is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the unit is not found.
+
+unit_value - get unit value
+---------------------------
+
+.. code-block:: python
+
+    unit_value(unit_id)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+
+Returns value (float if the value is numeric) of unit state, *None* if unit is
+not found. If the value is *null*, returns an empty string.  Returns value
+(integer) of unit, *None* if unit is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the unit is not found.
+
+unit_nstatus - get unit future status
+-------------------------------------
+
+.. code-block:: python
+
+    unit_nstatus(unit_id)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+
+Returns future status (integer) of unit, *None* if unit is not found. If the
+unit has no action running, future status is equal to the current.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the unit is not found.
+
+unit_nvalue - get unit future value
+-----------------------------------
+
+.. code-block:: python
+
+    unit_nvalue(unit_id)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+
+Returns value (float if the value is numeric) of unit state, *None* if unit is
+not found. If the value is *null*, returns an empty string.  Returns value
+(integer) of unit, *None* if unit is not found. If the unit has no action
+running, future state value is equal to the current.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the unit is not found.
+
+is_busy - check if the unit has action running
+----------------------------------------------
+
+Compares current and future unit state, the difference means the unit currently
+is running an action and is busy.
+
+.. code-block:: python
+
+    is_busy(unit_id)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+
+Returns *True* if unit is currently running an action and its future state is
+different from the current. *False* if states are equal and it means unit has
+no action running, *None* if unit is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the unit is not found.
+
+action, start, stop - start unit action
+---------------------------------------
+
+Starts the action for the unit.
+
+.. code-block:: python
+
+    action(unit_id, status, value=None, wait=0, uuid=None, priority=None)
+    # same as action with status=1
+    start(unit_id, value=None, wait=0, uuid=None, priority=None)
+    # same as action with status=0
+    stop(unit_id, value=None, wait=0, uuid=None, priority=None)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+* **status** unit new status
+* **value** unit new value
+* **wait** wait (seconds) for the action execution
+* **uuid** set action uuid (generated automatically if not set)
+* **priority** action priority on the controller (default 100, lower is higher)
+
+Returns result in the same dict format as UC API :ref:`action<uc_action>`
+function, *None* if unit is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the unit is not found.
