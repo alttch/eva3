@@ -22,7 +22,7 @@ Executing macros
 ----------------
 
 To execute a macro, use **run** command of :doc:`lm-cmd</cli>` or LM API
-:ref:`run<l_run>` function.
+:ref:`run<lm_run>` function.
 
 Debugging macros
 ----------------
@@ -41,12 +41,12 @@ Macros configuration
 --------------------
 
 After the macro code is placed into *xc/lm/<macro_id>.py* file, it should be
-appended to the controller using :ref:`create_macro<l_create_macro>` LM API
+appended to the controller using :ref:`create_macro<lm_create_macro>` LM API
 function or with **lm-cmd**.
 
 After the macro configuration is created, you may view it's params using
-:ref:`list_macro_props<l_list_macro_props>` and change them with
-:ref:`set_macro_prop<l_set_macro_prop>`.
+:ref:`list_macro_props<lm_list_macro_props>` and change them with
+:ref:`set_macro_prop<lm_set_macro_prop>`.
 
 Parameters:
 
@@ -282,7 +282,7 @@ config and the variale is not found.
 .. _m_clear:
 
 clear - stop timer/flag clear
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If lvar is being used as a timer and has **expires** set, this function sets
 it's status to *0* which works like a timer stop.
@@ -304,7 +304,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variale is not found.
 
 toggle - toggle a flag value
-----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Sets lvar value to *1* if it has value *"0"*, otherwise *"1"*. If lvar is being
 used as a flag, this works like a switching between *False* and *True*.
@@ -323,7 +323,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variale is not found.
 
 expires - set the lvar expiration time
---------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Function is used to set/change lvar expiration time and is useful for changing
 timers' durations.
@@ -348,7 +348,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variale is not found.
 
 is_expired - check timer expiration
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Function is useful when lvar is being used as a timer to quickly check is it
 still running or not.
@@ -368,7 +368,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variale is not found.
 
 unit_status - get unit status
------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -384,7 +384,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 unit_value - get unit value
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -402,7 +402,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 unit_nstatus - get unit future status
--------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -419,7 +419,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 unit_nvalue - get unit future value
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -438,7 +438,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 is_busy - check if the unit has action running
-----------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Compares current and future unit state, the difference means the unit currently
 is running an action and is busy.
@@ -459,7 +459,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 action, start, stop - start unit action
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Starts the action for the unit.
 
@@ -485,3 +485,131 @@ function, *None* if unit is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
+
+result - get action result
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Obtain action result, either all results for the unit by **unit_id** or the
+particual action result by **uuid**
+
+.. code-block:: python
+
+    result(unit_id=None, uuid=None)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+* **uuid** action uuid
+
+Either **unit_id** or **uuid** must be specified. The controller can obtain the
+result by uuid only if the action was executed by its API or macro function and
+the controller hasn't been restarted after that.
+
+Returns result in the same dict format as UC API :ref:`result<uc_result>`
+function, *None* if unit is not found or controller doesn't know about the
+action with the specified uuid.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the unit is not found.
+
+terminate - terminate the current action
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Terminate the current unit action, either by **unit_id** or the by action
+**uuid**
+
+.. code-block:: python
+
+    terminate(unit_id=None, uuid=None)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+* **uuid** action uuid
+
+Either **unit_id** or **uuid** must be specified. The controller can terminate
+the action by uuid only if it was executed by its API or macro function and the
+controller hasn't been restarted after that.
+
+Returns termination result in the same dict format as UC API
+:ref:`terminate<uc_terminate>` function, *None* if unit is not found, the
+controller doesn't know about the action with the specified uuid or the remote
+action doesn't exist (or is already finished).
+
+Doesn't raise any exceptions.
+
+q_clean - clean unit action queue
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Cleans the unit action queue but keeps the current action running if it already
+has been started.
+
+.. code-block:: python
+
+    q_clean(unit_id=None)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+
+Returns queue clean result in the same dict format as UC API
+:ref:`q_clean<uc_q_clean>` function, *None* if unit is not found.
+
+Doesn't raise any exceptions.
+
+kill - clean unit queue and terminate current action
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Cleans the unit action queue and terminates the current action running if it
+already has been started.
+
+.. code-block:: python
+
+    kill(unit_id=None)
+
+params:
+
+* **unit_id** :ref:`unit<unit>` id (full)
+
+Returns queue clean result in the same dict format as UC API
+:ref:`kill<uc_kill>` function, *None* if unit is not found.
+
+Doesn't raise any exceptions.
+
+sensor_status - get sensor status
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    sensor_status(sensor_id)
+
+params:
+
+* **sensor_id** :ref:`sensor<sensor>` id (full)
+
+Returns status (integer) of sensor, *None* if sensor is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the sensor is not found.
+
+sensor_value - get sensor value
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    sensor_value(sensor_id)
+
+params:
+
+* **sensor_id** :ref:`sensor<sensor>` id (full)
+
+Returns value (float if the value is numeric) of sensor state, *None* if sensor
+is not found. If the value is *null*, returns an empty string.  Returns value
+(integer) of sensor, *None* if sensor is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the sensor is not found.
+
+System functions
+----------------
+
