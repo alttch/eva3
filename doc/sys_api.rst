@@ -310,8 +310,8 @@ save - save database and runtime configuration
 
 All modified items, their status, and configuration will be written to the
 disk. If **exec_before_save** command is defined in the controller's
-configuration file is called before saving and **exec_after_save** after (i.e.
-to switch the partition to write mode and back to read-only).
+configuration file, it's called before saving and **exec_after_save** after
+(i.e.  to switch the partition to write mode and back to read-only).
 
 Parameters:
 

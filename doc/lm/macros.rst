@@ -18,6 +18,8 @@ Macros are compiled into byte-code each time after macros file or **common.py**
 file are changed. Compilation or execution errors can be viewed in the log
 files of the controller.
 
+.. contents::
+
 Executing macros
 ----------------
 
