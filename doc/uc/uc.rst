@@ -80,8 +80,8 @@ The file contais a JSON dict:
      "VAR2": "value2"
     }
 
-Variables can be changed while the server is run via :doc:`/sys_api` as well as
-:doc:`uc-cmd</cli>` **get_cvar** and **set_cvar** commands.
+Variables can be changed while the server is runing via :doc:`/sys_api` as well
+as :doc:`uc-cmd</cli>` **get_cvar** and **set_cvar** commands.
 
 For example, let's create a variable:
 

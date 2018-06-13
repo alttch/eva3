@@ -10,11 +10,11 @@ Macro code is located the file written in Python and located in the folder
 id should be unique within the single LM PLC, full id (group/id) - within the
 whole installation.
 
-Additionally, each macro is automatically appended with common.py file located
-in the same folder enabling to quickly assign common functions to several
-macros without using modules.
+Additionally, each macro is automatically appended with **common.py** file
+located in the same folder enabling to quickly assign common functions to
+several macros without using modules.
 
-Macros are compiled into byte-code each time after macros file or common.py
+Macros are compiled into byte-code each time after macros file or **common.py**
 file are changed. Compilation or execution errors can be viewed in the log
 files of the controller.
 
@@ -40,24 +40,25 @@ To receive information about an errors you may run the following command:
 Macros configuration
 --------------------
 
-After the macros code is placed into *xc/lm/<macro_id>.py* file, it should be
+After the macro code is placed into *xc/lm/<macro_id>.py* file, it should be
 appended to the controller using :ref:`create_macro<l_create_macro>` LM API
 function or with **lm-cmd**.
 
-After the macros is attached, you may configure it's params using
+After the macro configuration is created, you may view it's params using
+:ref:`list_macro_props<l_list_macro_props>` and change them with
 :ref:`set_macro_prop<l_set_macro_prop>`.
 
 Parameters:
 
 * **id** macros id, can't be modified after the macro is created
-* **action_enabled** *true* means macro can be executed (true by default) *
-  **action_exec** controller gets the code of the macro from the file
-  *<macro_id>.py* by default, use this parameter to assign another file.
+* **action_enabled** *true* means macro can be executed (true by default)
+* **action_exec** controller gets the code of the macro from the file
+  *<macro_id>.py* by default, use this parameter to assign another file
 * **description** macro description
 * **group** macro group (in difference to other objects, macro group can be
   changed after creation)
 * **pass_errors** if *true*, in case the function called by macro is completed
-  with an exception, the controller ignores this and continue the code
+  with an exception, the controller ignores this and continues the code
   execution (false by default)
 
 Common principles of macros operation
@@ -65,7 +66,7 @@ Common principles of macros operation
 
 Macros are launched simultaneously: system does not wait for the completion of
 the macro and launches its next copy or another macro in parallel. If you want
-only one copy of macro to operate at a certain point of tme or to block
+only one copy of macro to operate at the certain point of time or to block
 execution of the other macros, use macro :ref:`lock<m_lock>` and
 :ref:`unlock<m_unlock>` functions.
 
@@ -79,8 +80,8 @@ matrix<decision_matrix>`. The working cycles should be implemented with
 System macros
 -------------
 
-If defined, macro called *system/autoexec* is launched automatically after
-controller start. The macro is not always the first one executed, as far as
+If defined, macro named **system/autoexec** is launched automatically at the
+controller startup. This macro is not always the first one executed, as far as
 some initial :doc:`decision-making rules<decision_matrix>` may call assigned
 macros, or some events may be handled before. In case macro is launched later
 than :ref:`logic variables<lvar>` or other loadable items update their status
@@ -90,7 +91,7 @@ to use :ref:`sleep<m_sleep>` function to do a small delay.
 Macros from **system** group are considered as the local system macros and
 aren't synchronized to :doc:`SFA</sfa/sfa>`.
 
-Example of *autoexec* macro usage:
+Example of **autoexec** macro usage:
 
 .. code-block:: python
 
@@ -104,12 +105,12 @@ Example of *autoexec* macro usage:
 Macros and security
 -------------------
 
-As all Python features are available for macro, including the execution of the
-external programs or working with any local files, code of the macros should be
-edited only by the system administrator.
+As all Python features are available for the macros, including the execution of
+the external programs or working with any local files, code of the macros
+should be edited only by the system administrator.
 
 If access permissions to the individual macros are configured via API keys, you
-should take into account the following: if macro runs other macros via
+should take into account the following: if macro runs other macros using
 :ref:`run<m_run>` function, these macros will be executed even if the API key
 allows to run only the initial macro.
 
@@ -117,13 +118,13 @@ Macros built-ins
 ----------------
 
 Macros can execute any Python functions or use Python modules installed on the
-local server. In addition macros have a set of the built-in functions and
+local server. In addition, macros have a set of the built-in functions and
 variables.
 
-Built-in functions are include for quick access to most frequently used Python
-functions as well as :doc:`lm_api` and :doc:`/uc/uc_api`. While calling API
-function, item id is always transmitted in full. For calling other macros and
-working with logic variables it is possible to use the short ids only.
+Built-in functions are include for quick access of the most frequently used
+Python functions as well as :doc:`lm_api` and :doc:`/uc/uc_api`. When calling
+API function, item id is always transmitted in full. When calling other macros
+and working with logic variables, it's possible to use the short ids only.
 
 Variables
 ---------
@@ -135,8 +136,8 @@ Macros have the following built-in variables:
 * **yes** alias to boolean *True*
 * **no** alias to boolean *False*
 
-* **_source** item generated the :doc:`event<decision_matrix>` used by the
-  system to call this macro. You may directly access the item and i.e. use it's
+* **_source** item generated the :doc:`event<decision_matrix>`, used by the
+  system to call the macro. You may directly access the item and i.e. use it's
   internal variables such as *_source.item_id*, *_source.full_id*,
   *_source.oid* etc.
 * **argv** array list of arguments the macro is being executed with
@@ -149,14 +150,15 @@ Macros have the following built-in variables:
 
 .. note::
 
-    if macro arguments/lm_cvars are numbers, they're automatically converted
-    into float type
+    if macro arguments or lm_cvars are numbers, they are automatically converted
+    to float type
 
 
 Log messaging functions
 -----------------------
 
-Macros may send messages to the log systems with the following functions:
+Macros may send messages to the log of the controller with the following
+functions:
 
 * **debug(msg)** send DEBUG level message
 * **info(msg)** send INFO level message
@@ -169,7 +171,7 @@ In addition, **print** function is an alias of **info**.
 Shared variables
 ----------------
 
-Apart from from the :ref:`logic variables<lvar>` macros can exchange variables
+Apart from the :ref:`logic variables<lvar>` macros, can exchange variables
 within the single controller with the following functions:
 
 * **shared(varname)** get value of the shared variable
@@ -217,4 +219,5 @@ params:
 
 * **lock_id** unique lock id (defined by user)
 
-Unlike the SYS API :ref:`unlock<s_unlock>` function, always returns True, even if lock doesn't exist.
+Unlike the SYS API :ref:`unlock<s_unlock>` function, this one always returns
+True, even if lock doesn't exist.
