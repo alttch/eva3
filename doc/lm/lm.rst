@@ -42,6 +42,8 @@ lm.ini - primary configuration file of LM PLC
 .. literalinclude:: ../../etc/lm.ini-dist
     :language: ini
 
+.. _lm_cvars:
+
 runtime/lm_cvars.json variables file
 ------------------------------------
 
