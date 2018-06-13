@@ -272,14 +272,14 @@ class MacroAPI(object):
         else:
             return self.reset(lvar_id)
 
-    def expires(self, lvar_id, expires=0):
+    def expires(self, lvar_id, etime=0):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
             if not self.pass_errors:
                 raise Exception('lvar unknown: ' + lvar_id)
             return False
         try:
-            result = lvar.set_prop('expires', expires, save=False)
+            result = lvar.set_prop('expires', etime, save=False)
             if not self.pass_errors and not result:
                 raise Exception('lvar expire set error')
             return result
