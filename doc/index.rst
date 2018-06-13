@@ -93,7 +93,7 @@ System documentation
 
     * :doc:`/uc/uc_api` - API of the Universal Controller subsystem
     * :ref:`unit` - controlled item
-    * :ref:`sensor` - monitoring item
+    * :ref:`sensor` - monitored item
     * :doc:`/item_scripts` - action and update scripts
     * :doc:`/virtual`
 
