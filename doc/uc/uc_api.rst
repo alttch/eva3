@@ -50,7 +50,7 @@ masterkey only  'master':true is returned)
                 "windows",
                 "hall/+"
             ],
-           "items": [],
+            "items": [],
             "key_id": "key1",
             "master": false,
             "sysfunc": false
@@ -74,17 +74,17 @@ state - get item state
 ----------------------
 
 State of the :doc:`item</items>` or all items of the specified type can be
-obtained using *state* command.
+obtained using **state** command.
 
 Parameters:
 
 * **k** valid API key
-* **i=ID** item ID
-* **p=TYPE** item type (short forms U for unit, S for sensor may be used)
+* **i** item ID
+* **p** item type (short forms U for unit, S for sensor may be used)
 * **g** group filter, optional :ref:`mqtt<mqtt_>` masks can be used, for
   example group1/#, group1/+/lamps)
-* **full=1** display extended item info, optional (config_changed, description,
-  virtual, status_labels and action_enabled for unit)
+* **f** if *1*, display extended item info, optional (config_changed,
+  description, virtual, status_labels and action_enabled for unit)
 
 Returns item status in JSON dict or array of dicts:
 
@@ -131,13 +131,13 @@ Parameters:
 
 optionally:
 
-* **p=PRIORITY** action priority in queue (the less value is** the higher
+* **p** action priority in queue (the less value is** the higher
   priority is, default is 100)
-* **u=UUID** unique action ID (use this option only if you know what you do, the
+* **u** unique action ID (use this option only if you know what you do, the
   system assigns the unique ID by default)
-* **w=sec** the API request will wait for the completion of the action for the
+* **w** the API request will wait for the completion of the action for the
   specified number of seconds
-* **q=sec** timeout for action processing in the public queue
+* **q** timeout (sec) for action processing in the public queue
 
 Returns JSON dict with the following data (time** UNIX_TIMESTAMP):
 
@@ -185,17 +185,17 @@ simple units.
 Parameters:
 
 * **k** valid API key
-* **ID** unique unit ID
+* **id** unique unit ID
 
 optionally:
 
-* **p=PRIORITY** action priority in queue (the less value is** the higher
+* **p** action priority in queue (the less value is** the higher
   priority is, default is 100)
-* **u=UUID** unique action ID (use this option only if you know what you do, the
+* **u** unique action ID (use this option only if you know what you do, the
   system assigns the unique ID by default)
-* **w=sec** the API request will wait for the completion of the action for the
+* **w** the API request will wait for the completion of the action for the
   specified number of seconds
-* **q=sec** timeout for action processing in the public queue
+* **q** timeout (sec) for action processing in the public queue
 
 Returns and behaviour:
 
@@ -222,8 +222,8 @@ Parameters:
 
 Additionally results may be filtered by:
 
-* **g=GROUP** unit group
-* **s=STATE** action status (Q** queued, R** running, F** finished)
+* **g** unit group
+* **s** action status (*Q* queued, *R* running, *F* finished)
 
 Returns:
 

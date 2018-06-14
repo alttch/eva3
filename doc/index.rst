@@ -107,7 +107,7 @@ System documentation
 
  * :doc:`/sfa/sfa` server
 
-    * :doc:`/sfa/sfa_api` - API of the Scada Final Aggregator
+    * :doc:`/sfa/sfa_api` - API of the SCADA Final Aggregator
     * :doc:`/sfa/sfa_pvt` - Private data web server
 
 * :doc:`/cli`
