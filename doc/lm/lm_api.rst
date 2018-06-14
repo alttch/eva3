@@ -110,4 +110,69 @@ Errors:
 set - set lvar state
 --------------------
 
+Allows to set status and value of a :ref:`logic variable<lvar>`.
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+* **s** lvar status, optional
+* **v** lvar value, optional
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+
+reset - reset lvar state
+------------------------
+
+Allows to set status and value of a :ref:`logic variable<lvar>` to *1*. Useful
+when lvar is being used as a timer to reset it, or as a flag to set it *True*.
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+
+clear - clear lvar state
+------------------------
+
+Allows to set status (if **expires** lvar param > 0) or value (if **expires**
+isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is being
+used as a timer to stop it, or as a flag to set it *False*.
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+
+toggle - toggle lvar value
+--------------------------
+
+Allows to switch value of a :ref:`logic variable<lvar>` between *0* and *1*.
+Useful when lvar is being used as a flag to switch it between *True*/*False*.
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+
+groups - get lvar groups list
+-----------------------------
 
