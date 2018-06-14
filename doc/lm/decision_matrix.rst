@@ -31,15 +31,15 @@ analyzed and processed in the following way:
 * Then, the system is verifying whether the current item state matches the rule
   conditions and the previous one is out of its range
 
-    * For example, there is a temperature sensor; the condition <= x <= 28 is
-      specified in the rule; the will match only once - as soon as the
+    * For example, there is a temperature sensor; the condition *25 <= x <= 28*
+      is specified in the rule; the will match only once - as soon as the
       transmitted temperature reaches 25-28 degrees. The rule will match again
       if the temperature exceeds this range and returns back.
-    * When the contoller is just started, the previous state is unknown or usually
-      outdated. In this case, the system acts according to the configuration
-      property of the rule **for_initial**: if it's set to *skip*, the rule is
-      ignored, if *only* or *any*, it's verified and the rule matches if the
-      current state match the range.
+    * When the contoller is just started, the previous state is unknown or
+      usually outdated. In this case, the system acts according to the
+      configuration property of the rule **for_initial**: if it's set to
+      *skip*, the rule is ignored, if *only* or *any*, it's verified and the
+      rule matches if the current state match the range.
     * If **for_initial** is set to *only* in the rule configuration, the rule
       is being checked only once, after the contoller is started and received
       the initial states of the items.

@@ -3,7 +3,7 @@ UC API
 
 :doc:`Universal Controller<uc>` UC API is called through URL request
 
-**\http://<IP_address_UC:Port>/uc-api/function?parameters**
+**\http://<IP_address_UC:Port>/uc-api/function**
 
 If SSL is allowed in the controller configuration file, you can also use https
 calls.

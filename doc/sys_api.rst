@@ -6,7 +6,7 @@ used to manage controller itself.
 
 SYS API is called through URL request
 
-**\http://<IP_address:Port>/sys-api/function?parameters**
+**\http://<IP_address:Port>/sys-api/function**
 
 If SSL is allowed in the controller configuration file, you can also use https
 calls.

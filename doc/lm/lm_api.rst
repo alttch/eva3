@@ -3,7 +3,7 @@ LM API
 
 :doc:`Logic Manager<lm>` LM API is called through URL request
 
-**\http://<IP_address_UC:Port>/lm-api/function?parameters**
+**\http://<IP_address_LM:Port>/lm-api/function**
 
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
