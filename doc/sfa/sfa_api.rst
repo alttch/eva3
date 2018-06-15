@@ -24,6 +24,41 @@ JSON.
 
 .. contents::
 
+Functions passed to the remote controllers
+------------------------------------------
+
+The following functions are passed to the :ref:`connected remote
+controllers<sfa_remote_c>` and return the result as-is.
+
+* :ref:`action<uc_action>` - UC API call for :ref:`unit<unit>` control actions
+* :ref:`terminate<uc_terminate>` - UC API call to terminate current
+  :ref:`unit<unit>` action
+* :ref:`q_clean<uc_q_clean>` - UC API call to clean :ref:`unit<unit>` action
+  queue
+* :ref:`kill<uc_kill>` - UC API call to :ref:`unit<unit>` action queue and
+  terminate the current action
+
+* :ref:`disable_actions<uc_disable_actions>` - UC API call to disable
+  :ref:`unit<unit>` actions
+* :ref:`enable_actions<uc_enable_actions>` - UC API call to enable
+  :ref:`unit<unit>` actions
+
+* :ref:`set<lm_set>` - LM API call to set :ref:`logical variable<lvar>` state
+* :ref:`reset<lm_reset>` - LM API call to reset :ref:`logical variable<lvar>`
+  state
+* :ref:`clear<lm_clear>` - LM API call to clear :ref:`logical variable<lvar>`
+  state
+* :ref:`toggle<lm_toggle>` - LM API call to toggle :ref:`logical
+  variable<lvar>` state
+
+* :ref:`run<lm_run>` - LM API call to run :doc:`logic control
+  macro</lm/macros>`
+
+* :ref:`list_rule_props<lm_list_rule_props>` - LM API call to list
+  :doc:`decision rule</lm/decision_matrix>` props
+* :ref:`set_rule_prop<lm_set_rule_prop>` - LM API call to set :doc:`decision
+  rule</lm/decision_matrix>` prop
+
 .. _sfa_test:
 
 test - test API/key and get system info
@@ -68,7 +103,7 @@ Errors:
 
 * **403 Forbidden** the key has no access to the API
 
-.. _lm_state:
+.. _sfa_state:
 
 state - get item state
 ----------------------
@@ -107,41 +142,6 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** item doesn't exist, or the key has no access to the item
-
-Functions passed to the remote controllers
-------------------------------------------
-
-The following functions are passed to the :ref:`connected remote
-controllers<sfa_remote_c>` and return the result as-is.
-
-* :ref:`action<uc_action>` - UC API call for :ref:`unit<unit>` control actions
-* :ref:`terminate<uc_terminate>` - UC API call to terminate current
-  :ref:`unit<unit>` action
-* :ref:`q_clean<uc_q_clean>` - UC API call to clean :ref:`unit<unit>` action
-  queue
-* :ref:`kill<uc_kill>` - UC API call to :ref:`unit<unit>` action queue and
-  terminate the current action
-
-* :ref:`disable_actions<uc_disable_actions>` - UC API call to disable
-  :ref:`unit<unit>` actions
-* :ref:`enable_actions<uc_enable_actions>` - UC API call to enable
-  :ref:`unit<unit>` actions
-
-* :ref:`set<lm_set>` - LM API call to set :ref:`logical variable<lvar>` state
-* :ref:`reset<lm_reset>` - LM API call to reset :ref:`logical variable<lvar>`
-  state
-* :ref:`clear<lm_clear>` - LM API call to clear :ref:`logical variable<lvar>`
-  state
-* :ref:`toggle<lm_toggle>` - LM API call to toggle :ref:`logical
-  variable<lvar>` state
-
-* :ref:`run<lm_run>` - LM API call to run :doc:`logic control
-  macro</lm/macros>`
-
-* :ref:`list_rule_props<lm_list_rule_props>` - LM API call to list
-  :doc:`decision rule</lm/decision_matrix>` props
-* :ref:`set_rule_prop<lm_set_rule_prop>` - LM API call to set :doc:`decision
-  rule</lm/decision_matrix>` prop
 
 groups - get item group list
 ----------------------------
@@ -364,7 +364,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-.. _lm_reload_controller:
+.. _sfa_reload_controller:
 
 reload_controller - reload items from UC
 ----------------------------------------
