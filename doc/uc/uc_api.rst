@@ -366,7 +366,7 @@ Errors:
 groups - get item group list
 ----------------------------
 
-Returns the list of the item groups. Useful i.e. for the custom interfaces.
+Get the list of the item groups. Useful i.e. for the custom interfaces.
 
 Parameters:
 
@@ -379,7 +379,6 @@ Returns JSON array:
     [
         "parent_group1/group1",
         "parent_group1/group2"
-        .....
     ]
 
 Errors:

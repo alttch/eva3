@@ -175,4 +175,43 @@ Errors:
 
 groups - get lvar groups list
 -----------------------------
+Get the list of the lvar groups. Useful i.e. for the custom interfaces.
+
+Parameters:
+
+* **k** valid API key
+
+Returns JSON array:
+
+.. code-block:: json
+
+    [
+        "parent_group1/group1",
+        "parent_group1/group2"
+    ]
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+groups_macro - get lvar groups list
+-----------------------------
+Get the list of the macro groups.
+
+Parameters:
+
+* **k** valid API key
+
+Returns JSON array:
+
+.. code-block:: json
+
+    [
+        "parent_group1/group1",
+        "parent_group1/group2"
+    ]
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
 
