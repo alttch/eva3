@@ -194,8 +194,8 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
-groups_macro - get lvar groups list
------------------------------
+groups_macro - get macro groups list
+------------------------------------
 Get the list of the macro groups.
 
 Parameters:
