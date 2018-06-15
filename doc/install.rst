@@ -159,7 +159,7 @@ Our final config for all of this should look like:
     }
 
     upstream eva-sfa {
-            server 127.0.0.1:828;
+            server 127.0.0.1:8828;
     }
 
     server {
