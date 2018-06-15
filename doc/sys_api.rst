@@ -82,7 +82,7 @@ Parameters:
 
 Returns JSON dict
 
-.. code-block::
+.. code-block:: text
 
     {
        "args": [ "<specified>", "<command>", "<parameters>" ],

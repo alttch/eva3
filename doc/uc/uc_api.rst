@@ -141,7 +141,7 @@ optionally:
 
 Returns JSON dict with the following data (time** UNIX_TIMESTAMP):
 
-.. code-block::
+.. code-block:: text
 
     {
        "err": "<output_stderr>",

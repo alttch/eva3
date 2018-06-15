@@ -54,7 +54,7 @@ When the system or you add the record to the logs, the notification system
 sends 'log' event notification. The log notification data have the following
 format:
 
-.. code-block::
+.. code-block:: text
 
     {
      "h": "<SYSTEM_NAME>",
