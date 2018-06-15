@@ -30,6 +30,9 @@ Functions passed to the remote controllers
 The following functions are passed to the :ref:`connected remote
 controllers<sfa_remote_c>` and return the result as-is.
 
+Units control
+~~~~~~~~~~~~~
+
 * :ref:`action<uc_action>` - UC API call for :ref:`unit<unit>` control actions
 * :ref:`terminate<uc_terminate>` - UC API call to terminate current
   :ref:`unit<unit>` action
@@ -37,11 +40,13 @@ controllers<sfa_remote_c>` and return the result as-is.
   queue
 * :ref:`kill<uc_kill>` - UC API call to :ref:`unit<unit>` action queue and
   terminate the current action
-
 * :ref:`disable_actions<uc_disable_actions>` - UC API call to disable
   :ref:`unit<unit>` actions
 * :ref:`enable_actions<uc_enable_actions>` - UC API call to enable
   :ref:`unit<unit>` actions
+
+Logical variables control
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * :ref:`set<lm_set>` - LM API call to set :ref:`logical variable<lvar>` state
 * :ref:`reset<lm_reset>` - LM API call to reset :ref:`logical variable<lvar>`
@@ -51,8 +56,14 @@ controllers<sfa_remote_c>` and return the result as-is.
 * :ref:`toggle<lm_toggle>` - LM API call to toggle :ref:`logical
   variable<lvar>` state
 
-* :ref:`run<lm_run>` - LM API call to run :doc:`logic control
+Macros control
+~~~~~~~~~~~~~
+
+* :ref:`run<lm_run>` - LM API call to execute :doc:`logic control
   macro</lm/macros>`
+
+Decision rules control
+~~~~~~~~~~~~~~~~~~~~~~
 
 * :ref:`list_rule_props<lm_list_rule_props>` - LM API call to list
   :doc:`decision rule</lm/decision_matrix>` props
