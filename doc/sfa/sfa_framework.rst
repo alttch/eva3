@@ -29,14 +29,14 @@ initial authentication:
 
 .. code-block:: javascript
 
-    eva_sfa_login = ''
-    eva_sfa_password = ''
+    eva_sfa_login = '';
+    eva_sfa_password = '';
 
 Another way is to use the variable
 
 .. code-block:: javascript
 
-    eva_sfa_apikey = null
+    eva_sfa_apikey = null;
 
 in case its value is not NULL, the authentication is done with API key
 
@@ -46,21 +46,21 @@ either succeeded or failed (**data** parameter is equal to `jQuery post
 
 .. code-block:: javascript
 
-    eva_sfa_cb_login_success = null
-    eva_sfa_cb_login_error = null
+    eva_sfa_cb_login_success = null;
+    eva_sfa_cb_login_error = null;
 
 The interval for a server ping test (heartbeat)
 
 .. code-block:: javascript
 
-    eva_sfa_heartbeat_interval = 5
+    eva_sfa_heartbeat_interval = 5;
 
 The following function is being automatically called in case of the server
 heartbeat error:
 
 .. code-block:: javascript
 
-    eva_sfa_heartbeat_error = eva_sfa_restart
+    eva_sfa_heartbeat_error = eva_sfa_restart;
 
 The function is called with **data** parameter containing HTTP error data, or
 without parameter if such data is not available (e. g. the error occurred when
@@ -70,7 +70,7 @@ Interval (seconds) for updating data when framework is in AJAX mode:
 
 .. code-block:: javascript
 
-    eva_sfa_ajax_reload_interval = 2
+    eva_sfa_ajax_reload_interval = 2;
 
 The next variable forces ajax updates if if the framework is running in
 WebSocket mode. *0* value disables updating via AJAX completely, but it's
@@ -79,22 +79,23 @@ even if some websocket events are lost.
 
 .. code-block:: javascript
 
-    eva_sfa_force_reload_interval = 5
+    eva_sfa_force_reload_interval = 5;
 
 Interval (seconds) for updating settings of the :doc:`decision-making matrix
 rules</lm/decision_matrix>`. Rule settings are updated via AJAX only.
 
 .. code-block:: javascript
 
-    eva_sfa_rule_monitor_interval = 60
+    eva_sfa_rule_monitor_interval = 60;
 
-The next variable is updated by heartbeat and contains API **test** call results.
-This variable may be used by the application to check whether the framework has
-established the connection to the server - if not, the variable is *null*.
+The next variable is updated by heartbeat and contains API **test** call
+results.  This variable may be used by the application to check whether the
+framework has established the connection to the server - if not, the variable
+is *null*.
 
 .. code-block:: javascript
 
-    eva_sfa_server_info = null
+    eva_sfa_server_info = null;
 
 This variable sets the framework working mode. If its value is *true*, SFA
 framework operates via WebSocket, if false - via AJAX. This value is changed by
@@ -104,7 +105,7 @@ initial framework initialization.
 
 .. code-block:: javascript
 
-    eva_sfa_ws_mode = true
+    eva_sfa_ws_mode = true;
 
 The next variable contains function processing WebSocket data. If the user
 declares this function, it should return *true* (in case the data processing is
@@ -113,7 +114,7 @@ function is called via **data** parameter with the event data set herein.
 
 .. code-block:: javascript
 
-    eva_sfa_ws_event_handler = null
+    eva_sfa_ws_event_handler = null;
 
 .. _sf_init:
 
@@ -124,13 +125,13 @@ To initialize the framework run
 
 .. code-block:: javascript
 
-    eva_sfa_init()
+    eva_sfa_init();
 
 then to start the framework, run
 
 .. code-block:: javascript
 
-    eva_sfa_start()
+    eva_sfa_start();
 
 that will authorize the user and run the data update and event handling
 threads.
@@ -141,13 +142,13 @@ called by init/start and you should call it separately:
 
 .. code-block:: javascript
 
-    eva_sfa_start_rule_monitor()
+    eva_sfa_start_rule_monitor();
 
 To stop the framework, call:
 
 .. code-block:: javascript
 
-    eva_sfa_stop()
+    eva_sfa_stop();
 
 Event Handling
 --------------
@@ -158,7 +159,7 @@ framework, use
  
 .. code-block:: javascript
 
-    eva_sfa_register_update_state(oid, cb)
+    eva_sfa_register_update_state(oid, cb);
 
 where:
 
@@ -174,7 +175,7 @@ registered by
 
 .. code-block:: javascript
 
-    eva_sfa_register_rule(rule_id, cb)
+    eva_sfa_register_rule(rule_id, cb);
 
 where:
 
@@ -189,7 +190,7 @@ To execute :doc:`macro</lm/macros>`, call the function:
 
 .. code-block:: javascript
 
-    eva_sfa_run(macro_id, args, wait, priority, uuid, cb_success, cb_error)
+    eva_sfa_run(macro_id, args, wait, priority, uuid, cb_success, cb_error);
 
 where **macro_id** - macro id (in a full format, *group/macro_id*) to execute,
 other params are equal to LM API :ref:`run<lm_run>` function, and
@@ -202,7 +203,7 @@ To run the :ref:`unit<unit>` action, call the function:
 .. code-block:: javascript
 
     eva_sfa_action(unit_id, nstatus, nvalue, wait, priority, uuid, cb_success,
-    cb_error)
+    cb_error);
 
 Where unit_id - full unit id (*group/id*), other parameters are equal to UC API
 :ref:`action<uc_action>`, and **cb_success**, **cb_error** - functions called
@@ -213,26 +214,26 @@ In case you want to switch unit status between *0* and *1*, call:
 
 .. code-block:: javascript
 
-    eva_sfa_action_toggle(unit_id, wait, priority, uuid, cb_success, cb_error)
+    eva_sfa_action_toggle(unit_id, wait, priority, uuid, cb_success, cb_error);
 
 Terminate unit action and clean up queued commands:
 
 .. code-block:: javascript
 
-    eva_sfa_kill(unit_id, cb_success, cb_error)
+    eva_sfa_kill(unit_id, cb_success, cb_error);
 
 Clean unit action queue but keep the current action running:
 
 .. code-block:: javascript
 
-    eva_sfa_q_clean(unit_id, cb_success, cb_error)
+    eva_sfa_q_clean(unit_id, cb_success, cb_error);
 
 Terminate the current unit action either by unit id, or by action uuid:
 
 .. code-block:: javascript
 
-    eva_sfa_terminate(unit_id, cb_success, cb_error)
-    eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error)
+    eva_sfa_terminate(unit_id, cb_success, cb_error);
+    eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error);
 
 Working with logic variables
 ----------------------------
@@ -241,27 +242,27 @@ To set the :ref:`logic variable<lvar>` status, use the function:
 
 .. code-block:: javascript
 
-    eva_sfa_set(lvar_id, value, cb_success, cb_error)
+    eva_sfa_set(lvar_id, value, cb_success, cb_error);
 
 To switch lvar value between *0* and *1* use
 
 .. code-block:: javascript
 
-    eva_sfa_set_toggle(lvar_id, cb_success, cb_error)
+    eva_sfa_set_toggle(lvar_id, cb_success, cb_error);
     // or
-    eva_sfa_toggle(lvar_id, cb_success, cb_error)
+    eva_sfa_toggle(lvar_id, cb_success, cb_error);
 
 To reset lvar when used as a timer or flag:
 
 .. code-block:: javascript
 
-    eva_sfa_reset(lvar_id, cb_success, cb_error)
+    eva_sfa_reset(lvar_id, cb_success, cb_error);
 
 To clear lvar flag or stop the timer:
 
 .. code-block:: javascript
 
-    eva_sfa_clear(lvar_id, cb_success, cb_error)
+    eva_sfa_clear(lvar_id, cb_success, cb_error);
 
 Modifying decision rules
 ------------------------
@@ -270,7 +271,7 @@ To change :doc:`decision rules</lm/decision_matrix>` properties, call:
 
 .. code-block:: javascript
 
-    eva_sfa_set_rule_prop(rule_id, prop, value, save, cb_success, cb_error)
+    eva_sfa_set_rule_prop(rule_id, prop, value, save, cb_success, cb_error);
 
 Examples
 --------
@@ -301,7 +302,7 @@ the default value
 
 .. code-block:: javascript
 
-    eva_sfa_heartbeat_error = eva_sfa_restart
+    eva_sfa_heartbeat_error = eva_sfa_restart;
 
 and keep login/password in **eva_sfa_login** and **eva_sfa_password
 variables**, or API key in **eva_sfa_apikey**. If an error occurs,
