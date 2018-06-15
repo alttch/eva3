@@ -76,7 +76,7 @@ Should I run it as root?
 * :doc:`/uc/uc` is designed to be run on the virtual machines, microcomputers,
   and embedded systems. If server directly controls connected devices, you
   should run it as root in order to avoid any device access errors.  UC
-  security bottleneck (when working with root) - API and :doc:`/uc/uc_ei`
+  security bottleneck (when working under root) - API and :doc:`/uc/uc_ei`
   interface. However, you should use API in Supervisory network only and UC EI
   interface should be turned off and used only in case of emergency.
 
