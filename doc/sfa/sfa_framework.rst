@@ -289,8 +289,8 @@ Common problems which may arise:
 * SFA server reboot and loss of session data.
 * Breaking the WebSocket connection due to frontend reboot or another reason.
 
-To control the session, SFA Framework requests :doc:`/sfa/sfa_api` test every
-**eva_sfa_heartbeat_interval** (*5* seconds by default). WebSocket is
+To control the session, SFA Framework requests SFA API :ref:`test<sfa_test>`
+every **eva_sfa_heartbeat_interval** (*5* seconds by default). WebSocket is
 additionally controlled by the framework using { 's': 'ping' } packet, whereto
 the server should send a response { 's': 'pong' }. If there is no response
 within the time exceeding heartbeat interval, the connection is considered
