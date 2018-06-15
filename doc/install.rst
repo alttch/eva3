@@ -79,8 +79,9 @@ The system is ready.
 
 .. note::
 
-    To change or set up (without *easy-setup.sh*) the user controllers are running under,
-    use *./set-run-under-user.sh* script to adjust runtime and database permissions.
+    To change or set up (without *easy-setup.sh*) the user controllers are
+    running under, use *./set-run-under-user.sh* script to adjust runtime and
+    database permissions.
 
 How to assign IDs to items
 --------------------------
@@ -123,8 +124,8 @@ Using NGINX as a frontend for SFA interface
 -------------------------------------------
 
 Suppose `NGINX <https://www.nginx.com/>`_ operates on 8443 port with SSL, and
-`/sfa/sfa` - without SSL. Let's make the task even more complicated: let NGINX
-receive the request not directly, but via port forwarding from the router
+:doc:`/sfa/sfa` - without SSL. Let's make the task even more complicated: let
+NGINX receive the request not directly, but via port forwarding from the router
 listening on an external domain (i.e. port 35200).
 
 Additionally, we want to authorize:
