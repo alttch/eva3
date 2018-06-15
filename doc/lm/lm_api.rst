@@ -119,6 +119,8 @@ Parameters:
 * **s** lvar status, optional
 * **v** lvar value, optional
 
+Returns JSON dict result="OK", if the state is set successfully.
+
 Errors:
 
 * **403 Forbidden** invalid API KEY
@@ -135,6 +137,8 @@ Parameters:
 * **k** valid API key
 * **i** lvar id
 
+Returns JSON dict result="OK", if the state is reset successfully.
+
 Errors:
 
 * **403 Forbidden** invalid API KEY
@@ -146,6 +150,8 @@ clear - clear lvar state
 Allows to set status (if **expires** lvar param > 0) or value (if **expires**
 isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is being
 used as a timer to stop it, or as a flag to set it *False*.
+
+Returns JSON dict result="OK", if the state is cleared successfully.
 
 Parameters:
 
@@ -167,6 +173,8 @@ Parameters:
 
 * **k** valid API key
 * **i** lvar id
+
+Returns JSON dict result="OK", if the state is toggled successfully.
 
 Errors:
 
@@ -218,7 +226,7 @@ Errors:
 list_macros - get macro list
 ----------------------------
 
-Get the list of all available macros
+Get the list of all available :doc:`macros<macros>`.
 
 Parameters:
 
@@ -246,6 +254,8 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
+.. _lm_run:
+
 run - execute macro
 -------------------
 
@@ -260,7 +270,7 @@ optionally:
 
 * **a** macro arguments, space separated
 * **p** queue priority (less value - higher priority, default 100)
-* **u** unique action ID (use this option only if you know what you do, the
+* **u** unique action id (use this option only if you know what you do, the
   system assigns the unique ID by default)
 * **w** the API request will wait for the completion of the action for the
   specified number of seconds
@@ -301,8 +311,365 @@ for the exit code of the macro. Additionally, "time" will be supplemented by
 variable (if it was associated with a value in the macro), "err" field (in case
 of macro compilation/execution errors)contains the error details.
 
+.. _lm_result:
+
 result - macro execution result
 -------------------------------
 
+Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
+
+Parameters:
+
+* **k** valid API key
+
+optionally:
+
+* **i** macro_id
+* **u** action uuid (either action uuid or macro_id must be specified)
+* **g** filter by macro group
+* **s** filter by action status (Q - queued, R - running, F - finished)
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** macro or action doesn't exist, or the key has no access to
+  the macro
+
+Actions remain in the system until they receive the status *completed*,
+*failed* or *terminated* and until **keep_action_status** time indicated in
+:ref:`contoller configuration<lm_ini>` passes.
+
+.. note::
+
+    This function doesn't return results of the unit actions executed by macros
+
+list - get list of all logic variables
+--------------------------------------
+
+Parameters:
+
+* **k** masterkey API key
+* **g** filter by group (optional)
+
+Returns JSON array which contains :ref:`lvars<lvar>`:
 
 
+.. code-block:: json
+
+    [
+        {
+           "description": "description",
+           "expires": 0,
+           "full_id": "group/id",
+           "group": "group",
+           "id": "lvare_id",
+           "oid": "lvar:group/id",
+           "set_time": 9999999,
+           "type": "lvar"
+        }
+    ]
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+get_config - get logic variable configuration
+---------------------------------------------
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+
+Returns complete :ref:`lvar<lvar>` configuration.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+
+save_config - save lvar configuration on disk
+---------------------------------------------
+
+Saves lvar configuration on disk (even if it wasn't changed)
+
+Parameters:
+
+* **k** masterkey
+* **i** lvar id
+
+Returns JSON dict result="OK", if the configuration is saved successfully.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** lvar doesn't exist, or the key has no access to it
+
+.. _lm_list_props:
+
+list_props - get editable lvar parameters
+-----------------------------------------
+
+Allows to get all editable parameters of the :ref:`lvar configuration<lvar>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** lvar id
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** lvar doesn't exist, or the key has no access to it
+
+.. _lm_set_prop:
+
+set_prop - set item parameters
+------------------------------
+
+Allows to set configuration parameters of the lvar.
+
+Parameters:
+
+* **k** masterkey
+* **i** lvar id
+* **p** lvar configuration param
+* **v** param value
+
+Returns result="OK if the parameter is set, or result="ERROR", if an error
+occurs.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** lvar doesn't exist, or the key has no access to it
+
+create_lvar - create new lvar
+-----------------------------
+
+Creates new :ref:`lvar<lvar>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** lvar id
+* **g** lvar group
+
+optionally:
+
+* **save=1** save lvar configuration on the disk immediately after creation
+
+Returns result="OK if the lvar is created, or result="ERROR", if the error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+destroy_lvar - delete lvar
+--------------------------
+
+Deletes :ref:`lvar<lvar>`.
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+
+Returns result="OK if the lvar is deleted, or result="ERROR", if error
+occurred.
+
+LVar configuration may be immediately deleted from the disk, if there is
+*db_update=instant* set in :ref:`controller configuration<lm_ini>`, at the
+moment of the shutdown, if there is *db_update=on_exit*, or when
+calling :doc:`/sys_api` save (or save in :doc:`LM EI<lm_ei>`), if there is
+*db_update=manual*.
+
+If configuration is not deleted by either of these, you should delete it
+manually by removing the file runtime/lm_lvar.d/ID.json, otherwise the
+lvar(s) will remain in the system after restarting the controller.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** the lvar doesn't exist
+
+.. _lm_list_macro_props:
+
+list_macro_props - get editable macro parameters
+------------------------------------------------
+
+Allows to get all editable parameters of the :doc:`macro
+configuration<macros>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** macro id
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** macro doesn't exist, or the key has no access to it
+
+.. _lm_set_macro_prop:
+
+set_macro_prop - set macro parameters
+-------------------------------------
+
+Allows to set configuration parameters of the macro.
+
+Parameters:
+
+* **k** masterkey
+* **i** macro id
+* **p** macro configuration param
+* **v** param value
+
+Returns result="OK if the parameter is set, or result="ERROR", if an error
+occurs.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** macro doesn't exist, or the key has no access to it
+
+.. _lm_create_macro:
+
+create_macro - create new macro
+-------------------------------
+
+Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm**
+manually.
+
+Parameters:
+
+* **k** masterkey
+* **i** macro id
+* **g** macro group
+
+optionally:
+
+* **save=1** save macro configuration on the disk immediately after creation
+
+Returns result="OK if the macro is created, or result="ERROR", if the error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+destroy_macro - delete macro
+----------------------------
+
+Deletes :doc:`macro<macros>`.
+
+Parameters:
+
+* **k** valid API key
+* **i** macro id
+
+Returns result="OK if the macro is deleted, or result="ERROR", if error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** the macro doesn't exist
+
+list_rules - get rules list
+---------------------------
+
+Get the list of all available :doc:`decision rules<decision_matrix>`.
+
+Parameters:
+
+* **k** valid API key
+
+Returns JSON array of rules and their properties.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+list_rule_props - get editable rule parameters
+-----------------------------------------------
+
+Allows to get all editable parameters of the :doc:`decision
+rule<decision_matrix>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** rule id
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** rule doesn't exist, or the key has no access to it
+
+.. _lm_set_rule_prop:
+
+set_rule_prop - set rule parameters
+-----------------------------------
+
+Allows to set configuration parameters of the rule.
+
+Parameters:
+
+* **k** masterkey
+* **i** rule id
+* **p** rule configuration param
+* **v** param value
+
+Returns result="OK if the parameter is set, or result="ERROR", if an error
+occurs.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** rule doesn't exist, or the key has no access to it
+
+create_rule - create new rule
+------------------------------
+
+Creates new :doc:`decision rule<decision_matrix>`. Rule id is always generated
+automatically.
+
+Parameters:
+
+* **k** masterkey
+
+optionally:
+
+* **save=1** save rule configuration on the disk immediately after creation
+
+Returns result="OK if the rule is created, or result="ERROR", if the error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+destroy_rule - delete rule
+----------------------------
+
+Deletes :doc:`decision rule<decision_matrix>`.
+
+Parameters:
+
+* **k** valid API key
+* **i** rule id
+
+Returns result="OK if the rule is deleted, or result="ERROR", if error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** the rule doesn't exist
+
+list_remote - get a list of items from connected UCs
+----------------------------------------------------
+
+.. include:: ../userauth.rst

@@ -125,7 +125,7 @@ Create unit control action and put it into the queue of the controller.
 Parameters:
 
 * **k** valid API key
-* **ID** unique unit ID
+* **ID** unique unit id
 * **s** new unit status
 * **v** new unit value
 
@@ -185,7 +185,7 @@ simple units.
 Parameters:
 
 * **k** valid API key
-* **id** unique unit ID
+* **id** unique unit id
 
 optionally:
 
@@ -218,7 +218,7 @@ Parameters:
 
 * **k** valid API key
 * **u** action UUID or
-* **i** unit ID
+* **i** unit id
 
 Additionally results may be filtered by:
 
@@ -269,7 +269,7 @@ Cancel all queued actions, keep the current action running
 Parameters:
 
 * **k** valid API key
-* **i** unit ID
+* **i** unit id
 
 Returns JSON dict result="OK", if queue is cleaned.
 
@@ -289,7 +289,7 @@ current running action.
 Parameters:
 
 * **k** valid API key
-* **i** unit ID
+* **i** unit id
 
 Returns JSON dict result="OK", if the command completed successfully. If the
 current action of the unit cannot be terminated by configuration, the notice
@@ -311,7 +311,7 @@ Disables unit to run and queue new actions.
 Parameters:
 
 * **k** valid API key
-* **i** unit ID
+* **i** unit id
 
 Returns JSON dict result="OK", if actions are disabled.
 
@@ -330,7 +330,7 @@ Enables unit to run and queue new actions.
 Parameters:
 
 * **k** valid API key
-* **i** unit ID
+* **i** unit id
 
 Returns JSON dict result="OK", if actions are enabled.
 
@@ -350,16 +350,16 @@ of the passive state update, for example with the use of the external controller
 Parameters:
 
 * **k** valid API key
-* **i** unit ID
-* **s** unit status (integer, optional)
-* **v** unit value (optional)
+* **i** item id
+* **s** item status (integer, optional)
+* **v** item value (optional)
 
-Returns JSON dict result="OK", if the state was updated successfully.
+Returns JSON dict result="OK", if the state is updated successfully.
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** unit doesn't exist, or the key has no access to it
+* **404 Not Found** item doesn't exist, or the key has no access to it
 
 .. _uc_groups:
 
@@ -425,10 +425,12 @@ Returns complete :doc:`item configuration</items>`
 Parameters:
 
 * **k** masterkey
+* **i** item id
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
+* **404 Not Found** item doesn't exist, or the key has no access to it
 
 .. _uc_save_config:
 
@@ -440,14 +442,14 @@ Saves item configuration on disk (even if it wasn't changed)
 Parameters:
 
 * **k** masterkey
-* **i** unit ID
+* **i** item id
 
-Returns JSON dict result="OK", if the configuration was saved successfully.
+Returns JSON dict result="OK", if the configuration is saved successfully.
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** unit doesn't exist, or the key has no access to it
+* **404 Not Found** item doesn't exist, or the key has no access to it
 
 .. _uc_list_props:
 
@@ -460,12 +462,12 @@ Allows to get all editable parameters of the
 Parameters:
 
 * **k** masterkey
-* **i** unit ID
+* **i** item id
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** unit doesn't exist, or the key has no access to it
+* **404 Not Found** item doesn't exist, or the key has no access to it
 
 .. _uc_set_prop:
 
@@ -477,7 +479,7 @@ Allows to set configuration parameters of the item.
 Parameters:
 
 * **k** masterkey
-* **i** unit ID
+* **i** item id
 * **p** item configuration param
 * **v** param value
 
@@ -487,7 +489,7 @@ occurs.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** unit doesn't exist, or the key has no access to it
+* **404 Not Found** item doesn't exist, or the key has no access to it
 
 .. _uc_create_unit:
 
@@ -499,7 +501,7 @@ Creates new :ref:`unit<unit>`.
 Parameters:
 
 * **k** masterkey
-* **i** unit ID
+* **i** unit id
 * **g** unit group
 
 optionally:
@@ -507,7 +509,7 @@ optionally:
 * **virtual=1** unit is created as :doc:`virtual</virtual>`
 * **save=1** save unit configuration on the disk immediately after creation
 
-Returns result="OK if the unit was created, or result="ERROR", if the error
+Returns result="OK if the unit is created, or result="ERROR", if the error
 occurred.
 
 Errors:
@@ -532,7 +534,7 @@ optionally:
 * **virtual=1** sensor is created as :doc:`virtual</virtual>`
 * **save=1** save sensor configuration on the disk immediately after creation
 
-Returns result="OK if the sensor was created, or result="ERROR", if the error
+Returns result="OK if the sensor is created, or result="ERROR", if the error
 occurred.
 
 Errors:
@@ -558,7 +560,7 @@ optionally:
 * **save=1** save multiupdate configuration on the disk immediately after
   creation
 
-Returns result="OK if the multiupdate was created, or result="ERROR", if the
+Returns result="OK if the multiupdate is created, or result="ERROR", if the
 error occurred.
 
 Errors:
@@ -583,12 +585,13 @@ optionally:
 
 * **save=1** save item configuration on the disk immediately after creation
 
-Returns result="OK if the item was loned, or result="ERROR", if the error
+Returns result="OK if the item is cloned, or result="ERROR", if the error
 occurred.
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
+* **404 Not Found** the source item doesn't exist
 
 .. _uc_clone_group:
 
@@ -616,80 +619,41 @@ occurred. Only items with type unit and sensor are cloned.
 Errors:
 
 * **403 Forbidden** invalid API KEY
+* **404 Not Found** the source group doesn't exist
 
 .. _uc_destroy:
 
 destroy - delete item or group
 ------------------------------
 
-Deletes the item or the group (and all the items in it) from the system.
+Deletes the :doc:`item</items>` or the group (and all the items in it) from the
+system.
 
-Returns result="OK if the item/group was deleted, or result="ERROR", if error
+Parameters:
+
+* **k** valid API key
+* **i** item id
+* **g** item group (either id or group must be specified)
+
+Returns result="OK if the item/group is deleted, or result="ERROR", if error
 occurred.
 
 Item configuration may be immediately deleted from the disk, if there is
-db_update=instant set in server configuration, at the moment server's work is
-completed, if there is db_update=on_exit, or when calling :doc:`/sys_api` save
-(or save in :doc:`UC EI<uc_ei>`), if there is db_update=manual.
+*db_update=instant* set in :ref:`controller configuration<uc_ini>`, at the
+moment of the shutdown, if there is *db_update=on_exit*, or when
+calling :doc:`/sys_api` save (or save in :doc:`UC EI<uc_ei>`), if there is
+*db_update=manual*.
 
 If configuration is not deleted by either of these, you should delete it
 manually by removing the file runtime/uc_<type>.d/ID.json, otherwise the
-item(s) will remain in the system after
-restarting the server.
+item(s) will remain in the system after restarting the controller.
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
+* **404 Not Found** the item or group doesn't exist
 
-.. _uc-users:
-
-User authorization using login/password
----------------------------------------
-
-Third-party apps may authorize :doc:`users</sys_api>` using login and password
-as an alternative for authorization via API key.
-
-.. _uc-login:
-
-login - user authorization
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Authorizes user in the system and and opens up a new authorized session.
-Session ID is stored in cookie.
-
-Attention! Session is created for all requests to API, even if login is not
-used; web-browsers use the same session for the host even if apps are running
-on different ports. Therefore, when you use web-apps (even if you use the same
-the same browser to simultaneously assess system interfaces or other apps) each
-app/interface should be associated with different domains/alias/different host
-IP addresses.
-
-Parameters:
-
-* **u** user name
-* **p** user password
-
-Returns JSON dict { "result" "OK", "key": "APIKEY_ID" }, if the user is
-authorized.
-
-Errors:
-
-* **403 Forbidden** invalid user name / password
-
-.. _uc-logout:
-
-logout
-~~~~~~
-
-Finishes the authorized session
-
-Parameters: none
-
-Returns JSON dict { "result" : "OK" }
-
-Errors:
-
-* **403 Forbidden** no session available / session is already finished
+.. include:: ../userauth.rst
 
 .. _uc_udp_api:
 
