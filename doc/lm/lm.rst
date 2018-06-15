@@ -172,13 +172,14 @@ Controller actions<uc_queues>`.
 Startup and shutdown
 --------------------
 
-To manage LM server use ./sbin/lm-control script with the following options:
+To manage LM controller use ./sbin/lm-control script with the following
+options:
 
-* **start** start UC server
-* **stop** stop UC server
-* **restart** restart UC server
+* **start** start LM controller
+* **stop** stop LM controller
+* **restart** restart LM controller
 * **logrotate** call after log rotation to restart the logging
-* **version** display the server version
+* **version** display the controller version
 
 The controller startup/shutdown is also performed by **./sbin/eva-control**
 which's configured during the :doc:`system setup</install>`.
