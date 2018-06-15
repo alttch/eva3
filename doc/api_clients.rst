@@ -128,7 +128,7 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
     # the call suceeded
     result_ok = 0
     # the item is not found or the function requires a different set of
-    #parameters
+    # parameters
     result_not_found = 1
     # access is denied with the set key
     result_forbidden = 2
@@ -166,13 +166,13 @@ API has two classes:
 
 .. code-block:: php
 
-    <?php EVA_APIClient() ?>
+    <?php EVA_APIClient(); ?>
 
 and
 
 .. code-block:: php
 
-    <?php EVA_APIClientLocal($product, $dir_eva) ?>
+    <?php EVA_APIClientLocal($product, $dir_eva); ?>
 
 **EVA_APIClientLocal** class may be used on the servers where EVA is installed.
 When specifying **product='<subsystem code>'** parameter (i.e. *'uc'*) API is
@@ -260,7 +260,7 @@ Result codes are stored in module variables:
     # the call suceeded
     $result_ok = 0;
     # the item is not found or the function requires a different set of
-    #parameters
+    # parameters
     $result_not_found = 1;
     # access is denied with the set key
     $result_forbidden = 2;
