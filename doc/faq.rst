@@ -7,7 +7,7 @@ Is this a "smart home"?
 -----------------------
 
 EVA is a universal system used for the construction of both "smart home" and
-automated control system (`ACS
+automated control system (`ICS
 <https://en.wikipedia.org/wiki/Industrial_control_system>`_) on the industrial
 enterprise.
 
@@ -32,9 +32,9 @@ ones working:
 
 And, most preferably, having an open API to be connected to any system.
 
-The classic situation typical for IoT market involves controlling your device via
-the Internet with the help of software on the developer servers (aka "clouds").
-As you can see it is:
+The classic situation typical for IoT market involves controlling your device
+via the Internet with the help of software on the developer servers (aka
+"clouds"). As you can see it is:
 
 * Unreliable
 * Dangerous
