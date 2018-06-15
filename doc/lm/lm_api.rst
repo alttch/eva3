@@ -215,3 +215,33 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
+list_macros - get macro list
+----------------------------
+
+Get the list of all available macros
+
+Parameters:
+
+* **k** valid API key
+* **g** filter by group, optional (:ref:`MQTT<mqtt_>` masks may be used, i.e.
+  group1/#, group1/+/service)
+
+Returns JSON array:
+
+.. code-block:: json
+
+    [
+        {
+           "action_enabled": true,
+           "description": "DESCRIPTION",
+           "full_id": "GROUP/macro_id",
+           "group": "GROUP",
+           "id": "macro_id",
+           "oid: "lmacro:GROUP/macro_id",
+           "type": "lmacro"
+        }
+    ]
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
