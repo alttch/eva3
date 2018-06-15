@@ -107,6 +107,8 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
 
+.. _lm_set:
+
 set - set lvar state
 --------------------
 
@@ -126,6 +128,8 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
 
+.. _lm_reset:
+
 reset - reset lvar state
 ------------------------
 
@@ -143,6 +147,8 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+
+.. _lm_clear:
 
 clear - clear lvar state
 ------------------------
@@ -162,6 +168,8 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+
+.. _lm_toggle:
 
 toggle - toggle lvar value
 --------------------------
@@ -587,6 +595,8 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
+.. _lm_list_rule_props:
+
 list_rule_props - get editable rule parameters
 -----------------------------------------------
 
@@ -595,7 +605,9 @@ rule<decision_matrix>`.
 
 Parameters:
 
-* **k** masterkey
+* **k** masterkey or a key with *allow=dm_rule_props* to access
+  in_range,_\*enabled and **chillout_time** rule settings, or with an access to
+  a certain rule
 * **i** rule id
 
 Errors:
@@ -612,7 +624,9 @@ Allows to set configuration parameters of the rule.
 
 Parameters:
 
-* **k** masterkey
+* **k** masterkey or a key with *allow=dm_rule_props* to access
+  in_range,_\*enabled and **chillout_time** rule settings, or with an access to
+  a certain rule
 * **i** rule id
 * **p** rule configuration param
 * **v** param value
@@ -673,6 +687,11 @@ controllers<lm_remote_uc>`.  Useful to debug the controller connections.
 Parameters:
 
 * **k** masterkey
+
+optionally:
+
+* **g** item group
+* **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`)
 
 Returns the JSON array of :ref:`units<unit>` and :ref:`sensors<sensor>` loaded
 from the remote controllers. Additional field **controller_id** is present in

@@ -125,7 +125,7 @@ Create unit control action and put it into the queue of the controller.
 Parameters:
 
 * **k** valid API key
-* **ID** unique unit id
+* **i** unique unit id
 * **s** new unit status
 * **v** new unit value
 
@@ -133,8 +133,8 @@ optionally:
 
 * **p** action priority in queue (the less value is** the higher
   priority is, default is 100)
-* **u** unique action ID (use this option only if you know what you do, the
-  system assigns the unique ID by default)
+* **u** unique action id (use this option only if you know what you do, the
+  system assigns the unique id by default)
 * **w** the API request will wait for the completion of the action for the
   specified number of seconds
 * **q** timeout (sec) for action processing in the public queue
@@ -166,7 +166,7 @@ Returns JSON dict with the following data (time** UNIX_TIMESTAMP):
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** item doesn't exist, or the key has no access to the item
+* **404 Not Found** unit doesn't exist, or the key has no access to the unit
 
 In case the parameter **w** is not present or action is not terminated in the
 specified wait time, it will continue running, and it's status may be checked
@@ -186,14 +186,14 @@ simple units.
 Parameters:
 
 * **k** valid API key
-* **id** unique unit id
+* **i** unique unit id
 
 optionally:
 
 * **p** action priority in queue (the less value is** the higher
   priority is, default is 100)
-* **u** unique action ID (use this option only if you know what you do, the
-  system assigns the unique ID by default)
+* **u** unique action id (use this option only if you know what you do, the
+  system assigns the unique id by default)
 * **w** the API request will wait for the completion of the action for the
   specified number of seconds
 * **q** timeout (sec) for action processing in the public queue
@@ -247,6 +247,7 @@ Parameters:
 
 * **k** valid API key
 * **u** action UUID
+* **i** item id, either item id or action UUID must be specified
 
 Returns:
 
@@ -257,8 +258,8 @@ termination is disabled in unit configuration.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** action with the specified UUID doesn't exist (or already
-  compelted), or the key has no access to it
+* **404 Not Found** item or action with the specified UUID doesn't exist (or
+  already compeleted), or the key has no access to it
 
 .. _uc_q_clean:
 
@@ -372,6 +373,8 @@ Get the list of the item groups. Useful i.e. for the custom interfaces.
 Parameters:
 
 * **k** valid API key
+* **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`),
+  required
 
 Returns JSON array:
 
@@ -396,6 +399,11 @@ Returns the list of all items available
 Parameters:
 
 * **k** masterkey
+
+optionally:
+
+* **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`)
+* **g** item group
 
 Returns JSON array:
 
@@ -665,23 +673,22 @@ microcontrollers sometimes takes advantage.
 
 To update the status of the item send the following UDP packet to API port:
 
-    ID u <status> [value]
+    <ID> u <status> [value]
 
-(ID** item ID, value** optional parameter).
+(**ID** - item id, **value** - optional parameter).
 
 To send :ref:`action<uc_action>` for the unit send the following UDP packet to
 API port:
 
-    ID <status> [value] [priority]
+    <ID> <status> [value] [priority]
 
 (value and priority** optional parameters).
-
 
 If you needs to skip the parameter, set it to 'None'. For example:
 
     sensor1 u None 29.55
 
-will keep sensor1 status and set value 29.55
+will keep sensor1 status and set value 29.55;
 
 or
 

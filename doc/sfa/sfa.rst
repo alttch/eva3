@@ -5,7 +5,7 @@ SCADA Final Aggregator (SFA) is a subsystem usually installed directly in the
 host wherein the user interface or third-party applications are installed.
 
 Aggregates all the :doc:`control and monitoring items</items>`, :doc:`logic
-macros</lm/macros>` and :doc:`decision rules</lm/decision_matrix` from all
+macros</lm/macros>` and :doc:`decision rules</lm/decision_matrix>` from all
 connected :doc:`UC</uc/uc>` and :doc:`LM PLC</lm/lm>` controllers into a single
 space. As the result, the final interface or application doesn't need to know
 on which controller the :doc:`item</items>` is present, it does all the
@@ -62,7 +62,7 @@ The file contais a JSON dict:
 Variables can be changed while the server is running via :doc:`/sys_api` as
 well as :doc:`sfa-cmd</cli>` **get_cvar** and **set_cvar** commands.
 
-.. _lm_apikey:
+.. _sfa_apikey:
 
 etc/sfa_apikeys.ini API keys file
 ---------------------------------

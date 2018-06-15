@@ -422,6 +422,7 @@ class RemoteUCPool(RemoteControllerPool):
                value=None,
                wait=0,
                uuid=None,
+               q=None,
                priority=None):
         if not unit_id in self.controllers_by_unit: return None
         uc = self.controllers_by_unit[unit_id]
@@ -430,6 +431,7 @@ class RemoteUCPool(RemoteControllerPool):
         if wait: p['w'] = wait
         if uuid: p['u'] = uuid
         if priority: p['p'] = priority
+        if q: p['q'] = q
         result = uc.api_call('action', p)
         if result and \
                 'item_id' in result and \
@@ -447,6 +449,7 @@ class RemoteUCPool(RemoteControllerPool):
                unit_id,
                wait=0,
                uuid=None,
+               q=None,
                priority=None):
         if not unit_id in self.controllers_by_unit: return None
         uc = self.controllers_by_unit[unit_id]
@@ -454,6 +457,7 @@ class RemoteUCPool(RemoteControllerPool):
         if wait: p['w'] = wait
         if uuid: p['u'] = uuid
         if priority: p['p'] = priority
+        if q: p['q'] = q
         result = uc.api_call('action_toggle', p)
         if result and \
                 'item_id' in result and \

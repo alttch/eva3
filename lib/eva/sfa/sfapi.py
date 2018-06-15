@@ -86,6 +86,7 @@ class SFA_API(GenericAPI):
                nstatus=None,
                nvalue='',
                priority=None,
+               q=None,
                wait=0):
         unit = eva.sfa.controller.uc_pool.get_unit(i)
         if not unit or not apikey.check(k, unit): return None
@@ -95,18 +96,20 @@ class SFA_API(GenericAPI):
             value=nvalue,
             wait=wait,
             uuid=action_uuid,
-            priority=priority)
+            priority=priority,
+            q=q)
 
     def action_toggle(self,
                       k=None,
                       i=None,
                       action_uuid=None,
                       priority=None,
+                      q=None,
                       wait=0):
         unit = eva.sfa.controller.uc_pool.get_unit(i)
         if not unit or not apikey.check(k, unit): return None
         return eva.sfa.controller.uc_pool.action_toggle(
-            unit_id=i, wait=wait, uuid=action_uuid, priority=priority)
+            unit_id=i, wait=wait, uuid=action_uuid, priority=priority, q=q)
 
     def disable_actions(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(i)
@@ -456,7 +459,14 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         else:
             _q = None
         a = super().action(
-            k=k, i=i, action_uuid=u, nstatus=_s, nvalue=v, priority=_p, wait=_w)
+            k=k,
+            i=i,
+            action_uuid=u,
+            nstatus=_s,
+            nvalue=v,
+            priority=p,
+            q=q,
+            wait=_w)
         if not a:
             raise cp_api_404()
         return a
@@ -483,7 +493,8 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
                 raise cp_api_error('q_timeout is not a float')
         else:
             _q = None
-        a = super().action_toggle(k=k, i=i, action_uuid=u, priority=_p, wait=_w)
+        a = super().action_toggle(
+            k=k, i=i, action_uuid=u, priority=p, q=q, wait=_w)
         if not a:
             raise cp_api_404()
         return a
