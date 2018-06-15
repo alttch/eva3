@@ -82,9 +82,9 @@ not to send the records in cycles.
 Configuring the notification endpoints
 --------------------------------------
 
-The configuration is done using the :doc:`console commands</cli/cli>`
-uc-notifier for :doc:`/uc/uc`, lm-notifier for :doc:`/lm/lm` and sfa-notifier
-for :doc:`/sfa/sfa`. Therefore, even if two controllers are set up in the same
+The configuration is done using the :doc:`console commands</cli>` uc-notifier
+for :doc:`/uc/uc`, lm-notifier for :doc:`/lm/lm` and sfa-notifier for
+:doc:`/sfa/sfa`. Therefore, even if two controllers are set up in the same
 folder on the same server, they have different notification endpoints
 configurations.
 

@@ -1,3 +1,6 @@
 UC_ENABLED=no
+; UC_USER=nobody
 LM_ENABLED=no
+; LM_USER=nobody
 SFA_ENABLED=no
+; SFA_USER=nobody

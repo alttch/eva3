@@ -94,7 +94,7 @@ maximally synchronize the system time between LM PLC and SFA, if LM PLC
 controllers are set up on the remote servers.
 
 To connect the controllers you should use **sfa-cmd** :doc:`console
-command</cli/cli>` or SFA API :ref:`append_controller<sfa_append_controller>`
+command</cli>` or SFA API :ref:`append_controller<sfa_append_controller>`
 function.
 
 When connecting, it is necessary to indicate minimum URI of the connected
