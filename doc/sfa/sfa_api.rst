@@ -274,11 +274,11 @@ Returns JSON array:
 
     [
         {
-        description": "controller_description",
-        "full_id": "type/controller_id",
-        "group": "type",
-        "id": "controller_id",
-        "oid": "remote_<type>:type/controller_id",
+        "description": "<controller_description>",
+        "full_id": "<type/controller_id>",
+        "group": "<type>",
+        "id": "<controller_id>",
+        "oid": "remote_<type>:<type>/<controller_id>",
         "type": "remote_<type>"
         }
     ]

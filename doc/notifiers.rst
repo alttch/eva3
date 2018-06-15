@@ -54,16 +54,16 @@ When the system or you add the record to the logs, the notification system
 sends 'log' event notification. The log notification data have the following
 format:
 
-.. code-block:: json
+.. code-block::
 
     {
-     "h": "SYSTEM_NAME",
-     "l": LEVEL,
-     "p": "PRODUCT_CODE",
-     "msg": "Message body",
-     "mod": "MODULE",
-     "th": "MODULE_THREAD",
-     "t": TIME(UNIX_TIMESTAMP)
+     "h": "<SYSTEM_NAME>",
+     "l": <LEVEL>,
+     "p": "<PRODUCT_CODE>",
+     "msg": "<message body>",
+     "mod": "<MODULE>",
+     "th": "<MODULE_THREAD>",
+     "t": <TIME(UNIX_TIMESTAMP)>
     }
 
 * **SYSTEM_NAME** the name specified in the configuration file of controller

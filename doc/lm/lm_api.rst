@@ -286,22 +286,22 @@ optionally:
 
 Returns JSON dict with the following data (time** UNIX_TIMESTAMP):
 
-.. code-block:: json
+.. code-block::
 
     {
        "err": "<compilation and exec errors>",
-       "exitcode": exit_code,
-       "item_group": "group",
-       "item_id": "macro_id",
+       "exitcode": <exit_code>,
+       "item_group": "<group>",
+       "item_id": "<macro_id>",
        "item_type": "lmacro",
-       "out": "",
-       "priority": priority,
-       "status": "action_status",
+       "out": "[macro out variable]",
+       "priority": <priority>,
+       "status": "<action status>",
        "time": {
-           "created": creation_time,
-           "pending": public_queue_pending_time,
-           "queued": controller_queue_pending_time,
-           "running": running_time
+           "created": <creation_time>,
+           "pending": <public_queue_pending_time>,
+           "queued": <controller_queue_pending_time>,
+           "running": <running_time>
        },
        "uuid": "unique_action_id"
     }
@@ -606,8 +606,9 @@ rule<decision_matrix>`.
 Parameters:
 
 * **k** masterkey or a key with *allow=dm_rule_props* to access
-  in_range,_\*enabled and **chillout_time** rule settings, or with an access to
-  a certain rule
+  **in_range_\***,_**enabled** and **chillout_time** rule props, or with an
+  access to a certain rule by ID
+
 * **i** rule id
 
 Errors:
@@ -718,11 +719,11 @@ Returns JSON array:
 
     [
         {
-        description": "controller_description",
-        "full_id": "uc/controller_id",
+        "description": "<controller_description>",
+        "full_id": "<uc/controller_id>",
         "group": "uc",
-        "id": "controller_id"
-        "oid": "remote_uc:uc/controller_id"
+        "id": "<controller_id>",
+        "oid": "<remote_uc:uc/controller_id>",
         "type": "remote_uc"
         }
     ]

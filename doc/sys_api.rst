@@ -82,19 +82,18 @@ Parameters:
 
 Returns JSON dict
 
-.. code-block:: json
+.. code-block::
 
     {
        "args": [ "<specified>", "<command>", "<parameters>" ],
        "cmd": "<command>",
        "err": "<stderr output>",
-       "exitcode": "<script exit code>",
+       "exitcode": <script exit code>,
        "out": "<stdout output>",
        "status": "<current_status>",
        "time": {
-           "<status1>": UNIX_TIMESTAMP,
-           "<status2>": UNIX_TIMESTAMP,
-           ........................
+           "<status1>": <UNIX_TIMESTAMP>,
+           "<status2>": <UNIX_TIMESTAMP>
        },
        "timeout": "<specified_max_execution_time>"
     }
@@ -276,7 +275,7 @@ Returns JSON dict
 .. code-block:: json
 
     {
-        "VARIABLE" = "VALUE"
+        "VARIABLE" : "VALUE"
     }
 
 Errors:
