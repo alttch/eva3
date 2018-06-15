@@ -101,8 +101,8 @@ command</cli>` or :doc:`lm_api` **append_controller** function.
 When connecting, it is necessary to indicate minimum URI of the connected
 controller and API KEY functioning either as a master key or the key with
 access the certain items. If Logic Manager and UC keys are the same, the key
-can be set as *$key* (\$key in the command line). In this case, LM will use the
-local key of its own configuration.
+can be set as *$key* (\\$key in the command line). In this case, LM will use
+the local key of its own configuration.
 
 .. code-block:: bash
 

@@ -760,7 +760,7 @@ Parameters:
 
 * **k** masterkey
 * **uri** :doc:`/uc/uc_api` uri (*proto://host:port*)
-* **a** remote controller API key (you can use \$key to use local key)
+* **a** remote controller API key (\$key to use local key)
 
 optionally:
 
