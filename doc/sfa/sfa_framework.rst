@@ -334,11 +334,11 @@ And for automatic reconnection it should look like:
         if (data.status == 403) {
             // if the server returned error 403 (authentication failed
             // due to invalid auth data), the user should get a login form
-            show_login_form()
+            show_login_form();
             } else {
             // in case of another errors - try to restart framework in 3 seconds
             // and attempt to connect again
-            setTimeout(eva_sfa_start, 3 * 1000)
+            setTimeout(eva_sfa_start, 3 * 1000);
             }
        }
 
