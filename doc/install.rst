@@ -20,18 +20,19 @@ System Requirements
 * To sync :doc:`item</items>` status between the components in real time -
   :ref:`MQTT<mqtt_>`-server (i.e. `mosquitto <http://mosquitto.org/>`_)
 
-Installing modules and creating the initial configuration
----------------------------------------------------------
+Initial configuration
+---------------------
 
 Easy setup
 ~~~~~~~~~~
 
-* For the interactive setup, run *sh easy-setup.sh* in EVA folder and follow the
+* For the interactive setup, run *./easy-setup.sh* in EVA folder and follow the
   instructions.
-* For the automatic setup, run *sh easy-setup.sh -h* in EVA folder and choose
+* For the automatic setup, run *./easy-setup.sh -h* in EVA folder and choose
   the installation type.
 * Setup log rotation by placing *etc/logrotate.d/eva-\** files to
-  */etc/logrotate.d* system folder.
+  */etc/logrotate.d* system folder. Correct the paths to EVA files if
+  necessary.
 * Setup automatic launch at boot time by placing *EVADIR/sbin/eva-control
   start* command into system startup i.e. to */etc/rc.local*.
 
@@ -44,7 +45,7 @@ Easy setup
 Manual setup
 ~~~~~~~~~~~~
 
-* Run *sh install.sh* in EVA folder
+* Run *./install.sh* in EVA folder
 * In *etc* folder copy *uc.ini-dist* into *uc.ini*; if you plan to use
   :doc:`/uc/uc`, change the necessary configuration parameters.
 * Copy *uc_apikeys.ini-dist* into *uc_apikeys.ini* and set the API keys
@@ -63,7 +64,8 @@ Manual setup
     SFA_USER=nobody
 
 * Setup log rotation by placing *etc/logrotate.d/eva-\** files to
-  */etc/logrotate.d* system folder.
+  */etc/logrotate.d* system folder. Correct the paths to EVA files if
+  necessary.
 * Setup automatic launch at boot time by placing *EVADIR/sbin/eva-control
   start* command into system startup i.e. to */etc/rc.local*.
 
