@@ -248,7 +248,7 @@ To switch lvar value between *0* and *1* use
 .. code-block:: javascript
 
     eva_sfa_set_toggle(lvar_id, cb_success, cb_error)
-    //or
+    // or
     eva_sfa_toggle(lvar_id, cb_success, cb_error)
 
 To reset lvar when used as a timer or flag:
@@ -275,7 +275,7 @@ To change :doc:`decision rules</lm/decision_matrix>` properties, call:
 Examples
 --------
 
-Examples of the SFA framework usage are provided in ":doc:`</tutorial/ui>` part
+Examples of the SFA framework usage are provided in ":doc:`/tutorial/ui` part
 of the EVA `/tutorial/intro`.
 
 Controlling reliability of the connection
