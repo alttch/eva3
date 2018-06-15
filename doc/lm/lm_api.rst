@@ -233,11 +233,11 @@ Returns JSON array:
     [
         {
            "action_enabled": true,
-           "description": "DESCRIPTION",
-           "full_id": "GROUP/macro_id",
-           "group": "GROUP",
+           "description": "description",
+           "full_id": "group/macro_id",
+           "group": "group",
            "id": "macro_id",
-           "oid: "lmacro:GROUP/macro_id",
+           "oid": "lmacro:group/macro_id",
            "type": "lmacro"
         }
     ]
@@ -245,3 +245,64 @@ Returns JSON array:
 Errors:
 
 * **403 Forbidden** invalid API KEY
+
+run - execute macro
+-------------------
+
+Executes a :doc:`macro<macros>` with the specified arguments.
+
+Parameters:
+
+* **k** valid API key
+* **i** macro id
+
+optionally:
+
+* **a** macro arguments, space separated
+* **p** queue priority (less value - higher priority, default 100)
+* **u** unique action ID (use this option only if you know what you do, the
+  system assigns the unique ID by default)
+* **w** the API request will wait for the completion of the action for the
+  specified number of seconds
+* **q** timeout (sec) for action processing in the public queue
+
+Returns JSON dict with the following data (time** UNIX_TIMESTAMP):
+
+.. code-block:: json
+
+    {
+       "err": "<compilation and exec errors>",
+       "exitcode": exit_code,
+       "item_group": "group",
+       "item_id": "macro_id",
+       "item_type": "lmacro",
+       "out": "",
+       "priority": priority,
+       "status": "action_status",
+       "time": {
+           "created": creation_time,
+           "pending": public_queue_pending_time,
+           "queued": controller_queue_pending_time,
+           "running": running_time
+       },
+       "uuid": "unique_action_id"
+    }
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** macro doesn't exist, or the key has no access to the macro
+
+In case the parameter w is not indicated or action is not finished in the
+specified time, it should continue running, and its status may be checked in
+accordance with assigned uuid. If action is terminated, exit code will stand
+for the exit code of the macro. Additionally, "time" will be supplemented by
+"completed", "failed" or "terminated". "Out" field contains the output of "out"
+variable (if it was associated with a value in the macro), "err" field (in case
+of macro compilation/execution errors)contains the error details.
+
+result - macro execution result
+-------------------------------
+
+
+

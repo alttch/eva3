@@ -144,23 +144,23 @@ Returns JSON dict with the following data (time** UNIX_TIMESTAMP):
 .. code-block:: json
 
     {
-       "err": "OUTPUT_STDERR",
-       "exitcode": EXIT_CODE,
-       "item_group": "GROUP",
-       "item_id": "UNIT_ID",
+       "err": "output_stderr",
+       "exitcode": exit_code,
+       "item_group": "group",
+       "item_id": "unit_id",
        "item_type": "unit",
-       "nstatus": NEW_STATUS,
-       "nvalue": "NEW_VALUE",
-       "out": "OUTPUT_STDOUT",
-       "priority": PRIORITY,
-       "status": "ACTION_STATUS",
+       "nstatus": new_status,
+       "nvalue": "new_value",
+       "out": "output_stdout",
+       "priority": priority,
+       "status": "action_status",
        "time": {
-           "created": CREATION_TIME,
-           "pending": PUBLIC_QUEUE_PENDING_TIME,
-           "queued": UNIT_QUEUE_PENDING_TIME,
-           "running": RUNNING_TIME
+           "created": creation_time,
+           "pending": public_queue_pending_time,
+           "queued": unit_queue_pending_time,
+           "running": running_time
        },
-       "uuid": "UNIQUE_ACTION_ID"
+       "uuid": "unique_action_id"
     }
 
 Errors:
