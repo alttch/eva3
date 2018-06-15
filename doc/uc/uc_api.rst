@@ -168,11 +168,12 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** item doesn't exist, or the key has no access to the item
 
-In case the parameter 'w' is not present or action is not terminated in the
+In case the parameter **w** is not present or action is not terminated in the
 specified wait time, it will continue running, and it's status may be checked
-in with assigned uuid. If the action is terminated, out and err will have not
-null values and the process exit code will be available at 'exitcode'.
-Additionally, 'time' will be appended by "completed", "failed" or "terminated".
+in with assigned uuid. If the action is terminated, **out** and **err** will
+have not null values and the process exit code will be available at
+**exitcode**.  Additionally, **time** will be supplemented by *completed*,
+*failed* or *terminated*.
 
 .. _uc_action_toggle:
 
@@ -449,7 +450,6 @@ Returns JSON dict result="OK", if the configuration is saved successfully.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** item doesn't exist, or the key has no access to it
 
 .. _uc_list_props:
 
@@ -489,7 +489,6 @@ occurs.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** item doesn't exist, or the key has no access to it
 
 .. _uc_create_unit:
 
@@ -591,7 +590,6 @@ occurred.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** the source item doesn't exist
 
 .. _uc_clone_group:
 
@@ -619,7 +617,6 @@ occurred. Only items with type unit and sensor are cloned.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** the source group doesn't exist
 
 .. _uc_destroy:
 
@@ -631,7 +628,7 @@ system.
 
 Parameters:
 
-* **k** valid API key
+* **k** masterkey
 * **i** item id
 * **g** item group (either id or group must be specified)
 
@@ -651,7 +648,6 @@ item(s) will remain in the system after restarting the controller.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** the item or group doesn't exist
 
 .. include:: ../userauth.rst
 

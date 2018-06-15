@@ -303,13 +303,13 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** macro doesn't exist, or the key has no access to the macro
 
-In case the parameter w is not indicated or action is not finished in the
+In case the parameter **w** is not indicated or action is not finished in the
 specified time, it should continue running, and its status may be checked in
 accordance with assigned uuid. If action is terminated, exit code will stand
-for the exit code of the macro. Additionally, "time" will be supplemented by
-"completed", "failed" or "terminated". "Out" field contains the output of "out"
-variable (if it was associated with a value in the macro), "err" field (in case
-of macro compilation/execution errors)contains the error details.
+for the exit code of the macro. Additionally, **time** will be supplemented by
+*completed*, *failed* or *terminated*. **out** field contains the output of
+*out* variable (if it was associated with a value in the macro), **err** field
+(in case of macro compilation/execution errors)contains the error details.
 
 .. _lm_result:
 
@@ -378,7 +378,7 @@ get_config - get logic variable configuration
 
 Parameters:
 
-* **k** valid API key
+* **k** masterkey
 * **i** lvar id
 
 Returns complete :ref:`lvar<lvar>` configuration.
@@ -386,7 +386,7 @@ Returns complete :ref:`lvar<lvar>` configuration.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+* **404 Not Found** lvar doesn't exist
 
 save_config - save lvar configuration on disk
 ---------------------------------------------
@@ -403,7 +403,6 @@ Returns JSON dict result="OK", if the configuration is saved successfully.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to it
 
 .. _lm_list_props:
 
@@ -420,7 +419,7 @@ Parameters:
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to it
+* **404 Not Found** lvar doesn't exist
 
 .. _lm_set_prop:
 
@@ -442,7 +441,6 @@ occurs.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to it
 
 create_lvar - create new lvar
 -----------------------------
@@ -473,7 +471,7 @@ Deletes :ref:`lvar<lvar>`.
 
 Parameters:
 
-* **k** valid API key
+* **k** masterkey
 * **i** lvar id
 
 Returns result="OK if the lvar is deleted, or result="ERROR", if error
@@ -492,7 +490,6 @@ lvar(s) will remain in the system after restarting the controller.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** the lvar doesn't exist
 
 .. _lm_list_macro_props:
 
@@ -510,7 +507,7 @@ Parameters:
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** macro doesn't exist, or the key has no access to it
+* **404 Not Found** macro doesn't exist
 
 .. _lm_set_macro_prop:
 
@@ -532,7 +529,6 @@ occurs.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** macro doesn't exist, or the key has no access to it
 
 .. _lm_create_macro:
 
@@ -566,7 +562,7 @@ Deletes :doc:`macro<macros>`.
 
 Parameters:
 
-* **k** valid API key
+* **k** masterkey
 * **i** macro id
 
 Returns result="OK if the macro is deleted, or result="ERROR", if error
@@ -575,7 +571,6 @@ occurred.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** the macro doesn't exist
 
 list_rules - get rules list
 ---------------------------
@@ -606,7 +601,7 @@ Parameters:
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** rule doesn't exist, or the key has no access to it
+* **404 Not Found** rule doesn't exist
 
 .. _lm_set_rule_prop:
 
@@ -628,7 +623,6 @@ occurs.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** rule doesn't exist, or the key has no access to it
 
 create_rule - create new rule
 ------------------------------
@@ -658,7 +652,7 @@ Deletes :doc:`decision rule<decision_matrix>`.
 
 Parameters:
 
-* **k** valid API key
+* **k** masterkey
 * **i** rule id
 
 Returns result="OK if the rule is deleted, or result="ERROR", if error
@@ -667,9 +661,164 @@ occurred.
 Errors:
 
 * **403 Forbidden** invalid API KEY
-* **404 Not Found** the rule doesn't exist
+
+.. _lm_list_remote:
 
 list_remote - get a list of items from connected UCs
 ----------------------------------------------------
 
+Get a list of the items loaded from the connected :ref:`UC
+controllers<lm_remote_uc>`.  Useful to debug the controller connections.
+
+Parameters:
+
+* **k** masterkey
+
+Returns the JSON array of :ref:`units<unit>` and :ref:`sensors<sensor>` loaded
+from the remote controllers. Additional field **controller_id** is present in
+any item indicating the controller it's loaded from.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+.. _lm_list_controllers:
+
+list_controllers - get controllers list
+---------------------------------------
+
+Get the list of all connected :ref:`UC controllers<lm_remote_uc>`.
+
+Parameters:
+
+* **k** valid API key
+
+Returns JSON array:
+
+.. code-block:: json
+
+    [
+        {
+        description": "controller_description",
+        "full_id": "uc/controller_id",
+        "group": "uc",
+        "id": "controller_id"
+        "oid": "remote_uc:uc/controller_id"
+        "type": "remote_uc"
+        }
+    ]
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+.. _lm_list_controller_props:
+
+list_controller_props - get editable controller parameters
+----------------------------------------------------------
+
+Allows to get all editable parameters of the connected :ref:`UC
+controller<lm_remote_uc>`.
+
+* **k** masterkey
+* **i** controller id
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** controller doesn't exist
+
+.. _lm_set_controller_prop:
+
+set_controller_prop - set controller parameters
+-----------------------------------------------
+
+Allows to set configuration parameters of the connected UC.
+
+Parameters:
+
+* **k** masterkey
+* **i** controller id
+* **p** controller configuration param
+* **v** param value
+
+Returns result="OK if the parameter is set, or result="ERROR", if an error
+occurs.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+.. _lm_append_controller:
+
+append_controller - connect remote UC
+-------------------------------------
+
+Connects remote :ref:`UC controller<lm_remote_uc>` to the local.
+
+Parameters:
+
+* **k** masterkey
+* **uri** :doc:`/uc/uc_api` uri (*proto://host:port*)
+* **a** remote controller API key (you can use \$key to use local key)
+
+optionally:
+
+* **m** :ref:`MQTT notifier<mqtt_>` to exchange item states in real time
+* **s** *True*/*False* (*1*/*0*) verify remote SSL certificate or pass invalid
+* **t** timeout (seconds) for the remote controller API calls
+* **save=1** save connected controller configuration on the disk immediately
+  after creation
+
+Returns result="OK if the controller is connected, or result="ERROR", if the
+error occurred.
+
+The remote controller id is being obtained and set automatically according to
+its hostname or **name** field in the controller configuration. The remote
+controller id can't be changed.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+.. _lm_remove_controller:
+
+remove_controller - disconnect UC
+---------------------------------
+
+Disconnects the remote :ref:`UC controller<lm_remote_uc>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** controller id
+
+Returns result="OK if the controller is disconnected, or result="ERROR", if
+error occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+.. _lm_reload_controller:
+
+reload_controller - reload items from UC
+----------------------------------------
+
+Allows to immediately reload all the :doc:`items</items>` and their status from
+the remote :ref:`UC controller<lm_remote_uc>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** controller id
+
+Returns result="OK if the controller is deleted, or result="ERROR", if error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
 .. include:: ../userauth.rst
+

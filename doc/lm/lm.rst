@@ -78,6 +78,8 @@ host only.
 .. literalinclude:: ../../etc/lm_apikeys.ini-dist
     :language: ini
 
+.. _lm_remote_uc:
+
 Connecting UC controllers
 -------------------------
 
