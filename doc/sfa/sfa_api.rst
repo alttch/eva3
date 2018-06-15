@@ -57,7 +57,7 @@ Logical variables control
   variable<lvar>` state
 
 Macros control
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
 * :ref:`run<lm_run>` - LM API call to execute :doc:`logic control
   macro</lm/macros>`

@@ -283,7 +283,7 @@ class EVA_APIClient {
     function ssl_verify($v) { $this->_ssl_verify = $v; }
 
 
-    function call($func, $params = null, $timeout = null) {
+    function call($func, $params=null, $timeout=null) {
         if(!is_callable('curl_init')) {
             trigger_error('Error: curl not enabled', E_USER_ERROR);
             return array($GLOBALS['eva_result_not_ready'], array());

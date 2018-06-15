@@ -36,7 +36,7 @@ configuration files generally match the other components.
 .. _sfa_ini:
 
 etc/sfa.ini configuration file
------------------------------
+------------------------------
 
 sfa.ini - primary configuration file of SFA
 
@@ -57,7 +57,6 @@ The file contais a JSON dict:
      "VAR1": "value1",
      "VAR2": "value2"
     }
-
 
 Variables can be changed while the server is running via :doc:`/sys_api` as
 well as :doc:`sfa-cmd</cli>` **get_cvar** and **set_cvar** commands.
