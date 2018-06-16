@@ -99,6 +99,17 @@ SFA commands:
                                               but it's not recommended unless
                                               you know what you are doing
 
+    action_toggle <-i id> [-p priority] [-w sec] [-q sec] [-u uuid]
+                                              execute unit action to toggle
+                                              it's status (set 1 if 0, 0 if 1).
+                                              Options and behaviour are equal
+                                              to action command.
+
+    result [-u uuid] [-i id]
+                                              get action result(s), filter by
+                                               -u  action uuid
+                                               -i  unit id
+
     enable_actions <-i id>                    enable actions of unit, save
                                               config property instantly
 
@@ -121,6 +132,14 @@ SFA commands:
 
     reset <-i id>                             reset lvar when used as timer,
                                               set status = 1, value = "1"
+
+    clear <-i id>                             clears lvar when used as a flag,
+                                              set status=1, value="0". If
+                                              lvar is being used as a timer and
+                                              has 'expires' set, set status=0
+
+    toggle <-i id>                            toggles lvar when used as a flag
+                                              value between "0" and "1"
 
     list_macros [-g group] [-i controller_id] list available macros, filter
                                               by group and/or controller_id

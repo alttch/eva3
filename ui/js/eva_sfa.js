@@ -365,6 +365,42 @@ function eva_sfa_action_toggle(
 }
 
 /**
+ * Get action results by unit ID
+ *
+ * @param unit_id - full unit ID
+ */
+function eva_sfa_result(unit_id, cb_success, cb_error) {
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += 'k=' + eva_sfa_apikey;
+  }
+  q += '&i=' + unit_id;
+  $.getJSON('/sfa-api/result?' + q, function(data) {
+    if (cb_success !== undefined && cb_success !== null) cb_success(data);
+  }).error(function(data) {
+    if (cb_error !== undefined && cb_error !== null) cb_error(data);
+  });
+}
+
+/**
+ * Get action result by uuid
+ *
+ * @param uuid - action uuid
+ */
+function eva_sfa_result_by_uuid(uuid, cb_success, cb_error) {
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += 'k=' + eva_sfa_apikey;
+  }
+  q += '&u=' + uuid;
+  $.getJSON('/sfa-api/result?' + q, function(data) {
+    if (cb_success !== undefined && cb_success !== null) cb_success(data);
+  }).error(function(data) {
+    if (cb_error !== undefined && cb_error !== null) cb_error(data);
+  });
+}
+
+/**
  * Kill running unit action and clean queue
  *
  * @param unit_id - full unit ID
@@ -470,12 +506,17 @@ function eva_sfa_toggle(lvar_id, cb_success, cb_error) {
     q += 'k=' + eva_sfa_apikey;
   }
   q += '&i=' + lvar_id;
-  q += '&v=' + value;
   $.getJSON('/sfa-api/toggle?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
   }).error(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
+}
+
+/* deprecated - use eva_sfa_toggle instead */
+function eva_sfa_set_toggle(lvar_id, cb_success, cb_error) {
+  _eva_sfa_deprecated('eva_sfa_set_toggle', 'eva_sfa_toggle');
+  return eva_sfa_toggle(lvar_id, cb_success, cb_error);
 }
 
 /**
@@ -501,7 +542,7 @@ function eva_sfa_reset(lvar_id, cb_success, cb_error) {
  *
  * @param lvar_id - full lvar ID
  */
-function eva_sfa_reset(lvar_id, cb_success, cb_error) {
+function eva_sfa_clear(lvar_id, cb_success, cb_error) {
   var q = '';
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
     q += 'k=' + eva_sfa_apikey;
@@ -743,4 +784,8 @@ function eva_sfa_load_initial_states(reload) {
       eva_sfa_start_ws();
     }
   });
+}
+
+function _eva_sfa_deprecated(f1, f2) {
+  console.log('!!! function ' + f1 + ' is deprecated. Use ' + f2 + 'instead');
 }

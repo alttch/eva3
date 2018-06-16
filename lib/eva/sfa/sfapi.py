@@ -110,6 +110,18 @@ class SFA_API(GenericAPI):
         if not unit or not apikey.check(k, unit): return None
         return eva.sfa.controller.uc_pool.action_toggle(
             unit_id=i, wait=wait, uuid=action_uuid, priority=priority, q=q)
+    
+    def result(self, k=None, i=None, u=None):
+        if i:
+            unit = eva.sfa.controller.uc_pool.get_unit(i)
+        elif u:
+            a = eva.sfa.controller.uc_pool.action_history_get(u)
+            unit = eva.sfa.controller.uc_pool.get_unit(a['i']);
+        else:
+            return None
+        if not unit or not apikey.check(k, unit): return None
+        return eva.sfa.controller.uc_pool.result(unit_id=i, uuid=u)
+
 
     def disable_actions(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(i)
@@ -121,10 +133,16 @@ class SFA_API(GenericAPI):
         if not unit or not apikey.check(k, unit): return None
         return eva.sfa.controller.uc_pool.enable_actions(unit_id=i)
 
-    def terminate(self, k=None, i=None):
-        unit = eva.sfa.controller.uc_pool.get_unit(i)
+    def terminate(self, k=None, i=None, u=None):
+        if i:
+            unit = eva.sfa.controller.uc_pool.get_unit(i)
+        elif u:
+            a = eva.sfa.controller.uc_pool.action_history_get(u)
+            unit = eva.sfa.controller.uc_pool.get_unit(a['i']);
+        else:
+            return None
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.terminate(unit_id=i)
+        return eva.sfa.controller.uc_pool.terminate(unid_id=i, uuid=u)
 
     def kill(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(i)
@@ -143,7 +161,19 @@ class SFA_API(GenericAPI):
             lvar_id=i, status=status, value=value)
 
     def reset(self, k=None, i=None):
-        return self.set(k, i, 1, "1")
+        lvar = eva.sfa.controller.lm_pool.get_lvar(i)
+        if not lvar or not apikey.check(k, lvar): return None
+        return eva.sfa.controller.lm_pool.reset(lvar_id=i)
+
+    def toggle(self, k=None, i=None):
+        lvar = eva.sfa.controller.lm_pool.get_lvar(i)
+        if not lvar or not apikey.check(k, lvar): return None
+        return eva.sfa.controller.lm_pool.toggle(lvar_id=i)
+
+    def clear(self, k=None, i=None):
+        lvar = eva.sfa.controller.lm_pool.get_lvar(i)
+        if not lvar or not apikey.check(k, lvar): return None
+        return eva.sfa.controller.lm_pool.clear(lvar_id=i)
 
     def list_macros(self, k=None, controller_id=None, group=None):
         result = []
@@ -382,6 +412,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         SFA_HTTP_API.groups.exposed = True
         SFA_HTTP_API.action.exposed = True
         SFA_HTTP_API.action_toggle.exposed = True
+        SFA_HTTP_API.result.exposed = True
         SFA_HTTP_API.terminate.exposed = True
         SFA_HTTP_API.kill.exposed = True
         SFA_HTTP_API.q_clean.exposed = True
@@ -390,6 +421,8 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
         SFA_HTTP_API.set.exposed = True
         SFA_HTTP_API.reset.exposed = True
+        SFA_HTTP_API.toggle.exposed = True
+        SFA_HTTP_API.clear.exposed = True
 
         SFA_HTTP_API.list_macros.exposed = True
         SFA_HTTP_API.groups_macro.exposed = True
@@ -499,8 +532,13 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
             raise cp_api_404()
         return a
 
-    def terminate(self, k=None, i=None):
-        result = super().terminate(k, i)
+    def result(self, k=None, i=None, u=None):
+        result = super().result(k, i, u)
+        if result is None: raise cp_api_404()
+        return result if result else http_api_result_error()
+
+    def terminate(self, k=None, i=None, u=None):
+        result = super().terminate(k, i, u)
         if result is None: raise cp_api_404()
         return result if result else http_api_result_error()
 
@@ -540,6 +578,18 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
     def reset(self, k=None, i=None):
         if super().reset(k, i):
+            return http_api_result_ok()
+        else:
+            raise cp_api_404()
+
+    def toggle(self, k=None, i=None):
+        if super().toggle(k, i):
+            return http_api_result_ok()
+        else:
+            raise cp_api_404()
+
+    def clear(self, k=None, i=None):
+        if super().clear(k, i):
             return http_api_result_ok()
         else:
             raise cp_api_404()

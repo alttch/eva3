@@ -719,6 +719,24 @@ class RemoteLMPool(RemoteControllerPool):
         if value is not None: p['v'] = value
         return lm.api_call('set', p)
 
+    def reset(self, lvar_id):
+        if not lvar_id in self.controllers_by_lvar: return None
+        lm = self.controllers_by_lvar[lvar_id]
+        p = {'i': lvar_id}
+        return lm.api_call('reset', p)
+
+    def toggle(self, lvar_id):
+        if not lvar_id in self.controllers_by_lvar: return None
+        lm = self.controllers_by_lvar[lvar_id]
+        p = {'i': lvar_id}
+        return lm.api_call('toggle', p)
+
+    def clear(self, lvar_id):
+        if not lvar_id in self.controllers_by_lvar: return None
+        lm = self.controllers_by_lvar[lvar_id]
+        p = {'i': lvar_id}
+        return lm.api_call('clear', p)
+
     def list_rule_props(self, rule_id):
         if not rule_id in self.controllers_by_rule: return None
         lm = self.controllers_by_rule[rule_id]
