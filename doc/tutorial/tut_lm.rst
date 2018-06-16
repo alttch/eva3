@@ -26,8 +26,8 @@ allow Logic Manager to receive UC item states in real time:
 
     lm-notifier create -i eva_1 -p mqtt -h localhost -s plant1 -A eva:secret -y
 
-then subscribe the notification system to receive the states of the local :ref:`logic
-variables<lvar>` which will be created later:
+then subscribe the notification system to receive the states of the local
+:ref:`logic variables<lvar>` which will be created later:
 
 .. code-block:: bash
 
@@ -132,7 +132,7 @@ forget that the inside ventilation should be off from 9pm till 7am. Though this
 will be later implemented via **sfa-cmd** and system **cron**, we should get
 it prepared now.
 
-Ventilation Logic
+Ventilation logic
 ~~~~~~~~~~~~~~~~~
 
 We chose our example, as far as the boundary conditions of the sensor is a very
@@ -154,10 +154,10 @@ Due to the flexibility of EVA there is a number of solutions of this problem:
 
 **Option 1:**
 
-Ventilation is switched on, if the temperature is above 25 degrees, and switched off
-if it is below i.e. 25.5. The logic will have half a degree gap for the
-equipment not to be overloaded. If the temperature changes not that quickly,
-this option would be the best one.
+Ventilation is switched on, if the temperature is above 25 degrees, and
+switched off if it is below i.e. 25.5. The logic will have half a degree gap
+for the equipment not to be overloaded. If the temperature changes not that
+quickly, this option would be the best one.
 
 **Option 2:**
 
@@ -250,7 +250,7 @@ delayed start timer.
 Create a control macro which satisfies for our current task and the scheduled
 ventilation switching. We will give it two parameters: the first - what to do
 with ventilation (0 - switch off, 1 - switch on), the second - who runs it:
-temperature :doc:`event</lm/decision_matrix`, our delayed start timer or a
+temperature :doc:`event</lm/decision_matrix>`, our delayed start timer or a
 system cron:
 
 .. code-block:: bash
