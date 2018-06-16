@@ -512,7 +512,7 @@ class RemoteUCPool(RemoteControllerPool):
         self.action_history_lock.release()
         return a
 
-    def result(self, unit_id=None, uuid=None):
+    def result(self, unit_id=None, uuid=None, group=None, status=None):
         if unit_id:
             i = unit_id
             p = {'i': unit_id}
@@ -525,6 +525,8 @@ class RemoteUCPool(RemoteControllerPool):
                 i = None
         else:
             i = None
+        if group: p['g'] = group
+        if status: p['s'] = status
         if not i or not i in self.controllers_by_unit: return None
         uc = self.controllers_by_unit[i]
         return uc.api_call('result', p)

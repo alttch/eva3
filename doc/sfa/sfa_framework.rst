@@ -216,6 +216,13 @@ In case you want to switch unit status between *0* and *1*, call:
 
     eva_sfa_action_toggle(unit_id, wait, priority, uuid, cb_success, cb_error);
 
+To obtain a result of the executed actions, use the functions:
+
+.. code-block:: javascript
+
+    eva_sfa_result(unit_id, g, s, cb_success, cb_error);
+    eva_sfa_result_by_uuid(uuid, cb_success, cb_error);
+
 Terminate unit action and clean up queued commands:
 
 .. code-block:: javascript

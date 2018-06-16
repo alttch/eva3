@@ -308,30 +308,23 @@ class MacroAPI(object):
             uuid=uuid,
             priority=priority)
 
-    def action_toggle(self,
-               unit_id,
-               wait=0,
-               uuid=None,
-               priority=None):
+    def action_toggle(self, unit_id, wait=0, uuid=None, priority=None):
         unit = eva.lm.controller.uc_pool.get_unit(unit_id)
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
             return None
         return eva.lm.controller.uc_pool.action_toggle(
-            unit_id=unit_id,
-            wait=wait,
-            uuid=uuid,
-            priority=priority)
+            unit_id=unit_id, wait=wait, uuid=uuid, priority=priority)
 
-    def result(self, unit_id=None, uuid=None):
+    def result(self, unit_id=None, uuid=None, group=None, status=None):
         if unit_id:
             unit = eva.lm.controller.uc_pool.get_unit(unit_id)
             if not unit:
                 if not self.pass_errors:
                     raise Exception('unit unknown: ' + unit_id)
                 return None
-        return eva.lm.controller.uc_pool.result(unit_id, uuid)
+        return eva.lm.controller.uc_pool.result(unit_id, uuid, group, status)
 
     def action_start(self,
                      unit_id,

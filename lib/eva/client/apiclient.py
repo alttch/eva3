@@ -97,9 +97,9 @@ _api_func = {
         ],
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',
-            'set', 'reset', 'set_controller_prop', 'append_controller',
-            'remove_controller', 'reload_controller', 'set_rule_prop', 'login',
-            'logout'
+            'set', 'reset', 'toggle', 'clear', 'set_controller_prop',
+            'append_controller', 'remove_controller', 'reload_controller',
+            'set_rule_prop', 'login', 'logout'
         ],
         'ce': ['action', 'action_toggle', 'run']
     }

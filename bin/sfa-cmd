@@ -109,6 +109,9 @@ SFA commands:
                                               get action result(s), filter by
                                                -u  action uuid
                                                -i  unit id
+                                               -g  group
+                                               -s  state (Q,R,F -
+                                                   queued, running, finished)
 
     enable_actions <-i id>                    enable actions of unit, save
                                               config property instantly

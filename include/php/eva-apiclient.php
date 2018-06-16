@@ -247,6 +247,8 @@ $_eva_api_func = array(
                     'enable_actions',
                     'set',
                     'reset',
+                    'toggle',
+                    'clear',
                     'set_controller_prop',
                     'append_controller',
                     'remove_controller',

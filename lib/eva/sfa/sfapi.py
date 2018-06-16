@@ -110,18 +110,18 @@ class SFA_API(GenericAPI):
         if not unit or not apikey.check(k, unit): return None
         return eva.sfa.controller.uc_pool.action_toggle(
             unit_id=i, wait=wait, uuid=action_uuid, priority=priority, q=q)
-    
-    def result(self, k=None, i=None, u=None):
+
+    def result(self, k=None, i=None, u=None, g=None, s=None):
         if i:
             unit = eva.sfa.controller.uc_pool.get_unit(i)
         elif u:
             a = eva.sfa.controller.uc_pool.action_history_get(u)
-            unit = eva.sfa.controller.uc_pool.get_unit(a['i']);
+            unit = eva.sfa.controller.uc_pool.get_unit(a['i'])
         else:
             return None
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.result(unit_id=i, uuid=u)
-
+        return eva.sfa.controller.uc_pool.result(
+            unit_id=i, uuid=u, group=g, status=s)
 
     def disable_actions(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(i)
@@ -138,7 +138,7 @@ class SFA_API(GenericAPI):
             unit = eva.sfa.controller.uc_pool.get_unit(i)
         elif u:
             a = eva.sfa.controller.uc_pool.action_history_get(u)
-            unit = eva.sfa.controller.uc_pool.get_unit(a['i']);
+            unit = eva.sfa.controller.uc_pool.get_unit(a['i'])
         else:
             return None
         if not unit or not apikey.check(k, unit): return None
@@ -532,10 +532,10 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
             raise cp_api_404()
         return a
 
-    def result(self, k=None, i=None, u=None):
-        result = super().result(k, i, u)
+    def result(self, k=None, i=None, u=None, g=None, s=None):
+        result = super().result(k, i, u, g, s)
         if result is None: raise cp_api_404()
-        return result if result else http_api_result_error()
+        return result if result is not None else http_api_result_error()
 
     def terminate(self, k=None, i=None, u=None):
         result = super().terminate(k, i, u)

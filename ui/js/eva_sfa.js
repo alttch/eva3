@@ -369,12 +369,18 @@ function eva_sfa_action_toggle(
  *
  * @param unit_id - full unit ID
  */
-function eva_sfa_result(unit_id, cb_success, cb_error) {
+function eva_sfa_result(unit_id, g, s, cb_success, cb_error) {
   var q = '';
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
     q += 'k=' + eva_sfa_apikey;
   }
   q += '&i=' + unit_id;
+  if (g !== undefined && g !== null) {
+    q += '&g=' + g;
+  }
+  if (s !== undefined && s !== null) {
+    q += '&s=' + s;
+  }
   $.getJSON('/sfa-api/result?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
   }).error(function(data) {
