@@ -248,8 +248,6 @@ To switch lvar value between *0* and *1* use
 
 .. code-block:: javascript
 
-    eva_sfa_set_toggle(lvar_id, cb_success, cb_error);
-    // or
     eva_sfa_toggle(lvar_id, cb_success, cb_error);
 
 To reset lvar when used as a timer or flag:
