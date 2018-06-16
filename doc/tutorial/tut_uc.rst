@@ -380,5 +380,4 @@ Looks good. Now restart UC:
 
     ./sbin/uc-control restart
 
-The configuration of :doc:`/uc/uc` is complete. Let's proceed to :doc:`/lm/lm`.
-
+The configuration of :doc:`/uc/uc` is complete. Let's proceed to :doc:`tut_lm`.

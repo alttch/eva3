@@ -22,11 +22,11 @@ There is a room and some equipment:
 
 Our task is to automate the above:
 
-* to switch on the internal ventilation every night for the period from 9pm.
+* To switch on the internal ventilation every night for the period from 9pm
   till 7am.
 
-* to switch ventilation in the daytime, if the air temperature is above 25 °C
-  for more than 5 minutes
+* To switch ventilation in the daytime, if the air temperature is above 25
+  degrees for more than 5 minutes in a row.
 
 * If the sensor detect a motion, do the following:
 

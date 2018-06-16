@@ -369,6 +369,8 @@ Returns *True* if lvar has expired status (timer is finished), equal to checking
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
 
+.. _m_unit_status:
+
 unit_status - get unit status
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
