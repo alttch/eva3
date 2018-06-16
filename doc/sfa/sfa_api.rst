@@ -45,16 +45,16 @@ Units control
 * :ref:`enable_actions<uc_enable_actions>` - UC API call to enable
   :ref:`unit<unit>` actions
 
-Logical variables control
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Logic variables control
+~~~~~~~~~~~~~~~~~~~~~~~
 
-* :ref:`set<lm_set>` - LM API call to set :ref:`logical variable<lvar>` state
-* :ref:`reset<lm_reset>` - LM API call to reset :ref:`logical variable<lvar>`
+* :ref:`set<lm_set>` - LM API call to set :ref:`logic variable<lvar>` state
+* :ref:`reset<lm_reset>` - LM API call to reset :ref:`logic variable<lvar>`
   state
-* :ref:`clear<lm_clear>` - LM API call to clear :ref:`logical variable<lvar>`
+* :ref:`clear<lm_clear>` - LM API call to clear :ref:`logic variable<lvar>`
   state
-* :ref:`toggle<lm_toggle>` - LM API call to toggle :ref:`logical
-  variable<lvar>` state
+* :ref:`toggle<lm_toggle>` - LM API call to toggle :ref:`logic variable<lvar>`
+  state
 
 Macros control
 ~~~~~~~~~~~~~~

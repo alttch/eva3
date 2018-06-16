@@ -238,7 +238,7 @@ lvar_status - get logic variable status
 
 params:
 
-* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
 Returns status (integer) of logic variable, *None* if variable is not found.
 
@@ -256,7 +256,7 @@ lvar_value, value - get logic variable value
 
 params:
 
-* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
 Returns value (float if the value is numeric) of logic variable, *None* if
 variable is not found. If the value is *null*, returns an empty string.
@@ -273,7 +273,7 @@ set - set logic variable value
 
 params:
 
-* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 * **value** value to set. If not specified, variable is set to *null*
 
 Returns *True* on success, *False* if variable is not found.
@@ -298,7 +298,7 @@ If lvar is being used as a flag and has no expiration, this sets it's value to
 
 params:
 
-* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
 Returns *True* on success, *False* if variable is not found.
 
@@ -317,7 +317,7 @@ used as a flag, this works like a switching between *False* and *True*.
 
 params:
 
-* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
 Returns *True* on success, *False* if variable is not found.
 
@@ -336,7 +336,7 @@ timers' durations.
 
 params:
 
-* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 * **etime** new expiration time (in seconds)
 
 If expires is not defined or set to zero, the function stops a timer, but apart
@@ -361,7 +361,7 @@ still running or not.
 
 params:
 
-* **lvar_id** :ref:`logical variable<lvar>` id (full or short)
+* **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
 Returns *True* if lvar has expired status (timer is finished), equal to checking
 *status==1 and value==''*, *False* if lvar is not expired or not found.
