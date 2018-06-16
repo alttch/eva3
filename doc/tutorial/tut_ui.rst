@@ -104,7 +104,7 @@ unauthorized users, the additional .js files with such data may be served by
      </div>
      <script type="text/javascript">
     
-     var ed_labels = [ 'DISABLED', 'ENABLED' ]
+     var ed_labels = [ 'DISABLED', 'ENABLED' ];
     
      // function starting SFA Framework after the
      // authentication form has been submitted
@@ -147,16 +147,16 @@ unauthorized users, the additional .js files with such data may be served by
             'sensor:env/temp1', function(state) {$('#temp1').html(state.value)})
        eva_sfa_register_update_state(
             'unit:ventilation/vi',
-            function(state) {$('#vi').html(ed_labels[state.status])})
+            function(state) {$('#vi').html(ed_labels[state.status])});
        eva_sfa_register_update_state(
             'unit:ventilation/ve',
-            function(state) {$('#ve').html(ed_labels[state.status])})
+            function(state) {$('#ve').html(ed_labels[state.status])});
        eva_sfa_register_update_state(
             'unit:light/lamp1',
-            function(state) {$('#lamp1').html(ed_labels[state.status])})
+            function(state) {$('#lamp1').html(ed_labels[state.status])});
        eva_sfa_register_update_state(
             'lvar:security/alarm_enabled',
-            function(state) {$('#alarm_enabled').html(ed_labels[state.value])})
+            function(state) {$('#alarm_enabled').html(ed_labels[state.value])});
      })
      </script>
     </body>
