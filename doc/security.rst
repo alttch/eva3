@@ -106,8 +106,8 @@ Universal Controller API keys
   masterkey (as well as all keys with master rights) only locally or for the
   system configuration/emergency situations.
 
-* For the use of `/uc/uc_ei` it is recommended to create *operator* key with
-  *groups = #, sysfunc = yes* permissions.
+* For the use of :doc:`/uc/uc_ei` it is recommended to create *operator* key
+  with *groups = #, sysfunc = yes* permissions.
 
 * When connecting to :doc:`/lm/lm` and :doc:`/sfa/sfa` it is recommended to
   create a separate key with rights for the certain item groups, *sysfunc =

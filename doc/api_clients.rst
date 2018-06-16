@@ -72,9 +72,9 @@ API is initialized with the use of the following functions:
 * **set_timeout(timeout)** set a maximum request timeout (seconds), 5 seconds
   by default.
 * **set_product(product)** set controller type: *uc* for :doc:`/uc/uc`, *lm*
-  for :doc:`/lm/lm`, *sfa* for `/sfa/sfa`. The client automatically identifies
-  which API is to be called - either :doc:`/sys_api` one or the one of the
-  certain controller  - that is why this parameter is required.
+  for :doc:`/lm/lm`, *sfa* for :doc:`/sfa/sfa`. The client automatically
+  identifies which API is to be called - either :doc:`/sys_api` one or the one
+  of the certain controller  - that is why this parameter is required.
 * **ssl_verify(v)** to verify or not SSL certificate validity while working
   through https://. Can be *True* (check) or *False* (don't check). The
   certificate is verified by default.
