@@ -275,7 +275,7 @@ Examples
 --------
 
 Examples of the SFA framework usage are provided in ":doc:`/tutorial/tut_ui`"
-part of the EVA :doc:`/tutorial/tutorial`.
+part of the EVA :doc:`tutorial</tutorial/tutorial>`.
 
 Controlling reliability of the connection
 -----------------------------------------
