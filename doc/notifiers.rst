@@ -279,7 +279,7 @@ subject:
     
 It means that the common log subject is created for the one EVA space.
 
-Any EVA server (usually it's a job for `/sfa/sfa`) can be a log collector, 
+Any EVA server (usually it's a job for :doc:`/sfa/sfa`) can be a log collector,
 collecting the reports from MQTT server (space/log), pass them further via the
 local notification system and have available via API. In order to enable this
 function, set param *collect_logs* to true in the notifier configuration:
