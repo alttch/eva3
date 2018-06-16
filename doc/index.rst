@@ -75,7 +75,7 @@ System documentation
 
 * :doc:`Security recommendations</security>`
 
-* :doc:`Tutorial</tutorial/intro>`
+* :doc:`Tutorial</tutorial/tutorial>`
 
 * System components
 

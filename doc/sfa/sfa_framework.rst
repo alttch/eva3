@@ -274,8 +274,8 @@ To change :doc:`decision rules</lm/decision_matrix>` properties, call:
 Examples
 --------
 
-Examples of the SFA framework usage are provided in ":doc:`/tutorial/ui` part
-of the EVA `/tutorial/intro`.
+Examples of the SFA framework usage are provided in ":doc:`/tutorial/tut_ui`
+part of the EVA `/tutorial/tutorial`.
 
 Controlling reliability of the connection
 -----------------------------------------
