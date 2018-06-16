@@ -326,15 +326,14 @@ function eva_sfa_action(
 }
 
 /**
- * Execute unit action, toggle current status (if status is 0 or 1)
+ * Execute unit action, toggle status beteween 0 and 1
  *
  * @param unit_id - full unit ID
+ * @param nstatus - new unit status (int)
+ * @param nvalue - new unit value (optional)
  * @param wait - seconds to wait until complete
  * @param priority - action priority (optional)
  * @param uuid - action uuid (optional)
- *
- * @returns true - if action started
- *          false - if no status loaded
  */
 function eva_sfa_action_toggle(
   unit_id,
@@ -344,20 +343,25 @@ function eva_sfa_action_toggle(
   cb_success,
   cb_error
 ) {
-  var cstatus = eva_sfa_status('unit:' + unit_id);
-  if (cstatus === undefined) return false;
-  var nstatus = cstatus ? 0 : 1;
-  eva_sfa_action(
-    unit_id,
-    nstatus,
-    null,
-    wait,
-    priority,
-    uuid,
-    cb_success,
-    cb_error
-  );
-  return true;
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += 'k=' + eva_sfa_apikey;
+  }
+  q += '&i=' + unit_id;
+  if (priority !== undefined && priority !== null) {
+    q += '&p=' + priority;
+  }
+  if (uuid !== undefined && uuid !== null) {
+    q += '&u=' + uuid;
+  }
+  if (wait !== undefined && wait !== null) {
+    q += '&w=' + wait;
+  }
+  $.getJSON('/sfa-api/action_toggle?' + q, function(data) {
+    if (cb_success !== undefined && cb_success !== null) cb_success(data);
+  }).error(function(data) {
+    if (cb_error !== undefined && cb_error !== null) cb_error(data);
+  });
 }
 
 /**
@@ -415,6 +419,24 @@ function eva_sfa_terminate(unit_id, cb_success, cb_error) {
 }
 
 /**
+ * Terminate current unit action by uuid if possible
+ *
+ * @param uuid - action uuid
+ */
+function eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error) {
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += 'k=' + eva_sfa_apikey;
+  }
+  q += '&u=' + uuid;
+  $.getJSON('/sfa-api/terminate?' + q, function(data) {
+    if (cb_success !== undefined && cb_success !== null) cb_success(data);
+  }).error(function(data) {
+    if (cb_error !== undefined && cb_error !== null) cb_error(data);
+  });
+}
+
+/**
  * Set lvar value
  *
  * @param lvar_id - full lvar ID
@@ -442,12 +464,18 @@ function eva_sfa_set(lvar_id, value, cb_success, cb_error) {
  * @returns true - if set started
  *          false - if no value loaded
  */
-function eva_sfa_set_toggle(lvar_id, cb_success, cb_error) {
-  var cvalue = eva_sfa_value('lvar:' + lvar_id);
-  if (cvalue === undefined) return false;
-  var nvalue = cvalue ? 0 : 1;
-  eva_sfa_set(lvar_id, nvalue, cb_success, cb_error);
-  return true;
+function eva_sfa_toggle(lvar_id, cb_success, cb_error) {
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += 'k=' + eva_sfa_apikey;
+  }
+  q += '&i=' + lvar_id;
+  q += '&v=' + value;
+  $.getJSON('/sfa-api/toggle?' + q, function(data) {
+    if (cb_success !== undefined && cb_success !== null) cb_success(data);
+  }).error(function(data) {
+    if (cb_error !== undefined && cb_error !== null) cb_error(data);
+  });
 }
 
 /**
@@ -462,6 +490,24 @@ function eva_sfa_reset(lvar_id, cb_success, cb_error) {
   }
   q += '&i=' + lvar_id;
   $.getJSON('/sfa-api/reset?' + q, function(data) {
+    if (cb_success !== undefined && cb_success !== null) cb_success(data);
+  }).error(function(data) {
+    if (cb_error !== undefined && cb_error !== null) cb_error(data);
+  });
+}
+
+/**
+ * Clear lvar (for timer - set status to 0, otherwise value to 0)
+ *
+ * @param lvar_id - full lvar ID
+ */
+function eva_sfa_reset(lvar_id, cb_success, cb_error) {
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += 'k=' + eva_sfa_apikey;
+  }
+  q += '&i=' + lvar_id;
+  $.getJSON('/sfa-api/clear?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
   }).error(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
