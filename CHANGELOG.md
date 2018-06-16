@@ -24,9 +24,9 @@ Core:
     * each set_prop call now logs what's actually changed
     * added item oid (type:group/item_id) - reserved for the future releases
     * added stop_on_critical option in config (default: yes),
-       server will be restarted via safe-run if critical exception occur
+      server will be restarted via safe-run if critical exception occur
     * uptime in dump and test API function, last 100 exceptions are now stored
-       in a dump, dumps are now compressed with gzip
+      in a dump, dumps are now compressed with gzip
     * API functions now support JSON requests
 
 UC:
@@ -37,12 +37,12 @@ LM PLC:
 
     * list_remote returns array + controller_id proprety instead of dict
     * result function in macro api. terminate and result function accept action
-       uuid as a param
+      uuid as a param
     * on_set lm rule (status changed to 1)
     * new LM API and macro functions: clear (set lvar value to 0), toggle
-       (toggles lvar value between 0 and 1)
+      (toggles lvar value between 0 and 1)
     * cmd macro function now accepts full controller id (uc/controller_id) as
-       well as short
+      well as short
     * new macro functions for the file management: ls, open_oldest, open_newest
 
 SFA:
@@ -52,15 +52,15 @@ SFA:
     * list_remote returns array instead of dict + controller_id proprety
     * list_macros contains now controller property
     * append_controller now tries to autodetect controller type if no type
-       specified
+      specified
     * sfa pvt access logs
     * reset, toggle, clear, action_toggle, result and terminate by uuid funcs in
-       sfa & sfa framework
+      sfa & sfa framework
 
 Common:
 
     * easy-setup.sh - an interactive/automatic script to quickly set up the
-       current host
+      current host
     * ability to run controllers under restricted user
 
 3.0.1
@@ -71,13 +71,13 @@ Minor release with some urgent features
 Core:
 
     * EVA_ITEM_PARENT_GROUP variable in script ENV which contains the parent
-       group of the item
+      group of the item
     * cvars now can be set as global or assigned to the specified item group
-       i.e. 'VAR1' - global cvar, available to the all scripts,
-       'group1/VAR2' - variable available only to scripts from group
-       'group1' (as 'VAR2'), 'group2/VAR2' - variable available only to
-       group 'group2' (also as 'VAR2').  Used by UC scripts to let one
-       script manage different items
+      i.e. 'VAR1' - global cvar, available to the all scripts,
+      'group1/VAR2' - variable available only to scripts from group
+      'group1' (as 'VAR2'), 'group2/VAR2' - variable available only to
+      group 'group2' (also as 'VAR2').  Used by UC scripts to let one
+      script manage different items
 
 Universal Controller:
 
@@ -94,7 +94,7 @@ UC API and uc-cmd:
 Logic Manager:
 
     * item id in LM rules match by simple mask (i.e. '\*id\'* or 'id\'* or
-       '\*id')
+      '\*id')
 
 3.0.0
 -----
