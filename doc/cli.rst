@@ -40,8 +40,8 @@ Other
 :doc:`Virtual item</virtual>` management is being performed using
 **xc/evirtual** application.
 
-Device controlling apps
------------------------
+Device control apps
+-------------------
 
 EVA distribution includes preinstalled samples for the device controlling. All
 sample scripts are located in **xbin** folder
