@@ -1,5 +1,13 @@
 #!/bin/bash
 
+if [ "x$1" = "x" ]; then
+    echo "Usage: w1_therm <DEVICE>"
+    echo
+    echo "DEVICE                 Device ID on 1-Wire bus"
+    echo
+    exit 99
+fi
+
 DATA=`cat /sys/bus/w1/devices/$1/w1_slave 2>&1` || exit 1
 echo ${DATA} | grep -E " crc=[a-z0-9]+ YES" > /dev/null 2>&1 || exit 2
 (echo "scale=3; "; echo -n ${DATA} | cut -d= -f3 | tr -d "\n"; echo " / 1000") | bc

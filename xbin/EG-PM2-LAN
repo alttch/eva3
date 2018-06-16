@@ -4,7 +4,26 @@ IP=$1
 SOCKET=$2
 MODE=$3
 
-[ "x${IP}" = "x" ] && exit 3
+if [ "x${IP}" = "x" ]; then
+    echo "Usage: EG-PM2-LAN <IP> [SOCKET] [MODE]"
+    echo
+    echo "IP                    Device IP"
+    echo "SOCKET                Socket number"
+    echo "MODE                  0 - off, 1 - on"
+    echo
+    echo "If SOCKET/MODE are not provided, the script displays"
+    echo "the current socket states"
+    echo
+    echo "The script looks for an access passwords in a file"
+    echo "../etc/passwd.EG-PM2-LAN which should be stored in"
+    echo "a plain text in the following format:"
+    echo
+    echo "DEVICE_IP:PASSWORD"
+    echo "DEVICE_IP:PASSWORD"
+    echo "..."
+    echo
+    exit 99
+fi
 
 D=`realpath $0`
 cd `dirname ${D}`/..

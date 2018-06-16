@@ -4,7 +4,18 @@ use strict;
 
 my ($dev, $u, $cmd) = @ARGV;
 
-if (not defined $dev) { exit 2; }
+if (not defined $dev) {
+    print "Usage: w1_ds2408 <DEVICE> [RELAY] [MODE]\n";
+    print "\n";
+    print "DEVICE                    Device ID on 1-Wire bus\n";
+    print "RELAY                     Relay number\n";
+    print "MODE                      0 - off, 1 - on\n";
+    print "\n";
+    print "If RELAY/MODE are not provided, the script displays\n";
+    print "the current socket states\n";
+    print "\n";
+    exit 99;
+    }
 
 my $output = "/sys/bus/w1/devices/".$dev."/output";
 
