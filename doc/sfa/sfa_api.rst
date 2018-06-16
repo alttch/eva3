@@ -36,6 +36,8 @@ Units control
 * :ref:`action<uc_action>` - UC API call for :ref:`unit<unit>` control actions
 * :ref:`action_toggle<uc_action_toggle>` - UC API call for :ref:`unit<unit>`
   control actions to toggle status
+* :ref:`result<uc_result>` - UC API call to get action result by unit id or
+  uuid
 * :ref:`terminate<uc_terminate>` - UC API call to terminate current
   :ref:`unit<unit>` action
 * :ref:`q_clean<uc_q_clean>` - UC API call to clean :ref:`unit<unit>` action
