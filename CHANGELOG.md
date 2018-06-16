@@ -48,11 +48,14 @@ LM PLC:
 SFA:
 
     * fixes: dm_rule_props acl in SFA
+
     * list_remote returns array instead of dict + controller_id proprety
     * list_macros contains now controller property
     * append_controller now tries to autodetect controller type if no type
        specified
     * sfa pvt access logs
+    * reset, toggle, clear, action_toggle, result and terminate by uuid funcs in
+       sfa & sfa framework
 
 Common:
 
