@@ -118,6 +118,29 @@ Errors:
 
 * **403 Forbidden** the key has no access to the API
 
+.. _sfa_reload_clients:
+
+reload_clients - ask connected clients to reload
+------------------------------------------------
+
+This function sends to all connected clients a **reload** event asking them to
+reload the interface.
+
+All the connected clients receive the event with *subject=reload* and
+*data=asap*. If the clients use :doc:`sfa_framework`, they must define
+:ref:`eva_sfa_reload_handler<sfw_reload>` function.
+
+Parameters:
+
+* **k** masterkey
+
+Returns result="OK" if the reload event is sent, or result="ERROR", if an error
+occurs.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
 .. _sfa_state:
 
 state - get item state
@@ -321,7 +344,7 @@ Parameters:
 * **p** controller configuration param
 * **v** param value
 
-Returns result="OK if the parameter is set, or result="ERROR", if an error
+Returns result="OK" if the parameter is set, or result="ERROR", if an error
 occurs.
 
 Errors:
@@ -349,7 +372,7 @@ optionally:
 * **save=1** save connected controller configuration on the disk immediately
   after creation
 
-Returns result="OK if the controller is connected, or result="ERROR", if the
+Returns result="OK" if the controller is connected, or result="ERROR", if the
 error occurred.
 
 The remote controller id is being obtained and set automatically according to
@@ -372,7 +395,7 @@ Parameters:
 * **k** masterkey
 * **i** controller id
 
-Returns result="OK if the controller is disconnected, or result="ERROR", if
+Returns result="OK" if the controller is disconnected, or result="ERROR", if
 error occurred.
 
 Errors:
@@ -393,7 +416,7 @@ Parameters:
 * **k** masterkey
 * **i** controller id
 
-Returns result="OK if the controller is deleted, or result="ERROR", if error
+Returns result="OK" if the controller is deleted, or result="ERROR", if error
 occurred.
 
 Errors:

@@ -29,6 +29,11 @@ eva_sfa_cb_login_error = null;
  */
 eva_sfa_ws_event_handler = null;
 
+/** Contains function which's called as f() when reload event is received
+ *  (server ask the clients to reload the interface)
+ */
+eva_sfa_reload_handler = null;
+
 /**
  * Contains function called if heartbeat got an error (usually user is forcibly
  * logged out). The function is called f(data) if there's HTTP error data or
@@ -647,6 +652,12 @@ function eva_sfa_process_ws(evt) {
   var data = JSON.parse(evt.data);
   if (data.s == 'pong') {
     eva_sfa_last_pong = Date.now() / 1000;
+    return;
+  }
+  if (data.s == 'reload') {
+    if (eva_sfa_reload_handler != null) {
+      eva_sfa_reload_handler();
+    }
     return;
   }
   if (eva_sfa_ws_event_handler !== null) {

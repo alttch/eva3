@@ -116,6 +116,21 @@ function is called via **data** parameter with the event data set herein.
 
     eva_sfa_ws_event_handler = null;
 
+.. _sfw_reload:
+
+This variable contains function which's called when :doc:`/sfa/sfa` asks
+connected clients to reload the interface. If you want the interface to handle
+the reload event, you must define this function.
+
+.. note::
+
+    reload event can be processed only when the framework works in a websocket
+    mode
+
+.. code-block:: javascript
+
+    eva_sfa_reload_handler = null;
+
 .. _sf_init:
 
 Initialization, authentication

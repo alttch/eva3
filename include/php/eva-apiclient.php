@@ -237,7 +237,8 @@ $_eva_api_func = array(
                     'list_rule_props',
                     'set_rule_prop',
                     'login',
-                    'logout'
+                    'logout',
+                    'reload_clients'
                     ),
                 'cr' => array(
                     'terminate',
@@ -255,7 +256,8 @@ $_eva_api_func = array(
                     'reload_controller',
                     'set_rule_prop',
                     'login',
-                    'logout'
+                    'logout',
+                    'reload_clients'
                     ),
                 'ce' => array(
                     'action',

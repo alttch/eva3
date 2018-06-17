@@ -93,13 +93,13 @@ _api_func = {
             'groups_macro', 'run', 'list_controllers', 'append_controller',
             'remove_controller', 'list_controller_props', 'set_controller_prop',
             'reload_controller', 'list_remote', 'list_rule_props',
-            'set_rule_prop', 'login', 'logout'
+            'set_rule_prop', 'login', 'logout', 'reload_clients'
         ],
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',
             'set', 'reset', 'toggle', 'clear', 'set_controller_prop',
             'append_controller', 'remove_controller', 'reload_controller',
-            'set_rule_prop', 'login', 'logout'
+            'set_rule_prop', 'login', 'logout', 'reload_clients'
         ],
         'ce': ['action', 'action_toggle', 'run']
     }

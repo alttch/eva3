@@ -212,6 +212,8 @@ Controller management in runtime (requires master key):
 
     reload_controller <-i id>                 reload controller items
 
+    reload_clients                            ask connected clients to reload
+
 File management in runtime (requires master key):
 
     file_get <-i file>                        get file from runtime

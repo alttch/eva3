@@ -1083,6 +1083,9 @@ class WSNotifier_Client(GenericNotifier_Client):
             except:
                 eva.core.log_traceback(notifier=True)
 
+    def send_reload(self):
+        self.send_notification('reload', 'asap')
+
     def is_client_dead(self):
         if self.ws:
             return self.ws.terminated
@@ -1475,6 +1478,10 @@ def stop():
         _notifier_client_cleaner_active = False
         _notifier_client_cleaner.join()
 
+def reload_clients():
+    logging.warning('sending reload event to clients')
+    for k, n in notifiers.copy().items():
+        if n.nt_client: n.send_reload()
 
 def _t_notifier_client_cleaner():
     logging.debug('notifier client cleaner started')
@@ -1487,7 +1494,6 @@ def _t_notifier_client_cleaner():
             time.sleep(eva.core.sleep_step)
             i += eva.core.sleep_step
     logging.debug('notifier client cleaner stopped')
-
 
 def init():
     eva.core.append_dump_func('notify', dump)
