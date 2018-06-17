@@ -411,11 +411,12 @@ cycles.
 
 Returns float number of seconds to timer expiration, or:
 
-* **undefined** if :ref:`lvar<lvar>` is not found, has no expiration set or
-  **eva_sfa_tsdiff** is not set yet.
+* **undefined** if :ref:`lvar<lvar>` is not found, or **eva_sfa_tsdiff** is not
+  set yet.
+* **null** if lvar has no expiration set
 
-* **null** if the timer is disabled (stopped) and has status *0*
 * **-1** if the timer is expired
+* **-2** if the timer is disabled (stopped) and has status *0*
 
 Modifying decision rules
 ------------------------
@@ -447,10 +448,10 @@ is updated every 500 ms.
 
     function show_countdown() {
         var t = eva_sfa_expires_in('timers/timer1');
-        if (t === undefined) {
+        if (t === undefined || t == null) {
             $('#timer').html('');
         } else {
-            if (t == null) {
+            if (t == -2) {
                 $('#timer').html('STOPPED');
             } else if (t == -1 ) {
                 $('#timer').html('FINISHED');

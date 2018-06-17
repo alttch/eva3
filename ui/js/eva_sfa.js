@@ -216,11 +216,11 @@ function eva_sfa_expires_in(lvar_id) {
   // if no such item
   if (i === undefined) return undefined;
   // if item has no expiration or expiration is set to zero
-  if (i.expires === undefined || i.expires == 0) return undefined;
+  if (i.expires === undefined || i.expires == 0) return null;
   // if no timestamp diff
   if (eva_sfa_tsdiff == null) return undefined;
-  // if timer is disabled, return 0
-  if (i.status == 0) return null;
+  // if timer is disabled (stopped), return -2
+  if (i.status == 0) return -2;
   // if timer is expired, return -1
   if (i.status == -1) return -1;
   var t = i.expires - new Date().getTime() / 1000 + eva_sfa_tsdiff + i.set_time;
