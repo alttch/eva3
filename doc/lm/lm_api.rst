@@ -443,7 +443,7 @@ Parameters:
 * **p** lvar configuration param
 * **v** param value
 
-Returns result="OK if the parameter is set, or result="ERROR", if an error
+Returns result="OK" if the parameter is set, or result="ERROR", if an error
 occurs.
 
 Errors:
@@ -465,7 +465,7 @@ optionally:
 
 * **save=1** save lvar configuration on the disk immediately after creation
 
-Returns result="OK if the lvar is created, or result="ERROR", if the error
+Returns result="OK" if the lvar is created, or result="ERROR", if the error
 occurred.
 
 Errors:
@@ -482,7 +482,7 @@ Parameters:
 * **k** masterkey
 * **i** lvar id
 
-Returns result="OK if the lvar is deleted, or result="ERROR", if error
+Returns result="OK" if the lvar is deleted, or result="ERROR", if error
 occurred.
 
 LVar configuration may be immediately deleted from the disk, if there is
@@ -531,7 +531,7 @@ Parameters:
 * **p** macro configuration param
 * **v** param value
 
-Returns result="OK if the parameter is set, or result="ERROR", if an error
+Returns result="OK" if the parameter is set, or result="ERROR", if an error
 occurs.
 
 Errors:
@@ -556,7 +556,7 @@ optionally:
 
 * **save=1** save macro configuration on the disk immediately after creation
 
-Returns result="OK if the macro is created, or result="ERROR", if the error
+Returns result="OK" if the macro is created, or result="ERROR", if the error
 occurred.
 
 Errors:
@@ -573,7 +573,7 @@ Parameters:
 * **k** masterkey
 * **i** macro id
 
-Returns result="OK if the macro is deleted, or result="ERROR", if error
+Returns result="OK" if the macro is deleted, or result="ERROR", if error
 occurred.
 
 Errors:
@@ -632,7 +632,7 @@ Parameters:
 * **p** rule configuration param
 * **v** param value
 
-Returns result="OK if the parameter is set, or result="ERROR", if an error
+Returns result="OK" if the parameter is set, or result="ERROR", if an error
 occurs.
 
 Errors:
@@ -653,7 +653,7 @@ optionally:
 
 * **save=1** save rule configuration on the disk immediately after creation
 
-Returns result="OK if the rule is created, or result="ERROR", if the error
+Returns result="OK" if the rule is created, or result="ERROR", if the error
 occurred.
 
 Errors:
@@ -670,7 +670,7 @@ Parameters:
 * **k** masterkey
 * **i** rule id
 
-Returns result="OK if the rule is deleted, or result="ERROR", if error
+Returns result="OK" if the rule is deleted, or result="ERROR", if error
 occurred.
 
 Errors:
@@ -762,7 +762,7 @@ Parameters:
 * **p** controller configuration param
 * **v** param value
 
-Returns result="OK if the parameter is set, or result="ERROR", if an error
+Returns result="OK" if the parameter is set, or result="ERROR", if an error
 occurs.
 
 Errors:
@@ -790,7 +790,7 @@ optionally:
 * **save=1** save connected controller configuration on the disk immediately
   after creation
 
-Returns result="OK if the controller is connected, or result="ERROR", if the
+Returns result="OK" if the controller is connected, or result="ERROR", if the
 error occurred.
 
 The remote controller id is being obtained and set automatically according to
@@ -813,7 +813,7 @@ Parameters:
 * **k** masterkey
 * **i** controller id
 
-Returns result="OK if the controller is disconnected, or result="ERROR", if
+Returns result="OK" if the controller is disconnected, or result="ERROR", if
 error occurred.
 
 Errors:
@@ -833,7 +833,7 @@ Parameters:
 * **k** masterkey
 * **i** controller id
 
-Returns result="OK if the controller is deleted, or result="ERROR", if error
+Returns result="OK" if the controller is deleted, or result="ERROR", if error
 occurred.
 
 Errors:

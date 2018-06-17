@@ -491,7 +491,7 @@ Parameters:
 * **p** item configuration param
 * **v** param value
 
-Returns result="OK if the parameter is set, or result="ERROR", if an error
+Returns result="OK" if the parameter is set, or result="ERROR", if an error
 occurs.
 
 Errors:
@@ -516,7 +516,7 @@ optionally:
 * **virtual=1** unit is created as :doc:`virtual</virtual>`
 * **save=1** save unit configuration on the disk immediately after creation
 
-Returns result="OK if the unit is created, or result="ERROR", if the error
+Returns result="OK" if the unit is created, or result="ERROR", if the error
 occurred.
 
 Errors:
@@ -541,7 +541,7 @@ optionally:
 * **virtual=1** sensor is created as :doc:`virtual</virtual>`
 * **save=1** save sensor configuration on the disk immediately after creation
 
-Returns result="OK if the sensor is created, or result="ERROR", if the error
+Returns result="OK" if the sensor is created, or result="ERROR", if the error
 occurred.
 
 Errors:
@@ -567,7 +567,7 @@ optionally:
 * **save=1** save multiupdate configuration on the disk immediately after
   creation
 
-Returns result="OK if the multiupdate is created, or result="ERROR", if the
+Returns result="OK" if the multiupdate is created, or result="ERROR", if the
 error occurred.
 
 Errors:
@@ -592,7 +592,7 @@ optionally:
 
 * **save=1** save item configuration on the disk immediately after creation
 
-Returns result="OK if the item is cloned, or result="ERROR", if the error
+Returns result="OK" if the item is cloned, or result="ERROR", if the error
 occurred.
 
 Errors:
@@ -619,7 +619,7 @@ optionally:
 * **save=1** save cloned items configurations on the disk immediately after
   creation.
 
-Returns result="OK if the items were cloned, or result="ERROR", if error
+Returns result="OK" if the items were cloned, or result="ERROR", if error
 occurred. Only items with type unit and sensor are cloned.
 
 Errors:
@@ -640,7 +640,7 @@ Parameters:
 * **i** item id
 * **g** item group (either id or group must be specified)
 
-Returns result="OK if the item/group is deleted, or result="ERROR", if error
+Returns result="OK" if the item/group is deleted, or result="ERROR", if error
 occurred.
 
 Item configuration may be immediately deleted from the disk, if there is
