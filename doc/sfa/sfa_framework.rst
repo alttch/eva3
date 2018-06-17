@@ -168,6 +168,17 @@ To stop the framework, call:
 Event Handling
 --------------
 
+To manually get :doc:`item</items>` state, use the function
+
+.. code-block:: javascript
+
+    eva_sfa_state(oid)
+
+where:
+
+* **oid** :doc:`item</items>` id in the following format:
+  **type:group/item_id**, i.e. *sensor:env/temperature/temp1*
+
 When the new data is obtained from the server, the framework may run a
 specified functions to handle events. To register such function in the
 framework, use
