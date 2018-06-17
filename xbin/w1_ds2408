@@ -12,7 +12,7 @@ if (not defined $dev) {
     print "MODE                      0 - off, 1 - on\n";
     print "\n";
     print "If RELAY/MODE are not provided, the script displays\n";
-    print "the current socket states\n";
+    print "the current relay states\n";
     print "\n";
     exit 99;
     }
