@@ -67,6 +67,11 @@ eva_sfa_heartbeat_interval = 5;
  */
 eva_sfa_server_info = null;
 
+/*
+ * Contains difference (in seconds) between server and client time
+ */
+eva_sfa_tsdiff = null;
+
 /**
  * WebSocket mode if true, is set by eva_sfa_init()
  * Setting this to false (after calling eva_sfa_init()) will force
@@ -195,6 +200,32 @@ function eva_sfa_state(oid) {
   } else {
     return undefined;
   }
+}
+
+/**
+ * Get expiration time left (in seconds)
+ *
+ * @param lvar_id - object id in format obj:full_id, i.e. lvar:timers/timer1
+ *
+ * @returns - seconds to expiration
+ */
+
+function eva_sfa_expires_in(lvar_id) {
+  // get item
+  var i = eva_sfa_state('lvar:' + lvar_id);
+  // if no such item
+  if (i === undefined) return undefined;
+  // if item has no expiration or expiration is set to zero
+  if (i.expires === undefined || i.expires == 0) return undefined;
+  // if no timestamp diff
+  if (eva_sfa_tsdiff == null) return undefined;
+  // if timer is disabled, return 0
+  if (i.status == 0) return null;
+  // if timer is expired, return -1
+  if (i.status == -1) return -1;
+  var t = i.expires - new Date().getTime() / 1000 + eva_sfa_tsdiff + i.set_time;
+  if (t < 0) t = 0;
+  return t;
 }
 
 /**
@@ -709,6 +740,7 @@ function eva_sfa_stop_engine() {
   eva_sfa_states = Array();
   eva_sfa_rule_props_data = Array();
   eva_sfa_server_info = null;
+  eva_sfa_tsdiff = null;
   eva_sfa_last_ping = null;
   eva_sfa_last_pong = null;
   if (eva_sfa_heartbeat_reload !== null) {
@@ -761,6 +793,7 @@ function eva_sfa_heartbeat(on_login, data) {
   }
   $.getJSON('/sfa-api/test' + q, function(data) {
     eva_sfa_server_info = data;
+    eva_sfa_tsdiff = new Date().getTime() / 1000 - data.time;
     if (on_login !== undefined && on_login) {
       if (eva_sfa_cb_login_success !== null) eva_sfa_cb_login_success(data);
     }

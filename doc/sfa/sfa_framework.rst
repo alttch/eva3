@@ -124,6 +124,16 @@ is *null*.
 
     eva_sfa_server_info = null;
 
+eva_sfa_tsdiff
+~~~~~~~~~~~~~~
+
+This variable contains the time difference (in seconds) between server and
+connected client. The value is updated every time client gets new server info.
+
+.. code-block:: javascript
+
+    eva_sfa_tsdiff = null;
+
 eva_sfa_ws_mode
 ~~~~~~~~~~~~~~~
 
@@ -388,6 +398,25 @@ To clear lvar flag or stop the timer:
 
     eva_sfa_clear(lvar_id, cb_success, cb_error);
 
+eva_sfa_expires_in
+~~~~~~~~~~~~~~~~~~
+
+Get timer expiration (in seconds). Allows to :ref:`display
+timers<sfw_example_timer>` and interactive progress bars of the production
+cycles.
+
+.. code-block:: javascript
+
+    eva_sfa_expires_in(lvar_id);
+
+Returns float number of seconds to timer expiration, or:
+
+* **undefined** if :ref:`lvar<lvar>` is not found, has no expiration set or
+  **eva_sfa_tsdiff** is not set yet.
+
+* **null** if the timer is disabled (stopped) and has status *0*
+* **-1** if the timer is expired
+
 Modifying decision rules
 ------------------------
 
@@ -405,6 +434,35 @@ Examples
 
 Examples of the SFA framework usage are provided in ":doc:`/tutorial/tut_ui`"
 part of the EVA :doc:`tutorial</tutorial/tutorial>`.
+
+.. _sfw_example_timer:
+
+Timer example
+~~~~~~~~~~~~~
+
+The following example shows how to display the timer countdown. The countdown
+is updated every 500 ms.
+
+.. code-block:: javascript
+
+    function show_countdown() {
+        var t = eva_sfa_expires_in('timers/timer1');
+        if (t === undefined) {
+            $('#timer').html('');
+        } else {
+            if (t == null) {
+                $('#timer').html('STOPPED');
+            } else if (t == -1 ) {
+                $('#timer').html('FINISHED');
+            } else {
+                t = Number(Math.round(t * 10) / 10).toFixed(1);
+                $('#timer').html(t);
+            }
+        }
+    }
+
+    setInterval(show_countdown, 500);
+
 
 Controlling reliability of the connection
 -----------------------------------------

@@ -57,6 +57,7 @@ SFA:
     * reset, toggle, clear, action_toggle, result and terminate by uuid funcs in
       sfa & sfa framework
     * reload_clients command and sfa framework reload event handler
+    * eva_sfa_expires_in function in a framework to work with timers
 
 Common:
 
