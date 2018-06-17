@@ -126,8 +126,8 @@ reload_clients - ask connected clients to reload
 This function sends to all connected clients a **reload** event asking them to
 reload the interface.
 
-All the connected clients receive the event with *subject=reload* and
-*data=asap*. If the clients use :doc:`sfa_framework`, they must define
+All the connected clients receive the event with *subject="reload"* and
+*data="asap"*. If the clients use :doc:`sfa_framework`, they must define
 :ref:`eva_sfa_reload_handler<sfw_reload>` function.
 
 Parameters:
