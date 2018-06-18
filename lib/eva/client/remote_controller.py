@@ -43,7 +43,8 @@ class RemoteController(eva.item.Item):
                     self.api._uri)
             return None
         elif code != eva.client.apiclient.result_ok and \
-                code != eva.client.apiclient.result_func_failed:
+                code != eva.client.apiclient.result_func_failed \
+                and code != eva.client.apiclient.result_not_found:
             logging.error('Remote controller access error %s, code %u' % \
                     (self.api._uri, code))
             return None
