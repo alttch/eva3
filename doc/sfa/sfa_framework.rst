@@ -4,7 +4,7 @@ SFA Framework
 SFA Framework is a component of :doc:`/sfa/sfa` that allows you to quickly
 create a web application with EVA interface for a specific configuration.
 
-**ui** folder contains *js/eva_sfa.js* file, namely the framework itself and
+**ui** folder contains *js/eva_sfa.js* file, the framework itself and
 **lib/jquery*.js** - `jQuery <https://jquery.com/>`_, necessary for correct
 operation. Lib folder also contains `Bootstrap <http://getbootstrap.com/>`_
 files often used for web application development.
