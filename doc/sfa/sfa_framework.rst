@@ -545,8 +545,8 @@ is updated every 500 ms.
 Log viewer example
 ~~~~~~~~~~~~~~~~~~
 
-The following example shows how to build a simple log viewer, simplar to
-included in :doc:`/uc/uc_ei` and :doc:`/lm/lm_ei`.
+The following example shows how to build a log viewer, similar to included in
+:doc:`/uc/uc_ei` and :doc:`/lm/lm_ei`.
 
 .. code-block:: html
 
