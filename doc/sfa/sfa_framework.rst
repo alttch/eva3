@@ -430,6 +430,65 @@ To change :doc:`decision rules</lm/decision_matrix>` properties, call:
 
     eva_sfa_set_rule_prop(rule_id, prop, value, save, cb_success, cb_error);
 
+Processing logs
+---------------
+
+SFA Framework has built-in functions to display SFA logs. In case
+:doc:`SFA</sfa/sfa>` is a :doc:`log aggregator</notifiers>`, this allows to
+:ref:`view a logs<sfw_example_log>` from the whole EVA installation.
+
+This variable sets log reload interval if the framework works in AJAX mode.
+
+.. code-block:: javascript
+
+    eva_sfa_log_reload_interval = 2;
+
+Maximum number of log records to get initially
+
+.. code-block:: javascript
+
+  eva_sfa_log_records_max = 200;
+
+Function called when the new log record arrives
+
+.. code-block:: javascript
+
+  eva_sfa_process_log_record = null;
+
+Function called when all new log records are processed, i.e. to autoscroll the
+log viewer
+
+.. code-block:: javascript
+
+  eva_sfa_log_postprocess = null;
+
+This function starts log processing engine
+
+.. code-block:: javascript
+
+    eva_sfa_log_start(log_level);
+
+**log_level** - optional param, log level records with *level >= 20 (INFO)* are
+processed by default, if not specified.
+
+This function allows to change log level processing
+
+.. code-block:: javascript
+
+  eva_sfa_change_log_level(log_level);
+
+Here **log_level** param is required. The function reloads all log records with
+the specified level, so it's good idea to clean log viewer before.
+
+This function returns log level name matches the given log level code:
+
+.. code-block:: javascript
+
+  eva_sfa_log_level_name(log_level)
+
+Returns *DEBUG* for *10*, *INFO* for *20*, *WARNING* for *30*, *ERROR* for
+*40*, *CRITICAL* for *50*.
+
 Examples
 --------
 
@@ -464,6 +523,136 @@ is updated every 500 ms.
 
     setInterval(show_countdown, 500);
 
+.. _sfw_example_log:
+
+Log viewer example
+~~~~~~~~~~~~~~~~~~
+
+The following example shows how to build a simple log viewer, simplar to
+included in :doc:`/uc/uc_ei` and :doc:`/lm/lm_ei`.
+
+.. code-block:: html
+
+  <html>
+    <head>
+    <script src="lib/jquery.min.js"></script>
+    <script src="js/eva_sfa.js"></script>
+    <style type="text/css">
+      #logr {
+        outline: none;
+        width: 100%;
+        height: 60% !important;
+        font-size: 11px;
+        overflow: scroll;
+        overflow-x: hidden;
+        margin-bottom: 10px;
+        border-style : Solid;
+        border-color : #3ab0ea;
+        border-color : rgba(58, 176, 234, 1);
+        border-width : 2px;
+        border-radius : 5px;
+        -moz-border-radius : 5px;
+        -webkit-border-radius : 5px;
+        }
+      .logentry.logentry_color_10 { color: grey }
+      .logentry.logentry_color_20 { color: black }
+      .logentry.logentry_color_30 {
+        color: orange;
+        font-weight: bold;
+        font-size: 14px
+        }
+      .logentry.logentry_color_40 {
+        color: red;
+        font-weight: bold;
+        font-size: 16px
+      }
+      .logentry.logentry_color_50 {
+        color: red;
+        font-weight: bold;
+        font-size: 20px;
+        animation: blinker 0.5s linear infinite;
+      }
+      @keyframes blinker {  
+        50% { opacity: 0; }
+      }
+    </style>
+    </head>
+    <body>
+    <div id="logr"></div>
+    <script type="text/javascript">
+        function time_converter(UNIX_timestamp) {
+          var a = new Date(UNIX_timestamp * 1000);
+          var year = a.getFullYear();
+          var month = a.getMonth() + 1;
+          var date = a.getDate();
+          var hour = a.getHours();
+          var min = a.getMinutes();
+          var sec = a.getSeconds();
+          var time =
+            year +
+            '-' +
+            pad(month, 2) +
+            '-' +
+            pad(date, 2) +
+            ' ' +
+            pad(hour, 2) +
+            ':' +
+            pad(min, 2) +
+            ':' +
+            pad(sec, 2);
+          return time;
+        }
+
+        function pad(num, size) {
+          var s = num + '';
+          while (s.length < size) s = '0' + s;
+          return s;
+        }
+
+        function format_log_record(l) {
+          return (
+            '<div class="logentry logentry_color_' +
+            l.l +
+            '">' +
+            time_converter(l.t) +
+            ' ' +
+            l.h +
+            ' ' +
+            l.p +
+            ' ' +
+            eva_sfa_log_level_name(l.l) +
+            ' ' +
+            l.mod +
+            ' ' +
+            l.th +
+            ': ' +
+            l.msg +
+            '</div>'
+          );
+        }
+        eva_sfa_process_log_record = function(l) {
+          $('#logr').append(format_log_record(l));
+          while ($('.logentry').length > eva_sfa_log_records_max) {
+          $('#logr')
+            .find('.logentry')
+            .first()
+            .remove();
+          }
+        }
+        eva_sfa_log_postprocess = function() {
+          $('#logr').scrollTop($('#logr').prop('scrollHeight'));
+        }
+
+        eva_sfa_init();
+        eva_sfa_apikey="SECRET_KEY_JUST_FOR_EXAMPLE_DONT_STORE_KEYS_IN_JS";
+        eva_sfa_cb_login_success = function(data) {
+            eva_sfa_log_records_max = 100;
+            eva_sfa_log_start();
+        }
+        eva_sfa_start();
+    </script>
+    </body>
+    </html>
 
 Controlling reliability of the connection
 -----------------------------------------

@@ -57,6 +57,26 @@ eva_sfa_force_reload_interval = 5;
 eva_sfa_rule_monitor_interval = 60;
 
 /**
+ * Log refresh interval for AJAX mode (in seconds)
+ */
+eva_sfa_log_reload_interval = 2;
+
+/**
+ * Max log records to get/keep
+ */
+eva_sfa_log_records_max = 200;
+
+/**
+ * Append log entry
+ */
+eva_sfa_process_log_record = null;
+
+/**
+ * Log post processing function i.e. to autoscroll the log viewer
+ */
+eva_sfa_log_postprocess = null;
+
+/**
  * "Heartbeat" interval (requests to system info, in seconds)
  */
 eva_sfa_heartbeat_interval = 5;
@@ -631,6 +651,44 @@ function eva_sfa_set_rule_prop(
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
+
+/**
+ * Start log processing
+ *
+ * @log_level - log processing level (optional)
+ */
+function eva_sfa_log_start(log_level) {
+  eva_sfa_log_started = true;
+  if (log_level !== undefined) {
+    eva_sfa_log_level = log_level;
+  }
+  if (!eva_sfa_ws_mode || eva_sfa_log_first_load) {
+    eva_sfa_log_loaded = false;
+    eva_sfa_load_log_entries(false, true);
+  }
+}
+
+/**
+ * Change log processing level
+ *
+ * @log_level - log processing level
+ */
+function eva_sfa_change_log_level(log_level) {
+  eva_sfa_log_level = log_level;
+  eva_sfa_set_ws_log_level(log_level);
+  eva_sfa_load_log_entries(false, true);
+}
+
+/**
+ * Get log level name
+ *
+ * @lid - log level id
+ */
+
+function eva_sfa_log_level_name(log_level) {
+  return eva_sfa_log_level_names[log_level];
+}
+
 /* ----------------------------------------------------------------------------
  * INTERNAL FUNCTIONS AND VARIABLES
  */
@@ -645,8 +703,24 @@ eva_sfa_rule_reload = null;
 eva_sfa_states = Array();
 eva_sfa_rule_props_data = Array();
 
+eva_sfa_log_level = 20;
+eva_sfa_log_subscribed = false;
+eva_sfa_log_first_load = true;
+eva_sfa_log_loaded = false;
+eva_sfa_log_started = false;
+
+eva_sfa_lr2p = new Array();
+
 eva_sfa_last_ping = null;
 eva_sfa_last_pong = null;
+
+eva_sfa_log_level_names = {
+  10: 'DEBUG',
+  20: 'INFO',
+  30: 'WARNING',
+  40: 'ERROR',
+  50: 'CRITICAL'
+};
 
 function eva_sfa_after_login(data) {
   eva_sfa_logged_in = true;
@@ -698,6 +772,16 @@ function eva_sfa_process_ws(evt) {
     $.each(data.d, function(i, s) {
       eva_sfa_process_state(s);
     });
+    return;
+  }
+  if (data.s == 'log') {
+    $.each(data.d, function(i, l) {
+      eva_sfa_preprocess_log_record(l);
+    });
+    if (eva_sfa_log_postprocess != null) {
+      eva_sfa_log_postprocess();
+    }
+    return;
   }
 }
 
@@ -711,6 +795,14 @@ function eva_sfa_process_state(state) {
     } else {
       f(state);
     }
+  }
+}
+
+function eva_sfa_preprocess_log_record(l) {
+  if (!eva_sfa_log_loaded) {
+    eva_sfa_lr2p.push(l);
+  } else if (eva_sfa_process_log_record != null) {
+    eva_sfa_process_log_record(l);
   }
 }
 
@@ -733,7 +825,17 @@ function eva_sfa_start_ws() {
   };
   eva_sfa_ws.addEventListener('open', function(event) {
     eva_sfa_ws.send(JSON.stringify({s: 'state'}));
+    if (eva_sfa_log_subscribed) {
+      eva_sfa_set_ws_log_level(eva_sfa_log_level);
+    }
   });
+}
+
+function eva_sfa_set_ws_log_level(l) {
+  eva_sfa_log_subscribed = true;
+  try {
+    if (eva_sfa_ws != null) eva_sfa_ws.send(JSON.stringify({s: 'log', l: l}));
+  } catch (err) {}
 }
 
 function eva_sfa_stop_engine() {
@@ -832,6 +934,53 @@ function eva_sfa_load_initial_states(reload) {
     });
     if (eva_sfa_ws_mode && reload !== true) {
       eva_sfa_start_ws();
+    }
+  });
+}
+
+function eva_sfa_load_log_entries(r, postprocess) {
+  if (eva_sfa_ws_mode) eva_sfa_lr2p = new Array();
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += '?k=' + eva_sfa_apikey;
+  }
+  $.getJSON(
+    '/sys-api/log_get?l=' +
+      eva_sfa_log_level +
+      '&n=' +
+      eva_sfa_log_records_max +
+      q,
+    function(data) {
+      if (eva_sfa_ws_mode && eva_sfa_log_first_load) {
+        eva_sfa_set_ws_log_level(eva_sfa_log_level);
+      }
+      var _l = '';
+      $.each(data, function(t, l) {
+        if (eva_sfa_process_log_record != null) {
+          eva_sfa_process_log_record(l);
+        }
+      });
+      eva_sfa_log_loaded = true;
+      $.each(eva_sfa_lr2p, function(i, l) {
+        if (eva_sfa_process_log_record != null) {
+          eva_sfa_process_log_record(l);
+        }
+      });
+      if (postprocess && eva_sfa_log_postprocess != null) {
+        eva_sfa_log_postprocess();
+      }
+      if ((!eva_sfa_ws_mode && eva_sfa_log_first_load) || r) {
+        setTimeout(function() {
+          eva_sfa_load_log_entries(true, false);
+        }, eva_sfa_log_reload_interval * 1000);
+      }
+      eva_sfa_log_first_load = false;
+    }
+  ).error(function(data) {
+    if ((!eva_sfa_ws_mode && eva_sfa_log_first_load) || r) {
+      setTimeout(function() {
+        eva_sfa_load_log_entries(true, false);
+      }, eva_sfa_log_reload_interval * 1000);
     }
   });
 }

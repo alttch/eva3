@@ -58,6 +58,7 @@ SFA:
       sfa & sfa framework
     * reload_clients command and sfa framework reload event handler
     * eva_sfa_expires_in function in a framework to work with timers
+    * log processing functions in a framework
 
 Common:
 
