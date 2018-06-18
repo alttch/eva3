@@ -20,7 +20,7 @@ Core:
 
     * fixes: remove empty controller group when all objects are deleted
     * fixes: remote items correctly display state in list_remote
-    * fixes: disabled sensors and lvars shouldn't react to an expiration
+    * fixes: disabled sensors and lvars should not react to an expiration
     * each set_prop call now logs what's actually changed
     * added item oid (type:group/item_id) - reserved for the future releases
     * added stop_on_critical option in config (default: yes),
