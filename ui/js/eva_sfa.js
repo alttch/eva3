@@ -23,6 +23,11 @@ eva_sfa_apikey = null;
 eva_sfa_cb_login_success = null;
 eva_sfa_cb_login_error = null;
 
+/**
+ * Contains function called after framework loads initial item states
+ */
+eva_sfa_cb_states_loaded = null;
+
 /** Contains function which's called as f(data) when ws event is received
  *  function should return true, if it return false, WS data processing
  *  is stopped
@@ -190,9 +195,17 @@ function eva_sfa_stop(cb) {
  * if state is already loaded, function will be called immediately
  */
 function eva_sfa_register_update_state(oid, cb) {
-  eva_sfa_update_state_functions[oid] = cb;
-  var state = eva_sfa_state(oid);
-  if (state !== undefined) cb(state);
+  if (!oid.includes('*')) {
+    eva_sfa_update_state_functions[oid] = cb;
+    var state = eva_sfa_state(oid);
+    if (state !== undefined) cb(state);
+  } else {
+    eva_sfa_update_state_mask_functions[oid] = cb;
+    var i = eva_sfa_state(oid);
+    $.each(i, function(k, v) {
+      cb(v);
+    });
+  }
 }
 
 /**
@@ -215,11 +228,20 @@ function eva_sfa_register_rule(rule_id, cb) {
  * @returns - object state or undefined if no object found
  */
 function eva_sfa_state(oid) {
-  if (oid in eva_sfa_states) {
-    return eva_sfa_states[oid];
-  } else {
-    return undefined;
+  if (!oid.includes('*')) {
+    if (oid in eva_sfa_states) {
+      return eva_sfa_states[oid];
+    } else {
+      return undefined;
+    }
   }
+  var result = new Array();
+  $.each(Object.keys(eva_sfa_states), function(i, v) {
+      if (eva_sfa_oid_match(v, oid)) {
+        result.push(eva_sfa_states[v]);
+      }
+  });
+  return result;
 }
 
 /**
@@ -694,6 +716,7 @@ function eva_sfa_log_level_name(log_level) {
  */
 
 eva_sfa_update_state_functions = Array();
+eva_sfa_update_state_mask_functions = Array();
 eva_sfa_rules_to_monitor = Array();
 eva_sfa_logged_in = false;
 eva_sfa_ws = null;
@@ -724,7 +747,7 @@ eva_sfa_log_level_names = {
 
 function eva_sfa_after_login(data) {
   eva_sfa_logged_in = true;
-  eva_sfa_load_initial_states();
+  eva_sfa_load_initial_states(true, false);
   eva_sfa_heartbeat(true, data);
   if (!eva_sfa_ws_mode) {
     if (eva_sfa_ajax_reload !== null) {
@@ -740,7 +763,7 @@ function eva_sfa_after_login(data) {
     }
     if (eva_sfa_force_reload_interval) {
       eva_sfa_ajax_reload = setInterval(function() {
-        eva_sfa_load_initial_states(true);
+        eva_sfa_load_initial_states(false, true);
       }, eva_sfa_force_reload_interval * 1000);
     }
   }
@@ -796,6 +819,16 @@ function eva_sfa_process_state(state) {
       f(state);
     }
   }
+  $.each(Object.keys(eva_sfa_update_state_mask_functions), function(i, v) {
+    if (eva_sfa_oid_match(oid, v)) {
+      var f = eva_sfa_update_state_mask_functions[v];
+      if (typeof f === 'string' || f instanceof String) {
+        eval(f);
+      } else {
+        f(state);
+      }
+    }
+  });
 }
 
 function eva_sfa_preprocess_log_record(l) {
@@ -923,7 +956,7 @@ function eva_sfa_load_rule_props(rule_id, cb) {
   });
 }
 
-function eva_sfa_load_initial_states(reload) {
+function eva_sfa_load_initial_states(on_login, reload) {
   var q = '';
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
     q += '?k=' + eva_sfa_apikey;
@@ -934,6 +967,9 @@ function eva_sfa_load_initial_states(reload) {
     });
     if (eva_sfa_ws_mode && reload !== true) {
       eva_sfa_start_ws();
+    }
+    if (on_login !== undefined && on_login) {
+      if (eva_sfa_cb_states_loaded !== null) eva_sfa_cb_states_loaded(data);
     }
   });
 }
@@ -983,6 +1019,10 @@ function eva_sfa_load_log_entries(r, postprocess) {
       }, eva_sfa_log_reload_interval * 1000);
     }
   });
+}
+
+function eva_sfa_oid_match(oid, mask) {
+  return new RegExp("^" + mask.split("*").join(".*") + "$").test(oid);
 }
 
 function _eva_sfa_deprecated(f1, f2) {

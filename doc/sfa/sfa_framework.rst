@@ -58,6 +58,15 @@ either succeeded or failed (**data** parameter is equal to `jQuery post
     eva_sfa_cb_login_success = null;
     eva_sfa_cb_login_error = null;
 
+eva_sfa_cb_states_loaded
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function called after framework loads initial item states
+
+.. code-block:: javascript
+
+    eva_sfa_cb_states_loaded = null;
+
 eva_sfa_heartbeat_interval
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -243,6 +252,10 @@ where:
 The function returns **state** object or **undefined** if the item state is
 unknown.
 
+You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
+case the function returns the array of all item with oids match the specified
+mask.
+
 eva_sfa_register_update_state
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -261,6 +274,10 @@ where:
 * **cb** function which's called with **state** param containing the new item
   state data (**state.status**, **state.value** etc. equal to the regular state
   :doc:`notification event</notifiers>`.)
+
+You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
+case the specified state update function will be called always when item oid
+match the specified mask.
 
 eva_sfa_register_rule
 ~~~~~~~~~~~~~~~~~~~~~
