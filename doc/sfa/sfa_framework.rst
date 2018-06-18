@@ -563,7 +563,7 @@ The following example shows how to build a log viewer, similar to included in
         overflow: scroll;
         overflow-x: hidden;
         margin-bottom: 10px;
-        border-style : Solid;
+        border-style : solid;
         border-color : #3ab0ea;
         border-color : rgba(58, 176, 234, 1);
         border-width : 2px;
