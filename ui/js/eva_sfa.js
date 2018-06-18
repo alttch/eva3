@@ -137,7 +137,7 @@ function eva_sfa_start() {
   }
   $.post('/sfa-api/login', q, function(data) {
     eva_sfa_after_login(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     eva_sfa_logged_in = false;
     eva_sfa_stop_engine();
     if (eva_sfa_cb_login_error !== null) eva_sfa_cb_login_error(data);
@@ -180,7 +180,7 @@ function eva_sfa_stop(cb) {
   eva_sfa_logged_in = false;
   $.getJSON('/sfa-api/logout', function(data) {
     if (cb !== undefined && cb !== null) cb(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb !== undefined && cb !== null) cb(data);
   });
 }
@@ -353,7 +353,7 @@ function eva_sfa_run(
   }
   $.getJSON('/sfa-api/run?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -398,7 +398,7 @@ function eva_sfa_action(
   }
   $.getJSON('/sfa-api/action?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -437,7 +437,7 @@ function eva_sfa_action_toggle(
   }
   $.getJSON('/sfa-api/action_toggle?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -461,7 +461,7 @@ function eva_sfa_result(unit_id, g, s, cb_success, cb_error) {
   }
   $.getJSON('/sfa-api/result?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -479,7 +479,7 @@ function eva_sfa_result_by_uuid(uuid, cb_success, cb_error) {
   q += '&u=' + uuid;
   $.getJSON('/sfa-api/result?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -497,7 +497,7 @@ function eva_sfa_kill(unit_id, cb_success, cb_error) {
   q += '&i=' + unit_id;
   $.getJSON('/sfa-api/kill?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -515,7 +515,7 @@ function eva_sfa_q_clean(unit_id, cb_success, cb_error) {
   q += '&i=' + unit_id;
   $.getJSON('/sfa-api/q_clean?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -533,7 +533,7 @@ function eva_sfa_terminate(unit_id, cb_success, cb_error) {
   q += '&i=' + unit_id;
   $.getJSON('/sfa-api/terminate?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -551,7 +551,7 @@ function eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error) {
   q += '&u=' + uuid;
   $.getJSON('/sfa-api/terminate?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -571,7 +571,7 @@ function eva_sfa_set(lvar_id, value, cb_success, cb_error) {
   q += '&v=' + value;
   $.getJSON('/sfa-api/set?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -592,7 +592,7 @@ function eva_sfa_toggle(lvar_id, cb_success, cb_error) {
   q += '&i=' + lvar_id;
   $.getJSON('/sfa-api/toggle?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -616,7 +616,7 @@ function eva_sfa_reset(lvar_id, cb_success, cb_error) {
   q += '&i=' + lvar_id;
   $.getJSON('/sfa-api/reset?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -634,7 +634,7 @@ function eva_sfa_clear(lvar_id, cb_success, cb_error) {
   q += '&i=' + lvar_id;
   $.getJSON('/sfa-api/clear?' + q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -669,7 +669,7 @@ function eva_sfa_set_rule_prop(
   }
   $.post('/sfa-api/set_rule_prop', q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).error(function(data) {
+  }).fail(function(data) {
     if (cb_error !== undefined && cb_error !== null) cb_error(data);
   });
 }
@@ -932,7 +932,7 @@ function eva_sfa_heartbeat(on_login, data) {
     if (on_login !== undefined && on_login) {
       if (eva_sfa_cb_login_success !== null) eva_sfa_cb_login_success(data);
     }
-  }).error(function(data) {
+  }).fail(function(data) {
     if (eva_sfa_heartbeat_error !== null) {
       eva_sfa_heartbeat_error(data);
     }
@@ -1012,7 +1012,7 @@ function eva_sfa_load_log_entries(r, postprocess) {
       }
       eva_sfa_log_first_load = false;
     }
-  ).error(function(data) {
+  ).fail(function(data) {
     if ((!eva_sfa_ws_mode && eva_sfa_log_first_load) || r) {
       setTimeout(function() {
         eva_sfa_load_log_entries(true, false);
