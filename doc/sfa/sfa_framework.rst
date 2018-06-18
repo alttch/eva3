@@ -454,11 +454,17 @@ SFA Framework has built-in functions to display SFA logs. In case
 :doc:`SFA</sfa/sfa>` is a :doc:`log aggregator</notifiers>`, this allows to
 :ref:`view a logs<sfw_example_log>` from the whole EVA installation.
 
+eva_sfa_log_reload_interval
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 This variable sets log reload interval if the framework works in AJAX mode.
 
 .. code-block:: javascript
 
     eva_sfa_log_reload_interval = 2;
+
+eva_sfa_log_records_max
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Maximum number of log records to get initially
 
@@ -466,11 +472,17 @@ Maximum number of log records to get initially
 
   eva_sfa_log_records_max = 200;
 
-Function called when the new log record arrives
+eva_sfa_process_log_record
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Function called with log record param, when the new log event arrives
 
 .. code-block:: javascript
 
   eva_sfa_process_log_record = null;
+
+eva_sfa_log_postprocess
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Function called when all new log records are processed, i.e. to autoscroll the
 log viewer
@@ -478,6 +490,9 @@ log viewer
 .. code-block:: javascript
 
   eva_sfa_log_postprocess = null;
+
+eva_sfa_log_start
+~~~~~~~~~~~~~~~~~
 
 This function starts log processing engine
 
@@ -488,6 +503,9 @@ This function starts log processing engine
 **log_level** - optional param, log level records with *level >= 20 (INFO)* are
 processed by default, if not specified.
 
+eva_sfa_change_log_level
+~~~~~~~~~~~~~~~~~~~~~~~~
+
 This function allows to change log level processing
 
 .. code-block:: javascript
@@ -496,6 +514,9 @@ This function allows to change log level processing
 
 Here **log_level** param is required. The function reloads all log records with
 the specified level, so it's good idea to clean log viewer before.
+
+eva_sfa_log_level_name
+~~~~~~~~~~~~~~~~~~~~~~
 
 This function returns log level name matches the given log level code:
 
