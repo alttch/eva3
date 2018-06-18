@@ -115,7 +115,7 @@ img.tbtn.disabled {
     overflow: scroll;
     overflow-x: hidden;
     margin-bottom: 10px;
-    border-style : Solid;
+    border-style : solid;
     border-color : #3ab0ea;
     border-color : rgba(58, 176, 234, 1);
     border-width : 2px;
@@ -161,7 +161,7 @@ img.tbtn.disabled {
     width: 46px;
     height: 46px;
     margin-left: 10px;
-    border-style : Solid;
+    border-style : solid;
     border-color : #3ab0ea;
     border-color : rgba(58, 176, 234, 1);
     border-width : 0px;
@@ -176,7 +176,7 @@ img.tbtn.disabled {
 .tbtn_l {
     width: 54px;
     height: 54px;
-    border-style : Solid;
+    border-style : solid;
     border-color : #3ab0ea;
     border-color : rgba(58, 176, 234, 1);
     border-width : 0px;
@@ -226,7 +226,7 @@ img.tbtn.disabled {
 	height: 44px;
 	color: #3ab0ea;
 	font-size: 14px;
-	border-style : Solid;
+	border-style : solid;
 	border-color : #3ab0ea;
 	border-color : rgba(58, 176, 234, 1);
 	border-width : 2px;
@@ -246,7 +246,7 @@ img.tbtn.disabled {
     color: #3ab0ea;
     height: 25px;
     font-size: 14px;
-    border-style : Solid;
+    border-style : solid;
     border-color : #3ab0ea;
     border-color : rgba(58, 176, 234, 1);
     border-width : 2px;
