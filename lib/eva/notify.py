@@ -922,7 +922,7 @@ class GenericMQTTNotifier(GenericNotifier):
             else: _retain = True
             for i in data:
                 for k in i:
-                    if not k in ['id', 'group', 'type']:
+                    if not k in ['id', 'group', 'type', 'full_id', 'oid']:
                         self.mq.publish(pfx + i['type'] + '/' + i['group'] +\
                                     '/' + i['id'] + '/' + k, i[k], qos,
                                     retain = _retain)

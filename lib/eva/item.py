@@ -91,7 +91,7 @@ class Item(object):
             d['id'] = self.item_id
             d['type'] = self.item_type
             d['group'] = self.group
-        if not props and not notify:
+        if not props:
             d['full_id'] = self.group + '/' + self.item_id
             d['oid'] = self.oid
         if full or config or info or props:
