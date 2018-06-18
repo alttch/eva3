@@ -325,6 +325,7 @@ alarm system:
 put it's code to **xc/lm/alarm_start.py**:
 
 .. code-block:: python
+
     # do not send API calls more than once in 30 minutes
     try: lock('alarm-start', expires = 1800) 
     except: exit()
