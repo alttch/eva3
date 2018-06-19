@@ -12,7 +12,7 @@ include them in the final product. Virtual items allow you to:
 
 * Test EVA without connecting a real equipment
 * Debug various configurations before embedding
-* Check how the system responses to the emergencies
+* Check how the system responds to the emergencies
 
 :any:`Units<unit>`, :any:`sensors<sensor>` and :any:`multiupdates<multiupdate>`
 can be virtual and have the following features:
