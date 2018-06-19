@@ -247,6 +247,12 @@ class MacroAPI(object):
         return True
 
     def reset(self, lvar_id):
+        lvar = eva.lm.controller.get_lvar(lvar_id)
+        if not lvar:
+            if not self.pass_errors:
+                raise Exception('lvar unknown: ' + lvar_id)
+            return False
+        lvar.update_set_state(status=1)
         return self.set(lvar_id=lvar_id, value=1)
 
     def clear(self, lvar_id):
