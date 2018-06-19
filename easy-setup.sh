@@ -556,11 +556,8 @@ if [ "x$X" != "x" ]; then
 fi
 
 echo "Setup completed!"
-
 echo
-
 echo "MASTERKEY: ${MASTERKEY}"
-
 echo
 
 if [ $INSTALL_UC -eq 1 ]; then
