@@ -35,7 +35,7 @@ What is EVA
   interfaces for a specific configuration.
 
 EVA can be installed either partially or fully, it can bescaled up to many
-servers or all the components can be installed onto the only one. The system is
+servers or all components can be installed onto the only one. The system is
 designed in such a way, that it can work on any hardware: from the fat servers
 to mini-computers with only one smart card in the “read-only” mode.
 
