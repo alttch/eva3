@@ -454,6 +454,11 @@ SFA Framework has built-in functions to display SFA logs. In case
 :doc:`SFA</sfa/sfa>` is a :doc:`log aggregator</notifiers>`, this allows to
 :ref:`view a logs<sfw_example_log>` from the whole EVA installation.
 
+.. note::
+
+    For log processing the client :ref:`API key<sfa_apikey>` should have
+    *sysfunc=yes* permission.
+
 eva_sfa_log_reload_interval
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
