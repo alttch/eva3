@@ -85,6 +85,16 @@ The system is ready.
     running under, use *./set-run-under-user.sh* script to adjust runtime and
     database permissions.
 
+Updating
+--------
+
+* Stop EVA: *./sbin/eva-control stop*
+* Backup eva installation folder
+* Unpack new version to the folder where EVA is installed
+* Execute *sh install.sh* to install missed modules
+* Restore custom scripts and **ui** folder if required
+* Start EVA: *./sbin/eva-control start*
+
 How to assign IDs to items
 --------------------------
 
