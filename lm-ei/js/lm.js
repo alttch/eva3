@@ -98,8 +98,10 @@ function redraw_lvar_state(i) {
   $('[id="lval_' + i + '"]').html(items[i].value);
   var _e_label = '';
   var rb = $('[id="lval_rb_' + i + '"]');
-  if (items[i].expires > 0) {
+  if (items[i].expires > 0 && items[i].status != 0) {
     _e_label = '<span class="hidden-xs">E: </span>';
+    rb.show();
+  } else if (items[i].expires > 0) {
     rb.show();
   } else {
     rb.hide();
@@ -308,7 +310,7 @@ function load_lvars() {
         _lvar_expires = $('<div />', {class: 'col-sm-2 col-xs-12'});
         _lvar_state = $('<div />', {class: 'col-sm-4 col-xs-12'});
         var _e_label = '';
-        if (val.expires > 0) {
+        if (val.expires > 0 && val.status != 0) {
           _e_label = '<span class="hidden-xs">E: </span>';
         }
         $('<span />', {
