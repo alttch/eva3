@@ -1,0 +1,12 @@
+__pycache__
+Makefile
+TODO*
+common.txt
+doc/_build
+etc/eva_servers
+etc/*.ini
+dev
+log
+runtime
+xc/uc
+xc/lm
