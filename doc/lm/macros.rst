@@ -665,7 +665,7 @@ open_newest - open newest file
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Tries to find and open the newest file by the specified mask. Useful i.e. for
-the folders where security cameras periodicatlly upload an images.
+the folders where security cameras periodically upload an images.
 
 .. code-block:: python
 
