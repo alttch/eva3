@@ -79,24 +79,24 @@ which return JSON array:
         "name": "1.png",
         "size": 2443,
         "time": {
-            "created": 1507735364.2441583,
-            "modified": 1507734605.1451921
+            "c": 1507735364.2441583,
+            "m": 1507734605.1451921
         }
     },
     {
         "name": "2.png",
         "size": 2231,
         "time": {
-            "created": 1507735366.5561802,
-            "modified": 1507735342.923956
+            "c": 1507735366.5561802,
+            "m": 1507735342.923956
         }
     }] 
 
 where
 
 * **size** file size (in bytes)
-* **time/created** file creation time (UNIX timestamp)
-* **time/modified** file modification time
+* **time/c** inode creation time (ctime, UNIX timestamp)
+* **time/m** file modification time (mtime)
 
 Receiving the newest and the oldest file
 ----------------------------------------

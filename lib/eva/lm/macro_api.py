@@ -425,27 +425,37 @@ class MacroAPI(object):
                 'name': os.path.basename(x),
                 'size': os.path.getsize(x),
                 'time': {
-                    'created': os.path.getctime(x),
-                    'modified': os.path.getmtime(x)
+                    'c': os.path.getctime(x),
+                    'm': os.path.getmtime(x)
                 }
             })
         return l
 
     def open_oldest(self, mask, mode='r'):
-        fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
-        if not fls: return None
-        return open(min(fls, key=os.path.getmtime), mode)
+        try:
+            fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
+            if not fls: return None
+            return open(min(fls, key=os.path.getmtime), mode)
+        except:
+            if not self.pass_errors:
+                raise 'file open error'
+            return None
 
     def open_newest(self, mask, mode='r', alt=True):
-        fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
-        if not fls: return None
-        _f = max(fls, key=os.path.getmtime)
-        fls.remove(_f)
-        if fls: _f_alt = max(fls, key=os.path.getmtime)
-        else: _f_alt = None
         try:
-            o = open(_f, mode)
+            fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
+            if not fls: return None
+            _f = max(fls, key=os.path.getmtime)
+            fls.remove(_f)
+            if fls: _f_alt = max(fls, key=os.path.getmtime)
+            else: _f_alt = None
+            try:
+                o = open(_f, mode)
+            except:
+                if not alt or not _f_alt: raise
+                o = open(_f_alt, mode)
+            return o
         except:
-            if not alt or not _f_alt: raise
-            o = open(_f_alt, mode)
-        return o
+            if not self.pass_errors:
+                raise 'file open error'
+            return None
