@@ -653,7 +653,7 @@ Returns file listing by the specified mask as an array:
             "c": 1507735366.5561802,
             "m": 1507735342.923956
         }
-    }] 
+    }]
 
 where
 
