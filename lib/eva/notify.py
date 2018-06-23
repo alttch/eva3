@@ -535,7 +535,7 @@ class SQLiteNotifier(GenericNotifier):
                   t_start=None,
                   t_end=None,
                   limit=None,
-                  field=None,
+                  prop=None,
                   time_format=None):
         l = int(limit) if limit else None
         if t_start:
@@ -567,14 +567,14 @@ class SQLiteNotifier(GenericNotifier):
             sql += ' order by t desc limit %u' % l
         req_status = False
         req_value = False
-        if field in ['status', 'S']:
-            fields = 'status'
+        if prop in ['status', 'S']:
+            props = 'status'
             req_status = True
-        elif field in ['value', 'V']:
-            fields = 'value'
+        elif prop in ['value', 'V']:
+            props = 'value'
             req_value = True
         else:
-            fields = 'status, value'
+            props = 'status, value'
             req_status = True
             req_value = True
         db = self.get_db()
@@ -585,7 +585,7 @@ class SQLiteNotifier(GenericNotifier):
             tz = pytz.timezone(time.tzname[0])
         try:
             c.execute(
-                'select t, ' + fields +
+                'select t, ' + props +
                 ' from state_history where space = ? and oid = ?' + sql, (
                     space,
                     oid,

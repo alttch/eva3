@@ -17,6 +17,8 @@ from eva.api import cp_need_master
 from eva import apikey
 import eva.uc.controller
 
+api = None
+
 
 class UC_API(GenericAPI):
 
@@ -103,7 +105,7 @@ class UC_API(GenericAPI):
             t_start=s,
             t_end=e,
             limit=l,
-            field=x,
+            prop=x,
             time_format=t,
             fill=w)
 
@@ -576,6 +578,8 @@ class UC_HTTP_Root:
 
 
 def start():
+    global api
+    api = UC_API()
     cherrypy.tree.mount(UC_HTTP_API(), '/uc-api')
     cherrypy.tree.mount(
         UC_HTTP_Root(),

@@ -4,7 +4,25 @@ EVA ICS CHANGELOG
 3.0.3
 -----
 
-Under development now, use only for testing.
+Core:
+
+    * working with locks now require allow=lock apikey permission
+    * new notifier type: db, used to store item state history
+
+UC:
+    * new function state_history in UC API
+
+LM:
+    * macro function unlock now return false if lock was not locked or doesn't
+      exist
+    * unlock macro function may throw exception if the controller forbids it's
+      functionality, in case the controller has no masterkey defined
+    * new functions "state_history" in LM API and "history" (equivalent) in
+      macros
+
+SFA:
+    * new function state_history in SFA API
+    * state and state_history functions accept item oids
 
 3.0.2
 -----

@@ -64,15 +64,15 @@ _api_func = {
         'uri':
         '/lm-api/',
         'func': [
-            'test', 'state', 'groups', 'groups_macro', 'set', 'reset', 'clear',
-            'toggle', 'run', 'result', 'get_config', 'save_config', 'list',
-            'list_remote', 'list_controllers', 'list_macros', 'create_macro',
-            'destroy_macro', 'append_controller', 'remove_controller',
-            'list_props', 'list_macro_props', 'list_controller_props',
-            'set_prop', 'set_macro_prop', 'set_controller_prop',
-            'reload_controller', 'create_lvar', 'destroy_lvar', 'list_rules',
-            'list_rule_props', 'set_rule_prop', 'create_rule', 'destroy_rule',
-            'login', 'logout'
+            'test', 'state', 'state_history', 'groups', 'groups_macro', 'set',
+            'reset', 'clear', 'toggle', 'run', 'result', 'get_config',
+            'save_config', 'list', 'list_remote', 'list_controllers',
+            'list_macros', 'create_macro', 'destroy_macro', 'append_controller',
+            'remove_controller', 'list_props', 'list_macro_props',
+            'list_controller_props', 'set_prop', 'set_macro_prop',
+            'set_controller_prop', 'reload_controller', 'create_lvar',
+            'destroy_lvar', 'list_rules', 'list_rule_props', 'set_rule_prop',
+            'create_rule', 'destroy_rule', 'login', 'logout'
         ],
         'cr': [
             'set', 'reset', 'clear', 'toggle', 'save_config', 'set_prop',
@@ -87,13 +87,14 @@ _api_func = {
         'uri':
         '/sfa-api/',
         'func': [
-            'test', 'state', 'state_all', 'groups', 'action', 'action_toggle',
-            'result', 'terminate', 'kill', 'q_clean', 'disable_actions',
-            'enable_actions', 'set', 'reset', 'toggle', 'clear', 'list_macros',
-            'groups_macro', 'run', 'list_controllers', 'append_controller',
-            'remove_controller', 'list_controller_props', 'set_controller_prop',
-            'reload_controller', 'list_remote', 'list_rule_props',
-            'set_rule_prop', 'login', 'logout', 'reload_clients'
+            'test', 'state', 'state_all', 'state_history', 'groups', 'action',
+            'action_toggle', 'result', 'terminate', 'kill', 'q_clean',
+            'disable_actions', 'enable_actions', 'set', 'reset', 'toggle',
+            'clear', 'list_macros', 'groups_macro', 'run', 'list_controllers',
+            'append_controller', 'remove_controller', 'list_controller_props',
+            'set_controller_prop', 'reload_controller', 'list_remote',
+            'list_rule_props', 'set_rule_prop', 'login', 'logout',
+            'reload_clients'
         ],
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',

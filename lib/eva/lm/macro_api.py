@@ -9,6 +9,7 @@ import os
 import glob
 import eva.core
 import eva.sysapi
+import eva.apikey
 import eva.mailer
 import eva.lm.controller
 import time
@@ -96,11 +97,38 @@ class MacroAPI(object):
             'kill': self.kill,
             'run': self.run,
             'cmd': self.cmd,
+            'history': self.history,
             'system': os.system,
+            'time': time.time,
             'ls': self.ls,
             'open_oldest': self.open_oldest,
             'open_newest': self.open_newest
         }
+
+    def history(self,
+                      lvar_id,
+                      t_start=None,
+                      t_end=None,
+                      limit=None,
+                      prop=None,
+                      time_format=None,
+                      fill=None,
+                      db=None):
+        result = eva.lm.lmapi.api.state_history(
+            k=eva.apikey.masterkey,
+            a=db,
+            i=lvar_id,
+            s=t_start,
+            e=t_end,
+            l=limit,
+            x=prop,
+            t=time_format,
+            w=fill)
+        if result is False:
+            if not self.pass_errors:
+                raise Exception('lvar unknown: ' + lvar_id)
+            return None
+        return result
 
     def debug(self, msg):
         logging.debug(msg)
@@ -125,14 +153,16 @@ class MacroAPI(object):
 
     def lock(self, lock_id, timeout=None, expires=None):
         result = eva.sysapi.api.lock(
-            l=lock_id, timeout=timeout, expires=expires)
+            k=eva.apikey.masterkey, l=lock_id, timeout=timeout, expires=expires)
         if not result and not self.pass_errors:
             raise Exception('Error obtaining lock')
         return result
 
     def unlock(self, lock_id):
-        result = eva.sysapi.api.unlock(l=lock_id)
-        return True
+        result = eva.sysapi.api.unlock(k=eva.apikey.masterkey, l=lock_id)
+        if result is None and not self.pass_errors:
+            raise Exception('Error releasing lock')
+        return result
 
     def lvar_status(self, lvar_id):
         lvar = eva.lm.controller.get_lvar(lvar_id)

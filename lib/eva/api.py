@@ -8,6 +8,7 @@ import eva.core
 import logging
 import threading
 import time
+import math
 import jsonpickle
 from datetime import datetime
 import dateutil
@@ -186,7 +187,7 @@ class GenericAPI(object):
                           t_start=None,
                           t_end=None,
                           limit=None,
-                          field=None,
+                          prop=None,
                           time_format=None,
                           fill=None):
         if oid is None: return False
@@ -200,7 +201,7 @@ class GenericAPI(object):
                 t_start=t_start,
                 t_end=t_end,
                 limit=limit,
-                field=field,
+                prop=prop,
                 time_format=tf)
         except:
             logging.error('state history call error, arch: %s, oid: %s' %
@@ -231,18 +232,27 @@ class GenericAPI(object):
                 freq=fill)
             sp = df.reindex(i2, method='pad').to_dict(orient='split')
             result = []
-            for i in range(0,len(sp['index'])):
+            for i in range(0, len(sp['index'])):
                 t = sp['index'][i].timestamp()
                 if time_format == 'iso':
                     t = datetime.fromtimestamp(t, tz).isoformat()
-                r = { 't': t }
+                r = {'t': t}
                 if 'status' in sp['columns'] and 'value' in sp['columns']:
-                    r['status'] = int(sp['data'][i][0])
+                    try:
+                        r['status'] = int(sp['data'][i][0])
+                    except:
+                        r['status'] = None
                     r['value'] = sp['data'][i][1]
                 elif 'status' in sp['columns']:
-                    r['status'] = int(sp['data'][i][0])
+                    try:
+                        r['status'] = int(sp['data'][i][0])
+                    except:
+                        r['status'] = None
                 elif 'value' in sp['columns']:
                     r['value'] = sp['data'][i][0]
+                if 'value' in r and isinstance(
+                        r['value'], float) and math.isnan(r['value']):
+                    r['value'] = None
                 result.append(r)
             return result
         except:

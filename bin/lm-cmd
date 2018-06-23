@@ -326,7 +326,7 @@ debug = False
 try:
     func = sys.argv[1]
     o, a = getopt.getopt(sys.argv[2:],
-                         'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:s:v:w:yzD')
+            'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:s:v:w:x:yzD')
 except:
     usage()
     sys.exit(99)

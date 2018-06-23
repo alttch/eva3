@@ -120,7 +120,7 @@ def load(fname=None):
                     pass
                 _keys[k] = key
                 _keys_by_id[ks] = key
-                if key.master and not _masterkey:
+                if key.master and not masterkey:
                     _masterkey = k
                     logging.info('+ masterkey loaded')
             except:

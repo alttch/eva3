@@ -56,6 +56,8 @@ api_file_management_allowed = False
 class LockAPI(object):
 
     def lock(self, k=None, l=None, timeout=None, expires=None):
+        if not eva.apikey.check(k, allow = [ 'lock' ]):
+            return None
         if timeout: t = timeout
         else: t = eva.core.timeout
         if not l in locks:
@@ -69,6 +71,8 @@ class LockAPI(object):
         return result
 
     def unlock(self, k=None, l=None):
+        if not eva.apikey.check(k, allow = [ 'lock' ]):
+            return None
         logging.debug('releasing lock %s' % l)
         try:
             locks[l].release()
@@ -410,15 +414,19 @@ class SysHTTP_API(SysAPI):
     def lock(self, k=None, l=None, t=None, e=None):
         if not l:
             raise cp_api_error('No lock provided')
+        result = super().lock(k, l, t, e)
+        if result is None: raise cp_forbidden_key()
         return http_api_result_ok() \
-                if super().lock(k, l, t, e) else http_api_result_error()
+                if result else http_api_result_error()
 
     def unlock(self, k=None, l=None):
         if not l:
             raise cp_api_error('No lock provided')
         if not l in locks:
             raise cp_api_404('Lock not found')
-        return http_api_result_ok() if super().unlock(k, l) else \
+        result = super().unlock(k, l)
+        if result is None: raise cp_forbidden_key()
+        return http_api_result_ok() if result else \
                 http_api_result_ok({ 'remark': 'notlocked' })
 
     def cmd(self, k, c, a=None, w=None, t=None):

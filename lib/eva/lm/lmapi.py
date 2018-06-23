@@ -18,6 +18,8 @@ from eva.api import cp_need_master
 from eva import apikey
 import eva.lm.controller
 
+api = None
+
 
 def cp_need_dm_rules_list(k):
     if not eva.apikey.check(k, allow=['dm_rules_list']):
@@ -69,6 +71,29 @@ class LM_API(GenericAPI):
                     r = v.serialize(full=full)
                     result.append(r)
             return sorted(result, key=lambda k: k['id'])
+
+    def state_history(self,
+                      k=None,
+                      a=None,
+                      i=None,
+                      s=None,
+                      e=None,
+                      l=None,
+                      x=None,
+                      t=None,
+                      w=None):
+        item = eva.lm.controller.get_lvar(i)
+        if not item or not apikey.check(k, item): return False
+        return self.get_state_history(
+            k=k,
+            a=a,
+            oid=item.oid,
+            t_start=s,
+            t_end=e,
+            limit=l,
+            prop=x,
+            time_format=t,
+            fill=w)
 
     def set(self, k=None, i=None, status=None, value=None):
         item = eva.lm.controller.get_lvar(i)
@@ -433,6 +458,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
             LM_API.dev_lm_i.exposed = True
         LM_HTTP_API.groups.exposed = True
         LM_HTTP_API.state.exposed = True
+        LM_HTTP_API.state_history.exposed = True
         LM_HTTP_API.set.exposed = True
         LM_HTTP_API.reset.exposed = True
         LM_HTTP_API.clear.exposed = True
@@ -481,6 +507,22 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         result = super().state(k, i, _full, g, p)
         if result is None:
             raise cp_api_404()
+        return result
+
+    def state_history(self,
+                      k=None,
+                      a=None,
+                      i=None,
+                      s=None,
+                      e=None,
+                      l=None,
+                      x=None,
+                      t=None,
+                      w=None):
+        result = super().state_history(
+            k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w)
+        if result is None: raise cp_api_error('internal error')
+        if result is False: raise cp_api_404()
         return result
 
     def set(self, k=None, i=None, s=None, v=None):
@@ -740,6 +782,8 @@ class LM_HTTP_Root:
 
 
 def start():
+    global api
+    api = LM_API()
     cherrypy.tree.mount(LM_HTTP_API(), '/lm-api')
     cherrypy.tree.mount(
         LM_HTTP_Root(),

@@ -31,7 +31,7 @@ def config_error(fname, section, key, value):
 
 def format_json(obj, minimal=False):
     return json.dumps(json.loads(jsonpickle.encode(obj,
-            unpicklable = False)), indent = 4, sort_keys = True) \
+            unpicklable = False)), indent=4, sort_keys=True) \
                 if not minimal else jsonpickle.encode(obj, unpicklable = False)
 
 

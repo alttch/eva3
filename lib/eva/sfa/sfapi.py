@@ -27,6 +27,8 @@ import eva.sfa.controller
 
 from PIL import Image
 
+api = None
+
 
 def cp_need_dm_rules_list(k):
     if not eva.apikey.check(k, allow=['dm_rules_list']):
@@ -41,18 +43,26 @@ def cp_need_dm_rule_props(k):
 class SFA_API(GenericAPI):
 
     def state(self, k=None, i=None, group=None, tp=None):
-        if not tp: return None
-        if tp == 'U' or tp == 'unit':
+        if i and i.find(':') != -1:
+            try:
+                _tp, _i = i.split(':')
+            except:
+                return None
+        else:
+            _tp = tp
+            _i = i
+        if not _tp: return None
+        if _tp == 'U' or _tp == 'unit':
             gi = eva.sfa.controller.uc_pool.units
-        elif tp == 'S' or tp == 'sensor':
+        elif _tp == 'S' or _tp == 'sensor':
             gi = eva.sfa.controller.uc_pool.sensors
-        elif tp == 'LV' or tp == 'lvar':
+        elif _tp == 'LV' or _tp == 'lvar':
             gi = eva.sfa.controller.lm_pool.lvars
         else:
             return None
-        if i:
-            if i in gi and apikey.check(k, gi[i]):
-                return gi[i].serialize()
+        if _i:
+            if _i in gi and apikey.check(k, gi[_i]):
+                return gi[_i].serialize()
             else:
                 return None
         result = []
@@ -63,6 +73,48 @@ class SFA_API(GenericAPI):
                 r = v.serialize()
                 result.append(r)
         return sorted(result, key=lambda k: k['id'])
+
+    def state_history(self,
+                      k=None,
+                      tp=None,
+                      a=None,
+                      i=None,
+                      s=None,
+                      e=None,
+                      l=None,
+                      x=None,
+                      t=None,
+                      w=None):
+        if i and i.find(':') != -1:
+            try:
+                _tp, _i = i.split(':')
+            except:
+                return False
+        else:
+            _tp = tp
+            _i = i
+        if not _tp: return False
+        if _tp == 'U' or _tp == 'unit':
+            gi = eva.sfa.controller.uc_pool.units
+        elif _tp == 'S' or _tp == 'sensor':
+            gi = eva.sfa.controller.uc_pool.sensors
+        elif _tp == 'LV' or _tp == 'lvar':
+            gi = eva.sfa.controller.lm_pool.lvars
+        else:
+            return False
+        if not _i in gi: return False
+        if not apikey.check(k, gi[_i]):
+                return False
+        return self.get_state_history(
+            k=k,
+            a=a,
+            oid=gi[_i].oid,
+            t_start=s,
+            t_end=e,
+            limit=l,
+            prop=x,
+            time_format=t,
+            fill=w)
 
     def groups(self, k=None, tp=None):
         if not tp: return []
@@ -408,11 +460,13 @@ class SFA_API(GenericAPI):
         eva.notify.reload_clients()
         return True
 
+
 class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
     def __init__(self):
         super().__init__()
         SFA_HTTP_API.state.exposed = True
+        SFA_HTTP_API.state_history.exposed = True
         SFA_HTTP_API.state_all.exposed = True
         SFA_HTTP_API.groups.exposed = True
         SFA_HTTP_API.action.exposed = True
@@ -461,6 +515,23 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         result = super().state(k, i, g, p)
         if not result:
             raise cp_api_404()
+        return result
+
+    def state_history(self,
+                      k=None,
+                      a=None,
+                      i=None,
+                      p=None,
+                      s=None,
+                      e=None,
+                      l=None,
+                      x=None,
+                      t=None,
+                      w=None):
+        result = super().state_history(
+            k=k, tp=p, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w)
+        if result is None: raise cp_api_error('internal error')
+        if result is False: raise cp_api_404()
         return result
 
     def groups(self, k=None, p=None):
@@ -785,6 +856,8 @@ class SFA_HTTP_Root:
 
 
 def start():
+    global api
+    api = SFA_API()
     cherrypy.tree.mount(SFA_HTTP_API(), '/sfa-api')
     cherrypy.tree.mount(
         SFA_HTTP_Root(),
