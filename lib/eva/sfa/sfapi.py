@@ -143,7 +143,7 @@ class SFA_API(GenericAPI):
         else:
             return None
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.terminate(unid_id=i, uuid=u)
+        return eva.sfa.controller.uc_pool.terminate(unit_id=i, uuid=u)
 
     def kill(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(i)
