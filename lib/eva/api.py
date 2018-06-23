@@ -184,10 +184,7 @@ class GenericAPI(object):
                           limit=None,
                           field=None):
         if oid is None: return False
-        if a:
-            n = eva.notify.get_notifier(a)
-        else:
-            n = eva.notify.get_default_arch()
+        n = eva.notify.get_arch(a)
         if not n: return False
         try:
             return n.get_state(

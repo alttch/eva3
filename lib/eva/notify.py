@@ -567,9 +567,13 @@ class Archivist(GenericNotifier):
                     h['status'] = d[1]
                 if req_value:
                     if req_status:
-                        h['value'] = d[2]
+                        v = d[2]
                     else:
-                        h['value'] = d[1]
+                        v = d[1]
+                try:
+                    h['value'] = float(v)
+                except:
+                    h['value'] = v
                 result.append(h)
         except:
             c.close()
@@ -1647,8 +1651,10 @@ def get_notifier(notifier_id):
     else: return None
 
 
-def get_default_arch():
-    return get_notifier(archivist_default_id)
+def get_arch(arch_id):
+    if arch_id is None: return get_notifier(archivist_default_id)
+    n = get_notifier(arch_id)
+    return n if n and n.notifier_type == 'arch' else None
 
 
 def get_notifiers():
