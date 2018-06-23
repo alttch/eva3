@@ -182,13 +182,19 @@ class GenericAPI(object):
                           t_start=None,
                           t_end=None,
                           limit=None,
-                          field=None):
+                          field=None,
+                          time_format=None):
         if oid is None: return False
-        n = eva.notify.get_arch(a)
+        n = eva.notify.get_db_notifier(a)
         if not n: return False
         try:
             return n.get_state(
-                oid=oid, t_start=t_start, t_end=t_end, limit=limit, field=field)
+                oid=oid,
+                t_start=t_start,
+                t_end=t_end,
+                limit=limit,
+                field=field,
+                time_format=time_format)
         except:
             logging.error('state history call error, arch: %s, oid: %s' %
                           (n.notifier_id, oid))

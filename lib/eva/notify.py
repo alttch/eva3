@@ -10,6 +10,8 @@ import jsonpickle
 import requests
 import paho.mqtt.client as mqtt
 import time
+from datetime import datetime
+import pytz
 import glob
 import os
 import uuid
@@ -28,8 +30,8 @@ notifier_client_clean_delay = 1
 
 default_mqtt_qos = 1
 
-archivist_default_keep = 86400
-archivist_default_id = 'arch_1'
+sqlite_default_keep = 86400
+sqlite_default_id = 'db_1'
 
 logging.getLogger('requests').setLevel(logging.CRITICAL)
 logging.getLogger('urllib3').setLevel(logging.CRITICAL)
@@ -500,14 +502,14 @@ class GenericNotifier_Client(GenericNotifier):
             self.unregister()
 
 
-class Archivist(GenericNotifier):
+class SQLiteNotifier(GenericNotifier):
 
     def __init__(self, notifier_id, db=None, keep=None, space=None):
-        notifier_type = 'arch'
+        notifier_type = 'db'
         super().__init__(
             notifier_id=notifier_id, notifier_type=notifier_type, space=space)
         self.keep = keep if keep else \
-            archivist_default_keep
+            sqlite_default_keep
         self._keep = keep
         self.cleanup_time = 3600
         self._db = db
@@ -527,15 +529,17 @@ class Archivist(GenericNotifier):
         db = sqlite3.connect(self.db)
         return db
 
-    def get_state(self, oid, t_start=None, t_end=None, limit=None, field=None):
+    def get_state(self,
+                  oid,
+                  t_start=None,
+                  t_end=None,
+                  limit=None,
+                  field=None,
+                  time_format=None):
         l = int(limit) if limit else None
         t_s = float(t_start) if t_start else None
         t_e = float(t_end) if t_end else None
         sql = ''
-        if self.space:
-            ik = self.space + '//' + oid
-        else:
-            ik = oid
         if t_s:
             sql += ' and t>=%f' % t_s
         if t_e:
@@ -557,12 +561,22 @@ class Archivist(GenericNotifier):
         db = self.get_db()
         c = db.cursor()
         result = []
+        space = self.space if self.space is not None else ''
+        if time_format == 'iso':
+            tz = pytz.timezone(time.tzname[0])
         try:
             c.execute(
-                'select t, ' + fields + ' from a_state where ik = ?' + sql,
-                (ik,))
+                'select t, ' + fields +
+                ' from state_history where space = ? and oid = ?' + sql, (
+                    space,
+                    oid,
+                ))
             for d in c:
-                h = {'t': d[0]}
+                h = {}
+                if time_format == 'iso':
+                    h['t'] = datetime.fromtimestamp(d[0], tz).isoformat()
+                else:
+                    h['t'] = d[0]
                 if req_status:
                     h['status'] = d[1]
                 if req_value:
@@ -570,10 +584,10 @@ class Archivist(GenericNotifier):
                         v = d[2]
                     else:
                         v = d[1]
-                try:
-                    h['value'] = float(v)
-                except:
-                    h['value'] = v
+                    try:
+                        h['value'] = float(v)
+                    except:
+                        h['value'] = v
                 result.append(h)
         except:
             c.close()
@@ -589,18 +603,27 @@ class Archivist(GenericNotifier):
                 db = self.get_db()
                 try:
                     c = db.cursor()
-                    c.execute('select t from a_state limit 1')
+                    c.execute('select t from state_history limit 1')
                     c.close()
                 except:
-                    logging.info('.%s: no a_state table, crating new' % self.db)
+                    logging.info(
+                        '.%s: no state_history table, crating new' % self.db)
                     c.close()
                     c = db.cursor()
                     try:
-                        c.execute('create table a_state(t, ik, status, value)')
+                        c.execute(
+                            'create table state_history(space, t, oid,' + \
+                            ' status, value, primary key(space, t, oid))'
+                        )
+                        c.execute(
+                            'create index i_t_oid on state_history(t,oid)')
+                        c.execute('create index i_oid on state_history(oid)')
+                        db.commit()
                         c.close()
                     except:
                         logging.error(
-                            '.%s: failed to create a_state table' % self.db)
+                            '.%s: failed to create state_history table' %
+                            self.db)
                         eva.core.log_traceback()
                         db.close()
                         self.connected = False
@@ -622,18 +645,16 @@ class Archivist(GenericNotifier):
         if subject == 'state':
             t = time.time()
             for d in data:
-                if self.space:
-                    ik = self.space + '//' + d['oid']
-                else:
-                    ik = d['oid']
                 v = d['value'] if d['value'] != 'null' else None
                 db = self.get_db()
                 c = db.cursor()
+                space = self.space if self.space is not None else ''
                 try:
                     c.execute(
-                        'insert into a_state (t, ik, status, value)' + \
-                                ' values (?, ?, ?, ?)',
-                        (t, ik, d['status'], v))
+                        'insert into state_history ' + \
+                                '(space, t, oid, status, value)' + \
+                                ' values (?, ?, ?, ?, ?)',
+                        (space, t, d['oid'], d['status'], v))
                 except:
                     c.close()
                     db.close()
@@ -654,7 +675,7 @@ class Archivist(GenericNotifier):
             return True
         elif prop == 'keep':
             if value is None:
-                self.keep = archivist_default_keep
+                self.keep = sqlite_default_keep
                 self._keep = None
                 return True
             try:
@@ -667,7 +688,7 @@ class Archivist(GenericNotifier):
 
     def serialize(self, props=False):
         d = super().serialize(props)
-        # sqlite archivist has no timeout
+        # sqlite sqlite has no timeout
         try:
             del d['timeout']
         except:
@@ -684,10 +705,12 @@ class Archivist(GenericNotifier):
                 db = self.get_db()
                 c = db.cursor()
                 try:
+                    space = self.space if self.space is not None else ''
                     logging.debug('.%s: cleaning records older than %u sec' %
                                   (self.db, self.keep))
-                    c.execute('delete from a_state where t < ?',
-                              (time.time() - self.keep,))
+                    c.execute(
+                        'delete from state_history where space = ? and t < ?',
+                        (space, time.time() - self.keep))
                     db.commit()
                     c.close()
                     db.close()
@@ -1440,14 +1463,14 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             keepalive=keepalive,
             timeout=timeout,
             collect_logs=collect_logs)
-    elif ncfg['type'] == 'arch':
+    elif ncfg['type'] == 'db':
         if 'db' in ncfg: db = ncfg['db']
         else: db = None
         if 'keep' in ncfg: keep = ncfg['keep']
         else: keep = None
         if 'space' in ncfg: space = ncfg['space']
         else: space = None
-        n = Archivist(_notifier_id, db=db, keep=keep, space=space)
+        n = SQLiteNotifier(_notifier_id, db=db, keep=keep, space=space)
     elif ncfg['type'] == 'http' or ncfg['type'] == 'http-post':
         if 'space' in ncfg: space = ncfg['space']
         else: space = None
@@ -1651,10 +1674,10 @@ def get_notifier(notifier_id):
     else: return None
 
 
-def get_arch(arch_id):
-    if arch_id is None: return get_notifier(archivist_default_id)
-    n = get_notifier(arch_id)
-    return n if n and n.notifier_type == 'arch' else None
+def get_db_notifier(notifier_id):
+    if notifier_id is None: return get_notifier(sqlite_default_id)
+    n = get_notifier(notifier_id)
+    return n if n and n.notifier_type == 'db' else None
 
 
 def get_notifiers():

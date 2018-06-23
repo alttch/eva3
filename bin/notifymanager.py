@@ -39,7 +39,7 @@ Create notifier:
 
     create <-i id> <-p type> [-s space] [-t timeout] [args] [-y]
 
-        -p  type (http, http-post, mqtt, arch)
+        -p  type (http, http-post, mqtt, db)
         -i  notifier id
         -s  notification space
         -t  timeout
@@ -56,7 +56,7 @@ Create notifier:
         -P  mqtt port, optional
         -A  mqtt authentication (-A username:password)
 
-    arguments for arch notifiers:
+    arguments for db notifiers:
 
         -h  database file
         -k  time to keep item state records (in seconds)
@@ -280,7 +280,7 @@ elif func == 'create':
             password=password,
             space=space,
             timeout=timeout)
-    elif notifier_type == 'arch':
+    elif notifier_type == 'db':
         if not host:
             print('database is not specified')
             sys.exit(1)
@@ -292,7 +292,7 @@ elif func == 'create':
                 sys.exit(1)
         else:
             keep = None
-        n = eva.notify.Archivist(
+        n = eva.notify.SQLiteNotifier(
             notifier_id=notifier_id, db=host, keep=keep, space=space)
     else:
         if not notifier_type: print('notifier type not specified')
