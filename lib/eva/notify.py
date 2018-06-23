@@ -11,6 +11,7 @@ import requests
 import paho.mqtt.client as mqtt
 import time
 from datetime import datetime
+import dateutil.parser
 import pytz
 import glob
 import os
@@ -537,8 +538,26 @@ class SQLiteNotifier(GenericNotifier):
                   field=None,
                   time_format=None):
         l = int(limit) if limit else None
-        t_s = float(t_start) if t_start else None
-        t_e = float(t_end) if t_end else None
+        if t_start:
+            try:
+                t_s = float(t_start)
+            except:
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    t_s = None
+        else:
+            t_s = None
+        if t_end:
+            try:
+                t_e = float(t_end)
+            except:
+                try:
+                    t_e = dateutil.parser.parse(t_end).timestamp()
+                except:
+                    t_e = None
+        else:
+            t_e = None
         sql = ''
         if t_s:
             sql += ' and t>=%f' % t_s

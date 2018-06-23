@@ -9,6 +9,8 @@ import logging
 import threading
 import time
 import jsonpickle
+from datetime import datetime
+import pandas as pd
 
 from eva import apikey
 from eva.tools import format_json
@@ -183,12 +185,13 @@ class GenericAPI(object):
                           t_end=None,
                           limit=None,
                           field=None,
-                          time_format=None):
+                          time_format=None,
+                          fill=None):
         if oid is None: return False
         n = eva.notify.get_db_notifier(a)
         if not n: return False
         try:
-            return n.get_state(
+            result = n.get_state(
                 oid=oid,
                 t_start=t_start,
                 t_end=t_end,
@@ -198,6 +201,29 @@ class GenericAPI(object):
         except:
             logging.error('state history call error, arch: %s, oid: %s' %
                           (n.notifier_id, oid))
+            eva.core.log_traceback()
+            return None
+        if not t_start or not fill: return result
+        try:
+            t_s = float(t_start)
+        except:
+            t_s = t_start
+        if t_end:
+            try:
+                t_e = float(t_end)
+            except:
+                t_e = t_end
+        else:
+            t_e = datetime.now()
+        try:
+            df = pd.DataFrame(result)
+            df.set_index('t')
+            df.index = pd.to_datetime(df.index)
+            i2 = pd.date_range(start=t_s, end=t_e, freq=fill)
+            result = df.reindex(i2, method='pad').to_dict()
+            return result
+        except:
+            logging.warning('state history dataframe error')
             eva.core.log_traceback()
             return None
 

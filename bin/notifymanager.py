@@ -217,6 +217,8 @@ if func == 'list':
         if isinstance(n, eva.notify.HTTPNotifier) or \
                 isinstance(n, eva.notify.HTTP_POSTNotifier):
             print(' %s' % n.uri, end='')
+        elif isinstance(n, eva.notify.SQLiteNotifier):
+            print(' %s' % n.db, end='')
         elif isinstance(n, eva.notify.MQTTNotifier):
             if n.username is not None and n.password is not None:
                 print(' %s:%s@' % (n.username, n.password), end='')
