@@ -1,7 +1,7 @@
-__author__ = "Altertech Group, http://www.altertech.com/"
+__author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
-__license__ = "See http://www.eva-ics.com/"
-__version__ = "3.0.2"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.0.3"
 
 import logging
 import eva.core
@@ -14,6 +14,7 @@ import glob
 import os
 import uuid
 import threading
+import sqlite3
 
 from eva import apikey
 from eva.tools import format_json
@@ -26,6 +27,8 @@ default_log_level = 20
 notifier_client_clean_delay = 1
 
 default_mqtt_qos = 1
+
+archivist_default_keep = 86400
 
 logging.getLogger('requests').setLevel(logging.CRITICAL)
 logging.getLogger('urllib3').setLevel(logging.CRITICAL)
@@ -263,7 +266,7 @@ class GenericNotifier(object):
                                             e.groups):
                         if not self.lse_lock.acquire(timeout=eva.core.timeout):
                             logging.critical(
-                                'GenericNotifier::format_data locking broken')
+                                '.GenericNotifier::format_data locking broken')
                             eva.core.critical()
                             return None
                         need_notify = False
@@ -494,6 +497,198 @@ class GenericNotifier_Client(GenericNotifier):
         if self.is_client_dead():
             self.connected = False
             self.unregister()
+
+
+class Archivist(GenericNotifier):
+
+    def __init__(self, notifier_id, db=None, keep=None, space=None):
+        notifier_type = 'arch'
+        super().__init__(
+            notifier_id=notifier_id, notifier_type=notifier_type, space=space)
+        self.keep = keep if keep else \
+            archivist_default_keep
+        self._keep = keep
+        self.cleanup_time = 3600
+        self._db = db
+        if db and db[0] == '/':
+            self.db = db
+        else:
+            self.db = eva.core.dir_runtime + '/' + db
+        self.history_cleaner_active = False
+        self.history_cleaner = None
+
+    def test(self):
+        if self.connected: return True
+        self.connect()
+        return self.connected
+
+    def get_db(self):
+        db = sqlite3.connect(self.db)
+        return db
+
+    def get_state(self, oid, t_start=None, t_end=None, limit=None):
+        l = int(limit) if limit else None
+        t_s = float(t_start) if t_start else None
+        t_e = float(t_end) if t_end else None
+        sql = ''
+        if self.space:
+            ik = self.space + '//' + oid
+        else:
+            ik = oid
+        if t_s or t_e:
+            sql += ' where'
+        if t_s:
+            sql += ' t>=%f' % t_s
+            if t_e: sql += ' and'
+        if t_e:
+            sql += ' t<=%f' % t_e
+        if l:
+            sql += ' order by t desc limit %u' % l
+        db = self.get_db()
+        c = db.cursor()
+        result = []
+        try:
+            c.execute('select t, state, value from a_state where ik = ?', (ik, ))
+            for d in c:
+                v = d[2]
+                result.append({
+                    't': d[0],
+                    'state': d[1],
+                    'value': d[2]
+                    })
+        except:
+            c.close()
+            db.close()
+            raise
+        c.close()
+        db.close()
+        return sorted(result, key=lambda k: k['t'])
+
+    def connect(self):
+        try:
+            if self.db:
+                db = self.get_db()
+                try:
+                    c = db.cursor()
+                    c.execute('select t from a_state limit 1')
+                    c.close()
+                except:
+                    logging.info('.%s: no a_state table, crating new' % self.db)
+                    c.close()
+                    c = db.cursor()
+                    try:
+                        c.execute('create table a_state(t, ik, status, value)')
+                        c.close()
+                    except:
+                        logging.error(
+                            '.%s: failed to create a_state table' % self.db)
+                        eva.core.log_traceback()
+                        db.close()
+                        self.connected = False
+                        return False
+                db.close()
+                self.history_cleaner_active = True
+                self.history_cleaner = threading.Thread(
+                    target=self._t_history_cleaner,
+                    name=self.notifier_id + '._t_history_cleaner')
+                self.history_cleaner.start()
+                self.connected = True
+            else:
+                self.connected = False
+        except:
+            eva.core.log_traceback()
+            self.connected = False
+
+    def send_notification(self, subject, data, retain=None, unpicklable=False):
+        if subject == 'state':
+            t = time.time()
+            for d in data:
+                if self.space:
+                    ik = self.space + '//' + d['oid']
+                else:
+                    ik = d['oid']
+                v = d['value'] if d['value'] != 'null' else None
+                db = self.get_db()
+                c = db.cursor()
+                try:
+                    c.execute(
+                        'insert into a_state (t, ik, status, value) values (?, ?, ?, ?)',
+                        (t, ik, d['status'], v))
+                except:
+                    c.close()
+                    db.close()
+                    raise
+                db.commit()
+                c.close()
+                db.close()
+        return True
+
+    def set_prop(self, prop, value):
+        if prop == 'db':
+            if value is None or value == '': return False
+            self._db = value
+            if self._db[0] == '/':
+                self.db = self._db
+            else:
+                self.db = eva.core.dir_runtime + '/' + self._db
+            return True
+        elif prop == 'keep':
+            if value is None:
+                self.keep = archivist_default_keep
+                self._keep = None
+                return True
+            try:
+                self.keep = int(value)
+            except:
+                return False
+            self._keep = self.keep
+            return True
+        return super().set_prop(prop, value)
+
+    def serialize(self, props=False):
+        d = super().serialize(props)
+        # sqlite archivist has no timeout
+        try:
+            del d['timeout']
+        except:
+            pass
+        if self._keep or props: d['keep'] = self._keep
+        if self._db or props: d['db'] = self._db
+        return d
+
+    def _t_history_cleaner(self):
+        logging.debug('.' + self.notifier_id +
+                      ' item state history cleaner started')
+        while self.history_cleaner_active:
+            try:
+                db = self.get_db()
+                c = db.cursor()
+                try:
+                    logging.debug('.%s: cleaning records older than %u sec' %
+                                  (self.db, self.keep))
+                    c.execute('delete from a_state where t < ?',
+                              (time.time() - self.keep,))
+                    db.commit()
+                    c.close()
+                    db.close()
+                except:
+                    c.close()
+                    db.close()
+                    eva.core.log_traceback()
+            except:
+                eva.core.log_traceback()
+            i = 0
+            while i < self.cleanup_time and \
+                    self.history_cleaner_active:
+                time.sleep(eva.core.sleep_step)
+                i += eva.core.sleep_step
+        logging.debug('.' + self.notifier_id +
+                      ' item state history cleaner stopped')
+
+    def disconnect(self):
+        self.history_cleaner_active = False
+        if self.history_cleaner and self.history_cleaner.isAlive():
+            self.history_cleaner.join()
 
 
 class GenericHTTPNotifier(GenericNotifier):
@@ -1225,6 +1420,14 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             keepalive=keepalive,
             timeout=timeout,
             collect_logs=collect_logs)
+    elif ncfg['type'] == 'arch':
+        if 'db' in ncfg: db = ncfg['db']
+        else: db = None
+        if 'keep' in ncfg: keep = ncfg['keep']
+        else: keep = None
+        if 'space' in ncfg: space = ncfg['space']
+        else: space = None
+        n = Archivist(_notifier_id, db=db, keep=keep, space=space)
     elif ncfg['type'] == 'http' or ncfg['type'] == 'http-post':
         if 'space' in ncfg: space = ncfg['space']
         else: space = None
@@ -1478,10 +1681,12 @@ def stop():
         _notifier_client_cleaner_active = False
         _notifier_client_cleaner.join()
 
+
 def reload_clients():
     logging.warning('sending reload event to clients')
     for k, n in notifiers.copy().items():
         if n.nt_client: n.send_reload()
+
 
 def _t_notifier_client_cleaner():
     logging.debug('notifier client cleaner started')
@@ -1494,6 +1699,7 @@ def _t_notifier_client_cleaner():
             time.sleep(eva.core.sleep_step)
             i += eva.core.sleep_step
     logging.debug('notifier client cleaner stopped')
+
 
 def init():
     eva.core.append_dump_func('notify', dump)
