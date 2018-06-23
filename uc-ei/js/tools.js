@@ -1,8 +1,8 @@
 /*
- * Author: Altertech Group, http://www.altertech.com/
+ * Author: Altertech Group, https://www.altertech.com/
  * Copyright: (C) 2012-2018 Altertech Group
- * License: See http://www.eva-ics.com/
- * Version: 3.0.2
+ * License: https://www.eva-ics.com/license
+ * Version: 3.0.3
  */
 
 function load_animation(o) {

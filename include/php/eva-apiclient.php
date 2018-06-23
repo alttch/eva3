@@ -4,13 +4,13 @@
  *
  * EVA API Client
  *
- * @author      Altertech Group, http://www.altertech.com/
+ * @author      Altertech Group, https://www.altertech.com/
  * @copyright   Copyright (C) 2012-2018 Altertech Group
- * @license     See http://www.eva-ics.com/
- * @version     3.0.2
+ * @license     https://www.eva-ics.com/license
+ * @version     3.0.3
  */
 
-$eva_version = '3.0.2';
+$eva_version = '3.0.3';
 
 $eva_result_ok = 0;
 $eva_result_not_found = 1;

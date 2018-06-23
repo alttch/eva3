@@ -12,7 +12,7 @@ db_update = instant
 ; db file, default runtime/db/uc.db
 db_file = runtime/db/uc.db
 ; user db file, default = db_file
-; you specify one local userdb_file for multiple servers
+; one user db may be used by multiple controllers at once
 ;userdb_file = runtime/db/users.db
 ; keep action history in seconds
 keep_action_history = 86400

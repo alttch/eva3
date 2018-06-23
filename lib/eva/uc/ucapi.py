@@ -1,7 +1,7 @@
-__author__ = "Altertech Group, http://www.altertech.com/"
+__author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
-__license__ = "See http://www.eva-ics.com/"
-__version__ = "3.0.2"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.0.3"
 
 import cherrypy
 import eva.core

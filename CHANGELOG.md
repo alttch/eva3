@@ -1,6 +1,11 @@
 EVA ICS CHANGELOG
 =================
 
+3.0.3
+-----
+
+Under development now, use only for testing.
+
 3.0.2
 -----
 
