@@ -29,6 +29,7 @@ notifier_client_clean_delay = 1
 default_mqtt_qos = 1
 
 archivist_default_keep = 86400
+archivist_default_id = 'arch_1'
 
 logging.getLogger('requests').setLevel(logging.CRITICAL)
 logging.getLogger('urllib3').setLevel(logging.CRITICAL)
@@ -526,7 +527,7 @@ class Archivist(GenericNotifier):
         db = sqlite3.connect(self.db)
         return db
 
-    def get_state(self, oid, t_start=None, t_end=None, limit=None):
+    def get_state(self, oid, t_start=None, t_end=None, limit=None, field=None):
         l = int(limit) if limit else None
         t_s = float(t_start) if t_start else None
         t_e = float(t_end) if t_end else None
@@ -535,27 +536,41 @@ class Archivist(GenericNotifier):
             ik = self.space + '//' + oid
         else:
             ik = oid
-        if t_s or t_e:
-            sql += ' where'
         if t_s:
-            sql += ' t>=%f' % t_s
-            if t_e: sql += ' and'
+            sql += ' and t>=%f' % t_s
         if t_e:
-            sql += ' t<=%f' % t_e
+            sql += ' and t<=%f' % t_e
         if l:
             sql += ' order by t desc limit %u' % l
+        req_status = False
+        req_value = False
+        if field in ['status', 'S']:
+            fields = 'status'
+            req_status = True
+        elif field in ['value', 'V']:
+            fields = 'value'
+            req_value = True
+        else:
+            fields = 'status, value'
+            req_status = True
+            req_value = True
         db = self.get_db()
         c = db.cursor()
         result = []
         try:
-            c.execute('select t, state, value from a_state where ik = ?', (ik, ))
+            c.execute(
+                'select t, ' + fields + ' from a_state where ik = ?' + sql,
+                (ik,))
             for d in c:
-                v = d[2]
-                result.append({
-                    't': d[0],
-                    'state': d[1],
-                    'value': d[2]
-                    })
+                h = {'t': d[0]}
+                if req_status:
+                    h['status'] = d[1]
+                if req_value:
+                    if req_status:
+                        h['value'] = d[2]
+                    else:
+                        h['value'] = d[1]
+                result.append(h)
         except:
             c.close()
             db.close()
@@ -612,7 +627,8 @@ class Archivist(GenericNotifier):
                 c = db.cursor()
                 try:
                     c.execute(
-                        'insert into a_state (t, ik, status, value) values (?, ?, ?, ?)',
+                        'insert into a_state (t, ik, status, value)' + \
+                                ' values (?, ?, ?, ?)',
                         (t, ik, d['status'], v))
                 except:
                     c.close()
@@ -1629,6 +1645,10 @@ def notify(subject,
 def get_notifier(notifier_id):
     if notifier_id in notifiers: return notifiers[notifier_id]
     else: return None
+
+
+def get_default_arch():
+    return get_notifier(archivist_default_id)
 
 
 def get_notifiers():

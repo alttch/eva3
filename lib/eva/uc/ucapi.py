@@ -84,6 +84,19 @@ class UC_API(GenericAPI):
                     result.append(r)
             return sorted(result, key=lambda k: k['id'])
 
+    def state_history(self,
+                      k=None,
+                      a=None,
+                      i=None,
+                      s=None,
+                      e=None,
+                      l=None,
+                      x=None):
+        item = eva.uc.controller.get_item(i)
+        if not item or not apikey.check(k, item): return False
+        return self.get_state_history(
+            k=k, a=a, oid=item.oid, t_start=s, t_end=e, limit=l, field=x)
+
     def update(self, k=None, i=None, status=None, value=None, force_virtual=0):
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): return False
@@ -301,6 +314,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             UC_API.dev_uc_mu.exposed = True
         UC_HTTP_API.groups.exposed = True
         UC_HTTP_API.state.exposed = True
+        UC_HTTP_API.state_history.exposed = True
         UC_HTTP_API.update.exposed = True
         UC_HTTP_API.action.exposed = True
         UC_HTTP_API.action_toggle.exposed = True
@@ -337,6 +351,12 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         result = super().state(k, i, _full, g, p)
         if result is None:
             raise cp_api_404()
+        return result
+
+    def state_history(self, k=None, a=None, i=None, s=None, e=None, l=None, x=None):
+        result = super().state_history(k=k, a=a, i=i, s=s, e=e, l=l, x=x)
+        if result is None: raise cp_api_error('internal error')
+        if result is False: raise cp_api_404()
         return result
 
     def update(self, k=None, i=None, s=None, v=None, force_virtual=''):

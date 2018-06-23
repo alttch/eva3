@@ -46,11 +46,11 @@ _api_func = {
         'uri':
         '/uc-api/',
         'func': [
-            'test', 'state', 'groups', 'update', 'action', 'action_toggle',
-            'result', 'terminate', 'q_clean', 'kill', 'disable_actions',
-            'enable_actions', 'get_config', 'save_config', 'list', 'list_props',
-            'set_prop', 'create_unit', 'create_sensor', 'create_mu', 'clone',
-            'clone_group', 'destroy', 'login', 'logout'
+            'test', 'state', 'state_history', 'groups', 'update', 'action',
+            'action_toggle', 'result', 'terminate', 'q_clean', 'kill',
+            'disable_actions', 'enable_actions', 'get_config', 'save_config',
+            'list', 'list_props', 'set_prop', 'create_unit', 'create_sensor',
+            'create_mu', 'clone', 'clone_group', 'destroy', 'login', 'logout'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',

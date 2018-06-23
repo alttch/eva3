@@ -15,6 +15,7 @@ from eva.tools import format_json
 from eva.tools import parse_host_port
 
 import eva.users
+import eva.notify
 
 host = None
 ssl_host = None
@@ -173,6 +174,29 @@ class GenericAPI(object):
             if eva.core.development:
                 result['development'] = True
         return result
+
+    def get_state_history(self,
+                          k=None,
+                          a=None,
+                          oid=None,
+                          t_start=None,
+                          t_end=None,
+                          limit=None,
+                          field=None):
+        if oid is None: return False
+        if a:
+            n = eva.notify.get_notifier(a)
+        else:
+            n = eva.notify.get_default_arch()
+        if not n: return False
+        try:
+            return n.get_state(
+                oid=oid, t_start=t_start, t_end=t_end, limit=limit, field=field)
+        except:
+            logging.error('state history call error, arch: %s, oid: %s' %
+                          (n.notifier_id, oid))
+            eva.core.log_traceback()
+            return None
 
     def dev_cvars(self, k=None):
         """ get only custom vars from ENV
