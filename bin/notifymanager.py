@@ -1,7 +1,7 @@
-__author__ = "Altertech Group, http://www.altertech.com/"
+__author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
-__license__ = "See http://www.eva-ics.com/"
-__version__ = "3.0.2"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.0.3"
 
 import sys
 import os
@@ -39,7 +39,7 @@ Create notifier:
 
     create <-i id> <-p type> [-s space] [-t timeout] [args] [-y]
 
-        -p  type (http, http-post, mqtt)
+        -p  type (http, http-post, mqtt, arch)
         -i  notifier id
         -s  notification space
         -t  timeout
@@ -55,6 +55,11 @@ Create notifier:
         -h  mqtt host, required
         -P  mqtt port, optional
         -A  mqtt authentication (-A username:password)
+
+    arguments for arch notifiers:
+
+        -h  database file
+        -k  time to keep item state records (in seconds)
 
 Configure notifier:
 
@@ -275,6 +280,20 @@ elif func == 'create':
             password=password,
             space=space,
             timeout=timeout)
+    elif notifier_type == 'arch':
+        if not host:
+            print('database is not specified')
+            sys.exit(1)
+        if notify_key:
+            try:
+                keep = int(notify_key)
+            except:
+                print('keep should be integer number (seconds)')
+                sys.exit(1)
+        else:
+            keep = None
+        n = eva.notify.Archivist(
+            notifier_id=notifier_id, db=host, keep=keep, space=space)
     else:
         if not notifier_type: print('notifier type not specified')
         else: print('notifier type unknown %s' % notifier_type)
@@ -304,6 +323,7 @@ elif func == 'list_props':
 elif func == 'test':
     if n.test(): print('notifier %s test passed' % notifier_id)
     else: print('notifier %s test FAILED' % notifier_id)
+    n.disconnect()
     sys.exit()
 
 eva.notify.append_notifier(n)
