@@ -10,6 +10,8 @@ import threading
 import time
 import jsonpickle
 from datetime import datetime
+import dateutil
+import pytz
 import pandas as pd
 
 from eva import apikey
@@ -189,6 +191,8 @@ class GenericAPI(object):
                           fill=None):
         if oid is None: return False
         n = eva.notify.get_db_notifier(a)
+        if t_start and fill: tf = 'iso'
+        else: tf = time_format
         if not n: return False
         try:
             result = n.get_state(
@@ -197,30 +201,49 @@ class GenericAPI(object):
                 t_end=t_end,
                 limit=limit,
                 field=field,
-                time_format=time_format)
+                time_format=tf)
         except:
             logging.error('state history call error, arch: %s, oid: %s' %
                           (n.notifier_id, oid))
             eva.core.log_traceback()
             return None
-        if not t_start or not fill: return result
+        if not t_start or not fill or not result: return result
+        tz = pytz.timezone(time.tzname[0])
         try:
             t_s = float(t_start)
         except:
-            t_s = t_start
+            t_s = dateutil.parser.parse(t_start).timestamp()
         if t_end:
             try:
                 t_e = float(t_end)
             except:
-                t_e = t_end
+                t_e = dateutil.parser.parse(t_end).timestamp()
         else:
-            t_e = datetime.now()
+            t_e = time.time()
+        if t_e > time.time(): t_e = time.time()
         try:
             df = pd.DataFrame(result)
-            df.set_index('t')
-            df.index = pd.to_datetime(df.index)
-            i2 = pd.date_range(start=t_s, end=t_e, freq=fill)
-            result = df.reindex(i2, method='pad').to_dict()
+            df = df.set_index('t')
+            df.index = pd.to_datetime(df.index, utc=True)
+            i2 = pd.date_range(
+                start=datetime.fromtimestamp(t_s, tz),
+                end=datetime.fromtimestamp(t_e, tz),
+                freq=fill)
+            sp = df.reindex(i2, method='pad').to_dict(orient='split')
+            result = []
+            for i in range(0,len(sp['index'])):
+                t = sp['index'][i].timestamp()
+                if time_format == 'iso':
+                    t = datetime.fromtimestamp(t, tz).isoformat()
+                r = { 't': t }
+                if 'status' in sp['columns'] and 'value' in sp['columns']:
+                    r['status'] = int(sp['data'][i][0])
+                    r['value'] = sp['data'][i][1]
+                elif 'status' in sp['columns']:
+                    r['status'] = int(sp['data'][i][0])
+                elif 'value' in sp['columns']:
+                    r['value'] = sp['data'][i][0]
+                result.append(r)
             return result
         except:
             logging.warning('state history dataframe error')
