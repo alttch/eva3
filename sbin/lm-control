@@ -13,7 +13,9 @@ PIDFILE=${EVA_DIR}/var/lm.pid
 LM=${EVA_DIR}/sbin/lmserv.py
 LM_ARGS=
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/lm_safe.pid
+WATCHDOG_PIDFILE=${EVA_DIR}/var/lm_watchdog.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
+WATCHDOG=${EVA_DIR}/sbin/watchdog.sh
 
 source ./etc/eva_servers
 
@@ -29,6 +31,7 @@ case $1 in
 start)
     echo 'Starting LM server'
     exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${LM} ${LM_ARGS} > /dev/null &
+    ${WATCHDOG} lm ${LM} > /dev/null &
     ;;
 launch)
     ${PYTHON} ${LM} ${LM_ARGS}
@@ -39,8 +42,14 @@ stop)
     echo -n 'Stopping LM server '
     PID_SAFE_RUN=
     PID_LM=
+    PID_WATCHDOG=
     [ -f ${SAFE_RUN_PIDFILE} ] && PID_SAFE_RUN=`cat ${SAFE_RUN_PIDFILE}`
+    [ -f ${WATCHDOG_PIDFILE} ] && PID_WATCHDOG=`cat ${WATCHDOG_PIDFILE}`
     [ -f ${PIDFILE} ] && PID_LM=`cat ${PIDFILE}`
+    if [ "x${PID_WATCHDOG}" != "x" ]; then
+        kill ${PID_WATCHDOG} > /dev/null 2>&1
+        rm -f ${WATCHDOG_PIDFILE}
+    fi
     if [ "x${PID_SAFE_RUN}" != "x" ]; then
         kill ${PID_SAFE_RUN} > /dev/null 2>&1
         rm -f ${SAFE_RUN_PIDFILE}

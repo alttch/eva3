@@ -265,7 +265,7 @@ echo
 
 
 if [ $FORCE -eq 0 ]; then
-    CFGS="eva_servers uc_apikeys.ini lm_apikeys.ini sfa_apikeys.ini"
+    CFGS="eva_servers watchdog uc_apikeys.ini lm_apikeys.ini sfa_apikeys.ini"
     for c in ${CFGS}; do
         if [ -f etc/$c ]; then
             echo "Error: etc/$c already present. Remove configs or use --force option. Use --force --clear to perform a clean install"
@@ -297,6 +297,8 @@ if [ "x$MQTT_HOST" != "x" ]; then
 fi
 
 echo -n > etc/eva_servers
+
+cp -vf etc/watchdog-dist etc/watchdog
 
 # INSTALL UC
 

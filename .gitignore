@@ -4,6 +4,7 @@ TODO*
 common.txt
 doc/_build
 etc/eva_servers
+etc/watchdog
 etc/*.ini
 dev
 dist

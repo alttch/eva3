@@ -13,7 +13,9 @@ PIDFILE=${EVA_DIR}/var/uc.pid
 UC=${EVA_DIR}/sbin/ucserv.py
 UC_ARGS=
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/uc_safe.pid
+WATCHDOG_PIDFILE=${EVA_DIR}/var/uc_watchdog.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
+WATCHDOG=${EVA_DIR}/sbin/watchdog.sh
 
 source ./etc/eva_servers
 
@@ -29,6 +31,7 @@ case $1 in
 start)
     echo 'Starting UC server'
     exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${UC} ${UC_ARGS} > /dev/null &
+    ${WATCHDOG} uc ${UC} > /dev/null &
     ;;
 launch)
     ${PYTHON} ${UC} ${UC_ARGS}
@@ -39,8 +42,14 @@ stop)
     echo -n 'Stopping UC server '
     PID_SAFE_RUN=
     PID_UC=
+    PID_WATCHDOG=
     [ -f ${SAFE_RUN_PIDFILE} ] && PID_SAFE_RUN=`cat ${SAFE_RUN_PIDFILE}`
+    [ -f ${WATCHDOG_PIDFILE} ] && PID_WATCHDOG=`cat ${WATCHDOG_PIDFILE}`
     [ -f ${PIDFILE} ] && PID_UC=`cat ${PIDFILE}`
+    if [ "x${PID_WATCHDOG}" != "x" ]; then
+        kill ${PID_WATCHDOG} > /dev/null 2>&1
+        rm -f ${WATCHDOG_PIDFILE}
+    fi
     if [ "x${PID_SAFE_RUN}" != "x" ]; then
         kill ${PID_SAFE_RUN} > /dev/null 2>&1
         rm -f ${SAFE_RUN_PIDFILE}

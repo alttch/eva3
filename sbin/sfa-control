@@ -13,7 +13,9 @@ PIDFILE=${EVA_DIR}/var/sfa.pid
 SFA=${EVA_DIR}/sbin/sfaserv.py
 SFA_ARGS=
 SAFE_RUN_PIDFILE=${EVA_DIR}/var/sfa_safe.pid
+WATCHDOG_PIDFILE=${EVA_DIR}/var/sfa_watchdog.pid
 SAFE_RUN=${EVA_DIR}/sbin/safe-run.sh
+WATCHDOG=${EVA_DIR}/sbin/watchdog.sh
 
 source ./etc/eva_servers
 
@@ -29,6 +31,7 @@ case $1 in
 start)
     echo 'Starting SFA server'
     exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${SFA} ${SFA_ARGS} > /dev/null &
+    ${WATCHDOG} sfa ${SFA} > /dev/null &
     ;;
 launch)
     ${PYTHON} ${SFA} ${SFA_ARGS}
@@ -39,8 +42,14 @@ stop)
     echo -n 'Stopping SFA server '
     PID_SAFE_RUN=
     PID_SFA=
+    PID_WATCHDOG=
     [ -f ${SAFE_RUN_PIDFILE} ] && PID_SAFE_RUN=`cat ${SAFE_RUN_PIDFILE}`
+    [ -f ${WATCHDOG_PIDFILE} ] && PID_WATCHDOG=`cat ${WATCHDOG_PIDFILE}`
     [ -f ${PIDFILE} ] && PID_SFA=`cat ${PIDFILE}`
+    if [ "x${PID_WATCHDOG}" != "x" ]; then
+        kill ${PID_WATCHDOG} > /dev/null 2>&1
+        rm -f ${WATCHDOG_PIDFILE}
+    fi
     if [ "x${PID_SAFE_RUN}" != "x" ]; then
         kill ${PID_SAFE_RUN} > /dev/null 2>&1
         rm -f ${SAFE_RUN_PIDFILE}
@@ -61,7 +70,7 @@ stop)
         rm -f ${PIDFILE}
     fi
     ps xa|grep -v grep|grep ${SFA}|awk '{ print $1 }'|xargs kill > /dev/null 2>&1
-    if [ $? == 0 ]; then
+    if [ $? = 0 ]; then
         sleep 10
         ps xa|grep -v grep|grep ${SFA}|awk '{ print $1 }'|xargs kill -9 > /dev/null 2>&1
     fi
