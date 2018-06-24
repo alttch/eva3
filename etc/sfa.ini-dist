@@ -18,8 +18,6 @@ db_file = runtime/db/sfa.db
 keep_action_history = 86400
 ; keep memory log in seconds
 keep_logmem = 86400
-; notify state on start
-notify_on_start = yes
 ; debug mode
 debug = no
 ; create crash dump on critical errors
