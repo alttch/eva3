@@ -560,7 +560,7 @@ class SQLiteNotifier(GenericNotifier):
             t_e = None
         sql = ''
         if t_s:
-            sql += ' and t>=%f' % t_s
+            sql += ' and t>%f' % t_s
         if t_e:
             sql += ' and t<=%f' % t_e
         if l:
@@ -584,13 +584,29 @@ class SQLiteNotifier(GenericNotifier):
         if time_format == 'iso':
             tz = pytz.timezone(time.tzname[0])
         try:
+            data = []
+            # if we have start time - fetch newest record before it
+            if t_s:
+                c.execute(
+                    'select ' + props +
+                    ' from state_history where space = ? and ' + \
+                            'oid = ? and t <= ? order by t desc limit 1', (
+                        space,
+                        oid,
+                        t_s
+                    ))
+                r = c.fetchone()
+                if r:
+                    r = (t_s, ) + r
+                    data += [ r ]
             c.execute(
                 'select t, ' + props +
                 ' from state_history where space = ? and oid = ?' + sql, (
                     space,
                     oid,
                 ))
-            for d in c:
+            data += c.fetchall()
+            for d in data:
                 h = {}
                 if time_format == 'iso':
                     h['t'] = datetime.fromtimestamp(d[0], tz).isoformat()
