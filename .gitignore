@@ -6,6 +6,7 @@ doc/_build
 etc/eva_servers
 etc/*.ini
 dev
+dist
 log
 runtime
 xc/uc
