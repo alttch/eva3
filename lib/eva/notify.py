@@ -1678,20 +1678,23 @@ def notify(subject,
            skip_subscribed_mqtt_item=None,
            skip_mqtt=False):
     if notifier_id:
-        if skip_mqtt and notifiers[notifier_id].notifier_type[:4] == 'mqtt':
-            return
-        if skip_subscribed_mqtt_item and \
-            notifiers[notifier_id].notifier_type[:4] == 'mqtt' and \
-            notifiers[notifier_id].update_item_exists(
-                    skip_subscribed_mqtt_item
-                    ):
-            return
-        nt = threading.Thread(
-            target=_t_notify,
-            name='_t_notify_%f' % time.time(),
-            args=(notifiers[notifier_id], subject, data, retain))
-        nt.start()
-        if wait: nt.join()
+        try:
+            if skip_mqtt and notifiers[notifier_id].notifier_type[:4] == 'mqtt':
+                return
+            if skip_subscribed_mqtt_item and \
+                notifiers[notifier_id].notifier_type[:4] == 'mqtt' and \
+                notifiers[notifier_id].update_item_exists(
+                        skip_subscribed_mqtt_item
+                        ):
+                return
+            nt = threading.Thread(
+                target=_t_notify,
+                name='_t_notify_%f' % time.time(),
+                args=(notifiers[notifier_id], subject, data, retain))
+            nt.start()
+            if wait: nt.join()
+        except:
+            eva.core.log_traceback()
     else:
         for i in notifiers.copy():
             notify(
