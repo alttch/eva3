@@ -189,7 +189,8 @@ class GenericAPI(object):
                           limit=None,
                           prop=None,
                           time_format=None,
-                          fill=None):
+                          fill=None,
+                          fmt=None):
         if oid is None: return False
         n = eva.notify.get_db_notifier(a)
         if t_start and fill: tf = 'iso'
@@ -204,57 +205,86 @@ class GenericAPI(object):
                 prop=prop,
                 time_format=tf)
         except:
-            logging.error('state history call error, arch: %s, oid: %s' %
-                          (n.notifier_id, oid))
+            logging.warning('state history call failed, arch: %s, oid: %s' %
+                            (n.notifier_id, oid))
             eva.core.log_traceback()
             return None
-        if not t_start or not fill or not result: return result
-        tz = pytz.timezone(time.tzname[0])
-        try: t_s = float(t_start)
-        except: t_s = dateutil.parser.parse(t_start).timestamp()
-        if t_end:
-            try: t_e = float(t_end)
-            except: t_e = dateutil.parser.parse(t_end).timestamp()
+        if t_start and fill and result:
+            tz = pytz.timezone(time.tzname[0])
+            try:
+                t_s = float(t_start)
+            except:
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    return None
+            if t_end:
+                try:
+                    t_e = float(t_end)
+                except:
+                    try:
+                        t_e = dateutil.parser.parse(t_end).timestamp()
+                    except:
+                        return None
+            else:
+                t_e = time.time()
+            if t_e > time.time(): t_e = time.time()
+            try:
+                df = pd.DataFrame(result)
+                df = df.set_index('t')
+                df.index = pd.to_datetime(df.index, utc=True)
+                i2 = pd.date_range(
+                    start=datetime.fromtimestamp(t_s, tz),
+                    end=datetime.fromtimestamp(t_e, tz),
+                    freq=fill)
+                sp = df.reindex(i2, method='pad').to_dict(orient='split')
+                result = []
+                for i in range(0, len(sp['index'])):
+                    t = sp['index'][i].timestamp()
+                    if time_format == 'iso':
+                        t = datetime.fromtimestamp(t, tz).isoformat()
+                    r = {'t': t}
+                    if 'status' in sp['columns'] and 'value' in sp['columns']:
+                        try:
+                            r['status'] = int(sp['data'][i][0])
+                        except:
+                            r['status'] = None
+                        r['value'] = sp['data'][i][1]
+                    elif 'status' in sp['columns']:
+                        try:
+                            r['status'] = int(sp['data'][i][0])
+                        except:
+                            r['status'] = None
+                    elif 'value' in sp['columns']:
+                        r['value'] = sp['data'][i][0]
+                    if 'value' in r and isinstance(
+                            r['value'], float) and math.isnan(r['value']):
+                        r['value'] = None
+                    result.append(r)
+            except:
+                logging.warning('state history dataframe error')
+                eva.core.log_traceback()
+                return None
+        if not fmt or fmt == 'list':
+            res = {'t': []}
+            for r in result:
+                res['t'].append(r['t'])
+                if 'status' in r:
+                    if 'status' in res:
+                        res['status'].append(r['status'])
+                    else:
+                        res['status'] = [r['status']]
+                if 'value' in r:
+                    if 'value' in res:
+                        res['value'].append(r['value'])
+                    else:
+                        res['value'] = [r['value']]
+            result = res
+        elif fmt == 'dict':
+            pass
         else:
-            t_e = time.time()
-        if t_e > time.time(): t_e = time.time()
-        try:
-            df = pd.DataFrame(result)
-            df = df.set_index('t')
-            df.index = pd.to_datetime(df.index, utc=True)
-            i2 = pd.date_range(
-                start=datetime.fromtimestamp(t_s, tz),
-                end=datetime.fromtimestamp(t_e, tz),
-                freq=fill)
-            sp = df.reindex(i2, method='pad').to_dict(orient='split')
-            result = []
-            for i in range(0, len(sp['index'])):
-                t = sp['index'][i].timestamp()
-                if time_format == 'iso':
-                    t = datetime.fromtimestamp(t, tz).isoformat()
-                r = {'t': t}
-                if 'status' in sp['columns'] and 'value' in sp['columns']:
-                    try:
-                        r['status'] = int(sp['data'][i][0])
-                    except:
-                        r['status'] = None
-                    r['value'] = sp['data'][i][1]
-                elif 'status' in sp['columns']:
-                    try:
-                        r['status'] = int(sp['data'][i][0])
-                    except:
-                        r['status'] = None
-                elif 'value' in sp['columns']:
-                    r['value'] = sp['data'][i][0]
-                if 'value' in r and isinstance(
-                        r['value'], float) and math.isnan(r['value']):
-                    r['value'] = None
-                result.append(r)
-            return result
-        except:
-            logging.warning('state history dataframe error')
-            eva.core.log_traceback()
             return None
+        return result
 
     def dev_cvars(self, k=None):
         """ get only custom vars from ENV

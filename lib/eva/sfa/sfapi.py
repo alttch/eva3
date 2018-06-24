@@ -86,7 +86,8 @@ class SFA_API(GenericAPI):
                       l=None,
                       x=None,
                       t=None,
-                      w=None):
+                      w=None,
+                      g=None):
         if is_oid(i):
             _tp, _i = parse_oid(i)
         else:
@@ -103,7 +104,7 @@ class SFA_API(GenericAPI):
             return False
         if not _i in gi: return False
         if not apikey.check(k, gi[_i]):
-                return False
+            return False
         return self.get_state_history(
             k=k,
             a=a,
@@ -113,7 +114,8 @@ class SFA_API(GenericAPI):
             limit=l,
             prop=x,
             time_format=t,
-            fill=w)
+            fill=w,
+            fmt=g)
 
     def groups(self, k=None, tp=None):
         if not tp: return []
@@ -161,7 +163,11 @@ class SFA_API(GenericAPI):
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
         return eva.sfa.controller.uc_pool.action_toggle(
-            unit_id=oid_to_id(i, 'unit'), wait=wait, uuid=action_uuid, priority=priority, q=q)
+            unit_id=oid_to_id(i, 'unit'),
+            wait=wait,
+            uuid=action_uuid,
+            priority=priority,
+            q=q)
 
     def result(self, k=None, i=None, u=None, g=None, s=None):
         if i:
@@ -178,12 +184,14 @@ class SFA_API(GenericAPI):
     def disable_actions(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.disable_actions(unit_id=oid_to_id(i, 'unit'))
+        return eva.sfa.controller.uc_pool.disable_actions(
+            unit_id=oid_to_id(i, 'unit'))
 
     def enable_actions(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.enable_actions(unit_id=oid_to_id(i, 'unit'))
+        return eva.sfa.controller.uc_pool.enable_actions(
+            unit_id=oid_to_id(i, 'unit'))
 
     def terminate(self, k=None, i=None, u=None):
         if i:
@@ -194,7 +202,8 @@ class SFA_API(GenericAPI):
         else:
             return None
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.terminate(unit_id=oid_to_id(i, 'unit'), uuid=u)
+        return eva.sfa.controller.uc_pool.terminate(
+            unit_id=oid_to_id(i, 'unit'), uuid=u)
 
     def kill(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
@@ -265,7 +274,11 @@ class SFA_API(GenericAPI):
         macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
         if not macro or not eva.apikey.check(k, macro): return False
         return eva.sfa.controller.lm_pool.run(
-            macro=oid_to_id(i, 'lmacro'), args=args, priority=priority, wait=wait, uuid=uuid)
+            macro=oid_to_id(i, 'lmacro'),
+            args=args,
+            priority=priority,
+            wait=wait,
+            uuid=uuid)
 
     def list_controllers(self, k=None, g=None):
         if not apikey.check(k, master = True) or \
@@ -526,9 +539,10 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
                       l=None,
                       x=None,
                       t=None,
-                      w=None):
+                      w=None,
+                      g=None):
         result = super().state_history(
-            k=k, tp=p, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w)
+            k=k, tp=p, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
         if result is None: raise cp_api_error('internal error')
         if result is False: raise cp_api_404()
         return result
