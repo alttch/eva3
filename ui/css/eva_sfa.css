@@ -1,5 +1,4 @@
-/* animated load progress */
-.cssload-square {
+.eva-sfa-cssload-square {
     margin: 123px auto;
     width: 35px;
     height: 35px;
@@ -11,25 +10,25 @@
 }
 
 
-.cssload-square-part {
+.eva-sfa-cssload-square-part {
     position: absolute;
     width: 35px;
     height: 35px;
     z-index: 1;
-    animation: cssload-part-anim 0.8s
+    animation: eva-sfa-cssload-part-anim 0.8s
         cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite alternate;
-    -o-animation: cssload-part-anim 0.8s
+    -o-animation: eva-sfa-cssload-part-anim 0.8s
         cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite alternate;
-    -ms-animation: cssload-part-anim 0.8s
+    -ms-animation: eva-sfa-cssload-part-anim 0.8s
         cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite alternate;
-    -webkit-animation: cssload-part-anim 0.8s
+    -webkit-animation: eva-sfa-cssload-part-anim 0.8s
         cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite alternate;
-    -moz-animation: cssload-part-anim 0.8s
+    -moz-animation: eva-sfa-cssload-part-anim 0.8s
         cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite alternate;
 }
 
 
-.cssload-square-green {
+.eva-sfa-cssload-square-green {
     background: rgb(58,176,234);
     right: 0;
     bottom: 0;
@@ -41,14 +40,14 @@
 }
 
 
-.cssload-square-pink {
+.eva-sfa-cssload-square-pink {
     background: rgb(96,148,204);
     left: 0;
     top: 0;
 }
 
 
-.cssload-square-blend {
+.eva-sfa-cssload-square-blend {
     background: rgb(255,255,255);
     position: absolute;
     top: 0;
@@ -56,15 +55,15 @@
     bottom: 0;
     right: 0;
     z-index: 2;
-    animation: blend-anim 0.8s ease-in infinite;
-        -o-animation: blend-anim 0.8s ease-in infinite;
-        -ms-animation: blend-anim 0.8s ease-in infinite;
-        -webkit-animation: blend-anim 0.8s ease-in infinite;
-        -moz-animation: blend-anim 0.8s ease-in infinite;
+    animation: eva-sfa-blend-anim 0.8s ease-in infinite;
+        -o-animation: eva-sfa-blend-anim 0.8s ease-in infinite;
+        -ms-animation: eva-sfa-blend-anim 0.8s ease-in infinite;
+        -webkit-animation: eva-sfa-blend-anim 0.8s ease-in infinite;
+        -moz-animation: eva-sfa-blend-anim 0.8s ease-in infinite;
 }
 
 
-@keyframes blend-anim {
+@keyframes eva-sfa-blend-anim {
     0% {
         transform: scale(0.01, 0.01) rotateY(0);
         animation-timing-function: cubic-bezier(0.47, 0, 0.745, 0.715);
@@ -79,7 +78,7 @@
 }
 
 
-@-o-keyframes blend-anim {
+@-o-keyframes eva-sfa-blend-anim {
     0% {
         -o-transform: scale(0.01, 0.01) rotateY(0);
         -o-animation-timing-function: cubic-bezier(0.47, 0, 0.745, 0.715);
@@ -94,7 +93,7 @@
 }
 
 
-@-ms-keyframes blend-anim {
+@-ms-keyframes eva-sfa-blend-anim {
     0% {
         -ms-transform: scale(0.01, 0.01) rotateY(0);
         -ms-animation-timing-function: cubic-bezier(0.47, 0, 0.745, 0.715);
@@ -109,7 +108,7 @@
 }
 
 
-@-webkit-keyframes blend-anim {
+@-webkit-keyframes eva-sfa-blend-anim {
     0% {
         -webkit-transform: scale(0.01, 0.01) rotateY(0);
         -webkit-animation-timing-function: cubic-bezier(0.47, 0, 0.745, 0.715);
@@ -124,7 +123,7 @@
 }
 
 
-@-moz-keyframes blend-anim {
+@-moz-keyframes eva-sfa-blend-anim {
     0% {
         -moz-transform: scale(0.01, 0.01) rotateY(0);
         -moz-animation-timing-function: cubic-bezier(0.47, 0, 0.745, 0.715);
@@ -139,7 +138,7 @@
 }
 
 
-@keyframes cssload-part-anim {
+@keyframes eva-sfa-cssload-part-anim {
     0% {
         transform: translate3d(-18px, -18px, 0);
     }
@@ -149,7 +148,7 @@
 }
 
 
-@-o-keyframes cssload-part-anim {
+@-o-keyframes eva-sfa-cssload-part-anim {
     0% {
         -o-transform: translate3d(-18px, -18px, 0);
     }
@@ -159,7 +158,7 @@
 }
 
 
-@-ms-keyframes cssload-part-anim {
+@-ms-keyframes eva-sfa-cssload-part-anim {
     0% {
         -ms-transform: translate3d(-18px, -18px, 0);
     }
@@ -169,7 +168,7 @@
 }
 
 
-@-webkit-keyframes cssload-part-anim {
+@-webkit-keyframes eva-sfa-cssload-part-anim {
     0% {
         -webkit-transform: translate3d(-18px, -18px, 0);
     }
@@ -179,7 +178,7 @@
 }
 
 
-@-moz-keyframes cssload-part-anim {
+@-moz-keyframes eva-sfa-cssload-part-anim {
     0% {
         -moz-transform: translate3d(-18px, -18px, 0);
     }

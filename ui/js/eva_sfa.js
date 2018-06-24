@@ -756,9 +756,15 @@ function eva_sfa_chart(
   _do_update
 ) {
   var cc = $('#' + ctx);
-  if (_do_update && !cc.is(":visible")) return;
+  var chart = null;
+  if (_do_update) {
+    chart = _do_update;
+  }
+  if (_do_update !== undefined && !cc.is(':visible')) {
+    if (chart) chart.destroy();
+    return;
+  }
   var d = new Date();
-  var work_cfg = $.extend({}, cfg);
   if (timeframe[timeframe.length - 1] == 'T') {
     d.setMinutes(d.getMinutes() - timeframe.substring(0, timeframe.length - 1));
   } else if (timeframe[timeframe.length - 1] == 'H') {
@@ -766,7 +772,7 @@ function eva_sfa_chart(
   } else if (timeframe[timeframe.length - 1] == 'D') {
     d.setDays(d.getDays() - timeframe.substring(0, timeframe.length - 1));
   }
-  if (!_do_update) eva_sfa_load_animation(cc);
+  if (!_do_update) eva_sfa_load_animation(ctx);
   var x = 'value';
   if (prop !== undefined && prop != null) {
     x = prop;
@@ -775,24 +781,34 @@ function eva_sfa_chart(
     oid,
     {t: 'iso', s: d.toISOString(), x: x, w: fill},
     function(data) {
-      var canvas = $('<canvas />', {
-        width: '100%',
-        height: '100%',
-        class: 'eva_sfa_chart'
-      });
-      work_cfg.data.labels = data.t;
-      if (oid.indexOf(',') == -1) {
-        work_cfg.data.datasets[0].data = data[x];
+      if (chart) {
+        chart.data.labels = data.t;
+        if (oid.indexOf(',') == -1) {
+          chart.data.datasets[0].data = data[x];
+        } else {
+          $.each(oid.split(','), function(a, v) {
+            chart.data.datasets[a].data = data[v + '/' + x];
+          });
+        }
+        chart.update();
       } else {
-        $.each(oid.split(','), function(a, v) {
-          work_cfg.data.datasets[a].data = data[v + '/' + x];
+        var canvas = $('<canvas />', {
+          width: '100%',
+          height: '100%',
+          class: 'eva_sfa_chart'
         });
+        var work_cfg = $.extend({}, cfg);
+        work_cfg.data.labels = data.t;
+        if (oid.indexOf(',') == -1) {
+          work_cfg.data.datasets[0].data = data[x];
+        } else {
+          $.each(oid.split(','), function(a, v) {
+            work_cfg.data.datasets[a].data = data[v + '/' + x];
+          });
+        }
+        cc.html(canvas);
+        chart = new Chart(canvas, work_cfg);
       }
-      if (_do_update) {
-        work_cfg.options.animation = false;
-      }
-      cc.html(canvas);
-      var chart1 = new Chart(canvas, work_cfg);
     },
     function(data) {
       var d_error = $('<div />', {
@@ -802,14 +818,31 @@ function eva_sfa_chart(
           'color: red; font-weight: bold; font-size: 14px'
       }).html('Error loading chart data');
       cc.html(d_error);
+      chart.destroy();
+      chart = null;
     }
   );
 
   if (update) {
     setTimeout(function() {
-      eva_sfa_chart(ctx, work_cfg, oid, timeframe, fill, update, prop, true);
+      eva_sfa_chart(ctx, cfg, oid, timeframe, fill, update, prop, chart);
     }, update * 1000);
   }
+}
+
+/*
+ * Animate html element block (simple loading animation)
+ *
+ * @el_id - html element id
+ */
+function eva_sfa_load_animation(el_id) {
+  $('#' + el_id).html(
+    '<div class="eva-sfa-cssload-square"><div ' +
+      'class="eva-sfa-cssload-square-part eva-sfa-cssload-square-green">' +
+      '</div><div class="eva-sfa-cssload-square-part ' +
+      'eva-sfa-cssload-square-pink">' +
+      '</div><div class="eva-sfa-cssload-square-blend"></div></div>'
+  );
 }
 /* ----------------------------------------------------------------------------
  * INTERNAL FUNCTIONS AND VARIABLES
@@ -1137,13 +1170,4 @@ function eva_sfa_serialize(obj) {
       str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
     }
   return str.join('&');
-}
-
-function eva_sfa_load_animation(obj) {
-  obj.html(
-    '<div class="cssload-square"><div ' +
-      'class="cssload-square-part cssload-square-green">' +
-      '</div><div class="cssload-square-part cssload-square-pink">' +
-      '</div><div class="cssload-square-blend"></div></div>'
-  );
 }
