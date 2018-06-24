@@ -95,7 +95,8 @@ class UC_API(GenericAPI):
                       l=None,
                       x=None,
                       t=None,
-                      w=None):
+                      w=None,
+                      g=None):
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): return False
         return self.get_state_history(
@@ -107,7 +108,8 @@ class UC_API(GenericAPI):
             limit=l,
             prop=x,
             time_format=t,
-            fill=w)
+            fill=w,
+            fmt=g)
 
     def update(self, k=None, i=None, status=None, value=None, force_virtual=0):
         item = eva.uc.controller.get_item(i)
@@ -369,17 +371,41 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
                       k=None,
                       a=None,
                       i=None,
+                      p=None,
                       s=None,
                       e=None,
                       l=None,
                       x=None,
                       t=None,
-                      w=None):
-        result = super().state_history(
-            k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w)
-        if result is None: raise cp_api_error('internal error')
-        if result is False: raise cp_api_404()
-        return result
+                      w=None,
+                      g=None):
+        if i and i.find(',') != -1:
+            if not w:
+                raise cp_api_error(
+                    '"w" param required to process multiple items')
+            items = i.split(',')
+            if not g or g == 'list':
+                result = {}
+            else:
+                raise cp_api_error(
+                    'format should be list only to process multiple items')
+            for i in items:
+                r = super().state_history(
+                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
+                if r is None: raise cp_api_error('internal error')
+                if r is False: raise cp_api_404()
+                result['t'] = r['t']
+                if 'status' in r:
+                    result[i + '/status'] = r['status']
+                if 'value' in r:
+                    result[i + '/value'] = r['value']
+            return result
+        else:
+            result = super().state_history(
+                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
+            if result is None: raise cp_api_error('internal error')
+            if result is False: raise cp_api_404()
+            return result
 
     def update(self, k=None, i=None, s=None, v=None, force_virtual=''):
         if force_virtual:

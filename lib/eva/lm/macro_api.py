@@ -106,14 +106,15 @@ class MacroAPI(object):
         }
 
     def history(self,
-                      lvar_id,
-                      t_start=None,
-                      t_end=None,
-                      limit=None,
-                      prop=None,
-                      time_format=None,
-                      fill=None,
-                      db=None):
+                lvar_id,
+                t_start=None,
+                t_end=None,
+                limit=None,
+                prop=None,
+                time_format=None,
+                fill=None,
+                fmt=None,
+                db=None):
         result = eva.lm.lmapi.api.state_history(
             k=eva.apikey.masterkey,
             a=db,
@@ -123,7 +124,8 @@ class MacroAPI(object):
             l=limit,
             x=prop,
             t=time_format,
-            w=fill)
+            w=fill,
+            g=fmt)
         if result is False:
             if not self.pass_errors:
                 raise Exception('lvar unknown: ' + lvar_id)
