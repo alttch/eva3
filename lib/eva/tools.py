@@ -79,3 +79,24 @@ def val_to_boolean(s):
     if val.lower() in ['1', 'true', 'yes', 'on', 'y']: return True
     if val.lower() in ['0', 'false', 'no', 'off', 'n']: return False
     return None
+
+
+def is_oid(oid):
+    if oid is None: return False
+    return oid.find(':') != -1
+
+def parse_oid(oid):
+    if oid is None: return None, None
+    try:
+        tp, i = oid.split(':')
+    except:
+        return None, None
+    return tp, i
+
+def oid_to_id(oid, required=None):
+    if not is_oid(oid): return oid
+    tp, i = parse_oid(oid)
+    if tp is None or i is None: return None
+    if required and tp != required: return None
+    return i
+

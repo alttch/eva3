@@ -876,26 +876,28 @@ class RemoteLMPool(RemoteControllerPool):
         if rules is not None:
             p = {}
             for u in rules:
-                if u.full_id in self.rules and u.controller != lm:
-                    self.rules[u.full_id].destroy()
-                if not u.full_id in self.rules or \
-                        self.rules[u.full_id].is_destroyed():
-                    self.rules[u.full_id] = u
+                if u.item_id in self.rules and u.controller != lm:
+                    self.rules[u.item_id].destroy()
+                if not u.item_id in self.rules or \
+                        self.rules[u.item_id].is_destroyed():
+                    self.rules[u.item_id] = u
+                    self.controllers_by_rule[u.item_id] = lm
                     u.start_processors()
-                p[u.full_id] = u
+                p[u.item_id] = u
             if controller_id in self.rules_by_controller:
                 for i in self.rules_by_controller[controller_id].copy().keys():
                     if i not in p:
                         self.rules[i].destroy()
                         try:
                             del (self.rules[i])
+                            del (self.controllers_by_rule[i])
                             del (self.rules_by_controller[controller_id][i])
                         except:
                             eva.core.log_traceback()
                 for u in rules:
-                    if u.full_id not in self.rules_by_controller[
+                    if u.item_id not in self.rules_by_controller[
                             controller_id].keys():
-                        self.rules_by_controller[controller_id][u.full_id] = u
+                        self.rules_by_controller[controller_id][u.item_id] = u
             else:
                 self.rules_by_controller[controller_id] = p
             logging.debug('Loaded %u DM rules from %s' % \

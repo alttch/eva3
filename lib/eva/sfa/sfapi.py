@@ -9,6 +9,11 @@ import glob
 import logging
 from cherrypy.lib.static import serve_file
 from eva.tools import format_json
+
+from eva.tools import is_oid
+from eva.tools import parse_oid
+from eva.tools import oid_to_id
+
 import eva.core
 import eva.notify
 from eva.api import GenericHTTP_API
@@ -43,11 +48,8 @@ def cp_need_dm_rule_props(k):
 class SFA_API(GenericAPI):
 
     def state(self, k=None, i=None, group=None, tp=None):
-        if i and i.find(':') != -1:
-            try:
-                _tp, _i = i.split(':')
-            except:
-                return None
+        if is_oid(i):
+            _tp, _i = parse_oid(i)
         else:
             _tp = tp
             _i = i
@@ -85,11 +87,8 @@ class SFA_API(GenericAPI):
                       x=None,
                       t=None,
                       w=None):
-        if i and i.find(':') != -1:
-            try:
-                _tp, _i = i.split(':')
-            except:
-                return False
+        if is_oid(i):
+            _tp, _i = parse_oid(i)
         else:
             _tp = tp
             _i = i
@@ -141,10 +140,10 @@ class SFA_API(GenericAPI):
                priority=None,
                q=None,
                wait=0):
-        unit = eva.sfa.controller.uc_pool.get_unit(i)
+        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
         return eva.sfa.controller.uc_pool.action(
-            unit_id=i,
+            unit_id=oid_to_id(i, 'unit'),
             status=nstatus,
             value=nvalue,
             wait=wait,
@@ -159,14 +158,14 @@ class SFA_API(GenericAPI):
                       priority=None,
                       q=None,
                       wait=0):
-        unit = eva.sfa.controller.uc_pool.get_unit(i)
+        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
         return eva.sfa.controller.uc_pool.action_toggle(
-            unit_id=i, wait=wait, uuid=action_uuid, priority=priority, q=q)
+            unit_id=oid_to_id(i, 'unit'), wait=wait, uuid=action_uuid, priority=priority, q=q)
 
     def result(self, k=None, i=None, u=None, g=None, s=None):
         if i:
-            unit = eva.sfa.controller.uc_pool.get_unit(i)
+            unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         elif u:
             a = eva.sfa.controller.uc_pool.action_history_get(u)
             unit = eva.sfa.controller.uc_pool.get_unit(a['i'])
@@ -174,59 +173,59 @@ class SFA_API(GenericAPI):
             return None
         if not unit or not apikey.check(k, unit): return None
         return eva.sfa.controller.uc_pool.result(
-            unit_id=i, uuid=u, group=g, status=s)
+            unit_id=oid_to_id(i, 'unit'), uuid=u, group=g, status=s)
 
     def disable_actions(self, k=None, i=None):
-        unit = eva.sfa.controller.uc_pool.get_unit(i)
+        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.disable_actions(unit_id=i)
+        return eva.sfa.controller.uc_pool.disable_actions(unit_id=oid_to_id(i, 'unit'))
 
     def enable_actions(self, k=None, i=None):
-        unit = eva.sfa.controller.uc_pool.get_unit(i)
+        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.enable_actions(unit_id=i)
+        return eva.sfa.controller.uc_pool.enable_actions(unit_id=oid_to_id(i, 'unit'))
 
     def terminate(self, k=None, i=None, u=None):
         if i:
-            unit = eva.sfa.controller.uc_pool.get_unit(i)
+            unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         elif u:
             a = eva.sfa.controller.uc_pool.action_history_get(u)
             unit = eva.sfa.controller.uc_pool.get_unit(a['i'])
         else:
             return None
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.terminate(unid_id=i, uuid=u)
+        return eva.sfa.controller.uc_pool.terminate(unit_id=oid_to_id(i, 'unit'), uuid=u)
 
     def kill(self, k=None, i=None):
-        unit = eva.sfa.controller.uc_pool.get_unit(i)
+        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.kill(unit_id=i)
+        return eva.sfa.controller.uc_pool.kill(unit_id=oid_to_id(i, 'unit'))
 
     def q_clean(self, k=None, i=None):
-        unit = eva.sfa.controller.uc_pool.get_unit(i)
+        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.q_clean(unit_id=i)
+        return eva.sfa.controller.uc_pool.q_clean(unit_id=oid_to_id(i, 'unit'))
 
     def set(self, k=None, i=None, status=None, value=None):
-        lvar = eva.sfa.controller.lm_pool.get_lvar(i)
+        lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
         if not lvar or not apikey.check(k, lvar): return None
         return eva.sfa.controller.lm_pool.set(
-            lvar_id=i, status=status, value=value)
+            lvar_id=oid_to_id(i, 'lvar'), status=status, value=value)
 
     def reset(self, k=None, i=None):
-        lvar = eva.sfa.controller.lm_pool.get_lvar(i)
+        lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
         if not lvar or not apikey.check(k, lvar): return None
-        return eva.sfa.controller.lm_pool.reset(lvar_id=i)
+        return eva.sfa.controller.lm_pool.reset(lvar_id=oid_to_id(i, 'lvar'))
 
     def toggle(self, k=None, i=None):
-        lvar = eva.sfa.controller.lm_pool.get_lvar(i)
+        lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
         if not lvar or not apikey.check(k, lvar): return None
-        return eva.sfa.controller.lm_pool.toggle(lvar_id=i)
+        return eva.sfa.controller.lm_pool.toggle(lvar_id=oid_to_id(i, 'lvar'))
 
     def clear(self, k=None, i=None):
-        lvar = eva.sfa.controller.lm_pool.get_lvar(i)
+        lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
         if not lvar or not apikey.check(k, lvar): return None
-        return eva.sfa.controller.lm_pool.clear(lvar_id=i)
+        return eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar'))
 
     def list_macros(self, k=None, controller_id=None, group=None):
         result = []
@@ -263,10 +262,10 @@ class SFA_API(GenericAPI):
         return sorted(result)
 
     def run(self, k=None, i=None, args=None, priority=None, wait=0, uuid=None):
-        macro = eva.sfa.controller.lm_pool.get_macro(i)
+        macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
         if not macro or not eva.apikey.check(k, macro): return False
         return eva.sfa.controller.lm_pool.run(
-            macro=i, args=args, priority=priority, wait=wait, uuid=uuid)
+            macro=oid_to_id(i, 'lmacro'), args=args, priority=priority, wait=wait, uuid=uuid)
 
     def list_controllers(self, k=None, g=None):
         if not apikey.check(k, master = True) or \
@@ -430,8 +429,8 @@ class SFA_API(GenericAPI):
         return result
 
     def list_rule_props(self, k=None, i=None):
+        print(eva.sfa.controller.lm_pool.controllers_by_rule)
         rule = eva.sfa.controller.lm_pool.get_dm_rule(i)
-        if not rule: return None
         if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
                 not apikey.check(k, rule):
             return None
@@ -446,7 +445,7 @@ class SFA_API(GenericAPI):
 
     def set_rule_prop(self, k=None, i=None, p=None, v=None, save=False):
         rule = eva.sfa.controller.lm_pool.get_dm_rule(i)
-        if not rule: return None
+        if not rule or not p: return None
         if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
             if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
                     not apikey.check(k, rule):
