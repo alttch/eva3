@@ -10,9 +10,11 @@ Core:
     * new notifier type: db, used to store item state history
 
 UC:
+
     * new function state_history in UC API
 
 LM:
+
     * macro function unlock now return false if lock was not locked or doesn't
       exist
     * unlock macro function may throw exception if the controller forbids it's
@@ -21,11 +23,16 @@ LM:
       macros
 
 SFA:
+
     * fixed rule management functions
     * new function state_history in SFA API and SFA Framework
     * state and state_history functions now accept item oids
     * SFA framework is now jQuery 3 compatible, jQuery lib updated to 3.3.1
     * eva_sfa_chart function
+
+Common:
+
+    * watchdog to test/automatically restart controllers in case of failure
 
 3.0.2
 -----
