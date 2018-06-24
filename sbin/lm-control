@@ -34,7 +34,8 @@ launch)
     ${PYTHON} ${LM} ${LM_ARGS}
     ;;
 stop)
-    [ -f ${PIDFILE} ] || exit 1
+    ps xa|grep -v grep|grep ${LM} > /dev/null 2>&1
+    [ $? == 0 ] || exit 1
     echo -n 'Stopping LM server '
     PID_SAFE_RUN=
     PID_LM=
@@ -58,6 +59,11 @@ stop)
             fi
         done
         rm -f ${PIDFILE}
+    fi
+    ps xa|grep -v grep|grep ${LM}|awk '{ print $1 }'|xargs kill > /dev/null 2>&1
+    if [ $? == 0 ]; then
+        sleep 10
+        ps xa|grep -v grep|grep ${LM}|awk '{ print $1 }'|xargs kill -9 > /dev/null 2>&1
     fi
     echo ' stopped'
     ;;
