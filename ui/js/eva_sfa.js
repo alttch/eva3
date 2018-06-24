@@ -189,7 +189,7 @@ function eva_sfa_stop(cb) {
  * Register the function (or javascript code) to be called in case of state
  * change event (or at first state load)
  *
- * @param oid - object id in format obj:full_id, i.e. sensor:env/temp1
+ * @param oid - item id in format type:full_id, i.e. sensor:env/temp1
  * @param cb - function to be called
  *
  * if state is already loaded, function will be called immediately
@@ -221,9 +221,9 @@ function eva_sfa_register_rule(rule_id, cb) {
 }
 
 /**
- * Get obj state
+ * Get item state
  *
- * @param oid - object id in format obj:full_id, i.e. sensor:env/temp1
+ * @param oid - item id in format type:full_id, i.e. sensor:env/temp1
  *
  * @returns - object state or undefined if no object found
  */
@@ -237,9 +237,9 @@ function eva_sfa_state(oid) {
   }
   var result = new Array();
   $.each(Object.keys(eva_sfa_states), function(i, v) {
-      if (eva_sfa_oid_match(v, oid)) {
-        result.push(eva_sfa_states[v]);
-      }
+    if (eva_sfa_oid_match(v, oid)) {
+      result.push(eva_sfa_states[v]);
+    }
   });
   return result;
 }
@@ -247,7 +247,7 @@ function eva_sfa_state(oid) {
 /**
  * Get expiration time left (in seconds)
  *
- * @param lvar_id - object id in format obj:full_id, i.e. lvar:timers/timer1
+ * @param lvar_id - item id in format type:full_id, i.e. lvar:timers/timer1
  *
  * @returns - seconds to expiration
  */
@@ -286,9 +286,9 @@ function eva_sfa_rule_props(rule_id) {
 }
 
 /**
- * Get obj status
+ * Get item status
  *
- * @param oid - object id in format obj:full_id, i.e. sensor:env/temp1
+ * @param oid - item id in format type:full_id, i.e. sensor:env/temp1
  *
  * @returns object status(int) or undefined if no object found
  */
@@ -299,9 +299,9 @@ function eva_sfa_status(oid) {
 }
 
 /**
- * Get obj status
+ * Get item status
  *
- * @param oid - object id in format obj:full_id, i.e. sensor:env/temp1
+ * @param oid - item id in format type:full_id, i.e. sensor:env/temp1
  *
  * @returns object value (null, string or numeric if possible)
  * or undefined if no object found
@@ -314,6 +314,27 @@ function eva_sfa_value(oid) {
   } else {
     return state.value;
   }
+}
+
+/**
+ * Get item state history
+ *
+ * @param uuid - action uuid
+ */
+function eva_sfa_state_history(oid, params, cb_success, cb_error) {
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += 'k=' + eva_sfa_apikey;
+  }
+  q += '&i=' + oid;
+  $.getJSON(
+    '/sfa-api/state_history?' + q + '&' + eva_sfa_serialize(params),
+    function(data) {
+      if (cb_success !== undefined && cb_success !== null) cb_success(data);
+    }
+  ).fail(function(data) {
+    if (cb_error !== undefined && cb_error !== null) cb_error(data);
+  });
 }
 
 /**
@@ -1022,9 +1043,19 @@ function eva_sfa_load_log_entries(r, postprocess) {
 }
 
 function eva_sfa_oid_match(oid, mask) {
-  return new RegExp("^" + mask.split("*").join(".*") + "$").test(oid);
+  return new RegExp('^' + mask.split('*').join('.*') + '$').test(oid);
 }
 
 function _eva_sfa_deprecated(f1, f2) {
   console.log('!!! function ' + f1 + ' is deprecated. Use ' + f2 + 'instead');
+}
+
+function eva_sfa_serialize(obj) {
+  if (obj === undefined || obj == null) return '';
+  var str = [];
+  for (var p in obj)
+    if (obj.hasOwnProperty(p)) {
+      str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
+    }
+  return str.join('&');
 }

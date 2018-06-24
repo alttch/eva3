@@ -210,15 +210,11 @@ class GenericAPI(object):
             return None
         if not t_start or not fill or not result: return result
         tz = pytz.timezone(time.tzname[0])
-        try:
-            t_s = float(t_start)
-        except:
-            t_s = dateutil.parser.parse(t_start).timestamp()
+        try: t_s = float(t_start)
+        except: t_s = dateutil.parser.parse(t_start).timestamp()
         if t_end:
-            try:
-                t_e = float(t_end)
-            except:
-                t_e = dateutil.parser.parse(t_end).timestamp()
+            try: t_e = float(t_end)
+            except: t_e = dateutil.parser.parse(t_end).timestamp()
         else:
             t_e = time.time()
         if t_e > time.time(): t_e = time.time()
