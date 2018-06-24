@@ -21,8 +21,10 @@ LM:
       macros
 
 SFA:
+    * fixed rule management functions
     * new function state_history in SFA API
     * state and state_history functions accept item oids
+    * SFA framework is now jQuery 3 compatible, jQuery lib updated to 3.3.1
 
 3.0.2
 -----
