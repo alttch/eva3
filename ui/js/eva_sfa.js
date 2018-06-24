@@ -732,6 +732,85 @@ function eva_sfa_log_level_name(log_level) {
   return eva_sfa_log_level_names[log_level];
 }
 
+/*
+ * Displays a chart
+ *
+ * @ctx - html container element id to draw in (must have fixed width/height)
+ * @cfg - Chart.js configuration
+ * @oid - item oid or oids, comma separated (type:full_id)
+ * @timeframe - timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2 days etc.)
+ * @fill - precision (10T - 60T recommended, more accurate - more data)
+ * @update - update interval in seconds, set 0 or null to skip updates
+ * @prop - item property to use (default is value)
+ *
+ * note: if the conteiner is no longer visible, chart ends updating forever
+ */
+function eva_sfa_chart(
+  ctx,
+  cfg,
+  oid,
+  timeframe,
+  fill,
+  update,
+  prop,
+  _do_update
+) {
+  var cc = $('#' + ctx);
+  if (_do_update && !cc.is(":visible")) return;
+  var d = new Date();
+  var work_cfg = $.extend({}, cfg);
+  if (timeframe[timeframe.length - 1] == 'T') {
+    d.setMinutes(d.getMinutes() - timeframe.substring(0, timeframe.length - 1));
+  } else if (timeframe[timeframe.length - 1] == 'H') {
+    d.setHours(d.getHours() - timeframe.substring(0, timeframe.length - 1));
+  } else if (timeframe[timeframe.length - 1] == 'D') {
+    d.setDays(d.getDays() - timeframe.substring(0, timeframe.length - 1));
+  }
+  if (!_do_update) eva_sfa_load_animation(cc);
+  var x = 'value';
+  if (prop !== undefined && prop != null) {
+    x = prop;
+  }
+  eva_sfa_state_history(
+    oid,
+    {t: 'iso', s: d.toISOString(), x: x, w: fill},
+    function(data) {
+      var canvas = $('<canvas />', {
+        width: '100%',
+        height: '100%',
+        class: 'eva_sfa_chart'
+      });
+      work_cfg.data.labels = data.t;
+      if (oid.indexOf(',') == -1) {
+        work_cfg.data.datasets[0].data = data[x];
+      } else {
+        $.each(oid.split(','), function(a, v) {
+          work_cfg.data.datasets[a].data = data[v + '/' + x];
+        });
+      }
+      if (_do_update) {
+        work_cfg.options.animation = false;
+      }
+      cc.html(canvas);
+      var chart1 = new Chart(canvas, work_cfg);
+    },
+    function(data) {
+      var d_error = $('<div />', {
+        class: 'eva_sfa_chart',
+        style:
+          'width: 100%; height: 100%; ' +
+          'color: red; font-weight: bold; font-size: 14px'
+      }).html('Error loading chart data');
+      cc.html(d_error);
+    }
+  );
+
+  if (update) {
+    setTimeout(function() {
+      eva_sfa_chart(ctx, work_cfg, oid, timeframe, fill, update, prop, true);
+    }, update * 1000);
+  }
+}
 /* ----------------------------------------------------------------------------
  * INTERNAL FUNCTIONS AND VARIABLES
  */
@@ -1058,4 +1137,13 @@ function eva_sfa_serialize(obj) {
       str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
     }
   return str.join('&');
+}
+
+function eva_sfa_load_animation(obj) {
+  obj.html(
+    '<div class="cssload-square"><div ' +
+      'class="cssload-square-part cssload-square-green">' +
+      '</div><div class="cssload-square-part cssload-square-pink">' +
+      '</div><div class="cssload-square-blend"></div></div>'
+  );
 }
