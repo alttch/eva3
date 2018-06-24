@@ -637,9 +637,11 @@ def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
     else:
         return fname
 
-
 def init():
     append_save_func(save_modified)
     append_dump_func('eva_core', serialize)
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
+
+#BD: 20.05.2017
+
