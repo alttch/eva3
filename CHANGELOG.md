@@ -31,6 +31,9 @@ SFA:
       3.3.1
     * eva_sfa_chart function, displays item state charts
     * eva_sfa_popup function, displays popus and info windows
+    * new ws event: server restart and eva_sfa_server_restart_handler in a
+      framework. SFA API function notify_restart allows to notify clients about
+      the server restart w/o actual restarting (i.e. when restarting frontend)
 
 Common:
 

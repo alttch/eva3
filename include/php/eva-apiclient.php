@@ -88,6 +88,7 @@ $_eva_api_func = array(
                 'func' => array(
                     'test',
                     'state',
+                    'state_history',
                     'groups',
                     'update',
                     'action',
@@ -142,6 +143,7 @@ $_eva_api_func = array(
                     array(
                     'test',
                     'state',
+                    'state_history',
                     'groups',
                     'groups_macro',
                     'set',
@@ -211,6 +213,7 @@ $_eva_api_func = array(
                     'test',
                     'state',
                     'state_all',
+                    'state_history',
                     'groups',
                     'action',
                     'action_toggle',
@@ -238,6 +241,7 @@ $_eva_api_func = array(
                     'set_rule_prop',
                     'login',
                     'logout',
+                    'notify_restart',
                     'reload_clients'
                     ),
                 'cr' => array(

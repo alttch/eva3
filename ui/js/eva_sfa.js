@@ -39,6 +39,11 @@ eva_sfa_ws_event_handler = null;
  */
 eva_sfa_reload_handler = null;
 
+/** Contains function which's called as f() when server restart event is
+ * received (server warns the clients about it's restart)
+ */
+eva_sfa_server_restart_handler = null;
+
 /**
  * Contains function called if heartbeat got an error (usually user is forcibly
  * logged out). The function is called f(data) if there's HTTP error data or
@@ -847,25 +852,46 @@ function eva_sfa_load_animation(el_id) {
 
 /*
  * Opens popup window. Requires bootstrap css included
+ * There may be only 1 popup opened. If the page want to open another popup, the
+ * current one will be overwritten unless it's class is higher than a new one.
  *
  * @ctx - html element id to use as popup (any empty <div /> is fine)
  * @pclass - popup class: info, warning or error.
  *           opens big popup window if '!' is put before the class (i.e. !info)
  * @title - popup window title
  * @msg - popup window message
+ * @ct - popup auto close time (sec), equal to pressing escape
  * @btn1 - button 1 name ('OK' if not specified)
  * @btn2 - button 2 name
  * @btn1a - function to run if button 1 (or enter) is pressed
  * @btn2a - function(arg) to run if button 2 (or escape) is pressed. arg is true
- *          if the button was pressed, false if escape key.
+ *          if the button was pressed, false if escape key or auto close.
  * @va - validate function which runs before btn1a. if the function return true,
  *       the popup is closed and btn1a function is executed. otherwise the popup
  *       is kept and the function btn1a function is not executed. va function is
  *       used to validate an input, if popup contains any input fields.
  *
  */
-function eva_sfa_popup(ctx, pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
+function eva_sfa_popup(
+  ctx,
+  pclass,
+  title,
+  msg,
+  ct,
+  btn1,
+  btn2,
+  btn1a,
+  btn2a,
+  va
+) {
   var _pclass = pclass;
+  if (pclass[0] == '!') {
+    _pclass = pclass.substr(1);
+  }
+  if (eva_sfa_popup_priority(eva_sfa_popup_active) > eva_sfa_popup_priority(_pclass)) {
+    return false;
+  }
+  eva_sfa_popup_active = _pclass;
   var popup = $('#' + ctx);
   popup.removeClass();
   popup.html('');
@@ -873,7 +899,6 @@ function eva_sfa_popup(ctx, pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
   var popup_window = $('<div />', {class: 'eva_sfa_popup_window'});
   popup.append(popup_window);
   if (pclass[0] == '!') {
-    _pclass = pclass.substr(1);
     popup_window.addClass('eva_sfa_popup_window_big');
   } else {
     popup_window.addClass('eva_sfa_popup_window');
@@ -881,7 +906,11 @@ function eva_sfa_popup(ctx, pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
   var popup_header = $('<div />', {
     class: 'eva_sfa_popup_header eva_sfa_popup_header_' + _pclass
   });
-  popup_header.html(title);
+  if (title !== undefined && title != null) {
+    popup_header.html(title);
+  } else {
+    popup_header.html(_pclass.charAt(0).toUpperCase() + _pclass.slice(1));
+  }
   popup_window.append(popup_header);
   var popup_content = $('<div />', {class: 'eva_sfa_popup_content'});
   popup_content.html(msg);
@@ -900,7 +929,7 @@ function eva_sfa_popup(ctx, pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
   if (btn1) {
     btn1text = btn1;
   }
-  var btn1 = $('<div />', {
+  var btn1_o = $('<div />', {
     class: 'eva_sfa_popup_btn eva_sfa_popup_btn_' + _pclass,
     html: btn1text
   });
@@ -911,23 +940,24 @@ function eva_sfa_popup(ctx, pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
     }
   };
   if (btn1a) {
-    btn1.on('click', f_validate_run_and_close);
+    btn1_o.on('click', f_validate_run_and_close);
   } else {
-    btn1.on('click', function() {
+    btn1_o.on('click', function() {
       eva_sfa_close_popup(ctx);
     });
   }
-  popup_btn1.append(btn1);
+  var btn2_o = null;
+  popup_btn1.append(btn1_o);
   if (btn2) {
-    var btn2 = $('<div />', {
+    btn2_o = $('<div />', {
       class: 'eva_sfa_popup_btn eva_sfa_popup_btn_' + _pclass,
       html: btn2
     });
-    btn2.on('click', function() {
+    btn2_o.on('click', function() {
       if (btn2a) btn2a(true);
       eva_sfa_close_popup(ctx);
     });
-    popup_btn2.append(btn2);
+    popup_btn2.append(btn2_o);
     popup_btn1.addClass('col-xs-5 col-sm-4');
     popup_btn2.addClass('col-xs-5 col-sm-4');
   } else {
@@ -945,6 +975,10 @@ function eva_sfa_popup(ctx, pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
       f_validate_run_and_close();
     }
   });
+  if (ct && ct > 0) {
+    eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct);
+  }
+  return true;
 }
 
 /* ----------------------------------------------------------------------------
@@ -972,6 +1006,8 @@ eva_sfa_lr2p = new Array();
 
 eva_sfa_last_ping = null;
 eva_sfa_last_pong = null;
+
+eva_sfa_popup_active = null;
 
 eva_sfa_log_level_names = {
   10: 'DEBUG',
@@ -1020,7 +1056,12 @@ function eva_sfa_process_ws(evt) {
   }
   if (data.s == 'reload') {
     if (eva_sfa_reload_handler != null) {
-      eva_sfa_reload_handler();
+      return eva_sfa_reload_handler();
+    }
+  }
+  if (data.s == 'server' && data.d == 'restart') {
+    if (eva_sfa_server_restart_handler != null) {
+      eva_sfa_server_restart_handler();
     }
     return;
   }
@@ -1278,4 +1319,33 @@ function eva_sfa_serialize(obj) {
 function eva_sfa_close_popup(ctx) {
   $(document).off('keydown');
   $('#' + ctx).hide();
+  eva_sfa_popup_active = null;
+}
+
+function eva_sfa_popup_priority(pclass) {
+  if (pclass == 'info') return 20;
+  if (pclass == 'warning') return 30;
+  if (pclass == 'error') return 40;
+  return 0;
+}
+
+function eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct) {
+  if (ct <= 0) {
+    eva_sfa_close_popup(ctx);
+    if (btn2a) btn2a(false);
+    return;
+  }
+  var obj = null;
+  var txt = '';
+  if (btn2_o) {
+    obj = btn2_o;
+    txt = btn2;
+  } else {
+    obj = btn1_o;
+    txt = btn1text;
+  }
+  obj.html(txt + ' (' + ct + ')');
+  setTimeout(function() {
+    eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct - 1)
+  }, 1000);
 }

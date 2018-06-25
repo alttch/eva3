@@ -1359,6 +1359,9 @@ class WSNotifier_Client(GenericNotifier_Client):
     def send_reload(self):
         self.send_notification('reload', 'asap')
 
+    def send_server_event(self, event):
+        self.send_notification('server', event)
+
     def is_client_dead(self):
         if self.ws:
             return self.ws.terminated
@@ -1759,6 +1762,7 @@ def start():
 def stop():
     global _notifier_client_cleaner
     global _notifier_client_cleaner_active
+    notify_restart()
     for i, n in notifiers.copy().items():
         t = threading.Thread(target = n.disconnect,
                 name = '_t_notifier_disconnect_%s_%f' % \
@@ -1773,6 +1777,11 @@ def reload_clients():
     logging.warning('sending reload event to clients')
     for k, n in notifiers.copy().items():
         if n.nt_client: n.send_reload()
+
+def notify_restart():
+    logging.warning('sending server restart event to clients')
+    for k, n in notifiers.copy().items():
+        if n.nt_client: n.send_server_event('restart')
 
 
 def _t_notifier_client_cleaner():

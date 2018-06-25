@@ -472,6 +472,11 @@ class SFA_API(GenericAPI):
         eva.notify.reload_clients()
         return True
 
+    def notify_restart(self, k=None):
+        if not apikey.check(k, master=True): return None
+        eva.notify.notify_restart()
+        return True
+
 
 class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
@@ -512,6 +517,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         SFA_HTTP_API.set_rule_prop.exposed = True
 
         SFA_HTTP_API.reload_clients.exposed = True
+        SFA_HTTP_API.notify_restart.exposed = True
 
     def state_all(self, k=None):
         result = []
@@ -778,6 +784,11 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
     def reload_clients(self, k=None):
         cp_need_master(k)
         return http_api_result_ok() if super().reload_clients(k) \
+                else http_api_result_error()
+
+    def notify_restart(self, k=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().notify_restart(k) \
                 else http_api_result_error()
 
     def list_remote(self, k=None, i=None, g=None, p=None):

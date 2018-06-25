@@ -94,7 +94,7 @@ _api_func = {
             'append_controller', 'remove_controller', 'list_controller_props',
             'set_controller_prop', 'reload_controller', 'list_remote',
             'list_rule_props', 'set_rule_prop', 'login', 'logout',
-            'reload_clients'
+            'reload_clients', 'notify_restart'
         ],
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',
