@@ -844,6 +844,109 @@ function eva_sfa_load_animation(el_id) {
       '</div><div class="eva-sfa-cssload-square-blend"></div></div>'
   );
 }
+
+/*
+ * Opens popup window. Requires bootstrap css included
+ *
+ * @ctx - html element id to use as popup (any empty <div /> is fine)
+ * @pclass - popup class: info, warning or error.
+ *           opens big popup window if '!' is put before the class (i.e. !info)
+ * @title - popup window title
+ * @msg - popup window message
+ * @btn1 - button 1 name ('OK' if not specified)
+ * @btn2 - button 2 name
+ * @btn1a - function to run if button 1 (or enter) is pressed
+ * @btn2a - function(arg) to run if button 2 (or escape) is pressed. arg is true
+ *          if the button was pressed, false if escape key.
+ * @va - validate function which runs before btn1a. if the function return true,
+ *       the popup is closed and btn1a function is executed. otherwise the popup
+ *       is kept and the function btn1a function is not executed. va function is
+ *       used to validate an input, if popup contains any input fields.
+ *
+ */
+function eva_sfa_popup(ctx, pclass, title, msg, btn1, btn2, btn1a, btn2a, va) {
+  var _pclass = pclass;
+  var popup = $('#' + ctx);
+  popup.removeClass();
+  popup.html('');
+  popup.addClass('eva_sfa_popup');
+  var popup_window = $('<div />', {class: 'eva_sfa_popup_window'});
+  popup.append(popup_window);
+  if (pclass[0] == '!') {
+    _pclass = pclass.substr(1);
+    popup_window.addClass('eva_sfa_popup_window_big');
+  } else {
+    popup_window.addClass('eva_sfa_popup_window');
+  }
+  var popup_header = $('<div />', {
+    class: 'eva_sfa_popup_header eva_sfa_popup_header_' + _pclass
+  });
+  popup_header.html(title);
+  popup_window.append(popup_header);
+  var popup_content = $('<div />', {class: 'eva_sfa_popup_content'});
+  popup_content.html(msg);
+  popup_window.append(popup_content);
+  var popup_footer = $('<div />', {class: 'eva_sfa_popup_footer'});
+  popup_window.append(popup_footer);
+  var popup_buttons = $('<div />', {class: 'row'});
+  popup_window.append(popup_buttons);
+  var popup_btn1 = $('<div />');
+  var popup_btn2 = $('<div />');
+  $('<div />', {class: 'col-xs-1 col-sm-2'}).appendTo(popup_buttons);
+  popup_buttons.append(popup_btn1);
+  popup_buttons.append(popup_btn2);
+  $('<div />', {class: 'col-xs-1 col-sm-2'}).appendTo(popup_buttons);
+  var btn1text = 'OK';
+  if (btn1) {
+    btn1text = btn1;
+  }
+  var btn1 = $('<div />', {
+    class: 'eva_sfa_popup_btn eva_sfa_popup_btn_' + _pclass,
+    html: btn1text
+  });
+  var f_validate_run_and_close = function() {
+    if (va === undefined || va == null || va()) {
+      eva_sfa_close_popup(ctx);
+      if (btn1a) btn1a();
+    }
+  };
+  if (btn1a) {
+    btn1.on('click', f_validate_run_and_close);
+  } else {
+    btn1.on('click', function() {
+      eva_sfa_close_popup(ctx);
+    });
+  }
+  popup_btn1.append(btn1);
+  if (btn2) {
+    var btn2 = $('<div />', {
+      class: 'eva_sfa_popup_btn eva_sfa_popup_btn_' + _pclass,
+      html: btn2
+    });
+    btn2.on('click', function() {
+      if (btn2a) btn2a(true);
+      eva_sfa_close_popup(ctx);
+    });
+    popup_btn2.append(btn2);
+    popup_btn1.addClass('col-xs-5 col-sm-4');
+    popup_btn2.addClass('col-xs-5 col-sm-4');
+  } else {
+    popup_btn1.addClass('col-xs-10 col-sm-8');
+    popup_btn2.hide();
+  }
+  popup.show();
+  $(document).on('keydown', function(e) {
+    if (e.which == 27) {
+      eva_sfa_close_popup(ctx);
+      if (btn2a) btn2a(false);
+      e.preventDefault();
+    }
+    if (e.which == 13) {
+      f_validate_run_and_close();
+    }
+  });
+}
+
 /* ----------------------------------------------------------------------------
  * INTERNAL FUNCTIONS AND VARIABLES
  */
@@ -1170,4 +1273,9 @@ function eva_sfa_serialize(obj) {
       str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
     }
   return str.join('&');
+}
+
+function eva_sfa_close_popup(ctx) {
+  $(document).off('keydown');
+  $('#' + ctx).hide();
 }
