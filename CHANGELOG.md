@@ -27,6 +27,8 @@ SFA:
     * fixed rule management functions
     * new function state_history in SFA API and SFA Framework
     * state and state_history functions now accept item oids
+    * SFA cvars are automatically available in SFA Framework app. Note: SFA
+      cvars are public and may be obtained with any valid API key
     * SFA framework is now jQuery 3 compatible, included jQuery lib updated to
       3.3.1
     * eva_sfa_chart function, displays item state charts

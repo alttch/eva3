@@ -80,6 +80,8 @@ eva.logs.start()
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
 
+eva.sysapi.cvars_public = True
+
 eva.core.load_cvars()
 
 eva.apikey.allows = ['cmd', 'lock', 'dm_rule_props', 'dm_rules_list']

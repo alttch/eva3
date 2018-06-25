@@ -823,7 +823,7 @@ function eva_sfa_chart(
           'color: red; font-weight: bold; font-size: 14px'
       }).html('Error loading chart data');
       cc.html(d_error);
-      chart.destroy();
+      if (chart) chart.destroy();
       chart = null;
     }
   );
@@ -1181,6 +1181,9 @@ function eva_sfa_heartbeat(on_login, data) {
   var q = '';
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '')
     q += '?k=' + eva_sfa_apikey;
+  if (on_login) {
+    q += '&icvars=1'
+  }
   if (eva_sfa_ws_mode) {
     if (eva_sfa_last_ping !== null) {
       if (
@@ -1207,12 +1210,19 @@ function eva_sfa_heartbeat(on_login, data) {
     eva_sfa_server_info = data;
     eva_sfa_tsdiff = new Date().getTime() / 1000 - data.time;
     if (on_login !== undefined && on_login) {
+      eva_sfa_set_cvars(data['cvars']);
       if (eva_sfa_cb_login_success !== null) eva_sfa_cb_login_success(data);
     }
   }).fail(function(data) {
     if (eva_sfa_heartbeat_error !== null) {
       eva_sfa_heartbeat_error(data);
     }
+  });
+}
+
+function eva_sfa_set_cvars(cvars) {
+  $.each(cvars, function(k, v) {
+    eval(k + ' = "' + v + '"');
   });
 }
 

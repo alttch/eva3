@@ -52,6 +52,8 @@ api = None
 
 api_file_management_allowed = False
 
+cvars_public = False
+
 
 class LockAPI(object):
 
@@ -288,7 +290,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         return eva.core.create_dump()
 
     def get_cvar(self, k=None, var=None):
-        if not eva.apikey.check(k, master=True):
+        if not eva.apikey.check(k, master=not cvars_public):
             return False
         if var:
             return eva.core.get_cvar(var)
@@ -464,8 +466,8 @@ class SysHTTP_API(SysAPI):
                 else http_api_result_error()
 
     def get_cvar(self, k=None, i=None):
-        cp_need_master(k)
         result = super().get_cvar(k, i)
+        if result is False: raise cp_forbidden_key()
         if result is None: raise cp_api_404()
         return {i: result} if i is not None else result
 

@@ -29,6 +29,7 @@ from eva.api import session_timeout
 from eva.api import http_real_ip
 from eva import apikey
 import eva.sfa.controller
+import eva.sysapi
 
 from PIL import Image
 
@@ -482,6 +483,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
     def __init__(self):
         super().__init__()
+        SFA_HTTP_API.test.exposed = True
         SFA_HTTP_API.state.exposed = True
         SFA_HTTP_API.state_history.exposed = True
         SFA_HTTP_API.state_all.exposed = True
@@ -518,6 +520,17 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
         SFA_HTTP_API.reload_clients.exposed = True
         SFA_HTTP_API.notify_restart.exposed = True
+
+    def test(self, k=None, icvars=None):
+        result = super().test(k)
+        if (icvars):
+            cvars = eva.sysapi.api.get_cvar(k=k)
+            if cvars is False:
+                raise cp_forbidden_key()
+            if not cvars:
+                cvars = []
+            result['cvars'] = cvars
+        return result
 
     def state_all(self, k=None):
         result = []
