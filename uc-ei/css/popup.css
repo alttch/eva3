@@ -121,20 +121,20 @@
 }
 
 @media (max-width: 450px), (max-height: 450px){
-	.error_window {
+	.popup_window {
 		width: 90%;
 		min-height: 200px;
 	}
 }
 
 @media (max-height: 415px){
-	.error_window {
+	.popup_window {
 		top: 15%;
 	}
 }
 
 @media (max-height: 350px){
-	.error_window {
+	.popup_window {
 		top: 5%;
 	}
 }
