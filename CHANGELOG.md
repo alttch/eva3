@@ -37,6 +37,7 @@ SFA:
       cvars are public and may be obtained with any valid API key
     * SFA framework is now jQuery 3 compatible, included jQuery lib updated to
       3.3.1
+    * eva_sfa_groups function, gets item groups list (with optional filter)
     * eva_sfa_chart function, displays item state charts
     * eva_sfa_popup function, displays popus and info windows
     * new ws event: server restart and eva_sfa_server_restart_handler in a
