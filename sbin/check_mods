@@ -13,6 +13,7 @@ mods = [
     'getopt',
     'glob',
     'hashlib',
+    'jinja2',
     'json',
     'jsonpickle',
     'logging',

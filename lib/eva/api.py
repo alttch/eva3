@@ -360,7 +360,10 @@ class GenericHTTP_API(GenericAPI):
         if 'k' in cherrypy.serving.request.params:
             k = cherrypy.serving.request.params['k']
         else:
-            k = cherrypy.session.get('k')
+            try:
+                k = cherrypy.session.get('k')
+            except:
+                k = None
             if k is None: k = eva.apikey.key_by_ip_address(http_real_ip())
             if k is not None: cherrypy.serving.request.params['k'] = k
         if cherrypy.serving.request.path_info[:6] == '/login': return

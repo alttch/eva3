@@ -7,6 +7,8 @@ import cherrypy
 import os
 import glob
 import logging
+import jinja2
+
 from cherrypy.lib.static import serve_file
 from eva.tools import format_json
 
@@ -37,12 +39,12 @@ api = None
 
 
 def cp_need_dm_rules_list(k):
-    if not eva.apikey.check(k, allow=['dm_rules_list']):
+    if not apikey.check(k, allow=['dm_rules_list']):
         raise cp_forbidden_key()
 
 
 def cp_need_dm_rule_props(k):
-    if not eva.apikey.check(k, allow=['dm_rule_props']):
+    if not apikey.check(k, allow=['dm_rule_props']):
         raise cp_forbidden_key()
 
 
@@ -118,7 +120,7 @@ class SFA_API(GenericAPI):
             fill=w,
             fmt=g)
 
-    def groups(self, k=None, tp=None):
+    def groups(self, k=None, tp=None, group=None):
         if not tp: return []
         if tp == 'U' or tp == 'unit':
             gi = eva.sfa.controller.uc_pool.units
@@ -130,7 +132,9 @@ class SFA_API(GenericAPI):
             return None
         result = []
         for i, v in gi.copy().items():
-            if apikey.check(k, v) and v.group not in result:
+            if apikey.check(k, v) and (not group or \
+                        eva.item.item_match(v, [], [group])) and \
+                        v.group not in result:
                 result.append(v.group)
         return sorted(result)
 
@@ -273,7 +277,7 @@ class SFA_API(GenericAPI):
 
     def run(self, k=None, i=None, args=None, priority=None, wait=0, uuid=None):
         macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
-        if not macro or not eva.apikey.check(k, macro): return False
+        if not macro or not apikey.check(k, macro): return False
         return eva.sfa.controller.lm_pool.run(
             macro=oid_to_id(i, 'lmacro'),
             args=args,
@@ -443,7 +447,6 @@ class SFA_API(GenericAPI):
         return result
 
     def list_rule_props(self, k=None, i=None):
-        print(eva.sfa.controller.lm_pool.controllers_by_rule)
         rule = eva.sfa.controller.lm_pool.get_dm_rule(i)
         if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
                 not apikey.check(k, rule):
@@ -588,8 +591,8 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
             if result is False: raise cp_api_404()
             return result
 
-    def groups(self, k=None, p=None):
-        return super().groups(k, p)
+    def groups(self, k=None, p=None, g=None):
+        return super().groups(k, p, g)
 
     def list_controllers(self, k=None, g=None):
         cp_need_master(k)
@@ -826,6 +829,90 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
             return http_api_result_error()
 
 
+# j2 template engine functions
+
+
+def j2_state(i=None, g=None, p=None, k=None):
+    if k:
+        _k = apikey.key_by_id(k)
+    else:
+        _k = apikey.masterkey
+    result = api.state(k=_k, i=i, group=g, tp=p)
+    if not result:
+        result = None
+    return result
+
+
+def j2_groups(g=None, p=None, k=None):
+    if k:
+        _k = apikey.key_by_id(k)
+    else:
+        _k = apikey.masterkey
+    result = api.groups(k=_k, group=g, tp=p)
+    if not result:
+        result = None
+    return result
+
+
+def serve_j2(tpl_file, tpl_dir='ui'):
+    j2_templateLoader = jinja2.FileSystemLoader(searchpath=eva.core.dir_eva +
+                                                '/' + tpl_dir)
+    j2_templateEnv = jinja2.Environment(loader=j2_templateLoader)
+    try:
+        template = j2_templateEnv.get_template(tpl_file)
+    except:
+        raise cp_api_404()
+    env = {}
+    env['req'] = cherrypy.serving.request.params
+    if 'k' in cherrypy.serving.request.params:
+        k = cherrypy.serving.request.params['k']
+    else:
+        try:
+            k = cherrypy.session.get('k')
+        except:
+            k = None
+        if k is None: k = apikey.key_by_ip_address(http_real_ip())
+    server_info = api.test(k)
+    env['server'] = server_info
+    env.update(eva.core.cvars)
+    template.globals['state'] = j2_state
+    template.globals['groups'] = j2_groups
+    return template.render(env).encode()
+
+
+def j2_handler(*args, **kwargs):
+    try:
+        del cherrypy.serving.response.headers['Content-Length']
+    except:
+        pass
+    return serve_j2(cherrypy.serving.request.path_info.replace('..', ''))
+
+
+def j2_hook(*args, **kwargs):
+    if cherrypy.serving.request.path_info[-3:] == '.j2':
+        cherrypy.serving.request.handler = j2_handler
+
+
+# ui and pvt
+
+
+class UI_ROOT():
+
+    _cp_config = {'tools.j2.on': True}
+
+    def __init__(self):
+        cherrypy.tools.j2 = cherrypy.Tool(
+            'before_handler', j2_hook, priority=100)
+
+    @cherrypy.expose
+    def index(self, **kwargs):
+        if os.path.isfile(eva.core.dir_eva + '/ui/index.j2'):
+            return serve_j2('/index.j2')
+        if os.path.isfile(eva.core.dir_eva + '/ui/index.html'):
+            return serve_file(eva.core.dir_eva + '/ui/index.html')
+        raise cp_api_404()
+
+
 class SFA_HTTP_Root:
 
     @cherrypy.expose
@@ -844,7 +931,7 @@ class SFA_HTTP_Root:
     def pvt(self, k=None, f=None, c=None, ic=None, nocache=None):
         if k is None:
             _k = cherrypy.session.get('k')
-            if _k is None: _k = eva.apikey.key_by_ip_address(http_real_ip())
+            if _k is None: _k = apikey.key_by_ip_address(http_real_ip())
         else:
             _k = k
         _r = '%s@%s' % (apikey.key_id(k), http_real_ip())
@@ -853,6 +940,8 @@ class SFA_HTTP_Root:
         if not apikey.check(_k, pvt_file=f, ip=http_real_ip()):
             logging.warning('pvt %s file %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
+        if f[-3:] == '.j2':
+            return serve_j2('/' + f, tpl_dir='pvt')
         _f = eva.core.dir_eva + '/pvt/' + f
         _f_alt = None
         if c:
@@ -935,12 +1024,13 @@ def start():
         })
 
     cherrypy.tree.mount(
-        object(),
+        UI_ROOT(),
         '/ui',
         config={
             '/': {
+                'tools.sessions.on': True,
+                'tools.sessions.timeout': session_timeout,
                 'tools.staticdir.dir': eva.core.dir_eva + '/ui',
-                'tools.staticdir.on': True,
-                'tools.staticdir.index': 'index.html',
+                'tools.staticdir.on': True
             }
         })

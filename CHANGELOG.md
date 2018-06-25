@@ -24,9 +24,15 @@ LM:
 
 SFA:
 
-    * fixed rule management functions
+    * warning: SFA now requires jinja2 module, run install.sh after update to
+      install missing local mods.
+
+    * fixes: rule management functions
+
     * new function state_history in SFA API and SFA Framework
     * state and state_history functions now accept item oids
+    * SFA API groups function now accept 'g' parameter to filter group list
+      (with MQTT-style wildcards)
     * SFA cvars are automatically available in SFA Framework app. Note: SFA
       cvars are public and may be obtained with any valid API key
     * SFA framework is now jQuery 3 compatible, included jQuery lib updated to
@@ -36,6 +42,15 @@ SFA:
     * new ws event: server restart and eva_sfa_server_restart_handler in a
       framework. SFA API function notify_restart allows to notify clients about
       the server restart w/o actual restarting (i.e. when restarting frontend)
+
+    * jinja2 templates for SFA ui and PVT files (all files with .j2 extension
+      are considered to be served as  templates). index.j2 has more priority
+      than index.html
+    * j2 templates have all cvars defined in SFA as a normal variables
+    * j2 templates have "server" variable (contains API call test result,
+      including API key if user is authorized or key param is present in req)
+    * j2 templates have "state" and "groups" functions, equal to SFA API
+      (called with masterkey unless the other specified)
 
 Common:
 
