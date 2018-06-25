@@ -29,6 +29,7 @@ from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva.api import session_timeout
 from eva.api import http_real_ip
+from eva.api import cp_client_key
 from eva import apikey
 import eva.sfa.controller
 import eva.sysapi
@@ -836,10 +837,8 @@ def j2_state(i=None, g=None, p=None, k=None):
     if k:
         _k = apikey.key_by_id(k)
     else:
-        _k = apikey.masterkey
+        _k = cp_client_key()
     result = api.state(k=_k, i=i, group=g, tp=p)
-    if not result:
-        result = None
     return result
 
 
@@ -847,10 +846,8 @@ def j2_groups(g=None, p=None, k=None):
     if k:
         _k = apikey.key_by_id(k)
     else:
-        _k = apikey.masterkey
+        _k = cp_client_key()
     result = api.groups(k=_k, group=g, tp=p)
-    if not result:
-        result = None
     return result
 
 
@@ -863,16 +860,10 @@ def serve_j2(tpl_file, tpl_dir='ui'):
     except:
         raise cp_api_404()
     env = {}
-    env['req'] = cherrypy.serving.request.params
-    if 'k' in cherrypy.serving.request.params:
-        k = cherrypy.serving.request.params['k']
-    else:
-        try:
-            k = cherrypy.session.get('k')
-        except:
-            k = None
-        if k is None: k = apikey.key_by_ip_address(http_real_ip())
+    env['request'] = cherrypy.serving.request.params
+    k = cp_client_key()
     server_info = api.test(k)
+    server_info['remote_ip'] = http_real_ip()
     env['server'] = server_info
     env.update(eva.core.cvars)
     template.globals['state'] = j2_state
@@ -929,12 +920,8 @@ class SFA_HTTP_Root:
 
     @cherrypy.expose
     def pvt(self, k=None, f=None, c=None, ic=None, nocache=None):
-        if k is None:
-            _k = cherrypy.session.get('k')
-            if _k is None: _k = apikey.key_by_ip_address(http_real_ip())
-        else:
-            _k = k
-        _r = '%s@%s' % (apikey.key_id(k), http_real_ip())
+        _k = cp_client_key()
+        _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
             raise cp_api_404()
         if not apikey.check(_k, pvt_file=f, ip=http_real_ip()):

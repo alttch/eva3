@@ -7,6 +7,7 @@ import cherrypy
 import eva.core
 from eva import apikey
 from eva.api import cp_forbidden_key
+from eva.api import cp_client_key
 from eva.api import session_timeout
 from eva.api import http_real_ip
 from eva.notify import NWebSocket
@@ -19,10 +20,7 @@ class WS_API(object):
 
     @cherrypy.expose
     def default(self, k=None):
-        _k = k
-        if _k is None:
-            _k = cherrypy.session.get('k')
-            if _k is None: _k = eva.apikey.key_by_ip_address(http_real_ip())
+        _k = cp_client_key(k)
         if not apikey.check(_k, ip=http_real_ip()): raise cp_forbidden_key()
         handler = cherrypy.request.ws_handler
         client = WSNotifier_Client('ws_' + eva.core.product_code + '_' + \

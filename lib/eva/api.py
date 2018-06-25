@@ -344,6 +344,18 @@ def cp_api_404(msg=''):
 def cp_need_master(k):
     if not eva.apikey.check(k, master=True): raise cp_forbidden_key()
 
+def cp_client_key(_k=None):
+    if _k: return _k
+    if 'k' in cherrypy.serving.request.params:
+        k = cherrypy.serving.request.params['k']
+    else:
+        try:
+            k = cherrypy.session.get('k')
+        except:
+            k = None
+        if k is None: k = eva.apikey.key_by_ip_address(http_real_ip())
+    return k
+
 
 class GenericHTTP_API(GenericAPI):
 
@@ -357,15 +369,8 @@ class GenericHTTP_API(GenericAPI):
     }
 
     def cp_check_perm(self):
-        if 'k' in cherrypy.serving.request.params:
-            k = cherrypy.serving.request.params['k']
-        else:
-            try:
-                k = cherrypy.session.get('k')
-            except:
-                k = None
-            if k is None: k = eva.apikey.key_by_ip_address(http_real_ip())
-            if k is not None: cherrypy.serving.request.params['k'] = k
+        k = cp_client_key()
+        if k is not None: cherrypy.serving.request.params['k'] = k
         if cherrypy.serving.request.path_info[:6] == '/login': return
         if cherrypy.serving.request.path_info[:4] == '/dev': dev = True
         else: dev = False

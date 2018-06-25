@@ -28,6 +28,7 @@ from eva.api import http_api_result_error
 from eva.api import session_timeout
 
 from eva.api import http_real_ip
+from eva.api import cp_client_key
 
 from eva.api import GenericAPI
 
@@ -330,12 +331,8 @@ class SysHTTP_API(SysAPI):
     }
 
     def cp_check_perm(self):
-        if 'k' in cherrypy.serving.request.params:
-            k = cherrypy.serving.request.params['k']
-        else:
-            k = cherrypy.session.get('k')
-            if k is None: k = eva.apikey.key_by_ip_address(http_real_ip())
-            if k is not None: cherrypy.serving.request.params['k'] = k
+        k = cp_client_key()
+        if k is not None: cherrypy.serving.request.params['k'] = k
         if cherrypy.serving.request.path_info[:6] == '/login': return
         if cherrypy.serving.request.path_info[:4] == '/dev': dev = True
         else: dev = False

@@ -48,9 +48,13 @@ SFA:
       than index.html
     * j2 templates have all cvars defined in SFA as a normal variables
     * j2 templates have "server" variable (contains API call test result,
-      including API key if user is authorized or key param is present in req)
+      including API key if user is authorized or key param is present in req,
+      plus user ip)
+    * j2 templates have "request" param (contains get/post variables of the
+      current http request)
     * j2 templates have "state" and "groups" functions, equal to SFA API
-      (called with masterkey unless the other specified)
+      (called with current session key unless the other specified. if you want
+      to access some device for everyone - use masterkey)
 
 Common:
 

@@ -322,6 +322,32 @@ function eva_sfa_value(oid) {
 }
 
 /**
+ * Get groups list
+ *
+ * @param p - item type (U for unit, S for sensor, LV for lvar)
+ * @param g - group filter (mqtt style)
+ * @param cb_success - function called on success
+ * @param cb_error - function called if error occured
+ */
+function eva_sfa_groups(p, g, cb_success, cb_error) {
+  var q = '';
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    q += 'k=' + eva_sfa_apikey;
+  }
+  if (p !== undefined && p !== null) {
+    q += '&p=' + p;
+  }
+  if (g !== undefined && g !== null) {
+    q += '&g=' + g;
+  }
+  $.getJSON('/sfa-api/groups?' + q, function(data) {
+    if (cb_success !== undefined && cb_success !== null) cb_success(data);
+  }).fail(function(data) {
+    if (cb_error !== undefined && cb_error !== null) cb_error(data);
+  });
+}
+
+/**
  * Get item state history
  *
  * @param uuid - action uuid
@@ -703,7 +729,7 @@ function eva_sfa_set_rule_prop(
 /**
  * Start log processing
  *
- * @log_level - log processing level (optional)
+ * @param log_level - log processing level (optional)
  */
 function eva_sfa_log_start(log_level) {
   eva_sfa_log_started = true;
@@ -719,7 +745,7 @@ function eva_sfa_log_start(log_level) {
 /**
  * Change log processing level
  *
- * @log_level - log processing level
+ * @param log_level - log processing level
  */
 function eva_sfa_change_log_level(log_level) {
   eva_sfa_log_level = log_level;
@@ -730,7 +756,7 @@ function eva_sfa_change_log_level(log_level) {
 /**
  * Get log level name
  *
- * @lid - log level id
+ * @param lid - log level id
  */
 
 function eva_sfa_log_level_name(log_level) {
@@ -740,13 +766,15 @@ function eva_sfa_log_level_name(log_level) {
 /*
  * Displays a chart
  *
- * @ctx - html container element id to draw in (must have fixed width/height)
- * @cfg - Chart.js configuration
- * @oid - item oid or oids, comma separated (type:full_id)
- * @timeframe - timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2 days etc.)
- * @fill - precision (10T - 60T recommended, more accurate - more data)
- * @update - update interval in seconds, set 0 or null to skip updates
- * @prop - item property to use (default is value)
+ * @param ctx - html container element id to draw in (must have fixed
+ *              width/height)
+ * @param cfg - Chart.js configuration
+ * @param oid - item oid or oids, comma separated (type:full_id)
+ * @param timeframe - timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2 days
+ *                    etc.)
+ * @param fill - precision (10T - 60T recommended, more accurate - more data)
+ * @param update - update interval in seconds, set 0 or null to skip updates
+ * @param prop - item property to use (default is value)
  *
  * note: if the conteiner is no longer visible, chart ends updating forever
  */
@@ -838,7 +866,7 @@ function eva_sfa_chart(
 /*
  * Animate html element block (simple loading animation)
  *
- * @el_id - html element id
+ * @param el_id - html element id
  */
 function eva_sfa_load_animation(el_id) {
   $('#' + el_id).html(
@@ -855,21 +883,23 @@ function eva_sfa_load_animation(el_id) {
  * There may be only 1 popup opened. If the page want to open another popup, the
  * current one will be overwritten unless it's class is higher than a new one.
  *
- * @ctx - html element id to use as popup (any empty <div /> is fine)
- * @pclass - popup class: info, warning or error.
- *           opens big popup window if '!' is put before the class (i.e. !info)
- * @title - popup window title
- * @msg - popup window message
- * @ct - popup auto close time (sec), equal to pressing escape
- * @btn1 - button 1 name ('OK' if not specified)
- * @btn2 - button 2 name
- * @btn1a - function to run if button 1 (or enter) is pressed
- * @btn2a - function(arg) to run if button 2 (or escape) is pressed. arg is true
- *          if the button was pressed, false if escape key or auto close.
- * @va - validate function which runs before btn1a. if the function return true,
- *       the popup is closed and btn1a function is executed. otherwise the popup
- *       is kept and the function btn1a function is not executed. va function is
- *       used to validate an input, if popup contains any input fields.
+ * @param ctx - html element id to use as popup (any empty <div /> is fine)
+ * @param pclass - popup class: info, warning or error. opens big popup window
+ *                 if '!' is put before the class (i.e. !info)
+ * @param title - popup window title
+ * @param msg - popup window message
+ * @param ct - popup auto close time (sec), equal to pressing escape
+ * @param btn1 - button 1 name ('OK' if not specified)
+ * @param btn2 - button 2 name
+ * @param btn1a - function to run if button 1 (or enter) is pressed
+ * @param btn2a - function(arg) to run if button 2 (or escape) is pressed. arg
+ *                is true if the button was pressed, false if escape key or
+ *                auto close.
+ * @param va - validate function which runs before btn1a.
+ *             if the function return true, the popup is closed and btn1a
+ *             function is executed. otherwise the popup is kept and the
+ *             function btn1a function is not executed. va function is used to
+ *             validate an input, if popup contains any input fields.
  *
  */
 function eva_sfa_popup(
