@@ -23,6 +23,7 @@ LM:
       functionality, in case the controller has no masterkey defined
     * new functions "state_history" in LM API and "history" (equivalent) in
       macros
+    * rule filter in LM EI
     * LM EI now should be enabled/disabled in lm.ini
 
 SFA:

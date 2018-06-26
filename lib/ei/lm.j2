@@ -32,7 +32,7 @@ disable_ws = false
 apikey = ''
 {% endblock %}
 {% block toolbars %}
-   <div class="col-xs-10 col-sm-7" id="toolbar_lvars"
+<div class="col-xs-10 col-sm-7" id="toolbar_lvars"
                                 style="display: none">
     <select id="s_lvar_group" data-role="none" class="st1"
                         onchange="load_lvars()"></select>
@@ -53,6 +53,8 @@ apikey = ''
     <button class="st0"
         onclick='edit_rule_dialog()'
         style="width: 120px; font-weight: bold;">NEW RULE</button>
+    <select id="s_rule_group" data-role="none" class="st1"
+                        onchange="load_rules()"></select>
     <img id="tbtn_reload_rules" src="i/reload.png" class="tbtn_l"
             alt="Reload" title="Reload"
             onclick="reload_rules()" />
