@@ -13,7 +13,7 @@ hosts_allow = 127.0.0.1
 ;key = key2secret
 ;items = unit1, unit2
 ;sysfunc = yes
-;allow = cmd
+;allow = cmd, lock, device
 ;hosts_allow = 0.0.0.0/0
 ; key will be assigned to requests from these hosts if no key provided
 ;hosts_assign = 192.168.1.1

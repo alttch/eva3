@@ -337,19 +337,11 @@ class UC_API(GenericAPI):
         return cfg
 
     def create_device(self, k=None, tpl_config={}, device_tpl=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check(k, allow=['device']): return None
+        _k = eva.apikey.masterkey
         cfg = self.load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
         if cfg is None: return False
-        cvars = cfg.get('cvars')
-        if cvars:
-            for i, v in cvars.items():
-                try:
-                    if not eva.sysapi.api.set_cvar(k, i, v):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
         units = cfg.get('units')
         if units:
             for u in units:
@@ -359,9 +351,7 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    if not api.create_unit(k, unit_id=i, group=g, save=save):
-                        return False
-                    if not api.set_props(k, i, u.get('props'), save):
+                    if not api.create_unit(_k, unit_id=i, group=g, save=save):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -376,9 +366,7 @@ class UC_API(GenericAPI):
                     return False
                 try:
                     if not api.create_sensor(
-                            k, sensor_id=i, group=g, save=save):
-                        return False
-                    if not api.set_props(k, i, u.get('props'), save):
+                            _k, sensor_id=i, group=g, save=save):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -392,9 +380,69 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    if not api.create_mu(k, mu_id=i, group=g, save=save):
+                    if not api.create_mu(_k, mu_id=i, group=g, save=save):
                         return False
-                    if not api.set_props(k, i, u.get('props'), save):
+                except:
+                    eva.core.log_traceback()
+                    return False
+        return api.update_device(k, cfg=cfg, save=save)
+
+    def update_device(self,
+                      k=None,
+                      tpl_config={},
+                      device_tpl=None,
+                      cfg=None,
+                      save=False):
+        if not apikey.check(k, allow=['device']): return None
+        _k = eva.apikey.masterkey
+        if cfg is None:
+            cfg = self.load_device_config(
+                tpl_config=tpl_config, device_tpl=device_tpl)
+        if cfg is None: return False
+        cvars = cfg.get('cvars')
+        if cvars:
+            for i, v in cvars.items():
+                try:
+                    if not eva.sysapi.api.set_cvar(_k, i, v):
+                        return False
+                except:
+                    eva.core.log_traceback()
+                    return False
+        units = cfg.get('units')
+        if units:
+            for u in units:
+                try:
+                    i = u['id']
+                except:
+                    return False
+                try:
+                    if not api.set_props(_k, i, u.get('props'), save):
+                        return False
+                except:
+                    eva.core.log_traceback()
+                    return False
+        sensors = cfg.get('sensors')
+        if sensors:
+            for u in sensors:
+                try:
+                    i = u['id']
+                except:
+                    return False
+                try:
+                    if not api.set_props(_k, i, u.get('props'), save):
+                        return False
+                except:
+                    eva.core.log_traceback()
+                    return False
+        mu = cfg.get('mu')
+        if mu:
+            for u in mu:
+                try:
+                    i = u['id']
+                except:
+                    return False
+                try:
+                    if not api.set_props(_k, i, u.get('props'), save):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -402,7 +450,8 @@ class UC_API(GenericAPI):
         return True
 
     def destroy_device(self, k=None, tpl_config={}, device_tpl=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check(k, allow=['device']): return None
+        _k = eva.apikey.masterkey
         cfg = self.load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
         if cfg is None: return False
@@ -414,7 +463,7 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    api.destroy(k, i)
+                    api.destroy(_k, i)
                 except:
                     pass
         units = cfg.get('units')
@@ -425,7 +474,7 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    api.destroy(k, i)
+                    api.destroy(_k, i)
                 except:
                     pass
         sensors = cfg.get('sensors')
@@ -436,14 +485,14 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    api.destroy(k, i)
+                    api.destroy(_k, i)
                 except:
                     pass
         cvars = cfg.get('cvars')
         if cvars:
             for cvar in cvars.keys():
                 try:
-                    eva.sysapi.api.set_cvar(k, cvar)
+                    eva.sysapi.api.set_cvar(_k, cvar)
                 except:
                     pass
         return True
@@ -496,6 +545,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.create_sensor.exposed = True
         UC_HTTP_API.create_mu.exposed = True
         UC_HTTP_API.create_device.exposed = True
+        UC_HTTP_API.update_device.exposed = True
 
         UC_HTTP_API.clone.exposed = True
         UC_HTTP_API.clone_group.exposed = True
@@ -725,7 +775,6 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             k, i, g, virtual, save) else http_api_result_error()
 
     def create_device(self, k=None, c=None, t=None, save=None):
-        cp_need_master(k)
         config = {}
         if not c:
             return http_api_result_error()
@@ -739,8 +788,22 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             k=k, tpl_config=config, device_tpl=t,
             save=save) else http_api_result_error()
 
+    def update_device(self, k=None, c=None, t=None, save=None):
+        print(1111111111111111)
+        config = {}
+        if not c:
+            return http_api_result_error()
+        try:
+            for i in c.split(','):
+                name, value = i.split('=')
+                config[name] = value
+        except:
+            raise cp_api_error()
+        return http_api_result_ok() if super().update_device(
+            k=k, tpl_config=config, device_tpl=t,
+            save=save) else http_api_result_error()
+
     def destroy_device(self, k=None, c=None, t=None):
-        cp_need_master(k)
         config = {}
         if not c:
             return http_api_result_error()

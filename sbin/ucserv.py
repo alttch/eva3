@@ -86,7 +86,7 @@ eva.sysapi.update_config(cfg)
 
 eva.core.load_cvars()
 
-eva.apikey.allows = ['cmd', 'lock']
+eva.apikey.allows = ['cmd', 'lock', 'device']
 eva.apikey.load()
 
 eva.notify.init()
