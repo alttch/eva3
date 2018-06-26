@@ -21,6 +21,7 @@ result_server_error = 7
 result_server_timeout = 8
 result_bad_data = 9
 result_func_failed = 10
+result_invalid_params = 11
 
 _sysapi_uri = '/sys-api/'
 
@@ -51,14 +52,15 @@ _api_func = {
             'action_toggle', 'result', 'terminate', 'q_clean', 'kill',
             'disable_actions', 'enable_actions', 'get_config', 'save_config',
             'list', 'list_props', 'set_prop', 'create_unit', 'create_sensor',
-            'create_mu', 'create_device', 'clone', 'clone_group', 'destroy',
-            'destroy_device', 'login', 'logout'
+            'create_mu', 'create_device', 'update_device', 'clone',
+            'clone_group', 'destroy', 'destroy_device', 'login', 'logout'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
             'enable_actions', 'save_config', 'set_prop', 'create_unit',
-            'create_sensor', 'create_mu', 'create_device', 'clone',
-            'clone_group', 'destroy', 'destroy_device', 'login', 'logout'
+            'create_sensor', 'create_mu', 'create_device', 'update_device',
+            'clone', 'clone_group', 'destroy', 'destroy_device', 'login',
+            'logout'
         ],
         'ce': ['action', 'action_toggle']
     },
@@ -206,6 +208,8 @@ class APIClient(object):
                 return (result_not_found, {})
             elif r.status_code == 500:
                 return (result_api_error, {})
+            elif r.status_code == 400:
+                return (result_invalid_params, {})
             else:
                 return (result_unknown_error, {})
         try:

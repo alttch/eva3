@@ -23,6 +23,7 @@ $eva_result_server_error = 7;
 $eva_result_server_timeout = 8;
 $eva_result_bad_data = 9;
 $eva_result_func_failed = 10;
+$eva_result_invalid_params = 11;
 
 $_eva_sysapi_uri = '/sys-api/';
 
@@ -110,6 +111,7 @@ $_eva_api_func = array(
                     'create_sensor',
                     'create_mu',
                     'create_device',
+                    'update_device',
                     'clone',
                     'clone_group',
                     'destroy',
@@ -130,6 +132,7 @@ $_eva_api_func = array(
                     'create_sensor',
                     'create_mu',
                     'create_device',
+                    'update_device',
                     'clone',
                     'clone_group',
                     'destroy',
@@ -366,6 +369,8 @@ class EVA_APIClient {
                 return array($GLOBALS['eva_result_forbidden'], array());
             if ($c == 404)
                 return array($GLOBALS['eva_result_not_found'], array());
+            if ($c == 400)
+                return array($GLOBALS['eva_result_invalid_params'], array());
             if ($c == 500)
                 return array($GLOBALS['eva_result_api_error'], array());
             return array($GLOBALS['eva_result_unknown_error'], array());
