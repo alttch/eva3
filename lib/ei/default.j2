@@ -1,0 +1,167 @@
+<html>
+<head>
+    <script type="text/javascript">
+    {% block props %}
+    {% endblock %}
+    </script>
+    <title>{{ product_code|upper }} EI</title>
+    <link rel="stylesheet" href="lib/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/ei.css" />
+    <link rel="stylesheet" href="css/animate.css" />
+    <link rel="stylesheet" href="css/popup.css" />
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/jquery.mobile.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap.min.js"></script>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1,
+        maximum-scale=1, user-scalable=no">
+    {% block head %}
+    {% endblock %}
+</head>
+<body>
+<div class="container" style="overflow: hidden">
+    <div class="row" id="sysinfo" style="display: none">
+        <div class="col-xs-12">
+            {{ product_code|upper }}: <span id="i_system"></span>,
+            sync: <span id="i_connection"></span>,
+            key: <span id="i_key"></span>,
+            master: <span id="i_master"></span>
+        </div>
+    </div>
+    <div class="row" id="controls"
+        style="margin-top: 10px; padding-bottom: 20px; display: none">
+        <div class="col-xs-10 col-sm-7" id="toolbar_blank"
+            style="display: none"></div>
+        {% block toolbars %}
+        {% endblock %}
+        <div class="col-xs-10 col-sm-7" id="toolbar_log"
+             style="display: none; height: 54px; padding-top: 25px;">
+            <span class="hidden-xs">Records: </span>
+            <select class="tbselect" id="s_max_log_records"
+                data-role="none"
+                onchange="max_log_records = this.value;
+                load_log_entries(false,true)">
+                <option>50</option>
+                <option selected="selected">100</option>
+                <option>200</option>
+                <option>500</option>
+                <option>1000</option>
+                <option>2000</option>
+                <option>5000</option>
+            </select>
+            <span class="hidden-xs">Level: </span>
+            <select class="tbselect" id="s_log_level" data-role="none"
+                    onchange="
+                    log_level = this.value;
+                    ask_debug_mode();
+                    set_ws_log_level(this.value);
+                    load_log_entries(false,true)
+                    ">
+                <option value="10">DEBUG</option>
+                <option value="20" selected="selected">INFO</option>
+                <option value="30">WARNING</option>
+                <option value="40">ERROR</option>
+            </select>
+            <button id="btn_log_as" class="st0 active" style="height: 25px;"
+                        onclick="toggle_log_as()">Autoscroll</button>
+        </div>
+        <div class="col-xs-2 col-sm-5" style="text-align: right">
+            <div id="toolmenu_btn" class="hidden-md hidden-lg">
+                <span onclick="open_tool_menu()"
+                    class="glyphicon glyphicon-menu-hamburger
+                                    glyphicon-toolmenu"></span>
+            </div>
+            <div id="toolmenu" class="hidden-xs hidden-sm">
+                <span onclick="close_tool_menu()"
+                    class="hidden-md hidden-lg
+                    glyphicon glyphicon-menu-up
+                    glyphicon-toolmenu"></span>
+                {% block menu %}
+                {% endblock %}
+                <img id="tbtn_log" src="i/log.png"
+                        alt="Log" title="Show log"
+                        class="tbtn disabled" />
+                <img id="tbtn_save" title="Save system data"
+                        alt="Save" src="i/save.png"
+                        class="tbtn disabled" />
+                <img id="tbtn_logout" src="i/logout.png" class="tbtn"
+                        alt="Logout" title="Logout" 
+                        onclick="
+                        popup('confirm', 'Log out',
+                        'Are you sure to log out?',
+                        'Yes', 'No', 'logout()', '')
+                        " />
+            </div>
+        </div>
+    </div>
+    <div class="row vcenter" id="b_blank" style="display: none"></div>
+    <div class="row vcenter" id="b_keyform" style="display: none">
+        <div class="col-xs-12" align="center" id="keyform">
+        </div>
+    </div>
+    {% block boards %}
+    {% endblock %}
+    <div class="row board" id="b_log" style="display: none">
+                <div class="col-xs-12" id="logr"></div>
+    </div>
+    <div class="row" id="version_info" style="display: none;">
+        <div class="col-xs-12">
+            {{ product_name }} version: <span id="i_version"></span>
+            build <span id="i_build"></span><br />
+            <div id="i_sysinfo" style="display: none">
+                <span id="i_debug"></span><span id="i_dbsave"></span>
+                <span id="i_polldelay"></span></div>
+            <br />
+            <a href="https://www.eva-ics.com/">EVA ICS</a>
+            Copyright &copy; 2012-2018
+            <a href="https://www.altertech.com/">Altertech Group</a>
+        </div>
+    </div>
+    <div class="popup" id="popup" style="display: none">
+        <div class="popup_window" id="popup_window">
+            <div id="popup_header"></div>
+            <div class="popup_content" id="popup_content"></div>
+            <div "popup_footer" id="popup_footer"></div>
+				<div class="row" id="popup_buttons" align="center">
+					<div class="col-xs-1 col-sm-2"></div>
+					<div id="popup_btn_1"></div>
+					<div id="popup_btn_2"></div>
+					<div class="col-xs-1 col-sm-2"></div>
+				</div>
+    	</div>
+    </div>
+</div>
+<script type="text/javascript" src="js/cookie.js"></script>
+<script type="text/javascript" src="js/log.js"></script>
+<script type="text/javascript" src="js/toolmenu.js"></script>
+<script type="text/javascript" src="js/tools.js"></script>
+<script type="text/javascript" src="js/popup.js"></script>
+<script type="text/javascript" src="js/{{ product_code }}.js"></script>
+<script type="text/javascript">
+ws_mode = false
+
+$(document).ready(
+    function() {
+        $.mobile.loading().hide()
+        $.mobile.linkBindingEnabled = false
+        var dws = get_arg('disable_ws')
+        if (window.WebSocket && !disable_ws &&
+                ((dws == null) || (dws != '1'))) {
+            ws_mode = true
+        }
+        var k = get_arg('k')
+        if (k != null) {
+            login(k, false, true, false)
+        } else {
+            k = read_cookie("apikey")
+            if (k != null) {
+                login(k, true, true, false)
+            } else {
+                show_login_form()
+            }
+        }
+})
+
+</script>
+</body>
+</html>

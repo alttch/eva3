@@ -1,4 +1,6 @@
 import eva.core
+from eva.api import cp_api_404
+
 import cherrypy
 import jinja2
 
@@ -22,7 +24,11 @@ class EI():
             template = self.j2.get_template('%s.j2' % eva.core.product_code)
         except:
             raise cp_api_404()
-        env = {'build': eva.core.product_build}
+        env = {
+            'build': eva.core.product_build,
+            'product_name': eva.core.product_name,
+            'product_code': eva.core.product_code
+        }
         return template.render(env)
 
 
