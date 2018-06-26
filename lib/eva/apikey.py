@@ -32,6 +32,7 @@ class APIKey(object):
         self.hosts_allow = []
         self.hosts_assign = []
         self.pvt_files = []
+        self.rpvt_uris = []
 
 
 def load(fname=None):
@@ -112,6 +113,12 @@ def load(fname=None):
                 except:
                     pass
                 try:
+                    key.rpvt_uris = list(filter(None,
+                        [x.strip() for x in \
+                                cfg.get(ks, 'rpvt').split(',')]))
+                except:
+                    pass
+                try:
                     key.allow = list(
                         filter(None, [
                             x.strip() for x in cfg.get(ks, 'allow').split(',')
@@ -162,6 +169,7 @@ def check(k,
           item=None,
           allow=[],
           pvt_file=None,
+          rpvt_uri=None,
           ip=None,
           master=False,
           sysfunc=False):
@@ -196,6 +204,26 @@ def check(k,
                             break
                     if match: return True
         return False
+    if rpvt_uri:
+        if rpvt_uri.find('//') != -1:
+            r = rpvt_uri.split('//')[1]
+        else:
+            r = rpvt_uri
+        if '#' in _k.rpvt_uris or r in _k.rpvt_uris: return True
+        for d in _k.rpvt_uris:
+            p = d.find('#')
+            if p > -1 and d[:p] == r[:p]: return True
+            if d.find('+') > -1:
+                g1 = d.split('/')
+                g2 = r.split('/')
+                if len(g1) == len(g2):
+                    match = True
+                    for i in range(0, len(g1)):
+                        if g1[i] != '+' and g1[i] != g2[i]:
+                            match = False
+                            break
+                    if match: return True
+        return False
     return True
 
 
@@ -208,6 +236,7 @@ def serialized_acl(k):
     r['items'] = _k.item_ids
     r['groups'] = _k.groups
     if _k.pvt_files: r['pvt'] = _k.pvt_files
+    if _k.rpvt_uris: r['rpvt'] = _k.rpvt_uris
     r['allow'] = {}
     for a in allows:
         r['allow'][a] = True if a in _k.allow else False

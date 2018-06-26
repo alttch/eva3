@@ -8,7 +8,10 @@ hosts_allow = 127.0.0.1
 ;key = key1secret
 ;groups = group1/#, group2, group3/+/somegroup
 ;pvt = #
+;rpvt = 127.0.0.1/#
 ;hosts_allow = 0.0.0.0/0
+; key will be assigned to requests from these hosts if no key provided
+;hosts_assign = 192.168.1.1
 
 ;[key2]
 ;key = key2secret
@@ -16,5 +19,6 @@ hosts_allow = 127.0.0.1
 ;sysfunc = yes
 ;allow = cmd, dm_rule_props, dm_rules_list
 ;pvt = dir1/#, file1, dir2/file2, dir3/+/content.js
+;rpvt = 127.0.0.1:8080/file1.png 127.0.0.1:8080/img/#
 ;hosts_allow = 0.0.0.0/0
 

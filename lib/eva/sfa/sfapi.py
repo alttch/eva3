@@ -8,6 +8,9 @@ import os
 import glob
 import logging
 import jinja2
+import requests
+
+from io import BytesIO
 
 from cherrypy.lib.static import serve_file
 from eva.tools import format_json
@@ -912,14 +915,36 @@ class SFA_HTTP_Root:
         raise cherrypy.HTTPRedirect('/ui/' + q)
 
     def _no_cache(self):
-        cherrypy.response.headers['Expires'] = 'Sun, 19 Nov 1978 05:00:00 GMT'
-        cherrypy.response.headers['Cache-Control'] = \
+        cherrypy.serving.response.headers['Expires'] = 'Sun, 19 Nov 1978 05:00:00 GMT'
+        cherrypy.serving.response.headers['Cache-Control'] = \
             'no-store, no-cache, must-revalidate, post-check=0, pre-check=0'
-        cherrypy.response.headers['Pragma'] = 'no-cache'
+        cherrypy.serving.response.headers['Pragma'] = 'no-cache'
+
+    @cherrypy.expose
+    def rpvt(self, k=None, f=None, nocache=None):
+        _k = cp_client_key(k)
+        _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
+        if f is None: raise cp_api_error('uri not provided')
+        if not apikey.check(_k, rpvt_uri=f, ip=http_real_ip()):
+            logging.warning('rpvt %s uri %s access forbidden' % (_r, f))
+            raise cp_forbidden_key()
+        try:
+            if f.find('//') == -1: _f = 'http://' + f
+            else: _f = f
+            r = requests.get(_f, timeout=eva.core.timeout)
+        except:
+            raise cp_api_error()
+        if r.status_code != 200:
+            raise cp_api_error('remote response %s' % r.status_code)
+        ctype = r.headers.get('Content-Type')
+        if ctype:
+            cherrypy.serving.response.headers['Content-Type'] = ctype
+        if nocache: self._no_cache()
+        return BytesIO(r.content)
 
     @cherrypy.expose
     def pvt(self, k=None, f=None, c=None, ic=None, nocache=None):
-        _k = cp_client_key()
+        _k = cp_client_key(k)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
             raise cp_api_404()

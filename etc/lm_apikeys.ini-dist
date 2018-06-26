@@ -15,6 +15,8 @@ hosts_allow = 127.0.0.1
 ;sysfunc = yes
 ;allow = cmd, dm_rule_props, dm_rules_list
 ;hosts_allow = 0.0.0.0/0
+; key will be assigned to requests from these hosts if no key provided
+;hosts_assign = 192.168.1.1
 
 ;[sfa]
 ;key = sfasecret
