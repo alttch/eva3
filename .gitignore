@@ -8,6 +8,10 @@ etc/watchdog
 etc/*.ini
 dev
 dist
+lib/ei/css/ei.min.css
+lib/ei/js/lm.min.js
+lib/ei/js/uc.min.js
+ui/js/eva_sfa.min.js
 log
 runtime
 xc/uc

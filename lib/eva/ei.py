@@ -31,6 +31,8 @@ class EI():
             'product_name': eva.core.product_name,
             'product_code': eva.core.product_code
         }
+        if eva.core.development:
+            env['development'] = True
         return template.render(env)
 
 
