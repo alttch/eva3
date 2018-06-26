@@ -1,8 +1,8 @@
 EVA ICS CHANGELOG
 =================
 
-3.0.3
------
+3.0.3 (TBA)
+-----------
 
 Core:
 
@@ -65,8 +65,8 @@ Common:
 
     * watchdog to test/automatically restart controllers in case of failure
 
-3.0.2
------
+3.0.2 (2018-06-23)
+------------------
 
 Bugfix release, some new urgent features, stability improvements
 
@@ -131,8 +131,8 @@ Common:
       current host
     * ability to run controllers under restricted user
 
-3.0.1
------
+3.0.1 (2018-02-21)
+------------------
 
 Minor release with some urgent features
 
@@ -164,7 +164,7 @@ Logic Manager:
     * item id in LM rules match by simple mask (i.e. '\*id\'* or 'id\'* or
       '\*id')
 
-3.0.0
------
+3.0.0 (2017-10-19)
+------------------
 
 First public release
