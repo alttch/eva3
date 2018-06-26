@@ -55,6 +55,8 @@ listen = 0.0.0.0:8817
 ;session_timeout = 3600
 ; server thread pool
 ;thread_pool = 15
+; uncomment to disable LM EI
+;ei_enabled = no
 
 [mailer]
 ; mailer for mail() macro function

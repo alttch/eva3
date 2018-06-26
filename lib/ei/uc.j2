@@ -1,4 +1,18 @@
 {% extends "_ei.j2" %}
+{%- set menu = [
+    {
+        'id': 'units',
+        'title': 'Show units',
+        'action': 'show_units()'
+    },
+    {
+        'id': 'sensors',
+        'title': 'Show sensors',
+        'action': 'show_sensors()'
+    }
+] %}
+{%- set toolmenu_height = 400 %}
+{%- set boards = [ 'units', 'sensors' ] %}
 {% block props %}
 // json refresh for items
 jrInterval = 5000;
@@ -10,13 +24,6 @@ lrInterval = 2000;
 disable_ws = false
 // default API key
 apikey = ''
-{% endblock %}
-{% block head %}
-<style type="text/css">
-@media(max-width: 991px) {
-    #toolmenu { height: 400px; }
-}
-</style>
 {% endblock %}
 {% block toolbars %}
 <div class="col-xs-10 col-sm-7" id="toolbar_units"
@@ -35,22 +42,4 @@ apikey = ''
             alt="Reload" title="Reload"
             onclick="reload_sensors()" />
 </div>
-{% endblock %}
-{% block menu %}
-<img id="tbtn_units" src="i/unit.png" class="tbtn"
-        alt="Units" title="Show units"
-        onclick="
-        safe_close_tool_menu();
-        show_units()
-        " />
-<img id="tbtn_sensors" class="tbtn" src="i/sensor.png"
-        alt="Sensors" title="Show sensors"
-        onclick="
-        safe_close_tool_menu();
-        show_sensors()
-        " />
-{% endblock %}
-{% block boards %}
-<div class="row board" id="b_units" style="display: none"></div>
-<div class="row board" id="b_sensors" style="display: none"></div>
 {% endblock %}

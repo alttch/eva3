@@ -12,6 +12,7 @@ Core:
 UC:
 
     * new function state_history in UC API
+    * UC EI now should be enabled/disabled in uc.ini
 
 LM:
 
@@ -21,11 +22,9 @@ LM:
       functionality, in case the controller has no masterkey defined
     * new functions "state_history" in LM API and "history" (equivalent) in
       macros
+    * LM EI now should be enabled/disabled in lm.ini
 
 SFA:
-
-    * warning: SFA now requires jinja2 module, run install.sh after update to
-      install missing local mods.
 
     * fixes: rule management functions
 

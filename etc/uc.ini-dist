@@ -53,8 +53,10 @@ listen = 0.0.0.0:8812
 ;ssl_chain = test.pam
 ; session timeout
 ;session_timeout = 3600
-; server thread pool                                                                                                                                                                                                                     
+; server thread pool
 ;thread_pool = 15
+; uncomment to disable UC EI
+;ei_enabled = no
 
 [snmptrap]
 ; snmp trap handler, default community is eva

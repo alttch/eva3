@@ -33,6 +33,8 @@ ssl_cert = None
 ssl_key = None
 ssl_chain = None
 
+ei_enabled = True
+
 default_port = 80
 default_ssl_port = 443
 
@@ -59,7 +61,7 @@ def http_api_result_error(env=None):
 def update_config(cfg):
     global host, port, ssl_host, ssl_port
     global ssl_module, ssl_cert, ssl_key, ssl_chain
-    global session_timeout, thread_pool
+    global session_timeout, thread_pool, ei_enabled
     try:
         host, port = parse_host_port(cfg.get('webapi', 'listen'))
         if not port:
@@ -95,6 +97,13 @@ def update_config(cfg):
     except:
         pass
     logging.debug('webapi.thread_pool = %u' % thread_pool)
+    try:
+        ei_enabled = (cfg.get('webapi',
+                                   'ei_enabled') == 'yes')
+    except:
+        pass
+    logging.debug('webapi.ei_enabled = %s' % ('yes' \
+                                if ei_enabled else 'no'))
     return True
 
 
