@@ -34,6 +34,15 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
         # labels have string keys to be JSON compatible
         self.status_labels = {'0': status_label_off, '1': status_label_on}
 
+    def status_by_label(self, label):
+        for k, v in self.status_labels.copy().items():
+            if v.lower() == label.lower():
+                try:
+                    return int(k)
+                except:
+                    return None
+        return None
+
     def serialize(self,
                   full=False,
                   config=False,

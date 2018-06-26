@@ -426,10 +426,6 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             raise cp_api_404()
 
     def action(self, k=None, i=None, u=None, s=None, v='', p=None, q=None, w=0):
-        try:
-            _s = int(s)
-        except:
-            raise cp_api_error('status is not an integer')
         if w:
             try:
                 _w = float(w)
@@ -455,7 +451,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             k=k,
             i=i,
             action_uuid=u,
-            nstatus=_s,
+            nstatus=s,
             nvalue=v,
             priority=_p,
             q_timeout=_q,
