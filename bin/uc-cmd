@@ -318,6 +318,7 @@ params = {}
 
 if ( func == 'set_prop' or \
         func == 'create_device' or \
+        func == 'update_device' or \
         func == 'clone' or \
         func == 'clone_group' or \
         func == 'create_unit' or \
@@ -370,6 +371,8 @@ if code != apiclient.result_ok and \
         print('Error: Server timeout')
     elif code == apiclient.result_bad_data:
         print('Error: Bad data')
+    elif code == apiclient.result_invalid_params:
+        print('Error: invalid params')
     sys.exit(code)
 else:
     if func in ['action'] and \
