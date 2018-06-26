@@ -54,7 +54,7 @@ def cp_need_dm_rule_props(k):
 
 class SFA_API(GenericAPI):
 
-    def state(self, k=None, i=None, group=None, tp=None):
+    def state(self, k=None, i=None, group=None, tp=None, full=None):
         if is_oid(i):
             _tp, _i = parse_oid(i)
         else:
@@ -79,7 +79,7 @@ class SFA_API(GenericAPI):
             if apikey.check(k, v) and \
                     (not group or \
                         eva.item.item_match(v, [], [group])):
-                r = v.serialize()
+                r = v.serialize(full=full)
                 result.append(r)
         return sorted(result, key=lambda k: k['id'])
 
@@ -448,23 +448,23 @@ class SFA_API(GenericAPI):
                 for x in items_uc:
                     for a, v in x.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result.append(v.serialize())
+                            result.append(v.serialize(full=True))
             if items_lm:
                 for x in items_lm:
                     for a, v in x.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result.append(v.serialize())
+                            result.append(v.serialize(full=True))
         else:
             for x in items_uc:
                 for c, d in x.copy().items():
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result.append(v.serialize())
+                            result.append(v.serialize(full=True))
             for x in items_lm:
                 for c, d in x.copy().items():
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result.append(v.serialize())
+                            result.append(v.serialize(full=True))
         return result
 
     def list_rule_props(self, k=None, i=None):
@@ -560,14 +560,14 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         result = []
         for p in ['U', 'S', 'LV']:
             try:
-                result += self.state(k, p=p)
+                result += self.state(k, p=p, full=True)
             except:
                 pass
         return sorted(
             sorted(result, key=lambda k: k['id']), key=lambda k: k['type'])
 
-    def state(self, k=None, i=None, g=None, p=None):
-        result = super().state(k, i, g, p)
+    def state(self, k=None, i=None, g=None, p=None, full=None):
+        result = super().state(k, i, g, p, full)
         if not result:
             raise cp_api_404()
         return result

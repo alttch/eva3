@@ -194,7 +194,7 @@ class RemoteUC(RemoteController):
 
     def load_units(self):
         if not self.item_id: return None
-        states = self.api_call('state', {'p': 'U'})
+        states = self.api_call('state', {'p': 'U', 'full': '1'})
         result = []
         if states is not None:
             for s in states:
@@ -206,7 +206,7 @@ class RemoteUC(RemoteController):
 
     def load_sensors(self):
         if not self.item_id: return None
-        states = self.api_call('state', {'p': 'S'})
+        states = self.api_call('state', {'p': 'S', 'full': '1'})
         result = []
         if states is not None:
             for s in states:
@@ -233,7 +233,7 @@ class RemoteLM(RemoteController):
 
     def load_lvars(self):
         if not self.item_id: return None
-        states = self.api_call('state')
+        states = self.api_call('state', {'full': '1'})
         result = []
         if states is not None:
             for s in states:
@@ -610,6 +610,8 @@ class RemoteUCPool(RemoteControllerPool):
                     self.controllers_by_unit[u.full_id] = uc
                     u.start_processors()
                 p[u.full_id] = u
+            _u = self.get_unit(u.full_id)
+            if _u: _u.update_config(u.serialize(config=True))
             if controller_id in self.units_by_controller:
                 for i in self.units_by_controller[controller_id].copy().keys():
                     if i not in p:
@@ -641,6 +643,8 @@ class RemoteUCPool(RemoteControllerPool):
                     self.sensors[u.full_id] = u
                     u.start_processors()
                 p[u.full_id] = u
+                _u = self.get_sensor(u.full_id)
+                if _u: _u.update_config(u.serialize(config=True))
             if controller_id in self.sensors_by_controller:
                 for i in self.sensors_by_controller[
                         controller_id].copy().keys():
@@ -845,6 +849,8 @@ class RemoteLMPool(RemoteControllerPool):
                     self.controllers_by_lvar[u.full_id] = lm
                     u.start_processors()
                 p[u.full_id] = u
+                _u = self.get_lvar(u.full_id)
+                if _u: _u.update_config(u.serialize(config=True))
             if controller_id in self.lvars_by_controller:
                 for i in self.lvars_by_controller[controller_id].copy().keys():
                     if i not in p:
@@ -877,6 +883,8 @@ class RemoteLMPool(RemoteControllerPool):
                     self.controllers_by_macro[u.full_id] = lm
                     u.start_processors()
                 p[u.full_id] = u
+                _u = self.get_macro(u.full_id)
+                if _u: _u.update_config(u.serialize(config=True))
             if controller_id in self.macros_by_controller:
                 for i in self.macros_by_controller[controller_id].copy().keys():
                     if i not in p:

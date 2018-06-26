@@ -70,6 +70,8 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         d = super().serialize(
             full=full, config=config, info=info, props=props, notify=notify)
         d['controller_id'] = self.controller.full_id
+        try: del d['config_changed']
+        except: pass
         return d
 
 
@@ -127,6 +129,7 @@ class RemoteUnit(RemoteUpdatableItem):
         self.nstatus = self.status
         self.nvalue = self.value
         self.action_enabled = True
+        self.status_labels = state.get('status_labels')
 
     def mqtt_set_state(self, topic, data):
         super().mqtt_set_state(topic, data)
@@ -153,6 +156,8 @@ class RemoteUnit(RemoteUpdatableItem):
                   props=False,
                   notify=False):
         d = {'nstatus': self.nstatus, 'nvalue': self.nvalue}
+        if full and self.status_labels:
+            d['status_labels'] = self.status_labels
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         return d
@@ -163,6 +168,12 @@ class RemoteMacro(eva.item.Item):
     def __init__(self, macro_id, controller):
         super().__init__(macro_id, 'lmacro')
         self.controller = controller
+        self.action_enabled = False
+
+    def update_config(self,cfg):
+        super().update_config(cfg)
+        if 'action_enabled' in cfg:
+            self.action_enabled = cfg['action_enabled']
 
     def serialize(self,
                   full=False,
@@ -173,4 +184,5 @@ class RemoteMacro(eva.item.Item):
         d = super().serialize(
             full=full, config=config, info=info, props=props, notify=notify)
         d['controller_id'] = self.controller.full_id
+        d['action_enabled'] = self.action_enabled
         return d

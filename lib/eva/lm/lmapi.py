@@ -322,13 +322,13 @@ class LM_API(GenericAPI):
             for x in items:
                 for a, v in x.copy().items():
                     if not group or eva.item.item_match(v, [], [group]):
-                        result.append(v.serialize())
+                        result.append(v.serialize(full=True))
         else:
             for x in items:
                 for c, d in x.copy().items():
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
-                            result.append(v.serialize())
+                            result.append(v.serialize(full=True))
         return result
 
     def list_controllers(self, k=None):

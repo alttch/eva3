@@ -36,6 +36,8 @@ SFA:
     * all functions now accept item oids
     * result function returns the result of macro execution if macro action uuid
       specified or macro id (in the oid format)
+    * state API function accepts full paramter
+    * full SFA states now have item descriptions and action labels (for units)
     * SFA API groups function now accept 'g' parameter to filter group list
       (with MQTT-style wildcards)
     * SFA rpvt function to load documents from the remote servers
