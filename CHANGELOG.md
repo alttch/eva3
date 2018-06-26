@@ -19,7 +19,9 @@ UC:
     * EVA_ITEM_OID var in the environment of UC scripts
     * action status label (case insensitive) may be used instead of number.
       if the label is not defined, API return 404 error
-    * device templates, create_device and destroy_device functions
+    * new key permission: "device", allows calling device management functions.
+    * device templates, "create_device", "update_device" and "destroy_device"
+      functions
 
 LM:
 
@@ -29,6 +31,8 @@ LM:
       functionality, in case the controller has no masterkey defined
     * new functions "state_history" in LM API and "history" (equivalent) in
       macros
+    * device management functions: "create_device", "update_device",
+      "destroy_device"
     * rule filter in LM EI
     * LM EI now should be enabled/disabled in lm.ini
 
@@ -68,6 +72,10 @@ SFA:
     * j2 templates have "state" and "groups" functions, equal to SFA API
       (called with current session key unless the other specified. if you want
       to access some device for everyone - use masterkey)
+
+API Client:
+
+    * new API function call result: "result_invalid_params"
 
 Common:
 
