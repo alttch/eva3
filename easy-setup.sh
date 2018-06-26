@@ -347,7 +347,7 @@ hosts_allow = 0.0.0.0/0
 [lm]
 key = ${UC_LM_KEY}
 groups = #
-allow = cmd
+allow = cmd, device
 hosts_allow = ${REMOTES}
 
 [sfa]

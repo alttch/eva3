@@ -35,6 +35,7 @@ mkdir -p ./runtime/uc_unit.d || exit 1
 mkdir -p ./runtime/uc_sensor.d || exit 1
 mkdir -p ./runtime/uc_mu.d || exit 1
 mkdir -p ./runtime/db || exit 1
+mkdir -p ./runtime/tpl || exit 1
 touch runtime/db/uc.db || exit 1
 mkdir -p ./runtime/xc || exit 1
 mkdir -p ./runtime/xc/uc || exit 1
