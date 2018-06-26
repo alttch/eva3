@@ -2,11 +2,9 @@
 <head>
     <script type="text/javascript">
     // json refresh for items
-    jrInterval = 2000;
+    jrInterval = 5000;
     // json refresh for sysinfo
     srInterval = 15000;
-    // timer refresh
-    trInterval = 200;
     // json refresh for log
     lrInterval = 2000;
     // disable websockets
@@ -14,11 +12,16 @@
     // default API key
     apikey = ''
     </script>
-    <title>Logic Manager EI</title>
+    <title>UC EI</title>
     <link rel="stylesheet" href="lib/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/lm.css" />
+    <link rel="stylesheet" href="css/ei.css" />
     <link rel="stylesheet" href="css/animate.css" />
     <link rel="stylesheet" href="css/popup.css" />
+    <style type="text/css">
+    @media(max-width: 991px) {
+    #toolmenu { height: 400px; }
+    }
+    </style>
     <script src="lib/jquery.min.js"></script>
     <script src="lib/jquery.mobile.min.js"></script>
     <script type="text/javascript" src="lib/bootstrap.min.js"></script>
@@ -30,7 +33,7 @@
 <div class="container" style="overflow: hidden">
     <div class="row" id="sysinfo" style="display: none">
         <div class="col-xs-12">
-            LM: <span id="i_system"></span>,
+            UC: <span id="i_system"></span>,
             sync: <span id="i_connection"></span>,
             key: <span id="i_key"></span>,
             master: <span id="i_master"></span>
@@ -40,30 +43,21 @@
                 style="margin-top: 10px; padding-bottom: 20px; display: none">
         <div class="col-xs-10 col-sm-7" id="toolbar_blank"
                                         style="display: none"></div>
-        <div class="col-xs-10 col-sm-7" id="toolbar_lvars"
+        <div class="col-xs-10 col-sm-7" id="toolbar_units"
                                         style="display: none">
-            <select id="s_lvar_group" data-role="none" class="st1"
-                                onchange="load_lvars()"></select>
-            <img id="tbtn_reload_lvars" src="i/reload.png" class="tbtn_l"
+            <select id="s_unit_group" data-role="none" class="st1"
+                                onchange="load_units()"></select>
+            <img id="tbtn_reload_units" src="i/reload.png" class="tbtn_l"
                     alt="Reload" title="Reload"
-                    onclick="reload_lvars()" />
+                    onclick="reload_units()" />
         </div>
-        <div class="col-xs-10 col-sm-7" id="toolbar_macros"
+        <div class="col-xs-10 col-sm-7" id="toolbar_sensors"
                                         style="display: none">
-            <select id="s_macro_group" data-role="none" class="st1"
-                                onchange="load_macros()"></select>
-            <img id="tbtn_reload_macros" src="i/reload.png" class="tbtn_l"
+            <select id="s_sensor_group" data-role="none" class="st1"
+                                onchange="load_sensors()"></select>
+            <img id="tbtn_reload_sensors" src="i/reload.png" class="tbtn_l"
                     alt="Reload" title="Reload"
-                    onclick="reload_macros()" />
-        </div>
-        <div class="col-xs-10 col-sm-7" id="toolbar_rules"
-                                        style="display: none">
-            <button class="st0"
-                onclick='edit_rule_dialog()'
-                style="width: 120px; font-weight: bold;">NEW RULE</button>
-            <img id="tbtn_reload_rules" src="i/reload.png" class="tbtn_l"
-                    alt="Reload" title="Reload"
-                    onclick="reload_rules()" />
+                    onclick="reload_sensors()" />
         </div>
         <div class="col-xs-10 col-sm-7" id="toolbar_log"
              style="display: none; height: 54px; padding-top: 25px;">
@@ -103,24 +97,21 @@
             </div>
             <div id="toolmenu" class="hidden-xs hidden-sm">
                 <span onclick="close_tool_menu()"
+                    style="cursor: hand"
                     class="hidden-md hidden-lg
                     glyphicon glyphicon-menu-up glyphicon-toolmenu"></span>
-                <img id="tbtn_lvars" src="i/lvar.png" class="tbtn"
-                        alt="LVars" title="Show lvars"
+                <img id="tbtn_units" src="i/unit.png" class="tbtn"
+                        alt="Units" title="Show units"
                         onclick="
                         safe_close_tool_menu();
-                        show_lvars()
+                        show_units()
                         " />
-                <img id="tbtn_macros" src="i/macros.png"
-                        alt="Macros" title="Show macros"
-                        class="tbtn"
+                <img id="tbtn_sensors" class="tbtn" src="i/sensor.png"
+                        alt="Sensors" title="Show sensors"
                         onclick="
                         safe_close_tool_menu();
-                        show_macros()
+                        show_sensors()
                         " />
-                <img id="tbtn_rules" src="i/rules.png"
-                        alt="Rules" title="Show rules"
-                        class="tbtn disabled" />
                 <img id="tbtn_log" src="i/log.png"
                         alt="Log" title="Show log"
                         class="tbtn disabled" />
@@ -141,27 +132,26 @@
         <div class="col-xs-12" align="center" id="keyform">
         </div>
     </div>
-    <div class="row board" id="b_lvars" style="display: none"></div>
-    <div class="row board" id="b_macros" style="display: none"></div>
-    <div class="row board" id="b_rules" style="display: none"></div>
+    <div class="row board" id="b_units" style="display: none"></div>
+    <div class="row board" id="b_sensors" style="display: none"></div>
     <div class="row board" id="b_log" style="display: none">
                 <div class="col-xs-12" id="logr"></div>
     </div>
     <div class="row" id="version_info" style="display: none;">
         <div class="col-xs-12">
-            LM PLC version: <span id="i_version"></span>
+            UC version: <span id="i_version"></span>
             build <span id="i_build"></span><br />
             <div id="i_sysinfo" style="display: none">
                 <span id="i_debug"></span><span id="i_dbsave"></span>
                 <span id="i_polldelay"></span></div>
             <br />
             <a href="https://www.eva-ics.com/">EVA ICS</a>
-            Copyright &copy; 2017
+            Copyright &copy; 2012-2018
             <a href="https://www.altertech.com/">Altertech Group</a>
         </div>
     </div>
     <div class="popup" id="popup" style="display: none">
-        <div class="popup_window" id="popup_window">
+        <div class="popup_window">
             <div id="popup_header"></div>
             <div class="popup_content" id="popup_content"></div>
             <div "popup_footer" id="popup_footer"></div>
@@ -179,7 +169,7 @@
 <script type="text/javascript" src="js/toolmenu.js"></script>
 <script type="text/javascript" src="js/tools.js"></script>
 <script type="text/javascript" src="js/popup.js"></script>
-<script type="text/javascript" src="js/lm.js"></script>
+<script type="text/javascript" src="js/uc.js"></script>
 <script type="text/javascript">
 ws_mode = false
 

@@ -17,6 +17,7 @@ from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva import apikey
 import eva.lm.controller
+import eva.ei
 
 api = None
 
@@ -800,36 +801,8 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
                 else http_api_result_error()
 
 
-class LM_HTTP_Root:
-
-    @cherrypy.expose
-    def index(self):
-        raise cherrypy.HTTPRedirect('/lm-ei/')
-
-
 def start():
     global api
     api = LM_API()
     cherrypy.tree.mount(LM_HTTP_API(), '/lm-api')
-    cherrypy.tree.mount(
-        LM_HTTP_Root(),
-        '/',
-        config={
-            '/favicon.ico': {
-                'tools.staticfile.on':
-                True,
-                'tools.staticfile.filename':
-                eva.core.dir_eva + '/lib/eva/i/favicon.ico'
-            }
-        })
-
-    cherrypy.tree.mount(
-        object(),
-        '/lm-ei',
-        config={
-            '/': {
-                'tools.staticdir.dir': eva.core.dir_eva + '/lm-ei',
-                'tools.staticdir.on': True,
-                'tools.staticdir.index': 'index.html',
-            }
-        })
+    eva.ei.start()

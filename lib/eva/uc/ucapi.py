@@ -16,6 +16,7 @@ from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva import apikey
 import eva.uc.controller
+import eva.ei
 
 api = None
 
@@ -596,36 +597,8 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
                 else http_api_result_error()
 
 
-class UC_HTTP_Root:
-
-    @cherrypy.expose
-    def index(self):
-        raise cherrypy.HTTPRedirect('/uc-ei/')
-
-
 def start():
     global api
     api = UC_API()
     cherrypy.tree.mount(UC_HTTP_API(), '/uc-api')
-    cherrypy.tree.mount(
-        UC_HTTP_Root(),
-        '/',
-        config={
-            '/favicon.ico': {
-                'tools.staticfile.on':
-                True,
-                'tools.staticfile.filename':
-                eva.core.dir_eva + '/lib/eva/i/favicon.ico'
-            }
-        })
-
-    cherrypy.tree.mount(
-        object(),
-        '/uc-ei',
-        config={
-            '/': {
-                'tools.staticdir.dir': eva.core.dir_eva + '/uc-ei',
-                'tools.staticdir.on': True,
-                'tools.staticdir.index': 'index.html',
-            }
-        })
+    eva.ei.start()

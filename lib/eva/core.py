@@ -79,6 +79,9 @@ dir_eva = os.environ['EVA_DIR'] if 'EVA_DIR' in os.environ \
 dir_var = dir_eva + '/var'
 dir_etc = dir_eva + '/etc'
 dir_xc = dir_eva + '/xc'
+dir_ui = dir_eva + '/ui'
+dir_pvt = dir_eva + '/pvt'
+dir_lib = dir_eva + '/lib'
 dir_runtime = dir_eva + '/runtime'
 
 userdb_file = None

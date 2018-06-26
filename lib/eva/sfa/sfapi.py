@@ -851,12 +851,11 @@ def j2_groups(g=None, p=None, k=None):
     return result
 
 
-def serve_j2(tpl_file, tpl_dir='ui'):
-    j2_templateLoader = jinja2.FileSystemLoader(searchpath=eva.core.dir_eva +
-                                                '/' + tpl_dir)
-    j2_templateEnv = jinja2.Environment(loader=j2_templateLoader)
+def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
+    j2_loader = jinja2.FileSystemLoader(searchpath=tpl_dir)
+    j2 = jinja2.Environment(loader=j2_loader)
     try:
-        template = j2_templateEnv.get_template(tpl_file)
+        template = j2.get_template(tpl_file)
     except:
         raise cp_api_404()
     env = {}
@@ -928,8 +927,8 @@ class SFA_HTTP_Root:
             logging.warning('pvt %s file %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
         if f[-3:] == '.j2':
-            return serve_j2('/' + f, tpl_dir='pvt')
-        _f = eva.core.dir_eva + '/pvt/' + f
+            return serve_j2('/' + f, tpl_dir=eva.core.dir_pvt)
+        _f = eva.core.dir_pvt + '/' + f
         _f_alt = None
         if c:
             fls = [x for x in glob.glob(_f) if os.path.isfile(x)]
