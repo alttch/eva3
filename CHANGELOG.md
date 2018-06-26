@@ -7,7 +7,10 @@ EVA ICS CHANGELOG
 Core:
 
     * working with locks now require allow=lock apikey permission
-    * new notifier type: db, used to store item state history
+    * new notifier type: db, used to store item state history SYS API
+    * functions: notifiers, enable_notifier, disable_notifier. the
+    * enable/disable functions change notifier status only temporary, until the
+      controller is restarted
 
 UC:
 

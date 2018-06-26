@@ -40,6 +40,8 @@ import eva.apikey
 
 import eva.users
 
+import eva.notify
+
 from eva.runner import ExternalProcess
 
 locks = {}
@@ -309,6 +311,18 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             result.append(n.serialize())
         return sorted(result, key=lambda k: k['id'])
 
+    def enable_notifier(self, k=None, i=None):
+        n = eva.notify.get_notifier(i)
+        if not n: return False
+        n.enabled = True
+        return True
+
+    def disable_notifier(self, k=None, i=None):
+        n = eva.notify.get_notifier(i)
+        if not n: return False
+        n.enabled = False
+        return True
+
     def set_debug(self, k=None, debug=False):
         if not eva.apikey.check(k, master=True):
             return False
@@ -317,7 +331,6 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         else:
             eva.core.debug_off()
         return True
-
 
 class SysHTTP_API(SysAPI):
 
@@ -409,6 +422,9 @@ class SysHTTP_API(SysAPI):
 
         SysHTTP_API.list_keys.exposed = True
         SysHTTP_API.list_users.exposed = True
+
+        SysHTTP_API.enable_notifier.exposed = True
+        SysHTTP_API.disable_notifier.exposed = True
 
     def lock(self, k=None, l=None, t=None, e=None):
         if not l:
@@ -516,6 +532,16 @@ class SysHTTP_API(SysAPI):
         val = val_to_boolean(debug)
         if val is None: raise cp_api_error()
         return http_api_result_ok() if super().set_debug(k, val) \
+                else http_api_result_error()
+
+    def enable_notifier(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().enable_notifier(k, i) \
+                else http_api_result_error()
+
+    def disable_notifier(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().disable_notifier(k, i) \
                 else http_api_result_error()
 
     def file_unlink(self, k=None, i=None):

@@ -26,10 +26,11 @@ _sysapi_uri = '/sys-api/'
 
 _sysapi_func = [
     'cmd', 'lock', 'unlock', 'log_rotate', 'log_debug', 'log_info',
-    'log_warning', 'log_error', 'log_critical', 'log_get', 'notifiers', 'save',
-    'get_cvar', 'set_cvar', 'set_debug', 'file_unlink', 'file_get', 'file_put',
-    'file_set_exec', 'create_user', 'set_user_password', 'set_user_key',
-    'destroy_user', 'list_keys', 'list_users', 'dump'
+    'log_warning', 'log_error', 'log_critical', 'log_get', 'notifiers',
+    'enable_notifier', 'disable_notifier', 'save', 'get_cvar', 'set_cvar',
+    'set_debug', 'file_unlink', 'file_get', 'file_put', 'file_set_exec',
+    'create_user', 'set_user_password', 'set_user_key', 'destroy_user',
+    'list_keys', 'list_users', 'dump'
 ]
 
 _sysapi_func_cr = [

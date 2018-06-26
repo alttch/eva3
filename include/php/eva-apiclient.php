@@ -38,6 +38,8 @@ $_eva_sysapi_func = array(
         'log_critical',
         'log_get',
         'notifiers',
+        'enable_notifier',
+        'disable_notifier',
         'save',
         'get_cvar',
         'set_cvar',
