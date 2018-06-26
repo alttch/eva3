@@ -179,16 +179,33 @@ class SFA_API(GenericAPI):
             q=q)
 
     def result(self, k=None, i=None, u=None, g=None, s=None):
-        if i:
-            unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        elif u:
+        item = None
+        if u:
             a = eva.sfa.controller.uc_pool.action_history_get(u)
-            unit = eva.sfa.controller.uc_pool.get_unit(a['i'])
+            if a:
+                item = eva.sfa.controller.uc_pool.get_unit(a['i'])
+            else:
+                a = eva.sfa.controller.lm_pool.action_history_get(u)
+                if not a: return None
+                item = eva.sfa.controller.lm_pool.get_macro(a['i'])
+        elif i:
+            if is_oid(i):
+                t, _i = parse_oid(i)
+                if t == 'unit':
+                    item = eva.sfa.controller.uc_pool.get_unit(_i)
+                elif t == 'lmacro':
+                    item = eva.sfa.controller.lm_pool.get_macro(_i)
+            else:
+                item = eva.sfa.controller.uc_pool.get_unit(i)
+        if not item or not apikey.check(k, item): return None
+        if item.item_type == 'unit':
+            return eva.sfa.controller.uc_pool.result(
+                unit_id=oid_to_id(i, 'unit'), uuid=u, group=g, status=s)
+        elif item.item_type == 'lmacro':
+            return eva.sfa.controller.lm_pool.result(
+                macro_id=oid_to_id(i, 'lmacro'), uuid=u, group=g, status=s)
         else:
             return None
-        if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.result(
-            unit_id=oid_to_id(i, 'unit'), uuid=u, group=g, status=s)
 
     def disable_actions(self, k=None, i=None):
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))

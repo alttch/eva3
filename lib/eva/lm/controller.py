@@ -603,7 +603,7 @@ def stop():
     for i, v in items_by_id.copy().items():
         v.stop_processors()
     if uc_pool:
-        uc_pool.shutdown()
+        uc_pool.stop()
     if plc: plc.stop_processors()
     if Q: Q.stop()
 

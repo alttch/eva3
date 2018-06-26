@@ -31,7 +31,9 @@ SFA:
     * fixes: rule management functions
 
     * new function state_history in SFA API and SFA Framework
-    * state and state_history functions now accept item oids
+    * all functions now accept item oids
+    * result function returns the result of macro execution if macro action uuid
+      specified or macro id (in the oid format)
     * SFA API groups function now accept 'g' parameter to filter group list
       (with MQTT-style wildcards)
     * SFA rpvt function to load documents from the remote servers

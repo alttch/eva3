@@ -237,6 +237,7 @@ def start():
             logging.error('Failed to add %s to the controller pool' % \
                     v.full_id)
     lm_pool = eva.client.remote_controller.RemoteLMPool()
+    lm_pool.start()
     for i, v in remote_lms.items():
         if lm_pool.append(v):
             logging.info('%s added to the controller pool' % \
@@ -250,9 +251,9 @@ def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.db_update == 1: save()
     if uc_pool:
-        uc_pool.shutdown()
+        uc_pool.stop()
     if lm_pool:
-        lm_pool.shutdown()
+        lm_pool.stop()
 
 
 def dump():
