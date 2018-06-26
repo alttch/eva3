@@ -1307,7 +1307,6 @@ function eva_sfa_load_log_entries(r, postprocess) {
       if (eva_sfa_ws_mode && eva_sfa_log_first_load) {
         eva_sfa_set_ws_log_level(eva_sfa_log_level);
       }
-      var _l = '';
       $.each(data, function(t, l) {
         if (eva_sfa_process_log_record != null) {
           eva_sfa_process_log_record(l);
