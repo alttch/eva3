@@ -597,8 +597,8 @@ class SQLiteNotifier(GenericNotifier):
                     ))
                 r = c.fetchone()
                 if r:
-                    r = (t_s, ) + r
-                    data += [ r ]
+                    r = (t_s,) + r
+                    data += [r]
             c.execute(
                 'select t, ' + props +
                 ' from state_history where space = ? and oid = ?' + sql, (
@@ -651,8 +651,10 @@ class SQLiteNotifier(GenericNotifier):
                             ' status, value, primary key(space, t, oid))'
                         )
                         c.execute(
-                            'create index i_t_oid on state_history(t,oid)')
-                        c.execute('create index i_oid on state_history(oid)')
+                            'create index i_t_oid on state_history(space,t,oid)'
+                        )
+                        c.execute(
+                            'create index i_oid on state_history(space,oid)')
                         db.commit()
                         c.close()
                     except:
@@ -743,10 +745,21 @@ class SQLiteNotifier(GenericNotifier):
                     space = self.space if self.space is not None else ''
                     logging.debug('.%s: cleaning records older than %u sec' %
                                   (self.db, self.keep))
-                    c.execute(
-                        'delete from state_history where space = ? and t < ?',
-                        (space, time.time() - self.keep))
+                    c.execute('select oid, max(t) from state_history ' + \
+                            ' where space = ? and t < ? group by oid',
+                            (space, time.time() - self.keep))
+                    c2 = db.cursor()
+                    try:
+                        for r in c:
+                            c2.execute(
+                            'delete from state_history where ' + \
+                                    ' space = ? and oid = ? and t < ?',
+                                    (space, r[0], r[1]))
+                    except:
+                        c2.close()
+                        raise
                     db.commit()
+                    c2.close()
                     c.close()
                     db.close()
                 except:
@@ -1777,6 +1790,7 @@ def reload_clients():
     logging.warning('sending reload event to clients')
     for k, n in notifiers.copy().items():
         if n.nt_client: n.send_reload()
+
 
 def notify_restart():
     logging.warning('sending server restart event to clients')
