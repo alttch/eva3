@@ -13,6 +13,7 @@ UC:
 
     * new function state_history in UC API
     * UC EI now should be enabled/disabled in uc.ini
+    * EVA_ITEM_OID var in the environment of UC scripts
 
 LM:
 
