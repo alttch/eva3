@@ -317,6 +317,7 @@ api.ssl_verify(False)
 params = {}
 
 if ( func == 'set_prop' or \
+        func == 'create_device' or \
         func == 'clone' or \
         func == 'clone_group' or \
         func == 'create_unit' or \

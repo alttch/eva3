@@ -109,9 +109,11 @@ $_eva_api_func = array(
                     'create_unit',
                     'create_sensor',
                     'create_mu',
+                    'create_device',
                     'clone',
                     'clone_group',
                     'destroy',
+                    'destroy_device',
                     'login',
                     'logout'
                     ),
@@ -127,9 +129,11 @@ $_eva_api_func = array(
                     'create_unit',
                     'create_sensor',
                     'create_mu',
+                    'create_device',
                     'clone',
                     'clone_group',
                     'destroy',
+                    'destroy_device',
                     'login',
                     'logout'
                     ),

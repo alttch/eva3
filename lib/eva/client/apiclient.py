@@ -51,13 +51,14 @@ _api_func = {
             'action_toggle', 'result', 'terminate', 'q_clean', 'kill',
             'disable_actions', 'enable_actions', 'get_config', 'save_config',
             'list', 'list_props', 'set_prop', 'create_unit', 'create_sensor',
-            'create_mu', 'clone', 'clone_group', 'destroy', 'login', 'logout'
+            'create_mu', 'create_device', 'clone', 'clone_group', 'destroy',
+            'destroy_device', 'login', 'logout'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
             'enable_actions', 'save_config', 'set_prop', 'create_unit',
-            'create_sensor', 'create_mu', 'clone', 'clone_group', 'destroy',
-            'login', 'logout'
+            'create_sensor', 'create_mu', 'create_device', 'clone',
+            'clone_group', 'destroy', 'destroy_device', 'login', 'logout'
         ],
         'ce': ['action', 'action_toggle']
     },

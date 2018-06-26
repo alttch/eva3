@@ -15,8 +15,12 @@ from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva import apikey
+import eva.sysapi
 import eva.uc.controller
 import eva.ei
+import jinja2
+import jsonpickle
+import logging
 
 api = None
 
@@ -261,6 +265,19 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         return item.serialize(props=True) if item else None
 
+    def set_props(self, k=None, i=None, props=None, save=None):
+        if props:
+            for p, v in props.items():
+                try:
+                    if not api.set_prop(k, i=i, p=p, v=v, save=None):
+                        return False
+                except:
+                    eva.core.log_traceback()
+                    return False
+        if save:
+            api.save_config(k, i=i)
+        return True
+
     def set_prop(self, k=None, i=None, p=None, v=None, save=False):
         if not apikey.check(k, master=True): return None
         item = eva.uc.controller.get_item(i)
@@ -301,6 +318,135 @@ class UC_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.create_mu(
             mu_id=mu_id, group=group, virtual=virtual, save=save)
+
+    def load_device_config(self, tpl_config={}, device_tpl=None):
+        try:
+            tpl = jinja2.Template(
+                open(eva.core.dir_runtime + '/tpl/' + device_tpl +
+                     '.json').read())
+        except:
+            logging.error('device template file error: %s' % device_tpl)
+            eva.core.log_traceback()
+            return None
+        try:
+            cfg = jsonpickle.decode(tpl.render(tpl_config))
+        except:
+            logging.error('device template decode error')
+            eva.core.log_traceback()
+            return None
+        return cfg
+
+    def create_device(self, k=None, tpl_config={}, device_tpl=None, save=False):
+        if not apikey.check(k, master=True): return None
+        cfg = self.load_device_config(
+            tpl_config=tpl_config, device_tpl=device_tpl)
+        if cfg is None: return False
+        cvars = cfg.get('cvars')
+        if cvars:
+            for i, v in cvars.items():
+                try:
+                    if not eva.sysapi.api.set_cvar(k, i, v):
+                        return False
+                except:
+                    eva.core.log_traceback()
+                    return False
+        units = cfg.get('units')
+        if units:
+            for u in units:
+                try:
+                    i = u['id']
+                    g = u.get('group')
+                except:
+                    return False
+                try:
+                    if not api.create_unit(k, unit_id=i, group=g, save=save):
+                        return False
+                    if not api.set_props(k, i, u.get('props'), save):
+                        return False
+                except:
+                    eva.core.log_traceback()
+                    return False
+        sensors = cfg.get('sensors')
+        if sensors:
+            for u in sensors:
+                try:
+                    i = u['id']
+                    g = u.get('group')
+                except:
+                    return False
+                try:
+                    if not api.create_sensor(
+                            k, sensor_id=i, group=g, save=save):
+                        return False
+                    if not api.set_props(k, i, u.get('props'), save):
+                        return False
+                except:
+                    eva.core.log_traceback()
+                    return False
+        mu = cfg.get('mu')
+        if mu:
+            for u in mu:
+                try:
+                    i = u['id']
+                    g = u.get('group')
+                except:
+                    return False
+                try:
+                    if not api.create_mu(k, mu_id=i, group=g, save=save):
+                        return False
+                    if not api.set_props(k, i, u.get('props'), save):
+                        return False
+                except:
+                    eva.core.log_traceback()
+                    return False
+        return True
+
+    def destroy_device(self, k=None, tpl_config={}, device_tpl=None):
+        if not apikey.check(k, master=True): return None
+        cfg = self.load_device_config(
+            tpl_config=tpl_config, device_tpl=device_tpl)
+        if cfg is None: return False
+        mu = cfg.get('mu')
+        if mu:
+            for m in mu:
+                try:
+                    i = m['id']
+                except:
+                    return False
+                try:
+                    api.destroy(k, i)
+                except:
+                    pass
+        units = cfg.get('units')
+        if units:
+            for u in units:
+                try:
+                    i = u['id']
+                except:
+                    return False
+                try:
+                    api.destroy(k, i)
+                except:
+                    pass
+        sensors = cfg.get('sensors')
+        if sensors:
+            for u in sensors:
+                try:
+                    i = u['id']
+                except:
+                    return False
+                try:
+                    api.destroy(k, i)
+                except:
+                    pass
+        cvars = cfg.get('cvars')
+        if cvars:
+            for cvar in cvars.keys():
+                try:
+                    eva.sysapi.api.set_cvar(k, cvar)
+                except:
+                    pass
+        return True
 
     def clone(self, k=None, i=None, n=None, g=None, save=False):
         if not apikey.check(k, master=True): return None
@@ -349,11 +495,13 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.create_unit.exposed = True
         UC_HTTP_API.create_sensor.exposed = True
         UC_HTTP_API.create_mu.exposed = True
+        UC_HTTP_API.create_device.exposed = True
 
         UC_HTTP_API.clone.exposed = True
         UC_HTTP_API.clone_group.exposed = True
 
         UC_HTTP_API.destroy.exposed = True
+        UC_HTTP_API.destroy_device.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -575,6 +723,35 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         cp_need_master(k)
         return http_api_result_ok() if super().create_mu(
             k, i, g, virtual, save) else http_api_result_error()
+
+    def create_device(self, k=None, c=None, t=None, save=None):
+        cp_need_master(k)
+        config = {}
+        if not c:
+            return http_api_result_error()
+        try:
+            for i in c.split(','):
+                name, value = i.split('=')
+                config[name] = value
+        except:
+            raise cp_api_error()
+        return http_api_result_ok() if super().create_device(
+            k=k, tpl_config=config, device_tpl=t,
+            save=save) else http_api_result_error()
+
+    def destroy_device(self, k=None, c=None, t=None):
+        cp_need_master(k)
+        config = {}
+        if not c:
+            return http_api_result_error()
+        try:
+            for i in c.split(','):
+                name, value = i.split('=')
+                config[name] = value
+        except:
+            raise cp_api_error()
+        return http_api_result_ok() if super().destroy_device(
+            k=k, tpl_config=config, device_tpl=t) else http_api_result_error()
 
     def clone(self, k=None, i=None, n=None, g=None, save=None):
         cp_need_master(k)
