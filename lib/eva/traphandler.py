@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.0.3"
+__version__ = "3.1.0"
 
 from pysnmp.entity import engine, config
 from pysnmp.carrier.asyncore.dgram import udp

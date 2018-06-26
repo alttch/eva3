@@ -1,7 +1,7 @@
 EVA ICS CHANGELOG
 =================
 
-3.0.3 (TBA)
+3.1.0 (TBA)
 -----------
 
 Core:
