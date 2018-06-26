@@ -102,7 +102,10 @@ class MacroAPI(object):
             'time': time.time,
             'ls': self.ls,
             'open_oldest': self.open_oldest,
-            'open_newest': self.open_newest
+            'open_newest': self.open_newest,
+            'create_device': self.create_device,
+            'update_device': self.update_device,
+            'destroy_device': self.destroy_device
         }
 
     def history(self,
@@ -432,6 +435,8 @@ class MacroAPI(object):
         _argv = []
         if isinstance(argv, str):
             _argv = argv.split(' ')
+        elif isinstance(argv, float) or isinstance(argv, int):
+            _argv = [str(argv)]
         elif isinstance(argv, list):
             _argv = argv
         return eva.lm.controller.exec_macro(
@@ -481,3 +486,24 @@ class MacroAPI(object):
             if not alt or not _f_alt: raise
             o = open(_f_alt, mode)
         return o
+
+    def create_device(self, controller_id, device_tpl, cfg=None, save=None):
+        result = eva.lm.controller.uc_pool.create_device(
+            controller_id=controller_id,
+            device_tpl=device_tpl,
+            cfg=cfg,
+            save=save)
+        return result.get('result') == 'OK'
+
+    def update_device(self, controller_id, device_tpl, cfg=None, save=None):
+        result = eva.lm.controller.uc_pool.update_device(
+            controller_id=controller_id,
+            device_tpl=device_tpl,
+            cfg=cfg,
+            save=save)
+        return result.get('result') == 'OK'
+
+    def destroy_device(self, controller_id, device_tpl, cfg=None):
+        result = eva.lm.controller.uc_pool.destroy_device(
+            controller_id=controller_id, device_tpl=device_tpl, cfg=cfg)
+        return result.get('result') == 'OK'

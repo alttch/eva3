@@ -684,6 +684,58 @@ class RemoteUCPool(RemoteControllerPool):
             wait=wait,
             timeout=timeout)
 
+    def manage_device(self,
+                      controller_id,
+                      device_func,
+                      device_tpl,
+                      cfg=None,
+                      save=None):
+        if controller_id.find('/') == -1:
+            _controller_id = controller_id
+        else:
+            try:
+                t, _controller_id = controller_id.split('/')
+                if t != 'uc': return None
+            except:
+                return None
+        if _controller_id not in self.controllers: return None
+        c = self.controllers[_controller_id]
+        p = {'t': device_tpl}
+        if save:
+            p['save'] = 1
+        if cfg:
+            if isinstance(cfg, dict):
+                a = []
+                for k, v in cfg.items():
+                    a.append('%s=%s' % (k, v))
+                p['c'] = ','.join(a)
+            elif isinstance(cfg, str):
+                p['c'] = cfg
+        return c.api_call(device_func, p)
+
+    def create_device(self, controller_id, device_tpl, cfg=None, save=None):
+        return self.manage_device(
+            controller_id=controller_id,
+            device_func='create_device',
+            device_tpl=device_tpl,
+            cfg=cfg,
+            save=save)
+
+    def update_device(self, controller_id, device_tpl, cfg=None, save=None):
+        return self.manage_device(
+            controller_id=controller_id,
+            device_func='update_device',
+            device_tpl=device_tpl,
+            cfg=cfg,
+            save=save)
+
+    def destroy_device(self, controller_id, device_tpl, cfg=None):
+        return self.manage_device(
+            controller_id=controller_id,
+            device_func='destroy_device',
+            device_tpl=device_tpl,
+            cfg=cfg)
+
 
 class RemoteLMPool(RemoteControllerPool):
 
