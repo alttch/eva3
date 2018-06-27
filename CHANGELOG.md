@@ -65,8 +65,7 @@ SFA:
       frontend)
 
     * jinja2 templates for SFA ui and PVT files (all files with .j2 extension
-      are considered to be served as  templates). index.j2 has more priority
-      than index.html
+      are served as templates). index.j2 has more priority than index.html
     * j2 templates have all cvars defined in SFA as a normal variables
     * j2 templates have "server" variable (contains API call test result,
       including API key if user is authorized or key param is present in req,
