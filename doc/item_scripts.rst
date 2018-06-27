@@ -130,7 +130,7 @@ item state are named **ID_update**, where ID is a item ID, for example:
 The status update script is being executed:
 
 * Every X seconds, if *update_interval* specified in the config is more than 0
-* After the `:ref:unit<unit>` action succeeds (if
+* After the :ref:`unit<unit>` action succeeds (if
   *update_exec_after_action=true* in config)
 
 The system considers the script was executed successfully if its exit code is
