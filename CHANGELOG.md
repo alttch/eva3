@@ -7,27 +7,27 @@ EVA ICS CHANGELOG
 Core:
 
     * working with locks now require allow=lock apikey permission
-    * new notifier type: db, used to store item state history SYS API
-    * functions: notifiers, enable_notifier, disable_notifier. the
-    * enable/disable functions change notifier status only temporary, until the
-      controller is restarted
+    * new notifier type: db, used to store item state history
+    * SYS API functions: notifiers, enable_notifier, disable_notifier. the
+      enable/disable API functions change notifier status only temporary, until
+      the controller is restarted
 
 UC:
 
-    * new function state_history in UC API
-    * UC EI now should be enabled/disabled in uc.ini
+    * new function "state_history" in UC API
     * EVA_ITEM_OID var in the environment of UC scripts
-    * action status label (case insensitive) may be used instead of number.
-      if the label is not defined, API return 404 error
+    * action status label (case insensitive) may be used instead of number,
+      if the label is not defined, API returns 404 error
     * new key permission: "device", allows calling device management functions.
     * device templates, "create_device", "update_device" and "destroy_device"
       functions
+    * UC EI now should be enabled/disabled in uc.ini
 
 LM:
 
-    * macro function unlock now return false if lock was not locked or doesn't
-      exist
-    * unlock macro function may throw exception if the controller forbids it's
+    * macro function "unlock" now return false if lock hasn't been not locked
+      or doesn't exist
+    * unlock macro function may throw an exception if the controller forbids its
       functionality, in case the controller has no masterkey defined
     * new functions "state_history" in LM API and "history" (equivalent) in
       macros
@@ -40,25 +40,29 @@ SFA:
 
     * fixes: rule management functions
 
-    * new function state_history in SFA API and SFA Framework
+    * new function "state_history" in SFA API and SFA Framework
     * all functions now accept item oids
-    * result function returns the result of macro execution if macro action uuid
-      specified or macro id (in the oid format)
-    * state API function accepts full paramter
-    * full SFA states now have item descriptions and action labels (for units)
-    * SFA API groups function now accept 'g' parameter to filter group list
+    * "result" function returns the result of macro execution if macro action
+      uuid or macro id (in the oid format) specified
+    * state API function accepts "full" parameter
+    * full SFA states now have item descriptions and status labels (for units)
+    * SFA API groups function now accept "g" parameter to filter group list
       (with MQTT-style wildcards)
     * SFA rpvt function to load documents from the remote servers
     * SFA cvars are automatically available in SFA Framework app. Note: SFA
       cvars are public and may be obtained with any valid API key
-    * SFA framework is now jQuery 3 compatible, included jQuery lib updated to
+
+    * SFA Framework is now jQuery 3 compatible, included jQuery lib updated to
       3.3.1
-    * eva_sfa_groups function, gets item groups list (with optional filter)
+    * SFA Framework item states now also have description and status labels
+      fields
+    * eva_sfa_groups function, returns item groups list (with optional filter)
     * eva_sfa_chart function, displays item state charts
     * eva_sfa_popup function, displays popus and info windows
     * new ws event: server restart and eva_sfa_server_restart_handler in a
-      framework. SFA API function notify_restart allows to notify clients about
-      the server restart w/o actual restarting (i.e. when restarting frontend)
+      framework. SFA API function "notify_restart" allows to notify clients
+      about the server restart w/o actual restarting (i.e. when restarting
+      frontend)
 
     * jinja2 templates for SFA ui and PVT files (all files with .j2 extension
       are considered to be served as  templates). index.j2 has more priority
@@ -71,15 +75,16 @@ SFA:
       current http request)
     * j2 templates have "state" and "groups" functions, equal to SFA API
       (called with current session key unless the other specified. if you want
-      to access some device for everyone - use masterkey)
+      to have states of any device available to everyone - use masterkey)
 
 API Client:
 
-    * new API function call result: "result_invalid_params"
+    * new API function call result: "result_invalid_params" (11)
 
 Common:
 
     * watchdog to test/automatically restart controllers in case of failure
+    * other stability improvements
 
 3.0.2 (2018-06-23)
 ------------------
