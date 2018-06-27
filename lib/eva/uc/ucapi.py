@@ -265,7 +265,11 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         return item.serialize(props=True) if item else None
 
-    def set_props(self, k=None, i=None, props=None, save=None):
+    def set_props(self, k=None, i=None, props=None, save=None,
+                  clean_snmp=False):
+        if clean_snmp:
+            if not api.set_prop(k, i=i, p='snmp_trap'):
+                return False
         if props:
             for p, v in props.items():
                 try:
@@ -416,7 +420,7 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    if not api.set_props(_k, i, u.get('props'), save):
+                    if not api.set_props(_k, i, u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -429,7 +433,7 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    if not api.set_props(_k, i, u.get('props'), save):
+                    if not api.set_props(_k, i, u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
