@@ -282,7 +282,7 @@ img.tbtn.disabled {
 .st1 {
 /*    margin: 50px;
     width: 559px;*/
-    height: 54px;
+    height: 44px;
     padding: 5px 65px 5px 25px;
     font-size: 24px;
     color: #4d4d4d;
@@ -330,11 +330,22 @@ img.tbtn.disabled {
 	border: none;
 	cursor: auto;
 }
+@media (min-width: 450px) and (max-width: 767px) {
+	.col-xs-btn {
+		width: 125px;
+	}
+	.col-xs-1btn {
+		width: calc(100% - 125px);
+	}
+	.col-xs-2btn {
+		width: calc(100% - 250px);
+	}
+	.col-xs-hid {
+		display: none;
+	}
+}
 
 @media (max-width: 767px) {
-    .row-device button {
-        margin: 10px 2px 0px;
-    }
     .form-group {
     ¦   margin-bottom: 0px;
     }
@@ -346,6 +357,12 @@ img.tbtn.disabled {
     ¦   margin-top: 5px;
     }
 
+}
+
+@media (max-width: 449px) {
+    .row-device button {
+        margin: 10px 2px 0px;
+    }
 }
 
 @media(max-width:350px) {
