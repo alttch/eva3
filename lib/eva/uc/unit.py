@@ -65,7 +65,11 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
                 d['update_if_action'] = self.update_if_action
             if not config or self.auto_off:
                 d['auto_off'] = self.auto_off
-            if not config or self.status_labels != self.default_status_labels:
+            if not config or \
+                    (self.status_labels.keys() != \
+                        self.default_status_labels.keys()) or \
+                    self.status_labels['0'] != status_label_off or \
+                    self.status_labels['1'] != status_label_on:
                 d['status_labels'] = self.status_labels
         elif full:
             d['status_labels'] = sorted([ { 'status': int(x),

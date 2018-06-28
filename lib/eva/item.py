@@ -479,7 +479,7 @@ class UpdatableItem(Item):
                 self.log_set('snmp_trap.set_value', val)
                 self.set_modified(save)
                 return True
-        elif prop == 'snmp_trap.set_if' and self._snmp_traps_allowed:
+        elif prop[:16] == 'snmp_trap.set_if' and self._snmp_traps_allowed:
             if val is None:
                 if self.snmp_trap and 'set_if' in self.snmp_trap:
                     del self.snmp_trap['set_if']

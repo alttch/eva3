@@ -206,6 +206,21 @@ Configure items (requires master key):
     destroy <-i id|-g group>                  destroy an item or all items in
                                               the group
 
+    create_device <-t tpl> [-c cfg] [-y]      create device (set of items and
+                                              cvars) from template
+
+                                                 -y  save items configs right
+                                                     after creation
+
+    update_device <-t tpl> [-c cfg] [-y]      update device (set of items and
+                                              cvars) from template
+
+                                                 -y  save items configs right
+                                                     after update
+
+    destroy_device <-t tpl> [-c cfg]          destroy device (set of items and
+                                              cvars) from template
+
 File management in runtime (requires master key):
 
     file_get <-i file>                        get file from runtime

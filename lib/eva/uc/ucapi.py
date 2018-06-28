@@ -793,7 +793,6 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             save=save) else http_api_result_error()
 
     def update_device(self, k=None, c=None, t=None, save=None):
-        print(1111111111111111)
         config = {}
         if not c:
             return http_api_result_error()
