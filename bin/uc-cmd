@@ -243,7 +243,7 @@ Exit codes:
 the exit codes are equal to the return codes of API client:
 
     0   everything is okay
-    1   object (i.e. unit) not found or command was executed with wrong params
+    1   item (i.e. unit) not found or command was executed with wrong params
     2   forbidden (access to the object or function is denied)
     3   API returned error 500 (wrong params - used string instead of number
         etc.)
@@ -257,6 +257,7 @@ the exit codes are equal to the return codes of API client:
     9   server returned bad data (not JSON)
     10  command/function failed (i.e. executed action/cmd was completed with
         an error)
+    11  invalid command params
 
     99  if no command specified
     """)
