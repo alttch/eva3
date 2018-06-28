@@ -36,7 +36,7 @@ Usage: uc-tpl <command> [args] [-U API uri] [-K key] [-T sec] [-D]
 
 Template commands:
 
-    vailidate <-t template_file> [-c config]        validate existing template,
+    validate <-t template_file> [-c config]        validate existing template,
 
                                                     config - config params,
                                                     comma separated name=value
@@ -75,11 +75,13 @@ def c_replace(s, rep):
         result = result.replace(i, '{{ %s }}' % v)
     return result
 
+
 def print_debug(o1=None, o2=None, end='\n'):
     if not debug: return
     if o1: print(o1, end='')
-    if o2: print('',o2, end='')
+    if o2: print('', o2, end='')
     print(end=end)
+
 
 timeout = None
 apikey = None
@@ -97,8 +99,7 @@ config_rev = {}
 
 try:
     func = sys.argv[1]
-    o, a = getopt.getopt(sys.argv[2:],
-            'K:T:U:t:c:i:v:D')
+    o, a = getopt.getopt(sys.argv[2:], 'K:T:U:t:c:i:v:D')
 except:
     usage()
     sys.exit(99)
@@ -165,7 +166,7 @@ elif func == 'generate':
         api = apiclient.APIClient()
         api.set_uri(apiuri)
         api.set_product('uc')
-    
+
     if apikey is not None:
         api.set_key(apikey)
     api.ssl_verify(False)
@@ -175,7 +176,7 @@ elif func == 'generate':
     print_debug()
     for cvar in cvars:
         print_debug('cvar %s' % cvar, end='')
-        c, r = api.call('get_cvar', {'i': cvar }, _debug=debug)
+        c, r = api.call('get_cvar', {'i': cvar}, _debug=debug)
         if c:
             print('\nAPI call failed, code %u' % c)
             sys.exit(1)
@@ -184,21 +185,24 @@ elif func == 'generate':
         if not 'cvars' in tpl: tpl['cvars'] = {}
         tpl['cvars'][c_replace(cvar, config_rev)] = c_replace(v, config_rev)
     for item in items:
-        print_debug('item %s' % item, end='') 
-        c, r = api.call('get_config', {'i': item }, _debug=debug)
+        print_debug('item %s' % item, end='')
+        c, r = api.call('get_config', {'i': item}, _debug=debug)
         if c:
             print('\nAPI call failed, code %u' % c)
             sys.exit(1)
         if r.get('type') not in ['unit', 'sensor', 'mu']:
-            print_debug(' - type not supported: %s' % r,get('type'))
-        section = r.get('type') + 's' if r.get('type') in ['unit', 'sensor'] else r.get('type')
+            print_debug(' - type not supported: %s' % r, get('type'))
+        section = r.get('type') + 's' if r.get('type') in ['unit', 'sensor'
+                                                          ] else r.get('type')
         ic = {}
-        ic['id']  = c_replace(r.get('id'), config_rev)
-        ic['group']  = c_replace(r.get('group'), config_rev)
+        ic['id'] = c_replace(r.get('id'), config_rev)
+        ic['group'] = c_replace(r.get('group'), config_rev)
         ic['props'] = {}
         for f in ['full_id', 'oid', 'id', 'group', 'type']:
-            try: del r[f]
-            except: pass
+            try:
+                del r[f]
+            except:
+                pass
         for p, v in r.items():
             if isinstance(v, list):
                 if p == 'items':
@@ -225,7 +229,7 @@ elif func == 'generate':
         print_debug(' - OK')
     if (tpl_file):
         try:
-            open(tpl_file,'w').write(format_json(tpl))
+            open(tpl_file, 'w').write(format_json(tpl))
             print('Template saved to %s' % tpl_file)
         except:
             print('Error: can not save template to %s' % tpl_file)
