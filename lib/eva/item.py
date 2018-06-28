@@ -206,13 +206,15 @@ class PhysicalItem(Item):
         self.loc_z = None
         if loc and loc.find(':') != -1:
             l = loc.split(':')
-            try: self.loc_x = float(l[0])
-            except: pass
-            try: self.loc_y = float(l[1])
-            except: pass
-            if len(l) > 2:
-                try: self.loc_z = float(l[2])
-                except: pass
+            try:
+                self.loc_x = float(l[0])
+                self.loc_y = float(l[1])
+                if len(l) > 2:
+                    self.loc_z = float(l[2])
+            except:
+                self.loc_x = None
+                self.loc_y = None
+                self.loc_z = None
         self.location = loc
 
     def serialize(self,
