@@ -86,7 +86,7 @@ Parameters:
 * **f** if *1*, display extended item info, optional (config_changed,
   description, virtual, status_labels and action_enabled for unit)
 
-Returns item status in JSON dict or array of dicts:
+Returns item state in JSON dict or array of dicts:
 
 .. code-block:: json
 
@@ -105,7 +105,7 @@ Returns item status in JSON dict or array of dicts:
         }
     ]
 
-where status and value** current item state, nstatus and nvalue (for unit) -
+where status and value - current item state, nstatus and nvalue (for unit) -
 expected status and value.  Current and new status and value are different in
 case the action is executed for the unit at the moment. In all other cases,
 they are the same.
