@@ -21,6 +21,7 @@ UC:
     * new key permission: "device", allows calling device management functions.
     * device templates, "create_device", "update_device" and "destroy_device"
       functions
+    * uc-tpl device template validator and generator (alpha)
     * unit and sensor items now have physical location. if location is specified
       as coordinates (x:y or x:y:z), loc_x, loc_y and loc_z props become
       available

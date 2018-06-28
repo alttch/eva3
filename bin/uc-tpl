@@ -1,0 +1,237 @@
+#!/usr/bin/env python3
+
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2018 Altertech Group"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.1.0"
+
+import os
+import sys
+import getopt
+import jsonpickle
+import jinja2
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+from eva.client import apiclient
+
+import eva.core
+from eva.tools import print_json
+from eva.tools import format_json
+
+
+def usage():
+    print()
+    print('EVA UC device template tool version %s' % (apiclient.version))
+    print("""
+Usage: uc-tpl <command> [args] [-U API uri] [-K key] [-T sec] [-D]
+
+    -U   specify API uri (http://host:port), if no uri specified, API will be
+         called in local mode (with data from ../etc/uc.ini and uc_apikeys.ini)
+    -K   masterkey, if no key specified, local master key will be used (if
+         local API)
+    -T   API request timeout
+    -D   Enable debug messages
+
+Template commands:
+
+    vailidate <-t template_file> [-c config]        validate existing template,
+
+                                                    config - config params,
+                                                    comma separated name=value
+                                                    pairs
+                                                    
+                                                    outputs formatted json if
+                                                    success
+
+    generate [-i items] [-v cvars] [-c config] [-t output_file]
+                                                    generate new template
+
+                                                    items - items to fetch,
+                                                    comma separated
+
+                                                    cvars - cvars to fetch,
+                                                    comma separated
+
+                                                    config - config params,
+                                                    comma separated name=value
+                                                    pairs
+
+Exit codes:
+
+    0   everything is okay
+    1   API error
+    2   command failed
+
+    99  if no command specified
+    """)
+
+
+def c_replace(s, rep):
+    if not isinstance(s, str): return s
+    result = s
+    for i, v in rep.items():
+        result = result.replace(i, '{{ %s }}' % v)
+    return result
+
+def print_debug(o1=None, o2=None, end='\n'):
+    if not debug: return
+    if o1: print(o1, end='')
+    if o2: print('',o2, end='')
+    print(end=end)
+
+timeout = None
+apikey = None
+apiuri = None
+
+tpl_file = None
+
+debug = False
+
+items = []
+cvars = []
+c = []
+config = {}
+config_rev = {}
+
+try:
+    func = sys.argv[1]
+    o, a = getopt.getopt(sys.argv[2:],
+            'K:T:U:t:c:i:v:D')
+except:
+    usage()
+    sys.exit(99)
+
+for i, v in o:
+    if i == '-t':
+        tpl_file = v
+    elif i == '-c':
+        c = v.split(',')
+    elif i == '-i':
+        items = v.split(',')
+    elif i == '-v':
+        cvars = v.split(',')
+    elif i == '-T':
+        try:
+            timeout = float(v)
+        except:
+            usage()
+            sys.exit(99)
+    elif i == '-U':
+        apiuri = v
+        if apiuri[-1] == '/': apiuri = apiuri[:-1]
+    elif i == '-K':
+        apikey = v
+    elif i == '-D':
+        debug = True
+
+for i in c:
+    try:
+        name, value = i.split('=')
+        config[name] = value
+        config_rev[value] = name
+    except:
+        usage()
+        sys.exit(99)
+
+if func == 'validate':
+    try:
+        template = jinja2.Template(open(tpl_file).read())
+    except:
+        print('No such template file: %s' % tpl_file)
+        usage()
+        sys.exit(99)
+    raw = template.render(config)
+    try:
+        result = jsonpickle.decode(raw)
+        print_json(result)
+    except:
+        print('Invalid json data')
+        print_debug('-----------------------')
+        print_debug(raw)
+        sys.exit(2)
+    sys.exit(0)
+
+elif func == 'generate':
+    tpl = {}
+    if not apiuri:
+        try:
+            api = apiclient.APIClientLocal('uc')
+        except:
+            print('Can not init API, uc.ini or uc_apikeys.ini missing?')
+            sys.exit(98)
+    else:
+        api = apiclient.APIClient()
+        api.set_uri(apiuri)
+        api.set_product('uc')
+    
+    if apikey is not None:
+        api.set_key(apikey)
+    api.ssl_verify(False)
+    print_debug('Generating new template')
+    print_debug('items:', items)
+    print_debug('cvars:', cvars)
+    print_debug()
+    for cvar in cvars:
+        print_debug('cvar %s' % cvar, end='')
+        c, r = api.call('get_cvar', {'i': cvar }, _debug=debug)
+        if c:
+            print('\nAPI call failed, code %u' % c)
+            sys.exit(1)
+        v = r[cvar]
+        print_debug(' = %s' % v)
+        if not 'cvars' in tpl: tpl['cvars'] = {}
+        tpl['cvars'][c_replace(cvar, config_rev)] = c_replace(v, config_rev)
+    for item in items:
+        print_debug('item %s' % item, end='') 
+        c, r = api.call('get_config', {'i': item }, _debug=debug)
+        if c:
+            print('\nAPI call failed, code %u' % c)
+            sys.exit(1)
+        if r.get('type') not in ['unit', 'sensor', 'mu']:
+            print_debug(' - type not supported: %s' % r,get('type'))
+        section = r.get('type') + 's' if r.get('type') in ['unit', 'sensor'] else r.get('type')
+        ic = {}
+        ic['id']  = c_replace(r.get('id'), config_rev)
+        ic['group']  = c_replace(r.get('group'), config_rev)
+        ic['props'] = {}
+        for f in ['full_id', 'oid', 'id', 'group', 'type']:
+            try: del r[f]
+            except: pass
+        for p, v in r.items():
+            if isinstance(v, list):
+                if p == 'items':
+                    ic['props']['items'] = c_replace(','.join(v), config_rev)
+                else:
+                    print_debug(' - ', end='')
+                    print('can not parse prop: %s' % p)
+                    sys.exit(2)
+            elif isinstance(v, dict):
+                if p == 'status_labels':
+                    for _k, _v in v.items():
+                        ic['props']['status:' + _k] = c_replace(_v, config_rev)
+                else:
+                    # TODO: parse snmp trap handler
+                    print_debug(' - ', end='')
+                    print('can not parse prop: %s' % p)
+                    sys.exit(2)
+            else:
+                ic['props'][p] = c_replace(v, config_rev)
+        if not section in tpl:
+            tpl[section] = []
+        tpl[section].append(ic)
+        print_debug(' - OK')
+    if (tpl_file):
+        try:
+            open(tpl_file,'w').write(format_json(tpl))
+            print('Template saved to %s' % tpl_file)
+        except:
+            print('Error: can not save template to %s' % tpl_file)
+    else:
+        print_debug('Template output:')
+        print_debug('----------------')
+        print_json(tpl)
+else:
+    usage()
+    sys.exit(99)
