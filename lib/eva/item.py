@@ -174,6 +174,69 @@ class Item(object):
         return self._destroyed
 
 
+class PhysicalItem(Item):
+
+    def __init__(self, item_id, item_type):
+        super().__init__(item_id, item_type)
+        self.loc_x = None
+        self.loc_y = None
+        self.loc_z = None
+        self.location = ''
+
+    def update_config(self, data):
+        if 'location' in data:
+            self.update_loc(data['location'])
+        super().update_config(data)
+
+    def set_prop(self, prop, val=None, save=False):
+        if prop == 'location':
+            if val is None: v = ''
+            else: v = val
+            if self.location != v:
+                self.update_loc(v)
+                self.log_set(prop, v)
+                self.set_modified(save)
+            return True
+        else:
+            return super().set_prop(prop, val, save)
+
+    def update_loc(self, loc):
+        self.loc_x = None
+        self.loc_y = None
+        self.loc_z = None
+        if loc and loc.find(':') != -1:
+            l = loc.split(':')
+            try: self.loc_x = float(l[0])
+            except: pass
+            try: self.loc_y = float(l[1])
+            except: pass
+            if len(l) > 2:
+                try: self.loc_z = float(l[2])
+                except: pass
+        self.location = loc
+
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = {}
+        if config or props:
+            if self.location != '':
+                d['location'] = self.location
+            elif props:
+                d['location'] = None
+        if full:
+            d['location'] = self.location
+            d['loc_x'] = self.loc_x
+            d['loc_y'] = self.loc_y
+            d['loc_z'] = self.loc_z
+        d.update(super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify))
+        return d
+
+
 class UpdatableItem(Item):
 
     def __init__(self, item_id, item_type):

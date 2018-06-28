@@ -16,7 +16,7 @@ status_label_off = 'OFF'
 status_label_on = 'ON'
 
 
-class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
+class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
 
     def __init__(self, unit_id):
         super().__init__(unit_id, 'unit')

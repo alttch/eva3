@@ -71,7 +71,7 @@ class SFA_API(GenericAPI):
             return None
         if _i:
             if _i in gi and apikey.check(k, gi[_i]):
-                return gi[_i].serialize()
+                return gi[_i].serialize(full=full)
             else:
                 return None
         result = []

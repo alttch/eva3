@@ -113,13 +113,13 @@ class RemoteLVar(RemoteUpdatableItem):
         return d
 
 
-class RemoteSensor(RemoteUpdatableItem):
+class RemoteSensor(RemoteUpdatableItem, eva.item.PhysicalItem):
 
     def __init__(self, remote_uc, state):
         super().__init__('sensor', remote_uc, state)
 
 
-class RemoteUnit(RemoteUpdatableItem):
+class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
 
     def __init__(self, remote_uc, state):
         super().__init__('unit', remote_uc, state)
