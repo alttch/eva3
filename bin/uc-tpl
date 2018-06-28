@@ -220,6 +220,7 @@ elif func == 'generate':
                 ic['props'][p] = c_replace(v, config_rev)
         if not section in tpl:
             tpl[section] = []
+        if 'props' in ic and not ic['props']: del ic['props']
         tpl[section].append(ic)
         print_debug(' - OK')
     if (tpl_file):

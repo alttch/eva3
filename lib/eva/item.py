@@ -96,7 +96,8 @@ class Item(object):
             d['full_id'] = self.group + '/' + self.item_id
             d['oid'] = self.oid
         if full or config or info or props:
-            d['description'] = self.description
+            if not config or self.description != '':
+                d['description'] = self.description
         if full:
             d['config_changed'] = self.config_changed
         if info:
@@ -874,7 +875,8 @@ class UpdatableItem(Item):
                     d['snmp_trap'] = self.snmp_trap
                 elif props:
                     d['snmp_trap'] = None
-            d['expires'] = self.expires
+            if not config or self.expires:
+                d['expires'] = self.expires
             if self.update_exec:
                 d['update_exec'] = self.update_exec
             elif props:
@@ -884,8 +886,10 @@ class UpdatableItem(Item):
                     d['mqtt_update'] = self.mqtt_update
                 elif props:
                     d['mqtt_update'] = None
-            d['update_interval'] = self.update_interval
-            d['update_delay'] = self.update_delay
+            if not config or self.update_interval:
+                d['update_interval'] = self.update_interval
+            if not config or self.update_delay:
+                d['update_delay'] = self.update_delay
             if self._update_timeout:
                 d['update_timeout'] = self._update_timeout
             elif props:
@@ -894,7 +898,8 @@ class UpdatableItem(Item):
             d['status'] = self.status
             d['value'] = self.value
         if (full or config or props) and self._virtual_allowed:
-            d['virtual'] = self.virtual
+            if not config or self.virtual:
+                d['virtual'] = self.virtual
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         return d
@@ -1326,7 +1331,8 @@ class ActiveItem(Item):
                   notify=False):
         d = {}
         if not info:
-            d['action_enabled'] = self.action_enabled
+            if not config or self.action_enabled:
+                d['action_enabled'] = self.action_enabled
         if config or props:
             if self.action_exec:
                 d['action_exec'] = self.action_exec
@@ -1336,8 +1342,10 @@ class ActiveItem(Item):
                 d['mqtt_control'] = self.mqtt_control
             elif props:
                 d['mqtt_control'] = None
-            d['action_queue'] = self.action_queue
-            d['action_allow_termination'] = self.action_allow_termination
+            if not config or self.action_queue:
+                d['action_queue'] = self.action_queue
+            if not config or self.action_allow_termination:
+                d['action_allow_termination'] = self.action_allow_termination
             if self._action_timeout:
                 d['action_timeout'] = self._action_timeout
             elif props:
@@ -1684,11 +1692,13 @@ class MultiUpdate(UpdatableItem):
         if 'expires' in d:
             del d['expires']
         if config or props:
-            d['update_allow_check'] = self.update_allow_check
+            if not config or not self.update_allow_check:
+                d['update_allow_check'] = self.update_allow_check
             ids = []
-            for i in self.items_to_update:
-                ids.append(i.item_id)
-            d['items'] = ids
+            if not config or self.items_to_update:
+                for i in self.items_to_update:
+                    ids.append(i.item_id)
+                d['items'] = ids
         return d
 
     def destroy(self):
