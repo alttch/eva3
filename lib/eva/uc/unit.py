@@ -61,7 +61,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
             d['status_labels'] = sorted([ { 'status': int(x),
                 'label': self.status_labels[x] } \
                     for x in self.status_labels ], key = lambda k: k['status'])
-        if not info and not props:
+        if not info and not props and not config:
             d['nstatus'] = self.nstatus
             d['nvalue'] = self.nvalue
         d.update(super().serialize(
