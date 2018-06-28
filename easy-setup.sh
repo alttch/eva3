@@ -158,7 +158,7 @@ function askUser {
         if [ "x$u" == "x" ]; then
             u=$2
         fi
-        id $u > dev/null 2>&1
+        id $u > /dev/null 2>&1
         if [ $? -eq 0 ]; then
             USER=$u
             return
