@@ -610,8 +610,8 @@ class RemoteUCPool(RemoteControllerPool):
                     self.controllers_by_unit[u.full_id] = uc
                     u.start_processors()
                 p[u.full_id] = u
-            _u = self.get_unit(u.full_id)
-            if _u: _u.update_config(u.serialize(config=True))
+                _u = self.get_unit(u.full_id)
+                if _u: _u.update_config(u.serialize(config=True))
             if controller_id in self.units_by_controller:
                 for i in self.units_by_controller[controller_id].copy().keys():
                     if i not in p:
