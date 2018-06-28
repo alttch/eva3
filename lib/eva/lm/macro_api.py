@@ -105,7 +105,8 @@ class MacroAPI(object):
             'open_newest': self.open_newest,
             'create_device': self.create_device,
             'update_device': self.update_device,
-            'destroy_device': self.destroy_device
+            'destroy_device': self.destroy_device,
+            'set_rule_prop': self.set_rule_prop
         }
 
     def history(self,
@@ -507,3 +508,8 @@ class MacroAPI(object):
         result = eva.lm.controller.uc_pool.destroy_device(
             controller_id=controller_id, device_tpl=device_tpl, cfg=cfg)
         return result.get('result') == 'OK'
+
+    def set_rule_prop(self, rule_id, prop, value=None, save=False):
+        result = eva.lm.lmapi.api.set_rule_prop(
+            eva.apikey.masterkey, i=rule_id, p=prop, v=value, save=save)
+        return result
