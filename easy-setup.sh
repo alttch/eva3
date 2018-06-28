@@ -160,8 +160,12 @@ function askUser {
         fi
         id $u > dev/null 2>&1
         if [ $? -eq 0 ]; then
-            USER=$u
-            return
+            su - $u -c "ls" > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                USER=$u
+                return
+            fi
+            echo "User $u has no shell set"
         fi
         echo "Invalid user: $u"
     done
@@ -328,6 +332,11 @@ if [ $INSTALL_UC -eq 1 ]; then
         echo "Invalid user: ${USER}"
         exit 2
     fi
+    su - ${USER} -c "ls" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "User ${USER} has no valid shell set"
+        exit 2
+    fi
     [ ! -f etc/uc.ini ] && cp etc/uc.ini-dist etc/uc.ini
     chmod 644 etc/uc.ini
     echo "Generating uc_apikeys.ini"
@@ -397,6 +406,11 @@ if [ $INSTALL_LM -eq 1 ]; then
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "Invalid user: ${USER}"
+        exit 2
+    fi
+    su - ${USER} -c "ls" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "User ${USER} has no valid shell set"
         exit 2
     fi
     [ ! -f etc/lm.ini ] && cp etc/lm.ini-dist etc/lm.ini
@@ -470,6 +484,11 @@ if [ $INSTALL_SFA -eq 1 ]; then
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "Invalid user: ${USER}"
+        exit 2
+    fi
+    su - ${USER} -c "ls" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "User ${USER} has no valid shell set"
         exit 2
     fi
     [ ! -f etc/sfa.ini ] && cp etc/sfa.ini-dist etc/sfa.ini
