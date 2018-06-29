@@ -124,13 +124,14 @@ Passive updates of item state
 
 Passive updates are used to collect the state of the equipment which doesn't
 report its state by itself. By default, scripts for passive updating of the
-item state are named **ID_update**, where ID is a unit ID, for example:
+item state are named **ID_update**, where ID is a item ID, for example:
 *lamp1_update*.
 
 The status update script is being executed:
 
 * Every X seconds, if *update_interval* specified in the config is more than 0
-* After the unit action succeeds (if *update_exec_after_action=true* in config)
+* After the :ref:`unit<unit>` action succeeds (if
+  *update_exec_after_action=true* in config)
 
 The system considers the script was executed successfully if its exit code is
 0, otherwise, its new item state is ignored.

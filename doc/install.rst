@@ -23,6 +23,12 @@ System Requirements
 Initial configuration
 ---------------------
 
+.. note::
+
+    If you are going to run any controllers under restricted user account,
+    make sure it has a valid shell set.
+
+
 Easy setup
 ~~~~~~~~~~
 

@@ -984,8 +984,8 @@ class SFA_HTTP_Root:
                         'name': os.path.basename(x),
                         'size': os.path.getsize(x),
                         'time': {
-                            'created': os.path.getctime(x),
-                            'modified': os.path.getmtime(x)
+                            'c': os.path.getctime(x),
+                            'm': os.path.getmtime(x)
                         }
                     })
                 cherrypy.response.headers['Content-Type'] = 'application/json'

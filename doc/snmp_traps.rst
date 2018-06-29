@@ -136,7 +136,7 @@ Example:
 
 .. code-block:: bash
 
-    uc-cmd set_prop -i unit1 -p snmp_trap.set_status -v 1.3.6.1.4.1.3855.1.7.17.2
+    uc-cmd set_prop -i unit1 -p snmp_trap.set_value -v 1.3.6.1.4.1.3855.1.7.17.2
 
 Result:
 

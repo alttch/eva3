@@ -620,6 +620,88 @@ is not found. If the value is *null*, returns an empty string.
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the sensor is not found.
 
+File management functions
+-------------------------
+
+ls - list files by mask
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    ls(mask)
+
+params:
+
+* **mask** file mask to list (i.e. */var/folder1/\*.jpg*)
+
+Returns file listing by the specified mask as an array:
+
+.. code-block:: json
+
+   [{
+        "name": "1.png",
+        "size": 2443,
+        "time": {
+            "c": 1507735364.2441583,
+            "m": 1507734605.1451921
+        }
+    },
+    {
+        "name": "2.png",
+        "size": 2231,
+        "time": {
+            "c": 1507735366.5561802,
+            "m": 1507735342.923956
+        }
+    }]
+
+where
+
+* **size** file size (in bytes)
+* **time/c** inode creation time (ctime, UNIX timestamp)
+* **time/m** file modification time (mtime)
+
+open_newest - open newest file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tries to find and open the newest file by the specified mask. Useful i.e. for
+the folders where security cameras periodically upload an images.
+
+.. code-block:: python
+
+    open_newest(self, mask, mode='r', alt=True)
+
+params:
+
+* **mask** file mask to search in (i.e. */var/folder1/\*.jpg*)
+* **mode** file open mode
+* **alt** open alternative (the second newest) file if there's error opening
+  the newest one (i.e. when the newest file it's still uploading)
+
+Returns a file stream.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the file can not be opened.
+
+open_oldest - open oldest file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tries to find and open the oldest file by the specified mask.
+
+.. code-block:: python
+
+    open_oldest(self, mask, mode='r')
+
+params:
+
+* **mask** file mask to search in (i.e. */var/folder1/\*.jpg*)
+* **mode** file open mode
+
+Returns a file stream.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the file can not be opened.
+
 System functions
 ----------------
 

@@ -35,7 +35,7 @@ function usage {
     echo " Options for the automatic setup:"
     echo
     echo " --local-only             accept API keys (except operator) only from local host"
-    echo " --u USER                 set up all controllers to run under specified user"
+    echo " -u USER                 set up all controllers to run under specified user"
     echo
     echo " --link                   link all controllers together (requires --mqtt)"
     echo "                          WARNING: it's not possible to change controller id"
