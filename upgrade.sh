@@ -19,15 +19,6 @@ fi
 
 echo "- Starting upgrade to ${VERSION} build ${BUILD}"
 
-if [ -f ui/index.html ]; then
-    echo "Backing up UI index"
-    if [ -f ui/index.bak.html ]; then
-        echo "ui/index.bak.html already exist. Remove or move this file somewhere and run upgrade again"
-        exit 1
-    fi
-    cp -f ui/index.html ui/index.bak.html
-fi
-
 mkdir -p _upgrade
 
 echo "- Downloading new version tarball"
@@ -57,9 +48,11 @@ for o in ${OBS}; do
     rm -rf ${o}
 done
 
-echo "- Copying new files"
+echo "- Installing new files"
 
-cp -rf _upgrade/eva-${VERSION}/* . || exit 1
+rm -f _upgrade/eva-${VERSION}/ui/index.html
+
+mv -f _upgrade/eva-${VERSION}/* . || exit 1
 
 echo "- Cleaning up"
 
