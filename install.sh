@@ -9,6 +9,12 @@ fi
 D=`realpath $0`
 cd `dirname ${D}`
 
+if [ -d runtime ]; then
+    echo "runtime folder found, the system seems to be live"
+    echo "aborting"
+    exit 1
+fi
+
 echo "Preparing Universal Controller"
 sh install-uc.sh || exit 1
 echo "Preparing Logic Manager"

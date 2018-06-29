@@ -928,7 +928,8 @@ class SFA_HTTP_Root:
         raise cherrypy.HTTPRedirect('/ui/' + q)
 
     def _no_cache(self):
-        cherrypy.serving.response.headers['Expires'] = 'Sun, 19 Nov 1978 05:00:00 GMT'
+        cherrypy.serving.response.headers['Expires'] = \
+                'Sun, 19 Nov 1978 05:00:00 GMT'
         cherrypy.serving.response.headers['Cache-Control'] = \
             'no-store, no-cache, must-revalidate, post-check=0, pre-check=0'
         cherrypy.serving.response.headers['Pragma'] = 'no-cache'
