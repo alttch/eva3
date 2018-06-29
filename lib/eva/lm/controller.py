@@ -566,9 +566,9 @@ def serialize_lvars(full=False, config=False):
     return d
 
 
-def pdme(item):
+def pdme(item, ns=False):
     if not DM: return False
-    return DM.process(item)
+    return DM.process(item, ns=ns)
 
 
 def start():

@@ -35,6 +35,7 @@ LM:
       functionality, in case the controller has no masterkey defined
     * new functions "state_history" in LM API and "history" (equivalent) in
       macros
+    * new DM rule events: on nstatus, nvalue change (for units)
     * device management functions: "create_device", "update_device",
       "destroy_device"
     * "set_rule_prop" macro function

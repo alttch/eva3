@@ -230,7 +230,7 @@ for i, v in o:
     elif i == '-d':
         apply_props['description'] = v
     elif i == '-x':
-        if v not in ['status', 'value']:
+        if v not in ['status', 'value', 'nstatus', 'nvalue']:
             usage()
             sys.exit(99)
         apply_props['for_prop'] = v
@@ -388,10 +388,7 @@ if func in cmd_list:
             macro = r['macro'] + '(' + ', '.join(args) + ')'
         else:
             macro = ''
-        data2.append({
-            'for_oid': r['for_oid'],
-            'macro': macro
-        })
+        data2.append({'for_oid': r['for_oid'], 'macro': macro})
         data3.append({
             'id':
             r['id'],

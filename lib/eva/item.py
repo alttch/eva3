@@ -846,7 +846,10 @@ class UpdatableItem(Item):
         need_notify = False
         if status is not None and status != '':
             try:
-                self.status = int(status)
+                _s = int(status)
+                if self.status != _s:
+                    need_notify = True
+                    self.status = _s
             except:
                 logging.info('%s status "%s" is not number, can not set' % \
                         (self.full_id, status))
@@ -856,8 +859,9 @@ class UpdatableItem(Item):
         if value is not None:
             if value == '': v = 'null'
             else: v = value
-            if self.value != v: need_notify = True
-            self.value = v
+            if self.value != v:
+                need_notify = True
+                self.value = v
         if need_notify:
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
