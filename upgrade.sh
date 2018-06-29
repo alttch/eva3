@@ -52,11 +52,9 @@ echo "- Installing new files"
 
 rm -f _upgrade/eva-${VERSION}/ui/index.html
 
-mv -f _upgrade/eva-${VERSION}/* . || exit 1
+cp -rf _upgrade/eva-${VERSION}/* . || exit 1
 
 echo "- Cleaning up"
-
-mv -f ui/index.bak.html ui/index.html
 
 rm -rf _upgrade
 
