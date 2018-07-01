@@ -10,13 +10,15 @@ from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 class PHI(GenericPHI):
 
     def __init__(self, cfg):
-        self.data = {
-                '1': -1,
-                '2': -1,
-                '3': -1,
-                '4': -1
-                }
         super().__init__(cfg=cfg)
+        d = self.cfg.get('default_state')
+        if d is None: d = -1
+        self.data = {
+                '1': d,
+                '2': d,
+                '3': d,
+                '4': d 
+                }
 
     def get(self, port, timeout):
         try:

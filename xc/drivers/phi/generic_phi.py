@@ -23,3 +23,6 @@ class PHI(object):
 
     def set(self, port, data, timeout):
         return False
+
+    def handle_event(self):
+        pass

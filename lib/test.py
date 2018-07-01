@@ -24,9 +24,12 @@ print('LPI license: %s' % lpi_mod.__license__)
 
 e = threading.Event()
 
-driver = lpi_mod.LPI(phi=phi_mod.PHI)
-status = driver.state(cfg = {'port': [ 'i3', 'i4', 'i1' ] })
+driver = lpi_mod.LPI(cfg = { 'phi': {'default_state': 0 }}, phi=phi_mod.PHI)
+status = driver.state(cfg = {'port': [ '1', 'i:2', '5' ] }, multi=True)
 print(status)
+sys.exit()
+
+
 t = threading.Thread(target = driver.action, args=('111', 1, None, { 'port': [ 'i2', '4'] }, eva.core.timeout))
 t.start()
 t.join(1)

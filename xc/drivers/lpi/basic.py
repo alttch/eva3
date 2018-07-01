@@ -11,29 +11,40 @@ from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
 class LPI(GenericLPI):
 
-    def do_state(self, cfg=None, timeout=None):
-        if cfg is None: return None, None
+    def do_state(self, cfg=None, multi=False, timeout=None):
+        if cfg is None:
+            return [] if multi else None, None
         port = cfg.get('port')
-        if port is None: return None, None
+        if port is None: return [] if multi else None, None
         if not isinstance(port, list):
             _port = [port]
         else:
             _port = port
-        st = None
+        if multi:
+            st = []
+        else:
+            st = None
         for p in _port:
             _p, invert = self.need_invert(p)
             status = self.phi.get(_p, timeout=timeout)
-            if status is None or status not in [0, 1]: return -1, None
+            if status is None or status not in [0, 1]:
+                if multi:
+                    st.append((-1,None))
+                    continue
+                else: return -1, None
             if invert:
                 _status = 1 - status
             else:
                 _status = status
-            if st is None:
-                st = _status
+            if multi:
+                st.append((_status, None))
             else:
-                if st != _status:
-                    return -1, None
-        return st, None
+                if st is None:
+                    st = _status
+                else:
+                    if st != _status:
+                        return -1, None
+        return st if multi else (st, None)
 
     def do_action(self, _uuid, status, value, cfg, timeout):
         if cfg is None or status is None:

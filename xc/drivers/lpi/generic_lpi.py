@@ -6,8 +6,12 @@ __description__ = "Generic LPI, don't use"
 __api__ = 1
 
 import threading
-import eva.core
+import logging
 import time
+
+from eva.uc.uc_driverapi import get_polldelay
+from eva.uc.uc_driverapi import get_timeout
+from eva.uc.uc_driverapi import critical
 
 
 class LPI(object):
@@ -19,7 +23,8 @@ class LPI(object):
     Override this function with your own
     """
 
-    def do_state(self, cfg, timeout):
+    def do_state(self, cfg, multi, timeout):
+        logging.error('driver lpi %s state function not implemented' % __name__)
         return -1, None
 
     """
@@ -28,7 +33,9 @@ class LPI(object):
     """
 
     def do_action(self, _uuid, status, value, cfg, timeout):
-        return self.result_error(_uuid, msg='do not use this lpi!')
+        logging.error(
+            'driver lpi %s action function not implemented' % __name__)
+        return self.result_error(_uuid, msg='action function not implemented')
 
     """
     Functions allowed to use in LPI
@@ -44,8 +51,8 @@ class LPI(object):
     """
 
     def need_invert(self, port):
-        if not isinstance(port, str) or port[0] != 'i': return port, False
-        return port[1:], True
+        if not isinstance(port, str) or port[:2] != 'i:': return port, False
+        return port[2:], True
 
     """
     Checks for the terminate call
@@ -60,7 +67,7 @@ class LPI(object):
         e = self.__terminate.get(_uuid)
         if not e:
             logging.critical('Driver %s termination engine broken' % __name__)
-            eva.core.critical()
+            critical()
         return e.isSet()
 
     """
@@ -79,8 +86,8 @@ class LPI(object):
         i = 0
         while i < sec:
             if self.need_terminate(_uuid): return False
-            time.sleep(eva.core.polldelay)
-            i += eva.core.polldelay
+            time.sleep(get_polldelay())
+            i += get_polldelay()
         return not self.need_terminate(_uuid)
 
     def result_terminated(self, _uuid):
@@ -106,7 +113,7 @@ class LPI(object):
     def __init__(self, cfg=None, phi=None):
         self.phi = phi(cfg)
         if cfg:
-            self.cfg = cfg.get('pli')
+            self.cfg = cfg.get('lpi')
         else:
             self.cfg = {}
         self.__terminate = {}
@@ -116,8 +123,8 @@ class LPI(object):
     DO NOT OVERRIDE THE FUNCTIONS BELOW
     """
 
-    def state(self, cfg=None, timeout=None):
-        return self.do_state(cfg, timeout)
+    def state(self, cfg=None, multi=False, timeout=None):
+        return self.do_state(cfg, multi, timeout)
 
     def action(self, _uuid, status=None, value=None, cfg=None, timeout=None):
         self._append_terminate(_uuid)

@@ -720,13 +720,7 @@ class UpdatableItem(Item):
         try:
             self.update_log_run()
             self.update_before_run()
-            xc = eva.runner.ExternalProcess(
-                fname=self.update_exec,
-                item=self,
-                env=self.update_env(),
-                update=True,
-                args=self.update_run_args(),
-                timeout=self.update_timeout)
+            xc = self.get_update_xc()
             self.update_xc = xc
             xc.run()
             if xc.exitcode < 0:
@@ -739,6 +733,15 @@ class UpdatableItem(Item):
         except:
             logging.error('update %s failed' % self.full_id)
             eva.core.log_traceback()
+
+    def get_update_xc(self):
+        return eva.runner.ExternalProcess(
+            fname=self.update_exec,
+            item=self,
+            env=self.update_env(),
+            update=True,
+            args=self.update_run_args(),
+            timeout=self.update_timeout)
 
     def update_env(self):
         return {}
@@ -1145,13 +1148,7 @@ class ActiveItem(Item):
                     elif a.is_status_queued() and a.set_running():
                         self.action_log_run(a)
                         self.action_before_run(a)
-                        xc = eva.runner.ExternalProcess(
-                            fname=self.action_exec,
-                            item=self,
-                            env=a.action_env(),
-                            update=False,
-                            args=self.action_run_args(a),
-                            timeout=self.action_timeout)
+                        xc = self.get_action_xc()
                         self.action_xc = xc
                         self.queue_lock.release()
                         xc.set_tki(self.term_kill_interval)
@@ -1187,6 +1184,16 @@ class ActiveItem(Item):
             self.action_xc = None
             self.queue_lock.release()
         logging.debug('%s action processor stopped' % self.full_id)
+
+
+    def get_action_xc(self):
+        return eva.runner.ExternalProcess(
+            fname=self.action_exec,
+            item=self,
+            env=a.action_env(),
+            update=False,
+            args=self.action_run_args(a),
+            timeout=self.action_timeout)
 
     def update_config(self, data):
         if 'action_enabled' in data:
