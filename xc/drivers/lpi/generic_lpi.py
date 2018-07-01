@@ -9,9 +9,9 @@ import threading
 import logging
 import time
 
-from eva.uc.uc_driverapi import get_polldelay
-from eva.uc.uc_driverapi import get_timeout
-from eva.uc.uc_driverapi import critical
+from eva.uc.driverapi import get_polldelay
+from eva.uc.driverapi import get_timeout
+from eva.uc.driverapi import critical
 
 
 class LPI(object):
