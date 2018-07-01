@@ -911,11 +911,11 @@ class UpdatableItem(Item):
             full=full, config=config, info=info, props=props, notify=notify))
         return d
 
-    def item_env(self):
+    def item_env(self, full=True):
         if self.value is not None: value = self.value
         else: value = 'null'
         e = {'EVA_ITEM_STATUS': str(self.status), 'EVA_ITEM_VALUE': str(value)}
-        e.update(super().item_env())
+        if full: e.update(super().item_env())
         return e
 
     def destroy(self):
