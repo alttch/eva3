@@ -11,10 +11,9 @@ class PHI(object):
     Override everything. super() constructor may be useful to keep unparsed
     config
     """
-
     def __init__(self, cfg):
         if cfg:
-            self.cfg = cfg.get('phi')
+            self.cfg = cfg
         else:
             self.cfg = {}
 
@@ -26,3 +25,9 @@ class PHI(object):
 
     def handle_event(self):
         pass
+
+    def start(self):
+        return True
+
+    def stop(self):
+        return True

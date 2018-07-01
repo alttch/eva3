@@ -12,6 +12,7 @@ import time
 from eva.uc.driverapi import get_polldelay
 from eva.uc.driverapi import get_timeout
 from eva.uc.driverapi import critical
+from eva.uc.driverapi import get_phi
 
 
 class LPI(object):
@@ -36,6 +37,18 @@ class LPI(object):
         logging.error(
             'driver lpi %s action function not implemented' % __name__)
         return self.result_error(_uuid, msg='action function not implemented')
+
+    """
+    Starts LPI threads
+    """
+    def start(self):
+        return True
+
+    """
+    Stops LPI threads
+    """
+    def stop(self):
+        return True
 
     """
     Functions allowed to use in LPI
@@ -110,10 +123,10 @@ class LPI(object):
     call super().__init__
     """
 
-    def __init__(self, cfg=None, phi=None):
-        self.phi = phi(cfg)
+    def __init__(self, cfg=None, phi_id=None):
+        self.phi = get_phi(phi_id)
         if cfg:
-            self.cfg = cfg.get('lpi')
+            self.cfg = cfg
         else:
             self.cfg = {}
         self.__terminate = {}
@@ -126,9 +139,11 @@ class LPI(object):
     """
 
     def state(self, cfg=None, multi=False, timeout=None):
+        if not self.phi: return None
         return self.do_state(cfg, multi, timeout)
 
     def action(self, _uuid, status=None, value=None, cfg=None, timeout=None):
+        if not self.phi: return None
         self._append_terminate(_uuid)
         self._set_result(_uuid)
         return self.do_action(_uuid, status, value, cfg, timeout)

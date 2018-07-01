@@ -3,19 +3,19 @@ import threading
 import sys
 import eva.core
 
-d = 'test.basic'
+d = 'test1.basic'
 
 phi_id, lpi_id = d.split('.')
 
-phi_mod = importlib.import_module('eva.uc.drivers.phi.' + phi_id)
+# phi_mod = importlib.import_module('eva.uc.drivers.phi.' + phi_id)
 lpi_mod = importlib.import_module('eva.uc.drivers.lpi.' + lpi_id)
 
 print('Driver: %s' % d)
-print('PHI API: %u' % phi_mod.__api__)
-print('PHI author: %s' % phi_mod.__author__)
-print('PHI version: %s' % phi_mod.__version__)
-print('PHI description: %s' % phi_mod.__description__)
-print('PHI license: %s' % phi_mod.__license__)
+# print('PHI API: %u' % phi_mod.__api__)
+# print('PHI author: %s' % phi_mod.__author__)
+# print('PHI version: %s' % phi_mod.__version__)
+# print('PHI description: %s' % phi_mod.__description__)
+# print('PHI license: %s' % phi_mod.__license__)
 print('LPI API: %u' % lpi_mod.__api__)
 print('LPI author: %s' % lpi_mod.__author__)
 print('LPI version: %s' % lpi_mod.__version__)
@@ -24,7 +24,7 @@ print('LPI license: %s' % lpi_mod.__license__)
 
 e = threading.Event()
 
-driver = lpi_mod.LPI(cfg = { 'phi': {'default_state': 0 }}, phi=phi_mod.PHI)
+driver = lpi_mod.LPI(cfg = { 'phi': {'default_state': 0 }}, phi=phi_id)
 status = driver.state(cfg = {'port': [ '1', 'i:2', '5' ] }, multi=True)
 print(status)
 
