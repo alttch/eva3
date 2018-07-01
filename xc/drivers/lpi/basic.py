@@ -11,7 +11,11 @@ from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
 class LPI(GenericLPI):
 
-    def do_state(self, cfg=None, multi=False, timeout=None):
+    def __init__(self, cfg=None, phi_id=None):
+        super().__init__(cfg, phi_id)
+        self.lpi_id = 'basic'
+
+    def do_state(self, cfg=None, multi=False, timeout=None, state_in=None):
         if cfg is None:
             return [] if multi else None, None
         port = cfg.get('port')
@@ -26,7 +30,10 @@ class LPI(GenericLPI):
             st = None
         for p in _port:
             _p, invert = self.need_invert(p)
-            status = self.phi.get(_p, timeout=timeout)
+            if state_in and _p in state_in:
+                status = state_in.get(_p)
+            else:
+                status = self.phi.get(_p, timeout=timeout)
             if status is None or status not in [0, 1]:
                 if multi:
                     st.append((-1,None))

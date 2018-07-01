@@ -6,11 +6,13 @@ __description__ = "Emulates 4-port relay"
 __api__ = 1
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
+from eva.uc.driverapi import handle_phi_event
 
 class PHI(GenericPHI):
 
     def __init__(self, cfg):
         super().__init__(cfg=cfg)
+        self.phi_id = 'test'
         d = self.cfg.get('default_state')
         if d is None: d = -1
         self.data = {
@@ -29,10 +31,12 @@ class PHI(GenericPHI):
     def set(self, port, data, timeout):
         _port = str(port)
         try:
-            data = int(data)
+            _data = int(data)
         except:
             return False
         if not _port in self.data:
             return False
-        self.data[_port] = data
+        self.data[_port] = _data
+        if self.cfg.get('event_on_set'):
+            handle_phi_event(__name__.split('.')[-1], port, self.data)
         return True

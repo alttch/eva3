@@ -16,6 +16,7 @@ class PHI(object):
             self.cfg = cfg
         else:
             self.cfg = {}
+        self.phi_id = 'generic'
 
     def get(self, port, timeout):
         return None

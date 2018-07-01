@@ -24,8 +24,9 @@ class LPI(object):
     Override this function with your own
     """
 
-    def do_state(self, cfg, multi, timeout):
-        logging.error('driver lpi %s state function not implemented' % __name__)
+    def do_state(self, cfg, multi, timeout, state_in):
+        logging.error('driver lpi %s state function not implemented' %
+                      self.lpi_id.split('.')[-1])
         return -1, None
 
     """
@@ -34,19 +35,21 @@ class LPI(object):
     """
 
     def do_action(self, _uuid, status, value, cfg, timeout):
-        logging.error(
-            'driver lpi %s action function not implemented' % __name__)
+        logging.error('driver lpi %s action function not implemented' %
+                      self.lpi_id.split('.')[-1])
         return self.result_error(_uuid, msg='action function not implemented')
 
     """
     Starts LPI threads
     """
+
     def start(self):
         return True
 
     """
     Stops LPI threads
     """
+
     def stop(self):
         return True
 
@@ -79,7 +82,8 @@ class LPI(object):
     def need_terminate(self, _uuid):
         e = self.__terminate.get(_uuid)
         if not e:
-            logging.critical('Driver %s termination engine broken' % __name__)
+            logging.critical('Driver %s termination engine broken' %
+                             self.lpi_id.split('.')[-1])
             critical()
         return e.isSet()
 
@@ -119,8 +123,8 @@ class LPI(object):
         return result
 
     """
-    Constructor may be overriden i.e. to parse config, just don't forget to
-    call super().__init__
+    Constructor should be overriden to set lpi id plus i.e. to parse config,
+    just don't forget to call super().__init__ before your code
     """
 
     def __init__(self, cfg=None, phi_id=None):
@@ -133,17 +137,24 @@ class LPI(object):
         self.__action_results = {}
         self.__terminate_lock = threading.Lock()
         self.__action_results_lock = threading.Lock()
+        self.lpi_id = 'generic'
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW
     """
 
-    def state(self, cfg=None, multi=False, timeout=None):
-        if not self.phi: return None
-        return self.do_state(cfg, multi, timeout)
+    def state(self, cfg=None, multi=False, timeout=None, state_in=None):
+        if not self.phi:
+            logging.error(
+                'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
+            return None
+        return self.do_state(cfg, multi, timeout, state_in)
 
     def action(self, _uuid, status=None, value=None, cfg=None, timeout=None):
-        if not self.phi: return None
+        if not self.phi:
+            logging.error(
+                'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
+            return None
         self._append_terminate(_uuid)
         self._set_result(_uuid)
         return self.do_action(_uuid, status, value, cfg, timeout)
@@ -213,4 +224,3 @@ class LPI(object):
         result = self.__action_results.get(_uuid)
         self.__action_results_lock.release()
         return result
-
