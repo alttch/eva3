@@ -118,6 +118,8 @@ class LPI(object):
             self.cfg = {}
         self.__terminate = {}
         self.__action_results = {}
+        self.__terminate_lock = threading.Lock()
+        self.__action_results_lock = threading.Lock()
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW
@@ -132,36 +134,68 @@ class LPI(object):
         return self.do_action(_uuid, status, value, cfg, timeout)
 
     def terminate(self, _uuid):
-        # TODO locking
+        if not self.__terminate_lock.acquire(timeout=get_timeout()):
+            logging.critical('GenericLPI::terminate locking broken')
+            critical()
+            return None
         t = self.__terminate.get(_uuid)
-        if not t: return False
-        t.set()
-        return True
-
-    def _set_result(self, _uuid, result=None):
-        # TODO locking
-        self.__action_results[_uuid] = result
-
-    def clear_result(self, _uuid):
-        # TODO locking
-        try:
-            del (self.__action_results[_uuid])
-        except:
+        if not t:
+            self.__terminate_lock.release()
             return False
+        t.set()
+        self.__terminate_lock.release()
         return True
-
-    def get_result(self, _uuid):
-        # TODO locking
-        result = self.__action_results.get(_uuid)
-        return result
 
     def _append_terminate(self, _uuid):
-        # TODO locking
+        if not self.__terminate_lock.acquire(timeout=get_timeout()):
+            logging.critical('GenericLPI::_append_terminate locking broken')
+            critical()
+            return None
         self.__terminate[_uuid] = threading.Event()
+        self.__terminate_lock.release()
+        return True
 
     def _remove_terminate(self, _uuid):
-        # TODO locking
+        if not self.__terminate_lock.acquire(timeout=get_timeout()):
+            logging.critical('GenericLPI::_remove_terminate locking broken')
+            critical()
+            return None
         try:
             del (self.__terminate[_uuid])
         except:
-            pass
+            self.__terminate_lock.release()
+            return False
+        self.__terminate_lock.release()
+        return True
+
+    def _set_result(self, _uuid, result=None):
+        if not self.__action_results_lock.acquire(timeout=get_timeout()):
+            logging.critical('GenericLPI::_set_result locking broken')
+            critical()
+            return None
+        self.__action_results[_uuid] = result
+        self.__action_results_lock.release()
+        return True
+
+    def clear_result(self, _uuid):
+        if not self.__action_results_lock.acquire(timeout=get_timeout()):
+            logging.critical('GenericLPI::clear_result locking broken')
+            critical()
+            return None
+        try:
+            del (self.__action_results[_uuid])
+        except:
+            self.__action_results_lock.release()
+            return False
+        self.__action_results_lock.release()
+        return True
+
+    def get_result(self, _uuid):
+        if not self.__action_results_lock.acquire(timeout=get_timeout()):
+            logging.critical('GenericLPI::get_result locking broken')
+            critical()
+            return None
+        result = self.__action_results.get(_uuid)
+        self.__action_results_lock.release()
+        return result
+
