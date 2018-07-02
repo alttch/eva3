@@ -8,6 +8,9 @@ __id__ = 'test'
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
+from eva.uc.driverapi import log_traceback
+
+import logging
 
 class PHI(GenericPHI):
 
@@ -20,12 +23,7 @@ class PHI(GenericPHI):
                 d = int(d)
             except:
                 d = -1
-        self.data = {
-                '1': d,
-                '2': d,
-                '3': d,
-                '4': d 
-                }
+        self.data = {'1': d, '2': d, '3': d, '4': d}
         self.phi_mod_id = __id__
         self.author = __author__
         self.license = __license__
@@ -55,3 +53,18 @@ class PHI(GenericPHI):
     def serialize(self, full=False, config=False):
         d = super().serialize(full=full, config=config)
         return d
+
+    def test(self, msg=None):
+        try:
+            port, val = msg.split('=')
+            port = int(port)
+            val = int(val)
+            if port < 1 or port > 4 or val < -1 or val > 1: return None
+            self.data[port] = val
+            logging.debug(
+                '%s test completed, set port %s=%s' % (self.phi_id, port, val))
+            handle_phi_event(self, port, self.data)
+            return self.data
+        except:
+            log_traceback()
+            return None

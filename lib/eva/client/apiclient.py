@@ -55,7 +55,7 @@ _api_func = {
             'create_mu', 'create_device', 'update_device', 'clone',
             'clone_group', 'destroy', 'destroy_device', 'login', 'logout',
             'load_phi', 'unload_phi', 'load_driver', 'unload_driver',
-            'list_phi', 'list_drivers', 'get_phi', 'get_driver'
+            'list_phi', 'list_drivers', 'get_phi', 'get_driver', 'test_phi'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',

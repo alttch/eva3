@@ -609,6 +609,16 @@ class UC_API(GenericAPI):
         else:
             return False
 
+    def test_phi(self, k=None, i=None, m=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return False
+        phi = eva.uc.driverapi.get_phi(i)
+        if phi:
+            return phi.test(m)
+        else:
+            return False
+
+
 class UC_HTTP_API(GenericHTTP_API, UC_API):
 
     def __init__(self):
@@ -658,6 +668,8 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.list_drivers.exposed = True
         UC_HTTP_API.unload_driver.exposed = True
         UC_HTTP_API.get_driver.exposed = True
+
+        UC_HTTP_API.test_phi.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -982,6 +994,14 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
         return result
+
+    def test_phi(self, k=None, i=None, m=None):
+        cp_need_master(k)
+        result = super().test_phi(k, i, m)
+        if result is False: raise cp_api_404()
+        if result is None: raise cp_api_error()
+        return result
+
 
 def start():
     global api

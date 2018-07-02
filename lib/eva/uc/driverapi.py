@@ -44,6 +44,8 @@ def get_lpi(lpi_id):
 def get_driver(driver_id):
     return drivers.get(driver_id)
 
+def log_traceback():
+    return eva.core.log_traceback()
 
 def register_item_update(i):
     u = i.update_exec
@@ -90,7 +92,7 @@ def unregister_item_update(i):
 
 
 def handle_phi_event(phi, port, data):
-    iph = items.by_phi.get(phi.phi_id)
+    iph = items_by_phi.get(phi.phi_id)
     if iph:
         for i in iph:
             if i.updates_allowed() and not i.is_destroyed():
