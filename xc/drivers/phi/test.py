@@ -26,7 +26,7 @@ class PHI(GenericPHI):
                 '3': d,
                 '4': d 
                 }
-        self.phi_id = __id__
+        self.phi_mod_id = __id__
         self.author = __author__
         self.license = __license__
         self.description = __description__

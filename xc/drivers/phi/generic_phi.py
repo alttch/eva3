@@ -18,12 +18,13 @@ class PHI(object):
             self.cfg = cfg
         else:
             self.cfg = {}
-        self.phi_id = __id__
+        self.phi_mod_id = __id__
         self.author = __author__
         self.license = __license__
         self.description = __description__
         self.version = __version__
         self.api_version = __api__
+        self.phi_id = None # set by driverapi on load
 
     def get(self, port, timeout):
         return None
@@ -50,5 +51,6 @@ class PHI(object):
             d['api'] = self.api_version
         if config:
             d['cfg'] = self.cfg
+        d['mod'] = self.phi_mod_id
         d['id'] = self.phi_id
         return d

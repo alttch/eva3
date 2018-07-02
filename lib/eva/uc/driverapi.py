@@ -81,6 +81,7 @@ def load_phi(phi_id, phi_mod_id, cfg=None, start=True):
         eva.core.log_traceback()
         return False
     phi = phi_mod.PHI(cfg)
+    phi.phi_id = phi_id
     if phi_id in phis:
         phis[phi_id].stop()
     phis[phi_id] = phi
@@ -105,8 +106,6 @@ def serialize_phi(full=False, config=False):
     for k, p in phis.copy().items():
         try:
             r = p.serialize(full=full, config=config)
-            r['mod_id'] = r['id']
-            r['id'] = k
             result.append(r)
         except:
             logging.error('phi %s serialize error' % k)
@@ -125,7 +124,7 @@ def load():
         _phi = data.get('phi')
         if _phi:
             for p in _phi:
-                load_phi(p['id'], p['mod_id'], cfg=p['cfg'], start=False)
+                load_phi(p['id'], p['mod'], cfg=p['cfg'], start=False)
     except:
         logging.error('unaboe to load uc_drivers.json')
         eva.core.log_traceback()

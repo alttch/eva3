@@ -528,6 +528,12 @@ class UC_API(GenericAPI):
             for p in props:
                 try:
                     name, value = p.split('=')
+                    try:
+                        value = float(value)
+                        if value == int(value):
+                            value = int(value)
+                    except:
+                        pass
                     _cfg[name] = value
                 except:
                     eva.core.log_traceback()
