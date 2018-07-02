@@ -69,6 +69,16 @@ Exit codes:
 
 
 def c_replace(s, rep):
+    if isinstance(s, dict):
+        result = {}
+        for k, v in s.items():
+            result[c_replace(k, rep)] = c_replace(v, rep)
+        return result
+    if isinstance(s, list):
+        result = []
+        for x in s:
+            result.append(c_replace(x, rep))
+        return result
     if not isinstance(s, str): return s
     result = s
     for i, v in rep.items():
@@ -204,61 +214,61 @@ elif func == 'generate':
             except:
                 pass
         for p, v in r.items():
-            if isinstance(v, list):
-                if p == 'items':
-                    ic['props']['items'] = c_replace(','.join(v), config_rev)
-                else:
-                    print_debug(' - ', end='')
-                    print('can not parse prop: %s' % p)
-                    sys.exit(2)
-            elif isinstance(v, dict):
-                if p == 'status_labels':
-                    for _k, _v in v.items():
-                        ic['props']['status:' + _k] = c_replace(_v, config_rev)
-                elif p == 'snmp_trap':
-                    s_ident = v.get('ident_vars')
-                    if s_ident:
-                        _r = []
-                        for _k, _v in s_ident.items():
-                            _r.append('%s=%s' % (c_replace(_k, config_rev),
-                                                 c_replace(_v, config_rev)))
-                        ic['props']['snmp_trap.ident_vars'] = ','.join(_r)
-                    s_down = v.get('set_down')
-                    if s_down:
-                        _r = []
-                        for _k, _v in s_down.items():
-                            _r.append('%s=%s' % (c_replace(_k, config_rev),
-                                                 c_replace(_v, config_rev)))
-                        ic['props']['snmp_trap.set_down'] = ','.join(_r)
-                    if 'set_status' in v:
-                        ic['props']['snmp_trap.set_status'] = c_replace(
-                            v['set_status'], config_rev)
-                    if 'set_value' in v:
-                        ic['props']['snmp_trap.set_value'] = c_replace(
-                            v['set_value'], config_rev)
-                    if 'set_if' in v:
-                        n = 0
-                        for _v in v['set_if']:
-                            n += 1
-                            _status = _v.get('status')
-                            _value = _v.get('value')
-                            if not _status: _status = 'null'
-                            if not _value: _value = 'null'
-                            _vars = _v.get('vars')
-                            if _vars:
-                                __r = []
-                                for __k, __v in _vars.items():
-                                    __r.append(
-                                        '%s=%s' % (c_replace(__k, config_rev),
-                                                   c_replace(__v, config_rev)))
-                                ic['props']['snmp_trap.set_if_%u' %
-                                            n] = '%s,%s:%s' % (_status, _value,
-                                                               ','.join(__r))
-                else:
-                    print_debug(' - ', end='')
-                    print('can not parse prop: %s' % p)
-                    sys.exit(2)
-            else:
+            # if isinstance(v, list):
+                # if p == 'items':
+                    # ic['props']['items'] = c_replace(','.join(v), config_rev)
+                # else:
+                    # print_debug(' - ', end='')
+                    # print('can not parse prop: %s' % p)
+                    # sys.exit(2)
+            # elif isinstance(v, dict):
+                # if p == 'status_labels':
+                    # for _k, _v in v.items():
+                        # ic['props']['status:' + _k] = c_replace(_v, config_rev)
+                # elif p == 'snmp_trap':
+                    # s_ident = v.get('ident_vars')
+                    # if s_ident:
+                        # _r = []
+                        # for _k, _v in s_ident.items():
+                            # _r.append('%s=%s' % (c_replace(_k, config_rev),
+                                                 # c_replace(_v, config_rev)))
+                        # ic['props']['snmp_trap.ident_vars'] = ','.join(_r)
+                    # s_down = v.get('set_down')
+                    # if s_down:
+                        # _r = []
+                        # for _k, _v in s_down.items():
+                            # _r.append('%s=%s' % (c_replace(_k, config_rev),
+                                                 # c_replace(_v, config_rev)))
+                        # ic['props']['snmp_trap.set_down'] = ','.join(_r)
+                    # if 'set_status' in v:
+                        # ic['props']['snmp_trap.set_status'] = c_replace(
+                            # v['set_status'], config_rev)
+                    # if 'set_value' in v:
+                        # ic['props']['snmp_trap.set_value'] = c_replace(
+                            # v['set_value'], config_rev)
+                    # if 'set_if' in v:
+                        # n = 0
+                        # for _v in v['set_if']:
+                            # n += 1
+                            # _status = _v.get('status')
+                            # _value = _v.get('value')
+                            # if not _status: _status = 'null'
+                            # if not _value: _value = 'null'
+                            # _vars = _v.get('vars')
+                            # if _vars:
+                                # __r = []
+                                # for __k, __v in _vars.items():
+                                    # __r.append(
+                                        # '%s=%s' % (c_replace(__k, config_rev),
+                                                   # c_replace(__v, config_rev)))
+                                # ic['props']['snmp_trap.set_if_%u' %
+                                            # n] = '%s,%s:%s' % (_status, _value,
+                                                               # ','.join(__r))
+                # else:
+                    # print_debug(' - ', end='')
+                    # print('can not parse prop: %s' % p)
+                    # sys.exit(2)
+            # else:
                 ic['props'][p] = c_replace(v, config_rev)
         if not section in tpl:
             tpl[section] = []

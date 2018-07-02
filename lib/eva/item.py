@@ -13,6 +13,7 @@ import logging
 import jsonpickle
 import eva.core
 import eva.runner
+import eva.uc.driverapi
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
@@ -264,6 +265,7 @@ class UpdatableItem(Item):
         self.set_time = time.time()
         self.expires = 0
         self.snmp_trap = None
+        self.driver_config = None
         self.mqtt_update = None
         self.mqtt_update_notifier = None
         self.mqtt_update_qos = 1
@@ -272,6 +274,7 @@ class UpdatableItem(Item):
         self._virtual_allowed = True
         self._mqtt_updates_allowed = True
         self._snmp_traps_allowed = True
+        self._drivers_allowed = True
         self._expire_on_any = False
 
     def update_config(self, data):
@@ -279,6 +282,8 @@ class UpdatableItem(Item):
             self.virtual = data['virtual']
         if 'snmp_trap' in data:
             self.snmp_trap = data['snmp_trap']
+        if 'driver_config' in data:
+            self.driver_config = data['driver_config']
         if 'expires' in data:
             self.expires = data['expires']
         if 'update_exec' in data:
@@ -411,6 +416,32 @@ class UpdatableItem(Item):
                 self.set_modified(save)
                 return True
             return False
+        elif prop == 'driver_config' and self._drivers_allowed:
+            if val is None:
+                self.driver_config = None
+                self.log_set(prop, None)
+                self.set_modified(save)
+                return True
+            elif isinstance(val, dict):
+                self.driver_config = val
+                self.log_set(prop, 'dict')
+                self.set_modified(save)
+                return True
+            else:
+                try:
+                    cfg = {}
+                    vals = val.split(',')
+                    for v in vals:
+                        name, value = v.split('=')
+                        if value.find('|') != -1: value = value.split('|')
+                        cfg[name] = value
+                    self.driver_config = cfg
+                    self.log_set(prop, val)
+                    self.set_modified(save)
+                    return True
+                except:
+                    eva.core.log_traceback()
+                    return False
         elif prop == 'snmp_trap.ident_vars' and self._snmp_traps_allowed:
             if val is None:
                 if self.snmp_trap and 'ident_vars' in self.snmp_trap:
@@ -553,6 +584,7 @@ class UpdatableItem(Item):
     def start_processors(self):
         self.subscribe_mqtt_update()
         self.subscribe_snmp_traps()
+        self.register_driver_updates()
         self.start_update_processor()
         self.start_update_scheduler()
         self.start_expiration_checker()
@@ -560,6 +592,7 @@ class UpdatableItem(Item):
 
     def stop_processors(self):
         self.unsubscribe_mqtt_update()
+        self.unregister_driver_updates()
         self.unsubscribe_snmp_traps()
         self.stop_update_processor()
         self.stop_update_scheduler()
@@ -570,9 +603,19 @@ class UpdatableItem(Item):
         if self.snmp_trap and self._snmp_traps_allowed:
             eva.traphandler.subscribe(self)
 
+    def register_driver_updates(self):
+        if self._drivers_allowed and \
+                self.update_exec and self.update_exec[0] == '|':
+            eva.uc.driverapi.register_item_update(self)
+
     def unsubscribe_snmp_traps(self):
         if self._snmp_traps_allowed:
             eva.traphandler.unsubscribe(self)
+
+    def unregister_driver_updates(self):
+        if self._drivers_allowed and \
+                self.update_exec and self.update_exec[0] == '|':
+            eva.uc.driverapi.unregister_item_update(self)
 
     def subscribe_mqtt_update(self):
         if not self.mqtt_update or \
@@ -888,6 +931,11 @@ class UpdatableItem(Item):
                     d['snmp_trap'] = self.snmp_trap
                 elif props:
                     d['snmp_trap'] = None
+            if self._drivers_allowed:
+                if self.driver_config:
+                    d['driver_config'] = self.driver_config
+                elif props:
+                    d['driver_config'] = None
             if not config or self.expires:
                 d['expires'] = self.expires
             if self.update_exec:
@@ -1190,7 +1238,6 @@ class ActiveItem(Item):
             self.action_xc = None
             self.queue_lock.release()
         logging.debug('%s action processor stopped' % self.full_id)
-
 
     def get_action_xc(self, a):
         return eva.runner.ExternalProcess(

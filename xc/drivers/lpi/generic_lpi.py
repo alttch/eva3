@@ -5,6 +5,8 @@ __version__ = "1.0.0"
 __description__ = "Generic LPI, don't use"
 __api__ = 1
 
+__id__ = 'generic'
+
 import threading
 import logging
 import time
@@ -52,6 +54,25 @@ class LPI(object):
 
     def stop(self):
         return True
+
+    def serialize(self, full=False, config=False):
+        d = {}
+        phi = get_phi(self.phi_id)
+        if full:
+            d['author'] = self.author
+            d['license'] = self.license
+            d['description'] = self.description
+            d['version'] = self.version
+            d['api'] = self.api_version
+            if phi:
+                d['phi'] = phi.serialize(full=True)
+        if config:
+            d['cfg'] = self.lpi_cfg
+        d['lpi_id'] = self.lpi_id
+        d['id'] = self.driver_id
+        d['mod'] = self.lpi_mod_id
+        d['phi_id'] = self.phi_id
+        return d
 
     """
     Functions allowed to use in LPI
@@ -128,7 +149,7 @@ class LPI(object):
     """
 
     def __init__(self, lpi_cfg=None, phi_id=None):
-        self.phi = get_phi(phi_id)
+        self.phi_id = phi_id
         if lpi_cfg:
             self.lpi_cfg = lpi_cfg
         else:
@@ -137,8 +158,15 @@ class LPI(object):
         self.__action_results = {}
         self.__terminate_lock = threading.Lock()
         self.__action_results_lock = threading.Lock()
-        self.lpi_id = 'generic'
-        self.io_label = lpi.cfg.get('io_label') if lpi_cfg.get(
+        self.lpi_mod_id = __id__
+        self.author = __author__
+        self.license = __license__
+        self.description = __description__
+        self.version = __version__
+        self.api_version = __api__
+        self.lpi_id = None # set by driverapi on load
+        self.driver_id = None # set by driverapi on load
+        self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
 
     """
@@ -146,6 +174,7 @@ class LPI(object):
     """
 
     def state(self, cfg=None, multi=False, timeout=None, state_in=None):
+        self.phi = get_phi(self.phi_id)
         if not self.phi:
             logging.error(
                 'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
@@ -153,6 +182,7 @@ class LPI(object):
         return self.do_state(cfg, multi, timeout, state_in)
 
     def action(self, _uuid, status=None, value=None, cfg=None, timeout=None):
+        self.phi = get_phi(self.phi_id)
         if not self.phi:
             logging.error(
                 'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
@@ -226,3 +256,4 @@ class LPI(object):
         result = self.__action_results.get(_uuid)
         self.__action_results_lock.release()
         return result
+

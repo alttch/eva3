@@ -12,8 +12,8 @@ import eva.core
 from eva.tools import format_json
 
 phis = {}
+lpis = {}
 drivers = {}
-
 items_by_phi = {}
 
 
@@ -37,25 +37,56 @@ def get_phi(phi_id):
     return phis.get(phi_id)
 
 
-def handle_phi_event(phi_id, port, data):
-    #TODO - rewrite
-    iph = items.by_phi.get(phi_id)
+def get_lpi(lpi_id):
+    return lpis.get(lpi_id)
+
+
+def get_driver(driver_id):
+    return drivers.get(driver_id)
+
+
+def register_item_update(i):
+    u = i.update_exec
+    if not u or u[0] != '|' or u.find('.') == -1:
+        logging.error(
+            'unable to register item %s for the driver events, invalid driver str: %s'
+            % (i.oid, i.update_exec))
+        return False
+    phi_id = u[1:].split('.')[0]
+    if not phi_id in phis:
+        logging.error(
+            'unable to register item %s for the driver events, no such PHI: %s'
+            % (i.oid, phi_id))
+        return False
+    items_by_phi[phi_id].add(i)
+    return True
+
+
+def unregister_item_update(i):
+    u = i.update_exec
+    if not u or u[0] != '|' or u.find('.') == -1:
+        logging.error(
+            'unable to unregister item %s from the driver events, invalid driver str: %s'
+            % (i.oid, i.update_exec))
+        return False
+    phi_id = u[1:].split('.')[0]
+    if not phi_id in phis:
+        logging.error(
+            'unable to unregister item %s from the driver events, no such PHI: %s'
+            % (i.oid, phi_id))
+        return False
+    try:
+        items_by_phi[phi_id].remove(i)
+        return True
+    except:
+        return False
+
+
+def handle_phi_event(phi, port, data):
+    iph = items.by_phi.get(phi.phi_id)
     if iph:
-        ibp = iph.get(str(port))
-        if ibp:
-            for ie in ibp:
-                if not isinstance(ie.update_exec, dict):
-                    continue
-                driver = drivers.get(ie.updat_exec.get('driver'))
-                if driver is None:
-                    continue
-                if ie.item_type == 'mu':
-                    multi = True
-                else:
-                    multi = False
-                state = driver.state(cfg=ie.update_exec, multi=multi)
-                if item.updates_allowed():
-                    item.update_after_run(state)
+        for i in iph:
+            if i.updates_allowed() and not i.is_destroyed(): i.do_update()
 
 
 def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
@@ -77,7 +108,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
                 'PHI driver API version is %s' % _api)
             return False
     except:
-        logging.error('unable to load phi mod %s' % phi_mod_id)
+        logging.error('unable to load PHI mod %s' % phi_mod_id)
         eva.core.log_traceback()
         return False
     phi = phi_mod.PHI(phi_cfg=phi_cfg)
@@ -85,20 +116,88 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     if phi_id in phis:
         phis[phi_id].stop()
     phis[phi_id] = phi
+    if not phi_id in items_by_phi:
+        items_by_phi[phi_id] = set()
     if start: phi.start()
     return phi
+
+
+def load_lpi(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
+    if get_phi(phi_id) is None:
+        logging.error('Unable to load LPI, unknown PHI: %s' % phi_id)
+        return False
+    try:
+        lpi_mod = importlib.import_module('eva.uc.drivers.lpi.' + lpi_mod_id)
+        importlib.reload(lpi_mod)
+        _api = lpi_mod.__api__
+        _author = lpi_mod.__author__
+        _version = lpi_mod.__version__
+        _description = lpi_mod.__description__
+        _license = lpi_mod.__license__
+        logging.info('LPI loaded %s v%s, author: %s, license: %s' %
+                     (lpi_mod_id, _version, _author, _license))
+        logging.debug('%s: %s' % (lpi_mod_id, _description))
+        if _api > __api__:
+            logging.error(
+                'Unable to activate LPI %s: ' % lpi_mod_id + \
+                'controller driver API version is %s, ' % __api__ + \
+                'LPI driver API version is %s' % _api)
+            return False
+    except:
+        logging.error('unable to load LPI mod %s' % lpi_mod_id)
+        eva.core.log_traceback()
+        return False
+    lpi = lpi_mod.LPI(lpi_cfg=lpi_cfg, phi_id=phi_id)
+    lpi.lpi_id = lpi_id
+    lpi.driver_id = phi_id + '.' + lpi_id
+    if lpi_id in lpis:
+        lpis[lpi_id].stop()
+    lpis[lpi_id] = lpi
+    drivers[lpi.driver_id] = lpi
+    if start: lpi.start()
+    return lpi
 
 
 def unload_phi(phi_id):
     phi = get_phi(phi_id)
     if phi is None: return False
+    erro = False
+    for k, l in lpis.copy().items():
+        if l.phi_id == phi_id:
+            logging.error(
+                'Unable to unload PHI %s, it is in use by LPI %s' % (phi_id, k))
+            err = True
+    if items_by_phi[phi_id]:
+        logging.error(
+            'Unable to unload PHI %s, it is in use by controller items' %
+            (phi_id))
+        err = True
+    if err: return False
     phi.stop()
     del phis[phi_id]
     return True
 
 
+def unload_lpi(lpi_id=None, driver_id=None):
+    if lpi_id:
+        lpi = get_lpi(lpi_id)
+    elif driver_id:
+        lpi = get_driver(driver_id)
+    else:
+        return False
+    if lpi is None: return False
+    erro = False
+    lpi.stop()
+    del drivers[lpi.driver_id]
+    del lpis[lpi.lpi_id]
+    return True
+
+
 def serialize(full=False, config=False):
-    return {'phi': serialize_phi(full=full, config=config), 'drivers': []}
+    return {
+        'phi': serialize_phi(full=full, config=config),
+        'lpi': serialize_lpi(full=full, config=config)
+    }
 
 
 def serialize_phi(full=False, config=False):
@@ -109,6 +208,18 @@ def serialize_phi(full=False, config=False):
             result.append(r)
         except:
             logging.error('phi %s serialize error' % k)
+            eva.core.log_traceback()
+    return result
+
+
+def serialize_lpi(full=False, config=False):
+    result = []
+    for k, p in lpis.copy().items():
+        try:
+            r = p.serialize(full=full, config=config)
+            result.append(r)
+        except:
+            logging.error('lpi %s serialize error' % k)
             eva.core.log_traceback()
     return result
 
@@ -125,6 +236,15 @@ def load():
         if _phi:
             for p in _phi:
                 load_phi(p['id'], p['mod'], phi_cfg=p['cfg'], start=False)
+        _lpi = data.get('lpi')
+        if _lpi:
+            for l in _lpi:
+                load_lpi(
+                    l['lpi_id'],
+                    l['mod'],
+                    l['phi_id'],
+                    lpi_cfg=l['cfg'],
+                    start=False)
     except:
         logging.error('unaboe to load uc_drivers.json')
         eva.core.log_traceback()
@@ -148,6 +268,8 @@ def start():
     eva.core.append_dump_func('uc.driverapi', dump)
     eva.core.append_save_func(save)
     for k, p in phis.items():
+        p.start()
+    for k, p in lpis.items():
         p.start()
 
 

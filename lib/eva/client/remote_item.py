@@ -37,6 +37,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.controller = controller
         self._virtual_allowed = False
         self._snmp_traps_allowed = False
+        self._drivers_allowed = False
         cfg = {}
         if controller.mqtt_update:
             cfg['mqtt_update'] = controller.mqtt_update

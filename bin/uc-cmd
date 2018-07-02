@@ -336,6 +336,7 @@ if ( func == 'set_prop' or \
         func == 'create_device' or \
         func == 'update_device' or \
         func == 'load_phi' or \
+        func == 'load_driver' or \
         func == 'clone' or \
         func == 'clone_group' or \
         func == 'create_unit' or \

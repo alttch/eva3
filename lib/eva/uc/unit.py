@@ -36,7 +36,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
             '0': status_label_off,
             '1': status_label_on
         }
-        self.status_labels = self.default_status_labels
+        self.status_labels = self.default_status_labels.copy()
 
     def status_by_label(self, label):
         for k, v in self.status_labels.copy().items():
@@ -167,6 +167,11 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
                     self.stop_auto_processor()
                 else:
                     self.start_auto_processor()
+            return True
+        elif prop == 'status_labels' and isinstance(val, dict):
+            self.status_labels = val
+            self.log_set(prop, 'dict')
+            self.set_modified(save)
             return True
         elif prop[:7] == 'status:':
             try:
