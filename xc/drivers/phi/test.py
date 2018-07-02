@@ -55,6 +55,8 @@ class PHI(GenericPHI):
         return d
 
     def test(self, msg=None):
+        if msg == 'get':
+            return self.data
         try:
             port, val = msg.split('=')
             port = int(port)
