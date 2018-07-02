@@ -18,7 +18,7 @@ class LPI(GenericLPI):
     def do_state(self, cfg=None, multi=False, timeout=None, state_in=None):
         if cfg is None:
             return [] if multi else None, None
-        port = cfg.get('port')
+        port = cfg.get(self.io_label)
         if port is None: return [] if multi else None, None
         if not isinstance(port, list):
             _port = [port]
@@ -56,7 +56,7 @@ class LPI(GenericLPI):
     def do_action(self, _uuid, status, value, cfg, timeout):
         if cfg is None or status is None:
             return self.result_error(_uuid, 1, 'no config specified')
-        port = cfg.get('port')
+        port = cfg.get(self.io_label)
         if port is None:
             return self.result_error(_uuid, 1, 'no ports in config')
         try:

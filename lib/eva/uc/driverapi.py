@@ -58,7 +58,7 @@ def handle_phi_event(phi_id, port, data):
                     item.update_after_run(state)
 
 
-def load_phi(phi_id, phi_mod_id, cfg=None, start=True):
+def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     try:
         phi_mod = importlib.import_module('eva.uc.drivers.phi.' + phi_mod_id)
         importlib.reload(phi_mod)
@@ -80,7 +80,7 @@ def load_phi(phi_id, phi_mod_id, cfg=None, start=True):
         logging.error('unable to load phi mod %s' % phi_mod_id)
         eva.core.log_traceback()
         return False
-    phi = phi_mod.PHI(cfg)
+    phi = phi_mod.PHI(phi_cfg=phi_cfg)
     phi.phi_id = phi_id
     if phi_id in phis:
         phis[phi_id].stop()
@@ -124,7 +124,7 @@ def load():
         _phi = data.get('phi')
         if _phi:
             for p in _phi:
-                load_phi(p['id'], p['mod'], cfg=p['cfg'], start=False)
+                load_phi(p['id'], p['mod'], phi_cfg=p['cfg'], start=False)
     except:
         logging.error('unaboe to load uc_drivers.json')
         eva.core.log_traceback()

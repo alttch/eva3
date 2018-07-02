@@ -127,17 +127,19 @@ class LPI(object):
     just don't forget to call super().__init__ before your code
     """
 
-    def __init__(self, cfg=None, phi_id=None):
+    def __init__(self, lpi_cfg=None, phi_id=None):
         self.phi = get_phi(phi_id)
-        if cfg:
-            self.cfg = cfg
+        if lpi_cfg:
+            self.lpi_cfg = lpi_cfg
         else:
-            self.cfg = {}
+            self.lpi_cfg = {}
         self.__terminate = {}
         self.__action_results = {}
         self.__terminate_lock = threading.Lock()
         self.__action_results_lock = threading.Lock()
         self.lpi_id = 'generic'
+        self.io_label = lpi.cfg.get('io_label') if lpi_cfg.get(
+            'io_label') else 'port'
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW

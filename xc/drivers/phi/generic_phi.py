@@ -13,11 +13,11 @@ class PHI(object):
     Override everything. super() constructor may be useful to keep unparsed
     config
     """
-    def __init__(self, cfg):
-        if cfg:
-            self.cfg = cfg
+    def __init__(self, phi_cfg):
+        if phi_cfg:
+            self.phi_cfg = phi_cfg
         else:
-            self.cfg = {}
+            self.phi_cfg = {}
         self.phi_mod_id = __id__
         self.author = __author__
         self.license = __license__
@@ -50,7 +50,7 @@ class PHI(object):
             d['version'] = self.version
             d['api'] = self.api_version
         if config:
-            d['cfg'] = self.cfg
+            d['cfg'] = self.phi_cfg
         d['mod'] = self.phi_mod_id
         d['id'] = self.phi_id
         return d

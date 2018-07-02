@@ -11,9 +11,9 @@ from eva.uc.driverapi import handle_phi_event
 
 class PHI(GenericPHI):
 
-    def __init__(self, cfg):
-        super().__init__(cfg=cfg)
-        d = self.cfg.get('default_state')
+    def __init__(self, phi_cfg):
+        super().__init__(phi_cfg=phi_cfg)
+        d = self.phi_cfg.get('default_state')
         if d is None: d = -1
         else:
             try:
@@ -48,7 +48,7 @@ class PHI(GenericPHI):
         if not _port in self.data:
             return False
         self.data[_port] = _data
-        if self.cfg.get('event_on_set'):
+        if self.phi_cfg.get('event_on_set'):
             handle_phi_event(self.phi_id, port, self.data)
         return True
 
