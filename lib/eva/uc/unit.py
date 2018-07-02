@@ -36,7 +36,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
             '0': status_label_off,
             '1': status_label_on
         }
-        self.status_labels = self.default_status_labels
+        self.status_labels = self.default_status_labels.copy()
 
     def status_by_label(self, label):
         for k, v in self.status_labels.copy().items():
