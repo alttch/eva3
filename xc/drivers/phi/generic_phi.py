@@ -24,6 +24,7 @@ class PHI(object):
         self.description = __description__
         self.version = __version__
         self.api_version = __api__
+        self.ready = True
         self.phi_id = None # set by driverapi on load
 
     def get(self, port, timeout):
@@ -54,3 +55,6 @@ class PHI(object):
         d['mod'] = self.phi_mod_id
         d['id'] = self.phi_id
         return d
+
+    def test(self, cmd):
+        return False

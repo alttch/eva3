@@ -344,7 +344,7 @@ class UpdatableItem(Item):
             return True
         elif prop == 'update_exec':
             if self.update_exec != val:
-                if val[0] == '|':
+                if val and val[0] == '|':
                     if self._drivers_allowed:
                         d = eva.uc.driverapi.get_driver(val[1:])
                         if not d:
@@ -358,7 +358,7 @@ class UpdatableItem(Item):
                 self.update_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
-                if val[0] == '|':
+                if val and val[0] == '|':
                     self.register_driver_updates()
                 else:
                     self.unregister_driver_updates()
@@ -1154,7 +1154,7 @@ class ActiveItem(Item):
             '%s executing action %s pr=%u' % \
              (self.full_id, action.uuid, action.priority))
 
-    def action_run_args(self, action):
+    def action_run_args(self, action, n2n=True):
         return ()
 
     def action_before_get_task(self):
@@ -1220,7 +1220,6 @@ class ActiveItem(Item):
                         xc = self.get_action_xc(a)
                         self.action_xc = xc
                         self.queue_lock.release()
-                        xc.set_tki(self.term_kill_interval)
                         xc.run()
                         self.action_after_run(a, xc)
                         if xc.exitcode < 0:
@@ -1255,13 +1254,23 @@ class ActiveItem(Item):
         logging.debug('%s action processor stopped' % self.full_id)
 
     def get_action_xc(self, a):
-        return eva.runner.ExternalProcess(
-            fname=self.action_exec,
-            item=self,
-            env=a.action_env(),
-            update=False,
-            args=self.action_run_args(a),
-            timeout=self.action_timeout)
+        if self._drivers_allowed and \
+                self.action_exec and self.action_exec[0] == '|':
+            return eva.runner.DriverCommand(
+                item=self,
+                state=self.action_run_args(a, n2n=False),
+                timeout=self.action_timeout,
+                tki=self.term_kill_interval,
+                _uuid=a.uuid)
+        else:
+            return eva.runner.ExternalProcess(
+                fname=self.action_exec,
+                item=self,
+                env=a.action_env(),
+                update=False,
+                args=self.action_run_args(a),
+                timeout=self.action_timeout,
+                tki=self.term_kill_interval)
 
     def update_config(self, data):
         if 'action_enabled' in data:
@@ -1304,6 +1313,17 @@ class ActiveItem(Item):
                 return False
         elif prop == 'action_exec':
             if self.action_exec != val:
+                if val and val[0] == '|':
+                    if self._drivers_allowed:
+                        d = eva.uc.driverapi.get_driver(val[1:])
+                        if not d:
+                            logging.error(
+                                'Can not set ' + \
+                                    '%s.action_exec = %s, no such driver'
+                                    % (self.full_id, val))
+                            return False
+                    else:
+                        return False
                 self.action_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)

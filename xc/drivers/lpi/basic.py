@@ -23,11 +23,9 @@ class LPI(GenericLPI):
         self.api_version = __api__
         self.lpi_mod_id = __id__
 
-    def do_state(self, cfg=None, multi=False, timeout=None, state_in=None):
-        if cfg is None:
-            return [] if multi else None, None
-        port = cfg.get(self.io_label)
-        if port is None: return [] if multi else None, None
+    def do_state(self, _uuid, cfg, multi, timeout, tki, state_in):
+        if cfg is None or cfg.get(self.io_label) is None:
+            return self.state_result_error(_uuid)
         if not isinstance(port, list):
             _port = [port]
         else:
@@ -44,9 +42,11 @@ class LPI(GenericLPI):
                 status = self.phi.get(_p, timeout=timeout)
             if status is None or status not in [0, 1]:
                 if multi:
-                    st.append((-1,None))
+                    st.append((-1, None))
                     continue
-                else: return -1, None
+                else:
+                    self.set_result((-1, None))
+                    return
             if invert:
                 _status = 1 - status
             else:
@@ -59,20 +59,26 @@ class LPI(GenericLPI):
                 else:
                     if st != _status:
                         return -1, None
-        return st if multi else (st, None)
+        if multi:
+            self.set_result(st)
+        else:
+            self.set_result((st, None))
+        return
 
-    def do_action(self, _uuid, status, value, cfg, timeout):
-        if cfg is None or status is None:
-            return self.result_error(_uuid, 1, 'no config specified')
+    def do_action(self, _uuid, status, value, cfg, timeout, tki):
+        if cfg is None:
+            return self.action_result_error(_uuid, 1, 'no config specified')
+        if status is None:
+            return self.action_result_error(_uuid, 1, 'no status specified')
         port = cfg.get(self.io_label)
         if port is None:
-            return self.result_error(_uuid, 1, 'no ports in config')
+            return self.action_result_error(_uuid, 1, 'no ports in config')
         try:
             status = int(status)
         except:
-            return self.result_error(_uuid, msg='status is not integer')
+            return self.action_result_error(_uuid, msg='status is not integer')
         if status not in [0, 1]:
-            return self.result_error(_uuid, msg='status is not integer')
+            return self.action_result_error(_uuid, msg='status is not integer')
         if not isinstance(port, list):
             _port = [port]
         else:
@@ -84,5 +90,6 @@ class LPI(GenericLPI):
             else:
                 _status = status
             if not self.phi.set(_port, _status, timeout=timeout):
-                return self.result_error(_uuid, msg='port %s set error' % _port)
-        return self.result_ok(_uuid)
+                return self.action_result_error(
+                    _uuid, msg='port %s set error' % _port)
+        return self.action_result_ok(_uuid)

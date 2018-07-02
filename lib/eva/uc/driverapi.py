@@ -129,6 +129,9 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
         eva.core.log_traceback()
         return False
     phi = phi_mod.PHI(phi_cfg=phi_cfg)
+    if not phi.ready:
+        logging.error('unable to init PHI mod %s' % phi_mod_id)
+        return False
     phi.phi_id = phi_id
     if phi_id in phis:
         phis[phi_id].stop()
@@ -165,6 +168,9 @@ def load_lpi(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
         eva.core.log_traceback()
         return False
     lpi = lpi_mod.LPI(lpi_cfg=lpi_cfg, phi_id=phi_id)
+    if not lpi.ready:
+        logging.error('unable to init LPI mod %s' % lpi_mod_id)
+        return False
     lpi.lpi_id = lpi_id
     lpi.driver_id = phi_id + '.' + lpi_id
     if lpi_id in lpis:
@@ -178,7 +184,7 @@ def load_lpi(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
 def unload_phi(phi_id):
     phi = get_phi(phi_id)
     if phi is None: return False
-    erro = False
+    err = False
     for k, l in lpis.copy().items():
         if l.phi_id == phi_id:
             logging.error(
@@ -186,7 +192,7 @@ def unload_phi(phi_id):
             err = True
     if items_by_phi[phi_id]:
         logging.error(
-            'Unable to unload PHI %s, it is in use by controller items' %
+            'Unable to unload PHI %s, it is in use' %
             (phi_id))
         err = True
     if err: return False
@@ -203,7 +209,14 @@ def unload_lpi(lpi_id=None, driver_id=None):
     else:
         return False
     if lpi is None: return False
-    erro = False
+    err = False
+    for i in items_by_phi[lpi.phi_id]:
+        if i.update_exec[1:] == driver_id:
+            logging.error(
+                'Unable to unload driver %s, it is in use' %
+                (driver_id))
+            err = True
+    if err: return False
     lpi.stop()
     del drivers[lpi.driver_id]
     del lpis[lpi.lpi_id]
@@ -284,12 +297,14 @@ def start():
     eva.core.append_stop_func(stop)
     eva.core.append_dump_func('uc.driverapi', dump)
     eva.core.append_save_func(save)
-    for k, p in phis.items():
-        p.start()
     for k, p in lpis.items():
+        p.start()
+    for k, p in phis.items():
         p.start()
 
 
 def stop():
-    for p in phis:
+    for k, p in lpis.items():
+        p.stop()
+    for k, p in phis.items():
         p.stop()

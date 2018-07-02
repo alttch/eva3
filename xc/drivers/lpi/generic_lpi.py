@@ -15,6 +15,7 @@ from eva.uc.driverapi import get_polldelay
 from eva.uc.driverapi import get_timeout
 from eva.uc.driverapi import critical
 from eva.uc.driverapi import get_phi
+from eva.uc.driverapi import get_timeout
 
 
 class LPI(object):
@@ -128,20 +129,33 @@ class LPI(object):
             i += get_polldelay()
         return not self.need_terminate(_uuid)
 
-    def result_terminated(self, _uuid):
-        return self.result(_uuid, -15, '', '')
+    def action_result_terminated(self, _uuid):
+        return self.action_result(_uuid, -15, '', '')
 
-    def result_error(self, _uuid, code=1, msg=''):
-        return self.result(_uuid, code, '', msg)
+    def action_result_error(self, _uuid, code=1, msg=''):
+        return self.action_result(_uuid, code, '', msg)
 
-    def result_ok(self, _uuid, msg=''):
-        return self.result(_uuid, 0, msg, '')
+    def action_result_ok(self, _uuid, msg=''):
+        return self.action_result(_uuid, 0, msg, '')
 
-    def result(self, _uuid, code=0, out='', err=''):
+    def action_result(self, _uuid, code=0, out='', err=''):
         self._remove_terminate(_uuid)
         result = {'exitcode': code, 'out': out, 'err': err}
-        self._set_result(_uuid, result)
+        self.set_result(_uuid, result)
         return result
+
+    def state_result_error(self, _uuid):
+        set_result(_uuid, False)
+        return False
+
+    def set_result(self, _uuid, result=None):
+        if not self.__results_lock.acquire(timeout=get_timeout()):
+            logging.critical('GenericLPI::set_result locking broken')
+            critical()
+            return None
+        self.__results[_uuid] = result
+        self.__results_lock.release()
+        return True
 
     """
     Constructor should be overriden to set lpi id plus i.e. to parse config,
@@ -154,42 +168,74 @@ class LPI(object):
             self.lpi_cfg = lpi_cfg
         else:
             self.lpi_cfg = {}
+        self.default_tki_diff = 2
         self.__terminate = {}
-        self.__action_results = {}
+        self.__results = {}
         self.__terminate_lock = threading.Lock()
-        self.__action_results_lock = threading.Lock()
+        self.__results_lock = threading.Lock()
         self.lpi_mod_id = __id__
         self.author = __author__
         self.license = __license__
         self.description = __description__
         self.version = __version__
         self.api_version = __api__
-        self.lpi_id = None # set by driverapi on load
-        self.driver_id = None # set by driverapi on load
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
+        self.ready = True
+        self.lpi_id = None  # set by driverapi on load
+        self.driver_id = None  # set by driverapi on load
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW
     """
 
-    def state(self, cfg=None, multi=False, timeout=None, state_in=None):
+    def state(self,
+              _uuid,
+              cfg=None,
+              multi=False,
+              timeout=None,
+              tki=None,
+              state_in=None):
         self.phi = get_phi(self.phi_id)
+        if timeout:
+            _timeout = timeout
+        else:
+            _timeout = get_timeout()
+        if tki:
+            _tki = tki
+        else:
+            _tki = get_timeout() - self.default_tki_diff
+            if _tki < 0: _tki = 0
         if not self.phi:
             logging.error(
                 'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
             return None
-        return self.do_state(cfg, multi, timeout, state_in)
+        return self.do_state(_uuid, cfg, multi, _timeout, _tki, state_in)
 
-    def action(self, _uuid, status=None, value=None, cfg=None, timeout=None):
+    def action(self,
+               _uuid,
+               status=None,
+               value=None,
+               cfg=None,
+               timeout=None,
+               tki=None):
         self.phi = get_phi(self.phi_id)
+        if timeout:
+            _timeout = timeout
+        else:
+            _timeout = get_timeout()
+        if tki:
+            _tki = tki
+        else:
+            _tki = get_timeout() - self.default_tki_diff
+            if _tki < 0: _tki = 0
         if not self.phi:
             logging.error(
                 'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
             return None
         self._append_terminate(_uuid)
-        self._set_result(_uuid)
-        return self.do_action(_uuid, status, value, cfg, timeout)
+        self.set_result(_uuid)
+        return self.do_action(_uuid, status, value, cfg, timeout, tki)
 
     def terminate(self, _uuid):
         if not self.__terminate_lock.acquire(timeout=get_timeout()):
@@ -226,34 +272,24 @@ class LPI(object):
         self.__terminate_lock.release()
         return True
 
-    def _set_result(self, _uuid, result=None):
-        if not self.__action_results_lock.acquire(timeout=get_timeout()):
-            logging.critical('GenericLPI::_set_result locking broken')
-            critical()
-            return None
-        self.__action_results[_uuid] = result
-        self.__action_results_lock.release()
-        return True
-
     def clear_result(self, _uuid):
-        if not self.__action_results_lock.acquire(timeout=get_timeout()):
+        if not self.__results_lock.acquire(timeout=get_timeout()):
             logging.critical('GenericLPI::clear_result locking broken')
             critical()
             return None
         try:
-            del (self.__action_results[_uuid])
+            del (self.__results[_uuid])
         except:
-            self.__action_results_lock.release()
+            self.__results_lock.release()
             return False
-        self.__action_results_lock.release()
+        self.__results_lock.release()
         return True
 
     def get_result(self, _uuid):
-        if not self.__action_results_lock.acquire(timeout=get_timeout()):
+        if not self.__results_lock.acquire(timeout=get_timeout()):
             logging.critical('GenericLPI::get_result locking broken')
             critical()
             return None
-        result = self.__action_results.get(_uuid)
-        self.__action_results_lock.release()
+        result = self.__results.get(_uuid)
+        self.__results_lock.release()
         return result
-

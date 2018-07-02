@@ -2,7 +2,7 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
-__description__ = "Emulates 4-port relay"
+__description__ = "Emulates 16-port relay"
 __api__ = 1
 __id__ = 'test'
 
@@ -23,7 +23,9 @@ class PHI(GenericPHI):
                 d = int(d)
             except:
                 d = -1
-        self.data = {'1': d, '2': d, '3': d, '4': d}
+        self.data = {}
+        for i in range(1,32):
+            self.data[str(i)] = d
         self.phi_mod_id = __id__
         self.author = __author__
         self.license = __license__
@@ -54,14 +56,14 @@ class PHI(GenericPHI):
         d = super().serialize(full=full, config=config)
         return d
 
-    def test(self, msg=None):
-        if msg == 'get':
+    def test(self, cmd=None):
+        if cmd == 'get':
             return self.data
         try:
-            port, val = msg.split('=')
+            port, val = cmd.split('=')
             port = int(port)
             val = int(val)
-            if port < 1 or port > 4 or val < -1 or val > 1: return None
+            if port < 1 or port > 16 or val < -1 or val > 1: return None
             self.data[port] = val
             logging.debug(
                 '%s test completed, set port %s=%s' % (self.phi_id, port, val))

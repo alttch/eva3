@@ -255,11 +255,11 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
              (self.full_id, action.uuid, action.priority,
                  action.nstatus, action.nvalue))
 
-    def action_run_args(self, action):
+    def action_run_args(self, action, n2n=True):
         nstatus = str(action.nstatus)
         if action.nvalue is not None:
             nvalue = str(action.nvalue)
-        else:
+        elif n2n:
             nvalue = 'null'
         return (nstatus, nvalue)
 

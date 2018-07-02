@@ -609,12 +609,12 @@ class UC_API(GenericAPI):
         else:
             return False
 
-    def test_phi(self, k=None, i=None, m=None):
+    def test_phi(self, k=None, i=None, c=None):
         if not apikey.check(k, master=True): return None
         if not i: return False
         phi = eva.uc.driverapi.get_phi(i)
         if phi:
-            return phi.test(m)
+            return phi.test(c)
         else:
             return False
 
@@ -995,9 +995,9 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         if result is False: raise cp_api_404()
         return result
 
-    def test_phi(self, k=None, i=None, m=None):
+    def test_phi(self, k=None, i=None, c=None):
         cp_need_master(k)
-        result = super().test_phi(k, i, m)
+        result = super().test_phi(k, i, c)
         if result is False: raise cp_api_404()
         if result is None: raise cp_api_error()
         return result
