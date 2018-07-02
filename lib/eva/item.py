@@ -344,9 +344,24 @@ class UpdatableItem(Item):
             return True
         elif prop == 'update_exec':
             if self.update_exec != val:
+                if val[0] == '|':
+                    if self._drivers_allowed:
+                        d = eva.uc.driverapi.get_driver(val[1:])
+                        if not d:
+                            logging.error(
+                                'Can not set ' + \
+                                    '%s.update_exec = %s, no such driver'
+                                    % (self.full_id, val))
+                            return False
+                    else:
+                        return False
                 self.update_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
+                if val[0] == '|':
+                    self.register_driver_updates()
+                else:
+                    self.unregister_driver_updates()
             return True
         elif prop == 'update_interval':
             if val is None:

@@ -44,8 +44,13 @@ class UCMultiUpdate(eva.item.MultiUpdate):
                     self.set_modified(save)
                 return True
             if isinstance(val, list):
-                self.items_to_update = val
-                self.log_set(prop, 'list')
+                i2u = []
+                for i in val:
+                    item = eva.uc.controller.get_item(i)
+                    if not item or item in i2u: return False
+                    i2u.append(item)
+                self.items_to_update = i2u
+                self.log_set(prop, ','.join(val))
                 self.set_modified(save)
                 return True
             item_ids = val.split(',')

@@ -49,7 +49,8 @@ def register_item_update(i):
     u = i.update_exec
     if not u or u[0] != '|' or u.find('.') == -1:
         logging.error(
-            'unable to register item %s for the driver events, invalid driver str: %s'
+            'unable to register item ' + \
+                    '%s for the driver events, invalid driver str: %s'
             % (i.oid, i.update_exec))
         return False
     phi_id = u[1:].split('.')[0]
@@ -59,6 +60,8 @@ def register_item_update(i):
             % (i.oid, phi_id))
         return False
     items_by_phi[phi_id].add(i)
+    logging.debug(
+        'item %s registered for driver updates, PHI: %s' % (i.full_id, phi_id))
     return True
 
 
@@ -66,17 +69,21 @@ def unregister_item_update(i):
     u = i.update_exec
     if not u or u[0] != '|' or u.find('.') == -1:
         logging.error(
-            'unable to unregister item %s from the driver events, invalid driver str: %s'
+            'unable to unregister item ' + \
+                    '%s from the driver events, invalid driver str: %s'
             % (i.oid, i.update_exec))
         return False
     phi_id = u[1:].split('.')[0]
     if not phi_id in phis:
         logging.error(
-            'unable to unregister item %s from the driver events, no such PHI: %s'
+            'unable to unregister item ' + \
+                    '%s from the driver events, no such PHI: %s'
             % (i.oid, phi_id))
         return False
     try:
         items_by_phi[phi_id].remove(i)
+        logging.debug('item %s unregistered from driver updates, PHI: %s' %
+                      (i.full_id, phi_id))
         return True
     except:
         return False
@@ -86,7 +93,15 @@ def handle_phi_event(phi, port, data):
     iph = items.by_phi.get(phi.phi_id)
     if iph:
         for i in iph:
-            if i.updates_allowed() and not i.is_destroyed(): i.do_update()
+            if i.updates_allowed() and not i.is_destroyed():
+                logging.debug('event on PHI %s, port %s, updating item %s' %
+                              (phi.phi_id, port, i.full_id))
+                update_item(i, data)
+
+
+def update_item(i, data):
+    #TODO - handle update event
+    pass
 
 
 def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
