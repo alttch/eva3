@@ -5,6 +5,8 @@ __version__ = "1.0.0"
 __description__ = "Generic PHI, don't use"
 __api__ = 1
 
+__id__ = 'generic'
+
 
 class PHI(object):
     """
@@ -16,7 +18,12 @@ class PHI(object):
             self.cfg = cfg
         else:
             self.cfg = {}
-        self.phi_id = 'generic'
+        self.phi_id = __id__
+        self.author = __author__
+        self.license = __license__
+        self.description = __description__
+        self.version = __version__
+        self.api_version = __api__
 
     def get(self, port, timeout):
         return None
@@ -32,3 +39,16 @@ class PHI(object):
 
     def stop(self):
         return True
+
+    def serialize(self, full=False, config=False):
+        d = {}
+        if full:
+            d['author'] = self.author
+            d['license'] = self.license
+            d['description'] = self.description
+            d['version'] = self.version
+            d['api'] = self.api_version
+        if config:
+            d['cfg'] = self.cfg
+        d['id'] = self.phi_id
+        return d

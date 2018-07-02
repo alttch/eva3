@@ -12,11 +12,6 @@ phi_mod = importlib.import_module('eva.uc.drivers.phi.' + phi_id)
 lpi_mod = importlib.import_module('eva.uc.drivers.lpi.' + lpi_id)
 
 print('Driver: %s' % d)
-print('PHI API: %u' % phi_mod.__api__)
-print('PHI author: %s' % phi_mod.__author__)
-print('PHI version: %s' % phi_mod.__version__)
-print('PHI description: %s' % phi_mod.__description__)
-print('PHI license: %s' % phi_mod.__license__)
 print('LPI API: %u' % lpi_mod.__api__)
 print('LPI author: %s' % lpi_mod.__author__)
 print('LPI version: %s' % lpi_mod.__version__)
@@ -25,13 +20,16 @@ print('LPI license: %s' % lpi_mod.__license__)
 
 e = threading.Event()
 
-phi = phi_mod.PHI({'default_state': 0 })
+import eva.uc.driverapi as driverapi
 
-import eva.uc.driverapi
+driverapi.load_phi('test_1', 'test', {'default_state': 0 })
 
-eva.uc.driverapi.phis[d] = phi
+print(driverapi.serialize())
 
-driver = lpi_mod.LPI(phi_id=d)
+# driverapi.unload_phi('test_1')
+
+driver = lpi_mod.LPI(phi_id='test_1')
+
 status = driver.state(cfg = {'port': [ '1', 'i:2', '5' ] }, multi=True)
 print(status)
 

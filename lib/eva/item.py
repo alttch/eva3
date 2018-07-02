@@ -404,6 +404,12 @@ class UpdatableItem(Item):
                 self.log_set(prop, None)
                 self.set_modified(save)
                 return True
+            elif isinstance(val, dict):
+                self.snmp_trap = val
+                self.subscribe_snmp_traps()
+                self.log_set('snmp_trap', 'dict')
+                self.set_modified(save)
+                return True
             return False
         elif prop == 'snmp_trap.ident_vars' and self._snmp_traps_allowed:
             if val is None:
@@ -1148,7 +1154,7 @@ class ActiveItem(Item):
                     elif a.is_status_queued() and a.set_running():
                         self.action_log_run(a)
                         self.action_before_run(a)
-                        xc = self.get_action_xc()
+                        xc = self.get_action_xc(a)
                         self.action_xc = xc
                         self.queue_lock.release()
                         xc.set_tki(self.term_kill_interval)
@@ -1186,7 +1192,7 @@ class ActiveItem(Item):
         logging.debug('%s action processor stopped' % self.full_id)
 
 
-    def get_action_xc(self):
+    def get_action_xc(self, a):
         return eva.runner.ExternalProcess(
             fname=self.action_exec,
             item=self,
