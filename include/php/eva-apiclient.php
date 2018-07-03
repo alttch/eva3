@@ -117,7 +117,16 @@ $_eva_api_func = array(
                     'destroy',
                     'destroy_device',
                     'login',
-                    'logout'
+                    'logout',
+                    'load_phi',
+                    'unload_phi',
+                    'load_driver',
+                    'unload_driver',
+                    'list_phi',
+                    'list_drivers',
+                    'get_phi',
+                    'get_driver',
+                    'test_phi'
                     ),
                 'cr' => array(
                     'update',
@@ -138,7 +147,16 @@ $_eva_api_func = array(
                     'destroy',
                     'destroy_device',
                     'login',
-                    'logout'
+                    'logout',
+                    'load_phi',
+                    'unload_phi',
+                    'load_driver',
+                    'unload_driver',
+                    'list_phi',
+                    'list_drivers',
+                    'get_phi',
+                    'get_driver',
+                    'test_phi'
                     ),
                 'ce' => array(
                     'action',
