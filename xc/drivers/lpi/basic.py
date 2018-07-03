@@ -8,7 +8,8 @@ __api__ = 1
 __id__ = 'basic'
 __logic__ = 'basic'
 
-import threading
+from time import time
+
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
 
@@ -26,6 +27,7 @@ class LPI(GenericLPI):
         self.__logic = __logic__
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
+        time_start = time()
         _state_in = state_in
         if self.phi.all_at_once and not _state_in:
             _state_in = self.phi.get(timeout=timeout)
@@ -56,7 +58,8 @@ class LPI(GenericLPI):
                 if _state_in and _p in _state_in:
                     status = _state_in.get(_p)
                 else:
-                    status = self.phi.get(_p, timeout=timeout)
+                    status = self.phi.get(
+                        _p, timeout=(timeout + time_start - time()))
                 if status is None or status not in [0, 1]:
                     if multi:
                         st.append((-1, None))
@@ -70,10 +73,10 @@ class LPI(GenericLPI):
                     _status = status
                 if multi:
                     if st_prev is None:
-                            st_prev = _status
+                        st_prev = _status
                     elif st_prev != _status:
-                            st_prev = -1
-                            break
+                        st_prev = -1
+                        break
                 else:
                     if st is None:
                         st = _status
@@ -89,6 +92,7 @@ class LPI(GenericLPI):
         return
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
+        time_start = time()
         if cfg is None:
             return self.action_result_error(_uuid, 1, 'no config specified')
         if status is None:
@@ -121,11 +125,12 @@ class LPI(GenericLPI):
                 ports_to_set.append(_port)
                 data_to_set.append(_status)
             else:
-                if not self.phi.set(_port, _status, timeout=timeout):
+                if not self.phi.set(
+                        _port, _status,
+                        timeout=(timeout + time_start - time())):
                     return self.action_result_error(
                         _uuid, msg='port %s set error' % _port)
         if self.phi.all_at_once:
             if not self.phi.set(ports_to_set, data_to_set, timeout=timeout):
-                return self.action_result_error(
-                    _uuid, msg='ports set error')
+                return self.action_result_error(_uuid, msg='ports set error')
         return self.action_result_ok(_uuid)
