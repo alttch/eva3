@@ -24,7 +24,7 @@ class PHI(GenericPHI):
             except:
                 d = -1
         self.data = {}
-        for i in range(1,32):
+        for i in range(1,16):
             self.data[str(i)] = d
         self.phi_mod_id = __id__
         self.author = __author__
@@ -34,6 +34,7 @@ class PHI(GenericPHI):
         self.api_version = __api__
 
     def get(self, port, timeout):
+        print(port, self.data, self.data.get(str(port)))
         try:
             return self.data.get(str(port))
         except:
@@ -64,10 +65,11 @@ class PHI(GenericPHI):
             port = int(port)
             val = int(val)
             if port < 1 or port > 16 or val < -1 or val > 1: return None
-            self.data[port] = val
+            self.data[str(port)] = val
             logging.debug(
                 '%s test completed, set port %s=%s' % (self.phi_id, port, val))
-            handle_phi_event(self, port, self.data)
+            if self.phi_cfg.get('event_on_test_set'):
+                handle_phi_event(self, port, self.data)
             return self.data
         except:
             log_traceback()

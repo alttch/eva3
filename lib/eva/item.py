@@ -780,11 +780,15 @@ class UpdatableItem(Item):
         self.update_set_state(status=-1, value='null', force_virtual=True)
         return True
 
-    def _perform_update(self):
+    def update(self, driver_state_in):
+        if self.updates_allowed() and not self.is_destroyed():
+            self._perform_update(driver_state_in)
+
+    def _perform_update(self, driver_state_in=None):
         try:
             self.update_log_run()
             self.update_before_run()
-            xc = self.get_update_xc()
+            xc = self.get_update_xc(driver_state_in)
             self.update_xc = xc
             xc.run()
             if xc.exitcode < 0:
@@ -798,7 +802,15 @@ class UpdatableItem(Item):
             logging.error('update %s failed' % self.full_id)
             eva.core.log_traceback()
 
-    def get_update_xc(self):
+    def get_update_xc(self, driver_state_in=None):
+        if self._drivers_allowed and not self.virtual and \
+                self.update_exec and self.update_exec[0] == '|':
+            return eva.runner.DriverCommand(
+                item=self,
+                update=True,
+                timeout=self.action_timeout,
+                tki=self.term_kill_interval,
+                state_in=driver_state_in)
         return eva.runner.ExternalProcess(
             fname=self.update_exec,
             item=self,
@@ -823,12 +835,17 @@ class UpdatableItem(Item):
     def update_after_run(self, update_out):
         if self._destroyed: return
         try:
-            result = update_out.strip()
-            if result.find(' ') > -1:
-                status, value = result.split(' ')
+            if isinstance(update_out, str):
+                result = update_out.strip()
+                if result.find(' ') > -1:
+                    status, value = result.split(' ')
+                else:
+                    status = result
+                    value = 'null'
             else:
-                status = result
-                value = 'null'
+                status = update_out[0]
+                value = update_out[1]
+                if value is None: value = 'null'
         except:
             logging.error('update %s returned bad data' % self.full_id)
             eva.core.log_traceback()
@@ -1254,7 +1271,7 @@ class ActiveItem(Item):
         logging.debug('%s action processor stopped' % self.full_id)
 
     def get_action_xc(self, a):
-        if self._drivers_allowed and \
+        if self._drivers_allowed and not self.virtual and \
                 self.action_exec and self.action_exec[0] == '|':
             return eva.runner.DriverCommand(
                 item=self,

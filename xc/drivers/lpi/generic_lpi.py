@@ -66,7 +66,7 @@ class LPI(object):
             d['version'] = self.version
             d['api'] = self.api_version
             if phi:
-                d['phi'] = phi.serialize(full=True)
+                d['phi'] = phi.serialize(full=True, config=True)
         if config:
             d['cfg'] = self.lpi_cfg
         d['lpi_id'] = self.lpi_id
@@ -155,6 +155,7 @@ class LPI(object):
             return None
         self.__results[_uuid] = result
         self.__results_lock.release()
+        print(self.__results)
         return True
 
     """

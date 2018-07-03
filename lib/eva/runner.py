@@ -79,7 +79,7 @@ class DriverCommand(GenericRunner):
         if _uuid:
             self._uuid = _uuid
         else:
-            self._uuid = str(uuid.uuid1)
+            self._uuid = str(uuid.uuid1())
         if update:
             self.driver_id = item.update_exec[1:]
         else:
@@ -89,8 +89,8 @@ class DriverCommand(GenericRunner):
             if update:
                 self.run_thread = threading.Thread(
                     target=self.driver.state,
-                    args=(cfg, multi, self.timeout, self.term_kill_interval,
-                          state_in))
+                    args=(self._uuid, cfg, multi, self.timeout,
+                          self.term_kill_interval, state_in))
             else:
                 self.run_thread = threading.Thread(
                     target=self.driver.action,
@@ -108,22 +108,16 @@ class DriverCommand(GenericRunner):
             self.run_thread.start()
             self.run_thread.join(self.timeout)
             if self.run_thread.isAlive():
-                if self.update:
+                logging.warning('driver ' + \
+                    '%s command timeout, sending termination signal'
+                    % self.driver.driver_id)
+                driver.terminate(self._uuid)
+                self.run_thread.join(self.term_kill_interval)
+                if self.run_thread.isAlive():
                     logging.critical('driver %s state command timeout' %
                                      self.driver.driver_id)
                     eva.core.critical()
                     self.run_thread.join()
-                else:
-                    logging.warning('driver ' + \
-                        '%s action command timeout, sending termination signal'
-                        % self.driver.driver_id)
-                    driver.terminate(self._uuid)
-                    self.run_thread.join(self.term_kill_interval)
-                    if self.run_thread.isAlive():
-                        logging.critical('driver %s state command timeout' %
-                                         self.driver.driver_id)
-                        eva.core.critical()
-                        self.run_thread.join()
         else:
             logging.error('driver %s is not found' % self.driver_id)
         self.finish()
@@ -137,7 +131,11 @@ class DriverCommand(GenericRunner):
             result = self.driver.get_result(self._uuid)
             self.driver.clear_result(self._uuid)
             if self.update:
-                self.result = result
+                if result is None:
+                    self.exitcode = 1
+                else:
+                    self.out = result
+                    self.exitcode = 0
             else:
                 self.out = result.get('out')
                 self.err = result.get('err')

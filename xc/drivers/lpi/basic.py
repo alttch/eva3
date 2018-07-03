@@ -26,6 +26,7 @@ class LPI(GenericLPI):
     def do_state(self, _uuid, cfg, multi, timeout, tki, state_in):
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
+        port = cfg.get(self.io_label)
         if not isinstance(port, list):
             _port = [port]
         else:
@@ -39,13 +40,15 @@ class LPI(GenericLPI):
             if state_in and _p in state_in:
                 status = state_in.get(_p)
             else:
+                print(_p, invert)
                 status = self.phi.get(_p, timeout=timeout)
+                print(status)
             if status is None or status not in [0, 1]:
                 if multi:
                     st.append((-1, None))
                     continue
                 else:
-                    self.set_result((-1, None))
+                    self.set_result(_uuid, (-1, None))
                     return
             if invert:
                 _status = 1 - status
@@ -58,11 +61,12 @@ class LPI(GenericLPI):
                     st = _status
                 else:
                     if st != _status:
-                        return -1, None
+                        self.set_result(_uuid, (-1, None))
+                        return
         if multi:
-            self.set_result(st)
+            self.set_result(_uuid, st)
         else:
-            self.set_result((st, None))
+            self.set_result(_uuid, (st, None))
         return
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
@@ -72,13 +76,15 @@ class LPI(GenericLPI):
             return self.action_result_error(_uuid, 1, 'no status specified')
         port = cfg.get(self.io_label)
         if port is None:
-            return self.action_result_error(_uuid, 1, 'no ports in config')
+            return self.action_result_error(
+                _uuid, 1, 'no ' + self.io_label + ' in config')
         try:
             status = int(status)
         except:
             return self.action_result_error(_uuid, msg='status is not integer')
         if status not in [0, 1]:
-            return self.action_result_error(_uuid, msg='status is not integer')
+            return self.action_result_error(
+                _uuid, msg='status is not in range 0..1')
         if not isinstance(port, list):
             _port = [port]
         else:

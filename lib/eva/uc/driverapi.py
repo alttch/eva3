@@ -44,8 +44,10 @@ def get_lpi(lpi_id):
 def get_driver(driver_id):
     return drivers.get(driver_id)
 
+
 def log_traceback():
     return eva.core.log_traceback()
+
 
 def register_item_update(i):
     u = i.update_exec
@@ -102,8 +104,7 @@ def handle_phi_event(phi, port, data):
 
 
 def update_item(i, data):
-    #TODO - handle update event
-    pass
+    i.update(driver_state_in=data)
 
 
 def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
@@ -191,9 +192,7 @@ def unload_phi(phi_id):
                 'Unable to unload PHI %s, it is in use by LPI %s' % (phi_id, k))
             err = True
     if items_by_phi[phi_id]:
-        logging.error(
-            'Unable to unload PHI %s, it is in use' %
-            (phi_id))
+        logging.error('Unable to unload PHI %s, it is in use' % (phi_id))
         err = True
     if err: return False
     phi.stop()
@@ -213,8 +212,7 @@ def unload_lpi(lpi_id=None, driver_id=None):
     for i in items_by_phi[lpi.phi_id]:
         if i.update_exec[1:] == driver_id:
             logging.error(
-                'Unable to unload driver %s, it is in use' %
-                (driver_id))
+                'Unable to unload driver %s, it is in use' % (driver_id))
             err = True
     if err: return False
     lpi.stop()
