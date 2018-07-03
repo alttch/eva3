@@ -29,6 +29,33 @@ debug = False
 
 _me = 'EVA ICS UC driver manager version %s' % __version__
 
+def fancy_print_result(result, tab=0):
+    if isinstance(result, dict):
+        rprinted = False
+        for v in sorted(result.keys()):
+            if v != 'result':
+                if isinstance(result[v], dict):
+                    if tab:
+                        print(' ' * (tab*10),  end='>' * tab + ' ')
+                    print(("{:>%u} : {}" % max(map(len, result))).format(v, ''))
+                    fancy_print_result(result[v], tab+1)
+                else:
+                    if tab:
+                        print(' ' * (tab*10), end='>' * tab + ' ')
+                    if isinstance(result[v], list):
+                        _v = ', '.join(result[v])
+                    else:
+                        _v = result[v]
+                    print(("{:>%u} : {}" % max(map(len, result))).format(v, _v))
+                rprinted = True
+        if not rprinted and not tab:
+            print('OK')
+    elif isinstance(result, list):
+        print(result)
+    else:
+        print(result)
+
+
 ap = argparse.ArgumentParser(description=_me)
 ap.add_argument(
     '-K',
@@ -110,8 +137,8 @@ sp_phi_load.add_argument(
     action='store_true')
 
 sp_driver_load = sp_driver.add_parser('load', help='Load driver')
-sp_driver_load.add_argument('_i', help='lpi id', metavar='LPI_ID')
-sp_driver_load.add_argument('_m', help='lpi module', metavar='LPI_MOD')
+sp_driver_load.add_argument('_i', help='LPI id', metavar='LPI_ID')
+sp_driver_load.add_argument('_m', help='LPI module', metavar='LPI_MOD')
 sp_driver_load.add_argument('_p', help='PHI id', metavar='PHI_ID')
 sp_driver_load.add_argument(
     '-c',
@@ -227,6 +254,5 @@ else:
         if a._json:
             print_json(result)
         else:
-            print(result)
-
-sys.exit(code)
+            fancy_print_result(result)
+sys.exit(0)

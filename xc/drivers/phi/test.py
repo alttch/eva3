@@ -6,7 +6,7 @@ __description__ = "Emulates 16-port relay"
 __api__ = 1
 
 __id__ = 'test'
-__equipment__ = 'virtual'
+__equipment__ = 'virtual relay'
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
