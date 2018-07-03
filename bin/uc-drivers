@@ -11,6 +11,7 @@ import sys
 import getopt
 import jsonpickle
 import argparse
+import re
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -29,6 +30,29 @@ debug = False
 
 _me = 'EVA ICS UC driver manager version %s' % __version__
 
+def _prepare_result_data(data):
+    result = []
+    for d in data.copy():
+        if 'license' in d: del d['license']
+        if 'author' in d: del d['author']
+        # if 'cfg' in d: del d['cfg']
+        if 'equipment' in d: del d['equipment']
+        if 'logic' in d: del d['logic']
+        if 'api' in d: del d['api']
+        if 'phi' in d:
+            d['phi_mod'] = d['phi'].get('mod')
+            del d['phi']
+        if 'lpi_id' in d: del d['lpi_id']
+        if 'cfg' in d:
+            d['configuration'] = d['cfg']
+            del d['cfg']
+        result.append(d)
+    return result
+
+_pd_cols = {
+        'list_phi_': [ 'id', 'mod', 'configuration', 'description', 'version' ],
+        'list_drivers_': [ 'id', 'mod', 'configuration', 'phi_id', 'phi_mod', 'description', 'version' ]
+        }
 
 def fancy_print_result(result, tab=0):
     if isinstance(result, dict):
@@ -52,7 +76,22 @@ def fancy_print_result(result, tab=0):
         if not rprinted and not tab:
             print('OK')
     elif isinstance(result, list):
-        print(result)
+        import pandas as pd
+        pd.options.display.max_colwidth = 65
+        df = pd.DataFrame(data=_prepare_result_data(result))
+        if api_func + api_func_full in _pd_cols:
+            cols = _pd_cols[api_func + api_func_full]
+        else:
+            cols = list(df)
+        df = df.ix[:, cols]
+        try:
+            df.set_index('id', inplace=True)
+            out = df.fillna(' ').to_string().split('\n')
+            print('id' + out[0][2:])
+            print('-' * len(out[0]))
+            [print(re.sub('^NaN', '   ', o)) for o in out[2:]]
+        except:
+            pass
     else:
         print(result)
 
@@ -201,6 +240,9 @@ params = {}
 
 if hasattr(a, '_full') and a._full:
     params['full'] = 1
+    api_func_full = '_'
+else:
+    api_func_full = ''
 
 if hasattr(a, '_save') and a._save:
     params['save'] = 1
