@@ -7,6 +7,7 @@ __api__ = 1
 import importlib
 import logging
 import jsonpickle
+import re
 
 import eva.core
 from eva.tools import format_json
@@ -114,6 +115,10 @@ def update_item(i, data):
 
 
 def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
+    if not phi_id: return False
+    if not re.match("^[A-Za-z0-9_-]*$", phi_id):
+        logging.debug('PHI %s id contains forbidden symbols' % phi_id)
+        return False
     try:
         phi_mod = importlib.import_module('eva.uc.drivers.phi.' + phi_mod_id)
         importlib.reload(phi_mod)
@@ -159,6 +164,10 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
 def load_lpi(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     if get_phi(phi_id) is None:
         logging.error('Unable to load LPI, unknown PHI: %s' % phi_id)
+        return False
+    if not lpi_id: return False
+    if not re.match("^[A-Za-z0-9_-]*$", lpi_id):
+        logging.debug('LPI %s id contains forbidden symbols' % lpi_id)
         return False
     try:
         lpi_mod = importlib.import_module('eva.uc.drivers.lpi.' + lpi_mod_id)
