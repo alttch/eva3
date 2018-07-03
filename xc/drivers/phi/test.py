@@ -12,6 +12,7 @@ from eva.uc.driverapi import log_traceback
 
 import logging
 
+
 class PHI(GenericPHI):
 
     def __init__(self, phi_cfg):
@@ -24,7 +25,7 @@ class PHI(GenericPHI):
             except:
                 d = -1
         self.data = {}
-        for i in range(1,16):
+        for i in range(1, 16):
             self.data[str(i)] = d
         self.phi_mod_id = __id__
         self.author = __author__
@@ -33,22 +34,34 @@ class PHI(GenericPHI):
         self.version = __version__
         self.api_version = __api__
 
-    def get(self, port, timeout):
-        print(port, self.data, self.data.get(str(port)))
+    def get(self, port=None, timeout=None):
+        if self.all_at_once: return self.data
         try:
             return self.data.get(str(port))
         except:
             return None
 
     def set(self, port, data, timeout):
-        _port = str(port)
-        try:
-            _data = int(data)
-        except:
-            return False
-        if not _port in self.data:
-            return False
-        self.data[_port] = _data
+        if isinstance(port, list):
+            ports = port
+            multi = True
+        else:
+            ports = [port]
+            multi = False
+        for i in range(0, len(ports)):
+            p = ports[i]
+            _port = str(p)
+            if multi:
+                d = data[i]
+            else:
+                d = data
+            try:
+                _data = int(d)
+            except:
+                return False
+            if not _port in self.data:
+                return False
+            self.data[_port] = _data
         if self.phi_cfg.get('event_on_set'):
             handle_phi_event(self.phi_id, port, self.data)
         return True

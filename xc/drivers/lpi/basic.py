@@ -23,7 +23,10 @@ class LPI(GenericLPI):
         self.api_version = __api__
         self.lpi_mod_id = __id__
 
-    def do_state(self, _uuid, cfg, multi, timeout, tki, state_in):
+    def do_state(self, _uuid, cfg, timeout, tki, state_in):
+        _state_in = state_in
+        if self.phi.all_at_once and not _state_in:
+            _state_in = self.phi.get(timeout=timeout)
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         port = cfg.get(self.io_label)
@@ -31,14 +34,20 @@ class LPI(GenericLPI):
             _port = [port]
         else:
             _port = port
+        multi = False
+        for p in _port:
+            if isinstance(p, list):
+                multi = True
+                break
         if multi:
             st = []
         else:
             st = None
+        # TODO support mu with multiple ports
         for p in _port:
             _p, invert = self.need_invert(p)
-            if state_in and _p in state_in:
-                status = state_in.get(_p)
+            if _state_in and _p in _state_in:
+                status = _state_in.get(_p)
             else:
                 print(_p, invert)
                 status = self.phi.get(_p, timeout=timeout)
@@ -89,13 +98,24 @@ class LPI(GenericLPI):
             _port = [port]
         else:
             _port = port
+        if self.phi.all_at_once:
+            ports_to_set = []
+            data_to_set = []
         for p in _port:
             _port, invert = self.need_invert(p)
             if invert:
                 _status = 1 - status
             else:
                 _status = status
-            if not self.phi.set(_port, _status, timeout=timeout):
+            if self.phi.all_at_once:
+                ports_to_set.append(_port)
+                data_to_set.append(_status)
+            else:
+                if not self.phi.set(_port, _status, timeout=timeout):
+                    return self.action_result_error(
+                        _uuid, msg='port %s set error' % _port)
+        if self.phi.all_at_once:
+            if not self.phi.set(ports_to_set, data_to_set, timeout=timeout):
                 return self.action_result_error(
-                    _uuid, msg='port %s set error' % _port)
+                    _uuid, msg='ports set error')
         return self.action_result_ok(_uuid)

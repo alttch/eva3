@@ -27,7 +27,7 @@ class LPI(object):
     Override this function with your own
     """
 
-    def do_state(self, cfg, multi, timeout, state_in):
+    def do_state(self, cfg, timeout, state_in):
         logging.error('driver lpi %s state function not implemented' %
                       self.lpi_id.split('.')[-1])
         return -1, None
@@ -193,7 +193,6 @@ class LPI(object):
     def state(self,
               _uuid,
               cfg=None,
-              multi=False,
               timeout=None,
               tki=None,
               state_in=None):
@@ -211,7 +210,7 @@ class LPI(object):
             logging.error(
                 'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
             return None
-        return self.do_state(_uuid, cfg, multi, _timeout, _tki, state_in)
+        return self.do_state(_uuid, cfg, timeout, _tki, state_in)
 
     def action(self,
                _uuid,

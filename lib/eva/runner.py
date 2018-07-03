@@ -61,7 +61,6 @@ class DriverCommand(GenericRunner):
                  state=None,
                  timeout=None,
                  tki=None,
-                 multi=False,
                  _uuid=None,
                  state_in=None):
         super().__init__(timeout=timeout, tki=tki)
@@ -89,7 +88,7 @@ class DriverCommand(GenericRunner):
             if update:
                 self.run_thread = threading.Thread(
                     target=self.driver.state,
-                    args=(self._uuid, cfg, multi, self.timeout,
+                    args=(self._uuid, cfg, self.timeout,
                           self.term_kill_interval, state_in))
             else:
                 self.run_thread = threading.Thread(

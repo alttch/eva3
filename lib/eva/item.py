@@ -448,7 +448,16 @@ class UpdatableItem(Item):
                     vals = val.split(',')
                     for v in vals:
                         name, value = v.split('=')
-                        if value.find('|') != -1: value = value.split('|')
+                        if value.find('||') != -1:
+                            _value = value.split('||')
+                            value = []
+                            for _v in _value:
+                                if _v.find('|') != -1:
+                                    value.append(_v.split('|'))
+                                else:
+                                    value.append(_v)
+                        elif value.find('|') != -1:
+                            value = value.split('|')
                         cfg[name] = value
                     self.driver_config = cfg
                     self.log_set(prop, val)

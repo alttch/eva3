@@ -24,6 +24,10 @@ class PHI(object):
         self.description = __description__
         self.version = __version__
         self.api_version = __api__
+        # the equipment supports working with a single ports
+        # set all_at_once = True if the equipment can query/modify only all
+        # ports at once
+        self.all_at_once = False 
         self.ready = True
         self.phi_id = None # set by driverapi on load
 
