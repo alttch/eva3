@@ -4,6 +4,8 @@ EVA ICS CHANGELOG
 3.1.0 (TBA)
 -----------
 
+UC drivers, device templates, state history, charts and other new features
+
 Core:
 
     * working with locks now require allow=lock apikey permission
@@ -15,13 +17,12 @@ Core:
 UC:
 
     * UC drivers: logical to physical (LPI) and physical (PHI) interfaces
+    * device templates
     * new function "state_history" in UC API
     * EVA_ITEM_OID var in the environment of UC scripts
     * action status label (case insensitive) may be used instead of number,
       if the label is not defined, API returns 404 error
     * new key permission: "device", allows calling device management functions.
-    * device templates, "create_device", "update_device" and "destroy_device"
-      functions
     * uc-tpl device template validator and generator (alpha)
     * unit and sensor items now have physical location. if location is specified
       as coordinates (x:y or x:y:z), loc_x, loc_y and loc_z props become
@@ -73,15 +74,6 @@ SFA:
 
     * jinja2 templates for SFA ui and PVT files (all files with .j2 extension
       are served as templates). index.j2 has more priority than index.html
-    * j2 templates have all cvars defined in SFA as a normal variables
-    * j2 templates have "server" variable (contains API call test result,
-      including API key if user is authorized or key param is present in req,
-      plus user ip)
-    * j2 templates have "request" param (contains get/post variables of the
-      current http request)
-    * j2 templates have "state" and "groups" functions, equal to SFA API
-      (called with current session key unless the other specified. if you want
-      to have states of any device available to everyone - use masterkey)
 
 API Client:
 
