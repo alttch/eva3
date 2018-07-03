@@ -4,7 +4,9 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
 __description__ = "Emulates 16-port relay"
 __api__ = 1
+
 __id__ = 'test'
+__equipment__ = 'virtual'
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
@@ -28,11 +30,12 @@ class PHI(GenericPHI):
         for i in range(1, 16):
             self.data[str(i)] = d
         self.phi_mod_id = __id__
-        self.author = __author__
-        self.license = __license__
-        self.description = __description__
-        self.version = __version__
-        self.api_version = __api__
+        self.__author = __author__
+        self.__license = __license__
+        self.__description = __description__
+        self.__version = __version__
+        self.__api_version = __api__
+        self.__equipment = __equipment__
 
     def get(self, port=None, timeout=None):
         if self.all_at_once: return self.data

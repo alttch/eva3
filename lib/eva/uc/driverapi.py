@@ -122,9 +122,16 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
         _version = phi_mod.__version__
         _description = phi_mod.__description__
         _license = phi_mod.__license__
+        _equipment = phi_mod.__equipment__
         logging.info('PHI loaded %s v%s, author: %s, license: %s' %
                      (phi_mod_id, _version, _author, _license))
         logging.debug('%s: %s' % (phi_mod_id, _description))
+        if _equipment == 'abstract':
+            logging.error(
+                'Unable to activate PHI %s: ' % phi_mod_id + \
+                'abstract module'
+                )
+            return False
         if _api > __api__:
             logging.error(
                 'Unable to activate PHI %s: ' % phi_mod_id + \
@@ -161,9 +168,16 @@ def load_lpi(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
         _version = lpi_mod.__version__
         _description = lpi_mod.__description__
         _license = lpi_mod.__license__
+        _logic = lpi_mod.__logic__
         logging.info('LPI loaded %s v%s, author: %s, license: %s' %
                      (lpi_mod_id, _version, _author, _license))
         logging.debug('%s: %s' % (lpi_mod_id, _description))
+        if _logic == 'abstract':
+            logging.error(
+                'Unable to activate LPI %s: ' % lpi_mod_id + \
+                'abstract module'
+                )
+            return False
         if _api > __api__:
             logging.error(
                 'Unable to activate LPI %s: ' % lpi_mod_id + \
@@ -248,8 +262,9 @@ def serialize_phi(full=False, config=False):
 
 def serialize_lpi(full=False, config=False):
     result = []
-    for k, p in lpis.copy().items():
+    for k in lpis.copy().keys():
         try:
+            p = get_lpi(k)
             r = p.serialize(full=full, config=config)
             result.append(r)
         except:

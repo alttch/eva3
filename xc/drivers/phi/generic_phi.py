@@ -6,7 +6,7 @@ __description__ = "Generic PHI, don't use"
 __api__ = 1
 
 __id__ = 'generic'
-
+__equipment__ = 'abstract'
 
 class PHI(object):
     """
@@ -19,14 +19,14 @@ class PHI(object):
         else:
             self.phi_cfg = {}
         self.phi_mod_id = __id__
-        self.author = __author__
-        self.license = __license__
-        self.description = __description__
-        self.version = __version__
-        self.api_version = __api__
-        # the equipment supports working with a single ports
+        self.__author = __author__
+        self.__license = __license__
+        self.__description = __description__
+        self.__version = __version__
+        self.__api_version = __api__
+        self.__equipment = __equipment__
         # set all_at_once = True if the equipment can query/modify only all
-        # ports at once
+        # ports at once and can not work with a single ports
         self.all_at_once = False 
         self.ready = True
         self.phi_id = None # set by driverapi on load
@@ -49,11 +49,12 @@ class PHI(object):
     def serialize(self, full=False, config=False):
         d = {}
         if full:
-            d['author'] = self.author
-            d['license'] = self.license
-            d['description'] = self.description
-            d['version'] = self.version
-            d['api'] = self.api_version
+            d['author'] = self.__author
+            d['license'] = self.__license
+            d['description'] = self.__description
+            d['version'] = self.__version
+            d['api'] = self.__api_version
+            d['equipment'] = self.__equipment
         if config:
             d['cfg'] = self.phi_cfg
         d['mod'] = self.phi_mod_id

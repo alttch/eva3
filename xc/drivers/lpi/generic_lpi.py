@@ -6,6 +6,7 @@ __description__ = "Generic LPI, don't use"
 __api__ = 1
 
 __id__ = 'generic'
+__logic__ = 'abstract'
 
 import threading
 import logging
@@ -59,11 +60,12 @@ class LPI(object):
     def serialize(self, full=False, config=False):
         d = {}
         if full:
-            d['author'] = self.author
-            d['license'] = self.license
-            d['description'] = self.description
-            d['version'] = self.version
-            d['api'] = self.api_version
+            d['author'] = self.__author
+            d['license'] = self.__license
+            d['description'] = self.__description
+            d['version'] = self.__version
+            d['api'] = self.__api_version
+            d['logic'] = self.__logic
             if self.phi:
                 d['phi'] = self.phi.serialize(full=True, config=True)
         if config:
@@ -172,12 +174,13 @@ class LPI(object):
         self.__results = {}
         self.__terminate_lock = threading.Lock()
         self.__results_lock = threading.Lock()
-        self.lpi_mod_id = __id__
-        self.author = __author__
-        self.license = __license__
-        self.description = __description__
-        self.version = __version__
-        self.api_version = __api__
+        self.__lpi_mod_id = __id__
+        self.__author = __author__
+        self.__license = __license__
+        self.__description = __description__
+        self.__version = __version__
+        self.__api_version = __api__
+        self.__logic = __logic__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
         self.ready = True

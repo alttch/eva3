@@ -211,7 +211,10 @@ def create_dump(e='request', msg=''):
     dump = {'reason': {'event': e, 'info': str(msg)}}
     try:
         for i, f in _dump_func.items():
-            dump[i] = f()
+            try:
+                dump[i] = f()
+            except:
+                dump[i] = traceback.format_exc()
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
         gzip.open(filename, 'w')

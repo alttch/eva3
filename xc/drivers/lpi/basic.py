@@ -6,6 +6,7 @@ __description__ = "Basic LPI for simple devices"
 __api__ = 1
 
 __id__ = 'basic'
+__logic__ = 'basic'
 
 import threading
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
@@ -16,12 +17,13 @@ class LPI(GenericLPI):
     def __init__(self, lpi_cfg=None, phi_id=None):
         super().__init__(lpi_cfg, phi_id)
         self.lpi_mod_id = __id__
-        self.author = __author__
-        self.license = __license__
-        self.description = __description__
-        self.version = __version__
-        self.api_version = __api__
-        self.lpi_mod_id = __id__
+        self.__author = __author__
+        self.__license = __license__
+        self.__description = __description__
+        self.__version = __version__
+        self.__api_version = __api__
+        self.__lpi_mod_id = __id__
+        self.__logic = __logic__
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         _state_in = state_in
