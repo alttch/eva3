@@ -29,10 +29,10 @@ class LPI(GenericLPI):
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()
         _state_in = state_in
-        if self.phi.all_at_once and not _state_in:
-            _state_in = self.phi.get(timeout=timeout)
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
+        if self.phi.all_at_once and not _state_in:
+            _state_in = self.phi.get(timeout=(timeout + time_start - time()))
         port = cfg.get(self.io_label)
         if not isinstance(port, list):
             _port = [port]
