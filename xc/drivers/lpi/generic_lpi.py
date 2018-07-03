@@ -72,7 +72,7 @@ class LPI(object):
             d['cfg'] = self.lpi_cfg
         d['lpi_id'] = self.lpi_id
         d['id'] = self.driver_id
-        d['mod'] = self.lpi_mod_id
+        d['mod'] = self.__lpi_mod_id
         d['phi_id'] = self.phi_id
         return d
 
@@ -186,6 +186,7 @@ class LPI(object):
         self.ready = True
         self.lpi_id = None  # set by driverapi on load
         self.driver_id = None  # set by driverapi on load
+        self.phi = None # set by driverapi on each call
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW

@@ -6,7 +6,7 @@ __description__ = "Basic LPI for simple devices"
 __api__ = 1
 
 __id__ = 'basic'
-__logic__ = 'basic'
+__logic__ = 'basic status on/off'
 
 from time import time
 

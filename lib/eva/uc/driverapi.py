@@ -8,6 +8,8 @@ import importlib
 import logging
 import jsonpickle
 import re
+import glob
+import os
 
 import eva.core
 from eva.tools import format_json
@@ -54,6 +56,42 @@ def get_driver(driver_id):
 
 def log_traceback():
     return eva.core.log_traceback()
+
+
+def list_phi_mods():
+    result = []
+    phi_mods = glob.glob(eva.core.dir_lib + '/eva/uc/drivers/phi/*.py')
+    for p in phi_mods:
+        f = os.path.basename(p)[:-3]
+        if f != '__init__':
+            code = 'from eva.uc.drivers.phi.%s import PHI;' % f + \
+                    ' s=PHI().serialize(full=True)'
+            try:
+                d = {}
+                exec(code, d)
+                if d['s']['equipment'] != 'abstract':
+                    result.append(d['s'])
+            except:
+                pass
+    return sorted(result, key=lambda k: k['mod'])
+
+
+def list_lpi_mods():
+    result = []
+    lpi_mods = glob.glob(eva.core.dir_lib + '/eva/uc/drivers/lpi/*.py')
+    for p in lpi_mods:
+        f = os.path.basename(p)[:-3]
+        if f != '__init__':
+            code = 'from eva.uc.drivers.lpi.%s import LPI;' % f +  \
+                    ' s=LPI().serialize(full=True)'
+            try:
+                d = {}
+                exec(code, d)
+                if d['s']['logic'] != 'abstract':
+                    result.append(d['s'])
+            except:
+                pass
+    return sorted(result, key=lambda k: k['mod'])
 
 
 def register_item_update(i):

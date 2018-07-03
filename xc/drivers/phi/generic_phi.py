@@ -13,7 +13,7 @@ class PHI(object):
     Override everything. super() constructor may be useful to keep unparsed
     config
     """
-    def __init__(self, phi_cfg):
+    def __init__(self, phi_cfg=None):
         if phi_cfg:
             self.phi_cfg = phi_cfg
         else:

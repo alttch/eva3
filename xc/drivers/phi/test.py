@@ -18,7 +18,7 @@ import logging
 
 class PHI(GenericPHI):
 
-    def __init__(self, phi_cfg):
+    def __init__(self, phi_cfg=None):
         super().__init__(phi_cfg=phi_cfg)
         d = self.phi_cfg.get('default_state')
         if d is None: d = -1

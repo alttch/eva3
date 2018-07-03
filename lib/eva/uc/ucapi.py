@@ -619,6 +619,14 @@ class UC_API(GenericAPI):
             return False
 
 
+    def list_phi_mods(self, k=None):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.list_phi_mods()
+
+    def list_lpi_mods(self, k=None):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.list_lpi_mods()
+
 class UC_HTTP_API(GenericHTTP_API, UC_API):
 
     def __init__(self):
@@ -670,6 +678,9 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.get_driver.exposed = True
 
         UC_HTTP_API.test_phi.exposed = True
+
+        UC_HTTP_API.list_phi_mods.exposed = True
+        UC_HTTP_API.list_lpi_mods.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -1002,6 +1013,13 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         if result is None: raise cp_api_error()
         return result
 
+    def list_phi_mods(self, k=None):
+        cp_need_master(k)
+        return super().list_phi_mods(k)
+
+    def list_lpi_mods(self, k=None):
+        cp_need_master(k)
+        return super().list_lpi_mods(k)
 
 def start():
     global api

@@ -30,29 +30,32 @@ debug = False
 
 _me = 'EVA ICS UC driver manager version %s' % __version__
 
+
 def _prepare_result_data(data):
     result = []
     for d in data.copy():
-        if 'license' in d: del d['license']
-        if 'author' in d: del d['author']
-        # if 'cfg' in d: del d['cfg']
-        if 'equipment' in d: del d['equipment']
-        if 'logic' in d: del d['logic']
-        if 'api' in d: del d['api']
         if 'phi' in d:
             d['phi_mod'] = d['phi'].get('mod')
             del d['phi']
-        if 'lpi_id' in d: del d['lpi_id']
-        if 'cfg' in d:
-            d['configuration'] = d['cfg']
-            del d['cfg']
+        if 'equipment' in d and isinstance(d['equipment'], list):
+            d['equipment'] = ', '.join(d['equipment'])
+        if 'logic' in d and isinstance(d['logic'], list):
+            d['logic'] = ', '.join(d['logic'])
         result.append(d)
     return result
 
+
 _pd_cols = {
-        'list_phi_': [ 'id', 'mod', 'configuration', 'description', 'version' ],
-        'list_drivers_': [ 'id', 'mod', 'configuration', 'phi_id', 'phi_mod', 'description', 'version' ]
-        }
+    'list_phi_': ['id', 'mod', 'cfg', 'description', 'version'],
+    'list_drivers_':
+    ['id', 'mod', 'cfg', 'phi_id', 'phi_mod', 'description', 'version'],
+    'list_drivers': ['id', 'mod', 'phi_id'],
+    'list_phi_mods':
+    ['mod', 'equipment', 'description', 'version', 'api', 'author'],
+    'list_lpi_mods':
+    ['mod', 'logic', 'description', 'version', 'api', 'author']
+}
+
 
 def fancy_print_result(result, tab=0):
     if isinstance(result, dict):
@@ -85,9 +88,13 @@ def fancy_print_result(result, tab=0):
             cols = list(df)
         df = df.ix[:, cols]
         try:
-            df.set_index('id', inplace=True)
+            if api_func not in ['list_phi_mods', 'list_lpi_mods']:
+                idxcol = 'id'
+            else:
+                idxcol = 'mod'
+            df.set_index(idxcol, inplace=True)
             out = df.fillna(' ').to_string().split('\n')
-            print('id' + out[0][2:])
+            print(idxcol + out[0][len(idxcol):])
             print('-' * len(out[0]))
             [print(re.sub('^NaN', '   ', o)) for o in out[2:]]
         except:
@@ -129,10 +136,13 @@ ap.add_argument(
 sp = ap.add_subparsers(dest='_type', metavar='type', help='instance type')
 
 ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
-ap_driver = sp.add_parser('driver', help='Drivers (LPI+PHI)')
+ap_lpi = sp.add_parser('lpi', help='LPI (Logical to physical interface)')
+ap_driver = sp.add_parser('driver', help='Drivers ( PHI + LPI )')
 
 sp_phi = ap_phi.add_subparsers(
     dest='_func', metavar='func', help='PHI commands')
+sp_lpi = ap_lpi.add_subparsers(
+    dest='_func', metavar='func', help='LPI commands')
 sp_driver = ap_driver.add_subparsers(
     dest='_func', metavar='func', help='Driver commands')
 
@@ -153,6 +163,9 @@ sp_driver_list.add_argument(
 
 sp_phi_show = sp_phi.add_parser('show', help='Show loaded PHI info')
 sp_phi_show.add_argument('_i', help='PHI id', metavar='PHI_ID')
+
+sp_phi_mods = sp_phi.add_parser('mods', help='List available PHI mods')
+sp_lpi_mods = sp_lpi.add_parser('mods', help='List available PHI mods')
 
 sp_phi_test = sp_phi.add_parser('test', help='Send test call to PHI')
 sp_phi_test.add_argument('_i', help='PHI id', metavar='PHI_ID')
@@ -219,6 +232,8 @@ debug = a._debug
 if api_func == 'show_phi': api_func = 'get_phi'
 elif api_func == 'show_driver': api_func = 'get_driver'
 elif api_func == 'list_driver': api_func = 'list_drivers'
+elif api_func == 'mods_phi': api_func = 'list_phi_mods'
+elif api_func == 'mods_lpi': api_func = 'list_lpi_mods'
 
 if not apiuri:
     try:
