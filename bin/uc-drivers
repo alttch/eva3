@@ -29,6 +29,7 @@ debug = False
 
 _me = 'EVA ICS UC driver manager version %s' % __version__
 
+
 def fancy_print_result(result, tab=0):
     if isinstance(result, dict):
         rprinted = False
@@ -36,12 +37,12 @@ def fancy_print_result(result, tab=0):
             if v != 'result':
                 if isinstance(result[v], dict):
                     if tab:
-                        print(' ' * (tab*10),  end='>' * tab + ' ')
+                        print(' ' * (tab * 10), end='>' * tab + ' ')
                     print(("{:>%u} : {}" % max(map(len, result))).format(v, ''))
-                    fancy_print_result(result[v], tab+1)
+                    fancy_print_result(result[v], tab + 1)
                 else:
                     if tab:
-                        print(' ' * (tab*10), end='>' * tab + ' ')
+                        print(' ' * (tab * 10), end='>' * tab + ' ')
                     if isinstance(result[v], list):
                         _v = ', '.join(result[v])
                     else:
@@ -128,7 +129,8 @@ sp_phi_load.add_argument(
     '-c',
     '--config',
     help='PHI configuration values, comma separated',
-    dest='_c', metavar='CONFIG')
+    dest='_c',
+    metavar='CONFIG')
 sp_phi_load.add_argument(
     '-y',
     '--save',
@@ -144,7 +146,8 @@ sp_driver_load.add_argument(
     '-c',
     '--config',
     help='driver configuration values, comma separated',
-    dest='_c', metavar='CONFIG')
+    dest='_c',
+    metavar='CONFIG')
 sp_driver_load.add_argument(
     '-y',
     '--save',
