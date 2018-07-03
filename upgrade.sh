@@ -5,10 +5,14 @@ BUILD=2018070401
 
 OBS="lm-ei uc-ei INSTALL.txt"
 
+UC_NEW_FILES="runtime/uc_drivers.json"
+
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
     echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"
     exit 1
 fi
+
+source etc/eva_servers
 
 CURRENT_BUILD=`./sbin/uc-control version|sed 's/.*build //g'|awk '{ print $1 }'`
 
@@ -46,6 +50,15 @@ echo "- Removing obsolete files and folders"
 for o in ${OBS}; do
     echo $o
     rm -rf ${o}
+done
+
+echo "- Adding new runtime files"
+
+for f in ${UC_NEW_FILES}; do
+    touch $f
+    if [ "x$UC_USER" != "x" ]; then
+        chown ${UC_USER} $f
+    fi
 done
 
 echo "- Installing new files"

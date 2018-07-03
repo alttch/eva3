@@ -52,6 +52,7 @@ echo "Checking mods"
 echo "Doing initial config"
 
 [ -f ./runtime/uc_cvars.json ] || echo "{}" > ./runtime/uc_cvars.json
+[ -f ./runtime/uc_drivers.json ] || echo "{}" > ./runtime/uc_drivers.json
 
 echo "Finished"
 
