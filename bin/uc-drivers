@@ -1,0 +1,228 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2018 Altertech Group"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.1.0"
+
+import os
+import sys
+import getopt
+import jsonpickle
+import argparse
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+from eva.client import apiclient
+
+import eva.core
+from eva.tools import print_json
+
+xparams = {}
+timeout = None
+apikey = None
+apiuri = None
+
+debug = False
+
+_me = 'EVA ICS UC driver manager version %s' % __version__
+
+ap = argparse.ArgumentParser(description=_me)
+ap.add_argument(
+    '-K',
+    '--api-key',
+    help='master key, if no key specified, local master key will be used',
+    dest='_key',
+    metavar='KEY')
+ap.add_argument(
+    '-T',
+    '--api-timeout',
+    help='API request timeout (in seconds)',
+    type=float,
+    default=None,
+    dest='_timeout',
+    metavar='TIMEOUT')
+ap.add_argument(
+    '-J',
+    '--json',
+    help='print result as JSON',
+    action='store_true',
+    dest='_json',
+    default=False)
+ap.add_argument(
+    '-D',
+    '--debug',
+    help='enable debug messages',
+    action='store_true',
+    dest='_debug',
+    default=False)
+
+sp = ap.add_subparsers(dest='_type', metavar='type', help='instance type')
+
+ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
+ap_driver = sp.add_parser('driver', help='Drivers (LPI+PHI)')
+
+sp_phi = ap_phi.add_subparsers(
+    dest='_func', metavar='func', help='PHI commands')
+sp_driver = ap_driver.add_subparsers(
+    dest='_func', metavar='func', help='Driver commands')
+
+sp_phi_list = sp_phi.add_parser('list', help='List loaded PHIs')
+sp_phi_list.add_argument(
+    '-y',
+    '--full',
+    help='full information about PHI',
+    dest='_full',
+    action='store_true')
+sp_driver_list = sp_driver.add_parser('list', help='List loaded drivers')
+sp_driver_list.add_argument(
+    '-y',
+    '--full',
+    help='full information about driver',
+    dest='_full',
+    action='store_true')
+
+sp_phi_show = sp_phi.add_parser('show', help='Show loaded PHI info')
+sp_phi_show.add_argument('_i', help='PHI id', metavar='PHI_ID')
+
+sp_driver_show = sp_driver.add_parser('show', help='Show loaded driver info')
+sp_driver_show.add_argument('_i', help='driver id', metavar='DRIVER_ID')
+
+sp_phi_load = sp_phi.add_parser('load', help='Load PHI')
+sp_phi_load.add_argument('_i', help='PHI id', metavar='PHI_ID')
+sp_phi_load.add_argument('_m', help='PHI module', metavar='PHI_MOD')
+sp_phi_load.add_argument(
+    '-c',
+    '--config',
+    help='PHI configuration values, comma separated',
+    dest='_c', metavar='CONFIG')
+sp_phi_load.add_argument(
+    '-y',
+    '--save',
+    help='save configuration on success load',
+    dest='_save',
+    action='store_true')
+
+sp_driver_load = sp_driver.add_parser('load', help='Load driver')
+sp_driver_load.add_argument('_i', help='lpi id', metavar='LPI_ID')
+sp_driver_load.add_argument('_m', help='lpi module', metavar='LPI_MOD')
+sp_driver_load.add_argument('_p', help='PHI id', metavar='PHI_ID')
+sp_driver_load.add_argument(
+    '-c',
+    '--config',
+    help='driver configuration values, comma separated',
+    dest='_c', metavar='CONFIG')
+sp_driver_load.add_argument(
+    '-y',
+    '--save',
+    help='save configuration on success load',
+    dest='_save',
+    action='store_true')
+
+sp_phi_unload = sp_phi.add_parser('unload', help='Unload PHI')
+sp_phi_unload.add_argument('_i', help='PHI id', metavar='PHI_ID')
+
+sp_driver_unload = sp_driver.add_parser('unload', help='Unload driver')
+sp_driver_unload.add_argument('_i', help='driver id', metavar='DRIVER_ID')
+
+try:
+    import argcomplete
+    argcomplete.autocomplete(ap)
+except:
+    pass
+
+a = ap.parse_args()
+
+if not a._type or not a._func:
+    ap.print_usage()
+    sys.exit(99)
+
+api_func = a._func + '_' + a._type
+
+debug = a._debug
+
+if api_func == 'show_phi': api_func = 'get_phi'
+elif api_func == 'show_driver': api_func = 'get_driver'
+elif api_func == 'list_driver': api_func = 'list_drivers'
+
+if not apiuri:
+    try:
+        api = apiclient.APIClientLocal('uc')
+    except:
+        print('Can not init API, uc.ini or uc_apikeys.ini missing?')
+        sys.exit(98)
+else:
+    api = apiclient.APIClient()
+    api.set_uri(apiuri)
+    api.set_product('uc')
+
+if apikey is not None:
+    api.set_key(apikey)
+
+api.ssl_verify(False)
+
+params = {}
+
+if hasattr(a, '_full') and a._full:
+    params['full'] = 1
+
+if hasattr(a, '_save') and a._save:
+    params['save'] = 1
+
+if hasattr(a, '_i') and a._i is not None:
+    params['i'] = a._i
+
+if hasattr(a, '_p') and a._p is not None:
+    params['p'] = a._p
+
+if hasattr(a, '_m') and a._m is not None:
+    params['m'] = a._m
+
+if hasattr(a, '_c') and a._i is not None:
+    params['c'] = a._c
+
+if debug:
+    print('API:', api._uri)
+    print('API func:', api_func)
+    print('Params', params)
+code, result = api.call(api_func, params, timeout, _debug=debug)
+
+if code != apiclient.result_ok and \
+        code != apiclient.result_func_failed:
+    if code == apiclient.result_not_found:
+        print('Error: Object not found')
+    elif code == apiclient.result_forbidden:
+        print('Error: Forbidden')
+    elif code == apiclient.result_api_error:
+        print('Error: API error')
+    elif code == apiclient.result_unknown_error:
+        print('Error: Unknown error')
+    elif code == apiclient.result_not_ready:
+        print('Error: API not ready')
+    elif code == apiclient.result_func_unknown:
+        ap.print_usage()
+    elif code == apiclient.result_server_error:
+        print('Error: Server error')
+    elif code == apiclient.result_server_timeout:
+        print('Error: Server timeout')
+    elif code == apiclient.result_bad_data:
+        print('Error: Bad data')
+    elif code == apiclient.result_invalid_params:
+        print('Error: invalid params')
+    sys.exit(code)
+else:
+    if code == apiclient.result_func_failed:
+        print('FAILED')
+        sys.exit(code)
+    if 'result' in result:
+        if result['result'] == 'OK':
+            print('OK')
+    else:
+        if a._json:
+            print_json(result)
+        else:
+            print(result)
+
+sys.exit(code)

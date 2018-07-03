@@ -29,9 +29,9 @@ def config_error(fname, section, key, value):
             (fname, key, value, section))
 
 
-def format_json(obj, minimal=False):
+def format_json(obj, minimal=False, unpicklable=False):
     return json.dumps(json.loads(jsonpickle.encode(obj,
-            unpicklable = False)), indent=4, sort_keys=True) \
+            unpicklable = unpicklable)), indent=4, sort_keys=True) \
                 if not minimal else jsonpickle.encode(obj, unpicklable = False)
 
 

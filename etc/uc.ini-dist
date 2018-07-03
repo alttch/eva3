@@ -25,7 +25,10 @@ debug = no
 ; create crash dump on critical errors
 dump_on_critical = yes
 ; stop server on critical errors (will be restarted via safe-run)
-stop_on_critical = yes
+; always - stop on all critical errors
+; core - core errors only (ignore driver critical errors)
+; no - don't stop
+stop_on_critical = always
 ; default timeout
 timeout = 5
 

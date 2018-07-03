@@ -13,6 +13,7 @@ import logging
 import jsonpickle
 import eva.core
 import eva.runner
+import eva.uc.driverapi
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
@@ -264,6 +265,7 @@ class UpdatableItem(Item):
         self.set_time = time.time()
         self.expires = 0
         self.snmp_trap = None
+        self.driver_config = None
         self.mqtt_update = None
         self.mqtt_update_notifier = None
         self.mqtt_update_qos = 1
@@ -272,6 +274,7 @@ class UpdatableItem(Item):
         self._virtual_allowed = True
         self._mqtt_updates_allowed = True
         self._snmp_traps_allowed = True
+        self._drivers_allowed = True
         self._expire_on_any = False
 
     def update_config(self, data):
@@ -279,6 +282,8 @@ class UpdatableItem(Item):
             self.virtual = data['virtual']
         if 'snmp_trap' in data:
             self.snmp_trap = data['snmp_trap']
+        if 'driver_config' in data:
+            self.driver_config = data['driver_config']
         if 'expires' in data:
             self.expires = data['expires']
         if 'update_exec' in data:
@@ -339,9 +344,24 @@ class UpdatableItem(Item):
             return True
         elif prop == 'update_exec':
             if self.update_exec != val:
+                if val and val[0] == '|':
+                    if self._drivers_allowed:
+                        d = eva.uc.driverapi.get_driver(val[1:])
+                        if not d:
+                            logging.error(
+                                'Can not set ' + \
+                                    '%s.update_exec = %s, no such driver'
+                                    % (self.full_id, val))
+                            return False
+                    else:
+                        return False
                 self.update_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
+                if val and val[0] == '|':
+                    self.register_driver_updates()
+                else:
+                    self.unregister_driver_updates()
             return True
         elif prop == 'update_interval':
             if val is None:
@@ -404,7 +424,48 @@ class UpdatableItem(Item):
                 self.log_set(prop, None)
                 self.set_modified(save)
                 return True
+            elif isinstance(val, dict):
+                self.snmp_trap = val
+                self.subscribe_snmp_traps()
+                self.log_set('snmp_trap', 'dict')
+                self.set_modified(save)
+                return True
             return False
+        elif prop == 'driver_config' and self._drivers_allowed:
+            if val is None:
+                self.driver_config = None
+                self.log_set(prop, None)
+                self.set_modified(save)
+                return True
+            elif isinstance(val, dict):
+                self.driver_config = val
+                self.log_set(prop, 'dict')
+                self.set_modified(save)
+                return True
+            else:
+                try:
+                    cfg = {}
+                    vals = val.split(',')
+                    for v in vals:
+                        name, value = v.split('=')
+                        if value.find('||') != -1:
+                            _value = value.split('||')
+                            value = []
+                            for _v in _value:
+                                if _v.find('|') != -1:
+                                    value.append(_v.split('|'))
+                                else:
+                                    value.append([_v])
+                        elif value.find('|') != -1:
+                            value = value.split('|')
+                        cfg[name] = value
+                    self.driver_config = cfg
+                    self.log_set(prop, val)
+                    self.set_modified(save)
+                    return True
+                except:
+                    eva.core.log_traceback()
+                    return False
         elif prop == 'snmp_trap.ident_vars' and self._snmp_traps_allowed:
             if val is None:
                 if self.snmp_trap and 'ident_vars' in self.snmp_trap:
@@ -547,6 +608,7 @@ class UpdatableItem(Item):
     def start_processors(self):
         self.subscribe_mqtt_update()
         self.subscribe_snmp_traps()
+        self.register_driver_updates()
         self.start_update_processor()
         self.start_update_scheduler()
         self.start_expiration_checker()
@@ -554,6 +616,7 @@ class UpdatableItem(Item):
 
     def stop_processors(self):
         self.unsubscribe_mqtt_update()
+        self.unregister_driver_updates()
         self.unsubscribe_snmp_traps()
         self.stop_update_processor()
         self.stop_update_scheduler()
@@ -564,9 +627,19 @@ class UpdatableItem(Item):
         if self.snmp_trap and self._snmp_traps_allowed:
             eva.traphandler.subscribe(self)
 
+    def register_driver_updates(self):
+        if self._drivers_allowed and \
+                self.update_exec and self.update_exec[0] == '|':
+            eva.uc.driverapi.register_item_update(self)
+
     def unsubscribe_snmp_traps(self):
         if self._snmp_traps_allowed:
             eva.traphandler.unsubscribe(self)
+
+    def unregister_driver_updates(self):
+        if self._drivers_allowed and \
+                self.update_exec and self.update_exec[0] == '|':
+            eva.uc.driverapi.unregister_item_update(self)
 
     def subscribe_mqtt_update(self):
         if not self.mqtt_update or \
@@ -716,17 +789,15 @@ class UpdatableItem(Item):
         self.update_set_state(status=-1, value='null', force_virtual=True)
         return True
 
-    def _perform_update(self):
+    def update(self, driver_state_in):
+        if self.updates_allowed() and not self.is_destroyed():
+            self._perform_update(driver_state_in)
+
+    def _perform_update(self, driver_state_in=None):
         try:
             self.update_log_run()
             self.update_before_run()
-            xc = eva.runner.ExternalProcess(
-                fname=self.update_exec,
-                item=self,
-                env=self.update_env(),
-                update=True,
-                args=self.update_run_args(),
-                timeout=self.update_timeout)
+            xc = self.get_update_xc(driver_state_in)
             self.update_xc = xc
             xc.run()
             if xc.exitcode < 0:
@@ -739,6 +810,22 @@ class UpdatableItem(Item):
         except:
             logging.error('update %s failed' % self.full_id)
             eva.core.log_traceback()
+
+    def get_update_xc(self, driver_state_in=None):
+        if self._drivers_allowed and not self.virtual and \
+                self.update_exec and self.update_exec[0] == '|':
+            return eva.runner.DriverCommand(
+                item=self,
+                update=True,
+                timeout=self.update_timeout,
+                state_in=driver_state_in)
+        return eva.runner.ExternalProcess(
+            fname=self.update_exec,
+            item=self,
+            env=self.update_env(),
+            update=True,
+            args=self.update_run_args(),
+            timeout=self.update_timeout)
 
     def update_env(self):
         return {}
@@ -756,12 +843,17 @@ class UpdatableItem(Item):
     def update_after_run(self, update_out):
         if self._destroyed: return
         try:
-            result = update_out.strip()
-            if result.find(' ') > -1:
-                status, value = result.split(' ')
+            if isinstance(update_out, str):
+                result = update_out.strip()
+                if result.find(' ') > -1:
+                    status, value = result.split(' ')
+                else:
+                    status = result
+                    value = 'null'
             else:
-                status = result
-                value = 'null'
+                status = update_out[0]
+                value = update_out[1]
+                if value is None: value = 'null'
         except:
             logging.error('update %s returned bad data' % self.full_id)
             eva.core.log_traceback()
@@ -879,6 +971,11 @@ class UpdatableItem(Item):
                     d['snmp_trap'] = self.snmp_trap
                 elif props:
                     d['snmp_trap'] = None
+            if self._drivers_allowed:
+                if self.driver_config:
+                    d['driver_config'] = self.driver_config
+                elif props:
+                    d['driver_config'] = None
             if not config or self.expires:
                 d['expires'] = self.expires
             if self.update_exec:
@@ -908,11 +1005,11 @@ class UpdatableItem(Item):
             full=full, config=config, info=info, props=props, notify=notify))
         return d
 
-    def item_env(self):
+    def item_env(self, full=True):
         if self.value is not None: value = self.value
         else: value = 'null'
         e = {'EVA_ITEM_STATUS': str(self.status), 'EVA_ITEM_VALUE': str(value)}
-        e.update(super().item_env())
+        if full: e.update(super().item_env())
         return e
 
     def destroy(self):
@@ -1082,7 +1179,7 @@ class ActiveItem(Item):
             '%s executing action %s pr=%u' % \
              (self.full_id, action.uuid, action.priority))
 
-    def action_run_args(self, action):
+    def action_run_args(self, action, n2n=True):
         return ()
 
     def action_before_get_task(self):
@@ -1145,16 +1242,9 @@ class ActiveItem(Item):
                     elif a.is_status_queued() and a.set_running():
                         self.action_log_run(a)
                         self.action_before_run(a)
-                        xc = eva.runner.ExternalProcess(
-                            fname=self.action_exec,
-                            item=self,
-                            env=a.action_env(),
-                            update=False,
-                            args=self.action_run_args(a),
-                            timeout=self.action_timeout)
+                        xc = self.get_action_xc(a)
                         self.action_xc = xc
                         self.queue_lock.release()
-                        xc.set_tki(self.term_kill_interval)
                         xc.run()
                         self.action_after_run(a, xc)
                         if xc.exitcode < 0:
@@ -1187,6 +1277,25 @@ class ActiveItem(Item):
             self.action_xc = None
             self.queue_lock.release()
         logging.debug('%s action processor stopped' % self.full_id)
+
+    def get_action_xc(self, a):
+        if self._drivers_allowed and not self.virtual and \
+                self.action_exec and self.action_exec[0] == '|':
+            return eva.runner.DriverCommand(
+                item=self,
+                state=self.action_run_args(a, n2n=False),
+                timeout=self.action_timeout,
+                tki=self.term_kill_interval,
+                _uuid=a.uuid)
+        else:
+            return eva.runner.ExternalProcess(
+                fname=self.action_exec,
+                item=self,
+                env=a.action_env(),
+                update=False,
+                args=self.action_run_args(a),
+                timeout=self.action_timeout,
+                tki=self.term_kill_interval)
 
     def update_config(self, data):
         if 'action_enabled' in data:
@@ -1229,6 +1338,17 @@ class ActiveItem(Item):
                 return False
         elif prop == 'action_exec':
             if self.action_exec != val:
+                if val and val[0] == '|':
+                    if self._drivers_allowed:
+                        d = eva.uc.driverapi.get_driver(val[1:])
+                        if not d:
+                            logging.error(
+                                'Can not set ' + \
+                                    '%s.action_exec = %s, no such driver'
+                                    % (self.full_id, val))
+                            return False
+                    else:
+                        return False
                 self.action_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
@@ -1616,7 +1736,12 @@ class MultiUpdate(UpdatableItem):
 
     def update_after_run(self, update_out):
         if self._destroyed: return
-        result = update_out.strip().split('\n')
+        if isinstance(update_out, str):
+            result = update_out.strip().split('\n')
+        elif isinstance(update_out, list):
+            result  = update_out
+        else:
+            result = [ update_out ]
         if len(result) < len(self.items_to_update):
             logging.warning(
                     '%s have %u items to update, got only %u in result' % \

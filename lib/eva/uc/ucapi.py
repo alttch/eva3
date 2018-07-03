@@ -17,6 +17,7 @@ from eva.api import cp_need_master
 from eva import apikey
 import eva.sysapi
 import eva.uc.controller
+import eva.uc.driverapi
 import eva.ei
 import jinja2
 import jsonpickle
@@ -516,6 +517,107 @@ class UC_API(GenericAPI):
         return eva.uc.controller.destroy_item(i) if i \
                 else eva.uc.controller.destroy_group(g)
 
+    # master functions for driver configuration
+
+    def load_phi(self, k=None, i=None, m=None, cfg=None, save=False):
+        if not apikey.check(k, master=True): return None
+        if not i or not m: return None
+        if isinstance(cfg, str):
+            _cfg = {}
+            props = cfg.split(',')
+            for p in props:
+                try:
+                    name, value = p.split('=')
+                    try:
+                        value = float(value)
+                        if value == int(value):
+                            value = int(value)
+                    except:
+                        pass
+                    _cfg[name] = value
+                except:
+                    eva.core.log_traceback()
+                    return None
+        else:
+            _cfg = cfg
+        if eva.uc.driverapi.load_phi(i, m, _cfg):
+            if save: eva.uc.driverapi.save()
+            return eva.uc.driverapi.get_phi(i).serialize(full=True, config=True)
+
+    def load_driver(self, k=None, i=None, m=None, p=None, cfg=None, save=False):
+        if not apikey.check(k, master=True): return None
+        if not i or not m or not p: return None
+        if isinstance(cfg, str):
+            _cfg = {}
+            props = cfg.split(',')
+            for _p in props:
+                try:
+                    name, value = _p.split('=')
+                    try:
+                        value = float(value)
+                        if value == int(value):
+                            value = int(value)
+                    except:
+                        pass
+                    _cfg[name] = value
+                except:
+                    eva.core.log_traceback()
+                    return None
+        else:
+            _cfg = cfg
+        if eva.uc.driverapi.load_lpi(i, m, p, _cfg):
+            if save: eva.uc.driverapi.save()
+            return eva.uc.driverapi.get_lpi(i).serialize(full=True, config=True)
+
+    def unload_phi(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return None
+        result = eva.uc.driverapi.unload_phi(i)
+        if result: eva.uc.driverapi.save()
+        return result
+
+    def unload_driver(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return None
+        result = eva.uc.driverapi.unload_lpi(driver_id=i)
+        if result: eva.uc.driverapi.save()
+        return result
+
+    def list_phi(self, k=None, full=False):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.serialize_phi(full=full, config=full)
+
+    def list_drivers(self, k=None, full=False):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.serialize_lpi(full=full, config=full)
+
+    def get_phi(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return None
+        phi = eva.uc.driverapi.get_phi(i)
+        if phi:
+            return phi.serialize(full=True, config=True)
+        else:
+            return False
+
+    def get_driver(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return None
+        lpi = eva.uc.driverapi.get_driver(i)
+        if lpi:
+            return lpi.serialize(full=True, config=True)
+        else:
+            return False
+
+    def test_phi(self, k=None, i=None, c=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return False
+        phi = eva.uc.driverapi.get_phi(i)
+        if phi:
+            return phi.test(c)
+        else:
+            return False
+
 
 class UC_HTTP_API(GenericHTTP_API, UC_API):
 
@@ -556,6 +658,18 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
         UC_HTTP_API.destroy.exposed = True
         UC_HTTP_API.destroy_device.exposed = True
+
+        UC_HTTP_API.load_phi.exposed = True
+        UC_HTTP_API.unload_phi.exposed = True
+        UC_HTTP_API.list_phi.exposed = True
+        UC_HTTP_API.get_phi.exposed = True
+
+        UC_HTTP_API.load_driver.exposed = True
+        UC_HTTP_API.list_drivers.exposed = True
+        UC_HTTP_API.unload_driver.exposed = True
+        UC_HTTP_API.get_driver.exposed = True
+
+        UC_HTTP_API.test_phi.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -834,6 +948,59 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         cp_need_master(k)
         return http_api_result_ok() if super().destroy(k, i, g) \
                 else http_api_result_error()
+
+    def load_phi(self, k=None, i=None, m=None, c=None, save=False):
+        cp_need_master(k)
+        result = super().load_phi(k, i, m, c, save)
+        return result if result else http_api_result_error()
+
+    def unload_phi(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().unload_phi(k, i) \
+                else http_api_result_error()
+
+    def list_phi(self, k=None, full=None):
+        cp_need_master(k)
+        result = super().list_phi(k, full)
+        if result is None: raise cp_api_error()
+        return result
+
+    def get_phi(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().get_phi(k, i)
+        if result is None: raise cp_api_error()
+        if result is False: raise cp_api_404()
+        return result
+
+    def load_driver(self, k=None, i=None, m=None, p=None, c=None, save=False):
+        cp_need_master(k)
+        result = super().load_driver(k, i, m, p, c, save)
+        return result if result else http_api_result_error()
+
+    def list_drivers(self, k=None, full=None):
+        cp_need_master(k)
+        result = super().list_drivers(k, full)
+        if result is None: raise cp_api_error()
+        return result
+
+    def unload_driver(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().unload_driver(k, i) \
+                else http_api_result_error()
+
+    def get_driver(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().get_driver(k, i)
+        if result is None: raise cp_api_error()
+        if result is False: raise cp_api_404()
+        return result
+
+    def test_phi(self, k=None, i=None, c=None):
+        cp_need_master(k)
+        result = super().test_phi(k, i, c)
+        if result is False: raise cp_api_404()
+        if result is None: raise cp_api_error()
+        return result
 
 
 def start():

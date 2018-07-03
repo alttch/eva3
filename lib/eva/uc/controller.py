@@ -15,6 +15,7 @@ import eva.uc.ucqueue
 import eva.uc.unit
 import eva.uc.sensor
 import eva.uc.ucmu
+import eva.uc.driverapi
 
 units_by_id = {}
 units_by_group = {}
@@ -177,6 +178,9 @@ def save_item_state(item):
             pass
         return False
 
+
+def load_drivers():
+    eva.uc.driverapi.load()
 
 def load_db_state(items, item_type, clean=False, create=True):
     _db_loaded_ids = []
@@ -526,6 +530,7 @@ def start():
     logging.info('UC action queue started')
     for i, v in items_by_id.items():
         v.start_processors()
+    eva.uc.driverapi.start()
 
 
 def stop():
