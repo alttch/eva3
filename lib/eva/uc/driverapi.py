@@ -31,7 +31,7 @@ def get_timeout():
 
 
 def critical():
-    return eva.core.critical()
+    return eva.core.critical(from_driver=True)
 
 
 def get_phi(phi_id):

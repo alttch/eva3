@@ -48,7 +48,7 @@ development = False
 
 show_traceback = False
 
-stop_on_critical = True
+stop_on_critical = 'always'
 
 dump_on_critical = True
 
@@ -220,7 +220,8 @@ def create_dump(e='request', msg=''):
         gzip.open(filename, 'w')
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
         gzip.open(filename, 'a').write(
-            format_json(dump, minimal=not development).encode())
+            format_json(dump, minimal=not development,
+                        unpicklable=True).encode())
         logging.warning(
             'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
     except:
@@ -392,12 +393,13 @@ def load(fname=None, initial=False, init_log=True):
             logging.debug('server.notify_on_start = %s' % ('yes' \
                                         if notify_on_start else 'no'))
             try:
-                stop_on_critical = (cfg.get('server',
-                                            'stop_on_critical') == 'yes')
+                stop_on_critical = (cfg.get('server', 'stop_on_critical'))
             except:
                 pass
-            logging.debug('server.stop_on_critical = %s' % ('yes' \
-                                        if stop_on_critical else 'no'))
+            if stop_on_critical == 'yes': stop_on_critical = 'always'
+            elif stop_on_critical not in ('no', 'always', 'core'):
+                stop_on_critical = 'no'
+            logging.debug('server.stop_on_critical = %s' % stop_on_critical)
             try:
                 dump_on_critical = (cfg.get('server',
                                             'dump_on_critical') == 'yes')
@@ -599,7 +601,7 @@ def log_traceback(display=False, notifier=False, force=False):
     _exception_log_lock.release()
 
 
-def critical(log=True):
+def critical(log=True, from_driver=False):
     try:
         caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
         caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
@@ -610,7 +612,8 @@ def critical(log=True):
     if dump_on_critical:
         logging.critical('critical exception. dump file: %s' % create_dump(
             'critical', caller_info))
-    if stop_on_critical:
+    if stop_on_critical in ['always', 'yes'] or (not from_driver and
+                                                 stop_on_critical == 'core'):
         logging.critical('critical exception, shutting down')
         sighandler_term(None, None)
 
@@ -643,11 +646,12 @@ def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
     else:
         return fname
 
+
 def init():
     append_save_func(save_modified)
     append_dump_func('eva_core', serialize)
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
 
-#BD: 20.05.2017
 
+#BD: 20.05.2017

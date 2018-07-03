@@ -11,6 +11,7 @@ __equipment__ = 'virtual'
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
+from eva.uc.driverapi import critical
 
 import logging
 
@@ -76,6 +77,9 @@ class PHI(GenericPHI):
     def test(self, cmd=None):
         if cmd == 'get':
             return self.data
+        if cmd == 'critical':
+            critical()
+            return { 'result': 'OK' }
         try:
             port, val = cmd.split('=')
             port = int(port)
