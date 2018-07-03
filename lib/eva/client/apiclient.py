@@ -62,7 +62,7 @@ _api_func = {
             'enable_actions', 'save_config', 'set_prop', 'create_unit',
             'create_sensor', 'create_mu', 'create_device', 'update_device',
             'clone', 'clone_group', 'destroy', 'destroy_device', 'login',
-            'logout', 'unload_phi', 'remove_driver'
+            'logout', 'unload_phi', 'unload_driver'
         ],
         'ce': ['action', 'action_toggle']
     },

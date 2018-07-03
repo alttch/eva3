@@ -367,6 +367,10 @@ if func == 'file_put':
             print('Can\'t read local file %s' % params['l'])
             sys.exit(apiclient.result_not_found)
 
+if debug:
+    print('API:', api._uri)
+    print('API func:', func)
+    print('Params', params)
 code, result = api.call(func, params, timeout, _debug=debug)
 
 if code != apiclient.result_ok and \

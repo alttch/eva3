@@ -542,7 +542,7 @@ class UC_API(GenericAPI):
             _cfg = cfg
         if eva.uc.driverapi.load_phi(i, m, _cfg):
             if save: eva.uc.driverapi.save()
-            return eva.uc.driverapi.get_phi(i).serialize(full=True)
+            return eva.uc.driverapi.get_phi(i).serialize(full=True, config=True)
 
     def load_driver(self, k=None, i=None, m=None, p=None, cfg=None, save=False):
         if not apikey.check(k, master=True): return None
@@ -567,7 +567,7 @@ class UC_API(GenericAPI):
             _cfg = cfg
         if eva.uc.driverapi.load_lpi(i, m, p, _cfg):
             if save: eva.uc.driverapi.save()
-            return eva.uc.driverapi.get_lpi(i).serialize(full=True)
+            return eva.uc.driverapi.get_lpi(i).serialize(full=True, config=True)
 
     def unload_phi(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -585,11 +585,11 @@ class UC_API(GenericAPI):
 
     def list_phi(self, k=None, full=False):
         if not apikey.check(k, master=True): return None
-        return eva.uc.driverapi.serialize_phi(full=full)
+        return eva.uc.driverapi.serialize_phi(full=full, config=full)
 
     def list_drivers(self, k=None, full=False):
         if not apikey.check(k, master=True): return None
-        return eva.uc.driverapi.serialize_lpi(full=full)
+        return eva.uc.driverapi.serialize_lpi(full=full, config=full)
 
     def get_phi(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
