@@ -13,7 +13,7 @@ fi
 CURRENT_BUILD=`./sbin/uc-control version|sed 's/.*build //g'|awk '{ print $1 }'`
 
 if [ $CURRENT_BUILD -ge $BUILD ]; then
-    echo "Your build is ${CURRENT_BUILD}, this script may upgrade EVA ICS to ${BUILD} only"
+    echo "Your build is ${CURRENT_BUILD}, this script can upgrade EVA ICS to ${BUILD} only"
     exit 1
 fi
 
