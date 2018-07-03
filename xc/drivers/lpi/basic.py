@@ -43,35 +43,45 @@ class LPI(GenericLPI):
             st = []
         else:
             st = None
-        # TODO support mu with multiple ports
-        for p in _port:
-            _p, invert = self.need_invert(p)
-            if _state_in and _p in _state_in:
-                status = _state_in.get(_p)
+        for pi in _port:
+            if isinstance(pi, list):
+                pp = pi
             else:
-                print(_p, invert)
-                status = self.phi.get(_p, timeout=timeout)
-                print(status)
-            if status is None or status not in [0, 1]:
-                if multi:
-                    st.append((-1, None))
-                    continue
+                pp = [pi]
+            st_prev = None
+            for p in pp:
+                _p, invert = self.need_invert(p)
+                if _state_in and _p in _state_in:
+                    status = _state_in.get(_p)
                 else:
-                    self.set_result(_uuid, (-1, None))
-                    return
-            if invert:
-                _status = 1 - status
-            else:
-                _status = status
-            if multi:
-                st.append((_status, None))
-            else:
-                if st is None:
-                    st = _status
-                else:
-                    if st != _status:
+                    print(_p, invert)
+                    status = self.phi.get(_p, timeout=timeout)
+                    print(status)
+                if status is None or status not in [0, 1]:
+                    if multi:
+                        st.append((-1, None))
+                        continue
+                    else:
                         self.set_result(_uuid, (-1, None))
                         return
+                if invert:
+                    _status = 1 - status
+                else:
+                    _status = status
+                if multi:
+                    if st_prev is None:
+                            st_prev = _status
+                    elif st_prev != _status:
+                            st_prev = -1
+                            break
+                else:
+                    if st is None:
+                        st = _status
+                    elif st != _status:
+                        self.set_result(_uuid, (-1, None))
+                        return
+            if multi:
+                st.append((st_prev, None))
         if multi:
             self.set_result(_uuid, st)
         else:

@@ -38,11 +38,17 @@ def get_phi(phi_id):
 
 
 def get_lpi(lpi_id):
-    return lpis.get(lpi_id)
+    lpi = lpis.get(lpi_id)
+    if lpi:
+        lpi.phi = get_phi(lpi.phi_id)
+    return lpi
 
 
 def get_driver(driver_id):
-    return drivers.get(driver_id)
+    driver = drivers.get(driver_id)
+    if driver:
+        driver.phi = get_phi(driver.phi_id)
+    return driver
 
 
 def log_traceback():

@@ -58,15 +58,14 @@ class LPI(object):
 
     def serialize(self, full=False, config=False):
         d = {}
-        phi = get_phi(self.phi_id)
         if full:
             d['author'] = self.author
             d['license'] = self.license
             d['description'] = self.description
             d['version'] = self.version
             d['api'] = self.api_version
-            if phi:
-                d['phi'] = phi.serialize(full=True, config=True)
+            if self.phi:
+                d['phi'] = self.phi.serialize(full=True, config=True)
         if config:
             d['cfg'] = self.lpi_cfg
         d['lpi_id'] = self.lpi_id
@@ -196,7 +195,6 @@ class LPI(object):
               timeout=None,
               tki=None,
               state_in=None):
-        self.phi = get_phi(self.phi_id)
         if timeout:
             _timeout = timeout
         else:
@@ -219,7 +217,6 @@ class LPI(object):
                cfg=None,
                timeout=None,
                tki=None):
-        self.phi = get_phi(self.phi_id)
         if timeout:
             _timeout = timeout
         else:

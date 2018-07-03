@@ -455,7 +455,7 @@ class UpdatableItem(Item):
                                 if _v.find('|') != -1:
                                     value.append(_v.split('|'))
                                 else:
-                                    value.append(_v)
+                                    value.append([_v])
                         elif value.find('|') != -1:
                             value = value.split('|')
                         cfg[name] = value
@@ -817,8 +817,7 @@ class UpdatableItem(Item):
             return eva.runner.DriverCommand(
                 item=self,
                 update=True,
-                timeout=self.action_timeout,
-                tki=self.term_kill_interval,
+                timeout=self.update_timeout,
                 state_in=driver_state_in)
         return eva.runner.ExternalProcess(
             fname=self.update_exec,
@@ -1737,7 +1736,12 @@ class MultiUpdate(UpdatableItem):
 
     def update_after_run(self, update_out):
         if self._destroyed: return
-        result = update_out.strip().split('\n')
+        if isinstance(update_out, str):
+            result = update_out.strip().split('\n')
+        elif isinstance(update_out, list):
+            result  = update_out
+        else:
+            result = [ update_out ]
         if len(result) < len(self.items_to_update):
             logging.warning(
                     '%s have %u items to update, got only %u in result' % \
