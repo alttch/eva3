@@ -61,5 +61,5 @@ class PHI(object):
         d['id'] = self.phi_id
         return d
 
-    def test(self, cmd):
+    def test(self, cmd=None):
         return False

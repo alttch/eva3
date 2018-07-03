@@ -14,6 +14,7 @@ Core:
 
 UC:
 
+    * UC drivers: logical to physical (LPI) and physical (PHI) interfaces
     * new function "state_history" in UC API
     * EVA_ITEM_OID var in the environment of UC scripts
     * action status label (case insensitive) may be used instead of number,

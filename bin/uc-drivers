@@ -87,6 +87,10 @@ sp_driver_list.add_argument(
 sp_phi_show = sp_phi.add_parser('show', help='Show loaded PHI info')
 sp_phi_show.add_argument('_i', help='PHI id', metavar='PHI_ID')
 
+sp_phi_test = sp_phi.add_parser('test', help='Send test call to PHI')
+sp_phi_test.add_argument('_i', help='PHI id', metavar='PHI_ID')
+sp_phi_test.add_argument('_c', help='PHI test command', metavar='CMD')
+
 sp_driver_show = sp_driver.add_parser('show', help='Show loaded driver info')
 sp_driver_show.add_argument('_i', help='driver id', metavar='DRIVER_ID')
 
