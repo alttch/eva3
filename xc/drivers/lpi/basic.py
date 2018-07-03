@@ -54,9 +54,7 @@ class LPI(GenericLPI):
                 if _state_in and _p in _state_in:
                     status = _state_in.get(_p)
                 else:
-                    print(_p, invert)
                     status = self.phi.get(_p, timeout=timeout)
-                    print(status)
                 if status is None or status not in [0, 1]:
                     if multi:
                         st.append((-1, None))

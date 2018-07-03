@@ -110,7 +110,7 @@ class DriverCommand(GenericRunner):
                 logging.warning('driver ' + \
                     '%s command timeout, sending termination signal'
                     % self.driver.driver_id)
-                driver.terminate(self._uuid)
+                self.driver.terminate(self._uuid)
                 self.run_thread.join(self.term_kill_interval)
                 if self.run_thread.isAlive():
                     logging.critical('driver %s state command timeout' %

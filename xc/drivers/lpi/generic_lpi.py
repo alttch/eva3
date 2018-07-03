@@ -154,7 +154,6 @@ class LPI(object):
             return None
         self.__results[_uuid] = result
         self.__results_lock.release()
-        print(self.__results)
         return True
 
     """
