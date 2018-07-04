@@ -63,7 +63,7 @@ class LPI(GenericLPI):
                 if status is None or status not in [0, 1]:
                     if multi:
                         st.append((-1, None))
-                        continue
+                        break
                     else:
                         self.set_result(_uuid, (-1, None))
                         return
