@@ -29,8 +29,7 @@ class LPI(object):
     """
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
-        logging.error('driver lpi %s state function not implemented' %
-                      self.lpi_id.split('.')[-1])
+        logging.error('LPI %s state function not implemented' % self.lpi_id)
         self.set_result(_uuid, (-1, None))
         return
 
@@ -40,8 +39,7 @@ class LPI(object):
     """
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
-        logging.error('driver lpi %s action function not implemented' %
-                      self.lpi_id.split('.')[-1])
+        logging.error('LPI %s action function not implemented' % self.lpi_id)
         return self.action_result_error(
             _uuid, msg='action function not implemented')
 
@@ -107,8 +105,7 @@ class LPI(object):
     def need_terminate(self, _uuid):
         e = self.__terminate.get(_uuid)
         if not e:
-            logging.critical('Driver %s termination engine broken' %
-                             self.lpi_id.split('.')[-1])
+            logging.critical('LPI %s termination engine broken' % self.lpi_id)
             critical()
         return e.isSet()
 
@@ -206,7 +203,7 @@ class LPI(object):
             if _tki < 0: _tki = 0
         if not self.phi:
             logging.error(
-                'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
+                'LPI %s has no phi assigned' % self.lpi_id.split('.')[-1])
             return None
         return self.do_state(_uuid, cfg, timeout, _tki, state_in)
 
@@ -227,8 +224,7 @@ class LPI(object):
             _tki = get_timeout() - self.default_tki_diff
             if _tki < 0: _tki = 0
         if not self.phi:
-            logging.error(
-                'lpi %s has no phi assigned' % self.lpi_id.split('.')[-1])
+            logging.error('lpi %s has no phi assigned' % self.lpi)
             return None
         self._append_terminate(_uuid)
         self.set_result(_uuid)
