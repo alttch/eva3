@@ -310,8 +310,7 @@ else:
         if code == apiclient.result_func_failed:
             print('FAILED')
         elif 'result' in result:
-            if result['result'] == 'OK':
-                print('OK')
+            print(result['result'])
         else:
             if result:
                 fancy_print_result(result)
