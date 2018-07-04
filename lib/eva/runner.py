@@ -70,8 +70,10 @@ class DriverCommand(GenericRunner):
             cfg = {}
         cfg.update(self.get_cvars(item))
         cfg.update(item.item_env(full=False))
-        if item.driver_config:
-            cfg.update(item.driver_config)
+        if update:
+            if item.update_driver_config: cfg.update(item.update_driver_config)
+        else:
+            if item.action_driver_config: cfg.update(item.action_driver_config)
         self.result = None
         if env: cfg.update(env)
         self.finished = False
