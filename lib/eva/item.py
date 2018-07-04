@@ -265,7 +265,7 @@ class UpdatableItem(Item):
         self.set_time = time.time()
         self.expires = 0
         self.snmp_trap = None
-        self.driver_config = None
+        self.update_driver_config = None
         self.mqtt_update = None
         self.mqtt_update_notifier = None
         self.mqtt_update_qos = 1
@@ -282,8 +282,8 @@ class UpdatableItem(Item):
             self.virtual = data['virtual']
         if 'snmp_trap' in data:
             self.snmp_trap = data['snmp_trap']
-        if 'driver_config' in data:
-            self.driver_config = data['driver_config']
+        if 'update_driver_config' in data:
+            self.update_driver_config = data['update_driver_config']
         if 'expires' in data:
             self.expires = data['expires']
         if 'update_exec' in data:
@@ -431,14 +431,14 @@ class UpdatableItem(Item):
                 self.set_modified(save)
                 return True
             return False
-        elif prop == 'driver_config' and self._drivers_allowed:
+        elif prop == 'update_driver_config' and self._drivers_allowed:
             if val is None:
-                self.driver_config = None
+                self.update_driver_config = None
                 self.log_set(prop, None)
                 self.set_modified(save)
                 return True
             elif isinstance(val, dict):
-                self.driver_config = val
+                self.update_driver_config = val
                 self.log_set(prop, 'dict')
                 self.set_modified(save)
                 return True
@@ -459,7 +459,7 @@ class UpdatableItem(Item):
                         elif value.find('|') != -1:
                             value = value.split('|')
                         cfg[name] = value
-                    self.driver_config = cfg
+                    self.update_driver_config = cfg
                     self.log_set(prop, val)
                     self.set_modified(save)
                     return True
@@ -972,10 +972,10 @@ class UpdatableItem(Item):
                 elif props:
                     d['snmp_trap'] = None
             if self._drivers_allowed:
-                if self.driver_config:
-                    d['driver_config'] = self.driver_config
+                if self.update_driver_config:
+                    d['update_driver_config'] = self.update_driver_config
                 elif props:
-                    d['driver_config'] = None
+                    d['update_driver_config'] = None
             if not config or self.expires:
                 d['expires'] = self.expires
             if self.update_exec:
@@ -1044,6 +1044,8 @@ class ActiveItem(Item):
         self.mqtt_control_notifier = None
         self.mqtt_control_qos = 1
         self._expire_on_any = True
+        self._drivers_allowed = True
+        self.action_driver_config = None
 
     def q_is_task(self):
         return not self.queue.empty()
@@ -1302,6 +1304,8 @@ class ActiveItem(Item):
             self.action_enabled = data['action_enabled']
         if 'action_exec' in data:
             self.action_exec = data['action_exec']
+        if 'action_driver_config' in data:
+            self.action_driver_config = data['action_driver_config']
         if 'mqtt_control' in data and data['mqtt_control'] is not None:
             self.mqtt_control = data['mqtt_control']
             params = data['mqtt_control'].split(':')
@@ -1353,6 +1357,41 @@ class ActiveItem(Item):
                 self.log_set(prop, val)
                 self.set_modified(save)
             return True
+        elif prop == 'action_driver_config' and self._drivers_allowed:
+            if val is None:
+                self.action_driver_config = None
+                self.log_set(prop, None)
+                self.set_modified(save)
+                return True
+            elif isinstance(val, dict):
+                self.action_driver_config = val
+                self.log_set(prop, 'dict')
+                self.set_modified(save)
+                return True
+            else:
+                try:
+                    cfg = {}
+                    vals = val.split(',')
+                    for v in vals:
+                        name, value = v.split('=')
+                        if value.find('||') != -1:
+                            _value = value.split('||')
+                            value = []
+                            for _v in _value:
+                                if _v.find('|') != -1:
+                                    value.append(_v.split('|'))
+                                else:
+                                    value.append([_v])
+                        elif value.find('|') != -1:
+                            value = value.split('|')
+                        cfg[name] = value
+                    self.action_driver_config = cfg
+                    self.log_set(prop, val)
+                    self.set_modified(save)
+                    return True
+                except:
+                    eva.core.log_traceback()
+                    return False
         elif prop == 'mqtt_control':
             if val is None:
                 if self.mqtt_control is not None:
@@ -1458,6 +1497,11 @@ class ActiveItem(Item):
             if not config or self.action_enabled:
                 d['action_enabled'] = self.action_enabled
         if config or props:
+            if self._drivers_allowed:
+                if self.action_driver_config:
+                    d['action_driver_config'] = self.update_driver_config
+                elif props:
+                    d['action_driver_config'] = None
             if self.action_exec:
                 d['action_exec'] = self.action_exec
             elif props:
