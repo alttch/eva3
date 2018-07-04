@@ -10,10 +10,7 @@ __logic__ = 'basic status on/off'
 
 from time import time
 
-import logging
-
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
-
 
 class LPI(GenericLPI):
 
@@ -106,29 +103,24 @@ class LPI(GenericLPI):
                         _status = -1
                         break
                     else:
-                        logging.error(
+                        self.log_error(
                             '%s %s failed to get value' % (self.io_label, p))
                 else:
                     st_arr.append(value)
-                    st_ports.append(p)
-            if _status == -1 or not st_arr:
-                if multi:
-                    st.append((-1, None))
-                else:
-                    self.set_result(_uuid, (-1, None))
-                    return
-            else:
-                broken = False
-                if max_diff != 'skip' and len(st_arr) > 1:
+                    st_ports.append(str(p))
+            if max_diff != 'skip' and _status != -1 and len(st_arr) > 1:
+                _st_ports = st_ports.copy()
+                while True:
+                    diver = False
                     for i in range(0, len(st_arr)):
                         _s = st_arr.copy()
                         del _s[i]
                         _avg = sum(_s) / float(len(_s))
                         if abs(st_arr[i] - _avg) > max_diff:
                             if len(st_arr) == 2:
-                                logging.error(
+                                self.log_error(
                                 'one %s of %s failed' %
-                                (self.io_label, ', '.join(st_ports)) + \
+                                (self.io_label, ', '.join(_st_ports)) + \
                                 '  - value is too different')
                                 if multi:
                                     _status = -1
@@ -137,38 +129,43 @@ class LPI(GenericLPI):
                                     self.set_result(_uuid, (-1, None))
                                     return
                             else:
-                                broken = True
+                                diver = True
                                 break
-                if broken:
-                    diffs = []
-                    for i in range(0, len(st_arr)):
-                        diff = 0
-                        for i2 in range(0, len(st_arr)):
-                            if i != i2: diff += abs(st_arr[i2] - st_arr[i])
-                        diffs.append(diff)
-                    bi = diffs.index(max(diffs))
-                    logging.error('%s %s seems to be failed' %
-                    (self.io_label, st_ports[bi]) + ' - value is too different')
-                    del st_arr[bi]
-                if _status == -1 or not st_arr:
-                    if multi:
-                        st.append((-1, None))
-                        continue
+                    if diver and _status != -1:
+                        diffs = []
+                        for i in range(0, len(st_arr)):
+                            diff = 0
+                            for i2 in range(0, len(st_arr)):
+                                if i != i2:
+                                    diff += abs(st_arr[i2] - st_arr[i])
+                            diffs.append(diff)
+                        bi = diffs.index(max(diffs))
+                        self.log_error('%s %s seems to be failed' %
+                                      (self.io_label, st_ports[bi]) +
+                                      ' - value is too different')
+                        del st_arr[bi]
+                        del st_ports[bi]
                     else:
-                        self.set_result(_uuid, (-1, None))
-                        return
-                if gpf == 'first':
-                    value = st_arr[0]
-                elif gpf == 'max':
-                    value = max(st_arr)
-                elif gpf == 'min':
-                    value = min(st_arr)
-                else:
-                    value = sum(st_arr) / float(len(st_arr))
+                        break
+            if _status == -1 or not st_arr:
                 if multi:
-                    st.append((1, value))
+                    st.append((-1, None))
+                    continue
                 else:
-                    st = value
+                    self.set_result(_uuid, (-1, None))
+                    return
+            if gpf == 'first':
+                value = st_arr[0]
+            elif gpf == 'max':
+                value = max(st_arr)
+            elif gpf == 'min':
+                value = min(st_arr)
+            else:
+                value = sum(st_arr) / float(len(st_arr))
+            if multi:
+                st.append((1, value))
+            else:
+                st = value
         if multi:
             self.set_result(_uuid, st)
         else:
