@@ -94,9 +94,9 @@ class LPI(GenericLPI):
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
         time_start = time()
         if cfg is None:
-            return self.action_result_error(_uuid, 1, 'no config specified')
+            return self.action_result_error(_uuid, 1, 'no config provided')
         if status is None:
-            return self.action_result_error(_uuid, 1, 'no status specified')
+            return self.action_result_error(_uuid, 1, 'no status provided')
         port = cfg.get(self.io_label)
         if port is None:
             return self.action_result_error(

@@ -27,12 +27,12 @@ class LPI(GenericLPI):
         self.__api_version = __api__
         self.__lpi_mod_id = __id__
         self.__logic = __logic__
-        # 1 - skip sensor errors (log error and continue)
-        # 0 - if one sensor in a group failed, stop polling others
+        # skip - skip sensor errors (log error and continue)
+        # otherwise if one sensor in a group failed, stop polling others
         #
         # may be overriden with skip_errors param in a state request cfg
         self.on_err = self.lpi_cfg.get('on_err') if \
-                self.lpi_cfg.get('on_err') is not None else 'skip'
+                self.lpi_cfg.get('on_err') is not None else ''
         # when polling a sensor group
         # avg - return avg sensor value
         # max - return max sensor value
@@ -43,12 +43,12 @@ class LPI(GenericLPI):
         self.gpf = self.lpi_cfg.get('gpf') if \
                 self.lpi_cfg.get('gpf') is not None else 'avg'
         # when polling a sensor group, mark sensor as broken if its value is
-        # different from avg on maxdiff. Setting variable to 'skip' disables
+        # different from avg on max_diff. Setting variable to 'skip' disables
         # this feature
         try:
-            self.maxdiff = float(self.lpi_cfg.get('maxdiff'))
+            self.max_diff = float(self.lpi_cfg.get('max_diff'))
         except:
-            self.maxdiff = 'skip'
+            self.max_diff = 'skip'
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()
@@ -61,12 +61,12 @@ class LPI(GenericLPI):
                 cfg.get('on_err') is not None else self.on_err
         gpf = cfg.get('gpf') if \
                 cfg.get('gpf') is not None else self.gpf
-        maxdiff = cfg.get('maxdiff') if \
-                cfg.get('maxdiff') is not None else self.maxdiff
+        max_diff = cfg.get('max_diff') if \
+                cfg.get('max_diff') is not None else self.max_diff
         try:
-            maxdiff = float(maxdiff)
+            max_diff = float(max_diff)
         except:
-            maxdiff = self.maxdiff
+            max_diff = self.max_diff
         port = cfg.get(self.io_label)
         if not isinstance(port, list):
             _port = [port]
@@ -77,6 +77,8 @@ class LPI(GenericLPI):
             if isinstance(p, list):
                 multi = True
                 break
+        else:
+            _port = [_port]
         if multi:
             st = []
         else:
@@ -88,7 +90,7 @@ class LPI(GenericLPI):
                 pp = [pi]
             st_arr = []
             st_ports = []
-            _status = 0
+            _status = 1
             for p in pp:
                 if _state_in and p in _state_in:
                     value = _state_in.get(p)
@@ -100,7 +102,7 @@ class LPI(GenericLPI):
                 except:
                     value = None
                 if value is None:
-                    if on_error != 'skip':
+                    if on_err != 'skip':
                         _status = -1
                         break
                     else:
@@ -109,31 +111,61 @@ class LPI(GenericLPI):
                 else:
                     st_arr.append(value)
                     st_ports.append(p)
-            if _status == -1:
+            if _status == -1 or not st_arr:
                 if multi:
-                    st.append(-1, None)
+                    st.append((-1, None))
                 else:
                     self.set_result(_uuid, (-1, None))
                     return
             else:
-                avg = sum(st_arr) / float(len(st_arr))
-                _st = st_arr.copy()
-                if maxdiff != 'skip':
+                broken = False
+                if max_diff != 'skip' and len(st_arr) > 1:
                     for i in range(0, len(st_arr)):
-                        if abs(st_arr[i] - avg) > maxdiff:
-                            logging.error(
-                                '%s %s may be failed, value is too different' % (self.io_label, st_ports[i]))
-                            del st_arr[i]
+                        _s = st_arr.copy()
+                        del _s[i]
+                        _avg = sum(_s) / float(len(_s))
+                        if abs(st_arr[i] - _avg) > max_diff:
+                            if len(st_arr) == 2:
+                                logging.error(
+                                'one %s of %s failed' %
+                                (self.io_label, ', '.join(st_ports)) + \
+                                '  - value is too different')
+                                if multi:
+                                    _status = -1
+                                    break
+                                else:
+                                    self.set_result(_uuid, (-1, None))
+                                    return
+                            else:
+                                broken = True
+                if broken:
+                    diffs = []
+                    for i in range(0, len(st_arr)):
+                        diff = 0
+                        for i2 in range(0, len(st_arr)):
+                            if i != i2: diff += abs(st_arr[i2] - st_arr[i])
+                        diffs.append(diff)
+                    bi = diffs.index(max(diffs))
+                    logging.error('%s %s seems to be failed' %
+                    (self.io_label, st_ports[bi]) + ' - value is too different')
+                    del st_arr[bi]
+                if _status == -1 or not st_arr:
+                    if multi:
+                        st.append((-1, None))
+                        continue
+                    else:
+                        self.set_result(_uuid, (-1, None))
+                        return
                 if gpf == 'first':
-                    value = _st[0]
+                    value = st_arr[0]
                 elif gpf == 'max':
-                    value = max(_st)
+                    value = max(st_arr)
                 elif gpf == 'min':
-                    value = min(_st)
+                    value = min(st_arr)
                 else:
-                    value = sum(_st) / float(len(_st))
+                    value = sum(st_arr) / float(len(st_arr))
                 if multi:
-                    st.append(1, value)
+                    st.append((1, value))
                 else:
                     st = value
         if multi:
@@ -141,47 +173,3 @@ class LPI(GenericLPI):
         else:
             self.set_result(_uuid, (1, st))
         return
-
-    def do_action(self, _uuid, status, value, cfg, timeout, tki):
-        time_start = time()
-        if cfg is None:
-            return self.action_result_error(_uuid, 1, 'no config specified')
-        if status is None:
-            return self.action_result_error(_uuid, 1, 'no status specified')
-        port = cfg.get(self.io_label)
-        if port is None:
-            return self.action_result_error(
-                _uuid, 1, 'no ' + self.io_label + ' in config')
-        try:
-            status = int(status)
-        except:
-            return self.action_result_error(_uuid, msg='status is not integer')
-        if status not in [0, 1]:
-            return self.action_result_error(
-                _uuid, msg='status is not in range 0..1')
-        if not isinstance(port, list):
-            _port = [port]
-        else:
-            _port = port
-        if self.phi.all_at_once:
-            ports_to_set = []
-            data_to_set = []
-        for p in _port:
-            _port, invert = self.need_invert(p)
-            if invert:
-                _status = 1 - status
-            else:
-                _status = status
-            if self.phi.all_at_once:
-                ports_to_set.append(_port)
-                data_to_set.append(_status)
-            else:
-                if not self.phi.set(
-                        _port, _status,
-                        timeout=(timeout + time_start - time())):
-                    return self.action_result_error(
-                        _uuid, msg='port %s set error' % _port)
-        if self.phi.all_at_once:
-            if not self.phi.set(ports_to_set, data_to_set, timeout=timeout):
-                return self.action_result_error(_uuid, msg='ports set error')
-        return self.action_result_ok(_uuid)

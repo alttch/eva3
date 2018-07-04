@@ -24,7 +24,7 @@ class PHI(GenericPHI):
         if d is None: d = None
         else:
             try:
-                d = int(d)
+                d = float(d)
             except:
                 d = None
         self.data = {}
@@ -56,8 +56,11 @@ class PHI(GenericPHI):
             return { 'result': 'OK' }
         try:
             port, val = cmd.split('=')
-            val = float(val)
-            self.data[port] = val
+            try:
+                val = float(val)
+                self.data[port] = val
+            except:
+                self.data[port] = None
             logging.debug(
                 '%s test completed, set port %s=%s' % (self.phi_id, port, val))
             if self.phi_cfg.get('event_on_test_set'):

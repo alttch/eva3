@@ -28,20 +28,22 @@ class LPI(object):
     Override this function with your own
     """
 
-    def do_state(self, cfg, timeout, state_in):
+    def do_state(self, _uuid, cfg, timeout, tki, state_in):
         logging.error('driver lpi %s state function not implemented' %
                       self.lpi_id.split('.')[-1])
-        return -1, None
+        self.set_result(_uuid, (-1, None))
+        return
 
     """
     Performs item action
     Override this function with your own
     """
 
-    def do_action(self, _uuid, status, value, cfg, timeout):
+    def do_action(self, _uuid, status, value, cfg, timeout, tki):
         logging.error('driver lpi %s action function not implemented' %
                       self.lpi_id.split('.')[-1])
-        return self.result_error(_uuid, msg='action function not implemented')
+        return self.action_result_error(
+            _uuid, msg='action function not implemented')
 
     """
     Starts LPI threads
@@ -186,18 +188,13 @@ class LPI(object):
         self.ready = True
         self.lpi_id = None  # set by driverapi on load
         self.driver_id = None  # set by driverapi on load
-        self.phi = None # set by driverapi on each call
+        self.phi = None  # set by driverapi on each call
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW
     """
 
-    def state(self,
-              _uuid,
-              cfg=None,
-              timeout=None,
-              tki=None,
-              state_in=None):
+    def state(self, _uuid, cfg=None, timeout=None, tki=None, state_in=None):
         if timeout:
             _timeout = timeout
         else:
