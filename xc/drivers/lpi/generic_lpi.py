@@ -147,7 +147,7 @@ class LPI(object):
         return result
 
     def state_result_error(self, _uuid):
-        set_result(_uuid, False)
+        self.set_result(_uuid, (-1, 0))
         return False
 
     def set_result(self, _uuid, result=None):
