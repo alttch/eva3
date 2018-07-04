@@ -8,6 +8,8 @@ __api__ = 1
 __id__ = 'vrtsensors'
 __equipment__ = 'virtual sensors'
 
+__features__ = [ 'port_get' ]
+
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
@@ -34,6 +36,7 @@ class PHI(GenericPHI):
         self.__version = __version__
         self.__api_version = __api__
         self.__equipment = __equipment__
+        self.__features = __features__
 
     def get(self, port=None, timeout=None):
         try:

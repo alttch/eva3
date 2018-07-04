@@ -8,9 +8,12 @@ __api__ = 1
 __id__ = 'basic'
 __logic__ = 'basic status on/off'
 
+__features__ = ['state', 'state_mp', 'mu', 'port_get', 'aao_get']
+
 from time import time
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
+
 
 class LPI(GenericLPI):
 
@@ -24,6 +27,7 @@ class LPI(GenericLPI):
         self.__api_version = __api__
         self.__lpi_mod_id = __id__
         self.__logic = __logic__
+        self.__features = __features__
         # skip - skip sensor errors (log error and continue)
         # otherwise if one sensor in a group failed, stop polling others
         #
@@ -52,7 +56,7 @@ class LPI(GenericLPI):
         _state_in = state_in
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
-        if self.phi.all_at_once and not _state_in:
+        if self.phi.aao_get and not _state_in:
             _state_in = self.phi.get(timeout=timeout)
         on_err = cfg.get('on_err') if \
                 cfg.get('on_err') is not None else self.on_err
@@ -141,8 +145,8 @@ class LPI(GenericLPI):
                             diffs.append(diff)
                         bi = diffs.index(max(diffs))
                         self.log_error('%s %s seems to be failed' %
-                                      (self.io_label, st_ports[bi]) +
-                                      ' - value is too different')
+                                       (self.io_label, st_ports[bi]) +
+                                       ' - value is too different')
                         del st_arr[bi]
                         del st_ports[bi]
                     else:

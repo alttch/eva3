@@ -8,6 +8,8 @@ __api__ = 1
 __id__ = 'generic'
 __logic__ = 'abstract'
 
+__features__ = []
+
 import threading
 import logging
 import time
@@ -74,6 +76,7 @@ class LPI(object):
         d['id'] = self.driver_id
         d['mod'] = self.__lpi_mod_id
         d['phi_id'] = self.phi_id
+        d['features'] = self.__features
         return d
 
     """
@@ -200,6 +203,7 @@ class LPI(object):
         self.__version = __version__
         self.__api_version = __api__
         self.__logic = __logic__
+        self.__features = __features__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
         self.ready = True

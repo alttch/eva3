@@ -8,6 +8,11 @@ __api__ = 1
 __id__ = 'basic'
 __logic__ = 'basic status on/off'
 
+__features__ = [
+    'state', 'state_mp', 'mu', 'port_get', 'aao_get', 'action', 'action_mp',
+    'port_set', 'aao_set'
+]
+
 from time import time
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
@@ -25,13 +30,14 @@ class LPI(GenericLPI):
         self.__api_version = __api__
         self.__lpi_mod_id = __id__
         self.__logic = __logic__
+        self.__features = __features__
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()
         _state_in = state_in
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
-        if self.phi.all_at_once and not _state_in:
+        if self.phi.aao_get and not _state_in:
             _state_in = self.phi.get(timeout=(timeout + time_start - time()))
         port = cfg.get(self.io_label)
         if not isinstance(port, list):
@@ -112,7 +118,7 @@ class LPI(GenericLPI):
             _port = [port]
         else:
             _port = port
-        if self.phi.all_at_once:
+        if self.phi.aao_set:
             ports_to_set = []
             data_to_set = []
         for p in _port:
@@ -121,7 +127,7 @@ class LPI(GenericLPI):
                 _status = 1 - status
             else:
                 _status = status
-            if self.phi.all_at_once:
+            if self.phi.aao_set:
                 ports_to_set.append(_port)
                 data_to_set.append(_status)
             else:
@@ -130,7 +136,7 @@ class LPI(GenericLPI):
                         timeout=(timeout + time_start - time())):
                     return self.action_result_error(
                         _uuid, msg='port %s set error' % _port)
-        if self.phi.all_at_once:
+        if self.phi.aao_set:
             if not self.phi.set(ports_to_set, data_to_set, timeout=timeout):
                 return self.action_result_error(_uuid, msg='ports set error')
         return self.action_result_ok(_uuid)

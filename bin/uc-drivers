@@ -313,5 +313,6 @@ else:
             if result['result'] == 'OK':
                 print('OK')
         else:
-            fancy_print_result(result)
+            if result:
+                fancy_print_result(result)
 sys.exit(code)

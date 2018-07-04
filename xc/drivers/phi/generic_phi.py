@@ -8,6 +8,8 @@ __api__ = 1
 __id__ = 'generic'
 __equipment__ = 'abstract'
 
+__features__ = []
+
 import logging
 
 from eva.uc.driverapi import critical
@@ -29,9 +31,11 @@ class PHI(object):
         self.__version = __version__
         self.__api_version = __api__
         self.__equipment = __equipment__
-        # set all_at_once = True if the equipment can query/modify only all
+        self.__features = __features__
+        # True if the equipment can query/modify only all
         # ports at once and can not work with a single ports
-        self.all_at_once = False 
+        self.aao_get = False 
+        self.aao_set = False 
         self.ready = True
         self.phi_id = None # set by driverapi on load
 
@@ -59,6 +63,7 @@ class PHI(object):
             d['version'] = self.__version
             d['api'] = self.__api_version
             d['equipment'] = self.__equipment
+            d['features'] = self.__features
         if config:
             d['cfg'] = self.phi_cfg
         d['mod'] = self.phi_mod_id
