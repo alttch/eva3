@@ -55,7 +55,7 @@ class PHI(GenericPHI):
         return r.text
 
     def _logout(self, timeout):
-        return requests.get('http://%s/login.html' % self.ip)
+        return requests.get('http://%s/login.html' % self.ip, timeout=timeout)
 
     def _parse_response(self, data):
         m = re.search(self.re_ss, data)
