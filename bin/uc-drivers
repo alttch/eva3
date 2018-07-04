@@ -46,9 +46,9 @@ def _prepare_result_data(data):
 
 
 _pd_cols = {
-    'list_phi_': ['id', 'mod', 'cfg', 'description', 'version'],
+    'list_phi_': ['id', 'mod', 'description', 'version'],
     'list_drivers_':
-    ['id', 'mod', 'cfg', 'phi_id', 'phi_mod', 'description', 'version'],
+    ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
     'list_drivers': ['id', 'mod', 'phi_id'],
     'list_phi_mods':
     ['mod', 'equipment', 'description', 'version', 'api', 'author'],
