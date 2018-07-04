@@ -130,8 +130,7 @@ class LPI(GenericLPI):
                                     _status = -1
                                     break
                                 else:
-                                    self.set_result(_uuid, (-1, None))
-                                    return
+                                    return self.state_result_error(_uuid)
                             else:
                                 diver = True
                                 break
@@ -156,8 +155,7 @@ class LPI(GenericLPI):
                     st.append((-1, None))
                     continue
                 else:
-                    self.set_result(_uuid, (-1, None))
-                    return
+                    return self.state_result_error(_uuid)
             if gpf == 'first':
                 value = st_arr[0]
             elif gpf == 'max':
