@@ -1011,7 +1011,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         result = super().test_phi(k, i, c)
         if result is False: raise cp_api_404()
         if result is None: raise cp_api_error()
-        return result
+        return http_api_result_ok() if result is True else result
 
     def list_phi_mods(self, k=None):
         cp_need_master(k)

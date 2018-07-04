@@ -304,15 +304,14 @@ if code != apiclient.result_ok and \
         print('Error: invalid params')
     sys.exit(code)
 else:
-    if code == apiclient.result_func_failed:
-        print('FAILED')
-        sys.exit(code)
-    if 'result' in result:
-        if result['result'] == 'OK':
-            print('OK')
+    if a._json:
+        print_json(result)
     else:
-        if a._json:
-            print_json(result)
+        if code == apiclient.result_func_failed:
+            print('FAILED')
+        elif 'result' in result:
+            if result['result'] == 'OK':
+                print('OK')
         else:
             fancy_print_result(result)
-sys.exit(0)
+sys.exit(code)
