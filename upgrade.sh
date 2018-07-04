@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VERSION=3.1.0
-BUILD=2018070401
+BUILD=2018070402
 
 OBS="lm-ei uc-ei INSTALL.txt"
 
