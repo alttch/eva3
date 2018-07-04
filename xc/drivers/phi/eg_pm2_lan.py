@@ -57,7 +57,7 @@ class PHI(GenericPHI):
     def _logout(self, timeout):
         return requests.get('http://%s/login.html' % self.ip)
 
-    def parse_response(self, data):
+    def _parse_response(self, data):
         m = re.search(self.re_ss, data)
         if not m:
             raise Exception('sockstats not found')
@@ -81,7 +81,7 @@ class PHI(GenericPHI):
         logged_in = False
         try:
             res = self._login(timeout=(t_start - time() + timeout))
-            result = self.parse_response(res)
+            result = self._parse_response(res)
             try:
                 if self.logout != 'skip':
                     self._logout(timeout=(t_start - time() + timeout))
@@ -122,7 +122,7 @@ class PHI(GenericPHI):
                 raise Exception(
                     'remote http code %s on port set' % r.status_code)
             # the remote doesn't return any errors, so just check the socket
-            result = self.parse_response(r.text)
+            result = self._parse_response(r.text)
             if result.get(port) != data:
                 raise Exception('port %s set failed' % port)
             try:
