@@ -14,6 +14,8 @@ import logging
 
 from eva.uc.driverapi import critical
 
+from time import time
+
 class PHI(object):
     """
     Override everything. super() constructor may be useful to keep unparsed
@@ -38,6 +40,29 @@ class PHI(object):
         self.aao_set = False 
         self.ready = True
         self.phi_id = None # set by driverapi on load
+        # cache time, useful for aao_get devices
+        self.cache_set = 0
+        try:
+            self.cache = float(self.phi_cfg.get('cache'))
+        except:
+            self.cache = 0
+        self.cache_data = None
+
+    def get_cached_state(self):
+        if not self.cache or not self.cache_data:
+            return None
+        return self.cache_data if \
+                time() - self.cache_set < self.cache else None
+
+    def set_cached_state(self, data):
+        if not self.cache:
+            return False
+        self.cache_data = data
+        self.cache_set = time()
+
+    def clear_cache(self):
+        self.cache_set = 0
+        self.cache_data = None
 
     def get(self, port, timeout):
         return None
