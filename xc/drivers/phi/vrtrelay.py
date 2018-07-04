@@ -11,10 +11,6 @@ __equipment__ = 'virtual relay'
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
-from eva.uc.driverapi import critical
-
-import logging
-
 
 class PHI(GenericPHI):
 
@@ -78,16 +74,15 @@ class PHI(GenericPHI):
         if cmd == 'get':
             return self.data
         if cmd == 'critical':
-            critical()
-            return { 'result': 'OK' }
+            self.log_critical('test')
+            return True
         try:
             port, val = cmd.split('=')
             port = int(port)
             val = int(val)
             if port < 1 or port > 16 or val < -1 or val > 1: return None
             self.data[str(port)] = val
-            logging.debug(
-                '%s test completed, set port %s=%s' % (self.phi_id, port, val))
+            self.log_debug('test set port %s=%s' % (port, val))
             if self.phi_cfg.get('event_on_test_set'):
                 handle_phi_event(self, port, self.data)
             return self.data

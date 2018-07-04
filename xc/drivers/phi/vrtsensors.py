@@ -13,9 +13,6 @@ from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import critical
 
-import logging
-
-
 class PHI(GenericPHI):
 
     def __init__(self, phi_cfg=None):
@@ -52,8 +49,8 @@ class PHI(GenericPHI):
         if cmd == 'get':
             return self.data
         if cmd == 'critical':
-            critical()
-            return { 'result': 'OK' }
+            self.log_critical('test')
+            return True
         try:
             port, val = cmd.split('=')
             try:
@@ -61,7 +58,7 @@ class PHI(GenericPHI):
                 self.data[port] = val
             except:
                 self.data[port] = None
-            logging.debug(
+            self.log_debug(
                 '%s test completed, set port %s=%s' % (self.phi_id, port, val))
             if self.phi_cfg.get('event_on_test_set'):
                 handle_phi_event(self, port, self.data)

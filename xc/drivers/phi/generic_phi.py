@@ -8,6 +8,10 @@ __api__ = 1
 __id__ = 'generic'
 __equipment__ = 'abstract'
 
+import logging
+
+from eva.uc.driverapi import critical
+
 class PHI(object):
     """
     Override everything. super() constructor may be useful to keep unparsed
@@ -63,3 +67,25 @@ class PHI(object):
 
     def test(self, cmd=None):
         return False
+
+    def log_debug(self, msg):
+        logging.debug('PHI %s: %s' % (self.phi_id, msg))
+
+    def log_info(self, msg):
+        logging.info('PHI %s: %s' % (self.phi_id, msg))
+
+    def log_warning(self, msg):
+        logging.warning('PHI %s: %s' % (self.phi_id, msg))
+
+    def log_error(self, msg):
+        logging.error('PHI %s: %s' % (self.phi_id, msg))
+
+    def log_error(self, msg):
+        logging.error('PHI %s: %s' % (self.phi_id, msg))
+
+    def log_critical(self, msg):
+        self.critical(msg)
+
+    def critical(self, msg):
+        logging.critical('PHI %s: %s' % (self.phi_id, msg))
+        critical()

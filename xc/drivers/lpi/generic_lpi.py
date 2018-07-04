@@ -29,7 +29,7 @@ class LPI(object):
     """
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
-        logging.error('LPI %s state function not implemented' % self.lpi_id)
+        self.log_error('state function not implemented')
         self.set_result(_uuid, (-1, None))
         return
 
@@ -39,7 +39,7 @@ class LPI(object):
     """
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
-        logging.error('LPI %s action function not implemented' % self.lpi_id)
+        self.log_error('action function not implemented')
         return self.action_result_error(
             _uuid, msg='action function not implemented')
 
@@ -105,8 +105,7 @@ class LPI(object):
     def need_terminate(self, _uuid):
         e = self.__terminate.get(_uuid)
         if not e:
-            logging.critical('LPI %s termination engine broken' % self.lpi_id)
-            critical()
+            self.critical('termination engine broken')
         return e.isSet()
 
     """
@@ -150,12 +149,33 @@ class LPI(object):
 
     def set_result(self, _uuid, result=None):
         if not self.__results_lock.acquire(timeout=get_timeout()):
-            logging.critical('GenericLPI::set_result locking broken')
-            critical()
+            self.critical('GenericLPI::set_result locking broken')
             return None
         self.__results[_uuid] = result
         self.__results_lock.release()
         return True
+
+    def log_debug(self, msg):
+        logging.debug('driver %s: %s' % (self.driver_id, msg))
+
+    def log_info(self, msg):
+        logging.info('driver %s: %s' % (self.driver_id, msg))
+
+    def log_warning(self, msg):
+        logging.warning('driver %s: %s' % (self.driver_id, msg))
+
+    def log_error(self, msg):
+        logging.error('driver %s: %s' % (self.driver_id, msg))
+
+    def log_error(self, msg):
+        logging.error('driver %s: %s' % (self.driver_id, msg))
+
+    def log_critical(self, msg):
+        self.critical(msg)
+
+    def critical(self, msg):
+        logging.critical('driver %s: %s' % (self.driver_id, msg))
+        critical()
 
     """
     Constructor should be overriden to set lpi id plus i.e. to parse config,
@@ -202,8 +222,7 @@ class LPI(object):
             _tki = get_timeout() - self.default_tki_diff
             if _tki < 0: _tki = 0
         if not self.phi:
-            logging.error(
-                'LPI %s has no phi assigned' % self.lpi_id.split('.')[-1])
+            self.log_error('no PHI assigned')
             return None
         return self.do_state(_uuid, cfg, timeout, _tki, state_in)
 
@@ -224,7 +243,7 @@ class LPI(object):
             _tki = get_timeout() - self.default_tki_diff
             if _tki < 0: _tki = 0
         if not self.phi:
-            logging.error('lpi %s has no phi assigned' % self.lpi)
+            self.log_error('no PHI assigned')
             return None
         self._append_terminate(_uuid)
         self.set_result(_uuid)
@@ -232,8 +251,7 @@ class LPI(object):
 
     def terminate(self, _uuid):
         if not self.__terminate_lock.acquire(timeout=get_timeout()):
-            logging.critical('GenericLPI::terminate locking broken')
-            critical()
+            self.critical('GenericLPI::terminate locking broken')
             return None
         t = self.__terminate.get(_uuid)
         if not t:
@@ -245,8 +263,7 @@ class LPI(object):
 
     def _append_terminate(self, _uuid):
         if not self.__terminate_lock.acquire(timeout=get_timeout()):
-            logging.critical('GenericLPI::_append_terminate locking broken')
-            critical()
+            self.critical('GenericLPI::_append_terminate locking broken')
             return None
         self.__terminate[_uuid] = threading.Event()
         self.__terminate_lock.release()
@@ -254,8 +271,7 @@ class LPI(object):
 
     def _remove_terminate(self, _uuid):
         if not self.__terminate_lock.acquire(timeout=get_timeout()):
-            logging.critical('GenericLPI::_remove_terminate locking broken')
-            critical()
+            self.critical('GenericLPI::_remove_terminate locking broken')
             return None
         try:
             del (self.__terminate[_uuid])
@@ -267,8 +283,7 @@ class LPI(object):
 
     def clear_result(self, _uuid):
         if not self.__results_lock.acquire(timeout=get_timeout()):
-            logging.critical('GenericLPI::clear_result locking broken')
-            critical()
+            self.critical('GenericLPI::clear_result locking broken')
             return None
         try:
             del (self.__results[_uuid])
@@ -280,8 +295,7 @@ class LPI(object):
 
     def get_result(self, _uuid):
         if not self.__results_lock.acquire(timeout=get_timeout()):
-            logging.critical('GenericLPI::get_result locking broken')
-            critical()
+            self.critical('GenericLPI::get_result locking broken')
             return None
         result = self.__results.get(_uuid)
         self.__results_lock.release()
