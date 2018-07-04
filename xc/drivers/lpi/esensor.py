@@ -138,6 +138,7 @@ class LPI(GenericLPI):
                                     return
                             else:
                                 broken = True
+                                break
                 if broken:
                     diffs = []
                     for i in range(0, len(st_arr)):
