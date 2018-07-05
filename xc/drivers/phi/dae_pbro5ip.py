@@ -2,7 +2,7 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
-__description__ = "Basic PHI for DAE-PB-RO5-DAEnetIP4"
+__description__ = "Denkovi relay DAE-PB-RO5-DAEnetIP4"
 __api__ = 1
 
 __id__ = 'dae_pbro5ip'
