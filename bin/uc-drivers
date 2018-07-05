@@ -28,6 +28,8 @@ apiuri = None
 
 debug = False
 
+default_timeout = 5
+
 _me = 'EVA ICS UC driver manager version %s' % __version__
 
 
@@ -58,7 +60,7 @@ _pd_cols = {
 
 
 def fancy_print_result(result, tab=0):
-    if isinstance(result, dict):
+    if result and isinstance(result, dict):
         rprinted = False
         for v in sorted(result.keys()):
             if v != 'result':
@@ -78,7 +80,7 @@ def fancy_print_result(result, tab=0):
                 rprinted = True
         if not rprinted and not tab:
             print('OK')
-    elif isinstance(result, list):
+    elif result and isinstance(result, list):
         import pandas as pd
         pd.options.display.max_colwidth = 65
         df = pd.DataFrame(data=_prepare_result_data(result))
@@ -92,7 +94,11 @@ def fancy_print_result(result, tab=0):
                 idxcol = 'id'
             else:
                 idxcol = 'mod'
-            df.set_index(idxcol, inplace=True)
+            if idxcol in list(df):
+                df.set_index(idxcol, inplace=True)
+            else:
+                idxcol = list(df)[0]
+                df.set_index(list(df)[0], inplace=True)
             out = df.fillna(' ').to_string().split('\n')
             print(idxcol + out[0][len(idxcol):])
             print('-' * len(out[0]))
@@ -115,7 +121,7 @@ ap.add_argument(
     '--api-timeout',
     help='API request timeout (in seconds)',
     type=float,
-    default=None,
+    default=default_timeout,
     dest='_timeout',
     metavar='TIMEOUT')
 ap.add_argument(
@@ -138,6 +144,23 @@ sp = ap.add_subparsers(dest='_type', metavar='type', help='instance type')
 ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
 ap_lpi = sp.add_parser('lpi', help='LPI (Logical to physical interface)')
 ap_driver = sp.add_parser('driver', help='Drivers ( PHI + LPI )')
+
+ap_set = sp.add_parser(
+    'set', help='Set driver for the item (both action & update)')
+ap_set.add_argument('_i', help='item id', metavar='ID')
+ap_set.add_argument('_d', help='driver id', metavar='DRIVER_ID')
+ap_set.add_argument(
+    '-c',
+    '--config',
+    help='item driver config (ports etc.)',
+    dest='_c',
+    metavar='CONFIG')
+ap_set.add_argument(
+    '-y',
+    '--save',
+    help='save configuration',
+    dest='_save',
+    action='store_true')
 
 sp_phi = ap_phi.add_subparsers(
     dest='_func', metavar='func', help='PHI commands')
@@ -227,11 +250,14 @@ except:
 
 a = ap.parse_args()
 
-if not a._type or not a._func:
+if not a._type:
     ap.print_usage()
     sys.exit(99)
 
-api_func = a._func + '_' + a._type
+if a._type == 'set':
+    api_func = 'set_driver'
+else:
+    api_func = a._func + '_' + a._type
 
 debug = a._debug
 
@@ -281,13 +307,19 @@ if hasattr(a, '_i') and a._i is not None:
 if hasattr(a, '_m') and a._m is not None:
     params['m'] = a._m
 
+if hasattr(a, '_d') and a._d is not None:
+    params['d'] = a._d
+
 if hasattr(a, '_c') and a._i is not None:
     params['c'] = a._c
+
+timeout = a._timeout
 
 if debug:
     print('API:', api._uri)
     print('API func:', api_func)
-    print('Params', params)
+    print('timeout:', timeout)
+    print('params', params)
 code, result = api.call(api_func, params, timeout, _debug=debug)
 
 if code != apiclient.result_ok and \

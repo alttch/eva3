@@ -266,8 +266,12 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         return item.serialize(props=True) if item else None
 
-    def set_props(self, k=None, i=None, props=None, save=None,
-                  clean_snmp=False):
+    def _set_props(self,
+                   k=None,
+                   i=None,
+                   props=None,
+                   save=None,
+                   clean_snmp=False):
         if clean_snmp:
             if not api.set_prop(k, i=i, p='snmp_trap'):
                 return False
@@ -421,7 +425,7 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    if not api.set_props(_k, i, u.get('props'), save, True):
+                    if not api._set_props(_k, i, u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -434,7 +438,7 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    if not api.set_props(_k, i, u.get('props'), save, True):
+                    if not api._set_props(_k, i, u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -447,7 +451,7 @@ class UC_API(GenericAPI):
                 except:
                     return False
                 try:
-                    if not api.set_props(_k, i, u.get('props'), save):
+                    if not api._set_props(_k, i, u.get('props'), save):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -635,6 +639,17 @@ class UC_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.uc.driverapi.modinfo_lpi(i)
 
+    def set_driver(self, k=None, i=None, d=None, c=None, save=False):
+        if not apikey.check(k, master=True): return None
+        item = eva.uc.controller.get_unit(i)
+        if not item: return None
+        if not api.set_prop(k, i, 'update_driver_config', c): return False
+        if not api.set_prop(k, i, 'action_driver_config', c): return False
+        if not api.set_prop(k, i, 'update_exec', '|' + d): return False
+        if not api.set_prop(k, i, 'action_exec', '|' + d): return False
+        if save: item.save()
+        return True
+
 
 class UC_HTTP_API(GenericHTTP_API, UC_API):
 
@@ -693,6 +708,8 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
         UC_HTTP_API.modinfo_phi.exposed = True
         UC_HTTP_API.modinfo_lpi.exposed = True
+
+        UC_HTTP_API.set_driver.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -1048,6 +1065,12 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             raise cp_api_error()
         else:
             return result
+
+    def set_driver(self, k=None, i=None, d=None, c=None, save=False):
+        cp_need_master(k)
+        result = super().set_driver(k, i, d, c, save)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
 
 def start():

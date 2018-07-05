@@ -56,14 +56,15 @@ _api_func = {
             'clone_group', 'destroy', 'destroy_device', 'login', 'logout',
             'load_phi', 'unload_phi', 'load_driver', 'unload_driver',
             'list_phi', 'list_drivers', 'get_phi', 'get_driver', 'test_phi',
-            'list_lpi_mods', 'list_phi_mods', 'modinfo_phi', 'modinfo_lpi'
+            'list_lpi_mods', 'list_phi_mods', 'modinfo_phi', 'modinfo_lpi',
+            'set_driver'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
             'enable_actions', 'save_config', 'set_prop', 'create_unit',
             'create_sensor', 'create_mu', 'create_device', 'update_device',
             'clone', 'clone_group', 'destroy', 'destroy_device', 'login',
-            'logout', 'unload_phi', 'unload_driver'
+            'logout', 'unload_phi', 'unload_driver', 'set_driver'
         ],
         'ce': ['action', 'action_toggle']
     },
