@@ -5,8 +5,8 @@ __version__ = "1.0.0"
 __description__ = "Enhanced sensor LPI"
 __api__ = 1
 
-__id__ = 'basic'
-__logic__ = 'basic status on/off'
+__id__ = 'esensor'
+__logic__ = 'single and group polling'
 
 __features__ = ['state', 'state_mp', 'mu', 'port_get', 'aao_get']
 
