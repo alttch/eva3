@@ -46,6 +46,8 @@ ln -sf ../runtime/xc/uc
 
 cd ..
 
+ln -sf ../../xc/drivers lib/eva/uc/drivers
+
 echo "Checking mods"
 ./sbin/check_mods install || exit 1
 
