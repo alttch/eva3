@@ -644,9 +644,13 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_unit(i)
         if not item: return None
         if not api.set_prop(k, i, 'update_driver_config', c): return False
-        if not api.set_prop(k, i, 'action_driver_config', c): return False
+        if item.item_type == 'unit' and \
+                not api.set_prop(k, i, 'action_driver_config', c):
+            return False
         if not api.set_prop(k, i, 'update_exec', '|' + d): return False
-        if not api.set_prop(k, i, 'action_exec', '|' + d): return False
+        if item.item_type == 'unit' and \
+                not api.set_prop(k, i, 'action_exec', '|' + d):
+            return False
         if save: item.save()
         return True
 
