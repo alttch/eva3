@@ -20,6 +20,7 @@ import eva.lm.plc
 import eva.lm.lremote
 import eva.lm.lmqueue
 import eva.lm.dmatrix
+import eva.lm.extapi
 
 lvars_by_id = {}
 lvars_by_group = {}
@@ -202,6 +203,8 @@ def save_lvar_state(item):
             pass
         return False
 
+def load_extensions():
+    eva.lm.extapi.load()
 
 def load_lvar_db_state(items, clean=False, create=True):
     _db_loaded_ids = []
@@ -576,6 +579,7 @@ def start():
     global plc
     global Q
     global DM
+    eva.lm.extapi.start()
     Q = eva.lm.lmqueue.LM_Queue('lm_queue')
     Q.start()
     DM = eva.lm.dmatrix.DecisionMatrix()
@@ -606,6 +610,7 @@ def stop():
         uc_pool.stop()
     if plc: plc.stop_processors()
     if Q: Q.stop()
+    eva.uc.extapi.stop()
 
 
 def exec_macro(macro,
