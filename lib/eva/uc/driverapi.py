@@ -382,7 +382,6 @@ def save():
 
 
 def start():
-    eva.core.append_stop_func(stop)
     eva.core.append_dump_func('uc.driverapi', dump)
     eva.core.append_save_func(save)
     for k, p in drivers.items():

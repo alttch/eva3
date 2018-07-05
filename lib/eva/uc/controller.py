@@ -525,12 +525,12 @@ def serialize_actions():
 
 def start():
     global Q
+    eva.uc.driverapi.start()
     Q = eva.uc.ucqueue.UC_Queue('uc_queue')
     Q.start()
     logging.info('UC action queue started')
     for i, v in items_by_id.items():
         v.start_processors()
-    eva.uc.driverapi.start()
 
 
 def stop():
@@ -539,6 +539,7 @@ def stop():
     for i, v in items_by_id.copy().items():
         v.stop_processors()
     if Q: Q.stop()
+    eva.uc.driverapi.stop()
 
 
 def exec_mqtt_unit_action(unit, msg):
