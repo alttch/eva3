@@ -35,6 +35,10 @@ def critical():
     return eva.core.critical(from_driver=True)
 
 
+def log_traceback():
+    return eva.core.log_traceback()
+
+
 def get_phi(phi_id):
     return phis.get(phi_id)
 
@@ -44,10 +48,6 @@ def get_driver(driver_id):
     if driver:
         driver.phi = get_phi(driver.phi_id)
     return driver
-
-
-def log_traceback():
-    return eva.core.log_traceback()
 
 
 def modinfo_phi(mod):
@@ -364,7 +364,7 @@ def load():
                     lpi_cfg=l['cfg'],
                     start=False)
     except:
-        logging.error('unaboe to load uc_drivers.json')
+        logging.error('unable to load uc_drivers.json')
         eva.core.log_traceback()
         return False
     return True
@@ -375,7 +375,7 @@ def save():
         open(eva.core.dir_runtime + '/uc_drivers.json', 'w').write(
             format_json(serialize(config=True), minimal=False))
     except:
-        logging.error('unable to save driver state')
+        logging.error('unable to save drivers config')
         eva.core.log_traceback()
         return False
     return True
