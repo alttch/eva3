@@ -53,9 +53,9 @@ _pd_cols = {
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
     'list_drivers': ['id', 'mod', 'phi_id'],
     'list_phi_mods':
-    ['mod', 'equipment', 'description', 'version', 'api', 'author'],
+    ['mod', 'equipment', 'description', 'version', 'api'],
     'list_lpi_mods':
-    ['mod', 'logic', 'description', 'version', 'api', 'author']
+    ['mod', 'logic', 'description', 'version', 'api']
 }
 
 
