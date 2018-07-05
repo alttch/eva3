@@ -64,10 +64,10 @@ class PHI(object):
         self.cache_set = 0
         self.cache_data = None
 
-    def get(self, port, timeout):
+    def get(self, port=None, cfg=None, timeout=0):
         return None
 
-    def set(self, port, data, timeout):
+    def set(self, port=None, data=None, cfg=None, timeout=0):
         return False
 
     def handle_event(self):

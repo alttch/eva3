@@ -37,14 +37,14 @@ class PHI(GenericPHI):
         self.__equipment = __equipment__
         self.__features = __features__
 
-    def get(self, port=None, timeout=None):
+    def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data
         try:
             return self.data.get(str(port))
         except:
             return None
 
-    def set(self, port, data, timeout):
+    def set(self, port, data, cfg=None, timeout=0):
         if isinstance(port, list):
             ports = port
             multi = True

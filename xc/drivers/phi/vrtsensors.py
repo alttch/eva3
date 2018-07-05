@@ -38,7 +38,7 @@ class PHI(GenericPHI):
         self.__equipment = __equipment__
         self.__features = __features__
 
-    def get(self, port=None, timeout=None):
+    def get(self, port=None, cfg=None, timeout=0):
         try:
             return self.data.get(str(port))
         except:

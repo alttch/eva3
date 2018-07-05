@@ -70,7 +70,7 @@ class PHI(GenericPHI):
         self.set_cached_state(result)
         return result
 
-    def get(self, port=None, timeout=None):
+    def get(self, port=None, cfg=None, timeout=0):
         # trying to get cached state before
         state = self.get_cached_state()
         if state is not None:
@@ -101,7 +101,7 @@ class PHI(GenericPHI):
             log_traceback()
             return None
 
-    def set(self, port, data, timeout):
+    def set(self, port, data, cfg=None, timeout=0):
         t_start = time()
         if not isinstance(port, str):
             return False
