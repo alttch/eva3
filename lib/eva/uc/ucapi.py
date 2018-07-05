@@ -574,14 +574,14 @@ class UC_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         if not i: return None
         result = eva.uc.driverapi.unload_phi(i)
-        if result: eva.uc.driverapi.save()
+        if result and eva.core.db_update == 1: eva.uc.driverapi.save()
         return result
 
     def unload_driver(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         if not i: return None
         result = eva.uc.driverapi.unload_driver(i)
-        if result: eva.uc.driverapi.save()
+        if result and eva.core.db_update == 1: eva.uc.driverapi.save()
         return result
 
     def list_phi(self, k=None, full=False):
