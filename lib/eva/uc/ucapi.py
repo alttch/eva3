@@ -565,9 +565,10 @@ class UC_API(GenericAPI):
                     return None
         else:
             _cfg = cfg
-        if eva.uc.driverapi.load_lpi(i, m, p, _cfg):
+        if eva.uc.driverapi.load_driver(i, m, p, _cfg):
             if save: eva.uc.driverapi.save()
-            return eva.uc.driverapi.get_lpi(i).serialize(full=True, config=True)
+            return eva.uc.driverapi.get_driver(p + '.' + i).serialize(
+                full=True, config=True)
 
     def unload_phi(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -579,7 +580,7 @@ class UC_API(GenericAPI):
     def unload_driver(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         if not i: return None
-        result = eva.uc.driverapi.unload_lpi(driver_id=i)
+        result = eva.uc.driverapi.unload_driver(i)
         if result: eva.uc.driverapi.save()
         return result
 

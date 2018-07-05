@@ -15,7 +15,6 @@ import eva.core
 from eva.tools import format_json
 
 phis = {}
-lpis = {}
 drivers = {}
 items_by_phi = {}
 
@@ -38,13 +37,6 @@ def critical():
 
 def get_phi(phi_id):
     return phis.get(phi_id)
-
-
-def get_lpi(lpi_id):
-    lpi = lpis.get(lpi_id)
-    if lpi:
-        lpi.phi = get_phi(lpi.phi_id)
-    return lpi
 
 
 def get_driver(driver_id):
@@ -171,6 +163,7 @@ def unregister_item_update(i):
                       (i.full_id, phi_id))
         return True
     except:
+        eva.core.log_traceback()
         return False
 
 
@@ -235,7 +228,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     return phi
 
 
-def load_lpi(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
+def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     if get_phi(phi_id) is None:
         logging.error('Unable to load LPI, unknown PHI: %s' % phi_id)
         return False
@@ -277,9 +270,8 @@ def load_lpi(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
         return False
     lpi.lpi_id = lpi_id
     lpi.driver_id = phi_id + '.' + lpi_id
-    if lpi_id in lpis:
-        lpis[lpi_id].stop()
-    lpis[lpi_id] = lpi
+    if lpi.driver_id in drivers:
+        drivers[lpi.driver_id].stop()
     drivers[lpi.driver_id] = lpi
     if start: lpi.start()
     return lpi
@@ -289,10 +281,10 @@ def unload_phi(phi_id):
     phi = get_phi(phi_id)
     if phi is None: return False
     err = False
-    for k, l in lpis.copy().items():
+    for k, l in drivers.copy().items():
         if l.phi_id == phi_id:
-            logging.error(
-                'Unable to unload PHI %s, it is in use by LPI %s' % (phi_id, k))
+            logging.error('Unable to unload PHI %s, it is in use by driver %s' %
+                          (phi_id, k))
             err = True
     if items_by_phi[phi_id]:
         logging.error('Unable to unload PHI %s, it is in use' % (phi_id))
@@ -303,24 +295,18 @@ def unload_phi(phi_id):
     return True
 
 
-def unload_lpi(lpi_id=None, driver_id=None):
-    if lpi_id:
-        lpi = get_lpi(lpi_id)
-    elif driver_id:
-        lpi = get_driver(driver_id)
-    else:
-        return False
+def unload_driver(driver_id):
+    lpi = get_driver(driver_id)
     if lpi is None: return False
     err = False
     for i in items_by_phi[lpi.phi_id]:
-        if i.update_exec[1:] == driver_id:
-            logging.error(
-                'Unable to unload driver %s, it is in use' % (driver_id))
+        if i.update_exec and i.update_exec[1:] == driver_id:
+            logging.error('Unable to unload driver %s, it is in use by %s' %
+                          (driver_id, i.oid))
             err = True
     if err: return False
     lpi.stop()
     del drivers[lpi.driver_id]
-    del lpis[lpi.lpi_id]
     return True
 
 
@@ -345,13 +331,13 @@ def serialize_phi(full=False, config=False):
 
 def serialize_lpi(full=False, config=False):
     result = []
-    for k in lpis.copy().keys():
+    for k in drivers.copy().keys():
         try:
-            p = get_lpi(k)
+            p = get_driver(k)
             r = p.serialize(full=full, config=config)
             result.append(r)
         except:
-            logging.error('lpi %s serialize error' % k)
+            logging.error('driver %s serialize error' % k)
             eva.core.log_traceback()
     return result
 
@@ -371,7 +357,7 @@ def load():
         _lpi = data.get('lpi')
         if _lpi:
             for l in _lpi:
-                load_lpi(
+                load_driver(
                     l['lpi_id'],
                     l['mod'],
                     l['phi_id'],
@@ -399,14 +385,14 @@ def start():
     eva.core.append_stop_func(stop)
     eva.core.append_dump_func('uc.driverapi', dump)
     eva.core.append_save_func(save)
-    for k, p in lpis.items():
+    for k, p in drivers.items():
         p.start()
     for k, p in phis.items():
         p.start()
 
 
 def stop():
-    for k, p in lpis.items():
+    for k, p in drivers.items():
         p.stop()
     for k, p in phis.items():
         p.stop()

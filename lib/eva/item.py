@@ -355,13 +355,13 @@ class UpdatableItem(Item):
                             return False
                     else:
                         return False
+                if not val:
+                    self.unregister_driver_updates()
                 self.update_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
                 if val and val[0] == '|':
                     self.register_driver_updates()
-                else:
-                    self.unregister_driver_updates()
             return True
         elif prop == 'update_interval':
             if val is None:
