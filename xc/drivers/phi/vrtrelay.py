@@ -8,11 +8,12 @@ __api__ = 1
 __id__ = 'vrtrelay'
 __equipment__ = 'virtual relay'
 
-__features__ = [ 'port_get', 'port_set', 'aao_set' ]
+__features__ = ['port_get', 'port_set', 'aao_set']
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
+
 
 class PHI(GenericPHI):
 
@@ -90,5 +91,10 @@ class PHI(GenericPHI):
                 handle_phi_event(self, port, self.data)
             return self.data
         except:
-            log_traceback()
-            return None
+            return [{
+                'command': 'get',
+                'help': 'get relay ports status'
+            }, {
+                'command': 'X=S',
+                'help': 'set port X to S'
+            }]

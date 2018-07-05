@@ -8,12 +8,13 @@ __api__ = 1
 __id__ = 'vrtsensors'
 __equipment__ = 'virtual sensors'
 
-__features__ = [ 'port_get' ]
+__features__ = ['port_get']
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import critical
+
 
 class PHI(GenericPHI):
 
@@ -67,5 +68,10 @@ class PHI(GenericPHI):
                 handle_phi_event(self, port, self.data)
             return self.data
         except:
-            log_traceback()
-            return None
+            return [{
+                'command': 'get',
+                'help': 'get sensors values'
+            }, {
+                'command': 'X=S',
+                'help': 'set sensor port X to S'
+            }]
