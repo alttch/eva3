@@ -12,6 +12,7 @@ lib/ei/css/ei.min.css
 lib/ei/js/lm.min.js
 lib/ei/js/uc.min.js
 lib/eva/uc/drivers
+lib/eva/lm/extensions
 ui/js/eva_sfa.min.js
 log
 runtime

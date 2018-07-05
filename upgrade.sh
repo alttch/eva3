@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "x`id -u`" != "x0" ]; then
+if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
     echo "Please run this script as root"
     exit 98
 fi
@@ -10,7 +10,8 @@ BUILD=2018070501
 
 OBS="lm-ei uc-ei INSTALL.txt"
 
-UC_NEW_FILES="runtime/uc_drivers.json"
+UC_NEW_CFG="runtime/uc_drivers.json"
+LM_NEW_CFG="runtime/lm_extensions.json"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
     echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"
@@ -57,12 +58,19 @@ for o in ${OBS}; do
     rm -rf ${o}
 done
 
-echo "- Adding new runtime files"
+echo "- Adding new runtime configs"
 
-for f in ${UC_NEW_FILES}; do
-    touch $f
+for f in ${UC_NEW_CFG}; do
+    [ ! -f $f ] && echo "{}" > $f
     if [ "x$UC_USER" != "x" ]; then
         chown ${UC_USER} $f
+    fi
+done
+
+for f in ${LM_NEW_CFG}; do
+    [ ! -f $f ] && echo "{}" > $f
+    if [ "x$LM_USER" != "x" ]; then
+        chown ${LM_USER} $f
     fi
 done
 

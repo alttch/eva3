@@ -84,3 +84,6 @@ class LMExt(object):
     def critical(self, msg):
         logging.critical('Extension %s: %s' % (self.ext_id, msg))
         critical()
+
+    def get_functions(self):
+        return self.__functions

@@ -33,8 +33,7 @@ class LMExt(GenericExt):
         self.__version = __version__
         self.__api_version = __api__
         self.__lpi_mod_id = __id__
-        self.__logic = __logic__
-        self.__features = __features__
+        self.__functions = __functions__
         self.__config_help = __config_help__
         self.url = self.cfg.get('url')
         if not self.url: self.ready = False

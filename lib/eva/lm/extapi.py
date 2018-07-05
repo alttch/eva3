@@ -15,6 +15,7 @@ import eva.core
 from eva.tools import format_json
 
 exts = {}
+env = {}
 
 
 def get_version():
@@ -41,8 +42,17 @@ def get_ext(ext_id):
     return exts.get(ext_id)
 
 
-def extinfo(mod):
-    code = 'from eva.uc.extensions.%s import LMExt;' % mod + \
+def rebuild_env():
+    global env
+    _env = {}
+    for i, e in exts.copy().items():
+        for f, h in e.get_functions().copy().items():
+            _env['%s_%s' % (e.ext_id, f)] = getattr(e, f)
+    env = _env
+
+
+def modinfo(mod):
+    code = 'from eva.lm.extensions.%s import LMExt;' % mod + \
             ' s=LMExt().serialize(full=True)'
     try:
         d = {}
@@ -58,7 +68,7 @@ def extinfo(mod):
         return None
 
 
-def list_exts():
+def list_ext_mods():
     result = []
     mods = glob.glob(eva.core.dir_lib + '/eva/lm/extensions/*.py')
     for p in mods:
@@ -72,24 +82,25 @@ def list_exts():
                 if d['s']['functions']:
                     result.append(d['s'])
             except:
+                raise
                 pass
     return sorted(result, key=lambda k: k['mod'])
 
 
-def load_ext(ext_id, ext_mod_id, cfg=None, start=True):
+def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
     if not ext_id: return False
     if not re.match("^[A-Za-z0-9_-]*$", ext_id):
-        logging.debug('Extension %s id contains forbidden symbols' % phi_id)
+        logging.debug('Extension %s id contains forbidden symbols' % ext_id)
         return False
     try:
-        ext_mod = importlib.import_module('eva.lm.extensions.' + phi_mod_id)
+        ext_mod = importlib.import_module('eva.lm.extensions.' + ext_mod_id)
         importlib.reload(ext_mod)
         _api = ext_mod.__api__
         _author = ext_mod.__author__
         _version = ext_mod.__version__
         _description = ext_mod.__description__
         _license = ext_mod.__license__
-        _functions = ext_mod.__functions
+        _functions = ext_mod.__functions__
         logging.info('Extension loaded %s v%s, author: %s, license: %s' %
                      (ext_mod_id, _version, _author, _license))
         logging.debug('%s: %s' % (ext_mod_id, _description))
@@ -116,8 +127,9 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True):
     ext.ext_id = ext_id
     if ext_id in exts:
         exts[ext_id].stop()
-    exts[ext_id] = phi
+    exts[ext_id] = ext
     if start: ext.start()
+    if rebuild: rebuild_env()
     return ext
 
 
@@ -126,6 +138,7 @@ def unload_ext(ext_id):
     if ext is None: return False
     ext.stop()
     del exts[ext_id]
+    rebuild_env()
     return True
 
 
@@ -150,7 +163,8 @@ def load():
         data = jsonpickle.decode(
             open(eva.core.dir_runtime + '/lm_extensions.json').read())
         for p in data:
-            load_extension(p['id'], p['mod'], cfg=p['cfg'], start=False)
+            load_extension(
+                p['id'], p['mod'], cfg=p['cfg'], start=False, rebuild=False)
     except:
         logging.error('unable to load lm_extensions.json')
         eva.core.log_traceback()
