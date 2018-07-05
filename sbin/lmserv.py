@@ -92,6 +92,7 @@ eva.notify.load()
 eva.notify.start()
 
 eva.lm.controller.init()
+eva.lm.controller.load_extensions()
 eva.lm.controller.load_lvars()
 eva.lm.controller.load_remote_ucs()
 eva.lm.controller.load_macros()
