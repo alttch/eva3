@@ -618,7 +618,6 @@ class UC_API(GenericAPI):
         else:
             return False
 
-
     def list_phi_mods(self, k=None):
         if not apikey.check(k, master=True): return None
         return eva.uc.driverapi.list_phi_mods()
@@ -626,6 +625,15 @@ class UC_API(GenericAPI):
     def list_lpi_mods(self, k=None):
         if not apikey.check(k, master=True): return None
         return eva.uc.driverapi.list_lpi_mods()
+
+    def modinfo_phi(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.modinfo_phi(i)
+
+    def modinfo_lpi(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.modinfo_lpi(i)
+
 
 class UC_HTTP_API(GenericHTTP_API, UC_API):
 
@@ -681,6 +689,9 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
         UC_HTTP_API.list_phi_mods.exposed = True
         UC_HTTP_API.list_lpi_mods.exposed = True
+
+        UC_HTTP_API.modinfo_phi.exposed = True
+        UC_HTTP_API.modinfo_lpi.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -1020,6 +1031,23 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
     def list_lpi_mods(self, k=None):
         cp_need_master(k)
         return super().list_lpi_mods(k)
+
+    def modinfo_phi(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().modinfo_phi(k, i)
+        if not result:
+            raise cp_api_error()
+        else:
+            return result
+
+    def modinfo_lpi(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().modinfo_lpi(k, i)
+        if not result:
+            raise cp_api_error()
+        else:
+            return result
+
 
 def start():
     global api

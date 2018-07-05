@@ -165,7 +165,7 @@ sp_phi_show = sp_phi.add_parser('show', help='Show loaded PHI info')
 sp_phi_show.add_argument('_i', help='PHI id', metavar='PHI_ID')
 
 sp_phi_mods = sp_phi.add_parser('mods', help='List available PHI mods')
-sp_lpi_mods = sp_lpi.add_parser('mods', help='List available PHI mods')
+sp_lpi_mods = sp_lpi.add_parser('mods', help='List available LPI mods')
 
 sp_phi_test = sp_phi.add_parser('test', help='Send test call to PHI')
 sp_phi_test.add_argument('_i', help='PHI id', metavar='PHI_ID')
@@ -191,9 +191,9 @@ sp_phi_load.add_argument(
     action='store_true')
 
 sp_driver_load = sp_driver.add_parser('load', help='Load driver')
-sp_driver_load.add_argument('_i', help='LPI id', metavar='LPI_ID')
+sp_driver_load.add_argument(
+    '_i', help='driver id (PHI_ID.LPI.ID)', metavar='PHI_ID.LPI_ID')
 sp_driver_load.add_argument('_m', help='LPI module', metavar='LPI_MOD')
-sp_driver_load.add_argument('_p', help='PHI id', metavar='PHI_ID')
 sp_driver_load.add_argument(
     '-c',
     '--config',
@@ -212,6 +212,12 @@ sp_phi_unload.add_argument('_i', help='PHI id', metavar='PHI_ID')
 
 sp_driver_unload = sp_driver.add_parser('unload', help='Unload driver')
 sp_driver_unload.add_argument('_i', help='driver id', metavar='DRIVER_ID')
+
+sp_phi_modinfo = sp_phi.add_parser('modinfo', help='PHI module info')
+sp_phi_modinfo.add_argument('_i', help='PHI module', metavar='PHI_MOD')
+
+sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
+sp_lpi_modinfo.add_argument('_i', help='LPI module', metavar='LPI_MOD')
 
 try:
     import argcomplete
@@ -263,10 +269,14 @@ if hasattr(a, '_save') and a._save:
     params['save'] = 1
 
 if hasattr(a, '_i') and a._i is not None:
-    params['i'] = a._i
-
-if hasattr(a, '_p') and a._p is not None:
-    params['p'] = a._p
+    if api_func == 'load_driver':
+        try:
+            params['p'], params['i'] = a._i.split('.')
+        except:
+            print("Invalid driver ID")
+            sys.exit(98)
+    else:
+        params['i'] = a._i
 
 if hasattr(a, '_m') and a._m is not None:
     params['m'] = a._m

@@ -58,6 +58,42 @@ def log_traceback():
     return eva.core.log_traceback()
 
 
+def modinfo_phi(mod):
+    code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
+            ' s=PHI().serialize(full=True)'
+    try:
+        d = {}
+        exec(code, d)
+        result = d.get('s')
+        if result:
+            try:
+                del result['id']
+            except:
+                pass
+        return result
+    except:
+        return None
+
+
+def modinfo_lpi(mod):
+    code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \
+            ' s=LPI().serialize(full=True)'
+    try:
+        d = {}
+        exec(code, d)
+        result = d.get('s')
+        if result:
+            try:
+                del result['id']
+                del result['lpi_id']
+                del result['phi_id']
+            except:
+                pass
+        return result
+    except:
+        return None
+
+
 def list_phi_mods():
     result = []
     phi_mods = glob.glob(eva.core.dir_lib + '/eva/uc/drivers/phi/*.py')

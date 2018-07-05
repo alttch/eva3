@@ -128,7 +128,9 @@ $_eva_api_func = array(
                     'get_driver',
                     'test_phi',
                     'list_phi_mods',
-                    'list_lpi_mods'
+                    'list_lpi_mods',
+                    'modinfo_phi',
+                    'modinfo_lpi'
                     ),
                 'cr' => array(
                     'update',
