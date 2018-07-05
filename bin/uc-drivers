@@ -145,23 +145,6 @@ ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
 ap_lpi = sp.add_parser('lpi', help='LPI (Logical to physical interface)')
 ap_driver = sp.add_parser('driver', help='Drivers ( PHI + LPI )')
 
-ap_set = sp.add_parser(
-    'set', help='Set driver for the item (both action & update)')
-ap_set.add_argument('_i', help='item id', metavar='ID')
-ap_set.add_argument('_d', help='driver id', metavar='DRIVER_ID')
-ap_set.add_argument(
-    '-c',
-    '--config',
-    help='item driver config (ports etc.)',
-    dest='_c',
-    metavar='CONFIG')
-ap_set.add_argument(
-    '-y',
-    '--save',
-    help='save configuration',
-    dest='_save',
-    action='store_true')
-
 sp_phi = ap_phi.add_subparsers(
     dest='_func', metavar='func', help='PHI commands')
 sp_lpi = ap_lpi.add_subparsers(
@@ -236,6 +219,24 @@ sp_phi_unload.add_argument('_i', help='PHI id', metavar='PHI_ID')
 sp_driver_unload = sp_driver.add_parser('unload', help='Unload driver')
 sp_driver_unload.add_argument('_i', help='driver id', metavar='DRIVER_ID')
 
+sp_driver_set = sp_driver.add_parser(
+    'set', help='Set for the item (action & update)')
+sp_driver_set.add_argument('_i', help='item id', metavar='ID')
+sp_driver_set.add_argument('_d', help='driver id', metavar='DRIVER_ID')
+sp_driver_set.add_argument(
+    '-c',
+    '--config',
+    help='item driver config (ports etc.)',
+    dest='_c',
+    metavar='CONFIG')
+sp_driver_set.add_argument(
+    '-y',
+    '--save',
+    help='save configuration',
+    dest='_save',
+    action='store_true')
+
+
 sp_phi_modinfo = sp_phi.add_parser('modinfo', help='PHI module info')
 sp_phi_modinfo.add_argument('_i', help='PHI module', metavar='PHI_MOD')
 
@@ -250,14 +251,11 @@ except:
 
 a = ap.parse_args()
 
-if not a._type:
+if not a._type or not a._func:
     ap.print_usage()
     sys.exit(99)
 
-if a._type == 'set':
-    api_func = 'set_driver'
-else:
-    api_func = a._func + '_' + a._type
+api_func = a._func + '_' + a._type
 
 debug = a._debug
 
