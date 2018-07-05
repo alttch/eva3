@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "x`id -u`" != "x0" ]; then
+    echo "Please run this script as root"
+    exit 98
+fi
+
 VERSION=3.1.0
 BUILD=2018070402
 
