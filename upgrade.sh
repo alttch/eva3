@@ -6,7 +6,7 @@ if [ "x`id -u`" != "x0" ]; then
 fi
 
 VERSION=3.1.0
-BUILD=2018070402
+BUILD=2018070501
 
 OBS="lm-ei uc-ei INSTALL.txt"
 
