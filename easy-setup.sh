@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "x`id -u`" != "x0" ]; then
+    echo "Please run this script as root"
+    exit 98
+fi
+
 FORCE=0
 INTERACTIVE=1
 DEFAULT_USER=root
