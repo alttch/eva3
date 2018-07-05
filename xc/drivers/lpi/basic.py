@@ -13,6 +13,8 @@ __features__ = [
     'port_set', 'aao_set'
 ]
 
+__config_help__ = {}
+
 from time import time
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
@@ -31,6 +33,7 @@ class LPI(GenericLPI):
         self.__lpi_mod_id = __id__
         self.__logic = __logic__
         self.__features = __features__
+        self.__config_help = __config_help__
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()

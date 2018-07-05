@@ -10,6 +10,12 @@ __equipment__ = 'EG-PM2-LAN'
 
 __features__ = ['aao_get', 'port_set', 'cache']
 
+__config_help__ = {
+    'host': 'device ip/host[:port], required',
+    'pw': 'device password, required',
+    'logout': 'set to "skip" to skip logout'
+}
+
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
@@ -34,6 +40,7 @@ class PHI(GenericPHI):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__config_help = __config_help__
         self.aao_get = True
         self.host = self.phi_cfg.get('host')
         self.pw = self.phi_cfg.get('pw')
@@ -151,4 +158,4 @@ class PHI(GenericPHI):
     def test(self, cmd=None):
         if cmd == 'get':
             return self.get(timeout=get_timeout())
-        return [{'command': 'get', 'help': 'get sockets status'}]
+        return {'get': 'get sockets status'}

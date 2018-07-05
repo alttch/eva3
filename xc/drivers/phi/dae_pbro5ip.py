@@ -10,6 +10,14 @@ __equipment__ = 'DAE-PB-RO5-DAEnetIP4'
 
 __features__ = ['port_get', 'port_set']
 
+__config_help__ = {
+    'host': 'relay host/ip[:port], required',
+    'community': 'snmp community (default: private)',
+    'read_community': 'snmp read community',
+    'write_community': 'snmp write community',
+    'retries': 'snmp retry attemps (default: 0)'
+}
+
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
 
@@ -30,7 +38,7 @@ class PHI(GenericPHI):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
-
+        self.__config_help = __config_help__
         c = self.phi_cfg.get('community') if self.phi_cfg.get(
             'community') else 'private'
         self.snmp_read_community = c
@@ -106,7 +114,4 @@ class PHI(GenericPHI):
                 timeout=5)
             if not version: return 'QUERY FAILED'
             return '%s %s' % (name.strip(), version.strip())
-        return [{
-            'command': 'info',
-            'help': 'returns relay ip module name and version'
-        }]
+        return {'info': 'returns relay ip module name and version'}

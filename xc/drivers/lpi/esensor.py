@@ -8,7 +8,13 @@ __api__ = 1
 __id__ = 'esensor'
 __logic__ = 'single and group polling'
 
-__features__ = ['state', 'state_mp', 'mu', 'port_get', 'aao_get']
+__features__ = ['state', 'state_mp', 'mu', 'port_get', 'aao_get', 'cfg']
+
+__config_help__ = {
+    'on_err': '"skip" skips failed sensor in a group',
+    'gpf': 'avg, max, min, first - group function',
+    'max_diff': 'maximum value diff until marked as failed'
+}
 
 from time import time
 
@@ -28,6 +34,7 @@ class LPI(GenericLPI):
         self.__lpi_mod_id = __id__
         self.__logic = __logic__
         self.__features = __features__
+        self.__config_help = __config_help__
         # skip - skip sensor errors (log error and continue)
         # otherwise if one sensor in a group failed, stop polling others
         #
@@ -112,7 +119,8 @@ class LPI(GenericLPI):
                 else:
                     st_arr.append(value)
                     st_ports.append(str(p))
-            if max_diff != 'skip' and _status != -1 and len(st_arr) > 1:
+            if max_diff and max_diff != 'skip' and _status != -1 and len(
+                    st_arr) > 1:
                 _st_ports = st_ports.copy()
                 while True:
                     diver = False

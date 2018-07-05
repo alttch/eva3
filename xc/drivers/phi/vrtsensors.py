@@ -10,6 +10,8 @@ __equipment__ = 'virtual sensors'
 
 __features__ = ['port_get']
 
+__config_help__ = {'default_value': 'sensors value on load (default: None)'}
+
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
@@ -38,6 +40,7 @@ class PHI(GenericPHI):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__config_help = __config_help__
 
     def get(self, port=None, cfg=None, timeout=0):
         try:
@@ -68,10 +71,7 @@ class PHI(GenericPHI):
                 handle_phi_event(self, port, self.data)
             return self.data
         except:
-            return [{
-                'command': 'get',
-                'help': 'get sensors values'
-            }, {
-                'command': 'X=S',
-                'help': 'set sensor port X to S'
-            }]
+            return {
+                'get': 'get sensors values',
+                'X=S': 'set sensor port X to S'
+            }

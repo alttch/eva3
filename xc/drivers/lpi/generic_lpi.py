@@ -10,6 +10,8 @@ __logic__ = 'abstract'
 
 __features__ = []
 
+__config_help__ = {}
+
 import threading
 import logging
 import time
@@ -77,6 +79,7 @@ class LPI(object):
         d['mod'] = self.__lpi_mod_id
         d['phi_id'] = self.phi_id
         d['features'] = self.__features
+        if not self.lpi_id: d['cfg'] = self.__config_help
         return d
 
     """
@@ -204,6 +207,7 @@ class LPI(object):
         self.__api_version = __api__
         self.__logic = __logic__
         self.__features = __features__
+        self.__config_help = __config_help__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
         self.ready = True

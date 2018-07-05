@@ -10,17 +10,21 @@ __equipment__ = 'abstract'
 
 __features__ = []
 
+__config_help__ = {}
+
 import logging
 
 from eva.uc.driverapi import critical
 
 from time import time
 
+
 class PHI(object):
     """
     Override everything. super() constructor may be useful to keep unparsed
     config
     """
+
     def __init__(self, phi_cfg=None):
         if phi_cfg:
             self.phi_cfg = phi_cfg
@@ -34,12 +38,13 @@ class PHI(object):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__config_help = __config_help__
         # True if the equipment can query/modify only all
         # ports at once and can not work with a single ports
-        self.aao_get = False 
-        self.aao_set = False 
+        self.aao_get = False
+        self.aao_set = False
         self.ready = True
-        self.phi_id = None # set by driverapi on load
+        self.phi_id = None  # set by driverapi on load
         # cache time, useful for aao_get devices
         self.cache_set = 0
         try:
@@ -93,10 +98,15 @@ class PHI(object):
             d['cfg'] = self.phi_cfg
         d['mod'] = self.phi_mod_id
         d['id'] = self.phi_id
+        if not self.phi_id:
+            d['cfg'] = self.__config_help
+            if 'cache' in self.__features:
+                d['cfg'][
+                    'cache'] = 'caches state for N sec'
         return d
 
     def test(self, cmd=None):
-        return False
+        return None
 
     def log_debug(self, msg):
         logging.debug('PHI %s: %s' % (self.phi_id, msg))

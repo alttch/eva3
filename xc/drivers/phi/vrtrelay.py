@@ -10,6 +10,8 @@ __equipment__ = 'virtual relay'
 
 __features__ = ['port_get', 'port_set', 'aao_set']
 
+__config_help__ = {'default_status': 'ports status on load (default: -1)'}
+
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
@@ -37,6 +39,7 @@ class PHI(GenericPHI):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__config_help = __config_help__
 
     def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data
@@ -91,10 +94,4 @@ class PHI(GenericPHI):
                 handle_phi_event(self, port, self.data)
             return self.data
         except:
-            return [{
-                'command': 'get',
-                'help': 'get relay ports status'
-            }, {
-                'command': 'X=S',
-                'help': 'set port X to S'
-            }]
+            return {'get': 'get relay ports status', 'X=S': 'set port X to S'}
