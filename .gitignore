@@ -11,6 +11,7 @@ dist
 lib/ei/css/ei.min.css
 lib/ei/js/lm.min.js
 lib/ei/js/uc.min.js
+lib/eva/uc/drivers
 ui/js/eva_sfa.min.js
 log
 runtime
