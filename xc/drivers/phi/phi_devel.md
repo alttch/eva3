@@ -123,7 +123,7 @@ methods are variable and may be used i.e. for debugging. If command is not
 understood by the method, it's a rule of a good taste to return a help text
 (dict { 'command': 'command help' }).
 
-    def test(self, cmd):
+    def test(self, cmd=None):
         #<your code>
 
 The following methods may be used to call or register/unregister anything on
