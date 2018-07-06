@@ -139,15 +139,22 @@ class DriverCommand(GenericRunner):
                     self.out = result
                     self.exitcode = 0
             else:
-                self.out = result.get('out')
-                self.err = result.get('err')
-                exitcode = result.get('exitcode')
-                if exitcode is None:
-                    self.exitcode = -1
+                if result:
+                    self.out = result.get('out')
+                    self.err = result.get('err')
+                    exitcode = result.get('exitcode')
+                    if exitcode is None:
+                        self.exitcode = -1
+                    else:
+                        self.exitcode = exitcode
                 else:
-                    self.exitcode = exitcode
+                    self.exitcode = -3
+                    self.out = ''
+                    self.err = 'no result'
         else:
             self.exitcode = -2
+            self.out = ''
+            self.err = 'driver not found'
 
 
 class ExternalProcess(GenericRunner):
