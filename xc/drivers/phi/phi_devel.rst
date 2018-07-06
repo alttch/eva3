@@ -47,7 +47,8 @@ It's allowed to import any Python system module or module installed by EVA ICS.
 If PHI requires installing more modules, they should be listed in PHi readme
 file.
 
-Importing modules from eva.uc.drivers.tools and functions from eva.uc.driverapi:
+Importing modules from eva.uc.drivers.tools, eva.tools and functions from
+eva.uc.driverapi:
 
 * **get_version()** get Driver API version
 * **get_polldelay()** get EVA poll delay
