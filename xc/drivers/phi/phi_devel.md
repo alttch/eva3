@@ -78,6 +78,7 @@ be serialized by super() if requested:
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__required = __required__
         self.__config_help = __config_help__
 
 The super().__init__ call should always be first.
