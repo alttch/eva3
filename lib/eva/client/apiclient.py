@@ -117,8 +117,8 @@ _api_func = {
 
 
 # copy of eva.tools.parse_host_port to avoid unnecesseary imports
-def parse_host_port(hp):
-    if hp.find(':') == -1: return (hp, None)
+def parse_host_port(hp, default_port):
+    if hp.find(':') == -1: return (hp, default_port)
     try:
         host, port = hp.split(':')
         port = int(port)
@@ -276,9 +276,8 @@ class APIClientLocal(APIClient):
                 h = None
         if h:
             try:
-                host, port = parse_host_port(h)
+                host, port = parse_host_port(h, default_port)
                 if host == '0.0.0.0': host = '127.0.0.1'
-                if not port: port = default_port
                 self._uri = pfx + host + ':' + str(port)
             except:
                 pass

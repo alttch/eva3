@@ -22,9 +22,8 @@ default_port = 25
 def update_config(cfg):
     global _smtp_host, _smtp_port, _from, _default_rcp
     try:
-        _smtp_host, _smtp_port = parse_host_port(cfg.get('mailer', 'smtp'))
-        if not _smtp_port:
-            _smtp_port = default_port
+        _smtp_host, _smtp_port = parse_host_port(
+            cfg.get('mailer', 'smtp'), default_port)
     except:
         _smtp_host = 'localhost'
         _smtp_port = default_port

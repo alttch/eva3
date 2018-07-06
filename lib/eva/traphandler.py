@@ -35,9 +35,8 @@ _t_dispatcher = None
 def update_config(cfg):
     global host, port, community, hosts_allow
     try:
-        host, port = parse_host_port(cfg.get('snmptrap', 'listen'))
-        if not port:
-            port = default_port
+        host, port = parse_host_port(
+            cfg.get('snmptrap', 'listen'), default_port)
         logging.debug('snmptrap.listen = %s:%u' % (host, port))
     except:
         return False
