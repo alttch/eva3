@@ -112,7 +112,7 @@ def list_phi_mods():
             try:
                 d = {}
                 exec(code, d)
-                if d['s']['equipment'] != 'abstract':
+                if d['s']['equipment'][0] != 'abstract':
                     result.append(d['s'])
             except:
                 pass
