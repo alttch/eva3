@@ -9,8 +9,8 @@ __id__ = 'basic'
 __logic__ = 'basic status on/off'
 
 __features__ = [
-    'state', 'state_mp', 'mu', 'port_get', 'aao_get', 'action', 'action_mp',
-    'port_set', 'aao_set'
+    'status', 'status_mp', 'mu_status', 'mu_status_mp', 'port_get', 'aao_get',
+    'action', 'action_mp', 'port_set', 'aao_set'
 ]
 
 __config_help__ = {}

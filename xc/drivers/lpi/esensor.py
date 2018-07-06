@@ -8,7 +8,9 @@ __api__ = 1
 __id__ = 'esensor'
 __logic__ = 'single and group polling'
 
-__features__ = ['state', 'state_mp', 'mu', 'port_get', 'aao_get', 'cfg']
+__features__ = [
+    'value', 'value_mp', 'mu_value', 'mu_value_mp', 'port_get', 'aao_get', 'cfg'
+]
 
 __config_help__ = {
     'on_err': '"skip" skips failed sensor in a group',

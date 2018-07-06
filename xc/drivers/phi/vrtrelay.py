@@ -3,13 +3,12 @@ __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
 __description__ = "Emulates 16-port relay"
-__api__ = 1
 
 __id__ = 'vrtrelay'
-__equipment__ = 'virtual relay'
-
+__equipment__ = 'virtual'
+__api__ = 1
+__required__ = ['port_get', 'port_set']
 __features__ = ['port_get', 'port_set', 'aao_set']
-
 __config_help__ = {'default_status': 'ports status on load (default: -1)'}
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
@@ -39,6 +38,7 @@ class PHI(GenericPHI):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__required = __required__
         self.__config_help = __config_help__
 
     def get(self, port=None, cfg=None, timeout=0):
@@ -48,7 +48,7 @@ class PHI(GenericPHI):
         except:
             return None
 
-    def set(self, port, data, cfg=None, timeout=0):
+    def set(self, port=None, data=None, cfg=None, timeout=0):
         if isinstance(port, list):
             ports = port
             multi = True
@@ -73,11 +73,9 @@ class PHI(GenericPHI):
             handle_phi_event(self.phi_id, port, self.data)
         return True
 
-    def serialize(self, full=False, config=False):
-        d = super().serialize(full=full, config=config)
-        return d
-
     def test(self, cmd=None):
+        if cmd == 'self':
+            return 'OK'
         if cmd == 'get':
             return self.data
         if cmd == 'critical':

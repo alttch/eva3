@@ -3,13 +3,12 @@ __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
 __description__ = "Denkovi relay DAE-PB-RO5-DAEnetIP4"
-__api__ = 1
 
 __id__ = 'dae_pbro5ip'
 __equipment__ = 'DAE-PB-RO5-DAEnetIP4'
-
+__api__ = 1
+__required__ = ['port_get', 'port_set', 'status', 'action']
 __features__ = ['port_get', 'port_set']
-
 __config_help__ = {
     'host': 'relay host/ip[:port], required',
     'community': 'snmp community (default: private)',
@@ -20,6 +19,7 @@ __config_help__ = {
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
+from eva.uc.driverapi import get_timeout
 
 import eva.uc.drivers.tools.snmp as snmp
 
@@ -38,6 +38,7 @@ class PHI(GenericPHI):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__required = __required__
         self.__config_help = __config_help__
         c = self.phi_cfg.get('community') if self.phi_cfg.get(
             'community') else 'private'
@@ -80,7 +81,7 @@ class PHI(GenericPHI):
             self.snmp_tries - 1,
             rf=int)
 
-    def set(self, port, data, cfg=None, timeout=0):
+    def set(self, port=None, data=None, cfg=None, timeout=0):
         try:
             port = int(port)
             val = int(data)
@@ -93,25 +94,22 @@ class PHI(GenericPHI):
             rfc1902.Integer(val), self.snmp_host, self.snmp_port,
             self.snmp_write_community, _timeout, self.snmp_tries - 1)
 
-    def serialize(self, full=False, config=False):
-        d = super().serialize(full=full, config=config)
-        return d
-
     def test(self, cmd=None):
-        if cmd == 'info':
+        if cmd == 'info' or cmd == 'self':
             name = snmp.get(
                 '.1.3.6.1.4.1.42505.1.1.1.0',
                 self.snmp_host,
                 self.snmp_port,
                 self.snmp_read_community,
-                timeout=5)
-            if not name: return 'QUERY FAILED'
+                timeout=get_timeout() - 0.5)
+            if not name: return 'FAILED'
+            if name and cmd == 'self': return 'OK'
             version = snmp.get(
                 '.1.3.6.1.4.1.42505.1.1.2.0',
                 self.snmp_host,
                 self.snmp_port,
                 self.snmp_read_community,
-                timeout=5)
-            if not version: return 'QUERY FAILED'
+                timeout=get_timeout() - 0.5)
+            if not version: return 'FAILED'
             return '%s %s' % (name.strip(), version.strip())
         return {'info': 'returns relay ip module name and version'}

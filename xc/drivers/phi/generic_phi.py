@@ -3,13 +3,12 @@ __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
 __description__ = "Generic PHI, don't use"
-__api__ = 1
 
 __id__ = 'generic'
 __equipment__ = 'abstract'
-
+__api__ = 1
+__required__ = []
 __features__ = []
-
 __config_help__ = {}
 
 import logging
@@ -38,6 +37,7 @@ class PHI(object):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__required = __required__
         self.__config_help = __config_help__
         # True if the equipment can query/modify only all
         # ports at once and can not work with a single ports
@@ -92,8 +92,10 @@ class PHI(object):
             d['description'] = self.__description
             d['version'] = self.__version
             d['api'] = self.__api_version
-            d['equipment'] = self.__equipment
+            d['equipment'] = self.__equipment if \
+                    isinstance(self.__equipment, list) else [self.__equipment]
             d['features'] = self.__features
+            d['required'] = self.__required
         if config:
             d['cfg'] = self.phi_cfg
         d['mod'] = self.phi_mod_id
@@ -101,12 +103,11 @@ class PHI(object):
         if not self.phi_id:
             d['cfg'] = self.__config_help
             if 'cache' in self.__features:
-                d['cfg'][
-                    'cache'] = 'caches state for N sec'
+                d['cfg']['cache'] = 'caches state for N sec'
         return d
 
     def test(self, cmd=None):
-        return None
+        return 'FAILED'
 
     def log_debug(self, msg):
         logging.debug('PHI %s: %s' % (self.phi_id, msg))

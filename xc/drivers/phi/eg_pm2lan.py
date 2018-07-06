@@ -3,13 +3,12 @@ __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
 __description__ = "EG-PM2-LAN smart PDU"
-__api__ = 1
 
 __id__ = 'eg_pm2lan'
 __equipment__ = 'EG-PM2-LAN'
-
+__api__ = 1
+__required__ = ['aao_get', 'port_set', 'status', 'action']
 __features__ = ['aao_get', 'port_set', 'cache']
-
 __config_help__ = {
     'host': 'device ip/host[:port], required',
     'pw': 'device password, required',
@@ -40,6 +39,7 @@ class PHI(GenericPHI):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__required = __required__
         self.__config_help = __config_help__
         self.aao_get = True
         self.host = self.phi_cfg.get('host')
@@ -103,12 +103,12 @@ class PHI(GenericPHI):
                     self._logout(timeout=(t_start - time() + timeout))
             except:
                 log_traceback()
-                pass
             self.lock.release()
             log_traceback()
             return None
 
-    def set(self, port, data, cfg=None, timeout=0):
+    def set(self, port=None, data=None, cfg=None, timeout=0):
+        if not port or not data: return False
         t_start = time()
         if not isinstance(port, str):
             return False
@@ -151,11 +151,10 @@ class PHI(GenericPHI):
             log_traceback()
             return False
 
-    def serialize(self, full=False, config=False):
-        d = super().serialize(full=full, config=config)
-        return d
-
     def test(self, cmd=None):
-        if cmd == 'get':
-            return self.get(timeout=get_timeout())
-        return {'get': 'get sockets status'}
+        if cmd == 'get' or cmd == 'self':
+            result = self.get(timeout=get_timeout())
+            if cmd == 'self':
+                return 'OK' if result else 'FAILED'
+            return result
+        return {'get': 'get socket status'}

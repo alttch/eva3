@@ -3,13 +3,12 @@ __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
 __description__ = "Emulates virtual sensors"
-__api__ = 1
 
 __id__ = 'vrtsensors'
-__equipment__ = 'virtual sensors'
-
-__features__ = ['port_get']
-
+__equipment__ = 'virtual'
+__api__ = 1
+__required__ = ['port_get', 'value' ]
+__features__ = ['port_get', 'port_set', 'aao_set' ]
 __config_help__ = {'default_value': 'sensors value on load (default: None)'}
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
@@ -40,6 +39,7 @@ class PHI(GenericPHI):
         self.__api_version = __api__
         self.__equipment = __equipment__
         self.__features = __features__
+        self.__required = __required__
         self.__config_help = __config_help__
 
     def get(self, port=None, cfg=None, timeout=0):
@@ -48,11 +48,9 @@ class PHI(GenericPHI):
         except:
             return None
 
-    def serialize(self, full=False, config=False):
-        d = super().serialize(full=full, config=config)
-        return d
-
     def test(self, cmd=None):
+        if cmd == 'self':
+            return 'OK'
         if cmd == 'get':
             return self.data
         if cmd == 'critical':

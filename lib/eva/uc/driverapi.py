@@ -18,6 +18,8 @@ phis = {}
 drivers = {}
 items_by_phi = {}
 
+# public API functions, may be imported into PHI and LPI
+
 
 def get_version():
     return __api__
@@ -39,6 +41,16 @@ def log_traceback():
     return eva.core.log_traceback()
 
 
+def handle_phi_event(phi, port, data):
+    iph = items_by_phi.get(phi.phi_id)
+    if iph:
+        for i in iph:
+            if i.updates_allowed() and not i.is_destroyed():
+                logging.debug('event on PHI %s, port %s, updating item %s' %
+                              (phi.phi_id, port, i.full_id))
+                update_item(i, data)
+
+
 def get_phi(phi_id):
     return phis.get(phi_id)
 
@@ -48,6 +60,9 @@ def get_driver(driver_id):
     if driver:
         driver.phi = get_phi(driver.phi_id)
     return driver
+
+
+# private API functions, not recommended to use
 
 
 def modinfo_phi(mod):
@@ -165,16 +180,6 @@ def unregister_item_update(i):
     except:
         eva.core.log_traceback()
         return False
-
-
-def handle_phi_event(phi, port, data):
-    iph = items_by_phi.get(phi.phi_id)
-    if iph:
-        for i in iph:
-            if i.updates_allowed() and not i.is_destroyed():
-                logging.debug('event on PHI %s, port %s, updating item %s' %
-                              (phi.phi_id, port, i.full_id))
-                update_item(i, data)
 
 
 def update_item(i, data):
