@@ -70,7 +70,7 @@ class PHI(GenericPHI):
             port = int(port)
         except:
             return None
-        if port > self.port_max: return None
+        if port < 1 or port > self.port_max: return None
         _timeout = (timeout - 1) / self.snmp_tries
         return snmp.get(
             '.1.3.6.1.4.1.42505.1.2.3.1.11.%u' % (port + self.port_shift),
@@ -87,7 +87,7 @@ class PHI(GenericPHI):
             val = int(data)
         except:
             return None
-        if port > self.port_max or val < 0 or val > 1: return None
+        if port < 1 or port > self.port_max or val < 0 or val > 1: return None
         _timeout = (timeout - 1) / self.snmp_tries
         return snmp.set(
             '.1.3.6.1.4.1.42505.1.2.3.1.11.%u' % (port + self.port_shift),
