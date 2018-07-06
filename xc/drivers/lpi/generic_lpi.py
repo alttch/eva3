@@ -308,3 +308,10 @@ class LPI(object):
         result = self.__results.get(_uuid)
         self.__results_lock.release()
         return result
+
+    def prepare_phi_cfg(self, cfg):
+        phi_cfg = {}
+        for k, v in cfg.copy().items():
+            if k[0] == '_':
+                phi_cfg[k[1:]] = v
+        return phi_cfg

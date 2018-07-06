@@ -40,6 +40,7 @@ class LPI(GenericLPI):
         _state_in = state_in
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
+        phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi.aao_get and not _state_in:
             _state_in = self.phi.get(timeout=(timeout + time_start - time()))
         port = cfg.get(self.io_label)
@@ -67,8 +68,8 @@ class LPI(GenericLPI):
                 if _state_in and _p in _state_in:
                     status = _state_in.get(_p)
                 else:
-                    status = self.phi.get(
-                        _p, timeout=(timeout + time_start - time()))
+                    status = self.phi.get(_p, phi_cfg,
+                                          timeout + time_start - time())
                 if status is None or status not in [0, 1]:
                     if multi:
                         st_prev = -1
@@ -104,6 +105,7 @@ class LPI(GenericLPI):
         time_start = time()
         if cfg is None:
             return self.action_result_error(_uuid, 1, 'no config provided')
+        phi_cfg = self.prepare_phi_cfg(cfg)
         if status is None:
             return self.action_result_error(_uuid, 1, 'no status provided')
         port = cfg.get(self.io_label)
@@ -135,7 +137,9 @@ class LPI(GenericLPI):
                 data_to_set.append(_status)
             else:
                 if not self.phi.set(
-                        _port, _status,
+                        _port,
+                        _status,
+                        phi_cfg,
                         timeout=(timeout + time_start - time())):
                     return self.action_result_error(
                         _uuid, msg='port %s set error' % _port)

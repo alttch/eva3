@@ -65,6 +65,7 @@ class LPI(GenericLPI):
         _state_in = state_in
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
+        phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi.aao_get and not _state_in:
             _state_in = self.phi.get(timeout=timeout)
         on_err = cfg.get('on_err') if \
@@ -106,7 +107,7 @@ class LPI(GenericLPI):
                     value = _state_in.get(p)
                 else:
                     value = self.phi.get(
-                        p, timeout=(timeout + time_start - time()))
+                        p, phi_cfg, timeout + time_start - time())
                 try:
                     value = float(value)
                 except:
