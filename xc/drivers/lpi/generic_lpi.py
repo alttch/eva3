@@ -34,8 +34,7 @@ class LPI(object):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         self.log_error('state function not implemented')
-        self.set_result(_uuid, (-1, None))
-        return
+        return self.state_result_error(_uuid)
 
     """
     Performs item action
