@@ -18,21 +18,20 @@ the next fields are processed by controller, so make them exactly as required
 
 * __required__      features required from LPI (Logical to Physical Interface,
                     list):
-
-                    * port_get - get single port data
-                    * port_set - set single port data
-                    * aao_get - get and process all ports at once
-                    * aao_set - set all ports at once
-                    * status - process item status
-                    * value - process item values
-                    * action - unit actions
+ * port_get - get single port data
+ * port_set - set single port data
+ * aao_get - get and process all ports at once
+ * aao_set - set all ports at once
+ * status - process item status
+ * value - process item values
+ * action - unit actions
 
 * __features__      own features provided (list):
-                    * port_get - get single port data
-                    * port_set - set single port data
-                    * aao_get - get all ports at once (if no port specified)
-                    * aao_set - set all ports at once (if list of ports and
-                                list of data is given)
+ * port_get - get single port data
+ * port_set - set single port data
+ * aao_get - get all ports at once (if no port specified)
+ * aao_set - set all ports at once (if list of ports and
+   list of data is given)
 
 * __config_help__   dict { 'config_prop': 'value' }
 
