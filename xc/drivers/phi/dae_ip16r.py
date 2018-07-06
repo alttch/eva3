@@ -2,10 +2,10 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
-__description__ = "Denkovi relay smartDEN-IP-16R-12V-BOX"
+__description__ = "Denkovi relay smartDEN-IP-16R"
 
 __id__ = 'dae_ip16r'
-__equipment__ = 'DAE-PB-RO5-DAEnetIP4'
+__equipment__ = 'smartDEN-IP-16R'
 __api__ = 1
 __required__ = ['port_get', 'port_set', 'status', 'action']
 __features__ = ['port_get', 'port_set']
