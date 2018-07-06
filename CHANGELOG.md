@@ -31,6 +31,7 @@ UC:
 
 LM:
 
+    * macro extensions
     * macro function "unlock" now return false if lock hasn't been not locked
       or doesn't exist
     * unlock macro function may throw an exception if the controller forbids its

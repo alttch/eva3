@@ -375,6 +375,7 @@ if ( func == 'set_prop' or \
         func == 'set_controller_prop' or \
         func == 'set_macro_prop' or \
         func == 'set_rule_prop' or \
+        func == 'load_ext' or \
         func == 'create_rule' or \
         func == 'create_macro' or \
         func == 'append_controller' or \

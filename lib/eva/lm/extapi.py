@@ -46,8 +46,13 @@ def rebuild_env():
     global env
     _env = {}
     for i, e in exts.copy().items():
-        for f, h in e.get_functions().copy().items():
-            _env['%s_%s' % (e.ext_id, f)] = getattr(e, f)
+        for f in e.get_functions():
+            try:
+                _env['%s_%s' % (e.ext_id, f)] = getattr(e, f)
+                logging.info('New macro function loaded: %s_%s' % (i, f))
+            except:
+                logging.error('Unable to add function %s extension %s' % (i, f))
+                eva.core.log_traceback()
     env = _env
 
 
@@ -68,7 +73,7 @@ def modinfo(mod):
         return None
 
 
-def list_ext_mods():
+def list_mods():
     result = []
     mods = glob.glob(eva.core.dir_lib + '/eva/lm/extensions/*.py')
     for p in mods:
@@ -82,7 +87,6 @@ def list_ext_mods():
                 if d['s']['functions']:
                     result.append(d['s'])
             except:
-                raise
                 pass
     return sorted(result, key=lambda k: k['mod'])
 
@@ -163,8 +167,9 @@ def load():
         data = jsonpickle.decode(
             open(eva.core.dir_runtime + '/lm_extensions.json').read())
         for p in data:
-            load_extension(
+            load_ext(
                 p['id'], p['mod'], cfg=p['cfg'], start=False, rebuild=False)
+        rebuild_env()
     except:
         logging.error('unable to load lm_extensions.json')
         eva.core.log_traceback()

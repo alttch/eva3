@@ -17,6 +17,7 @@ from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva import apikey
 import eva.lm.controller
+import eva.lm.extapi
 import eva.ei
 
 api = None
@@ -452,6 +453,61 @@ class LM_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.lm.controller.destroy_item(i)
 
+    # master functions for lmacro extension management
+
+    def load_ext(self, k=None, i=None, m=None, cfg=None, save=False):
+        if not apikey.check(k, master=True): return None
+        if not i or not m: return None
+        if isinstance(cfg, str):
+            _cfg = {}
+            props = cfg.split(',')
+            for p in props:
+                try:
+                    name, value = p.split('=')
+                    try:
+                        value = float(value)
+                        if value == int(value):
+                            value = int(value)
+                    except:
+                        pass
+                    _cfg[name] = value
+                except:
+                    eva.core.log_traceback()
+                    return None
+        else:
+            _cfg = cfg
+        if eva.lm.extapi.load_ext(i, m, _cfg):
+            if save: eva.lm.extapi.save()
+            return eva.lm.extapi.get_ext(i).serialize(full=True, config=True)
+
+    def unload_ext(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return None
+        result = eva.lm.extapi.unload_ext(i)
+        if result and eva.core.db_update == 1: eva.lm.extapi.save()
+        return result
+
+    def list_ext(self, k=None, full=False):
+        if not apikey.check(k, master=True): return None
+        return eva.lm.extapi.serialize(full=full, config=full)
+
+    def get_ext(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return None
+        ext = eva.lm.extapi.get_ext(i)
+        if ext:
+            return ext.serialize(full=True, config=True)
+        else:
+            return False
+
+    def list_ext_mods(self, k=None):
+        if not apikey.check(k, master=True): return None
+        return eva.lm.extapi.list_mods()
+
+    def modinfo_ext(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        return eva.lm.extapi.modinfo(i)
+
 
 class LM_HTTP_API(GenericHTTP_API, LM_API):
 
@@ -498,6 +554,13 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
 
         LM_HTTP_API.create_lvar.exposed = True
         LM_HTTP_API.destroy_lvar.exposed = True
+
+        LM_HTTP_API.load_ext.exposed = True
+        LM_HTTP_API.unload_ext.exposed = True
+        LM_HTTP_API.list_ext.exposed = True
+        LM_HTTP_API.list_ext_mods.exposed = True
+        LM_HTTP_API.get_ext.exposed = True
+        LM_HTTP_API.modinfo_ext.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -799,6 +862,41 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         cp_need_master(k)
         return http_api_result_ok() if super().destroy_lvar(k, i) \
                 else http_api_result_error()
+
+    def load_ext(self, k=None, i=None, m=None, c=None, save=False):
+        cp_need_master(k)
+        result = super().load_ext(k, i, m, c, save)
+        return result if result else http_api_result_error()
+
+    def unload_ext(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().unload_ext(k, i) \
+                else http_api_result_error()
+
+    def list_ext(self, k=None, full=None):
+        cp_need_master(k)
+        result = super().list_ext(k, full)
+        if result is None: raise cp_api_error()
+        return result
+
+    def list_ext_mods(self, k=None):
+        cp_need_master(k)
+        return super().list_ext_mods(k)
+
+    def get_ext(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().get_ext(k, i)
+        if result is None: raise cp_api_error()
+        if result is False: raise cp_api_404()
+        return result
+
+    def modinfo_ext(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().modinfo_ext(k, i)
+        if not result:
+            raise cp_api_error()
+        else:
+            return result
 
 
 def start():
