@@ -80,14 +80,15 @@ _api_func = {
             'list_controller_props', 'set_prop', 'set_macro_prop',
             'set_controller_prop', 'reload_controller', 'create_lvar',
             'destroy_lvar', 'list_rules', 'list_rule_props', 'set_rule_prop',
-            'create_rule', 'destroy_rule', 'login', 'logout'
+            'create_rule', 'destroy_rule', 'login', 'logout', 'load_ext',
+            'unload_ext', 'list_ext', 'get_ext', 'list_ext_mods', 'modinfo_ext'
         ],
         'cr': [
             'set', 'reset', 'clear', 'toggle', 'save_config', 'set_prop',
             'set_macro_prop', 'set_controller_prop', 'create_macro',
             'destroy_macro', 'append_controller', 'remove_controller',
             'reload_controller', 'create_lvar', 'destroy_lvar', 'set_rule_prop',
-            'create_rule', 'destroy_rule', 'login', 'logout'
+            'create_rule', 'destroy_rule', 'login', 'logout', 'unload_ext'
         ],
         'ce': ['run']
     },

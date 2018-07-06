@@ -210,7 +210,13 @@ $_eva_api_func = array(
                     'create_rule',
                     'destroy_rule',
                     'login',
-                    'logout'
+                    'logout',
+                    'load_ext',
+                    'unload_ext',
+                    'list_ext',
+                    'get_ext',
+                    'list_ext_mods',
+                    'modinfo_ext'
                     ),
                 'cr' => array(
                     'set',
