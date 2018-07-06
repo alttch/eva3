@@ -2,9 +2,9 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
-__description__ = "Denkovi relay DAE-PB-RO5-DAEnetIP4"
+__description__ = "Denkovi relay smartDEN-IP-16R-12V-BOX"
 
-__id__ = 'dae_pbro5ip'
+__id__ = 'dae_ip16r'
 __equipment__ = 'DAE-PB-RO5-DAEnetIP4'
 __api__ = 1
 __required__ = ['port_get', 'port_set', 'status', 'action']
@@ -53,8 +53,8 @@ class PHI(GenericPHI):
         except:
             self.snmp_tries = 1
         host = self.phi_cfg.get('host')
-        self.port_shift = 7
-        self.port_max = 5
+        self.port_shift = -1
+        self.port_max = 16
         if host:
             try:
                 self.snmp_host, port = host.split(':')
@@ -64,9 +64,9 @@ class PHI(GenericPHI):
                 self.snmp_port = 161
         else:
             self.ready = False
-        self.oid_name = '.1.3.6.1.4.1.42505.1.1.1.0'
-        self.oid_version = '.1.3.6.1.4.1.42505.1.1.2.0'
-        self.oid_work = '.1.3.6.1.4.1.42505.1.2.3.1.11'
+        self.oid_name = '.1.3.6.1.4.1.42505.6.1.1.0'
+        self.oid_version = '.1.3.6.1.4.1.42505.6.1.2.0'
+        self.oid_work = '.1.3.6.1.4.1.42505.6.2.3.1.3'
 
     def get(self, port=None, cfg=None, timeout=0):
         try:
