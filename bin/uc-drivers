@@ -52,10 +52,8 @@ _pd_cols = {
     'list_drivers_':
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
     'list_drivers': ['id', 'mod', 'phi_id'],
-    'list_phi_mods':
-    ['mod', 'equipment', 'description', 'version', 'api'],
-    'list_lpi_mods':
-    ['mod', 'logic', 'description', 'version', 'api']
+    'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
+    'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api']
 }
 
 
@@ -236,7 +234,6 @@ sp_driver_set.add_argument(
     dest='_save',
     action='store_true')
 
-
 sp_phi_modinfo = sp_phi.add_parser('modinfo', help='PHI module info')
 sp_phi_modinfo.add_argument('_i', help='PHI module', metavar='PHI_MOD')
 
@@ -346,11 +343,15 @@ if code != apiclient.result_ok and \
 else:
     if a._json:
         print_json(result)
+        if 'result' in result and result['result'] == 'ERROR':
+            sys.exit(apiclient.result_func_failed)
     else:
         if code == apiclient.result_func_failed:
             print('FAILED')
         elif 'result' in result:
             print(result['result'])
+            if result['result'] == 'ERROR':
+                sys.exit(apiclient.result_func_failed)
         else:
             if result:
                 fancy_print_result(result)
