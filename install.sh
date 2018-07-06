@@ -22,8 +22,8 @@ sh install-lm.sh || exit 1
 echo "Preparing SCADA Final Aggregator"
 sh install-sfa.sh || exit
 echo ""
-echo "All done!"
+echo "Completed!"
 echo ""
 echo "Now edit etc/*.ini and etc/eva_servers"
 echo ""
-echo "After you may start EVA with sbin/eva-control start"
+echo "After you can start EVA with sbin/eva-control start"
