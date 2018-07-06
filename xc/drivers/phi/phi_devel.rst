@@ -130,9 +130,11 @@ incorrect by itself.
 **cfg** may contain equipment configuration options. If the driver is
 universal, it should handle them properly.
 
-WARNING: watch out the timeout - if it's expired, the controller may crash or
-be forcely restarted.  Always calculate the remaining time for the external
-calls and return error as soon as it comes closer to the expiration.
+.. warning::
+
+    watch out the timeout - if it's expired, the controller may crash or be
+    forcely restarted.  Always calculate the remaining time for the external
+    calls and return error as soon as it comes closer to the expiration.
 
 This method should perform a self-test (equipment test) if cmd=='self', other
 methods are variable and may be used i.e. for debugging. If command is not
