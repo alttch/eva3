@@ -15,6 +15,7 @@ __config_help__ = {}
 import threading
 import logging
 import time
+import uuid
 
 from eva.uc.driverapi import get_polldelay
 from eva.uc.driverapi import get_timeout
@@ -252,9 +253,12 @@ class LPI(object):
         if not self.phi:
             self.log_error('no PHI assigned')
             return None
+        self.prepare_action(_uuid)
+        return self.do_action(_uuid, status, value, cfg, timeout, tki)
+
+    def prepare_action(self, _uuid):
         self._append_terminate(_uuid)
         self.set_result(_uuid)
-        return self.do_action(_uuid, status, value, cfg, timeout, tki)
 
     def terminate(self, _uuid):
         if not self.__terminate_lock.acquire(timeout=get_timeout()):
@@ -314,3 +318,6 @@ class LPI(object):
             if k[0] == '_':
                 phi_cfg[k[1:]] = v
         return phi_cfg
+
+    def gen_uuid(self):
+        return str(uuid.uuid1())

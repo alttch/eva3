@@ -133,7 +133,7 @@ class DriverCommand(GenericRunner):
             result = self.driver.get_result(self._uuid)
             self.driver.clear_result(self._uuid)
             if self.update:
-                if result is None:
+                if not result:
                     self.exitcode = 1
                 else:
                     self.out = result
