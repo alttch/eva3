@@ -26,7 +26,7 @@ class LMExt(object):
             self.cfg = cfg
         else:
             self.cfg = {}
-        self.ext_mod_id = __id__
+        self.mod_id = __id__
         self.__author = __author__
         self.__license = __license__
         self.__description = __description__
@@ -54,7 +54,7 @@ class LMExt(object):
             d['functions'] = self.__functions
         if config:
             d['cfg'] = self.cfg
-        d['mod'] = self.ext_mod_id
+        d['mod'] = self.mod_id
         d['id'] = self.ext_id
         if not self.ext_id:
             d['cfg'] = self.__config_help
@@ -86,4 +86,7 @@ class LMExt(object):
         critical()
 
     def get_functions(self):
-        return self.__functions
+        result = []
+        for f, h in self.__functions.copy().items():
+            result.append(f.split('(')[0].strip())
+        return result

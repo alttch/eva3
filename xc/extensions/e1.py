@@ -12,7 +12,7 @@ __config_help__ = {
     }
 
 __functions__ = {
-        'push': 'push data to remote URL'
+        'push(data)': 'push data to remote URL'
         }
 
 from eva.lm.extensions.generic import LMExt as GenericExt
@@ -27,12 +27,12 @@ class LMExt(GenericExt):
 
     def __init__(self, cfg=None):
         super().__init__(cfg)
+        self.mod_id = __id__
         self.__author = __author__
         self.__license = __license__
         self.__description = __description__
         self.__version = __version__
         self.__api_version = __api__
-        self.__lpi_mod_id = __id__
         self.__functions = __functions__
         self.__config_help = __config_help__
         self.url = self.cfg.get('url')
