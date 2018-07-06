@@ -789,7 +789,7 @@ class UpdatableItem(Item):
         self.update_set_state(status=-1, value='null', force_virtual=True)
         return True
 
-    def update(self, driver_state_in):
+    def update(self, driver_state_in=None):
         if self.updates_allowed() and not self.is_destroyed():
             self._perform_update(driver_state_in)
 
