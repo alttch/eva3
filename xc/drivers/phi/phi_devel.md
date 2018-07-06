@@ -97,7 +97,8 @@ returns state of all ports at once only), constructor should set variables:
 Primary methods
 ---------------
 
-The following methods should be defined. cfg param
+The following methods should be defined. "cfg" param may contain configuration
+params which should override the default ones for the current call.
 
     # if PHI can read data from the equipment
     get(self, port=None, cfg=None, timeout=0):
