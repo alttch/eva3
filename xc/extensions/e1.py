@@ -8,7 +8,7 @@ __api__ = 1
 __id__ = 'e1'
 
 __config_help__ = {
-    'url': 'url to push JSON data to'
+    '*url': 'url to push JSON data to'
     }
 
 __functions__ = {

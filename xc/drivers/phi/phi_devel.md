@@ -33,7 +33,9 @@ the next fields are processed by controller, so make them exactly as required
  * aao_set - set all ports at once (if list of ports and
    list of data is given)
 
-* __config_help__   dict { 'config_prop': 'value' }
+* __config_help__   dict { 'prop_name': 'value' }
+
+Required parameters should be marked with * before the prop name (i.e. *url).
 
 Classes and modules
 -------------------

@@ -10,8 +10,8 @@ __api__ = 1
 __required__ = ['aao_get', 'port_set', 'status', 'action']
 __features__ = ['aao_get', 'port_set', 'cache']
 __config_help__ = {
-    'host': 'device ip/host[:port], required',
-    'pw': 'device password, required',
+    '*host': 'device ip/host[:port]',
+    '*pw': 'device password',
     'logout': 'set to "skip" to skip logout'
 }
 

@@ -10,7 +10,7 @@ __api__ = 1
 __required__ = ['port_get', 'port_set', 'status', 'action']
 __features__ = ['port_get', 'port_set']
 __config_help__ = {
-    'host': 'relay host/ip[:port], required',
+    '*host': 'relay host/ip[:port]',
     'community': 'snmp community (default: private)',
     'read_community': 'snmp read community',
     'write_community': 'snmp write community',
