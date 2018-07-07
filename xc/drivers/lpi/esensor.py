@@ -18,6 +18,15 @@ __config_help__ = {
     'max_diff': 'maximum value diff until marked as failed'
 }
 
+__action_help__ = {}
+
+__state_help__ = {
+        '*port': 'port(s) to use',
+        'on_err': '"skip" skips failed sensor in a group',
+        'gpf': 'avg, max, min, first - group function',
+        'max_diff': 'maximum value diff until marked as failed'
+        }
+
 from time import time
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
@@ -37,6 +46,8 @@ class LPI(GenericLPI):
         self.__logic = __logic__
         self.__features = __features__
         self.__config_help = __config_help__
+        self.__action_help = __action_help__
+        self.__state_help = __state_help__
         # skip - skip sensor errors (log error and continue)
         # otherwise if one sensor in a group failed, stop polling others
         #
