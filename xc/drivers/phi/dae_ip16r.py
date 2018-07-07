@@ -70,6 +70,7 @@ class PHI(GenericPHI):
         if cfg:
             host, snmp_port = parse_host_port(cfg.get('host'), 161)
             community = cfg.get('community')
+            if not community: community = cfg.get('read_community')
             tries = cfg.get('retries')
             try:
                 tries = int(tries)
@@ -85,6 +86,7 @@ class PHI(GenericPHI):
         if not community:
             community = self.snmp_read_community
         if tries is None: tries = self.snmp_tries
+        if not host or not community: return None
         if port < 1 or port > self.port_max: return None
         _timeout = (timeout - 1) / tries
         return snmp.get(
@@ -105,6 +107,7 @@ class PHI(GenericPHI):
         if cfg:
             host, snmp_port = parse_host_port(cfg.get('host'), 161)
             community = cfg.get('community')
+            if not community: community = cfg.get('write_community')
             tries = cfg.get('retries')
             try:
                 tries = int(tries)
@@ -120,6 +123,7 @@ class PHI(GenericPHI):
         if not community:
             community = self.snmp_write_community
         if tries is None: tries = self.snmp_tries
+        if not host or not community: return None
         if port < 1 or port > self.port_max or val < 0 or val > 1: return None
         _timeout = (timeout - 1) / self.snmp_tries
         return snmp.set('%s.%u' % (self.oid_work, port + self.port_shift),
