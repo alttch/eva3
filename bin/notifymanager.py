@@ -323,10 +323,14 @@ elif func == 'list_props':
     print_json(n.serialize(props=True))
     sys.exit()
 elif func == 'test':
-    if n.test(): print('notifier %s test passed' % notifier_id)
-    else: print('notifier %s test FAILED' % notifier_id)
+    if n.test():
+        print('notifier %s test passed' % notifier_id)
+        exitcode = 0
+    else:
+        print('notifier %s test FAILED' % notifier_id)
+        exitcode = 1
     n.disconnect()
-    sys.exit(1)
+    sys.exit(exitcode)
 
 eva.notify.append_notifier(n)
 
