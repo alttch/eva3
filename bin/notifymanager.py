@@ -326,7 +326,7 @@ elif func == 'test':
     if n.test(): print('notifier %s test passed' % notifier_id)
     else: print('notifier %s test FAILED' % notifier_id)
     n.disconnect()
-    sys.exit()
+    sys.exit(1)
 
 eva.notify.append_notifier(n)
 
