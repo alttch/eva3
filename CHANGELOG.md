@@ -13,6 +13,7 @@ Core:
     * SYS API functions: notifiers, enable_notifier, disable_notifier. the
       enable/disable API functions change notifier status only temporary, until
       the controller is restarted
+    * MQTT SSL support
 
 UC:
 

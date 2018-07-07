@@ -1011,7 +1011,10 @@ class GenericMQTTNotifier(GenericNotifier):
                  qos=None,
                  keepalive=None,
                  timeout=None,
-                 collect_logs=None):
+                 collect_logs=None,
+                 ca_certs=None,
+                 certfile=None,
+                 keyfile=None):
         notifier_type = 'mqtt'
         super().__init__(
             notifier_id=notifier_id,
@@ -1033,6 +1036,17 @@ class GenericMQTTNotifier(GenericNotifier):
         self.mq.on_message = self.on_message
         self.username = username
         self.password = password
+        self.ca_certs = ca_certs
+        self.certfile = certfile
+        self.keyfile = keyfile
+        if ca_certs:
+            try:
+                self.mq.tls_set(
+                    ca_certs=ca_certs, certfile=certfile, keyfile=keyfile)
+            except:
+                eva.core.log_traceback()
+                self.log_error(message='can not load ssl files')
+                pass
         self.items_to_update = set()
         self.items_to_update_by_topic = {}
         self.items_to_control = set()
@@ -1259,6 +1273,9 @@ class GenericMQTTNotifier(GenericNotifier):
         if self._qos or props: d['qos'] = self._qos
         if self._keepalive or props: d['keepalive'] = self._keepalive
         if self.collect_logs or props: d['collect_logs'] = self.collect_logs
+        if self.ca_certs or props: d['ca_certs'] = self.ca_certs
+        if self.certfile or props: d['certfile'] = self.certfile
+        if self.keyfile or props: d['keyfile'] = self.keyfile
         d.update(super().serialize(props=props))
         return d
 
@@ -1267,7 +1284,28 @@ class GenericMQTTNotifier(GenericNotifier):
             v = eva.tools.val_to_boolean(value)
             self.collect_logs = v
             return True
-        if prop == 'host':
+        elif prop == 'ca_certs':
+            if os.path.isfile(value):
+                self.ca_certs = value
+            else:
+                self.log_error(message='unable to open ' + value)
+                return False
+            return True
+        elif prop == 'certfile':
+            if os.path.isfile(value):
+                self.certfile = value
+            else:
+                self.log_error(message='unable to open ' + value)
+                return False
+            return True
+        elif prop == 'keyfile':
+            if os.path.isfile(value):
+                self.keyfile = value
+            else:
+                self.log_error(message='unable to open ' + value)
+                return False
+            return True
+        elif prop == 'host':
             if not value: return False
             self.host = value
             return True
@@ -1337,7 +1375,10 @@ class MQTTNotifier(GenericMQTTNotifier):
                  qos=None,
                  keepalive=None,
                  timeout=None,
-                 collect_logs=None):
+                 collect_logs=None,
+                 ca_certs=None,
+                 certfile=None,
+                 keyfile=None):
         super().__init__(
             notifier_id=notifier_id,
             host=host,
@@ -1348,7 +1389,10 @@ class MQTTNotifier(GenericMQTTNotifier):
             qos=qos,
             keepalive=keepalive,
             timeout=timeout,
-            collect_logs=collect_logs)
+            collect_logs=collect_logs,
+            ca_certs=ca_certs,
+            certfile=certfile,
+            keyfile=keyfile)
 
 
 class WSNotifier_Client(GenericNotifier_Client):
@@ -1489,6 +1533,12 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         else: host = None
         if 'port' in ncfg: port = ncfg['port']
         else: port = None
+        if 'ca_certs' in ncfg: ca_certs = ncfg['ca_certs']
+        else: ca_certs = None
+        if 'certfile' in ncfg: certfile = ncfg['certfile']
+        else: certfile = None
+        if 'keyfile' in ncfg: keyfile = ncfg['keyfile']
+        else: keyfile = None
         if 'space' in ncfg: space = ncfg['space']
         else: space = None
         if 'username' in ncfg: username = ncfg['username']
@@ -1513,7 +1563,10 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             qos=qos,
             keepalive=keepalive,
             timeout=timeout,
-            collect_logs=collect_logs)
+            collect_logs=collect_logs,
+            ca_certs=ca_certs,
+            certfile=certfile,
+            keyfile=keyfile)
     elif ncfg['type'] == 'db':
         if 'db' in ncfg: db = ncfg['db']
         else: db = None
