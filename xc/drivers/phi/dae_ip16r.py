@@ -8,9 +8,9 @@ __id__ = 'dae_ip16r'
 __equipment__ = 'smartDEN-IP-16R'
 __api__ = 1
 __required__ = ['port_get', 'port_set', 'status', 'action']
-__features__ = ['port_get', 'port_set']
+__features__ = ['port_get', 'port_set', 'universal']
 __config_help__ = {
-    '*host': 'relay host/ip[:port]',
+    'host': 'relay host/ip[:port]',
     'community': 'snmp community (default: private)',
     'read_community': 'snmp read community',
     'write_community': 'snmp write community',
@@ -20,6 +20,8 @@ __config_help__ = {
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import get_timeout
+
+from eva.tools import parse_host_port
 
 import eva.uc.drivers.tools.snmp as snmp
 
@@ -52,18 +54,10 @@ class PHI(GenericPHI):
             self.snmp_tries = int(self.phi_get('retries')) + 1
         except:
             self.snmp_tries = 1
-        host = self.phi_cfg.get('host')
         self.port_shift = -1
         self.port_max = 16
-        if host:
-            try:
-                self.snmp_host, port = host.split(':')
-                self.snmp_port = int(port)
-            except:
-                self.snmp_host = host
-                self.snmp_port = 161
-        else:
-            self.ready = False
+        self.snmp_host, self.snmp_port = parse_host_port(
+            self.phi_cfg.get('host'), 161)
         self.oid_name = '.1.3.6.1.4.1.42505.6.1.1.0'
         self.oid_version = '.1.3.6.1.4.1.42505.6.1.2.0'
         self.oid_work = '.1.3.6.1.4.1.42505.6.2.3.1.3'
@@ -73,15 +67,33 @@ class PHI(GenericPHI):
             port = int(port)
         except:
             return None
+        if cfg:
+            host, snmp_port = parse_host_port(cfg.get('host'), 161)
+            community = cfg.get('community')
+            tries = cfg.get('retries')
+            try:
+                tries = int(tries)
+            except:
+                tries = None
+        else:
+            host = None
+            community = None
+            tries = None
+        if not host:
+            host = self.snmp_host
+            snmp_port = self.snmp_port
+        if not community:
+            community = self.snmp_read_community
+        if tries is None: tries = self.snmp_tries
         if port < 1 or port > self.port_max: return None
-        _timeout = (timeout - 1) / self.snmp_tries
+        _timeout = (timeout - 1) / tries
         return snmp.get(
             '%s.%u' % (self.oid_work, port + self.port_shift),
-            self.snmp_host,
-            self.snmp_port,
-            self.snmp_read_community,
+            host,
+            snmp_port,
+            community,
             _timeout,
-            self.snmp_tries - 1,
+            tries - 1,
             rf=int)
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
@@ -90,12 +102,29 @@ class PHI(GenericPHI):
             val = int(data)
         except:
             return None
+        if cfg:
+            host, snmp_port = parse_host_port(cfg.get('host'), 161)
+            community = cfg.get('community')
+            tries = cfg.get('retries')
+            try:
+                tries = int(tries)
+            except:
+                tries = None
+        else:
+            host = None
+            community = None
+            tries = None
+        if not host:
+            host = self.snmp_host
+            snmp_port = self.snmp_port
+        if not community:
+            community = self.snmp_write_community
+        if tries is None: tries = self.snmp_tries
         if port < 1 or port > self.port_max or val < 0 or val > 1: return None
         _timeout = (timeout - 1) / self.snmp_tries
         return snmp.set('%s.%u' % (self.oid_work, port + self.port_shift),
-                        rfc1902.Integer(val), self.snmp_host, self.snmp_port,
-                        self.snmp_write_community, _timeout,
-                        self.snmp_tries - 1)
+                        rfc1902.Integer(val), host, snmp_port, community,
+                        _timeout, tries - 1)
 
     def test(self, cmd=None):
         if cmd == 'info' or cmd == 'self':
