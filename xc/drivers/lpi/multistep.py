@@ -35,17 +35,17 @@ class LPI(BasicLPI):
     def __init__(self, lpi_cfg=None, phi_id=None):
         super().__init__(lpi_cfg, phi_id)
         self.lpi_mod_id = __id__
-        self._LPI__author = __author__
-        self._LPI__license = __license__
-        self._LPI__description = __description__
-        self._LPI__version = __version__
-        self._LPI__api_version = __api__
-        self._LPI__lpi_mod_id = __id__
-        self._LPI__logic = __logic__
-        self._LPI__features = __features__
-        self._LPI__config_help = __config_help__
-        self._LPI__action_help = __action_help__
-        self._LPI__state_help = __state_help__
+        self.__author = __author__
+        self.__license = __license__
+        self.__description = __description__
+        self.__version = __version__
+        self.__api_version = __api__
+        self.__lpi_mod_id = __id__
+        self.__logic = __logic__
+        self.__features = __features__
+        self.__config_help = __config_help__
+        self.__action_help = __action_help__
+        self.__state_help = __state_help__
         self.bose = self.lpi_cfg.get('bose') != 'skip'
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
