@@ -1499,7 +1499,7 @@ class ActiveItem(Item):
         if config or props:
             if self._drivers_allowed:
                 if self.action_driver_config:
-                    d['action_driver_config'] = self.update_driver_config
+                    d['action_driver_config'] = self.action_driver_config
                 elif props:
                     d['action_driver_config'] = None
             if self.action_exec:
