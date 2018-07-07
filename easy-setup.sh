@@ -22,7 +22,7 @@ REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 pip3 sha256sum mosquitto_pub"
+REQUIRED="realpath python3 pip3 sha256sum"
 
 function usage {
     echo "Usage: easy-setup.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
@@ -72,12 +72,15 @@ function create_notifier {
     [ "x${MQTT_SPACE}" != "x" ] && local sp="-s ${MQTT_SPACE}"
     ./bin/$T-notifier create -i eva_1 -p mqtt -h ${MQTT_HOST} \
         -P ${MQTT_PORT} -A ${MQTT_USER}:${MQTT_PASSWORD} $sp -y || return 1
-    [ "$MQTT_CAFILE" != "x" ] && ./bin/$T-notifier set_prop \
-        -i eva_1 -p ca_certs -v $MQTT_CAFILE || return 1
-    [ "$MQTT_CERT" != "x" ] && ./bin/$T-notifier set_prop \
-        -i eva_1 -p certfile -v $MQTT_CERT || return 1
-    [ "$MQTT_KEY" != "x" ] && ./bin/$T-notifier set_prop \
-        -i eva_1 -p keyfile -v $MQTT_KEY || return 1
+    if [ "x$MQTT_CAFILE" != "x" ]; then
+        ./bin/$T-notifier set_prop -i eva_1 -p ca_certs -v $MQTT_CAFILE || return 1
+    fi
+    if [ "x$MQTT_CERT" != "x" ]; then
+        ./bin/$T-notifier set_prop  -i eva_1 -p certfile -v $MQTT_CERT || return 1
+    fi
+    if [ "x$MQTT_KEY" != "x" ]; then
+        ./bin/$T-notifier set_prop -i eva_1 -p keyfile -v $MQTT_KEY || return 1
+    fi
     ./bin/$T-notifier subscribe -i eva_1 -p state -v '#' -g '#' || return 1
     ./bin/$T-notifier subscribe -i eva_1 -p log -L 20 || return 1
     ./bin/$T-notifier test -i eva_1
@@ -151,8 +154,7 @@ function askMQTT {
             if [ $VALUE == "1" ]; then
                 while [ 1 ]; do
                     echo -n "MQTT CA file ($DEFAULT_CA_FILE): "
-                    read -s MQTT_CAFILE
-                    echo
+                    read MQTT_CAFILE
                     [ "x$MQTT_CAFILE" == "x" ] && MQTT_CAFILE=$DEFAULT_CA_FILE
                     if [ ! -f "$MQTT_CAFILE" ]; then
                         echo "No such file: $MQTT_CAFILE"
@@ -162,15 +164,13 @@ function askMQTT {
                 done
                 while [ 1 ]; do
                     echo -n "MQTT cert file (empty for none): "
-                    read -s MQTT_CERT
-                    echo
+                    read MQTT_CERT
                     [ "x$MQTT_CERT" == "x" ] || [ -f "$MQTT_CERT" ] ; break
                 done
                 if [ "x$MQTT_CERT" != "x" ]; then
                     while [ 1 ]; do
                         echo -n "MQTT key file (empty for none): "
-                        read -s MQTT_KEY
-                        echo
+                        read MQTT_KEY
                         [ "x$MQTT_KEY" == "x" ] || [ -f "$MQTT_KEY" ] ; break
                     done
                 fi
@@ -188,15 +188,17 @@ function askMQTT {
             [ "x$MQTT_CERT" != "x" ] && SSL_OPTS="$SSL_OPTS --cert $MQTT_CERT"
             [ "x$MQTT_KEY" != "x" ] && SSL_OPTS="$SSL_OPTS --key $MQTT_KEY"
         fi
-        mosquitto_pub -d -h ${MQTT_HOST} -p ${MQTT_PORT} ${SSL_OPTS} -u ${MQTT_USER} \
-                -P ${MQTT_PASSWORD} -t ${s} -m OK
+        ./sbin/check_mqtt ${SSL_OPTS} \
+            ${MQTT_USER}:${MQTT_PASSWORD}@${MQTT_HOST}:${MQTT_PORT}/${MQTT_SPACE} > /dev/null 2>&1
         if [ $? -ne 0 ]; then
             if [ ${INTERACTIVE} -ne 1 ]; then
+                echo "MQTT test failed"
                 exit 5
             fi
         else
             return
         fi
+        echo "MQTT test failed"
     done
 }
 
@@ -237,7 +239,7 @@ do
             MQTT_HOST=`echo $M|cut -d@ -f2|cut -d: -f1|cut -d/ -f1`
             MQTT_PORT=`echo $M|cut -d@ -f2 |cut -d/ -f1|awk -F: '{ print $2 }'`
             [ "x$MQTT_PORT" = "x" ] && MQTT_PORT=1883
-            MQTT_SPACE=`echo $M|awk -F/ '{ print $2 }'`
+            MQTT_SPACE=`echo $M|cut -d/ -f2-`
             shift
             shift
         ;;
@@ -322,9 +324,8 @@ do
             echo "Will perform automatic install"
             shift
         ;;
-        -root)
+        --root)
             ALLOW_ROOT=1
-            shift
             shift
         ;;
         *)
@@ -333,7 +334,7 @@ do
     esac
 done
 
-if [ "xALLOW_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
+if [ "x$ALLOW_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
     echo "Please run this script as root"
     exit 98
 fi
