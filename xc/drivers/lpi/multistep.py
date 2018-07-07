@@ -1,0 +1,243 @@
+__author__ = 'Altertech Group, https://www.altertech.com/'
+__copyright__ = 'Copyright (C) 2012-2018 Altertech Group'
+__license__ = 'https://www.eva-ics.com/license'
+__version__ = '1.0.0'
+__description__ = 'Multistep LPI (opener)'
+__api__ = 1
+
+__id__ = 'multistep'
+__logic__ = 'multistep with delays'
+
+__features__ = ['action', 'action_mp', 'port_set', 'aao_set']
+
+__config_help__ = {
+    'bose': 'set "skip" to allow action even if current status is error (-1)'
+}
+__action_help__ = {
+    '*port': 'port(s) to use',
+    '*dport': 'port(s) to use for direction',
+    '*steps': 'delay steps (list)',
+    'warmup': 'warmup for middle status',
+    'tuning': 'tuning for start/end status',
+    'ts': 'less and equal go to the start then to status',
+    'te': 'greater and equal go to the end then to status'
+}
+
+__state_help__ = {}
+
+from time import time
+from eva.uc.drivers.lpi.basic import LPI as BasicLPI
+from eva.uc.driverapi import log_traceback
+
+
+class LPI(BasicLPI):
+
+    def __init__(self, lpi_cfg=None, phi_id=None):
+        super().__init__(lpi_cfg, phi_id)
+        self.lpi_mod_id = __id__
+        self._LPI__author = __author__
+        self._LPI__license = __license__
+        self._LPI__description = __description__
+        self._LPI__version = __version__
+        self._LPI__api_version = __api__
+        self._LPI__lpi_mod_id = __id__
+        self._LPI__logic = __logic__
+        self._LPI__features = __features__
+        self._LPI__config_help = __config_help__
+        self._LPI__action_help = __action_help__
+        self._LPI__state_help = __state_help__
+        self.bose = self.lpi_cfg.get('bose') != 'skip'
+
+    def do_state(self, _uuid, cfg, timeout, tki, state_in):
+        self.log_error('state function not implemented')
+        return self.state_result_error(_uuid)
+
+    def _calc_delay(self, s, ns, steps, warmup=0, tuning=0):
+        _delay = 0
+        if s == ns: return 0
+        if ns > s:
+            _delay = sum(steps[s:ns])
+            if s > 0:
+                _delay += warmup
+            if ns == len(steps):
+                _delay += tuning
+        else:
+            _delay = sum(steps[ns:s])
+            if s < len(steps):
+                _delay += warmup
+            if ns == 0:
+                _delay += tuning
+        return _delay
+
+    def do_action(self, _uuid, status, value, cfg, timeout, tki):
+        time_start = time()
+        if cfg is None:
+            return self.action_result_error(_uuid, 1, 'no config provided')
+        phi_cfg = self.prepare_phi_cfg(cfg)
+        if cfg.get('bose'):
+            bose = cfg.get('bose') != 'skip'
+        else:
+            bose = self.bose
+        if status is None:
+            return self.action_result_error(_uuid, 1, 'no status provided')
+        port = cfg.get(self.io_label)
+        if port is None:
+            return self.action_result_error(
+                _uuid, 1, 'no ' + self.io_label + ' in config')
+        dport = cfg.get('d' + self.io_label)
+        if dport is None:
+            return self.action_result_error(
+                _uuid, 2, 'no d' + self.io_label + ' in config')
+        try:
+            nstatus = int(status)
+        except:
+            return self.action_result_error(
+                _uuid, msg='status is not integer')
+        _steps = cfg.get('steps')
+        if not _steps or not isinstance(_steps, list):
+            return self.action_result_error(_uuid, msg='no steps provided')
+        steps = []
+        for i in _steps:
+            try:
+                steps.append(float(i))
+            except:
+                return self.action_result_error(_uuid, msg='steps should be float numbers')
+        if nstatus < 0 or nstatus > len(steps):
+            return self.action_result_error(
+                _uuid, msg='status is not in range 0..%u' % len(steps))
+        pstatus = cfg.get('EVA_ITEM_STATUS')
+        try:
+            pstatus = int(pstatus)
+        except:
+            pstatus = 0
+        if pstatus is None or pstatus < 0:
+            if bose:
+                return self.action_result_error(
+                    _uuid, msg='current status is an error')
+            pstatus = 0
+        if pstatus > len(steps):
+            self.log_warning('current status is %s while only %s steps are set'
+                             % (pstatus, len(steps)))
+        if pstatus == nstatus:
+            return self.action_result_ok(_uuid)
+        warmup = cfg.get('warmup')
+        if warmup is not None:
+            try:
+                warmup = float(warmup)
+            except:
+                return self.action_result_error(_uuid, 1,
+                                                'warmup is not a number')
+        else:
+            warmup = 0
+        tuning = cfg.get('tuning')
+        if tuning is not None:
+            try:
+                tuning = float(tuning)
+            except:
+                return self.action_result_error(_uuid, 1,
+                                                'tuning is not a number')
+        else:
+            tuning = 0
+        ts = cfg.get('ts')
+        if ts:
+            try:
+                ts = int(ts)
+            except:
+                return self.action_result_error(_uuid, 1, 'ts is not a number')
+        te = cfg.get('te')
+        if te:
+            try:
+                te = int(te)
+            except:
+                return self.action_result_error(_uuid, 1, 'te is not a number')
+        if nstatus < pstatus and ts and ts <= nstatus:
+            # we need to go to start then to nstatus
+            _delay = self._calc_delay(pstatus, 0, steps, warmup, tuning)
+            _delay += self._calc_delay(0, nstatus, steps, warmup, tuning)
+            if _delay > time_start - time() + timeout:
+                return self.action_result_error(
+                    _uuid, 4,
+                    'can not perform action. requires: %s sec, timeout: %s sec'
+                    % (_delay, timeout))
+            _pstatus = [pstatus, 0]
+            _nstatus = [0, nstatus]
+        elif nstatus > pstatus and te and te <= nstatus:
+            # we need to go to the end then to nstatus
+            _delay = self._calc_delay(pstatus, len(steps), steps, warmup, tuning)
+            _delay += self._calc_delay(
+                len(steps), nstatus, steps, warmup, tuning)
+            if _delay > time_start - time() + timeout:
+                return self.action_result_error(
+                    _uuid, 4,
+                    'can not perform action. requires: %s sec, timeout: %s sec'
+                    % (_delay, timeout))
+            _pstatus = [pstatus, len(steps)]
+            _nstatus = [len(steps), nstatus]
+        else:
+            _pstatus = [pstatus]
+            _nstatus = [nstatus]
+        for i in range(0, len(_pstatus)):
+            pstatus = _pstatus[i]
+            nstatus = _nstatus[i]
+            if nstatus > pstatus:
+                direction = 1
+            else:
+                direction = 0
+            try:
+                _delay = self._calc_delay(pstatus, nstatus, steps, warmup, tuning)
+            except:
+                log_traceback()
+                return self.action_result_error(_uuid, 3, '_delay calc error')
+            # no delay - nothing to do
+            print(pstatus, nstatus, _delay)
+            if not _delay:
+                continue
+            if _delay > time_start - time() + timeout:
+                return self.action_result_error(
+                    _uuid, 4,
+                    'can not perform action. requires: %s sec, timeout: %s sec'
+                    % (_delay, time_start - time() + timeout))
+            _c = {self.io_label: port}
+            _cd = {self.io_label: dport}
+            # direction
+            r = self.exec_super_subaction(direction, _cd,
+                                          time_start - time() + timeout, tki)
+            if not r or r.get('exitcode') != 0:
+                if not r:
+                    r = {}
+                return self.action_result_error(
+                    _uuid, 4,
+                    'direction set error: %s, %s' % (r.get('exitcode'),
+                                                     r.get('err')))
+            # power on
+            r = self.exec_super_subaction(1, _c, time_start - time() + timeout,
+                                          tki)
+            if not r or r.get('exitcode') != 0:
+                if not r:
+                    r = {}
+                return self.action_result_error(
+                    _uuid, 4, 'power on error: %s, %s' % (r.get('exitcode'),
+                                                          r.get('err')))
+            dr = self.delay(_uuid, _delay)
+            # power off
+            r = self.exec_super_subaction(0, _c, time_start - time() + timeout,
+                                          tki)
+            if not r or r.get('exitcode') != 0:
+                if not r:
+                    r = {}
+                self.critical('power off error!')
+                return self.action_result_error(
+                    _uuid, 4, 'power off error: %s, %s' % (r.get('exitcode'),
+                                                           r.get('err')))
+            if not dr:
+                # we are terminated
+                return self.action_result_terminated(_uuid)
+        return self.action_result_ok(_uuid)
+
+    def exec_super_subaction(self, status, cfg, timeout, tki):
+        _u = self.gen_uuid()
+        self.prepare_action(_u)
+        super().do_action(_u, status, None, cfg, timeout, tki)
+        result = self.get_result(_u)
+        self.clear_result(_u)
+        return result
