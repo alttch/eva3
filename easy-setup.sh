@@ -70,7 +70,8 @@ function create_notifier {
     ./bin/$T-notifier create -i eva_1 -p mqtt -h ${MQTT_HOST} -P ${MQTT_PORT} -A ${MQTT_USER}:${MQTT_PASSWORD} $sp -y || return 1
     ./bin/$T-notifier subscribe -i eva_1 -p state -v '#' -g '#' || return 1
     ./bin/$T-notifier subscribe -i eva_1 -p log -L 20 || return 1
-    return 0
+    ./bin/$T-notifier test -i eva_1
+    return $?
 }
 
 function check_required_exec {
