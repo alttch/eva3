@@ -1285,21 +1285,27 @@ class GenericMQTTNotifier(GenericNotifier):
             self.collect_logs = v
             return True
         elif prop == 'ca_certs':
-            if os.path.isfile(value):
+            if value is None:
+                self.ca_certs = None
+            elif os.path.isfile(value):
                 self.ca_certs = value
             else:
                 self.log_error(message='unable to open ' + value)
                 return False
             return True
         elif prop == 'certfile':
-            if os.path.isfile(value):
+            if value is None:
+                self.certfile = None
+            elif os.path.isfile(value):
                 self.certfile = value
             else:
                 self.log_error(message='unable to open ' + value)
                 return False
             return True
         elif prop == 'keyfile':
-            if os.path.isfile(value):
+            if value is None:
+                self.keyfile = None
+            elif os.path.isfile(value):
                 self.keyfile = value
             else:
                 self.log_error(message='unable to open ' + value)
