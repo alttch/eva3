@@ -49,12 +49,12 @@ __action_help__ = [{
 }, {
     'name': 'ts',
     'help': 'less and equal go to the start then to status',
-    'type': 'int',
+    'type': 'uint',
     'required': False
 }, {
     'name': 'te',
     'help': 'greater and equal go to the end then to status',
-    'type': 'int',
+    'type': 'uint',
     'required': False
 }]
 
