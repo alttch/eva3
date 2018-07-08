@@ -38,6 +38,7 @@ from eva.uc.driverapi import log_traceback
 import fcntl
 import os
 
+
 class PHI(GenericPHI):
 
     def __init__(self, phi_cfg=None):
@@ -69,7 +70,7 @@ class PHI(GenericPHI):
             r = ord(open(self.w1 % addr, 'rb').read(1))
             data = {}
             for i in range(8):
-                data[str(i+1)] = 0 if 1 << i & r else 1
+                data[str(i + 1)] = 0 if 1 << i & r else 1
         except:
             log_traceback()
             return None
@@ -93,9 +94,11 @@ class PHI(GenericPHI):
                 for i in range(0, len(_port)):
                     _p = int(_port[i])
                     _d = int(_data[i])
-                    if _p < 1 or _p > 8: raise Exception('port is not in range 1..8')
-                    if _d < 0 or _d > 1: raise Exception('data is not in range 0..1')
-                    if _d: r = 1 << (_p - 1 ) ^ 0xFF & r
+                    if _p < 1 or _p > 8:
+                        raise Exception('port is not in range 1..8')
+                    if _d < 0 or _d > 1:
+                        raise Exception('data is not in range 0..1')
+                    if _d: r = 1 << (_p - 1) ^ 0xFF & r
                     else: r = r | 1 << (_p - 1)
                 d.seek(0, 0)
                 d.write(bytes([r]))
@@ -110,7 +113,7 @@ class PHI(GenericPHI):
     def test(self, cmd=None):
         if cmd == 'self':
             if self.addr is None:
-                return 'OK' if os.path.isdir('/sys/bus/w1') else'FAILED'
+                return 'OK' if os.path.isdir('/sys/bus/w1') else 'FAILED'
             else:
                 return 'OK' if self.get() else 'FAILED'
         elif cmd == 'get':
