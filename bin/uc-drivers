@@ -154,7 +154,7 @@ ap.add_argument(
     dest='_debug',
     default=False)
 
-sp = ap.add_subparsers(dest='_type', metavar='command', help='command or type')
+sp = ap.add_subparsers(dest='_type', metavar='type', help='instance type')
 
 ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
 ap_lpi = sp.add_parser('lpi', help='LPI (Logical to physical interface)')
