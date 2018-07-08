@@ -14,7 +14,7 @@ __config_help__ = [{
     'name':
     'bose',
     'help':
-    'set to allow action even if current status is error',
+    'allow action even if current status is error',
     'type':
     'bool',
     'required':
@@ -60,6 +60,32 @@ __action_help__ = [{
 
 __state_help__ = []
 
+__help__ = """
+Solves typical logic task: turning the motor direction and run the motor for
+the specified number of seconds, to control i.e. window opening, door opening,
+manipulators of the robots.
+
+The duration of the motor work is specified in 'steps' unit driver
+configuration param, each step corresponds to the next status.
+
+Warmup is used to let the motor additional number of seconds for the starting
+states between first and last.
+
+Tuning is used to make sure the motor drivers the target to starting and
+finishing position (i.e. completely opens/closes the door).
+
+ts and te. Sometimes it's pretty hard to calculate the proper position for the
+middle states. In this case LPI will ask motor to go all the way to the start
+state (if target status <= ts) and then back to the target, or all the way to
+the end and to the target (if target status >= te).
+
+Unit driver config fields should have property 'port' with a
+port label/number for PHI. 'io_label' prop allows to rename 'port', 'dport'
+i.e. to 'socket', 'dsocket' for a more fancy unit configuration.  Each port and
+dport may be specified as a single value or contain an array of values, in this
+case multiple ports are used simultaneously.
+"""
+
 from time import time
 from eva.uc.drivers.lpi.basic import LPI as BasicLPI
 from eva.uc.driverapi import log_traceback
@@ -82,6 +108,7 @@ class LPI(BasicLPI):
         self.__config_help = __config_help__
         self.__action_help = __action_help__
         self.__state_help = __state_help__
+        self.__help = __help__
         self.bose = val_to_boolean(self.lpi_cfg.get('bose'))
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):

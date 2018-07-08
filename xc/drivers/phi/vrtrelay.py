@@ -17,6 +17,9 @@ __config_help__ = [{
 }]
 __get_help__ = []
 __set_help__ = []
+__help__ = """
+Simple 16-port virtual relay, may be used for the various tests/debugging.
+"""
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
@@ -49,6 +52,7 @@ class PHI(GenericPHI):
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        self.__help = __help__
 
     def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data

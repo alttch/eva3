@@ -29,6 +29,12 @@ __config_help__ = [{
 __get_help__ = []
 __set_help__ = []
 
+__help__ = """
+PHI for Energenie (Gembird) EG-PM2-LAN smart PDU. You may use 'skip_logout'
+param to let PHI skip logout procedure after the requests. This speed up the
+functions however may cause the equipment to be locked to UC IP only.
+"""
+
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
@@ -59,6 +65,7 @@ class PHI(GenericPHI):
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        self.__help = __help__
         self.aao_get = True
         self.host = self.phi_cfg.get('host')
         self.pw = self.phi_cfg.get('pw')

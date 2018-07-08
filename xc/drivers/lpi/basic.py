@@ -29,6 +29,15 @@ __state_help__ = [{
     'required': True
 }]
 
+__help__ = """
+Basic LPI for simple unit status control (on/off) and monitoring. Support
+status 0 and 1. Unit driver config fields should have property 'port' with a
+port label/number for PHI. 'io_label' prop allows to rename 'port' i.e. to
+'socket' for a more fancy unit configuration. Each port may be specified as a
+single value or contain an array of values, in this case multiple ports are
+used simultaneously.
+"""
+
 from time import time
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
@@ -50,6 +59,7 @@ class LPI(GenericLPI):
         self.__config_help = __config_help__
         self.__action_help = __action_help__
         self.__state_help = __state_help__
+        self.__help = __help__
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()

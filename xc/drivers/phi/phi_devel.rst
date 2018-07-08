@@ -49,7 +49,7 @@ the next fields are processed by controller, so make them exactly as required
 PHI help
 ~~~~~~~~
 
-Each PHI module should contain 3 help variables:
+Each PHI module should contain 4 help variables:
 
 * **__config__help__** module configuration help (on load)
 * **__get_help__** additional configuration params which possible for LPI to
@@ -80,8 +80,14 @@ Property **type** may be:
 * **list:type** list of variables with type specified
 * **enum:type:a,b,c** list of the permitted specified type values
 
-Classes and modules
+The last one variable is
 
+* **__help__**
+
+It should contain the extended PHI description and operation manual. May be in
+any variable format and use restructured text directives for the formatting.
+
+Classes and modules
 -------------------
 
 It's allowed to import any Python system module or module installed by EVA ICS.

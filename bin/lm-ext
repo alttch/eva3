@@ -49,8 +49,11 @@ _pd_cols = {
 def fancy_print_result(result, tab=0):
     if result and isinstance(result, dict):
         rprinted = False
+        h = None
         for v in sorted(result.keys()):
-            if v != 'result':
+            if v == 'help' and not tab:
+                h = result[v]
+            elif v != 'result':
                 if isinstance(result[v], dict):
                     if tab:
                         print(' ' * (tab * 10), end='>' * tab + ' ')
@@ -65,6 +68,10 @@ def fancy_print_result(result, tab=0):
                         _v = result[v]
                     print(("{:>%u} : {}" % max(map(len, result))).format(v, _v))
                 rprinted = True
+        if h:
+            print('-'*81)
+            print(h.strip())
+            rprinted = True
         if not rprinted and not tab:
             print('OK')
     elif result and isinstance(result, list):

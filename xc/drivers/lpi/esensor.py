@@ -40,6 +40,14 @@ __state_help__ = [{
 
 __state_help__ += __config_help__
 
+__help__="""
+Enhanced LPI to work with sensors, supports various typical functions: working
+with a sensor groups, returning the average, max or min group value etc. Can
+use 'max_diff' param to control the maximum difference of the sensor value in a
+group and automatically remove possible broken sensors from the result (if the
+number of good sensors in a group is more than broken).
+"""
+
 from time import time
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
@@ -63,6 +71,7 @@ class LPI(GenericLPI):
         self.__config_help = __config_help__
         self.__action_help = __action_help__
         self.__state_help = __state_help__
+        self.__help = __help__
         # skip - skip sensor errors (log error and continue)
         # otherwise if one sensor in a group failed, stop polling others
         #

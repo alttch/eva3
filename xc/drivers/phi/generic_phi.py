@@ -13,12 +13,17 @@ __config_help__ = []
 __get_help__ = []
 __set_help__ = []
 
+__help__ = """
+Generic PHI for using as a base for all other UC PHI modules. For a list of the
+available functions look directly into the extension code or to EVA ICS
+documentation.
+"""
+
 import logging
 
 from eva.uc.driverapi import critical
 
 from time import time
-
 
 class PHI(object):
     """
@@ -43,6 +48,7 @@ class PHI(object):
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        self.__help = __help__
         # True if the equipment can query/modify only all
         # ports at once and can not work with a single ports
         self.aao_get = False
@@ -117,6 +123,7 @@ class PHI(object):
                     isinstance(self.__equipment, list) else [self.__equipment]
             d['features'] = self.__features
             d['required'] = self.__required
+            d['help'] = self.__help
         if config:
             d['cfg'] = self.phi_cfg
         d['mod'] = self.phi_mod_id

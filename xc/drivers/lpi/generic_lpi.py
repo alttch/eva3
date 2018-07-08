@@ -16,6 +16,12 @@ __action_help__ = []
 
 __state_help__ = []
 
+__help__ = """
+Generic extension for using as a base for all other UC LPI modules. For a list
+of the available functions look directly into the extension code or to EVA ICS
+documentation.
+"""
+
 import threading
 import logging
 import time
@@ -85,6 +91,7 @@ class LPI(object):
             d['version'] = self.__version
             d['api'] = self.__api_version
             d['logic'] = self.__logic
+            d['help'] = self.__help
             if self.phi:
                 d['phi'] = self.phi.serialize(full=True, config=True)
         if config:
@@ -224,6 +231,7 @@ class LPI(object):
         self.__config_help = __config_help__
         self.__action_help = __action_help__
         self.__state_help = __state_help__
+        self.__help = __help__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
         self.ready = True

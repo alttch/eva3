@@ -17,6 +17,12 @@ __config_help__ = [{
 }]
 __get_help__ = []
 __set_help__ = []
+__help__ = """
+Simple virtual sensor controller, may be used for the various tests/debugging.
+When loaded, simulates sensors with ports 1000..1010, which may be extended,
+also any labels for the sensors (including strings) may be used. Virtual
+sensors can be set to float values only.
+"""
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event

@@ -37,6 +37,11 @@ __config_help__ = [{
 }]
 __get_help__ = []
 __set_help__ = []
+__help__ = """
+PHI for Denkovi relay DAE-PB-RO5-DAEnetIP4, uses SNMP API to control/monitor
+the equipment. SNMP on relay should be enabled and configured to allow packets
+from UC.
+"""
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
@@ -63,6 +68,7 @@ class PHI(GenericPHI):
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        self.__help = __help__
         c = self.phi_cfg.get('community') if self.phi_cfg.get(
             'community') else 'private'
         self.snmp_read_community = c

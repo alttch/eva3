@@ -16,6 +16,11 @@ __config_help__ = [{
 
 __functions__ = {'push(data)': 'push data to remote URL'}
 
+__help__= """
+This is test extension just to test how LM PLC extesions works. It sould be
+removed before the final 3.1.0 release. If we forgot to do this, please remove
+this mod manually."""
+
 from eva.lm.extensions.generic import LMExt as GenericExt
 
 from eva.lm.extapi import get_timeout
@@ -37,6 +42,7 @@ class LMExt(GenericExt):
         self.__api_version = __api__
         self.__config_help = __config_help__
         self.__functions = __functions__
+        self.__help = __help__
         self.url = self.cfg.get('url')
         if not self.url: self.ready = False
 

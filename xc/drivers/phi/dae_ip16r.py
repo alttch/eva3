@@ -38,6 +38,19 @@ __config_help__ = [{
 __get_help__ = __config_help__[:-2]
 __set_help__ = __config_help__[:-2]
 
+__help__ = """
+PHI for Denkovi smartDEN-IP-16R IP relay, uses SNMP API to control/monitor the
+equipment. SNMP on relay should be enabled and configured to allow packets from
+UC.
+
+This is unversal PHI which means one PHI can control either one or multiple
+relays of the same type if relay config (host) is provided in unit driver
+configuration.
+
+host and communities should be specified either in driver primary configuration
+or in each unit configuration which uses the driver with this PHI.
+"""
+
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import get_timeout
@@ -65,6 +78,7 @@ class PHI(GenericPHI):
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        self.__help = __help__
         c = self.phi_cfg.get('community') if self.phi_cfg.get(
             'community') else 'private'
         self.snmp_read_community = c

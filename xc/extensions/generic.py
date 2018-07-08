@@ -11,6 +11,12 @@ __config_help__ = []
 
 __functions__ = {}
 
+__help__ = """
+This is generic extension for using as a base for all other LM PLC macro
+extensions. For a list of the available functions look directly into
+the extension code or to EVA ICS documentation.
+"""
+
 import logging
 
 from eva.lm.extapi import critical
@@ -35,6 +41,7 @@ class LMExt(object):
         self.__api_version = __api__
         self.__config_help = __config_help__
         self.__functions = __functions__
+        self.__help = __help__
         self.ready = True
         self.ext_id = None  # set by extapi on load
 
@@ -60,6 +67,7 @@ class LMExt(object):
             d['description'] = self.__description
             d['version'] = self.__version
             d['api'] = self.__api_version
+            d['help'] = self.__help
         if config:
             d['cfg'] = self.cfg
         d['mod'] = self.mod_id
