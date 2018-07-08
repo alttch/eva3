@@ -19,6 +19,7 @@ Core
 UC
 ~~
 
+    * uc-cmd renamed to uc-api
     * UC drivers: logical to physical (LPI) and physical (PHI) interfaces
     * device templates
     * new function "state_history" in UC API
@@ -35,6 +36,7 @@ UC
 LM PLC
 ~~~~~~
 
+    * lm-cmd renamed to lm-api
     * macro extensions
     * macro function "unlock" now return false if lock hasn't been not locked
       or doesn't exist
@@ -54,6 +56,7 @@ SFA
 
     * fixes: rule management functions
 
+    * sfa-cmd renamed to sfa-api
     * new function "state_history" in SFA API and SFA Framework
     * all functions now accept item oids
     * "result" function returns the result of macro execution if macro action
