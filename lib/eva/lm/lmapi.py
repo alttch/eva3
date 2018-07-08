@@ -508,6 +508,10 @@ class LM_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.lm.extapi.modinfo(i)
 
+    def modhelp_ext(self, k=None, i=None, c=None):
+        if not apikey.check(k, master=True): return None
+        return eva.lm.extapi.modhelp(i, c)
+
 
 class LM_HTTP_API(GenericHTTP_API, LM_API):
 
@@ -561,6 +565,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.list_ext_mods.exposed = True
         LM_HTTP_API.get_ext.exposed = True
         LM_HTTP_API.modinfo_ext.exposed = True
+        LM_HTTP_API.modhelp_ext.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -898,6 +903,13 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         else:
             return result
 
+    def modhelp_ext(self, k=None, i=None, c=None):
+        cp_need_master(k)
+        result = super().modhelp_ext(k, i, c)
+        if result is None:
+            raise cp_api_error()
+        else:
+            return result
 
 def start():
     global api

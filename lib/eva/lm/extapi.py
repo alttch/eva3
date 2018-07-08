@@ -72,6 +72,17 @@ def modinfo(mod):
     except:
         return None
 
+def modhelp(mod, context):
+    code = 'from eva.lm.extensions.%s import LMExt;' % mod + \
+            ' s=LMExt().serialize(helpinfo=\'%s\')' % context
+    try:
+        d = {}
+        exec(code, d)
+        result = d.get('s')
+        return result
+    except:
+        return None
+
 
 def list_mods():
     result = []
@@ -80,11 +91,11 @@ def list_mods():
         f = os.path.basename(p)[:-3]
         if f != '__init__':
             code = 'from eva.lm.extensions.%s import LMExt;' % f + \
-                    ' s=LMExt().serialize(full=True)'
+                    ' s=LMExt().serialize(full=True);f=LMExt().get_functions()'
             try:
                 d = {}
                 exec(code, d)
-                if d['s']['functions']:
+                if d['f']:
                     result.append(d['s'])
             except:
                 pass

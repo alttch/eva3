@@ -218,7 +218,8 @@ $_eva_api_func = array(
                     'list_ext',
                     'get_ext',
                     'list_ext_mods',
-                    'modinfo_ext'
+                    'modinfo_ext',
+                    'modhelp_ext'
                     ),
                 'cr' => array(
                     'set',

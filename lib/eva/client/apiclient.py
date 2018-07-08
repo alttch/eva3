@@ -81,7 +81,8 @@ _api_func = {
             'set_controller_prop', 'reload_controller', 'create_lvar',
             'destroy_lvar', 'list_rules', 'list_rule_props', 'set_rule_prop',
             'create_rule', 'destroy_rule', 'login', 'logout', 'load_ext',
-            'unload_ext', 'list_ext', 'get_ext', 'list_ext_mods', 'modinfo_ext'
+            'unload_ext', 'list_ext', 'get_ext', 'list_ext_mods', 'modinfo_ext',
+            'modhelp_ext'
         ],
         'cr': [
             'set', 'reset', 'clear', 'toggle', 'save_config', 'set_prop',

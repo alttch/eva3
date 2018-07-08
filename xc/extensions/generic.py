@@ -7,13 +7,14 @@ __api__ = 1
 
 __id__ = 'generic'
 
-__functions__ = {}
+__config_help__ = []
 
-__config_help__ = {}
+__functions__ = {}
 
 import logging
 
 from eva.lm.extapi import critical
+
 
 class LMExt(object):
     """
@@ -32,8 +33,8 @@ class LMExt(object):
         self.__description = __description__
         self.__version = __version__
         self.__api_version = __api__
-        self.__functions = __functions__
         self.__config_help = __config_help__
+        self.__functions = __functions__
         self.ready = True
         self.ext_id = None  # set by extapi on load
 
@@ -43,21 +44,26 @@ class LMExt(object):
     def stop(self):
         return True
 
-    def serialize(self, full=False, config=False):
+    def serialize(self, full=False, config=False, helpinfo=None):
         d = {}
+        if helpinfo:
+            if helpinfo == 'cfg':
+                d = self.__config_help
+            elif helpinfo == 'functions':
+                d = self.__functions
+            else:
+                d = None
+            return d
         if full:
             d['author'] = self.__author
             d['license'] = self.__license
             d['description'] = self.__description
             d['version'] = self.__version
             d['api'] = self.__api_version
-            d['functions'] = self.__functions
         if config:
             d['cfg'] = self.cfg
         d['mod'] = self.mod_id
         d['id'] = self.ext_id
-        if not self.ext_id:
-            d['cfg'] = self.__config_help
         return d
 
     def test(self, cmd=None):

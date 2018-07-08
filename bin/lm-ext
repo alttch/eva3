@@ -41,7 +41,8 @@ def _prepare_result_data(data):
 
 _pd_cols = {
     'list_ext_': ['id', 'mod', 'description', 'version'],
-    'list_ext_mods': ['mod', 'description', 'version', 'api']
+    'list_ext_mods': ['mod', 'description', 'version', 'api'],
+    'modhelp_ext': [ 'name', 'type', 'required', 'help']
 }
 
 
@@ -158,10 +159,18 @@ sp_ext_load.add_argument(
     action='store_true')
 
 sp_ext_unload = sp_ext.add_parser('unload', help='Unload extension')
-sp_ext_unload.add_argument('_i', help='EXT id', metavar='EXT_ID')
+sp_ext_unload.add_argument('_i', help='Extension id', metavar='EXT_ID')
 
 sp_ext_modinfo = sp_ext.add_parser('modinfo', help='Extension module info')
-sp_ext_modinfo.add_argument('_i', help='EXT module', metavar='EXT_MOD')
+sp_ext_modinfo.add_argument('_i', help='Extension module', metavar='EXT_MOD')
+
+sp_ext_modhelp = sp_ext.add_parser('modhelp', help='Extension module help')
+sp_ext_modhelp.add_argument('_i', help='Extension module', metavar='EXT_MOD')
+sp_ext_modhelp.add_argument(
+    '_c',
+    help='Help context (cfg, functions)',
+    metavar='CONTEXT',
+    choices=['cfg', 'functions'])
 
 try:
     import argcomplete
