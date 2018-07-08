@@ -5,6 +5,14 @@ PHI (Physical interface) is low level driver which communicates directly with
 an equipment. PHI should not contain any logic, it's job is only get/set
 an equipment to state, requested by LPI.
 
+File name
+---------
+
+Custom PHI file name can have any name, but should start with '_' symbol. This
+gives a warranty that PHI will be not overriden by EVA ICS PHI with the same
+name in the next updates. PHIs, officially included in EVA ICS, never start
+with '_'.
+
 Required variables in a header
 ------------------------------
 
