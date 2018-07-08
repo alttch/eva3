@@ -168,6 +168,7 @@ class PHI(GenericPHI):
                         _timeout, tries - 1)
 
     def test(self, cmd=None):
+        if cmd == 'self' and self.snmp_host is None: return 'OK'
         if cmd == 'info' or cmd == 'self':
             name = snmp.get(
                 self.oid_name,
