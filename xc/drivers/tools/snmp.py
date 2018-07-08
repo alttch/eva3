@@ -4,6 +4,7 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.0"
 
 import pysnmp.hlapi as snmp_engine
+import logging
 
 def get(oid, host, port=161, community='public', timeout=0, retries=0,
         rf=str):
@@ -16,7 +17,7 @@ def get(oid, host, port=161, community='public', timeout=0, retries=0,
                 snmp_engine.ContextData(),
                 snmp_engine.ObjectType(snmp_engine.ObjectIdentity(oid))):
             if err_i or err_st:
-                logging.debug('snmp error %s' (err_st))
+                logging.debug('snmp error: %s' % err_i)
                 return None
             else:
                 for v in vals:
@@ -41,7 +42,7 @@ def set(oid, value, host, port=161, community='private', timeout=0, retries=0):
                 snmp_engine.ObjectType(snmp_engine.ObjectIdentity(oid),
                                         value)):
             if err_i or err_st:
-                logging.debug('snmp error %s' (err_st))
+                logging.debug('snmp error: %s' % err_i)
                 return None
             else:
                 return True
