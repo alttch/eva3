@@ -84,6 +84,9 @@ port label/number for PHI. 'io_label' prop allows to rename 'port', 'dport'
 i.e. to 'socket', 'dsocket' for a more fancy unit configuration.  Each port and
 dport may be specified as a single value or contain an array of values, in this
 case multiple ports are used simultaneously.
+
+You may set i: before the port label/number, i.e. i:2, to return/use inverted
+port state. This works both for power and direction ports.
 """
 
 from time import time
