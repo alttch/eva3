@@ -29,19 +29,22 @@ debug = False
 
 default_timeout = 5
 
-_me = 'EVA ICS UC driver manager version %s' % __version__
+_me = 'EVA ICS UC driver manager CLI version %s' % __version__
 
 
 def _prepare_result_data(data):
     result = []
     for d in data.copy():
-        if 'phi' in d:
-            d['phi_mod'] = d['phi'].get('mod')
-            del d['phi']
-        if 'equipment' in d and isinstance(d['equipment'], list):
-            d['equipment'] = ', '.join(d['equipment'])
-        if 'logic' in d and isinstance(d['logic'], list):
-            d['logic'] = ', '.join(d['logic'])
+        if a._type == 'driver':
+            if 'phi' in d:
+                d['phi_mod'] = d['phi'].get('mod')
+                del d['phi']
+        elif a._type == 'phi':
+            if 'equipment' in d and isinstance(d['equipment'], list):
+                d['equipment'] = ', '.join(d['equipment'])
+        elif a._type == 'lpi':
+            if 'logic' in d and isinstance(d['logic'], list):
+                d['logic'] = ', '.join(d['logic'])
         result.append(d)
     return result
 
@@ -120,8 +123,14 @@ ap.add_argument(
     '-K',
     '--api-key',
     help='master key, if no key specified, local master key will be used',
-    dest='_key',
+    dest='_api_key',
     metavar='KEY')
+ap.add_argument(
+    '-U',
+    '--api-url',
+    help='API URL',
+    dest='_api_uri',
+    metavar='URL')
 ap.add_argument(
     '-T',
     '--api-timeout',
@@ -145,7 +154,7 @@ ap.add_argument(
     dest='_debug',
     default=False)
 
-sp = ap.add_subparsers(dest='_type', metavar='type', help='instance type')
+sp = ap.add_subparsers(dest='_type', metavar='command', help='command or type')
 
 ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
 ap_lpi = sp.add_parser('lpi', help='LPI (Logical to physical interface)')
@@ -272,11 +281,14 @@ except:
 
 a = ap.parse_args()
 
-if not a._type or not a._func:
+if not a._type:
     ap.print_usage()
     sys.exit(99)
 
-api_func = a._func + '_' + a._type
+if a._type and a._func:
+    api_func = a._func + '_' + a._type
+else:
+    api_func = a._type
 
 debug = a._debug
 
@@ -285,6 +297,9 @@ elif api_func == 'show_driver': api_func = 'get_driver'
 elif api_func == 'list_driver': api_func = 'list_drivers'
 elif api_func == 'mods_phi': api_func = 'list_phi_mods'
 elif api_func == 'mods_lpi': api_func = 'list_lpi_mods'
+
+apiuri = a._api_uri
+apikey = a._api_key
 
 if not apiuri:
     try:
@@ -363,6 +378,8 @@ if code != apiclient.result_ok and \
         print('Error: Bad data')
     elif code == apiclient.result_invalid_params:
         print('Error: invalid params')
+    if debug:
+        print('API result code: %u' % code)
     sys.exit(code)
 else:
     if a._json:
