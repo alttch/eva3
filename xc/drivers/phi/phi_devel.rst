@@ -5,14 +5,20 @@ PHI (Physical interface) is low level driver which communicates directly with
 an equipment. PHI should not contain any logic, it's job is only get/set
 an equipment to state, requested by LPI.
 
-Required fields in a header
----------------------------
+Required variables in a header
+------------------------------
+
+PHI info
+~~~~~~~~
 
 * **__author__**        module author
 * **__copyright__**     copyright
 * **__license__**       module license
 * **__version__**       module version
 * **__description__**   module descrption (keep it short)
+
+PHI system info
+~~~~~~~~~~~~~~~
 
 the next fields are processed by controller, so make them exactly as required
 
@@ -40,11 +46,42 @@ the next fields are processed by controller, so make them exactly as required
    list of data is given)
  * **universal** the driver is universal and process **cfg** in requests.
 
-* **__config_help__**   dict *{ 'prop_name': 'value' }*
+PHI help
+~~~~~~~~
 
-Required parameters should be marked with * before the prop name (i.e. \*url).
+Each PHI module should contain 3 help variables:
+
+* **__config__help__** module configuration help (on load)
+* **__get_help__** additional configuration params which possible for LPI to
+  send with **get** command
+* **__set_help__** additional configuration params which possible for LPI to
+  send with **set** command
+
+First variable should be human readable, others may copy, join or process the
+first one or each other in any way.
+
+All variables should be in list format, containing dictionaries with the
+following context:
+
+* **name** property name
+* **help** property description (help)
+* **type** property type
+* **required** *True* if proprery is required, *False* if it's optinal
+
+Property **type** may be:
+
+* **bool** boolean (True/False)
+* **str** string
+* **url** string containing url
+* **int** integer
+* **uint** unsigned integer (greater or equal to 0)
+* **float** float number
+* **ufloat** unsigned float (greater or equal to 0)
+* **list:type** list of variables with type specified
+* **enum:type:a,b,c** list of the permitted specified type values
 
 Classes and modules
+
 -------------------
 
 It's allowed to import any Python system module or module installed by EVA ICS.
@@ -94,6 +131,8 @@ be serialized by super() if requested:
         self.__features = __features__
         self.__required = __required__
         self.__config_help = __config_help__
+        self.__get_help = __get_help__
+        self.__set_help = __set_help__
 
 The super().__init__ call should always be first.
 
