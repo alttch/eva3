@@ -78,7 +78,7 @@ class PHI(GenericPHI):
     def set(self, port=None, data=None, cfg=None, timeout=0):
         if cfg: addr = cfg.get('addr')
         else: addr = self.addr
-        if addr is None: return None
+        if addr is None: return False
         try:
             if isinstance(port, list):
                 _port = port
