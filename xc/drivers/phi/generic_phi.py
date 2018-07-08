@@ -25,6 +25,7 @@ from eva.uc.driverapi import critical
 
 from time import time
 
+
 class PHI(object):
     """
     Override everything. super() constructor may be useful to keep unparsed
@@ -105,7 +106,7 @@ class PHI(object):
                         'help': 'caches state for N sec',
                         'type': 'float',
                         'required': False
-                        })
+                    })
             elif helpinfo == 'get':
                 d = self.__get_help
             elif helpinfo == 'set':
@@ -134,23 +135,29 @@ class PHI(object):
         return 'FAILED'
 
     def log_debug(self, msg):
-        logging.debug('PHI %s: %s' % (self.phi_id, msg))
+        i = self.phi_id if self.phi_id is not None else self.phi_mod_id
+        logging.debug('PHI %s: %s' % (i, msg))
 
     def log_info(self, msg):
-        logging.info('PHI %s: %s' % (self.phi_id, msg))
+        i = self.phi_id if self.phi_id is not None else self.phi_mod_id
+        logging.info('PHI %s: %s' % (i, msg))
 
     def log_warning(self, msg):
-        logging.warning('PHI %s: %s' % (self.phi_id, msg))
+        i = self.phi_id if self.phi_id is not None else self.phi_mod_id
+        logging.warning('PHI %s: %s' % (i, msg))
 
     def log_error(self, msg):
-        logging.error('PHI %s: %s' % (self.phi_id, msg))
+        i = self.phi_id if self.phi_id is not None else self.phi_mod_id
+        logging.error('PHI %s: %s' % (i, msg))
 
     def log_error(self, msg):
-        logging.error('PHI %s: %s' % (self.phi_id, msg))
+        i = self.phi_id if self.phi_id is not None else self.phi_mod_id
+        logging.error('PHI %s: %s' % (i, msg))
 
     def log_critical(self, msg):
         self.critical(msg)
 
     def critical(self, msg):
-        logging.critical('PHI %s: %s' % (self.phi_id, msg))
+        i = self.phi_id if self.phi_id is not None else self.phi_mod_id
+        logging.critical('PHI %s: %s' % (i, msg))
         critical()
