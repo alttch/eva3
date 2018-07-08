@@ -21,7 +21,7 @@ from eva.tools import print_json
 
 def usage():
     print()
-    print('EVA SFA CLI version %s' % (apiclient.version))
+    print('EVA SFA API CLI version %s' % (apiclient.version))
     print("""
 Usage: sfa-cmd <command> [args] [-U API uri] [-K key] [-T sec] [-D]
 
