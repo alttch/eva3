@@ -20,7 +20,7 @@ __config_help__ = [{
 }, {
     'name': 'gpf',
     'help': 'avg, max, min, first - group function',
-    'type': 'enum:avg,max,min,first',
+    'type': 'enum:str:avg,max,min,first',
     'required': False
 }, {
     'name': 'max_diff',
