@@ -640,11 +640,11 @@ class UC_API(GenericAPI):
         return eva.uc.driverapi.modinfo_lpi(i)
 
     def modhelp_phi(self, k=None, i=None, c=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check(k, master=True) or not c: return None
         return eva.uc.driverapi.modhelp_phi(i, c)
 
     def modhelp_lpi(self, k=None, i=None, c=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check(k, master=True) or not c: return None
         return eva.uc.driverapi.modhelp_lpi(i, c)
 
     def set_driver(self, k=None, i=None, d=None, c=None, save=False):
