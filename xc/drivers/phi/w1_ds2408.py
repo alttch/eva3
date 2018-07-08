@@ -21,14 +21,15 @@ __set_help__ = __config_help__
 __help__ = """
 PHI for Maxim Integrated 1-Wire DS2408, uses Linux w1 module and /sys/bus/w1
 bus to access the equipment. The Linux module should be always loaded before
-PHI.
+PHI. The equipment returns and sets ports state all at once only, LPI should
+support this method.
 
-This is unversal PHI which means one PHI can control either one or multiple
+This is universal PHI which means one PHI can control either one or multiple
 relays of the same type if relay config (addr) is provided in unit driver
 configuration.
 
-addr should be specified either in driver primary configuration or in each unit
-configuration which uses the driver with this PHI.
+Property 'addr' should be specified either in driver primary configuration or
+in each unit configuration which uses the driver with this PHI.
 """
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI

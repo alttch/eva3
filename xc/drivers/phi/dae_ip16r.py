@@ -43,7 +43,7 @@ PHI for Denkovi smartDEN-IP-16R IP relay, uses SNMP API to control/monitor the
 equipment. SNMP on relay should be enabled and configured to allow packets from
 UC.
 
-This is unversal PHI which means one PHI can control either one or multiple
+This is universal PHI which means one PHI can control either one or multiple
 relays of the same type if relay config (host) is provided in unit driver
 configuration.
 
