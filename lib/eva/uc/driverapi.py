@@ -64,6 +64,16 @@ def get_driver(driver_id):
 
 # private API functions, not recommended to use
 
+def modhelp_phi(mod, context):
+    code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
+            ' s=PHI().serialize(helpinfo=\'%s\')' % context
+    try:
+        d = {}
+        exec(code, d)
+        result = d.get('s')
+        return result
+    except:
+        return None
 
 def modinfo_phi(mod):
     code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
@@ -81,6 +91,16 @@ def modinfo_phi(mod):
     except:
         return None
 
+def modhelp_lpi(mod, context):
+    code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \
+            ' s=LPI().serialize(helpinfo=\'%s\')' % context
+    try:
+        d = {}
+        exec(code, d)
+        result = d.get('s')
+        return result
+    except:
+        return None
 
 def modinfo_lpi(mod):
     code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \

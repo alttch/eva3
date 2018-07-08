@@ -9,16 +9,32 @@ __equipment__ = 'EG-PM2-LAN'
 __api__ = 1
 __required__ = ['aao_get', 'port_set', 'status', 'action']
 __features__ = ['aao_get', 'port_set', 'cache']
-__config_help__ = {
-    '*host': 'device ip/host[:port]',
-    '*pw': 'device password',
-    'logout': 'set to "skip" to skip logout'
-}
+
+__config_help__ = [{
+    'name': 'host',
+    'help': 'device ip/host[:port]',
+    'type': 'str',
+    'required': True
+}, {
+    'name': 'pw',
+    'help': 'device password',
+    'type': 'str',
+    'required': True,
+}, {
+    'name': 'skip_logout',
+    'help': 'skip logout after command',
+    'type': 'bool',
+    'required': False
+}]
+__get_help__ = []
+__set_help__ = []
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import get_timeout
+
+from eva.tools import val_to_boolean
 
 import requests
 import re
@@ -41,12 +57,14 @@ class PHI(GenericPHI):
         self.__features = __features__
         self.__required = __required__
         self.__config_help = __config_help__
+        self.__get_help = __get_help__
+        self.__set_help = __set_help__
         self.aao_get = True
         self.host = self.phi_cfg.get('host')
         self.pw = self.phi_cfg.get('pw')
         # set logout='skip' to speed up the operations
         # but keep device bound to UC ip address
-        self.logout = self.phi_cfg.get('logout')
+        self.skip_logout = val_to_boolean(self.phi_cfg.get('skip_logout'))
         self.re_ss = re.compile('sockstates = \[([01,]+)\]')
         if not self.host or not self.pw:
             self.ready = False
@@ -90,7 +108,7 @@ class PHI(GenericPHI):
             res = self._login(timeout=(t_start - time() + timeout))
             result = self._parse_response(res)
             try:
-                if self.logout != 'skip':
+                if not self.skip_logout:
                     self._logout(timeout=(t_start - time() + timeout))
             except:
                 log_traceback()
@@ -99,7 +117,7 @@ class PHI(GenericPHI):
             return result
         except:
             try:
-                if self.logout != 'skip':
+                if not self.skip_logout:
                     self._logout(timeout=(t_start - time() + timeout))
             except:
                 log_traceback()
@@ -133,7 +151,7 @@ class PHI(GenericPHI):
             if result.get(port) != data:
                 raise Exception('port %s set failed' % port)
             try:
-                if self.logout != 'skip':
+                if not self.skip_logout:
                     self._logout(timeout=(t_start - time() + timeout))
             except:
                 log_traceback()
@@ -142,7 +160,7 @@ class PHI(GenericPHI):
             return True
         except:
             try:
-                if self.logout != 'skip':
+                if not self.skip_logout:
                     self._logout(timeout=(t_start - time() + timeout))
             except:
                 log_traceback()

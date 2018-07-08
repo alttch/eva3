@@ -9,7 +9,9 @@ __equipment__ = 'abstract'
 __api__ = 1
 __required__ = []
 __features__ = []
-__config_help__ = {}
+__config_help__ = []
+__get_help__ = []
+__set_help__ = []
 
 import logging
 
@@ -39,6 +41,8 @@ class PHI(object):
         self.__features = __features__
         self.__required = __required__
         self.__config_help = __config_help__
+        self.__get_help = __get_help__
+        self.__set_help = __set_help__
         # True if the equipment can query/modify only all
         # ports at once and can not work with a single ports
         self.aao_get = False
@@ -84,8 +88,25 @@ class PHI(object):
     def stop(self):
         return True
 
-    def serialize(self, full=False, config=False):
+    def serialize(self, full=False, config=False, helpinfo=None):
         d = {}
+        if helpinfo:
+            if helpinfo == 'cfg':
+                d = self.__config_help
+                if 'cache' in self.__features:
+                    d.append({
+                        'name': 'cache',
+                        'help': 'caches state for N sec',
+                        'type': 'float',
+                        'required': False
+                        })
+            elif helpinfo == 'get':
+                d = self.__get_help
+            elif helpinfo == 'set':
+                d = self.__set_help
+            else:
+                d = None
+            return d
         if full:
             d['author'] = self.__author
             d['license'] = self.__license
@@ -100,10 +121,6 @@ class PHI(object):
             d['cfg'] = self.phi_cfg
         d['mod'] = self.phi_mod_id
         d['id'] = self.phi_id
-        if not self.phi_id:
-            d['cfg'] = self.__config_help
-            if 'cache' in self.__features:
-                d['cfg']['cache'] = 'caches state for N sec'
         return d
 
     def test(self, cmd=None):

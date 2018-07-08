@@ -131,6 +131,8 @@ $_eva_api_func = array(
                     'list_lpi_mods',
                     'modinfo_phi',
                     'modinfo_lpi',
+                    'modhelp_phi',
+                    'modhelp_lpi',
                     'set_driver'
                     ),
                 'cr' => array(

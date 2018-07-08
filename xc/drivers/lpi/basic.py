@@ -13,15 +13,21 @@ __features__ = [
     'action', 'action_mp', 'port_set', 'aao_set'
 ]
 
-__config_help__ = {}
+__config_help__ = []
 
-__action_help__ = {
-        '*port': 'port(s) to use'
-        }
+__action_help__ = [{
+    'name': 'port',
+    'help': 'port(s) to use',
+    'type': 'str',
+    'required': True
+}]
 
-__state_help__ = {
-        '*port': 'port(s) to use'
-        }
+__state_help__ = [{
+    'name': 'port',
+    'help': 'port(s) to use',
+    'type': 'str',
+    'required': True
+}]
 
 from time import time
 

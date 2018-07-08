@@ -12,24 +12,39 @@ __features__ = [
     'value', 'value_mp', 'mu_value', 'mu_value_mp', 'port_get', 'aao_get', 'cfg'
 ]
 
-__config_help__ = {
-    'on_err': '"skip" skips failed sensor in a group',
-    'gpf': 'avg, max, min, first - group function',
-    'max_diff': 'maximum value diff until marked as failed'
-}
+__config_help__ = [{
+    'name': 'skip_err',
+    'help': 'skips failed sensor in a group',
+    'type': 'bool',
+    'required': False
+}, {
+    'name': 'gpf',
+    'help': 'avg, max, min, first - group function',
+    'type': 'enum:avg,max,min,first',
+    'required': False
+}, {
+    'name': 'max_diff',
+    'help': 'maximum value diff until marked as failed',
+    'type': 'float',
+    'required': False,
+}]
 
-__action_help__ = {}
+__action_help__ = []
 
-__state_help__ = {
-        '*port': 'port(s) to use',
-        'on_err': '"skip" skips failed sensor in a group',
-        'gpf': 'avg, max, min, first - group function',
-        'max_diff': 'maximum value diff until marked as failed'
-        }
+__state_help__ = [{
+    'name': 'port',
+    'help': 'port(s) to use',
+    'type': 'str',
+    'required': True
+}]
+
+__state_help__ += __config_help__
 
 from time import time
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
+
+from eva.tools import val_to_boolean
 
 
 class LPI(GenericLPI):
@@ -52,8 +67,7 @@ class LPI(GenericLPI):
         # otherwise if one sensor in a group failed, stop polling others
         #
         # may be overriden with skip_errors param in a state request cfg
-        self.on_err = self.lpi_cfg.get('on_err') if \
-                self.lpi_cfg.get('on_err') is not None else ''
+        self.skip_err = val_to_boolean(self.lpi_cfg.get('skip_err'))
         # when polling a sensor group
         # avg - return avg sensor value
         # max - return max sensor value
@@ -69,7 +83,7 @@ class LPI(GenericLPI):
         try:
             self.max_diff = float(self.lpi_cfg.get('max_diff'))
         except:
-            self.max_diff = 'skip'
+            self.max_diff = None
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()
@@ -79,8 +93,8 @@ class LPI(GenericLPI):
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi.aao_get and not _state_in:
             _state_in = self.phi.get(timeout=timeout)
-        on_err = cfg.get('on_err') if \
-                cfg.get('on_err') is not None else self.on_err
+        skip_err = val_to_boolean(cfg.get('skip_err')) if \
+                cfg.get('skip_err') is not None else self.skip_err
         gpf = cfg.get('gpf') if \
                 cfg.get('gpf') is not None else self.gpf
         max_diff = cfg.get('max_diff') if \
@@ -117,14 +131,14 @@ class LPI(GenericLPI):
                 if _state_in and p in _state_in:
                     value = _state_in.get(p)
                 else:
-                    value = self.phi.get(
-                        p, phi_cfg, timeout + time_start - time())
+                    value = self.phi.get(p, phi_cfg,
+                                         timeout + time_start - time())
                 try:
                     value = float(value)
                 except:
                     value = None
                 if value is None:
-                    if on_err != 'skip':
+                    if not skip_err:
                         _status = -1
                         break
                     else:
@@ -133,8 +147,7 @@ class LPI(GenericLPI):
                 else:
                     st_arr.append(value)
                     st_ports.append(str(p))
-            if max_diff and max_diff != 'skip' and _status != -1 and len(
-                    st_arr) > 1:
+            if max_diff and _status != -1 and len(st_arr) > 1:
                 _st_ports = st_ports.copy()
                 while True:
                     diver = False

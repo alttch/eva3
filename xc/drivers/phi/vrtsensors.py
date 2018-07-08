@@ -7,9 +7,16 @@ __description__ = "Emulates virtual sensors"
 __id__ = 'vrtsensors'
 __equipment__ = 'virtual'
 __api__ = 1
-__required__ = ['port_get', 'value' ]
-__features__ = ['port_get', 'port_set', 'aao_set' ]
-__config_help__ = {'default_value': 'sensors value on load (default: None)'}
+__required__ = ['port_get', 'value']
+__features__ = ['port_get', 'port_set', 'aao_set']
+__config_help__ = [{
+    'name': 'default_value',
+    'help': 'sensors value on load (default: None)',
+    'type': 'float',
+    'required': False
+}]
+__get_help__ = []
+__set_help__ = []
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
@@ -41,6 +48,8 @@ class PHI(GenericPHI):
         self.__features = __features__
         self.__required = __required__
         self.__config_help = __config_help__
+        self.__get_help = __get_help__
+        self.__set_help = __set_help__
 
     def get(self, port=None, cfg=None, timeout=0):
         try:

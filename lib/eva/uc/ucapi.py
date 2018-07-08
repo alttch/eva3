@@ -639,6 +639,14 @@ class UC_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.uc.driverapi.modinfo_lpi(i)
 
+    def modhelp_phi(self, k=None, i=None, c=None):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.modhelp_phi(i, c)
+
+    def modhelp_lpi(self, k=None, i=None, c=None):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.modhelp_lpi(i, c)
+
     def set_driver(self, k=None, i=None, d=None, c=None, save=False):
         if not apikey.check(k, master=True): return None
         item = eva.uc.controller.get_unit(i)
@@ -712,6 +720,9 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
         UC_HTTP_API.modinfo_phi.exposed = True
         UC_HTTP_API.modinfo_lpi.exposed = True
+
+        UC_HTTP_API.modhelp_phi.exposed = True
+        UC_HTTP_API.modhelp_lpi.exposed = True
 
         UC_HTTP_API.set_driver.exposed = True
 
@@ -1062,10 +1073,26 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         else:
             return result
 
+    def modhelp_phi(self, k=None, i=None, c=None):
+        cp_need_master(k)
+        result = super().modhelp_phi(k, i, c)
+        if result is None:
+            raise cp_api_error()
+        else:
+            return result
+
     def modinfo_lpi(self, k=None, i=None):
         cp_need_master(k)
         result = super().modinfo_lpi(k, i)
         if not result:
+            raise cp_api_error()
+        else:
+            return result
+
+    def modhelp_lpi(self, k=None, i=None, c=None):
+        cp_need_master(k)
+        result = super().modhelp_lpi(k, i, c)
+        if result is None:
             raise cp_api_error()
         else:
             return result

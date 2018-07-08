@@ -52,7 +52,9 @@ _pd_cols = {
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
     'list_drivers': ['id', 'mod', 'phi_id'],
     'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
-    'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api']
+    'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
+    'modhelp_lpi': [ 'name', 'type', 'required', 'help'],
+    'modhelp_phi': [ 'name', 'type', 'required', 'help']
 }
 
 
@@ -238,6 +240,22 @@ sp_phi_modinfo.add_argument('_i', help='PHI module', metavar='PHI_MOD')
 
 sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
 sp_lpi_modinfo.add_argument('_i', help='LPI module', metavar='LPI_MOD')
+
+sp_phi_modhelp = sp_phi.add_parser('modhelp', help='PHI module help')
+sp_phi_modhelp.add_argument('_i', help='PHI module', metavar='PHI_MOD')
+sp_phi_modhelp.add_argument(
+    '_c',
+    help='Help context (cfg, get, set)',
+    metavar='CONTEXT',
+    choices=['cfg', 'get', 'set'])
+
+sp_lpi_modhelp = sp_lpi.add_parser('modhelp', help='LPI module help')
+sp_lpi_modhelp.add_argument('_i', help='LPI module', metavar='LPI_MOD')
+sp_lpi_modhelp.add_argument(
+    '_c',
+    help='Help context (cfg, action, update)',
+    metavar='CONTEXT',
+    choices=['cfg', 'action', 'update'])
 
 try:
     import argcomplete

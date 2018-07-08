@@ -10,24 +10,60 @@ __logic__ = 'multistep with delays'
 
 __features__ = ['action', 'action_mp', 'port_set', 'aao_set']
 
-__config_help__ = {
-    'bose': 'set "skip" to allow action even if current status is error (-1)'
-}
-__action_help__ = {
-    '*port': 'port(s) to use',
-    '*dport': 'port(s) to use for direction',
-    '*steps': 'delay steps (list)',
-    'warmup': 'warmup for middle status',
-    'tuning': 'tuning for start/end status',
-    'ts': 'less and equal go to the start then to status',
-    'te': 'greater and equal go to the end then to status'
-}
+__config_help__ = [{
+    'name':
+    'bose',
+    'help':
+    'set to allow action even if current status is error',
+    'type':
+    'bool',
+    'required':
+    False
+}]
 
-__state_help__ = {}
+__action_help__ = [{
+    'name': 'port',
+    'help': 'port(s) to use for power',
+    'type': 'str',
+    'required': True,
+}, {
+    'name': 'dport',
+    'help': 'port(s) to use for direction',
+    'type': 'str',
+    'required': True,
+}, {
+    'name': 'steps',
+    'help': 'delay steps',
+    'type': 'list:int',
+    'required': True
+}, {
+    'name': 'warmup',
+    'help': 'warmup for middle status',
+    'type': 'float',
+    'required': False,
+}, {
+    'name': 'tuning',
+    'help': 'tuning for start/end status',
+    'type': 'float',
+    'required': False
+}, {
+    'name': 'ts',
+    'help': 'less and equal go to the start then to status',
+    'type': 'int',
+    'required': False
+}, {
+    'name': 'te',
+    'help': 'greater and equal go to the end then to status',
+    'type': 'int',
+    'required': False
+}]
+
+__state_help__ = []
 
 from time import time
 from eva.uc.drivers.lpi.basic import LPI as BasicLPI
 from eva.uc.driverapi import log_traceback
+from eva.tools import val_to_boolean
 
 
 class LPI(BasicLPI):
@@ -46,7 +82,7 @@ class LPI(BasicLPI):
         self.__config_help = __config_help__
         self.__action_help = __action_help__
         self.__state_help = __state_help__
-        self.bose = self.lpi_cfg.get('bose') != 'skip'
+        self.bose = val_to_boolean(self.lpi_cfg.get('bose'))
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         self.log_error('state function not implemented')
@@ -91,8 +127,7 @@ class LPI(BasicLPI):
         try:
             nstatus = int(status)
         except:
-            return self.action_result_error(
-                _uuid, msg='status is not integer')
+            return self.action_result_error(_uuid, msg='status is not integer')
         _steps = cfg.get('steps')
         if not _steps or not isinstance(_steps, list):
             return self.action_result_error(_uuid, msg='no steps provided')
@@ -101,7 +136,8 @@ class LPI(BasicLPI):
             try:
                 steps.append(float(i))
             except:
-                return self.action_result_error(_uuid, msg='steps should be float numbers')
+                return self.action_result_error(
+                    _uuid, msg='steps should be float numbers')
         if nstatus < 0 or nstatus > len(steps):
             return self.action_result_error(
                 _uuid, msg='status is not in range 0..%u' % len(steps))
@@ -163,7 +199,8 @@ class LPI(BasicLPI):
             _nstatus = [0, nstatus]
         elif nstatus > pstatus and te and te <= nstatus:
             # we need to go to the end then to nstatus
-            _delay = self._calc_delay(pstatus, len(steps), steps, warmup, tuning)
+            _delay = self._calc_delay(pstatus, len(steps), steps, warmup,
+                                      tuning)
             _delay += self._calc_delay(
                 len(steps), nstatus, steps, warmup, tuning)
             if _delay > time_start - time() + timeout:
@@ -184,7 +221,8 @@ class LPI(BasicLPI):
             else:
                 direction = 0
             try:
-                _delay = self._calc_delay(pstatus, nstatus, steps, warmup, tuning)
+                _delay = self._calc_delay(pstatus, nstatus, steps, warmup,
+                                          tuning)
             except:
                 log_traceback()
                 return self.action_result_error(_uuid, 3, '_delay calc error')

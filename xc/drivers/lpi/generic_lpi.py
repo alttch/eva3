@@ -10,11 +10,11 @@ __logic__ = 'abstract'
 
 __features__ = []
 
-__config_help__ = {}
+__config_help__ = []
 
-__action_help__ = {}
+__action_help__ = []
 
-__state_help__ = {}
+__state_help__ = []
 
 import threading
 import logging
@@ -65,8 +65,19 @@ class LPI(object):
     def stop(self):
         return True
 
-    def serialize(self, full=False, config=False):
+    def serialize(self, full=False, config=False, helpinfo=None):
         d = {}
+        if helpinfo:
+            if helpinfo == 'cfg':
+                d = self.__config_help
+                return d
+            elif helpinfo == 'action':
+                d = self.__action_help
+            elif helpinfo == 'update':
+                d = self.__state_help
+            else:
+                d = None
+            return d
         if full:
             d['author'] = self.__author
             d['license'] = self.__license
@@ -76,8 +87,6 @@ class LPI(object):
             d['logic'] = self.__logic
             if self.phi:
                 d['phi'] = self.phi.serialize(full=True, config=True)
-            d['action'] = self.__action_help
-            d['update'] = self.__state_help
         if config:
             d['cfg'] = self.lpi_cfg
         d['lpi_id'] = self.lpi_id
@@ -85,8 +94,6 @@ class LPI(object):
         d['mod'] = self.__lpi_mod_id
         d['phi_id'] = self.phi_id
         d['features'] = self.__features
-        if not self.lpi_id:
-            d['cfg'] = self.__config_help
         return d
 
     """

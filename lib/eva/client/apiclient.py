@@ -57,7 +57,7 @@ _api_func = {
             'load_phi', 'unload_phi', 'load_driver', 'unload_driver',
             'list_phi', 'list_drivers', 'get_phi', 'get_driver', 'test_phi',
             'list_lpi_mods', 'list_phi_mods', 'modinfo_phi', 'modinfo_lpi',
-            'set_driver'
+            'modhelp_phi', 'modhelp_lpi', 'set_driver'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',

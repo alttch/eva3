@@ -9,13 +9,34 @@ __equipment__ = 'DAE-PB-RO5-DAEnetIP4'
 __api__ = 1
 __required__ = ['port_get', 'port_set', 'status', 'action']
 __features__ = ['port_get', 'port_set']
-__config_help__ = {
-    '*host': 'relay host/ip[:port]',
-    'community': 'snmp community (default: private)',
-    'read_community': 'snmp read community',
-    'write_community': 'snmp write community',
-    'retries': 'snmp retry attemps (default: 0)'
-}
+__config_help__ = [{
+    'name': 'host',
+    'help': 'relay host/ip[:port]',
+    'type': 'str',
+    'required': False
+}, {
+    'name': 'community',
+    'help': 'snmp default community (default: private)',
+    'type': 'str',
+    'required': False
+}, {
+    'name': 'read_community',
+    'help': 'snmp read community',
+    'type': 'str',
+    'required': False
+}, {
+    'name': 'write_community',
+    'help': 'snmp write community',
+    'type': 'str',
+    'required': False
+}, {
+    'name': 'retries',
+    'help': 'snmp retry attemps (default: 0)',
+    'type': 'int',
+    'required': False
+}]
+__get_help__ = []
+__set_help__ = []
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
@@ -40,6 +61,8 @@ class PHI(GenericPHI):
         self.__features = __features__
         self.__required = __required__
         self.__config_help = __config_help__
+        self.__get_help = __get_help__
+        self.__set_help = __set_help__
         c = self.phi_cfg.get('community') if self.phi_cfg.get(
             'community') else 'private'
         self.snmp_read_community = c
