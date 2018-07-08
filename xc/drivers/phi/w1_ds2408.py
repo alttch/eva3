@@ -63,7 +63,9 @@ class PHI(GenericPHI):
             self.ready = False
 
     def get(self, port=None, cfg=None, timeout=0):
-        if cfg: addr = cfg.get('addr')
+        if cfg:
+            addr = cfg.get('addr')
+            if addr is None: addr = self.addr
         else: addr = self.addr
         if addr is None: return None
         try:
@@ -77,7 +79,9 @@ class PHI(GenericPHI):
         return data
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
-        if cfg: addr = cfg.get('addr')
+        if cfg:
+            addr = cfg.get('addr')
+            if addr is None: addr = self.addr
         else: addr = self.addr
         if addr is None: return False
         try:
