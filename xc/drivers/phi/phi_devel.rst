@@ -139,6 +139,7 @@ be serialized by super() if requested:
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        self.__help = __help__
 
 The super().__init__ call should always be first.
 
