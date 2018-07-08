@@ -188,8 +188,10 @@ UC
        multiple updates run simultaneously producing high system load
 
     * 'clone' function in UC API and uc-cmd to clone items
+
     * 'clone_group' function in UC API and uc-cmd for cloning all matching
        items in a group
+
     * 'destroy_group' function destroys all items in the specified group
 
 LM
