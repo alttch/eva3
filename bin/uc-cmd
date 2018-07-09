@@ -414,7 +414,7 @@ for p in params.copy().keys():
         del params[p]
 
 if not itype:
-    ap.print_usage()
+    ap.print_help()
     sys.exit(99)
 
 if hasattr(a, '_func'):
@@ -427,7 +427,7 @@ debug = a._debug
 api_func = get_api_func(itype, func)
 
 if not api_func:
-    ap.print_usage()
+    ap.print_help()
     sys.exit(99)
 
 apiuri = a._api_uri
@@ -487,7 +487,7 @@ if code != apiclient.result_ok and \
     elif code == apiclient.result_not_ready:
         print('Error: API not ready')
     elif code == apiclient.result_func_unknown:
-        ap.print_usage()
+        ap.print_help()
     elif code == apiclient.result_server_error:
         print('Error: Server error')
     elif code == apiclient.result_server_timeout:
