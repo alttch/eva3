@@ -34,9 +34,13 @@ in each unit configuration which uses the driver with this PHI.
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
+from eva.uc.driverapi import get_timeout
+from eva.uc.driverapi import get_polldelay
 
-import fcntl
 import os
+import threading
+
+from time import sleep
 
 
 class PHI(GenericPHI):
@@ -58,6 +62,7 @@ class PHI(GenericPHI):
         self.__help = __help__
         self.addr = self.phi_cfg.get('addr')
         self.w1 = '/sys/bus/w1/devices'
+        self.set_lock = threading.Lock()
         if not os.path.isdir(self.w1):
             self.log_error('1-Wire bus not ready')
             self.ready = False
@@ -84,6 +89,7 @@ class PHI(GenericPHI):
             if addr is None: addr = self.addr
         else: addr = self.addr
         if addr is None: return False
+        if not self.set_lock.acquire(get_timeout()): return False
         try:
             if isinstance(port, list):
                 _port = port
@@ -91,26 +97,31 @@ class PHI(GenericPHI):
             else:
                 _port = [port]
                 _data = [data]
-            d = open('%s/%s/output' % (self.w1, addr), 'r+b')
-            try:
-                fcntl.flock(d, fcntl.LOCK_EX)
-                r = ord(d.read(1))
-                for i in range(0, len(_port)):
-                    _p = int(_port[i])
-                    _d = int(_data[i])
-                    if _p < 1 or _p > 8:
-                        raise Exception('port is not in range 1..8')
-                    if _d < 0 or _d > 1:
-                        raise Exception('data is not in range 0..1')
-                    if _d: r = 1 << (_p - 1) ^ 0xFF & r
-                    else: r = r | 1 << (_p - 1)
-                d.seek(0, 0)
-                d.write(bytes([r]))
-                d.close()
-            except:
-                d.close()
-                raise
+            r = ord(open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
+            for i in range(0, len(_port)):
+                _p = int(_port[i])
+                _d = int(_data[i])
+                if _p < 1 or _p > 8:
+                    raise Exception('port is not in range 1..8')
+                if _d < 0 or _d > 1:
+                    raise Exception('data is not in range 0..1')
+                if _d: r = 1 << (_p - 1) ^ 0xFF & r
+                else: r = r | 1 << (_p - 1)
+            for i in range(3):
+                try:
+                    open('%s/%s/output' % (self.w1, addr), 'wb').write(
+                        bytes([r]))
+                    sleep(get_polldelay())
+                    rn = ord(
+                        open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
+                except:
+                    rn = None
+                if r == rn: break
+                if i == 2: raise Exception('1-Wire set error')
+            self.set_lock.release()
+            return True
         except:
+            self.set_lock.release()
             log_traceback()
             return False
 
