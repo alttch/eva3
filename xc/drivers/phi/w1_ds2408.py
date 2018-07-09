@@ -42,10 +42,12 @@ in each unit configuration which uses the driver with this PHI.
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import get_timeout
+from eva.uc.driverapi import lock
+from eva.uc.driverapi import unlock
 
 import os
-import threading
 
+from time import time
 from time import sleep
 
 
@@ -68,7 +70,6 @@ class PHI(GenericPHI):
         self.__help = __help__
         self.addr = self.phi_cfg.get('addr')
         self.w1 = '/sys/bus/w1/devices'
-        self.set_lock = threading.Lock()
         self.aao_get = True
         self.aao_set = True
         retries = self.phi_cfg.get('retries')
@@ -81,30 +82,49 @@ class PHI(GenericPHI):
             self.log_error('1-Wire bus not ready')
             self.ready = False
 
+    def safe_read(self, addr):
+        for i in range(self.retries + 1):
+            result = []
+            for ins in range(2):
+                for i in range(self.retries + 1):
+                    try:
+                        r = ord(
+                            open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
+                        break
+                    except:
+                        r = None
+                result.append(r)
+                if not ins: sleep(w1_delay)
+            if result[0] == result[1]:
+                return result[0]
+        return None
+
     def get(self, port=None, cfg=None, timeout=0):
         if cfg:
             addr = cfg.get('addr')
             if addr is None: addr = self.addr
         else: addr = self.addr
         if addr is None: return None
+        if not lock('w1:' + addr):
+            self.log_error('can not acquire lock')
+            return False
         try:
-            for i in range(self.retries + 1):
-                try:
-                    r = ord(open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
-                except:
-                    r = None
-            if r is None and i == self.retries:
+            r = self.safe_read(addr)
+            if r is None:
                 raise Exception('1-Wire get error')
             sleep(w1_delay)
             data = {}
             for i in range(8):
                 data[str(i + 1)] = 0 if 1 << i & r else 1
         except:
+            unlock('w1:' + addr)
             log_traceback()
             return None
+        unlock('w1:' + addr)
         return data
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
+        time_start = time()
         if cfg:
             addr = cfg.get('addr')
             if addr is None: addr = self.addr
@@ -112,8 +132,8 @@ class PHI(GenericPHI):
         if addr is None:
             self.log_error('1-Wire addr not specified')
             return False
-        if not self.set_lock.acquire(timeout=get_timeout()):
-            self.log_error('can not acquire set lock')
+        if not lock('w1:' + addr):
+            self.log_error('can not acquire lock')
             return False
         try:
             if isinstance(port, list):
@@ -122,7 +142,9 @@ class PHI(GenericPHI):
             else:
                 _port = [port]
                 _data = [data]
-            r = ord(open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
+            r = self.safe_read(addr)
+            if r is None:
+                raise Exception('1-Wire get error')
             for i in range(0, len(_port)):
                 _p = int(_port[i])
                 _d = int(_data[i])
@@ -132,21 +154,24 @@ class PHI(GenericPHI):
                     raise Exception('data is not in range 0..1')
                 if _d: r = 1 << (_p - 1) ^ 0xFF & r
                 else: r = r | 1 << (_p - 1)
+            if time_start + timeout <= time():
+                raise Exception('1-Wire timeout')
             for i in range(self.retries + 1):
                 try:
                     open('%s/%s/output' % (self.w1, addr), 'wb').write(
                         bytes([r]))
                     sleep(w1_delay)
-                    rn = ord(
-                        open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
+                    rn = self.safe_read(addr)
                 except:
                     rn = None
                 if r == rn: break
                 if i == self.retries: raise Exception('1-Wire set error')
-            self.set_lock.release()
+                if time_start + timeout <= time():
+                    raise Exception('1-Wire timeout')
+            unlock('w1:' + addr)
             return True
         except:
-            self.set_lock.release()
+            unlock('w1:' + addr)
             log_traceback()
             return False
 
