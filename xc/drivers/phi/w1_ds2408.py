@@ -41,7 +41,6 @@ in each unit configuration which uses the driver with this PHI.
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
-from eva.uc.driverapi import get_timeout
 from eva.uc.driverapi import lock
 from eva.uc.driverapi import unlock
 
