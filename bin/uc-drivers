@@ -20,7 +20,6 @@ from eva.client import apiclient
 import eva.core
 from eva.tools import print_json
 
-xparams = {}
 timeout = None
 apikey = None
 apiuri = None
