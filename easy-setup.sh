@@ -463,7 +463,7 @@ EOF
     fi
     ./sbin/uc-control start
     sleep 3
-    ./bin/uc-cmd test > /dev/null 2>&1
+    ./bin/uc-api test > /dev/null 2>&1
     if [ $? != 0 ]; then
         echo "Unable to test UC"
         ./sbin/eva-control stop
@@ -534,7 +534,7 @@ EOF
     fi
     ./sbin/lm-control start
     sleep 3
-    ./bin/lm-cmd test > /dev/null 2>&1
+    ./bin/lm-api test > /dev/null 2>&1
     if [ $? != 0 ]; then
         echo "Unable to test LM"
         ./sbin/eva-control stop
@@ -542,7 +542,7 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
-        ./bin/lm-cmd append_controller -u http://localhost:8812 -a ${UC_LM_KEY} -m eva_1 -y
+        ./bin/lm-api append_controller -u http://localhost:8812 -a ${UC_LM_KEY} -m eva_1 -y
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -610,7 +610,7 @@ EOF
     fi
     ./sbin/sfa-control start
     sleep 3
-    ./bin/sfa-cmd test > /dev/null 2>&1
+    ./bin/sfa-api test > /dev/null 2>&1
     if [ $? != 0 ]; then
         echo "Unable to test SFA"
         ./sbin/eva-control stop
@@ -618,7 +618,7 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
-        ./bin/sfa-cmd append_controller -g uc -u http://localhost:8812 -a ${UC_SFA_KEY} -m eva_1 -y
+        ./bin/sfa-api append_controller -g uc -u http://localhost:8812 -a ${UC_SFA_KEY} -m eva_1 -y
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -627,7 +627,7 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
         echo "Linking local LM PLC to SFA"
-        ./bin/sfa-cmd append_controller -g lm -u http://localhost:8817 -a ${LM_SFA_KEY} -m eva_1 -y
+        ./bin/sfa-api append_controller -g lm -u http://localhost:8817 -a ${LM_SFA_KEY} -m eva_1 -y
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
