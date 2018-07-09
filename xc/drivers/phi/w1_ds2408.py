@@ -57,8 +57,8 @@ class PHI(GenericPHI):
         self.__set_help = __set_help__
         self.__help = __help__
         self.addr = self.phi_cfg.get('addr')
-        self.w1 = '/sys/bus/w1/devices/%s/output'
-        if not os.path.isdir('/sys/bus/w1'):
+        self.w1 = '/sys/bus/w1/devices'
+        if not os.path.isdir(self.w1):
             self.log_error('1-Wire bus not ready')
             self.ready = False
 
@@ -69,7 +69,7 @@ class PHI(GenericPHI):
         else: addr = self.addr
         if addr is None: return None
         try:
-            r = ord(open(self.w1 % addr, 'rb').read(1))
+            r = ord(open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
             data = {}
             for i in range(8):
                 data[str(i + 1)] = 0 if 1 << i & r else 1
@@ -91,7 +91,7 @@ class PHI(GenericPHI):
             else:
                 _port = [port]
                 _data = [data]
-            d = open(self.w1 % addr, 'r+b')
+            d = open('%s/%s/output' % (self.w1, addr), 'r+b')
             try:
                 fcntl.flock(d, fcntl.LOCK_EX)
                 r = ord(d.read(1))
@@ -117,7 +117,7 @@ class PHI(GenericPHI):
     def test(self, cmd=None):
         if cmd == 'self':
             if self.addr is None:
-                return 'OK' if os.path.isdir('/sys/bus/w1') else 'FAILED'
+                return 'OK' if os.path.isdir(self.w1) else 'FAILED'
             else:
                 return 'OK' if self.get() else 'FAILED'
         elif cmd == 'get':
