@@ -49,12 +49,17 @@ def lock(l, timeout=None, expires=None):
     else:
         e = expires
         if e > eva.core.timeout: e = eva.core.timeout
+    if timeout is None:
+        t = eva.core.timeout
+    else:
+        t = timeout
+        if t > eva.core.timeout: t = eva.core.timeout
     return eva.sysapi.api.lock(
-        eva.apikey.masterkey, l=l, timeout=timeout, expires=e)
+        eva.apikey.masterkey, l='eva:phi:' + l, timeout=t, expires=e)
 
 
 def unlock(l):
-    return eva.sysapi.api.unlock(eva.apikey.masterkey, l=l)
+    return eva.sysapi.api.unlock(eva.apikey.masterkey, l='eva:phi:' + l)
 
 
 def handle_phi_event(phi, port, data):

@@ -110,10 +110,10 @@ eva.uc.driverapi:
 * **get_timeout()** get default timeout
 * **critical()** send EVA critical call
 * **log_traceback()** log traceback debug info
-* **lock(l, timeout, expires)** acquire lock **l**, wait max **timeout** sec,
-  lock automatically expires in **expires** sec. Expiration time can't be
-  longer than default controller timeout.
-* **unlock(l)** release lock **l**
+* **lock(l, timeout, expires)** acquire lock "eva:phi:**l**", wait max
+  **timeout** sec, lock automatically expires in **expires** sec. Timeout and
+  expiration time can't be longer than default controller timeout.
+* **unlock(l)** release lock "eva:phi:**l**"
 * **handle_phi_event(phi, port, data)** ask Driver API to handle event (see
   below)
 
