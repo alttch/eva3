@@ -23,6 +23,8 @@ __config_help__ = [{
 __get_help__ = __config_help__
 __set_help__ = __config_help__
 
+w1_delay = 0.05
+
 __help__ = """
 PHI for Maxim Integrated 1-Wire DS2408, uses Linux w1 module and /sys/bus/w1
 bus to access the equipment. The Linux module should be always loaded before
@@ -93,6 +95,7 @@ class PHI(GenericPHI):
                     r = None
             if r is None and i == self.retries:
                 raise Exception('1-Wire get error')
+            sleep(w1_delay)
             data = {}
             for i in range(8):
                 data[str(i + 1)] = 0 if 1 << i & r else 1
@@ -133,7 +136,7 @@ class PHI(GenericPHI):
                 try:
                     open('%s/%s/output' % (self.w1, addr), 'wb').write(
                         bytes([r]))
-                    sleep(0.05)
+                    sleep(w1_delay)
                     rn = ord(
                         open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
                 except:
