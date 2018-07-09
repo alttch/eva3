@@ -117,7 +117,23 @@ $_eva_api_func = array(
                     'destroy',
                     'destroy_device',
                     'login',
-                    'logout'
+                    'logout',
+                    'load_phi',
+                    'unload_phi',
+                    'load_driver',
+                    'unload_driver',
+                    'list_phi',
+                    'list_drivers',
+                    'get_phi',
+                    'get_driver',
+                    'test_phi',
+                    'list_phi_mods',
+                    'list_lpi_mods',
+                    'modinfo_phi',
+                    'modinfo_lpi',
+                    'modhelp_phi',
+                    'modhelp_lpi',
+                    'set_driver'
                     ),
                 'cr' => array(
                     'update',
@@ -138,7 +154,17 @@ $_eva_api_func = array(
                     'destroy',
                     'destroy_device',
                     'login',
-                    'logout'
+                    'logout',
+                    'load_phi',
+                    'unload_phi',
+                    'load_driver',
+                    'unload_driver',
+                    'list_phi',
+                    'list_drivers',
+                    'get_phi',
+                    'get_driver',
+                    'test_phi',
+                    'set_driver'
                     ),
                 'ce' => array(
                     'action',
@@ -186,7 +212,14 @@ $_eva_api_func = array(
                     'create_rule',
                     'destroy_rule',
                     'login',
-                    'logout'
+                    'logout',
+                    'load_ext',
+                    'unload_ext',
+                    'list_ext',
+                    'get_ext',
+                    'list_ext_mods',
+                    'modinfo_ext',
+                    'modhelp_ext'
                     ),
                 'cr' => array(
                     'set',

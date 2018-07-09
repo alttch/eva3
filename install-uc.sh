@@ -46,12 +46,15 @@ ln -sf ../runtime/xc/uc
 
 cd ..
 
+ln -sf ../../../xc/drivers lib/eva/uc/drivers
+
 echo "Checking mods"
 ./sbin/check_mods install || exit 1
 
 echo "Doing initial config"
 
 [ -f ./runtime/uc_cvars.json ] || echo "{}" > ./runtime/uc_cvars.json
+[ -f ./runtime/uc_drivers.json ] || echo "{}" > ./runtime/uc_drivers.json
 
 echo "Finished"
 

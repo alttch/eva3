@@ -16,7 +16,7 @@ status_label_off = 'OFF'
 status_label_on = 'ON'
 
 
-class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
+class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
 
     def __init__(self, unit_id):
         super().__init__(unit_id, 'unit')
@@ -32,7 +32,11 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
         self.auto_processor_active = False
         self.auto_processor = None
         # labels have string keys to be JSON compatible
-        self.status_labels = {'0': status_label_off, '1': status_label_on}
+        self.default_status_labels = {
+            '0': status_label_off,
+            '1': status_label_on
+        }
+        self.status_labels = self.default_status_labels.copy()
 
     def status_by_label(self, label):
         for k, v in self.status_labels.copy().items():
@@ -51,17 +55,27 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
                   notify=False):
         d = {}
         if config or props:
-            d['action_always_exec'] = self.action_always_exec
-            d['update_exec_after_action'] = self.update_exec_after_action
-            d['update_state_after_action'] = self.update_state_after_action
-            d['update_if_action'] = self.update_if_action
-            d['auto_off'] = self.auto_off
-            d['status_labels'] = self.status_labels
+            if not config or self.action_always_exec:
+                d['action_always_exec'] = self.action_always_exec
+            if not config or self.update_exec_after_action:
+                d['update_exec_after_action'] = self.update_exec_after_action
+            if not config or not self.update_state_after_action:
+                d['update_state_after_action'] = self.update_state_after_action
+            if not config or self.update_if_action:
+                d['update_if_action'] = self.update_if_action
+            if not config or self.auto_off:
+                d['auto_off'] = self.auto_off
+            if not config or \
+                    (self.status_labels.keys() != \
+                        self.default_status_labels.keys()) or \
+                    self.status_labels['0'] != status_label_off or \
+                    self.status_labels['1'] != status_label_on:
+                d['status_labels'] = self.status_labels
         elif full:
             d['status_labels'] = sorted([ { 'status': int(x),
                 'label': self.status_labels[x] } \
                     for x in self.status_labels ], key = lambda k: k['status'])
-        if not info and not props:
+        if not info and not props and not config:
             d['nstatus'] = self.nstatus
             d['nvalue'] = self.nvalue
         d.update(super().serialize(
@@ -154,6 +168,11 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
                 else:
                     self.start_auto_processor()
             return True
+        elif prop == 'status_labels' and isinstance(val, dict):
+            self.status_labels = val
+            self.log_set(prop, 'dict')
+            self.set_modified(save)
+            return True
         elif prop[:7] == 'status:':
             try:
                 s = int(prop.split(':')[1])
@@ -236,11 +255,11 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem):
              (self.full_id, action.uuid, action.priority,
                  action.nstatus, action.nvalue))
 
-    def action_run_args(self, action):
+    def action_run_args(self, action, n2n=True):
         nstatus = str(action.nstatus)
         if action.nvalue is not None:
             nvalue = str(action.nvalue)
-        else:
+        elif n2n:
             nvalue = 'null'
         return (nstatus, nvalue)
 

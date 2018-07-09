@@ -63,17 +63,14 @@ def update_config(cfg):
     global ssl_module, ssl_cert, ssl_key, ssl_chain
     global session_timeout, thread_pool, ei_enabled
     try:
-        host, port = parse_host_port(cfg.get('webapi', 'listen'))
-        if not port:
-            port = default_port
+        host, port = parse_host_port(cfg.get('webapi', 'listen'), default_port)
         logging.debug('webapi.listen = %s:%u' % (host, port))
     except:
         eva.core.log_traceback()
         return False
     try:
-        ssl_host, ssl_port = parse_host_port(cfg.get('webapi', 'ssl_listen'))
-        if not ssl_port:
-            ssl_port = default_ssl_port
+        ssl_host, ssl_port = parse_host_port(
+            cfg.get('webapi', 'ssl_listen'), default_ssl_port)
         try:
             ssl_module = cfg.get('webapi', 'ssl_module')
         except:
@@ -98,8 +95,7 @@ def update_config(cfg):
         pass
     logging.debug('webapi.thread_pool = %u' % thread_pool)
     try:
-        ei_enabled = (cfg.get('webapi',
-                                   'ei_enabled') == 'yes')
+        ei_enabled = (cfg.get('webapi', 'ei_enabled') == 'yes')
     except:
         pass
     logging.debug('webapi.ei_enabled = %s' % ('yes' \
@@ -352,6 +348,7 @@ def cp_api_404(msg=''):
 
 def cp_need_master(k):
     if not eva.apikey.check(k, master=True): raise cp_forbidden_key()
+
 
 def cp_client_key(_k=None):
     if _k: return _k

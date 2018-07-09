@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "x`id -u`" != "x0" ]; then
+    echo "Please run this script as root"
+    exit 98
+fi
+
 PRODUCT=$1
 USER=$2
 

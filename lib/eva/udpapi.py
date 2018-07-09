@@ -59,9 +59,7 @@ server_socket = None
 def update_config(cfg):
     global host, port, hosts_allow
     try:
-        host, port = parse_host_port(cfg.get('udpapi', 'listen'))
-        if not port:
-            port = default_port
+        host, port = parse_host_port(cfg.get('udpapi', 'listen'), default_port)
         logging.debug('udpapi.listen = %s:%u' % (host, port))
     except:
         return False

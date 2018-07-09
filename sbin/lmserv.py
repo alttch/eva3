@@ -43,7 +43,7 @@ for production use lm-control only to start/stop LM PLC
 """)
 
 
-product_build = 2018062701
+product_build = 2018070501
 
 product_code = 'lm'
 
@@ -92,6 +92,7 @@ eva.notify.load()
 eva.notify.start()
 
 eva.lm.controller.init()
+eva.lm.controller.load_extensions()
 eva.lm.controller.load_lvars()
 eva.lm.controller.load_remote_ucs()
 eva.lm.controller.load_macros()

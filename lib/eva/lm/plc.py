@@ -6,11 +6,11 @@ __version__ = "3.1.0"
 import eva.core
 import eva.item
 import eva.lm.macro_api
+import eva.lm.extapi
 import threading
 import logging
 
 from eva.tools import val_to_boolean
-
 
 class PLC(eva.item.ActiveItem):
 
@@ -83,7 +83,9 @@ class PLC(eva.item.ActiveItem):
     def _t_action(self, a):
         self.action_log_run(a)
         self.action_before_run(a)
-        env_globals = a.item.api.get_globals()
+        env_globals = {}
+        env_globals.update(eva.lm.extapi.env)
+        env_globals.update(a.item.api.get_globals())
         env_globals['_source'] = a.source
         env_globals['argv'] = []
         for x in a.argv:

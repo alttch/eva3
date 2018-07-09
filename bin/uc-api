@@ -21,13 +21,12 @@ from eva.tools import print_json
 
 def usage():
     print()
-    print('EVA SFA CLI version %s' % (apiclient.version))
+    print('EVA UC API CLI version %s' % (apiclient.version))
     print("""
-Usage: sfa-cmd <command> [args] [-U API uri] [-K key] [-T sec] [-D]
+Usage: uc-api <command> [args] [-U API uri] [-K key] [-T sec] [-D]
 
     -U   specify API uri (http://host:port), if no uri specified, API will be
-         called in local mode (with data from ../etc/sfa.ini and
-         sfa_apikeys.ini)
+         called in local mode (with data from ../etc/uc.ini and uc_apikeys.ini)
     -K   key, if no key specified, local master key will be used (if local API)
     -T   API request timeout
     -D   Enable debug messages
@@ -75,18 +74,23 @@ System commands:
     nodebug - set server debug mode off
 
 
-SFA commands:
+UC commands:
 
-    state <-p tp> [-i id] [-g group]          get unit/sensor state, specify
-                                              -p item type (U for unit,
-                                                              S for sensor,
-                                                              LV for lvar)
+    state <-p tp> [-i id] [-y] [-g group]     get unit/sensor state, specify
+                                              either:
+                                                -i unit/sensor id, or
+                                                -p item type (U for unit,
+                                                              S for sensor)
 
-                                              -i show state just for specified
-                                                 item
                                               -g  filter by group, you may use
                                                   # and + for group wildcard
                                                   (mqtt style)
+
+                                              -y  get full item info
+                                                  (description etc.)
+
+    update <-i id> [-s status] [-v value]     update unit/sensor state,
+                                              status = always integer number
 
     action <-i id> <-s status> [-v value] [-p priority]
                                [-w sec] [-q sec] [-u uuid]
@@ -99,13 +103,16 @@ SFA commands:
                                               but it's not recommended unless
                                               you know what you are doing
 
+                                              -q - seconds to wait for action
+                                              processing in the main queue
+
     action_toggle <-i id> [-p priority] [-w sec] [-q sec] [-u uuid]
                                               execute unit action to toggle
                                               it's status (set 1 if 0, 0 if 1).
                                               Options and behaviour are equal
                                               to action command.
 
-    result [-u uuid] [-i id]
+    result [-u uuid] [-i id] [-g grp] [-s state]
                                               get action result(s), filter by
                                                -u  action uuid
                                                -i  unit id
@@ -113,14 +120,18 @@ SFA commands:
                                                -s  state (Q,R,F -
                                                    queued, running, finished)
 
+
     enable_actions <-i id>                    enable actions of unit, save
                                               config property instantly
 
     disable_actions <-i id>                   disable actions of unit save
                                               config property instantly
 
-    terminate [-i id]                         terminate running action for
-                                              a unit
+    terminate [-u uuid] [-i id]               terminate running action, either
+                                              by action uuid, or by item id.
+                                              if action uuid is specified but
+                                              action is still queued, it will
+                                              be canceled
 
     q_clean <-i id>                           clean action queue for the unit,
                                               don't terminate current running
@@ -130,89 +141,85 @@ SFA commands:
                                               plus terminate current running 
                                               action
 
-    set <-i id> [-s status] [-v value]        set lvar state,
-                                              status = -1 , 0 or 1
+Configure items (requires master key):
 
-    reset <-i id>                             reset lvar when used as timer,
-                                              set status = 1, value = "1"
+    list [-g group] [-p tp]                   brief list of configurable items,
+                                              filter by:
+                                                -p  item type (U for unit,
+                                                    S for sensor)
 
-    clear <-i id>                             clears lvar when used as a flag,
-                                              set status=1, value="0". If
-                                              lvar is being used as a timer and
-                                              has 'expires' set, set status=0
+                                                -g  filter by group, you may
+                                                    use # and + for group
+                                                    wildcard (mqtt style)
 
-    toggle <-i id>                            toggles lvar when used as a flag
-                                              value between "0" and "1"
+    get_config <-i id>                        get item configuration
 
-    list_macros [-g group] [-i controller_id] list available macros, filter
-                                              by group and/or controller_id
-                                              if specified
+    save_config <-i id>                       save item configuration, modified
+                                              item config will be also save on
+                                              exit (if db_update isn't set to 
+                                              manual) and when save API
+                                              function/command is called
 
-    run <-i macro_id> [-a args] [-p priority] [-w sec] [-u uuid]
-                                              execute macro with args specified
-                                              in -a, wait -w sec to complete.
-                                              if wait time expires, returns
-                                              current action state
 
-                                              you may define own action uuid
-                                              but it's not recommended unless
-                                              you know what you are doing
+    list_props <-i id>                        list item properties allowed to
+                                              be modified
 
-    list_rule_props <-i id>                   list DM rule properties allowed
-                                              to be modified
-
-    set_rule_prop <-i id> <-p prop> [-v val] [-y]
-                                              set DM rule property to specified
+    set_prop <-i id> <-p prop> [-v val] [-y]
+                                              set item property to specified
                                               value, unset property (set to
                                               default) if -v key is not
                                               specified
 
-                                              -y option will save rule config
+                                              -y option will save item config
                                               if the property got the new value
 
-Controller management in runtime (requires master key):
+    create_unit <-i id> [-g group] [-y] [-z]
+    create_sensor <-i id> [-g group] [-y] [-z]
+    create_mu <-i id> [-g group] [-y] [-z]
+                                              create new unit, sensor or
+                                              multiupdate, if group is not
+                                              specified, 'nogroup' will be
+                                              assigned.
 
-    list_remote [-p type] [-i controller] [-g group]
-                                              list remote items
+                                                 -y  save item config right
+                                                     after creation
+                                                 -z  create virtual item
 
-                                              -p  filter by item type (unit,
-                                                  sensor)
-                                              -i  filter by controller full ID
-                                              -g  filter by group, you may use
-                                                  # and + for group wildcard
-                                                  (mqtt style)
+    clone <-i id> <-n new_id> [-g group] [-y]
+                                              clone item, put a new item into
+                                              the group if specified
 
-    list_controllers                          list connected controllers
+                                                 -y  save item config right
+                                                     after creation
 
-    list_controller_props <-i id>             list controller properties
-                                              allowed to be modified
+    clone_group <-g group> <-n new_group>
+                <-p item_prefix> <-r new_item_prefix> [-y]
 
-    set_controller_prop <-i id> <-p prop> [-v val] [-y]
-                                              set controller property to
-                                              specified value, unset property
-                                              (set to default) if -v key is not
-                                              specified
+                                              clone all items in group with ids
+                                              starting with item_prefix into a
+                                              new group, replace item_prefix to
+                                              new_item_prefix
 
-                                              -y option will save controller
-                                              config if the property got the
-                                              new value
+                                                 -y  save item config right
+                                                     after creation
 
-    append_controller <-u URI> [-g uc|lm] [-a apikey] [-m mqtt_notifier]
-                      [-s ssl_verify] [-t timeout] [-y]
-                                              append controller by API URI
-                                              -a  remote controller apikey
-                                              -m  local mqtt notifier to sync
-                                              -s  verify SSL or not (1|0) when
-                                                  calling API
-                                              -t  API timeout
-                                              -y  save controller config after
-                                                  creation
+    destroy <-i id|-g group>                  destroy an item or all items in
+                                              the group
 
-    remove_controller <-i id>                 remove controller
+    create_device <-t tpl> [-c cfg] [-y]      create device (set of items and
+                                              cvars) from template
 
-    reload_controller <-i id>                 reload controller items
+                                                 -y  save items configs right
+                                                     after creation
 
-    reload_clients                            ask connected clients to reload
+    update_device <-t tpl> [-c cfg] [-y]      update device (set of items and
+                                              cvars) from template
+
+                                                 -y  save items configs right
+                                                     after update
+
+    destroy_device <-t tpl> [-c cfg]          destroy device (set of items and
+                                              cvars) from template
 
 File management in runtime (requires master key):
 
@@ -246,26 +253,26 @@ User management in runtime (requires master key):
 
     destroy_user <-u username>                delete user
 
-
 Exit codes:
 
 the exit codes are equal to the return codes of API client:
 
     0   everything is okay
-    1   object (i.e. unit) not found or command was executed with wrong params
+    1   item (i.e. unit) not found or command was executed with wrong params
     2   forbidden (access to the object or function is denied)
     3   API returned error 500 (wrong params - used string instead of number
         etc.)
     4   API returned unknown error, try enabling debug mode and repeat,
         maybe it's a bug
-    5   API not ready. returns when unable to open etc/sfa.ini or
-        sfa_apikeys.ini and API uri was not specified
+    5   API not ready. returns when unable to open etc/uc.ini or uc_apikeys.ini
+        and API uri was not specified
     6   unknown command/function or no function specified
     7   server error (unable to connect etc.)
     8   server timeout
     9   server returned bad data (not JSON)
     10  command/function failed (i.e. executed action/cmd was completed with
         an error)
+    11  invalid command params
 
     99  if no command specified
     """)
@@ -281,7 +288,7 @@ debug = False
 try:
     func = sys.argv[1]
     o, a = getopt.getopt(sys.argv[2:],
-            'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:s:v:w:x:yzD')
+            'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:r:s:v:w:x:yzD')
 except:
     usage()
     sys.exit(99)
@@ -309,14 +316,14 @@ for i, v in o:
 
 if not apiuri:
     try:
-        api = apiclient.APIClientLocal('sfa')
+        api = apiclient.APIClientLocal('uc')
     except:
-        print('Can not init API, sfa.ini or sfa_apikeys.ini missing?')
+        print('Can not init API, uc.ini or uc_apikeys.ini missing?')
         sys.exit(98)
 else:
     api = apiclient.APIClient()
     api.set_uri(apiuri)
-    api.set_product('sfa')
+    api.set_product('uc')
 
 if apikey is not None:
     api.set_key(apikey)
@@ -325,10 +332,17 @@ api.ssl_verify(False)
 
 params = {}
 
-if ( func == 'set_controller_prop' or \
-        func == 'set_rule_prop' or \
-        func == 'append_controller' ) \
-        and 'full' in xparams and xparams['full'] == '1':
+if ( func == 'set_prop' or \
+        func == 'create_device' or \
+        func == 'update_device' or \
+        func == 'load_phi' or \
+        func == 'load_driver' or \
+        func == 'clone' or \
+        func == 'clone_group' or \
+        func == 'create_unit' or \
+        func == 'create_sensor' or \
+        func == 'create_mu' ) and \
+            'full' in xparams and xparams['full'] == '1':
     del xparams['full']
     params['save'] = '1'
 
@@ -353,6 +367,10 @@ if func == 'file_put':
             print('Can\'t read local file %s' % params['l'])
             sys.exit(apiclient.result_not_found)
 
+if debug:
+    print('API:', api._uri)
+    print('API func:', func)
+    print('Params', params)
 code, result = api.call(func, params, timeout, _debug=debug)
 
 if code != apiclient.result_ok and \
@@ -379,7 +397,7 @@ if code != apiclient.result_ok and \
         print('Error: invalid params')
     sys.exit(code)
 else:
-    if func in ['run'] and \
+    if func in ['action'] and \
         'status' in result and \
         result['status'] == 'completed':
         t1 = result['time']['created']

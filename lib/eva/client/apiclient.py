@@ -53,14 +53,18 @@ _api_func = {
             'disable_actions', 'enable_actions', 'get_config', 'save_config',
             'list', 'list_props', 'set_prop', 'create_unit', 'create_sensor',
             'create_mu', 'create_device', 'update_device', 'clone',
-            'clone_group', 'destroy', 'destroy_device', 'login', 'logout'
+            'clone_group', 'destroy', 'destroy_device', 'login', 'logout',
+            'load_phi', 'unload_phi', 'load_driver', 'unload_driver',
+            'list_phi', 'list_drivers', 'get_phi', 'get_driver', 'test_phi',
+            'list_lpi_mods', 'list_phi_mods', 'modinfo_phi', 'modinfo_lpi',
+            'modhelp_phi', 'modhelp_lpi', 'set_driver'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
             'enable_actions', 'save_config', 'set_prop', 'create_unit',
             'create_sensor', 'create_mu', 'create_device', 'update_device',
             'clone', 'clone_group', 'destroy', 'destroy_device', 'login',
-            'logout'
+            'logout', 'unload_phi', 'unload_driver', 'set_driver'
         ],
         'ce': ['action', 'action_toggle']
     },
@@ -76,14 +80,16 @@ _api_func = {
             'list_controller_props', 'set_prop', 'set_macro_prop',
             'set_controller_prop', 'reload_controller', 'create_lvar',
             'destroy_lvar', 'list_rules', 'list_rule_props', 'set_rule_prop',
-            'create_rule', 'destroy_rule', 'login', 'logout'
+            'create_rule', 'destroy_rule', 'login', 'logout', 'load_ext',
+            'unload_ext', 'list_ext', 'get_ext', 'list_ext_mods', 'modinfo_ext',
+            'modhelp_ext'
         ],
         'cr': [
             'set', 'reset', 'clear', 'toggle', 'save_config', 'set_prop',
             'set_macro_prop', 'set_controller_prop', 'create_macro',
             'destroy_macro', 'append_controller', 'remove_controller',
             'reload_controller', 'create_lvar', 'destroy_lvar', 'set_rule_prop',
-            'create_rule', 'destroy_rule', 'login', 'logout'
+            'create_rule', 'destroy_rule', 'login', 'logout', 'unload_ext'
         ],
         'ce': ['run']
     },
@@ -112,8 +118,8 @@ _api_func = {
 
 
 # copy of eva.tools.parse_host_port to avoid unnecesseary imports
-def parse_host_port(hp):
-    if hp.find(':') == -1: return (hp, None)
+def parse_host_port(hp, default_port):
+    if hp.find(':') == -1: return (hp, default_port)
     try:
         host, port = hp.split(':')
         port = int(port)
@@ -271,9 +277,8 @@ class APIClientLocal(APIClient):
                 h = None
         if h:
             try:
-                host, port = parse_host_port(h)
+                host, port = parse_host_port(h, default_port)
                 if host == '0.0.0.0': host = '127.0.0.1'
-                if not port: port = default_port
                 self._uri = pfx + host + ':' + str(port)
             except:
                 pass

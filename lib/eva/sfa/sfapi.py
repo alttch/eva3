@@ -71,7 +71,7 @@ class SFA_API(GenericAPI):
             return None
         if _i:
             if _i in gi and apikey.check(k, gi[_i]):
-                return gi[_i].serialize()
+                return gi[_i].serialize(full=full)
             else:
                 return None
         result = []
@@ -928,7 +928,8 @@ class SFA_HTTP_Root:
         raise cherrypy.HTTPRedirect('/ui/' + q)
 
     def _no_cache(self):
-        cherrypy.serving.response.headers['Expires'] = 'Sun, 19 Nov 1978 05:00:00 GMT'
+        cherrypy.serving.response.headers['Expires'] = \
+                'Sun, 19 Nov 1978 05:00:00 GMT'
         cherrypy.serving.response.headers['Cache-Control'] = \
             'no-store, no-cache, must-revalidate, post-check=0, pre-check=0'
         cherrypy.serving.response.headers['Pragma'] = 'no-cache'
@@ -984,8 +985,8 @@ class SFA_HTTP_Root:
                         'name': os.path.basename(x),
                         'size': os.path.getsize(x),
                         'time': {
-                            'created': os.path.getctime(x),
-                            'modified': os.path.getmtime(x)
+                            'c': os.path.getctime(x),
+                            'm': os.path.getmtime(x)
                         }
                     })
                 cherrypy.response.headers['Content-Type'] = 'application/json'

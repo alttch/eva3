@@ -15,6 +15,7 @@ import eva.uc.ucqueue
 import eva.uc.unit
 import eva.uc.sensor
 import eva.uc.ucmu
+import eva.uc.driverapi
 
 units_by_id = {}
 units_by_group = {}
@@ -177,6 +178,9 @@ def save_item_state(item):
             pass
         return False
 
+
+def load_drivers():
+    eva.uc.driverapi.load()
 
 def load_db_state(items, item_type, clean=False, create=True):
     _db_loaded_ids = []
@@ -521,6 +525,7 @@ def serialize_actions():
 
 def start():
     global Q
+    eva.uc.driverapi.start()
     Q = eva.uc.ucqueue.UC_Queue('uc_queue')
     Q.start()
     logging.info('UC action queue started')
@@ -534,6 +539,7 @@ def stop():
     for i, v in items_by_id.copy().items():
         v.stop_processors()
     if Q: Q.stop()
+    eva.uc.driverapi.stop()
 
 
 def exec_mqtt_unit_action(unit, msg):

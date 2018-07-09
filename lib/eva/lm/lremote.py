@@ -25,6 +25,8 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
         self.update_lock = threading.Lock()
         self.prv_status = None
         self.prv_value = None
+        self.prv_nstatus = None
+        self.prv_nvalue = None
         super().__init__(remote_uc, state)
 
     def start_processors(self):
@@ -50,6 +52,22 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
             self.prv_status = _status
             self.prv_value = _value
             eva.lm.controller.pdme(self)
+            self.update_lock.release()
+            return True
+        self.update_lock.release()
+        return False
+
+    def update_nstate(self, nstatus=None, nvalue=None):
+        if not self.update_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('LRemoteUnit::update_set_state locking broken')
+            eva.core.critical()
+            return False
+        _nstatus = self.nstatus
+        _nvalue = self.nvalue
+        if super().update_nstate(nstatus, nvalue):
+            self.prv_nstatus = _nstatus
+            self.prv_nvalue = _nvalue
+            eva.lm.controller.pdme(self, ns=True)
             self.update_lock.release()
             return True
         self.update_lock.release()

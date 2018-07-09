@@ -1,0 +1,284 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2018 Altertech Group"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.1.0"
+
+import os
+import sys
+import jsonpickle
+import argparse
+import re
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+from eva.client import apiclient
+
+import eva.core
+from eva.tools import print_json
+
+xparams = {}
+timeout = None
+apikey = None
+apiuri = None
+
+debug = False
+
+default_timeout = 5
+
+_me = 'EVA ICS LM PLC macro extension manager version %s' % __version__
+
+
+def _prepare_result_data(data):
+    result = []
+    for d in data.copy():
+        result.append(d)
+    return result
+
+
+_pd_cols = {
+    'list_ext_': ['id', 'mod', 'description', 'version'],
+    'list_ext_mods': ['mod', 'description', 'version', 'api'],
+    'modhelp_ext': [ 'name', 'type', 'required', 'help']
+}
+
+
+def fancy_print_result(result, tab=0):
+    if result and isinstance(result, dict):
+        rprinted = False
+        h = None
+        for v in sorted(result.keys()):
+            if v == 'help' and not tab:
+                h = result[v]
+            elif v != 'result':
+                if isinstance(result[v], dict):
+                    if tab:
+                        print(' ' * (tab * 10), end='>' * tab + ' ')
+                    print(("{:>%u} : {}" % max(map(len, result))).format(v, ''))
+                    fancy_print_result(result[v], tab + 1)
+                else:
+                    if tab:
+                        print(' ' * (tab * 10), end='>' * tab + ' ')
+                    if isinstance(result[v], list):
+                        _v = ', '.join(result[v])
+                    else:
+                        _v = result[v]
+                    print(("{:>%u} : {}" % max(map(len, result))).format(v, _v))
+                rprinted = True
+        if h:
+            print('-'*81)
+            print(h.strip())
+            rprinted = True
+        if not rprinted and not tab:
+            print('OK')
+    elif result and isinstance(result, list):
+        import pandas as pd
+        pd.options.display.max_colwidth = 65
+        df = pd.DataFrame(data=_prepare_result_data(result))
+        if api_func + api_func_full in _pd_cols:
+            cols = _pd_cols[api_func + api_func_full]
+        else:
+            cols = list(df)
+        df = df.ix[:, cols]
+        try:
+            if api_func not in ['list_ext_mods']:
+                idxcol = 'id'
+            else:
+                idxcol = 'mod'
+            if idxcol in list(df):
+                df.set_index(idxcol, inplace=True)
+            else:
+                idxcol = list(df)[0]
+                df.set_index(list(df)[0], inplace=True)
+            out = df.fillna(' ').to_string().split('\n')
+            print(idxcol + out[0][len(idxcol):])
+            print('-' * len(out[0]))
+            [print(re.sub('^NaN', '   ', o)) for o in out[2:]]
+        except:
+            pass
+    elif result:
+        print(result)
+
+
+ap = argparse.ArgumentParser(description=_me)
+ap.add_argument(
+    '-K',
+    '--api-key',
+    help='master key, if no key specified, local master key will be used',
+    dest='_key',
+    metavar='KEY')
+ap.add_argument(
+    '-T',
+    '--api-timeout',
+    help='API request timeout (in seconds)',
+    type=float,
+    default=default_timeout,
+    dest='_timeout',
+    metavar='TIMEOUT')
+ap.add_argument(
+    '-J',
+    '--json',
+    help='print result as JSON',
+    action='store_true',
+    dest='_json',
+    default=False)
+ap.add_argument(
+    '-D',
+    '--debug',
+    help='enable debug messages',
+    action='store_true',
+    dest='_debug',
+    default=False)
+
+sp_ext = ap.add_subparsers(
+    dest='_func', metavar='func', help='Extension commands')
+
+sp_ext_list = sp_ext.add_parser('list', help='List loaded extensions')
+sp_ext_list.add_argument(
+    '-y',
+    '--full',
+    help='full information about extension',
+    dest='_full',
+    action='store_true')
+
+sp_ext_show = sp_ext.add_parser('show', help='Show loaded extension info')
+sp_ext_show.add_argument('_i', help='EXT id', metavar='EXT_ID')
+
+sp_ext_mods = sp_ext.add_parser('mods', help='List available extension mods')
+
+sp_ext_load = sp_ext.add_parser('load', help='Load extension')
+sp_ext_load.add_argument('_i', help='Extension id', metavar='EXT_ID')
+sp_ext_load.add_argument('_m', help='Extension module', metavar='EXT_MOD')
+sp_ext_load.add_argument(
+    '-c',
+    '--config',
+    help='Extension configuration values, comma separated',
+    dest='_c',
+    metavar='CONFIG')
+sp_ext_load.add_argument(
+    '-y',
+    '--save',
+    help='save configuration on success load',
+    dest='_save',
+    action='store_true')
+
+sp_ext_unload = sp_ext.add_parser('unload', help='Unload extension')
+sp_ext_unload.add_argument('_i', help='Extension id', metavar='EXT_ID')
+
+sp_ext_modinfo = sp_ext.add_parser('modinfo', help='Extension module info')
+sp_ext_modinfo.add_argument('_i', help='Extension module', metavar='EXT_MOD')
+
+sp_ext_modhelp = sp_ext.add_parser('modhelp', help='Extension module help')
+sp_ext_modhelp.add_argument('_i', help='Extension module', metavar='EXT_MOD')
+sp_ext_modhelp.add_argument(
+    '_c',
+    help='Help context (cfg, functions)',
+    metavar='CONTEXT',
+    choices=['cfg', 'functions'])
+
+try:
+    import argcomplete
+    argcomplete.autocomplete(ap)
+except:
+    pass
+
+a = ap.parse_args()
+
+if not a._func:
+    ap.print_usage()
+    sys.exit(99)
+
+api_func = a._func + '_ext'
+
+debug = a._debug
+
+if api_func == 'show_ext': api_func = 'get_ext'
+elif api_func == 'mods_ext': api_func = 'list_ext_mods'
+
+if not apiuri:
+    try:
+        api = apiclient.APIClientLocal('lm')
+    except:
+        print('Can not init API, lm.ini or uc_apikeys.ini missing?')
+        sys.exit(98)
+else:
+    api = apiclient.APIClient()
+    api.set_uri(apiuri)
+    api.set_product('lm')
+
+if apikey is not None:
+    api.set_key(apikey)
+
+api.ssl_verify(False)
+
+params = {}
+
+if hasattr(a, '_full') and a._full:
+    params['full'] = 1
+    api_func_full = '_'
+else:
+    api_func_full = ''
+
+if hasattr(a, '_save') and a._save:
+    params['save'] = 1
+
+if hasattr(a, '_i') and a._i is not None:
+    params['i'] = a._i
+
+if hasattr(a, '_m') and a._m is not None:
+    params['m'] = a._m
+
+if hasattr(a, '_c') and a._i is not None:
+    params['c'] = a._c
+
+timeout = a._timeout
+
+if debug:
+    print('API:', api._uri)
+    print('API func:', api_func)
+    print('timeout:', timeout)
+    print('params', params)
+code, result = api.call(api_func, params, timeout, _debug=debug)
+
+if code != apiclient.result_ok and \
+        code != apiclient.result_func_failed:
+    if code == apiclient.result_not_found:
+        print('Error: Object not found')
+    elif code == apiclient.result_forbidden:
+        print('Error: Forbidden')
+    elif code == apiclient.result_api_error:
+        print('Error: API error')
+    elif code == apiclient.result_unknown_error:
+        print('Error: Unknown error')
+    elif code == apiclient.result_not_ready:
+        print('Error: API not ready')
+    elif code == apiclient.result_func_unknown:
+        ap.print_usage()
+    elif code == apiclient.result_server_error:
+        print('Error: Server error')
+    elif code == apiclient.result_server_timeout:
+        print('Error: Server timeout')
+    elif code == apiclient.result_bad_data:
+        print('Error: Bad data')
+    elif code == apiclient.result_invalid_params:
+        print('Error: invalid params')
+    sys.exit(code)
+else:
+    if a._json:
+        print_json(result)
+        if 'result' in result and result['result'] == 'ERROR':
+            sys.exit(apiclient.result_func_failed)
+    else:
+        if code == apiclient.result_func_failed:
+            print('FAILED')
+        elif 'result' in result:
+            print(result['result'])
+            if result['result'] == 'ERROR':
+                sys.exit(apiclient.result_func_failed)
+        else:
+            if result:
+                fancy_print_result(result)
+sys.exit(code)

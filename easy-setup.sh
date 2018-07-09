@@ -11,13 +11,18 @@ MQTT_PORT=
 MQTT_USER=
 MQTT_PASSWORD=
 MQTT_SPACE=
+MQTT_CAFILE=
+MQTT_CERT=
+MQTT_KEY=
 LINK=0
+ALLOW_ROOT=0
+DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
 
 REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 pip3 sha256sum mosquitto_pub"
+REQUIRED="realpath python3 pip3 sha256sum"
 
 function usage {
     echo "Usage: easy-setup.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
@@ -35,7 +40,7 @@ function usage {
     echo " Options for the automatic setup:"
     echo
     echo " --local-only             accept API keys (except operator) only from local host"
-    echo " --u USER                 set up all controllers to run under specified user"
+    echo " -u USER                 set up all controllers to run under specified user"
     echo
     echo " --link                   link all controllers together (requires --mqtt)"
     echo "                          WARNING: it's not possible to change controller id"
@@ -46,6 +51,9 @@ function usage {
     echo
     echo " --mqtt user:password@host:port/space"
     echo "                          specify MQTT server access"
+    echo " --mqtt-cafile FILE            MQTT CA file to enable MQTT via SSL"
+    echo " --mqtt-cert FILE         MQTT authorization cert"
+    echo " --mqtt-key FILE          MQTT authorization key"
     echo
     echo " -p {uc,lm,sfa,all}       specify which controller to set up or all, may be used"
     echo "                          several times"
@@ -62,10 +70,21 @@ function create_notifier {
     echo "Creating notifier for ${T}"
     local sp=
     [ "x${MQTT_SPACE}" != "x" ] && local sp="-s ${MQTT_SPACE}"
-    ./bin/$T-notifier create -i eva_1 -p mqtt -h ${MQTT_HOST} -P ${MQTT_PORT} -A ${MQTT_USER}:${MQTT_PASSWORD} $sp -y || return 1
+    ./bin/$T-notifier create -i eva_1 -p mqtt -h ${MQTT_HOST} \
+        -P ${MQTT_PORT} -A ${MQTT_USER}:${MQTT_PASSWORD} $sp -y || return 1
+    if [ "x$MQTT_CAFILE" != "x" ]; then
+        ./bin/$T-notifier set_prop -i eva_1 -p ca_certs -v $MQTT_CAFILE || return 1
+    fi
+    if [ "x$MQTT_CERT" != "x" ]; then
+        ./bin/$T-notifier set_prop  -i eva_1 -p certfile -v $MQTT_CERT || return 1
+    fi
+    if [ "x$MQTT_KEY" != "x" ]; then
+        ./bin/$T-notifier set_prop -i eva_1 -p keyfile -v $MQTT_KEY || return 1
+    fi
     ./bin/$T-notifier subscribe -i eva_1 -p state -v '#' -g '#' || return 1
     ./bin/$T-notifier subscribe -i eva_1 -p log -L 20 || return 1
-    return 0
+    ./bin/$T-notifier test -i eva_1
+    return $?
 }
 
 function check_required_exec {
@@ -131,6 +150,31 @@ function askMQTT {
             done
             echo -n "MQTT space (empty for the root hive): "
             read MQTT_SPACE
+            askYN "Enable MQTT SSL"
+            if [ $VALUE == "1" ]; then
+                while [ 1 ]; do
+                    echo -n "MQTT CA file ($DEFAULT_CA_FILE): "
+                    read MQTT_CAFILE
+                    [ "x$MQTT_CAFILE" == "x" ] && MQTT_CAFILE=$DEFAULT_CA_FILE
+                    if [ ! -f "$MQTT_CAFILE" ]; then
+                        echo "No such file: $MQTT_CAFILE"
+                    else
+                        break
+                    fi
+                done
+                while [ 1 ]; do
+                    echo -n "MQTT cert file (empty for none): "
+                    read MQTT_CERT
+                    [ "x$MQTT_CERT" == "x" ] || [ -f "$MQTT_CERT" ] ; break
+                done
+                if [ "x$MQTT_CERT" != "x" ]; then
+                    while [ 1 ]; do
+                        echo -n "MQTT key file (empty for none): "
+                        read MQTT_KEY
+                        [ "x$MQTT_KEY" == "x" ] || [ -f "$MQTT_KEY" ] ; break
+                    done
+                fi
+            fi
         else
             if [ "x${MQTT_HOST}"  = "x" ]; then
                 return
@@ -138,14 +182,23 @@ function askMQTT {
         fi
         local s="test"
         [ "x${MQTT_SPACE}" != "x" ] && local s="${MQTT_SPACE}/test"
-        mosquitto_pub -d -h ${MQTT_HOST} -p ${MQTT_PORT} -u ${MQTT_USER} -P ${MQTT_PASSWORD} -t ${s} -m passed
+        SSL_OPTS=
+        if [ "x$MQTT_CAFILE" != "x" ]; then
+            SSL_OPTS="--cafile $MQTT_CAFILE"
+            [ "x$MQTT_CERT" != "x" ] && SSL_OPTS="$SSL_OPTS --cert $MQTT_CERT"
+            [ "x$MQTT_KEY" != "x" ] && SSL_OPTS="$SSL_OPTS --key $MQTT_KEY"
+        fi
+        ./sbin/check_mqtt ${SSL_OPTS} \
+            ${MQTT_USER}:${MQTT_PASSWORD}@${MQTT_HOST}:${MQTT_PORT}/${MQTT_SPACE} > /dev/null 2>&1
         if [ $? -ne 0 ]; then
             if [ ${INTERACTIVE} -ne 1 ]; then
+                echo "MQTT test failed"
                 exit 5
             fi
         else
             return
         fi
+        echo "MQTT test failed"
     done
 }
 
@@ -158,10 +211,14 @@ function askUser {
         if [ "x$u" == "x" ]; then
             u=$2
         fi
-        id $u > dev/null 2>&1
+        id $u > /dev/null 2>&1
         if [ $? -eq 0 ]; then
-            USER=$u
-            return
+            su - $u -c "ls" > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                USER=$u
+                return
+            fi
+            echo "User $u has no shell set"
         fi
         echo "Invalid user: $u"
     done
@@ -182,7 +239,34 @@ do
             MQTT_HOST=`echo $M|cut -d@ -f2|cut -d: -f1|cut -d/ -f1`
             MQTT_PORT=`echo $M|cut -d@ -f2 |cut -d/ -f1|awk -F: '{ print $2 }'`
             [ "x$MQTT_PORT" = "x" ] && MQTT_PORT=1883
-            MQTT_SPACE=`echo $M|awk -F/ '{ print $2 }'`
+            MQTT_SPACE=`echo $M|cut -d/ -f2-`
+            shift
+            shift
+        ;;
+        --mqtt-cafile)
+            MQTT_CAFILE=$2
+            if [ ! -f $2 ]; then
+                echo "No such MQTT CA file: $2"
+                exit 5
+            fi
+            shift
+            shift
+        ;;
+        --mqtt-cert)
+            MQTT_CERT=$2
+            if [ ! -f $2 ]; then
+                echo "No such MQTT cert file: $2"
+                exit 5
+            fi
+            shift
+            shift
+        ;;
+        --mqtt-key)
+            MQTT_KEY=$2
+            if [ ! -f $2 ]; then
+                echo "No such MQTT key file: $2"
+                exit 5
+            fi
             shift
             shift
         ;;
@@ -240,11 +324,20 @@ do
             echo "Will perform automatic install"
             shift
         ;;
+        --root)
+            ALLOW_ROOT=1
+            shift
+        ;;
         *)
             option_error
         ;;
     esac
 done
+
+if [ "x$ALLOW_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
+    echo "Please run this script as root"
+    exit 98
+fi
 
 if [ $LINK -eq 1 ] && [ "x$MQTT_HOST" = "x" ]; then
     echo "Linking requested but no MQTT HOST specified"
@@ -328,6 +421,11 @@ if [ $INSTALL_UC -eq 1 ]; then
         echo "Invalid user: ${USER}"
         exit 2
     fi
+    su - ${USER} -c "ls" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "User ${USER} has no valid shell set"
+        exit 2
+    fi
     [ ! -f etc/uc.ini ] && cp etc/uc.ini-dist etc/uc.ini
     chmod 644 etc/uc.ini
     echo "Generating uc_apikeys.ini"
@@ -397,6 +495,11 @@ if [ $INSTALL_LM -eq 1 ]; then
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "Invalid user: ${USER}"
+        exit 2
+    fi
+    su - ${USER} -c "ls" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "User ${USER} has no valid shell set"
         exit 2
     fi
     [ ! -f etc/lm.ini ] && cp etc/lm.ini-dist etc/lm.ini
@@ -470,6 +573,11 @@ if [ $INSTALL_SFA -eq 1 ]; then
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "Invalid user: ${USER}"
+        exit 2
+    fi
+    su - ${USER} -c "ls" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "User ${USER} has no valid shell set"
         exit 2
     fi
     [ ! -f etc/sfa.ini ] && cp etc/sfa.ini-dist etc/sfa.ini

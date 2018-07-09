@@ -29,9 +29,9 @@ def config_error(fname, section, key, value):
             (fname, key, value, section))
 
 
-def format_json(obj, minimal=False):
+def format_json(obj, minimal=False, unpicklable=False):
     return json.dumps(json.loads(jsonpickle.encode(obj,
-            unpicklable = False)), indent=4, sort_keys=True) \
+            unpicklable = unpicklable)), indent=4, sort_keys=True) \
                 if not minimal else jsonpickle.encode(obj, unpicklable = False)
 
 
@@ -43,14 +43,15 @@ def print_json(obj):
     print(format_json(obj))
 
 
-def parse_host_port(hp):
-    if hp.find(':') == -1: return (hp, None)
+def parse_host_port(hp, default_port=None):
+    if hp is None: return (None, default_port)
+    if hp.find(':') == -1: return (hp, default_port)
     try:
         host, port = hp.split(':')
         port = int(port)
     except:
         eva.core.log_traceback()
-        return (None, None)
+        return (None, default_port)
     return (host, port)
 
 

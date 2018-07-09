@@ -17,15 +17,25 @@ class DecisionMatrix(object):
     def __init__(self):
         self.rules = []
 
-    def process(self, item):
-        if item.prv_status == item.status and \
+    def process(self, item, ns=False):
+        if not ns and item.prv_status == item.status and \
                 item.prv_value == item.value:
             return False
+        elif ns and item.prv_nstatus == item.nstatus and \
+                item.prv_nvalue == item.nvalue:
+            return False
         event_code = '%s/dme-%f' % (item.full_id, time.time())
-        logging.debug('Decision matrix event %s %s, ' % \
+        if not ns:
+            logging.debug('Decision matrix event %s %s, ' % \
                 (item.item_type, item.full_id) + \
                 'status = %s -> %s, ' % (item.prv_status, item.status) + \
-                'value = "%s" -> "%s", ' % (item.prv_value, item.value) + \
+                'value = "%s" -> "%s" ' % (item.prv_value, item.value) + \
+                'assigned code = %s' % event_code)
+        else:
+            logging.debug('Decision matrix event %s %s, ' % \
+                (item.item_type, item.full_id) + \
+                'nstatus = %s -> %s, ' % (item.prv_nstatus, item.nstatus) + \
+                'nvalue = "%s" -> "%s" ' % (item.prv_nvalue, item.nvalue) + \
                 'assigned code = %s' % event_code)
         for rule in self.rules.copy():
             if not rule.enabled: continue
@@ -50,7 +60,7 @@ class DecisionMatrix(object):
                 continue
             pv = None
             v = None
-            if rule.for_prop == 'status':
+            if rule.for_prop == 'status' and not ns:
                 try:
                     pv = float(item.prv_status)
                 except:
@@ -59,7 +69,7 @@ class DecisionMatrix(object):
                     v = float(item.status)
                 except:
                     v = None
-            elif rule.for_prop == 'value':
+            elif rule.for_prop == 'value' and not ns:
                 if item.prv_value is not None:
                     try:
                         pv = float(item.prv_value)
@@ -69,6 +79,27 @@ class DecisionMatrix(object):
                     v = float(item.value)
                 except:
                     v = item.value
+            elif rule.for_prop == 'nstatus' and ns:
+                try:
+                    pv = float(item.prv_nstatus)
+                except:
+                    pv = None
+                try:
+                    v = float(item.nstatus)
+                except:
+                    v = None
+            elif rule.for_prop == 'nvalue' and ns:
+                if item.prv_nvalue is not None:
+                    try:
+                        pv = float(item.prv_nvalue)
+                    except:
+                        pv = item.prv_nvalue
+                try:
+                    v = float(item.nvalue)
+                except:
+                    v = item.value
+            else:
+                continue
             if (pv is None and rule.for_initial == 'skip') or \
                     (pv is not None and \
                         rule.for_initial == 'only') or \
@@ -240,48 +271,49 @@ class DecisionRule(eva.item.Item):
             d['macro_args'] = None
         d['break_after_exec'] = self.break_after_exec
         d['chillout_time'] = self.chillout_time
-        for_oid = self.for_item_type if self.for_item_type else '#'
-        for_oid += ':'
-        for_oid += self.for_item_group if self.for_item_group else '#'
-        for_oid += '/'
-        for_oid += self.for_item_id if self.for_item_id else '#'
-        for_oid += '/'
-        for_oid += self.for_prop if self.for_prop else '#'
-        d['for_oid'] = for_oid
-        condition = ''
-        cond_eq = False
-        if self.in_range_min is not None:
-            if isinstance(self.in_range_min, float):
-                try:
-                    if self.for_prop == 'status': m = int(self.in_range_min)
-                    else: m = self.in_range_min
-                except:
-                    m = self.in_range_min
-                if self.in_range_min == self.in_range_max and \
-                        self.in_range_min_eq and \
-                        self.in_range_max_eq:
-                    cond_eq = True
-                    condition = 'x == %s' % m
+        if not config:
+            for_oid = self.for_item_type if self.for_item_type else '#'
+            for_oid += ':'
+            for_oid += self.for_item_group if self.for_item_group else '#'
+            for_oid += '/'
+            for_oid += self.for_item_id if self.for_item_id else '#'
+            for_oid += '/'
+            for_oid += self.for_prop if self.for_prop else '#'
+            d['for_oid'] = for_oid
+            condition = ''
+            cond_eq = False
+            if self.in_range_min is not None:
+                if isinstance(self.in_range_min, float):
+                    try:
+                        if self.for_prop == 'status': m = int(self.in_range_min)
+                        else: m = self.in_range_min
+                    except:
+                        m = self.in_range_min
+                    if self.in_range_min == self.in_range_max and \
+                            self.in_range_min_eq and \
+                            self.in_range_max_eq:
+                        cond_eq = True
+                        condition = 'x == %s' % m
+                    else:
+                        condition = str(m) + ' <'
+                        if self.in_range_min_eq: condition += '='
+                        condition += ' x'
                 else:
-                    condition = str(m) + ' <'
-                    if self.in_range_min_eq: condition += '='
-                    condition += ' x'
-            else:
-                condition = 'x == \'%s\'' % self.in_range_min
-                cond_eq = True
-        if (self.in_range_min is not None and \
-                isinstance(self.in_range_min, float) or \
-                self.in_range_min is None) and \
-                not cond_eq and \
-                self.in_range_max is not None and \
-                isinstance(self.in_range_max, float):
-            if not condition: condition = 'x'
-            condition += ' <'
-            if self.in_range_max_eq: condition += '='
-            if self.for_prop == 'status': m = int(self.in_range_max)
-            else: m = self.in_range_max
-            condition += ' ' + str(m)
-        d['condition'] = condition
+                    condition = 'x == \'%s\'' % self.in_range_min
+                    cond_eq = True
+            if (self.in_range_min is not None and \
+                    isinstance(self.in_range_min, float) or \
+                    self.in_range_min is None) and \
+                    not cond_eq and \
+                    self.in_range_max is not None and \
+                    isinstance(self.in_range_max, float):
+                if not condition: condition = 'x'
+                condition += ' <'
+                if self.in_range_max_eq: condition += '='
+                if self.for_prop == 'status': m = int(self.in_range_max)
+                else: m = self.in_range_max
+                condition += ' ' + str(m)
+            d['condition'] = condition
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         if 'group' in d: del d['group']
@@ -405,7 +437,7 @@ class DecisionRule(eva.item.Item):
                 self.set_modified(save)
             return True
         elif prop == 'for_prop':
-            if val not in ['status', 'value']: return False
+            if val not in ['status', 'value', 'nstatus', 'nvalue']: return False
             if self.for_prop != val:
                 self.for_prop = val
                 self.log_set(prop, val)

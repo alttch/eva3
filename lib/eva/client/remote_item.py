@@ -37,6 +37,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.controller = controller
         self._virtual_allowed = False
         self._snmp_traps_allowed = False
+        self._drivers_allowed = False
         cfg = {}
         if controller.mqtt_update:
             cfg['mqtt_update'] = controller.mqtt_update
@@ -70,8 +71,10 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         d = super().serialize(
             full=full, config=config, info=info, props=props, notify=notify)
         d['controller_id'] = self.controller.full_id
-        try: del d['config_changed']
-        except: pass
+        try:
+            del d['config_changed']
+        except:
+            pass
         return d
 
 
@@ -113,13 +116,13 @@ class RemoteLVar(RemoteUpdatableItem):
         return d
 
 
-class RemoteSensor(RemoteUpdatableItem):
+class RemoteSensor(RemoteUpdatableItem, eva.item.PhysicalItem):
 
     def __init__(self, remote_uc, state):
         super().__init__('sensor', remote_uc, state)
 
 
-class RemoteUnit(RemoteUpdatableItem):
+class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
 
     def __init__(self, remote_uc, state):
         super().__init__('unit', remote_uc, state)
@@ -131,18 +134,36 @@ class RemoteUnit(RemoteUpdatableItem):
         self.action_enabled = True
         self.status_labels = state.get('status_labels')
 
+    def update_nstate(self, nstatus=None, nvalue=None):
+        need_notify = False
+        if nstatus is not None:
+            try:
+                _s = int(nstatus)
+                if self.nstatus != _s:
+                    self.nstatus = _s
+                    need_notify = True
+            except:
+                logging.info('%s nstatus "%s" is not number, can not set' % \
+                        (self.full_id, nstatus))
+                eva.core.log_traceback()
+                return False
+        if nvalue is not None:
+            if nvalue == '': nv = 'null'
+            else: nv = nvalue
+            if self.nvalue != nv:
+                self.nvalue = nv
+                need_notify = True
+        if need_notify:
+            self.notify()
+        return True
+
     def mqtt_set_state(self, topic, data):
         super().mqtt_set_state(topic, data)
         try:
             if topic.endswith('/nstatus'):
-                try:
-                    self.nstatus = int(data)
-                    self.notify()
-                except:
-                    pass
+                self.update_nstate(nstatus=data)
             elif topic.endswith('/nvalue'):
-                self.nvalue = data
-                self.notify()
+                self.update_nstate(nvalue=data)
             elif topic.endswith('/action_enabled'):
                 self.action_enabled = eva.tools.val_to_boolean(data)
                 self.notify()
@@ -170,7 +191,7 @@ class RemoteMacro(eva.item.Item):
         self.controller = controller
         self.action_enabled = False
 
-    def update_config(self,cfg):
+    def update_config(self, cfg):
         super().update_config(cfg)
         if 'action_enabled' in cfg:
             self.action_enabled = cfg['action_enabled']

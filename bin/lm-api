@@ -21,12 +21,12 @@ from eva.tools import print_json
 
 def usage():
     print()
-    print('EVA UC CLI version %s' % (apiclient.version))
+    print('EVA LM API CLI version %s' % (apiclient.version))
     print("""
-Usage: uc-cmd <command> [args] [-U API uri] [-K key] [-T sec] [-D]
+Usage: lm-api <command> [args] [-U API uri] [-K key] [-T sec] [-D]
 
     -U   specify API uri (http://host:port), if no uri specified, API will be
-         called in local mode (with data from ../etc/uc.ini and uc_apikeys.ini)
+         called in local mode (with data from ../etc/lm.ini and lm_apikeys.ini)
     -K   key, if no key specified, local master key will be used (if local API)
     -T   API request timeout
     -D   Enable debug messages
@@ -74,30 +74,39 @@ System commands:
     nodebug - set server debug mode off
 
 
-UC commands:
+LM commands:
 
-    state <-p tp> [-i id] [-y] [-g group]     get unit/sensor state, specify
-                                              either:
-                                                -i unit/sensor id, or
-                                                -p item type (U for unit,
-                                                              S for sensor)
+    state [-i id] [-y] [-g group]             get lvar state
 
-                                              -g  filter by group, you may use
-                                                  # and + for group wildcard
-                                                  (mqtt style)
+                                               -i  lvar id
+                                               -g  filter by group, you may use
+                                                   # and + for group wildcard
+                                                   (mqtt style)
+                                               -y  get full lvar info
+                                                   (description etc.)
 
-                                              -y  get full item info
-                                                  (description etc.)
+    set <-i id> [-s status] [-v value]        set lvar state,
+                                              status = -1 , 0 or 1
 
-    update <-i id> [-s status] [-v value]     update unit/sensor state,
-                                              status = always integer number
+    reset <-i id>                             reset lvar when used as a timer,
+                                              set status=1, value = "1"
 
-    action <-i id> <-s status> [-v value] [-p priority]
-                               [-w sec] [-q sec] [-u uuid]
-                                              execute unit action, wait -w sec
-                                              to complete. if wait time
-                                              expires, returns current action
-                                              state
+    clear <-i id>                             clears lvar when used as a flag,
+                                              set status=1, value="0". If
+                                              lvar is being used as a timer and
+                                              has 'expires' set, set status=0
+
+    toggle <-i id>                            toggles lvar when used as a flag
+                                              value between "0" and "1"
+
+    list_macros [-g group]                    list available macros, filter
+                                              by group if specified
+
+    run <-i macro_id> [-a args] [-p priority] [-w sec] [-q sec] [-u uuid]
+                                              execute macro with args specified
+                                              in -a, wait -w sec to complete.
+                                              if wait time expires, returns
+                                              current action state
 
                                               you may define own action uuid
                                               but it's not recommended unless
@@ -106,105 +115,150 @@ UC commands:
                                               -q - seconds to wait for action
                                               processing in the main queue
 
-    action_toggle <-i id> [-p priority] [-w sec] [-q sec] [-u uuid]
-                                              execute unit action to toggle
-                                              it's status (set 1 if 0, 0 if 1).
-                                              Options and behaviour are equal
-                                              to action command.
-
     result [-u uuid] [-i id] [-g grp] [-s state]
-                                              get action result(s), filter by
+                                              get macro execution result(s),
+                                              filter by
                                                -u  action uuid
-                                               -i  unit id
+                                               -i  macro id
                                                -g  group
                                                -s  state (Q,R,F -
                                                    queued, running, finished)
-
-
-    enable_actions <-i id>                    enable actions of unit, save
-                                              config property instantly
-
-    disable_actions <-i id>                   disable actions of unit save
-                                              config property instantly
-
-    terminate [-u uuid] [-i id]               terminate running action, either
-                                              by action uuid, or by item id.
-                                              if action uuid is specified but
-                                              action is still queued, it will
-                                              be canceled
-
-    q_clean <-i id>                           clean action queue for the unit,
-                                              don't terminate current running
-                                              action
-
-    kill <-i id>                              clean action queue for the unit
-                                              plus terminate current running 
-                                              action
 
 Configure items (requires master key):
 
     list [-g group] [-p tp]                   brief list of configurable items,
                                               filter by:
-                                                -p  item type (U for unit,
-                                                    S for sensor)
+
+                                                -p  item type (LV for lvar)
 
                                                 -g  filter by group, you may
                                                     use # and + for group
                                                     wildcard (mqtt style)
 
-    get_config <-i id>                        get item configuration
+    get_config <-i id>                        get lvar configuration
 
-    save_config <-i id>                       save item configuration, modified
-                                              item config will be also save on
+    save_config <-i id>                       save lvar configuration, modified
+                                              lvar config will be also save on
                                               exit (if db_update isn't set to 
                                               manual) and when save API
                                               function/command is called
 
 
-    list_props <-i id>                        list item properties allowed to
+    list_props <-i id>                        list lvar properties allowed to
                                               be modified
 
     set_prop <-i id> <-p prop> [-v val] [-y]
-                                              set item property to specified
+                                              set lvar property to specified
                                               value, unset property (set to
                                               default) if -v key is not
                                               specified
 
-                                              -y option will save item config
+                                              -y option will save lvar config
                                               if the property got the new value
 
-    create_unit <-i id> [-g group] [-y] [-z]
-    create_sensor <-i id> [-g group] [-y] [-z]
-    create_mu <-i id> [-g group] [-y] [-z]
-                                              create new unit, sensor or
-                                              multiupdate, if group is not
+    create_lvar <-i id> [-g group] [-y]
+                                              create new lvar, if group is not
                                               specified, 'nogroup' will be
                                               assigned.
 
                                                  -y  save item config right
                                                      after creation
-                                                 -z  create virtual item
 
-    clone <-i id> <-n new_id> [-g group] [-y]
-                                              clone item, put a new item into
-                                              the group if specified
+    destroy_lvar <-i id>                      destroy lvar
 
-                                                 -y  save item config right
-                                                     after creation
 
-    clone_group <-g group> <-n new_group>
-                <-p item_prefix> <-r new_item_prefix> [-y]
+Macros management in runtime (requires master key):
 
-                                              clone all items in group with ids
-                                              starting with item_prefix into a
-                                              new group, replace item_prefix to
-                                              new_item_prefix
+    list_macro_props <-i id>                  list macro properties allowed to
+                                              be modified
 
-                                                 -y  save item config right
-                                                     after creation
 
-    destroy <-i id|-g group>                  destroy an item or all items in
-                                              the group
+    set_macro_prop <-i id> <-p prop> [-v val] [-y]
+                                              set macro property to specified
+                                              value, unset property (set to
+                                              default) if -v key is not
+                                              specified
+
+                                              -y option will save macro config
+                                              if the property got the new value
+
+    create_macro <-i id> [-g group] [-y]      create macro configuration
+
+                                              -g  macro group
+                                              -y  save macro config after
+                                                  creation
+
+    destroy_macro <-i id>                     destroy macro configuration
+
+
+Decision Matrix management in runtime (requires master key or a key with
+allow = dm_rules for in_range_*, enabled and chillout_time prop management):
+
+    list_rules                                list DM rules, requires master
+                                              key only
+
+    list_rule_props <-i id>                   list DM rule properties allowed
+                                              to be modified
+
+    set_rule_prop <-i id> <-p prop> [-v val] [-y]
+                                              set DM rule property to specified
+                                              value, unset property (set to
+                                              default) if -v key is not
+                                              specified
+
+                                              -y option will save rule config
+                                              if the property got the new value
+
+    create_rule [-y]                          create new DM rule, rule id
+                                              will be returned in result,
+                                              requires master key only
+
+                                              -y  save rule config after
+                                                  creation
+
+    destroy_rule <-i id>                      destroy specified DM rule,
+                                              requires master key only
+
+
+Controller management in runtime (requires master key):
+
+    list_remote [-p type] [-i controller] [-g group]
+                                              list remote items
+
+                                              -p  filter by item type (unit,
+                                                  sensor)
+                                              -i  filter by UC
+                                              -g  filter by group, you may use
+                                                  # and + for group wildcard
+                                                  (mqtt style)
+
+    list_controllers                          list connected UCs
+
+    list_controller_props <-i id>             list UC properties allowed to
+                                              be modified
+
+    set_controller_prop <-i id> <-p prop> [-v val] [-y]
+                                              set UC property to specified
+                                              value, unset property (set to
+                                              default) if -v key is not
+                                              specified
+
+                                              -y option will save UC config
+                                              if the property got the new value
+
+    append_controller <-u URI> [-a apikey] [-m mqtt_notifier] [-s ssl_verify]
+                               [-t timeout] [-y]
+                                              append UC by API URI
+                                              -a  remote controller apikey
+                                              -m  local mqtt notifier to sync
+                                              -s  verify SSL or not (1|0) when
+                                                  calling API
+                                              -t  API timeout
+                                              -y  save UC config after creation
+
+    remove_controller <-i id>                 remove UC
+
+    reload_controller <-i id>                 reload UC items
 
 File management in runtime (requires master key):
 
@@ -243,13 +297,13 @@ Exit codes:
 the exit codes are equal to the return codes of API client:
 
     0   everything is okay
-    1   object (i.e. unit) not found or command was executed with wrong params
+    1   item (i.e. unit) not found or command was executed with wrong params
     2   forbidden (access to the object or function is denied)
     3   API returned error 500 (wrong params - used string instead of number
         etc.)
     4   API returned unknown error, try enabling debug mode and repeat,
         maybe it's a bug
-    5   API not ready. returns when unable to open etc/uc.ini or uc_apikeys.ini
+    5   API not ready. returns when unable to open etc/lm.ini or lm_apikeys.ini
         and API uri was not specified
     6   unknown command/function or no function specified
     7   server error (unable to connect etc.)
@@ -257,6 +311,7 @@ the exit codes are equal to the return codes of API client:
     9   server returned bad data (not JSON)
     10  command/function failed (i.e. executed action/cmd was completed with
         an error)
+    11  invalid command params
 
     99  if no command specified
     """)
@@ -272,7 +327,7 @@ debug = False
 try:
     func = sys.argv[1]
     o, a = getopt.getopt(sys.argv[2:],
-            'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:r:s:v:w:x:yzD')
+            'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:s:v:w:x:yzD')
 except:
     usage()
     sys.exit(99)
@@ -300,14 +355,14 @@ for i, v in o:
 
 if not apiuri:
     try:
-        api = apiclient.APIClientLocal('uc')
+        api = apiclient.APIClientLocal('lm')
     except:
-        print('Can not init API, uc.ini or uc_apikeys.ini missing?')
+        print('Can not init API, lm.ini or lm_apikeys.ini missing?')
         sys.exit(98)
 else:
     api = apiclient.APIClient()
     api.set_uri(apiuri)
-    api.set_product('uc')
+    api.set_product('lm')
 
 if apikey is not None:
     api.set_key(apikey)
@@ -317,14 +372,15 @@ api.ssl_verify(False)
 params = {}
 
 if ( func == 'set_prop' or \
-        func == 'create_device' or \
-        func == 'update_device' or \
-        func == 'clone' or \
-        func == 'clone_group' or \
-        func == 'create_unit' or \
-        func == 'create_sensor' or \
-        func == 'create_mu' ) and \
-            'full' in xparams and xparams['full'] == '1':
+        func == 'set_controller_prop' or \
+        func == 'set_macro_prop' or \
+        func == 'set_rule_prop' or \
+        func == 'load_ext' or \
+        func == 'create_rule' or \
+        func == 'create_macro' or \
+        func == 'append_controller' or \
+        func == 'create_lvar' ) \
+        and 'full' in xparams and xparams['full'] == '1':
     del xparams['full']
     params['save'] = '1'
 
@@ -349,6 +405,10 @@ if func == 'file_put':
             print('Can\'t read local file %s' % params['l'])
             sys.exit(apiclient.result_not_found)
 
+if debug:
+    print('API:', api._uri)
+    print('API func:', func)
+    print('Params', params)
 code, result = api.call(func, params, timeout, _debug=debug)
 
 if code != apiclient.result_ok and \
@@ -375,7 +435,7 @@ if code != apiclient.result_ok and \
         print('Error: invalid params')
     sys.exit(code)
 else:
-    if func in ['action'] and \
+    if func in ['run'] and \
         'status' in result and \
         result['status'] == 'completed':
         t1 = result['time']['created']

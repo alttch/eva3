@@ -4,18 +4,160 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.0"
 
 import subprocess
-import eva.core
 import threading
 import psutil
 import logging
 import time
 import os
 import traceback
+import uuid
+
+import eva.core
+import eva.uc.driverapi
 
 default_tki_diff = 2
 
 
-class ExternalProcess(object):
+class GenericRunner(object):
+
+    def __init__(self, timeout=None, tki=None):
+        self.xc = None
+        self.term = None
+        self.out = None
+        self.err = None
+        self.exitcode = -15
+        if tki: self.term_kill_interval = tki
+        else: self.term_kill_interval = eva.core.timeout - default_tki_diff
+        if self.term_kill_interval < 0: self.term_kill_interval = 0
+        if timeout: self.timeout = timeout
+        else: self.timeout = eva.core.timeout
+
+    def get_cvars(self, item=None):
+        cvars = eva.core.cvars.copy()
+        result = {}
+        for c in cvars.keys():
+            if c.find('/') == -1:
+                result[c] = cvars[c]
+            elif item and item.group == '/'.join(c.split('/')[:-1]):
+                result[c.split('/')[-1]] = cvars[c]
+        return result
+
+    def is_finished(self):
+        return True
+
+    def run(self):
+        pass
+
+    def terminate(self):
+        pass
+
+
+class DriverCommand(GenericRunner):
+
+    def __init__(self,
+                 item,
+                 env=None,
+                 update=False,
+                 state=None,
+                 timeout=None,
+                 tki=None,
+                 _uuid=None,
+                 state_in=None):
+        super().__init__(timeout=timeout, tki=tki)
+        if env:
+            cfg = env.copy()
+        else:
+            cfg = {}
+        cfg.update(self.get_cvars(item))
+        cfg.update(item.item_env(full=False))
+        if update:
+            if item.update_driver_config: cfg.update(item.update_driver_config)
+        else:
+            if item.action_driver_config: cfg.update(item.action_driver_config)
+        self.result = None
+        if env: cfg.update(env)
+        self.finished = False
+        if _uuid:
+            self._uuid = _uuid
+        else:
+            self._uuid = str(uuid.uuid1())
+        if update:
+            self.driver_id = item.update_exec[1:]
+        else:
+            self.driver_id = item.action_exec[1:]
+        self.driver = eva.uc.driverapi.get_driver(self.driver_id)
+        if self.driver:
+            if update:
+                self.run_thread = threading.Thread(
+                    target=self.driver.state,
+                    args=(self._uuid, cfg, self.timeout,
+                          self.term_kill_interval, state_in))
+            else:
+                self.run_thread = threading.Thread(
+                    target=self.driver.action,
+                    args=(self._uuid, state[0], state[1], cfg, self.timeout,
+                          self.term_kill_interval))
+        else:
+            self.run_thread = None
+        self.update = update
+
+    def is_finished(self):
+        return self.finished
+
+    def run(self):
+        if self.run_thread:
+            self.run_thread.start()
+            self.run_thread.join(self.timeout)
+            if self.run_thread.isAlive():
+                cmd = 'state' if self.update else 'action'
+                logging.warning('driver ' + \
+                    '%s %s command timeout, sending termination signal'
+                    % (self.driver.driver_id, cmd))
+                self.driver.terminate(self._uuid)
+                self.run_thread.join(self.term_kill_interval)
+                if self.run_thread.isAlive():
+                    logging.critical('driver %s %s command timeout' %
+                                     (self.driver.driver_id, cmd))
+                    eva.core.critical(from_driver=True)
+                    self.run_thread.join()
+        else:
+            logging.error('driver %s not found' % self.driver_id)
+        self.finish()
+
+    def terminate(self):
+        self.driver.terminate(self._uuid)
+
+    def finish(self):
+        self.finished = True
+        if self.driver:
+            result = self.driver.get_result(self._uuid)
+            self.driver.clear_result(self._uuid)
+            if self.update:
+                if not result:
+                    self.exitcode = 1
+                else:
+                    self.out = result
+                    self.exitcode = 0
+            else:
+                if result:
+                    self.out = result.get('out')
+                    self.err = result.get('err')
+                    exitcode = result.get('exitcode')
+                    if exitcode is None:
+                        self.exitcode = -1
+                    else:
+                        self.exitcode = exitcode
+                else:
+                    self.exitcode = -3
+                    self.out = ''
+                    self.err = 'no result'
+        else:
+            self.exitcode = -2
+            self.out = ''
+            self.err = 'driver not found'
+
+
+class ExternalProcess(GenericRunner):
 
     def __init__(self,
                  fname,
@@ -25,6 +167,7 @@ class ExternalProcess(object):
                  args=None,
                  timeout=None,
                  tki=None):
+        super().__init__(timeout=timeout, tki=tki)
         if item:
             if item.virtual:
                 self.xc_fname = eva.core.dir_xc + '/evirtual'
@@ -44,31 +187,9 @@ class ExternalProcess(object):
         if args: self.args += args
         if env: self.env.update(env)
         self.env.update(eva.core.env)
-        cvars = eva.core.cvars.copy()
-        for c in cvars.keys():
-            if c.find('/') == -1:
-                self.env[c] = cvars[c]
-            elif item and item.group == '/'.join(c.split('/')[:-1]):
-                self.env[c.split('/')[-1]] = cvars[c]
-        self.xc = None
+        self.env.update(self.get_cvars(item))
         self.termflag = threading.Event()
-        self.term = None
-        if tki: self.set_tki(tki)
-        else: self.term_kill_interval = eva.core.timeout - default_tki_diff
-        if timeout: self.timeout = timeout
-        else: self.timeout = eva.core.timeout
-        self.out = None
-        self.err = None
-        self.exitcode = -15
         self.finished = threading.Event()
-
-    def set_tki(self, tki):
-        if not tki: return
-        if tki < eva.core.timeout - default_tki_diff:
-            self.term_kill_interval = tki
-        else:
-            tki = eva.core.timeout - default_tki_diff
-        if tki < 0: tki = 0
 
     def is_finished(self):
         return self.finished.is_set()

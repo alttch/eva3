@@ -17,11 +17,28 @@ System Requirements
   <https://python-pillow.org/>`_ installation)
 * `realpath <http://www.gnu.org/software/coreutils/realpath>`_ (available in
   all modern Linux distributions)
+* EVA ICS can run on any Linux or UNIX-compatible system, but for the smooth
+  install we recommend Ubuntu or Debian.
 * To sync :doc:`item</items>` status between the components in real time -
   :ref:`MQTT<mqtt_>`-server (i.e. `mosquitto <http://mosquitto.org/>`_)
 
+.. warning::
+
+    Installation scripts try to install all required Python modules
+    automatically, but some of them may have problems installing with pip. It's
+    better to install these modules manually, before running EVA installation
+    scripts. Currently the problems may be expected with:
+
+        * **pandas** (python3-pandas)
+
 Initial configuration
 ---------------------
+
+.. note::
+
+    If you are going to run any controllers under restricted user account,
+    make sure it has a valid shell set.
+
 
 Easy setup
 ~~~~~~~~~~
@@ -85,8 +102,27 @@ The system is ready.
     running under, use *./set-run-under-user.sh* script to adjust runtime and
     database permissions.
 
-Updating
---------
+Upgrading
+---------
+
+To version 3.1.0 and above
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* Backup everything
+* Run the following command:
+
+.. code-block:: bash
+
+    curl -s <UPGRADE_SCRIPT_URL> | bash /dev/stdin
+    #i.e.
+    #curl -s https://www.eva-ics.com/download/3.1.0/stable/upgrade.sh | bash /dev/stdin
+
+* If upgrading from 3.0.2 or below, you may also want to enable controller
+  watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if
+  required)
+
+To versions below 3.1.0
+~~~~~~~~~~~~~~~~~~~~~~~
 
 * Stop EVA: *./sbin/eva-control stop*
 * Backup eva installation folder
@@ -94,6 +130,10 @@ Updating
 * Execute *sh install.sh* to install missed modules
 * Restore custom scripts and **ui** folder if required
 * Start EVA: *./sbin/eva-control start*
+
+.. note::
+
+    The system downgrade is officially not supported and not recommended.
 
 How to assign IDs to items
 --------------------------

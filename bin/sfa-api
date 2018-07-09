@@ -21,12 +21,13 @@ from eva.tools import print_json
 
 def usage():
     print()
-    print('EVA LM CLI version %s' % (apiclient.version))
+    print('EVA SFA API CLI version %s' % (apiclient.version))
     print("""
-Usage: lm-cmd <command> [args] [-U API uri] [-K key] [-T sec] [-D]
+Usage: sfa-cmd <command> [args] [-U API uri] [-K key] [-T sec] [-D]
 
     -U   specify API uri (http://host:port), if no uri specified, API will be
-         called in local mode (with data from ../etc/lm.ini and lm_apikeys.ini)
+         called in local mode (with data from ../etc/sfa.ini and
+         sfa_apikeys.ini)
     -K   key, if no key specified, local master key will be used (if local API)
     -T   API request timeout
     -D   Enable debug messages
@@ -74,22 +75,66 @@ System commands:
     nodebug - set server debug mode off
 
 
-LM commands:
+SFA commands:
 
-    state [-i id] [-y] [-g group]             get lvar state
+    state <-p tp> [-i id] [-g group]          get unit/sensor state, specify
+                                              -p item type (U for unit,
+                                                              S for sensor,
+                                                              LV for lvar)
 
-                                               -i  lvar id
-                                               -g  filter by group, you may use
-                                                   # and + for group wildcard
-                                                   (mqtt style)
-                                               -y  get full lvar info
-                                                   (description etc.)
+                                              -i show state just for specified
+                                                 item
+                                              -g  filter by group, you may use
+                                                  # and + for group wildcard
+                                                  (mqtt style)
+
+    action <-i id> <-s status> [-v value] [-p priority]
+                               [-w sec] [-q sec] [-u uuid]
+                                              execute unit action, wait -w sec
+                                              to complete. if wait time
+                                              expires, returns current action
+                                              state
+
+                                              you may define own action uuid
+                                              but it's not recommended unless
+                                              you know what you are doing
+
+    action_toggle <-i id> [-p priority] [-w sec] [-q sec] [-u uuid]
+                                              execute unit action to toggle
+                                              it's status (set 1 if 0, 0 if 1).
+                                              Options and behaviour are equal
+                                              to action command.
+
+    result [-u uuid] [-i id]
+                                              get action result(s), filter by
+                                               -u  action uuid
+                                               -i  unit id
+                                               -g  group
+                                               -s  state (Q,R,F -
+                                                   queued, running, finished)
+
+    enable_actions <-i id>                    enable actions of unit, save
+                                              config property instantly
+
+    disable_actions <-i id>                   disable actions of unit save
+                                              config property instantly
+
+    terminate [-i id]                         terminate running action for
+                                              a unit
+
+    q_clean <-i id>                           clean action queue for the unit,
+                                              don't terminate current running
+                                              action
+
+    kill <-i id>                              clean action queue for the unit
+                                              plus terminate current running 
+                                              action
 
     set <-i id> [-s status] [-v value]        set lvar state,
                                               status = -1 , 0 or 1
 
-    reset <-i id>                             reset lvar when used as a timer,
-                                              set status=1, value = "1"
+    reset <-i id>                             reset lvar when used as timer,
+                                              set status = 1, value = "1"
 
     clear <-i id>                             clears lvar when used as a flag,
                                               set status=1, value="0". If
@@ -99,10 +144,11 @@ LM commands:
     toggle <-i id>                            toggles lvar when used as a flag
                                               value between "0" and "1"
 
-    list_macros [-g group]                    list available macros, filter
-                                              by group if specified
+    list_macros [-g group] [-i controller_id] list available macros, filter
+                                              by group and/or controller_id
+                                              if specified
 
-    run <-i macro_id> [-a args] [-p priority] [-w sec] [-q sec] [-u uuid]
+    run <-i macro_id> [-a args] [-p priority] [-w sec] [-u uuid]
                                               execute macro with args specified
                                               in -a, wait -w sec to complete.
                                               if wait time expires, returns
@@ -111,91 +157,6 @@ LM commands:
                                               you may define own action uuid
                                               but it's not recommended unless
                                               you know what you are doing
-
-                                              -q - seconds to wait for action
-                                              processing in the main queue
-
-    result [-u uuid] [-i id] [-g grp] [-s state]
-                                              get macro execution result(s),
-                                              filter by
-                                               -u  action uuid
-                                               -i  macro id
-                                               -g  group
-                                               -s  state (Q,R,F -
-                                                   queued, running, finished)
-
-Configure items (requires master key):
-
-    list [-g group] [-p tp]                   brief list of configurable items,
-                                              filter by:
-
-                                                -p  item type (LV for lvar)
-
-                                                -g  filter by group, you may
-                                                    use # and + for group
-                                                    wildcard (mqtt style)
-
-    get_config <-i id>                        get lvar configuration
-
-    save_config <-i id>                       save lvar configuration, modified
-                                              lvar config will be also save on
-                                              exit (if db_update isn't set to 
-                                              manual) and when save API
-                                              function/command is called
-
-
-    list_props <-i id>                        list lvar properties allowed to
-                                              be modified
-
-    set_prop <-i id> <-p prop> [-v val] [-y]
-                                              set lvar property to specified
-                                              value, unset property (set to
-                                              default) if -v key is not
-                                              specified
-
-                                              -y option will save lvar config
-                                              if the property got the new value
-
-    create_lvar <-i id> [-g group] [-y]
-                                              create new lvar, if group is not
-                                              specified, 'nogroup' will be
-                                              assigned.
-
-                                                 -y  save item config right
-                                                     after creation
-
-    destroy_lvar <-i id>                      destroy lvar
-
-
-Macros management in runtime (requires master key):
-
-    list_macro_props <-i id>                  list macro properties allowed to
-                                              be modified
-
-
-    set_macro_prop <-i id> <-p prop> [-v val] [-y]
-                                              set macro property to specified
-                                              value, unset property (set to
-                                              default) if -v key is not
-                                              specified
-
-                                              -y option will save macro config
-                                              if the property got the new value
-
-    create_macro <-i id> [-g group] [-y]      create macro configuration
-
-                                              -g  macro group
-                                              -y  save macro config after
-                                                  creation
-
-    destroy_macro <-i id>                     destroy macro configuration
-
-
-Decision Matrix management in runtime (requires master key or a key with
-allow = dm_rules for in_range_*, enabled and chillout_time prop management):
-
-    list_rules                                list DM rules, requires master
-                                              key only
 
     list_rule_props <-i id>                   list DM rule properties allowed
                                               to be modified
@@ -209,17 +170,6 @@ allow = dm_rules for in_range_*, enabled and chillout_time prop management):
                                               -y option will save rule config
                                               if the property got the new value
 
-    create_rule [-y]                          create new DM rule, rule id
-                                              will be returned in result,
-                                              requires master key only
-
-                                              -y  save rule config after
-                                                  creation
-
-    destroy_rule <-i id>                      destroy specified DM rule,
-                                              requires master key only
-
-
 Controller management in runtime (requires master key):
 
     list_remote [-p type] [-i controller] [-g group]
@@ -227,38 +177,42 @@ Controller management in runtime (requires master key):
 
                                               -p  filter by item type (unit,
                                                   sensor)
-                                              -i  filter by UC
+                                              -i  filter by controller full ID
                                               -g  filter by group, you may use
                                                   # and + for group wildcard
                                                   (mqtt style)
 
-    list_controllers                          list connected UCs
+    list_controllers                          list connected controllers
 
-    list_controller_props <-i id>             list UC properties allowed to
-                                              be modified
+    list_controller_props <-i id>             list controller properties
+                                              allowed to be modified
 
     set_controller_prop <-i id> <-p prop> [-v val] [-y]
-                                              set UC property to specified
-                                              value, unset property (set to
-                                              default) if -v key is not
+                                              set controller property to
+                                              specified value, unset property
+                                              (set to default) if -v key is not
                                               specified
 
-                                              -y option will save UC config
-                                              if the property got the new value
+                                              -y option will save controller
+                                              config if the property got the
+                                              new value
 
-    append_controller <-u URI> [-a apikey] [-m mqtt_notifier] [-s ssl_verify]
-                               [-t timeout] [-y]
-                                              append UC by API URI
+    append_controller <-u URI> [-g uc|lm] [-a apikey] [-m mqtt_notifier]
+                      [-s ssl_verify] [-t timeout] [-y]
+                                              append controller by API URI
                                               -a  remote controller apikey
                                               -m  local mqtt notifier to sync
                                               -s  verify SSL or not (1|0) when
                                                   calling API
                                               -t  API timeout
-                                              -y  save UC config after creation
+                                              -y  save controller config after
+                                                  creation
 
-    remove_controller <-i id>                 remove UC
+    remove_controller <-i id>                 remove controller
 
-    reload_controller <-i id>                 reload UC items
+    reload_controller <-i id>                 reload controller items
+
+    reload_clients                            ask connected clients to reload
 
 File management in runtime (requires master key):
 
@@ -292,25 +246,27 @@ User management in runtime (requires master key):
 
     destroy_user <-u username>                delete user
 
+
 Exit codes:
 
 the exit codes are equal to the return codes of API client:
 
     0   everything is okay
-    1   object (i.e. unit) not found or command was executed with wrong params
+    1   item (i.e. unit) not found or command was executed with wrong params
     2   forbidden (access to the object or function is denied)
     3   API returned error 500 (wrong params - used string instead of number
         etc.)
     4   API returned unknown error, try enabling debug mode and repeat,
         maybe it's a bug
-    5   API not ready. returns when unable to open etc/lm.ini or lm_apikeys.ini
-        and API uri was not specified
+    5   API not ready. returns when unable to open etc/sfa.ini or
+        sfa_apikeys.ini and API uri was not specified
     6   unknown command/function or no function specified
     7   server error (unable to connect etc.)
     8   server timeout
     9   server returned bad data (not JSON)
     10  command/function failed (i.e. executed action/cmd was completed with
         an error)
+    11  invalid command params
 
     99  if no command specified
     """)
@@ -354,14 +310,14 @@ for i, v in o:
 
 if not apiuri:
     try:
-        api = apiclient.APIClientLocal('lm')
+        api = apiclient.APIClientLocal('sfa')
     except:
-        print('Can not init API, lm.ini or lm_apikeys.ini missing?')
+        print('Can not init API, sfa.ini or sfa_apikeys.ini missing?')
         sys.exit(98)
 else:
     api = apiclient.APIClient()
     api.set_uri(apiuri)
-    api.set_product('lm')
+    api.set_product('sfa')
 
 if apikey is not None:
     api.set_key(apikey)
@@ -370,14 +326,9 @@ api.ssl_verify(False)
 
 params = {}
 
-if ( func == 'set_prop' or \
-        func == 'set_controller_prop' or \
-        func == 'set_macro_prop' or \
+if ( func == 'set_controller_prop' or \
         func == 'set_rule_prop' or \
-        func == 'create_rule' or \
-        func == 'create_macro' or \
-        func == 'append_controller' or \
-        func == 'create_lvar' ) \
+        func == 'append_controller' ) \
         and 'full' in xparams and xparams['full'] == '1':
     del xparams['full']
     params['save'] = '1'
@@ -402,7 +353,10 @@ if func == 'file_put':
         except:
             print('Can\'t read local file %s' % params['l'])
             sys.exit(apiclient.result_not_found)
-
+if debug:
+    print('API:', api._uri)
+    print('API func:', func)
+    print('Params', params)
 code, result = api.call(func, params, timeout, _debug=debug)
 
 if code != apiclient.result_ok and \

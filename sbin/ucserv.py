@@ -44,7 +44,7 @@ for production use uc-control only to start/stop UC
 """)
 
 
-product_build = 2018062701
+product_build = 2018070501
 
 product_code = 'uc'
 
@@ -93,6 +93,7 @@ eva.notify.init()
 eva.notify.load()
 eva.notify.start()
 eva.uc.controller.init()
+eva.uc.controller.load_drivers()
 eva.uc.controller.load_units()
 eva.uc.controller.load_sensors()
 eva.uc.controller.load_mu()

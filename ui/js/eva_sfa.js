@@ -918,7 +918,10 @@ function eva_sfa_popup(
   if (pclass[0] == '!') {
     _pclass = pclass.substr(1);
   }
-  if (eva_sfa_popup_priority(eva_sfa_popup_active) > eva_sfa_popup_priority(_pclass)) {
+  if (
+    eva_sfa_popup_priority(eva_sfa_popup_active) >
+    eva_sfa_popup_priority(_pclass)
+  ) {
     return false;
   }
   eva_sfa_popup_active = _pclass;
@@ -1212,7 +1215,7 @@ function eva_sfa_heartbeat(on_login, data) {
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '')
     q += '?k=' + eva_sfa_apikey;
   if (on_login) {
-    q += '&icvars=1'
+    q += '&icvars=1';
   }
   if (eva_sfa_ws_mode) {
     if (eva_sfa_last_ping !== null) {
@@ -1385,6 +1388,6 @@ function eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct) {
   }
   obj.html(txt + ' (' + ct + ')');
   setTimeout(function() {
-    eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct - 1)
+    eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct - 1);
   }, 1000);
 }

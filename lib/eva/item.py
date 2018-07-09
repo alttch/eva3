@@ -13,6 +13,7 @@ import logging
 import jsonpickle
 import eva.core
 import eva.runner
+import eva.uc.driverapi
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
@@ -96,7 +97,8 @@ class Item(object):
             d['full_id'] = self.group + '/' + self.item_id
             d['oid'] = self.oid
         if full or config or info or props:
-            d['description'] = self.description
+            if not config or self.description != '':
+                d['description'] = self.description
         if full:
             d['config_changed'] = self.config_changed
         if info:
@@ -174,6 +176,71 @@ class Item(object):
         return self._destroyed
 
 
+class PhysicalItem(Item):
+
+    def __init__(self, item_id, item_type):
+        super().__init__(item_id, item_type)
+        self.loc_x = None
+        self.loc_y = None
+        self.loc_z = None
+        self.location = ''
+
+    def update_config(self, data):
+        if 'location' in data:
+            self.update_loc(data['location'])
+        super().update_config(data)
+
+    def set_prop(self, prop, val=None, save=False):
+        if prop == 'location':
+            if val is None: v = ''
+            else: v = val
+            if self.location != v:
+                self.update_loc(v)
+                self.log_set(prop, v)
+                self.set_modified(save)
+            return True
+        else:
+            return super().set_prop(prop, val, save)
+
+    def update_loc(self, loc):
+        self.loc_x = None
+        self.loc_y = None
+        self.loc_z = None
+        if loc and loc.find(':') != -1:
+            l = loc.split(':')
+            try:
+                self.loc_x = float(l[0])
+                self.loc_y = float(l[1])
+                if len(l) > 2:
+                    self.loc_z = float(l[2])
+            except:
+                self.loc_x = None
+                self.loc_y = None
+                self.loc_z = None
+        self.location = loc
+
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = {}
+        if config or props:
+            if self.location != '':
+                d['location'] = self.location
+            elif props:
+                d['location'] = None
+        if full:
+            d['location'] = self.location
+            d['loc_x'] = self.loc_x
+            d['loc_y'] = self.loc_y
+            d['loc_z'] = self.loc_z
+        d.update(super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify))
+        return d
+
+
 class UpdatableItem(Item):
 
     def __init__(self, item_id, item_type):
@@ -198,6 +265,7 @@ class UpdatableItem(Item):
         self.set_time = time.time()
         self.expires = 0
         self.snmp_trap = None
+        self.update_driver_config = None
         self.mqtt_update = None
         self.mqtt_update_notifier = None
         self.mqtt_update_qos = 1
@@ -206,6 +274,7 @@ class UpdatableItem(Item):
         self._virtual_allowed = True
         self._mqtt_updates_allowed = True
         self._snmp_traps_allowed = True
+        self._drivers_allowed = True
         self._expire_on_any = False
 
     def update_config(self, data):
@@ -213,6 +282,8 @@ class UpdatableItem(Item):
             self.virtual = data['virtual']
         if 'snmp_trap' in data:
             self.snmp_trap = data['snmp_trap']
+        if 'update_driver_config' in data:
+            self.update_driver_config = data['update_driver_config']
         if 'expires' in data:
             self.expires = data['expires']
         if 'update_exec' in data:
@@ -273,9 +344,24 @@ class UpdatableItem(Item):
             return True
         elif prop == 'update_exec':
             if self.update_exec != val:
+                if val and val[0] == '|':
+                    if self._drivers_allowed:
+                        d = eva.uc.driverapi.get_driver(val[1:])
+                        if not d:
+                            logging.error(
+                                'Can not set ' + \
+                                    '%s.update_exec = %s, no such driver'
+                                    % (self.full_id, val))
+                            return False
+                    else:
+                        return False
+                if not val:
+                    self.unregister_driver_updates()
                 self.update_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
+                if val and val[0] == '|':
+                    self.register_driver_updates()
             return True
         elif prop == 'update_interval':
             if val is None:
@@ -338,7 +424,48 @@ class UpdatableItem(Item):
                 self.log_set(prop, None)
                 self.set_modified(save)
                 return True
+            elif isinstance(val, dict):
+                self.snmp_trap = val
+                self.subscribe_snmp_traps()
+                self.log_set('snmp_trap', 'dict')
+                self.set_modified(save)
+                return True
             return False
+        elif prop == 'update_driver_config' and self._drivers_allowed:
+            if val is None:
+                self.update_driver_config = None
+                self.log_set(prop, None)
+                self.set_modified(save)
+                return True
+            elif isinstance(val, dict):
+                self.update_driver_config = val
+                self.log_set(prop, 'dict')
+                self.set_modified(save)
+                return True
+            else:
+                try:
+                    cfg = {}
+                    vals = val.split(',')
+                    for v in vals:
+                        name, value = v.split('=')
+                        if value.find('||') != -1:
+                            _value = value.split('||')
+                            value = []
+                            for _v in _value:
+                                if _v.find('|') != -1:
+                                    value.append(_v.split('|'))
+                                else:
+                                    value.append([_v])
+                        elif value.find('|') != -1:
+                            value = value.split('|')
+                        cfg[name] = value
+                    self.update_driver_config = cfg
+                    self.log_set(prop, val)
+                    self.set_modified(save)
+                    return True
+                except:
+                    eva.core.log_traceback()
+                    return False
         elif prop == 'snmp_trap.ident_vars' and self._snmp_traps_allowed:
             if val is None:
                 if self.snmp_trap and 'ident_vars' in self.snmp_trap:
@@ -413,7 +540,7 @@ class UpdatableItem(Item):
                 self.log_set('snmp_trap.set_value', val)
                 self.set_modified(save)
                 return True
-        elif prop == 'snmp_trap.set_if' and self._snmp_traps_allowed:
+        elif prop[:16] == 'snmp_trap.set_if' and self._snmp_traps_allowed:
             if val is None:
                 if self.snmp_trap and 'set_if' in self.snmp_trap:
                     del self.snmp_trap['set_if']
@@ -481,6 +608,7 @@ class UpdatableItem(Item):
     def start_processors(self):
         self.subscribe_mqtt_update()
         self.subscribe_snmp_traps()
+        self.register_driver_updates()
         self.start_update_processor()
         self.start_update_scheduler()
         self.start_expiration_checker()
@@ -488,6 +616,7 @@ class UpdatableItem(Item):
 
     def stop_processors(self):
         self.unsubscribe_mqtt_update()
+        self.unregister_driver_updates()
         self.unsubscribe_snmp_traps()
         self.stop_update_processor()
         self.stop_update_scheduler()
@@ -498,9 +627,19 @@ class UpdatableItem(Item):
         if self.snmp_trap and self._snmp_traps_allowed:
             eva.traphandler.subscribe(self)
 
+    def register_driver_updates(self):
+        if self._drivers_allowed and \
+                self.update_exec and self.update_exec[0] == '|':
+            eva.uc.driverapi.register_item_update(self)
+
     def unsubscribe_snmp_traps(self):
         if self._snmp_traps_allowed:
             eva.traphandler.unsubscribe(self)
+
+    def unregister_driver_updates(self):
+        if self._drivers_allowed and \
+                self.update_exec and self.update_exec[0] == '|':
+            eva.uc.driverapi.unregister_item_update(self)
 
     def subscribe_mqtt_update(self):
         if not self.mqtt_update or \
@@ -650,17 +789,15 @@ class UpdatableItem(Item):
         self.update_set_state(status=-1, value='null', force_virtual=True)
         return True
 
-    def _perform_update(self):
+    def update(self, driver_state_in=None):
+        if self.updates_allowed() and not self.is_destroyed():
+            self._perform_update(driver_state_in)
+
+    def _perform_update(self, driver_state_in=None):
         try:
             self.update_log_run()
             self.update_before_run()
-            xc = eva.runner.ExternalProcess(
-                fname=self.update_exec,
-                item=self,
-                env=self.update_env(),
-                update=True,
-                args=self.update_run_args(),
-                timeout=self.update_timeout)
+            xc = self.get_update_xc(driver_state_in)
             self.update_xc = xc
             xc.run()
             if xc.exitcode < 0:
@@ -673,6 +810,22 @@ class UpdatableItem(Item):
         except:
             logging.error('update %s failed' % self.full_id)
             eva.core.log_traceback()
+
+    def get_update_xc(self, driver_state_in=None):
+        if self._drivers_allowed and not self.virtual and \
+                self.update_exec and self.update_exec[0] == '|':
+            return eva.runner.DriverCommand(
+                item=self,
+                update=True,
+                timeout=self.update_timeout,
+                state_in=driver_state_in)
+        return eva.runner.ExternalProcess(
+            fname=self.update_exec,
+            item=self,
+            env=self.update_env(),
+            update=True,
+            args=self.update_run_args(),
+            timeout=self.update_timeout)
 
     def update_env(self):
         return {}
@@ -690,12 +843,17 @@ class UpdatableItem(Item):
     def update_after_run(self, update_out):
         if self._destroyed: return
         try:
-            result = update_out.strip()
-            if result.find(' ') > -1:
-                status, value = result.split(' ')
+            if isinstance(update_out, str):
+                result = update_out.strip()
+                if result.find(' ') > -1:
+                    status, value = result.split(' ')
+                else:
+                    status = result
+                    value = 'null'
             else:
-                status = result
-                value = 'null'
+                status = update_out[0]
+                value = update_out[1]
+                if value is None: value = 'null'
         except:
             logging.error('update %s returned bad data' % self.full_id)
             eva.core.log_traceback()
@@ -780,7 +938,10 @@ class UpdatableItem(Item):
         need_notify = False
         if status is not None and status != '':
             try:
-                self.status = int(status)
+                _s = int(status)
+                if self.status != _s:
+                    need_notify = True
+                    self.status = _s
             except:
                 logging.info('%s status "%s" is not number, can not set' % \
                         (self.full_id, status))
@@ -790,8 +951,9 @@ class UpdatableItem(Item):
         if value is not None:
             if value == '': v = 'null'
             else: v = value
-            if self.value != v: need_notify = True
-            self.value = v
+            if self.value != v:
+                need_notify = True
+                self.value = v
         if need_notify:
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
@@ -809,7 +971,13 @@ class UpdatableItem(Item):
                     d['snmp_trap'] = self.snmp_trap
                 elif props:
                     d['snmp_trap'] = None
-            d['expires'] = self.expires
+            if self._drivers_allowed:
+                if self.update_driver_config:
+                    d['update_driver_config'] = self.update_driver_config
+                elif props:
+                    d['update_driver_config'] = None
+            if not config or self.expires:
+                d['expires'] = self.expires
             if self.update_exec:
                 d['update_exec'] = self.update_exec
             elif props:
@@ -819,8 +987,10 @@ class UpdatableItem(Item):
                     d['mqtt_update'] = self.mqtt_update
                 elif props:
                     d['mqtt_update'] = None
-            d['update_interval'] = self.update_interval
-            d['update_delay'] = self.update_delay
+            if not config or self.update_interval:
+                d['update_interval'] = self.update_interval
+            if not config or self.update_delay:
+                d['update_delay'] = self.update_delay
             if self._update_timeout:
                 d['update_timeout'] = self._update_timeout
             elif props:
@@ -829,16 +999,17 @@ class UpdatableItem(Item):
             d['status'] = self.status
             d['value'] = self.value
         if (full or config or props) and self._virtual_allowed:
-            d['virtual'] = self.virtual
+            if not config or self.virtual:
+                d['virtual'] = self.virtual
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         return d
 
-    def item_env(self):
+    def item_env(self, full=True):
         if self.value is not None: value = self.value
         else: value = 'null'
         e = {'EVA_ITEM_STATUS': str(self.status), 'EVA_ITEM_VALUE': str(value)}
-        e.update(super().item_env())
+        if full: e.update(super().item_env())
         return e
 
     def destroy(self):
@@ -873,6 +1044,8 @@ class ActiveItem(Item):
         self.mqtt_control_notifier = None
         self.mqtt_control_qos = 1
         self._expire_on_any = True
+        self._drivers_allowed = True
+        self.action_driver_config = None
 
     def q_is_task(self):
         return not self.queue.empty()
@@ -1008,7 +1181,7 @@ class ActiveItem(Item):
             '%s executing action %s pr=%u' % \
              (self.full_id, action.uuid, action.priority))
 
-    def action_run_args(self, action):
+    def action_run_args(self, action, n2n=True):
         return ()
 
     def action_before_get_task(self):
@@ -1071,16 +1244,9 @@ class ActiveItem(Item):
                     elif a.is_status_queued() and a.set_running():
                         self.action_log_run(a)
                         self.action_before_run(a)
-                        xc = eva.runner.ExternalProcess(
-                            fname=self.action_exec,
-                            item=self,
-                            env=a.action_env(),
-                            update=False,
-                            args=self.action_run_args(a),
-                            timeout=self.action_timeout)
+                        xc = self.get_action_xc(a)
                         self.action_xc = xc
                         self.queue_lock.release()
-                        xc.set_tki(self.term_kill_interval)
                         xc.run()
                         self.action_after_run(a, xc)
                         if xc.exitcode < 0:
@@ -1114,11 +1280,32 @@ class ActiveItem(Item):
             self.queue_lock.release()
         logging.debug('%s action processor stopped' % self.full_id)
 
+    def get_action_xc(self, a):
+        if self._drivers_allowed and not self.virtual and \
+                self.action_exec and self.action_exec[0] == '|':
+            return eva.runner.DriverCommand(
+                item=self,
+                state=self.action_run_args(a, n2n=False),
+                timeout=self.action_timeout,
+                tki=self.term_kill_interval,
+                _uuid=a.uuid)
+        else:
+            return eva.runner.ExternalProcess(
+                fname=self.action_exec,
+                item=self,
+                env=a.action_env(),
+                update=False,
+                args=self.action_run_args(a),
+                timeout=self.action_timeout,
+                tki=self.term_kill_interval)
+
     def update_config(self, data):
         if 'action_enabled' in data:
             self.action_enabled = data['action_enabled']
         if 'action_exec' in data:
             self.action_exec = data['action_exec']
+        if 'action_driver_config' in data:
+            self.action_driver_config = data['action_driver_config']
         if 'mqtt_control' in data and data['mqtt_control'] is not None:
             self.mqtt_control = data['mqtt_control']
             params = data['mqtt_control'].split(':')
@@ -1155,10 +1342,56 @@ class ActiveItem(Item):
                 return False
         elif prop == 'action_exec':
             if self.action_exec != val:
+                if val and val[0] == '|':
+                    if self._drivers_allowed:
+                        d = eva.uc.driverapi.get_driver(val[1:])
+                        if not d:
+                            logging.error(
+                                'Can not set ' + \
+                                    '%s.action_exec = %s, no such driver'
+                                    % (self.full_id, val))
+                            return False
+                    else:
+                        return False
                 self.action_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
             return True
+        elif prop == 'action_driver_config' and self._drivers_allowed:
+            if val is None:
+                self.action_driver_config = None
+                self.log_set(prop, None)
+                self.set_modified(save)
+                return True
+            elif isinstance(val, dict):
+                self.action_driver_config = val
+                self.log_set(prop, 'dict')
+                self.set_modified(save)
+                return True
+            else:
+                try:
+                    cfg = {}
+                    vals = val.split(',')
+                    for v in vals:
+                        name, value = v.split('=')
+                        if value.find('||') != -1:
+                            _value = value.split('||')
+                            value = []
+                            for _v in _value:
+                                if _v.find('|') != -1:
+                                    value.append(_v.split('|'))
+                                else:
+                                    value.append([_v])
+                        elif value.find('|') != -1:
+                            value = value.split('|')
+                        cfg[name] = value
+                    self.action_driver_config = cfg
+                    self.log_set(prop, val)
+                    self.set_modified(save)
+                    return True
+                except:
+                    eva.core.log_traceback()
+                    return False
         elif prop == 'mqtt_control':
             if val is None:
                 if self.mqtt_control is not None:
@@ -1261,8 +1494,14 @@ class ActiveItem(Item):
                   notify=False):
         d = {}
         if not info:
-            d['action_enabled'] = self.action_enabled
+            if not config or self.action_enabled:
+                d['action_enabled'] = self.action_enabled
         if config or props:
+            if self._drivers_allowed:
+                if self.action_driver_config:
+                    d['action_driver_config'] = self.action_driver_config
+                elif props:
+                    d['action_driver_config'] = None
             if self.action_exec:
                 d['action_exec'] = self.action_exec
             elif props:
@@ -1271,8 +1510,10 @@ class ActiveItem(Item):
                 d['mqtt_control'] = self.mqtt_control
             elif props:
                 d['mqtt_control'] = None
-            d['action_queue'] = self.action_queue
-            d['action_allow_termination'] = self.action_allow_termination
+            if not config or self.action_queue:
+                d['action_queue'] = self.action_queue
+            if not config or self.action_allow_termination:
+                d['action_allow_termination'] = self.action_allow_termination
             if self._action_timeout:
                 d['action_timeout'] = self._action_timeout
             elif props:
@@ -1539,7 +1780,12 @@ class MultiUpdate(UpdatableItem):
 
     def update_after_run(self, update_out):
         if self._destroyed: return
-        result = update_out.strip().split('\n')
+        if isinstance(update_out, str):
+            result = update_out.strip().split('\n')
+        elif isinstance(update_out, list):
+            result  = update_out
+        else:
+            result = [ update_out ]
         if len(result) < len(self.items_to_update):
             logging.warning(
                     '%s have %u items to update, got only %u in result' % \
@@ -1619,11 +1865,13 @@ class MultiUpdate(UpdatableItem):
         if 'expires' in d:
             del d['expires']
         if config or props:
-            d['update_allow_check'] = self.update_allow_check
+            if not config or not self.update_allow_check:
+                d['update_allow_check'] = self.update_allow_check
             ids = []
-            for i in self.items_to_update:
-                ids.append(i.item_id)
-            d['items'] = ids
+            if not config or self.items_to_update:
+                for i in self.items_to_update:
+                    ids.append(i.item_id)
+                d['items'] = ids
         return d
 
     def destroy(self):
