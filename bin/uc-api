@@ -14,8 +14,6 @@ dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
 from eva.client import apiclient
-
-import eva.core
 from eva.tools import print_json
 
 
@@ -288,7 +286,7 @@ debug = False
 try:
     func = sys.argv[1]
     o, a = getopt.getopt(sys.argv[2:],
-            'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:r:s:v:w:x:yzD')
+                         'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:r:s:v:w:x:yzD')
 except:
     usage()
     sys.exit(99)

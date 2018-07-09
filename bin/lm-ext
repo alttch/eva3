@@ -17,7 +17,6 @@ sys.path.append(dir_lib)
 
 from eva.client import apiclient
 
-import eva.core
 from eva.tools import print_json
 
 xparams = {}

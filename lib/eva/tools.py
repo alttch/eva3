@@ -12,9 +12,6 @@ import struct
 from collections import OrderedDict
 from netaddr import IPNetwork, IPAddress
 
-import eva.core
-
-
 class MultiOrderedDict(OrderedDict):
 
     def __setitem__(self, key, value):
@@ -50,7 +47,6 @@ def parse_host_port(hp, default_port=None):
         host, port = hp.split(':')
         port = int(port)
     except:
-        eva.core.log_traceback()
         return (None, default_port)
     return (host, port)
 
