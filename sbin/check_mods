@@ -4,7 +4,6 @@ import sys
 import os
 import importlib
 
-
 mods = [
     'cherrypy',
     'collections',
@@ -38,19 +37,20 @@ mods = [
     'traceback',
     'uuid',
     'ws4py',
-    ]
+]
 
-if len(sys.argv)>1 and sys.argv[1] == 'install': install = True
+if len(sys.argv) > 1 and sys.argv[1] == 'install': install = True
 else: install = False
 
 for m in mods:
-    print (m.ljust(20),end = '')
+    print(m.ljust(20), end='')
     try:
         importlib.import_module(m)
-        print ('OK')
+        print('OK')
     except:
-        print ('MISSING!')
+        print('MISSING! ', end='')
         if install:
+            print('INSTALLING...')
             if m == 'paho.mqtt.client': mod = 'paho-mqtt'
             elif m == 'PIL': mod = 'pillow'
             else: mod = m
@@ -60,3 +60,5 @@ for m in mods:
             except:
                 print('Failed to install, Aborting')
                 sys.exit(1)
+        else:
+            print()
