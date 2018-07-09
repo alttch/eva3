@@ -281,7 +281,7 @@ except:
 a = ap.parse_args()
 
 if not a._type:
-    ap.print_usage()
+    ap.print_help()
     sys.exit(99)
 
 if a._type and a._func:
@@ -368,7 +368,7 @@ if code != apiclient.result_ok and \
     elif code == apiclient.result_not_ready:
         print('Error: API not ready')
     elif code == apiclient.result_func_unknown:
-        ap.print_usage()
+        ap.print_help()
     elif code == apiclient.result_server_error:
         print('Error: Server error')
     elif code == apiclient.result_server_timeout:
