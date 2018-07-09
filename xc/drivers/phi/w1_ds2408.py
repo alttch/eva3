@@ -14,6 +14,11 @@ __config_help__ = [{
     'help': 'relay address on 1-Wire bus',
     'type': 'str',
     'required': False
+}, {
+    'name': 'retries',
+    'help': '1-Wire set retry attempts (default: 3)',
+    'type': 'int',
+    'required': False
 }]
 __get_help__ = __config_help__
 __set_help__ = __config_help__
@@ -35,7 +40,6 @@ in each unit configuration which uses the driver with this PHI.
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import get_timeout
-from eva.uc.driverapi import get_polldelay
 
 import os
 import threading
@@ -63,6 +67,14 @@ class PHI(GenericPHI):
         self.addr = self.phi_cfg.get('addr')
         self.w1 = '/sys/bus/w1/devices'
         self.set_lock = threading.Lock()
+        self.aao_get = True
+        self.aao_set = True
+        retries = self.phi_cfg.get('retries')
+        try:
+            retries = int(retries)
+        except:
+            retries = None
+        self.retries = retries if retries is not None else 3
         if not os.path.isdir(self.w1):
             self.log_error('1-Wire bus not ready')
             self.ready = False
@@ -74,7 +86,13 @@ class PHI(GenericPHI):
         else: addr = self.addr
         if addr is None: return None
         try:
-            r = ord(open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
+            for i in range(self.retries + 1):
+                try:
+                    r = ord(open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
+                except:
+                    r = None
+            if r is None and i == self.retries:
+                raise Exception('1-Wire get error')
             data = {}
             for i in range(8):
                 data[str(i + 1)] = 0 if 1 << i & r else 1
@@ -88,8 +106,12 @@ class PHI(GenericPHI):
             addr = cfg.get('addr')
             if addr is None: addr = self.addr
         else: addr = self.addr
-        if addr is None: return False
-        if not self.set_lock.acquire(get_timeout()): return False
+        if addr is None:
+            self.log_error('1-Wire addr not specified')
+            return False
+        if not self.set_lock.acquire(timeout=get_timeout()):
+            self.log_error('can not acquire set lock')
+            return False
         try:
             if isinstance(port, list):
                 _port = port
@@ -107,17 +129,17 @@ class PHI(GenericPHI):
                     raise Exception('data is not in range 0..1')
                 if _d: r = 1 << (_p - 1) ^ 0xFF & r
                 else: r = r | 1 << (_p - 1)
-            for i in range(3):
+            for i in range(self.retries + 1):
                 try:
                     open('%s/%s/output' % (self.w1, addr), 'wb').write(
                         bytes([r]))
-                    sleep(get_polldelay())
+                    sleep(0.05)
                     rn = ord(
                         open('%s/%s/state' % (self.w1, addr), 'rb').read(1))
                 except:
                     rn = None
                 if r == rn: break
-                if i == 2: raise Exception('1-Wire set error')
+                if i == self.retries: raise Exception('1-Wire set error')
             self.set_lock.release()
             return True
         except:
