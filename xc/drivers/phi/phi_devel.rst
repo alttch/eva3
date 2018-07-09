@@ -175,6 +175,8 @@ call.
     get(self, port=None, cfg=None, timeout=0):
         #<your code>
         #should return a single state value or a dict { 'port': value }
+        #port should always be a string
+        #
         #should return None if failed
     
     # if PHI can write data to the equipment
