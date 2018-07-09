@@ -433,7 +433,7 @@ def load(fname=None, initial=False, init_log=True):
         except:
             pass
         try:
-            timeout = int(cfg.get('server', 'timeout'))
+            timeout = float(cfg.get('server', 'timeout'))
         except:
             pass
         logging.debug('server.timeout = %s' % timeout)
