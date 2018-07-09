@@ -12,6 +12,8 @@ import glob
 import os
 
 import eva.core
+import eva.sysapi
+import eva.apikey
 from eva.tools import format_json
 
 phis = {}
@@ -41,6 +43,20 @@ def log_traceback():
     return eva.core.log_traceback()
 
 
+def lock(l, timeout=None, expires=None):
+    if expires is None:
+        e = eva.core.timeout
+    else:
+        e = expires
+        if e > eva.core.timeout: e = eva.core.timeout
+    return eva.sysapi.api.lock(
+        eva.apikey.masterkey, l=l, timeout=timeout, expires=e)
+
+
+def unlock(l):
+    return eva.sysapi.api.unlock(eva.apikey.masterkey, l=l)
+
+
 def handle_phi_event(phi, port, data):
     iph = items_by_phi.get(phi.phi_id)
     if iph:
@@ -64,6 +80,7 @@ def get_driver(driver_id):
 
 # private API functions, not recommended to use
 
+
 def modhelp_phi(mod, context):
     code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
             ' s=PHI().serialize(helpinfo=\'%s\')' % context
@@ -74,6 +91,7 @@ def modhelp_phi(mod, context):
         return result
     except:
         return None
+
 
 def modinfo_phi(mod):
     code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
@@ -91,6 +109,7 @@ def modinfo_phi(mod):
     except:
         return None
 
+
 def modhelp_lpi(mod, context):
     code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \
             ' s=LPI().serialize(helpinfo=\'%s\')' % context
@@ -101,6 +120,7 @@ def modhelp_lpi(mod, context):
         return result
     except:
         return None
+
 
 def modinfo_lpi(mod):
     code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \
