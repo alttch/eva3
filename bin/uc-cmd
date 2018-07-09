@@ -20,43 +20,49 @@ from eva.client import apiclient
 import eva.core
 from eva.tools import print_json
 
-xparams = {}
 timeout = None
 apikey = None
 apiuri = None
 
 debug = False
 
-default_timeout = 5
+default_timeout = 10
 
 _me = 'EVA ICS UC CLI version %s' % __version__
 
 api_functions = {
-        'test': 'test',
-        'save': 'save',
-        'phi:list': 'list_phi',
-        'phi:show': 'get_phi',
-        'phi:mods': 'list_phi_mods',
-        'phi:test': 'test_phi',
-        'phi:load': 'load_phi',
-        'phi:unload': 'unload_phi',
-        'phi:modinfo': 'modinfo_phi',
-        'phi:modhelp': 'modhelp_phi',
-        'lpi:mods': 'list_lpi_mods',
-        'lpi:modinfo': 'modinfo_lpi',
-        'lpi:modhelp': 'modhelp_lpi',
-        'driver:list': 'list_drivers',
-        'driver:show': 'get_driver',
-        'driver:load': 'load_driver',
-        'driver:unload': 'unload_driver',
-        'driver:set': 'set_driver'
-        }
+    'cvar:all': 'get_cvar',
+    'cvar:get': 'get_cvar',
+    'cvar:set': 'set_cvar',
+    'cvar:delete': 'set_cvar',
+    'debug': 'set_debug',
+    'debug': 'set_debug',
+    'phi:list': 'list_phi',
+    'phi:show': 'get_phi',
+    'phi:mods': 'list_phi_mods',
+    'phi:test': 'test_phi',
+    'phi:load': 'load_phi',
+    'phi:unload': 'unload_phi',
+    'phi:modinfo': 'modinfo_phi',
+    'phi:modhelp': 'modhelp_phi',
+    'lpi:mods': 'list_lpi_mods',
+    'lpi:modinfo': 'modinfo_lpi',
+    'lpi:modhelp': 'modhelp_lpi',
+    'driver:list': 'list_drivers',
+    'driver:show': 'get_driver',
+    'driver:load': 'load_driver',
+    'driver:unload': 'unload_driver',
+    'driver:set': 'set_driver'
+}
+
 
 def get_api_func(itype, func):
     if func is None:
-        return api_functions.get(itype)
+        f = api_functions.get(itype)
+        return f if f else itype
     else:
-        return api_functions.get(itype + ':' + func)
+        f = api_functions.get(itype + ':' + func)
+        return f if f else itype + '_' + func
 
 
 def _prepare_result_data(data):
@@ -83,8 +89,8 @@ _pd_cols = {
     'list_drivers': ['id', 'mod', 'phi_id'],
     'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
-    'modhelp_lpi': [ 'name', 'type', 'required', 'help'],
-    'modhelp_phi': [ 'name', 'type', 'required', 'help']
+    'modhelp_lpi': ['name', 'type', 'required', 'help'],
+    'modhelp_phi': ['name', 'type', 'required', 'help']
 }
 
 
@@ -92,9 +98,15 @@ def fancy_print_result(result, tab=0):
     if result and isinstance(result, dict):
         rprinted = False
         h = None
+        out = None
+        err = None
         for v in sorted(result.keys()):
             if v == 'help' and not tab:
                 h = result[v]
+            elif v == 'out' and not tab:
+                out = result[v]
+            elif v == 'err' and not tab:
+                err = result[v]
             elif v != 'result':
                 if isinstance(result[v], dict):
                     if tab:
@@ -111,8 +123,18 @@ def fancy_print_result(result, tab=0):
                     print(("{:>%u} : {}" % max(map(len, result))).format(v, _v))
                 rprinted = True
         if h:
-            print('-'*81)
+            print('-' * 81)
             print(h.strip())
+            rprinted = True
+        if out:
+            print('-' * 81)
+            print('OUTPUT:')
+            print(out.strip())
+            rprinted = True
+        if err:
+            print('-' * 81)
+            print('ERROR:')
+            print(err.strip())
             rprinted = True
         if not rprinted and not tab:
             print('OK')
@@ -153,11 +175,7 @@ ap.add_argument(
     dest='_api_key',
     metavar='KEY')
 ap.add_argument(
-    '-U',
-    '--api-url',
-    help='API URL',
-    dest='_api_uri',
-    metavar='URL')
+    '-U', '--api-url', help='API URL', dest='_api_uri', metavar='URL')
 ap.add_argument(
     '-T',
     '--api-timeout',
@@ -183,9 +201,85 @@ ap.add_argument(
 
 sp = ap.add_subparsers(dest='_type', metavar='command', help='command or type')
 
+# PRIMARY
 ap_test = sp.add_parser('test', help='API test')
 ap_save = sp.add_parser('save', help='Save item state and config')
 
+# CMD
+ap_cmd = sp.add_parser('cmd', help='Execute remote command')
+ap_cmd.add_argument('c', help='Command to execute', metavar='CMD')
+ap_cmd.add_argument(
+    '-a', '--args', help='Command arguments', metavar='ARGS', dest='a')
+ap_cmd.add_argument(
+    '-w',
+    '--wait',
+    help='Wait for command finish',
+    metavar='SEC',
+    type=float,
+    dest='w')
+ap_cmd.add_argument(
+    '-t',
+    '--timeout',
+    help='Command timeout',
+    metavar='SEC',
+    type=float,
+    dest='t')
+
+# Locks
+ap_lock = sp.add_parser('lock', help='acquire lock')
+ap_lock.add_argument('l', help='Lock ID', metavar='ID')
+ap_lock.add_argument(
+    '-t',
+    '--timeout',
+    help='Max acquire wait time',
+    metavar='SEC',
+    type=float,
+    dest='t')
+ap_lock.add_argument(
+    '-e',
+    '--expires',
+    help='Lock expire time',
+    metavar='SEC',
+    type=float,
+    dest='e')
+ap_unlock = sp.add_parser('unlock', help='release lock')
+ap_unlock.add_argument('l', help='Lock ID', metavar='ID')
+
+# Logs
+ap_log = sp.add_parser('log', help='Log functions')
+sp_log = ap_log.add_subparsers(
+    dest='_func', metavar='func', help='Log commands')
+sp_log_rotate = sp_log.add_parser('rotate', help='Rotate logs')
+sp_log_debug = sp_log.add_parser('debug', help='Send debug message')
+sp_log_debug.add_argument('m', help='Message', metavar='MSG')
+sp_log_info = sp_log.add_parser('info', help='Send info message')
+sp_log_info.add_argument('m', help='Message', metavar='MSG')
+sp_log_warning = sp_log.add_parser('warning', help='Send warning message')
+sp_log_warning.add_argument('m', help='Message', metavar='MSG')
+sp_log_error = sp_log.add_parser('error', help='Send error message')
+sp_log_error.add_argument('m', help='Message', metavar='MSG')
+sp_log_critical = sp_log.add_parser('critical', help='Send critical message')
+sp_log_critical.add_argument('m', help='Message', metavar='MSG')
+
+# CVAR
+ap_cvar = sp.add_parser('cvar', help='CVAR functions')
+sp_cvar = ap_cvar.add_subparsers(
+    dest='_func', metavar='func', help='CVAR commands')
+sp_cvar_all = sp_cvar.add_parser('all', help='Get all CVARS')
+sp_cvar_get = sp_cvar.add_parser('get', help='Get CVAR value')
+sp_cvar_get.add_argument('i', help='CVAR ID', metavar='ID')
+sp_cvar_set = sp_cvar.add_parser('set', help='Set CVAR value')
+sp_cvar_set.add_argument('i', help='CVAR ID', metavar='ID')
+sp_cvar_set.add_argument('v', help='Value', metavar='VALUE')
+sp_cvar_delete = sp_cvar.add_parser('delete', help='Delete CVAR')
+sp_cvar_delete.add_argument('i', help='CVAR ID', metavar='ID')
+
+# DEBUG
+ap_debug = sp.add_parser('debug', help='Debug control')
+ap_debug.add_argument(
+    'debug', help='Debug mode (on/off)', metavar='MODE', choices=['on', 'off'])
+
+# Drivers
 ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
 ap_lpi = sp.add_parser('lpi', help='LPI (Logical to physical interface)')
 ap_driver = sp.add_parser('driver', help='Drivers ( PHI + LPI )')
@@ -213,26 +307,26 @@ sp_driver_list.add_argument(
     action='store_true')
 
 sp_phi_show = sp_phi.add_parser('show', help='Show loaded PHI info')
-sp_phi_show.add_argument('_i', help='PHI id', metavar='PHI_ID')
+sp_phi_show.add_argument('i', help='PHI id', metavar='PHI_ID')
 
 sp_phi_mods = sp_phi.add_parser('mods', help='List available PHI mods')
 sp_lpi_mods = sp_lpi.add_parser('mods', help='List available LPI mods')
 
 sp_phi_test = sp_phi.add_parser('test', help='Send test call to PHI')
-sp_phi_test.add_argument('_i', help='PHI id', metavar='PHI_ID')
-sp_phi_test.add_argument('_c', help='PHI test command', metavar='CMD')
+sp_phi_test.add_argument('i', help='PHI id', metavar='PHI_ID')
+sp_phi_test.add_argument('c', help='PHI test command', metavar='CMD')
 
 sp_driver_show = sp_driver.add_parser('show', help='Show loaded driver info')
-sp_driver_show.add_argument('_i', help='driver id', metavar='DRIVER_ID')
+sp_driver_show.add_argument('i', help='driver id', metavar='DRIVER_ID')
 
 sp_phi_load = sp_phi.add_parser('load', help='Load PHI')
-sp_phi_load.add_argument('_i', help='PHI id', metavar='PHI_ID')
-sp_phi_load.add_argument('_m', help='PHI module', metavar='PHI_MOD')
+sp_phi_load.add_argument('i', help='PHI id', metavar='PHI_ID')
+sp_phi_load.add_argument('m', help='PHI module', metavar='PHI_MOD')
 sp_phi_load.add_argument(
     '-c',
     '--config',
     help='PHI configuration values, comma separated',
-    dest='_c',
+    dest='c',
     metavar='CONFIG')
 sp_phi_load.add_argument(
     '-y',
@@ -243,13 +337,13 @@ sp_phi_load.add_argument(
 
 sp_driver_load = sp_driver.add_parser('load', help='Load driver')
 sp_driver_load.add_argument(
-    '_i', help='driver id (PHI_ID.LPI.ID)', metavar='PHI_ID.LPI_ID')
-sp_driver_load.add_argument('_m', help='LPI module', metavar='LPI_MOD')
+    'i', help='driver id (PHI_ID.LPI.ID)', metavar='PHI_ID.LPI_ID')
+sp_driver_load.add_argument('m', help='LPI module', metavar='LPI_MOD')
 sp_driver_load.add_argument(
     '-c',
     '--config',
     help='driver configuration values, comma separated',
-    dest='_c',
+    dest='c',
     metavar='CONFIG')
 sp_driver_load.add_argument(
     '-y',
@@ -259,20 +353,20 @@ sp_driver_load.add_argument(
     action='store_true')
 
 sp_phi_unload = sp_phi.add_parser('unload', help='Unload PHI')
-sp_phi_unload.add_argument('_i', help='PHI id', metavar='PHI_ID')
+sp_phi_unload.add_argument('i', help='PHI id', metavar='PHI_ID')
 
 sp_driver_unload = sp_driver.add_parser('unload', help='Unload driver')
-sp_driver_unload.add_argument('_i', help='driver id', metavar='DRIVER_ID')
+sp_driver_unload.add_argument('i', help='driver id', metavar='DRIVER_ID')
 
 sp_driver_set = sp_driver.add_parser(
     'set', help='Set for the item (action & update)')
-sp_driver_set.add_argument('_i', help='item id', metavar='ID')
-sp_driver_set.add_argument('_d', help='driver id', metavar='DRIVER_ID')
+sp_driver_set.add_argument('i', help='item id', metavar='ID')
+sp_driver_set.add_argument('d', help='driver id', metavar='DRIVER_ID')
 sp_driver_set.add_argument(
     '-c',
     '--config',
     help='item driver config (ports etc.)',
-    dest='_c',
+    dest='c',
     metavar='CONFIG')
 sp_driver_set.add_argument(
     '-y',
@@ -282,23 +376,23 @@ sp_driver_set.add_argument(
     action='store_true')
 
 sp_phi_modinfo = sp_phi.add_parser('modinfo', help='PHI module info')
-sp_phi_modinfo.add_argument('_i', help='PHI module', metavar='PHI_MOD')
+sp_phi_modinfo.add_argument('i', help='PHI module', metavar='PHI_MOD')
 
 sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
-sp_lpi_modinfo.add_argument('_i', help='LPI module', metavar='LPI_MOD')
+sp_lpi_modinfo.add_argument('i', help='LPI module', metavar='LPI_MOD')
 
 sp_phi_modhelp = sp_phi.add_parser('modhelp', help='PHI module help')
-sp_phi_modhelp.add_argument('_i', help='PHI module', metavar='PHI_MOD')
+sp_phi_modhelp.add_argument('i', help='PHI module', metavar='PHI_MOD')
 sp_phi_modhelp.add_argument(
-    '_c',
+    'c',
     help='Help context (cfg, get, set)',
     metavar='CONTEXT',
     choices=['cfg', 'get', 'set'])
 
 sp_lpi_modhelp = sp_lpi.add_parser('modhelp', help='LPI module help')
-sp_lpi_modhelp.add_argument('_i', help='LPI module', metavar='LPI_MOD')
+sp_lpi_modhelp.add_argument('i', help='LPI module', metavar='LPI_MOD')
 sp_lpi_modhelp.add_argument(
-    '_c',
+    'c',
     help='Help context (cfg, action, update)',
     metavar='CONTEXT',
     choices=['cfg', 'action', 'update'])
@@ -311,7 +405,13 @@ except:
 
 a = ap.parse_args()
 
+params = vars(a).copy()
+
 itype = a._type
+
+for p in params.copy().keys():
+    if p[0] == '_':
+        del params[p]
 
 if not itype:
     ap.print_usage()
@@ -349,8 +449,6 @@ if apikey is not None:
 
 api.ssl_verify(False)
 
-params = {}
-
 if hasattr(a, '_full') and a._full:
     params['full'] = 1
     api_func_full = '_'
@@ -360,24 +458,12 @@ else:
 if hasattr(a, '_save') and a._save:
     params['save'] = 1
 
-if hasattr(a, '_i') and a._i is not None:
-    if api_func == 'load_driver':
-        try:
-            params['p'], params['i'] = a._i.split('.')
-        except:
-            print("Invalid driver ID")
-            sys.exit(98)
-    else:
-        params['i'] = a._i
-
-if hasattr(a, '_m') and a._m is not None:
-    params['m'] = a._m
-
-if hasattr(a, '_d') and a._d is not None:
-    params['d'] = a._d
-
-if hasattr(a, '_c') and a._i is not None:
-    params['c'] = a._c
+if api_func == 'load_driver':
+    try:
+        params['p'], params['i'] = params['i'].split('.')
+    except:
+        print("Invalid driver ID")
+        sys.exit(98)
 
 timeout = a._timeout
 
@@ -419,7 +505,7 @@ else:
         if 'result' in result and result['result'] == 'ERROR':
             sys.exit(apiclient.result_func_failed)
     else:
-        if code == apiclient.result_func_failed:
+        if code == apiclient.result_func_failed and api_func not in ['cmd']:
             print('FAILED')
         elif 'result' in result and api_func != 'test':
             print(result['result'])
