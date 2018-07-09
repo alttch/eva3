@@ -9,7 +9,12 @@ __equipment__ = ['DS18S20', 'DS18B20']
 __api__ = 1
 __required__ = ['port_get', 'value']
 __features__ = ['port_get', 'universal']
-__config_help__ = []
+__config_help__ = [{
+    'name': 'retries',
+    'help': '1-Wire retry attempts (default: 3)',
+    'type': 'int',
+    'required': False
+}]
 __get_help__ = __config_help__
 __set_help__ = __config_help__
 
@@ -47,21 +52,28 @@ class PHI(GenericPHI):
         self.__set_help = __set_help__
         self.__help = __help__
         self.w1 = '/sys/bus/w1/devices'
+        retries = self.phi_cfg.get('retries')
+        try:
+            retries = int(retries)
+        except:
+            retries = None
+        self.retries = retries if retries is not None else 3
         if not os.path.isdir(self.w1):
             self.log_error('1-Wire bus not ready')
             self.ready = False
 
     def get(self, port=None, cfg=None, timeout=0):
         if port is None: return None
-        try:
-            r = open('%s/%s/w1_slave' % (self.w1, port)).readlines()
-            if r[0][-3:] != 'YES': return None
-            d, val = r[1].split('=')
-            val = float(val) / 1000
-            return val
-        except:
-            log_traceback()
-            return None
+        for i in range(self.retries + 1):
+            try:
+                r = open('%s/%s/w1_slave' % (self.w1, port)).readlines()
+                if r[0][-3:] != 'YES': return None
+                d, val = r[1].split('=')
+                val = float(val) / 1000
+                return val
+            except:
+                if i == self.retries: log_traceback()
+        return None
 
     def test(self, cmd=None):
         if cmd == 'self':

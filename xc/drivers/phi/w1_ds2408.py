@@ -16,7 +16,7 @@ __config_help__ = [{
     'required': False
 }, {
     'name': 'retries',
-    'help': '1-Wire set retry attempts (default: 3)',
+    'help': '1-Wire retry attempts (default: 3)',
     'type': 'int',
     'required': False
 }]
