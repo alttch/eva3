@@ -138,7 +138,7 @@ class LPI(GenericLPI):
             _status = 1
             for p in pp:
                 if _state_in and p in _state_in:
-                    value = _state_in.get(p)
+                    value = _state_in.get(str(p))
                 else:
                     value = self.phi.get(p, phi_cfg,
                                          timeout + time_start - time())

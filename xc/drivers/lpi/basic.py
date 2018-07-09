@@ -95,7 +95,7 @@ class LPI(GenericLPI):
             for p in pp:
                 _p, invert = self.need_invert(p)
                 if _state_in and _p in _state_in:
-                    status = _state_in.get(_p)
+                    status = _state_in.get(str(_p))
                 else:
                     status = self.phi.get(_p, phi_cfg,
                                           timeout + time_start - time())
