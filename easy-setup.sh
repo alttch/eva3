@@ -22,7 +22,7 @@ REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 pip3 sha256sum"
+REQUIRED="realpath python3 pip3 sha256sum curl"
 
 function usage {
     echo "Usage: easy-setup.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
