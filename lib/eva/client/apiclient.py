@@ -193,7 +193,7 @@ class APIClient(object):
         try:
             r = requests.post(
                 self._uri + api_uri + func,
-                data=p,
+                json=p,
                 timeout=t,
                 verify=self._ssl_verify)
         except requests.Timeout:
