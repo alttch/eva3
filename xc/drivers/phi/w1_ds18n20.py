@@ -67,8 +67,8 @@ class PHI(GenericPHI):
         for i in range(self.retries + 1):
             try:
                 r = open('%s/%s/w1_slave' % (self.w1, port)).readlines()
-                if r[0][-3:] != 'YES': return None
-                d, val = r[1].split('=')
+                if r[0].strip()[-3:] != 'YES': return None
+                d, val = r[1].strip().split('=')
                 val = float(val) / 1000
                 return val
             except:
