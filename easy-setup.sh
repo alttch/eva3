@@ -24,6 +24,8 @@ VALUE=
 
 REQUIRED="realpath python3 pip3 sha256sum curl"
 
+MAX_START_WAIT=180
+
 function usage {
     echo "Usage: easy-setup.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
     echo "          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]"
@@ -63,6 +65,34 @@ function option_error {
     usage
     exit 2
 }
+
+
+function start_controller() {
+    ./sbin/$1-control start
+    I=0
+    sleep 0.5
+    ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
+    R=$?
+    if [ $R -eq 9 ]; then
+        echo " configs missing!"
+        return 1
+    fi
+    echo -n "$1: ." | tr "a-z" "A-Z"
+    while [ $R -ne 0 ]; do
+        if [ $I -gt ${MAX_START_WAIT} ]; then
+            echo " failed to start!"
+            return 2
+        fi
+        I=`expr $I + 1`
+        sleep 0.5
+        echo -n "."
+        ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
+        R=$?
+    done
+    echo " started"
+    return 0
+}
+
 
 function create_notifier {
     [ "x$MQTT_HOST" = "x" ] && return 0
@@ -461,9 +491,7 @@ EOF
         chmod 777 runtime/db
         ./set-run-under-user.sh uc ${USER} || exit 1
     fi
-    ./sbin/uc-control start
-    sleep 3
-    ./bin/uc-api test > /dev/null 2>&1
+    start_controller uc
     if [ $? != 0 ]; then
         echo "Unable to test UC"
         ./sbin/eva-control stop
@@ -532,9 +560,7 @@ EOF
         chmod 777 runtime/db
         ./set-run-under-user.sh lm ${USER} || exit 1
     fi
-    ./sbin/lm-control start
-    sleep 3
-    ./bin/lm-api test > /dev/null 2>&1
+    start_controller lm
     if [ $? != 0 ]; then
         echo "Unable to test LM"
         ./sbin/eva-control stop
@@ -608,9 +634,7 @@ EOF
         chmod 777 runtime/db
         ./set-run-under-user.sh sfa ${USER} || exit 1
     fi
-    ./sbin/sfa-control start
-    sleep 3
-    ./bin/sfa-api test > /dev/null 2>&1
+    start_controller sfa
     if [ $? != 0 ]; then
         echo "Unable to test SFA"
         ./sbin/eva-control stop

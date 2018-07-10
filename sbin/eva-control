@@ -12,94 +12,38 @@ if [ ! -f ./etc/eva_servers ]; then
 fi
 source ./etc/eva_servers
 
+function start_controller() {
+    ./sbin/$1-control start
+    I=0
+    sleep 0.5
+    ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
+    R=$?
+    if [ $R -eq 9 ]; then
+        echo " configs missing!"
+        return 1
+    fi
+    echo -n "$1: ." | tr "a-z" "A-Z"
+    while [ $R -ne 0 ]; do
+        if [ $I -gt ${MAX_START_WAIT} ]; then
+            echo " failed to start!"
+            return 2
+        fi
+        I=`expr $I + 1`
+        sleep 0.5
+        echo -n "."
+        ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
+        R=$?
+    done
+    echo " started"
+    return 0
+}
+
 case $1 in
 start)
     echo 'Starting EVA'
-    if [ "x${UC_ENABLED}" == "xyes" ]; then
-        ./sbin/uc-control start
-        I=0
-        sleep 0.5
-        ./sbin/eva-tinyapi -C uc -F test > /dev/null 2>&1
-        R=$?
-        if [ $R -eq 98 ]; then
-            echo " configs missing!"
-            exit 1
-        fi
-        echo -n "UC: ."
-        while [ $R -ne 0 ]; do
-            if [ $R -eq 2 ]; then
-                echo "WARNING: forbidden for local"
-                break
-            fi
-            if [ $I -gt ${MAX_START_WAIT} ]; then
-                echo " failed to start!"
-                break
-            fi
-            I=`expr $I + 1`
-            sleep 0.5
-            echo -n "."
-            ./sbin/eva-tinyapi -C uc -F test > /dev/null 2>&1
-            R=$?
-        done
-        echo " started"
-    fi
-    if [ "x${LM_ENABLED}" == "xyes" ]; then
-        ./sbin/lm-control start
-        I=0
-        sleep 0.5
-        ./sbin/eva-tinyapi -C lm -F test > /dev/null 2>&1
-        R=$?
-        if [ $R -eq 98 ]; then
-            echo " configs missing!"
-            exit 1
-        fi
-        echo -n "LM: ."
-        while [ $R -ne 0 ]; do
-            if [ $R -eq 2 ]; then
-                echo "WARNING: forbidden for local"
-                break
-            fi
-            if [ $I -gt ${MAX_START_WAIT} ]; then
-                echo " failed to start!"
-                break
-            fi
-            I=`expr $I + 1`
-            sleep 0.5
-            echo -n "."
-            ./sbin/eva-tinyapi -C lm -F test > /dev/null 2>&1
-            R=$?
-        done
-        echo " started"
-    fi
-    if [ "x${SFA_ENABLED}" == "xyes" ]; then
-        ./sbin/sfa-control start
-        I=0
-        sleep 0.5
-        ./sbin/eva-tinyapi -C sfa -F test > /dev/null 2>&1
-        R=$?
-        if [ $R -eq 98 ]; then
-            echo " configs missing!"
-            exit 1
-        fi
-        echo -n "SFA: ."
-        while [ $R -ne 0 ]; do
-            if [ $R -eq 2 ]; then
-                echo "WARNING: forbidden for local"
-                break
-            fi
-            if [ $I -gt ${MAX_START_WAIT} ]; then
-                echo " failed to start!"
-                break
-            fi
-            I=`expr $I + 1`
-            sleep 0.5
-            echo -n "."
-            ./sbin/eva-tinyapi -C sfa -F test > /dev/null 2>&1
-            R=$?
-        done
-        echo " started"
-    fi
-    exit 0
+    [ "x${UC_ENABLED}" == "xyes" ] && start_controller uc
+    [ "x${LM_ENABLED}" == "xyes" ] && start_controller lm
+    [ "x${SFA_ENABLED}" == "xyes" ] && start_controller sfa
     ;;
 stop)
     echo 'Stopping EVA'
