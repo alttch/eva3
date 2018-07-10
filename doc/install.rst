@@ -45,9 +45,16 @@ Initial configuration
 Easy setup
 ~~~~~~~~~~
 
-* For the interactive setup, run *./easy-setup.sh* in EVA folder and follow the
+.. warning::
+
+    If you want to run some components under restricted users, make sure they
+    have an access to *log* and *var* folders before running *easy-setup*. If
+    you've customized ini files in *etc*, make sure the restricted user has an
+    access to both <component>.ini and <component>_apikeys.ini.
+
+* For the interactive setup, run *./easy-setup* in EVA folder and follow the
   instructions.
-* For the automatic setup, run *./easy-setup.sh -h* in EVA folder and choose
+* For the automatic setup, run *./easy-setup -h* in EVA folder and choose
   the installation type.
 * Setup log rotation by placing *etc/logrotate.d/eva-\** files to
   */etc/logrotate.d* system folder. Correct the paths to EVA files if
@@ -64,7 +71,7 @@ Easy setup
 Manual setup
 ~~~~~~~~~~~~
 
-* Run *./install.sh* in EVA folder
+* Run *./install/install-without-setup* in EVA folder
 * In *etc* folder copy *uc.ini-dist* into *uc.ini*; if you plan to use
   :doc:`/uc/uc`, change the necessary configuration parameters.
 * Copy *uc_apikeys.ini-dist* into *uc_apikeys.ini* and set the API keys
@@ -81,6 +88,10 @@ Manual setup
     SFA_ENABLED=yes
     LM_USER=nobody
     SFA_USER=nobody
+
+* Make sure all restricted users have an access to *log*, *var* and
+  *runtime/db* folders as well to runtime files and folders plus to config
+  files in *etc* (both <component>.ini and <component>_apikeys.ini).
 
 * Setup log rotation by placing *etc/logrotate.d/eva-\** files to
   */etc/logrotate.d* system folder. Correct the paths to EVA files if
@@ -107,9 +118,6 @@ The system is ready.
 Upgrading
 ---------
 
-To version 3.1.0 and above
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 * Backup everything
 * Run the following command:
 
@@ -122,16 +130,6 @@ To version 3.1.0 and above
 * If upgrading from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if
   required)
-
-To versions below 3.1.0
-~~~~~~~~~~~~~~~~~~~~~~~
-
-* Stop EVA: *./sbin/eva-control stop*
-* Backup eva installation folder
-* Unpack new version to the folder where EVA is installed
-* Execute *sh install.sh* to install missed modules
-* Restore custom scripts and **ui** folder if required
-* Start EVA: *./sbin/eva-control start*
 
 .. note::
 
