@@ -97,6 +97,9 @@ Usage: eva-tinyapi <-T timeout> <-C type> <-F function> [-S] [params]
     -v      verbose mode
     params  API function params (i.e. i=test full=1), space separated
 
+    -V      print EVA version and exit
+    -B      print EVA build and exit
+
 Exit code = curl exit code
 
 WARNING: eva-tinyapi has been tested only with basic API functions and not
@@ -135,6 +138,12 @@ do
             shift
         ;;
         -h) showHelp
+            exit 0
+        ;;
+        -V) grep ^__version__ ./sbin/ucserv.py |cut -d\" -f2
+            exit 0
+        ;;
+        -B) grep ^product_build ./sbin/ucserv.py |cut -d= -f2|sed 's/ //g'
             exit 0
         ;;
         *)

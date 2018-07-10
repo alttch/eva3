@@ -20,7 +20,12 @@ fi
 
 source etc/eva_servers
 
-CURRENT_BUILD=`./sbin/uc-control version|sed 's/.*build //g'|awk '{ print $1 }'`
+CURRENT_BUILD=`./sbin/eva-tinyapi -B`
+
+if [ $? != 0 ]; then
+    echo "Can't obtain current build"
+    exit 1
+fi
 
 if [ $CURRENT_BUILD -ge $BUILD ]; then
     echo "Your build is ${CURRENT_BUILD}, this script can upgrade EVA ICS to ${BUILD} only"

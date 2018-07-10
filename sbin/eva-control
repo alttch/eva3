@@ -17,7 +17,7 @@ start)
         ./sbin/uc-control start
         I=0
         sleep 0.5
-        ./bin/uc-api test > /dev/null 2>&1
+        ./sbin/eva-tinyapi -C uc -F test > /dev/null 2>&1
         R=$?
         if [ $R -eq 98 ]; then
             echo " configs missing!"
@@ -36,7 +36,7 @@ start)
             I=`expr $I + 1`
             sleep 0.5
             echo -n "."
-            ./bin/uc-api test > /dev/null 2>&1
+            ./sbin/eva-tinyapi -C uc -F test > /dev/null 2>&1
             R=$?
         done
         echo " started"
@@ -45,7 +45,7 @@ start)
         ./sbin/lm-control start
         I=0
         sleep 0.5
-        ./bin/lm-api test > /dev/null 2>&1
+        ./sbin/eva-tinyapi -C lm -F test > /dev/null 2>&1
         R=$?
         if [ $R -eq 98 ]; then
             echo " configs missing!"
@@ -64,7 +64,7 @@ start)
             I=`expr $I + 1`
             sleep 0.5
             echo -n "."
-            ./bin/lm-api test > /dev/null 2>&1
+            ./sbin/eva-tinyapi -C lm -F test > /dev/null 2>&1
             R=$?
         done
         echo " started"
@@ -73,7 +73,7 @@ start)
         ./sbin/sfa-control start
         I=0
         sleep 0.5
-        ./bin/sfa-api test > /dev/null 2>&1
+        ./sbin/eva-tinyapi -C sfa -F test > /dev/null 2>&1
         R=$?
         if [ $R -eq 98 ]; then
             echo " configs missing!"
@@ -92,7 +92,7 @@ start)
             I=`expr $I + 1`
             sleep 0.5
             echo -n "."
-            ./bin/sfa-api test > /dev/null 2>&1
+            ./sbin/eva-tinyapi -C sfa -F test > /dev/null 2>&1
             R=$?
         done
         echo " started"
