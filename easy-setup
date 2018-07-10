@@ -406,7 +406,7 @@ if [ $INTERACTIVE -eq 1 ]; then
     echo
     cat << EOF
 WARNING: If you want to run some components under restricted users, make sure
-they have an access to *log* and *var* folders before continuing easy-setup. If
+they have an access to log and var folders before continuing easy-setup. If
 you've customized ini files in etc, make sure the restricted user has an access
 to both <component>.ini and <component>_apikeys.ini.
 
