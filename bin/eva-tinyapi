@@ -1,0 +1,228 @@
+#!/bin/bash
+
+DEFAULT_TIMEOUT=5
+
+# author     :  Altertech Group, http://www.altertech.com/
+# copyright  :  Copyright (C) 2018 Altertech Group
+# license    :  https://www.eva-ics.com/license
+
+shopt -s extglob
+
+D=`realpath $0`
+cd `dirname ${D}`/..
+
+_CONFIG=()
+_SECTIONS=""
+_PROP=""
+
+_EX=1
+
+PRODUCT=
+FUNCTION=
+SYSAPI=
+VERBOSE=0
+
+function echoV() {
+    [ ${VERBOSE} -gt 0 ] && echo $*
+}
+
+function parseIniFile() {
+    local LINE=""
+    local SECTION=""
+    local KEY=""
+    local VALUE=""
+
+    local IFS=""
+
+    while read LINE 
+    do
+        LINE=${LINE%%[;#]*}
+        LINE=${LINE%%*( )}
+
+        if [[ -n $KEY && $LINE =~ ^[[:space:]]+(.+) ]]
+        then
+            VALUE+=" ${BASH_REMATCH[1]}"
+        else
+            if [[ -n $KEY ]]
+            then
+                _CONFIG=(${_CONFIG[@]} "${SECTION}.${KEY}" "${VALUE}")
+                KEY=""
+                VALUE=""
+            fi
+
+            if [[ $LINE =~ ^\[([[:alnum:]]+)\] ]]
+            then
+                SECTION=${BASH_REMATCH[1]}
+                _SECTIONS="${_SECTIONS} ${SECTION}"
+                KEY=""
+            elif [[ $LINE =~ ^([^[:space:]]+)[[:space:]]*=[[:space:]]*(.+) ]]
+            then 
+                KEY=${BASH_REMATCH[1]}
+                VALUE="${BASH_REMATCH[2]}"
+            fi
+        fi
+    done
+
+    if [[ -n $KEY ]]
+    then
+        _CONFIG=(${_CONFIG[@]} "${SECTION}.${KEY}" "${VALUE}")
+    fi
+}
+
+function getProperty() {
+	_PROP=""
+    local -i i
+    local KEY=$1
+    for ((i=0; i<${#_CONFIG[@]}; i+=2))
+    do
+        if [[ ${_CONFIG[$i]} =~ ^\.?${KEY} ]]
+        then
+            _PROP=${_CONFIG[((i+1))]}
+            return 0
+        fi
+    done
+    return 1
+}
+
+function showHelp() {
+cat <<EOF
+EVA API direct call CLI
+
+Usage: eva-tinyapi <-T timeout> <-C type> <-F function> [-S] [params]
+
+    -T      API call timeout (default: ${DEFAULT_TIMEOUT})
+    -C      uc, lm or sfa
+    -F      API function
+    -S      SYSAPI call
+    -v      verbose mode
+    params  API function params (i.e. i=test full=1), space separated
+
+Exit code = curl exit code
+
+WARNING: eva-tinyapi has been tested only with basic API functions and not
+recommended to use in a production unless in EVA internal scripts.
+EOF
+}
+
+TIMEOUT=${DEFAULT_TIMEOUT}
+DATA=
+
+
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        -C)
+            PRODUCT="$2"
+            shift
+            shift
+        ;;
+        -T) TIMEOUT="$2"
+            shift
+            shift
+        ;;
+        -F) FUNCTION="$2"
+            shift
+            shift
+        ;;
+        -S) SYSAPI=1
+            shift
+        ;;
+        -v) VERBOSE=1
+            shift
+        ;;
+        -vv) VERBOSE=2
+            shift
+        ;;
+        -h) showHelp
+            exit 0
+        ;;
+        *)
+            echo $1 | grep '=' > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                [ "x$DATA" = "x" ] || DATA="${DATA}, "
+                D=`echo $1 | sed "s/\(.*\)=\(.*\)/\"\1\" : \"\2\"/g"`
+                shift;
+                DATA="${DATA} ${D}"
+            else
+                echo "Unknown option: ${key}"
+                showHelp
+                exit -1
+            fi
+        ;;
+    esac
+done
+
+if [ "x$PRODUCT" = "x" ] || [ "x$FUNCTION" = "x" ]; then
+        echo "No product or function specified"
+        echo
+        showHelp
+        exit -1
+fi
+
+cat ./etc/${PRODUCT}.ini > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "Can't open ${PRODUCT}.ini"
+    exit 9
+fi
+
+cat ./etc/${PRODUCT}_apikeys.ini > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "Can't open ${PRODUCT}_apikeys.ini"
+    exit 9
+fi
+
+parseIniFile < ./etc/${PRODUCT}.ini
+
+getProperty webapi.listen
+U="http://"
+
+if [ "x$_PROP" = "x" ]; then
+    getProperty webapi.ssl_listen
+    if [ "x$_PROP" = "x" ]; then
+        echo "Can't find API host/port in ${PRODUCT}.ini"
+        exit 9
+    fi
+    U="https://"
+fi
+
+U="$U`echo $_PROP | sed 's/0.0.0.0/127.0.0.1/'`"
+
+if [ "x$SYSAPI" = "x" ]; then
+    U="$U/${PRODUCT}-api/"
+    else
+    U="$U/sys-api/"
+fi
+
+U="${U}${FUNCTION}"
+
+parseIniFile < ./etc/${PRODUCT}_apikeys.ini
+
+getProperty masterkey.key
+
+if [ "x$_PROP" = "x" ]; then
+    echo "Can't find masterkey in ${PRODUCT}_apikeys.ini"
+    exit 9
+fi
+
+[ "x$DATA" = "x" ] || DATA="${DATA}, "
+
+DATA="$DATA \"k\" : \"$_PROP\""
+
+DATA="{ ${DATA} }"
+
+echoV "API call to $U"
+echoV "Timeout: ${TIMEOUT}"
+
+if [ ${VERBOSE} == "2" ]; then
+    VERB="-v"
+else
+    VERB=
+fi
+
+echo $DATA | curl --header "Content-Type: application/json" --data @- -X POST -m ${TIMEOUT} -s ${VERB} $U
+_EX=$?
+echo
+echoV "Exit code: $_EX"
+
+exit $_EX
