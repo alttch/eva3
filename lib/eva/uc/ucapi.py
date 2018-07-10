@@ -649,7 +649,7 @@ class UC_API(GenericAPI):
 
     def set_driver(self, k=None, i=None, d=None, c=None, save=False):
         if not apikey.check(k, master=True): return None
-        item = eva.uc.controller.get_unit(i)
+        item = eva.uc.controller.get_item(i)
         if not item: return None
         if not api.set_prop(k, i, 'update_driver_config', c): return False
         if item.item_type == 'unit' and \
