@@ -15,7 +15,7 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-if [ ! -x ./sbin/check_mods ]; then
+if [ ! -x ./install/check_mods ]; then
     echo "please run in EVA dir!"
     exit 1
 fi
@@ -49,7 +49,7 @@ cd ..
 ln -sf ../../../xc/extensions lib/eva/lm/extensions
 
 echo "Checking mods"
-./sbin/check_mods install || exit 1
+./install/check_mods install || exit 1
 
 echo "Doing initial config"
 

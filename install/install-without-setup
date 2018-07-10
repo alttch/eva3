@@ -16,11 +16,11 @@ if [ -d runtime ]; then
 fi
 
 echo "Preparing Universal Controller"
-bash install/install-uc.sh || exit 1
+bash install/install-uc || exit 1
 echo "Preparing Logic Manager"
-bash install/install-lm.sh || exit 1
+bash install/install-lm || exit 1
 echo "Preparing SCADA Final Aggregator"
-bash install/install-sfa.sh || exit
+bash install/install-sfa || exit
 echo ""
 echo "Completed!"
 echo ""
