@@ -86,7 +86,8 @@ class LMExt(GenericExt):
         if _uuid is not None: params['u'] = _uuid
         code, result = self.apiclient.call('run', params)
         if code:
-            self.log_error('Remote macro %s run failed' % macro_id)
+            self.log_error(
+                'Remote macro %s run failed, API code: %u' % (macro_id, code))
             return None
         else:
             return result
