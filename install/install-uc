@@ -7,7 +7,7 @@ if [ $? != 0 ]; then
 fi
 
 D=`realpath $0`
-cd `dirname ${D}`
+cd `dirname ${D}`/..
 
 which pip3 > /dev/null
 if [ $? != 0 ]; then

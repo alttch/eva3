@@ -7,7 +7,7 @@ if [ $? != 0 ]; then
 fi
 
 D=`realpath $0`
-cd `dirname ${D}`
+cd `dirname ${D}`/..
 
 if [ -d runtime ]; then
     echo "runtime folder found, the system seems to be live"
@@ -16,11 +16,11 @@ if [ -d runtime ]; then
 fi
 
 echo "Preparing Universal Controller"
-sh install-uc.sh || exit 1
+bash install/install-uc.sh || exit 1
 echo "Preparing Logic Manager"
-sh install-lm.sh || exit 1
+bash install/install-lm.sh || exit 1
 echo "Preparing SCADA Final Aggregator"
-sh install-sfa.sh || exit
+bash install/install-sfa.sh || exit
 echo ""
 echo "Completed!"
 echo ""

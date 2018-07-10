@@ -117,7 +117,7 @@ To version 3.1.0 and above
 
     curl -s <UPGRADE_SCRIPT_URL> | bash /dev/stdin
     #i.e.
-    #curl -s https://www.eva-ics.com/download/3.1.0/stable/upgrade.sh | bash /dev/stdin
+    #curl -s https://www.eva-ics.com/download/3.1.0/stable/upgrade | bash /dev/stdin
 
 * If upgrading from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if
