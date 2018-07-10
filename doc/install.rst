@@ -47,8 +47,9 @@ Easy setup
 
 .. warning::
 
-    If you want to run some components under restricted users, make sure they
-    have an access to *log* and *var* folders before running *easy-setup*. If
+    If you want to run some components under restricted users, create **var**
+    and **log** folders in EVA installation dir and make sure the restricted
+    users have an access to these folders before running *easy-setup*. If
     you've customized ini files in *etc*, make sure the restricted user has an
     access to both <component>.ini and <component>_apikeys.ini.
 
