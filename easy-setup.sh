@@ -568,7 +568,8 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
-        ./bin/lm-api append_controller -u http://localhost:8812 -a ${UC_LM_KEY} -m eva_1 -y
+        (./sbin/eva-tinyapi -C lm -F append_controller \
+            u=http://localhost:8812 a=${UC_LM_KEY} m=eva_1 save=1 | grep OK) > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -642,7 +643,8 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
-        ./bin/sfa-api append_controller -g uc -u http://localhost:8812 -a ${UC_SFA_KEY} -m eva_1 -y
+        (./sbin/eva-tinyapi -C sfa -F append_controller \
+            g=uc u=http://localhost:8812 a=${UC_SFA_KEY} m=eva_1 save=1 | grep OK ) > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -651,7 +653,8 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
         echo "Linking local LM PLC to SFA"
-        ./bin/sfa-api append_controller -g lm -u http://localhost:8817 -a ${LM_SFA_KEY} -m eva_1 -y
+        (./sbin/eva-tinyapi -C sfa -F append_controller \
+            g=lm u=http://localhost:8817 a=${LM_SFA_KEY} m=eva_1 save=1 | grep OK ) > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
