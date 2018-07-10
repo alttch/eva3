@@ -137,7 +137,10 @@ class LM_API(GenericAPI):
         if args is None:
             ar = []
         else:
-            ar = args.split(' ')
+            if isinstance(args, list):
+                ar = args
+            else:
+                ar = args.split(' ')
         return eva.lm.controller.exec_macro(
             macro=macro,
             argv=ar,
