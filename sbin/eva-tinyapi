@@ -102,7 +102,7 @@ Usage: eva-tinyapi <-T timeout> <-C type> <-F function> [-S] [params]
 
 Exit code = curl exit code
 
-WARNING: eva-tinyapi has been tested only with basic API functions and not
+WARNING: eva-tinyapi has been tested with basic API functions only and not
 recommended to use in a production unless in EVA internal scripts.
 EOF
 }
