@@ -330,15 +330,17 @@ img.tbtn.disabled {
 	border: none;
 	cursor: auto;
 }
-@media (min-width: 450px) and (max-width: 767px) {
+@media (min-width: 320px) and (max-width: 767px) {
 	.col-xs-btn {
-		width: 125px;
+		width: 105px;
+		padding-left: 0px;
+		padding-right: 10px;
 	}
 	.col-xs-1btn {
-		width: calc(100% - 125px);
+		width: calc(100% - 105px);
 	}
 	.col-xs-2btn {
-		width: calc(100% - 250px);
+		width: calc(100% - 210px);
 	}
 	.col-xs-hid {
 		display: none;
@@ -359,7 +361,7 @@ img.tbtn.disabled {
 
 }
 
-@media (max-width: 449px) {
+@media (max-width: 319px) {
     .row-device button {
         margin: 10px 2px 0px;
     }
