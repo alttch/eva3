@@ -25,11 +25,13 @@ System Requirements
 .. warning::
 
     Installation scripts try to install all required Python modules
-    automatically, but some of them may have problems installing with pip. It's
-    better to install these modules manually, before running EVA installation
-    scripts. Currently the problems may be expected with:
+    automatically, but some of them may have problems installing with pip -
+    install may fail or be slow. It's better to install these modules manually,
+    before running EVA installation scripts. Currently the problems may be
+    expected with:
 
         * **pandas** (python3-pandas)
+        * **pysnmp** (python3-pysnmp4)
 
 Initial configuration
 ---------------------
