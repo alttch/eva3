@@ -54,7 +54,7 @@ echo "- Stopping everything"
 
 echo "- Installing missing modules"
 
-./_upgrade/eva-${VERSION}/sbin/check_mods install || exit 
+./_upgrade/eva-${VERSION}/install/check_mods install || exit 
 
 echo "- Removing obsolete files and folders"
 
