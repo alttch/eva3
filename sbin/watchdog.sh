@@ -22,11 +22,11 @@ echo $$ > ${PIDFILE}
 
 while [ 1 ]; do
     sleep ${WATCHDOG_INTERVAL}
-    ./bin/${CONTROLLER}-api test -T ${WATCHDOG_MAX_TIMEOUT} > /dev/null 2>&1
+    ./bin/eva-tinyapi -C ${CONTROLLER} -F test -T ${WATCHDOG_MAX_TIMEOUT} > /dev/null 2>&1
     if [ $? != 0 ]; then
         echo "${PROCESS} not responding, sending restart"
         if [ "x${WATCHDOG_DUMP}" = "xyes" ]; then
-            ./bin/${CONTROLLER}-api dump -T 10 > /dev/null 2>&1
+            ./bin/eva-tinyapi -C ${CONTROLLER} -F dump -S -T ${WATCHDOG_MAX_TIMEOUT} > /dev/null 2>&1
         fi
         rm -f ${PIDFILE}
         ./sbin/${CONTROLLER}-control restart
