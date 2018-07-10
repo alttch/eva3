@@ -84,7 +84,7 @@ done
 echo "- Installing new files"
 
 rm -f _upgrade/eva-${VERSION}/ui/index.html
-rm -f _upgrade/eva-${VERSION}/upgrade
+rm -f _upgrade/eva-${VERSION}/upgrade.sh
 
 cp -rf _upgrade/eva-${VERSION}/* . || exit 1
 
