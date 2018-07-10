@@ -4,7 +4,6 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.0"
 
 import threading
-import eva.core
 import cherrypy
 import logging
 import threading
@@ -13,6 +12,8 @@ import os
 import sys
 import jsonpickle
 
+import eva.core
+import eva.runner
 import eva.logs
 
 from eva.api import cp_json_handler
@@ -41,8 +42,6 @@ import eva.apikey
 import eva.users
 
 import eva.notify
-
-from eva.runner import ExternalProcess
 
 locks = {}
 lock_expire_time = {}
@@ -109,7 +108,7 @@ class CMD(object):
         self.time = {'created': time.time()}
 
     def run(self):
-        self.xc = ExternalProcess(
+        self.xc = eva.runner.ExternalProcess(
             eva.core.dir_xc + '/cmd/' + self.cmd,
             args=self.args,
             timeout=self.timeout,
