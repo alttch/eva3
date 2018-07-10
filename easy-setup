@@ -181,6 +181,7 @@ function askMQTT {
             echo -n "MQTT space (empty for the root hive): "
             read MQTT_SPACE
             askYN "Enable MQTT SSL"
+            MQTT_CAFILE=
             if [ $VALUE == "1" ]; then
                 while [ 1 ]; do
                     echo -n "MQTT CA file ($DEFAULT_CA_FILE): "
