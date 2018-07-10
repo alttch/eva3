@@ -18,6 +18,8 @@ __config_help__ = [{
 __get_help__ = __config_help__
 __set_help__ = __config_help__
 
+w1_delay = 0.05
+
 __help__ = """
 PHI for Maxim Integrated 1-Wire DS18N20 temperature sensors (DS18S20, DS18B20
 and comiatible), uses Linux w1 module and /sys/bus/w1 bus to access the
@@ -30,6 +32,7 @@ be loaded once and can query any compatible sensor on the local bus, sensor
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
+from time import sleep
 
 import os
 
@@ -72,7 +75,10 @@ class PHI(GenericPHI):
                 val = float(val) / 1000
                 return val
             except:
-                if i == self.retries: log_traceback()
+                if i == self.retries:
+                    log_traceback()
+                else:
+                    sleep(w1_delay)
         return None
 
     def test(self, cmd=None):
