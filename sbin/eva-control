@@ -3,6 +3,8 @@
 D=`realpath $0`
 cd `dirname ${D}`/..
 
+MAX_START_WAIT=180
+
 export EVA_DIR=`pwd`
 if [ ! -f ./etc/eva_servers ]; then
     echo "${EVA_DIR}/etc/eva_servers missing"
@@ -29,7 +31,7 @@ start)
                 echo "WARNING: forbidden for local"
                 break
             fi
-            if [ $I -gt 60 ]; then
+            if [ $I -gt ${MAX_START_WAIT} ]; then
                 echo " failed to start!"
                 break
             fi
@@ -57,7 +59,7 @@ start)
                 echo "WARNING: forbidden for local"
                 break
             fi
-            if [ $I -gt 60 ]; then
+            if [ $I -gt ${MAX_START_WAIT} ]; then
                 echo " failed to start!"
                 break
             fi
@@ -85,7 +87,7 @@ start)
                 echo "WARNING: forbidden for local"
                 break
             fi
-            if [ $I -gt 60 ]; then
+            if [ $I -gt ${MAX_START_WAIT} ]; then
                 echo " failed to start!"
                 break
             fi
