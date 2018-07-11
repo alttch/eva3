@@ -186,7 +186,7 @@ call.
     # if PHI can write data to the equipment
     def set(self, port=None, data=None, cfg=None, timeout=0):
         #<your code>
-        #should return True if passed, False if failed
+        #should return True (or result) if passed, False, 0 or None if failed
 
 **port** and **data** may be integers, string, contain lists or be set as None.
 PHI should always be ready to any incoming params and handle the missing or
