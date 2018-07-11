@@ -137,7 +137,7 @@ class LPI(GenericLPI):
             st_ports = []
             _status = 1
             for p in pp:
-                if _state_in and p in _state_in:
+                if _state_in and str(p) in _state_in:
                     value = _state_in.get(str(p))
                 else:
                     value = self.phi.get(str(p), phi_cfg,

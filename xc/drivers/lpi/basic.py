@@ -94,7 +94,7 @@ class LPI(GenericLPI):
             st_prev = None
             for p in pp:
                 _p, invert = self.need_invert(p)
-                if _state_in and _p in _state_in:
+                if _state_in and str(_p) in _state_in:
                     status = _state_in.get(str(_p))
                 else:
                     status = self.phi.get(str(_p), phi_cfg,
