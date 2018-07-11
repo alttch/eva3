@@ -160,8 +160,8 @@ class PHI(GenericPHI):
         if not community:
             community = self.snmp_write_community
         if tries is None: tries = self.snmp_tries
-        if not host or not community: return None
-        if port < 1 or port > self.port_max or val < 0 or val > 1: return None
+        if not host or not community: return False
+        if port < 1 or port > self.port_max or val < 0 or val > 1: return False
         _timeout = (timeout - 1) / self.snmp_tries
         return snmp.set('%s.%u' % (self.oid_work, port + self.port_shift),
                         rfc1902.Integer(val), host, snmp_port, community,
