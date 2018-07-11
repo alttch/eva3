@@ -14,6 +14,9 @@ from eva.api import http_api_result_error
 from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
+from eva.tools import oid_to_id
+from eva.tools import parse_oid
+from eva.tools import val_to_boolean
 from eva import apikey
 import eva.sysapi
 import eva.uc.controller
@@ -73,7 +76,7 @@ class UC_API(GenericAPI):
 
     def state(self, k=None, i=None, full=False, group=None, tp=None):
         if i:
-            item = eva.uc.controller.get_item(i)
+            item = eva.uc.controller.get_item(oid_to_id(i))
             if not item or not apikey.check(k, item): return None
             return item.serialize(full=full)
         elif tp:
@@ -118,7 +121,7 @@ class UC_API(GenericAPI):
             fmt=g)
 
     def update(self, k=None, i=None, status=None, value=None, force_virtual=0):
-        item = eva.uc.controller.get_item(i)
+        item = eva.uc.controller.get_item(oid_to_id(i))
         if not item or not apikey.check(k, item): return False
         return item.update_set_state(
             status=status, value=value, force_virtual=force_virtual)
@@ -132,7 +135,7 @@ class UC_API(GenericAPI):
                priority=None,
                q_timeout=None,
                wait=0):
-        item = eva.uc.controller.get_unit(i)
+        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
         if not item or not apikey.check(k, item): return None
         return eva.uc.controller.exec_unit_action(
             unit=item,
@@ -150,7 +153,7 @@ class UC_API(GenericAPI):
                       priority=None,
                       q_timeout=None,
                       wait=0):
-        item = eva.uc.controller.get_unit(i)
+        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
         if not item or not apikey.check(k, item): return None
         nstatus = 0 if item.status else 1
         return eva.uc.controller.exec_unit_action(
@@ -162,12 +165,12 @@ class UC_API(GenericAPI):
             action_uuid=action_uuid)
 
     def disable_actions(self, k=None, i=None):
-        item = eva.uc.controller.get_unit(i)
+        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
         if not item or not apikey.check(k, item): return None
         return item.disable_actions()
 
     def enable_actions(self, k=None, i=None):
-        item = eva.uc.controller.get_unit(i)
+        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
         if not item or not apikey.check(k, item): return None
         return item.enable_actions()
 
@@ -179,17 +182,19 @@ class UC_API(GenericAPI):
         else:
             result = []
             if item_id:
+                _item_id = oid_to_id(item_id, 'unit')
+                if _item_id is None: return None
                 ar = None
-                item = eva.uc.controller.get_item(item_id)
+                item = eva.uc.controller.get_unit(_item_id)
                 if not apikey.check(k, item): return None
-                if item_id.find('/') > -1:
-                    if item_id in eva.uc.controller.Q.actions_by_item_full_id:
+                if _item_id.find('/') > -1:
+                    if _item_id in eva.uc.controller.Q.actions_by_item_full_id:
                         ar = eva.uc.controller.Q.actions_by_item_full_id[
-                            item_id]
+                            _item_id]
                 else:
-                    if item_id in eva.uc.controller.Q.actions_by_item_id:
-                        ar = eva.uc.controller.Q.actions_by_item_id[item_id]
-                if ar is None: return None
+                    if _item_id in eva.uc.controller.Q.actions_by_item_id:
+                        ar = eva.uc.controller.Q.actions_by_item_id[_item_id]
+                if ar is None: return []
             else:
                 ar = eva.uc.controller.Q.actions
             for a in ar:
@@ -215,12 +220,12 @@ class UC_API(GenericAPI):
             if not a or not apikey.check(k, a.item): return None
             return a.kill()
         elif i:
-            item = eva.uc.controller.get_unit(i)
+            item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
             if not item or not apikey.check(k, item): return None
             return item.terminate()
 
     def kill(self, k=None, i=None):
-        item = eva.uc.controller.get_unit(i)
+        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
         if not item or not apikey.check(k, item): return None
         result = item.kill()
         if not result: return 0
@@ -228,7 +233,7 @@ class UC_API(GenericAPI):
         return 1
 
     def q_clean(self, k=None, i=None):
-        item = eva.uc.controller.get_unit(i)
+        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
         if not item or not apikey.check(k, item): return None
         return item.q_clean()
 
@@ -237,12 +242,12 @@ class UC_API(GenericAPI):
 
     def get_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
-        item = eva.uc.controller.get_item(i)
+        item = eva.uc.controller.get_item(oid_to_id(i))
         return item.serialize(config=True) if item else None
 
     def save_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
-        item = eva.uc.controller.get_item(i)
+        item = eva.uc.controller.get_item(oid_to_id(i))
         return item.save() if item else None
 
     def list(self, k=None, group=None, tp=None):
@@ -263,7 +268,7 @@ class UC_API(GenericAPI):
 
     def list_props(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
-        item = eva.uc.controller.get_item(i)
+        item = eva.uc.controller.get_item(oid_to_id(i))
         return item.serialize(props=True) if item else None
 
     def _set_props(self,
@@ -273,18 +278,18 @@ class UC_API(GenericAPI):
                    save=None,
                    clean_snmp=False):
         if clean_snmp:
-            if not api.set_prop(k, i=i, p='snmp_trap'):
+            if not api.set_prop(k, i=oid_to_id(i), p='snmp_trap'):
                 return False
         if props:
             for p, v in props.items():
                 try:
-                    if not api.set_prop(k, i=i, p=p, v=v, save=None):
+                    if not api.set_prop(k, i=oid_to_id(i), p=p, v=v, save=None):
                         return False
                 except:
                     eva.core.log_traceback()
                     return False
         if save:
-            api.save_config(k, i=i)
+            api.save_config(k, i=oid_to_id(i))
         return True
 
     def set_prop(self, k=None, i=None, p=None, v=None, save=False):
@@ -306,7 +311,10 @@ class UC_API(GenericAPI):
                     save=False):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.create_unit(
-            unit_id=unit_id, group=group, virtual=virtual, save=save)
+            unit_id=oid_to_id(unit_id, 'unit'),
+            group=group,
+            virtual=virtual,
+            save=save)
 
     def create_sensor(self,
                       k=None,
@@ -316,7 +324,10 @@ class UC_API(GenericAPI):
                       save=False):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.create_sensor(
-            sensor_id=sensor_id, group=group, virtual=virtual, save=save)
+            sensor_id=oid_to_id(sensor_id, 'sensor'),
+            group=group,
+            virtual=virtual,
+            save=save)
 
     def create_mu(self,
                   k=None,
@@ -326,7 +337,21 @@ class UC_API(GenericAPI):
                   save=False):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.create_mu(
-            mu_id=mu_id, group=group, virtual=virtual, save=save)
+            mu_id=oid_to_id(mu_id, 'mu'),
+            group=group,
+            virtual=virtual,
+            save=save)
+
+    def create(self, k=None, oid=None, virtual=False, save=False):
+        if not apikey.check(k, master=True):
+            t, i = parse_oid(oid)
+            if t is None or i is None: return None
+        if t == 'unit':
+            return api.create_unit(k, i, virtual=virtual, save=save)
+        if t == 'sensor':
+            return api.create_sensor(k, i, virtual=virtual, save=save)
+        if t == 'mu':
+            return api.create_mu(k, i, virtual=virtual, save=save)
 
     def load_device_config(self, tpl_config={}, device_tpl=None):
         try:
@@ -691,6 +716,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.list_props.exposed = True
         UC_HTTP_API.set_prop.exposed = True
 
+        UC_HTTP_API.create.exposed = True
         UC_HTTP_API.create_unit.exposed = True
         UC_HTTP_API.create_sensor.exposed = True
         UC_HTTP_API.create_mu.exposed = True
@@ -932,20 +958,28 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
+    def create(self, k=None, i=None, virtual=None, save=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().create(
+            k, i, val_to_boolean(virtual), save) else http_api_result_error()
+
     def create_unit(self, k=None, i=None, g=None, virtual=None, save=None):
         cp_need_master(k)
         return http_api_result_ok() if super().create_unit(
-            k, i, g, virtual, save) else http_api_result_error()
+            k, i, g, val_to_boolean(virtual),
+            save) else http_api_result_error()
 
     def create_sensor(self, k=None, i=None, g=None, virtual=None, save=None):
         cp_need_master(k)
         return http_api_result_ok() if super().create_sensor(
-            k, i, g, virtual, save) else http_api_result_error()
+            k, i, g, val_to_boolean(virtual),
+            save) else http_api_result_error()
 
     def create_mu(self, k=None, i=None, g=None, virtual=None, save=None):
         cp_need_master(k)
         return http_api_result_ok() if super().create_mu(
-            k, i, g, virtual, save) else http_api_result_error()
+            k, i, g, val_to_boolean(virtual),
+            save) else http_api_result_error()
 
     def create_device(self, k=None, c=None, t=None, save=None):
         config = {}

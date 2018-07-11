@@ -11,6 +11,9 @@ import sys
 import jsonpickle
 import argparse
 import re
+import time
+from datetime import datetime
+import pytz
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -36,7 +39,13 @@ api_functions = {
     'cvar:set': 'set_cvar',
     'cvar:delete': 'set_cvar',
     'debug': 'set_debug',
-    'debug': 'set_debug',
+    'action:exec': 'action',
+    'action:result': 'result',
+    'action:enable': 'enable_actions',
+    'action:disable': 'disable_actions',
+    'action:terminate': 'terminate',
+    'action:clear': 'q_clean',
+    'action:kill': 'kill',
     'phi:list': 'list_phi',
     'phi:show': 'get_phi',
     'phi:mods': 'list_phi_mods',
@@ -67,8 +76,11 @@ def get_api_func(itype, func):
 
 def _prepare_result_data(data):
     result = []
+    tz = pytz.timezone(time.tzname[0])
     for d in data.copy():
-        if itype == 'driver':
+        if itype == 'action':
+            d['time'] = datetime.fromtimestamp(d['time']['created']).isoformat()
+        elif itype == 'driver':
             if 'phi' in d:
                 d['phi_mod'] = d['phi'].get('mod')
                 del d['phi']
@@ -83,6 +95,15 @@ def _prepare_result_data(data):
 
 
 _pd_cols = {
+    'state': ['oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue'],
+    'state_': [
+        'oid', 'virtual', 'action_enabled', 'description', 'location', 'status',
+        'value', 'nstatus', 'nvalue'
+    ],
+    'result': [
+        'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
+        'status'
+    ],
     'list_phi_': ['id', 'mod', 'description', 'version'],
     'list_drivers_':
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
@@ -91,6 +112,13 @@ _pd_cols = {
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
     'modhelp_lpi': ['name', 'type', 'required', 'help'],
     'modhelp_phi': ['name', 'type', 'required', 'help']
+}
+
+_pd_idx = {
+    'state': 'oid',
+    'result': 'time',
+    'list_phi_mods': 'mod',
+    'list_lpi_mods': 'mod'
 }
 
 
@@ -117,7 +145,10 @@ def fancy_print_result(result, tab=0):
                     if tab:
                         print(' ' * (tab * 10), end='>' * tab + ' ')
                     if isinstance(result[v], list):
-                        _v = ', '.join(result[v])
+                        _r = []
+                        for vv in result[v]:
+                            _r.append(str(vv))
+                        _v = ', '.join(_r)
                     else:
                         _v = result[v]
                     print(("{:>%u} : {}" % max(map(len, result))).format(v, _v))
@@ -148,21 +179,21 @@ def fancy_print_result(result, tab=0):
             cols = list(df)
         df = df.ix[:, cols]
         try:
-            if api_func not in ['list_phi_mods', 'list_lpi_mods']:
-                idxcol = 'id'
-            else:
-                idxcol = 'mod'
+            idxcol = _pd_idx.get(api_func)
+            if idxcol is None: idxcol = 'id'
             if idxcol in list(df):
                 df.set_index(idxcol, inplace=True)
             else:
                 idxcol = list(df)[0]
                 df.set_index(list(df)[0], inplace=True)
+            if idxcol == 'time':
+                df.index = pd.to_datetime(df.index, utc=False)
             out = df.fillna(' ').to_string().split('\n')
             print(idxcol + out[0][len(idxcol):])
             print('-' * len(out[0]))
             [print(re.sub('^NaN', '   ', o)) for o in out[2:]]
         except:
-            pass
+            raise
     elif result:
         print(result)
 
@@ -260,6 +291,128 @@ sp_log_error = sp_log.add_parser('error', help='Send error message')
 sp_log_error.add_argument('m', help='Message', metavar='MSG')
 sp_log_critical = sp_log.add_parser('critical', help='Send critical message')
 sp_log_critical.add_argument('m', help='Message', metavar='MSG')
+
+# Common
+sp_state = sp.add_parser('state', help='Get item state')
+sp_state.add_argument('i',
+    help='Item ID (specify either ID or item type)',
+    metavar='ID', nargs='?')
+sp_state.add_argument(
+    '-g', '--group', help='Item group', metavar='GROUP', dest='g')
+sp_state.add_argument(
+    '-p',
+    '--type',
+    help='Item type',
+    metavar='TYPE',
+    dest='p',
+    choices=['unit', 'sensor', 'U', 'S'])
+sp_state.add_argument(
+    '-y',
+    '--full',
+    help='full information about item',
+    dest='_full',
+    action='store_true')
+
+sp_update = sp.add_parser('update', help='Update item state')
+sp_update.add_argument('i', help='Item ID', metavar='ID')
+sp_update.add_argument(
+    '-s', '--status', help='Item status', metavar='STATUS', type=int, dest='s')
+sp_update.add_argument(
+    '-v', '--value', help='Item value', metavar='VALUE', dest='v')
+
+ap_action = sp.add_parser('action', help='Unit actions')
+
+sp_action = ap_action.add_subparsers(
+    dest='_func', metavar='func', help='Action commands')
+
+sp_action_enable = sp_action.add_parser('enable', help='Enable unit actions')
+sp_action_enable.add_argument('i', help='Unit ID', metavar='ID')
+
+sp_action_disable = sp_action.add_parser('disable', help='Disable unit actions')
+sp_action_disable.add_argument('i', help='Unit ID', metavar='ID')
+
+sp_action_exec = sp_action.add_parser('exec', help='Execute unit action')
+sp_action_exec.add_argument('i', help='Unit ID', metavar='ID')
+sp_action_exec.add_argument('s', help='New status', metavar='STATUS')
+sp_action_exec.add_argument(
+    '-v', '--value', help='New value', metavar='VALUE', dest='v')
+sp_action_exec.add_argument(
+    '-p',
+    '--priority',
+    help='Action priority',
+    metavar='PRIORITY',
+    type=int,
+    dest='p')
+sp_action_exec.add_argument(
+    '-w',
+    '--wait',
+    help='Wait for complete',
+    metavar='SEC',
+    type=float,
+    dest='w')
+sp_action_exec.add_argument(
+    '-q',
+    '--queue-timeout',
+    help='Max queue timeout',
+    metavar='SEC',
+    type=float,
+    dest='q')
+sp_action_exec.add_argument(
+    '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+
+sp_action_toggle = sp_action.add_parser(
+    'toggle', help='Execute unit toggle action')
+sp_action_toggle.add_argument('i', help='Unit ID', metavar='ID')
+sp_action_toggle.add_argument(
+    '-p',
+    '--priority',
+    help='Action priority',
+    metavar='PRIORITY',
+    type=int,
+    dest='p')
+sp_action_toggle.add_argument(
+    '-w',
+    '--wait',
+    help='Wait for complete',
+    metavar='SEC',
+    type=float,
+    dest='w')
+sp_action_toggle.add_argument(
+    '-q',
+    '--queue-timeout',
+    help='Max queue timeout',
+    metavar='SEC',
+    type=float,
+    dest='q')
+sp_action_toggle.add_argument(
+    '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+
+sp_action_terminate = sp_action.add_parser('terminate', help='Terminate unit action')
+sp_action_terminate.add_argument('i', help='Unit ID', metavar='ID', nargs='?')
+sp_action_terminate.add_argument(
+    '-u', '--uuid', help='Action uuid', metavar='UUID', dest='u')
+
+sp_action_qclean = sp_action.add_parser('clear', help='Clean up unit action queue')
+sp_action_qclean.add_argument('i', help='Unit ID', metavar='ID')
+
+sp_action_kill = sp_action.add_parser('kill', help='Terminate action and clean queue')
+sp_action_kill.add_argument('i', help='Unit ID', metavar='ID')
+
+sp_action_result = sp_action.add_parser(
+    'result', help='Get unit action results')
+sp_action_result.add_argument(
+    '-i', '--id', help='Unit ID', metavar='ID', dest='i')
+sp_action_result.add_argument(
+    '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
+sp_action_result.add_argument(
+    '-g', '--group', help='Unit group', metavar='GROUP', dest='g')
+sp_action_result.add_argument(
+    '-s',
+    '--state',
+    help='Action state',
+    metavar='STATE',
+    dest='s',
+    choices=['Q', 'R', 'F', 'queued', 'running', 'finished'])
 
 # CVAR
 ap_cvar = sp.add_parser('cvar', help='CVAR functions')
@@ -414,7 +567,7 @@ for p in params.copy().keys():
         del params[p]
 
 if not itype:
-    ap.print_usage()
+    ap.print_help()
     sys.exit(99)
 
 if hasattr(a, '_func'):
@@ -422,12 +575,15 @@ if hasattr(a, '_func'):
 else:
     func = None
 
+if itype in ['log', 'action', 'cvar', 'debug', 'phi', 'lpi', 'driver' ] and func is None:
+    ap.parse_args([itype, '--help'])
+
 debug = a._debug
 
 api_func = get_api_func(itype, func)
 
 if not api_func:
-    ap.print_usage()
+    ap.print_help()
     sys.exit(99)
 
 apiuri = a._api_uri
@@ -487,7 +643,7 @@ if code != apiclient.result_ok and \
     elif code == apiclient.result_not_ready:
         print('Error: API not ready')
     elif code == apiclient.result_func_unknown:
-        ap.print_usage()
+        ap.print_help()
     elif code == apiclient.result_server_error:
         print('Error: Server error')
     elif code == apiclient.result_server_timeout:
@@ -505,7 +661,9 @@ else:
         if 'result' in result and result['result'] == 'ERROR':
             sys.exit(apiclient.result_func_failed)
     else:
-        if code == apiclient.result_func_failed and api_func not in ['cmd']:
+        if code == apiclient.result_func_failed and api_func not in [
+                'cmd', 'action', 'action_toggle'
+        ]:
             print('FAILED')
         elif 'result' in result and api_func != 'test':
             print(result['result'])
