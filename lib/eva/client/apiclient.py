@@ -61,10 +61,11 @@ _api_func = {
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
-            'enable_actions', 'save_config', 'set_prop', 'create_unit',
-            'create_sensor', 'create_mu', 'create_device', 'update_device',
-            'clone', 'clone_group', 'destroy', 'destroy_device', 'login',
-            'logout', 'unload_phi', 'unload_driver', 'set_driver'
+            'enable_actions', 'save_config', 'set_prop', 'create',
+            'create_unit', 'create_sensor', 'create_mu', 'create_device',
+            'update_device', 'clone', 'clone_group', 'destroy',
+            'destroy_device', 'login', 'logout', 'unload_phi', 'unload_driver',
+            'set_driver'
         ],
         'ce': ['action', 'action_toggle']
     },
