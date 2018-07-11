@@ -48,8 +48,8 @@ from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
 class LPI(GenericLPI):
 
-    def __init__(self, lpi_cfg=None, phi_id=None):
-        super().__init__(lpi_cfg, phi_id)
+    def __init__(self, lpi_cfg=None, phi_id=None, info_only=False):
+        super().__init__(lpi_cfg, phi_id, info_only)
         self.lpi_mod_id = __id__
         self.__author = __author__
         self.__license = __license__

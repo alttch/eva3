@@ -57,8 +57,8 @@ from eva.tools import val_to_boolean
 
 class LPI(GenericLPI):
 
-    def __init__(self, lpi_cfg=None, phi_id=None):
-        super().__init__(lpi_cfg, phi_id)
+    def __init__(self, lpi_cfg=None, phi_id=None, info_only=False):
+        super().__init__(lpi_cfg, phi_id, info_only)
         self.lpi_mod_id = __id__
         self.__author = __author__
         self.__license = __license__
@@ -72,6 +72,7 @@ class LPI(GenericLPI):
         self.__action_help = __action_help__
         self.__state_help = __state_help__
         self.__help = __help__
+        if info_only: return
         # skip - skip sensor errors (log error and continue)
         # otherwise if one sensor in a group failed, stop polling others
         #

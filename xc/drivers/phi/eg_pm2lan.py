@@ -51,8 +51,8 @@ from time import time
 
 class PHI(GenericPHI):
 
-    def __init__(self, phi_cfg=None):
-        super().__init__(phi_cfg=phi_cfg)
+    def __init__(self, phi_cfg=None, info_only=False):
+        super().__init__(phi_cfg=phi_cfg, info_only=info_only)
         self.phi_mod_id = __id__
         self.__author = __author__
         self.__license = __license__
@@ -66,6 +66,7 @@ class PHI(GenericPHI):
         self.__get_help = __get_help__
         self.__set_help = __set_help__
         self.__help = __help__
+        if info_only: return
         self.aao_get = True
         self.host = self.phi_cfg.get('host')
         self.pw = self.phi_cfg.get('pw')

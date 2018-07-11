@@ -137,8 +137,8 @@ be serialized by super() if requested:
 
 .. code-block:: python
 
-    def __init__(self, phi_cfg=None):
-        super().__init__(phi_cfg=phi_cfg)
+    def __init__(self, phi_cfg=None, info_only=False):
+        super().__init__(phi_cfg=phi_cfg, info_only=info_only)
         self.phi_mod_id = __id__
         self.__author = __author__
         self.__license = __license__
@@ -152,11 +152,14 @@ be serialized by super() if requested:
         self.__get_help = __get_help__
         self.__set_help = __set_help__
         self.__help = __help__
+        if info_only: return
+        # your code, i.e. to parse self.phi_cfg
 
 The super().__init__ call should always be first.
 
-If the constructor faces a problem (i.e. parsing a config) it may set
-*self.ready=False* to abort controller loading the driver.
+If the constructor faces a problem (i.e. parsing a config or checking
+equipment, i.e. local bus) it may set *self.ready=False* to abort controller
+loading the driver.
 
 If PHI methods get/set can't work with a single ports at all (i.e. equipment
 returns state of all ports at once only), constructor should set variables:
@@ -165,6 +168,13 @@ returns state of all ports at once only), constructor should set variables:
   always contain all port states
 * **self.aao_set=True** asks LPI to collect as much data to set as possible, and
   then call PHI.set method
+
+The parent constructor sets the variable **self.phi_cfg** to phi_cfg or to {},
+so it's safe to work with it with *self.phi_cfg.get(cfgvar)*.
+
+If **info_only** param is true, it means the controller loaded module only to
+get its info and the module don't need to intialize itself for work and perform
+initial tests.
 
 Primary methods
 ---------------

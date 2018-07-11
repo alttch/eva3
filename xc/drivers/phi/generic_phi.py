@@ -32,7 +32,7 @@ class PHI(object):
     config
     """
 
-    def __init__(self, phi_cfg=None):
+    def __init__(self, phi_cfg=None, info_only=False):
         if phi_cfg:
             self.phi_cfg = phi_cfg
         else:
@@ -50,12 +50,13 @@ class PHI(object):
         self.__get_help = __get_help__
         self.__set_help = __set_help__
         self.__help = __help__
+        self.phi_id = None  # set by driverapi on load
+        if info_only: return
         # True if the equipment can query/modify only all
         # ports at once and can not work with a single ports
         self.aao_get = False
         self.aao_set = False
         self.ready = True
-        self.phi_id = None  # set by driverapi on load
         # cache time, useful for aao_get devices
         self.cache_set = 0
         try:

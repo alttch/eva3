@@ -32,18 +32,8 @@ from eva.uc.driverapi import critical
 
 class PHI(GenericPHI):
 
-    def __init__(self, phi_cfg=None):
-        super().__init__(phi_cfg=phi_cfg)
-        d = self.phi_cfg.get('default_value')
-        if d is None: d = None
-        else:
-            try:
-                d = float(d)
-            except:
-                d = None
-        self.data = {}
-        for i in range(1000, 1010):
-            self.data[str(i)] = d
+    def __init__(self, phi_cfg=None, info_only=False):
+        super().__init__(phi_cfg=phi_cfg, info_only=info_only)
         self.phi_mod_id = __id__
         self.__author = __author__
         self.__license = __license__
@@ -56,6 +46,17 @@ class PHI(GenericPHI):
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        if info_only: return
+        d = self.phi_cfg.get('default_value')
+        if d is None: d = None
+        else:
+            try:
+                d = float(d)
+            except:
+                d = None
+        self.data = {}
+        for i in range(1000, 1010):
+            self.data[str(i)] = d
 
     def get(self, port=None, cfg=None, timeout=0):
         try:

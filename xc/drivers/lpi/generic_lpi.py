@@ -209,7 +209,7 @@ class LPI(object):
     just don't forget to call super().__init__ before your code
     """
 
-    def __init__(self, lpi_cfg=None, phi_id=None):
+    def __init__(self, lpi_cfg=None, phi_id=None, info_only=False):
         self.phi_id = phi_id
         if lpi_cfg:
             self.lpi_cfg = lpi_cfg

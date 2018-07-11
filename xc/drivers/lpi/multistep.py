@@ -97,8 +97,8 @@ from eva.tools import val_to_boolean
 
 class LPI(BasicLPI):
 
-    def __init__(self, lpi_cfg=None, phi_id=None):
-        super().__init__(lpi_cfg, phi_id)
+    def __init__(self, lpi_cfg=None, phi_id=None, info_only=False):
+        super().__init__(lpi_cfg, phi_id, info_only)
         self.lpi_mod_id = __id__
         self.__author = __author__
         self.__license = __license__
@@ -112,6 +112,7 @@ class LPI(BasicLPI):
         self.__action_help = __action_help__
         self.__state_help = __state_help__
         self.__help = __help__
+        if info_only: return
         self.bose = val_to_boolean(self.lpi_cfg.get('bose'))
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):

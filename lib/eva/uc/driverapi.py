@@ -88,7 +88,7 @@ def get_driver(driver_id):
 
 def modhelp_phi(mod, context):
     code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
-            ' s=PHI().serialize(helpinfo=\'%s\')' % context
+            ' s=PHI(info_only=True).serialize(helpinfo=\'%s\')' % context
     try:
         d = {}
         exec(code, d)
@@ -100,7 +100,7 @@ def modhelp_phi(mod, context):
 
 def modinfo_phi(mod):
     code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
-            ' s=PHI().serialize(full=True)'
+            ' s=PHI(info_only=True).serialize(full=True)'
     try:
         d = {}
         exec(code, d)
@@ -117,7 +117,7 @@ def modinfo_phi(mod):
 
 def modhelp_lpi(mod, context):
     code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \
-            ' s=LPI().serialize(helpinfo=\'%s\')' % context
+            ' s=LPI(info_only=True).serialize(helpinfo=\'%s\')' % context
     try:
         d = {}
         exec(code, d)
@@ -129,7 +129,7 @@ def modhelp_lpi(mod, context):
 
 def modinfo_lpi(mod):
     code = 'from eva.uc.drivers.lpi.%s import LPI;' % mod + \
-            ' s=LPI().serialize(full=True)'
+            ' s=LPI(info_only=True).serialize(full=True)'
     try:
         d = {}
         exec(code, d)
@@ -153,7 +153,7 @@ def list_phi_mods():
         f = os.path.basename(p)[:-3]
         if f != '__init__':
             code = 'from eva.uc.drivers.phi.%s import PHI;' % f + \
-                    ' s=PHI().serialize(full=True)'
+                    ' s=PHI(info_only=True).serialize(full=True)'
             try:
                 d = {}
                 exec(code, d)
@@ -171,7 +171,7 @@ def list_lpi_mods():
         f = os.path.basename(p)[:-3]
         if f != '__init__':
             code = 'from eva.uc.drivers.lpi.%s import LPI;' % f +  \
-                    ' s=LPI().serialize(full=True)'
+                    ' s=LPI(info_only=True).serialize(full=True)'
             try:
                 d = {}
                 exec(code, d)

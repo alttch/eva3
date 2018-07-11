@@ -28,18 +28,8 @@ from eva.uc.driverapi import log_traceback
 
 class PHI(GenericPHI):
 
-    def __init__(self, phi_cfg=None):
-        super().__init__(phi_cfg=phi_cfg)
-        d = self.phi_cfg.get('default_status')
-        if d is None: d = -1
-        else:
-            try:
-                d = int(d)
-            except:
-                d = -1
-        self.data = {}
-        for i in range(1, 16):
-            self.data[str(i)] = d
+    def __init__(self, phi_cfg=None, info_only=False):
+        super().__init__(phi_cfg=phi_cfg, info_only=info_only)
         self.phi_mod_id = __id__
         self.__author = __author__
         self.__license = __license__
@@ -53,6 +43,17 @@ class PHI(GenericPHI):
         self.__get_help = __get_help__
         self.__set_help = __set_help__
         self.__help = __help__
+        if info_only: return
+        d = self.phi_cfg.get('default_status')
+        if d is None: d = -1
+        else:
+            try:
+                d = int(d)
+            except:
+                d = -1
+        self.data = {}
+        for i in range(1, 16):
+            self.data[str(i)] = d
 
     def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data
