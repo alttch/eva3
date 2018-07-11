@@ -257,7 +257,6 @@ class LPI(BasicLPI):
                 log_traceback()
                 return self.action_result_error(_uuid, 3, '_delay calc error')
             # no delay - nothing to do
-            print(pstatus, nstatus, _delay)
             if not _delay:
                 continue
             if _delay > time_start - time() + timeout:
