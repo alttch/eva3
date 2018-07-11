@@ -40,7 +40,7 @@ __state_help__ = [{
 
 __state_help__ += __config_help__
 
-__help__="""
+__help__ = """
 Enhanced LPI to work with sensors, supports various typical functions: working
 with a sensor groups, returning the average, max or min group value etc. Can
 use 'max_diff' param to control the maximum difference of the sensor value in a
@@ -101,7 +101,7 @@ class LPI(GenericLPI):
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi.aao_get and not _state_in:
-            _state_in = self.phi.get(timeout=timeout)
+            _state_in = self.phi.get(cfg=phi_cfg, timeout=timeout)
         skip_err = val_to_boolean(cfg.get('skip_err')) if \
                 cfg.get('skip_err') is not None else self.skip_err
         gpf = cfg.get('gpf') if \
@@ -140,8 +140,8 @@ class LPI(GenericLPI):
                 if _state_in and str(p) in _state_in:
                     value = _state_in.get(str(p))
                 else:
-                    value = self.phi.get(str(p), phi_cfg,
-                                         timeout + time_start - time())
+                    value = self.phi.get(
+                        str(p), phi_cfg, timeout + time_start - time())
                 try:
                     value = float(value)
                 except:

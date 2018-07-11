@@ -71,7 +71,8 @@ class LPI(GenericLPI):
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi.aao_get and not _state_in:
-            _state_in = self.phi.get(timeout=(timeout + time_start - time()))
+            _state_in = self.phi.get(
+                cfg=phi_cfg, timeout=(timeout + time_start - time()))
         port = cfg.get(self.io_label)
         if not isinstance(port, list):
             _port = [port]
@@ -97,8 +98,8 @@ class LPI(GenericLPI):
                 if _state_in and str(_p) in _state_in:
                     status = _state_in.get(str(_p))
                 else:
-                    status = self.phi.get(str(_p), phi_cfg,
-                                          timeout + time_start - time())
+                    status = self.phi.get(
+                        str(_p), phi_cfg, timeout + time_start - time())
                 if status is None or status not in [0, 1]:
                     if multi:
                         st_prev = -1
