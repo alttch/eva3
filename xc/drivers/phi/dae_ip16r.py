@@ -141,7 +141,7 @@ class PHI(GenericPHI):
             port = int(port)
             val = int(data)
         except:
-            return None
+            return False
         if cfg:
             host, snmp_port = parse_host_port(cfg.get('host'), 161)
             community = cfg.get('community')

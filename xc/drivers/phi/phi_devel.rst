@@ -274,3 +274,8 @@ The controller will call update() method for all items using the caller PHI for
 updating, providing LPIs state data to let them process the event with
 minimized amount of additional PHI.get() calls.
 
+Exceptions
+----------
+
+The methods of PHI should not throw any exceptions and handle/log all errors by
+themselves.

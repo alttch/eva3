@@ -166,14 +166,17 @@ class LPI(GenericLPI):
                 ports_to_set.append(_port)
                 data_to_set.append(_status)
             else:
-                if not self.phi.set(
-                        _port,
-                        _status,
-                        phi_cfg,
-                        timeout=(timeout + time_start - time())):
+                set_result = self.phi.set(
+                    _port,
+                    _status,
+                    phi_cfg,
+                    timeout=(timeout + time_start - time()))
+                if set_result is False or set_result is None:
                     return self.action_result_error(
                         _uuid, msg='port %s set error' % _port)
         if self.phi.aao_set:
-            if not self.phi.set(ports_to_set, data_to_set, timeout=timeout):
-                return self.action_result_error(_uuid, msg='ports set error')
+            set_result = self.phi.set(
+                ports_to_set, data_to_set, timeout=timeout)
+            if set_result is False or set_result is None:
+                self.action_result_error(_uuid, msg='ports set error')
         return self.action_result_ok(_uuid)
