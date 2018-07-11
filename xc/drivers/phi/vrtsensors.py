@@ -78,7 +78,7 @@ class PHI(GenericPHI):
                 val = float(val)
                 self.data[port] = val
             except:
-                self.data[port] = None
+                self.data[port] = val
             self.log_debug(
                 '%s test completed, set port %s=%s' % (self.phi_id, port, val))
             if self.phi_cfg.get('event_on_test_set'):
