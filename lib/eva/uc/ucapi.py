@@ -14,6 +14,7 @@ from eva.api import http_api_result_error
 from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
+from eva.tools import dict_from_str
 from eva import apikey
 import eva.sysapi
 import eva.uc.controller
@@ -526,24 +527,11 @@ class UC_API(GenericAPI):
     def load_phi(self, k=None, i=None, m=None, cfg=None, save=False):
         if not apikey.check(k, master=True): return None
         if not i or not m: return None
-        if isinstance(cfg, str):
-            _cfg = {}
-            props = cfg.split(',')
-            for p in props:
-                try:
-                    name, value = p.split('=')
-                    try:
-                        value = float(value)
-                        if value == int(value):
-                            value = int(value)
-                    except:
-                        pass
-                    _cfg[name] = value
-                except:
-                    eva.core.log_traceback()
-                    return None
-        else:
-            _cfg = cfg
+        try:
+            _cfg = dict_from_str(cfg)
+        except:
+            eva.core.log_traceback()
+            return None
         if eva.uc.driverapi.load_phi(i, m, _cfg):
             if save: eva.uc.driverapi.save()
             return eva.uc.driverapi.get_phi(i).serialize(full=True, config=True)
@@ -551,24 +539,11 @@ class UC_API(GenericAPI):
     def load_driver(self, k=None, i=None, m=None, p=None, cfg=None, save=False):
         if not apikey.check(k, master=True): return None
         if not i or not m or not p: return None
-        if isinstance(cfg, str):
-            _cfg = {}
-            props = cfg.split(',')
-            for _p in props:
-                try:
-                    name, value = _p.split('=')
-                    try:
-                        value = float(value)
-                        if value == int(value):
-                            value = int(value)
-                    except:
-                        pass
-                    _cfg[name] = value
-                except:
-                    eva.core.log_traceback()
-                    return None
-        else:
-            _cfg = cfg
+        try:
+            _cfg = dict_from_str(cfg)
+        except:
+            eva.core.log_traceback()
+            return None
         if eva.uc.driverapi.load_driver(i, m, p, _cfg):
             if save: eva.uc.driverapi.save()
             return eva.uc.driverapi.get_driver(p + '.' + i).serialize(

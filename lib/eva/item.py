@@ -17,6 +17,7 @@ import eva.uc.driverapi
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
+from eva.tools import dict_from_str
 
 
 class Item(object):
@@ -437,35 +438,16 @@ class UpdatableItem(Item):
                 self.log_set(prop, None)
                 self.set_modified(save)
                 return True
-            elif isinstance(val, dict):
-                self.update_driver_config = val
+            else:
+                try:
+                    v = dict_from_str(val)
+                except:
+                    log_traceback()
+                    return False
+                self.update_driver_config = v
                 self.log_set(prop, 'dict')
                 self.set_modified(save)
                 return True
-            else:
-                try:
-                    cfg = {}
-                    vals = val.split(',')
-                    for v in vals:
-                        name, value = v.split('=')
-                        if value.find('||') != -1:
-                            _value = value.split('||')
-                            value = []
-                            for _v in _value:
-                                if _v.find('|') != -1:
-                                    value.append(_v.split('|'))
-                                else:
-                                    value.append([_v])
-                        elif value.find('|') != -1:
-                            value = value.split('|')
-                        cfg[name] = value
-                    self.update_driver_config = cfg
-                    self.log_set(prop, val)
-                    self.set_modified(save)
-                    return True
-                except:
-                    eva.core.log_traceback()
-                    return False
         elif prop == 'snmp_trap.ident_vars' and self._snmp_traps_allowed:
             if val is None:
                 if self.snmp_trap and 'ident_vars' in self.snmp_trap:
@@ -1363,35 +1345,16 @@ class ActiveItem(Item):
                 self.log_set(prop, None)
                 self.set_modified(save)
                 return True
-            elif isinstance(val, dict):
-                self.action_driver_config = val
-                self.log_set(prop, 'dict')
-                self.set_modified(save)
-                return True
             else:
                 try:
-                    cfg = {}
-                    vals = val.split(',')
-                    for v in vals:
-                        name, value = v.split('=')
-                        if value.find('||') != -1:
-                            _value = value.split('||')
-                            value = []
-                            for _v in _value:
-                                if _v.find('|') != -1:
-                                    value.append(_v.split('|'))
-                                else:
-                                    value.append([_v])
-                        elif value.find('|') != -1:
-                            value = value.split('|')
-                        cfg[name] = value
-                    self.action_driver_config = cfg
-                    self.log_set(prop, val)
-                    self.set_modified(save)
-                    return True
+                    v = dict_from_str(val)
                 except:
                     eva.core.log_traceback()
                     return False
+                self.action_driver_config = v
+                self.log_set(prop, 'dict')
+                self.set_modified(save)
+                return True
         elif prop == 'mqtt_control':
             if val is None:
                 if self.mqtt_control is not None:

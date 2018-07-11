@@ -16,6 +16,7 @@ from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva import apikey
+from eva_tools import dict_from_str
 import eva.lm.controller
 import eva.lm.extapi
 import eva.ei
@@ -461,24 +462,11 @@ class LM_API(GenericAPI):
     def load_ext(self, k=None, i=None, m=None, cfg=None, save=False):
         if not apikey.check(k, master=True): return None
         if not i or not m: return None
-        if isinstance(cfg, str):
-            _cfg = {}
-            props = cfg.split(',')
-            for p in props:
-                try:
-                    name, value = p.split('=')
-                    try:
-                        value = float(value)
-                        if value == int(value):
-                            value = int(value)
-                    except:
-                        pass
-                    _cfg[name] = value
-                except:
-                    eva.core.log_traceback()
-                    return None
-        else:
-            _cfg = cfg
+        try:
+            _cfg = dict_from_str(cfg)
+        except:
+            eva.core.log_traceback()
+            return None
         if eva.lm.extapi.load_ext(i, m, _cfg):
             if save: eva.lm.extapi.save()
             return eva.lm.extapi.get_ext(i).serialize(full=True, config=True)
