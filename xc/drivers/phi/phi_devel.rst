@@ -176,12 +176,12 @@ call.
 .. code-block:: python
 
     # if PHI can read data from the equipment
-    get(self, port=None, cfg=None, timeout=0):
+    def get(self, port=None, cfg=None, timeout=0):
         #<your code>
         #should return a single state value or a dict { 'port': value }
         #port should always be a string
         #
-        #should return None if failed
+        #should return None if failed, integer for status, string for values
     
     # if PHI can write data to the equipment
     def set(self, port=None, data=None, cfg=None, timeout=0):
