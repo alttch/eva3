@@ -100,6 +100,10 @@ class LPI(GenericLPI):
                 else:
                     status = self.phi.get(
                         str(_p), phi_cfg, timeout + time_start - time())
+                try:
+                    status = int(status)
+                except:
+                    status = None
                 if status is None or status not in [0, 1]:
                     if multi:
                         st_prev = -1
