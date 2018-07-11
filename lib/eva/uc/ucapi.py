@@ -535,7 +535,7 @@ class UC_API(GenericAPI):
     def clone(self, k=None, i=None, n=None, g=None, save=False):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.clone_item(
-            item_id=i, new_item_id=n, group=g, save=save)
+            item_id=oid_to_id(i), new_item_id=n, group=g, save=save)
 
     def clone_group(self, k=None, g=None, n=None, p=None, r=None, save=False):
         if not apikey.check(k, master=True): return None
