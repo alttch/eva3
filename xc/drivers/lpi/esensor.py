@@ -140,7 +140,7 @@ class LPI(GenericLPI):
                 if _state_in and p in _state_in:
                     value = _state_in.get(str(p))
                 else:
-                    value = self.phi.get(p, phi_cfg,
+                    value = self.phi.get(str(p), phi_cfg,
                                          timeout + time_start - time())
                 try:
                     value = float(value)

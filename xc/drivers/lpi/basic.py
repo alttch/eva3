@@ -97,7 +97,7 @@ class LPI(GenericLPI):
                 if _state_in and _p in _state_in:
                     status = _state_in.get(str(_p))
                 else:
-                    status = self.phi.get(_p, phi_cfg,
+                    status = self.phi.get(str(_p), phi_cfg,
                                           timeout + time_start - time())
                 if status is None or status not in [0, 1]:
                     if multi:
