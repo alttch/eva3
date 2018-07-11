@@ -62,14 +62,10 @@ class PHI(GenericPHI):
                 d.on()
                 self.devices.append(d)
             except:
+                log_traceback()
                 self.log_error('can not power on gpio port %s' % p)
 
     def stop(self):
-        try:
-            gpiozero = importlib.import_module('gpiozero')
-        except:
-            self.log_error('gpiozero python module not found')
-            return
         for d in self.devices:
             try:
                 d.off()
