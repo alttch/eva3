@@ -48,6 +48,7 @@ class PHI(GenericPHI):
         self.__help = __help__
         if info_only: return
         self.ports = self.phi_cfg.get('ports')
+        self.devices = []
 
     def start(self):
         try:
@@ -57,7 +58,9 @@ class PHI(GenericPHI):
             return
         for p in self.ports:
             try:
-                gpiozero.DigitalOutputDevice(int(p)).on()
+                d = gpiozero.DigitalOutputDevice(int(p))
+                d.on()
+                self.devices.append(d)
             except:
                 self.log_error('can not power on gpio port %s' % p)
 
@@ -67,11 +70,12 @@ class PHI(GenericPHI):
         except:
             self.log_error('gpiozero python module not found')
             return
-        for p in self.ports:
+        for d in self.devices:
             try:
-                gpiozero.DigitalOutputDevice(int(p)).off()
+                d.off()
+                d.close()
             except:
-                self.log_error('can not power off gpio port %s' % p)
+                log_traceback()
 
     def test(self, cmd=None):
         if cmd == 'self':
