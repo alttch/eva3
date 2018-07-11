@@ -344,8 +344,9 @@ class UC_API(GenericAPI):
 
     def create(self, k=None, oid=None, virtual=False, save=False):
         if not apikey.check(k, master=True):
-            t, i = parse_oid(oid)
-            if t is None or i is None: return None
+            return None
+        t, i = parse_oid(oid)
+        if t is None or i is None: return None
         if t == 'unit':
             return api.create_unit(k, i, virtual=virtual, save=save)
         if t == 'sensor':
@@ -543,7 +544,7 @@ class UC_API(GenericAPI):
 
     def destroy(self, k=None, i=None, g=None):
         if not apikey.check(k, master=True): return None
-        return eva.uc.controller.destroy_item(i) if i \
+        return eva.uc.controller.destroy_item(oid_to_id(i)) if i \
                 else eva.uc.controller.destroy_group(g)
 
     # master functions for driver configuration
