@@ -54,6 +54,12 @@ def dict_from_str(s):
                     value.append([_v])
         else:
             value = arr_from_str(value)
+        if isinstance(value, str):
+            try:
+                value = float(value)
+                if value == int(value): value = int(value)
+            except:
+                pass
         result[name] = value
     return result
 
