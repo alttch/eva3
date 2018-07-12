@@ -1741,6 +1741,12 @@ class MultiUpdate(UpdatableItem):
             if not i.updates_allowed(): return False
         return True
 
+    def register_driver_updates(self):
+        return
+
+    def unregister_driver_updates(self):
+        return
+
     def update_after_run(self, update_out):
         if self._destroyed: return
         if isinstance(update_out, str):
