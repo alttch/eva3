@@ -10,8 +10,8 @@ __api__ = 1
 __required__ = []
 __features__ = []
 __config_help__ = [{
-    'name': 'ports',
-    'help': 'gpio ports with buttons',
+    'name': 'port',
+    'help': 'gpio port(s) with buttons',
     'type': 'list:str',
     'required': False
 }, {
@@ -57,8 +57,9 @@ class PHI(GenericPHI):
         self.__set_help = __set_help__
         self.__help = __help__
         if info_only: return
-        self.ports = self.phi_cfg.get('ports')
+        self.ports = self.phi_cfg.get('port')
         self.no_pullup = val_to_boolean(self.phi_cfg.get('no_pullup'))
+        self.devices = []
 
     def start(self):
         try:
@@ -66,17 +67,24 @@ class PHI(GenericPHI):
         except:
             self.log_error('gpiozero python module not found')
             return
-        for p in self.ports:
-            try:
-                pf = lambda a=str(_p): handle_phi_event(self, a, {str(a): '1'})
-                rf = lambda a=str(_p): handle_phi_event(self, a, {str(a): '0'})
-                d = gpiozero.Button(_p, pull_up=not self.no_pullup)
-                d.when_pressed = pf
-                d.when_released = rf
-                self.devices.append(d)
-            except:
-                log_traceback()
-                self.log_error('can not assign button to gpio port %s' % p)
+        if self.ports:
+            ports = self.ports
+            if not isinstance(ports, list):
+                ports = [ports]
+            for p in ports:
+                try:
+                    _p = int(p)
+                    pf = lambda a=str(_p): \
+                        handle_phi_event(self, a, {str(a): '1'})
+                    rf = lambda a=str(_p):  \
+                        handle_phi_event(self, a, {str(a): '0'})
+                    d = gpiozero.Button(_p, pull_up=not self.no_pullup)
+                    d.when_pressed = pf
+                    d.when_released = rf
+                    self.devices.append(d)
+                except:
+                    log_traceback()
+                    self.log_error('can not assign button to gpio port %s' % p)
 
     def stop(self):
         for d in self.devices:
@@ -89,7 +97,10 @@ class PHI(GenericPHI):
         if cmd == 'self':
             try:
                 if os.path.isdir('/sys/bus/gpio'):
-                    importlib.import_module('gpiozero')
+                    try:
+                        importlib.import_module('gpiozero')
+                    except:
+                        raise Exception('gpiozero python module not found')
                     return 'OK'
                 else:
                     raise Exception('gpio bus not found')

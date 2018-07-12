@@ -10,8 +10,8 @@ __api__ = 1
 __required__ = []
 __features__ = []
 __config_help__ = [{
-    'name': 'ports',
-    'help': 'gpio ports to turn power on',
+    'name': 'port',
+    'help': 'gpio port(s) to turn power on',
     'type': 'list:int',
     'required': False
 }]
@@ -28,6 +28,7 @@ from eva.uc.driverapi import log_traceback
 
 import os
 import importlib
+
 
 class PHI(GenericPHI):
 
@@ -47,7 +48,7 @@ class PHI(GenericPHI):
         self.__set_help = __set_help__
         self.__help = __help__
         if info_only: return
-        self.ports = self.phi_cfg.get('ports')
+        self.ports = self.phi_cfg.get('port')
         self.devices = []
 
     def start(self):
@@ -56,14 +57,18 @@ class PHI(GenericPHI):
         except:
             self.log_error('gpiozero python module not found')
             return
-        for p in self.ports:
-            try:
-                d = gpiozero.DigitalOutputDevice(int(p))
-                d.on()
-                self.devices.append(d)
-            except:
-                log_traceback()
-                self.log_error('can not power on gpio port %s' % p)
+        if self.ports:
+            ports = self.ports
+            if not isinstance(ports, list):
+                ports = [ports]
+            for p in ports:
+                try:
+                    d = gpiozero.DigitalOutputDevice(int(p))
+                    d.on()
+                    self.devices.append(d)
+                except:
+                    log_traceback()
+                    self.log_error('can not power on gpio port %s' % p)
 
     def stop(self):
         for d in self.devices:
@@ -72,12 +77,16 @@ class PHI(GenericPHI):
                 d.close()
             except:
                 log_traceback()
+        self.devices = []
 
     def test(self, cmd=None):
         if cmd == 'self':
             try:
                 if os.path.isdir('/sys/bus/gpio'):
-                    importlib.import_module('gpiozero')
+                    try:
+                        importlib.import_module('gpiozero')
+                    except:
+                        raise Exception('gpiozero python module not found')
                     return 'OK'
                 else:
                     raise Exception('gpio bus not found')
