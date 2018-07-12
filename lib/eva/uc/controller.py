@@ -59,7 +59,7 @@ def get_item(item_id):
 
 def get_unit(unit_id):
     if not unit_id: return None
-    if is_oid(lvar_id) and oid_type(lvar_id) != 'unit': return None
+    if is_oid(unit_id) and oid_type(unit_id) != 'unit': return None
     i = oid_to_id(unit_id)
     if i.find('/') > -1:
         if i in units_by_full_id: return units_by_full_id[i]
@@ -70,7 +70,7 @@ def get_unit(unit_id):
 
 def get_sensor(sensor_id):
     if not sensor_id: return None
-    if is_oid(lvar_id) and oid_type(lvar_id) != 'sensor': return None
+    if is_oid(sensor_id) and oid_type(sensor_id) != 'sensor': return None
     i = oid_to_id(sensor_id)
     if i.find('/') > -1:
         if i in sensors_by_full_id:
@@ -82,7 +82,7 @@ def get_sensor(sensor_id):
 
 def get_mu(mu_id):
     if not mu_id: return None
-    if is_oid(lvar_id) and oid_type(lvar_id) != 'mu': return None
+    if is_oid(mu_id) and oid_type(mu_id) != 'mu': return None
     i = oid_to_id(mu_id)
     if i.find('/') > -1:
         if i in mu_by_full_id: return mu_by_full_id[i]
