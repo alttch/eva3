@@ -46,6 +46,8 @@ with a sensor groups, returning the average, max or min group value etc. Can
 use 'max_diff' param to control the maximum difference of the sensor value in a
 group and automatically remove possible broken sensors from the result (if the
 number of good sensors in a group is more than broken).
+
+For multiupdates all ports specified in mu should be lists.
 """
 
 from time import time
