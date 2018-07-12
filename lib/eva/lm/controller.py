@@ -22,6 +22,11 @@ import eva.lm.lmqueue
 import eva.lm.dmatrix
 import eva.lm.extapi
 
+from eva.tools import is_oid
+from eva.tools import oid_to_id
+from eva.tools import oid_type
+from eva.tools import parse_oid
+
 lvars_by_id = {}
 lvars_by_group = {}
 lvars_by_full_id = {}
@@ -50,11 +55,16 @@ DM = None
 
 def get_item(item_id):
     if not item_id: return None
-    if item_id.find('/') > -1:
-        if item_id in items_by_full_id: return items_by_full_id[item_id]
+    if is_oid(item_id):
+        tp, i = parse_oid(item_id)
     else:
-        if item_id in items_by_id: return items_by_id[item_id]
-    return None
+        i = item_id
+    item = None
+    if i.find('/') > -1:
+        if i in items_by_full_id: item = items_by_full_id[i]
+    else:
+        if i in items_by_id: item = items_by_id[i]
+    return None if item and is_oid(item_id) and item.item_type != tp else item
 
 
 def get_controller(controller_id):
@@ -85,10 +95,12 @@ def get_dm_rule(r_id):
 
 def get_lvar(lvar_id):
     if not lvar_id: return None
-    if lvar_id.find('/') > -1:
-        if lvar_id in lvars_by_full_id: return lvars_by_full_id[lvar_id]
+    if is_oid(lvar_id) and oid_type(lvar_id) != 'lvar': return None
+    i = oid_to_id(lvar_id)
+    if i.find('/') > -1:
+        if i in lvars_by_full_id: return lvars_by_full_id[i]
     else:
-        if lvar_id in lvars_by_id: return lvars_by_id[lvar_id]
+        if i in lvars_by_id: return lvars_by_id[i]
     return None
 
 
@@ -203,8 +215,10 @@ def save_lvar_state(item):
             pass
         return False
 
+
 def load_extensions():
     eva.lm.extapi.load()
+
 
 def load_lvar_db_state(items, clean=False, create=True):
     _db_loaded_ids = []

@@ -16,7 +16,7 @@ from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva import apikey
-from eva_tools import dict_from_str
+from eva.tools import dict_from_str
 import eva.lm.controller
 import eva.lm.extapi
 import eva.ei

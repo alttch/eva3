@@ -63,6 +63,7 @@ def dict_from_str(s):
         result[name] = value
     return result
 
+
 def arr_from_str(s):
     if not isinstance(s, str) or s.find('|') == -1: return s
     result = []
@@ -75,6 +76,7 @@ def arr_from_str(s):
             _v = v
         result.append(_v)
     return result
+
 
 def print_json(obj):
     print(format_json(obj))
@@ -130,6 +132,12 @@ def parse_oid(oid):
     except:
         return None, None
     return tp, i
+
+
+def oid_type(oid):
+    if oid is None: return None
+    tp, i = parse_oid(oid)
+    return tp
 
 
 def oid_to_id(oid, required=None):

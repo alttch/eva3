@@ -17,6 +17,11 @@ import eva.uc.sensor
 import eva.uc.ucmu
 import eva.uc.driverapi
 
+from eva.tools import is_oid
+from eva.tools import parse_oid
+from eva.tools import oid_type
+from eva.tools import oid_to_id
+
 units_by_id = {}
 units_by_group = {}
 units_by_full_id = {}
@@ -40,38 +45,49 @@ configs_to_remove = set()
 
 def get_item(item_id):
     if not item_id: return None
-    if item_id.find('/') > -1:
-        if item_id in items_by_full_id: return items_by_full_id[item_id]
+    if is_oid(item_id):
+        tp, i = parse_oid(item_id)
     else:
-        if item_id in items_by_id: return items_by_id[item_id]
-    return None
+        i = item_id
+    item = None
+    if i.find('/') > -1:
+        if i in items_by_full_id: item = items_by_full_id[i]
+    else:
+        if i in items_by_id: item = items_by_id[i]
+    return None if item and is_oid(item_id) and item.item_type != tp else item
 
 
 def get_unit(unit_id):
     if not unit_id: return None
-    if unit_id.find('/') > -1:
-        if unit_id in units_by_full_id: return units_by_full_id[unit_id]
+    if is_oid(lvar_id) and oid_type(lvar_id) != 'unit': return None
+    i = oid_to_id(unit_id)
+    if i.find('/') > -1:
+        if i in units_by_full_id: return units_by_full_id[i]
     else:
-        if unit_id in units_by_id: return units_by_id[unit_id]
+        if i in units_by_id: return units_by_id[i]
     return None
 
 
 def get_sensor(sensor_id):
     if not sensor_id: return None
-    if sensor_id.find('/') > -1:
-        if sensor_id in sensors_by_full_id:
-            return sensors_by_full_id[sensor_id]
+    if is_oid(lvar_id) and oid_type(lvar_id) != 'sensor': return None
+    i = oid_to_id(sensor_id)
+    if i.find('/') > -1:
+        if i in sensors_by_full_id:
+            return sensors_by_full_id[i]
     else:
-        if sensor_id in sensors_by_id: return sensors_by_id[sensor_id]
+        if i in sensors_by_id: return sensors_by_id[i]
     return None
 
 
 def get_mu(mu_id):
     if not mu_id: return None
-    if mu_id.find('/') > -1:
-        if mu_id in mu_by_full_id: return mu_by_full_id[mu_id]
+    if is_oid(lvar_id) and oid_type(lvar_id) != 'mu': return None
+    i = oid_to_id(mu_id)
+    if i.find('/') > -1:
+        if i in mu_by_full_id: return mu_by_full_id[i]
     else:
-        if mu_id in mu_by_id: return mu_by_id[mu_id]
+        if i in mu_by_id: return mu_by_id[i]
     return None
 
 
