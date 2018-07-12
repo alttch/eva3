@@ -19,7 +19,6 @@ from eva.client import apiclient
 
 from eva.tools import print_json
 
-xparams = {}
 timeout = None
 apikey = None
 apiuri = None
@@ -62,7 +61,9 @@ def fancy_print_result(result, tab=0):
                     if tab:
                         print(' ' * (tab * 10), end='>' * tab + ' ')
                     if isinstance(result[v], list):
-                        _v = ', '.join(result[v])
+                        _r = []
+                        for _l in result[v]: _r.append(str(_l))
+                        _v = ', '.join(_r)
                     else:
                         _v = result[v]
                     print(("{:>%u} : {}" % max(map(len, result))).format(v, _v))
