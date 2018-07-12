@@ -49,8 +49,11 @@ api_functions = {
     'action:kill': 'kill',
     'config:get': 'get_config',
     'config:save': 'save_config',
+    'config:props': 'list_props',
+    'config:set': 'set_prop',
+    'clone:item': 'clone',
     'phi:list': 'list_phi',
-    'phi:show': 'get_phi',
+    'phi:get': 'get_phi',
     'phi:mods': 'list_phi_mods',
     'phi:test': 'test_phi',
     'phi:load': 'load_phi',
@@ -61,7 +64,7 @@ api_functions = {
     'lpi:modinfo': 'modinfo_lpi',
     'lpi:modhelp': 'modhelp_lpi',
     'driver:list': 'list_drivers',
-    'driver:show': 'get_driver',
+    'driver:get': 'get_driver',
     'driver:load': 'load_driver',
     'driver:unload': 'unload_driver',
     'driver:set': 'set_driver'
@@ -133,6 +136,8 @@ def fancy_print_result(result, tab=0):
         h = None
         out = None
         err = None
+        tabsp = 10
+        if api_func == 'list_props': tabsp = 28;
         for v in sorted(result.keys()):
             if v == 'help' and not tab:
                 h = result[v]
@@ -143,12 +148,12 @@ def fancy_print_result(result, tab=0):
             elif v != 'result':
                 if isinstance(result[v], dict):
                     if tab:
-                        print(' ' * (tab * 10), end='>' * tab + ' ')
+                        print(' ' * (tab * tabsp), end='>' * tab + ' ')
                     print(("{:>%u} : {}" % max(map(len, result))).format(v, ''))
                     fancy_print_result(result[v], tab + 1)
                 else:
                     if tab:
-                        print(' ' * (tab * 10), end='>' * tab + ' ')
+                        print(' ' * (tab * tabsp), end='>' * tab + ' ')
                     if isinstance(result[v], list):
                         _r = []
                         for vv in result[v]:
@@ -501,7 +506,73 @@ sp_config_get.add_argument('i', help='Item ID', metavar='ID')
 sp_config_save = sp_config.add_parser('save', help='Save item config')
 sp_config_save.add_argument('i', help='Item ID', metavar='ID')
 
-#TODO: list_props
+sp_list_props = sp_config.add_parser('props', help='List item config props')
+sp_list_props.add_argument('i', help='Item ID', metavar='ID')
+
+sp_set_prop = sp_config.add_parser('set', help='Set item config prop')
+sp_set_prop.add_argument('i', help='Item ID', metavar='ID')
+sp_set_prop.add_argument('p', help='Config property', metavar='PROP')
+sp_set_prop.add_argument('v', help='Value', metavar='VAL', nargs='?')
+sp_set_prop.add_argument(
+    '-y',
+    '--save',
+    help='Save item config after set',
+    dest='_save',
+    action='store_true')
+
+ap_create = sp.add_parser('create', help='Create new item')
+ap_create.add_argument(
+    'i', help='Item OID (type:group/id)', metavar='OID')
+ap_create.add_argument(
+    '-y',
+    '--save',
+    help='Save item config after creation',
+    dest='_save',
+    action='store_true')
+ap_create.add_argument(
+    '-z',
+    '--virtual',
+    help='Create virtual item',
+    dest='_virtual',
+    action='store_true')
+
+ap_clone = sp.add_parser('clone', help='Clone items')
+sp_clone = ap_clone.add_subparsers(
+    dest='_func', metavar='func', help='Cloning commands')
+
+sp_clone_item = sp_clone.add_parser('item', help='Clone single item')
+sp_clone_item.add_argument('i', help='Item ID', metavar='ID')
+sp_clone_item.add_argument('n', help='New item ID (short)', metavar='ID')
+sp_clone_item.add_argument('-g', '--group', help='Group for new item', metavar='GROUP', dest='g')
+sp_clone_item.add_argument(
+    '-y',
+    '--save',
+    help='Save item config after cloning',
+    dest='_save',
+    action='store_true')
+
+sp_clone_group = sp_clone.add_parser('group', help='Clone group of the items')
+sp_clone_group.add_argument('g', help='Source group', metavar='SRC_GROUP')
+sp_clone_group.add_argument('n', help='Target group', metavar='TGT_GROUP')
+sp_clone_group.add_argument('p', help='Source items prefix', metavar='SRC_PFX')
+sp_clone_group.add_argument('r', help='Target items prefix', metavar='TGT_PFX')
+sp_clone_group.add_argument(
+    '-y',
+    '--save',
+    help='Save items config after cloning',
+    dest='_save',
+    action='store_true')
+
+ap_destroy = sp.add_parser('destroy', help='Delete item')
+ap_destroy.add_argument(
+    'i', help='Item ID', metavar='ID', nargs='?')
+ap_destroy.add_argument(
+    '-g',
+    '--group',
+    help='Destroy group of items',
+    dest='g')
+
+# TODO: CREATE_DEVICE
 
 # Drivers
 ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
@@ -530,8 +601,8 @@ sp_driver_list.add_argument(
     dest='_full',
     action='store_true')
 
-sp_phi_show = sp_phi.add_parser('show', help='Show loaded PHI info')
-sp_phi_show.add_argument('i', help='PHI id', metavar='PHI_ID')
+sp_phi_get = sp_phi.add_parser('get', help='Get loaded PHI info')
+sp_phi_get.add_argument('i', help='PHI id', metavar='PHI_ID')
 
 sp_phi_mods = sp_phi.add_parser('mods', help='List available PHI mods')
 sp_lpi_mods = sp_lpi.add_parser('mods', help='List available LPI mods')
@@ -540,8 +611,8 @@ sp_phi_test = sp_phi.add_parser('test', help='Send test call to PHI')
 sp_phi_test.add_argument('i', help='PHI id', metavar='PHI_ID')
 sp_phi_test.add_argument('c', help='PHI test command', metavar='CMD')
 
-sp_driver_show = sp_driver.add_parser('show', help='Show loaded driver info')
-sp_driver_show.add_argument('i', help='driver id', metavar='DRIVER_ID')
+sp_driver_get = sp_driver.add_parser('get', help='Get loaded driver info')
+sp_driver_get.add_argument('i', help='driver id', metavar='DRIVER_ID')
 
 sp_phi_load = sp_phi.add_parser('load', help='Load PHI')
 sp_phi_load.add_argument('i', help='PHI id', metavar='PHI_ID')
@@ -683,6 +754,9 @@ if hasattr(a, '_full') and a._full:
     api_func_full = '_'
 else:
     api_func_full = ''
+
+if hasattr(a, '_virtual') and a._virtual:
+    params['virtual'] = 1
 
 if hasattr(a, '_save') and a._save:
     params['save'] = 1
