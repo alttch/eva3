@@ -19,7 +19,7 @@ __config_help__ = [{
 __get_help__ = __config_help__
 __set_help__ = __config_help__
 
-w1_delay = 0.05
+w1_delay = 0.5
 
 __help__ = """
 PHI for Maxim Integrated 1-Wire DS18N20 temperature sensors (DS18S20, DS18B20
