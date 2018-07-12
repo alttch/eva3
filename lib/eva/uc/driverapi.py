@@ -63,6 +63,7 @@ def unlock(l):
 
 
 def handle_phi_event(phi, port, data):
+    if not data: return
     iph = items_by_phi.get(phi.phi_id)
     if iph:
         for i in iph:
