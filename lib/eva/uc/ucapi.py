@@ -82,7 +82,7 @@ class UC_API(GenericAPI):
             if not item or not apikey.check(k, item): return None
             if is_oid(i):
                 t, iid = parse_oid(i)
-                if item.item_type != t: return None
+                if not item or item.item_type != t: return None
             return item.serialize(full=full)
         elif tp:
             if tp == 'U' or tp == 'unit':
@@ -115,7 +115,7 @@ class UC_API(GenericAPI):
         if not item or not apikey.check(k, item): return False
         if is_oid(i):
             _t, iid = parse_oid(i)
-            if item.item_type != _t: return False
+            if not item or item.item_type != _t: return False
         return self.get_state_history(
             k=k,
             a=a,
@@ -253,7 +253,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         if is_oid(i):
             t, iid = parse_oid(i)
-            if item.item_type != t: return None
+            if not item or item.item_type != t: return None
         return item.serialize(config=True) if item else None
 
     def save_config(self, k=None, i=None):
@@ -261,7 +261,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         if is_oid(i):
             t, iid = parse_oid(i)
-            if item.item_type != t: return None
+            if not item or item.item_type != t: return None
         return item.save() if item else None
 
     def list(self, k=None, group=None, tp=None):
