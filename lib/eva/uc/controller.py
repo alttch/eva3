@@ -372,10 +372,21 @@ def clone_item(item_id, new_item_id=None, group=None, save=False):
     ni = get_item(new_item_id)
     if not i or not new_item_id or ni or i.is_destroyed() or \
             i.item_type not in ['unit', 'sensor']:
-        return None
-    if group is None: _g = i.group
-    else: _g = group
-    ni = create_item(new_item_id, i.item_type, _g, start=False, save=False)
+        return False
+    if group and new_item_id.find('/') != -1: return False
+    if is_oid(new_item_id):
+        if oid_type(new_item_id) != i.item_type: return False
+        _ni = oid_to_id(new_item_id)
+    else:
+        _ni = new_item_id
+    if _ni.find('/') == -1:
+        ni_id = _ni
+        _g = i.group if group is None else group
+    else:
+        ni_id = _ni.split('/')[-1]
+        _g = '/'.join(_ni.split('/')[:-1])
+    ni = create_item(ni_id, i.item_type, _g, start=False, save=False)
+    if not ni: return False
     cfg = i.serialize(props=True)
     if 'description' in cfg: del cfg['description']
     ni.update_config(cfg)
@@ -403,7 +414,7 @@ def clone_group(group = None, new_group = None,\
 
 
 def destroy_group(group=None):
-    if group is None: return False
+    if group is None or group not in items_by_group: return False
     for i in items_by_group[group].copy():
         if not destroy_item(i): return False
     return True

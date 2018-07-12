@@ -367,6 +367,7 @@ class UC_API(GenericAPI):
             return api.create_sensor(k, i, virtual=virtual, save=save)
         if t == 'mu':
             return api.create_mu(k, i, virtual=virtual, save=save)
+        return None
 
     def load_device_config(self, tpl_config={}, device_tpl=None):
         try:
