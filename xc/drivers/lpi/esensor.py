@@ -97,13 +97,14 @@ class LPI(GenericLPI):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         # we don't handle events
-        if state_in: return False
+        if state_in: return self.state_result_error(_uuid)
         time_start = time()
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi.aao_get:
             _state_in = self.phi.get(cfg=phi_cfg, timeout=timeout)
+            if not _state_in: return self.state_result_error(_uuid)
         skip_err = val_to_boolean(cfg.get('skip_err')) if \
                 cfg.get('skip_err') is not None else self.skip_err
         gpf = cfg.get('gpf') if \

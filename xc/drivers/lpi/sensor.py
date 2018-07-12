@@ -8,9 +8,7 @@ __api__ = 1
 __id__ = 'sensor'
 __logic__ = 'single polling'
 
-__features__ = [
-    'value', 'mu_value', 'port_get', 'aao_get', 'cfg', 'events'
-]
+__features__ = ['value', 'mu_value', 'port_get', 'aao_get', 'cfg', 'events']
 
 __config_help__ = []
 
@@ -65,6 +63,7 @@ class LPI(GenericLPI):
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi.aao_get and not _state_in:
             _state_in = self.phi.get(cfg=phi_cfg, timeout=timeout)
+            if not _state_in: return self.state_result_error(_uuid)
         port = cfg.get(self.io_label)
         if not isinstance(port, list):
             _port = [port]
