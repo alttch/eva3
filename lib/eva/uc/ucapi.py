@@ -77,7 +77,7 @@ class UC_API(GenericAPI):
 
     def state(self, k=None, i=None, full=False, group=None, tp=None):
         if i:
-            item = eva.uc.controller.get_item(oid_to_id(i))
+            item = eva.uc.controller.get_item(i)
             if not item or not apikey.check(k, item): return None
             if is_oid(i):
                 t, iid = parse_oid(i)
@@ -110,7 +110,7 @@ class UC_API(GenericAPI):
                       t=None,
                       w=None,
                       g=None):
-        item = eva.uc.controller.get_item(oid_to_id(i))
+        item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): return False
         if is_oid(i):
             _t, iid = parse_oid(i)
@@ -128,7 +128,7 @@ class UC_API(GenericAPI):
             fmt=g)
 
     def update(self, k=None, i=None, status=None, value=None, force_virtual=0):
-        item = eva.uc.controller.get_item(oid_to_id(i))
+        item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): return False
         return item.update_set_state(
             status=status, value=value, force_virtual=force_virtual)
@@ -142,7 +142,7 @@ class UC_API(GenericAPI):
                priority=None,
                q_timeout=None,
                wait=0):
-        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
+        item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): return None
         return eva.uc.controller.exec_unit_action(
             unit=item,
@@ -160,7 +160,7 @@ class UC_API(GenericAPI):
                       priority=None,
                       q_timeout=None,
                       wait=0):
-        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
+        item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): return None
         nstatus = 0 if item.status else 1
         return eva.uc.controller.exec_unit_action(
@@ -172,12 +172,12 @@ class UC_API(GenericAPI):
             action_uuid=action_uuid)
 
     def disable_actions(self, k=None, i=None):
-        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
+        item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): return None
         return item.disable_actions()
 
     def enable_actions(self, k=None, i=None):
-        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
+        item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): return None
         return item.enable_actions()
 
@@ -227,12 +227,12 @@ class UC_API(GenericAPI):
             if not a or not apikey.check(k, a.item): return None
             return a.kill()
         elif i:
-            item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
+            item = eva.uc.controller.get_unit(i)
             if not item or not apikey.check(k, item): return None
             return item.terminate()
 
     def kill(self, k=None, i=None):
-        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
+        item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): return None
         result = item.kill()
         if not result: return 0
@@ -240,7 +240,7 @@ class UC_API(GenericAPI):
         return 1
 
     def q_clean(self, k=None, i=None):
-        item = eva.uc.controller.get_unit(oid_to_id(i, 'unit'))
+        item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): return None
         return item.q_clean()
 
@@ -249,7 +249,7 @@ class UC_API(GenericAPI):
 
     def get_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
-        item = eva.uc.controller.get_item(oid_to_id(i))
+        item = eva.uc.controller.get_item(i)
         if is_oid(i):
             t, iid = parse_oid(i)
             if item.item_type != t: return None
@@ -257,7 +257,7 @@ class UC_API(GenericAPI):
 
     def save_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
-        item = eva.uc.controller.get_item(oid_to_id(i))
+        item = eva.uc.controller.get_item(i)
         if is_oid(i):
             t, iid = parse_oid(i)
             if item.item_type != t: return None
@@ -281,7 +281,7 @@ class UC_API(GenericAPI):
 
     def list_props(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
-        item = eva.uc.controller.get_item(oid_to_id(i))
+        item = eva.uc.controller.get_item(i)
         return item.serialize(props=True) if item else None
 
     def _set_props(self,
@@ -291,18 +291,18 @@ class UC_API(GenericAPI):
                    save=None,
                    clean_snmp=False):
         if clean_snmp:
-            if not api.set_prop(k, i=oid_to_id(i), p='snmp_trap'):
+            if not api.set_prop(k, i=i, p='snmp_trap'):
                 return False
         if props:
             for p, v in props.items():
                 try:
-                    if not api.set_prop(k, i=oid_to_id(i), p=p, v=v, save=None):
+                    if not api.set_prop(k, i=i, p=p, v=v, save=None):
                         return False
                 except:
                     eva.core.log_traceback()
                     return False
         if save:
-            api.save_config(k, i=oid_to_id(i))
+            api.save_config(k, i=i)
         return True
 
     def set_prop(self, k=None, i=None, p=None, v=None, save=False):
@@ -548,7 +548,7 @@ class UC_API(GenericAPI):
     def clone(self, k=None, i=None, n=None, g=None, save=False):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.clone_item(
-            item_id=oid_to_id(i), new_item_id=n, group=g, save=save)
+            item_id=i, new_item_id=n, group=g, save=save)
 
     def clone_group(self, k=None, g=None, n=None, p=None, r=None, save=False):
         if not apikey.check(k, master=True): return None
@@ -557,7 +557,7 @@ class UC_API(GenericAPI):
 
     def destroy(self, k=None, i=None, g=None):
         if not apikey.check(k, master=True): return None
-        return eva.uc.controller.destroy_item(oid_to_id(i)) if i \
+        return eva.uc.controller.destroy_item(i) if i \
                 else eva.uc.controller.destroy_group(g)
 
     # master functions for driver configuration
