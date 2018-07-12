@@ -214,9 +214,9 @@ class LPI(GenericLPI):
             else:
                 value = sum(st_arr) / float(len(st_arr))
             if multi:
-                st.append((1, value))
+                st.append((1, str(value)))
             else:
-                st = value
+                st = str(value)
         if multi:
             self.set_result(_uuid, st)
         else:

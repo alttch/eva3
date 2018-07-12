@@ -91,9 +91,9 @@ class LPI(GenericLPI):
                 else:
                     return self.state_result_error(_uuid)
             if multi:
-                st.append((1, value))
+                st.append((1, str(value)))
             else:
-                st = value
+                st = str(value)
         if multi:
             self.set_result(_uuid, st)
         else:
