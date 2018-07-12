@@ -134,12 +134,6 @@ def parse_oid(oid):
     return tp, i
 
 
-def oid_type(oid):
-    if oid is None: return None
-    tp, i = parse_oid(oid)
-    return tp
-
-
 def oid_to_id(oid, required=None):
     if not is_oid(oid): return oid
     tp, i = parse_oid(oid)

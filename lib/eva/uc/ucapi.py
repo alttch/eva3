@@ -15,6 +15,10 @@ from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva.tools import dict_from_str
+from eva.tools import oid_to_id
+from eva.tools import parse_oid
+from eva.tools import is_oid
+from eva.tools import val_to_boolean
 from eva import apikey
 import eva.sysapi
 import eva.uc.controller
@@ -76,6 +80,9 @@ class UC_API(GenericAPI):
         if i:
             item = eva.uc.controller.get_item(i)
             if not item or not apikey.check(k, item): return None
+            if is_oid(i):
+                t, iid = parse_oid(i)
+                if item.item_type != t: return None
             return item.serialize(full=full)
         elif tp:
             if tp == 'U' or tp == 'unit':
@@ -106,6 +113,9 @@ class UC_API(GenericAPI):
                       g=None):
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): return False
+        if is_oid(i):
+            _t, iid = parse_oid(i)
+            if item.item_type != _t: return False
         return self.get_state_history(
             k=k,
             a=a,
@@ -180,17 +190,19 @@ class UC_API(GenericAPI):
         else:
             result = []
             if item_id:
+                _item_id = oid_to_id(item_id, 'unit')
+                if _item_id is None: return None
                 ar = None
-                item = eva.uc.controller.get_item(item_id)
+                item = eva.uc.controller.get_unit(_item_id)
                 if not apikey.check(k, item): return None
-                if item_id.find('/') > -1:
-                    if item_id in eva.uc.controller.Q.actions_by_item_full_id:
+                if _item_id.find('/') > -1:
+                    if _item_id in eva.uc.controller.Q.actions_by_item_full_id:
                         ar = eva.uc.controller.Q.actions_by_item_full_id[
-                            item_id]
+                            _item_id]
                 else:
-                    if item_id in eva.uc.controller.Q.actions_by_item_id:
-                        ar = eva.uc.controller.Q.actions_by_item_id[item_id]
-                if ar is None: return None
+                    if _item_id in eva.uc.controller.Q.actions_by_item_id:
+                        ar = eva.uc.controller.Q.actions_by_item_id[_item_id]
+                if ar is None: return []
             else:
                 ar = eva.uc.controller.Q.actions
             for a in ar:
@@ -239,11 +251,17 @@ class UC_API(GenericAPI):
     def get_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         item = eva.uc.controller.get_item(i)
+        if is_oid(i):
+            t, iid = parse_oid(i)
+            if item.item_type != t: return None
         return item.serialize(config=True) if item else None
 
     def save_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         item = eva.uc.controller.get_item(i)
+        if is_oid(i):
+            t, iid = parse_oid(i)
+            if item.item_type != t: return None
         return item.save() if item else None
 
     def list(self, k=None, group=None, tp=None):
@@ -260,7 +278,7 @@ class UC_API(GenericAPI):
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
                 result.append(v.serialize(info=True))
-        return result
+        return sorted(result, key=lambda k: k['oid'])
 
     def list_props(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -307,7 +325,10 @@ class UC_API(GenericAPI):
                     save=False):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.create_unit(
-            unit_id=unit_id, group=group, virtual=virtual, save=save)
+            unit_id=oid_to_id(unit_id, 'unit'),
+            group=group,
+            virtual=virtual,
+            save=save)
 
     def create_sensor(self,
                       k=None,
@@ -317,7 +338,10 @@ class UC_API(GenericAPI):
                       save=False):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.create_sensor(
-            sensor_id=sensor_id, group=group, virtual=virtual, save=save)
+            sensor_id=oid_to_id(sensor_id, 'sensor'),
+            group=group,
+            virtual=virtual,
+            save=save)
 
     def create_mu(self,
                   k=None,
@@ -327,7 +351,22 @@ class UC_API(GenericAPI):
                   save=False):
         if not apikey.check(k, master=True): return None
         return eva.uc.controller.create_mu(
-            mu_id=mu_id, group=group, virtual=virtual, save=save)
+            mu_id=oid_to_id(mu_id, 'mu'),
+            group=group,
+            virtual=virtual,
+            save=save)
+
+    def create(self, k=None, oid=None, virtual=False, save=False):
+        if not apikey.check(k, master=True):
+            return None
+        t, i = parse_oid(oid)
+        if t is None or i is None: return None
+        if t == 'unit':
+            return api.create_unit(k, i, virtual=virtual, save=save)
+        if t == 'sensor':
+            return api.create_sensor(k, i, virtual=virtual, save=save)
+        if t == 'mu':
+            return api.create_mu(k, i, virtual=virtual, save=save)
 
     def load_device_config(self, tpl_config={}, device_tpl=None):
         try:
@@ -666,6 +705,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.list_props.exposed = True
         UC_HTTP_API.set_prop.exposed = True
 
+        UC_HTTP_API.create.exposed = True
         UC_HTTP_API.create_unit.exposed = True
         UC_HTTP_API.create_sensor.exposed = True
         UC_HTTP_API.create_mu.exposed = True
@@ -726,11 +766,15 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
                       t=None,
                       w=None,
                       g=None):
-        if i and i.find(',') != -1:
+        if (isinstance(i, str) and i and i.find(',') != -1) or \
+                isinstance(i, list):
             if not w:
                 raise cp_api_error(
                     '"w" param required to process multiple items')
-            items = i.split(',')
+            if isinstance(i, str):
+                items = i.split(',')
+            else:
+                items = i
             if not g or g == 'list':
                 result = {}
             else:
@@ -907,20 +951,28 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
+    def create(self, k=None, i=None, virtual=None, save=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().create(
+            k, i, val_to_boolean(virtual), save) else http_api_result_error()
+
     def create_unit(self, k=None, i=None, g=None, virtual=None, save=None):
         cp_need_master(k)
         return http_api_result_ok() if super().create_unit(
-            k, i, g, virtual, save) else http_api_result_error()
+            k, i, g, val_to_boolean(virtual),
+            save) else http_api_result_error()
 
     def create_sensor(self, k=None, i=None, g=None, virtual=None, save=None):
         cp_need_master(k)
         return http_api_result_ok() if super().create_sensor(
-            k, i, g, virtual, save) else http_api_result_error()
+            k, i, g, val_to_boolean(virtual),
+            save) else http_api_result_error()
 
     def create_mu(self, k=None, i=None, g=None, virtual=None, save=None):
         cp_need_master(k)
         return http_api_result_ok() if super().create_mu(
-            k, i, g, virtual, save) else http_api_result_error()
+            k, i, g, val_to_boolean(virtual),
+            save) else http_api_result_error()
 
     def create_device(self, k=None, c=None, t=None, save=None):
         config = {}

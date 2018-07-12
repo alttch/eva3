@@ -1720,6 +1720,7 @@ class ItemAction(object):
         d['item_id'] = self.item.item_id
         d['item_group'] = self.item.group
         d['item_type'] = self.item.item_type
+        d['item_oid'] = self.item.oid
         d['time'] = {}
         for i, v in self.time.items():
             d['time'][ia_status_names[i]] = v
