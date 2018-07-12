@@ -30,7 +30,7 @@ __help__ = """
 PHI for DT11, DT22, AMR2302 temperature sensors (and compatible). Returns port
 'h' for humidity and 't' for temperature.
 
-PHI automatically calculates retries by formula (timeout - 1) / 0.5. To
+PHI automatically calculates retries by formula (timeout - 2) / 0.5. To
 increase amount of retries retries increase EVA sensor update timeout. The
 delay between retries is 0.5 sec.
 """
@@ -40,6 +40,7 @@ from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import get_timeout
 
 import os
+import importlib
 
 
 class PHI(GenericPHI):
@@ -87,7 +88,7 @@ class PHI(GenericPHI):
             self.type = tp
 
     def get(self, port=None, cfg=None, timeout=0):
-        retries = (timeout - 1) / bus_delay
+        retries = int((timeout - 2) / bus_delay)
         try:
             dht = importlib.import_module('Adafruit_DHT')
         except:
@@ -100,13 +101,14 @@ class PHI(GenericPHI):
                 sensor = dht.DHT22
             else:
                 sensor = dht.AM2302
-            result = {}
-            result['h'], result['t'] = dht.read_retry(
+            h, t = dht.read_retry(
                 sensor,
                 int(self.port),
                 retries=retries,
                 delay_seconds=bus_delay)
-            return result
+            if h is not None: h = int(h * 1000) / 1000.0
+            if t is not None: t = int(t * 1000) / 1000.0
+            return { 'h': h, 't': t }
         except:
             log_traceback()
             return None
