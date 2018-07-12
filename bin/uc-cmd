@@ -107,7 +107,7 @@ _pd_cols = {
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
         'status'
     ],
-    'list': [ 'oid', 'description' ],
+    'list': ['oid', 'description'],
     'list_phi_': ['id', 'mod', 'description', 'version'],
     'list_drivers_':
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
@@ -344,19 +344,15 @@ sp_history.add_argument(
     help='Item ID or multiple IDs (-w param is required), comma separated',
     metavar='ID')
 sp_history.add_argument(
-        '-a', '--notifier', help='Notifier to get history from (default: db_1)', metavar='NOTIFIER', dest='a')
+    '-a',
+    '--notifier',
+    help='Notifier to get history from (default: db_1)',
+    metavar='NOTIFIER',
+    dest='a')
 sp_history.add_argument(
-    '-s',
-    '--time-start',
-    help='Start time',
-    metavar='TIME',
-    dest='s')
+    '-s', '--time-start', help='Start time', metavar='TIME', dest='s')
 sp_history.add_argument(
-    '-e',
-    '--time-end',
-    help='End time',
-    metavar='TIME',
-    dest='e')
+    '-e', '--time-end', help='End time', metavar='TIME', dest='e')
 sp_history.add_argument(
     '-l',
     '--limit',
@@ -368,12 +364,14 @@ sp_history.add_argument(
     '--prop',
     help='Item state prop (status or value)',
     metavar='PROP',
-    dest='x', choices=['status', 'value', 'S', 'V'])
+    dest='x',
+    choices=['status', 'value', 'S', 'V'])
 sp_history.add_argument(
     '-w',
     '--fill',
     help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
-    metavar='INTERVAL', dest='w')
+    metavar='INTERVAL',
+    dest='w')
 
 sp_update = sp.add_parser('update', help='Update item state')
 sp_update.add_argument('i', help='Item ID', metavar='ID')
@@ -483,11 +481,19 @@ sp_action_result.add_argument(
 # Configure items
 
 sp_list = sp.add_parser('list', help='List items')
-sp_list.add_argument('-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
-sp_list.add_argument('-p', '--type', help='Filter by type', metavar='TYPE', dest='p', choices=['unit', 'sensor', 'U', 'S' ])
+sp_list.add_argument(
+    '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+sp_list.add_argument(
+    '-p',
+    '--type',
+    help='Filter by type',
+    metavar='TYPE',
+    dest='p',
+    choices=['unit', 'sensor', 'mu', 'U', 'S'])
 
 ap_config = sp.add_parser('config', help='Item configuration')
-sp_config = ap_config.add_subparsers(dest='_func', metavar='func', help='Configuration commands')
+sp_config = ap_config.add_subparsers(
+    dest='_func', metavar='func', help='Configuration commands')
 
 sp_config_get = sp_config.add_parser('get', help='Get item config')
 sp_config_get.add_argument('i', help='Item ID', metavar='ID')
@@ -640,8 +646,9 @@ if hasattr(a, '_func'):
 else:
     func = None
 
-if itype in ['log', 'action', 'config', 'cvar', 'debug', 'phi', 'lpi', 'driver'
-            ] and func is None:
+if itype in [
+        'log', 'action', 'config', 'cvar', 'debug', 'phi', 'lpi', 'driver'
+] and func is None:
     ap.parse_args([itype, '--help'])
 
 debug = a._debug
