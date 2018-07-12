@@ -39,6 +39,7 @@ api_functions = {
     'cvar:set': 'set_cvar',
     'cvar:delete': 'set_cvar',
     'debug': 'set_debug',
+    'history': 'state_history',
     'action:exec': 'action',
     'action:result': 'result',
     'action:enable': 'enable_actions',
@@ -46,6 +47,8 @@ api_functions = {
     'action:terminate': 'terminate',
     'action:clear': 'q_clean',
     'action:kill': 'kill',
+    'config:get': 'get_config',
+    'config:save': 'save_config',
     'phi:list': 'list_phi',
     'phi:show': 'get_phi',
     'phi:mods': 'list_phi_mods',
@@ -104,6 +107,7 @@ _pd_cols = {
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
         'status'
     ],
+    'list': [ 'oid', 'description' ],
     'list_phi_': ['id', 'mod', 'description', 'version'],
     'list_drivers_':
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
@@ -116,6 +120,7 @@ _pd_cols = {
 
 _pd_idx = {
     'state': 'oid',
+    'list': 'oid',
     'result': 'time',
     'list_phi_mods': 'mod',
     'list_lpi_mods': 'mod'
@@ -171,7 +176,7 @@ def fancy_print_result(result, tab=0):
             print('OK')
     elif result and isinstance(result, list):
         import pandas as pd
-        pd.options.display.max_colwidth = 65
+        pd.set_option('display.expand_frame_repr', False)
         df = pd.DataFrame(data=_prepare_result_data(result))
         if api_func + api_func_full in _pd_cols:
             cols = _pd_cols[api_func + api_func_full]
@@ -292,11 +297,31 @@ sp_log_error.add_argument('m', help='Message', metavar='MSG')
 sp_log_critical = sp_log.add_parser('critical', help='Send critical message')
 sp_log_critical.add_argument('m', help='Message', metavar='MSG')
 
-# Common
+# CVAR
+ap_cvar = sp.add_parser('cvar', help='CVAR functions')
+sp_cvar = ap_cvar.add_subparsers(
+    dest='_func', metavar='func', help='CVAR commands')
+sp_cvar_all = sp_cvar.add_parser('all', help='Get all CVARS')
+sp_cvar_get = sp_cvar.add_parser('get', help='Get CVAR value')
+sp_cvar_get.add_argument('i', help='CVAR ID', metavar='ID')
+sp_cvar_set = sp_cvar.add_parser('set', help='Set CVAR value')
+sp_cvar_set.add_argument('i', help='CVAR ID', metavar='ID')
+sp_cvar_set.add_argument('v', help='Value', metavar='VALUE')
+sp_cvar_delete = sp_cvar.add_parser('delete', help='Delete CVAR')
+sp_cvar_delete.add_argument('i', help='CVAR ID', metavar='ID')
+
+# DEBUG
+ap_debug = sp.add_parser('debug', help='Debug control')
+ap_debug.add_argument(
+    'debug', help='Debug mode (on/off)', metavar='MODE', choices=['on', 'off'])
+
+# UC Common
 sp_state = sp.add_parser('state', help='Get item state')
-sp_state.add_argument('i',
+sp_state.add_argument(
+    'i',
     help='Item ID (specify either ID or item type)',
-    metavar='ID', nargs='?')
+    metavar='ID',
+    nargs='?')
 sp_state.add_argument(
     '-g', '--group', help='Item group', metavar='GROUP', dest='g')
 sp_state.add_argument(
@@ -313,6 +338,43 @@ sp_state.add_argument(
     dest='_full',
     action='store_true')
 
+sp_history = sp.add_parser('history', help='Get item state history')
+sp_history.add_argument(
+    'i',
+    help='Item ID or multiple IDs (-w param is required), comma separated',
+    metavar='ID')
+sp_history.add_argument(
+        '-a', '--notifier', help='Notifier to get history from (default: db_1)', metavar='NOTIFIER', dest='a')
+sp_history.add_argument(
+    '-s',
+    '--time-start',
+    help='Start time',
+    metavar='TIME',
+    dest='s')
+sp_history.add_argument(
+    '-e',
+    '--time-end',
+    help='End time',
+    metavar='TIME',
+    dest='e')
+sp_history.add_argument(
+    '-l',
+    '--limit',
+    help='Records limit (doesn\'t work with fill)',
+    metavar='N',
+    dest='l')
+sp_history.add_argument(
+    '-x',
+    '--prop',
+    help='Item state prop (status or value)',
+    metavar='PROP',
+    dest='x', choices=['status', 'value', 'S', 'V'])
+sp_history.add_argument(
+    '-w',
+    '--fill',
+    help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
+    metavar='INTERVAL', dest='w')
+
 sp_update = sp.add_parser('update', help='Update item state')
 sp_update.add_argument('i', help='Item ID', metavar='ID')
 sp_update.add_argument(
@@ -320,6 +382,7 @@ sp_update.add_argument(
 sp_update.add_argument(
     '-v', '--value', help='Item value', metavar='VALUE', dest='v')
 
+# Actions
 ap_action = sp.add_parser('action', help='Unit actions')
 
 sp_action = ap_action.add_subparsers(
@@ -387,15 +450,18 @@ sp_action_toggle.add_argument(
 sp_action_toggle.add_argument(
     '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
 
-sp_action_terminate = sp_action.add_parser('terminate', help='Terminate unit action')
+sp_action_terminate = sp_action.add_parser(
+    'terminate', help='Terminate unit action')
 sp_action_terminate.add_argument('i', help='Unit ID', metavar='ID', nargs='?')
 sp_action_terminate.add_argument(
     '-u', '--uuid', help='Action uuid', metavar='UUID', dest='u')
 
-sp_action_qclean = sp_action.add_parser('clear', help='Clean up unit action queue')
+sp_action_qclean = sp_action.add_parser(
+    'clear', help='Clean up unit action queue')
 sp_action_qclean.add_argument('i', help='Unit ID', metavar='ID')
 
-sp_action_kill = sp_action.add_parser('kill', help='Terminate action and clean queue')
+sp_action_kill = sp_action.add_parser(
+    'kill', help='Terminate action and clean queue')
 sp_action_kill.add_argument('i', help='Unit ID', metavar='ID')
 
 sp_action_result = sp_action.add_parser(
@@ -412,25 +478,24 @@ sp_action_result.add_argument(
     help='Action state',
     metavar='STATE',
     dest='s',
-    choices=['Q', 'R', 'F', 'queued', 'running', 'finished'])
+    choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
 
-# CVAR
-ap_cvar = sp.add_parser('cvar', help='CVAR functions')
-sp_cvar = ap_cvar.add_subparsers(
-    dest='_func', metavar='func', help='CVAR commands')
-sp_cvar_all = sp_cvar.add_parser('all', help='Get all CVARS')
-sp_cvar_get = sp_cvar.add_parser('get', help='Get CVAR value')
-sp_cvar_get.add_argument('i', help='CVAR ID', metavar='ID')
-sp_cvar_set = sp_cvar.add_parser('set', help='Set CVAR value')
-sp_cvar_set.add_argument('i', help='CVAR ID', metavar='ID')
-sp_cvar_set.add_argument('v', help='Value', metavar='VALUE')
-sp_cvar_delete = sp_cvar.add_parser('delete', help='Delete CVAR')
-sp_cvar_delete.add_argument('i', help='CVAR ID', metavar='ID')
+# Configure items
 
-# DEBUG
-ap_debug = sp.add_parser('debug', help='Debug control')
-ap_debug.add_argument(
-    'debug', help='Debug mode (on/off)', metavar='MODE', choices=['on', 'off'])
+sp_list = sp.add_parser('list', help='List items')
+sp_list.add_argument('-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+sp_list.add_argument('-p', '--type', help='Filter by type', metavar='TYPE', dest='p', choices=['unit', 'sensor', 'U', 'S' ])
+
+ap_config = sp.add_parser('config', help='Item configuration')
+sp_config = ap_config.add_subparsers(dest='_func', metavar='func', help='Configuration commands')
+
+sp_config_get = sp_config.add_parser('get', help='Get item config')
+sp_config_get.add_argument('i', help='Item ID', metavar='ID')
+
+sp_config_save = sp_config.add_parser('save', help='Save item config')
+sp_config_save.add_argument('i', help='Item ID', metavar='ID')
+
+#TODO: list_props
 
 # Drivers
 ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
@@ -575,7 +640,8 @@ if hasattr(a, '_func'):
 else:
     func = None
 
-if itype in ['log', 'action', 'cvar', 'debug', 'phi', 'lpi', 'driver' ] and func is None:
+if itype in ['log', 'action', 'config', 'cvar', 'debug', 'phi', 'lpi', 'driver'
+            ] and func is None:
     ap.parse_args([itype, '--help'])
 
 debug = a._debug
@@ -656,7 +722,7 @@ if code != apiclient.result_ok and \
         print('API result code: %u' % code)
     sys.exit(code)
 else:
-    if a._json:
+    if a._json or api_func in ['get_config']:
         print_json(result)
         if 'result' in result and result['result'] == 'ERROR':
             sys.exit(apiclient.result_func_failed)
@@ -669,6 +735,29 @@ else:
             print(result['result'])
             if result['result'] == 'ERROR':
                 sys.exit(apiclient.result_func_failed)
+        elif api_func == 'state_history' and \
+                isinstance(result, dict) and 't' in result:
+            import pandas as pd
+            import pytz
+            from datetime import datetime
+            pd.set_option('display.expand_frame_repr', False)
+            # convert list to dict
+            res = []
+            for i in range(len(result['t'])):
+                r = {}
+                for k in result.keys():
+                    if k != 't':
+                        r[k] = result[k][i]
+                    else:
+                        r[k] = datetime.fromtimestamp(result[k][i]).isoformat()
+                res.append(r)
+            df = pd.DataFrame(res)
+            df = df.set_index('t')
+            df.index = pd.to_datetime(df.index, utc=False)
+            out = df.to_string().split('\n')
+            print('time' + out[0][4:])
+            print('-' * len(out[0]))
+            [print(o) for o in out[2:]]
         else:
             if result:
                 fancy_print_result(result)

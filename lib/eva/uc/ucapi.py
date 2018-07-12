@@ -16,6 +16,7 @@ from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
+from eva.tools import is_oid
 from eva.tools import val_to_boolean
 from eva import apikey
 import eva.sysapi
@@ -78,6 +79,9 @@ class UC_API(GenericAPI):
         if i:
             item = eva.uc.controller.get_item(oid_to_id(i))
             if not item or not apikey.check(k, item): return None
+            if is_oid(i):
+                t, iid = parse_oid(i)
+                if item.item_type != t: return None
             return item.serialize(full=full)
         elif tp:
             if tp == 'U' or tp == 'unit':
@@ -106,8 +110,11 @@ class UC_API(GenericAPI):
                       t=None,
                       w=None,
                       g=None):
-        item = eva.uc.controller.get_item(i)
+        item = eva.uc.controller.get_item(oid_to_id(i))
         if not item or not apikey.check(k, item): return False
+        if is_oid(i):
+            _t, iid = parse_oid(i)
+            if item.item_type != _t: return False
         return self.get_state_history(
             k=k,
             a=a,
@@ -243,11 +250,17 @@ class UC_API(GenericAPI):
     def get_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         item = eva.uc.controller.get_item(oid_to_id(i))
+        if is_oid(i):
+            t, iid = parse_oid(i)
+            if item.item_type != t: return None
         return item.serialize(config=True) if item else None
 
     def save_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         item = eva.uc.controller.get_item(oid_to_id(i))
+        if is_oid(i):
+            t, iid = parse_oid(i)
+            if item.item_type != t: return None
         return item.save() if item else None
 
     def list(self, k=None, group=None, tp=None):
@@ -264,7 +277,7 @@ class UC_API(GenericAPI):
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
                 result.append(v.serialize(info=True))
-        return result
+        return sorted(result, key=lambda k: k['oid'])
 
     def list_props(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -778,11 +791,15 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
                       t=None,
                       w=None,
                       g=None):
-        if i and i.find(',') != -1:
+        if (isinstance(i, str) and i and i.find(',') != -1) or \
+                isinstance(i, list):
             if not w:
                 raise cp_api_error(
                     '"w" param required to process multiple items')
-            items = i.split(',')
+            if isinstance(i, str):
+                items = i.split(',')
+            else:
+                items = i
             if not g or g == 'list':
                 result = {}
             else:
