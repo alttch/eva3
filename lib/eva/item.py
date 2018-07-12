@@ -823,7 +823,7 @@ class UpdatableItem(Item):
         self.start_expiration_checker()
 
     def update_after_run(self, update_out):
-        if self._destroyed: return
+        if self._destroyed or update_out is False: return
         try:
             if isinstance(update_out, str):
                 result = update_out.strip()
@@ -1746,9 +1746,9 @@ class MultiUpdate(UpdatableItem):
         if isinstance(update_out, str):
             result = update_out.strip().split('\n')
         elif isinstance(update_out, list):
-            result  = update_out
+            result = update_out
         else:
-            result = [ update_out ]
+            result = [update_out]
         if len(result) < len(self.items_to_update):
             logging.warning(
                     '%s have %u items to update, got only %u in result' % \

@@ -9,7 +9,7 @@ __id__ = 'sensor'
 __logic__ = 'single polling'
 
 __features__ = [
-    'value', 'mu_value', 'port_get', 'aao_get', 'cfg'
+    'value', 'mu_value', 'port_get', 'aao_get', 'cfg', 'events'
 ]
 
 __config_help__ = []
@@ -58,6 +58,8 @@ class LPI(GenericLPI):
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()
         _state_in = state_in
+        if _state_in: evh = True
+        else: evh = False
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
@@ -72,11 +74,17 @@ class LPI(GenericLPI):
             multi = True
         st = []
         for p in _port:
-            if _state_in and str(p) in _state_in:
+            if _state_in:
                 value = _state_in.get(str(p))
             else:
                 value = self.phi.get(
                     str(p), phi_cfg, timeout + time_start - time())
+            if value is None and evh:
+                if multi:
+                    st.append(False)
+                    continue
+                else:
+                    return self.state_result_skip(_uuid)
             if value is None:
                 if multi:
                     st.append((-1, None))

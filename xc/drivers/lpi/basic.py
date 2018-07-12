@@ -10,7 +10,7 @@ __logic__ = 'basic status on/off'
 
 __features__ = [
     'status', 'status_mp', 'mu_status', 'mu_status_mp', 'port_get', 'aao_get',
-    'action', 'action_mp', 'port_set', 'aao_set'
+    'action', 'action_mp', 'port_set', 'aao_set', 'events'
 ]
 
 __config_help__ = []
@@ -67,6 +67,8 @@ class LPI(GenericLPI):
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()
         _state_in = state_in
+        if _state_in: evh = True
+        else: evh = False
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
@@ -95,7 +97,7 @@ class LPI(GenericLPI):
             st_prev = None
             for p in pp:
                 _p, invert = self.need_invert(p)
-                if _state_in and str(_p) in _state_in:
+                if _state_in:
                     status = _state_in.get(str(_p))
                 else:
                     status = self.phi.get(
@@ -104,13 +106,18 @@ class LPI(GenericLPI):
                     status = int(status)
                 except:
                     status = None
+                if status is None and evh:
+                    if multi:
+                        st_prev = False
+                        break
+                    else:
+                        return self.state_result_skip(_uuid)
                 if status is None or status not in [0, 1]:
                     if multi:
                         st_prev = -1
                         break
                     else:
-                        self.set_result(_uuid, (-1, None))
-                        return
+                        return self.state_result_error(_uuid)
                 if invert:
                     _status = 1 - status
                 else:
@@ -128,7 +135,10 @@ class LPI(GenericLPI):
                         self.set_result(_uuid, (-1, None))
                         return
             if multi:
-                st.append((st_prev, None))
+                if st_prev is False:
+                    st.append(False)
+                else:
+                    st.append((st_prev, None))
         if multi:
             self.set_result(_uuid, st)
         else:

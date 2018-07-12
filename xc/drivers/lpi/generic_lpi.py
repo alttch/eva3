@@ -171,7 +171,11 @@ class LPI(object):
         return result
 
     def state_result_error(self, _uuid):
-        self.set_result(_uuid, (-1, 0))
+        self.set_result(_uuid, (-1, None))
+        return False
+
+    def state_result_skip(self, _uuid):
+        self.set_result(_uuid, False)
         return False
 
     def set_result(self, _uuid, result=None):
