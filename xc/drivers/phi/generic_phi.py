@@ -8,6 +8,7 @@ __id__ = 'generic'
 __equipment__ = 'abstract'
 __api__ = 1
 __required__ = []
+__mods_required__ = []
 __features__ = []
 __config_help__ = []
 __get_help__ = []
@@ -46,6 +47,7 @@ class PHI(object):
         self.__equipment = __equipment__
         self.__features = __features__
         self.__required = __required__
+        self.__mods_required = __mods_required__
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
@@ -125,6 +127,9 @@ class PHI(object):
                     isinstance(self.__equipment, list) else [self.__equipment]
             d['features'] = self.__features
             d['required'] = self.__required
+            d['mods_required'] = self.__mods_required if \
+                    isinstance(self.__mods_required, list) else \
+                    [self.__mods_required]
             d['help'] = self.__help
         if config:
             d['cfg'] = self.phi_cfg

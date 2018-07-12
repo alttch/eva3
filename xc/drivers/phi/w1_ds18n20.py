@@ -8,6 +8,7 @@ __id__ = 'w1_ds18n20'
 __equipment__ = ['DS18S20', 'DS18B20']
 __api__ = 1
 __required__ = ['port_get', 'value']
+__mods_required__ = []
 __features__ = ['port_get', 'universal']
 __config_help__ = [{
     'name': 'retries',
@@ -50,6 +51,7 @@ class PHI(GenericPHI):
         self.__equipment = __equipment__
         self.__features = __features__
         self.__required = __required__
+        self.__mods_required = __mods_required__
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__

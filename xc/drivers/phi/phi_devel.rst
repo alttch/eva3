@@ -45,6 +45,9 @@ the next fields are processed by controller, so make them exactly as required
  * **value** process item values
  * **action** unit actions
 
+* **__mods_required**   required python modules (included neither in standard
+  Python install nor in EVA ICS)
+
 * **__features__**      own features provided (list):
 
  * **port_get** get single port data
@@ -102,6 +105,12 @@ It's allowed to import any Python system module or module installed by EVA ICS.
 If PHI requires installing more modules, they should be listed in PHi readme
 file.
 
+.. warning::
+
+    All non-standard modules (included neither in Python install nor in EVA
+    ICS) should be imported with try/catch with **importlib**, their
+    unavailability shouldn't block loading PHI for the informational puproses.
+
 Importing modules from eva.uc.drivers.tools, eva.tools and functions from
 eva.uc.driverapi:
 
@@ -148,6 +157,7 @@ be serialized by super() if requested:
         self.__equipment = __equipment__
         self.__features = __features__
         self.__required = __required__
+        self.__mods_required = __mods_required__
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
