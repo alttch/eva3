@@ -261,6 +261,8 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
             nvalue = str(action.nvalue)
         elif n2n:
             nvalue = 'null'
+        else:
+            nvalue = None
         return (nstatus, nvalue)
 
     def action_before_get_task(self):
