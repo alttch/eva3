@@ -18,6 +18,8 @@ import eva.uc.driverapi
 from eva.tools import format_json
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
+from eva.tools import is_oid
+from eva.tools import parse_oid
 
 
 class Item(object):
@@ -1914,10 +1916,16 @@ class VariableItem(UpdatableItem):
 
 def item_match(item, item_ids, groups=None):
     if (groups and ('#' in groups) or (item.group in groups)) \
-            or '#' in item_ids or item.item_id in item_ids:
+            or '#' in item_ids or item.item_id in item_ids or \
+            item.oid in item_ids:
         return True
     if groups:
-        for g in groups:
+        for grp in groups:
+            if is_oid(grp):
+                rt, g = parse_oid(grp)
+                if rt != item.item_type: continue
+            else:
+                g = grp
             p = g.find('#')
             if p > -1 and g[:p] == item.group[:p]: return True
             if g.find('+') > -1:
