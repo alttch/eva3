@@ -103,8 +103,8 @@ file.
     ICS) should be imported with try/catch with **importlib**, their
     unavailability shouldn't block loading PHI for the informational puproses.
 
-Importing modules from eva.uc.drivers.tools, eva.tools and functions from
-eva.uc.driverapi:
+Importing modules from eva.uc.drivers.tools, eva.tools, eva.traphandler and
+functions from eva.uc.driverapi:
 
 * **get_version()** get Driver API version
 * **get_polldelay()** get EVA poll delay
@@ -275,6 +275,9 @@ where:
 The controller will call update() method for all items using the caller PHI for
 updating, providing LPIs state data to let them process the event with
 minimized amount of additional PHI.get() calls.
+
+Use port value *-1* can be used to set unit error status, value *False* to set
+sensor error status.
 
 Exceptions
 ----------
