@@ -246,7 +246,7 @@ User management in runtime (requires master key):
     set_user_password <-u username> <-p password>
                                               modify user password
 
-    set_user_key <-u username> <-p apikey_id>
+    set_user_key <-u username> <-a apikey_id>
                                               modify user API key ID
 
     destroy_user <-u username>                delete user
