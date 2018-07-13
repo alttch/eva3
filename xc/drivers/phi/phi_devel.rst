@@ -279,6 +279,45 @@ minimized amount of additional PHI.get() calls.
 Use port value *-1* can be used to set unit error status, value *False* to set
 sensor error status.
 
+Handling SNMP traps
+~~~~~~~~~~~~~~~~~~~
+
+First you need to subscribe to EVA trap handler. Import **eva.traphandler** mod
+and modify PHI start and stop methods:
+
+.. code-block:: python
+
+    import eva.traphandler
+
+    class PHI(GenericPHI):
+
+        # class code
+
+        def start(self):
+            #<your code>
+            eva.traphandler.subscribe(self)
+
+        def stop(self):
+            #<your code>
+            eva.traphandler.unsubscribe(self)
+
+EVA trap handler calls method **process_snmp_trap(data)** for each object
+subscribed, so let's create it inside a primary class:
+
+.. code-block:: python
+
+    def process_snmp_trap(self, data):
+        #<your code>
+
+**data** is a dict with name/value pairs, where name is SNMP numeric OID
+without a first dot, and value is always a string. Check if this trap belongs
+to your device and perform the required actions. Don't worry about the timeout
+(except about the actual reaction time on a trap event) because every method is
+being executed in the own thread.
+
+EVA traphandler doesn't care about the method return value and you must process
+all the errors by yourself. The method should not throw any exceptions.
+
 Exceptions
 ----------
 
