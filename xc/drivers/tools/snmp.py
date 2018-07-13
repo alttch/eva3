@@ -7,6 +7,7 @@ __version__ = "3.1.0"
 
 import pysnmp.hlapi as snmp_engine
 import logging
+from eva.uc.driverapi import log_traceback
 
 
 def get(oid,
@@ -39,6 +40,7 @@ def get(oid,
                         _v = None
                     return _v
     except:
+        log_traceback()
         return None
 
 
@@ -64,4 +66,5 @@ def set(oid,
             else:
                 return True
     except:
+        log_traceback()
         return False
