@@ -67,7 +67,8 @@ api_functions = {
     'driver:get': 'get_driver',
     'driver:load': 'load_driver',
     'driver:unload': 'unload_driver',
-    'driver:set': 'set_driver'
+    'driver:set': 'set_driver',
+    'driver:unset': 'set_driver'
 }
 
 
@@ -137,7 +138,7 @@ def fancy_print_result(result, tab=0):
         out = None
         err = None
         tabsp = 10
-        if api_func == 'list_props': tabsp = 28;
+        if api_func == 'list_props': tabsp = 28
         for v in sorted(result.keys()):
             if v == 'help' and not tab:
                 h = result[v]
@@ -521,8 +522,7 @@ sp_set_prop.add_argument(
     action='store_true')
 
 ap_create = sp.add_parser('create', help='Create new item')
-ap_create.add_argument(
-    'i', help='Item OID (type:group/id)', metavar='OID')
+ap_create.add_argument('i', help='Item OID (type:group/id)', metavar='OID')
 ap_create.add_argument(
     '-y',
     '--save',
@@ -543,7 +543,8 @@ sp_clone = ap_clone.add_subparsers(
 sp_clone_item = sp_clone.add_parser('item', help='Clone single item')
 sp_clone_item.add_argument('i', help='Item ID', metavar='ID')
 sp_clone_item.add_argument('n', help='New item ID (short)', metavar='ID')
-sp_clone_item.add_argument('-g', '--group', help='Group for new item', metavar='GROUP', dest='g')
+sp_clone_item.add_argument(
+    '-g', '--group', help='Group for new item', metavar='GROUP', dest='g')
 sp_clone_item.add_argument(
     '-y',
     '--save',
@@ -564,13 +565,9 @@ sp_clone_group.add_argument(
     action='store_true')
 
 ap_destroy = sp.add_parser('destroy', help='Delete item')
+ap_destroy.add_argument('i', help='Item ID', metavar='ID', nargs='?')
 ap_destroy.add_argument(
-    'i', help='Item ID', metavar='ID', nargs='?')
-ap_destroy.add_argument(
-    '-g',
-    '--group',
-    help='Destroy group of items',
-    dest='g')
+    '-g', '--group', help='Destroy group of items', dest='g')
 
 # TODO: CREATE_DEVICE
 
@@ -602,20 +599,20 @@ sp_driver_list.add_argument(
     action='store_true')
 
 sp_phi_get = sp_phi.add_parser('get', help='Get loaded PHI info')
-sp_phi_get.add_argument('i', help='PHI id', metavar='PHI_ID')
+sp_phi_get.add_argument('i', help='PHI ID', metavar='PHI_ID')
 
 sp_phi_mods = sp_phi.add_parser('mods', help='List available PHI mods')
 sp_lpi_mods = sp_lpi.add_parser('mods', help='List available LPI mods')
 
 sp_phi_test = sp_phi.add_parser('test', help='Send test call to PHI')
-sp_phi_test.add_argument('i', help='PHI id', metavar='PHI_ID')
+sp_phi_test.add_argument('i', help='PHI ID', metavar='PHI_ID')
 sp_phi_test.add_argument('c', help='PHI test command', metavar='CMD')
 
 sp_driver_get = sp_driver.add_parser('get', help='Get loaded driver info')
-sp_driver_get.add_argument('i', help='driver id', metavar='DRIVER_ID')
+sp_driver_get.add_argument('i', help='Driver ID', metavar='DRIVER_ID')
 
 sp_phi_load = sp_phi.add_parser('load', help='Load PHI')
-sp_phi_load.add_argument('i', help='PHI id', metavar='PHI_ID')
+sp_phi_load.add_argument('i', help='PHI ID', metavar='PHI_ID')
 sp_phi_load.add_argument('m', help='PHI module', metavar='PHI_MOD')
 sp_phi_load.add_argument(
     '-c',
@@ -632,7 +629,7 @@ sp_phi_load.add_argument(
 
 sp_driver_load = sp_driver.add_parser('load', help='Load driver')
 sp_driver_load.add_argument(
-    'i', help='driver id (PHI_ID.LPI.ID)', metavar='PHI_ID.LPI_ID')
+    'i', help='Driver ID (PHI_ID.LPI.ID)', metavar='PHI_ID.LPI_ID')
 sp_driver_load.add_argument('m', help='LPI module', metavar='LPI_MOD')
 sp_driver_load.add_argument(
     '-c',
@@ -648,15 +645,15 @@ sp_driver_load.add_argument(
     action='store_true')
 
 sp_phi_unload = sp_phi.add_parser('unload', help='Unload PHI')
-sp_phi_unload.add_argument('i', help='PHI id', metavar='PHI_ID')
+sp_phi_unload.add_argument('i', help='PHI ID', metavar='PHI_ID')
 
 sp_driver_unload = sp_driver.add_parser('unload', help='Unload driver')
-sp_driver_unload.add_argument('i', help='driver id', metavar='DRIVER_ID')
+sp_driver_unload.add_argument('i', help='Driver ID', metavar='DRIVER_ID')
 
 sp_driver_set = sp_driver.add_parser(
     'set', help='Set for the item (action & update)')
-sp_driver_set.add_argument('i', help='item id', metavar='ID')
-sp_driver_set.add_argument('d', help='driver id', metavar='DRIVER_ID')
+sp_driver_set.add_argument('i', help='Item ID', metavar='ID')
+sp_driver_set.add_argument('d', help='Driver ID', metavar='DRIVER_ID')
 sp_driver_set.add_argument(
     '-c',
     '--config',
@@ -664,6 +661,17 @@ sp_driver_set.add_argument(
     dest='c',
     metavar='CONFIG')
 sp_driver_set.add_argument(
+    '-y',
+    '--save',
+    help='save configuration',
+    dest='_save',
+    action='store_true')
+
+sp_driver_unset = sp_driver.add_parser(
+    'unset',
+    help='Unset for the item (set action, update and driver_config to null)')
+sp_driver_unset.add_argument('i', help='Item ID', metavar='ID')
+sp_driver_unset.add_argument(
     '-y',
     '--save',
     help='save configuration',

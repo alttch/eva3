@@ -670,9 +670,10 @@ class UC_API(GenericAPI):
         if item.item_type == 'unit' and \
                 not api.set_prop(k, i, 'action_driver_config', c):
             return False
-        if not api.set_prop(k, i, 'update_exec', '|' + d): return False
+        drv_p = '|' + d if d else None
+        if not api.set_prop(k, i, 'update_exec', drv_p): return False
         if item.item_type == 'unit' and \
-                not api.set_prop(k, i, 'action_exec', '|' + d):
+                not api.set_prop(k, i, 'action_exec', drv_p):
             return False
         if save: item.save()
         return True
