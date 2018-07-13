@@ -41,13 +41,16 @@ __state_help__ = [{
 __state_help__ += __config_help__
 
 __help__ = """
-Enhanced LPI to work with sensors, supports various typical functions: working
-with a sensor groups, returning the average, max or min group value etc. Can
-use 'max_diff' param to control the maximum difference of the sensor value in a
-group and automatically remove possible broken sensors from the result (if the
-number of good sensors in a group is more than broken).
+Enhanced LPI to work with groups of sensors, supports various typical
+functions: working with a sensor groups, returning the average, max or min
+group value etc. Can use 'max_diff' param to control the maximum difference of
+the sensor value in a group and automatically remove possible broken sensors
+from the result (if the number of good sensors in a group is more than broken).
 
 For multiupdates all ports specified in mu should be lists.
+
+This LPI is dedicated to work with a groups of sensors and doesn't support
+single sensor event processing.
 """
 
 from time import time
