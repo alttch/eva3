@@ -726,7 +726,7 @@ else:
     func = None
 
 if itype in [
-        'log', 'action', 'config', 'cvar', 'debug', 'phi', 'lpi', 'driver'
+        'log', 'action', 'config', 'cvar', 'phi', 'lpi', 'driver'
 ] and func is None:
     ap.parse_args([itype, '--help'])
 
