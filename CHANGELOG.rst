@@ -95,6 +95,7 @@ Common
 ~~~~~~
 
     * watchdog to test/automatically restart controllers in case of failure
+    * oid support in API keys
     * other stability improvements
 
 3.0.2 (2018-06-23)
