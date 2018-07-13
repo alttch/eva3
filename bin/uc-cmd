@@ -39,6 +39,15 @@ api_functions = {
     'cvar:set': 'set_cvar',
     'cvar:delete': 'set_cvar',
     'debug': 'set_debug',
+    'file:create': 'file_put',
+    'file:upload': 'file_put',
+    'file:mod': 'file_set_exec',
+    'key:list': 'list_keys',
+    'user:list': 'list_users',
+    'user:create': 'create_user',
+    'user:password': 'set_user_password',
+    'user:key': 'set_user_key',
+    'user:destroy': 'destroy_user',
     'history': 'state_history',
     'action:exec': 'action',
     'action:result': 'result',
@@ -71,16 +80,7 @@ api_functions = {
     'driver:load': 'load_driver',
     'driver:unload': 'unload_driver',
     'driver:set': 'set_driver',
-    'driver:unset': 'set_driver',
-    'file:create': 'file_put',
-    'file:upload': 'file_put',
-    'file:mod': 'file_set_exec',
-    'key:list': 'list_keys',
-    'user:list': 'list_users',
-    'user:create': 'create_user',
-    'user:password': 'set_user_password',
-    'user:key': 'set_user_key',
-    'user:destroy': 'destroy_user'
+    'driver:unset': 'set_driver'
 }
 
 
@@ -114,6 +114,7 @@ def _prepare_result_data(data):
 
 
 _pd_cols = {
+    'list_keys': ['key_id', 'master', 'sysfunc', 'allow'],
     'state': ['oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue'],
     'state_': [
         'oid', 'virtual', 'action_enabled', 'description', 'location', 'status',
@@ -130,17 +131,16 @@ _pd_cols = {
     'list_drivers': ['id', 'mod', 'phi_id'],
     'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
-    'list_keys': ['key_id', 'master', 'sysfunc', 'allow'],
     'modhelp_lpi': ['name', 'type', 'required', 'help'],
     'modhelp_phi': ['name', 'type', 'required', 'help']
 }
 
 _pd_idx = {
+    'list_keys': 'key_id',
+    'list_users': 'user',
     'state': 'oid',
     'list': 'oid',
     'result': 'time',
-    'list_keys': 'key_id',
-    'list_users': 'user',
     'list_phi_mods': 'mod',
     'list_lpi_mods': 'mod'
 }
@@ -342,23 +342,16 @@ ap_file = sp.add_parser('file', help='File management in runtime folder')
 sp_file = ap_file.add_subparsers(
     dest='_func', metavar='func', help='File commands')
 
-sp_file_get = sp_file.add_parser(
-    'get', help='Download file')
+sp_file_get = sp_file.add_parser('get', help='Download file')
 sp_file_get.add_argument(
     'i',
     help='File name (relative to runtime, without / in the beginning)',
     metavar='REMOTE_FILE')
-sp_file_get.add_argument(
-    '_fname',
-    help='Local file name',
-    metavar='LOCAL_FILE')
+sp_file_get.add_argument('_fname', help='Local file name', metavar='LOCAL_FILE')
 
-sp_file_upload = sp_file.add_parser(
-    'upload', help='Upload file')
+sp_file_upload = sp_file.add_parser('upload', help='Upload file')
 sp_file_upload.add_argument(
-    '_fname',
-    help='Local file name',
-    metavar='LOCAL_FILE')
+    '_fname', help='Local file name', metavar='LOCAL_FILE')
 sp_file_upload.add_argument(
     'i',
     help='File name (relative to runtime, without / in the beginning)',
@@ -372,8 +365,7 @@ sp_file_create.add_argument(
     metavar='REMOTE_FILE')
 sp_file_create.add_argument('m', help='File content', metavar='CONTENT')
 
-sp_file_mod = sp_file.add_parser(
-    'mod', help='Set file exec mode')
+sp_file_mod = sp_file.add_parser('mod', help='Set file exec mode')
 sp_file_mod.add_argument(
     'i',
     help='File name (relative to runtime, without / in the beginning)',
@@ -383,8 +375,7 @@ sp_file_mod.add_argument(
     help='Exec mode (0 - disabled [0644], 1 - enabled [0755])',
     metavar='MODE')
 
-sp_file_unlink = sp_file.add_parser(
-    'unlink', help='Delete remote file')
+sp_file_unlink = sp_file.add_parser('unlink', help='Delete remote file')
 sp_file_unlink.add_argument(
     'i',
     help='File name (relative to runtime, without / in the beginning)',
@@ -396,8 +387,7 @@ ap_key = sp.add_parser('key', help='API key management')
 sp_key = ap_key.add_subparsers(
     dest='_func', metavar='func', help='API key commands')
 
-sp_key_list = sp_key.add_parser(
-    'list', help='List API keys')
+sp_key_list = sp_key.add_parser('list', help='List API keys')
 
 # User management
 
@@ -405,11 +395,9 @@ ap_user = sp.add_parser('user', help='user management')
 sp_user = ap_user.add_subparsers(
     dest='_func', metavar='func', help='user commands')
 
-sp_user_list = sp_user.add_parser(
-    'list', help='List users')
+sp_user_list = sp_user.add_parser('list', help='List users')
 
-sp_user_create = sp_user.add_parser(
-    'create', help='Create new user')
+sp_user_create = sp_user.add_parser('create', help='Create new user')
 sp_user_create.add_argument('u', help='User login', metavar='LOGIN')
 sp_user_create.add_argument('p', help='User password', metavar='PASSWORD')
 sp_user_create.add_argument('a', help='API key ID', metavar='APIKEY_ID')
@@ -419,15 +407,12 @@ sp_user_password = sp_user.add_parser(
 sp_user_password.add_argument('u', help='User login', metavar='LOGIN')
 sp_user_password.add_argument('p', help='User password', metavar='PASSWORD')
 
-sp_user_key = sp_user.add_parser(
-    'key', help='Change API key for user')
+sp_user_key = sp_user.add_parser('key', help='Change API key for user')
 sp_user_key.add_argument('u', help='User login', metavar='LOGIN')
 sp_user_key.add_argument('a', help='API key ID', metavar='APIKEY_ID')
 
-sp_user_destroy = sp_user.add_parser(
-    'destroy', help='Delete user')
+sp_user_destroy = sp_user.add_parser('destroy', help='Delete user')
 sp_user_destroy.add_argument('u', help='User login', metavar='LOGIN')
-
 
 # UC Common
 sp_state = sp.add_parser('state', help='Get item state')
@@ -977,7 +962,12 @@ if code != apiclient.result_ok and \
     sys.exit(code)
 else:
     if api_func == 'file_get':
-        open(a._fname, 'w').write(result['data'])
+        try:
+            open(a._fname, 'w').write(result['data'])
+            print('OK')
+        except:
+            print('FAILED')
+            sys.exit(95)
     elif a._json or api_func in ['get_config']:
         print_json(result)
         if 'result' in result and result['result'] == 'ERROR':
