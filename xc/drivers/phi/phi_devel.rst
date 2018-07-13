@@ -316,10 +316,10 @@ to your device and perform the required actions. Don't worry about the timeout
 being executed in the own thread.
 
 EVA traphandler doesn't care about the method return value and you must process
-all the errors by yourself. The method should not throw any exceptions.
+all the errors by yourself.
 
 Exceptions
 ----------
 
-The methods of PHI should not throw any exceptions and handle/log all errors by
+The methods of PHI should not raise any exceptions and handle/log all errors by
 themselves.
