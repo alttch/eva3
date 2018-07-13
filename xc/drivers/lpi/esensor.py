@@ -107,6 +107,8 @@ class LPI(GenericLPI):
         if self.phi.aao_get:
             _state_in = self.phi.get(cfg=phi_cfg, timeout=timeout)
             if not _state_in: return self.state_result_error(_uuid)
+        else:
+            _state_in = {}
         skip_err = val_to_boolean(cfg.get('skip_err')) if \
                 cfg.get('skip_err') is not None else self.skip_err
         gpf = cfg.get('gpf') if \
