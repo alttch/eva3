@@ -83,6 +83,11 @@ for f in ${LM_NEW_CFG}; do
     fi
 done
 
+if [ ! -d runtime/tpl ]; then
+    mkdir runtime/tpl
+    chown ${UC_USER} runtime/tpl
+fi
+
 echo "- Installing new files"
 
 rm -f _upgrade/eva-${VERSION}/ui/index.html
