@@ -50,9 +50,6 @@ from eva.tools import parse_host_port
 
 import eva.uc.drivers.tools.snmp as snmp
 
-import pysnmp.proto.rfc1902 as rfc1902
-
-
 class PHI(GenericPHI):
 
     def __init__(self, phi_cfg=None, info_only=False):
@@ -106,7 +103,7 @@ class PHI(GenericPHI):
             self.community,
             _timeout,
             self.snmp_tries - 1,
-            rf=float,
+            rf=int,
             snmp_ver=1)
 
     def test(self, cmd=None):
@@ -115,15 +112,15 @@ class PHI(GenericPHI):
                 '.1.3.6.1.4.1.3854.1.1.8.0',
                 self.snmp_host,
                 self.snmp_port,
-                self.snmp_read_community,
-                timeout=get_timeout() - 0.5)
+                self.community,
+                timeout=get_timeout() - 0.5, snmp_ver=1)
             if not name: return 'FAILED'
             vendor = snmp.get(
                 '.1.3.6.1.4.1.3854.1.1.6.0',
                 self.snmp_host,
                 self.snmp_port,
-                self.snmp_read_community,
-                timeout=get_timeout() - 0.5)
+                self.community,
+                timeout=get_timeout() - 0.5, snmp_ver=1)
             if not vendor: return 'FAILED'
             return '%s %s' % (vendor.strip(), name.strip())
         if cmd == 'self':
