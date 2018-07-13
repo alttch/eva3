@@ -69,14 +69,14 @@ def update_config(cfg):
 
 def subscribe(item):
     subscribed_items.add(item)
-    logging.debug('%s subscribed to snmp traps' % item.full_id)
+    logging.debug('%s subscribed to snmp traps' % item.oid)
     return True
 
 
 def unsubscribe(item):
     try:
         subscribed_items.remove(item)
-        logging.debug('%s unsubscribed from snmp traps' % item.full_id)
+        logging.debug('%s unsubscribed from snmp traps' % item.oid)
     except:
         return False
     return True

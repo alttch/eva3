@@ -53,6 +53,7 @@ class PHI(object):
         self.__set_help = __set_help__
         self.__help = __help__
         self.phi_id = None  # set by driverapi on load
+        self.oid = None
         if info_only: return
         # True if the equipment can query/modify only all
         # ports at once and can not work with a single ports
@@ -123,6 +124,7 @@ class PHI(object):
             d['description'] = self.__description
             d['version'] = self.__version
             d['api'] = self.__api_version
+            d['oid'] = self.oid
             d['equipment'] = self.__equipment if \
                     isinstance(self.__equipment, list) else [self.__equipment]
             d['features'] = self.__features

@@ -90,6 +90,7 @@ class LPI(object):
             d['description'] = self.__description
             d['version'] = self.__version
             d['api'] = self.__api_version
+            d['oid'] = self.oid
             d['logic'] = self.__logic
             d['help'] = self.__help
             if self.phi:
@@ -242,6 +243,7 @@ class LPI(object):
         self.lpi_id = None  # set by driverapi on load
         self.driver_id = None  # set by driverapi on load
         self.phi = None  # set by driverapi on each call
+        self.oid = None
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW

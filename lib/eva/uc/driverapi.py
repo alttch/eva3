@@ -270,6 +270,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
         logging.error('unable to init PHI mod %s' % phi_mod_id)
         return False
     phi.phi_id = phi_id
+    phi.oid = 'phi:uc/%s/%s' % ( eva.core.system_name, phi_id )
     if phi_id in phis:
         phis[phi_id].stop()
     phis[phi_id] = phi
@@ -321,6 +322,7 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
         return False
     lpi.lpi_id = lpi_id
     lpi.driver_id = phi_id + '.' + lpi_id
+    lpi.oid = 'driver:uc/%s/%s' % ( eva.core.system_name, lpi.driver_id)
     if lpi.driver_id in drivers:
         drivers[lpi.driver_id].stop()
     drivers[lpi.driver_id] = lpi
