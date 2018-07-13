@@ -442,7 +442,7 @@ class UpdatableItem(Item):
                 try:
                     v = dict_from_str(val)
                 except:
-                    log_traceback()
+                    eva.core.log_traceback()
                     return False
                 self.update_driver_config = v
                 self.log_set(prop, 'dict')
