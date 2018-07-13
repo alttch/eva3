@@ -47,7 +47,8 @@ the next fields are processed by controller, so make them exactly as required
  * **aao_get** get all ports at once (if no port specified)
  * **aao_set** set all ports at once (if list of ports and
    list of data is given)
- * **universal** the driver is universal and process **cfg** in requests.
+ * **universal** PHI is universal and process **cfg** in requests.
+ * **cache** PHI supports state caching (useful for a slow devices)
 
 PHI help
 ~~~~~~~~
