@@ -27,6 +27,7 @@ class GenericCLI(object):
         self.product = None
         self.ssl_verify = False
         self.always_json = []
+        self.always_print = ['cmd']
         self.common_api_functions = {
             'cvar:all': 'get_cvar',
             'cvar:get': 'get_cvar',
@@ -154,8 +155,8 @@ class GenericCLI(object):
                             print(' ' * (tab * tabsp), end='>' * tab + ' ')
                         print(("{:>%u} : {}" % max(map(len, result))).format(
                             v, ''))
-                        self.fancy_print_result(result[v], api_func, api_func_full, itype,
-                                           tab + 1)
+                        self.fancy_print_result(result[v], api_func,
+                                                api_func_full, itype, tab + 1)
                     else:
                         if tab:
                             print(' ' * (tab * tabsp), end='>' * tab + ' ')
@@ -187,7 +188,8 @@ class GenericCLI(object):
                 print('OK')
         elif result and isinstance(result, list):
             self.import_pandas()
-            df = self.pd.DataFrame(data=self.prepare_result_data(result, api_func, itype))
+            df = self.pd.DataFrame(
+                data=self.prepare_result_data(result, api_func, itype))
             if api_func + api_func_full in self.pd_cols:
                 cols = self.pd_cols[api_func + api_func_full]
             else:
@@ -493,7 +495,8 @@ class GenericCLI(object):
                 if 'result' in result and result['result'] == 'ERROR':
                     return apiclient.result_func_failed
             else:
-                return self.process_result(result, code, api_func, api_func_full, itype, a)
+                return self.process_result(result, code, api_func,
+                                           api_func_full, itype, a)
         return 0
 
     def process_result(self, result, code, api_func, api_func_full, itype, a):
@@ -504,6 +507,9 @@ class GenericCLI(object):
             except:
                 print('FAILED')
                 return 95
+        elif code == apiclient.result_func_failed and api_func not in self.always_print:
+            print('FAILED')
+            return code
         elif 'result' in result and api_func != 'test':
             print(result['result'])
             if result['result'] == 'ERROR':

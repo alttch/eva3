@@ -112,12 +112,7 @@ class UC_CLI(GenericCLI):
         return result
 
     def process_result(self, result, code, api_func, api_func_full, itype, a):
-        if code == apiclient.result_func_failed and api_func not in [
-                'cmd', 'action', 'action_toggle'
-        ]:
-            print('FAILED')
-            return code
-        elif api_func == 'state_history' and \
+        if api_func == 'state_history' and \
                 isinstance(result, dict):
             self.print_tdf(result)
             return 0
@@ -601,6 +596,7 @@ class UC_CLI(GenericCLI):
 cli = UC_CLI(_me)
 cli.product = 'uc'
 cli.always_json += _always_json
+cli.always_print += ['action', 'action_toggle']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
