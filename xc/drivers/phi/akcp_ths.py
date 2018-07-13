@@ -50,10 +50,13 @@ value testing in pysnmp or pyasn1.
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import get_timeout
+from eva.uc.driverapi import handle_phi_event
 
 from eva.tools import parse_host_port
 
 import eva.uc.drivers.tools.snmp as snmp
+import eva.traphandler
+
 
 class PHI(GenericPHI):
 
@@ -111,6 +114,24 @@ class PHI(GenericPHI):
             rf=int,
             snmp_ver=1)
 
+    def start(self):
+        eva.traphandler.subscribe(self)
+
+    def stop(self):
+        eva.traphandler.unsubscribe(self)
+
+    def process_snmp_trap(data):
+        if data.get('1.3.6.1.4.1.3854.1.7.4.0') != self.sensor_port - 1:
+            return
+        d = data.get('1.3.6.1.4.1.3854.1.7.1.0')
+        if d == 7:
+            handle_phi_event(self, self.sensor_port, {'t': False, 'h': False})
+        elif d == 2:
+            t = self.get('t', timeout=get_timeout())
+            h = self.get('h', timeout=get_timeout())
+            handle_phi_event(self, self.sensor_port, {'t': t, 'h': h})
+        return
+
     def test(self, cmd=None):
         if cmd == 'info':
             name = snmp.get(
@@ -118,14 +139,16 @@ class PHI(GenericPHI):
                 self.snmp_host,
                 self.snmp_port,
                 self.community,
-                timeout=get_timeout() - 0.5, snmp_ver=1)
+                timeout=get_timeout() - 0.5,
+                snmp_ver=1)
             if not name: return 'FAILED'
             vendor = snmp.get(
                 '.1.3.6.1.4.1.3854.1.1.6.0',
                 self.snmp_host,
                 self.snmp_port,
                 self.community,
-                timeout=get_timeout() - 0.5, snmp_ver=1)
+                timeout=get_timeout() - 0.5,
+                snmp_ver=1)
             if not vendor: return 'FAILED'
             return '%s %s' % (vendor.strip(), name.strip())
         if cmd == 'self':
