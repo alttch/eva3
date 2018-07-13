@@ -40,6 +40,11 @@ monitor the equipment. SNMP on controller should be enabled and configured to
 allow packets from UC.
 
 Sensor port should be specified 't' for temperature or 'h' for humidity.
+
+Some pysnmp versions have a bug which throws ValueConstraintError exception
+when sensor data is processed despite the data is good. Quick and dirty fix is
+to turn on debug, perform PHI self test, get an exception trace and disable the
+value testing in pysnmp or pyasn1.
 """
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
