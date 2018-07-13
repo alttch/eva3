@@ -84,7 +84,7 @@ class LPI(GenericLPI):
                     continue
                 else:
                     return self.state_result_skip(_uuid)
-            if value is None:
+            if value is None or value is False:
                 if multi:
                     st.append((-1, None))
                     continue
