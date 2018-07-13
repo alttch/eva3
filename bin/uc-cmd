@@ -52,6 +52,9 @@ api_functions = {
     'config:props': 'list_props',
     'config:set': 'set_prop',
     'clone:item': 'clone',
+    'device:create': 'create_device',
+    'device:update': 'update_device',
+    'device:destroy': 'destroy_device',
     'phi:list': 'list_phi',
     'phi:get': 'get_phi',
     'phi:mods': 'list_phi_mods',
@@ -569,7 +572,55 @@ ap_destroy.add_argument('i', help='Item ID', metavar='ID', nargs='?')
 ap_destroy.add_argument(
     '-g', '--group', help='Destroy group of items', dest='g')
 
-# TODO: CREATE_DEVICE
+# Devices
+
+ap_device = sp.add_parser('device', help='Device management')
+sp_device = ap_device.add_subparsers(
+    dest='_func', metavar='func', help='Device commands')
+sp_device_create = sp_device.add_parser(
+    'create', help='Create device with a template')
+sp_device_create.add_argument(
+    't', help='Template name (file=runtime/tpl/<TPL>.json)', metavar='TPL')
+sp_device_create.add_argument(
+    '-c',
+    '--config',
+    help='Template vars, comma separated',
+    metavar='VARS',
+    dest='c')
+sp_device_create.add_argument(
+    '-y',
+    '--save',
+    help='Save items config after creation',
+    dest='_save',
+    action='store_true')
+
+sp_device_update = sp_device.add_parser(
+    'update', help='Update device item props with a template')
+sp_device_update.add_argument(
+    't', help='Template file (in runtime/tpl folder)', metavar='TPL')
+sp_device_update.add_argument(
+    '-c',
+    '--config',
+    help='Template vars, comma separated',
+    metavar='VARS',
+    dest='c')
+sp_device_update.add_argument(
+    '-y',
+    '--save',
+    help='Save items config after creation',
+    dest='_save',
+    action='store_true')
+
+sp_device_destroy = sp_device.add_parser(
+    'destroy', help='Destroy device with a template')
+sp_device_destroy.add_argument(
+    't', help='Template file (in runtime/tpl folder)', metavar='TPL')
+sp_device_destroy.add_argument(
+    '-c',
+    '--config',
+    help='Template vars, comma separated',
+    metavar='VARS',
+    dest='c')
 
 # Drivers
 ap_phi = sp.add_parser('phi', help='PHI (Physical interface)')
@@ -725,9 +776,8 @@ if hasattr(a, '_func'):
 else:
     func = None
 
-if itype in [
-        'log', 'action', 'config', 'cvar', 'phi', 'lpi', 'driver'
-] and func is None:
+if itype in ['log', 'action', 'config', 'cvar', 'device', 'phi', 'lpi', 'driver'
+            ] and func is None:
     ap.parse_args([itype, '--help'])
 
 debug = a._debug
