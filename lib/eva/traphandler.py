@@ -99,11 +99,8 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
                 (name.prettyPrint(), val.prettyPrint()))
         data[name.prettyPrint()] = val.prettyPrint()
     for i in subscribed_items:
-        try:
-            i.process_snmp_trap(data)
-        except:
-            logging.error('snmp trap processing error by %s' % i.oid)
-            eva.core.log_traceback()
+        t = threading.Thread(target=i.process_snmp_trap, args=(data,))
+        t.start()
 
 
 def start():
