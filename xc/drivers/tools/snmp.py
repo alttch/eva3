@@ -3,15 +3,25 @@ __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.0"
 
+# SNMP get/set module. Supports SNMPv1 and 2
+
 import pysnmp.hlapi as snmp_engine
 import logging
 
-def get(oid, host, port=161, community='public', timeout=0, retries=0,
-        rf=str):
+
+def get(oid,
+        host,
+        port=161,
+        community='public',
+        timeout=0,
+        retries=0,
+        rf=str,
+        snmp_ver=2):
     result = []
     try:
         for (err_i, err_st, err_idx, vals) in snmp_engine.getCmd(
-                snmp_engine.SnmpEngine(), snmp_engine.CommunityData(community),
+                snmp_engine.SnmpEngine(),
+                snmp_engine.CommunityData(community, mpModel=snmp_ver - 1),
                 snmp_engine.UdpTransportTarget(
                     (host, port), timeout=timeout, retries=retries),
                 snmp_engine.ContextData(),
@@ -32,15 +42,22 @@ def get(oid, host, port=161, community='public', timeout=0, retries=0,
         return None
 
 
-def set(oid, value, host, port=161, community='private', timeout=0, retries=0):
+def set(oid,
+        value,
+        host,
+        port=161,
+        community='private',
+        timeout=0,
+        retries=0,
+        snmp_ver=2):
     try:
         for (err_i, err_st, err_idx, vals) in snmp_engine.setCmd(
-                snmp_engine.SnmpEngine(), snmp_engine.CommunityData(community),
+                snmp_engine.SnmpEngine(),
+                snmp_engine.CommunityData(community, mpModel=snmp_ver - 1),
                 snmp_engine.UdpTransportTarget(
                     (host, port), timeout=timeout, retries=retries),
                 snmp_engine.ContextData(),
-                snmp_engine.ObjectType(snmp_engine.ObjectIdentity(oid),
-                                        value)):
+                snmp_engine.ObjectType(snmp_engine.ObjectIdentity(oid), value)):
             if err_i or err_st:
                 logging.debug('snmp error: %s' % err_i)
                 return None
