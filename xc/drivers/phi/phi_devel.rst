@@ -37,7 +37,7 @@ the next fields are processed by controller, so make them exactly as required
  * **value** process item values
  * **action** unit actions
 
-* **__mods_required**   required python modules (included neither in standard
+* **__mods_required__**   required python modules (included neither in standard
   Python install nor in EVA ICS)
 
 * **__features__**      own features provided (list):
@@ -94,7 +94,7 @@ Classes and modules
 -------------------
 
 It's allowed to import any Python system module or module installed by EVA ICS.
-If PHI requires installing more modules, they should be listed in PHi readme
+If PHI requires installing more modules, they should be listed in PHI readme
 file.
 
 .. warning::
@@ -134,7 +134,7 @@ Constructor
 -----------
 
 The constructor should set the above constants to class variables to let them
-be serialized by super() if requested:
+be serialized by parent class if requested:
 
 .. code-block:: python
 
@@ -276,8 +276,8 @@ The controller will call update() method for all items using the caller PHI for
 updating, providing LPIs state data to let them process the event with
 minimized amount of additional PHI.get() calls.
 
-Use port value *-1* can be used to set unit error status, value *False* to set
-sensor error status.
+Value *-1* can be used to set unit error status, value *False* to set sensor
+error status.
 
 Handling SNMP traps
 ~~~~~~~~~~~~~~~~~~~
