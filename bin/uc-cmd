@@ -93,9 +93,10 @@ _always_json = ['get_config']
 class UC_CLI(GenericCLI):
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
-        result = super().prepare_result_data(data, api_func, api_func_full,
-                                             itype)
-        if itype not in ['action', 'driver', 'phi', 'lpi']: return result
+        if itype not in ['action', 'driver', 'phi', 'lpi']:
+            return super().prepare_result_data(data, api_func, api_func_full,
+                                               itype)
+        result = []
         for d in data.copy():
             if itype == 'action':
                 d['time'] = datetime.fromtimestamp(
