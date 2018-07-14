@@ -183,7 +183,7 @@ class GenericCLI(object):
             if not tabsp: tabsp = 10
             for v in sorted(result.keys()):
                 if v == 'help':
-                    if not not tab:
+                    if not tab:
                         h = result[v]
                     else:
                         pass
