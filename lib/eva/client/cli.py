@@ -16,6 +16,7 @@ from datetime import datetime
 from eva.client import apiclient
 from eva.tools import print_json
 
+
 class GenericCLI(object):
 
     def __init__(self, name):
@@ -503,7 +504,9 @@ class GenericCLI(object):
         if self.batch_file is not None:
             try:
                 if self.batch_file != 'stdin':
-                    cmds = [x.strip() for x in open(self.batch_file).readlines()]
+                    cmds = [
+                        x.strip() for x in open(self.batch_file).readlines()
+                    ]
                 else:
                     cmds = [x.strip() for x in sys.stdin]
                 for c in cmds:
@@ -550,9 +553,10 @@ class GenericCLI(object):
                     print('or command to execute')
                 elif d[0] == 'a':
                     print('API uri: %s' % (self.apiuri
-                          if self.apiuri is not None else '<default>'))
-                    print('key: %s' % (self.apikey
-                          if self.apikey is not None else '<default>'))
+                                           if self.apiuri is not None else
+                                           '<default>'))
+                    print('key: %s' % (self.apikey if self.apikey is not None
+                                       else '<default>'))
                     print('JSON mode ' + ('on' if self.in_json else 'off'))
                     print('API debug mode ' + ('on' if self.debug else 'off'))
                     print('timeout: %f' % self.timeout)
