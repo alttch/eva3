@@ -17,17 +17,24 @@ __config_help__ = [{
     'type': 'str',
     'required': True
 }, {
-    'name': 'sp',
-    'help': 'controller port where sensor is located (1..X)',
-    'type': 'int',
-    'required': True
+    'name':
+    'sp',
+    'help':
+    'controller port where sensor is located (1..X), may be list',
+    'type':
+    'int|list:int',
+    'required':
+    True
 }]
 __get_help__ = []
 __set_help__ = []
 
 __help__ = """
 PHI for AKCP MD00 motion sensor, uses SNMP traps to set sensor status. EVA
-sensor should have "port" set to 1 in driver config or use ssp LPI.
+sensor should have "port" set to sp value in driver config or use ssp LPI.
+
+If only one port is specified, LPI "ssp" is automatically assigned to the
+default driver, otherwise LPI "sensor".
 
 PHI doesn't provide any control/monitoring functions.
 """
@@ -65,9 +72,15 @@ class PHI(GenericPHI):
         if info_only: return
         self.snmp_host, self.snmp_port = parse_host_port(
             self.phi_cfg.get('host'), 161)
+        self.sensor_port = self.phi_cfg.get('sp')
+        if self.sensor_port and not isinstance(self.sensor_port, list):
+            self.sensor_port = [self.sensor_port]
         try:
-            self.sensor_port = int(self.phi_cfg.get('sp'))
-            if self.sensor_port < 1: self.sensor_port = None
+            for i in range(len(self.sensor_port)):
+                self.sensor_port[i] = int(self.sensor_port[i]) - 1
+                if self.sensor_port[i] < 0:
+                    raise Exception('Sensor port can not be less than 1')
+                self.sensor_port[i] = str(self.sensor_port[i])
         except:
             self.sensor_port = None
         if not self.snmp_host:
@@ -76,6 +89,10 @@ class PHI(GenericPHI):
         if not self.sensor_port:
             self.log_error('no sensor port specified')
             self.ready = False
+        else:
+            print(self.sensor_port)
+            if len(self.sensor_port) > 1:
+                self.__lpi_default = 'sensor'
 
     def start(self):
         eva.traphandler.subscribe(self)
@@ -85,7 +102,7 @@ class PHI(GenericPHI):
 
     def process_snmp_trap(self, host, data):
         if host != self.snmp_host: return
-        if data.get('1.3.6.1.4.1.3854.1.7.4.0') != str(self.sensor_port - 1):
+        if data.get('1.3.6.1.4.1.3854.1.7.4.0') not in self.sensor_port:
             return
         d = data.get('1.3.6.1.4.1.3854.1.7.1.0')
         if d == '7':
