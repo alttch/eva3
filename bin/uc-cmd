@@ -132,7 +132,7 @@ class UC_CLI(GenericCLI):
             try:
                 params['p'], params['i'] = params['i'].split('.')
             except:
-                print("Invalid driver ID")
+                self.print_err("Invalid driver ID")
                 return 98
         return super().prepare_run(api_func, params, a)
 
