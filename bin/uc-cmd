@@ -597,6 +597,9 @@ cli = UC_CLI(_me)
 cli.product = 'uc'
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle']
+cli.arg_sections += [
+    'action', 'config', 'clone', 'device', 'phi', 'lpi', 'driver'
+]
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
