@@ -87,6 +87,9 @@ Property **type** may be:
 * **list:type** list of variables with type specified
 * **enum:type:a,b,c** list of the permitted specified type values
 
+If the property accepts multiple types, they should be listed via *or* (**|**)
+symbol.
+
 The last one variable is
 
 * **__help__**
