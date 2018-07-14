@@ -105,7 +105,10 @@ class UC_CLI(GenericCLI):
                 if 'phi' in d:
                     d['phi_mod'] = d['phi'].get('mod')
                     del d['phi']
-                    del d['phi']['help']
+                    try:
+                        del d['phi']['help']
+                    except:
+                        pass
             elif itype == 'phi':
                 if 'equipment' in d and isinstance(d['equipment'], list):
                     d['equipment'] = ', '.join(d['equipment'])

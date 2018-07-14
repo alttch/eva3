@@ -605,11 +605,14 @@ class UC_API(GenericAPI):
 
     def list_phi(self, k=None, full=False):
         if not apikey.check(k, master=True): return None
-        return eva.uc.driverapi.serialize_phi(full=full, config=full)
+        return sorted(eva.uc.driverapi.serialize_phi(full=full, config=full),
+            key=lambda k: k['id'])
 
     def list_drivers(self, k=None, full=False):
         if not apikey.check(k, master=True): return None
-        return eva.uc.driverapi.serialize_lpi(full=full, config=full)
+        return sorted(
+            eva.uc.driverapi.serialize_lpi(full=full, config=full),
+            key=lambda k: k['id'])
 
     def get_phi(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
