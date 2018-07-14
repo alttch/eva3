@@ -92,8 +92,10 @@ _always_json = ['get_config']
 
 class UC_CLI(GenericCLI):
 
-    def prepare_result_data(self, data, api_func, itype):
-        result = []
+    def prepare_result_data(self, data, api_func, api_func_full, itype):
+        result = super().prepare_result_data(data, api_func, api_func_full,
+                                             itype)
+        if itype not in ['action', 'driver', 'phi', 'lpi']: return result
         for d in data.copy():
             if itype == 'action':
                 d['time'] = datetime.fromtimestamp(
@@ -102,6 +104,7 @@ class UC_CLI(GenericCLI):
                 if 'phi' in d:
                     d['phi_mod'] = d['phi'].get('mod')
                     del d['phi']
+                    del d['phi']['help']
             elif itype == 'phi':
                 if 'equipment' in d and isinstance(d['equipment'], list):
                     d['equipment'] = ', '.join(d['equipment'])
@@ -156,7 +159,7 @@ class UC_CLI(GenericCLI):
         sp_state.add_argument(
             '-y',
             '--full',
-            help='full information about item',
+            help='Full information about item',
             dest='_full',
             action='store_true')
 
@@ -475,7 +478,7 @@ class UC_CLI(GenericCLI):
         sp_phi_list.add_argument(
             '-y',
             '--full',
-            help='full information about PHI',
+            help='Full information about PHI',
             dest='_full',
             action='store_true')
         sp_driver_list = sp_driver.add_parser(
@@ -483,7 +486,7 @@ class UC_CLI(GenericCLI):
         sp_driver_list.add_argument(
             '-y',
             '--full',
-            help='full information about driver',
+            help='Full information about driver',
             dest='_full',
             action='store_true')
 
