@@ -520,8 +520,8 @@ class GenericCLI(object):
                     print('q for quit')
                     print('k for key display/set (k. for key reset)')
                     print('t for timeout display/set (t. for timeout reset)')
-                    print('j for json mode (j. for normal mode)')
-                    print('d for API debug mode (d. for normal mode)')
+                    print('j for toggling json mode')
+                    print('d for toggling API debug mode')
                     print('sh for a system shell')
                     print('top for display system processes')
                     print('or command to execute')
@@ -529,17 +529,11 @@ class GenericCLI(object):
                     self.apikey = None
                     print('Key has been reset to default')
                 elif d[0] == 'j':
-                    self.in_json = True
-                    print('JSON mode on')
-                elif d[0] == 'j.':
-                    self.in_json = False
-                    print('JSON mode off')
+                    self.in_json = not self.in_json
+                    print('JSON mode ' + ('on' if self.in_json else 'off'))
                 elif d[0] == 'd':
-                    self.debug = True
-                    print('API debug mode on')
-                elif d[0] == 'd.':
-                    self.debug = False
-                    print('API debug mode off')
+                    self.debug = not self.debug
+                    print('API debug mode ' + ('on' if self.debug else 'off'))
                 elif d[0] == 't.':
                     self.timeout = self.default_timeout
                     print('timeout: %f' % self.timeout)
