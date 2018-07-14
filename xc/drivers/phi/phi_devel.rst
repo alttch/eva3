@@ -307,14 +307,16 @@ subscribed, so let's create it inside a primary class:
 
 .. code-block:: python
 
-    def process_snmp_trap(self, data):
+    def process_snmp_trap(self, host, data):
         #<your code>
 
-**data** is a dict with name/value pairs, where name is SNMP numeric OID
-without a first dot, and value is always a string. Check if this trap belongs
-to your device and perform the required actions. Don't worry about the timeout
-(except about the actual reaction time on a trap event) because every method is
-being executed in the own thread.
+**host** IP address of the host where SNMP trap is coming from.
+
+**data** a dict with name/value pairs, where name is SNMP numeric OID without a
+first dot, and value is always a string. Check if this trap belongs to your
+device and perform the required actions. Don't worry about the timeout (except
+about the actual reaction time on a trap event) because every method is being
+executed in the own thread.
 
 EVA traphandler doesn't care about the method return value and you must process
 all the errors by yourself.

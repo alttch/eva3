@@ -9,10 +9,10 @@ __equipment__ = ['AKCP THS00', 'AKCP THS01']
 __api__ = 1
 __required__ = ['port_get', 'value']
 __mods_required__ = []
-__features__ = ['port_get']
+__features__ = ['port_get', 'events']
 __config_help__ = [{
     'name': 'host',
-    'help': 'AKCP controller host/ip[:port]',
+    'help': 'AKCP controller ip[:port]',
     'type': 'str',
     'required': True
 }, {
@@ -120,16 +120,17 @@ class PHI(GenericPHI):
     def stop(self):
         eva.traphandler.unsubscribe(self)
 
-    def process_snmp_trap(self, data):
+    def process_snmp_trap(self, host, data):
+        if host != self.snmp_host: return
         if data.get('1.3.6.1.4.1.3854.1.7.4.0') != str(self.sensor_port - 1):
             return
         d = data.get('1.3.6.1.4.1.3854.1.7.1.0')
         if d == '7':
-            handle_phi_event(self, self.sensor_port, {'t': False, 'h': False})
+            handle_phi_event(self, ['t', 'h'], {'t': False, 'h': False})
         elif d == '2':
             t = self.get('t', timeout=get_timeout())
             h = self.get('h', timeout=get_timeout())
-            handle_phi_event(self, self.sensor_port, {'t': t, 'h': h})
+            handle_phi_event(self, ['t', 'h'], {'t': t, 'h': h})
         return
 
     def test(self, cmd=None):
