@@ -77,15 +77,18 @@ def log_get(logLevel=0, t=0, n=None):
     if n:
         max_entries = n
     else:
-        max_entries = -1
+        max_entries = 100
+    if max_entries > 10000: max_entries = 10000
     if t:
         _t = time.time() - t
     else:
         _t = 0
+    if logLevel is None: _ll = 0
+    else: _ll = logLevel
     for r in reversed(_log_records):
-        if r['t'] > _t and r['l'] >= logLevel:
+        if r['t'] > _t and r['l'] >= _ll:
             _lr = [r] + _lr
-            if n and len(_lr) >= n:
+            if len(_lr) >= max_entries:
                 break
     return _lr
 
