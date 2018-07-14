@@ -9,6 +9,7 @@ __equipment__ = ['AKCP THS00', 'AKCP THS01']
 __api__ = 1
 __required__ = ['port_get', 'value']
 __mods_required__ = []
+__lpi_default__ = 'sensor'
 __features__ = ['port_get', 'events']
 __config_help__ = [{
     'name': 'host',
@@ -72,6 +73,7 @@ class PHI(GenericPHI):
         self.__features = __features__
         self.__required = __required__
         self.__mods_required = __mods_required__
+        self.__lpi_default = __lpi_default__
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__

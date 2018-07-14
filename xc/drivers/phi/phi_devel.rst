@@ -37,8 +37,11 @@ the next fields are processed by controller, so make them exactly as required
  * **value** process item values
  * **action** unit actions
 
-* **__mods_required__**   required python modules (included neither in standard
+* **__mods_required__** required python modules (included neither in standard
   Python install nor in EVA ICS)
+
+* **__lpi_default__** if specified, the default driver will be created for this
+  PHI when loaded.
 
 * **__features__**      own features provided (list):
 
@@ -151,6 +154,7 @@ be serialized by parent class if requested:
         self.__features = __features__
         self.__required = __required__
         self.__mods_required = __mods_required__
+        self.__lpi_default = __lpi_default__
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__

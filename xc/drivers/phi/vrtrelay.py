@@ -9,6 +9,7 @@ __equipment__ = 'virtual'
 __api__ = 1
 __required__ = ['port_get', 'port_set']
 __mods_required__ = []
+__lpi_default__ = 'basic'
 __features__ = ['port_get', 'port_set', 'aao_set']
 __config_help__ = [{
     'name': 'default_status',
@@ -41,6 +42,7 @@ class PHI(GenericPHI):
         self.__features = __features__
         self.__required = __required__
         self.__mods_required = __mods_required__
+        self.__lpi_default = __lpi_default__
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__

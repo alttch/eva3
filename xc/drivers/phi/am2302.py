@@ -9,6 +9,7 @@ __equipment__ = ['DHT11', 'DHT22', 'AM2302']
 __api__ = 1
 __required__ = ['aao_get', 'value']
 __mods_required__ = 'Adafruit_DHT'
+__lpi_default__ = 'sensor'
 __features__ = ['aao_get']
 __config_help__ = [{
     'name': 'port',
@@ -57,6 +58,7 @@ class PHI(GenericPHI):
         self.__features = __features__
         self.__required = __required__
         self.__mods_required = __mods_required__
+        self.__lpi_default = __lpi_default__
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
