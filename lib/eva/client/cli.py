@@ -101,7 +101,8 @@ class GenericCLI(object):
 
     def print_json(self, obj):
         j = self.format_json(obj)
-        if not self.always_suppress_colors and not self.suppress_colors:
+        if not self.always_suppress_colors and not self.suppress_colors and \
+                sys.stdout.isatty():
             j = highlight(j, lexers.JsonLexer(), formatters.TerminalFormatter())
         print(j)
 
@@ -125,7 +126,9 @@ class GenericCLI(object):
         return prompt
 
     def colored(self, text, color=None, on_color=None, attrs=None):
-        if self.suppress_colors or self.always_suppress_colors: return text
+        if self.suppress_colors or self.always_suppress_colors or \
+                not sys.stdout.isatty():
+            return text
         return colored(text, color=color, on_color=on_color, attrs=attrs)
 
     def print_interactive_help(self):
