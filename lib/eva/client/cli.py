@@ -79,11 +79,42 @@ class GenericCLI(object):
         self.pd_idx = self.common_pd_idx
         self.common_fancy_tabsp = {'test': 14}
         self.fancy_tabsp = self.common_fancy_tabsp
-        self.ap = argparse.ArgumentParser(description=self.name)
+        self.batch_file = None
+        self.batch_stop_on_err = True
+        self.interactive = False
+        self.parse_primary_args()
+        if not self.interactive and not self.batch_file:
+            self.ap = argparse.ArgumentParser(description=self.name)
+        else:
+            self.ap = argparse.ArgumentParser(usage=argparse.SUPPRESS, prog='')
         self.add_primary_options()
         self.add_main_subparser()
         self.add_functions()
         self.load_argcomplete()
+
+    def parse_primary_args(self):
+        try:
+            o, a = getopt.getopt(
+                sys.argv[1:], 'U:K:T:I',
+                ['exec-batch=', 'pass-batch-err', 'interactive'])
+            for i, v in o:
+                if i == '--exec-batch':
+                    self.batch_file = v
+                elif i == '--pass-batch-err':
+                    self.batch_stop_on_err = False
+                elif i == '--interactive' or i == '-I':
+                    self.interactive = True
+                elif i == '-U':
+                    self.apiuri = v
+                elif i == '-K':
+                    self.apikey = v
+                elif i == '-T':
+                    try:
+                        self.timeout = float(v)
+                    except:
+                        pass
+        except:
+            pass
 
     def load_argcomplete(self):
         try:
@@ -467,26 +498,10 @@ class GenericCLI(object):
         return 0
 
     def run(self):
-        batch_file = None
-        stop_on_err = True
-        interactive = False
-        try:
-            o, a = getopt.getopt(
-                sys.argv[1:], 'I',
-                ['exec-batch=', 'pass-batch-err', 'interactive'])
-            for i, v in o:
-                if i == '--exec-batch':
-                    batch_file = v
-                elif i == '--pass-batch-err':
-                    stop_on_err = False
-                elif i == '--interactive' or i == '-I':
-                    interactive = True
-        except:
-            pass
-        if batch_file is not None:
+        if self.batch_file is not None:
             try:
-                if batch_file != 'stdin':
-                    cmds = [x.strip() for x in open(batch_file).readlines()]
+                if self.batch_file != 'stdin':
+                    cmds = [x.strip() for x in open(self.batch_file).readlines()]
                 else:
                     cmds = [x.strip() for x in sys.stdin]
                 for c in cmds:
@@ -496,14 +511,15 @@ class GenericCLI(object):
                     except:
                         code = 90
                     print()
-                    if code and stop_on_err: return code
+                    if code and self.batch_stop_on_err: return code
             except:
                 raise
                 print('Unable to open %s' % batch_file)
                 return 90
-        elif not interactive:
+        elif not self.interactive:
             return self.do_run()
         else:
+            # interactive mode
             while True:
                 d = ''
                 while d == '':
@@ -517,17 +533,33 @@ class GenericCLI(object):
                     print('Bye')
                     return 0
                 elif d[0] == '?':
-                    print('q for quit')
-                    print('k for key display/set (k. for key reset)')
-                    print('t for timeout display/set (t. for timeout reset)')
-                    print('j for toggling json mode')
-                    print('d for toggling API debug mode')
-                    print('sh for a system shell')
-                    print('top for display system processes')
+                    print('q: quit')
+                    print('a: show API params')
+                    print('k: key display/set (k. for key reset)')
+                    print('u: api uri display/set (u. for uri reset)')
+                    print('t: timeout display/set (t. for timeout reset)')
+                    print('j: toggle json mode')
+                    print('d: toggle API debug mode')
+                    print()
+                    print('sh: start system shell')
+                    print('top: display system processes')
+                    print('w: display uptime and who is online')
+                    print()
                     print('or command to execute')
+                elif d[0] == 'a':
+                    print('API uri: %s' % self.apiuri
+                          if self.apiuri is not None else '<default>')
+                    print('key: %s' % self.apikey
+                          if self.apikey is not None else '<default>')
+                    print('JSON mode ' + ('on' if self.in_json else 'off'))
+                    print('API debug mode ' + ('on' if self.debug else 'off'))
+                    print('timeout: %f' % self.timeout)
                 elif d[0] == 'k.':
                     self.apikey = None
                     print('Key has been reset to default')
+                elif d[0] == 'u.':
+                    self.apiuri = None
+                    print('API uri has been reset to default')
                 elif d[0] == 'j':
                     self.in_json = not self.in_json
                     print('JSON mode ' + ('on' if self.in_json else 'off'))
@@ -542,6 +574,11 @@ class GenericCLI(object):
                         self.apikey = d[1]
                     print('key: %s' % self.apikey
                           if self.apikey is not None else '<default>')
+                elif d[0] == 'u':
+                    if len(d) > 1:
+                        self.apiuri = d[1]
+                    print('API uri: %s' % self.apiuri
+                          if self.apiuri is not None else '<default>')
                 elif d[0] == 't':
                     if len(d) > 1:
                         try:
@@ -554,6 +591,11 @@ class GenericCLI(object):
                         os.system('top')
                     except:
                         print('Failed to run system "top" command')
+                elif d[0] == 'w':
+                    try:
+                        os.system('w')
+                    except:
+                        print('Failed to run system "w" command')
                 elif d[0] == 'sh':
                     print('Executing system shell')
                     shell = os.environ.get('SHELL')
@@ -574,6 +616,8 @@ class GenericCLI(object):
                         opts = []
                         if self.apikey is not None:
                             opts += ['-K', self.apikey]
+                        if self.apiuri is not None:
+                            opts += ['-U', self.apiuri]
                         if self.timeout is not None:
                             opts += ['-T', str(self.timeout)]
                         if self.in_json:
@@ -615,9 +659,9 @@ class GenericCLI(object):
         if not api_func:
             self.ap.print_help()
             return 99
-        self.apiuri = a._api_uri
+        apiuri = a._api_uri
         apikey = a._api_key
-        if not self.apiuri:
+        if not apiuri:
             try:
                 api = apiclient.APIClientLocal(self.product)
             except:
@@ -626,7 +670,7 @@ class GenericCLI(object):
                 return 98
         else:
             api = apiclient.APIClient()
-            api.set_uri(self.apiuri)
+            api.set_uri(apiuri)
             api.set_product(self.product)
         if apikey is not None:
             api.set_key(apikey)
