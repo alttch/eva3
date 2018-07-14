@@ -84,8 +84,8 @@ def print_json(obj):
 
 def parse_host_port(hp, default_port=None):
     if hp is None: return (None, default_port)
-    if hp.find(':') == -1: return (hp, default_port)
     try:
+        if hp.find(':') == -1: return (hp, default_port)
         host, port = hp.split(':')
         port = int(port)
     except:
