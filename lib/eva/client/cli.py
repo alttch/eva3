@@ -570,7 +570,7 @@ class GenericCLI(object):
                         os.system(shell)
                     except:
                         print('Failed to run system shell "%s"' % shell)
-                elif d[0] == 'h':
+                elif d[0] == 'h' or d[0] == 'help':
                     try:
                         self.do_run(['-h'])
                     except:
