@@ -12,10 +12,18 @@ import sys
 import os
 import shlex
 import readline
+import json
+import jsonpickle
 from datetime import datetime
 from eva.client import apiclient
-from eva.tools import print_json
 
+def print_json(obj):
+    print(format_json(obj))
+
+def format_json(obj, minimal=False, unpicklable=False):
+    return json.dumps(json.loads(jsonpickle.encode(obj,
+            unpicklable = unpicklable)), indent=4, sort_keys=True) \
+                if not minimal else jsonpickle.encode(obj, unpicklable = False)
 
 class GenericCLI(object):
 
@@ -32,6 +40,7 @@ class GenericCLI(object):
         self.pd = None
         self.argcomplete = None
         self.product = None
+        self.prompt = None
         self.ssl_verify = False
         self.always_json = []
         self.always_print = ['cmd']
@@ -92,6 +101,12 @@ class GenericCLI(object):
         self.add_main_subparser()
         self.add_functions()
         self.load_argcomplete()
+
+    def get_prompt(self):
+        if self.prompt: return self.prompt
+        prompt = '> '
+        if self.product: prompt = '[%s] %s' % (self.product, prompt)
+        return prompt
 
     def parse_primary_args(self):
         try:
@@ -510,7 +525,7 @@ class GenericCLI(object):
                 else:
                     cmds = [x.strip() for x in sys.stdin]
                 for c in cmds:
-                    print('>> ' + c)
+                    print(self.get_prompt() + c)
                     try:
                         code = self.do_run(shlex.split(c))
                     except:
@@ -518,7 +533,6 @@ class GenericCLI(object):
                     print()
                     if code and self.batch_stop_on_err: return code
             except:
-                raise
                 print('Unable to open %s' % batch_file)
                 return 90
         elif not self.interactive:
@@ -529,7 +543,7 @@ class GenericCLI(object):
                 d = ''
                 while d == '':
                     try:
-                        d = shlex.split(input('>> '))
+                        d = shlex.split(input(self.get_prompt()))
                     except:
                         print()
                         print('Bye')
