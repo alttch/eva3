@@ -347,7 +347,7 @@ def unload_phi(phi_id):
                 logging.error(
                     'Unable to unload PHI %s, it is in use by driver %s' %
                     (phi_id, k))
-            err = True
+                err = True
     if items_by_phi[phi_id]:
         logging.error('Unable to unload PHI %s, it is in use' % (phi_id))
         err = True
