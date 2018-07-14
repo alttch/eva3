@@ -270,13 +270,16 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
         logging.error('unable to init PHI mod %s' % phi_mod_id)
         return False
     phi.phi_id = phi_id
-    phi.oid = 'phi:uc/%s/%s' % ( eva.core.system_name, phi_id )
+    phi.oid = 'phi:uc/%s/%s' % (eva.core.system_name, phi_id)
     if phi_id in phis:
         phis[phi_id].stop()
     phis[phi_id] = phi
     if not phi_id in items_by_phi:
         items_by_phi[phi_id] = set()
     if start: phi.start()
+    ld = phi.get_default_lpi()
+    if ld:
+        load_driver('default', ld, phi_id, start=True)
     return phi
 
 
@@ -322,7 +325,7 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
         return False
     lpi.lpi_id = lpi_id
     lpi.driver_id = phi_id + '.' + lpi_id
-    lpi.oid = 'driver:uc/%s/%s' % ( eva.core.system_name, lpi.driver_id)
+    lpi.oid = 'driver:uc/%s/%s' % (eva.core.system_name, lpi.driver_id)
     if lpi.driver_id in drivers:
         drivers[lpi.driver_id].stop()
     drivers[lpi.driver_id] = lpi
@@ -336,8 +339,14 @@ def unload_phi(phi_id):
     err = False
     for k, l in drivers.copy().items():
         if l.phi_id == phi_id:
-            logging.error('Unable to unload PHI %s, it is in use by driver %s' %
-                          (phi_id, k))
+            if l.lpi_id == 'default':
+                ru = unload_driver(l.driver_id)
+            else:
+                ru = False
+            if not ru:
+                logging.error(
+                    'Unable to unload PHI %s, it is in use by driver %s' %
+                    (phi_id, k))
             err = True
     if items_by_phi[phi_id]:
         logging.error('Unable to unload PHI %s, it is in use' % (phi_id))

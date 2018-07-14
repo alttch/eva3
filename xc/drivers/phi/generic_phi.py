@@ -101,6 +101,9 @@ class PHI(object):
     def stop(self):
         return True
 
+    def get_default_lpi(self):
+        return self.__lpi_default
+
     def serialize(self, full=False, config=False, helpinfo=None):
         d = {}
         if helpinfo:
@@ -127,6 +130,7 @@ class PHI(object):
             d['version'] = self.__version
             d['api'] = self.__api_version
             d['oid'] = self.oid
+            d['lpi_default'] = self.__lpi_default
             d['equipment'] = self.__equipment if \
                     isinstance(self.__equipment, list) else [self.__equipment]
             d['features'] = self.__features
