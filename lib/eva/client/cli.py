@@ -547,10 +547,10 @@ class GenericCLI(object):
                     print()
                     print('or command to execute')
                 elif d[0] == 'a':
-                    print('API uri: %s' % self.apiuri
-                          if self.apiuri is not None else '<default>')
-                    print('key: %s' % self.apikey
-                          if self.apikey is not None else '<default>')
+                    print('API uri: %s' % (self.apiuri
+                          if self.apiuri is not None else '<default>'))
+                    print('key: %s' % (self.apikey
+                          if self.apikey is not None else '<default>'))
                     print('JSON mode ' + ('on' if self.in_json else 'off'))
                     print('API debug mode ' + ('on' if self.debug else 'off'))
                     print('timeout: %f' % self.timeout)
