@@ -120,7 +120,7 @@ class GenericCLI(object):
         if self.product:
             prompt = '[%s%s] %s' % (colored(
                 self.product, 'green', attrs=['bold']),
-                                     colored(h, 'blue', attrs=['bold']), prompt)
+                                    colored(h, 'blue', attrs=['bold']), prompt)
         return prompt
 
     def print_interactive_help(self):
@@ -173,6 +173,9 @@ class GenericCLI(object):
 
     def print_err(self, s):
         print(colored(s, color='red', attrs=[]))
+
+    def print_debug(self, s):
+        print(colored(s, color='grey', attrs=['bold']))
 
     def get_log_level_name(self, level):
         l = self.log_levels.get(level)
@@ -347,7 +350,9 @@ class GenericCLI(object):
                 if idxcol == 'time':
                     df.index = self.pd.to_datetime(df.index, utc=False)
                 out = df.fillna(' ').to_string().split('\n')
-                print(colored(idxcol + out[0][len(idxcol):] , color='green', attrs=[]))
+                print(
+                    colored(
+                        idxcol + out[0][len(idxcol):], color='green', attrs=[]))
                 print(colored('-' * len(out[0]), color='grey'))
                 for o in out[2:]:
                     s = re.sub('^NaN', '   ', o)
@@ -602,7 +607,6 @@ class GenericCLI(object):
                     try:
                         d = shlex.split(input(self.get_prompt()))
                     except:
-                        raise
                         print()
                         print('Bye')
                         return 0
@@ -658,7 +662,8 @@ class GenericCLI(object):
                             '/usr/bin/htop') else 'top'
                         os.system(top)
                     except:
-                        self.print_err('Failed to run system "%s" command' % top)
+                        self.print_err(
+                            'Failed to run system "%s" command' % top)
                 elif d[0] == 'w':
                     try:
                         os.system('w')
@@ -673,7 +678,8 @@ class GenericCLI(object):
                     try:
                         os.system(shell)
                     except:
-                       self.print_err('Failed to run system shell "%s"' % shell)
+                        self.print_err(
+                            'Failed to run system shell "%s"' % shell)
                 elif d[0] in ['?', 'h', 'help']:
                     self.print_interactive_help()
                     try:
@@ -694,7 +700,7 @@ class GenericCLI(object):
                         if self.debug:
                             opts += ['-D']
                         code = self.do_run(opts + d)
-                        if self.debug: print('\nCode: %s' % code)
+                        if self.debug: self.print_debug('\nCode: %s' % code)
                     except:
                         pass
         return 0
@@ -759,10 +765,10 @@ class GenericCLI(object):
         if code: return code
         timeout = a._timeout
         if debug:
-            print('API:', api._uri)
-            print('API func:', api_func)
-            print('timeout:', timeout)
-            print('params', params)
+            self.print_debug('API: %s' % api._uri)
+            self.print_debug('API func: %s' % api_func)
+            self.print_debug('timeout: %s' % timeout)
+            self.print_debug('params %s' % params)
         code, result = api.call(api_func, params, timeout, _debug=debug)
         if code != apiclient.result_ok and \
             code != apiclient.result_func_failed:
@@ -787,7 +793,7 @@ class GenericCLI(object):
             elif code == apiclient.result_invalid_params:
                 self.print_err('Error: invalid params')
             if debug:
-                print('API result code: %u' % code)
+                self.print_debug('API result code: %u' % code)
             return code
         else:
             if a._json or api_func in self.always_json:
@@ -812,7 +818,7 @@ class GenericCLI(object):
             self.print_err('FAILED')
             return code
         elif 'result' in result and api_func != 'test':
-            if result['result'] !='ERROR':
+            if result['result'] != 'ERROR':
                 print(result['result'])
             else:
                 self.print_err('FAILED')
