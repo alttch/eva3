@@ -20,19 +20,6 @@ from eva.client import apiclient
 from pygments import highlight, lexers, formatters
 
 
-def print_json(obj):
-    print(
-        highlight(
-            format_json(obj), lexers.JsonLexer(),
-            formatters.TerminalFormatter()))
-
-
-def format_json(obj, minimal=False, unpicklable=False):
-    return json.dumps(json.loads(jsonpickle.encode(obj,
-            unpicklable = unpicklable)), indent=4, sort_keys=True) \
-                if not minimal else jsonpickle.encode(obj, unpicklable = False)
-
-
 class GenericCLI(object):
 
     def __init__(self, name):
@@ -47,6 +34,8 @@ class GenericCLI(object):
         self.apiuri = None
         self.api_func = None
         self.in_json = False
+        self.suppress_colors = False
+        self.always_suppress_colors = False
         self.default_timeout = 10
         self.timeout = self.default_timeout
         self.ssl_verify = False
@@ -110,6 +99,18 @@ class GenericCLI(object):
         self.add_functions()
         self.load_argcomplete()
 
+    def print_json(self, obj):
+        j = self.format_json(obj)
+        if not self.always_suppress_colors and not self.suppress_colors:
+            j = highlight(j, lexers.JsonLexer(), formatters.TerminalFormatter())
+        print(j)
+
+    def format_json(self, obj, minimal=False, unpicklable=False):
+        return json.dumps(json.loads(jsonpickle.encode(obj,
+                unpicklable = unpicklable)), indent=4, sort_keys=True) \
+                    if not minimal else \
+                    jsonpickle.encode(obj, unpicklable = False)
+
     def get_prompt(self):
         if self.prompt: return self.prompt
         prompt = '> '
@@ -118,10 +119,14 @@ class GenericCLI(object):
         else:
             h = ''
         if self.product:
-            prompt = '[%s%s] %s' % (colored(
-                self.product, 'green', attrs=['bold']),
-                                    colored(h, 'blue', attrs=['bold']), prompt)
+            prompt = '[%s%s] %s' % (
+                self.colored(self.product, 'green', attrs=['bold']),
+                self.colored(h, 'blue', attrs=['bold']), prompt)
         return prompt
+
+    def colored(self, text, color=None, on_color=None, attrs=None):
+        if self.suppress_colors or self.always_suppress_colors: return text
+        return colored(text, color=color, on_color=on_color, attrs=attrs)
 
     def print_interactive_help(self):
         print('q: quit')
@@ -130,6 +135,7 @@ class GenericCLI(object):
         print('u: api uri display/set (u. for uri reset)')
         print('t: timeout display/set (t. for timeout reset)')
         print('j: toggle json mode')
+        print('r: toggle raw mode (no colors)')
         print('d: toggle client debug mode')
         print()
         print('sh: start system shell')
@@ -142,7 +148,7 @@ class GenericCLI(object):
     def parse_primary_args(self):
         try:
             o, a = getopt.getopt(
-                sys.argv[1:], 'U:K:T:JI',
+                sys.argv[1:], 'U:K:T:JIR',
                 ['exec-batch=', 'pass-batch-err', 'interactive'])
             for i, v in o:
                 if i == '--exec-batch':
@@ -157,6 +163,8 @@ class GenericCLI(object):
                     self.apikey = v
                 elif i == '-J':
                     self.in_json = True
+                elif i == '-R':
+                    self.always_suppress_colors = True
                 elif i == '-T':
                     try:
                         self.timeout = float(v)
@@ -172,10 +180,10 @@ class GenericCLI(object):
             pass
 
     def print_err(self, s):
-        print(colored(s, color='red', attrs=[]))
+        print(self.colored(s, color='red', attrs=[]))
 
     def print_debug(self, s):
-        print(colored(s, color='grey', attrs=['bold']))
+        print(self.colored(s, color='grey', attrs=['bold']))
 
     def get_log_level_name(self, level):
         l = self.log_levels.get(level)
@@ -190,13 +198,13 @@ class GenericCLI(object):
 
     def format_log_str(self, s):
         if s.find(' DEBUG ') != -1:
-            return colored(s, color='grey', attrs=['bold'])
+            return self.colored(s, color='grey', attrs=['bold'])
         if s.find(' WARNING ') != -1:
-            return colored(s, color='yellow', attrs=[])
+            return self.colored(s, color='yellow', attrs=[])
         if s.find(' ERROR ') != -1:
-            return colored(s, color='red', attrs=[])
+            return self.colored(s, color='red', attrs=[])
         if s.find(' CRITICAL ') != -1:
-            return colored(s, color='red', attrs=['bold'])
+            return self.colored(s, color='red', attrs=['bold'])
         return s
 
     def add_primary_options(self):
@@ -220,14 +228,21 @@ class GenericCLI(object):
         self.ap.add_argument(
             '-J',
             '--json',
-            help='print result as JSON',
+            help='Print result as JSON',
             action='store_true',
             dest='_json',
             default=False)
         self.ap.add_argument(
+            '-R',
+            '--raw-output',
+            help='Print raw result (no colors)',
+            action='store_true',
+            dest='_raw',
+            default=False)
+        self.ap.add_argument(
             '-D',
             '--debug',
-            help='enable debug messages',
+            help='Enable debug messages',
             action='store_true',
             dest='_debug',
             default=False)
@@ -295,14 +310,21 @@ class GenericCLI(object):
                 elif v != 'result':
                     if isinstance(result[v], dict):
                         if tab:
-                            print(' ' * (tab * tabsp), end='>' * tab + ' ')
-                        print(("{:>%u} : {}" % max(map(len, result))).format(
-                            v, ''))
+                            print(
+                                ' ' * (tab * tabsp),
+                                end=self.colored('>' * tab) + ' ')
+                        print(((self.colored(
+                            '{:>%u} ', color='blue', attrs=['bold']) +
+                                self.colored(':') + self.colored(
+                                    '  {}', color='yellow')) % max(
+                                        map(len, result))).format(v, ''))
                         self.fancy_print_result(result[v], api_func,
                                                 api_func_full, itype, tab + 1)
                     else:
                         if tab:
-                            print(' ' * (tab * tabsp), end='>' * tab + ' ')
+                            print(
+                                ' ' * (tab * tabsp),
+                                end=self.colored('>' * tab) + ' ')
                         if isinstance(result[v], list):
                             _r = []
                             for vv in result[v]:
@@ -310,21 +332,24 @@ class GenericCLI(object):
                             _v = ', '.join(_r)
                         else:
                             _v = result[v]
-                        print(("{:>%u} : {}" % max(map(len, result))).format(
-                            v, _v))
+                        print(((self.colored(
+                            '{:>%u} ', color='blue', attrs=['bold']) +
+                                self.colored(':') + self.colored(
+                                    ' {}', color='yellow')) % max(
+                                        map(len, result))).format(v, _v))
                     rprinted = True
             if h:
-                print('-' * 81)
+                print(self.colored('-' * 81, color='grey'))
                 print(h.strip())
                 rprinted = True
             if out:
-                print('-' * 81)
+                print(self.colored('-' * 81, color='grey'))
                 print('OUTPUT:')
                 print(out.strip())
                 rprinted = True
             if err:
-                print('-' * 81)
-                print('ERROR:')
+                print(self.colored('-' * 81, color='grey'))
+                print_err('ERROR:')
                 print(err.strip())
                 rprinted = True
             if not rprinted and not tab:
@@ -351,9 +376,9 @@ class GenericCLI(object):
                     df.index = self.pd.to_datetime(df.index, utc=False)
                 out = df.fillna(' ').to_string().split('\n')
                 print(
-                    colored(
-                        idxcol + out[0][len(idxcol):], color='green', attrs=[]))
-                print(colored('-' * len(out[0]), color='grey'))
+                    self.colored(
+                        idxcol + out[0][len(idxcol):], color='blue', attrs=[]))
+                print(self.colored('-' * len(out[0]), color='grey'))
                 for o in out[2:]:
                     s = re.sub('^NaN', '   ', o)
                     if api_func == 'log_get': s = self.format_log_str(s)
@@ -632,6 +657,11 @@ class GenericCLI(object):
                 elif d[0] == 'j':
                     self.in_json = not self.in_json
                     print('JSON mode ' + ('on' if self.in_json else 'off'))
+                elif d[0] == 'r':
+                    self.always_suppress_colors = \
+                            not self.always_suppress_colors
+                    print('Raw mode ' +
+                          ('on' if self.always_suppress_colors else 'off'))
                 elif d[0] == 'd':
                     self.debug = not self.debug
                     print('Client debug mode ' +
@@ -706,6 +736,7 @@ class GenericCLI(object):
         return 0
 
     def do_run(self, args=None):
+        self.suppress_colors = False
         if self.argcomplete:
             self.argcomplete.autocomplete(self.ap)
         try:
@@ -713,6 +744,7 @@ class GenericCLI(object):
         except:
             return 99
         params = vars(a).copy()
+        if a._raw: self.suppress_colors = True
         itype = a._type
         for p in params.copy().keys():
             if p[0] == '_':
@@ -797,7 +829,7 @@ class GenericCLI(object):
             return code
         else:
             if a._json or api_func in self.always_json:
-                print_json(result)
+                self.print_json(result)
                 if 'result' in result and result['result'] == 'ERROR':
                     return apiclient.result_func_failed
             else:
@@ -844,6 +876,6 @@ class GenericCLI(object):
         df = df.set_index(time_field)
         df.index = self.pd.to_datetime(df.index, utc=False)
         out = df.to_string().split('\n')
-        print(colored('time' + out[0][4:], color='green', attrs=[]))
-        print(colored('-' * len(out[0]), color='grey'))
+        print(self.colored('time' + out[0][4:], color='blue', attrs=[]))
+        print(self.colored('-' * len(out[0]), color='grey'))
         [print(o) for o in out[2:]]
