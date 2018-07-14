@@ -531,7 +531,6 @@ class GenericCLI(object):
                     try:
                         d = shlex.split(input('>> '))
                     except:
-                        raise
                         print('Bye')
                         return 0
                 if d[0] in ['q', 'quit', 'exit', 'bye']:
