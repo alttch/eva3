@@ -462,6 +462,8 @@ class GenericCLI(object):
                 return 97
         elif api_func == 'log_get':
             params['l'] = self.get_log_level_code(params['l'])
+            if params.get('n') is None:
+                params['n'] = 50
         return 0
 
     def run(self):
