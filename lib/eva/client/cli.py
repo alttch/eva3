@@ -4,8 +4,13 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.0"
 
 import argparse
+# to be compatible with argcomplete
+import getopt
 import importlib
 import re
+import sys
+import os
+import shlex
 from datetime import datetime
 from eva.client import apiclient
 from eva.tools import print_json
@@ -15,12 +20,13 @@ class GenericCLI(object):
 
     def __init__(self, name):
 
-        self.timeout = None
         self.apikey = None
         self.apiuri = None
         self.api_func = None
         self.debug = False
+        self.in_json = False
         self.default_timeout = 10
+        self.timeout = self.default_timeout
         self.name = name
         self.pd = None
         self.argcomplete = None
@@ -401,7 +407,131 @@ class GenericCLI(object):
                 return 97
         return 0
 
-    def run(self, args=None):
+    def run(self):
+        batch_file = None
+        stop_on_err = True
+        interactive = False
+        try:
+            o, a = getopt.getopt(
+                sys.argv[1:], '',
+                ['exec-batch=', 'pass-batch-err', 'interactive'])
+            for i, v in o:
+                if i == '--exec-batch':
+                    batch_file = v
+                elif i == '--pass-batch-err':
+                    stop_on_err = False
+                elif i == '--interactive':
+                    interactive = True
+        except:
+            pass
+        if batch_file is not None:
+            try:
+                if batch_file != 'stdin':
+                    cmds = [x.strip() for x in open(batch_file).readlines()]
+                else:
+                    cmds = [x.strip() for x in sys.stdin]
+                for c in cmds:
+                    print('>> ' + c)
+                    try:
+                        code = self.do_run(shlex.split(c))
+                    except:
+                        code = 90
+                    print()
+                    if code and stop_on_err: return code
+            except:
+                raise
+                print('Unable to open %s' % batch_file)
+                return 90
+        elif not interactive:
+            return self.do_run()
+        else:
+            while True:
+                d = ''
+                while d == '':
+                    try: d = shlex.split(input('>> '))
+                    except:
+                        raise
+                        print('Bye')
+                        return 0
+                if d[0] in ['q', 'quit', 'exit', 'bye']:
+                    print('Bye')
+                    return 0
+                elif d[0] == '?':
+                    print('q for quit')
+                    print('k for key display/set (k. for key reset)')
+                    print('t for timeout display/set (t. for timeout reset)')
+                    print('j for json mode (j. for normal mode)')
+                    print('d for API debug mode (d. for normal mode)')
+                    print('sh for a system shell')
+                    print('top for display system processes')
+                    print('or command to execute')
+                elif d[0] == 'k.':
+                    self.apikey = None
+                    print('Key has been reset to default')
+                elif d[0] == 'j':
+                    self.in_json = True
+                    print('JSON mode on')
+                elif d[0] == 'j.':
+                    self.in_json = False
+                    print('JSON mode off')
+                elif d[0] == 'd':
+                    self.debug = True
+                    print('API debug mode on')
+                elif d[0] == 'd.':
+                    self.debug = False
+                    print('API debug mode off')
+                elif d[0] == 't.':
+                    self.timeout = self.default_timeout
+                    print('timeout: %f' % self.timeout)
+                elif d[0] == 'k':
+                    if len(d) > 1:
+                        self.apikey = d[1]
+                    print('key: %s' % self.apikey if self.apikey is not None else '<default>')
+                elif d[0] == 't':
+                    if len(d) > 1:
+                        try:
+                            self.timeout = float(d[1])
+                        except:
+                            print('Failed')
+                    print('timeout: %f' % self.timeout)
+                elif d[0] == 'top':
+                    try:
+                        os.system('top')
+                    except:
+                        print('Failed to run system "top" command')
+                elif d[0] == 'sh':
+                    print ('Executing system shell')
+                    shell = os.environ.get('SHELL')
+                    if shell is None:
+                        if os.path.isfile('/bin/bash'): shell = '/bin/bash'
+                        else: shell = 'sh'
+                    try:
+                        os.system(shell)
+                    except:
+                        print('Failed to run system shell "%s"' % shell)
+                elif d[0] == 'h':
+                    try:
+                        self.do_run(['-h'])
+                    except:
+                        pass
+                else:
+                    try:
+                        opts = []
+                        if self.apikey is not None:
+                            opts += ['-K', self.apikey]
+                        if self.timeout is not None:
+                            opts += ['-T', str(self.timeout)]
+                        if self.in_json:
+                            opts += ['-J']
+                        if self.debug:
+                            opts += ['-D']
+                        code = self.do_run(opts + d)
+                        if self.debug: print('\nCode: %s' % code)
+                    except:
+                        pass
+        return 0
+
+    def do_run(self, args=None):
         if self.argcomplete:
             self.argcomplete.autocomplete(self.ap)
         try:
@@ -424,14 +554,14 @@ class GenericCLI(object):
             try:
                 self.ap.parse_args([itype, '--help'])
             except:
-                return 99
+                return 96
         debug = a._debug
         api_func = self.get_api_func(itype, func)
         if not api_func:
             self.ap.print_help()
             return 99
         self.apiuri = a._api_uri
-        self.apikey = a._api_key
+        apikey = a._api_key
         if not self.apiuri:
             try:
                 api = apiclient.APIClientLocal(self.product)
@@ -443,8 +573,8 @@ class GenericCLI(object):
             api = apiclient.APIClient()
             api.set_uri(self.apiuri)
             api.set_product(self.product)
-        if self.apikey is not None:
-            api.set_key(self.apikey)
+        if apikey is not None:
+            api.set_key(apikey)
         api.ssl_verify(self.ssl_verify)
         if hasattr(a, '_full') and a._full:
             params['full'] = 1
@@ -457,13 +587,13 @@ class GenericCLI(object):
             params['save'] = 1
         code = self.prepare_run(api_func, params, a)
         if code: return code
-        self.timeout = a._timeout
+        timeout = a._timeout
         if debug:
             print('API:', api._uri)
             print('API func:', api_func)
-            print('timeout:', self.timeout)
+            print('timeout:', timeout)
             print('params', params)
-        code, result = api.call(api_func, params, self.timeout, _debug=debug)
+        code, result = api.call(api_func, params, timeout, _debug=debug)
         if code != apiclient.result_ok and \
             code != apiclient.result_func_failed:
             if code == apiclient.result_not_found:
@@ -507,7 +637,8 @@ class GenericCLI(object):
             except:
                 print('FAILED')
                 return 95
-        elif code == apiclient.result_func_failed and api_func not in self.always_print:
+        elif code == apiclient.result_func_failed and \
+                api_func not in self.always_print:
             print('FAILED')
             return code
         elif 'result' in result and api_func != 'test':
