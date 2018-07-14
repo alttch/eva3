@@ -192,16 +192,20 @@ class GenericCLI(object):
             dest='_type', metavar='command', help='command or type')
 
     def set_api_functions(self, fn_table={}):
-        self.api_functions = {**self.common_api_functions, **fn_table}
+        self.api_functions = self.common_api_functions.copy()
+        self.api_functions.update(fn_table)
 
     def set_pd_cols(self, pd_cols={}):
-        self.pd_cols = {**self.common_pd_cols, **pd_cols}
+        self.pd_cols = self.common_pd_cols.copy()
+        self.pd_cols.update(pd_cols)
 
     def set_pd_idx(self, pd_idx={}):
-        self.pd_idx = {**self.common_pd_idx, **pd_idx}
+        self.pd_idx = self.common_pd_idx.copy()
+        self.pd_idx.update(pd_idx)
 
     def set_fancy_tabsp(self, fancy_tabsp={}):
-        self.fancy_tabsp = {**self.common_fancy_tabsp, **fancy_tabsp}
+        self.fancy_tabsp =self.common_fancy_tabsp.copy()
+        self.fancy_tabsp.update(fancy_tabsp)
 
     def get_api_func(self, itype, func):
         if func is None:
