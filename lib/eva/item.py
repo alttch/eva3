@@ -844,7 +844,7 @@ class UpdatableItem(Item):
             return False
         return self.update_set_state(status, value, force_virtual=True)
 
-    def process_snmp_trap(self, data):
+    def process_snmp_trap(self, host, data):
         if not self.snmp_trap: return
         try:
             if 'ident_vars' in self.snmp_trap:

@@ -95,11 +95,11 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
             return
     data = {}
     for name, val in varBinds:
-        logging.debug('snmp trap data %s = %s' % \
-                (name.prettyPrint(), val.prettyPrint()))
+        logging.debug('snmp trap host: %s, data %s = %s' % \
+                (host, name.prettyPrint(), val.prettyPrint()))
         data[name.prettyPrint()] = val.prettyPrint()
     for i in subscribed_items:
-        t = threading.Thread(target=i.process_snmp_trap, args=(data,))
+        t = threading.Thread(target=i.process_snmp_trap, args=(host, data))
         t.start()
 
 
