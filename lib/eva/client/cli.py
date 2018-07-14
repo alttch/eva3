@@ -472,14 +472,14 @@ class GenericCLI(object):
         interactive = False
         try:
             o, a = getopt.getopt(
-                sys.argv[1:], '',
+                sys.argv[1:], 'I',
                 ['exec-batch=', 'pass-batch-err', 'interactive'])
             for i, v in o:
                 if i == '--exec-batch':
                     batch_file = v
                 elif i == '--pass-batch-err':
                     stop_on_err = False
-                elif i == '--interactive':
+                elif i == '--interactive' or i == '-I':
                     interactive = True
         except:
             pass
