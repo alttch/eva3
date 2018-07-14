@@ -7,6 +7,7 @@ import argparse
 # to be compatible with argcomplete
 import getopt
 import importlib
+import configparser
 import re
 import sys
 import os
@@ -22,13 +23,12 @@ from pygments import highlight, lexers, formatters
 
 class GenericCLI(object):
 
-    def __init__(self, name):
-
+    def __init__(self, product, name):
         self.debug = False
         self.name = name
+        self.product = product
         self.pd = None
         self.argcomplete = None
-        self.product = None
         self.prompt = None
         self.apikey = None
         self.apiuri = None
@@ -150,9 +150,10 @@ class GenericCLI(object):
 
     def parse_primary_args(self):
         try:
-            o, a = getopt.getopt(
-                sys.argv[1:], 'U:K:T:JIR',
-                ['exec-batch=', 'pass-batch-err', 'interactive'])
+            o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T:JIR', [
+                'client-ini-file=', 'exec-batch=', 'pass-batch-err',
+                'interactive'
+            ])
             for i, v in o:
                 if i == '--exec-batch':
                     self.batch_file = v
@@ -173,8 +174,50 @@ class GenericCLI(object):
                         self.timeout = float(v)
                     except:
                         pass
+                elif i == '-F' or i == '--client-ini-file':
+                    c = self.parse_ini(v)
+                    if 'uri' in c: self.apiuri = c.get('uri')
+                    if 'key' in c: self.apikey = c.get('key')
+                    if 'timeout' in c: self.timeout = c.get('timeout')
+                    if 'debug' in c: self.debug = c.get('debug')
+                    if 'json' in c: self.in_json = c.get('json')
+                    if 'raw' in c: self.always_suppress_colors = c.get('raw')
         except:
             pass
+
+    def parse_ini(self, fname):
+        cfg = configparser.ConfigParser(inline_comment_prefixes=';')
+        result = {}
+        try:
+            cfg.readfp(open(fname))
+        except:
+            self.print_err('unable to open %s' % fname)
+            return {}
+        try:
+            result['uri'] = cfg.get(self.product, 'uri')
+        except:
+            pass
+        try:
+            result['key'] = cfg.get(self.product, 'key')
+        except:
+            pass
+        try:
+            result['timeout'] = float(cfg.get(self.product, 'timeout'))
+        except:
+            pass
+        try:
+            result['debug'] = cfg.get(self.product, 'debug') == 'yes'
+        except:
+            pass
+        try:
+            result['json'] = cfg.get(self.product, 'json') == 'yes'
+        except:
+            pass
+        try:
+            result['raw'] = cfg.get(self.product, 'raw') == 'yes'
+        except:
+            pass
+        return result
 
     def load_argcomplete(self):
         try:
@@ -225,7 +268,6 @@ class GenericCLI(object):
             '--api-timeout',
             help='API request timeout (in seconds)',
             type=float,
-            default=self.default_timeout,
             dest='_timeout',
             metavar='TIMEOUT')
         self.ap.add_argument(
@@ -249,6 +291,12 @@ class GenericCLI(object):
             action='store_true',
             dest='_debug',
             default=False)
+        self.ap.add_argument(
+            '-F',
+            '--client-ini-file',
+            help='Read API client options from config file',
+            dest='_ini_file',
+            metavar='FILE')
 
     def add_main_subparser(self):
         self.sp = self.ap.add_subparsers(
@@ -747,7 +795,6 @@ class GenericCLI(object):
         except:
             return 99
         params = vars(a).copy()
-        if a._raw: self.suppress_colors = True
         itype = a._type
         for p in params.copy().keys():
             if p[0] == '_':
@@ -764,13 +811,34 @@ class GenericCLI(object):
                 self.ap.parse_args([itype, '--help'])
             except:
                 return 96
-        debug = a._debug
+        if hasattr(a, '_ini_file') and a._ini_file:
+            c = self.parse_ini(a._ini_file)
+        else:
+            c = {}
+        if 'raw' in c:
+            self.suppress_colors = c.get('raw')
+        else:
+            self.suppress_colors = a._raw
+        if 'debug' in c:
+            debug = c.get('debug')
+        else:
+            debug = False
+        if a._debug: debug = a._debug
         api_func = self.get_api_func(itype, func)
         if not api_func:
             self.ap.print_help()
             return 99
-        apiuri = a._api_uri
-        apikey = a._api_key
+        if 'uri' in c:
+            apiuri = c.get('uri')
+        else:
+            apiuri = None
+        if a._api_uri: apiuri = a._api_uri
+        if 'key' in c:
+            apikey = c.get('key')
+        else:
+            apikey = None
+        if a._api_key:
+            apikey = a._api_key
         if not apiuri:
             try:
                 api = apiclient.APIClientLocal(self.product)
@@ -798,7 +866,11 @@ class GenericCLI(object):
             params['save'] = 1
         code = self.prepare_run(api_func, params, a)
         if code: return code
-        timeout = a._timeout
+        if 'timeout' in c:
+            timeout = c.get('timeout')
+        else:
+            timeout = self.default_timeout
+        if a._timeout: timeout = a._timeout
         if debug:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)
@@ -831,7 +903,7 @@ class GenericCLI(object):
                 self.print_debug('API result code: %u' % code)
             return code
         else:
-            if a._json or api_func in self.always_json:
+            if c.get('json') or a._json or api_func in self.always_json:
                 self.print_json(result)
                 if 'result' in result and result['result'] == 'ERROR':
                     return apiclient.result_func_failed

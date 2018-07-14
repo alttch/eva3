@@ -600,8 +600,7 @@ class UC_CLI(GenericCLI):
             choices=['cfg', 'action', 'update'])
 
 
-cli = UC_CLI(_me)
-cli.product = 'uc'
+cli = UC_CLI('uc', _me)
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle']
 cli.arg_sections += [
