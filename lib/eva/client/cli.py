@@ -95,7 +95,7 @@ class GenericCLI(object):
     def parse_primary_args(self):
         try:
             o, a = getopt.getopt(
-                sys.argv[1:], 'U:K:T:I',
+                sys.argv[1:], 'U:K:T:JI',
                 ['exec-batch=', 'pass-batch-err', 'interactive'])
             for i, v in o:
                 if i == '--exec-batch':
@@ -108,6 +108,8 @@ class GenericCLI(object):
                     self.apiuri = v
                 elif i == '-K':
                     self.apikey = v
+                elif i == '-J':
+                    self.in_json = True
                 elif i == '-T':
                     try:
                         self.timeout = float(v)
