@@ -22,7 +22,8 @@ __get_help__ = []
 __set_help__ = []
 __help__ = """Dummy PHI for turning on power for GPIO ports. Turns on power on
 selected GPIO ports on controller start and turns it back off on controller
-shutdown. Doesn't provide any control or monitoring functions.
+shutdown. Doesn't provide any control or monitoring functions, doesn't create
+any drivers on load.
 """
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
