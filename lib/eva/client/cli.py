@@ -17,30 +17,33 @@ import jsonpickle
 from datetime import datetime
 from eva.client import apiclient
 
+
 def print_json(obj):
     print(format_json(obj))
+
 
 def format_json(obj, minimal=False, unpicklable=False):
     return json.dumps(json.loads(jsonpickle.encode(obj,
             unpicklable = unpicklable)), indent=4, sort_keys=True) \
                 if not minimal else jsonpickle.encode(obj, unpicklable = False)
 
+
 class GenericCLI(object):
 
     def __init__(self, name):
 
-        self.apikey = None
-        self.apiuri = None
-        self.api_func = None
         self.debug = False
-        self.in_json = False
-        self.default_timeout = 10
-        self.timeout = self.default_timeout
         self.name = name
         self.pd = None
         self.argcomplete = None
         self.product = None
         self.prompt = None
+        self.apikey = None
+        self.apiuri = None
+        self.api_func = None
+        self.in_json = False
+        self.default_timeout = 10
+        self.timeout = self.default_timeout
         self.ssl_verify = False
         self.always_json = []
         self.always_print = ['cmd']
@@ -558,7 +561,7 @@ class GenericCLI(object):
                     print('u: api uri display/set (u. for uri reset)')
                     print('t: timeout display/set (t. for timeout reset)')
                     print('j: toggle json mode')
-                    print('d: toggle API debug mode')
+                    print('d: toggle client debug mode')
                     print()
                     print('sh: start system shell')
                     print('top: display system processes')
@@ -572,7 +575,8 @@ class GenericCLI(object):
                     print('key: %s' % (self.apikey if self.apikey is not None
                                        else '<default>'))
                     print('JSON mode ' + ('on' if self.in_json else 'off'))
-                    print('API debug mode ' + ('on' if self.debug else 'off'))
+                    print('Client debug mode ' +
+                          ('on' if self.debug else 'off'))
                     print('timeout: %f' % self.timeout)
                 elif d[0] == 'k.':
                     self.apikey = None
@@ -585,7 +589,8 @@ class GenericCLI(object):
                     print('JSON mode ' + ('on' if self.in_json else 'off'))
                 elif d[0] == 'd':
                     self.debug = not self.debug
-                    print('API debug mode ' + ('on' if self.debug else 'off'))
+                    print('Client debug mode ' +
+                          ('on' if self.debug else 'off'))
                 elif d[0] == 't.':
                     self.timeout = self.default_timeout
                     print('timeout: %f' % self.timeout)
@@ -770,20 +775,20 @@ class GenericCLI(object):
             self.fancy_print_result(result, api_func, api_func_full, itype)
         return 0
 
-    def print_tdf(self, result):
+    def print_tdf(self, result, time_field):
         self.import_pandas()
         # convert list to dict
         res = []
-        for i in range(len(result['t'])):
+        for i in range(len(result[time_field])):
             r = {}
             for k in result.keys():
-                if k != 't':
+                if k != time_field:
                     r[k] = result[k][i]
                 else:
                     r[k] = datetime.fromtimestamp(result[k][i]).isoformat()
             res.append(r)
         df = self.pd.DataFrame(res)
-        df = df.set_index('t')
+        df = df.set_index(time_field)
         df.index = self.pd.to_datetime(df.index, utc=False)
         out = df.to_string().split('\n')
         print('time' + out[0][4:])

@@ -118,7 +118,7 @@ class UC_CLI(GenericCLI):
     def process_result(self, result, code, api_func, api_func_full, itype, a):
         if api_func == 'state_history' and \
                 isinstance(result, dict):
-            self.print_tdf(result)
+            self.print_tdf(result, 't')
             return 0
         else:
             return super().process_result(result, code, api_func, api_func_full,
