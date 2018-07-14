@@ -26,7 +26,7 @@ __get_help__ = []
 __set_help__ = []
 __help__ = """ Handling pressed events from GPIO buttons.
 
-PHI doesn't provide any control/monitoring functions, eacn button can be
+PHI doesn't provide any control/monitoring functions, each button can be
 configured as unit (via basic LPI) or sensor (via esensor) and contain its port
 in update_driver_config, update_interval should be set to 0.
 """
