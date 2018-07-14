@@ -204,7 +204,7 @@ class GenericCLI(object):
         self.pd_idx.update(pd_idx)
 
     def set_fancy_tabsp(self, fancy_tabsp={}):
-        self.fancy_tabsp =self.common_fancy_tabsp.copy()
+        self.fancy_tabsp = self.common_fancy_tabsp.copy()
         self.fancy_tabsp.update(fancy_tabsp)
 
     def get_api_func(self, itype, func):
@@ -617,9 +617,11 @@ class GenericCLI(object):
                     print('timeout: %f' % self.timeout)
                 elif d[0] == 'top':
                     try:
-                        os.system('top')
+                        top = '/usr/bin/htop' if os.path.isfile(
+                            '/usr/bin/htop') else 'top'
+                        os.system(top)
                     except:
-                        print('Failed to run system "top" command')
+                        print('Failed to run system "%s" command' % top)
                 elif d[0] == 'w':
                     try:
                         os.system('w')
