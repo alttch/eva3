@@ -546,6 +546,11 @@ class GenericCLI(object):
             return self.do_run()
         else:
             # interactive mode
+            if self.argcomplete:
+                completer = self.argcomplete.CompletionFinder(self.ap)
+                readline.set_completer_delims("")
+                readline.set_completer(completer.rl_complete)
+                readline.parse_and_bind("tab: complete")
             while True:
                 d = None
                 while not d:
