@@ -5,7 +5,7 @@ __version__ = "1.0.0"
 __description__ = "AKCP MD00 motion sensor"
 
 __id__ = 'akcp_md'
-__equipment__ = ['AKCP THS00', 'AKCP THS01']
+__equipment__ = ['AKCP MD00']
 __api__ = 1
 __required__ = ['port_get', 'value']
 __mods_required__ = []
@@ -20,8 +20,7 @@ __config_help__ = [{
     'help': 'controller port where sensor is located (1..X)',
     'type': 'int',
     'required': True
-}
-]
+}]
 __get_help__ = []
 __set_help__ = []
 
