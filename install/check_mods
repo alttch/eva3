@@ -28,6 +28,7 @@ mods = [
     're',
     'readline',
     'requests',
+    'shlex',
     'signal',
     'socket',
     'sqlite3',
