@@ -11,10 +11,10 @@ import re
 import sys
 import os
 import shlex
+import readline
 from datetime import datetime
 from eva.client import apiclient
 from eva.tools import print_json
-
 
 class GenericCLI(object):
 
@@ -52,7 +52,10 @@ class GenericCLI(object):
         }
         self.api_functions = self.common_api_functions
         self.common_pd_cols = {
-            'list_keys': ['key_id', 'master', 'sysfunc', 'allow']
+            'list_keys': ['key_id', 'master', 'sysfunc', 'allow'],
+            'log_get': ['time', 'host', 'p', 'level', 'message'],
+            'log_get_':
+            ['time', 'host', 'p', 'level', 'mod', 'thread', 'message']
         }
         self.pd_cols = self.common_pd_cols
         self.common_pd_idx = {
@@ -60,11 +63,19 @@ class GenericCLI(object):
             'list_users': 'user',
             'state': 'oid',
             'list': 'oid',
+            'log_get': 'time',
             'result': 'time',
             'list_phi_mods': 'mod',
             'list_lpi_mods': 'mod'
         }
         self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
+        self.log_levels = {
+            10: 'DEBUG',
+            20: 'INFO',
+            30: 'WARNING',
+            40: 'ERROR',
+            50: 'CRITICAL'
+        }
         self.pd_idx = self.common_pd_idx
         self.common_fancy_tabsp = {'test': 14}
         self.fancy_tabsp = self.common_fancy_tabsp
@@ -79,6 +90,17 @@ class GenericCLI(object):
             self.argcomplete = importlib.import_module('argcomplete')
         except:
             pass
+
+    def get_log_level_name(self, level):
+        l = self.log_levels.get(level)
+        return l if l else level
+
+    def get_log_level_code(self, name):
+        if not isinstance(name, str): return name
+        n = str.upper(name)
+        for l, v in self.log_levels.items():
+            if n[0] == v[0]: return l
+        return None
 
     def add_primary_options(self):
         self.ap.add_argument(
@@ -137,8 +159,19 @@ class GenericCLI(object):
             f = self.api_functions.get(itype + ':' + func)
             return f if f else itype + '_' + func
 
-    def prepare_result_data(self, data, api_func, itype):
-        return data
+    def prepare_result_data(self, data, api_func, api_func_full, itype):
+        if api_func == 'log_get':
+            result = []
+            for d in data:
+                d['host'] = d.pop('h')
+                d['thread'] = d.pop('th')
+                d['message'] = d.pop('msg')
+                d['level'] = self.get_log_level_name(d.pop('l'))
+                d['time'] = datetime.fromtimestamp(d.pop('t')).isoformat()
+                result.append(d)
+            return result
+        else:
+            return data
 
     def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
         if result and isinstance(result, dict):
@@ -149,8 +182,11 @@ class GenericCLI(object):
             tabsp = self.fancy_tabsp.get(api_func)
             if not tabsp: tabsp = 10
             for v in sorted(result.keys()):
-                if v == 'help' and not tab:
-                    h = result[v]
+                if v == 'help':
+                    if not not tab:
+                        h = result[v]
+                    else:
+                        pass
                 elif v == 'out' and not tab:
                     out = result[v]
                 elif v == 'err' and not tab:
@@ -195,7 +231,8 @@ class GenericCLI(object):
         elif result and isinstance(result, list):
             self.import_pandas()
             df = self.pd.DataFrame(
-                data=self.prepare_result_data(result, api_func, itype))
+                data=self.prepare_result_data(result, api_func, api_func_full,
+                                              itype))
             if api_func + api_func_full in self.pd_cols:
                 cols = self.pd_cols[api_func + api_func_full]
             else:
@@ -224,6 +261,7 @@ class GenericCLI(object):
         if not self.pd:
             self.pd = importlib.import_module('pandas')
             self.pd.set_option('display.expand_frame_repr', False)
+            self.pd.options.display.max_colwidth = 90
 
     def add_functions(self):
         self.add_primary_functions()
@@ -297,6 +335,23 @@ class GenericCLI(object):
         sp_log_critical = sp_log.add_parser(
             'critical', help='Send critical message')
         sp_log_critical.add_argument('m', help='Message', metavar='MSG')
+        sp_log_get = sp_log.add_parser('get', help='Get system log messages')
+        sp_log_get.add_argument(
+            '-l', '--level', help='Log level', metavar='LEVEL', dest='l')
+        sp_log_get.add_argument(
+            '-t',
+            '--seconds',
+            help='Get records for the last SEC seconds',
+            metavar='SEC',
+            dest='t')
+        sp_log_get.add_argument(
+            '-n', '--limit', help='Limit records to', metavar='LIMIT', dest='n')
+        sp_log_get.add_argument(
+            '-y',
+            '--full',
+            help='Display full log records',
+            dest='_full_display',
+            action='store_true')
 
     def add_cvar_functions(self):
         ap_cvar = self.sp.add_parser('cvar', help='CVAR functions')
@@ -405,6 +460,8 @@ class GenericCLI(object):
             except:
                 print('Unable to open %s' % a._fname)
                 return 97
+        elif api_func == 'log_get':
+            params['l'] = self.get_log_level_code(params['l'])
         return 0
 
     def run(self):
@@ -448,7 +505,8 @@ class GenericCLI(object):
             while True:
                 d = ''
                 while d == '':
-                    try: d = shlex.split(input('>> '))
+                    try:
+                        d = shlex.split(input('>> '))
                     except:
                         raise
                         print('Bye')
@@ -486,7 +544,8 @@ class GenericCLI(object):
                 elif d[0] == 'k':
                     if len(d) > 1:
                         self.apikey = d[1]
-                    print('key: %s' % self.apikey if self.apikey is not None else '<default>')
+                    print('key: %s' % self.apikey
+                          if self.apikey is not None else '<default>')
                 elif d[0] == 't':
                     if len(d) > 1:
                         try:
@@ -500,7 +559,7 @@ class GenericCLI(object):
                     except:
                         print('Failed to run system "top" command')
                 elif d[0] == 'sh':
-                    print ('Executing system shell')
+                    print('Executing system shell')
                     shell = os.environ.get('SHELL')
                     if shell is None:
                         if os.path.isfile('/bin/bash'): shell = '/bin/bash'
@@ -578,6 +637,8 @@ class GenericCLI(object):
         api.ssl_verify(self.ssl_verify)
         if hasattr(a, '_full') and a._full:
             params['full'] = 1
+            api_func_full = '_'
+        elif hasattr(a, '_full_display') and a._full_display:
             api_func_full = '_'
         else:
             api_func_full = ''
