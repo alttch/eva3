@@ -22,6 +22,7 @@ mods = [
     'PIL',
     'platform',
     'psutil',
+    'pygments',
     'pytz',
     'pysnmp',
     'queue',
@@ -34,6 +35,7 @@ mods = [
     'sqlite3',
     'struct',
     'subprocess',
+    'termcolor',
     'threading',
     'time',
     'traceback',
@@ -43,6 +45,8 @@ mods = [
 
 if len(sys.argv) > 1 and sys.argv[1] == 'install': install = True
 else: install = False
+
+code = 0
 
 for m in mods:
     print(m.ljust(20), end='')
@@ -63,4 +67,6 @@ for m in mods:
                 print('Failed to install, Aborting')
                 sys.exit(1)
         else:
+            code = 1
             print()
+sys.exit(code)

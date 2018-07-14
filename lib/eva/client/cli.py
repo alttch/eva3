@@ -14,12 +14,17 @@ import shlex
 import readline
 import json
 import jsonpickle
+from termcolor import colored
 from datetime import datetime
 from eva.client import apiclient
+from pygments import highlight, lexers, formatters
 
 
 def print_json(obj):
-    print(format_json(obj))
+    print(
+        highlight(
+            format_json(obj), lexers.JsonLexer(),
+            formatters.TerminalFormatter()))
 
 
 def format_json(obj, minimal=False, unpicklable=False):
@@ -108,8 +113,31 @@ class GenericCLI(object):
     def get_prompt(self):
         if self.prompt: return self.prompt
         prompt = '> '
-        if self.product: prompt = '[%s] %s' % (self.product, prompt)
+        if self.apiuri:
+            h = ' ' + self.apiuri.replace('https://', '').replace('http://', '')
+        else:
+            h = ''
+        if self.product:
+            prompt = '[%s%s] %s' % (colored(
+                self.product, 'green', attrs=['bold']),
+                                     colored(h, 'blue', attrs=['bold']), prompt)
         return prompt
+
+    def print_interactive_help(self):
+        print('q: quit')
+        print('a: show API params')
+        print('k: key display/set (k. for key reset)')
+        print('u: api uri display/set (u. for uri reset)')
+        print('t: timeout display/set (t. for timeout reset)')
+        print('j: toggle json mode')
+        print('d: toggle client debug mode')
+        print()
+        print('sh: start system shell')
+        print('top: display system processes')
+        print('w: display uptime and who is online')
+        print()
+        print('or command to execute')
+        print()
 
     def parse_primary_args(self):
         try:
@@ -143,6 +171,9 @@ class GenericCLI(object):
         except:
             pass
 
+    def print_err(self, s):
+        print(colored(s, color='red', attrs=[]))
+
     def get_log_level_name(self, level):
         l = self.log_levels.get(level)
         return l if l else level
@@ -152,7 +183,18 @@ class GenericCLI(object):
         n = str.upper(name)
         for l, v in self.log_levels.items():
             if n[0] == v[0]: return l
-        return None
+        return name
+
+    def format_log_str(self, s):
+        if s.find(' DEBUG ') != -1:
+            return colored(s, color='grey', attrs=['bold'])
+        if s.find(' WARNING ') != -1:
+            return colored(s, color='yellow', attrs=[])
+        if s.find(' ERROR ') != -1:
+            return colored(s, color='red', attrs=[])
+        if s.find(' CRITICAL ') != -1:
+            return colored(s, color='red', attrs=['bold'])
+        return s
 
     def add_primary_options(self):
         self.ap.add_argument(
@@ -305,9 +347,12 @@ class GenericCLI(object):
                 if idxcol == 'time':
                     df.index = self.pd.to_datetime(df.index, utc=False)
                 out = df.fillna(' ').to_string().split('\n')
-                print(idxcol + out[0][len(idxcol):])
-                print('-' * len(out[0]))
-                [print(re.sub('^NaN', '   ', o)) for o in out[2:]]
+                print(colored(idxcol + out[0][len(idxcol):] , color='green', attrs=[]))
+                print(colored('-' * len(out[0]), color='grey'))
+                for o in out[2:]:
+                    s = re.sub('^NaN', '   ', o)
+                    if api_func == 'log_get': s = self.format_log_str(s)
+                    print(s)
             except:
                 raise
         elif result:
@@ -557,26 +602,13 @@ class GenericCLI(object):
                     try:
                         d = shlex.split(input(self.get_prompt()))
                     except:
+                        raise
                         print()
                         print('Bye')
                         return 0
                 if d[0] in ['q', 'quit', 'exit', 'bye']:
                     print('Bye')
                     return 0
-                elif d[0] == '?':
-                    print('q: quit')
-                    print('a: show API params')
-                    print('k: key display/set (k. for key reset)')
-                    print('u: api uri display/set (u. for uri reset)')
-                    print('t: timeout display/set (t. for timeout reset)')
-                    print('j: toggle json mode')
-                    print('d: toggle client debug mode')
-                    print()
-                    print('sh: start system shell')
-                    print('top: display system processes')
-                    print('w: display uptime and who is online')
-                    print()
-                    print('or command to execute')
                 elif d[0] == 'a':
                     print('API uri: %s' % (self.apiuri
                                            if self.apiuri is not None else
@@ -618,7 +650,7 @@ class GenericCLI(object):
                         try:
                             self.timeout = float(d[1])
                         except:
-                            print('Failed')
+                            self.print_err('FAILED')
                     print('timeout: %f' % self.timeout)
                 elif d[0] == 'top':
                     try:
@@ -626,12 +658,12 @@ class GenericCLI(object):
                             '/usr/bin/htop') else 'top'
                         os.system(top)
                     except:
-                        print('Failed to run system "%s" command' % top)
+                        self.print_err('Failed to run system "%s" command' % top)
                 elif d[0] == 'w':
                     try:
                         os.system('w')
                     except:
-                        print('Failed to run system "w" command')
+                        self.print_err('Failed to run system "w" command')
                 elif d[0] == 'sh':
                     print('Executing system shell')
                     shell = os.environ.get('SHELL')
@@ -641,8 +673,9 @@ class GenericCLI(object):
                     try:
                         os.system(shell)
                     except:
-                        print('Failed to run system shell "%s"' % shell)
-                elif d[0] == 'h' or d[0] == 'help':
+                       self.print_err('Failed to run system shell "%s"' % shell)
+                elif d[0] in ['?', 'h', 'help']:
+                    self.print_interactive_help()
                     try:
                         self.do_run(['-h'])
                     except:
@@ -734,25 +767,25 @@ class GenericCLI(object):
         if code != apiclient.result_ok and \
             code != apiclient.result_func_failed:
             if code == apiclient.result_not_found:
-                print('Error: Object not found')
+                self.print_err('Error: Object not found')
             elif code == apiclient.result_forbidden:
-                print('Error: Forbidden')
+                self.print_err('Error: Forbidden')
             elif code == apiclient.result_api_error:
-                print('Error: API error')
+                self.print_err('Error: API error')
             elif code == apiclient.result_unknown_error:
-                print('Error: Unknown error')
+                self.print_err('Error: Unknown error')
             elif code == apiclient.result_not_ready:
-                print('Error: API not ready')
+                self.print_err('Error: API not ready')
             elif code == apiclient.result_func_unknown:
-                self.ap.print_help()
+                self.ap.self.print_err_help()
             elif code == apiclient.result_server_error:
-                print('Error: Server error')
+                self.print_err('Error: Server error')
             elif code == apiclient.result_server_timeout:
-                print('Error: Server timeout')
+                self.print_err('Error: Server timeout')
             elif code == apiclient.result_bad_data:
-                print('Error: Bad data')
+                self.print_err('Error: Bad data')
             elif code == apiclient.result_invalid_params:
-                print('Error: invalid params')
+                self.print_err('Error: invalid params')
             if debug:
                 print('API result code: %u' % code)
             return code
@@ -772,14 +805,17 @@ class GenericCLI(object):
                 open(a._fname, 'w').write(result['data'])
                 print('OK')
             except:
-                print('FAILED')
+                self.print_err('FAILED')
                 return 95
         elif code == apiclient.result_func_failed and \
                 api_func not in self.always_print:
-            print('FAILED')
+            self.print_err('FAILED')
             return code
         elif 'result' in result and api_func != 'test':
-            print(result['result'])
+            if result['result'] !='ERROR':
+                print(result['result'])
+            else:
+                self.print_err('FAILED')
             if result['result'] == 'ERROR':
                 return apiclient.result_func_failed
         else:
@@ -802,6 +838,6 @@ class GenericCLI(object):
         df = df.set_index(time_field)
         df.index = self.pd.to_datetime(df.index, utc=False)
         out = df.to_string().split('\n')
-        print('time' + out[0][4:])
-        print('-' * len(out[0]))
+        print(colored('time' + out[0][4:], color='green', attrs=[]))
+        print(colored('-' * len(out[0]), color='grey'))
         [print(o) for o in out[2:]]
