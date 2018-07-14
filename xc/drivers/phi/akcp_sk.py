@@ -2,10 +2,10 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
-__description__ = "AKCP MD00 motion sensor"
+__description__ = "AKCP SK00 smoke detector"
 
-__id__ = 'akcp_md'
-__equipment__ = ['AKCP MD00']
+__id__ = 'akcp_sk'
+__equipment__ = ['AKCP SK00']
 __api__ = 1
 __required__ = ['port_get', 'value']
 __mods_required__ = []
@@ -26,7 +26,7 @@ __get_help__ = []
 __set_help__ = []
 
 __help__ = """
-PHI for AKCP MD00 motion sensor, uses SNMP traps to set sensor status. EVA
+PHI for AKCP SK00 smoke detector, uses SNMP traps to set sensor status. EVA
 sensor should have "port" set to 1 in driver config or use ssp LPI.
 
 PHI doesn't provide any control/monitoring functions.
@@ -92,7 +92,7 @@ class PHI(GenericPHI):
             handle_phi_event(self, self.sensor_port, {'1': False})
         elif d == '2':
             handle_phi_event(self, self.sensor_port, {'1': 0})
-        elif d == '4':
+        elif d == '6':
             handle_phi_event(self, self.sensor_port, {'1': 1})
         return
 
