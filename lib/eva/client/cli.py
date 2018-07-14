@@ -547,8 +547,8 @@ class GenericCLI(object):
         else:
             # interactive mode
             while True:
-                d = ''
-                while d == '':
+                d = None
+                while not d:
                     try:
                         d = shlex.split(input(self.get_prompt()))
                     except:
