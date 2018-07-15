@@ -130,6 +130,13 @@ class PHI(object):
                         'type': 'float',
                         'required': False
                     })
+                if 'aao_get' in self.__features:
+                    d.append({
+                        'name': 'update',
+                        'help': 'send updates to items every N sec',
+                        'type': 'float',
+                        'required': False
+                    })
             elif helpinfo == 'get':
                 d = self.__get_help
             elif helpinfo == 'set':
@@ -204,7 +211,6 @@ class PHI(object):
         return self.stop()
 
     def _start_update_processor(self):
-        if not self._update_interval: return
         self._update_processor_active = True
         if self._update_processor and self._update_processor.is_alive():
             return
@@ -214,7 +220,6 @@ class PHI(object):
         self._update_processor.start()
 
     def _start_update_scheduler(self):
-        if not self._update_interval: return
         self._update_scheduler_active = True
         if self._update_scheduler and \
                 self._update_scheduler.is_alive():
@@ -228,7 +233,6 @@ class PHI(object):
         self._update_scheduler.start()
 
     def _stop_update_processor(self):
-        if not self._update_interval: return
         if self._update_processor_active:
             self._update_processor_active = False
             self._need_update.set()
