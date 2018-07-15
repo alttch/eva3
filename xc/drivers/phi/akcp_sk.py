@@ -71,6 +71,7 @@ class PHI(GenericPHI):
         self.sensor_port = self.phi_cfg.copy().get('sp')
         if self.sensor_port and not isinstance(self.sensor_port, list):
             self.sensor_port = [self.sensor_port]
+        self.sensor_port = self.sensor_port.copy()
         try:
             for i in range(len(self.sensor_port)):
                 self.sensor_port[i] = int(self.sensor_port[i]) - 1
