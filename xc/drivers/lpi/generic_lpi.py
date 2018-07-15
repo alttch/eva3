@@ -351,3 +351,9 @@ class LPI(object):
 
     def gen_uuid(self):
         return str(uuid.uuid1())
+
+    def _start(self):
+        return self.start()
+
+    def _stop(self):
+        return self.stop()

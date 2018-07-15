@@ -272,11 +272,18 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     phi.phi_id = phi_id
     phi.oid = 'phi:uc/%s/%s' % (eva.core.system_name, phi_id)
     if phi_id in phis:
-        phis[phi_id].stop()
+        try:
+            phis[phi_id]._stop()
+        except:
+            eva.core.log_traceback()
     phis[phi_id] = phi
     if not phi_id in items_by_phi:
         items_by_phi[phi_id] = set()
-    if start: phi.start()
+    if start:
+        try:
+            phi._start()
+        except:
+            eva.core.log_traceback()
     ld = phi.get_default_lpi()
     if ld:
         load_driver('default', ld, phi_id, start=True)
@@ -327,9 +334,16 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     lpi.driver_id = phi_id + '.' + lpi_id
     lpi.oid = 'driver:uc/%s/%s' % (eva.core.system_name, lpi.driver_id)
     if lpi.driver_id in drivers:
-        drivers[lpi.driver_id].stop()
+        try:
+            drivers[lpi.driver_id]._stop()
+        except:
+            eva.core.log_traceback()
     drivers[lpi.driver_id] = lpi
-    if start: lpi.start()
+    if start:
+        try:
+            lpi._start()
+        except:
+            eva.core.log_traceback()
     return lpi
 
 
@@ -352,7 +366,10 @@ def unload_phi(phi_id):
         logging.error('Unable to unload PHI %s, it is in use' % (phi_id))
         err = True
     if err: return False
-    phi.stop()
+    try:
+        phi._stop()
+    except:
+        eva.core.log_traceback()
     del phis[phi_id]
     return True
 
@@ -367,7 +384,10 @@ def unload_driver(driver_id):
                           (driver_id, i.oid))
             err = True
     if err: return False
-    lpi.stop()
+    try:
+        lpi._stop()
+    except:
+        eva.core.log_traceback()
     del drivers[lpi.driver_id]
     return True
 
@@ -447,13 +467,25 @@ def start():
     eva.core.append_dump_func('uc.driverapi', dump)
     eva.core.append_save_func(save)
     for k, p in drivers.items():
-        p.start()
+        try:
+            p._start()
+        except:
+            eva.core.log_traceback()
     for k, p in phis.items():
-        p.start()
+        try:
+            p._start()
+        except:
+            eva.core.log_traceback()
 
 
 def stop():
     for k, p in drivers.items():
-        p.stop()
+        try:
+            p._stop()
+        except:
+            eva.core.log_traceback()
     for k, p in phis.items():
-        p.stop()
+        try:
+            p._stop()
+        except:
+            eva.core.log_traceback()

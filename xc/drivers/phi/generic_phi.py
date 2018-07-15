@@ -148,6 +148,8 @@ class PHI(object):
     def test(self, cmd=None):
         return 'FAILED'
 
+    # don't override the methods below
+
     def log_debug(self, msg):
         i = self.phi_id if self.phi_id is not None else self.phi_mod_id
         logging.debug('PHI %s: %s' % (i, msg))
@@ -175,3 +177,9 @@ class PHI(object):
         i = self.phi_id if self.phi_id is not None else self.phi_mod_id
         logging.critical('PHI %s: %s' % (i, msg))
         critical()
+
+    def _start(self):
+        return self.start()
+
+    def _stop(self):
+        return self.stop()
