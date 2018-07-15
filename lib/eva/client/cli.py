@@ -321,13 +321,14 @@ class GenericCLI(object):
             action='store_true',
             dest='_raw',
             default=False)
-        self.ap.add_argument(
-            '-I',
-            '--interactive',
-            help='Enter interactive (command prompt) mode',
-            action='store_true',
-            dest='__interactive',
-            default=False)
+        if not self.interactive:
+            self.ap.add_argument(
+                '-I',
+                '--interactive',
+                help='Enter interactive (command prompt) mode',
+                action='store_true',
+                dest='__interactive',
+                default=False)
 
     def add_main_subparser(self):
         self.sp = self.ap.add_subparsers(
