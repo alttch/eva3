@@ -68,7 +68,7 @@ class PHI(GenericPHI):
         if info_only: return
         self.snmp_host, self.snmp_port = parse_host_port(
             self.phi_cfg.get('host'), 161)
-        self.sensor_port = self.phi_cfg.get('sp')
+        self.sensor_port = self.phi_cfg.copy().get('sp')
         if self.sensor_port and not isinstance(self.sensor_port, list):
             self.sensor_port = [self.sensor_port]
         try:
@@ -86,7 +86,6 @@ class PHI(GenericPHI):
             self.log_error('no sensor port specified')
             self.ready = False
         else:
-            print(self.sensor_port)
             if len(self.sensor_port) > 1:
                 self.__lpi_default = 'sensor'
 
