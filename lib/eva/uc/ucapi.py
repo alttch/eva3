@@ -84,10 +84,15 @@ class UC_API(GenericAPI):
                 t, iid = parse_oid(i)
                 if not item or item.item_type != t: return None
             return item.serialize(full=full)
-        elif tp:
-            if tp == 'U' or tp == 'unit':
+        elif tp or is_oid(group):
+            if not tp:
+                _tp, grp = parse_oid(group)
+            else:
+                _tp = tp
+                grp = group
+            if tp == 'U' or _tp == 'unit':
                 gi = eva.uc.controller.units_by_id
-            elif tp == 'S' or tp == 'sensor':
+            elif tp == 'S' or _tp == 'sensor':
                 gi = eva.uc.controller.sensors_by_id
             else:
                 return None
@@ -95,7 +100,7 @@ class UC_API(GenericAPI):
             for i, v in gi.copy().items():
                 if apikey.check(k, v) and \
                         (not group or \
-                            eva.item.item_match(v, [], [group])):
+                            eva.item.item_match(v, [], [grp])):
                     r = v.serialize(full=full)
                     result.append(r)
             return sorted(result, key=lambda k: k['id'])
