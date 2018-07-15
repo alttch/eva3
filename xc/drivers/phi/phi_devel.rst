@@ -175,9 +175,9 @@ If PHI methods get/set can't work with a single ports at all (i.e. equipment
 returns state of all ports at once only), constructor should set variables:
 
 * **self.aao_get=True** tells LPI the returned with PHI.get method data will
-  always contain all port states
+  always contain all port states even if the port is specified in **get**.
 * **self.aao_set=True** asks LPI to collect as much data to set as possible, and
-  then call PHI.set method
+  then call PHI **set** method
 
 The parent constructor sets the variable **self.phi_cfg** to phi_cfg or to {},
 so it's safe to work with it with *self.phi_cfg.get(cfgvar)*.
@@ -202,15 +202,24 @@ call.
         #port should always be a string
         #
         #should return None if failed, integer for status, string for values
+        #
+        #if PHI supports aao_get feature, it should return all port states when
+        #no port is specified in request.
     
     # if PHI can write data to the equipment
     def set(self, port=None, data=None, cfg=None, timeout=0):
         #<your code>
         #should return True (or result) if passed, False or None if failed
+        #
+        #If PHI supports aao_set feature, it should deal with a list of ports,
+        #if no - with a single port only. If both port_set and aao_set are
+        #specified in features, PHI should deal with both single port and list
+        #of ports
 
 **port** and **data** may be integers, string, contain lists or be set as None.
 PHI should always be ready to any incoming params and handle the missing or
-incorrect by itself.
+incorrect by itself. If **port** contains a list, **data** always contain a
+list too.
 
 **cfg** may contain equipment configuration options. If the driver is
 universal, it should handle them properly.
@@ -327,6 +336,14 @@ executed in the own thread.
 
 EVA traphandler doesn't care about the method return value and you must process
 all the errors by yourself.
+
+Schedule events
+~~~~~~~~~~~~~~~
+
+If the equipment doesn't send any events, PHI can initiate updating the items
+by itself. To perform this, PHI should support **aao_get** feature and be
+loaded with *update=N* config param. Updates, intervals as well as the whole
+update process are handled by parent class.
 
 Exceptions
 ----------

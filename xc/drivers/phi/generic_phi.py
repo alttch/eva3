@@ -22,10 +22,15 @@ documentation.
 """
 
 import logging
+import threading
 
 from eva.uc.driverapi import critical
+from eva.uc.driverapi import get_sleep_step
+from eva.uc.driverapi import get_timeout
+from eva.uc.driverapi import handle_phi_event
 
 from time import time
+from time import sleep
 
 
 class PHI(object):
@@ -63,28 +68,37 @@ class PHI(object):
         self.aao_set = False
         self.ready = True
         # cache time, useful for aao_get devices
-        self.cache_set = 0
+        self._cache_set = 0
+        self._cache_data = None
         try:
-            self.cache = float(self.phi_cfg.get('cache'))
+            self._cache = float(self.phi_cfg.get('cache'))
         except:
-            self.cache = 0
-        self.cache_data = None
+            self._cache = 0
+        try:
+            self._update_interval = float(self.phi_cfg.get('update'))
+        except:
+            self._update_interval = 0
+        self._update_processor = None
+        self._update_scheduler = None
+        self._update_processor_active = False
+        self._update_scheduler_active = False
+        self._need_update = threading.Event()
 
     def get_cached_state(self):
-        if not self.cache or not self.cache_data:
+        if not self._cache or not self._cache_data:
             return None
-        return self.cache_data if \
-                time() - self.cache_set < self.cache else None
+        return self._cache_data if \
+                time() - self._cache_set < self._cache else None
 
     def set_cached_state(self, data):
-        if not self.cache:
+        if not self._cache:
             return False
-        self.cache_data = data
-        self.cache_set = time()
+        self._cache_data = data
+        self._cache_set = time()
 
     def clear_cache(self):
-        self.cache_set = 0
-        self.cache_data = None
+        self._cache_set = 0
+        self._cache_data = None
 
     def get(self, port=None, cfg=None, timeout=0):
         return None
@@ -179,7 +193,73 @@ class PHI(object):
         critical()
 
     def _start(self):
+        if self._update_interval and 'aao_get' in self.__features:
+            self._start_update_processor()
+            self._start_update_scheduler()
         return self.start()
 
     def _stop(self):
+        self._stop_update_processor()
+        self._stop_update_scheduler()
         return self.stop()
+
+    def _start_update_processor(self):
+        if not self._update_interval: return
+        self._update_processor_active = True
+        if self._update_processor and self._update_processor.is_alive():
+            return
+        self._update_processor = threading.Thread(target = \
+                self._t_update_processor,
+                name = '_t_update_processor_' + self.oid)
+        self._update_processor.start()
+
+    def _start_update_scheduler(self):
+        if not self._update_interval: return
+        self._update_scheduler_active = True
+        if self._update_scheduler and \
+                self._update_scheduler.is_alive():
+            return
+        if not self._update_interval:
+            self._update_scheduler_active = False
+            return
+        self._update_scheduler = threading.Thread(target = \
+                self._t_update_scheduler,
+                name = '_t_update_scheduler_' + self.oid)
+        self._update_scheduler.start()
+
+    def _stop_update_processor(self):
+        if not self._update_interval: return
+        if self._update_processor_active:
+            self._update_processor_active = False
+            self._need_update.set()
+
+    def _stop_update_scheduler(self):
+        if self._update_scheduler_active:
+            self._update_scheduler_active = False
+            self._update_scheduler.join()
+
+    def _t_update_scheduler(self):
+        logging.debug('%s update scheduler started' % self.oid)
+        while self._update_scheduler_active and self._update_interval:
+            i = 0
+            while i < self._update_interval and self._update_scheduler_active:
+                sleep(get_sleep_step())
+                i += get_sleep_step()
+            if not self._update_scheduler_active or not self._update_interval:
+                break
+            self._perform_update()
+        self._update_scheduler_active = False
+        logging.debug('%s update scheduler stopped' % self.oid)
+
+    def _t_update_processor(self):
+        logging.debug('%s update processor started' % self.oid)
+        while self._update_processor_active:
+            self._need_update.wait()
+            self._need_update.clear()
+            if self._update_processor_active:
+                self._perform_update()
+        logging.debug('%s update processor stopped' % self.oid)
+
+    def _perform_update(self):
+        logging.debug('%s updating' % self.oid)
+        handle_phi_event(self, 'scheduler', self.get(timeout=get_timeout()))
