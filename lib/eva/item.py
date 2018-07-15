@@ -123,7 +123,7 @@ class Item(object):
             raw = ''.join(open(fname_full).readlines())
         except:
             logging.error('can not load %s config from %s' % \
-                                    (self.item_id,fname_full))
+                                    (self.oid,fname_full))
             eva.core.log_traceback()
             return False
         try:
@@ -135,7 +135,7 @@ class Item(object):
         except:
             logging.error(
                    'can not load %s config from %s, bad config format' % \
-                                    (self.item_id,fname_full)
+                                    (self.oid,fname_full)
                             )
             eva.core.log_traceback()
             return False
@@ -147,13 +147,13 @@ class Item(object):
         u = self.serialize(config=True)
         fname_full = self.get_fname(fname)
         data = self.serialize(config=True)
-        logging.debug('Saving %s configuration' % self.item_id)
+        logging.debug('Saving %s configuration' % self.oid)
         try:
             open(fname_full, 'w').write(format_json(data, minimal=False))
             self.config_changed = False
         except:
             logging.error('can not save %s config into %s' % \
-    (self.item_id,fname_full))
+                (self.oid,fname_full))
             eva.core.log_traceback()
             return False
         self.config_file_exists = True
@@ -166,10 +166,10 @@ class Item(object):
             self.config_changed = True
 
     def start_processors(self):
-        logging.debug('%s processors started' % self.full_id)
+        logging.debug('%s processors started' % self.oid)
 
     def stop_processors(self):
-        logging.debug('%s processors stopped' % self.full_id)
+        logging.debug('%s processors stopped' % self.oid)
 
     def destroy(self):
         self._destroyed = True
@@ -305,7 +305,7 @@ class UpdatableItem(Item):
             notifier = eva.notify.get_notifier(n)
             if not notifier or notifier.notifier_type != 'mqtt':
                 logging.error('%s: invalid mqtt notifier %s' % \
-                        (self.full_id, n))
+                        (self.oid, n))
             else:
                 self.mqtt_update_notifier = n
                 if len(params) > 1:
@@ -313,7 +313,7 @@ class UpdatableItem(Item):
                         self.mqtt_update_qos = int(params[1])
                     except:
                         logging.error('%s invalid mqtt notifier qos' % \
-                                self.full_id)
+                                self.oid)
                         eva.core.log_traceback()
         super().update_config(data)
 
@@ -354,7 +354,7 @@ class UpdatableItem(Item):
                             logging.error(
                                 'Can not set ' + \
                                     '%s.update_exec = %s, no such driver'
-                                    % (self.full_id, val))
+                                    % (self.oid, val))
                             return False
                     else:
                         return False
@@ -634,7 +634,7 @@ class UpdatableItem(Item):
         try:
             notifier.update_item_append(self)
         except:
-            logging.error('%s mqtt subscribe failed' % self.full_id)
+            logging.error('%s mqtt subscribe failed' % self.oid)
             eva.core.log_traceback()
             return False
         return True
@@ -658,7 +658,7 @@ class UpdatableItem(Item):
             return
         self.update_processor = threading.Thread(target = \
                 self._t_update_processor,
-                name = '_t_update_processor_' + self.item_id)
+                name = '_t_update_processor_' + self.oid)
         self.update_processor.start()
 
     def stop_update_processor(self):
@@ -677,7 +677,7 @@ class UpdatableItem(Item):
             return
         self.update_scheduler = threading.Thread(target = \
                 self._t_update_scheduler,
-                name = '_t_update_scheduler_' + self.item_id)
+                name = '_t_update_scheduler_' + self.oid)
         self.update_scheduler.start()
 
     def start_expiration_checker(self):
@@ -690,7 +690,7 @@ class UpdatableItem(Item):
             return
         self.expiration_checker = threading.Thread(target = \
                 self._t_expiration_checker,
-                name = '_t_expiration_checker_' + self.item_id)
+                name = '_t_expiration_checker_' + self.oid)
         self.expiration_checker.start()
 
     def stop_update_scheduler(self):
@@ -724,45 +724,47 @@ class UpdatableItem(Item):
             self.need_update.set()
 
     def _t_update_scheduler(self):
-        logging.debug('%s update scheduler started' % self.full_id)
+        logging.debug('%s update scheduler started' % self.oid)
         while self.update_scheduler_active and self.update_interval:
-            if self.updates_allowed():
-                if self.update_delay:
-                    t  = threading.Thread(target = self.do_update,
-                            name = 'do_update_%s_%f' % \
-                                    (self.item_id, time.time()))
-                    t.start()
-                else:
-                    self.do_update()
             i = 0
             while i < self.update_interval and self.update_scheduler_active:
                 time.sleep(eva.core.sleep_step)
                 i += eva.core.sleep_step
+            if not self.update_scheduler_active or not self.update_interval:
+                break
+            if self.updates_allowed():
+                if self.update_delay:
+                    t  = threading.Thread(target = self.do_update,
+                            name = 'do_update_%s_%f' % \
+                                    (self.oid, time.time()))
+                    t.start()
+                else:
+                    self.do_update()
         self.update_scheduler_active = False
-        logging.debug('%s update scheduler stopped' % self.full_id)
+        logging.debug('%s update scheduler stopped' % self.oid)
 
     def _t_update_processor(self):
-        logging.debug('%s update processor started' % self.full_id)
+        logging.debug('%s update processor started' % self.oid)
         while self.update_processor_active:
             self.need_update.wait()
             self.need_update.clear()
             if self.update_processor_active:
                 self._perform_update()
-        logging.debug('%s update processor stopped' % self.full_id)
+        logging.debug('%s update processor stopped' % self.oid)
 
     def _t_expiration_checker(self):
-        logging.debug('%s expiration checker started' % self.full_id)
+        logging.debug('%s expiration checker started' % self.oid)
         while self.expiration_checker_active and self.expires:
             time.sleep(eva.core.polldelay)
             if self.status != -1 and \
                     (self.status != 0 or self._expire_on_any) and \
                     self.is_expired():
                 logging.debug('%s expired, resetting status/value' % \
-                        self.full_id)
+                        self.oid)
                 self.set_expired()
                 break
         self.expiration_checker_active = False
-        logging.debug('%s expiration checker stopped' % self.full_id)
+        logging.debug('%s expiration checker stopped' % self.oid)
 
     def is_expired(self):
         if not self.expires: return False
@@ -785,14 +787,14 @@ class UpdatableItem(Item):
             self.update_xc = xc
             xc.run()
             if xc.exitcode < 0:
-                logging.error('update %s terminated' % self.full_id)
+                logging.error('update %s terminated' % self.oid)
             elif xc.exitcode > 0:
                 logging.error('update %s failed, code %u' % \
-                        (self.full_id, xc.exitcode))
+                        (self.oid, xc.exitcode))
             else:
                 if self.updates_allowed(): self.update_after_run(xc.out)
         except:
-            logging.error('update %s failed' % self.full_id)
+            logging.error('update %s failed' % self.oid)
             eva.core.log_traceback()
 
     def get_update_xc(self, driver_state_in=None):
@@ -815,7 +817,7 @@ class UpdatableItem(Item):
         return {}
 
     def update_log_run(self):
-        logging.debug('updating %s' % self.full_id)
+        logging.debug('updating %s' % self.oid)
 
     def update_before_run(self):
         pass
@@ -839,7 +841,7 @@ class UpdatableItem(Item):
                 value = update_out[1]
                 if value is None: value = 'null'
         except:
-            logging.error('update %s returned bad data' % self.full_id)
+            logging.error('update %s returned bad data' % self.oid)
             eva.core.log_traceback()
             return False
         return self.update_set_state(status, value, force_virtual=True)
@@ -859,7 +861,7 @@ class UpdatableItem(Item):
                         break
             if _set:
                 logging.debug('%s according to the trap has failed' % \
-                        self.full_id)
+                        self.oid)
                 self.update_set_state(status=-1)
                 return
             if 'set_if' in self.snmp_trap:
@@ -891,7 +893,7 @@ class UpdatableItem(Item):
                 except:
                     logging.error(
                         '%s bad status integer in snmp trap' % \
-                                self.full_id)
+                                self.oid)
             if 'set_value' in self.snmp_trap and \
                     self.snmp_trap['set_value'] in data:
                 value = data[self.snmp_trap['set_value']]
@@ -916,7 +918,7 @@ class UpdatableItem(Item):
                          force_virtual=False):
         if self.virtual and not force_virtual:
             logging.debug('%s skipping update - it\'s virtual' % \
-                    self.full_id)
+                    self.oid)
             return
         self.update_expiration()
         need_notify = False
@@ -928,7 +930,7 @@ class UpdatableItem(Item):
                     self.status = _s
             except:
                 logging.info('%s status "%s" is not number, can not set' % \
-                        (self.full_id, status))
+                        (self.oid, status))
                 eva.core.log_traceback()
                 return False
             need_notify = True
@@ -1076,7 +1078,7 @@ class ActiveItem(Item):
             if a is not None:
                 a.set_canceled()
                 i += 1
-        logging.info('removed %u actions from queue of %s' % (i, self.full_id))
+        logging.info('removed %u actions from queue of %s' % (i, self.oid))
         if lock: self.queue_lock.release()
         return True
 
@@ -1089,7 +1091,7 @@ class ActiveItem(Item):
         if self.action_xc and not self.action_xc.is_finished():
             if not self.action_allow_termination:
                 logging.info('termination of %s denied by config' % \
-                        self.full_id)
+                        self.oid)
                 if lock: self.queue_lock.release()
                 return False
             self.action_xc.terminate()
@@ -1126,7 +1128,7 @@ class ActiveItem(Item):
             return
         self.action_processor = threading.Thread(target =\
                 self._t_action_processor,
-                name = '_t_action_processor_' + self.item_id)
+                name = '_t_action_processor_' + self.oid)
         self.action_processor.start()
 
     def stop_action_processor(self):
@@ -1163,7 +1165,7 @@ class ActiveItem(Item):
     def action_log_run(self, action):
         logging.info(
             '%s executing action %s pr=%u' % \
-             (self.full_id, action.uuid, action.priority))
+             (self.oid, action.uuid, action.priority))
 
     def action_run_args(self, action, n2n=True):
         return ()
@@ -1187,7 +1189,7 @@ class ActiveItem(Item):
         pass
 
     def _t_action_processor(self):
-        logging.debug('%s action processor started' % self.full_id)
+        logging.debug('%s action processor started' % self.oid)
         while self.action_processor_active:
             try:
                 self.current_action = None
@@ -1216,14 +1218,14 @@ class ActiveItem(Item):
                     self.queue_lock.release()
                     logging.info(
                      '%s actions disabled, canceling action %s' % \
-                     (self.full_id, a.uuid))
+                     (self.oid, a.uuid))
                     a.set_canceled()
                 else:
                     if not self.action_may_run(a):
                         self.queue_lock.release()
                         logging.info(
                                 '%s ignoring action %s' % \
-                                 (self.full_id, a.uuid))
+                                 (self.oid, a.uuid))
                         a.set_ignored()
                     elif a.is_status_queued() and a.set_running():
                         self.action_log_run(a)
@@ -1252,7 +1254,7 @@ class ActiveItem(Item):
             except:
                 logging.critical(
                         '%s action processor got an error, restarting' % \
-                                (self.full_id))
+                                (self.oid))
                 eva.core.log_traceback()
             if not self.queue_lock.acquire(timeout=eva.core.timeout):
                 logging.critical(
@@ -1262,7 +1264,7 @@ class ActiveItem(Item):
             self.current_action = None
             self.action_xc = None
             self.queue_lock.release()
-        logging.debug('%s action processor stopped' % self.full_id)
+        logging.debug('%s action processor stopped' % self.oid)
 
     def get_action_xc(self, a):
         if self._drivers_allowed and not self.virtual and \
@@ -1333,7 +1335,7 @@ class ActiveItem(Item):
                             logging.error(
                                 'Can not set ' + \
                                     '%s.action_exec = %s, no such driver'
-                                    % (self.full_id, val))
+                                    % (self.oid, val))
                             return False
                     else:
                         return False
@@ -1494,7 +1496,7 @@ class ActiveItem(Item):
     def disable_actions(self):
         if not self.action_enabled: return True
         self.update_config({'action_enabled': False})
-        logging.info('%s actions disabled' % self.full_id)
+        logging.info('%s actions disabled' % self.oid)
         self.notify()
         if eva.core.db_update == 1: self.save()
         return True
@@ -1502,7 +1504,7 @@ class ActiveItem(Item):
     def enable_actions(self):
         if self.action_enabled: return True
         self.update_config({'action_enabled': True})
-        logging.info('%s actions enabled' % self.full_id)
+        logging.info('%s actions enabled' % self.oid)
         self.notify()
         if eva.core.db_update == 1: self.save()
         return True
@@ -1761,7 +1763,7 @@ class MultiUpdate(UpdatableItem):
         if len(result) < len(self.items_to_update):
             logging.warning(
                     '%s have %u items to update, got only %u in result' % \
-                    (self.full_id, len(self.items_to_update),
+                    (self.oid, len(self.items_to_update),
                         len(result)))
         for i in range(0, min(len(result), len(self.items_to_update))):
             self.items_to_update[i].update_after_run(result[i])
@@ -1779,7 +1781,7 @@ class MultiUpdate(UpdatableItem):
                 else:
                     logging.warning(
                             '%s can not add %s, item not found' % \
-                                    (self.full_id, i))
+                                    (self.oid, i))
 
     def set_prop(self, prop, val=None, save=False):
         if prop == 'update_allow_check':
@@ -1807,7 +1809,7 @@ class MultiUpdate(UpdatableItem):
         if not item in self.items_to_update:
             logging.debug(
                 '%s can not remove %s, doesn\'t exist in the update list' % \
-                                (self.full_id, item.full_id))
+                                (self.oid, item.full_id))
             return False
         self.items_to_update.remove(item)
         self.set_update_run_args()
@@ -1861,18 +1863,18 @@ class VariableItem(UpdatableItem):
         if self._destroyed: return False
         if self.virtual and not force_virtual:
             logging.debug('%s skipping update - it\'s virtual' % \
-                    self.full_id)
+                    self.oid)
             return False
         try:
             if status is not None: _status = int(status)
             else: _status = None
         except:
-            logging.error('update %s returned bad data' % self.full_id)
+            logging.error('update %s returned bad data' % self.oid)
             eva.core.log_traceback()
             return False
         if not self.status and _status is None:
             logging.debug('%s skipping update - it\'s not active' % \
-                    self.full_id)
+                    self.oid)
             return False
         self.update_expiration()
         need_notify = False
@@ -1890,7 +1892,7 @@ class VariableItem(UpdatableItem):
         if need_notify:
             logging.debug(
                 '%s status = %u, value = "%s"' % \
-                        (self.full_id, self.status, self.value))
+                        (self.oid, self.status, self.value))
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 

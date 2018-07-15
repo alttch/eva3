@@ -21,4 +21,4 @@ class Sensor(eva.item.VariableItem, eva.item.PhysicalItem):
 
     def set_expired(self):
         if super().set_expired():
-            logging.error('%s status is -1 (failed)', self.full_id)
+            logging.error('%s status is -1 (failed)', self.oid)

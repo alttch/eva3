@@ -75,15 +75,15 @@ class LVar(eva.item.VariableItem):
         self.update_set_state(
             status=1, value=value, force_virtual=force_virtual)
         logging.debug('%s set, expires: %f' % \
-                (self.full_id, self.set_time + self.expires))
+                (self.oid, self.set_time + self.expires))
         if value is not None:
             logging.debug('%s value = "%s"' % \
-                    (self.full_id, self.value))
+                    (self.oid, self.value))
 
     def set_expired(self):
         if super().set_expired():
             if self.status == -1:
-                logging.info('%s expired', self.full_id)
+                logging.info('%s expired', self.oid)
 
     def serialize(self,
                   full=False,

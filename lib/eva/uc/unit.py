@@ -228,19 +228,19 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
             self.auto_processor.join()
 
     def _t_auto_processor(self):
-        logging.debug('%s auto processor started' % self.full_id)
+        logging.debug('%s auto processor started' % self.oid)
         while self.auto_processor_active and self.auto_off:
             time.sleep(eva.core.polldelay)
             if self.last_action and \
                     self.status != 0 and \
                     time.time() - self.last_action > self.auto_off:
                 logging.debug('%s auto off after %u seconds' % \
-                        (self.full_id, self.auto_off))
+                        (self.oid, self.auto_off))
                 self.last_action = time.time()
                 eva.uc.controller.exec_unit_action(
                     self, 0, None, wait=eva.core.timeout)
         self.auto_processor_active = False
-        logging.debug('%s auto processor stopped' % self.full_id)
+        logging.debug('%s auto processor stopped' % self.oid)
 
     def action_may_run(self, action):
         nv = action.nvalue
@@ -252,7 +252,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
     def action_log_run(self, action):
         logging.info(
             '%s executing action %s pr=%u, status=%s, value="%s"' % \
-             (self.full_id, action.uuid, action.priority,
+             (self.oid, action.uuid, action.priority,
                  action.nstatus, action.nvalue))
 
     def action_run_args(self, action, n2n=True):
@@ -285,13 +285,13 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
         if self._destroyed: return False
         if self.virtual and not force_virtual:
             logging.debug('%s skipping update - it\'s virtual' % \
-                    self.full_id)
+                    self.oid)
             return False
         try:
             if status is not None: _status = int(status)
             else: _status = None
         except:
-            logging.error('update %s returned bad data' % self.full_id)
+            logging.error('update %s returned bad data' % self.oid)
             eva.core.log_traceback()
             return False
         if not self.queue_lock.acquire(timeout=eva.core.timeout):
@@ -339,11 +339,11 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
         if need_notify:
             logging.debug(
                 '%s status = %u, value = "%s", nstatus = %u, nvalue = "%s"' % \
-                        (self.full_id, self.status, self.value,
+                        (self.oid, self.status, self.value,
                             self.nstatus, self.nvalue))
             if eva.core.db_update == 1: eva.uc.controller.save_item_state(self)
             if self.status == -1:
-                logging.error('%s status is -1 (failed)', self.full_id)
+                logging.error('%s status is -1 (failed)', self.oid)
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 
@@ -409,7 +409,7 @@ class UnitAction(eva.item.ItemAction):
                 smsg = 'status=%u value="%s"' % (self.item.status,
                                                  self.item.value)
             logging.debug('action %s completed, %s %s' %
-                          (self.uuid, self.item.full_id, smsg))
+                          (self.uuid, self.item.oid, smsg))
         if lock: self.unit_action_lock.release()
         return True
 
