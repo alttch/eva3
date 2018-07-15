@@ -23,10 +23,11 @@ from pygments import highlight, lexers, formatters
 
 class GenericCLI(object):
 
-    def __init__(self, product, name):
+    def __init__(self, product, name, remote_api=True):
         self.debug = False
         self.name = name
         self.product = product
+        self.remote_api = remote_api
         self.pd = None
         self.argcomplete = None
         self.prompt = None
@@ -40,42 +41,53 @@ class GenericCLI(object):
         self.timeout = self.default_timeout
         self.ssl_verify = False
         self.always_json = []
-        self.always_print = ['cmd']
-        self.common_api_functions = {
-            'cvar:all': 'get_cvar',
-            'cvar:get': 'get_cvar',
-            'cvar:set': 'set_cvar',
-            'cvar:delete': 'set_cvar',
-            'debug': 'set_debug',
-            'file:create': 'file_put',
-            'file:upload': 'file_put',
-            'file:mod': 'file_set_exec',
-            'key:list': 'list_keys',
-            'user:list': 'list_users',
-            'user:create': 'create_user',
-            'user:password': 'set_user_password',
-            'user:key': 'set_user_key',
-            'user:destroy': 'destroy_user'
-        }
-        self.api_functions = self.common_api_functions
-        self.common_pd_cols = {
-            'list_keys': ['key_id', 'master', 'sysfunc', 'allow'],
-            'log_get': ['time', 'host', 'p', 'level', 'message'],
-            'log_get_':
-            ['time', 'host', 'p', 'level', 'mod', 'thread', 'message']
-        }
-        self.pd_cols = self.common_pd_cols
-        self.common_pd_idx = {
-            'list_keys': 'key_id',
-            'list_users': 'user',
-            'state': 'oid',
-            'list': 'oid',
-            'log_get': 'time',
-            'result': 'time',
-            'list_phi_mods': 'mod',
-            'list_lpi_mods': 'mod'
-        }
-        self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
+        self.local_func_result_ok = (apiclient.result_ok, {'result': 'OK'})
+        self.local_func_result_failed = (apiclient.result_func_failed, {
+            'result': 'ERROR'
+        })
+        if remote_api:
+            self.always_print = ['cmd']
+            self.common_api_functions = {
+                'cvar:all': 'get_cvar',
+                'cvar:get': 'get_cvar',
+                'cvar:set': 'set_cvar',
+                'cvar:delete': 'set_cvar',
+                'debug': 'set_debug',
+                'file:create': 'file_put',
+                'file:upload': 'file_put',
+                'file:mod': 'file_set_exec',
+                'key:list': 'list_keys',
+                'user:list': 'list_users',
+                'user:create': 'create_user',
+                'user:password': 'set_user_password',
+                'user:key': 'set_user_key',
+                'user:destroy': 'destroy_user'
+            }
+            self.common_pd_cols = {
+                'list_keys': ['key_id', 'master', 'sysfunc', 'allow'],
+                'log_get': ['time', 'host', 'p', 'level', 'message'],
+                'log_get_':
+                ['time', 'host', 'p', 'level', 'mod', 'thread', 'message']
+            }
+            self.common_pd_idx = {
+                'list_keys': 'key_id',
+                'list_users': 'user',
+                'state': 'oid',
+                'list': 'oid',
+                'log_get': 'time',
+                'result': 'time',
+                'list_phi_mods': 'mod',
+                'list_lpi_mods': 'mod'
+            }
+            self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
+            self.common_fancy_tabsp = {'test': 14}
+        else:
+            self.always_print = []
+            self.common_api_functions = {}
+            self.common_pd_cols = {}
+            self.common_pd_idx = {}
+            self.arg_sections = []
+            self.common_fancy_tabsp = {}
         self.log_levels = {
             10: 'DEBUG',
             20: 'INFO',
@@ -83,9 +95,10 @@ class GenericCLI(object):
             40: 'ERROR',
             50: 'CRITICAL'
         }
-        self.pd_idx = self.common_pd_idx
-        self.common_fancy_tabsp = {'test': 14}
+        self.pd_cols = self.common_pd_cols
+        self.api_functions = self.common_api_functions
         self.fancy_tabsp = self.common_fancy_tabsp
+        self.pd_idx = self.common_pd_idx
         self.batch_file = None
         self.batch_stop_on_err = True
         self.interactive = False
@@ -133,14 +146,16 @@ class GenericCLI(object):
 
     def print_interactive_help(self):
         print('q: quit')
-        print('a: show API params')
-        print('k: key display/set (k. for key reset)')
-        print('u: api uri display/set (u. for uri reset)')
-        print('t: timeout display/set (t. for timeout reset)')
         print('j: toggle json mode')
         print('r: toggle raw mode (no colors)')
-        print('d: toggle client debug mode')
         print()
+        if self.remote_api:
+            print('a: show API params')
+            print('k: key display/set (k. for key reset)')
+            print('u: api uri display/set (u. for uri reset)')
+            print('t: timeout display/set (t. for timeout reset)')
+            print('d: toggle client debug mode')
+            print()
         print('sh: start system shell')
         print('top: display system processes')
         print('w: display uptime and who is online')
@@ -150,10 +165,15 @@ class GenericCLI(object):
 
     def parse_primary_args(self):
         try:
-            o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T:JIR', [
-                'client-ini-file=', 'exec-batch=', 'pass-batch-err',
-                'interactive'
-            ])
+            if self.remote_api:
+                o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T:JIR', [
+                    'client-ini-file=', 'exec-batch=', 'pass-batch-err',
+                    'interactive'
+                ])
+            else:
+                o, a = getopt.getopt(
+                    sys.argv[1:], 'JIR',
+                    ['exec-batch=', 'pass-batch-err', 'interactive'])
             for i, v in o:
                 if i == '--exec-batch':
                     self.batch_file = v
@@ -254,22 +274,39 @@ class GenericCLI(object):
         return s
 
     def add_primary_options(self):
-        self.ap.add_argument(
-            '-K',
-            '--api-key',
-            help=
-            'master key, if no key specified, local master key will be used',
-            dest='_api_key',
-            metavar='KEY')
-        self.ap.add_argument(
-            '-U', '--api-url', help='API URL', dest='_api_uri', metavar='URL')
-        self.ap.add_argument(
-            '-T',
-            '--api-timeout',
-            help='API request timeout (in seconds)',
-            type=float,
-            dest='_timeout',
-            metavar='TIMEOUT')
+        if self.remote_api:
+            self.ap.add_argument(
+                '-K',
+                '--api-key',
+                help='API key, if no key specified, local master key is used',
+                dest='_api_key',
+                metavar='KEY')
+            self.ap.add_argument(
+                '-U',
+                '--api-url',
+                help='API URL',
+                dest='_api_uri',
+                metavar='URL')
+            self.ap.add_argument(
+                '-T',
+                '--api-timeout',
+                help='API request timeout (in seconds)',
+                type=float,
+                dest='_timeout',
+                metavar='TIMEOUT')
+            self.ap.add_argument(
+                '-D',
+                '--debug',
+                help='Enable debug messages',
+                action='store_true',
+                dest='_debug',
+                default=False)
+            self.ap.add_argument(
+                '-F',
+                '--client-ini-file',
+                help='Read API client options from config file',
+                dest='_ini_file',
+                metavar='FILE')
         self.ap.add_argument(
             '-J',
             '--json',
@@ -285,18 +322,12 @@ class GenericCLI(object):
             dest='_raw',
             default=False)
         self.ap.add_argument(
-            '-D',
-            '--debug',
-            help='Enable debug messages',
+            '-I',
+            '--interactive',
+            help='Enter interactive (command prompt) mode',
             action='store_true',
-            dest='_debug',
+            dest='__interactive',
             default=False)
-        self.ap.add_argument(
-            '-F',
-            '--client-ini-file',
-            help='Read API client options from config file',
-            dest='_ini_file',
-            metavar='FILE')
 
     def add_main_subparser(self):
         self.sp = self.ap.add_subparsers(
@@ -446,21 +477,22 @@ class GenericCLI(object):
             self.pd.options.display.max_colwidth = 90
 
     def add_functions(self):
-        self.add_primary_functions()
-        self.add_cmd_functions()
-        self.add_lock_functions()
-        self.add_log_functions()
-        self.add_cvar_functions()
-        self.add_debug_functions()
-        self.add_file_functions()
-        self.add_key_functions()
-        self.add_user_functions()
+        if self.remote_api:
+            self._add_primary_functions()
+            self._add_cmd_functions()
+            self._add_lock_functions()
+            self._add_log_functions()
+            self._add_cvar_functions()
+            self._add_debug_functions()
+            self._add_file_functions()
+            self._add_key_functions()
+            self._add_user_functions()
 
-    def add_primary_functions(self):
+    def _add_primary_functions(self):
         ap_test = self.sp.add_parser('test', help='API test')
         ap_save = self.sp.add_parser('save', help='Save item state and config')
 
-    def add_cmd_functions(self):
+    def _add_cmd_functions(self):
         ap_cmd = self.sp.add_parser('cmd', help='Execute remote command')
         ap_cmd.add_argument('c', help='Command to execute', metavar='CMD')
         ap_cmd.add_argument(
@@ -480,7 +512,7 @@ class GenericCLI(object):
             type=float,
             dest='t')
 
-    def add_lock_functions(self):
+    def _add_lock_functions(self):
         ap_lock = self.sp.add_parser('lock', help='acquire lock')
         ap_lock.add_argument('l', help='Lock ID', metavar='ID')
         ap_lock.add_argument(
@@ -500,7 +532,7 @@ class GenericCLI(object):
         ap_unlock = self.sp.add_parser('unlock', help='release lock')
         ap_unlock.add_argument('l', help='Lock ID', metavar='ID')
 
-    def add_log_functions(self):
+    def _add_log_functions(self):
         ap_log = self.sp.add_parser('log', help='Log functions')
         sp_log = ap_log.add_subparsers(
             dest='_func', metavar='func', help='Log commands')
@@ -535,7 +567,7 @@ class GenericCLI(object):
             dest='_full_display',
             action='store_true')
 
-    def add_cvar_functions(self):
+    def _add_cvar_functions(self):
         ap_cvar = self.sp.add_parser('cvar', help='CVAR functions')
         sp_cvar = ap_cvar.add_subparsers(
             dest='_func', metavar='func', help='CVAR commands')
@@ -548,7 +580,7 @@ class GenericCLI(object):
         sp_cvar_delete = sp_cvar.add_parser('delete', help='Delete CVAR')
         sp_cvar_delete.add_argument('i', help='CVAR ID', metavar='ID')
 
-    def add_debug_functions(self):
+    def _add_debug_functions(self):
         ap_debug = self.sp.add_parser('debug', help='Debug control')
         ap_debug.add_argument(
             'debug',
@@ -556,7 +588,7 @@ class GenericCLI(object):
             metavar='MODE',
             choices=['on', 'off'])
 
-    def add_file_functions(self):
+    def _add_file_functions(self):
         ap_file = self.sp.add_parser(
             'file', help='File management in runtime folder')
         sp_file = ap_file.add_subparsers(
@@ -602,14 +634,14 @@ class GenericCLI(object):
             help='File name (relative to runtime, without / in the beginning)',
             metavar='REMOTE_FILE')
 
-    def add_key_functions(self):
+    def _add_key_functions(self):
         ap_key = self.sp.add_parser('key', help='API key management')
         sp_key = ap_key.add_subparsers(
             dest='_func', metavar='func', help='API key commands')
 
         sp_key_list = sp_key.add_parser('list', help='List API keys')
 
-    def add_user_functions(self):
+    def _add_user_functions(self):
         ap_user = self.sp.add_parser('user', help='user management')
         sp_user = ap_user.add_subparsers(
             dest='_func', metavar='func', help='user commands')
@@ -661,9 +693,9 @@ class GenericCLI(object):
                     print(self.get_prompt() + c)
                     try:
                         code = self.do_run(shlex.split(c))
+                        self.suppress_colors = False
                     except:
                         code = 90
-                    print()
                     if code and self.batch_stop_on_err: return code
             except:
                 print('Unable to open %s' % batch_file)
@@ -689,7 +721,7 @@ class GenericCLI(object):
                 if d[0] in ['q', 'quit', 'exit', 'bye']:
                     print('Bye')
                     return 0
-                elif d[0] == 'a':
+                elif d[0] == 'a' and self.remote_api:
                     print('API uri: %s' % (self.apiuri
                                            if self.apiuri is not None else
                                            '<default>'))
@@ -699,10 +731,10 @@ class GenericCLI(object):
                     print('Client debug mode ' +
                           ('on' if self.debug else 'off'))
                     print('timeout: %f' % self.timeout)
-                elif d[0] == 'k.':
+                elif d[0] == 'k.' and self.remote_api:
                     self.apikey = None
                     print('Key has been reset to default')
-                elif d[0] == 'u.':
+                elif d[0] == 'u.' and self.remote_api:
                     self.apiuri = None
                     print('API uri has been reset to default')
                 elif d[0] == 'j':
@@ -713,24 +745,24 @@ class GenericCLI(object):
                             not self.always_suppress_colors
                     print('Raw mode ' +
                           ('on' if self.always_suppress_colors else 'off'))
-                elif d[0] == 'd':
+                elif d[0] == 'd' and self.remote_api:
                     self.debug = not self.debug
                     print('Client debug mode ' +
                           ('on' if self.debug else 'off'))
-                elif d[0] == 't.':
+                elif d[0] == 't.' and self.remote_api:
                     self.timeout = self.default_timeout
                     print('timeout: %f' % self.timeout)
-                elif d[0] == 'k':
+                elif d[0] == 'k' and self.remote_api:
                     if len(d) > 1:
                         self.apikey = d[1]
                     print('key: %s' % self.apikey
                           if self.apikey is not None else '<default>')
-                elif d[0] == 'u':
+                elif d[0] == 'u' and self.remote_api:
                     if len(d) > 1:
                         self.apiuri = d[1]
                     print('API uri: %s' % self.apiuri
                           if self.apiuri is not None else '<default>')
-                elif d[0] == 't':
+                elif d[0] == 't' and self.remote_api:
                     if len(d) > 1:
                         try:
                             self.timeout = float(d[1])
@@ -770,17 +802,19 @@ class GenericCLI(object):
                 else:
                     try:
                         opts = []
-                        if self.apikey is not None:
-                            opts += ['-K', self.apikey]
-                        if self.apiuri is not None:
-                            opts += ['-U', self.apiuri]
-                        if self.timeout is not None:
-                            opts += ['-T', str(self.timeout)]
+                        if self.remote_api:
+                            if self.apikey is not None:
+                                opts += ['-K', self.apikey]
+                            if self.apiuri is not None:
+                                opts += ['-U', self.apiuri]
+                            if self.timeout is not None:
+                                opts += ['-T', str(self.timeout)]
+                            if self.debug:
+                                opts += ['-D']
                         if self.in_json:
                             opts += ['-J']
-                        if self.debug:
-                            opts += ['-D']
                         code = self.do_run(opts + d)
+                        self.suppress_colors = False
                         if self.debug: self.print_debug('\nCode: %s' % code)
                     except:
                         pass
@@ -823,7 +857,7 @@ class GenericCLI(object):
             debug = c.get('debug')
         else:
             debug = False
-        if a._debug: debug = a._debug
+        if hasattr(a, '_debug') and a._debug: debug = a._debug
         api_func = self.get_api_func(itype, func)
         if not api_func:
             self.ap.print_help()
@@ -832,27 +866,28 @@ class GenericCLI(object):
             apiuri = c.get('uri')
         else:
             apiuri = None
-        if a._api_uri: apiuri = a._api_uri
+        if hasattr(a, '_api_uri') and a._api_uri: apiuri = a._api_uri
         if 'key' in c:
             apikey = c.get('key')
         else:
             apikey = None
-        if a._api_key:
+        if hasattr(a, '_remote_key') and a._api_key:
             apikey = a._api_key
-        if not apiuri:
-            try:
-                api = apiclient.APIClientLocal(self.product)
-            except:
-                print('Can not init API, %s.ini or %s_apikeys.ini missing?' %
-                      (self.product, self.product))
-                return 98
-        else:
-            api = apiclient.APIClient()
-            api.set_uri(apiuri)
-            api.set_product(self.product)
-        if apikey is not None:
-            api.set_key(apikey)
-        api.ssl_verify(self.ssl_verify)
+        if self.remote_api:
+            if not apiuri:
+                try:
+                    api = apiclient.APIClientLocal(self.product)
+                except:
+                    print('Can not init API, %s.ini or %s_apikeys.ini missing?'
+                          % (self.product, self.product))
+                    return 98
+            else:
+                api = apiclient.APIClient()
+                api.set_uri(apiuri)
+                api.set_product(self.product)
+            if apikey is not None:
+                api.set_key(apikey)
+            api.ssl_verify(self.ssl_verify)
         if hasattr(a, '_full') and a._full:
             params['full'] = 1
             api_func_full = '_'
@@ -870,13 +905,17 @@ class GenericCLI(object):
             timeout = c.get('timeout')
         else:
             timeout = self.default_timeout
-        if a._timeout: timeout = a._timeout
-        if debug:
+        if hasattr(a, '_timeout') and a._timeout: timeout = a._timeout
+        if debug and self.remote_api:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)
             self.print_debug('timeout: %s' % timeout)
             self.print_debug('params %s' % params)
-        code, result = api.call(api_func, params, timeout, _debug=debug)
+        if isinstance(api_func, str) and self.remote_api:
+            code, result = api.call(api_func, params, timeout, _debug=debug)
+        else:
+            code, result = api_func(params)
+        if not isinstance(api_func, str): api_func = api_func.__name__
         if code != apiclient.result_ok and \
             code != apiclient.result_func_failed:
             if code == apiclient.result_not_found:
@@ -899,7 +938,7 @@ class GenericCLI(object):
                 self.print_err('Error: Bad data')
             elif code == apiclient.result_invalid_params:
                 self.print_err('Error: invalid params')
-            if debug:
+            if debug and self.remote_api:
                 self.print_debug('API result code: %u' % code)
             return code
         else:
