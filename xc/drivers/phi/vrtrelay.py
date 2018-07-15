@@ -10,7 +10,7 @@ __api__ = 1
 __required__ = ['port_get', 'port_set']
 __mods_required__ = []
 __lpi_default__ = 'basic'
-__features__ = ['port_get', 'port_set', 'aao_set']
+__features__ = ['port_get', 'port_set', 'aao_set', 'aao_get']
 __config_help__ = [{
     'name': 'default_status',
     'help': 'ports status on load (default: -1)',
@@ -61,6 +61,7 @@ class PHI(GenericPHI):
 
     def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data
+        if not port: return self.data
         try:
             return self.data.get(str(port))
         except:
