@@ -104,13 +104,17 @@ class PHI(GenericPHI):
         if host != self.snmp_host: return
         if data.get('1.3.6.1.4.1.3854.1.7.4.0') not in self.sensor_port:
             return
+        try:
+            port = str(int(data.get('1.3.6.1.4.1.3854.1.7.4.0')) + 1)
+        except:
+            return
         d = data.get('1.3.6.1.4.1.3854.1.7.1.0')
         if d == '7':
-            handle_phi_event(self, self.sensor_port, {'1': False})
+            handle_phi_event(self, self.sensor_port, {port: False})
         elif d == '2':
-            handle_phi_event(self, self.sensor_port, {'1': 0})
+            handle_phi_event(self, self.sensor_port, {port: 0})
         elif d == '4':
-            handle_phi_event(self, self.sensor_port, {'1': 1})
+            handle_phi_event(self, self.sensor_port, {port: 1})
         return
 
     def test(self, cmd=None):
