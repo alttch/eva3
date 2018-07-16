@@ -27,7 +27,7 @@ REQUIRED="realpath python3 pip3 sha256sum curl"
 MAX_START_WAIT=180
 
 function usage {
-    echo "Usage: easy-setup.sh [--force] [--clear] [--auto] [--local-only] [-u USER]"
+    echo "Usage: easy-setup [--force] [--clear] [--auto] [--local-only] [-u USER]"
     echo "          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]"
     echo
     echo " Options:"
