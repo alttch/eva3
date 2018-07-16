@@ -276,7 +276,7 @@ critical() method.
 Handling events
 ---------------
 
-If the equipment sends some event, PHI should ask Driver API to handle it. This
+If the equipment sends any event, PHI should ask Driver API to handle it. This
 can be done with method
 
 .. code-block:: python
