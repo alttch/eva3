@@ -25,6 +25,7 @@ mods = [
     'pygments',
     'pytz',
     'pysnmp',
+    'pymodbus',
     'queue',
     're',
     'readline',
