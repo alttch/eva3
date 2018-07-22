@@ -64,6 +64,7 @@ def create_modbus_port(port_id, params, **kwargs):
         lock: should the port be locked, True/False (default: True)
         timeout: port timeout (default: EVA timeout)
         delay: delay between operations (default: 0.02 sec)
+        retries: retry attempts for port read/write operations (default: 0)
 
     Returns:
         True if success, False if failed
@@ -131,11 +132,21 @@ class ModbusPort(object):
 
     def __init__(self, port_id, params, **kwargs):
         self.port_id = port_id
-        self.timeout = kwargs.get('timeout', eva.core.timeout)
         self.lock = kwargs.get('lock', True)
-        self._lock = kwargs.get('lock')
-        self.delay = kwargs.get('delay', default_delay)
-        self._delay = kwargs.get('delay')
+        try:
+            self.timeout = float(kwargs.get('timeout'))
+        except:
+            self.timeout = eva.core.timeout
+        try:
+            self.delay = float(kwargs.get('delay'))
+        except:
+            self.delay = default_delay
+        try:
+            self.retries = int(kwargs.get('retries'))
+        except:
+            self.retries = 0
+        self.tries = self.retries + 1
+        if self.tries < 0: self.tries = 1
         self.params = params
         self.client = None
         self.locker = threading.Lock()
@@ -190,47 +201,78 @@ class ModbusPort(object):
         return True
 
     def read_coils(self, address, count=1, **kwargs):
-        self.sleep()
-        return self.client.read_coils(address, count=1, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.read_coils(address, count=1, **kwargs)
+            if not result.isError(): break
+        return result
 
     def read_discrete_inputs(self, address, count=1, **kwargs):
-        self.sleep()
-        return self.client.read_discrete_inputs(
-            self, address, count=1, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.read_discrete_inputs(
+                self, address, count=1, **kwargs)
+            if not result.isError(): break
+        return result
 
     def write_coil(self, address, value, **kwargs):
-        self.sleep()
-        return self.client.write_coil(self, address, value, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.write_coil(self, address, value, **kwargs)
+            if not result.isError(): break
+        return result
 
     def write_coils(self, address, values, **kwargs):
-        self.sleep()
-        return self.client.write_coils(self, address, values, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.write_coils(self, address, values, **kwargs)
+            if not result.isError(): break
+        return result
 
     def write_register(self, address, value, **kwargs):
-        self.sleep()
-        return self.client.write_register(self, address, value, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.write_register(self, address, value, **kwargs)
+            if not result.isError(): break
+        return result
 
     def write_registers(self, address, values, **kwargs):
-        self.sleep()
-        return self.client.write_registers(self, address, values, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.write_registers(self, address, values,
+                                                 **kwargs)
+            if not result.isError(): break
+        return result
 
     def read_holding_registers(self, address, count=1, **kwargs):
-        self.sleep()
-        return self.client.read_holding_registers(
-            self, address, count=1, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.read_holding_registers(
+                self, address, count=1, **kwargs)
+            if not result.isError(): break
+        return result
 
     def read_input_registers(self, address, count=1, **kwargs):
-        self.sleep()
-        return self.client.read_input_registers(
-            self, address, count=1, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.read_input_registers(
+                self, address, count=1, **kwargs)
+            if not result.isError(): break
+        return result
 
     def readwrite_registers(self, *args, **kwargs):
-        self.sleep()
-        return self.client.readwrite_registers(self, *args, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.readwrite_registers(self, *args, **kwargs)
+            if not result.isError(): break
+        return result
 
     def mask_write_register(self, *args, **kwargs):
-        self.sleep()
-        return self.client.mask_write_register(self, *args, **kwargs)
+        for i in range(self.tries):
+            self.sleep()
+            result = self.client.mask_write_register(self, *args, **kwargs)
+            if not result.isError(): break
+        return result
 
     def sleep(self):
         a = time.time()
@@ -239,9 +281,13 @@ class ModbusPort(object):
         self.last_action = time.time()
 
     def serialize(self):
-        d = {'id': self.port_id, 'params': self.params}
-        if self._lock is not None: d['lock'] = self._lock
-        if self._delay is not None: d['delay'] = self._delay
+        d = {
+            'id': self.port_id,
+            'params': self.params,
+            'lock': self.lock,
+            'delay': self.delay,
+            'retries': self.retries
+        }
         return d
 
     def stop(self):
