@@ -133,6 +133,7 @@ class ModbusPort(object):
     def __init__(self, port_id, params, **kwargs):
         self.port_id = port_id
         self.lock = kwargs.get('lock', True)
+        self.lock = True if self.lock else False
         try:
             self.timeout = float(kwargs.get('timeout'))
         except:
@@ -157,9 +158,9 @@ class ModbusPort(object):
                 try:
                     host = p[1]
                     try:
-                        port = p[2]
+                        port = int(p[2])
                     except:
-                        port = 503
+                        port = 502
                     if p[0] == 'tcp':
                         self.client = ModbusTcpClient(host, port)
                     else:
