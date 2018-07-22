@@ -60,7 +60,7 @@ def create_modbus_port(port_id, params, **kwargs):
 
     Args:
         port_id: port ID
-        params: port params (i.e. tcp:localhost:502 or rtu:/dev/ttyS0:9600:8:N:1)
+        params: port params (i.e. tcp:localhost:502, rtu:/dev/ttyS0:9600:8:N:1)
         lock: should the port be locked, True/False (default: True)
         timeout: port timeout (default: EVA timeout)
         delay: delay between operations (default: 0.02 sec)
@@ -77,6 +77,7 @@ def create_modbus_port(port_id, params, **kwargs):
         if port_id in self.ports:
             self.ports[port_id].stop()
         self.ports[port_id] = p
+        logging.info('modbus port {} : {}'.format(port_id, params))
         return True
 
 
@@ -119,6 +120,11 @@ def save():
 def start():
     eva.core.append_dump_func('uc.modbus', dump)
     eva.core.append_save_func(save)
+
+
+def stop():
+    for k, p in ports.copy().items():
+        p.stop()
 
 
 class ModbusPort(object):

@@ -569,6 +569,7 @@ def stop():
         v.stop_processors()
     if Q: Q.stop()
     eva.uc.driverapi.stop()
+    eva.uc.modbus.stop()
 
 
 def exec_mqtt_unit_action(unit, msg):
