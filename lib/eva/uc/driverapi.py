@@ -30,8 +30,10 @@ def get_version():
 def get_polldelay():
     return eva.core.polldelay
 
+
 def get_sleep_step():
     return eva.core.sleep_step
+
 
 def get_timeout():
     return eva.core.timeout

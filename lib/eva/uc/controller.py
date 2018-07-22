@@ -16,6 +16,7 @@ import eva.uc.unit
 import eva.uc.sensor
 import eva.uc.ucmu
 import eva.uc.driverapi
+import eva.uc.modbus
 
 from eva.tools import is_oid
 from eva.tools import parse_oid
@@ -194,8 +195,8 @@ def save_item_state(item):
             pass
         return False
 
-
 def load_drivers():
+    eva.uc.modbus.load()
     eva.uc.driverapi.load()
 
 def load_db_state(items, item_type, clean=False, create=True):
@@ -552,6 +553,7 @@ def serialize_actions():
 
 def start():
     global Q
+    eva.uc.modbus.start()
     eva.uc.driverapi.start()
     Q = eva.uc.ucqueue.UC_Queue('uc_queue')
     Q.start()

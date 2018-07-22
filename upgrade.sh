@@ -11,6 +11,7 @@ BUILD=2018071501
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh sbin/check_mods set-run-under-user.sh"
 
 UC_NEW_CFG="runtime/uc_drivers.json"
+UC_NEW_CFG_L="runtime/uc_modbus.json"
 LM_NEW_CFG="runtime/lm_extensions.json"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
@@ -71,6 +72,13 @@ echo "- Adding new runtime configs"
 
 for f in ${UC_NEW_CFG}; do
     [ ! -f $f ] && echo "{}" > $f
+    if [ "x$UC_USER" != "x" ]; then
+        chown ${UC_USER} $f
+    fi
+done
+
+for f in ${UC_NEW_CFG_L}; do
+    [ ! -f $f ] && echo "[]" > $f
     if [ "x$UC_USER" != "x" ]; then
         chown ${UC_USER} $f
     fi
