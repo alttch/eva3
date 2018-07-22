@@ -13,6 +13,7 @@ import eva.core
 import threading
 import time
 
+
 class ModbusPort(object):
 
     def __init__(self, port_id, params, **kwargs):
@@ -79,7 +80,8 @@ class ModbusPort(object):
 
     def read_discrete_inputs(self, address, count=1, **kwargs):
         self.sleep()
-        return self.client.read_discrete_inputs(self, address, count=1, **kwargs)
+        return self.client.read_discrete_inputs(
+            self, address, count=1, **kwargs)
 
     def write_coil(self, address, value, **kwargs):
         self.sleep()
@@ -99,11 +101,13 @@ class ModbusPort(object):
 
     def read_holding_registers(self, address, count=1, **kwargs):
         self.sleep()
-        return self.client.read_holding_registers(self, address, count=1, **kwargs)
+        return self.client.read_holding_registers(
+            self, address, count=1, **kwargs)
 
     def read_input_registers(self, address, count=1, **kwargs):
         self.sleep()
-        return self.client.read_input_registers(self, address, count=1, **kwargs)
+        return self.client.read_input_registers(
+            self, address, count=1, **kwargs)
 
     def readwrite_registers(self, *args, **kwargs):
         self.sleep()
