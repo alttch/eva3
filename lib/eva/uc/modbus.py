@@ -38,7 +38,9 @@ def get_port(port_id):
     port stays locked!
     """
     port = ports.get(port_id)
-    return port.acquire() if port else None
+    if not port: return None
+    result = port.acquire()
+    return port if result else result
 
 
 # private functions
@@ -213,74 +215,71 @@ class ModbusPort(object):
     def read_coils(self, address, count=1, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.read_coils(address, count=1, **kwargs)
+            result = self.client.read_coils(address, count, **kwargs)
             if not result.isError(): break
         return result
 
     def read_discrete_inputs(self, address, count=1, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.read_discrete_inputs(
-                self, address, count=1, **kwargs)
+            result = self.client.read_discrete_inputs(address, count, **kwargs)
             if not result.isError(): break
         return result
 
     def write_coil(self, address, value, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.write_coil(self, address, value, **kwargs)
+            result = self.client.write_coil(address, value, **kwargs)
             if not result.isError(): break
         return result
 
     def write_coils(self, address, values, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.write_coils(self, address, values, **kwargs)
+            result = self.client.write_coils(address, values, **kwargs)
             if not result.isError(): break
         return result
 
     def write_register(self, address, value, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.write_register(self, address, value, **kwargs)
+            result = self.client.write_register(address, value, **kwargs)
             if not result.isError(): break
         return result
 
     def write_registers(self, address, values, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.write_registers(self, address, values,
-                                                 **kwargs)
+            result = self.client.write_registers(address, values, **kwargs)
             if not result.isError(): break
         return result
 
     def read_holding_registers(self, address, count=1, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.read_holding_registers(
-                self, address, count=1, **kwargs)
+            result = self.client.read_holding_registers(address, count,
+                                                        **kwargs)
             if not result.isError(): break
         return result
 
     def read_input_registers(self, address, count=1, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.read_input_registers(
-                self, address, count=1, **kwargs)
+            result = self.client.read_input_registers(address, count, **kwargs)
             if not result.isError(): break
         return result
 
     def readwrite_registers(self, *args, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.readwrite_registers(self, *args, **kwargs)
+            result = self.client.readwrite_registers(*args, **kwargs)
             if not result.isError(): break
         return result
 
     def mask_write_register(self, *args, **kwargs):
         for i in range(self.tries):
             self.sleep()
-            result = self.client.mask_write_register(self, *args, **kwargs)
+            result = self.client.mask_write_register(*args, **kwargs)
             if not result.isError(): break
         return result
 
