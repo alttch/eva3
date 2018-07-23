@@ -45,6 +45,9 @@ def get_port(port_id, timeout=None):
     """
     port = ports.get(port_id)
     if timeout and timeout < port.timeout * port.tries:
+        logging.warning(
+            'unable to acquire modbus port {}, '.format(port_id) + \
+                'commands execution time may exceed the limit')
         return None
     if not port: return None
     result = port.acquire()
@@ -151,8 +154,9 @@ class ModbusPort(object):
             self.timeout = float(kwargs.get('timeout'))
             self._timeout = self.timeout
         except:
-            self.timeout = eva.core.timeout
+            self.timeout = eva.core.timeout - 1
             self._timeout = None
+            if self.timeout < 1: self.timeout = 1
         try:
             self.delay = float(kwargs.get('delay'))
         except:
