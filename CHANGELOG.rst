@@ -23,6 +23,7 @@ UC
 
     * uc-cmd renamed to uc-api
     * UC drivers: logical to physical (LPI) and physical (PHI) interfaces
+    * Native ModBus support (drivers only)
     * device templates
     * new function "state_history" in UC API
     * EVA_ITEM_OID var in the environment of UC scripts
