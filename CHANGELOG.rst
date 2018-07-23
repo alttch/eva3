@@ -21,9 +21,10 @@ Core
 UC
 ~~
 
-    * uc-cmd renamed to uc-api
+    * new uc-cmd cli
+    * old uc-cmd available as uc-api
     * UC drivers: logical to physical (LPI) and physical (PHI) interfaces
-    * Native ModBus support (drivers only)
+    * native ModBus support (drivers only)
     * device templates
     * new function "state_history" in UC API
     * EVA_ITEM_OID var in the environment of UC scripts
@@ -95,6 +96,7 @@ API Client
 Common
 ~~~~~~
 
+    * new notifier management CLI
     * watchdog to test/automatically restart controllers in case of failure
     * oid support in API keys
     * other stability improvements
