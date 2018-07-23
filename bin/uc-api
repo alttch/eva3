@@ -286,7 +286,7 @@ debug = False
 try:
     func = sys.argv[1]
     o, a = getopt.getopt(sys.argv[2:],
-                         'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:r:s:v:w:x:yzD')
+                         'K:T:U:m:a:c:d:l:t:e:n:i:u:g:p:q:r:s:v:w:x:yzD')
 except:
     usage()
     sys.exit(99)
@@ -335,6 +335,7 @@ if ( func == 'set_prop' or \
         func == 'update_device' or \
         func == 'load_phi' or \
         func == 'load_driver' or \
+        func == 'create_modbus_port' or \
         func == 'clone' or \
         func == 'clone_group' or \
         func == 'create_unit' or \

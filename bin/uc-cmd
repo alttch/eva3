@@ -35,6 +35,10 @@ _api_functions = {
     'device:create': 'create_device',
     'device:update': 'update_device',
     'device:destroy': 'destroy_device',
+    'modbus:list': 'list_modbus_ports',
+    'modbus:create': 'create_modbus_port',
+    'modbus:destroy': 'destroy_modbus_port',
+    'modbus:test': 'test_modbus_port',
     'phi:list': 'list_phi',
     'phi:get': 'get_phi',
     'phi:mods': 'list_phi_mods',
@@ -65,6 +69,8 @@ _pd_cols = {
         'status'
     ],
     'list': ['oid', 'description'],
+    'list_modbus_ports':
+    ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
     'list_phi_': ['id', 'mod', 'description', 'version'],
     'list_drivers_':
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
@@ -142,6 +148,7 @@ class UC_CLI(GenericCLI):
         self.add_uc_action_functions()
         self.add_uc_configure_functions()
         self.add_uc_device_functions()
+        self.add_uc_modbus_functions()
         self.add_uc_driver_functions()
 
     def add_uc_common_functions(self):
@@ -465,6 +472,58 @@ class UC_CLI(GenericCLI):
             metavar='VARS',
             dest='c')
 
+    def add_uc_modbus_functions(self):
+        ap_modbus = self.sp.add_parser('modbus', help='ModBus ports')
+        sp_modbus = ap_modbus.add_subparsers(
+            dest='_func', metavar='func', help='ModBus port commands')
+
+        sp_modbus_list = sp_modbus.add_parser('list', help='List defined ports')
+        sp_modbus_create = sp_modbus.add_parser(
+            'create', help='Create (define) new port')
+        sp_modbus_create.add_argument('i', help='Port ID', metavar='ID')
+        sp_modbus_create.add_argument(
+            'p',
+            help='Port parameters (proto:port/host:params)',
+            metavar='PARAMS')
+        sp_modbus_create.add_argument(
+            '-l',
+            '--lock',
+            help='Lock port on operations',
+            action='store_true',
+            dest='l')
+        sp_modbus_create.add_argument(
+            '-t',
+            '--timeout',
+            help='Port timeout',
+            metavar='SEC',
+            type=float,
+            dest='t')
+        sp_modbus_create.add_argument(
+            '-r',
+            '--retries',
+            help='Operation retry attempts',
+            metavar='RETRIES',
+            type=int,
+            dest='r')
+        sp_modbus_create.add_argument(
+            '-d',
+            '--delay',
+            help='Delay between operations',
+            metavar='SEC',
+            type=float,
+            dest='d')
+        sp_modbus_create.add_argument(
+            '-y',
+            '--save',
+            help='save configuration on success load',
+            dest='_save',
+            action='store_true')
+        sp_modbus_test = sp_modbus.add_parser('test', help='Test defined port')
+        sp_modbus_test.add_argument('i', help='Port ID', metavar='ID')
+        sp_modbus_destroy = sp_modbus.add_parser(
+            'destroy', help='Destroy (undefine) port')
+        sp_modbus_destroy.add_argument('i', help='Port ID', metavar='ID')
+
     def add_uc_driver_functions(self):
         ap_phi = self.sp.add_parser('phi', help='PHI (Physical interface)')
         ap_lpi = self.sp.add_parser(
@@ -604,7 +663,7 @@ cli = UC_CLI('uc', _me)
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle']
 cli.arg_sections += [
-    'action', 'config', 'clone', 'device', 'phi', 'lpi', 'driver'
+    'action', 'config', 'clone', 'device', 'modbus', 'phi', 'lpi', 'driver'
 ]
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)

@@ -54,18 +54,20 @@ _api_func = {
             'list', 'list_props', 'set_prop', 'create', 'create_unit',
             'create_sensor', 'create_mu', 'create_device', 'update_device',
             'clone', 'clone_group', 'destroy', 'destroy_device', 'login',
-            'logout', 'load_phi', 'unload_phi', 'load_driver', 'unload_driver',
-            'list_phi', 'list_drivers', 'get_phi', 'get_driver', 'test_phi',
-            'list_lpi_mods', 'list_phi_mods', 'modinfo_phi', 'modinfo_lpi',
-            'modhelp_phi', 'modhelp_lpi', 'set_driver'
+            'logout', 'create_modbus_port', 'destroy_modbus_port',
+            'list_modbus_ports', 'test_modbus_port', 'load_phi', 'unload_phi',
+            'load_driver', 'unload_driver', 'list_phi', 'list_drivers',
+            'get_phi', 'get_driver', 'test_phi', 'list_lpi_mods',
+            'list_phi_mods', 'modinfo_phi', 'modinfo_lpi', 'modhelp_phi',
+            'modhelp_lpi', 'set_driver'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
             'enable_actions', 'save_config', 'set_prop', 'create',
             'create_unit', 'create_sensor', 'create_mu', 'create_device',
             'update_device', 'clone', 'clone_group', 'destroy',
-            'destroy_device', 'login', 'logout', 'unload_phi', 'unload_driver',
-            'set_driver'
+            'destroy_device', 'login', 'logout', 'destroy_modbus_port',
+            'test_modbus_port', 'unload_phi', 'unload_driver', 'set_driver'
         ],
         'ce': ['action', 'action_toggle']
     },
