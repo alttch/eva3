@@ -71,6 +71,32 @@ class PHI(GenericPHI):
             self.ready = False
             return
 
+    def exec(self, cmd=None, args=None):
+        if cmd == 'id':
+            try:
+                new_id = int(args)
+                if new_id < 1 or new_id > 247:
+                    raise Exception('id not in range 1..247')
+                mb = modbus.get_port(self.modbus_port)
+                if not mb:
+                    raise Exception('unable to get modbus port {}'.format(
+                        self.modbus_port))
+                try:
+                    result = mb.write_register(18, new_id, unit=self.unit_id)
+                except:
+                    log_traceback()
+                    result = None
+                mb.release()
+                if not result or result.isError(): return 'FAILED'
+                self.unit_id = new_id
+                self.phi_cfg['unit'] = new_id
+                return 'OK'
+            except:
+                log_traceback()
+                return 'FAILED'
+        else:
+            return {'id': 'change relay slave ID (1..247), relay reboot required'}
+
     def get(self, port=None, cfg=None, timeout=0):
         mb = modbus.get_port(self.modbus_port, timeout)
         if not mb: return None
