@@ -72,7 +72,7 @@ class PHI(GenericPHI):
             return
 
     def get(self, port=None, cfg=None, timeout=0):
-        mb = modbus.get_port(self.modbus_port)
+        mb = modbus.get_port(self.modbus_port, timeout)
         if not mb: return None
         rr = mb.read_coils(0, 16, unit=self.unit_id)
         mb.release()
@@ -93,7 +93,7 @@ class PHI(GenericPHI):
         except:
             return False
         if port < 1 or port > self.port_max or val < 0 or val > 1: return False
-        mb = modbus.get_port(self.modbus_port)
+        mb = modbus.get_port(self.modbus_port, timeout)
         if not mb: return None
         result = mb.write_coil(
             port - 1, True if val else False, unit=self.unit_id)
@@ -117,7 +117,7 @@ class PHI(GenericPHI):
             except:
                 log_traceback()
                 return 'FAILED'
-        if cmd == 'get': return self.get(timeout=get_timeout())
+        if cmd == 'get': return self.get(timeout=get_timeout() * 10)
         return {
             'info': 'returns relay firmware version',
             'get': 'get current relay state'

@@ -27,17 +27,25 @@ def is_port(port_id):
     return port_id in ports
 
 
-def get_port(port_id):
+def get_port(port_id, timeout=None):
     """Get modbus port with the choosen ID
 
+    Args:
+
+      port_id: modbus port ID
+      timeout: max allowed timeout for the operations
+
     Returns:
-      None if port doesn't exist, 0 if port is busy, False if port connect
-      error or modbus port object itself if success
+      None if port doesn't exist or the operations could require more time than
+      timeout specified, 0 if port is busy, False if port connect error or
+      modbus port object itself if success
 
     Don't forget to call port.release() after the work is over, otherwise the
     port stays locked!
     """
     port = ports.get(port_id)
+    if timeout and timeout < port.timeout * port.tries:
+        return None
     if not port: return None
     result = port.acquire()
     return port if result else result
