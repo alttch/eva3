@@ -23,6 +23,7 @@ from eva import apikey
 import eva.sysapi
 import eva.uc.controller
 import eva.uc.driverapi
+import eva.uc.modbus
 import eva.ei
 import jinja2
 import jsonpickle
@@ -567,6 +568,41 @@ class UC_API(GenericAPI):
         return eva.uc.controller.destroy_item(i) if i \
                 else eva.uc.controller.destroy_group(g)
 
+    # master functions for modbus port management
+
+    def create_modbus_port(self,
+                           k=None,
+                           i=None,
+                           params=None,
+                           lock=False,
+                           timeout=None,
+                           delay=None,
+                           retries=None,
+                           save=False):
+        if not apikey.check(k, master=True): return None
+        if not i or not params: return False
+        result = eva.uc.modbus.create_modbus_port(
+            i, params, lock=lock, timeout=timeout, delay=delay, retries=retries)
+        if result and save: eva.uc.modbus.save()
+        return result
+
+    def destroy_modbus_port(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        result = eva.uc.modbus.destroy_modbus_port(i)
+        if result and eva.core.db_update == 1: eva.uc.modbus.save()
+        return result
+
+    def list_modbus_ports(self, k=None):
+        if not apikey.check(k, master=True): return None
+        return sorted(eva.uc.modbus.serialize(), key=lambda k: k['id'])
+
+    def test_modbus_port(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        port = eva.uc.modbus.get_port(i)
+        result = True if port else False
+        if result: port.release()
+        return result
+
     # master functions for driver configuration
 
     def load_phi(self, k=None, i=None, m=None, cfg=None, save=False):
@@ -610,7 +646,8 @@ class UC_API(GenericAPI):
 
     def list_phi(self, k=None, full=False):
         if not apikey.check(k, master=True): return None
-        return sorted(eva.uc.driverapi.serialize_phi(full=full, config=full),
+        return sorted(
+            eva.uc.driverapi.serialize_phi(full=full, config=full),
             key=lambda k: k['id'])
 
     def list_drivers(self, k=None, full=False):
@@ -727,6 +764,11 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
         UC_HTTP_API.destroy.exposed = True
         UC_HTTP_API.destroy_device.exposed = True
+
+        UC_HTTP_API.create_modbus_port.exposed = True
+        UC_HTTP_API.destroy_modbus_port.exposed = True
+        UC_HTTP_API.list_modbus_ports.exposed = True
+        UC_HTTP_API.test_modbus_port.exposed = True
 
         UC_HTTP_API.load_phi.exposed = True
         UC_HTTP_API.unload_phi.exposed = True
@@ -1040,6 +1082,55 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         cp_need_master(k)
         return http_api_result_ok() if super().destroy(k, i, g) \
                 else http_api_result_error()
+
+    def create_modbus_port(self,
+                           k=None,
+                           i=None,
+                           p=None,
+                           l=None,
+                           t=None,
+                           d=None,
+                           r=None,
+                           save=False):
+        cp_need_master(k)
+        if t:
+            try:
+                _t = float(t)
+            except:
+                raise cp_api_error()
+        else:
+            _t = None
+        if d:
+            try:
+                _d = float(d)
+            except:
+                raise cp_api_error()
+        else:
+            _d = None
+        if r:
+            try:
+                _r = int(r)
+            except:
+                raise cp_api_error()
+        else:
+            _r = None
+        return http_api_result_ok() if super().create_modbus_port(
+            k, i, p, val_to_boolean(l), _t, _d, _r,
+            save) else http_api_result_error()
+
+    def destroy_modbus_port(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().destroy_modbus_port(
+            k, i) else http_api_result_error()
+
+    def list_modbus_ports(self, k=None):
+        cp_need_master(k)
+        return super().list_modbus_ports(k)
+
+    def test_modbus_port(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().test_modbus_port(
+            k, i) else http_api_result_error()
 
     def load_phi(self, k=None, i=None, m=None, c=None, save=False):
         cp_need_master(k)
