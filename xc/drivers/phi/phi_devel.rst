@@ -230,14 +230,34 @@ universal, it should handle them properly.
     forcely restarted.  Always calculate the remaining time for the external
     calls and return error as soon as it comes closer to the expiration.
 
-This method should perform a self-test (equipment test) if cmd=='self', other
-methods are variable and may be used i.e. for debugging. If command is not
-understood by the method, it's a rule of a good taste to return a help text
+Method **test** should perform a self-test (equipment test) if cmd=='self',
+other methods are variable and may be used i.e. for debugging. If command is
+not understood by the method, it's a rule of a good taste to return a help text
 (dict *{ 'command': 'command help' }*).
 
 .. code-block:: python
 
     def test(self, cmd=None):
+        #<your code>
+
+Method **exec** may be implemented to perform some actions on the equipment,
+i.e. changing the equipment settings or manage the firmware. You can implement
+any commands in any form you wish using **cmd** and **args** params.
+
+.. code-block:: python
+
+    def exec(self, cmd=None, args=None):
+        #<your code>
+
+The method should be used for the real commands only, all the tests (i.e.
+testing **get** method, obtaining equipment info for testing or informational
+puproses) should be implemented in **test**. If command is not understood by
+the method, it's a rule of a good taste to return a help text (dict *{
+'command': 'command help' }*).
+
+.. code-block:: python
+
+    def exec(self, cmd=None, args=None):
         #<your code>
 
 The following methods may be used to call or register/unregister anything on

@@ -683,6 +683,15 @@ class UC_API(GenericAPI):
         else:
             return False
 
+    def exec_phi(self, k=None, i=None, c=None, a=None):
+        if not apikey.check(k, master=True): return None
+        if not i: return False
+        phi = eva.uc.driverapi.get_phi(i)
+        if phi:
+            return phi.exec(c, a)
+        else:
+            return False
+
     def list_phi_mods(self, k=None):
         if not apikey.check(k, master=True): return None
         return eva.uc.driverapi.list_phi_mods()
@@ -781,6 +790,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.get_driver.exposed = True
 
         UC_HTTP_API.test_phi.exposed = True
+        UC_HTTP_API.exec_phi.exposed = True
 
         UC_HTTP_API.list_phi_mods.exposed = True
         UC_HTTP_API.list_lpi_mods.exposed = True
@@ -1181,6 +1191,13 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
     def test_phi(self, k=None, i=None, c=None):
         cp_need_master(k)
         result = super().test_phi(k, i, c)
+        if result is False: raise cp_api_404()
+        if result is None: raise cp_api_error()
+        return http_api_result_ok() if result is True else result
+
+    def exec_phi(self, k=None, i=None, c=None, a=None):
+        cp_need_master(k)
+        result = super().exec_phi(k, i, c, a)
         if result is False: raise cp_api_404()
         if result is None: raise cp_api_error()
         return http_api_result_ok() if result is True else result

@@ -166,6 +166,9 @@ class PHI(object):
         d['id'] = self.phi_id
         return d
 
+    def exec(self, cmd=None, args=None):
+        return 'not implemented'
+
     def test(self, cmd=None):
         return 'FAILED'
 

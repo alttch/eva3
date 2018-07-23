@@ -43,6 +43,7 @@ _api_functions = {
     'phi:get': 'get_phi',
     'phi:mods': 'list_phi_mods',
     'phi:test': 'test_phi',
+    'phi:exec': 'exec_phi',
     'phi:load': 'load_phi',
     'phi:unload': 'unload_phi',
     'phi:modinfo': 'modinfo_phi',
@@ -562,6 +563,12 @@ class UC_CLI(GenericCLI):
         sp_phi_test = sp_phi.add_parser('test', help='Send test call to PHI')
         sp_phi_test.add_argument('i', help='PHI ID', metavar='PHI_ID')
         sp_phi_test.add_argument('c', help='PHI test command', metavar='CMD')
+
+        sp_phi_exec = sp_phi.add_parser('exec', help='Send exec call to PHI')
+        sp_phi_exec.add_argument('i', help='PHI ID', metavar='PHI_ID')
+        sp_phi_exec.add_argument('c', help='PHI exec command', metavar='CMD')
+        sp_phi_exec.add_argument(
+            '-a', '--args', help='Command arguments', metavar='ARGS', dest='a')
 
         sp_driver_get = sp_driver.add_parser(
             'get', help='Get loaded driver info')
