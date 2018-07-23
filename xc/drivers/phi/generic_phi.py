@@ -122,7 +122,7 @@ class PHI(object):
         d = {}
         if helpinfo:
             if helpinfo == 'cfg':
-                d = self.__config_help
+                d = self.__config_help.copy()
                 if 'cache' in self.__features:
                     d.append({
                         'name': 'cache',
@@ -138,9 +138,9 @@ class PHI(object):
                         'required': False
                     })
             elif helpinfo == 'get':
-                d = self.__get_help
+                d = self.__get_help.copy()
             elif helpinfo == 'set':
-                d = self.__set_help
+                d = self.__set_help.copy()
             else:
                 d = None
             return d
