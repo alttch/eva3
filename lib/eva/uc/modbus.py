@@ -165,6 +165,7 @@ class ModbusPort(object):
         if self.tries < 0: self.tries = 1
         self.params = params
         self.client = None
+        self.client_type = None
         self.locker = threading.Lock()
         self.last_action = 0
         if params:
@@ -204,6 +205,8 @@ class ModbusPort(object):
                         baudrate=speed)
                 except:
                     eva.core.log_traceback()
+            if self.client:
+                self.client_type = p[0]
 
     def acquire(self):
         if not self.client: return False

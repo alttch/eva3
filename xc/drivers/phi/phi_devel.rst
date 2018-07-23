@@ -420,6 +420,11 @@ module.
         return result
 
 
+The variable **client_type** of the port object (*mb.client_type*) holds the
+port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
+working with the equipment of the same type which uses i.e. different registers
+for the different connection types.
+
 Exceptions
 ----------
 

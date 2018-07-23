@@ -109,7 +109,11 @@ class PHI(GenericPHI):
         if cmd == 'info':
             mb = modbus.get_port(self.modbus_port)
             if not mb: return 'FAILED'
-            rr = mb.read_holding_registers(22, 1, unit=self.unit_id)
+            if mb.client_type in ['tcp', 'udp']:
+                reg = 22
+            else:
+                reg = 21
+            rr = mb.read_holding_registers(reg, 1, unit=self.unit_id)
             mb.release()
             if rr.isError(): return 'FAILED'
             try:
