@@ -75,12 +75,12 @@ class LPI(object):
         d = {}
         if helpinfo:
             if helpinfo == 'cfg':
-                d = self.__config_help
+                d = self.__config_help.copy()
                 return d
             elif helpinfo == 'action':
-                d = self.__action_help
+                d = self.__action_help.copy()
             elif helpinfo == 'update':
-                d = self.__state_help
+                d = self.__state_help.copy()
             else:
                 d = None
             return d
