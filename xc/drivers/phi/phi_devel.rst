@@ -252,9 +252,9 @@ any commands in any form you wish using **cmd** and **args** params.
 The method should be used for the real commands only, all the tests (i.e.
 testing **get** method, obtaining equipment info for testing or informational
 puproses) should be implemented in **test**. After the command execution, the
-method should return *{ 'result': 'OK' }* on success or *{ 'result': 'ERROR' }*
-on failure. If command is not understood by the method, it's a rule of a good
-taste to return a help text (dict *{ 'command': 'command help' }*).
+method should return *OK* on success or *FAILED* on failure. If command is not
+understood by the method, it's a rule of a good taste to return a help text
+(dict *{ 'command': 'command help' }*).
 
 The following methods may be used to call or register/unregister anything on
 driver load/unload:
