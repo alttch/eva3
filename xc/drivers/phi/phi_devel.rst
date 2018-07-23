@@ -110,8 +110,8 @@ file.
     ICS) should be imported with try/catch with **importlib**, their
     unavailability shouldn't block loading PHI for the informational puproses.
 
-Importing modules from eva.uc.drivers.tools, eva.tools, eva.traphandler and
-functions from eva.uc.driverapi:
+Importing modules from eva.uc.drivers.tools, eva.tools, eva.traphandler,
+eva.uc.modbus and functions from eva.uc.driverapi:
 
 * **get_version()** get Driver API version
 * **get_polldelay()** get EVA poll delay
@@ -344,6 +344,65 @@ If the equipment doesn't send any events, PHI can initiate updating the items
 by itself. To perform this, PHI should support **aao_get** feature and be
 loaded with *update=N* config param. Updates, intervals as well as the whole
 update process are handled by parent class.
+
+Working with ModBus
+-------------------
+
+Working with ModBus is pretty easy. PHIs don't need to care about the ModBus
+connection and data exchange at all, everything is managed by **eva.uc.modbus**
+module.
+
+.. code-block:: python
+
+    # everything you need is just import module
+    import eva.uc.modbus as modbus
+
+    def __init__(self, phi_cfg=None, info_only=False):
+        # ....
+        # it's recommended to force aao_get in ModBus PHI to let it read states
+        # with one modbus request
+        self.aao_get = True
+        self.modbus_port = self.phi_cfg.get('port')
+        # check in constructor is the specified modbus port defined
+        if not modbus.is_port(self.modbus_port):
+            self.log_error('modbus port ID not specified or invalid')
+            self.ready = False
+            return
+        # store unit id PHI is loaded for
+        try:
+            self.unit_id = int(self.phi_cfg.get('unit'))
+        except:
+            self.ready = False
+            return
+
+    def get(self, port=None, cfg=None, timeout=0):
+        # modbus.get_port(port_id) function returns:
+        # False - if port failed to connect,
+        # None - if port doesn't exist,
+        # 0 - if port is locked and busy,
+        # or the port object itself
+        mb = modbus.get_port(self.modbus_port)
+        if not mb: return None
+        # The port object is a regular pymodbus object
+        # (https://pymodbus.readthedocs.io) and supports all pymodbus functions.
+        # All the functions are wrapped with EVA modbus module which handles
+        # all errors and retry attempts. The ports PHI gets are always in the
+        # connected state.
+        r = mb.read_coils(0, 16, unit=self.unit_id)
+        # Release modbus port as soon as possible to let other components work
+        # with it while your PHI is processing the data
+        mb.release()
+        # result is a regular pymodbus result
+        if rr.isError(): return None
+        # let's convert 16 coils to 16 port states
+        result = {}
+        try:
+            for i in range(16):
+                result[str(i + 1)] = 1 if rr.bits[i] else 0
+        except:
+            result = None
+        return result
+
 
 Exceptions
 ----------
