@@ -378,10 +378,10 @@ module.
     def get(self, port=None, cfg=None, timeout=0):
         # modbus.get_port(port_id) function returns:
         # False - if port failed to connect,
-        # None - if port doesn't exist,
+        # None - if port doesn't exist or may exceed the timeout,
         # 0 - if port is locked and busy,
         # or the port object itself
-        mb = modbus.get_port(self.modbus_port)
+        mb = modbus.get_port(self.modbus_port, timeout)
         if not mb: return None
         # The port object is a regular pymodbus object
         # (https://pymodbus.readthedocs.io) and supports all pymodbus functions.
