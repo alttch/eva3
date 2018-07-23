@@ -568,7 +568,7 @@ class UC_CLI(GenericCLI):
         sp_phi_exec.add_argument('i', help='PHI ID', metavar='PHI_ID')
         sp_phi_exec.add_argument('c', help='PHI exec command', metavar='CMD')
         sp_phi_exec.add_argument(
-            '-a', '--args', help='Command arguments', metavar='ARGS', dest='a')
+            'a', help='Command arguments', metavar='ARGS', nargs='?')
 
         sp_driver_get = sp_driver.add_parser(
             'get', help='Get loaded driver info')
