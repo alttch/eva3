@@ -38,16 +38,16 @@ def get_port(port_id):
     port stays locked!
     """
     port = ports.get(port_id)
-    return port.acquire if port else None
+    return port.acquire() if port else None
 
 
 # private functions
 
 
-def serialize():
+def serialize(config=False):
     result = []
     for k, p in ports.copy().items():
-        result.append(p.serialize())
+        result.append(p.serialize(config=config))
     return result
 
 
@@ -75,18 +75,18 @@ def create_modbus_port(port_id, params, **kwargs):
             port_id, params))
         return False
     else:
-        if port_id in self.ports:
-            self.ports[port_id].stop()
-        self.ports[port_id] = p
+        if port_id in ports:
+            ports[port_id].stop()
+        ports[port_id] = p
         logging.info('modbus port {} : {}'.format(port_id, params))
         return True
 
 
 def destroy_modbus_port(port_id):
-    if port_id in self.ports:
-        self.ports[port_id].stop()
+    if port_id in ports:
+        ports[port_id].stop()
         try:
-            del self.ports[port_id]
+            del ports[port_id]
         except:
             pass
         return True
@@ -99,7 +99,10 @@ def load():
         data = jsonpickle.decode(
             open(eva.core.dir_runtime + '/uc_modbus.json').read())
         for p in data:
-            create_modbus_port(p['id'], p['params'], p)
+            d = p.copy()
+            del d['id']
+            del d['params']
+            create_modbus_port(p['id'], p['params'], **d)
     except:
         logging.error('unable to load uc_modbus.json')
         eva.core.log_traceback()
@@ -110,7 +113,7 @@ def load():
 def save():
     try:
         open(eva.core.dir_runtime + '/uc_modbus.json', 'w').write(
-            format_json(serialize()))
+            format_json(serialize(config=True)))
     except:
         logging.error('unable to save modbus ports config')
         eva.core.log_traceback()
@@ -136,8 +139,10 @@ class ModbusPort(object):
         self.lock = True if self.lock else False
         try:
             self.timeout = float(kwargs.get('timeout'))
+            self._timeout = self.timeout
         except:
             self.timeout = eva.core.timeout
+            self._timeout = None
         try:
             self.delay = float(kwargs.get('delay'))
         except:
@@ -171,10 +176,10 @@ class ModbusPort(object):
             elif p[0] in ['rtu', 'ascii', 'binary']:
                 try:
                     port = p[1]
-                    speed = p[2]
-                    bits = p[3]
+                    speed = int(p[2])
+                    bits = int(p[3])
                     parity = p[4]
-                    stopbits = p[5]
+                    stopbits = int(p[5])
                     if bits < 1 or bits > 8:
                         raise Exception('bits not in range 1..8')
                     if parity not in ['N', 'E']:
@@ -195,7 +200,11 @@ class ModbusPort(object):
         if self.lock and not self.locker.acquire(timeout=eva.core.timeout):
             return 0
         self.client.connect()
-        return self if self.client.is_socket_open() else False
+        if self.client.is_socket_open():
+            return True
+        else:
+            if self.lock: self.locker.release()
+            return False
 
     def release(self):
         if self.lock: self.locker.release()
@@ -281,7 +290,7 @@ class ModbusPort(object):
             time.sleep(self.delay - a + self.last_action)
         self.last_action = time.time()
 
-    def serialize(self):
+    def serialize(self, config=False):
         d = {
             'id': self.port_id,
             'params': self.params,
@@ -289,6 +298,7 @@ class ModbusPort(object):
             'delay': self.delay,
             'retries': self.retries
         }
+        d['timeout'] = self._timeout if config else self.timeout
         return d
 
     def stop(self):
