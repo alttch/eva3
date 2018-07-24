@@ -83,8 +83,6 @@ _pd_cols = {
 }
 
 _pd_idx = {
-    'list_keys': 'key_id',
-    'list_users': 'user',
     'state': 'oid',
     'list': 'oid',
     'result': 'time',
