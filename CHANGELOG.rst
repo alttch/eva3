@@ -17,6 +17,8 @@ Core
       enable/disable API functions change notifier status only temporary, until
       the controller is restarted
     * MQTT SSL support
+    * JSON notifiers. GET/POST notifiers are marked as deprecated and should
+      not be used any more.
 
 UC
 ~~
