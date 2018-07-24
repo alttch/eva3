@@ -83,7 +83,7 @@ class LVar(eva.item.VariableItem):
     def set_expired(self):
         if super().set_expired():
             if self.status == -1:
-                logging.info('%s expired', self.oid)
+                logging.info('%s expired' % self.oid)
 
     def serialize(self,
                   full=False,

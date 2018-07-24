@@ -154,7 +154,7 @@ def save():
     for f in configs_to_remove:
         try:
             os.unlink(f)
-            logging.info('Removed unused config %s', f)
+            logging.info('Removed unused config %s' % f)
         except:
             logging.error('Can not remove %s' % f)
             eva.core.log_traceback()

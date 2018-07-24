@@ -343,7 +343,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
                             self.nstatus, self.nvalue))
             if eva.core.db_update == 1: eva.uc.controller.save_item_state(self)
             if self.status == -1:
-                logging.error('%s status is -1 (failed)', self.oid)
+                logging.error('%s status is -1 (failed)' % self.oid)
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 

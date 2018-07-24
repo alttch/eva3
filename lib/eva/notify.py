@@ -1115,8 +1115,8 @@ class GenericMQTTNotifier(GenericNotifier):
                     item.full_id + '/' + t
             self.items_to_update_by_topic[topic] = item
             self.mq.subscribe(topic, qos=item.mqtt_update_qos)
-            logging.debug('%s subscribed to %s q%u updates', self.notifier_id,
-                          topic, item.mqtt_update_qos)
+            logging.debug('%s subscribed to %s q%u updates' %
+                          (self.notifier_id, topic, item.mqtt_update_qos))
         return True
 
     def control_item_append(self, item):
@@ -1131,8 +1131,8 @@ class GenericMQTTNotifier(GenericNotifier):
         self.items_to_control.add(item)
         self.items_to_control_by_topic[topic_control] = item
         self.mq.subscribe(topic_control, qos=item.mqtt_control_qos)
-        logging.debug('%s subscribed to %s q%u control', self.notifier_id,
-                      topic_control, item.mqtt_control_qos)
+        logging.debug('%s subscribed to %s q%u control' % (self.notifier_id,
+                      topic_control, item.mqtt_control_qos))
         return True
 
     def update_item_remove(self, item):
@@ -1148,8 +1148,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 topic = pfx + item.item_type + '/' + \
                         item.full_id + '/' + t
                 self.mq.unsubscribe(topic)
-                logging.debug('%s unsubscribed from %s updates',
-                              self.notifier_id, topic)
+                logging.debug('%s unsubscribed from %s updates' %
+                              (self.notifier_id, topic))
                 del self.items_to_update_by_topic[topic]
             self.items_to_update.remove(item)
         except:
