@@ -15,6 +15,7 @@ sys.path.append(dir_lib)
 
 import eva.core
 from eva.client.cli import GenericCLI
+from eva.tools import parse_host_port
 
 
 class NotifierCLI(GenericCLI):
@@ -25,8 +26,15 @@ class NotifierCLI(GenericCLI):
 
     def add_notifier_common_functions(self):
         ap_list = self.sp.add_parser('list', help='List notifiers')
-        ap_test = self.sp.add_parser('test', help='Test notifier')
-        ap_test.add_argument('i', help='Notifier ID', metavar='ID')
+        ap_create = self.sp.add_parser('create', help='Create notifier')
+        ap_create.add_argument('i', help='Notifier ID', metavar='ID')
+        ap_create.add_argument('p', help='Notifier properties: ' + \
+                'json:http(s)://[key]@uri or ' + \
+                'mqtt:[username:password]@host:[port] or ' + \
+                'db:dbfile[:keeptime]', metavar='PROPS')
+        ap_create.add_argument('-s', '--space', help='Notification space', metavar='SPACE', dest='s')
+        ap_create.add_argument('-t', '--timeout', help='Notifier timeout', metavar='SEC', dest='t', type=float)
+        ap_create.add_argument('-y', '--enable', help='Enable notifier after creation', dest='y', action='store_true')
         ap_enable = self.sp.add_parser('enable', help='Enable notifier')
         ap_enable.add_argument('i', help='Notifier ID', metavar='ID')
         ap_disable = self.sp.add_parser('disable', help='Disable notifier')
@@ -39,6 +47,92 @@ class NotifierCLI(GenericCLI):
         ap_set_prop.add_argument('i', help='Notifier ID', metavar='ID')
         ap_set_prop.add_argument('p', help='Config property', metavar='PROP')
         ap_set_prop.add_argument('v', help='Value', metavar='VAL', nargs='?')
+        ap_test = self.sp.add_parser('test', help='Test notifier')
+        ap_test.add_argument('i', help='Notifier ID', metavar='ID')
+        ap_destroy = self.sp.add_parser('destroy', help='Destroy notifier')
+        ap_destroy.add_argument('i', help='Notifier ID', metavar='ID')
+
+    def create_notifier(self, params=None):
+        n = self.get_notifier(params['i'], pass_errors=True)
+        if n:
+            self.print_err('notifier %s already exists' % params['i'])
+            return self.local_func_result_failed
+        notifier_id = params['i']
+        p = params['p'].split(':')
+        space = params.get('s')
+        timeout = params.get('t')
+        if len(p) < 2: return self.local_func_result_failed
+        if p[0] in ['http', 'http-post', 'http-json', 'json']:
+            u = (':'.join(p[1:])).split('/')
+            if len(u) < 3: return self.local_func_result_failed
+            if u[2].find('@') != -1:
+                try:
+                    notify_key, u[2] = u[2].split('@')
+                except:
+                    return self.local_func_result_failed
+            else:
+                notify_key = None
+            uri = '/'.join(u)
+            if p[0] == 'http':
+                n = eva.notify.HTTPNotifier(
+                    notifier_id=notifier_id,
+                    uri=uri,
+                    notify_key=notify_key,
+                    space=space,
+                    timeout=timeout)
+            elif p[0] == 'http-post':
+                n = eva.notify.HTTP_POSTNotifier(
+                    notifier_id=notifier_id,
+                    uri=uri,
+                    notify_key=notify_key,
+                    space=space,
+                    timeout=timeout)
+            else:
+                n = eva.notify.HTTP_JSONNotifier(
+                    notifier_id=notifier_id,
+                    uri=uri,
+                    notify_key=notify_key,
+                    space=space,
+                    timeout=timeout)
+        elif p[0] == 'mqtt':
+            _p = ':'.join(p[1:])
+            if _p.find('@') != -1:
+                auth = _p.split('@')[0]
+                host = _p.split('@')[1]
+                username = auth.split(':')[0]
+                try:
+                    password = auth.split(':')[1]
+                except:
+                    password = None
+            else:
+                username = None
+                password = None
+                host = _p
+            host, port = parse_host_port(host)
+            n = eva.notify.MQTTNotifier(
+                notifier_id=notifier_id,
+                host=host,
+                port=port,
+                username=username,
+                password=password,
+                space=space,
+                timeout=timeout)
+        elif p[0] == 'db':
+            dbfile = p[1]
+            if len(p) > 2:
+                try: keep = int(p[2])
+                except: return self.local_func_result_failed
+            else:
+                keep = None
+            n = eva.notify.SQLiteNotifier(
+                notifier_id=notifier_id, db=dbfile, keep=keep, space=space)
+        else:
+            self.print_err('notifier type unknown %s' % p[0])
+            return self.local_func_result_failed
+        n.enabled = True if params.get('y') else False
+        eva.notify.append_notifier(n)
+        eva.notify.save_notifier(notifier_id)
+        return self.local_func_result_ok
 
     def list_notifiers(self, params=None):
         eva.notify.load(test=False, connect=False)
@@ -58,24 +152,38 @@ class NotifierCLI(GenericCLI):
             elif isinstance(i, eva.notify.SQLiteNotifier):
                 n['params'] = 'db: %s' % i.db
             elif isinstance(i, eva.notify.MQTTNotifier):
-                if i.username is not None and i.password is not None:
-                    n['params'] = '%s:%s@' % (i.username, i.password)
+                if i.username is not None:
+                    n['params'] = '%s:<secret>@' % (i.username)
                 n['params'] += '%s:%u' % (i.host, i.port)
             result.append(n)
         return 0, result
 
-    def get_notifier(self, notifier_id):
+    def get_notifier(self, notifier_id, pass_errors=False):
         try:
             n = eva.notify.load_notifier(notifier_id, test=False, connect=False)
             return n
         except:
-            self.print_err('can not load notifier %s' % notifier_id)
+            if not pass_errors: self.print_err('can not load notifier %s' % notifier_id)
             return None
 
     def test_notifier(self, params=None):
         n = self.get_notifier(params['i'])
         if n and n.test():
             n.disconnect()
+            return self.local_func_result_ok
+        else:
+            return self.local_func_result_failed
+
+    def destroy_notifier(self, params=None):
+        n = self.get_notifier(params['i'])
+        if n:
+            notifier_fname = eva.core.format_cfg_fname('%s_notify.d/%s.json' % \
+                (eva.core.product_code, params['i']), runtime = True)
+            try:
+                os.unlink(notifier_fname)
+            except:
+                self.print_err('unable to delete notifier config file')
+                return self.local_func_result_failed
             return self.local_func_result_ok
         else:
             return self.local_func_result_failed
@@ -139,6 +247,8 @@ cli = NotifierCLI('%s_notifier' % product, _me, remote_api=False)
 _api_functions = {
     'list': cli.list_notifiers,
     'test': cli.test_notifier,
+    'destroy': cli.destroy_notifier,
+    'create': cli.create_notifier,
     'enable': cli.enable_notifier,
     'disable': cli.disable_notifier,
     'config': cli.get_notifier_config,
