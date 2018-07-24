@@ -8,5 +8,5 @@ cd `dirname ${D}`/..
 export EVA_DIR=`pwd`
 export EVA_PRODUCT=`basename $0 | cut -d\- -f1`
 
-${PYTHON} ${EVA_DIR}/bin/notifymanager-legacy.py $*
+${PYTHON} ${EVA_DIR}/legacy/notifymanager-legacy.py $*
 
