@@ -60,9 +60,11 @@ class EventItem(Event):
     def __init__(self, subject, items, groups, item_types):
         super().__init__(subject=subject)
         if isinstance(groups, list): self.groups = groups
-        else: self.groups = [groups]
+        elif groups: self.groups = [groups]
+        else: self.groups = []
         if isinstance(item_types, list): self.item_types = item_types
-        else: self.item_types = [item_types]
+        elif item_types: self.item_types = [item_types]
+        else: self.item_types = []
         self.item_ids = set()
         if isinstance(items, list):
             for i in items:
@@ -70,7 +72,7 @@ class EventItem(Event):
                 else: self.item_ids.add(i.item_id)
         else:
             if isinstance(items, str): self.item_ids.add(items)
-            else: self.item_ids.add(items.item_id)
+            elif items: self.item_ids.add(items.item_id)
 
     def append_item(self, item):
         if isinstance(item, str): self.item_ids.add(item)
@@ -99,7 +101,7 @@ class EventItem(Event):
 
     def serialize(self):
         d = {}
-        if self.item_ids: d['items'] = self.item_ids
+        if self.item_ids: d['items'] = list(self.item_ids)
         if self.groups: d['groups'] = self.groups
         if self.item_types: d['types'] = self.item_types
         d.update(super().serialize())
