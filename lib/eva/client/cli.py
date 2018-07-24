@@ -23,7 +23,7 @@ from pygments import highlight, lexers, formatters
 
 class GenericCLI(object):
 
-    def __init__(self, product, name, remote_api=True):
+    def __init__(self, product, name, prog=None, remote_api=True):
         self.debug = False
         self.name = name
         self.product = product
@@ -104,7 +104,7 @@ class GenericCLI(object):
         self.interactive = False
         self.parse_primary_args()
         if not self.interactive and not self.batch_file:
-            self.ap = argparse.ArgumentParser(description=self.name)
+            self.ap = argparse.ArgumentParser(description=self.name, prog=prog)
         else:
             self.ap = argparse.ArgumentParser(usage=argparse.SUPPRESS, prog='')
         self.add_primary_options()
