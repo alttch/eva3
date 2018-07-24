@@ -984,10 +984,67 @@ class HTTP_POSTNotifier(GenericHTTPNotifier):
         try:
             logging.debug('.Testing http-post notifier %s (%s)' % \
                     (self.notifier_id,self.uri))
-            params = {self.get_subject: 'test', 'k': self.notify_key}
+            params = {'subject': 'test', 'k': self.notify_key}
             r = requests.post(
                 self.uri,
                 data=params,
+                timeout=self.get_timeout(),
+                verify=self.ssl_verify)
+            if r.status_code != 200: return False
+            result = jsonpickle.decode(r.text)
+            if result['result'] != 'OK': return False
+        except:
+            eva.core.log_traceback(notifier=True)
+            return False
+        return True
+
+
+class HTTP_JSONNotifier(GenericHTTPNotifier):
+
+    def __init__(self,
+                 notifier_id,
+                 uri,
+                 notify_key=None,
+                 space=None,
+                 timeout=None,
+                 ssl_verify=True):
+        super().__init__(
+            notifier_id=notifier_id,
+            notifier_subtype='json',
+            ssl_verify=ssl_verify,
+            uri=uri,
+            notify_key=notify_key,
+            space=space,
+            timeout=timeout)
+
+    def send_notification(self, subject, data, retain=None, unpicklable=False):
+        params = {'subject': subject, 'data': data}
+        key = apikey.format_key(self.notify_key)
+        if key: params['k'] = key
+        if self.space: params['space'] = self.space
+        r = requests.post(
+            self.uri,
+            json=params,
+            timeout=self.get_timeout(),
+            verify=self.ssl_verify)
+        if r.status_code == 200: result = jsonpickle.decode(r.text)
+        if r.status_code == 200 and result['result'] == 'OK': return True
+        elif r.status_code != 200:
+            self.log_error(code=r.status_code)
+            return False
+        else:
+            self.log_error(result=result)
+            return False
+
+    def test(self):
+        self.connect()
+        try:
+            logging.debug('.Testing http-json notifier %s (%s)' % \
+                    (self.notifier_id,self.uri))
+            params = {'subject': 'test', 'k': self.notify_key}
+            r = requests.post(
+                self.uri,
+                json=params,
                 timeout=self.get_timeout(),
                 verify=self.ssl_verify)
             if r.status_code != 200: return False
@@ -1131,8 +1188,8 @@ class GenericMQTTNotifier(GenericNotifier):
         self.items_to_control.add(item)
         self.items_to_control_by_topic[topic_control] = item
         self.mq.subscribe(topic_control, qos=item.mqtt_control_qos)
-        logging.debug('%s subscribed to %s q%u control' % (self.notifier_id,
-                      topic_control, item.mqtt_control_qos))
+        logging.debug('%s subscribed to %s q%u control' %
+                      (self.notifier_id, topic_control, item.mqtt_control_qos))
         return True
 
     def update_item_remove(self, item):
@@ -1581,7 +1638,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         if 'space' in ncfg: space = ncfg['space']
         else: space = None
         n = SQLiteNotifier(_notifier_id, db=db, keep=keep, space=space)
-    elif ncfg['type'] == 'http' or ncfg['type'] == 'http-post':
+    elif ncfg['type'] in ['http', 'http-post', 'http-json']:
         if 'space' in ncfg: space = ncfg['space']
         else: space = None
         if 'ssl_verify' in ncfg: ssl_verify = ncfg['ssl_verify']
@@ -1605,8 +1662,16 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                 space=space,
                 timeout=timeout,
                 stop_on_error=stop_on_error)
-        else:
+        elif ncfg['type'] == 'http-post':
             n = HTTP_POSTNotifier(
+                _notifier_id,
+                ssl_verify=ssl_verify,
+                uri=uri,
+                notify_key=notify_key,
+                space=space,
+                timeout=timeout)
+        else:
+            n = HTTP_JSONNotifier(
                 _notifier_id,
                 ssl_verify=ssl_verify,
                 uri=uri,
@@ -1700,9 +1765,6 @@ def serialize(notifier_id=None):
     if notifier_id: return notifiers[notifier_id].serialize()
     d = {}
     for i, n in notifiers.copy().items():
-        # if isinstance(n, HTTPNotifier) or \
-        # isinstance(n, HTTP_POSTNotifier) or \
-        # isinstance(n, MQTTNotifier):
         d[i] = n.serialize()
     return d
 
@@ -1724,6 +1786,7 @@ def save(notifier_id=None):
         n = notifiers[notifier_id]
         if isinstance(n, HTTPNotifier) or \
             isinstance(n, HTTP_POSTNotifier) or \
+            isinstance(n, HTTP_JSONNotifier) or \
             isinstance(n, MQTTNotifier):
             save_notifier(notifier_id)
         else:

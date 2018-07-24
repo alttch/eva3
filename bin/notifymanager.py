@@ -52,7 +52,8 @@ class NotifierCLI(GenericCLI):
             n['enabled'] = i.enabled
             n['params'] = ''
             if isinstance(i, eva.notify.HTTPNotifier) or \
-                    isinstance(i, eva.notify.HTTP_POSTNotifier):
+                    isinstance(i, eva.notify.HTTP_POSTNotifier) or \
+                    isinstance(i, eva.notify.HTTP_JSONNotifier):
                 n['params'] = 'uri: %s ' % i.uri
             elif isinstance(i, eva.notify.SQLiteNotifier):
                 n['params'] = 'db: %s' % i.db
