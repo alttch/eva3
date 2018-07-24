@@ -98,7 +98,7 @@ API Client
 Common
 ~~~~~~
 
-    * new notifier management CLI
+    * new notifier management CLI (old CLI tools available in **legacy** folder)
     * watchdog to test/automatically restart controllers in case of failure
     * oid support in API keys
     * other stability improvements
