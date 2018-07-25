@@ -769,7 +769,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
     def list_controllers(self, k=None):
         cp_need_master(k)
         result = super().list_controllers(k)
-        if not result: raise cp_api_404()
+        if result is None: raise cp_api_error()
         return result
 
     def list_macros(self, k=None, g=None):
