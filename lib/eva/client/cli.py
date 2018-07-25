@@ -930,7 +930,7 @@ class GenericCLI(object):
             elif code == apiclient.result_not_ready:
                 self.print_err('Error: API not ready')
             elif code == apiclient.result_func_unknown:
-                self.ap.self.print_err_help()
+                self.ap.print_help()
             elif code == apiclient.result_server_error:
                 self.print_err('Error: Server error')
             elif code == apiclient.result_server_timeout:
