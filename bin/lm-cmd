@@ -33,25 +33,39 @@ _api_functions = {
     'macro:create': 'create_macro',
     'macro:run': 'run',
     'macro:result': 'result',
+    'controller:list': 'list_controllers',
+    'controller:props': 'list_controller_props',
+    'controller:set': 'set_controller_prop',
+    'controller:reload': 'reload_controller',
+    'controller:append': 'append_controller',
+    'controller:remove': 'remove_controller',
+    'ext:list': 'list_ext',
+    'ext:show': 'get_ext',
+    'ext:mods': 'list_ext_mods',
+    'ext:load': 'load_ext',
+    'ext:unload': 'unload_ext',
+    'ext:modhelp': 'modhelp_ext',
+    'ext:modinfo': 'modinfo_ext'
 }
 
 _pd_cols = {
     'state': ['oid', 'status', 'value', 'set', 'expires'],
     'state_':
     ['oid', 'description', 'location', 'status', 'value', 'set', 'expires'],
-    'result': [
-        'time', 'uuid', 'priority', 'item_oid', 'exitcode',
-        'status'
-    ],
+    'result': ['time', 'uuid', 'priority', 'item_oid', 'exitcode', 'status'],
     'list': ['oid', 'description'],
     'list_remote': [
         'oid', 'description', 'controller_id', 'status', 'value', 'nstatus',
         'nvalue'
     ],
-    'list_macros': [ 'oid', 'description', 'action_enabled' ]
+    'list_macros': ['id', 'description', 'action_enabled'],
+    'list_controllers': ['id', 'description'],
+    'list_ext_': ['id', 'mod', 'description', 'version'],
+    'list_ext_mods': ['mod', 'description', 'version', 'api'],
+    'modhelp_ext': [ 'name', 'type', 'required', 'help']
 }
 
-_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time', 'list_macros': 'oid'}
+_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time', 'list_macros': 'id'}
 
 _fancy_tabsp = {'list_props': 26}
 
@@ -61,11 +75,15 @@ _always_json = ['get_config']
 class LM_CLI(GenericCLI):
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
-        if itype != 'state' and api_func not in ['list_macros', 'result']:
+        if api_func not in [
+                'state', 'list_macros', 'list_controllers', 'result'
+        ]:
             return super().prepare_result_data(data, api_func, api_func_full,
                                                itype)
         result = []
         for d in data.copy():
+            if api_func in ['list_macros', 'list_controllers']:
+                d['id'] = d['full_id']
             if api_func == 'result':
                 d['time'] = datetime.fromtimestamp(
                     d['time']['created']).isoformat()
@@ -89,6 +107,8 @@ class LM_CLI(GenericCLI):
         self.add_lm_configure_functions()
         self.add_lm_remote_functions()
         self.add_lm_macro_functions()
+        self.add_lm_ext_functions()
+        self.add_lm_controller_functions()
 
     def add_lm_common_functions(self):
         sp_state = self.sp.add_parser('state', help='Get LVar state')
@@ -258,8 +278,7 @@ class LM_CLI(GenericCLI):
             dest='_save',
             action='store_true')
 
-        sp_macro_run = sp_macro.add_parser(
-            'run', help='Execute macro')
+        sp_macro_run = sp_macro.add_parser('run', help='Execute macro')
         sp_macro_run.add_argument('i', help='Macro ID', metavar='ID')
         sp_macro_run.add_argument(
             '-p',
@@ -304,11 +323,132 @@ class LM_CLI(GenericCLI):
         ap_destroy = sp_macro.add_parser('destroy', help='Delete macro')
         ap_destroy.add_argument('i', help='Macro ID', metavar='ID')
 
+    def add_lm_controller_functions(self):
+        ap_controller = self.sp.add_parser(
+            'controller', help='Connected UC controllers functions')
+        sp_controller = ap_controller.add_subparsers(
+            dest='_func', metavar='func', help='Controller commands')
+
+        sp_controller_list = sp_controller.add_parser(
+            'list', help='List connected UCs')
+
+        sp_controller_list_props = sp_controller.add_parser(
+            'props', help='List controller config props')
+        sp_controller_list_props.add_argument(
+            'i', help='Controller ID', metavar='ID')
+
+        sp_controller_set_prop = sp_controller.add_parser(
+            'set', help='Set controller config prop')
+        sp_controller_set_prop.add_argument(
+            'i', help='Controller ID', metavar='ID')
+        sp_controller_set_prop.add_argument(
+            'p', help='Config property', metavar='PROP')
+        sp_controller_set_prop.add_argument(
+            'v', help='Value', metavar='VAL', nargs='?')
+        sp_controller_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save controller config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_controller_reload = sp_controller.add_parser(
+            'reload', help='Reload items from the connected UC')
+        sp_controller_reload.add_argument(
+            'i', help='Controller ID', metavar='ID')
+
+        sp_controller_append = sp_controller.add_parser(
+            'append', help='Connect UC')
+        sp_controller_append.add_argument(
+            'u', help='Controller API URI (http[s]://host:port)', metavar='URI')
+        sp_controller_append.add_argument(
+            '-a', '--api-key', help='API key', metavar='KEY', dest='a')
+        sp_controller_append.add_argument(
+            '-m',
+            '--mqtt',
+            help='Local MQTT notifier ID for data exchange',
+            metavar='NOTIFIER_ID',
+            dest='m')
+        sp_controller_append.add_argument(
+            '-s',
+            '--ssl-verify',
+            help='Verify remote cert for SSL connections',
+            metavar='SSL_VERIFY',
+            dest='s',
+            choices=[0, 1])
+        sp_controller_append.add_argument(
+            '-t',
+            '--timeout',
+            help='API timeout',
+            metavar='SEC',
+            dest='t',
+            type=float)
+        sp_controller_append.add_argument(
+            '-y',
+            '--save',
+            help='Save controller config after connection',
+            dest='_save',
+            action='store_true')
+
+        sp_controller_remove = sp_controller.add_parser(
+            'remove', help='Remove connected UC')
+        sp_controller_remove.add_argument(
+            'i', help='Controller ID', metavar='ID')
+
+    def add_lm_ext_functions(self):
+        ap_ext = self.sp.add_parser(
+            'ext', help='Macro extension functions')
+        sp_ext = ap_ext.add_subparsers(
+            dest='_func', metavar='func', help='Extension commands')
+        
+        sp_ext_list = sp_ext.add_parser('list', help='List loaded extensions')
+        sp_ext_list.add_argument(
+            '-y',
+            '--full',
+            help='full information about extension',
+            dest='_full',
+            action='store_true')
+        
+        sp_ext_show = sp_ext.add_parser('show', help='Show loaded extension info')
+        sp_ext_show.add_argument('i', help='EXT id', metavar='EXT_ID')
+        
+        sp_ext_mods = sp_ext.add_parser('mods', help='List available extension mods')
+        
+        sp_ext_load = sp_ext.add_parser('load', help='Load extension')
+        sp_ext_load.add_argument('i', help='Extension id', metavar='EXT_ID')
+        sp_ext_load.add_argument('m', help='Extension module', metavar='EXT_MOD')
+        sp_ext_load.add_argument(
+            '-c',
+            '--config',
+            help='Extension configuration values, comma separated',
+            dest='c',
+            metavar='CONFIG')
+        sp_ext_load.add_argument(
+            '-y',
+            '--save',
+            help='save configuration on success load',
+            dest='_save',
+            action='store_true')
+        
+        sp_ext_unload = sp_ext.add_parser('unload', help='Unload extension')
+        sp_ext_unload.add_argument('i', help='Extension id', metavar='EXT_ID')
+        
+        sp_ext_modinfo = sp_ext.add_parser('modinfo', help='Extension module info')
+        sp_ext_modinfo.add_argument('i', help='Extension module', metavar='EXT_MOD')
+        
+        sp_ext_modhelp = sp_ext.add_parser('modhelp', help='Extension module help')
+        sp_ext_modhelp.add_argument('i', help='Extension module', metavar='EXT_MOD')
+        sp_ext_modhelp.add_argument(
+            'c',
+            help='Help context (cfg, functions)',
+            metavar='CONTEXT',
+            choices=['cfg', 'functions'])
+
 
 cli = LM_CLI('lm', _me)
 cli.always_json += _always_json
 cli.always_print += ['run']
-cli.arg_sections += ['config', 'macro']
+cli.arg_sections += ['config', 'macro', 'controller', 'ext']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
