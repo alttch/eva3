@@ -17,6 +17,8 @@ from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva import apikey
 from eva.tools import dict_from_str
+from eva.tools import is_oid
+from eva.tools import parse_oid
 import eva.lm.controller
 import eva.lm.extapi
 import eva.ei
@@ -295,7 +297,7 @@ class LM_API(GenericAPI):
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
                 result.append(v.serialize(info=True))
-        return result
+        return sorted(result, key=lambda k: k['oid'])
 
     def list_remote(self, k=None, i=None, group=None, tp=None):
         if not apikey.check(k, master=True): return None
@@ -450,8 +452,13 @@ class LM_API(GenericAPI):
     def create_lvar(self, k = None, lvar_id = None, \
             group = None, save = False):
         if not apikey.check(k, master=True): return None
+        if is_oid(lvar_id):
+            tp, i = parse_oid(lvar_id)
+            if tp != 'lvar': return False
+        else:
+            i = lvar_id
         return eva.lm.controller.create_lvar(
-            lvar_id=lvar_id, group=group, save=save)
+            lvar_id=i, group=group, save=save)
 
     def destroy_lvar(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
