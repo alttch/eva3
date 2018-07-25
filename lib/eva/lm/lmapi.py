@@ -170,7 +170,7 @@ class LM_API(GenericAPI):
                 else:
                     if item_id in eva.lm.controller.Q.actions_by_item_id:
                         ar = eva.lm.controller.Q.actions_by_item_id[item_id]
-                if ar is None: return None
+                if ar is None: return []
             else:
                 ar = eva.lm.controller.Q.actions
             for a in ar:
