@@ -484,7 +484,7 @@ class MacroAPI(object):
         elif isinstance(argv, list):
             _argv = argv
         return eva.lm.controller.exec_macro(
-            macro=macro,
+            macro=oid_to_id(macro, 'lmacro'),
             argv=_argv,
             priority=priority,
             action_uuid=uuid,
