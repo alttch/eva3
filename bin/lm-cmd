@@ -1,0 +1,225 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2018 Altertech Group"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.1.0"
+
+import sys
+import os
+from datetime import datetime
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+from eva.client.cli import GenericCLI
+from eva.client import apiclient
+
+_me = 'EVA ICS LM CLI version %s' % __version__
+
+_api_functions = {
+    'history': 'state_history',
+    'config:get': 'get_config',
+    'config:save': 'save_config',
+    'config:props': 'list_props',
+    'config:set': 'set_prop',
+    'create': 'create_lvar',
+    'destroy': 'destroy_lvar',
+    'remote': 'list_remote'
+}
+
+_pd_cols = {
+    'state': ['oid', 'status', 'value', 'set', 'expires'],
+    'state_':
+    ['oid', 'description', 'location', 'status', 'value', 'set', 'expires'],
+    'result': [
+        'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
+        'status'
+    ],
+    'list': ['oid', 'description'],
+    'list_remote': [
+        'oid', 'description', 'controller_id', 'status', 'value', 'nstatus',
+        'nvalue'
+    ]
+}
+
+_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time'}
+
+_fancy_tabsp = {'list_props': 26}
+
+_always_json = ['get_config']
+
+
+class LM_CLI(GenericCLI):
+
+    def prepare_result_data(self, data, api_func, api_func_full, itype):
+        if itype not in ['run', 'state']:
+            return super().prepare_result_data(data, api_func, api_func_full,
+                                               itype)
+        result = []
+        for d in data.copy():
+            if itype == 'run':
+                d['time'] = datetime.fromtimestamp(
+                    d['time']['created']).isoformat()
+            elif itype == 'state':
+                d['set'] = datetime.fromtimestamp(d['set_time']).isoformat()
+            result.append(d)
+        return result
+
+    def process_result(self, result, code, api_func, api_func_full, itype, a):
+        if api_func == 'state_history' and \
+                isinstance(result, dict):
+            self.print_tdf(result, 't')
+            return 0
+        else:
+            return super().process_result(result, code, api_func, api_func_full,
+                                          itype, a)
+
+    def add_functions(self):
+        super().add_functions()
+        self.add_lm_common_functions()
+        self.add_lm_configure_functions()
+        self.add_lm_remote_functions()
+
+    def add_lm_common_functions(self):
+        sp_state = self.sp.add_parser('state', help='Get LVar state')
+        sp_state.add_argument('i', help='LVar ID', metavar='ID', nargs='?')
+        sp_state.add_argument(
+            '-g', '--group', help='LVar group', metavar='GROUP', dest='g')
+        sp_state.add_argument(
+            '-y',
+            '--full',
+            help='Full information about LVar',
+            dest='_full',
+            action='store_true')
+
+        sp_history = self.sp.add_parser(
+            'history', help='Get LVar state history')
+        sp_history.add_argument(
+            'i',
+            help=
+            'LVar ID or multiple IDs (-w param is required), comma separated',
+            metavar='ID')
+        sp_history.add_argument(
+            '-a',
+            '--notifier',
+            help='Notifier to get history from (default: db_1)',
+            metavar='NOTIFIER',
+            dest='a')
+        sp_history.add_argument(
+            '-s', '--time-start', help='Start time', metavar='TIME', dest='s')
+        sp_history.add_argument(
+            '-e', '--time-end', help='End time', metavar='TIME', dest='e')
+        sp_history.add_argument(
+            '-l',
+            '--limit',
+            help='Records limit (doesn\'t work with fill)',
+            metavar='N',
+            dest='l')
+        sp_history.add_argument(
+            '-x',
+            '--prop',
+            help='LVar state prop (status or value)',
+            metavar='PROP',
+            dest='x',
+            choices=['status', 'value', 'S', 'V'])
+        sp_history.add_argument(
+            '-w',
+            '--fill',
+            help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
+            metavar='INTERVAL',
+            dest='w')
+
+        sp_set = self.sp.add_parser('set', help='Set LVar state')
+        sp_set.add_argument('i', help='LVar ID', metavar='ID')
+        sp_set.add_argument(
+            '-s',
+            '--status',
+            help='LVar status',
+            metavar='STATUS',
+            type=int,
+            dest='s')
+        sp_set.add_argument(
+            '-v', '--value', help='LVar value', metavar='VALUE', dest='v')
+
+        sp_reset = self.sp.add_parser('reset', help='Set LVar state')
+        sp_reset.add_argument('i', help='LVar ID', metavar='ID')
+
+        sp_clear = self.sp.add_parser('clear', help='Set LVar state')
+        sp_clear.add_argument('i', help='LVar ID', metavar='ID')
+
+        sp_toggle = self.sp.add_parser('toggle', help='Set LVar state')
+        sp_toggle.add_argument('i', help='LVar ID', metavar='ID')
+
+    def add_lm_configure_functions(self):
+        sp_list = self.sp.add_parser('list', help='List LVars')
+        sp_list.add_argument(
+            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+
+        ap_config = self.sp.add_parser('config', help='LVar configuration')
+        sp_config = ap_config.add_subparsers(
+            dest='_func', metavar='func', help='Configuration commands')
+
+        sp_config_get = sp_config.add_parser('get', help='Get LVar config')
+        sp_config_get.add_argument('i', help='LVar ID', metavar='ID')
+
+        sp_config_save = sp_config.add_parser('save', help='Save LVar config')
+        sp_config_save.add_argument('i', help='LVar ID', metavar='ID')
+
+        sp_list_props = sp_config.add_parser(
+            'props', help='List LVar config props')
+        sp_list_props.add_argument('i', help='LVar ID', metavar='ID')
+
+        sp_set_prop = sp_config.add_parser('set', help='Set LVar config prop')
+        sp_set_prop.add_argument('i', help='LVar ID', metavar='ID')
+        sp_set_prop.add_argument('p', help='Config property', metavar='PROP')
+        sp_set_prop.add_argument('v', help='Value', metavar='VAL', nargs='?')
+        sp_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save LVar config after set',
+            dest='_save',
+            action='store_true')
+
+        ap_create = self.sp.add_parser('create', help='Create new LVar')
+        ap_create.add_argument('i', help='LVar ID or OID', metavar='OID')
+        ap_create.add_argument(
+            '-y',
+            '--save',
+            help='Save LVar config after creation',
+            dest='_save',
+            action='store_true')
+
+        ap_destroy = self.sp.add_parser('destroy', help='Delete LVar')
+        ap_destroy.add_argument('i', help='LVar ID', metavar='ID', nargs='?')
+
+    def add_lm_remote_functions(self):
+        ap_remote = self.sp.add_parser('remote', help='List remote items')
+        ap_remote.add_argument(
+            '-i',
+            '--controller',
+            help='Filter by controller ID',
+            metavar='CONTROLLER_ID',
+            dest='i')
+        ap_remote.add_argument(
+            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+        ap_remote.add_argument(
+            '-p',
+            '--type',
+            help='Filter by type',
+            metavar='TYPE',
+            dest='p',
+            choices=['unit', 'sensor', 'U', 'S'])
+
+
+cli = LM_CLI('lm', _me)
+cli.always_json += _always_json
+cli.always_print += ['run']
+cli.arg_sections += ['config']
+cli.set_api_functions(_api_functions)
+cli.set_pd_cols(_pd_cols)
+cli.set_pd_idx(_pd_idx)
+cli.set_fancy_tabsp(_fancy_tabsp)
+code = cli.run()
+sys.exit(code)

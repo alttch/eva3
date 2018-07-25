@@ -42,7 +42,8 @@ UC
 LM PLC
 ~~~~~~
 
-    * lm-cmd renamed to lm-api
+    * new lm-cmd cli
+    * old lm-cmd renamed to lm-api
     * macro extensions
     * macro function "unlock" now return false if lock hasn't been not locked
       or doesn't exist
