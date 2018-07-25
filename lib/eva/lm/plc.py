@@ -176,6 +176,9 @@ class Macro(eva.item.ActiveItem):
             return True
         return super().set_prop(prop, val, save)
 
+    def notify(self, retain=None, skip_subscribed_mqtt=False):
+        pass
+
     def serialize(self,
                   full=False,
                   config=False,
