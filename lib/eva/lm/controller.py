@@ -79,11 +79,12 @@ def get_controller(controller_id):
 
 
 def get_macro(macro_id):
-    if not macro_id: return None
-    if macro_id.find('/') > -1:
-        if macro_id in macros_by_full_id: return macros_by_full_id[macro_id]
+    _macro_id = oid_to_id(macro_id, 'lmacro')
+    if not _macro_id: return None
+    if _macro_id.find('/') > -1:
+        if _macro_id in macros_by_full_id: return macros_by_full_id[_macro_id]
     else:
-        if macro_id in macros_by_id: return macros_by_id[macro_id]
+        if _macro_id in macros_by_id: return macros_by_id[_macro_id]
     return None
 
 
@@ -354,14 +355,15 @@ def load_dm_rules():
 
 
 def create_macro(m_id, group=None, save=False):
-    if not m_id: return False
-    if group and m_id.find('/') != -1: return False
-    if m_id.find('/') == -1:
-        i = m_id
+    _m_id = oid_to_id(m_id, 'lmacro')
+    if not _m_id: return False
+    if group and _m_id.find('/') != -1: return False
+    if _m_id.find('/') == -1:
+        i = _m_id
         grp = group
     else:
-        i = m_id.split('/')[-1]
-        grp = '/'.join(m_id.split('/')[:-1])
+        i = _m_id.split('/')[-1]
+        grp = '/'.join(_m_id.split('/')[:-1])
     if not grp: grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
