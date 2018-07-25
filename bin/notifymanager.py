@@ -65,19 +65,17 @@ class NotifierCLI(GenericCLI):
         ap_set_prop.add_argument('v', help='Value', metavar='VAL', nargs='?')
         ap_test = self.sp.add_parser('test', help='Test notifier')
         ap_test.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
-        ap_destroy = self.sp.add_parser('destroy', help='Destroy notifier')
-        ap_destroy.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
 
         ap_unsubscribe = self.sp.add_parser(
             'unsubscribe', help='Unsubscribe notifier')
-        ap_unsubscribe.add_argument(
-            'i', help='Notifier ID', metavar='NOTIFIER_ID')
         ap_unsubscribe.add_argument(
             's',
             help='Notification subject (if empty - unsubscribe from all)',
             metavar='SUBJECT',
             nargs='?',
             choices=['log', 'state', 'action'])
+        ap_unsubscribe.add_argument(
+            'i', help='Notifier ID', metavar='NOTIFIER_ID')
 
         ap_subscribe = self.sp.add_parser(
             'subscribe', help='Subscribe notifier')
@@ -94,7 +92,8 @@ class NotifierCLI(GenericCLI):
         sp_subscribe_log.add_argument(
             '-l',
             '--level',
-            help='Log level (debug, info [default], warning, error or critical)',
+            help='Log level (debug, info [default], warning, error or ' + \
+                    'critical)',
             dest='l',
             metavar='LEVEL',
             default=20)
@@ -107,7 +106,8 @@ class NotifierCLI(GenericCLI):
             '-v',
             '--types',
             help=
-            'Item types, comma separated (unit, sensor, lvar or # [default] for all)',
+            'Item types, comma separated (unit, sensor, lvar or # ' + \
+                    '[default] for all)',
             dest='v',
             metavar='TYPE',
             default='#')
@@ -132,9 +132,9 @@ class NotifierCLI(GenericCLI):
             '-a',
             '--action-status',
             help=
-            'Action status, comma separated (created, pending, queued, refused, ' + \
-                    'dead, canceled, ignored, running, failed, terminated, ' + \
-                    'completed or # [default] for all)',
+            'Action status, comma separated (created, pending, queued, ' + \
+                    ' refused, dead, canceled, ignored, running, failed, '+ \
+                    'terminated, completed or # [default] for all)',
             dest='a',
             metavar='TYPE',
             default='#')
@@ -142,7 +142,8 @@ class NotifierCLI(GenericCLI):
             '-v',
             '--types',
             help=
-            'Item types, comma separated (unit, sensor, lvar or # [default] for all)',
+            'Item types, comma separated (unit, sensor, lvar or # [default]' + \
+                    'for all)',
             dest='v',
             metavar='TYPE',
             default='#')
@@ -158,6 +159,9 @@ class NotifierCLI(GenericCLI):
             help='Item groups, comma separated or # for all',
             dest='g',
             metavar='GROUPS')
+
+        ap_destroy = self.sp.add_parser('destroy', help='Destroy notifier')
+        ap_destroy.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
 
     def create_notifier(self, params):
         n = self.get_notifier(params['i'], pass_errors=True)
@@ -348,8 +352,18 @@ class NotifierCLI(GenericCLI):
         return self.local_func_result_ok
 
     def subscribe_notifier_log(self, params):
+        level = params.get('l')
+        if not level: level = 20
+        else:
+            try: level = int(level)
+            except:
+                try:
+                    level = int(self.get_log_level_code(level))
+                except:
+                    self.print_err('Invalid log level: %s' % level)
+                    return self.local_func_result_failed
         n = self.get_notifier(params['i'])
-        if not n or not n.subscribe(subject='log', log_level=params.get('l')):
+        if not n or not n.subscribe(subject='log', log_level=level):
             return self.local_func_result_failed
         eva.notify.append_notifier(n)
         eva.notify.save_notifier(params['i'])
@@ -372,7 +386,7 @@ class NotifierCLI(GenericCLI):
         for d in n.serialize()['events']:
             if d['subject'] == 'state':
                 return 0, d
-        return local_func_result_failed
+        return self.local_func_result_failed
 
     def subscribe_notifier_action(self, params):
         n = self.get_notifier(params['i'])
@@ -390,12 +404,12 @@ class NotifierCLI(GenericCLI):
         for d in n.serialize()['events']:
             if d['subject'] == 'action':
                 return 0, d
-        return local_func_result_failed
+        return self.local_func_result_failed
 
     def unsubscribe_notifier(self, params):
         n = self.get_notifier(params['i'])
         if not n or not n.unsubscribe(params['s'] if params.get('s') else '#'):
-            return local_func_result_failed
+            return self.local_func_result_failed
         eva.notify.append_notifier(n)
         eva.notify.save_notifier(params['i'])
         return self.local_func_result_ok
