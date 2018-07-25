@@ -26,7 +26,13 @@ _api_functions = {
     'config:set': 'set_prop',
     'create': 'create_lvar',
     'destroy': 'destroy_lvar',
-    'remote': 'list_remote'
+    'remote': 'list_remote',
+    'macro:list': 'list_macros',
+    'macro:props': 'list_macro_props',
+    'macro:set': 'set_macro_prop',
+    'macro:create': 'create_macro',
+    'macro:run': 'run',
+    'macro:result': 'result',
 }
 
 _pd_cols = {
@@ -34,17 +40,18 @@ _pd_cols = {
     'state_':
     ['oid', 'description', 'location', 'status', 'value', 'set', 'expires'],
     'result': [
-        'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
+        'time', 'uuid', 'priority', 'item_oid', 'exitcode',
         'status'
     ],
     'list': ['oid', 'description'],
     'list_remote': [
         'oid', 'description', 'controller_id', 'status', 'value', 'nstatus',
         'nvalue'
-    ]
+    ],
+    'list_macros': [ 'oid', 'description', 'action_enabled' ]
 }
 
-_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time'}
+_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time', 'list_macros': 'oid'}
 
 _fancy_tabsp = {'list_props': 26}
 
@@ -54,12 +61,12 @@ _always_json = ['get_config']
 class LM_CLI(GenericCLI):
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
-        if itype not in ['run', 'state']:
+        if itype != 'state' and api_func not in ['list_macros', 'result']:
             return super().prepare_result_data(data, api_func, api_func_full,
                                                itype)
         result = []
         for d in data.copy():
-            if itype == 'run':
+            if api_func == 'result':
                 d['time'] = datetime.fromtimestamp(
                     d['time']['created']).isoformat()
             elif itype == 'state':
@@ -81,6 +88,7 @@ class LM_CLI(GenericCLI):
         self.add_lm_common_functions()
         self.add_lm_configure_functions()
         self.add_lm_remote_functions()
+        self.add_lm_macro_functions()
 
     def add_lm_common_functions(self):
         sp_state = self.sp.add_parser('state', help='Get LVar state')
@@ -192,7 +200,7 @@ class LM_CLI(GenericCLI):
             action='store_true')
 
         ap_destroy = self.sp.add_parser('destroy', help='Delete LVar')
-        ap_destroy.add_argument('i', help='LVar ID', metavar='ID', nargs='?')
+        ap_destroy.add_argument('i', help='LVar ID', metavar='ID')
 
     def add_lm_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')
@@ -212,11 +220,95 @@ class LM_CLI(GenericCLI):
             dest='p',
             choices=['unit', 'sensor', 'U', 'S'])
 
+    def add_lm_macro_functions(self):
+        ap_macro = self.sp.add_parser('macro', help='Macro functions')
+        sp_macro = ap_macro.add_subparsers(
+            dest='_func', metavar='func', help='Macro commands')
+
+        sp_macro_list = sp_macro.add_parser('list', help='List macros')
+        sp_macro_list.add_argument(
+            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+
+        sp_macro_list_props = sp_macro.add_parser(
+            'props', help='List macro config props')
+        sp_macro_list_props.add_argument('i', help='Macro ID', metavar='ID')
+
+        sp_macro_set_prop = sp_macro.add_parser(
+            'set', help='Set macro config prop')
+        sp_macro_set_prop.add_argument('i', help='Macro ID', metavar='ID')
+        sp_macro_set_prop.add_argument(
+            'p', help='Config property', metavar='PROP')
+        sp_macro_set_prop.add_argument(
+            'v', help='Value', metavar='VAL', nargs='?')
+        sp_macro_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save macro config after set',
+            dest='_save',
+            action='store_true')
+
+        ap_macro_create = sp_macro.add_parser('create', help='Create new macro')
+        ap_macro_create.add_argument('i', help='Macro ID', metavar='OID')
+        ap_macro_create.add_argument(
+            '-g', '--group', help='Macro group', metavar='GROUP', dest='g')
+        ap_macro_create.add_argument(
+            '-y',
+            '--save',
+            help='Save macro config after creation',
+            dest='_save',
+            action='store_true')
+
+        sp_macro_run = sp_macro.add_parser(
+            'run', help='Execute macro')
+        sp_macro_run.add_argument('i', help='Macro ID', metavar='ID')
+        sp_macro_run.add_argument(
+            '-p',
+            '--priority',
+            help='Action priority',
+            metavar='PRIORITY',
+            type=int,
+            dest='p')
+        sp_macro_run.add_argument(
+            '-w',
+            '--wait',
+            help='Wait for complete',
+            metavar='SEC',
+            type=float,
+            dest='w')
+        sp_macro_run.add_argument(
+            '-q',
+            '--queue-timeout',
+            help='Max queue timeout',
+            metavar='SEC',
+            type=float,
+            dest='q')
+        sp_macro_run.add_argument(
+            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+
+        sp_macro_result = sp_macro.add_parser(
+            'result', help='Get macro execution results')
+        sp_macro_result.add_argument(
+            '-i', '--id', help='Macro ID', metavar='ID', dest='i')
+        sp_macro_result.add_argument(
+            '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
+        sp_macro_result.add_argument(
+            '-g', '--group', help='Macros group', metavar='GROUP', dest='g')
+        sp_macro_result.add_argument(
+            '-s',
+            '--state',
+            help='Action state (Q, R, F: queued, running, finished)',
+            metavar='STATE',
+            dest='s',
+            choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
+
+        ap_destroy = sp_macro.add_parser('destroy', help='Delete macro')
+        ap_destroy.add_argument('i', help='Macro ID', metavar='ID')
+
 
 cli = LM_CLI('lm', _me)
 cli.always_json += _always_json
 cli.always_print += ['run']
-cli.arg_sections += ['config']
+cli.arg_sections += ['config', 'macro']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
