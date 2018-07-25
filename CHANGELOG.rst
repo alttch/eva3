@@ -51,6 +51,7 @@ LM PLC
       functionality, in case the controller has no masterkey defined
     * new functions "state_history" in LM API and "history" (equivalent) in
       macros
+    * new functions: status, value, nstatus, nvalue with oid support
     * new DM rule events: on nstatus, nvalue change (for units)
     * device management functions: "create_device", "update_device",
       "destroy_device"
