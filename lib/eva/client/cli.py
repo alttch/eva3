@@ -428,12 +428,12 @@ class GenericCLI(object):
             if out:
                 print(self.colored('-' * 81, color='grey'))
                 print('OUTPUT:')
-                print(out.strip())
+                print(str(out).strip())
                 rprinted = True
             if err:
                 print(self.colored('-' * 81, color='grey'))
                 print_err('ERROR:')
-                print(err.strip())
+                print(str(err).strip())
                 rprinted = True
             if not rprinted and not tab:
                 print('OK')
