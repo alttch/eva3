@@ -9,6 +9,7 @@ import os
 import sys
 import getopt
 import jsonpickle
+import termcolor
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -17,6 +18,16 @@ from eva.client import apiclient
 
 from eva.tools import print_json
 
+suppress_colors = False
+
+
+def colored(text, color=None, on_color=None, attrs=None):
+    if suppress_colors or not sys.stdout.isatty():
+        return text
+    return termcolor.colored(text, color=color, on_color=on_color, attrs=attrs)
+
+def print_debug(s):
+    print(colored(s, color='grey', attrs=['bold']))
 
 def usage():
     print()
@@ -30,6 +41,7 @@ Usage: lm-rules <command> [rule_id] [args] [-U API uri] [-K key] [-T sec] [-d]
          All commands require master key
     -T   API request timeout
     -D   Enable debug messages
+    -R   Print raw result (no colors)
 
     -y   Save rule changes after modification
 
@@ -179,7 +191,7 @@ try:
         opts = sys.argv[3:]
     else:
         opts = sys.argv[2:]
-    o, a = getopt.getopt(opts, 'K:T:U:d:x:p:c:m:a:EyzD', [
+    o, a = getopt.getopt(opts, 'K:T:U:d:x:p:c:m:a:EyzDR', [
         'type=',
         'group=',
         'item=',
@@ -215,6 +227,8 @@ for i, v in o:
         apikey = v
     elif i == '-D':
         debug = True
+    elif i == '-R':
+        suppress_colors = True
     elif i == '-E':
         enable_after = True
     elif i == '--type':
@@ -336,7 +350,13 @@ elif func in cmd_edit:
     p = {'i': rule_id}
     p.update(xparams)
     if 'save' in p: del p['save']
+    if debug:
+        print_debug('API: %s' % api._uri)
+        print_debug('API func: %s' % 'list_rule_props')
+        print_debug('timeout: %s' % timeout)
+        print_debug('params %s' % p)
     code, result = api.call('list_rule_props', p, timeout, _debug=debug)
+    if debug: print_debug('API result code: %u' % code)
     if not code_ok(code):
         sys.exit(code)
     enable_after = result['enabled']
@@ -351,7 +371,13 @@ else:
 params.update(xparams)
 
 if apifunc:
+    if debug:
+        print_debug('API: %s' % api._uri)
+        print_debug('API func: %s' % apifunc)
+        print_debug('timeout: %s' % timeout)
+        print_debug('params %s' % params)
     code, result = api.call(apifunc, params, timeout, _debug=debug)
+    if debug: print_debug('API result code: %u' % code)
     if not code_ok(code):
         sys.exit(code)
 
@@ -414,8 +440,8 @@ if func in cmd_list:
     df3.set_index('id', inplace=True)
     out2 = df2.to_string().split('\n')
     out3 = df3.to_string().split('\n')
-    print(out3[0])
-    print('-' * max(len(out2[0]), len(out3[0])))
+    print(colored(out3[0], color='blue'))
+    print(colored('-' * max(len(out2[0]), len(out3[0])), color='grey'))
     for i in range(0, len(data2)):
         print(out3[i + 2])
         print(' ' + out2[i + 2])
@@ -439,7 +465,13 @@ if func in cmd_add + cmd_edit:
         p['p'] = i
         if v.lower() != 'none':
             p['v'] = v
+        if debug:
+            print_debug('API: %s' % api._uri)
+            print_debug('API func: %s' % 'set_rule_prop')
+            print_debug('timeout: %s' % timeout)
+            print_debug('params %s' % p)
         code, result = api.call('set_rule_prop', p, timeout, _debug=debug)
+        if debug: print_debug('API result code: %u' % code)
         if not code_ok(code):
             sys.exit(code)
         print('%s = %s' % (i, v))
@@ -448,7 +480,13 @@ if func in cmd_add + cmd_edit:
         p.update(xparams)
         p['p'] = 'enabled'
         p['v'] = '1'
+        if debug:
+            print_debug('API: %s' % api._uri)
+            print_debug('API func: %s' % 'set_rule_prop')
+            print_debug('timeout: %s' % timeout)
+            print_debug('params %s' % p)
         code, result = api.call('set_rule_prop', p, timeout, _debug=debug)
+        if debug: print_debug('API result code: %u' % code)
         if not code_ok(code):
             sys.exit(code)
         print('Enabled: %s' % rule_id)
