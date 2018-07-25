@@ -16,6 +16,10 @@ import time
 import requests
 import threading
 
+from eva.tools import is_oid
+from eva.tools import oid_to_id
+from eva.tools import parse_oid
+
 _shared = {}
 _shared_lock = threading.Lock()
 
@@ -79,11 +83,14 @@ class MacroAPI(object):
             'unit_value': self.unit_value,
             'unit_nstatus': self.unit_nstatus,
             'unit_nvalue': self.unit_nvalue,
+            'nstatus': self.unit_nstatus,
+            'nvalue': self.unit_nvalue,
             'is_busy': self.is_busy,
             'sensor_status': self.sensor_status,
             'sensor_value': self.sensor_value,
             'set': self.set,
-            'value': self.lvar_value,
+            'status': self.status,
+            'value': self.value,
             'reset': self.reset,
             'clear': self.clear,
             'toggle': self.toggle,
@@ -122,7 +129,7 @@ class MacroAPI(object):
         result = eva.lm.lmapi.api.state_history(
             k=eva.apikey.masterkey,
             a=db,
-            i=lvar_id,
+            i=oid_to_id(lvar_id, 'lvar'),
             s=t_start,
             e=t_end,
             l=limit,
@@ -170,6 +177,20 @@ class MacroAPI(object):
             raise Exception('Error releasing lock')
         return result
 
+    def status(self, item_id):
+        if is_oid(item_id):
+            tp, i = parse_oid(item_id)
+        else:
+            tp = 'lvar'
+            i = item_id
+        if tp == 'unit':
+            return self.unit_status(i)
+        if tp == 'sensor':
+            return self.sensor_status(i)
+        if tp == 'lvar':
+            return self.lvar_status(i)
+        raise Exception('Unknown item type: %s' % tp)
+
     def lvar_status(self, lvar_id):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
@@ -177,6 +198,20 @@ class MacroAPI(object):
                 raise Exception('lvar unknown: ' + lvar_id)
             return None
         return lvar.status
+
+    def value(self, item_id):
+        if is_oid(item_id):
+            tp, i = parse_oid(item_id)
+        else:
+            tp = 'lvar'
+            i = item_id
+        if tp == 'unit':
+            return self.unit_value(i)
+        if tp == 'sensor':
+            return self.sensor_value(i)
+        if tp == 'lvar':
+            return self.lvar_value(i)
+        raise Exception('Unknown item type: %s' % tp)
 
     def lvar_value(self, lvar_id):
         lvar = eva.lm.controller.get_lvar(lvar_id)
@@ -196,7 +231,7 @@ class MacroAPI(object):
                 self.lvar_value(lvar_id) == ''
 
     def unit_status(self, unit_id):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
@@ -204,7 +239,7 @@ class MacroAPI(object):
         return unit.status
 
     def unit_nstatus(self, unit_id):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
@@ -212,7 +247,7 @@ class MacroAPI(object):
         return unit.nstatus
 
     def unit_value(self, unit_id):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
@@ -225,7 +260,7 @@ class MacroAPI(object):
         return v
 
     def unit_nvalue(self, unit_id):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
@@ -238,7 +273,7 @@ class MacroAPI(object):
         return v
 
     def is_busy(self, unit_id):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
@@ -246,7 +281,8 @@ class MacroAPI(object):
         return unit.status != unit.nstatus or unit.value != unit.nvalue
 
     def sensor_status(self, sensor_id):
-        sensor = eva.lm.controller.uc_pool.get_sensor(sensor_id)
+        sensor = eva.lm.controller.uc_pool.get_sensor(
+            oid_to_id(sensor_id, 'sensor'))
         if not sensor:
             if not self.pass_errors:
                 raise Exception('sensor unknown: ' + sensor_id)
@@ -254,7 +290,8 @@ class MacroAPI(object):
         return sensor.status
 
     def sensor_value(self, sensor_id):
-        sensor = eva.lm.controller.uc_pool.get_sensor(sensor_id)
+        sensor = eva.lm.controller.uc_pool.get_sensor(
+            oid_to_id(sensor_id, 'sensor'))
         if not sensor:
             if not self.pass_errors:
                 raise Exception('sensor unknown: ' + sensor_id)
@@ -337,13 +374,13 @@ class MacroAPI(object):
                wait=0,
                uuid=None,
                priority=None):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
             return None
         return eva.lm.controller.uc_pool.action(
-            unit_id=unit_id,
+            unit_id=oid_to_id(unit_id, 'unit'),
             status=status,
             value=value,
             wait=wait,
@@ -351,7 +388,7 @@ class MacroAPI(object):
             priority=priority)
 
     def action_toggle(self, unit_id, wait=0, uuid=None, priority=None):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
@@ -361,12 +398,14 @@ class MacroAPI(object):
 
     def result(self, unit_id=None, uuid=None, group=None, status=None):
         if unit_id:
-            unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+            unit = eva.lm.controller.uc_pool.get_unit(
+                oid_to_id(unit_id, 'unit'))
             if not unit:
                 if not self.pass_errors:
                     raise Exception('unit unknown: ' + unit_id)
                 return None
-        return eva.lm.controller.uc_pool.result(unit_id, uuid, group, status)
+        return eva.lm.controller.uc_pool.result(
+            oid_to_id(unit_id, 'unit'), uuid, group, status)
 
     def action_start(self,
                      unit_id,
@@ -375,7 +414,7 @@ class MacroAPI(object):
                      uuid=None,
                      priority=None):
         return self.action(
-            unit_id=unit_id,
+            unit_id=oid_to_id(unit_id, 'unit'),
             status=1,
             value=value,
             wait=wait,
@@ -385,7 +424,7 @@ class MacroAPI(object):
     def action_stop(self, unit_id, value=None, wait=0, uuid=None,
                     priority=None):
         return self.action(
-            unit_id=unit_id,
+            unit_id=oid_to_id(unit_id, 'unit'),
             status=0,
             value=value,
             wait=wait,
@@ -394,12 +433,14 @@ class MacroAPI(object):
 
     def terminate(self, unit_id=None, uuid=None):
         if unit_id:
-            unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+            unit = eva.lm.controller.uc_pool.get_unit(
+                oid_to_id(unit_id, 'unit'))
             if not unit:
                 if not self.pass_errors:
                     raise Exception('unit unknown: ' + unit_id)
                 return None
-        result = eva.lm.controller.uc_pool.terminate(unit_id, uuid)
+        result = eva.lm.controller.uc_pool.terminate(
+            oid_to_id(unit_id, 'unit'), uuid)
         if not result or 'result' not in result or result['result'] != 'OK':
             if not self.pass_errors:
                 raise Exception('terminate error')
@@ -407,12 +448,13 @@ class MacroAPI(object):
         return True
 
     def q_clean(self, unit_id):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
             return None
-        result = eva.lm.controller.uc_pool.q_clean(unit_id=unit_id)
+        result = eva.lm.controller.uc_pool.q_clean(
+            unit_id=oid_to_id(unit_id, 'unit'))
         if 'result' not in result or result['result'] != 'OK':
             if not self.pass_errors:
                 raise Exception('q_clean error, unit ' + unit_id)
@@ -420,12 +462,13 @@ class MacroAPI(object):
         return True
 
     def kill(self, unit_id):
-        unit = eva.lm.controller.uc_pool.get_unit(unit_id)
+        unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
             return None
-        result = eva.lm.controller.uc_pool.kill(unit_id=unit_id)
+        result = eva.lm.controller.uc_pool.kill(
+            unit_id=oid_to_id(unit_id, 'unit'))
         if 'result' not in result or result['result'] != 'OK':
             if not self.pass_errors:
                 raise Exception('kill error, unit ' + unit_id)
