@@ -62,10 +62,10 @@ _pd_cols = {
     'list_controllers': ['id', 'description'],
     'list_ext_': ['id', 'mod', 'description', 'version'],
     'list_ext_mods': ['mod', 'description', 'version', 'api'],
-    'modhelp_ext': [ 'name', 'type', 'required', 'help']
+    'modhelp_ext': ['name', 'type', 'required', 'help']
 }
 
-_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time', 'list_macros': 'id'}
+_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time'}
 
 _fancy_tabsp = {'list_props': 26}
 
@@ -396,11 +396,10 @@ class LM_CLI(GenericCLI):
             'i', help='Controller ID', metavar='ID')
 
     def add_lm_ext_functions(self):
-        ap_ext = self.sp.add_parser(
-            'ext', help='Macro extension functions')
+        ap_ext = self.sp.add_parser('ext', help='Macro extension functions')
         sp_ext = ap_ext.add_subparsers(
             dest='_func', metavar='func', help='Extension commands')
-        
+
         sp_ext_list = sp_ext.add_parser('list', help='List loaded extensions')
         sp_ext_list.add_argument(
             '-y',
@@ -408,15 +407,18 @@ class LM_CLI(GenericCLI):
             help='full information about extension',
             dest='_full',
             action='store_true')
-        
-        sp_ext_show = sp_ext.add_parser('show', help='Show loaded extension info')
+
+        sp_ext_show = sp_ext.add_parser(
+            'show', help='Show loaded extension info')
         sp_ext_show.add_argument('i', help='EXT id', metavar='EXT_ID')
-        
-        sp_ext_mods = sp_ext.add_parser('mods', help='List available extension mods')
-        
+
+        sp_ext_mods = sp_ext.add_parser(
+            'mods', help='List available extension mods')
+
         sp_ext_load = sp_ext.add_parser('load', help='Load extension')
         sp_ext_load.add_argument('i', help='Extension id', metavar='EXT_ID')
-        sp_ext_load.add_argument('m', help='Extension module', metavar='EXT_MOD')
+        sp_ext_load.add_argument(
+            'm', help='Extension module', metavar='EXT_MOD')
         sp_ext_load.add_argument(
             '-c',
             '--config',
@@ -429,15 +431,19 @@ class LM_CLI(GenericCLI):
             help='save configuration on success load',
             dest='_save',
             action='store_true')
-        
+
         sp_ext_unload = sp_ext.add_parser('unload', help='Unload extension')
         sp_ext_unload.add_argument('i', help='Extension id', metavar='EXT_ID')
-        
-        sp_ext_modinfo = sp_ext.add_parser('modinfo', help='Extension module info')
-        sp_ext_modinfo.add_argument('i', help='Extension module', metavar='EXT_MOD')
-        
-        sp_ext_modhelp = sp_ext.add_parser('modhelp', help='Extension module help')
-        sp_ext_modhelp.add_argument('i', help='Extension module', metavar='EXT_MOD')
+
+        sp_ext_modinfo = sp_ext.add_parser(
+            'modinfo', help='Extension module info')
+        sp_ext_modinfo.add_argument(
+            'i', help='Extension module', metavar='EXT_MOD')
+
+        sp_ext_modhelp = sp_ext.add_parser(
+            'modhelp', help='Extension module help')
+        sp_ext_modhelp.add_argument(
+            'i', help='Extension module', metavar='EXT_MOD')
         sp_ext_modhelp.add_argument(
             'c',
             help='Help context (cfg, functions)',
