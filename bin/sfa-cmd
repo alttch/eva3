@@ -1,0 +1,474 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2018 Altertech Group"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.1.0"
+
+import sys
+import os
+from datetime import datetime
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+from eva.client.cli import GenericCLI
+from eva.client import apiclient
+
+_me = 'EVA ICS SFA CLI version %s' % __version__
+
+_api_functions = {
+    'history': 'state_history',
+    'action:exec': 'action',
+    'action:result': 'result',
+    'action:enable': 'enable_actions',
+    'action:disable': 'disable_actions',
+    'action:terminate': 'terminate',
+    'action:clear': 'q_clean',
+    'action:kill': 'kill',
+    'remote': 'list_remote',
+    'macro:list': 'list_macros',
+    'macro:run': 'run',
+    'macro:result': 'result',
+    'controller:list': 'list_controllers',
+    'controller:props': 'list_controller_props',
+    'controller:set': 'set_controller_prop',
+    'controller:reload': 'reload_controller',
+    'controller:append': 'append_controller',
+    'controller:remove': 'remove_controller',
+    'notify:reload': 'reload_clients',
+    'notify:restart': 'notify_restart'
+}
+
+_pd_cols = {
+    'state': [
+        'oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue', 'set',
+        'expires'
+    ],
+    'state_': [
+        'oid', 'virtual', 'action_enabled', 'description', 'location', 'status',
+        'value', 'nstatus', 'nvalue', 'set', 'expires'
+    ],
+    'result': [
+        'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
+        'status'
+    ],
+    'list_remote': [
+        'oid', 'description', 'controller_id', 'status', 'value', 'nstatus',
+        'nvalue'
+    ],
+    'list_macros': ['id', 'description', 'action_enabled'],
+    'list_controllers': ['id', 'description'],
+}
+
+_pd_idx = {'state': 'oid', 'result': 'time'}
+
+_fancy_tabsp = {}
+
+_always_json = []
+
+
+class SFA_CLI(GenericCLI):
+
+    def prepare_result_data(self, data, api_func, api_func_full, itype):
+        if api_func not in [
+                'state', 'list_macros', 'list_controllers', 'result'
+        ] and itype not in ['action']:
+            return super().prepare_result_data(data, api_func, api_func_full,
+                                               itype)
+        result = []
+        for d in data.copy():
+            if itype == 'action' or api_func == 'result':
+                d['time'] = datetime.fromtimestamp(
+                    d['time']['created']).isoformat()
+            elif api_func in ['list_macros', 'list_controllers']:
+                d['id'] = d['full_id']
+            elif itype == 'state':
+                try:
+                    d['set'] = datetime.fromtimestamp(d['set_time']).isoformat()
+                except:
+                    pass
+            result.append(d)
+        return result
+
+    def process_result(self, result, code, api_func, api_func_full, itype, a):
+        if api_func == 'state_history' and \
+                isinstance(result, dict):
+            self.print_tdf(result, 't')
+            return 0
+        else:
+            return super().process_result(result, code, api_func, api_func_full,
+                                          itype, a)
+
+    def add_functions(self):
+        super().add_functions()
+        self.add_sfa_common_functions()
+        self.add_sfa_remote_functions()
+        self.add_sfa_action_functions()
+        self.add_sfa_macro_functions()
+        self.add_sfa_lvar_functions()
+        self.add_sfa_notify_functions()
+        self.add_sfa_controller_functions()
+
+    def add_sfa_common_functions(self):
+        sp_state = self.sp.add_parser('state', help='Get item state')
+        sp_state.add_argument(
+            'i',
+            help='Item ID (specify either ID or item type)',
+            metavar='ID',
+            nargs='?')
+        sp_state.add_argument(
+            '-g', '--group', help='Item group', metavar='GROUP', dest='g')
+        sp_state.add_argument(
+            '-p',
+            '--type',
+            help='Item type',
+            metavar='TYPE',
+            dest='p',
+            choices=['unit', 'sensor', 'lvar', 'U', 'S', 'LV'])
+        sp_state.add_argument(
+            '-y',
+            '--full',
+            help='Full information about item',
+            dest='_full',
+            action='store_true')
+
+        sp_history = self.sp.add_parser(
+            'history', help='Get item state history')
+        sp_history.add_argument(
+            'i',
+            help=
+            'Item ID or multiple IDs (-w param is required), comma separated',
+            metavar='ID')
+        sp_history.add_argument(
+            '-a',
+            '--notifier',
+            help='Notifier to get history from (default: db_1)',
+            metavar='NOTIFIER',
+            dest='a')
+        sp_history.add_argument(
+            '-s', '--time-start', help='Start time', metavar='TIME', dest='s')
+        sp_history.add_argument(
+            '-e', '--time-end', help='End time', metavar='TIME', dest='e')
+        sp_history.add_argument(
+            '-l',
+            '--limit',
+            help='Records limit (doesn\'t work with fill)',
+            metavar='N',
+            dest='l')
+        sp_history.add_argument(
+            '-x',
+            '--prop',
+            help='Item state prop (status or value)',
+            metavar='PROP',
+            dest='x',
+            choices=['status', 'value', 'S', 'V'])
+        sp_history.add_argument(
+            '-w',
+            '--fill',
+            help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
+            metavar='INTERVAL',
+            dest='w')
+
+    def add_sfa_remote_functions(self):
+        ap_remote = self.sp.add_parser('remote', help='List remote items')
+        ap_remote.add_argument(
+            '-i',
+            '--controller',
+            help='Filter by controller ID',
+            metavar='CONTROLLER_ID',
+            dest='i')
+        ap_remote.add_argument(
+            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+        ap_remote.add_argument(
+            '-p',
+            '--type',
+            help='Filter by type',
+            metavar='TYPE',
+            dest='p',
+            choices=['unit', 'sensor', 'lvar', 'U', 'S', 'LV'])
+
+    def add_sfa_action_functions(self):
+        ap_action = self.sp.add_parser('action', help='Unit actions')
+
+        sp_action = ap_action.add_subparsers(
+            dest='_func', metavar='func', help='Action commands')
+
+        sp_action_enable = sp_action.add_parser(
+            'enable', help='Enable unit actions')
+        sp_action_enable.add_argument('i', help='Unit ID', metavar='ID')
+
+        sp_action_disable = sp_action.add_parser(
+            'disable', help='Disable unit actions')
+        sp_action_disable.add_argument('i', help='Unit ID', metavar='ID')
+
+        sp_action_exec = sp_action.add_parser(
+            'exec', help='Execute unit action')
+        sp_action_exec.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_exec.add_argument('s', help='New status', metavar='STATUS')
+        sp_action_exec.add_argument(
+            '-v', '--value', help='New value', metavar='VALUE', dest='v')
+        sp_action_exec.add_argument(
+            '-p',
+            '--priority',
+            help='Action priority',
+            metavar='PRIORITY',
+            type=int,
+            dest='p')
+        sp_action_exec.add_argument(
+            '-w',
+            '--wait',
+            help='Wait for complete',
+            metavar='SEC',
+            type=float,
+            dest='w')
+        sp_action_exec.add_argument(
+            '-q',
+            '--queue-timeout',
+            help='Max queue timeout',
+            metavar='SEC',
+            type=float,
+            dest='q')
+        sp_action_exec.add_argument(
+            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+
+        sp_action_toggle = sp_action.add_parser(
+            'toggle', help='Execute unit toggle action')
+        sp_action_toggle.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_toggle.add_argument(
+            '-p',
+            '--priority',
+            help='Action priority',
+            metavar='PRIORITY',
+            type=int,
+            dest='p')
+        sp_action_toggle.add_argument(
+            '-w',
+            '--wait',
+            help='Wait for complete',
+            metavar='SEC',
+            type=float,
+            dest='w')
+        sp_action_toggle.add_argument(
+            '-q',
+            '--queue-timeout',
+            help='Max queue timeout',
+            metavar='SEC',
+            type=float,
+            dest='q')
+        sp_action_toggle.add_argument(
+            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+
+        sp_action_terminate = sp_action.add_parser(
+            'terminate', help='Terminate unit action')
+        sp_action_terminate.add_argument(
+            'i', help='Unit ID', metavar='ID', nargs='?')
+        sp_action_terminate.add_argument(
+            '-u', '--uuid', help='Action uuid', metavar='UUID', dest='u')
+
+        sp_action_qclean = sp_action.add_parser(
+            'clear', help='Clean up unit action queue')
+        sp_action_qclean.add_argument('i', help='Unit ID', metavar='ID')
+
+        sp_action_kill = sp_action.add_parser(
+            'kill', help='Terminate action and clean queue')
+        sp_action_kill.add_argument('i', help='Unit ID', metavar='ID')
+
+        sp_action_result = sp_action.add_parser(
+            'result', help='Get unit action results')
+        sp_action_result.add_argument(
+            '-i',
+            '--id',
+            help='Unit ID (specify either unit ID or action UUID)',
+            metavar='ID',
+            dest='i')
+        sp_action_result.add_argument(
+            '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
+        sp_action_result.add_argument(
+            '-g', '--group', help='Unit group', metavar='GROUP', dest='g')
+        sp_action_result.add_argument(
+            '-s',
+            '--state',
+            help='Action state (Q, R, F: queued, running, finished)',
+            metavar='STATE',
+            dest='s',
+            choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
+
+    def add_sfa_macro_functions(self):
+        ap_macro = self.sp.add_parser('macro', help='Macro functions')
+        sp_macro = ap_macro.add_subparsers(
+            dest='_func', metavar='func', help='Macro commands')
+
+        sp_macro_list = sp_macro.add_parser('list', help='List macros')
+        sp_macro_list.add_argument(
+            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+
+        sp_macro_run = sp_macro.add_parser('run', help='Execute macro')
+        sp_macro_run.add_argument('i', help='Macro ID', metavar='ID')
+        sp_macro_run.add_argument(
+            '-p',
+            '--priority',
+            help='Action priority',
+            metavar='PRIORITY',
+            type=int,
+            dest='p')
+        sp_macro_run.add_argument(
+            '-w',
+            '--wait',
+            help='Wait for complete',
+            metavar='SEC',
+            type=float,
+            dest='w')
+        sp_macro_run.add_argument(
+            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+
+        sp_macro_result = sp_macro.add_parser(
+            'result', help='Get macro execution results')
+        sp_macro_result.add_argument(
+            '-i',
+            '--id',
+            help='Macro ID (specify either macro ID or action UUID)',
+            metavar='ID',
+            dest='i')
+        sp_macro_result.add_argument(
+            '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
+        sp_macro_result.add_argument(
+            '-g', '--group', help='Macro group', metavar='GROUP', dest='g')
+        sp_macro_result.add_argument(
+            '-s',
+            '--state',
+            help='Action state (Q, R, F: queued, running, finished)',
+            metavar='STATE',
+            dest='s',
+            choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
+
+    def add_sfa_lvar_functions(self):
+        sp_set = self.sp.add_parser('set', help='Set LVar state')
+        sp_set.add_argument('i', help='LVar ID', metavar='ID')
+        sp_set.add_argument(
+            '-s',
+            '--status',
+            help='LVar status',
+            metavar='STATUS',
+            type=int,
+            dest='s')
+        sp_set.add_argument(
+            '-v', '--value', help='LVar value', metavar='VALUE', dest='v')
+
+        sp_reset = self.sp.add_parser('reset', help='Set LVar state')
+        sp_reset.add_argument('i', help='LVar ID', metavar='ID')
+
+        sp_clear = self.sp.add_parser('clear', help='Set LVar state')
+        sp_clear.add_argument('i', help='LVar ID', metavar='ID')
+
+        sp_toggle = self.sp.add_parser('toggle', help='Set LVar state')
+        sp_toggle.add_argument('i', help='LVar ID', metavar='ID')
+
+    def add_sfa_notify_functions(self):
+        ap_notify = self.sp.add_parser(
+            'notify', help='Notify connected clients')
+        sp_notify = ap_notify.add_subparsers(
+            dest='_func',
+            metavar='func',
+            help='Client notification commands')
+
+        sp_notify_reload = sp_notify.add_parser(
+            'reload', help='Ask connected clients to reload the interface')
+        sp_notify_reload = sp_notify.add_parser(
+            'restart',
+            help=
+            'Notify connected clients about the server restart ' + \
+                    'without actual restarting'
+        )
+
+    def add_sfa_controller_functions(self):
+        ap_controller = self.sp.add_parser(
+            'controller', help='Connected controllers functions')
+        sp_controller = ap_controller.add_subparsers(
+            dest='_func', metavar='func', help='Controller commands')
+
+        sp_controller_list = sp_controller.add_parser(
+            'list', help='List connected controllers')
+
+        sp_controller_list_props = sp_controller.add_parser(
+            'props', help='List controller config props')
+        sp_controller_list_props.add_argument(
+            'i', help='Controller ID', metavar='ID')
+
+        sp_controller_set_prop = sp_controller.add_parser(
+            'set', help='Set controller config prop')
+        sp_controller_set_prop.add_argument(
+            'i', help='Controller ID', metavar='ID')
+        sp_controller_set_prop.add_argument(
+            'p', help='Config property', metavar='PROP')
+        sp_controller_set_prop.add_argument(
+            'v', help='Value', metavar='VAL', nargs='?')
+        sp_controller_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save controller config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_controller_reload = sp_controller.add_parser(
+            'reload', help='Reload items from the connected controller')
+        sp_controller_reload.add_argument(
+            'i', help='Controller ID', metavar='ID')
+
+        sp_controller_append = sp_controller.add_parser(
+            'append', help='Connect controller')
+        sp_controller_append.add_argument(
+            'u', help='Controller API URI (http[s]://host:port)', metavar='URI')
+        sp_controller_append.add_argument(
+            '-a', '--api-key', help='API key', metavar='KEY', dest='a')
+        sp_controller_append.add_argument(
+            '-g',
+            '--group',
+            help='Force controller type group',
+            metavar='GROUP',
+            choices=['uc', 'lm'],
+            dest='g')
+        sp_controller_append.add_argument(
+            '-m',
+            '--mqtt',
+            help='Local MQTT notifier ID for data exchange',
+            metavar='NOTIFIER_ID',
+            dest='m')
+        sp_controller_append.add_argument(
+            '-s',
+            '--ssl-verify',
+            help='Verify remote cert for SSL connections',
+            metavar='SSL_VERIFY',
+            dest='s',
+            choices=[0, 1])
+        sp_controller_append.add_argument(
+            '-t',
+            '--timeout',
+            help='API timeout',
+            metavar='SEC',
+            dest='t',
+            type=float)
+        sp_controller_append.add_argument(
+            '-y',
+            '--save',
+            help='Save controller config after connection',
+            dest='_save',
+            action='store_true')
+
+        sp_controller_remove = sp_controller.add_parser(
+            'remove', help='Remove connected controller')
+        sp_controller_remove.add_argument(
+            'i', help='Controller ID', metavar='ID')
+
+
+cli = SFA_CLI('sfa', _me)
+cli.always_json += _always_json
+cli.always_print += ['action', 'action_toggle']
+cli.arg_sections += ['action', 'macro', 'notify', 'controller']
+cli.set_api_functions(_api_functions)
+cli.set_pd_cols(_pd_cols)
+cli.set_pd_idx(_pd_idx)
+cli.set_fancy_tabsp(_fancy_tabsp)
+code = cli.run()
+sys.exit(code)
