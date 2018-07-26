@@ -64,6 +64,7 @@ SFA
 
     * fixes: rule management functions
 
+    * new sfa-cmd cli
     * sfa-cmd renamed to sfa-api
     * new function "state_history" in SFA API and SFA Framework
     * all functions now accept item oids
