@@ -684,12 +684,12 @@ class GenericCLI(object):
     def run(self):
         if self.batch_file is not None:
             try:
-                if self.batch_file != 'stdin':
+                if self.batch_file and self.batch_file != 'stdin':
                     cmds = [
-                        x.strip() for x in open(self.batch_file).readlines()
+                            x.strip() for x in open(self.batch_file).readlines()
                     ]
                 else:
-                    cmds = [x.strip() for x in sys.stdin]
+                    cmds = [x.strip() for x in ';'.join(sys.stdin).split(';')]
                 for c in cmds:
                     print(self.get_prompt() + c)
                     try:
@@ -699,7 +699,7 @@ class GenericCLI(object):
                         code = 90
                     if code and self.batch_stop_on_err: return code
             except:
-                print('Unable to open %s' % batch_file)
+                print('Unable to open %s' % self.batch_file)
                 return 90
         elif not self.interactive:
             return self.do_run()
