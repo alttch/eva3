@@ -95,25 +95,38 @@ function start_controller() {
 
 
 function create_notifier {
-    [ "x$MQTT_HOST" = "x" ] && return 0
     local T=$1
-    echo "Creating notifier for ${T}"
-    local sp=
-    [ "x${MQTT_SPACE}" != "x" ] && local sp="-s ${MQTT_SPACE}"
-    ./bin/$T-notifier create -i eva_1 -p mqtt -h ${MQTT_HOST} \
-        -P ${MQTT_PORT} -A ${MQTT_USER}:${MQTT_PASSWORD} $sp -y || return 1
-    if [ "x$MQTT_CAFILE" != "x" ]; then
-        ./bin/$T-notifier set_prop -i eva_1 -p ca_certs -v $MQTT_CAFILE || return 1
+    local BATCH=
+    if [ "x$MQTT_HOST" != "x" ]; then
+        echo "Creating notifier for ${T}"
+        local sp=
+        [ "x${MQTT_SPACE}" != "x" ] && local sp="-s ${MQTT_SPACE}"
+        local auth=
+        [ "x$MQTT_USER" != "x" ] && local auth="${MQTT_USER}"
+        [ "x$MQTT_PASSWORD" != "x" ] && local auth="$auth:${MQTT_PASSWORD}"
+        [ "x$auth" != "x" ] && auth="${auth}@"
+        local port=
+        [ "x${MQTT_PORT}" != "x" ] && port=":${MQTT_PORT}"
+        BATCH="create eva_1 mqtt:${auth}${MQTT_HOST}${port} ${sp} -y"
+        if [ "x$MQTT_CAFILE" != "x" ]; then
+            BATCH="$BATCH;set_eva_1 ca_certs $MQTT_CAFILE"
+        fi
+        if [ "x$MQTT_CERT" != "x" ]; then
+            BATCH="$BATCH;set_eva_1 certfile $MQTT_CERT"
+        fi
+        if [ "x$MQTT_KEY" != "x" ]; then
+            BATCH="$BATCH;set_eva_1 key $MQTT_KEY"
+        fi
+        BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
+        BATCH="$BATCH;subscribe log eva_1"
+        BATCH="$BATCH;test eva_1"
     fi
-    if [ "x$MQTT_CERT" != "x" ]; then
-        ./bin/$T-notifier set_prop  -i eva_1 -p certfile -v $MQTT_CERT || return 1
+    if [ "x$T" = "xsfa" ]; then
+        [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
+        BATCH="${BATCH}create db_1 db:db/sfa_history.db -y;subscribe state db_1 -v '#' -g '#'"
     fi
-    if [ "x$MQTT_KEY" != "x" ]; then
-        ./bin/$T-notifier set_prop -i eva_1 -p keyfile -v $MQTT_KEY || return 1
-    fi
-    ./bin/$T-notifier subscribe -i eva_1 -p state -v '#' -g '#' || return 1
-    ./bin/$T-notifier subscribe -i eva_1 -p log -L 20 || return 1
-    ./bin/$T-notifier test -i eva_1
+    [ "x${BATCH}" = "x" ] && return 0
+    echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
     return $?
 }
 
@@ -166,18 +179,14 @@ function askMQTT {
             read MQTT_PORT
             [ "x${MQTT_PORT}" = "x" ] && MQTT_PORT=1883
             MQTT_USER=
-            while [ 1 ]; do
-                echo -n "MQTT user: "
-                read MQTT_USER
-                [ "x$MQTT_USER" != "x" ]; break
-            done
+            echo -n "MQTT user (empty for none): "
+            read MQTT_USER
             MQTT_PASSWORD=
-            while [ 1 ]; do
-                echo -n "MQTT password: "
+            if [ "x$MQTT_USER" != "x" ]; then
+                echo -n "MQTT password (empty for none): "
                 read -s MQTT_PASSWORD
                 echo
-                [ "x$MQTT_PASSWORD" != "x" ]; break
-            done
+            fi
             echo -n "MQTT space (empty for the root hive): "
             read MQTT_SPACE
             askYN "Enable MQTT SSL"
@@ -264,13 +273,17 @@ do
             shift
         ;;
         --mqtt)
-            M="$2"
-            MQTT_USER=`echo $M|cut -d@ -f1|cut -d: -f1`
-            MQTT_PASSWORD=`echo $M|cut -d@ -f1|cut -d: -f2`
+            M=$2
+            echo "x$M" |grep '@' > /dev/null
+            if [ $? -eq 0 ]; then
+                MQTT_AUTH=`echo $M|cut -d@ -f1`
+                MQTT_USER=`echo $MQTT_AUTH|cut -d: -f1`
+                echo "x$MQTT_AUTH" |grep ':' > /dev/null && MQTT_PASSWORD=`echo $M|cut -d@ -f1|cut -d: -f2`
+            fi
             MQTT_HOST=`echo $M|cut -d@ -f2|cut -d: -f1|cut -d/ -f1`
             MQTT_PORT=`echo $M|cut -d@ -f2 |cut -d/ -f1|awk -F: '{ print $2 }'`
             [ "x$MQTT_PORT" = "x" ] && MQTT_PORT=1883
-            MQTT_SPACE=`echo $M|cut -d/ -f2-`
+            echo "x$M" |grep '/' > /dev/null && MQTT_SPACE=`echo $M|cut -d/ -f2-`
             shift
             shift
         ;;
@@ -639,9 +652,9 @@ hosts_allow = 0.0.0.0/0
 EOF
     chmod 600 etc/sfa_apikeys.ini
     create_notifier sfa || exit 1
-    if [ "x$MQTT_HOST" != "x" ]; then
-        ./bin/sfa-notifier set_prop -i eva_1 -p collect_logs -v 1 || exit 1
-    fi
+    #if [ "x$MQTT_HOST" != "x" ]; then
+        #./bin/sfa-notifier set_prop -i eva_1 -p collect_logs -v 1 || exit 1
+    #fi
     SFA_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
