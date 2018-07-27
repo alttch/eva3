@@ -446,7 +446,7 @@ fi
 
 echo -n > etc/eva_servers
 
-cp -vf etc/watchdog-dist etc/watchdog
+[ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
 
 # INSTALL UC
 
