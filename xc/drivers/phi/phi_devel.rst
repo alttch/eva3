@@ -82,6 +82,8 @@ Property **type** may be:
 * **url** string containing url
 * **int** integer
 * **uint** unsigned integer (greater or equal to 0)
+* **hex** hexadecimal number
+* **bin** binary number
 * **float** float number
 * **ufloat** unsigned float (greater or equal to 0)
 * **list:type** list of variables with type specified
@@ -110,8 +112,9 @@ file.
     ICS) should be imported with try/catch with **importlib**, their
     unavailability shouldn't block loading PHI for the informational puproses.
 
-Importing modules from eva.uc.drivers.tools, eva.tools, eva.traphandler,
-eva.uc.modbus and functions from eva.uc.driverapi:
+Importing modules from **eva.uc.drivers.tools**, **eva.tools**,
+**eva.traphandler**, **eva.uc.modbus**, **eva.uc.smbus** and functions from
+**eva.uc.driverapi**:
 
 * **get_version()** get Driver API version
 * **get_polldelay()** get EVA poll delay
@@ -360,6 +363,28 @@ If the equipment doesn't send any events, PHI can initiate updating the items
 by itself. To perform this, PHI should support **aao_get** feature and be
 loaded with *update=N* config param. Updates, intervals as well as the whole
 update process are handled by parent class.
+
+Working with I2C/SMBus
+----------------------
+
+It's highly recommended to use internal UC locking for I2C bus. See the code
+below
+
+.. code-block:: python
+
+    # import smbus locker module
+    import eva.uc.smbus as smbus
+
+    def get(self, port=None, cfg=None, timeout=0):
+        # returns smbus object
+        # https://github.com/kplindegaard/smbus2
+        bus = smbus.get(self.bus_id)
+        # perform some operations, then release the bus for other threads
+        smbus.release(self.bus_id)
+        return result
+
+All smbus exceptions, timeouts and retries should be handled by the code of
+your PHI.
 
 Working with ModBus
 -------------------
