@@ -22,5 +22,5 @@ def get(bus):
 
 def release(bus):
     if bus in locks:
-        bus.locks[bus].release()
+        locks[bus].release()
     return True
