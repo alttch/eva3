@@ -1,9 +1,9 @@
 Developing own PHI (Physical Interface) for EVA ICS. HOWTO
 ==========================================================
 
-PHI (Physical interface) is low level driver which communicates directly with
-an equipment. PHI should not contain any logic, it's job is only get/set
-an equipment to state, requested by LPI.
+PHI (Physical interface) is a low level driver which communicates directly with
+an equipment. PHI should not contain any logic, it's job is only get/set an
+equipment to state, requested by LPI.
 
 Required variables in a header
 ------------------------------
@@ -16,6 +16,7 @@ PHI info
 * **__license__**       module license
 * **__version__**       module version
 * **__description__**   module descrption (keep it short)
+
 
 PHI system info
 ~~~~~~~~~~~~~~~
