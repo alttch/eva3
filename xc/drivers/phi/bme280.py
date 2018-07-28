@@ -74,9 +74,9 @@ class PHI(GenericPHI):
             self.ready = False
             return
         try:
-            self.addr = int(self.phi_get('addr', '0x76'), 16)
+            self.addr = int(self.phi_cfg.get('addr', '0x76'), 16)
         except:
-            self.log_error('Invalid address: %s ' % self.phi_get('addr'))
+            self.log_error('Invalid address: %s ' % self.phi_cfg.get('addr'))
             self.ready = False
 
     def get(self, port=None, cfg=None, timeout=0):
@@ -84,13 +84,24 @@ class PHI(GenericPHI):
             b = smbus.get(self.bus)
             if not b:
                 raise Exception('Unable to acquire I2C bus %s ' % self.bus)
-            try:
-                t, h, p = self.readBME280All(bus=b, addr=self.addr)
-            except:
-                smbus.release(self.bus)
-                raise
+            time_start = time.time()
+            rd = False
+            while time_start + timeout >= time.time():
+                try:
+                    t, p, h = self.readBME280All(bus=b, addr=self.addr)
+                    if t is not None and p is not None and h is not None:
+                        rd = True
+                        break
+                except:
+                    pass
+                time.sleep(bus_delay)
             smbus.release(self.bus)
-            return {'t': t, 'h': h, 'p': p}
+            if not rd: raise Exception('data read error')
+            return {
+                't': int(t * 100) / 100.0,
+                'p': int(p * 100) / 100.0,
+                'h': int(h * 100) / 100.0
+            }
         except:
             log_traceback()
             return None
@@ -107,13 +118,18 @@ class PHI(GenericPHI):
                     smbus.release(self.bus)
                     raise
                 smbus.release(self.bus)
-                if not i or not v: raise Exception('Data read error')
+                if i is None or v is None: raise Exception('data read error')
             except:
                 log_traceback()
                 return 'FAILED'
             return {'id': i, 'version': v} if cmd != 'self' else 'OK'
+        elif cmd == 'get':
+            return self.get(timeout=get_timeout())
         else:
-            return {'info', 'Get chip ID and version'}
+            return {
+                'info': 'Get chip ID and version',
+                'get': 'Get data from chip'
+            }
 
     # the code below is based on bme280.py tool
     # Author : Matt Hawkins
@@ -185,7 +201,8 @@ class PHI(GenericPHI):
 
         dig_H6 = getChar(cal3, 6)
 
-        # Wait in ms (Datasheet Appendix B: Measurement time and current calculation)
+        # Wait in ms (Datasheet Appendix B: Measurement time and current
+        # calculation)
         wait_time = 1.25 + (2.3 * OVERSAMPLE_TEMP) + (
             (2.3 * OVERSAMPLE_PRES) + 0.575) + ((2.3 * OVERSAMPLE_HUM) + 0.575)
         time.sleep(wait_time / 1000)  # Wait the required time
