@@ -28,8 +28,8 @@ __set_help__ = []
 bus_delay = 0.5
 
 __help__ = """
-PHI for BME280 sensors (and compatible) connected via local I2C bus. Returns port
-'h' for humidity, 't' for temperature, 'p' for pressure.
+PHI for BME280 sensors (and compatible) connected via local I2C bus. Returns
+port 'h' for humidity, 't' for temperature, 'p' for pressure.
 """
 
 from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
