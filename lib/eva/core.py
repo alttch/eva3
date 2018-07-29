@@ -131,16 +131,33 @@ def sighandler_term(signum, frame):
     sys.exit(0)
 
 
+def prepare_save():
+    if not exec_before_save: return True
+    logging.debug('executing before save command "%s"' % \
+        exec_before_save)
+    code = os.system(exec_before_save)
+    if code:
+        logging.error('before save command exited with code %u' % \
+            code)
+        return False
+    return True
+
+
+def finish_save():
+    if not exec_after_save: return True
+    logging.debug('executing after save command "%s"' % \
+        exec_after_save)
+    code = os.system(exec_after_save)
+    if code:
+        logging.error('after save command exited with code %u' % \
+            code)
+        return False
+    return True
+
+
 def save(func=None):
     result = True
-    if exec_before_save:
-        logging.debug('executing before save command "%s"' % \
-                exec_before_save)
-        code = os.system(exec_before_save)
-        if code:
-            logging.error('before save command exited with code %u' % \
-                    result)
-            return False
+    if not prepare_save(): return False
     if func and func in _save_func:
         if not func(): result = False
     else:
@@ -149,14 +166,7 @@ def save(func=None):
                 if not f(): result = False
             except:
                 log_traceback()
-    if exec_after_save:
-        logging.debug('executing after save command "%s"' % \
-                exec_after_save)
-        code = os.system(exec_after_save)
-        if code:
-            logging.error('after save command exited with code %u' % \
-                    result)
-            return False
+    if not finish_save(): return False
     return result
 
 
