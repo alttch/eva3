@@ -60,7 +60,7 @@ cvars_public = False
 class LockAPI(object):
 
     def lock(self, k=None, l=None, timeout=None, expires=None):
-        if not eva.apikey.check(k, allow = [ 'lock' ]):
+        if not eva.apikey.check(k, allow=['lock']):
             return None
         if timeout: t = timeout
         else: t = eva.core.timeout
@@ -75,7 +75,7 @@ class LockAPI(object):
         return result
 
     def unlock(self, k=None, l=None):
-        if not eva.apikey.check(k, allow = [ 'lock' ]):
+        if not eva.apikey.check(k, allow=['lock']):
             return None
         logging.debug('releasing lock %s' % l)
         try:
@@ -203,9 +203,12 @@ class FileAPI(object):
                 fname.find('..') != -1:
             return False
         try:
+            if not eva.core.prepare_save(): return False
             os.unlink(eva.core.dir_runtime + '/' + fname)
+            if not eva.core.finish_save(): return False
             return True
         except:
+            eva.core.log_traceback()
             return False
 
     def file_get(self, k, fname=None):
@@ -218,6 +221,7 @@ class FileAPI(object):
             data = ''.join(open(eva.core.dir_runtime + '/' + fname).readlines())
             return data
         except:
+            eva.core.log_traceback()
             return None
 
     def file_put(self, k, fname=None, data=None):
@@ -229,9 +233,12 @@ class FileAPI(object):
         try:
             if not data: raw = ''
             else: raw = data
+            if not eva.core.prepare_save(): return False
             open(eva.core.dir_runtime + '/' + fname, 'w').write(raw)
+            if not eva.core.finish_save(): return False
             return True
         except:
+            eva.core.log_traceback()
             return False
 
     def file_set_exec(self, k, fname=None, e=False):
@@ -243,9 +250,12 @@ class FileAPI(object):
         try:
             if e: perm = 0o755
             else: perm = 0o644
+            if not eva.core.prepare_save(): return False
             os.chmod(eva.core.dir_runtime + '/' + fname, perm)
+            if not eva.core.finish_save(): return False
             return True
         except:
+            eva.core.log_traceback()
             return False
 
 
@@ -330,6 +340,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         else:
             eva.core.debug_off()
         return True
+
 
 class SysHTTP_API(SysAPI):
 
