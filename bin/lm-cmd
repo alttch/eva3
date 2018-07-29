@@ -281,6 +281,8 @@ class LM_CLI(GenericCLI):
         sp_macro_run = sp_macro.add_parser('run', help='Execute macro')
         sp_macro_run.add_argument('i', help='Macro ID', metavar='ID')
         sp_macro_run.add_argument(
+            '-a', '--args', help='Macro arguments', metavar='ARGS', dest='a')
+        sp_macro_run.add_argument(
             '-p',
             '--priority',
             help='Action priority',
