@@ -427,13 +427,19 @@ class GenericCLI(object):
                 rprinted = True
             if out:
                 print(self.colored('-' * 81, color='grey'))
-                print('OUTPUT:')
-                print(str(out).strip())
+                print(self.colored('OUTPUT:', color='blue'))
+                if isinstance(out, list) or isinstance(out, dict):
+                    self.print_json(out)
+                else:
+                    print(str(out).strip())
                 rprinted = True
             if err:
                 print(self.colored('-' * 81, color='grey'))
-                print_err('ERROR:')
-                print(str(err).strip())
+                print(self.colored('ERROR:', color='red'))
+                if isinstance(err, list) or isinstance(err, dict):
+                    self.print_json(err)
+                else:
+                    print(str(err).strip())
                 rprinted = True
             if not rprinted and not tab:
                 print('OK')
