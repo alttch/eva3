@@ -637,6 +637,18 @@ class UC_API(GenericAPI):
         if result and eva.core.db_update == 1: eva.uc.driverapi.save()
         return result
 
+    def unlink_phi_mod(self, k=None, m=None):
+        if not apikey.check(k, master=True): return None
+        if not m: return None
+        result = eva.uc.driverapi.unlink_phi_mod(m)
+        return result
+
+    def put_phi_mod(self, k=None, m=None, c=None, force=None):
+        if not apikey.check(k, master=True): return None
+        if not m: return None
+        result = eva.uc.driverapi.put_phi_mod(m, c, force)
+        return result
+
     def unload_driver(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         if not i: return None
@@ -735,6 +747,13 @@ class UC_API(GenericAPI):
 
 class UC_HTTP_API(GenericHTTP_API, UC_API):
 
+    def cp_check_perm(self):
+        if cherrypy.serving.request.path_info[:8] == '/put_phi':
+            rlp = ['c']
+        else:
+            rlp = None
+        super().cp_check_perm(rlp=rlp)
+
     def __init__(self):
         super().__init__()
         if eva.core.development:
@@ -781,6 +800,8 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
         UC_HTTP_API.load_phi.exposed = True
         UC_HTTP_API.unload_phi.exposed = True
+        UC_HTTP_API.unlink_phi_mod.exposed = True
+        UC_HTTP_API.put_phi_mod.exposed = True
         UC_HTTP_API.list_phi.exposed = True
         UC_HTTP_API.get_phi.exposed = True
 
@@ -1150,6 +1171,16 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
     def unload_phi(self, k=None, i=None):
         cp_need_master(k)
         return http_api_result_ok() if super().unload_phi(k, i) \
+                else http_api_result_error()
+
+    def unlink_phi_mod(self, k=None, m=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().unlink_phi_mod(k, m) \
+                else http_api_result_error()
+
+    def put_phi_mod(self, k=None, m=None, c=None, force=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().put_phi_mod(k, m, c, force) \
                 else http_api_result_error()
 
     def list_phi(self, k=None, full=None):

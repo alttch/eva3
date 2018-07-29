@@ -91,6 +91,52 @@ def get_driver(driver_id):
 # private API functions, not recommended to use
 
 
+def unlink_phi_mod(mod):
+    if mod.find('/') != -1 or mod == 'generic_phi': return False
+    for k, p in phis.copy().items():
+        if p.phi_mod_id == mod:
+            logging.error('PHI module %s is in use, unable to unlink' % mod)
+            return False
+    fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
+    try:
+        if not eva.core.prepare_save(): return False
+        os.unlink(fname)
+        if not eva.core.finish_save(): return False
+    except:
+        logging.error('Unable to unlink PHI module %s' % fname)
+        eva.core.log_traceback()
+        return False
+    return True
+
+
+def put_phi_mod(mod, content, force=False):
+    if mod.find('/') != -1 or mod == 'generic_phi': return False
+    fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
+    code = '{}\n\ns=PHI(info_only=True).serialize(full=True)'.format(content)
+    try:
+        d = {}
+        exec(code, d)
+        if 's' not in d or 'mod' not in d['s']:
+            raise Exception('Invalid module code')
+    except:
+        logging.error(
+            'Unable to check PHI module %s, invalid module code' % mod)
+        eva.core.log_traceback()
+        return False
+    if os.path.isfile(fname) and not force:
+        logging.error('Unable to overwrite PHI module %s' % fname)
+        return False
+    try:
+        if not eva.core.prepare_save(): return False
+        open(fname, 'w').write(content)
+        if not eva.core.finish_save(): return False
+    except:
+        logging.error('Unable to put PHI module %s' % fname)
+        eva.core.log_traceback()
+        return False
+    return True
+
+
 def modhelp_phi(mod, context):
     code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
             ' s=PHI(info_only=True).serialize(helpinfo=\'%s\')' % context
