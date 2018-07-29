@@ -552,7 +552,7 @@ class GenericCLI(object):
         sp_log_critical.add_argument('m', help='Message', metavar='MSG')
         sp_log_get = sp_log.add_parser('get', help='Get system log messages')
         sp_log_get.add_argument(
-            '-l', '--level', help='Log level', metavar='LEVEL', dest='l')
+            'l', help='Log level', metavar='LEVEL', nargs='?')
         sp_log_get.add_argument(
             '-t',
             '--seconds',
@@ -900,6 +900,8 @@ class GenericCLI(object):
             params['virtual'] = 1
         if hasattr(a, '_save') and a._save:
             params['save'] = 1
+        if hasattr(a, '_force') and a._force:
+            params['force'] = 1
         code = self.prepare_run(api_func, params, a)
         if code: return code
         if 'timeout' in c:
