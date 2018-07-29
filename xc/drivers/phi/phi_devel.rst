@@ -368,23 +368,39 @@ update process are handled by parent class.
 Working with I2C/SMBus
 ----------------------
 
-It's highly recommended to use internal UC locking for I2C bus. See the code
-below
+It's highly recommended to use internal UC locking for I2C bus. Then you can
+use any module available to work with I2C/SMBus. As there are a lot of modules
+with a similar functions, you can choose it on your own. See the code example
+below:
 
 .. code-block:: python
 
-    # import smbus locker module
-    import eva.uc.smbus as smbus
+    # ...........
+    # we'll use smbus2 module in this example
+    __mods_required__ = ['smbus2']
+    # ...........
+    # import i2c locker module
+    import eva.uc.i2cbus
+
+    def __init__(self, phi_cfg=None, info_only=False):
+        # code
+        try:
+            self.smbus2 = importlib.import_module('smbus2')
+        except:
+            self.log_error('unable to load smbus2 python module')
+            self.ready = False
+            return
 
     def get(self, port=None, cfg=None, timeout=0):
-        # returns smbus object
-        # https://github.com/kplindegaard/smbus2
-        bus = smbus.get(self.bus_id)
+        if not eva.uc.i2cbus.lock(self.bus):
+            self.log_error('unable to lock I2C bus')
+            return None
+        bus = self.smbus2.SMBus(self.bus)
         # perform some operations, then release the bus for other threads
-        smbus.release(self.bus_id)
+        eva.i2cbus.release(self.bus)
         return result
 
-All smbus exceptions, timeouts and retries should be handled by the code of
+All I2C/SMBus exceptions, timeouts and retries should be handled by the code of
 your PHI.
 
 Working with ModBus
