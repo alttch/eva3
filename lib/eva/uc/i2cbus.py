@@ -15,8 +15,8 @@ def lock(bus):
         l = threading.Lock()
         locks[bus] = l
     if not locks[bus].acquire(timeout=eva.core.timeout):
-        return None
-    return smbus2.SMBus(bus)
+        return False
+    return True
 
 
 def release(bus):
