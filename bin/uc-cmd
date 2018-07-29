@@ -145,7 +145,7 @@ class UC_CLI(GenericCLI):
         elif api_func == 'put_phi_mod':
             try:
                 # if a._uri[-3:] != '.py':
-                    # raise Exception('Not a PHI mod')
+                # raise Exception('Not a PHI mod')
                 params['m'] = '.'.join(a._uri.split('/')[-1].split('.')[:-1])
                 r = requests.get(a._uri, timeout=self.timeout)
                 if r.status_code != 200:
@@ -682,7 +682,8 @@ class UC_CLI(GenericCLI):
 
         sp_phi_download = sp_phi.add_parser(
             'download', help='Download and put PHI')
-        sp_phi_download.add_argument('_uri', help='Module HTTP URI', metavar='URI')
+        sp_phi_download.add_argument(
+            '_uri', help='Module HTTP URI', metavar='URI')
         sp_phi_download.add_argument(
             '-y',
             '--force',
@@ -693,7 +694,6 @@ class UC_CLI(GenericCLI):
         sp_phi_unlink = sp_phi.add_parser(
             'unlink', help='Unlink PHI (delete mod file)')
         sp_phi_unlink.add_argument('m', help='PHI module', metavar='PHI_MOD')
-
 
 
 cli = UC_CLI('uc', _me)

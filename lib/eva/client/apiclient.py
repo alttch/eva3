@@ -67,8 +67,8 @@ _api_func = {
             'create_unit', 'create_sensor', 'create_mu', 'create_device',
             'update_device', 'clone', 'clone_group', 'destroy',
             'destroy_device', 'login', 'logout', 'destroy_modbus_port',
-            'test_modbus_port', 'unload_phi', 'unlink_phi_mod', 'put_phi_mod',
-            'unload_driver', 'set_driver'
+            'test_modbus_port', 'unload_phi', 'unlink_phi_mod', 'unload_driver',
+            'set_driver'
         ],
         'ce': ['action', 'action_toggle']
     },

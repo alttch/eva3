@@ -169,7 +169,6 @@ $_eva_api_func = array(
                     'load_phi',
                     'unload_phi',
                     'unlink_phi_mod',
-                    'put_phi_mod',
                     'load_driver',
                     'unload_driver',
                     'list_phi',

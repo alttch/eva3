@@ -647,7 +647,7 @@ class UC_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         if not m: return None
         result = eva.uc.driverapi.put_phi_mod(m, c, force)
-        return result
+        return result if not result else api.modinfo_phi(k, m)
 
     def unload_driver(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -1180,8 +1180,9 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
     def put_phi_mod(self, k=None, m=None, c=None, force=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().put_phi_mod(k, m, c, force) \
-                else http_api_result_error()
+        result = super().put_phi_mod(k, m, c, force)
+        if not result: raise cp_api_error()
+        return result
 
     def list_phi(self, k=None, full=None):
         cp_need_master(k)
