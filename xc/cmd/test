@@ -10,4 +10,5 @@ echo "param 3: $3"
 echo "delay 3 sec"
 sleep 3
 echo "script finish"
+>&2 echo "some text to stderr"
 exit ${code}
