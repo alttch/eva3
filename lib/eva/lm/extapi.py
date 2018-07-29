@@ -70,6 +70,7 @@ def modinfo(mod):
                 pass
         return result
     except:
+        log_traceback()
         return None
 
 def modhelp(mod, context):
@@ -81,6 +82,7 @@ def modhelp(mod, context):
         result = d.get('s')
         return result
     except:
+        log_traceback()
         return None
 
 
