@@ -374,7 +374,7 @@ class GenericHTTP_API(GenericAPI):
         'tools.sessions.timeout': session_timeout
     }
 
-    def cp_check_perm(self):
+    def cp_check_perm(self, rlp=None):
         k = cp_client_key()
         if k is not None: cherrypy.serving.request.params['k'] = k
         if cherrypy.serving.request.path_info[:6] == '/login': return
@@ -383,6 +383,12 @@ class GenericHTTP_API(GenericAPI):
         if dev and not eva.core.development: raise cp_forbidden_key()
         p = cherrypy.serving.request.params.copy()
         if not eva.core.development and 'k' in p: del (p['k'])
+        if rlp:
+            for rp in rlp:
+                try:
+                    del p[rp]
+                except:
+                    pass
         log_api_request(cherrypy.serving.request.path_info[1:],
                         http_remote_info(k), p, dev)
         if apikey.check(k, master=dev, ip=http_real_ip()):
