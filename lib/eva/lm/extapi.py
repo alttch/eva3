@@ -70,8 +70,9 @@ def modinfo(mod):
                 pass
         return result
     except:
-        log_traceback()
+        eva.core.log_traceback()
         return None
+
 
 def modhelp(mod, context):
     code = 'from eva.lm.extensions.%s import LMExt;' % mod + \
@@ -82,7 +83,7 @@ def modhelp(mod, context):
         result = d.get('s')
         return result
     except:
-        log_traceback()
+        eva.core.log_traceback()
         return None
 
 

@@ -146,7 +146,7 @@ def modhelp_phi(mod, context):
         result = d.get('s')
         return result
     except:
-        log_traceback()
+        eva.core.log_traceback()
         return None
 
 
@@ -164,7 +164,7 @@ def modinfo_phi(mod):
                 pass
         return result
     except:
-        log_traceback()
+        eva.core.log_traceback()
         return None
 
 
