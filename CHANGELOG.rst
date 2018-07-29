@@ -19,6 +19,8 @@ Core
     * MQTT SSL support
     * JSON notifiers. GET/POST notifiers are marked as deprecated and should
       not be used any more.
+    * exec function (cmd, run) string arguments splitted with ' ' now support
+      the spaces inside (i.e. 'this is "third argument"')
 
 UC
 ~~
