@@ -8,6 +8,7 @@ import uuid
 import eva.item
 import eva.core
 import time
+import shlex
 
 from eva.tools import val_to_boolean
 
@@ -348,7 +349,7 @@ class DecisionRule(eva.item.Item):
         if 'macro_args' in data:
             m = data['macro_args']
             if m is not None:
-                m = m.split(' ')
+                m = shlex.split(m)
             self.macro_args = m
         if 'break_after_exec' in data:
             self.break_after_exec = data['break_after_exec']

@@ -11,6 +11,7 @@ import time
 import os
 import sys
 import jsonpickle
+import shlex
 
 import eva.core
 import eva.runner
@@ -150,8 +151,8 @@ class CMDAPI(object):
             cmd[0] == '/' or \
             cmd.find('..') != -1:
             return None
-        if args:
-            _args = tuple(args.split(' '))
+        if args is not None:
+            _args = tuple(shlex.split(args))
         else:
             _args = ()
         _c = CMD(cmd, _args, timeout)

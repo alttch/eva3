@@ -15,6 +15,7 @@ import eva.lm.controller
 import time
 import requests
 import threading
+import shlex
 
 from eva.tools import is_oid
 from eva.tools import oid_to_id
@@ -478,7 +479,7 @@ class MacroAPI(object):
     def run(self, macro, argv=None, wait=0, uuid=None, priority=None):
         _argv = []
         if isinstance(argv, str):
-            _argv = argv.split(' ')
+            _argv = shlex.split(argv)
         elif isinstance(argv, float) or isinstance(argv, int):
             _argv = [str(argv)]
         elif isinstance(argv, list):

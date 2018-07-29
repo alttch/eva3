@@ -288,12 +288,7 @@ class RemoteControllerPool(object):
         if controller_id not in self.controllers: return None
         c = self.controllers[controller_id]
         p = {'c': command}
-        _args = None
-        if isinstance(args, str):
-            _args = args
-        elif isinstance(args, list):
-            _args = ' '.join(args)
-        if _args is not None: p['a'] = _args
+        if args is not None: p['a'] = args
         if wait is not None: p['w'] = wait
         if timeout is not None: p['t'] = timeout
         return c.api_call('cmd', p)

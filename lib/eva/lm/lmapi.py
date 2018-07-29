@@ -5,6 +5,7 @@ __version__ = "3.1.0"
 
 import cherrypy
 import jsonpickle
+import shlex
 import eva.core
 from eva.api import GenericHTTP_API
 from eva.api import GenericAPI
@@ -143,7 +144,7 @@ class LM_API(GenericAPI):
             if isinstance(args, list):
                 ar = args
             else:
-                ar = args.split(' ')
+                ar = shlex.split(args)
         return eva.lm.controller.exec_macro(
             macro=macro,
             argv=ar,
