@@ -4,6 +4,7 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
 __description__ = "Run macro on remote LM PLC"
 __api__ = 1
+__mods_required__ = []
 
 __id__ = 'run_remote'
 
@@ -51,6 +52,7 @@ class LMExt(GenericExt):
         self.__license = __license__
         self.__description = __description__
         self.__version = __version__
+        self.__mods_required = __mods_required__
         self.__api_version = __api__
         self.__config_help = __config_help__
         self.__functions = __functions__

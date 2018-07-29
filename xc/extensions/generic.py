@@ -4,6 +4,7 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "1.0.0"
 __description__ = "Generic macro extension, don't use"
 __api__ = 1
+__mods_required__ = []
 
 __id__ = 'generic'
 
@@ -38,6 +39,7 @@ class LMExt(object):
         self.__license = __license__
         self.__description = __description__
         self.__version = __version__
+        self.__mods_required = __mods_required__
         self.__api_version = __api__
         self.__config_help = __config_help__
         self.__functions = __functions__
@@ -67,6 +69,9 @@ class LMExt(object):
             d['description'] = self.__description
             d['version'] = self.__version
             d['api'] = self.__api_version
+            d['mods_required'] = self.__mods_required if \
+                    isinstance(self.__mods_required, list) else \
+                    [self.__mods_required]
             d['help'] = self.__help
         if config:
             d['cfg'] = self.cfg
