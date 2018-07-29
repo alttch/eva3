@@ -32,7 +32,6 @@ mods = [
     'requests',
     'shlex',
     'signal',
-    'smbus2',
     'socket',
     'sqlite3',
     'struct',
