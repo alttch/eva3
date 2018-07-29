@@ -26,7 +26,7 @@ UC
 ~~
 
     * new uc-cmd cli
-    * old uc-cmd available as uc-api
+    * old uc-cmd renamed to uc-api
     * UC drivers: logical to physical (LPI) and physical (PHI) interfaces
     * native ModBus support (drivers only)
     * device templates
