@@ -95,6 +95,7 @@ class LMExt(GenericExt):
                 gain = float(self.cfg.get('gain', 0))
             except:
                 self.log_error('invalid gain value: %s' % self.cfg.get('gain'))
+                raise
             try:
                 if 'd' in self.cfg: device = int(self.cfg.get('d'))
                 else: device = None
@@ -139,7 +140,8 @@ class LMExt(GenericExt):
 
     def say(self, text, **kwargs):
         try:
-            return self.tts.say(text, **kwargs)
+            result = self.tts.say(text, **kwargs)
+            return True if result else False
         except:
             log_traceback()
             return False
