@@ -250,7 +250,7 @@ class APIClientLocal(APIClient):
                     '/../../../etc'
         self._product_code = product
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
-        cfg.readfp(open(_etc + '/' + product + '_apikeys.ini'))
+        cfg.read(_etc + '/' + product + '_apikeys.ini')
         for s in cfg.sections():
             try:
                 _master = (cfg.get(s, 'master') == 'yes')
@@ -263,7 +263,7 @@ class APIClientLocal(APIClient):
             except:
                 pass
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
-        cfg.readfp(open(_etc + '/' + product + '.ini'))
+        cfg.read(_etc + '/' + product + '.ini')
         try:
             self._timeout = float(cfg.get('server', 'timeout'))
         except:

@@ -48,7 +48,7 @@ def load(fname=None):
         return False
     try:
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
-        cfg.readfp(open(fname_full))
+        cfg.read(fname_full)
         for ks in cfg.sections():
             try:
                 k = cfg.get(ks, 'key')

@@ -339,7 +339,7 @@ def load(fname=None, initial=False, init_log=True):
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
     try:
-        cfg.readfp(open(fname_full))
+        cfg.read(fname_full)
         if initial:
             try:
                 pid_file = cfg.get('server', 'pid_file')

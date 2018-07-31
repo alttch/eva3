@@ -209,7 +209,7 @@ class GenericCLI(object):
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
         result = {}
         try:
-            cfg.readfp(open(fname))
+            cfg.read(fname)
         except:
             self.print_err('unable to open %s' % fname)
             return {}
