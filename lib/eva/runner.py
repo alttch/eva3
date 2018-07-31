@@ -278,7 +278,7 @@ code_cache_m = {}
 
 class PyThread(object):
 
-    def __init__(self, item=None, script=None, env_globals=None):
+    def __init__(self, item=None, script=None, env_globals=None, bcode=None):
         if item:
             if item.action_exec:
                 sfile = item.action_exec
@@ -293,6 +293,7 @@ class PyThread(object):
         self.code = None
         self.out = None
         self.err = None
+        self.bcode = bcode if bcode else ''
         self.exitcode = -15
 
     def compile(self):
@@ -314,7 +315,8 @@ class PyThread(object):
                     raw_c = ''.join(open(self.common_file).readlines())
                 except:
                     raw_c = ''
-                self.code = compile(raw_c + '\n\n' + raw, self.script, 'exec')
+                self.code = compile(self.bcode + raw_c + '\n' + raw,
+                                    self.script, 'exec')
                 code_cache[self.script_file] = self.code
                 code_cache_m[self.script_file] = mtime
                 logging.debug('File %s compiled successfully' % \
