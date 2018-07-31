@@ -45,7 +45,7 @@ from eva.tools import val_to_boolean
 
 class LMExt(GenericExt):
 
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, info_only=False):
         super().__init__(cfg)
         self.mod_id = __id__
         self.__author = __author__
@@ -57,6 +57,7 @@ class LMExt(GenericExt):
         self.__config_help = __config_help__
         self.__functions = __functions__
         self.__help = __help__
+        if info_only: return
         url = self.cfg.get('url')
         k = self.cfg.get('k')
         timeout = self.cfg.get('timeout')

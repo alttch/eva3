@@ -29,7 +29,7 @@ class LMExt(object):
     config
     """
 
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None, info_only=False):
         if cfg:
             self.cfg = cfg
         else:

@@ -58,7 +58,7 @@ def rebuild_env():
 
 def modinfo(mod):
     code = 'from eva.lm.extensions.%s import LMExt;' % mod + \
-            ' s=LMExt().serialize(full=True)'
+            ' s=LMExt(info_only=True).serialize(full=True)'
     try:
         d = {}
         exec(code, d)
@@ -76,7 +76,7 @@ def modinfo(mod):
 
 def modhelp(mod, context):
     code = 'from eva.lm.extensions.%s import LMExt;' % mod + \
-            ' s=LMExt().serialize(helpinfo=\'%s\')' % context
+            ' s=LMExt(info_only=True).serialize(helpinfo=\'%s\')' % context
     try:
         d = {}
         exec(code, d)
@@ -94,7 +94,7 @@ def list_mods():
         f = os.path.basename(p)[:-3]
         if f != '__init__':
             code = 'from eva.lm.extensions.%s import LMExt;' % f + \
-                    ' s=LMExt().serialize(full=True);f=LMExt().get_functions()'
+                    ' s=LMExt(info_only=True).serialize(full=True);f=LMExt().get_functions()'
             try:
                 d = {}
                 exec(code, d)
