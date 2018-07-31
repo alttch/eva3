@@ -139,9 +139,9 @@ class LMExt(GenericExt):
             self.ready = False
 
     def say(self, text, **kwargs):
+        if text is None: return False
         try:
-            result = self.tts.say(text, **kwargs)
-            return True if result else False
+            return self.tts.say(text, **kwargs)
         except:
             log_traceback()
             return False
