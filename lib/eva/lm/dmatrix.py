@@ -349,7 +349,10 @@ class DecisionRule(eva.item.Item):
         if 'macro_args' in data:
             m = data['macro_args']
             if m is not None:
-                m = shlex.split(m)
+                try:
+                    m = shlex.split(m)
+                except:
+                    m = m.split(' ')
             self.macro_args = m
         if 'break_after_exec' in data:
             self.break_after_exec = data['break_after_exec']

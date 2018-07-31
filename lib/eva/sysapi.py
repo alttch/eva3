@@ -152,7 +152,10 @@ class CMDAPI(object):
             cmd.find('..') != -1:
             return None
         if args is not None:
-            _args = tuple(shlex.split(args))
+            try:
+                _args = tuple(shlex.split(args))
+            except:
+                _args = tuple(args.split(' '))
         else:
             _args = ()
         _c = CMD(cmd, _args, timeout)

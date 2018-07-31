@@ -21,6 +21,7 @@ import eva.lm.lremote
 import eva.lm.lmqueue
 import eva.lm.dmatrix
 import eva.lm.extapi
+import eva.lm.macro_api
 
 from eva.tools import is_oid
 from eva.tools import oid_to_id
@@ -680,6 +681,7 @@ def dump(item_id=None):
 
 
 def init():
+    eva.lm.macro_api.init()
     eva.core.append_save_func(save)
     eva.core.append_dump_func('lm', dump)
     eva.core.append_stop_func(stop)

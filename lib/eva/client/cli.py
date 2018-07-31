@@ -721,10 +721,12 @@ class GenericCLI(object):
                 while not d:
                     try:
                         d = shlex.split(input(self.get_prompt()))
-                    except:
+                    except EOFError:
                         print()
                         print('Bye')
                         return 0
+                    except:
+                        self.print_err('parse error')
                 if d[0] in ['q', 'quit', 'exit', 'bye']:
                     print('Bye')
                     return 0
