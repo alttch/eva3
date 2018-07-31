@@ -425,7 +425,7 @@ class GenericCLI(object):
                 print(self.colored('-' * 81, color='grey'))
                 print(h.strip())
                 rprinted = True
-            if out:
+            if out is not None and out != '':
                 print(self.colored('-' * 81, color='grey'))
                 print(self.colored('OUTPUT:', color='blue'))
                 if isinstance(out, list) or isinstance(out, dict):
@@ -433,7 +433,7 @@ class GenericCLI(object):
                 else:
                     print(str(out).strip())
                 rprinted = True
-            if err:
+            if err is not None and err != '':
                 print(self.colored('-' * 81, color='grey'))
                 print(self.colored('ERROR:', color='red'))
                 if isinstance(err, list) or isinstance(err, dict):
