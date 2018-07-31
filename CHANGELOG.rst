@@ -58,6 +58,7 @@ LM PLC
     * device management functions: "create_device", "update_device",
       "destroy_device"
     * "set_rule_prop" macro function
+    * "alias" macro function
     * rule filter in LM EI
     * LM EI now should be enabled/disabled in lm.ini
 

@@ -24,6 +24,8 @@ from eva.tools import parse_oid
 _shared = {}
 _shared_lock = threading.Lock()
 
+mbi_code = ''
+
 
 def shared(name):
     if not _shared_lock.acquire(timeout=eva.core.timeout):
@@ -479,7 +481,10 @@ class MacroAPI(object):
     def run(self, macro, argv=None, wait=0, uuid=None, priority=None):
         _argv = []
         if isinstance(argv, str):
-            _argv = shlex.split(argv)
+            try:
+                _argv = shlex.split(argv)
+            except:
+                _argv = argv.split(' ')
         elif isinstance(argv, float) or isinstance(argv, int):
             _argv = [str(argv)]
         elif isinstance(argv, list):
@@ -567,3 +572,9 @@ class MacroAPI(object):
         result = eva.lm.lmapi.api.set_rule_prop(
             eva.apikey.masterkey, i=rule_id, p=prop, v=value, save=save)
         return result
+
+
+def init():
+    global mbi_code
+    mbi_code = open(eva.core.dir_lib +
+                    '/eva/lm/macro_builtins.py').read() + '\n\n'

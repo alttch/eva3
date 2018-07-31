@@ -12,6 +12,7 @@ import logging
 
 from eva.tools import val_to_boolean
 
+
 class PLC(eva.item.ActiveItem):
 
     def __init__(self):
@@ -105,7 +106,10 @@ class PLC(eva.item.ActiveItem):
                 env_globals['_%u' % i] = a.argv[i - 1]
             except:
                 env_globals['_%u' % i] = ''
-        xc = eva.runner.PyThread(item=a.item, env_globals=env_globals)
+        xc = eva.runner.PyThread(
+            item=a.item,
+            env_globals=env_globals,
+            bcode=eva.lm.macro_api.mbi_code)
         self.queue_lock.release()
         xc.run()
         self.action_after_run(a, xc)
