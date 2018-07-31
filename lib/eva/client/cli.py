@@ -692,7 +692,7 @@ class GenericCLI(object):
             try:
                 if self.batch_file and self.batch_file != 'stdin':
                     cmds = [
-                            x.strip() for x in open(self.batch_file).readlines()
+                        x.strip() for x in open(self.batch_file).readlines()
                     ]
                 else:
                     cmds = [x.strip() for x in ';'.join(sys.stdin).split(';')]
@@ -739,7 +739,7 @@ class GenericCLI(object):
                     print('JSON mode ' + ('on' if self.in_json else 'off'))
                     print('Client debug mode ' +
                           ('on' if self.debug else 'off'))
-                    print('timeout: %f' % self.timeout)
+                    print('timeout: %.2f' % self.timeout)
                 elif d[0] == 'k.' and self.remote_api:
                     self.apikey = None
                     print('Key has been reset to default')
@@ -880,7 +880,7 @@ class GenericCLI(object):
             apikey = c.get('key')
         else:
             apikey = None
-        if hasattr(a, '_remote_key') and a._api_key:
+        if hasattr(a, '_api_key') and a._api_key:
             apikey = a._api_key
         if self.remote_api:
             if not apiuri:
