@@ -45,7 +45,7 @@ LM PLC
     * new lm-cmd cli
     * old lm-cmd renamed to lm-api
     * macro extensions
-    * macro function "unlock" now return false if lock hasn't been not locked
+    * macro function "unlock" now return false if the lock hasn't been locked
       or doesn't exist
     * unlock macro function may throw an exception if the controller forbids its
       functionality, in case the controller has no masterkey defined
