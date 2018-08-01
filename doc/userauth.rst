@@ -7,13 +7,13 @@ as an alternative for authorization via API key.
 login - user authorization
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Authorizes user in the system and and opens up a new authorized session.
-Session ID is stored in cookie.
+Authorizes user in the system and and opens a new authorized session.  Session
+ID is stored in cookie.
 
 Attention! Session is created for all requests to API, even if login is not
 used; web-browsers use the same session for the host even if apps are running
 on different ports. Therefore, when you use web-apps (even if you use the same
-the same browser to simultaneously assess system interfaces or other apps) each
+browser to simultaneously access system interfaces or other apps) each
 app/interface should be associated with different domains/alias/different host
 IP addresses.
 

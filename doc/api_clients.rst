@@ -2,9 +2,9 @@ API Clients
 ===========
 
 All EVA API servers were designed as a simple and user-friendly way to work
-from a command line using the traditional calling methods of Linux http
-requests: GET, wget, lynx, curl etc. That is why JSON incoming data is always
-duplicated with the traditional GET/POST request parameters.
+from a command line using traditional calling methods of Linux http requests:
+GET, wget, lynx, curl etc. That is why JSON incoming data is always duplicated
+with the traditional GET/POST request parameters.
 
 API outgoing data is always in JSON format, which can easily be parsed with
 the use of `jq <https://stedolan.github.io/jq/>`_ (usually available in all
@@ -19,7 +19,7 @@ similarly regardless of the request method. You may use www-form as well as
 JSON for POST.
 
 If you want to integrate EVA API in your Python or PHP application, EVA can
-offer the ready-made client libraries.
+offer ready-made client libraries.
 
 API client for Python
 ---------------------
@@ -52,8 +52,8 @@ and
 **APIClientLocal** class may be used on the servers where EVA is installed.
 When specifying **product='<subsystem code>'** parameter (i.e. *product =
 'uc'*) API is automatically initialized by loading parameters and keys
-particularly from configuration files of the controller. If you load the
-**apiclient.py** module from **lib/eva/client/** folter, it is not necessary to
+specifically from configuration files of the controller. If you load the
+**apiclient.py** module from **lib/eva/client/** folder, it is not necessary to
 set **dir_eva** parameter. Otherwise, it should point to EVA root folder.
 
 **APIClient** class should always be initialized manually.
@@ -69,8 +69,8 @@ API is initialized with the use of the following functions:
 * **set_key(key)** set API key.
 * **set_uri(uri)** set the root API URI (i.e., \http://localhost:8812). You
   don't need to specify the full path to API.
-* **set_timeout(timeout)** set a maximum request timeout (seconds), 5 seconds
-  by default.
+* **set_timeout(timeout)** set maximum request timeout (seconds), 5 seconds by
+  default.
 * **set_product(product)** set controller type: *uc* for :doc:`/uc/uc`, *lm*
   for :doc:`/lm/lm`, *sfa* for :doc:`/sfa/sfa`. The client automatically
   identifies which API is to be called - either :doc:`/sys_api` one or the one
@@ -125,14 +125,14 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
 
 .. code-block:: python
 
-    # the call suceeded
+    # the call succeeded
     result_ok = 0
     # the item is not found or the function requires a different set of
     # parameters
     result_not_found = 1
     # access is denied with the set key
     result_forbidden = 2
-    # - API error, i.e. the string param was used instead of a number
+    # - API error, e.g. the string param was used instead of a number
     result_api_error = 3
     # unknown error: all errors not listed here fall within this category
     result_unknown_error = 4
@@ -146,7 +146,7 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
     result_server_timeout = 8
     # API returned data not in JSON or it cannot be parsed
     result_bad_data = 9
-    # action failed (i.e., when calling  SYS API cmd or UC API action functions)
+    # action failed (e.g., when calling  SYS API cmd or UC API action functions)
     result_func_failed = 10
 
 API client for PHP
@@ -176,9 +176,9 @@ and
 
 **EVA_APIClientLocal** class may be used on the servers where EVA is installed.
 When specifying **product='<subsystem code>'** parameter (i.e. *'uc'*) API is
-automatically initialized by loading parameters and keys particularly from
+automatically initialized by loading parameters and keys specifically from
 configuration files of the controller. If you load the **eva-apiclient.php**
-library from **include/php/** folter, it is not necessary to set **dir_eva**
+library from **include/php/** folder, it is not necessary to set **dir_eva**
 parameter. Otherwise, it should point to EVA root folder.
 
 **EVA_APIClient** class should always be initialized manually.
@@ -194,8 +194,8 @@ API is initialized with the use of the following functions:
 * **set_key($key)** set API key.
 * **set_uri($uri)** set the root API URI (i.e., \http://localhost:8812). You
   don't need to specify the full path to API.
-* **set_timeout($timeout)** set a maximum request timeout (seconds), 5 seconds
-  by default.
+* **set_timeout($timeout)** set maximum request timeout (seconds), 5 seconds by
+  default.
 * **set_product($product)** set controller type: *uc* for :doc:`/uc/uc`, *lm*
   for :doc:`/lm/lm`, *sfa* for :doc:`/sfa/sfa`. The client automatically
   identifies which API is to be called - either :doc:`/sys_api` one or the one
@@ -257,14 +257,14 @@ Result codes are stored in module variables:
 .. code-block:: php
 
     <?php
-    # the call suceeded
+    # the call succeeded
     $result_ok = 0;
     # the item is not found or the function requires a different set of
     # parameters
     $result_not_found = 1;
     # access is denied with the set key
     $result_forbidden = 2;
-    # - API error, i.e. the string param was used instead of a number
+    # - API error, e.g. the string param was used instead of a number
     $result_api_error = 3;
     # unknown error: all errors not listed here fall within this category
     $result_unknown_error = 4;
@@ -278,6 +278,6 @@ Result codes are stored in module variables:
     $result_server_timeout = 8;
     # API returned data not in JSON or it cannot be parsed
     $result_bad_data = 9;
-    # action failed (i.e., when calling  SYS API cmd or UC API action functions)
+    # action failed (e.g., when calling  SYS API cmd or UC API action functions)
     $result_func_failed = 10;
     ?>

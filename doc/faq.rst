@@ -8,13 +8,13 @@ Is this a "smart home"?
 
 EVA is a universal system used for the construction of both "smart home" and
 automated control system (`ICS
-<https://en.wikipedia.org/wiki/Industrial_control_system>`_) on the industrial
+<https://en.wikipedia.org/wiki/Industrial_control_system>`_) in an industrial
 enterprise.
 
-In fact, most products positioning themselves as "smart home" are just a dumb
+In fact, most products positioning themselves as "smart home" are just dumb
 control panels with a web interface. Moving light switch from the wall to the
 screen doesn't make it "smart". In turn, our system is equipped with a powerful
-and constantly evolving :doc:`/lm/lm` for the automatic
+and constantly evolving :doc:`/lm/lm` for automatic
 :doc:`decision-making</lm/decision_matrix>`.
 
 Is this IoT?
@@ -22,9 +22,8 @@ Is this IoT?
 
 In a way, yes. As far as `IoT
 <https://en.wikipedia.org/wiki/Internet_of_things>`_ is a part of the
-automation process, we are the part of IoT, in turn. However, from the
-thoursands of components positioning themselves as "IoT", we choose only those
-ones working:
+automation process, we are a part of IoT, in turn. However, from the thoursands
+of components positioning themselves as "IoT", we choose only those working:
 
 * Reliably
 * Safely
@@ -53,13 +52,13 @@ If the system is free and open, what is your interest?
 We have been engaged in the automation activities for both private and
 enterprise sectors for many years. Our clients work with different systems,
 including previous versions of EVA. The development of EVA 3 is a step towards
-the unification of all configurations that we support and use ourselves.
+unification of all configurations that we support and use ourselves.
 
 We decided to distribute the new system completely free of charge, but we
-provide a commercial support for the setups where the reliability is the
-critical importance. We are also developing and integrating complex
-configurations, create additional commercial EVA applications and interfaces
-for a specific systems.
+provide commercial support for setups where reliability is of critical
+importance. We are also developing and integrating complex configurations,
+create additional commercial EVA applications and interfaces for specific
+systems.
 
 In addition, if:
 
@@ -67,8 +66,8 @@ In addition, if:
 * you want to distribute our system together with your device
 * you want to make us an offer we can't refuse
 
-you should `contact us <https://www.altertech.com/>`_ and we provide you a
-siutable offer.
+you should `contact us <https://www.altertech.com/>`_ and we will make a
+siutable offer to you.
 
 Is EVA complex and difficult to learn?
 --------------------------------------
@@ -79,28 +78,28 @@ those who have never encountered the process automation.
 Is it reliable?
 ---------------
 
-It is reliable enough for home and office setups, as well as for the small
-industrial configurations, but if you use EVA on the enterprise, you should at
+It is reliable enough for home and office setups, as well as for small
+industrial configurations, but if you use EVA on an enterprise, you should at
 least understand the system well.
 
-How about the security?
------------------------
+How about security?
+-------------------
 
 Traditionally, automation systems and protocols have been designed as not
 completely secure. As for reliability, you may agree that it would be a pity if
-the motor or door gets stuck because of incorrect access rights to a folder or
-an expired SSL certificate. We recommend to have an optimal balance between
-stability and :doc:`security</security>` and it's really different for the
-every setup.
+motor or door gets stuck because of incorrect access rights to a folder or an
+expired SSL certificate. We recommend to have an optimal balance between
+stability and :doc:`security</security>` and it's really different for every
+setup.
 
 What programming languages can I use to write scripts and macros?
 -----------------------------------------------------------------
 
-As for :doc:`scripts</item_scripts>` - you can use any. Script or program runs
-as a separate process in the system. It's only necessary that it reads the
-input parameters correctly and writes the result in the appropriate format. If
-you need a speed - PERL or DASH are preffered. If the speed is not so
-important, you may use BASH or even PHP.
+As for :doc:`scripts</item_scripts>` - you can use any. A script or a program
+runs as a separate process in the system. It's only necessary that it reads the
+input parameters correctly and writes the result in an appropriate format. If
+you need speed - PERL or DASH are preffered. If speed is not so important, you
+may use BASH or even PHP.
 
 Logic Manager :doc:`macros</lm/macros>` are written in Python, but in most
 cases, you'll need to call the internal macro functions only.
@@ -115,8 +114,8 @@ Programming for EVA is only about creating :doc:`item management
 scripts</item_scripts>`. You can find plenty of examples in the documentation.
 
 Additionally you need to program Logic Manager :doc:`macros</lm/macros>` for
-the process automation. However, most macros have a very simple structure and
-call the in-built set of functions.
+process automation. However, most macros have a very simple structure and call
+the in-built set of functions.
 
 For example, a macro that runs a pump for watering plants:
 
@@ -128,30 +127,30 @@ For example, a macro that runs a pump for watering plants:
     # reset the timer for watering
     reset('farm/pump1_run') 
     # message to the log file
-    info ('watering cycle has been started') 
+    info('watering cycle has been started') 
     # assign "watering" value to the production cycle variable
     set('farm/pump1_cycle', 'WATERING') 
 
-As you can see, there is no rocket science.
+As you can see, it is not rocket science.
 
 What automation is all about? What are automation components?
 -------------------------------------------------------------
 
 The automation components mostly look like relay block, "smart" sockets,
 "smart" switches - however, there is still some kind of relay inside. Usually,
-there are 3 ports in the relay: input, two outputs, and two states: opened and
+there are 3 ports in the relay: input, two outputs, and two states: open and
 closed. In the first state, the signal passes through the first output, in the
 second one - through the second. This is the main principle automation is based
 on.
 
-Sometimes equipment may include controlled resistors, so that the additional
-parameters (e. g. light dimmer) should be set. In this case, you should
-send the additional value to the controller, i.e. to set a definite percent of
+Sometimes equipment may include controlled resistors, so that additional
+parameters (e.g. light dimmer) should be set. In this case, you should
+send additional value to the controller, e.g. to set a definite percent of
 capacity.
 
-Our system works not with relay, but with the endpoint equipment that is
-automated. The relay ports are programmed and switched with the help of
-:doc:`scripts</item_scripts>`, which are written once during the installation.
+Our system works not with relay, but with endpoint equipment that is automated.
+The relay ports are programmed and switched with the help of
+:doc:`scripts</item_scripts>`, which are written once during installation.
 Thereafter, the system works with the :ref:`units<unit>`.
 
 Besides, any automation system has its "eyes" and "ears" for receiving data
@@ -164,8 +163,8 @@ Where is the interface? I want a web interface!
 -----------------------------------------------
 
 Each automated setup needs an interface. EVA has a very powerful
-:doc:`/sfa/sfa` component, which combines the while setup itself and provides a
-flexible :doc:`/sfa/sfa_framework` which allows you to create the modern
+:doc:`/sfa/sfa` component, which combines the whole setup itself and provides a
+flexible :doc:`/sfa/sfa_framework` which allows you to create a modern
 websocket-powered web interface with a few strings of javascript
 
 .. code-block:: javascript

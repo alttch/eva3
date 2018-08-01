@@ -2,7 +2,7 @@ Virtual items
 =============
 
 :doc:`/uc/uc` items may be either virtual or real. You may toggle the item by
-changing the configuration while the server is running.
+changing configuration while the server is running.
 
 What are virtual items?
 -----------------------
@@ -10,7 +10,7 @@ What are virtual items?
 Virtual items were originally developed for testing EVA, but we decided to
 include them in the final product. Virtual items allow you to:
 
-* Test EVA without connecting a real equipment
+* Test EVA without connecting real equipment
 * Debug various configurations before embedding
 * Check how the system responds to the emergencies
 
@@ -22,9 +22,9 @@ can be virtual and have the following features:
 * The virtual multiupdate updates states of the  several virtual items at once
   in passive mode
 
-The :doc:`/cli` console application *./xc/evirtual* is used to control the
-virtual items. API and the interface for the remote control of the items will
-be added to the future EVA versions.
+The :doc:`/cli` console application *./xc/evirtual* is used to control virtual
+items. API and the interface for the remote control of the items will be added
+to the future EVA versions.
 
 Before switching the item to the virtual state, you should create its
 configuration:
@@ -76,16 +76,16 @@ To display the virtual item parameters, you should run the following command:
 
     ./xc/evirtual unit unit1
 
-To set the status or value or the unit or sensor, you should run the following
+To set status or value of a unit or sensor, you should run the following
 command:
 
     ./xc/evirtual unit unit1 set 1
     ./xc/evirtual sensor sensor1 set 1 29.4445
 
-You should always set the status, but the value is an optional parameter.
+You should always set status, but value is an optional parameter.
 
-To simulate the execution of the unit action script, you should run the
-following command:
+To simulate execution of the unit action script, you should run the following
+command:
 
     ./xc/evirtual unit unit1 1
 
@@ -115,10 +115,10 @@ the item is no longer active and automatically stops sending its status.
 Errors and delays simulation
 ----------------------------
 
-For the unit, simulation of action failures may be set up as follows:
+Simulation of action failures for the unit may be set up as follows:
 
-* ./xc/evirtual unit unit1 as - after the the action is called, the virtual
-  unit changes its status normally
+* ./xc/evirtual unit unit1 as - after the action is called, the virtual unit
+  changes its status normally
 * ./xc/evirtual unit unit1 is - does not change its status and does not report
   an error
 * ./xc/evirtual unit unit1 av - changes its value normally
@@ -128,28 +128,28 @@ For the unit, simulation of action failures may be set up as follows:
 * ./xc/evirtual unit unit1 i - does not change neither status nor value without
   reporting an error
 
-For the unit, simulation of action delay is set up as follows:
+Simulation of action delay for the unit is set up as follows:
 
     ./xc/evirtual unit unit1 d 2.5
 
-after the action is received, the unit simulates a delay, e. g. 2.5 sec (in this
+after the action is received, the unit simulates delay, e. g. 2.5 sec (in this
 example)
 
-For the unit, simulation of the action runtime failure is set up as follows:
+Simulation of the action runtime failure for the unit is set up as follows:
 
     ./xc/evirtual unit unit1 e 1
 
 after the action is received, the program exits with the error code 1. To
 disable the error code, set it to 0
 
-For all the items: to simulate, let's say, a 3.5-second delay when the UC
+For all items: to simulate, let's say, a 3.5-second delay when the UC
 starts a passive status update
 
     ./xc/evirtual unit unit1 ud 3.5
     ./xc/evirtual sensor temp1 ud 3.5
     ./xc/evirtual mu multiupdate1 ud 3.5
 
-For all the items: to complete the passive state update with the error code 1
+For all items: to complete the passive state update with the error code 1
 
     ./xc/evirtual sensor temp1 ue 1
 

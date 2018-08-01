@@ -10,25 +10,25 @@ All the examples provided in this documentation are written in the classic
 Bourne shell (bash). It is recommended to use dash or perl in the heavy loaded
 production systems to provide better startup speed. Experience has shown that
 the modern systems do not require the use of the lower-level languages compiled
-into executable files: it complicates the integration and servicing, on the
-other hand, the difference in the program operation is only a few milliseconds.
+into executable files: it complicates integration and servicing; on the
+other hand, the difference in program operation is only a few milliseconds.
 
-The script always the max execution time (timeout) specified in the item
+The script always has max execution time (timeout) specified in item
 configuration (or default controller timeout). After that the system terminates
 the script operation: firstly - voluntary, by sending SIGTERM, then - forcibly
-by sending SIGKILL (this in-between time may be changed in the item
-configuration with param *term_kill_interval*)
+by sending SIGKILL (this in-between time may be changed in item configuration
+with param *term_kill_interval*)
 
 Script or program always gets the environment variables:
 
 * all variables from the controller var file (:ref:`uc_cvars<uc_cvars>` or
   :ref:`lm_cvars<lm_cvars>`)
 * **PATH** variable with additional EVA bin and xbin subfolders
-* **EVA_ITEM_ID** item ID which the script is being executed for
+* **EVA_ITEM_ID** item ID which the script is executed for
 * **EVA_ITEM_TYPE** item type: unit, sensor or lvar, (lvars can also be
-  updated with a scripts)
+  updated with scripts)
 * **EVA_ITEM_GROUP** full item group
-* **EVA_ITEM_PARENT_GROUP** nearest parent group of the item (i.e.
+* **EVA_ITEM_PARENT_GROUP** the nearest parent group of the item (e.g.
   building1/env/room1/temp1 - room1)
 * **EVA_ITEM_FULL_ID** full item ID
 * **EVA_ITEM_STATUS** current item status
@@ -40,10 +40,10 @@ Item actions
 ~~~~~~~~~~~~
 
 Item actions are used to control the units. After the :ref:`unit<unit>` action
-has ben called, the controller executes the appropriate script. By default,
+has been called, the controller executes the appropriate script. By default,
 control scripts are placed in xc/uc/ folder and named ID, where ID is a unit
 ID, for example, xc/uc/lamp1. This may be changed in the item configuration to
-let i.e. one script execute actions for the group of units.
+let e.g. one script execute actions for a group of units.
 
 The startup parameters of the action script include:
 
@@ -90,7 +90,7 @@ where in :ref:`uc_cvars<uc_cvars>`:
     RELAY1_CMD = snmpset -v1 -c private RELAY_IP_ADDRESS .1.3.6.1.4.1.19865.1.2
 
 In the previous examples, we used the same command for turning the units
-on/off. Let us review more complex logic. The next example shows how EVA can
+on/off. Let us review a more complex logic. The next example shows how EVA can
 shut down the remote server machine and turn it on via Wake on LAN (tip: such
 script requires more action_timeout in unit config):
 
@@ -111,11 +111,11 @@ In the :ref:`queue<uc_queues>` history script is marked as completed if it
 completed independently with 0 code, failed - if the code differs from 0.
 
 The script or program can display anything on stdout/stderr. This data, as well
-the exit code, will be recorded in "out" and "err" fields of the
+as the exit code, will be recorded in "out" and "err" fields of the
 :ref:`result<uc_result>` dict.
 
-Sometimes it is useful to catch SIGTERM in the script/program, i.e. if you
-operate the motor that must be stopped after the script gets a termination
+Sometimes it is useful to catch SIGTERM in the script/program, e.g. if you
+operate a motor that must be stopped after the script gets a termination
 signal. Warning:, the system does not track/stop child processes executed after
 SIGTERM is sent to the script.
 
@@ -123,11 +123,11 @@ Passive updates of item state
 -----------------------------
 
 Passive updates are used to collect the state of the equipment which doesn't
-report its state by itself. By default, scripts for passive updating of the
-item state are named **ID_update**, where ID is a item ID, for example:
+report its state by itself. By default, scripts for passive updating of item
+state are named **ID_update**, where ID is a item ID, for example:
 *lamp1_update*.
 
-The status update script is being executed:
+The status update script is executed:
 
 * Every X seconds, if *update_interval* specified in the config is more than 0
 * After the :ref:`unit<unit>` action succeeds (if
@@ -142,7 +142,7 @@ Passive update scripts get the following parameters:
 * **param2** item ID
 
 Script should print on stdout only the new status and (optionally) value,
-separated by space, i.e.
+separated by space, e.g.
 
     0 NEW_VALUE
 
@@ -189,7 +189,7 @@ Multiupdate scripts
 -------------------
 
 :ref:`Multiupdates<multiupdate>` allow updating the state of several items with
-the one script which works like a normal passive update script and outputs the
+one script which works like a normal passive update script and outputs the
 states of the monitored items line-by-line:
 
 .. code-block:: bash
@@ -245,7 +245,7 @@ For command scripts:
 * Configurations are absent. Scripts are named as **xc/cmd/SCRIPT_NAME**
 * Script timeout is set when it is started
 
-Example of a command usage: the speaker is connected to the remote machine. we
+Example of a command usage: a speaker is connected to a remote machine. We
 want to play some sound as an additional feedback after the certain macros or
 actions are executed
 
@@ -262,5 +262,5 @@ actions are executed
 
 when you call the command, the sound file_name will be played. If you want to
 wait until the playback is over add w=15 to API call i.e. to wait 15 seconds
-before continue.
+before continuing.
 

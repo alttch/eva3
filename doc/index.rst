@@ -4,15 +4,15 @@ EVA ICS documentation
 =====================
 
 `EVA ICS <https://www.eva-ics.com/>`_ is a platform for automated control and
-monitoring systems development, for any needs, from home/office to the
-industrial setups. It is completely free for non-commercial use as well as for
-commercial, on condition that enterprise integrates it on its own. The product
-is distributed as open source software and available under
+monitoring systems development, for any needs, from home/office to industrial
+setups. It is completely free for non-commercial use as well as for commercial,
+on condition that enterprise integrates it on its own. The product is
+distributed as an open source software and is available under
 :doc:`EVA License</license>`.
 
 Automated control systems are facing a new stage of evolution: IoT-devices
-become interesting for those, who have never dealt with automatization, cheap
-programmable devices become reliable enough for the industrial use, commercial
+become interesting for those, who have never dealt with automation, cheap
+programmable devices become reliable enough for industrial use, commercial
 solutions move away from old protocols and involve computer networks instead.
 We do not reform automation – we change the approach: taking the classical
 technology as a basis, we simplify everything else to the maximum. Automation
@@ -21,48 +21,48 @@ is simple and available for everyone!
 What is EVA
 -----------
 
-* :doc:`Universal controllers</uc/uc>` for the management and monitoring of all
-  your equipment, on the basis of which you can develop you’s own automation
+* :doc:`Universal controllers</uc/uc>` for management and monitoring of all
+  your equipment, on the basis of which you can develop your own automation
   applications easily and quickly.
 
 * :doc:`Notification system</notifiers>`, that instantly informs applications
   on current events.
 
-* :doc:`Logic Manager</lm/lm>` programming logic controllers used for the
-  automatic data processing and decision-making.
+* :doc:`Logic Manager</lm/lm>` programming logic controllers used for automatic
+  data processing and decision-making.
 
 * :doc:`SFA Framework</sfa/sfa_framework>`, allowing quick development of the
   interfaces for a specific configuration.
 
-EVA can be installed either partially or fully, it can bescaled up to many
+EVA can be installed either partially or fully, it can be scaled up to many
 servers or all components can be installed onto the only one. The system is
-designed in such a way, that it can work on any hardware: from the fat servers
-to mini-computers with only one smart card in the “read-only” mode.
+designed in such a way, that it can work on any hardware: from fat servers to
+mini-computers with only one smart card in the “read-only” mode.
 
 Architecture of EVA provides a high scalability: one system can support dozens
 and even hundreds of thousands of devices through processing events via separate
-subsystems and collecting all data to the unified database. 
+subsystems and collecting all data to a unified database. 
 
 The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 
 What you get with EVA
 ---------------------
 
-* write a simple :doc:`scripts</item_scripts>` for your automation hardware and
+* write simple :doc:`scripts</item_scripts>` for your automation hardware and
   keep them organized, queued and safely executed with :doc:`/uc/uc`
-* easily collect a data from the hardware using :ref:`MQTT<mqtt_>` or :doc:`SNMP
+* easily collect data from the hardware using :ref:`MQTT<mqtt_>` or :doc:`SNMP
   traps</snmp_traps>` with the built-in SNMP trap handler server
-* collect the data from your microcontrollers with a simple
-  :ref:`UDP API<uc_udp_api>`
-* test and monitor the initial setup with contollers' EI web interfaces
-* exchange all the automation data between multiple servers with EVA
-  controllers and your own apps via :ref:`MQTT<mqtt_>` server or :doc:`HTTP
+* collect data from your microcontrollers with a simple :ref:`UDP
+  API<uc_udp_api>`
+* test and monitor the initial setup with controllers' EI web interfaces
+* exchange all automation data between multiple servers with EVA controllers
+  and your own apps via :ref:`MQTT<mqtt_>` server or :doc:`HTTP
   notifiers</notifiers>`
-* use EVA :doc:`/lm/lm` to write a powerful :doc:`macros</lm/macros>` which can
-  be run automatically on events in order to :doc:`decision
+* use EVA :doc:`/lm/lm` to write powerful :doc:`macros</lm/macros>` which can
+  be run automatically on events in accordance with the :doc:`decision
   rules</lm/decision_matrix>` you set up
-* collect everything and control the whole your setup with the
-  :doc:`aggregator controllers</sfa/sfa>`
+* collect everything and control your whole setup with the :doc:`aggregator
+  controllers</sfa/sfa>`
 * :doc:`/api_clients` to quickly connect controllers' API to your apps
 * develop a modern real-time websocket-powered SCADA web applications with
   :doc:`/sfa/sfa_framework`

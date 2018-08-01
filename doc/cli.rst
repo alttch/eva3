@@ -7,8 +7,8 @@ EVA command line apps
 ---------------------
 
 EVA apps are used to configure the system and call controller API functions
-from the command line or by external scripts. All the following apps are locate
-in **bin** folder.
+from the command line or by external scripts. All of the following apps are
+located in **bin** folder.
 
 Universal Controller
 ~~~~~~~~~~~~~~~~~~~~
@@ -37,13 +37,13 @@ Other
   Launches an item script with UC :ref:`cvars<uc_cvars>` and EVA paths set in
   the environment.
 
-:doc:`Virtual item</virtual>` management is being performed using
-**xc/evirtual** application.
+:doc:`Virtual item</virtual>` management is performed using **xc/evirtual**
+application.
 
 Device control apps
 -------------------
 
-EVA distribution includes preinstalled samples for the device controlling. All
+EVA distribution includes preinstalled samples for device controlling. All
 sample scripts are located in **xbin** folder
 
 TCP/IP controlled relays

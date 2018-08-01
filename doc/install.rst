@@ -1,7 +1,7 @@
 Installation
 ============
 
-Everything you need to install EVA  is to download the latest update from
+All you need to install EVA  is to download the latest update from
 https://www.eva-ics.com/, unpack the archive to any folder and everything is
 almost ready to use.
 
@@ -10,7 +10,7 @@ almost ready to use.
 System Requirements
 -------------------
 
-* Python version 3 (preferably 3.4+) or later, plus pip3 for the automatic
+* Python version 3 (preferably 3.4+) or later, plus pip3 for automatic
   installation of the additional modules
 * Linux or UNIX-compatible system * For :doc:`/sfa/sfa_pvt` to work with
   images: libjpeg-dev and libjpeg8-dev (for PIL / `pillow
@@ -25,9 +25,9 @@ System Requirements
 .. warning::
 
     Installation scripts try to install all required Python modules
-    automatically, but some of them may have problems installing with pip -
-    install may fail or be slow. It's better to install these modules manually,
-    before running EVA installation scripts. Currently the problems may be
+    automatically, but some of them can have problems installing with pip -
+    install can fail or be slow. It's better to install these modules manually,
+    before running EVA installation scripts. Currently the problems can be
     expected with:
 
         * **pandas** (python3-pandas)
@@ -65,8 +65,8 @@ Easy setup
 
 .. note::
 
-    If you want to make some initial customization, i.e. name the controllers
-    different from the host name, make a changes in *etc/uc.ini*, *etc/lm.ini*
+    If you want to make some initial customization, e.g. name the controllers
+    different from the host name, make changes in *etc/uc.ini*, *etc/lm.ini*
     and *etc/sfa.ini* configs first.
 
 Manual setup
@@ -74,9 +74,9 @@ Manual setup
 
 * Run *./install/install-without-setup* in EVA folder
 * In *etc* folder copy *uc.ini-dist* into *uc.ini*; if you plan to use
-  :doc:`/uc/uc`, change the necessary configuration parameters.
+  :doc:`/uc/uc`, change necessary configuration parameters.
 * Copy *uc_apikeys.ini-dist* into *uc_apikeys.ini* and set the API keys
-* Repeat the procedure for the configurations of :doc:`/lm/lm` and
+* Repeat the procedure for the configuration of :doc:`/lm/lm` and
   :doc:`/sfa/sfa`
 * In etc folder copy *eva_servers-dist* into *eva_servers*, set *ENABLED=yes*
   for the chosen controllers, set *USER* params to run certain controllers
@@ -143,7 +143,7 @@ All system :doc:`items</items>` including :doc:`macros</lm/macros>` have their
 own ids. Item id should be unique within one server.
 
 Ideally, item id should also be unique in the whole system, but if
-cross-controller access control to the certain items is not critical or is
+cross-controller access control to certain items is not critical or is
 implemented through the groups, different items on different servers (for
 example, logic variable on one LM PLC and sensor on another) can have the same
 id.
@@ -153,11 +153,11 @@ example, if you set *groups=security/#* in API key config file, you will allow
 the key to access all the items in the security group and its subgroups
 regardless of whether it is macro, sensor or logic variable.
 
-The best practice is always to use unique id for the item i.e.
+The best practice is always to use unique id for the item e.g.
 *office1.room1.temperature1* and use groups only for better item filtering.
 
-This does not apply to the decision rules: an unique id is generated for each
-rule automatically.
+This does not apply to decision rules: an unique id is generated for each rule
+automatically.
 
 Log file customization
 ----------------------

@@ -16,7 +16,7 @@ connect the controllers in the working configuration. Alternatively, you should
 install as many controllers as possible on the same server. Built-in web
 interfaces of the individual subsystems are called Emergency Interfaces.
 Therefore, they can only be used during primary setup, testing as well
-as in case of emergency but not for a regular basis.
+as in case of emergency but not on a regular basis.
 
 All programs and extensions which use API calls should be connected at least
 via SSL or, ideally, in a separate secure network.
@@ -37,10 +37,10 @@ following scheme:
 
 * **Public network** external network (company's local network); applications
   working in a public network (usually SCADA interfaces), should be protected
-  from the unauthorized access as much as possible: they should use SSL and
-  complex passwords and be regularly updated with the latest security patches.
+  from unauthorized access as much as possible: they should use SSL and complex
+  passwords and be regularly updated with the latest security patches.
 
-* **Supervisory network** network accessed by the authorized company employees
+* **Supervisory network** network accessed by authorized company employees
   only; it includes :ref:`MQTT<mqtt_>` (event server), PLC (:doc:`/lm/lm`),
   custom automation applications and "public" interfaces of :doc:`/uc/uc`
   subsystems. The security policies are minimal. They are used not as means for
@@ -50,19 +50,19 @@ following scheme:
   incorrect certificates.
 
 * **Direct control network** network in which only :doc:`item</items>`
-  management controllers operate, i. e. "productional" :doc:`/uc/uc`
-  interfaces, TCP/IP-controlled relays, network sensor controllers etc.
+  management controllers operate, e.g. "productional" :doc:`/uc/uc` interfaces,
+  TCP/IP-controlled relays, network sensor controllers etc.
 
 In many setups, you may combine Supervisory network and Direct control network
-into a single network. As for security, this decision is not that bad, as far
-the primary goal to divide these networks is a comfortable maintenance.
+into a single network. As for security, this decision is not that bad, if the
+primary goal to divide these networks is comfortable maintenance.
 
 Primary EVA interface is itself rather secure. Still, when connecting via
 insecure networks, especially via external Internet connection, it is highly
 recommended to:
 
 * use frontend (NGINX, Apache)
-* use SSL only (if the frontend is present - use it for SSL processing)
+* use SSL only (if frontend is present - use it for SSL processing)
 * use firewall and forward only one port to the server with an interface
 
 It is strongly recommended to access enterprise configurations with VPN only.
@@ -73,22 +73,22 @@ because some important data may be recorded in the log files.
 Should I run it as root?
 ------------------------
 
-* :doc:`/uc/uc` is designed to be run on the virtual machines, microcomputers,
-  and embedded systems. If server directly controls connected devices, you
-  should run it as root in order to avoid any device access errors.  UC
-  security bottleneck (when working under root) - API and :doc:`/uc/uc_ei`
-  interface. However, you should use API in Supervisory network only and UC EI
-  interface should be turned off and used only in case of emergency.
+* :doc:`/uc/uc` is designed to be run on virtual machines, microcomputers, and
+  embedded systems. If server directly controls connected devices, you should
+  run it as root in order to avoid any device access errors.  UC security
+  bottleneck (when working under root) - API and :doc:`/uc/uc_ei` interface.
+  However, you should use API in Supervisory network only and UC EI interface
+  should be turned off and used only in case of emergency.
 
-* :doc:`/lm/lm` does not require a direct access to the equipment, that is why
-  it can be run as root on the selected system (if really required) or as a
+* :doc:`/lm/lm` does not require direct access to the equipment, that is why it
+  can be run as root on the selected system (if really required) or as a
   restricted user on the common-purpose servers. If Logic Manager API and
   interface are available only in Supervisory network, this issue is not
   critical for security.
 
 * All external interfaces of the system, including :doc:`/sfa/sfa`, should be
-  run only under the restricted users and protected with an additional frontend
-  and/or firewall.
+  run only under restricted users and protected with additional frontend and/or
+  firewall.
 
 API recommendations
 -------------------
@@ -97,9 +97,9 @@ Universal Controller API keys
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * The key should contain at least 14 characters, including numbers, lowercase,
-  and uppercase letters. The default keys generated during :doc:`easy
+  and uppercase letters. Default keys generated during :doc:`easy
   setup</install>` are random sha256 64-byte length hashes, which's more than
-  enough for the security unless they're transferred between controllers in the
+  enough for security unless they're transferred between controllers in an
   insecure network and sniffed.
 
 * As far as day-to-day tasks are concerned, it is recommended to use API key
@@ -110,11 +110,11 @@ Universal Controller API keys
   with *groups = #, sysfunc = yes* permissions.
 
 * When connecting to :doc:`/lm/lm` and :doc:`/sfa/sfa` it is recommended to
-  create a separate key with rights for the certain item groups, *sysfunc =
-  no*, optionally *allow = cmd*.
+  create a separate key with rights for certain item groups, *sysfunc = no*,
+  optionally *allow = cmd*.
 
-* All external applications should have their own keys with the restricted
-  access rights to the required functions and items only.
+* All external applications should have their own keys with restricted access
+  rights to the required functions and items only.
 
 * After installation, make sure that *etc/uc_apikeys.ini* file has 0600
   permissions (and owned by the user you are running the controller under)
@@ -146,7 +146,7 @@ SCADA Final Aggregator interfaces
 Common API security recommendations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If server is present in a several VLANs, make sure that API listens only on
+If server is present in several VLANs, make sure that API listens only on
 Supervisory network address. If you do not use :ref:`UDP API<uc_udp_api>` or
 :doc:`SNMP traps</snmp_traps>` in :doc:`/uc/uc`, disable them in the controller
 configuration. Do not enable the remote file control function unless it's
@@ -159,14 +159,14 @@ Every component may be started in a "developer mode": if enabled, all data,
 including API keys, is openly written in the log file. That is why we do
 not advise you to enable it unless you are our developer or integrator. Still,
 as far as the whole system code is open, you can try to enable it on your own
-responsibility. Never enable developer mode on the working system. And avoid
+responsibility. Never enable developer mode on the working system and avoid
 enabling debug mode as well.
 
 If you contacted the product vendor or integrator who explained to you how to
 make a system "dump", you should delete it from the system immediately after
 the file is no longer required. "dump" contains plenty of confidential data,
-including all API KEYS. Never give dump files to an unauthorized persons! This
-is the same as giving away all configuration files, including the keys.
+including all API KEYS. Never give dump files to unauthorized persons! This is
+the same as giving away all configuration files, including the keys.
 
-Dump file should be sent only via secure channels or in the encrypted form.
+Dump file should be sent only via secure channels or in an encrypted form.
 

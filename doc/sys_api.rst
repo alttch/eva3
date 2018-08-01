@@ -12,8 +12,7 @@ If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
 All functions can be called using GET and POST methods. When POST method is
-being used, the parameters can be passed to functions eitner as www-form or as
-JSON.
+used, the parameters can be passed to functions either as www-form or as JSON.
 
 .. contents::
 
@@ -23,7 +22,7 @@ test - test API/key and get system info
 ---------------------------------------
 
 Test can be executed with any valid API key of the controller the function is
-being called to.
+called to.
 
 Parameters:
 
@@ -76,8 +75,8 @@ Parameters:
 * **c** name of the command script
 * **a** command arguments (passed to the script)
 * **w** wait (in seconds) before API call sends a response. This allows to try
-        waiting until a command finish
-* **t** maximim time of command execution. If the command fails to finish
+        waiting until command finish
+* **t** maximum time of command execution. If the command fails to finish
         within the specified time (in sec), it will be terminated
 
 Returns JSON dict
@@ -124,18 +123,17 @@ difference is that SYS API tokens can be:
 * automatically unlocked after the expiration time, if the initiator failed or
   forgot to release the lock
 
-used to restrict the parallel process starting or the access to system
-files/resources.
+used to restrict parallel process starting or access to system files/resources.
 
-Important: even if different EVA controllers are are working on the same
-server, their lock tokens are stored in different bases. To work with the token
-of each subsystem, use SYS API on the respective address/port.
+Important: even if different EVA controllers are working on the same server,
+their lock tokens are stored in different bases. To work with the token of each
+subsystem, use SYS API on the respective address/port.
 
 Parameters:
 
 * **k** API key with "sysfunc=yes" permissions
 * **l** lock ID (arbitrary)
-* **t** maxmum timeout (seconds) to get token (optionally)
+* **t** maximum timeout (seconds) to get token (optionally)
 * **e** time after which token is automatically unlocked (if absent, token may
         be unlocked only via unlock function)
 
@@ -189,7 +187,7 @@ Errors:
 log_debug, log_info, log_warning, log_error, log_critical - write to the log
 ----------------------------------------------------------------------------
 
-The external application can put the message in the logs on behalf of the
+An external application can put a message in the logs on behalf of the
 controller.
 
 Parameters:
@@ -208,9 +206,9 @@ Errors:
 log_get - get log records
 -------------------------
 
-This command allows to read the log records from the controller. Log records
-are stored in the controllers' memory until restart or the time
-(*keep_logmem*), specified in controller configuration passes.
+This command allows to read log records from the controller. Log records are
+stored in the controllers' memory until restart or the time (*keep_logmem*)
+specified in controller configuration passes.
 
 .. note::
 
@@ -240,7 +238,7 @@ set_debug - switch debugging mode
 ---------------------------------
 
 Enables and disables debugging mode while the controller is running. After the
-controller is restarted, this parameter is lost and controller switchs back to
+controller is restarted, this parameter is lost and controller switches back to
 the mode specified in the configuration file.
 
 Parameters:
@@ -261,9 +259,9 @@ get_cvar - get variable
 
 Returns one or all user-defined variables.
 
-Important: even if different EVA controllers are are working on the same
-server, they have different sets of variables To set the variables for each
-subsystem, use SYS API on the respective address/port.
+Important: even if different EVA controllers are working on the same server,
+they have different sets of variables To set the variables for each subsystem,
+use SYS API on the respective address/port.
 
 Parameters:
 
@@ -310,7 +308,7 @@ save - save database and runtime configuration
 All modified items, their status, and configuration will be written to the
 disk. If **exec_before_save** command is defined in the controller's
 configuration file, it's called before saving and **exec_after_save** after
-(i.e.  to switch the partition to write mode and back to read-only).
+(e.g. to switch the partition to write mode and back to read-only).
 
 Parameters:
 
@@ -325,10 +323,10 @@ Errors:
 User management
 ---------------
 
-Apart from the authorization via API keys, requests to API can be authorized
-using login/password. Each user is being assigned to a specific API key
-(multiple users can be assigned to the same key) and his permissions are stored
-during login session.
+Apart from authorization via API keys, requests to API can be authorized using
+login/password. A specific API key is assigned to each user (thhe same key can
+be assigned to multiple users) and its permissions are stored during login
+session.
 
 The key assigned to user is used to authorize all the operations unless the
 other key is specified in the request.
@@ -339,14 +337,14 @@ controllers' configurations, they will use a common user list.
 
 As far as controllers don't write anything to the database during user
 authorization tasks, it can easily be stored on the network drive and used by
-EVA controllers running on the different hosts.
+EVA controllers running on different hosts.
 
 .. _s_list_keys:
 
 list_keys - get API keys list
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Get the list of the available API keys
+Get the list of available API keys
 
 Parameters:
 
@@ -475,13 +473,12 @@ Errors:
 File operations in runtime
 --------------------------
 
-SYS API allows the operations with any text files in "runtime" folder.
-According to the program architecture, all the files in this folder (except the
-databases) are text(JSON). To simplify the work with a files via API calls all
-requests and replies are made in text(JSON) format and no binary data is
-transferred.
+SYS API allows operations with any text files in "runtime" folder. According to
+the program architecture, all files in this folder (except for databases) are
+text(JSON). To simplify working with files via API calls all requests and
+replies are made in text(JSON) format and no binary data is transferred.
 
-For safety reasons these API functions must be enabled before with
+For safety reasons these API functions must be enabled in advance with
 *file_management=yes* param in "sysapi" section of the controller's
 configuration file.
 
@@ -518,7 +515,7 @@ Errors:
 file_put - upload file into runtime
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Puts a new file into runtime folder. If the file with such name exist, it will
+Puts a new file into runtime folder. If the file with such name exists, it will
 be overwritten.
 
 Parameters:
@@ -538,7 +535,7 @@ Errors:
 file_set_exec - file exec permission management
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sets a file permissions to allow it being executed.
+Sets file permissions to allow its execution.
 
 Parameters:
 

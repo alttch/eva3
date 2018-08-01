@@ -13,10 +13,10 @@ Built-in trap handler should be enabled in :ref:`UC configuration
 file<uc_ini>`. Usually, SNMP traps server listen on the port 162. The embedded
 SNMP traps handler can work with SNMP v1 and SNMP v2c protocols.
 
-Both :ref:`units<unit>` and :ref:`sensors<sensor>` can update its state through
-SNMP traps processing. After the item configuration param **snmp_trap** is set
-up, it automatically subscribes to the incoming notifications and accept only
-the relevant ones. 
+Both :ref:`units<unit>` and :ref:`sensors<sensor>` can update their state
+through SNMP traps processing. After the item configuration param **snmp_trap**
+is set up, it automatically subscribes to the incoming notifications and accept
+only the relevant ones. 
 
 Currently EVA works with SNMP OIDs only - all snmp variables should be created
 in this format. To change **snmp_trap** variable and its child elements you may
@@ -26,7 +26,7 @@ function. In this tutorial we'll configure SNMP-traps handler with *uc-cmd*.
 ident_vars - identifying the trap
 ---------------------------------
 
-**snmp_trap.ident_vars** variable is used by the handler to filter the trap
+**snmp_trap.ident_vars** variable is used by the handler to filter trap
 notifications and parse only those ones directly related to the item. You
 should use it if, for example, the source sends the state change notifications
 with the same OID for different items, but the trap contains some tokens or
@@ -62,13 +62,13 @@ To reset **ident_vars** variable, run the command without -v key.
 set_down - handling the failures
 --------------------------------
 
-When the controller receives the trap notification indicating that the item is
-not available or disabled, its status is set to -1.
+When the controller receives trap notification indicating that the item is not
+available or disabled, its status is set to -1.
 
 This can be made with **set_down** variable, which's set similarly to
 **ident_vars**. If there are several OID, they should be listed and separated
-by a commas when setting up. The handler assigns an error status to the item
-only if all set_down variables match the trap. 
+by commas when setting up. The handler assigns an error status to the item only
+if all set_down variables match the trap. 
 
 Example:
 
@@ -96,10 +96,10 @@ To reset **set_down** variable, run the command without -v key.
 set_status - setting the item status
 ------------------------------------
 
-If the source device sends the trap notifications with the variable having the
-item status in the format similar to EVA, the handler can immediately change
-the status to the assigned one. Each item can have only one **set_status**
-variable containing OID where item status is being set in a trap.
+If the source device sends trap notifications with variable having the item
+status in the format similar to EVA, the handler can immediately change the
+status to the assigned one. Each item can have only one **set_status** variable
+containing OID where item status is being set in a trap.
 
 Example:
 
@@ -126,11 +126,11 @@ To reset **set_status** variable, run the command without -v key.
 set_value - setting the item value
 ----------------------------------
 
-If the source device sends the trap notifications with the variable having the
-item value  (usually, these are various sensor controllers which i.e. send the
+If the source device sends trap notifications with the variable having the
+item value  (usually, these are various sensor controllers which e.g. send
 current temperature every minute), the handler can immediately change the
 value to the assigned one. Each item can have only one **set_value**
-variable containing OID where item vlue is being set in a trap.
+variable containing OID where item value is set in a trap.
 
 Example:
 
@@ -158,10 +158,10 @@ set_if - conditional state updates
 ----------------------------------
 
 If the received trap notification contains certain variables but none of them
-can be used to set status and/or value as-is, you can define own rules and set
-the item status/value according to them.
+can be used to set status and/or value as-is, you can define your own rules and
+set the item status/value according to them.
 
-This operates similary to **set_down**, the only difference is that
+This operates similarly to **set_down**, the only difference is that
 **set_down** sets the item status to -1, while **set_if** allows you to set the
 status and/or value on your own.
 
