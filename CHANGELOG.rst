@@ -8,8 +8,6 @@ UC drivers, device templates, state history, charts and other new features
 
 Core
 ~~~~
-    * fixes: default timeout is now always integer to be compatible with all
-      core functions
 
     * working with locks now require allow=lock apikey permission
     * new notifier type: db, used to store item state history
