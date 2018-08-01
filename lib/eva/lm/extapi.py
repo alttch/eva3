@@ -94,7 +94,8 @@ def list_mods():
         f = os.path.basename(p)[:-3]
         if f != '__init__':
             code = 'from eva.lm.extensions.%s import LMExt;' % f + \
-                    ' s=LMExt(info_only=True).serialize(full=True);f=LMExt().get_functions()'
+                    ' s=LMExt(info_only=True).serialize(full=True);' + \
+                    'f=LMExt(info_only=True).get_functions()'
             try:
                 d = {}
                 exec(code, d)
