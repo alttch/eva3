@@ -40,7 +40,6 @@ from eva.lm.extapi import get_timeout
 from eva.lm.extapi import log_traceback
 
 from eva.client.apiclient import APIClient
-from eva.tools import val_to_boolean
 
 
 class LMExt(GenericExt):

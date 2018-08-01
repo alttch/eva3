@@ -68,7 +68,6 @@ import json
 
 from eva.lm.extensions.generic import LMExt as GenericExt
 from eva.lm.extapi import log_traceback
-from eva.tools import val_to_boolean
 
 
 class LMExt(GenericExt):
