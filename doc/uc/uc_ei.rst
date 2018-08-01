@@ -89,6 +89,6 @@ switch the controller to debugging mode.
 Disabling the interface
 -----------------------
 
-For a security reason, it may be good idea to disable the interface after the
+For a security reason, it may be a good idea to disable the interface after the
 initial configuration and system debug. To do this, just rename **uc-ei**
 folder, i.e. to **uc-ei.disabled**.

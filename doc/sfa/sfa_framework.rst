@@ -79,8 +79,8 @@ The interval for a server ping test (heartbeat)
 eva_sfa_heartbeat_error
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-The following function is being automatically called in case of the server
-heartbeat error:
+The following function is automatically called in case of a server heartbeat
+error:
 
 .. code-block:: javascript
 
@@ -102,10 +102,10 @@ Interval (seconds) for updating data when framework is in AJAX mode:
 eva_sfa_force_reload_interval
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The next variable forces ajax updates if if the framework is running in
-WebSocket mode. *0* value disables updating via AJAX completely, but it's
-recommended to keep some value to be sure the interface has the actual data
-even if some websocket events are lost.
+The next variable forces ajax updates if the framework is running in WebSocket
+mode. *0* value disables updating via AJAX completely, but it's recommended to
+keep some value to be sure the interface has the actual data even if some
+websocket events are lost.
 
 .. code-block:: javascript
 
@@ -126,8 +126,8 @@ eva_sfa_server_info
 
 The next variable is updated by heartbeat and contains API **test** call
 results.  This variable may be used by the application to check whether the
-framework has established the connection to the server - if not, the variable
-is *null*.
+framework has established connection to the server - if not, the variable is
+*null*.
 
 .. code-block:: javascript
 
@@ -148,9 +148,9 @@ eva_sfa_ws_mode
 
 This variable sets the framework working mode. If its value is *true*, SFA
 framework operates via WebSocket, if false - via AJAX. This value is changed by
-:ref:`eva_sfa_init()<sf_init>` which tries to detect is the web browser web
-socket compatible.  To change the mode manually, change the variable after the
-initial framework initialization.
+:ref:`eva_sfa_init()<sf_init>` which tries to detect if web browser is
+compatible with web socket. To change the mode manually, change the variable
+after the initial framework initialization.
 
 .. code-block:: javascript
 
@@ -215,7 +215,7 @@ threads.
 eva_sfa_start_rule_monitor
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-After the initialization succeeds, you may additionally start reloading of the
+After the initialization succeeds, you may additionally start reloading the
 :doc:`decision rules</lm/decision_matrix>`. The following function is not
 called by init/start and you should call it separately:
 
@@ -253,14 +253,14 @@ The function returns **state** object or **undefined** if the item state is
 unknown.
 
 You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
-case the function returns the array of all item with oids match the specified
-mask.
+case the function returns the array of all item with oids matching the
+specified mask.
 
 eva_sfa_register_update_state
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When the new data is obtained from the server, the framework may run a
-specified functions to handle events. To register such function in the
+specified function to handle events. To register such function in the
 framework, use
  
 .. code-block:: javascript
@@ -277,7 +277,7 @@ where:
 
 You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
 case the specified state update function will be called always when item oid
-match the specified mask.
+matches the specified mask.
 
 eva_sfa_register_rule
 ~~~~~~~~~~~~~~~~~~~~~
@@ -310,7 +310,7 @@ To execute :doc:`macro</lm/macros>`, call the function:
 
 where **macro_id** - macro id (in a full format, *group/macro_id*) to execute,
 other params are equal to LM API :ref:`run<lm_run>` function, and
-**cb_success**, **cb_error** - functions called when the access to API is
+**cb_success**, **cb_error** - functions called when the access to API has
 either succeeded or failed. The functions are called with **data** param which
 contains the API response.
 
@@ -326,7 +326,7 @@ To run the :ref:`unit<unit>` action, call the function:
 
 Where unit_id - full unit id (*group/id*), other parameters are equal to UC API
 :ref:`action<uc_action>`, and **cb_success**, **cb_error** - functions called
-when the access to API is either succeeded or failed. The functions are called
+when the access to API has either succeeded or failed. The functions are called
 with **data** param which contains the API response.
 
 eva_sfa_action_toggle
@@ -400,7 +400,7 @@ To switch lvar value between *0* and *1* use
 eva_sfa_reset
 ~~~~~~~~~~~~~
 
-To reset lvar when used as a timer or flag:
+To reset lvar when used as timer or flag:
 
 .. code-block:: javascript
 
@@ -452,7 +452,7 @@ Processing logs
 
 SFA Framework has built-in functions to display SFA logs. In case
 :doc:`SFA</sfa/sfa>` is a :doc:`log aggregator</notifiers>`, this allows to
-:ref:`view a logs<sfw_example_log>` from the whole EVA installation.
+:ref:`view logs<sfw_example_log>` from the whole EVA installation.
 
 .. note::
 
@@ -518,12 +518,12 @@ This function allows to change log level processing
   eva_sfa_change_log_level(log_level);
 
 Here **log_level** param is required. The function reloads all log records with
-the specified level, so it's good idea to clean log viewer before.
+the specified level, so it's a good idea to clean log viewer before.
 
 eva_sfa_log_level_name
 ~~~~~~~~~~~~~~~~~~~~~~
 
-This function returns log level name matches the given log level code:
+This function returns log level name matching the given log level code:
 
 .. code-block:: javascript
 
@@ -700,7 +700,7 @@ The following example shows how to build a log viewer, similar to included in
 Controlling reliability of the connection
 -----------------------------------------
 
-The important moment of the web interface chosen for automation systems is the
+An important moment of the web interface chosen for automation systems is
 reliability of the connection.
 
 Common problems which may arise:
@@ -715,8 +715,8 @@ the server should send a response { 's': 'pong' }. If there is no response
 within the time exceeding heartbeat interval, the connection is considered
 broken.
 
-In case of the short-term problems with the server, it will be enough to set
-the default value
+In case of short-term problems with the server, it will be enough to set the
+default value
 
 .. code-block:: javascript
 
@@ -755,7 +755,7 @@ And for automatic reconnection it should look like:
             // due to invalid auth data), the user should get a login form
             show_login_form();
             } else {
-            // in case of another errors - try to restart framework in 3 seconds
+            // in case of other errors - try to restart framework in 3 seconds
             // and attempt to connect again
             setTimeout(eva_sfa_start, 3 * 1000);
             }

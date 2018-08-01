@@ -32,7 +32,7 @@ create two :ref:`units<unit>` for the ventilation:
     uc-cmd create_unit -i ve -g ventilation -y # external
 
 As far as both ventilation systems are connected via the same relay, and it
-display the states of all ports at once, let's create a multiupdate for
+displays the states of all ports at once, let's create a multiupdate for
 updating their status with a single command:
 
 .. code-block:: bash
@@ -51,7 +51,7 @@ and the :doc:`script</item_scripts>` for this multiupdate named
 
 .. note::
 
-    After you've created a script file, don't forget to set it executable
+    After creating a script file, don't forget to set its executable
     permissions (*chmod +x scriptfile*)
 
 Let's check the script:
@@ -80,7 +80,7 @@ Let's check the script:
     ---- STDERR ----
     ----------------
 
-Then we need to create two scritps for the relay control.
+Then we need to create two scripts for the relay control.
 
 For internal ventilation, named **xc/uc/vi**
 
@@ -120,7 +120,7 @@ Connecting a temperature sensor
 
     uc-cmd create_sensor -i temp1 -g env
 
-Let's find or sensor on a 1-Wire bus:
+Let's find our sensor on a 1-Wire bus:
 
 .. code-block:: bash
 
@@ -135,7 +135,7 @@ Here it is. Create a script named **xc/uc/temp1_update**
  
     VALUE=`w1_therm 28-000006ef85d7` && echo 1 ${VALUE} || echo -1
 
-let the temperature update every 20 seconds:
+Let the temperature update every 20 seconds:
 
 .. code-block:: bash
 
@@ -144,15 +144,15 @@ let the temperature update every 20 seconds:
 Connecting a motion sensor
 --------------------------
 
-Configure the sensorc controller to send :doc:`/snmp_traps` to our server IP,
-switch on a debugging mode and look into a log file:
+Configure the sensors controller to send :doc:`/snmp_traps` to our server IP,
+switch on the debugging mode and look into the log file:
 
 .. code-block:: bash
 
     uc-cmd debug
     tail -f log/uc.log|grep "snmp trap data"
 
-let someone walk near the sensor and we'll catch SNMP trap data:
+Let someone walk near the sensor and we'll catch SNMP trap data:
 
 .. code-block:: text
 
@@ -179,12 +179,12 @@ let someone walk near the sensor and we'll catch SNMP trap data:
     2017-10-13 18:52:44,598 plant1  DEBUG uc traphandler_t_dispatcher: snmp trap data 1.3.6.1.4.1.3854.1.7.5.0 = Motion1
     2017-10-13 18:52:44,602 plant1  DEBUG uc traphandler_t_dispatcher: snmp trap data 1.3.6.1.4.1.3854.1.7.6.0 = MD Hall
 
-as we can see, the sensor sends SNMP OID *1.3.6.1.4.1.3854.1.7.1.0 = 4* when
+As we can see, the sensor sends SNMP OID *1.3.6.1.4.1.3854.1.7.1.0 = 4* when
 there is some activity and *1.3.6.1.4.1.3854.1.7.1.0 = 2* when the activity is
 finished. If we disconnect the sensor from the sensorProbe, trap with the same
 OID and value *7* will be received.
 
-switch off a debugging mode
+switch off the debugging mode
 
 .. code-block:: bash
 
@@ -196,7 +196,7 @@ and create a sensor in UC:
 
     uc-cmd create_sensor -i motion1 -g security -y
 
-append one ident var to let it parse only "it's own" traps:
+append one ident var to let it parse only "its own" traps:
 
 .. code-block:: bash
 
@@ -252,14 +252,14 @@ The final sensor configuration will look like:
        "virtual": false
     }
 
-The sensor is ready. It doesn't require any passive update script since it's
-state is updated with SNMP traps by the equpment.
+The sensor is ready. It doesn't require any passive update script since its
+state is updated with SNMP traps by the equipment.
 
 Connecting a hall light
 -----------------------
 
 So, now we have to connect the lamp to Denkovi IP-16R relay. Connect it
-similarly to the ventilation:
+similarly to ventilation:
 
 .. code-block:: bash
 
@@ -269,9 +269,9 @@ similarly to the ventilation:
     uc-cmd create_unit -i lamp1 -g light -y
     uc-cmd enable_actions -i lamp1
 
-this relay returns the status of each port separately. Additionally, there is
+This relay returns the status of each port separately. Additionally, there is
 only one connected device and, therefore, we won't create a multiupdate for the
-unit and let it to update state with own update script.
+unit and let it update the state with its own update script.
 
 Create a script named **xc/uc/lamp1_update**
 
@@ -289,7 +289,7 @@ and the action script **xc/uc/lamp1**
 
     ${RELAY1_CMD}.1 i $2
 
-Let's update a lamp state every 30 seconds:
+Let's update the lamp state every 30 seconds:
 
 .. code-block:: bash
 
@@ -332,7 +332,7 @@ Connect :doc:`/lm/lm` and :doc:`/sfa/sfa` to this controller. Create two
     sysfunc = no
     hosts_allow = 127.0.0.1
 
-After the new keys are added, you need to restart UC, which we'll do later.
+After adding the new keys, you need to restart UC, which we'll do later.
 Firstly, you should connect it to :ref:`MQTT<mqtt_>`.
 
 Notification system configuration
@@ -340,7 +340,7 @@ Notification system configuration
 
 .. include:: skip_easy.rst
 
-To let the item states to be transferred from UC to other controllers in real
+To let the item states be transferred from UC to other controllers in real
 time, configure its notification system. Connect the server to the local
 :ref:`MQTT<mqtt_>`:
 

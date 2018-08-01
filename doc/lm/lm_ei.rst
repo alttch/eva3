@@ -2,7 +2,7 @@ LM EI
 =====
 
 LM EI is a minimal interface for controlling the :doc:`lm` subsystem. The
-interface is not intended for daily use. It is designed solely for
+interface is not intended for daily use. It is designed exclusively for
 configuration, debugging and use in case of emergency, e. g. when the primary
 system interface is unavailable.
 
@@ -42,10 +42,10 @@ mode** enables or disables the controller debugging mode.
 Logic variables
 ---------------
 
-The logic variables (:ref:`lvars<lvar>`) page opens after you've logged in. On the top you see
-the controller name, key type (masterkey or the regular one) and data
-synchronization method (instant - via WebSocket, numeric value - via AJAX every
-X seconds).
+The logic variables (:ref:`lvars<lvar>`) page opens after logging in. On the
+top you see the controller name, key type (masterkey or the regular one) and
+data synchronization method (instant - via WebSocket, numeric value - via AJAX
+every X seconds).
 
 Important: when you create/delete lvars, the interface does not automatically
 display the changes made. Use reload button or refresh the page in browser.
@@ -81,9 +81,9 @@ The page displays the :doc:`decision-making rules<decision_matrix>`.
     :alt: Rules page
 
 It allows you to add, edit, delete and disable/enable rules of decision-making
-matrix. As far as decision rules do not belong to items sharing their state via
-:doc:`notification system</notifiers>`, the page doesn't reload any external
-changes automatically.
+matrix. As far as decision-making rules do not belong to items sharing their
+state via :doc:`notification system</notifiers>`, the page doesn't reload any
+external changes automatically.
 
 Log viewer
 ----------
@@ -99,6 +99,6 @@ switch the controller to debugging mode.
 Disabling the interface
 -----------------------
 
-For a security reason, it may be good idea to disable the interface after the
+For a security reason, it may be a good idea to disable the interface after the
 initial configuration and system debug. To do this, just rename **lm-ei**
 folder, i.e. to **lm-ei.disabled**.

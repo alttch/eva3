@@ -15,7 +15,7 @@ Additionally, you can use lm-rules console application for better control of the
 
 LM PLC additionally introduces one more control and monitoring item:
 :ref:`logic variable (lvar)<lvar>`. Logic variables are used to save and
-exchange system status data as well as function as a flags and timers for
+exchange system status data as well as function as flags and timers for
 organizing production cycles.
 
 Any change in the status of :ref:`units<unit>`, :ref:`sensors<sensor>` or logic
@@ -25,7 +25,7 @@ calls the indicated :doc:`macro<macros>` that performs the specified actions.
 
 Logic variables statuses are stored in the local database and can be accessed
 via :doc:`LM API<lm_api>` by other subsystems or third-party programs. Status
-changes are sent via :doc:`notification system</notifiers>`. To let LM PLC to
+changes are sent via :doc:`notification system</notifiers>`. To let LM PLC
 operate with the items of :doc:`UCs</uc/uc>` in real time, it should be
 connected to :ref:`MQTT server<mqtt_>`.
 
@@ -50,7 +50,7 @@ runtime/lm_cvars.json variables file
 lm_cvars.json - file containing user variables passed to all logic control
 :doc:`macros<macros>`.
 
-The file contais a JSON dict:
+The file contains a JSON dict:
 
 .. code-block:: json
 
@@ -70,10 +70,10 @@ etc/lm_apikeys.ini API keys file
 
 API access keys are stored into etc/lm_apikeys.ini file. At least one full
 access key named masterkey should be present for proper functioning. Important:
-with master key and API anyone can receive the full access to the system 
-similar to root user or the user UC is run under), that is why it is recommended
-to use this key only in supervisory networks or even restrict it's use to local
-host only.
+with master key and API anyone can receive full access to the system similar to
+root user or the user UC is run under), that is why it is recommended to use
+this key only in supervisory networks or even restrict its usage to local host
+only.
 
 .. literalinclude:: ../../etc/lm_apikeys.ini-dist
     :language: ini
@@ -92,31 +92,31 @@ Prior to UC connection, it is necessary to connect LM PLC to :ref:`MQTT
 server<mqtt_>`, where other controllers will send the events. Logic Manager
 reads the list of items and their initial status from the connected
 controllers; further status monitoring is performed via MQTT. In case MQTT
-server is inaccessible or have a problems exchanging data, statuses of the
-items are updated on every remote controller reload (**reload_interval** prop).
+server is inaccessible or has data exchange problems, states of the items are
+updated on every remote controller reload (**reload_interval** prop).
 
 To connect UC controllers you should use **lm-cmd** :doc:`console
 command</cli>` or :doc:`lm_api` **append_controller** function.
 
 When connecting, it is necessary to indicate minimum URI of the connected
 controller and API KEY functioning either as a master key or the key with
-access the certain items. If Logic Manager and UC keys are the same, the key
-can be set as *$key* (\\$key in the command line). In this case, LM will use
-the local key of its own configuration.
+access to certain items. If Logic Manager and UC keys are the same, the key can
+be set as *$key* (\\$key in the command line). In this case, LM will use the
+local key of its own configuration.
 
 .. code-block:: bash
 
     lm-cmd append_controller -u http://localhost:8812 -a secretkey -y
 
-The configurations of the connected controllers are stored in the following
-folder: *runtime/lm_remote_uc.d/*
+Configurations of connected controllers are stored in the following folder:
+*runtime/lm_remote_uc.d/*
 
 Logic Manager automatically loads the connected controller data (its ID) and
-saves the configuration to *runtime/lm_remote_uc.d/ID.json* file.
+saves configuration to *runtime/lm_remote_uc.d/ID.json* file.
 
 Items from remote controllers are loaded at the LM PLC start and then refreshed
 with **reload_interval** frequency set individually for each connected
-controller. if LM PLC fails to get the item list during loading, it will use
+controller. If LM PLC fails to get the item list during loading, it will use
 the existing one.
 
 To control the list of the received items you can use *lm-cmd* or
@@ -140,7 +140,7 @@ while LM PLC is running:
   through https://. May be *True* (verify) or *False* (not verify) The
   certificate is verified by default.
 * **timeout** request timeout (seconds) 
-* **uri** API URI of the connected controller (*proto://host:port*, witout
+* **uri** API URI of the connected controller (*proto://host:port*, without
   */uc-api/*)
 
 Parameters are displayed with **lm-cmd** command or :doc:`/lm/lm`
@@ -159,12 +159,12 @@ only or the full ID in the following format: *controller_type/ID* (i.e.
 Macro execution queues
 ----------------------
 
-Prior to the execution, the :doc:`macros<macros>` are put into the global
-queue. The macros are executed progressively without waiting for the completion
-of the previous macro. Queue is used for reporting only and reserved for some
-internal functions. If macro is required to block execution of the other ones,
-one should use :ref:`lock<m_lock>` and :ref:`unlock<m_unlock>` macro functions
-operating similarly to :ref:`SYS API locking<s_lock>`.
+Prior to execution, the :doc:`macros<macros>` are put into global queue. The
+macros are executed progressively without waiting for the completion of the
+previous macro. The queue is used for reporting only and reserved for some
+internal functions. If a macro is required to block execution of the other
+ones, one should use :ref:`lock<m_lock>` and :ref:`unlock<m_unlock>` macro
+functions operating similarly to :ref:`SYS API locking<s_lock>`.
 
 The status of the macro in queue is similar to the status of the :ref:`Universal
 Controller actions<uc_queues>`.
@@ -182,4 +182,4 @@ options:
 * **version** display the controller version
 
 The controller startup/shutdown is also performed by **./sbin/eva-control**
-which's configured during the :doc:`system setup</install>`.
+which is configured during the :doc:`system setup</install>`.

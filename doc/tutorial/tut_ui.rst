@@ -21,7 +21,7 @@ Configuring authentication keys
 
 .. include:: skip_easy.rst
 
-Create SFA :ref:`API key<sfa_apikey>` named **operator** in
+Create an SFA :ref:`API key<sfa_apikey>` named **operator** in
 **etc/sfa_apikeys.ini**:
 
 .. code-block:: ini
@@ -56,7 +56,7 @@ example setup. Create a new **index.html** file and put it to **ui** folder:
 
 If the :doc:`item</items>` ids or other information should be hidden from
 unauthorized users, the additional .js files with such data may be served by
-:doc:`/sfa/sfa_pvt` or frontend server with the additional authentication.
+:doc:`/sfa/sfa_pvt` or frontend server with additional authentication.
 
 .. code-block:: html
 

@@ -10,7 +10,7 @@ SCADA Final Aggregator configuration
   * :doc:`tut_ui`
 
 So, let us proceed with our configuration. :doc:`/uc/uc` has already been set
-up and :doc:`/lm/lm` as well. Therefore, let us move to :doc:`/sfa/sfa`
+up and :doc:`/lm/lm` as well. Therefore, let us move on to :doc:`/sfa/sfa`
 configuration.
 
 Since the logic has already been implemented, we have only two tasks: to
@@ -32,7 +32,7 @@ PLC</lm/lm>` :doc:`items</items>` in real time:
 
     sfa-notifier create -i eva_1 -p mqtt -h localhost -s plant1 -A eva:secret -y
 
-We won't subscribe the notifier to anything, because all the data is received
+We won't subscribe the notifier to anything, because all the data are received
 from it, and there is nothing to send instead.
 
 .. code-block:: bash
@@ -106,7 +106,7 @@ and :ref:`logic variables<lvar>`:
     sfa-cmd list_remote -p LV
 
 Let SFA reload the items from the connected controllers every 60 seconds, if
-the new ones are added in the future:
+the new ones are added in future:
 
 .. code-block:: bash
 
@@ -124,9 +124,8 @@ We provide this example for one reason: you should always connect your external
 applications to :doc:`SFA</sfa/sfa>` only. Controllers may be changed and,
 therefore, the setup may be extended: for example, one :doc:`/lm/lm` may be
 replaced by the three ones installed on the different servers. However, the
-local SFA will never be changed. All you need is to connect a new
-controllers to it, and EVA item infrastructure will be available again by its
-usual IDs.
+local SFA will never be changed. All you need is to connect new controllers to
+it, and EVA item infrastructure will be available again by its usual ID.
 
 The next step it to connect cron for it to run ventilation control macro (edit
 /etc/crontab or user's crontab):
@@ -136,7 +135,7 @@ The next step it to connect cron for it to run ventilation control macro (edit
     0 7 * * *    root   /path/to/sfa-cmd run -i control/vi_control -a "0 cron"
     0 21 * * *    root   /path/to/sfa-cmd run -i control/vi_control -a "1 cron"
 
-As you can see there is no rocket science here. :doc:`/sfa/sfa` is configured
-by a few commands and immediately started collecting the data and events. In
+As you can see, there is no rocket science here. :doc:`/sfa/sfa` is configured
+by a few commands and immediately starts collecting the data and events. In
 turn, it will save you a lot of time by structuring your setup. Now let's
 create :doc:`SFA Framework interface<tut_ui>` that will be served by SFA.

@@ -9,8 +9,8 @@ Logic Manager configuration
   * :doc:`tut_sfa`
   * :doc:`tut_ui`
 
-So, let us proceed with our configuration. As soon as :doc:`/uc/uc` has
-already been configured, let us move on with :doc:`/lm/lm`.
+So, let us proceed with our configuration. As soon as :doc:`/uc/uc` is
+already configured, let us move on with :doc:`/lm/lm`.
 
 .. contents::
 
@@ -79,7 +79,7 @@ Connecting UC controller
 .. include:: skip_easy.rst
 
 Connect the local :doc:`UC</uc/uc>` to :doc:`/lm/lm` using the key we've
-created in **etc/uc_apikeys.ini** in a :doc:`previous part<tut_uc>` of the
+created in **etc/uc_apikeys.ini** in the :doc:`previous part<tut_uc>` of the
 tutorial:
 
 .. code-block:: bash
@@ -110,14 +110,14 @@ tutorial:
         }
     ]
 
-Looks correctly, sensors are loaded, let's check the units:
+Looks correct, sensors are loaded, let's check the units:
 
 .. code-block:: bash
 
     lm-cmd list_remote -p U
 
 Let LM PLC reload the items from the connected controller every 60 seconds, if
-the new ones are added in the future:
+the new ones are added in future:
 
 .. code-block:: bash
 
@@ -144,18 +144,18 @@ If we solve this problem by creating the following two rules:
 * if below - switched off
 
 the following problem may occur: if the temperature will hover around 25
-degrees, the ventilation system will constantly switch on and off. Therefore,
-the breakdown is highly possible. We cannot simply set up **chillout_time** in
-the :doc:`rule</lm/decision_matrix>`, it completely disables the rule, so it
-doesn't match after the chillout is over, if the previous and the current state
-both are in the range.
+degrees, the ventilation system will constantly switch on and off. Therefore, a
+breakdown is highly possible. We cannot simply set up **chillout_time** in the
+:doc:`rule</lm/decision_matrix>`, it completely disables the rule, so it
+doesn't match after the chillout is over, if both previous and current state
+are in the range.
 
 Due to the flexibility of EVA there is a number of solutions of this problem:
 
 **Option 1:**
 
 Ventilation is switched on, if the temperature is above 25 degrees, and
-switched off if it is below i.e. 25.5. The logic will have half a degree gap
+switched off if it is below e.g. 25.5. The logic will have half a degree gap
 for the equipment not to be overloaded. If the temperature changes not that
 quickly, this option would be the best one.
 
@@ -175,8 +175,8 @@ quickly, this option would be the best one.
   **chillout_time**. Or even
 
 * Use :ref:`unit_status<m_unit_status>` macro function to get the current
-  ventilation status and use macro :ref:`lock<m_lock>` function to block it's
-  changes too often i.e. for 5 minutes
+  ventilation status and use macro :ref:`lock<m_lock>` function to block its
+  changing too often e.g. for 5 minutes
 
 The macro code will look like:
 
@@ -195,14 +195,14 @@ The macro code will look like:
 
 **Option 3**
 
-Increase **update_interval** prop of **env/temp1** :ref:`sensor<sensor>` i.e.
+Increase **update_interval** prop of **env/temp1** :ref:`sensor<sensor>` e.g.
 to 300 seconds. This option will work, though it is not that good because the
-system will the current temperature with a 5 min delay (or we need to duplicate
-the sensor in :doc:`UC</uc/uc>` and create the more quick one).
+system will obtain the current temperature with a 5 min delay (or we need to
+duplicate the sensor in :doc:`UC</uc/uc>` and create a quicker one).
 
 **Option 4**
 
-Add 5 minutes delay at the end of **xc/uc/vi** action script, allow **vi**
+Add a 5 minutes delay at the end of **xc/uc/vi** action script, allow **vi**
 queues (set **action_queue=1** unit prop), and start ventilation from the macro
 in the following way:
 
@@ -232,7 +232,7 @@ schedule-based logic, everything else will be done using EVA.
 There are more than 10 options to solve our problem, but we will choose the
 best one: delayed start. Moreover, we have a condition to run ventilation only
 in 5 minutes after the temperature becomes >=25. So, we will use this option.
-The other ones were reviewed just because this is a tutorial :)
+The other ones have been reviewed just because this is a tutorial.
 
 Create two :ref:`logic variables<lvar>`:
 
@@ -284,15 +284,15 @@ Put a macro code in **xc/lm/vi_control.py** file
 
 The macro requires 3 :doc:`rules</lm/decision_matrix>`:
 
-The first one will match if the temperature is above or equal to 25 degees and
+The first one will match if the temperature is above or equal to 25 degrees and
 activates the delayed start timer:
 
 .. code-block:: bash
 
     lm-rules add -E -y -x value --type sensor --group env --item temp1 --ge 25 --initial any -m vi_control -a "1 event"
 
-The second one will match if the temperature is below 25 degrees and switch the
-ventilation off (if it's allowed):
+The second one will match if the temperature is below 25 degrees and switches
+the ventilation off (if it's allowed):
 
 .. code-block:: bash
 
@@ -322,7 +322,7 @@ alarm system:
 
     lm-cmd create_macro -g security -i alarm_start -y
 
-put it's code to **xc/lm/alarm_start.py**:
+put its code to **xc/lm/alarm_start.py**:
 
 .. code-block:: python
 
@@ -339,7 +339,7 @@ alarm system or just turn on the lighting:
 
     lm-cmd create_macro -g security -i motion1_handler -y
 
-put it's code to **xc/lm/motion1_handler.py**:
+put its code to **xc/lm/motion1_handler.py**:
 
 .. code-block:: python
 
@@ -348,7 +348,7 @@ put it's code to **xc/lm/motion1_handler.py**:
     else:
         start('light/lamp1')
 
-And the additional rule executing **motion1_handler** macro when the motion
+Plus the additional rule executing **motion1_handler** macro when the motion
 sensor detects an activity:
 
 .. code-block:: bash

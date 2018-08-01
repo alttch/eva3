@@ -156,7 +156,7 @@ regardless of whether it is macro, sensor or logic variable.
 The best practice is always to use unique id for the item e.g.
 *office1.room1.temperature1* and use groups only for better item filtering.
 
-This does not apply to decision rules: an unique id is generated for each rule
+This does not apply to decision rules: a unique id is generated for each rule
 automatically.
 
 Log file customization

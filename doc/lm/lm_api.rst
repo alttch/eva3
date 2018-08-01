@@ -9,15 +9,14 @@ If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
 All functions can be called using GET and POST methods. When POST method is
-being used, the parameters can be passed to functions eitner as www-form or as
-JSON.
+used, the parameters can be passed to functions either as www-form or as JSON.
 
 .. note::
 
     Object creation and modification functions don't save configurations
     automatically unless you specify **save** parameter in API request. The
-    system is designed to work in this way to let you discard the changes in
-    case of the serious problems by killing the controller process.
+    system is designed to work this way to let you discard the changes in case
+    of serious problems by killing the controller process.
 
     If you need to save any changes made without this parameter, restart the
     controller gracefully or use :doc:`/sys_api` **save** function.
@@ -154,8 +153,8 @@ clear - clear lvar state
 ------------------------
 
 Allows to set status (if **expires** lvar param > 0) or value (if **expires**
-isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is being
-used as a timer to stop it, or as a flag to set it *False*.
+isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as
+a timer to stop it, or as a flag to set it *False*.
 
 Returns JSON dict result="OK", if the state is cleared successfully.
 
@@ -191,7 +190,7 @@ Errors:
 
 groups - get lvar groups list
 -----------------------------
-Get the list of the lvar groups. Useful i.e. for the custom interfaces.
+Get the list of the lvar groups. Useful i.e. for custom interfaces.
 
 Parameters:
 
@@ -212,7 +211,7 @@ Errors:
 
 groups_macro - get macro groups list
 ------------------------------------
-Get the list of the macro groups.
+Get the list of macro groups.
 
 Parameters:
 
@@ -345,7 +344,7 @@ Errors:
 
 Actions remain in the system until they receive the status *completed*,
 *failed* or *terminated* and until **keep_action_status** time indicated in
-:ref:`contoller configuration<lm_ini>` passes.
+:ref:`controller configuration<lm_ini>` passes.
 
 .. note::
 
@@ -465,7 +464,7 @@ optionally:
 
 * **save=1** save lvar configuration on the disk immediately after creation
 
-Returns result="OK" if the lvar is created, or result="ERROR", if the error
+Returns result="OK" if the lvar is created, or result="ERROR", if an error
 occurred.
 
 Errors:
@@ -482,13 +481,13 @@ Parameters:
 * **k** masterkey
 * **i** lvar id
 
-Returns result="OK" if the lvar is deleted, or result="ERROR", if error
+Returns result="OK" if the lvar is deleted, or result="ERROR", if an error
 occurred.
 
-LVar configuration may be immediately deleted from the disk, if there is
+LVar configuration can be immediately deleted from the disk, if there is
 *db_update=instant* set in :ref:`controller configuration<lm_ini>`, at the
-moment of the shutdown, if there is *db_update=on_exit*, or when
-calling :doc:`/sys_api` save (or save in :doc:`LM EI<lm_ei>`), if there is
+moment of shutdown, if there is *db_update=on_exit*, or when calling
+:doc:`/sys_api` save (or save in :doc:`LM EI<lm_ei>`), if there is
 *db_update=manual*.
 
 If configuration is not deleted by either of these, you should delete it
@@ -556,7 +555,7 @@ optionally:
 
 * **save=1** save macro configuration on the disk immediately after creation
 
-Returns result="OK" if the macro is created, or result="ERROR", if the error
+Returns result="OK" if a macro is created, or result="ERROR", if an error
 occurred.
 
 Errors:
@@ -573,7 +572,7 @@ Parameters:
 * **k** masterkey
 * **i** macro id
 
-Returns result="OK" if the macro is deleted, or result="ERROR", if error
+Returns result="OK" if the macro is deleted, or result="ERROR", if an error
 occurred.
 
 Errors:
@@ -653,7 +652,7 @@ optionally:
 
 * **save=1** save rule configuration on the disk immediately after creation
 
-Returns result="OK" if the rule is created, or result="ERROR", if the error
+Returns result="OK" if a rule is created, or result="ERROR", if an error
 occurred.
 
 Errors:
@@ -670,7 +669,7 @@ Parameters:
 * **k** masterkey
 * **i** rule id
 
-Returns result="OK" if the rule is deleted, or result="ERROR", if error
+Returns result="OK" if the rule is deleted, or result="ERROR", if an error
 occurred.
 
 Errors:
@@ -790,11 +789,11 @@ optionally:
 * **save=1** save connected controller configuration on the disk immediately
   after creation
 
-Returns result="OK" if the controller is connected, or result="ERROR", if the
+Returns result="OK" if the controller is connected, or result="ERROR", if an
 error occurred.
 
-The remote controller id is being obtained and set automatically according to
-its hostname or **name** field in the controller configuration. The remote
+The remote controller id is obtained and set automatically according to its
+hostname or **name** field in the controller configuration. The remote
 controller id can't be changed.
 
 Errors:
@@ -813,7 +812,7 @@ Parameters:
 * **k** masterkey
 * **i** controller id
 
-Returns result="OK" if the controller is disconnected, or result="ERROR", if
+Returns result="OK" if the controller is disconnected, or result="ERROR", if an
 error occurred.
 
 Errors:
@@ -833,8 +832,8 @@ Parameters:
 * **k** masterkey
 * **i** controller id
 
-Returns result="OK" if the controller is deleted, or result="ERROR", if error
-occurred.
+Returns result="OK" if the controller is deleted, or result="ERROR", if an
+error occurred.
 
 Errors:
 

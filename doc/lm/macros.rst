@@ -5,7 +5,7 @@ In :doc:`lm` macros can be triggered on the list of events, third-party
 applications or user via :doc:`LM EI<lm_ei>` interface or :doc:`LM API<lm_api>`
 functions.
 
-Macro code is located the file written in Python and located in the folder
+Macro code is located a file written in Python and located in the folder
 **xc/lm/** under the name <macro_id>.py, i.e. *test.py* for "test" macro. Macro
 id should be unique within the single LM PLC, full id (group/id) - within the
 whole installation.
@@ -33,7 +33,7 @@ Macro compilation and execution errors are written into the logs of the
 controller on DEBUG level, the exceptions are also added to **err** field of
 the execution result.
 
-To receive information about an errors you may run the following command:
+To receive information about errors you may run the following command:
 
 .. code-block:: bash
 
@@ -46,7 +46,7 @@ After the macro code is placed into *xc/lm/<macro_id>.py* file, it should be
 appended to the controller using :ref:`create_macro<lm_create_macro>` LM API
 function or with **lm-cmd**.
 
-After the macro configuration is created, you may view it's params using
+After the macro configuration is created, you may view its params using
 :ref:`list_macro_props<lm_list_macro_props>` and change them with
 :ref:`set_macro_prop<lm_set_macro_prop>`.
 
@@ -69,7 +69,7 @@ Common principles of macros operation
 Macros are launched simultaneously: system does not wait for the completion of
 the macro and launches its next copy or another macro in parallel. If you want
 only one copy of macro to operate at the certain point of time or to block
-execution of the other macros, use macro :ref:`lock<m_lock>` and
+execution of other macros, use macro :ref:`lock<m_lock>` and
 :ref:`unlock<m_unlock>` functions.
 
 The system architecture does not provide the possibility to stop macro from
@@ -85,7 +85,7 @@ System macros
 If defined, macro named **system/autoexec** is launched automatically at the
 controller startup. This macro is not always the first one executed, as far as
 some initial :doc:`decision-making rules<decision_matrix>` may call assigned
-macros, or some events may be handled before. In case macro is launched later
+macros, or some events may be handled before. In case a macro is launched later
 than :ref:`logic variables<lvar>` or other loadable items update their status
 (e. g. due to slow connection with :ref:`MQTT server<mqtt_>`) it's recommended
 to use :ref:`sleep<m_sleep>` function to do a small delay.
@@ -107,12 +107,12 @@ Example of **autoexec** macro usage:
 Macros and security
 -------------------
 
-As all Python features are available for the macros, including the execution of
-the external programs or working with any local files, code of the macros
-should be edited only by the system administrator.
+As all Python features are available for macros, including execution of
+external programs or working with any local files, the code of macros should be
+edited only by system administrator.
 
-If access permissions to the individual macros are configured via API keys, you
-should take into account the following: if macro runs other macros using
+If access permissions to individual macros are configured via API keys, you
+should take into account the following: if a macro runs other macros using
 :ref:`run<m_run>` function, these macros will be executed even if the API key
 allows to run only the initial macro.
 
@@ -120,11 +120,11 @@ Macros built-ins
 ----------------
 
 Macros can execute any Python functions or use Python modules installed on the
-local server. In addition, macros have a set of the built-in functions and
+local server. In addition, macros have a set of built-in functions and
 variables.
 
-Built-in functions are include for quick access of the most frequently used
-Python functions as well as :doc:`lm_api` and :doc:`/uc/uc_api`. When calling
+Built-in functions are included for quick access to the most frequently used
+Python functions such as :doc:`lm_api` and :doc:`/uc/uc_api`. When calling
 API function, item id is always transmitted in full. When calling other macros
 and working with logic variables, it's possible to use the short ids only.
 
@@ -139,7 +139,7 @@ Macros have the following built-in variables:
 * **no** alias to boolean *False*
 
 * **_source** item generated the :doc:`event<decision_matrix>`, used by the
-  system to call the macro. You may directly access the item and i.e. use it's
+  system to call the macro. You may directly access the item and e.g. use its
   internal variables such as *_source.item_id*, *_source.full_id*,
   *_source.oid* etc.
 * **argv** array list of arguments the macro is being executed with
@@ -174,7 +174,7 @@ Shared variables
 ----------------
 
 Apart from the :ref:`logic variables<lvar>` macros, can exchange variables
-within the single controller with the following functions:
+between each other within the single controller with the following functions:
 
 * **shared(varname)** get value of the shared variable
 * **set_shared(varname, value)** set value of the shared variable
@@ -184,7 +184,7 @@ Shared variables are not saved in case the controller is restarted.
 Locking features
 ----------------
 
-These functions implement internal locking which may be used i.e. to block
+These functions implement internal locking which may be used e.g. to block
 other macros to run until the current one is finished.
 
 .. _m_lock:
@@ -200,9 +200,9 @@ params:
 
 * **lock_id** unique lock id (defined by user)
 * **timeout** lock request timeout (in seconds)
-* **expires** time (seconds) after which lock is automatically released
+* **expires** time (seconds) after which the lock is automatically released
 
-Returns *True*, if lock has been requested successfully, *False* in case of the
+Returns *True*, if lock has been requested successfully, *False* in case of
 failure.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
@@ -222,7 +222,7 @@ params:
 * **lock_id** unique lock id (defined by user)
 
 Unlike the SYS API :ref:`unlock<s_unlock>` function, this one always returns
-*True*, even if lock doesn't exist.
+*True*, even if the lock does not exist.
 
 Item functions
 --------------
@@ -240,7 +240,8 @@ params:
 
 * **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
-Returns status (integer) of logic variable, *None* if variable is not found.
+Returns status (integer) of logic variable, *None* if the variable is not
+found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
@@ -276,7 +277,7 @@ params:
 * **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 * **value** value to set. If not specified, variable is set to *null*
 
-Returns *True* on success, *False* if variable is not found.
+Returns *True* on success, *False* if the variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
@@ -287,10 +288,10 @@ clear - stop timer/flag clear
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If lvar is being used as a timer and has **expires** set, this function sets
-it's status to *0* which works like a timer stop.
+its status to *0* which works like a timer stop.
 
-If lvar is being used as a flag and has no expiration, this sets it's value to
-*0* which works like setting flag to *False*
+If lvar is used as a flag and has no expiration, this sets its value to *0*
+which works like setting flag to *False*
 
 .. code-block:: python
 
@@ -300,7 +301,7 @@ params:
 
 * **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
-Returns *True* on success, *False* if variable is not found.
+Returns *True* on success, *False* if the variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
@@ -308,8 +309,8 @@ config and the variable is not found.
 toggle - toggle a flag value
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Sets lvar value to *1* if it has value *"0"*, otherwise *"1"*. If lvar is being
-used as a flag, this works like a switching between *False* and *True*.
+Sets lvar value to *1* if it has value *"0"*, otherwise *"1"*. If lvar is used
+as a flag, this works like a switching between *False* and *True*.
 
 .. code-block:: python
 
@@ -319,7 +320,7 @@ params:
 
 * **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
-Returns *True* on success, *False* if variable is not found.
+Returns *True* on success, *False* if the variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
@@ -339,12 +340,12 @@ params:
 * **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 * **etime** new expiration time (in seconds)
 
-If expires is not defined or set to zero, the function stops a timer, but apart
-from :ref:`clear<m_clear>` completely disables a timer by setting it's
-expiration to 0. To return the timer back to work, set it's expiration time
-back after the timer reset (not before!).
+If expiry is not defined or set to zero, the function stops the timer, but
+apart from :ref:`clear<m_clear>` completely disables the timer by setting its
+expiration to 0. To return the timer back to work, set its expiration time back
+after the timer reset (not before!).
 
-Returns *True* on success, *False* if variable is not found.
+Returns *True* on success, *False* if the variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
@@ -352,7 +353,7 @@ config and the variable is not found.
 is_expired - check timer expiration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Function is useful when lvar is being used as a timer to quickly check is it
+Function is useful when lvar is used as a timer to quickly check if it's
 still running or not.
 
 .. code-block:: python
@@ -382,7 +383,7 @@ params:
 
 * **unit_id** :ref:`unit<unit>` id (full)
 
-Returns status (integer) of unit, *None* if unit is not found.
+Returns status (integer) of the unit, *None* if the unit is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
@@ -398,9 +399,8 @@ params:
 
 * **unit_id** :ref:`unit<unit>` id (full)
 
-Returns value (float if the value is numeric) of unit state, *None* if unit is
-not found. If the value is *null*, returns an empty string.  Returns value
-(integer) of unit, *None* if unit is not found.
+Returns value (float if the value is numeric) of the unit state, *None* if the
+unit is not found. If the value is *null*, returns an empty string.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
@@ -416,8 +416,8 @@ params:
 
 * **unit_id** :ref:`unit<unit>` id (full)
 
-Returns future status (integer) of unit, *None* if unit is not found. If the
-unit has no action running, future status is equal to the current.
+Returns future status (integer) of the unit, *None* if the unit is not found.
+If the unit has no action running, future status is equal to the current.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
@@ -433,10 +433,9 @@ params:
 
 * **unit_id** :ref:`unit<unit>` id (full)
 
-Returns value (float if the value is numeric) of unit state, *None* if unit is
-not found. If the value is *null*, returns an empty string.  Returns value
-(integer) of unit, *None* if unit is not found. If the unit has no action
-running, future state value is equal to the current.
+Returns value (float if the value is numeric) of the unit state, *None* if the
+unit is not found. If the value is *null*, returns an empty string. . If the
+unit has no action running, future state value is equal to the current.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
@@ -444,8 +443,8 @@ config and the unit is not found.
 is_busy - check if the unit has action running
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Compares current and future unit state, the difference means the unit currently
-is running an action and is busy.
+Compares current and future unit state, the difference means the unit is
+currently is running an action and is busy.
 
 .. code-block:: python
 
@@ -455,9 +454,9 @@ params:
 
 * **unit_id** :ref:`unit<unit>` id (full)
 
-Returns *True* if unit is currently running an action and its future state is
-different from the current. *False* if states are equal and it means unit has
-no action running, *None* if unit is not found.
+Returns *True* if the unit is currently running an action and its future state
+is different from the current. *False* if the states are equal and it means the
+unit has no action running, *None* if the unit is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
@@ -486,7 +485,7 @@ params:
   means higher priority)
 
 Returns result in the same dict format as UC API :ref:`action<uc_action>`
-function, *None* if unit is not found.
+function, *None* if the unit is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
@@ -495,7 +494,7 @@ result - get action result
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Obtain action result, either all results for the unit by **unit_id** or the
-particual action result by **uuid**
+particular action result by **uuid**
 
 .. code-block:: python
 
@@ -511,7 +510,7 @@ result by uuid only if the action was executed by its API or macro function and
 the controller hasn't been restarted after that.
 
 Returns result in the same dict format as UC API :ref:`result<uc_result>`
-function, *None* if unit is not found or controller doesn't know about the
+function, *None* if the unit is not found or controller doesn't know about the
 action with the specified uuid.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
@@ -519,15 +518,14 @@ config and the unit is not found.
 
 .. note::
 
-    macro **result** function returns the execution result of unit action,
+    macro **result** function returns the execution result of the unit action,
     while :ref:`result<lm_result>` function of LM API returns the execution
     results of local macros only.
 
 terminate - terminate the current action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Terminate the current unit action, either by **unit_id** or the by action
-**uuid**
+Terminate the current unit action, either by **unit_id** or by action **uuid**
 
 .. code-block:: python
 
@@ -543,17 +541,17 @@ the action by uuid only if it was executed by its API or macro function and the
 controller hasn't been restarted after that.
 
 Returns termination result in the same dict format as UC API
-:ref:`terminate<uc_terminate>` function, *None* if unit is not found, the
+:ref:`terminate<uc_terminate>` function, *None* if the unit is not found, the
 controller doesn't know about the action with the specified uuid or the remote
 action doesn't exist (or is already finished).
 
-Doesn't raise any exceptions.
+Does not raise any exceptions.
 
 q_clean - clean unit action queue
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Cleans the unit action queue but keeps the current action running if it already
-has been started.
+has already been started.
 
 .. code-block:: python
 
@@ -564,15 +562,15 @@ params:
 * **unit_id** :ref:`unit<unit>` id (full)
 
 Returns queue clean result in the same dict format as UC API
-:ref:`q_clean<uc_q_clean>` function, *None* if unit is not found.
+:ref:`q_clean<uc_q_clean>` function, *None* if the unit is not found.
 
-Doesn't raise any exceptions.
+Does not raise any exceptions.
 
 kill - clean unit queue and terminate current action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Cleans the unit action queue and terminates the current action running if it
-already has been started.
+has already been started.
 
 .. code-block:: python
 
@@ -583,9 +581,9 @@ params:
 * **unit_id** :ref:`unit<unit>` id (full)
 
 Returns queue clean result in the same dict format as UC API
-:ref:`kill<uc_kill>` function, *None* if unit is not found.
+:ref:`kill<uc_kill>` function, *None* if the unit is not found.
 
-Doesn't raise any exceptions.
+Does not raise any exceptions.
 
 sensor_status - get sensor status
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -598,7 +596,7 @@ params:
 
 * **sensor_id** :ref:`sensor<sensor>` id (full)
 
-Returns status (integer) of sensor, *None* if sensor is not found.
+Returns status (integer) of sensor, *None* if the sensor is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the sensor is not found.
@@ -614,8 +612,8 @@ params:
 
 * **sensor_id** :ref:`sensor<sensor>` id (full)
 
-Returns value (float if the value is numeric) of sensor state, *None* if sensor
-is not found. If the value is *null*, returns an empty string.
+Returns value (float if the value is numeric) of sensor state, *None* if the
+sensor is not found. If the value is *null*, returns an empty string.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the sensor is not found.
@@ -729,7 +727,7 @@ params:
 * **text** email text
 * **rcp** recipient or array of the recipients
 
-The function use **[mailer]** section of the :ref:`LM PLC
+The function uses **[mailer]** section of the :ref:`LM PLC
 configuration<lm_ini>` to get sender address and list of the recipients (if not
 specified).
 

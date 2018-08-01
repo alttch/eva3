@@ -9,15 +9,14 @@ If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
 All functions can be called using GET and POST methods. When POST method is
-being used, the parameters can be passed to functions eitner as www-form or as
-JSON.
+used, the parameters can be passed to functions either as www-form or as JSON.
 
 .. note::
 
     Object creation and modification functions don't save configurations
     automatically unless you specify **save** parameter in API request. The
-    system is designed to work in this way to let you discard the changes in
-    case of the serious problems by killing the controller process.
+    system is designed to work this way to let you discard the changes in case
+    of serious problems by killing the controller process.
 
     If you need to save any changes made without this parameter, restart the
     controller gracefully or use :doc:`/sys_api` **save** function.
@@ -169,18 +168,18 @@ Errors:
 * **404 Not Found** unit doesn't exist, or the key has no access to the unit
 
 In case the parameter **w** is not present or action is not terminated in the
-specified wait time, it will continue running, and it's status may be checked
-in with assigned uuid. If the action is terminated, **out** and **err** will
-have not null values and the process exit code will be available at
-**exitcode**.  Additionally, **time** will be supplemented by *completed*,
-*failed* or *terminated*.
+specified wait time, it will continue running, and its status may be checked in
+with assigned uuid. If the action is terminated, **out** and **err** will have
+not null values and the process exit code will be available at **exitcode**.
+Additionally, **time** will be supplemented by *completed*, *failed* or
+*terminated*.
 
 .. _uc_action_toggle:
 
 action_toggle - simple unit control
 -----------------------------------
 
-Create unit control action to switch it's status between 0 and 1. Useful for the
+Create unit control action to switch its status between 0 and 1. Useful for
 simple units.
 
 Parameters:
@@ -198,7 +197,7 @@ optionally:
   specified number of seconds
 * **q** timeout (sec) for action processing in the public queue
 
-Returns and behaviour:
+Returns and behavior:
 
 Same as :ref:`action<uc_action>`
 
@@ -212,7 +211,7 @@ Errors:
 result - get action status
 --------------------------
 
-Checks the result of the action by it's UUID or returns the actions for the
+Checks the result of the action by its UUID or returns the actions for the
 specified unit.
 
 Parameters:
@@ -259,7 +258,7 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** item or action with the specified UUID doesn't exist (or
-  already compeleted), or the key has no access to it
+  already completed), or the key has no access to it
 
 .. _uc_q_clean:
 
@@ -273,7 +272,7 @@ Parameters:
 * **k** valid API key
 * **i** unit id
 
-Returns JSON dict result="OK", if queue is cleaned.
+Returns JSON dict result="OK", if the queue is cleaned.
 
 Errors:
 
@@ -346,8 +345,9 @@ Errors:
 update - set item status
 ------------------------
 
-Updates the status and value of the :doc:`item</items>`. This is one of the ways
-of the passive state update, for example with the use of the external controller
+Updates the status and value of the :doc:`item</items>`. This is one of the
+ways of passive state update, for example with the use of an external
+controller
 
 Parameters:
 
@@ -368,7 +368,7 @@ Errors:
 groups - get item group list
 ----------------------------
 
-Get the list of the item groups. Useful i.e. for the custom interfaces.
+Get the list of item groups. Useful e.g. for custom interfaces.
 
 Parameters:
 
@@ -446,7 +446,7 @@ Errors:
 save_config - save item configuration on disk
 ---------------------------------------------
 
-Saves item configuration on disk (even if it wasn't changed)
+Saves item configuration on disk (even if it hasn't been changed)
 
 Parameters:
 
@@ -514,9 +514,9 @@ Parameters:
 optionally:
 
 * **virtual=1** unit is created as :doc:`virtual</virtual>`
-* **save=1** save unit configuration on the disk immediately after creation
+* **save=1** save unit configuration on disk immediately after creation
 
-Returns result="OK" if the unit is created, or result="ERROR", if the error
+Returns result="OK" if the unit is created, or result="ERROR", if an error
 occurred.
 
 Errors:
@@ -539,9 +539,9 @@ Parameters:
 optionally:
 
 * **virtual=1** sensor is created as :doc:`virtual</virtual>`
-* **save=1** save sensor configuration on the disk immediately after creation
+* **save=1** save sensor configuration on disk immediately after creation
 
-Returns result="OK" if the sensor is created, or result="ERROR", if the error
+Returns result="OK" if the sensor is created, or result="ERROR", if an error
 occurred.
 
 Errors:
@@ -564,10 +564,10 @@ Parameters:
 optionally:
 
 * **virtual=1** multiupdate is created as :doc:`virtual</virtual>`
-* **save=1** save multiupdate configuration on the disk immediately after
+* **save=1** save multiupdate configuration on disk immediately after
   creation
 
-Returns result="OK" if the multiupdate is created, or result="ERROR", if the
+Returns result="OK" if the multiupdate is created, or result="ERROR", if an
 error occurred.
 
 Errors:
@@ -590,9 +590,9 @@ Parameters:
 
 optionally:
 
-* **save=1** save item configuration on the disk immediately after creation
+* **save=1** save item configuration on disk immediately after creation
 
-Returns result="OK" if the item is cloned, or result="ERROR", if the error
+Returns result="OK" if the item is cloned, or result="ERROR", if an error
 occurred.
 
 Errors:
@@ -604,7 +604,7 @@ Errors:
 clone_group - clone all items in the group
 ------------------------------------------
 
-Creates a copy of the all items from the group.
+Creates a copy of all items from the group.
 
 Parameters:
 
@@ -616,10 +616,10 @@ Parameters:
 
 optionally:
 
-* **save=1** save cloned items configurations on the disk immediately after
+* **save=1** save cloned items configurations on disk immediately after
   creation.
 
-Returns result="OK" if the items were cloned, or result="ERROR", if error
+Returns result="OK" if the items were cloned, or result="ERROR", if an error
 occurred. Only items with type unit and sensor are cloned.
 
 Errors:
@@ -640,13 +640,13 @@ Parameters:
 * **i** item id
 * **g** item group (either id or group must be specified)
 
-Returns result="OK" if the item/group is deleted, or result="ERROR", if error
-occurred.
+Returns result="OK" if the item/group is deleted, or result="ERROR", if an
+error occurred.
 
 Item configuration may be immediately deleted from the disk, if there is
 *db_update=instant* set in :ref:`controller configuration<uc_ini>`, at the
-moment of the shutdown, if there is *db_update=on_exit*, or when
-calling :doc:`/sys_api` save (or save in :doc:`UC EI<uc_ei>`), if there is
+moment of shutdown, if there is *db_update=on_exit*, or when calling
+:doc:`/sys_api` save (or save in :doc:`UC EI<uc_ei>`), if there is
 *db_update=manual*.
 
 If configuration is not deleted by either of these, you should delete it
@@ -665,10 +665,10 @@ UDP API
 -------
 
 UDP API enables to call API action and update functions by sending a simple UDP
-packets.
+packet.
 
 As there is no feedback in UDP, it is not recommended to use UDP API in cases
-where reliability is cricial, but its usability for programmable
+where reliability is critical, but its usability for programmable
 microcontrollers sometimes takes advantage.
 
 To update the status of the item send the following UDP packet to API port:
@@ -694,5 +694,5 @@ or
 
     unit1 1 None 50
 
-will run the action for unit1 for changing it's status to 1, without changing
+will run the action for unit1 for changing its status to 1, without changing
 the value, with priority 50.

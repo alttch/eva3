@@ -9,15 +9,14 @@ If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
 All functions can be called using GET and POST methods. When POST method is
-being used, the parameters can be passed to functions eitner as www-form or as
-JSON.
+used, the parameters can be passed to functions either as www-form or as JSON.
 
 .. note::
 
     Object creation and modification functions don't save configurations
     automatically unless you specify **save** parameter in API request. The
-    system is designed to work in this way to let you discard the changes in
-    case of the serious problems by killing the controller process.
+    system is designed to work this way to let you discard the changes in case
+    of serious problems by killing the controller process.
 
     If you need to save any changes made without this parameter, restart the
     controller gracefully or use :doc:`/sys_api` **save** function.
@@ -184,7 +183,7 @@ Errors:
 groups - get item group list
 ----------------------------
 
-Get the list of the item groups. Useful i.e. for the custom interfaces.
+Get the list of the item groups. Useful e.g. for custom interfaces.
 
 Parameters:
 
@@ -372,11 +371,11 @@ optionally:
 * **save=1** save connected controller configuration on the disk immediately
   after creation
 
-Returns result="OK" if the controller is connected, or result="ERROR", if the
+Returns result="OK" if the controller is connected, or result="ERROR", if an
 error occurred.
 
-The remote controller id is being obtained and set automatically according to
-its hostname or **name** field in the controller configuration. The remote
+The remote controller id is obtained and set automatically according to its
+hostname or **name** field in the controller configuration. The remote
 controller id can't be changed.
 
 Errors:
@@ -395,7 +394,7 @@ Parameters:
 * **k** masterkey
 * **i** controller id
 
-Returns result="OK" if the controller is disconnected, or result="ERROR", if
+Returns result="OK" if the controller is disconnected, or result="ERROR", if an
 error occurred.
 
 Errors:
@@ -416,8 +415,8 @@ Parameters:
 * **k** masterkey
 * **i** controller id
 
-Returns result="OK" if the controller is deleted, or result="ERROR", if error
-occurred.
+Returns result="OK" if the controller is deleted, or result="ERROR", if an
+error occurred.
 
 Errors:
 

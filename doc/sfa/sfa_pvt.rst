@@ -1,18 +1,18 @@
 SFA PVT
 =======
 
-While developing the interfaces for :doc:`/sfa/sfa` you faces the issue of the
+While developing the interfaces for :doc:`/sfa/sfa` you face the issue of the
 private data protection: the UI is loaded with the javascript application that
 runs in the browser and requires authentication to access the
-:doc:`/sfa/sfa_api` functions. However, the application may contain the
-components which an unauthorized user should not see: plans of the building,
-security cam footages, even the list of the managed :doc:`items</items>` may be
+:doc:`/sfa/sfa_api` functions. However, the application may contain components
+which an unauthorized user should not see: plans of the building, security cam
+footages, even the list of the managed :doc:`items</items>` may be
 confidential.
 
 One way to solve this problem is to use the frontend server for such content.
 However, frontend is not always necessary and, in our case, the content
-structure often requires the access rights to the certain parts to be set on
-the front-end. Therefore, it may involve duplicating user base and difficult
+structure often requires the access rights to certain parts to be set on the
+front-end. Therefore, it may involve duplicating user base and difficult
 integration of the additional authentication methods.
 
 In most cases, it would be sufficient to delineate access to such content with
@@ -30,11 +30,11 @@ i.e.:
 
     pvt = map.jpg, c1/#, +/content.js
 
-will give the key access to *map.jpg*, all files and subfoldres of *c1* folder
+will give the key access to *map.jpg*, all files and subfolders of *c1* folder
 as well as *content.js* file in any first-level folder.
 
-If the client has been authenticated in advance, the future requests do not
-require *k=APIKEY* param.
+If the client is authenticated in advance, the future requests do not require
+*k=APIKEY* param.
 
 .. contents::
 
@@ -109,8 +109,8 @@ interfaces - receiving the newest file from the specified folder.
     http(s)://<IP_address_SFA:Port>/pvt?k=APIKEY&f=FILEMASK&c=newest
 
 Example: there is a monitoring camera that uploads a file to the folder on the
-server every 10 seconds. The uploaded files are named, i.e.  TIMESTAMP.jpg or
-ID.jpg, where ID is a number within the camera itself.
+server every 10 seconds. The uploaded files are named, i.e. TIMESTAMP.jpg or
+ID.jpg.
 
 Connect the file with these images to pvt:
 
@@ -128,7 +128,7 @@ and easily receive the newest file with the following request:
 Image Processing
 ----------------
 
-Use **ic=resize** to ask the server to preprocess the image filee. To let the
+Use **ic=resize** to ask the server to preprocess the image file. To let the
 server process images, Python PIL (`pillow <https://python-pillow.org/>_`)
 library should be installed. :doc:`EVA installer</install>` automatically
 installs the library using pip3.
@@ -136,8 +136,8 @@ installs the library using pip3.
 Please, make sure that system has at least **libjpeg-dev** and **libjpeg8-dev**
 before EVA setup, otherwise, PIL won't work with JPEG images.
 
-In case you've missed this and  server returns an error ("decoder not
-available"), reinstall pillow:
+In case you miss this and  server returns an error ("decoder not available"),
+reinstall pillow:
 
 .. code-block:: bash
 
@@ -194,7 +194,7 @@ value:
     http(s)://<IP_address_SFA:Port>/pvt?k=APIKEY&f=FILE&nocache=VALUE
 
 if you use this parameter for requests, web browser will not cache a file (if
-the random value is used). Besides, the server will set **Cache-Control**,
+random value is used). Besides, the server will set **Cache-Control**,
 **Expires** and **Pragma** headers to the values which prohibit any caching.
 
 Using frontend
