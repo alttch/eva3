@@ -16,6 +16,9 @@ Universal Controller
 * **uc-cmd** manages :doc:`/uc/uc`
 * **uc-notifier** configures UC :doc:`notification system</notifiers>`
 
+* **uc-api** direct requests to :doc:`UC API</uc/uc_api>`. Use **-y** instead
+  of **full** and **save** params.
+
 Logic Manager
 ~~~~~~~~~~~~~
 
@@ -24,11 +27,17 @@ Logic Manager
   management
 * **lm-notifier** configures LM PLC :doc:`notification system</notifiers>`
 
+* **lm-api** direct requests to :doc:`LM API</lm/lm_api>`. Use **-y** instead
+  of **full** and **save** params.
+
 SCADA Final Aggregator
 ~~~~~~~~~~~~~~~~~~~~~~
 
 * **sfa-cmd** manages :doc:`/sfa/sfa`
 * **sfa-notifier** configures SFA :doc:`notification system</notifiers>`
+
+* **sfa-api** direct requests to :doc:`SFA API</sfa/sfa_api>`. Use **-y**
+  instead of **full** and **save** params.
 
 Other
 ~~~~~
@@ -39,6 +48,15 @@ Other
 
 :doc:`Virtual item</virtual>` management is performed using **xc/evirtual**
 application.
+
+Legacy
+~~~~~~
+
+In case of significant changes in the commands or arguments, previous versions
+of command line tools are kept and moved to **legacy** folder. We strongly
+recommend using API calls only in all 3rd-party applications, but if your app
+use command line interface, you can get the previous version until the app is
+reprogrammed to use a new one.
 
 Device control apps
 -------------------
