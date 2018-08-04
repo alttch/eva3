@@ -105,36 +105,26 @@ target.
    
 Let's test the endpoint (for mqtt the system will try to publish [space]/test)
 
-    # uc-notifier test -i eva_1
-    notifier eva_1 test passed
+    # uc-notifier test eva_1
+    OK
 
 To create the new notifier configuration, run:
 
-    #uc-notifier create -i ID -p TYPE -s SPACE -t TIMEOUT ARGS -y
+    uc-notifier create [-s SPACE] [-t SEC] [-y] ID PROPS
 
 where
 
 * **ID** the unique ID of the notifier
-* **TYPE** endpoint type (http, http-post, mqtt)
-* **SPACE** notification space (optional)
-* **TIMEOUT** timeout (optional)
-* **ARGS**
-
-  * to create notifier configuration of http or http-post types, you should
-    indicate *"-u URI"* parameter.
-  * Optionally, you can immediately set *-k KEY* (optional). The key can have
-    $key_value (i.e. *$operator*) to use controller's internal key. They keys
-    are sent to the certain types of the custom endpoints allowing you to
-    authorize the sender.
-  * for mqtt endpoints: *-h MQTT_HOST*, *-P MQTT_PORT* (optional) and *-A
-    username:password* (optional).
+* **PROPS** endpoint properties, e.g. mqtt:[username:password]@host:[port]
+* **-s SPACE** notification space
+* **-t SEC** timeout (optional)
 
 Option *"-y"* enables the notification configuration right after creation (by
 default all notifiers are created as disabled)
 
-The notifier configuration params may be viewed with *list_props* and changed
-with *set_prop* notifier cli commands. To apply the changes you must restart
-the controller.
+The notifier configuration params may be viewed with *props* and changed with
+*set* notifier cli commands. To apply the changes you must restart the
+controller.
 
 Except for endpoint configuration, notifiers have some additional params:
 
@@ -145,35 +135,6 @@ Except for endpoint configuration, notifiers have some additional params:
   :ref:`MQTT<mqtt_>` notifiers if you want to collect the logs of other
   controllers and have the records available locally in SFA.
 
-Setting up MQTT QoS
-~~~~~~~~~~~~~~~~~~~
-
-You may specify different :ref:`MQTT<mqtt_>` QoS for the events with different
-subjects.
-
-To set the same QoS for all events, use command:
-
-    uc-notifier set_prop -p qos -v Q
-
-    (where Q = 0, 1 or 2)
-
-To set QoS for the specified subject, use command:
-
-    uc-notifier set_prop -p qos.<subject> -v Q
-
-i.e.
-
-    uc-notifier set_prop -p qos.log -v 0
-
-Quick facts about MQTT QoS:
-
-* **0**  the minimum system/network load but does not guarantee message
-  delivery
-* **1** guarantees message delivery
-* **2**  the maximum system/network load which provides 100% guarantee of
-  message delivery and the guarantees the particular message has been delivered
-  only once and has no duplicates.
-
 Subscribing the notifier to events
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -182,7 +143,7 @@ review all the subscriptions using "get_config" command.
 
 To subscribe notifier to the new subject, run:
 
-    uc-notifier subscribe <-p subject> [args]
+    uc-notifier subscribe <subject> <notifier_id> [args]
 
     (where subject is "state", "log" or "action")
 
@@ -190,21 +151,21 @@ When subscribing notifier to logs, you may use optional *-l LEVEL* param (10 -
 DEBUG, 20 - INFO, default, 30 - WARNING, 40 - ERROR, 50 - CRITICAL).
 
 When subscribing notifier to state changes, you may also always specify item
-types (comma separated) or use '#' for all types with *-v TYPES* param, groups
+types (comma separated) or use '#' for all types with *-v TYPE* param, groups
 with *-g GROUPS*. Optionally you may specify the particular items to subscribe
 notifier to with *-I ITEMS*.
 
 .. note::
 
-    For the each "state" subscription you must specify either types and groups
+    For the each "state" subscription you must specify either type and groups
     or item IDs.
 
 Example:
 
-    uc-notifier subscribe -i test2 -p state -v '#' -g 'hall/#'
+    uc-notifier subscribe state test1 -v '#' -g 'hall/#'
 
-subscribes the notifier to the events of the status change of all the items in
-the 'hall' group subgroups.
+subscribes the notifier *test1* to the events of the status change of all the
+items in the *hall* group subgroups.
 
 Subscription to "action" requires the params similar to "state". Additionally,
 *-a '#'* should be specified to subscribe to all the action statuses or *-a
@@ -216,14 +177,14 @@ all failed actions:
 
 .. code-block:: bash
 
-    uc-notifier subscribe -i test2 -p action -v '#' -g '#' -a dead,refused,canceled,ignored,failed,terminated
+    uc-notifier subscribe action test2 -v '#' -g '#' -a dead,refused,canceled,ignored,failed,terminated
 
 Once created, the subscription can't be changed, but new subscription to the
 same subject replaces the configuration of the previous one.
 
 To unsubscribe the notifier from the subject, run:
 
-    uc-notifier unsubscribe [-p subject]
+    uc-notifier unsubscribe [subject] <notifier_id>
 
 if the subject is not specified, the notifier will be unsubscribed from all
 notification subjects.
@@ -283,7 +244,51 @@ collecting the reports from MQTT server (space/log), pass them further via the
 local notification system and have them available via API. In order to enable
 this function, set param *collect_logs* to true in the notifier configuration:
 
-    sfa-notifier set_prop -i eva_1 -p collect_logs -v true
+    sfa-notifier set eva_1 collect_logs true
+
+Setting up MQTT SSL
+~~~~~~~~~~~~~~~~~~~
+
+If MQTT server requires SSL connection, the following notifier properties
+should be set:
+
+* **ca_certs** CA certificates file (e.g. for Debian/Ubuntu:
+  */etc/ssl/certs/ca-certificates.crt*), required. SSL client connection is
+  enabled as soon as this property is set.
+
+* **certfile** SSL certificate file, if required for authentication
+
+* **keyfile** SSL key file for SSL cert
+
+Setting up MQTT QoS
+~~~~~~~~~~~~~~~~~~~
+
+You may specify different :ref:`MQTT<mqtt_>` QoS for the events with different
+subjects.
+
+To set the same QoS for all events, use command:
+
+    uc-notifier <notifier_id> set qos <Q>
+
+    (where Q = 0, 1 or 2)
+
+To set QoS for the specified subject, use command:
+
+    uc-notifier <notifier_id> set qos.<subject> <Q>
+
+e.g.
+
+    uc-notifier eva_1 set qos.log 0
+
+Quick facts about MQTT QoS:
+
+* **0**  the minimum system/network load but does not guarantee message
+  delivery
+* **1** guarantees message delivery
+* **2**  the maximum system/network load which provides 100% guarantee of
+  message delivery and the guarantees the particular message has been delivered
+  only once and has no duplicates.
+
 
 Use MQTT for updating the item states
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

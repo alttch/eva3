@@ -131,7 +131,7 @@ subsystem, use SYS API on the respective address/port.
 
 Parameters:
 
-* **k** API key with "sysfunc=yes" permissions
+* **k** API key with "allow=lock" permissions
 * **l** lock ID (arbitrary)
 * **t** maximum timeout (seconds) to get token (optionally)
 * **e** time after which token is automatically unlocked (if absent, token may
@@ -153,7 +153,7 @@ Releases the previously requested lock token.
 
 Parameters:
 
-* **k** API key with "sysfunc=yes" permissions
+* **k** API key with "allow=lock" permissions
 * **l** lock token ID
 
 returns JSON dict { "result" : "OK" }. In case token is already
