@@ -338,8 +338,45 @@ To let unit responding to MQTT control messages, set its configuration param
 **mqtt_control** to the local MQTT ID. You may specify QoS as well via
 semicolon, similarly as for **mqtt_update**.
 
-HTTP/POST (http-post)
----------------------
+JSON
+~~~~
+
+JSON notifier type is equal to HTTP/POST, the only one difference is that data
+is sent fully in JSON format:
+
+* **k** notification key the remote app may use to authorize the sender
+* **subject** event subject
+* **data** event data array
+
+Your application must respond with JSON if the event has been processed
+successfully:
+
+.. code-block:: json
+
+    { "result" : "OK" }
+
+or if your app failed to process it:
+
+.. code-block:: json
+
+    { "result" : "ERROR" }
+
+The event *data* field is always an array and may contain either one event or
+several ones.
+
+When EVA controllers test remote http-post endpoint, they send notifications
+with subject="test" and the remote app should respond with { "result": "OK" }.
+
+As HTTP/POST notifier type is no longer supported, we recommend creating web
+hooks only with JSON notifier type.
+
+HTTP/POST (http-post, deprecated)
+---------------------------------
+
+.. note::
+
+    This notifier type is deprecated and will be removed in the future
+    versions. Please switch all your existing web hooks to JSON notifiers.
 
 HTTP notifications can be transferred to servers which, for some reasons,
 cannot work with MQTT in real time, e.g. servers containing third-party or your
@@ -372,8 +409,13 @@ several ones.
 When EVA controllers test remote http-post endpoint, they send notifications
 with subject="test" and the remote app should respond with { "result": "OK" }.
 
-HTTP/GET (http)
-~~~~~~~~~~~~~~~
+HTTP/GET (http, deprecated)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. note::
+
+    This notifier type is deprecated and will be removed in the future
+    versions. Please switch all your existing web hooks to JSON notifiers.
 
 As with http-post, event notification can be transferred to the remote apps
 using HTTP/GET method. In this case only one event notification can be sent at

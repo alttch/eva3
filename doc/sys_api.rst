@@ -314,7 +314,63 @@ Parameters:
 
 * **k** API key with "sysfunc=yes" permissions
 
-returns JSON dict { "result" type: "OK" }
+returns JSON dict { "result": "OK" }
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+Notifier management
+-------------------
+
+These functions allow you to manage :doc:`notifiers<notifiers>` while EVA
+component is running. All changes are applied temporarly and are discarded
+after controller restart.
+
+.. _s_notifiers:
+
+notifiers - get list of notifiers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Get the list of configured notifiers as well as their configuration.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+
+returns JSON array of the notifiers available on the controller.
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+enable_notifier
+~~~~~~~~~~~~~~~
+
+Enables selected notifier
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **i** notifier ID
+
+returns JSON dict { "result": "OK" }
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+disable_notifier
+~~~~~~~~~~~~~~~~
+
+Disables selected notifier
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **i** notifier ID
+
+returns JSON dict { "result": "OK" }
 
 Errors:
 
