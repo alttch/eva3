@@ -136,6 +136,21 @@ Upgrading
 
     The system downgrade is officially not supported and not recommended.
 
+Watchdog
+--------
+
+Watchdog process is started automatically for each EVA controller and tests it
+with the specified interval. Controller should respond to API call **test**
+within the specified API timeout or it is forcibly restarted.
+
+Watchdog configuration is located in file *etc/watchdog* and has the following
+params:
+
+* **WATCHDOG_INTERVAL** checking frequency (default: 30 sec)
+* **WATCHDOG_MAX_TIMEOUT** maximum API timeout (default: 5 sec)
+* **WATCHDOG_DUMP** if the controller is not responding, try to create crash
+  dump before restarting (default: no).
+
 How to assign IDs to items
 --------------------------
 

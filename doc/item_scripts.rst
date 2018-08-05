@@ -25,6 +25,7 @@ Script or program always gets the environment variables:
   :ref:`lm_cvars<lm_cvars>`)
 * **PATH** variable with additional EVA bin and xbin subfolders
 * **EVA_ITEM_ID** item ID which the script is executed for
+* **EVA_ITEM_OID** item OID (**type:group/id**)
 * **EVA_ITEM_TYPE** item type: unit, sensor or lvar, (lvars can also be
   updated with scripts)
 * **EVA_ITEM_GROUP** full item group

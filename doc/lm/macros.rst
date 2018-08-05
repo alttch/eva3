@@ -461,6 +461,39 @@ unit has no action running, *None* if the unit is not found.
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
+history - get lvar state history
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Returns list or dict with state history records for the specified lvar(s).
+
+.. code-block:: python
+
+    history(lvar_id, t_start=None, t_end=None, limit=None, prop=None,
+        time_format=None, fill=None, fmt=None, db=None):
+
+params:
+
+* **lvar_id** lvar ID, or multiple IDs, comma separated
+* **t_start** time frame start, ISO or Unix timestamp
+* **t_end** time frame end, optional (default: current time), ISO or Unix
+  timestamp
+* **limit** limit history records (optional)
+* **prop** item property (**status** or **value**)
+* **time_format** time format (**iso** or **raw** for Unix timestamp)
+* **fill** fill frame with the specified interval (e.g. *1T* - 1 minute, *2H* -
+  2 hours etc.), optional
+* **fmt** output format, **'list'** (default) or **'dict'**
+* **db** :doc:`notifier</notifiers>` ID which keeps history for the specified
+  item(s) (default: **db_1**)
+
+To get state history for the multiple items:
+
+* **fill** param is required
+* **fmt** should be specified as **list**
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the lvar or history database is not found.
+
 action, start, stop - start unit action
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

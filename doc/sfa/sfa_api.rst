@@ -180,6 +180,42 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** item doesn't exist, or the key has no access to the item
 
+.. _sfa_state_history:
+
+state_history - get item state history
+--------------------------------------
+
+State history of the one :doc:`item</items>` or several items of the specified
+type can be obtained using **state_history** command.
+
+Parameters:
+
+* **k** valid API key
+* **i** item ID, or multiple IDs, comma separated
+* **a** :doc:`notifier</notifiers>` ID which keeps history for the specified
+  item(s) (default: **db_1**)
+* **s** time frame start, ISO or Unix timestamp
+* **e** time frame end, optional (default: current time), ISO or Unix timestamp
+* **l** limit history records (optional)
+* **x** item property (**status** or **value**)
+* **t** time format (**iso** or **raw** for Unix timestamp)
+* **w** fill frame with the specified interval (e.g. *1T* - 1 minute, *2H* - 2
+  hours etc.), optional
+* **g** output format, **list** (default) or **dict**
+
+Returns state history for the chosen item(s) in the specified format.
+
+To get state history for the multiple items:
+
+* **w** param is required
+* **g** should be specified as **list**
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** item doesn't exist, the key has no access to the item, or
+  the history database is not found
+
 groups - get item group list
 ----------------------------
 

@@ -256,6 +256,25 @@ You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
 case the function returns the array of all item with oids matching the
 specified mask.
 
+eva_sfa_state_history
+~~~~~~~~~~~~~~~~~~~~~
+
+Returns state history for the chosen item(s)
+
+.. code-block:: javascript
+
+    eva_sfa_state_history(oid, params, cb_success, cb_error)
+
+where:
+
+* **oid** :doc:`item</items>` id in the following format:
+  **type:group/item_id**, i.e. *sensor:env/temperature/temp1*, or multiple
+  items comma separated
+* **params** dict with history formatting params equal to SFA API function
+  :ref:`state_history<sfa_state_history>`.
+
+.. code-block:: javascript
+
 eva_sfa_register_update_state
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

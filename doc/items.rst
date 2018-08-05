@@ -188,7 +188,9 @@ Unit parameters
   interfaces.  Labels may be changed via :doc:`/uc/uc_api` or
   :doc:`uc-cmd</cli>`, in the following way: status:number = label, e.g.
   "status:0" = "stop". By default the unit has labels "status:0" = "OFF",
-  "status:1" = "ON".
+  "status:1" = "ON". Status labels can be used as **status** param to execute
+  unit actions, in this case controllers checks the status match to the
+  specified label (case insensitive).
 
 * **term_kill_interval** integer, difference (in seconds) between stopping and
   forceful stopping the action or update script. Tip: sometimes it is useful to

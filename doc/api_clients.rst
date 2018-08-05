@@ -148,6 +148,8 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
     result_bad_data = 9
     # action failed (e.g., when calling  SYS API cmd or UC API action functions)
     result_func_failed = 10
+    # the function is called with invalid params
+    result_invalid_params = 11
 
 API client for PHP
 ------------------
@@ -280,4 +282,6 @@ Result codes are stored in module variables:
     $result_bad_data = 9;
     # action failed (e.g., when calling  SYS API cmd or UC API action functions)
     $result_func_failed = 10;
+    # the function is called with invalid params
+    $result_invalid_params = 11;
     ?>
