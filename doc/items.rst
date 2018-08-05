@@ -452,12 +452,12 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except
 
 .. _device:
 
-Devices
--------
+Device
+------
 
 Multiple cvars, units, sensors and multiupdates can be merged in logical groups
 called **devices**. It's completely up to you how to merge items into device,
-but it's recommended to keep them in one or several separate groups.
+but it's recommended to keep them in one or several separate item groups.
 
 Device templates are stored in *runtime/tpl* folder in JSON format.
 
@@ -471,7 +471,7 @@ Device management requires master key or a key with *allow=device* permission.
 Device example
 ~~~~~~~~~~~~~~
 
-Let's imagine we have some hardware device, which have 1 relay and 2 sensors.
+Let's imagine we have some hardware device, which has 1 relay and 2 sensors.
 We have a lot of devices like this and we want to create them using template.
 
 Create one instance of device in :doc:`/uc/uc` defining all its items:
@@ -529,6 +529,12 @@ Configurations of the newly created items of *device5* are exact copies of the
 items of *device1*. The only configuration difference are the params where
 we've put template variables instead of part or full param value (in our
 example: *{{ ID }}*).
+
+.. note::
+
+    Device templates are actually `jinja2 <http://jinja.pocoo.org/>`_
+    templates, so you can use any jinja2 syntax in them (loops, conditions and
+    etc.)
 
 Device limitations
 ~~~~~~~~~~~~~~~~~~
