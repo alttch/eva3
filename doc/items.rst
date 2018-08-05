@@ -177,6 +177,15 @@ Unit parameters
   indicated period of time (in seconds) after the last action performed for
   this unit. Set 0 to disable this feature. Minimum step is 0.1 sec.
 
+* **location** you may specify units's physical location, as GPS coordinates or
+  in custom format. To specify GPS coordinates, set the paramter to value
+  *longitude:latitude* or *longitude:latitude:altitude*. If you choose to set
+  location as GPS or some other coords, full unit state is appended with a
+  virtual parameters **loc_x**, **loc_y** (and if altitude is specified -
+  **loc_z**). These virtual parameters are parsed automatically from location
+  and can be used later e.g. to filter units by location or to put a units on
+  geographical map.
+
 * **mqtt_control = "notifier:qos"** item gets actions through notifications
   from a specified :ref:`MQTT server<mqtt_>`, for example "eva_1:2",
   actions should be sent to path/to/unit/control (e.g.
