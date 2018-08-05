@@ -15,6 +15,7 @@ Universal Controller
 
 * **uc-cmd** manages :doc:`/uc/uc`
 * **uc-notifier** configures UC :doc:`notification system</notifiers>`
+* **uc-tpl** generate and validate :ref:`device templates<device>`
 
 * **uc-api** direct requests to :doc:`UC API</uc/uc_api>`. Use **-y** instead
   of **full** and **save** params.

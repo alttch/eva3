@@ -435,3 +435,22 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except
   the passive state updates are currently allowed for all included items (i.e.
   if some of them run actions at this moment and have update_if_action=False,
   multiupdate will be not executed)
+
+.. _device:
+
+Devices
+-------
+
+Multiple units, sensors and multiupdates can be merged in logical groups called
+**devices**. It's completely up to you how to merge items into devices, but
+it's recommended to keep them in one or several separate groups.
+
+Device templates are stored in *runtime/tpl* folder in JSON format.
+
+You can **uc-tpl** :doc:`command line</cli>` tool to create device templates
+using the existing config and **uc-cmd** or ref:`device
+management<create_device>` UC API functions to create, update and destroy
+devices.
+
+Device management requires master key or a key with *allow=device* permission.
+
