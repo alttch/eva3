@@ -389,8 +389,8 @@ config and the item is not found.
 
 .. _m_value:
 
-value - get item status
-~~~~~~~~~~~~~~~~~~~~~~~
+value - get item value
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
 
@@ -691,6 +691,86 @@ sensor is not found. If the value is *null*, returns an empty string.
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the sensor is not found.
 
+Rule management functions
+-------------------------
+
+.. _m_set_rule_prop:
+
+set_rule_prop - set rule parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    set_rule_prop(rule_id, prop, value=None, save=False)
+
+Allows to set configuration parameters of the rule.
+
+Parameters:
+
+* **rule_id** rule id
+* **prop** rule configuration param
+* **value** param value
+
+optionally:
+
+* **save** If *True*, save unit configuration on disk immediately after
+  creation
+
+Device management functions
+---------------------------
+
+Macros can create, update and destroy :ref:`devices<device>` with pre-defined
+device templates.
+
+.. _m_create_device:
+
+create_device - create device items
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    create_device(controller_id, device_tpl, cfg=None, save=None):
+
+params:
+
+* **controller_id** connected :doc:`/uc/uc` ID
+* **device_tpl** device template, stored on the connected controller in
+  *runtime/tpl*
+* **cfg** configuration params
+* **save** If *True*, save items configuration on disk immediately after operation
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the access error has been occured.
+
+.. _m_update_device:
+
+update_device - update device items
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Works similarly to :ref:`m_create_device` function but doesn't create new items,
+updating the item configuration of the existing ones.
+
+.. code-block:: python
+
+    update_device(controller_id, device_tpl, cfg=None, save=None):
+
+Parameters and return data are the same.
+
+.. _m_destroy_device:
+
+destroy_device - destroy device items
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Works in opposite way to :ref:`m_create_device` function, destroying all items
+specified in the template.
+
+.. code-block:: python
+
+    destroy_device(controller_id, device_tpl, cfg=None)
+
+Parameters and return data are the same except the function doesn't have
+**save** param.
+
 File management functions
 -------------------------
 
@@ -775,6 +855,36 @@ config and the file can not be opened.
 
 System functions
 ----------------
+
+.. _m_alias:
+
+alias - create object alias
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The functions allows to create object alias, e.g. make a short alias for a
+long-named function.
+
+.. code-block:: python
+
+    alias(alias_obj, src_obj)
+
+params:
+
+* **alias_obj** alias object
+* **src_obj** source object
+
+Returns *True* if alias is set, *False* if not (e.g. src_obj is not found).
+
+Usage example: you have a function *very_long_function* and want to make *f1*
+alias for it. All you need is to put in **xc/lm/common.py** the following code:
+
+.. code-block:: python
+
+    alias('f1', 'very_long_function')
+
+The difference between Python code *f1=very_long_function* is the such code
+will throw exception if *very_long_function* is not found, while **alias**
+macro function will pass an error and return *False*.
 
 .. _m_sleep:
 
