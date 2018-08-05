@@ -54,8 +54,9 @@ display the changes made. Use reload button or refresh the page in browser.
     :scale: 70%
     :alt: LVars page
 
-Use **SET** button to set status and value of the variable, **RESET** button - to
-reset state if the variable is used as timer (sets its status and value to 1).
+Use **SET** button to set status and value of the variable, **RESET** button -
+to reset state if the variable is used as timer (sets its status and value to
+1).
 
 Macros
 ------
@@ -100,5 +101,5 @@ Disabling the interface
 -----------------------
 
 For a security reason, it may be a good idea to disable the interface after the
-initial configuration and system debug. To do this, just rename **lm-ei**
-folder, i.e. to **lm-ei.disabled**.
+initial configuration and system debug. To do this, set *ei_enabled = no* in
+**webapi** section of :ref:`lm.ini<lm_ini>` and restart the controller.
