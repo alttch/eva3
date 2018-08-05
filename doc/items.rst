@@ -442,8 +442,8 @@ Devices
 -------
 
 Multiple units, sensors and multiupdates can be merged in logical groups called
-**devices**. It's completely up to you how to merge items into devices, but
-it's recommended to keep them in one or several separate groups.
+**devices**. It's completely up to you how to merge items into device, but it's
+recommended to keep them in one or several separate groups.
 
 Device templates are stored in *runtime/tpl* folder in JSON format.
 
