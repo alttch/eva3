@@ -29,6 +29,11 @@ Functions passed to the remote controllers
 The following functions are passed to the :ref:`connected remote
 controllers<sfa_remote_c>` and return the result as-is.
 
+.. note::
+
+    Function **result** is used to return both unit action results and macro
+    execution results.
+
 Units control
 ~~~~~~~~~~~~~
 
@@ -36,7 +41,7 @@ Units control
 * :ref:`action_toggle<uc_action_toggle>` - UC API call for :ref:`unit<unit>`
   control actions to toggle status
 * :ref:`result<uc_result>` - UC API call to get action result by unit id or
-  uuid
+  uuid.
 * :ref:`terminate<uc_terminate>` - UC API call to terminate current
   :ref:`unit<unit>` action
 * :ref:`q_clean<uc_q_clean>` - UC API call to clean :ref:`unit<unit>` action
@@ -64,6 +69,8 @@ Macros control
 
 * :ref:`run<lm_run>` - LM API call to execute :doc:`logic control
   macro</lm/macros>`
+* :ref:`result<lm_result>` - LM API call to get macro execution result by macro
+  oid (**lmacro/group/id**) or uuid
 
 Decision rules control
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -158,6 +165,10 @@ Parameters:
   example group1/#, group1/+/lamps)
   virtual, status_labels and action_enabled for unit)
 
+optionally:
+
+* **full=1** get full item state info (description, action labels and etc.)
+
 Returns item status in JSON dict or array of dicts:
 
 .. code-block:: json
@@ -226,6 +237,10 @@ Parameters:
 * **k** valid API key
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
   *LV* for :ref:`lvar<lvar>`), required
+
+optionally:
+
+* **g** filter group list with :ref:`MQTT-style<mqtt_>` wildcards.
 
 Returns JSON array:
 
