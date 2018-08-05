@@ -441,9 +441,9 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except
 Devices
 -------
 
-Multiple units, sensors and multiupdates can be merged in logical groups called
-**devices**. It's completely up to you how to merge items into device, but it's
-recommended to keep them in one or several separate groups.
+Multiple cvars, units, sensors and multiupdates can be merged in logical groups
+called **devices**. It's completely up to you how to merge items into device,
+but it's recommended to keep them in one or several separate groups.
 
 Device templates are stored in *runtime/tpl* folder in JSON format.
 
@@ -453,4 +453,76 @@ management<create_device>` UC API functions to create, update and destroy
 devices.
 
 Device management requires master key or a key with *allow=device* permission.
+
+Device example
+~~~~~~~~~~~~~~
+
+Let's imagine we have some hardware device, which have 1 relay and 2 sensors.
+We have a lot of devices like this and we want to create them using template.
+
+Create one instance of device in :doc:`/uc/uc` defining all its items:
+
+* *sensor:device1/device1.sensor1*
+* *sensor:device1/device1.sensor2*
+* *unit:device1/device1.relay1*
+
+Configure all defined items, then run:
+
+.. code-block:: bash
+
+    uc-tpl generate -i sensor:device1/device1.sensor1,sensor:device1/device1.sensor2,unit:device1/device1.relay1
+
+This will output device JSON template. Use *-t* param to output template to
+file or copy/paste it from the screen. You can use *-c* param to ask the tool
+automatically prepare template variables, but in our example it will just
+replace all *1* to *{{ ID }}*. We don't want it to be done this way because we
+have *sensor1* and *relay1* items, so let's edit the template manually:
+
+.. code-block:: json
+
+    {
+        "sensors": [
+            {
+                "group": "device{{ ID }}",
+                "id": "device{{ ID }}.sensor1"
+            },
+            {
+                "group": "device{{ ID }}",
+                "id": "device{{ ID }}.sensor2"
+            }
+        ],
+        "units": [
+            {
+                "group": "device{{ ID }}",
+                "id": "device{{ ID }}.relay1"
+            }
+        ]
+    }
+
+(template will also contain items' configurations which is omitted in the
+example)
+
+Save the final template as *runtime/tpl/mydevice.json* folder, and then
+
+.. code-block:: bash
+
+    # execute this command to create new device "device5"
+    uc-cmd device create mydevice -C ID=5 -y
+    # execute this command to destroy "device5"
+    uc-cmd device destroy mydevice -C ID=5
+
+Configurations of the newly created items of *device5* are exact copies of the
+items of *device1*. The only configuration difference are the params where
+we've put template variables instead of part or full param value (in our
+example: *{{ ID }}*).
+
+Device limitations
+~~~~~~~~~~~~~~~~~~
+
+* :ref:`Custom variables<uc_cvars>`, :ref:`units<unit>`, :ref:`sensors<sensor>`
+  and :ref:`multiupdates<multiupdate>` can be part of the device
+
+* :ref:`LVars<lvar>` can not be part of the device and :doc:`/lm/lm` doesn't
+  have any device management functions, but devices on the connected UCs can be
+  created from :ref:`logic control macros<m_create_device>`.
 

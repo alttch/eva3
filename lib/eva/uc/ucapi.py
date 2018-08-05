@@ -1061,12 +1061,15 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         config = {}
         if not c:
             return http_api_result_error()
-        try:
-            for i in c.split(','):
-                name, value = i.split('=')
-                config[name] = value
-        except:
-            raise cp_api_error()
+        if isinstance(c, dict):
+            config = c
+        else:
+            try:
+                for i in c.split(','):
+                    name, value = i.split('=')
+                    config[name] = value
+            except:
+                raise cp_api_error()
         return http_api_result_ok() if super().create_device(
             k=k, tpl_config=config, device_tpl=t,
             save=save) else http_api_result_error()
@@ -1075,12 +1078,15 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         config = {}
         if not c:
             return http_api_result_error()
-        try:
-            for i in c.split(','):
-                name, value = i.split('=')
-                config[name] = value
-        except:
-            raise cp_api_error()
+        if isinstance(c, dict):
+            config = c
+        else:
+            try:
+                for i in c.split(','):
+                    name, value = i.split('=')
+                    config[name] = value
+            except:
+                raise cp_api_error()
         return http_api_result_ok() if super().update_device(
             k=k, tpl_config=config, device_tpl=t,
             save=save) else http_api_result_error()
@@ -1089,12 +1095,15 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         config = {}
         if not c:
             return http_api_result_error()
-        try:
-            for i in c.split(','):
-                name, value = i.split('=')
-                config[name] = value
-        except:
-            raise cp_api_error()
+        if isinstance(c, dict):
+            config = c
+        else:
+            try:
+                for i in c.split(','):
+                    name, value = i.split('=')
+                    config[name] = value
+            except:
+                raise cp_api_error()
         return http_api_result_ok() if super().destroy_device(
             k=k, tpl_config=config, device_tpl=t) else http_api_result_error()
 

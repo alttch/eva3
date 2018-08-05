@@ -534,6 +534,30 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
+.. _uc_create:
+
+create - create new item
+------------------------
+
+Creates new :doc:`item</items>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** item OID (**type:group/id**)
+
+optionally:
+
+* **virtual=1** unit is created as :doc:`virtual</virtual>`
+* **save=1** save unit configuration on disk immediately after creation
+
+Returns result="OK" if the item is created, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
 .. _uc_create_unit:
 
 create_unit - create new unit
@@ -692,6 +716,48 @@ item(s) will remain in the system after restarting the controller.
 Errors:
 
 * **403 Forbidden** invalid API KEY
+
+.. _create_device:
+
+create_device - create device items
+-----------------------------------
+
+Creates the :ref:`device<device>` from the specified template.
+
+Parameters:
+
+* **k** key with *allow=device* permissions
+* **c** device config (*var=value*, comma separated or JSON dict)
+* **t** device template (*runtime/tpl/TEMPLATE.json*, without *.json*
+  extension)
+
+optionally:
+
+* **save=1** save items configuration on disk immediately after operation
+
+Returns result="OK" if the item/group is deleted, or result="ERROR", if an
+error occurred.
+
+.. _update_device:
+
+update_device - update device items
+-----------------------------------
+
+Works similarly to :ref:`create_device` function but doesn't create new items,
+updating the item configuration of the existing ones.
+
+Parameters and return data are the same.
+
+.. _destroy_device:
+
+destroy_device - destroy device items
+-------------------------------------
+
+Works in opposite way to :ref:`create_device` function, destroying all items
+specified in the template.
+
+Parameters and return data are the same except the function doesn't have
+**save** param.
 
 .. include:: ../userauth.rst
 
