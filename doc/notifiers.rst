@@ -338,8 +338,36 @@ To let unit responding to MQTT control messages, set its configuration param
 **mqtt_control** to the local MQTT ID. You may specify QoS as well via
 semicolon, similarly as for **mqtt_update**.
 
-JSON
-~~~~
+DB Notifiers
+------------
+
+EVA ICS has a special notifier type: **db**, which is used to store items'
+state history. State history can be obtained later via API calls or :doc:`SFA
+Framework</sfa/sfa_framework>` for analysis and i.e. to build a graphical
+charts.
+
+To create db notifier, specify notifier props as **db:<dbfile>[:keeptime]**,
+e.g. *db:history1.db:604800*, where *history1.db* - database file in
+**runtime** folder, *604800* - seconds to keep archive records (1 week). If
+keep time is not specified, EVA keep records for last 86400 seconds (24 hours).
+
+After creating db notifier, don't forget to subscribe it to **state** events.
+Events **action** and **log** are ignored.
+
+If **easy-setup** is used for EVA :doc:`installation</install>`, notifier
+called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically.
+
+History database format is `sqlite3 <https://www.sqlite.org/index.html>`_.
+
+HTTP Notifiers
+--------------
+
+JSON (json)
+~~~~~~~~~~~
+
+HTTP notifications (aka web hooks) can be transferred to servers which, for
+some reasons, cannot work with MQTT in real time, e.g. servers containing
+third-party or your own web applications.
 
 JSON notifier type is equal to HTTP/POST, the only one difference is that data
 is sent fully in JSON format:
@@ -371,16 +399,12 @@ As HTTP/POST notifier type is no longer supported, we recommend creating web
 hooks only with JSON notifier type.
 
 HTTP/POST (http-post, deprecated)
----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. note::
 
     This notifier type is deprecated and will be removed in the future
     versions. Please switch all your existing web hooks to JSON notifiers.
-
-HTTP notifications can be transferred to servers which, for some reasons,
-cannot work with MQTT in real time, e.g. servers containing third-party or your
-own PHP web applications.
 
 http-post notifier sends data to the URI specified in the configuration with
 POST method, as www-form and in the following format:
