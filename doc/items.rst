@@ -447,8 +447,8 @@ recommended to keep them in one or several separate groups.
 
 Device templates are stored in *runtime/tpl* folder in JSON format.
 
-You can **uc-tpl** :doc:`command line</cli>` tool to create device templates
-using the existing config and **uc-cmd** or ref:`device
+You can use **uc-tpl** :doc:`command line</cli>` tool to create device
+templates using the existing items and **uc-cmd** or :ref:`device
 management<create_device>` UC API functions to create, update and destroy
 devices.
 
