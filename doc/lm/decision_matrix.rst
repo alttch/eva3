@@ -84,8 +84,9 @@ Modifiable Parameters:
 * **for_item_id** the rule matches only for a specific item (# or null - for
   all items), may contain the mask \*id, id\* or \*id\*, i.e. *\*.temperature*
 
-* **for_prop** the status property of the item (status or value) the rule is
-  checking
+* **for_prop** the state property of the item (**status** or **value**) the
+  rule is checking. For :ref:`unit<unit>` state, **nstatus** and **nvalue**
+  properties may be additionally used.
 
 * **in_range_max** matches when *x < value*
 
