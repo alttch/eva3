@@ -40,6 +40,11 @@ Common item parameters
 * **virtual** boolean (true/false) param which say if the item is
   :doc:`virtual<virtual>` or real.
 
+.. note::
+
+    All EVA functions, commands and parameters can accept oid as the item
+    identifier.
+
 .. _unit:
 
 Unit

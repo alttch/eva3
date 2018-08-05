@@ -221,8 +221,7 @@ params:
 
 * **lock_id** unique lock id (defined by user)
 
-Unlike the SYS API :ref:`unlock<s_unlock>` function, this one always returns
-*True*, even if the lock does not exist.
+Returns *True* if the lock is unlocked, *False*, if the lock does not exist.
 
 Item functions
 --------------
@@ -370,6 +369,43 @@ Returns *True* if lvar has expired status (timer is finished), equal to checking
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
 
+.. _m_status:
+
+status - get item status
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    status(oid)
+
+params:
+
+* **oid** :doc:`item</items>` oid (**type:group/id**)
+
+Returns status (integer) of the item, *None* if the item is not found.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the item is not found.
+
+.. _m_value:
+
+value - get item status
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    value(oid)
+
+params:
+
+* **oid** :doc:`item</items>` oid (**type:group/id**)
+
+Returns value (float if the value is numeric) of the item state, *None* if the
+item is not found. If the value is *null*, returns an empty string.
+
+Raises an exception if the parameter *pass_errors=false* is set in the macro
+config and the item is not found.
+
 .. _m_unit_status:
 
 unit_status - get unit status
@@ -411,6 +447,8 @@ unit_nstatus - get unit future status
 .. code-block:: python
 
     unit_nstatus(unit_id)
+    # or
+    nstatus(unit_id)
 
 params:
 
@@ -428,6 +466,8 @@ unit_nvalue - get unit future value
 .. code-block:: python
 
     unit_nvalue(unit_id)
+    # or
+    nvalue(unit_id)
 
 params:
 
