@@ -186,6 +186,12 @@ the reload event, you must define this function.
 
     eva_sfa_reload_handler = null;
 
+SFA cvars
+~~~~~~~~~
+
+All :ref:`user-defined SFA variables<sfa_cvars>` are directly available in SFA
+Framework after login with any valid user or API key.
+
 .. _sf_init:
 
 Initialization, authentication
