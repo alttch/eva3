@@ -291,6 +291,22 @@ where:
 
 .. code-block:: javascript
 
+eva_sfa_groups
+~~~~~~~~~~~~~~
+
+Returns a list of item groups.
+
+.. code-block:: javascript
+
+    eva_sfa_groups(p, g, cb_success, cb_error)
+
+where
+
+* **p** item type (U for unit, S for sensor, LV for lvar)
+* **g** optional group filter (MQTT-style wildcards)
+* **cb_success**, **cb_error** - functions called when the access to API has
+  either succeeded or failed.
+
 eva_sfa_register_update_state
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
