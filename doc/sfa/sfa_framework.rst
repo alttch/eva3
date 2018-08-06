@@ -186,6 +186,16 @@ the reload event, you must define this function.
 
     eva_sfa_reload_handler = null;
 
+.. _sfw_server_restart:
+
+eva_sfa_server_restart_handler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This variable contains function which's called when :doc:`/sfa/sfa` notifies
+connected clients about server restart. Client application can prepare user for
+the server restart (e.g. display warning message) and forcibly reload data when
+the server is back online.
+
 SFA cvars
 ~~~~~~~~~
 

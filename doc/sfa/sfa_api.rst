@@ -129,12 +129,40 @@ Errors:
 reload_clients - ask connected clients to reload
 ------------------------------------------------
 
-This function sends to all connected clients a **reload** event asking them to
+This function sends to all connected clients **reload** event asking them to
 reload the interface.
 
 All the connected clients receive the event with *subject="reload"* and
 *data="asap"*. If the clients use :doc:`sfa_framework`, they must define
 :ref:`eva_sfa_reload_handler<sfw_reload>` function.
+
+Parameters:
+
+* **k** masterkey
+
+Returns result="OK" if the reload event is sent, or result="ERROR", if an error
+occurs.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+.. _sfa_notify_restart:
+
+notify_restart - notify about server restart
+--------------------------------------------
+
+This function sends to all connected clients a **server restart** event asking
+them to prepare for the server restart.
+
+All the connected clients receive the event with *subject="server"* and
+*data="restart"*. If the clients use :doc:`sfa_framework`, they must define
+:ref:`eva_sfa_server_restart_handler<sfw_server_restart>` function.
+
+Server restart notification is sent automatically to all connected clients when
+the server is restarting. This API function allows to send server restart
+notification without actual server restart, which may be useful e.g. for
+testing, handling frontend restart and etc.
 
 Parameters:
 
