@@ -289,8 +289,6 @@ where:
 * **params** dict with history formatting params equal to SFA API function
   :ref:`state_history<sfa_state_history>`.
 
-.. code-block:: javascript
-
 eva_sfa_register_update_state
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -567,6 +565,108 @@ This function returns log level name matching the given log level code:
 Returns *DEBUG* for *10*, *INFO* for *20*, *WARNING* for *30*, *ERROR* for
 *40*, *CRITICAL* for *50*.
 
+UI functions
+------------
+
+eva_sfa_load_animation
+~~~~~~~~~~~~~~~~~~~~~~
+
+Draws load animation inside specified <div />
+
+.. code-block:: javascript
+
+    eva_sfa_load_animation(div_id)
+
+eva_sfa_chart
+~~~~~~~~~~~~~
+
+Calls **eva_sfa_load_animation**, then **eva_sfa_state_history** and builds a
+chart inside specified <div />
+
+.. code-block:: javascript
+
+    eva_sfa_chart(ctx, cfg, oid, timeframe, fill, update, prop)
+
+where:
+
+* **ctx** HTML element (<div />) ID to draw a chart in.
+* **cfg** chart configuration. SFA Framework uses `Chart.js
+  <https://www.chartjs.org/>`_ library. At this moment, line and bar charts are
+  supported
+* **oid** item OID (or multiple, comma separated): **type:group/id**
+* **timeframe** timeframe to display, e.g. *5T* - last 5 min, *2H* - last 2
+  hours, *2D* last 2 days etc.
+* **fill** precision, 10T-60T recommended. As more accurate precision is, as
+  more data points are displayed (but chart is slower)
+* **update** chart update interval, in seconds. Set *0* or *null* to disable
+  updates
+* **prop** item state property to use (default: *'value'*)
+
+See :ref:`Chart example<sfw_chart_example>`.
+
+eva_sfa_popup
+~~~~~~~~~~~~~
+
+Opens HTML5 popups
+
+.. code-block:: javascript
+
+  eva_sfa_popup(
+      ctx,
+      pclass,
+      title,
+      msg,
+      ct,
+      btn1,
+      btn2,
+      btn1a,
+      btn2a,
+      va
+      )
+
+where:
+
+* **ctx** html element id to use as popup (any empty <div /> is fine)
+* **pclass** popup class: *info*, *warning* or *error*. opens big popup window
+  if '!' is put before the class (i.e. *!info*)
+* **title** popup window title
+* **msg** popup window message
+* **ct** popup auto close time (sec), equal to pressing escape
+* **btn1** button 1 name ('OK' if not specified)
+* **btn2** button 2 name
+* **btn1a** function to run if button 1 (or enter) is pressed
+* **btn2a** function(arg) to run if button 2 (or escape) is pressed. arg
+  is true if the button was pressed, false if escape key or auto close.
+* **va** validate function which runs before btn1a. If the function return
+  *true*, the popup is closed and btn1a function is executed. otherwise the
+  popup is kept and the function btn1a function is not executed. *va* function
+  is used to validate input, e.g. if popup contains any input fields.
+
+Example (consider *<div id="popup" style="display: none"></div>* is placed
+somewhere in HTML):
+
+.. code-block:: javascript
+
+    // after successful login
+    eva_sfa_popup('popup', 'info', 'Logged in', 'You are logged in', 2);
+    // .......
+    // reload handler
+    function reload_me() {
+        document.location='/ui/';
+    }
+    eva_sfa_reload_handler = function() {
+        eva_sfa_popup(
+          'popup',
+          'warning',
+          null,
+          'Reloading interface',
+          2,
+          null,
+          null,
+          reload_me,
+          reload_me);
+    }
+
 Examples
 --------
 
@@ -600,6 +700,97 @@ is updated every 500 ms.
     }
 
     setInterval(show_countdown, 500);
+
+.. _sfw_chart_example:
+
+Chart example
+~~~~~~~~~~~~~
+
+We have 2 sensors, for internal and external air temperature and want their
+data to be placed in one chart.
+
+Chart options:
+
+.. code-block:: javascript
+
+    var chart_opts = {
+            responsive: false,
+            //animation: false,
+            legend: {
+                display: true
+            },
+            scales: {
+                xAxes: [{
+                    type: "time",
+                    time: {
+                        unit: 'hour',
+                        unitStepSize: 1,
+                        round: 'minute',
+                        tooltipFormat: "H:mm:ss",
+                        displayFormats: {
+                          hour: 'MMM D, H:mm'
+                        }
+                    },
+                    ticks: {
+                        minRotation: 90,
+                        maxTicksLimit: 12,
+                        autoSkip: true
+                    },
+                    display: true,
+                }],
+                yAxes: [{
+                    display: true,
+                    ticks: {
+                    },
+                    scaleLabel: {
+                        display: true,
+                        labelString: 'Degrees'
+                    }
+                }]
+            }
+        }
+
+Chart configuration:
+
+.. code-block:: javascript
+
+    var chart_cfg = {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                label: 'Temperature inside',
+                data: [],
+                fill: false,
+                backgroundColor: 'red',
+                borderColor: 'red'
+                },
+                {
+                label: 'Temperature outside',
+                data: [],
+                fill: false,
+                backgroundColor: 'blue',
+                borderColor: 'blue'
+                }
+            ],
+        },
+        options: chart_opts
+    }
+
+Chart code (consider *<div id="chart1" style="display: none"></div>* is placed
+somewhere in HTML), data for last 8 hours, 15 min precision, update every 10
+seconds:
+
+.. code-block:: javascript
+
+    eva_sfa_chart(
+        'chart1',
+        chart_cfg,
+        'sensor:env/temp_inside,sensor:env/temp_outside',
+        '8H',
+        '15T',
+        10)
 
 .. _sfw_example_log:
 
