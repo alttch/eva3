@@ -898,8 +898,8 @@ function eva_sfa_load_animation(el_id) {
  * @param va - validate function which runs before btn1a.
  *             if the function return true, the popup is closed and btn1a
  *             function is executed. otherwise the popup is kept and the
- *             function btn1a function is not executed. va function is used to
- *             validate an input, if popup contains any input fields.
+ *             function btn1a is not executed. va function is used to validate
+ *             an input, if popup contains any input fields.
  *
  */
 function eva_sfa_popup(

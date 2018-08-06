@@ -637,15 +637,15 @@ where:
 * **title** popup window title
 * **msg** popup window message
 * **ct** popup auto close time (sec), equal to pressing escape
-* **btn1** button 1 name ('OK' if not specified)
+* **btn1** button 1 name (default: *'OK'*)
 * **btn2** button 2 name
 * **btn1a** function to run if button 1 (or enter) is pressed
 * **btn2a** function(arg) to run if button 2 (or escape) is pressed. arg
-  is true if the button was pressed, false if escape key or auto close.
+  is *true* if the button was pressed, *false* if escape key or auto close.
 * **va** validate function which runs before btn1a. If the function return
   *true*, the popup is closed and btn1a function is executed. otherwise the
-  popup is kept and the function btn1a function is not executed. *va* function
-  is used to validate input, e.g. if popup contains any input fields.
+  popup is kept and the function btn1a is not executed. *va* function is used
+  to validate input, e.g. if popup contains any input fields.
 
 Example (consider *<div id="popup" style="display: none"></div>* is placed
 somewhere in HTML):
