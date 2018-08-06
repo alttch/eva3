@@ -591,8 +591,8 @@ where:
 
 * **ctx** HTML element (<div />) ID to draw a chart in.
 * **cfg** chart configuration. SFA Framework uses `Chart.js
-  <https://www.chartjs.org/>`_ library. At this moment, line and bar charts are
-  supported
+  <https://www.chartjs.org/>`_ library. At this moment, *line* and *bar* charts
+  are supported
 * **oid** item OID (or multiple, comma separated): **type:group/id**
 * **timeframe** timeframe to display, e.g. *5T* - last 5 min, *2H* - last 2
   hours, *2D* last 2 days etc.
@@ -601,6 +601,11 @@ where:
 * **update** chart update interval, in seconds. Set *0* or *null* to disable
   updates
 * **prop** item state property to use (default: *'value'*)
+
+.. note::
+
+    To work with charts you should include Chart.js library, which is located
+    in file *lib/chart.min.js* (*ui* folder).
 
 See :ref:`Chart example<sfw_chart_example>`.
 
