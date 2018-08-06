@@ -216,3 +216,51 @@ The additional commands will keep working:
 
     GET "http://eva.sfa.domain/pvt/data/cam3/*.jp*?c=newest&ic=resize:320x200x50:jpeg&nocache=1508070344872"
 
+Remote content
+--------------
+
+SFA PVT can act as a proxy, fetching allowed resources in local network and
+displaying them to user.
+
+This can be done with request
+
+.. code-block:: bash
+
+    http(s)://<IP_address_SFA:Port>/rpvt?k=APIKEY&f=http://remote_host/folder/file&nocache=some_random_value
+
+Param **nocache** is optional. If user is logged in, param **k** can be
+omitted.
+
+Example: you have a chart on storage server in local network displaying storage
+usage. The chart is located at http://192.168.1.20/charts/zfs.png
+
+Append the following permission string to :ref:`API key<sfa_apikey>`:
+
+.. code-block:: ini
+
+    rpvt = 192.168.1.20/charts/#
+
+This will grant an access to all files on the specified host in /charts/ folder.
+
+Then include remote chart in your interface:
+
+.. code-block:: html
+
+    <img src="/rpvt?k=APIKEY&f=192.168.1.20/charts/zfs.png" />
+
+As you see, the remote client don't need to have a direct access to
+*192.168.1.20* web server, **/rpvt** API call acts for him as a content proxy.
+
+To use remote content feature, you must follow the rules:
+
+* protocol (http/https) don't need to be specified in **rpvt** API key param.
+
+* **f** param of **/rpvt** request may contain uri protocol (e.g.
+  *http://192.168.1.20/charts/zfs.png*). If the protocol is not specified, SFA
+  use plain HTTP without SSL.
+
+* You can not specify http(s) port in **f** param of **/rpvt** unless it's also
+  specified in **rpvt** API key param.
+
+* Avoid using *rpvt = #*, this will allow **/rpvt** to work as http proxy for
+  any local and Internet resource and may open a security hole.
