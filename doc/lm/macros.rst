@@ -882,8 +882,8 @@ alias for it. All you need is to put in **xc/lm/common.py** the following code:
 
     alias('f1', 'very_long_function')
 
-The difference between Python code *f1=very_long_function* is the such code
-will throw exception if *very_long_function* is not found, while **alias**
+The difference between Python code *f1=very_long_function* is that such code
+will throw an exception if *very_long_function* is not found, while **alias**
 macro function will pass an error and return *False*.
 
 .. _m_sleep:
