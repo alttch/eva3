@@ -98,6 +98,7 @@ System documentation
     * :ref:`device` - set of items
     * :doc:`/drivers` - drivers for the hardware equipment
     * :doc:`/item_scripts` - action and update scripts
+    * :doc:`ModBus equipment</modbus>`
     * :doc:`/virtual`
 
   * :doc:`/lm/lm` - a programmable logic controller
