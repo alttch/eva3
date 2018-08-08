@@ -383,7 +383,7 @@ Example:
 
 .. code-block:: bash
 
-    uc-cmd phi load sr201 -c host=192.168.20.2,update=5 -y
+    uc-cmd phi load relay2 sr201 -c host=192.168.20.2,update=5 -y
 
 As soon as the driver is assigned to item (*uc-cmd driver set*), it starts
 getting state updates every *5* seconds.
