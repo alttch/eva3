@@ -34,7 +34,7 @@ __action_help__ = [{
 }, {
     'name': 'steps',
     'help': 'delay steps',
-    'type': 'list:int',
+    'type': 'list:float',
     'required': True
 }, {
     'name': 'warmup',
