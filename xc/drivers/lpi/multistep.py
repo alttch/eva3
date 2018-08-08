@@ -142,7 +142,7 @@ class LPI(BasicLPI):
             return self.action_result_error(_uuid, 1, 'no config provided')
         phi_cfg = self.prepare_phi_cfg(cfg)
         if cfg.get('bose'):
-            bose = cfg.get('bose') != 'skip'
+            bose = cfg.get('bose')
         else:
             bose = self.bose
         if status is None:
