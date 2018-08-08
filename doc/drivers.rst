@@ -80,9 +80,9 @@ driver is assigned.
 Param *-c* is used to set driver configuration for the specified item: set
 port, logic etc.
 
-Advanced: EVA :doc:`item</items>` can have different drivers or scripts for
-actions and updates. To assign the different drivers, modify item properties
-**action_exec**, **update_exec**, **action_driver_config** and
+Advanced usage: EVA :doc:`item</items>` can have different drivers or scripts
+for actions and updates. To assign the different drivers, modify item
+properties **action_exec**, **update_exec**, **action_driver_config** and
 **update_driver_config** (e.g. with *uc-cmd config props*). Driver is assigned
 to the property with *|driver_id* value, e.g. *|v1.default*.
 
