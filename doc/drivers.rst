@@ -239,10 +239,10 @@ Configuration options (set with *uc-cmd driver load*):
 
 Action options (set with *uc-cmd driver set*):
 
-* **port** contain one or several (separated with **|**) relay ports used to
+* **port** contains one or several (separated with **|**) relay ports used to
   power a motor.
 
-* **dport** contain one or several (separated with **|**) relay ports used to
+* **dport** contains one or several (separated with **|**) relay ports used to
   set a direction.
 
 * **steps** list of float numbers, contains a time (in seconds) how long to
@@ -340,10 +340,10 @@ compatible relays:
     uc-cmd phi modhelp sr201 set
 
 Both **cfg**, **get** and **set** have an option **host** which should be
-defined ether in PHI configutation (*uc-cmd phi load* or in item driver
-configuration (*uc-cmd driver set*). Setting diffrent **host** option value in
-item driver configuration lets one *sr201* PHI can manage all SR-201
-relays.
+defined ether in PHI configutation (*uc-cmd phi load* with *host* config option
+or in item driver configuration (*uc-cmd driver set* with *_host* config
+option). Setting diffrent **host** option value in item driver configuration
+lets one *sr201* PHI manage all available SR-201 relays.
 
 Physical events
 ~~~~~~~~~~~~~~~
@@ -377,13 +377,13 @@ updating on physical events.
 How to use this feature: All PHIs with "aao_get" feature also have
 configuration param named *update* which means how frequently (in seconds) PHI
 should collect data from the equipment and initiate item updates. *update*
-value should be defined in PHI config and be greater than zero.
+value should be defined in PHI load config and be greater than zero.
 
 Example:
 
 .. code-block:: bash
 
-    uc-cmd phi load sr201 -c host=192.168.20.2,update=5
+    uc-cmd phi load sr201 -c host=192.168.20.2,update=5 -y
 
 As soon as the driver is assigned to item (*uc-cmd driver set*), it starts
 getting state updates every *5* seconds.
