@@ -387,3 +387,40 @@ Example:
 
 As soon as the driver is assigned to item (*uc-cmd driver set*), it starts
 getting state updates every *5* seconds.
+
+Testing PHIs and additional PHI commands
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As soon as PHI is loaded, you can test how it works. All PHI modules respond to
+the command:
+
+.. code-block:: bash
+
+    uc-cmd phi test <phi_id> self
+
+which returns result *"OK"* or *"FAILED"*.
+
+PHI can provide additional testing, to get a list of testing commands, execute:
+
+.. code-block:: bash
+
+    uc-cmd phi test <phi_id> help
+
+Some PHIs can provide additional commands to set up or control the hardware
+equipment. To get a list of these commands, execute:
+
+.. code-block:: bash
+
+    uc-cmd phi exec <phi_id> help
+
+Example: PHI module **dae_ro16_modbus** has a command to change ModBus unit ID
+of the hardware equipment. Let's change unit ID to *5*:
+
+.. code-block:: bash
+
+    uc-cmd phi exec <phi_id> id 5
+
+The module will flash new unit ID into hardware and change unit ID in self
+configuration. Don't forget to restart the hardware to let it be accessed with
+new unit ID and save PHI config (*uc-cmd save*).
+
