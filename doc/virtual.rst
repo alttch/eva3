@@ -154,3 +154,18 @@ For all items: to complete the passive state update with the error code 1
     ./xc/evirtual sensor temp1 ue 1
 
 To disable the error code, set it to 0.
+
+Virtual drivers
+---------------
+
+Primary goal of virtual items is to test :doc:`item scripts</item_scripts>`. If
+you just want to build a virtual setup, it may be good idea to use virtual
+:doc:`drivers</drivers>` instead. EVA ICS distribution includes 2 virtual
+drivers which cover all typical needs:
+
+* **vrtrelay** Virtual relay driver
+* **vrtsensors** Virtual sensor pool driver
+
+Both drivers work like the real ones so it's not necesseary set the item to
+virtual. When using virtual drivers, set item option *virtual=false*.
+

@@ -6,6 +6,15 @@ Scripts are placed in xc folder (**xc/uc** for :doc:`/uc/uc`, **xc/lm** for
 :doc:`/lm/lm`) and may be either written in any scripting language or be binary
 executables. The script file should have exec permissions.
 
+:doc:`/uc/uc` has 2 ways for controlling and monitoring items:
+:doc:`drivers</drivers>` and item scripts. Sometimes item scripts are harder to
+implement as you must define all logic by yourself, as well as implement
+hardware calls, they are also slower because controller needs to execute
+external process. But item scripts are more reliable than drivers because the
+external process can be easily terminated/killed by timeout, so if you don't
+have a driver for your equipment or the driver is unstable, it is good idea to
+use a scripts.
+
 All the examples provided in this documentation are written in the classic
 Bourne shell (bash). It is recommended to use dash or perl in the heavy loaded
 production systems to provide better startup speed. Experience has shown that

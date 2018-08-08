@@ -48,8 +48,9 @@ The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 What you get with EVA
 ---------------------
 
-* write simple :doc:`scripts</item_scripts>` for your automation hardware and
-  keep them organized, queued and safely executed with :doc:`/uc/uc`
+* use pre-made :doc:`drivers</drivers>` or write simple
+  :doc:`scripts</item_scripts>` for your automation hardware and keep them
+  organized, queued and safely executed with :doc:`/uc/uc`
 * easily collect data from the hardware using :ref:`MQTT<mqtt_>` or :doc:`SNMP
   traps</snmp_traps>` with the built-in SNMP trap handler server
 * collect data from your microcontrollers with a simple :ref:`UDP
@@ -95,6 +96,7 @@ System documentation
     * :ref:`unit` - controlled item
     * :ref:`sensor` - monitored item
     * :ref:`device` - set of items
+    * :doc:`/drivers` - drivers for the hardware equipment
     * :doc:`/item_scripts` - action and update scripts
     * :doc:`/virtual`
 
@@ -117,5 +119,6 @@ System documentation
 
     * :doc:`/api_clients`
     * :doc:`/sfa/sfa_framework`
+    * :doc:`Physical interfaces for drivers</phi_development>`
 
 * :doc:`/faq`
