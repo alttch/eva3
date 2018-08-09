@@ -42,4 +42,3 @@ Errors:
 
 * **403 Forbidden** no session available / session is already finished
 
-
