@@ -28,6 +28,12 @@ List the available PHI mods:
 
     uc-cmd phi mods
 
+Get PHI module information:
+
+.. code-block:: bash
+
+    uc-cmd phi modinfo <phi_module>
+
 If the desired PHI is not listed, download it and put to *xc/drivers/phi*
 folder. Official PHI modules are available at `<https://www.eva-ics.com/phi>`_.
 You may either download the module manually or use
@@ -130,6 +136,12 @@ To list available LPI mods, use the command:
 .. code-block:: bash
 
     uc-cmd lpi mods
+
+To get module information, use the command:
+
+.. code-block:: bash
+
+    uc-cmd lpi modinfo <lpi_module>
 
 Currently we don't provide any additional LPI modules or SDK, all available
 mods are included in EVA ICS distribution.
