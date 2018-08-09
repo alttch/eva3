@@ -635,7 +635,6 @@ def dump(item_id=None):
 
 
 def init():
-    import ipdb; ipdb.set_trace()
     eva.core.append_save_func(save)
     eva.core.append_dump_func('uc', dump)
     eva.core.append_stop_func(stop)
