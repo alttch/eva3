@@ -166,8 +166,17 @@ Used in default drivers for relay, sockets and similar PHIs, doesn't need to be
 configured when loaded.
 
 When assigning driver containing **basic** LPI mod to the specified item
-(*uc-cmd driver set*), the assign configuration should contain port number
-which usually matches the physical relay port.
+(*uc-cmd driver set*), the assign configuration should contain port number (*-c
+port=N*) which usually matches the physical relay port.
+
+Port number can be specified as a list (*-c port=N1|N2|N3*), in this case all
+listed ports will be used in commands.
+
+.. note::
+
+    If relay port number is specified as i:N e.g. i:2, LPI commands will
+    consider it's inverted meaning *0* is for *on* and *1* is for *off*. This
+    works as for **basic** as for any other relay control LPI.
 
 sensor LPI
 ~~~~~~~~~~
