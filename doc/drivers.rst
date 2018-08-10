@@ -92,6 +92,12 @@ properties **action_exec**, **update_exec**, **action_driver_config** and
 **update_driver_config** (e.g. with *uc-cmd config props*). Driver is assigned
 to the property with *|driver_id* value, e.g. *|v1.default*.
 
+.. note::
+
+    All :ref:`custom-defined user variables<uc_cvars>` are always passed to
+    driver function calls, which allows to set some device-specific or
+    logic-specific options as global or for the particular item group.
+
 .. figure:: drivers-action.png
     :scale: 60%
     :alt: Drivers and actions

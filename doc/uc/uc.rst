@@ -81,7 +81,7 @@ The file contains a JSON dict:
     }
 
 Variables can be changed while the server is running via :doc:`/sys_api` as
-well as :doc:`uc-cmd</cli>` **get_cvar** and **set_cvar** commands.
+well as :doc:`uc-cmd</cli>` **cvar_get** and **cvar_set** commands.
 
 For example, let's create a variable:
 
@@ -98,8 +98,8 @@ management script on the port 2 of the given relay will be the following:
     ${RELAY1_CMD}.1.2.0 i $2
 
 It's possible to assign different values for the variables used for different
-object groups with the same names, i.e. group1/VAR1, group2/VAR1 etc. In this
-case the variable will be available only for the specified group.
+object groups with the same names, e.g. *group1/VAR1*, *group2/VAR1* etc. In
+this case the variable will be available only for the specified group.
 
 .. _uc_apikey:
 

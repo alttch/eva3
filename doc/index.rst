@@ -31,8 +31,9 @@ What is EVA
 * :doc:`Logic Manager</lm/lm>` programming logic controllers used for automatic
   data processing and decision-making.
 
-* :doc:`SFA Framework</sfa/sfa_framework>`, allowing quick development of the
-  interfaces for a specific configuration.
+* :doc:`SFA Framework</sfa/sfa_framework>` and `SFA
+  Templates</sfa/sfa_templates>`, allowing quick development of the interfaces
+  for a specific configuration.
 
 EVA can be installed either partially or fully, it can be scaled up to many
 servers or all components can be installed onto the only one. The system is
@@ -120,6 +121,7 @@ System documentation
 * Application development
 
     * :doc:`/api_clients`
+    * :doc:`/sfa/sfa_templates`
     * :doc:`/sfa/sfa_framework`
     * :doc:`Physical interfaces for drivers</phi_development>`
 

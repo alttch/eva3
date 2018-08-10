@@ -187,7 +187,7 @@ Parameters:
 
 * **k** valid API key
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
-  *LV* for :ref:`lvar<lvar>`, must always be specified
+  *LV* for :ref:`lvar<lvar>`, required
 * **i** full item id (*group/id*), optional
 * **g** group filter, optional :ref:`mqtt<mqtt_>` masks can be used, for
   example group1/#, group1/+/lamps)
@@ -254,6 +254,8 @@ Errors:
 * **403 Forbidden** invalid API KEY
 * **404 Not Found** item doesn't exist, the key has no access to the item, or
   the history database is not found
+
+.. _sfa_groups:
 
 groups - get item group list
 ----------------------------

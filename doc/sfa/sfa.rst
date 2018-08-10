@@ -21,7 +21,8 @@ oid form (*type:group/id*) and be unique in the whole installation.
 SFA is set up and controlled with **sfa-cmd** :doc:`console application</cli>`
 and :doc:`sfa_api`. The API doesn't have a user interface by default, it's
 developed specifically for a certain installation certain installation using
-:doc:`sfa_framework`.
+doc:`sfa_templates` (server-side part) and :doc:`sfa_framework` (client-side
+part).
 
 All changes of item status, actions, and logs are sent to the
 :doc:`notification system</notifiers>`. In addition, SFA can function as the
@@ -62,7 +63,7 @@ The file contains a JSON dict:
     }
 
 Variables can be changed while the server is running via :doc:`/sys_api` as
-well as :doc:`sfa-cmd</cli>` **get_cvar** and **set_cvar** commands.
+well as :doc:`sfa-cmd</cli>` **cvar get** and **cvar set** commands.
 
 .. _sfa_apikey:
 
@@ -178,9 +179,10 @@ Interface
 ---------
 
 SFA interface is always specifically designed for a certain installation using
-:doc:`sfa_framework` and :doc:`sfa_pvt`. Interface files are stored in **ui**
-folder, interface is available at *http(s)://<IP_address_SFA:Port>/* (redirects
-to */ui/*) or *http(s)://<IP_address_SFA:Port>/ui/*.
+doc:`sfa_templates`, :doc:`sfa_framework` and :doc:`sfa_pvt`. Interface files
+are stored in **ui** folder, interface is available at
+*http(s)://<IP_address_SFA:Port>/* (redirects to */ui/*) or
+*http(s)://<IP_address_SFA:Port>/ui/*.
 
 Startup and shutdown
 --------------------
