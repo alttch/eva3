@@ -104,8 +104,8 @@ Classes and modules
 -------------------
 
 It's allowed to import any Python system module or module installed by EVA ICS.
-If PHI requires installing more modules, they should be listed in PHI readme
-file.
+If PHI requires installing more modules, they should be listed in PHI help file
+and in **__mods_required__** variable.
 
 .. warning::
 
@@ -113,8 +113,8 @@ file.
     ICS) should be imported with try/catch with **importlib**, their
     unavailability shouldn't block loading PHI for the informational puproses.
 
-Importing modules from **eva.uc.drivers.tools**, **eva.tools**,
-**eva.traphandler**, **eva.uc.modbus**, **eva.uc.smbus** and functions from
+Importing modules **eva.uc.drivers.tools**, **eva.tools**, **eva.traphandler**,
+**eva.uc.modbus**, **eva.uc.smbus** and functions from
 **eva.uc.driverapi**:
 
 * **get_version()** get Driver API version
@@ -173,7 +173,7 @@ The super().__init__ call should always be first.
 
 If the constructor faces a problem (i.e. parsing a config or checking
 equipment, i.e. local bus) it may set *self.ready=False* to abort controller
-loading the driver.
+loading the module.
 
 If PHI methods get/set can't work with a single ports at all (i.e. equipment
 returns state of all ports at once only), constructor should set variables:
