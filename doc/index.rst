@@ -107,6 +107,7 @@ System documentation
     * :ref:`lvar` -  item used by system components to exchange logic data
 
     * :doc:`/lm/macros`
+    * :doc:`/lm/ext`
     * :doc:`/lm/decision_matrix`
 
  * :doc:`/sfa/sfa` server

@@ -1000,3 +1000,10 @@ Finishes macro execution
 params:
 
 * **code** macro exit code (0 - no errors)
+
+Extending macros functionality
+------------------------------
+
+Macros function set can be extended with pre-made or custom :doc:`macro
+extensions</lm/ext>`. As soon as extension is loaded, its functions become
+available in all macros without a need to restart :doc:`LM PLC</lm/lm>`.
