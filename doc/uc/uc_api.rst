@@ -886,8 +886,7 @@ Errors:
 list_phi - list loaded PHIs
 ---------------------------
 
-Returns a list which contains all loaded :doc:`Physical Interface
-modules</drivers>`.
+Returns a list which contains all loaded :doc:`Physical Interfaces</drivers>`.
 
 Parameters:
 
@@ -900,7 +899,7 @@ Errors:
 load_phi - load PHI
 -------------------
 
-Loads :doc:`Physical Interface module</drivers>`.
+Loads :doc:`Physical Interface</drivers>`.
 
 Parameters:
 
@@ -928,9 +927,8 @@ Errors:
 unload_phi - unload PHI 
 -----------------------
 
-Unloads PHI module. The module should not be used by any
-:doc:`driver</drivers>` (except *default*, but the driver should not be in use
-by any :doc:`item</items>`).
+Unloads PHI. PHI should not be used by any :doc:`driver</drivers>` (except
+*default*, but the driver should not be in use by any :doc:`item</items>`).
 
 Parameters:
 
@@ -1117,7 +1115,9 @@ Optionally:
 
 * **save==1** save driver configuration after successful call
 
-Driver ID is a combination of PHI and LPI IDs: DRIVER_ID = PHI_ID.LPI_ID
+.. note::
+
+    Driver ID is a combination of PHI and LPI IDs: DRIVER_ID = PHI_ID.LPI_ID
 
 Returns result="OK" if driver is loaded, or result="ERROR", if an error
 occurred.
@@ -1144,7 +1144,7 @@ Errors:
 unload driver - unload driver
 -----------------------------
 
-Unloads specified driver (LPI module only, leaving PHI untouched)
+Unloads specified driver (LPI only, leaving PHI untouched)
 
 Parameters:
 
