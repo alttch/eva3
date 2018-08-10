@@ -15,7 +15,7 @@ __config_help__ = [{
     'required': True
 }, {
     'name': 'd',
-    'help': 'Playback device (list: python3 -m sounddevice',
+    'help': 'Playback device (list: python3 -m sounddevice)',
     'type': 'int',
     'required': False
 }, {
