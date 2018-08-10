@@ -742,6 +742,10 @@ optionally:
 Returns result="OK" if the item/group is deleted, or result="ERROR", if an
 error occurred.
 
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
 .. _update_device:
 
 update_device - update device items
@@ -750,7 +754,23 @@ update_device - update device items
 Works similarly to :ref:`create_device` function but doesn't create new items,
 updating the item configuration of the existing ones.
 
-Parameters and return data are the same.
+Parameters:
+
+* **k** key with *allow=device* permissions
+* **c** device config (*var=value*, comma separated or JSON dict)
+* **t** device template (*runtime/tpl/TEMPLATE.json*, without *.json*
+  extension)
+
+optionally:
+
+* **save=1** save items configuration on disk immediately after operation
+
+Returns result="OK" if the item/group is deleted, or result="ERROR", if an
+error occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
 
 .. _destroy_device:
 
@@ -760,8 +780,455 @@ destroy_device - destroy device items
 Works in opposite way to :ref:`create_device` function, destroying all items
 specified in the template.
 
-Parameters and return data are the same except the function doesn't have
-**save** param.
+Parameters:
+
+* **k** key with *allow=device* permissions
+* **c** device config (*var=value*, comma separated or JSON dict)
+* **t** device template (*runtime/tpl/TEMPLATE.json*, without *.json*
+  extension)
+
+Returns result="OK" if the item/group is deleted, or result="ERROR", if an
+error occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+list_modbus_ports - list virtual ModBus ports
+---------------------------------------------
+
+Returns a list which contains all virtual ModBus ports.
+
+Parameters:
+
+* **k** masterkey
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+create_modbus_port - create virtual ModBus port
+-----------------------------------------------
+
+Creates virtual :doc:`ModBus port</modbus>` with the specified configuration.
+
+Parameters:
+
+* **k** masterkey
+* **i** virtual port ID which will be used later in :doc:`PHI</drivers>`
+  configurations, required
+* **p** ModBus params, required
+* **l=1** lock port on operations, which means to wait while ModBus port is
+  used by other controller thread (driver command)
+* **t** ModBus operations timeout (in seconds, default: default timeout)
+* **r** retry attempts for each operation (default: no retries)
+* **d** delay between virtual port operations (default: 20ms)
+
+Optionally:
+
+* **save=1** save ModBus port config after creation
+
+ModBus params should contain the configuration of hardware ModBus port. The
+following hardware port types are supported:
+
+* **tcp** , **udp** Modbus protocol implementations for TCP/IP networks. The
+  params should be specified as: *<protocol>:<host>[:port]*, e.g.
+  *tcp:192.168.11.11:502*
+
+* **rtu**, **ascii**, **binary** ModBus protocol implementations for the local
+  bus connected with USB or serial port. The params should be specified as:
+  *<protocol>:<device>:<speed>:<data>:<parity>:<stop>* e.g.
+  *rtu:/dev/ttyS0:9600:8:E:1*
+
+Returns result="OK" if port is created, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+test_modbus_port - verifies virtual ModBus port
+-----------------------------------------------
+
+Verifies virtual :doc:`ModBus port</modbus>` by calling connect() ModBus client
+method.
+
+Parameters:
+
+* **k** masterkey
+* **i** virtual port ID
+
+.. note::
+
+    As ModBus UDP doesn't require a port to be connected, API call always
+    return "OK" result.
+
+Returns result="OK" if port test is passed, or result="ERROR", if an error
+occurred.
+
+destroy_modbus_port - delete virtual ModBus port
+------------------------------------------------
+
+Deletes virtual :doc:`ModBus port</modbus>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** virtual port ID
+
+Returns result="OK" if port is deleted, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+list_phi - list loaded PHIs
+---------------------------
+
+Returns a list which contains all loaded :doc:`Physical Interface
+modules</drivers>`.
+
+Parameters:
+
+* **k** masterkey
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+load_phi - load PHI
+-------------------
+
+Loads :doc:`Physical Interface module</drivers>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** PHI ID, required
+* **m** PHI module, required
+* **c** PHI configuration
+
+Optionally:
+
+* **save==1** save driver configuration after successful call
+
+Returns a dict with information about PHI if module is loaded, or
+result="ERROR", if an error occurred.
+
+.. note::
+
+    After successful load PHI automatically creates a :doc:`driver</drivers>`
+    with ID <PHI_ID>.default
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+unload_phi - unload PHI 
+-----------------------
+
+Unloads PHI module. The module should not be used by any
+:doc:`driver</drivers>` (except *default*, but the driver should not be in use
+by any :doc:`item</items>`).
+
+Parameters:
+
+* **k** masterkey
+* **i** PHI ID
+
+Returns result="OK" if module is unloaded, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+put_phi_mod - upload PHI module
+-------------------------------
+
+Allows to upload new PHI module to *xc/drivers/phi* folder.
+
+Parameters:
+
+* **k** masterkey
+* **m** PHI module name (without *.py* extension)
+* **c** PHI module content (as-is)
+
+Optionally:
+
+* **force==1** overwrite PHI module file if exist
+
+Returns result="OK" if module is uploaded, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+unlink_phi_mod - delete PHI module file
+---------------------------------------
+
+Deletes PHI module file, if the module is loaded, all its instances should be
+unloaded first.
+
+Parameters:
+
+* **k** masterkey
+* **m** PHI module name (without *.py* extension)
+
+Returns result="OK" if module is deleted, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+get_phi - get loaded PHI information
+------------------------------------
+
+Returns a dict with information about PHI
+
+Parameters:
+
+* **k** masterkey
+* **i** PHI ID
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Forbidden** PHI not found
+* **500 Internal Error** inaccessible PHI
+
+test_phi - test PHI
+-------------------
+
+Returns PHI test result. All PHIs respond to **self** command, **help** command
+returns all available test commands.
+
+Parameters:
+
+* **k** masterkey
+* **i** PHI ID
+* **c** test command
+
+Returns test result. *self* command always returns a JSON string (not a dict),
+either *OK* or *FAILED*.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Forbidden** PHI not found
+* **500 Internal Error** inaccessible PHI or PHI test is failed
+
+exec_phi - execute additional PHI commands
+------------------------------------------
+
+Returns PHI command execution result. **help** command returns all available
+commands.
+
+Parameters:
+
+* **k** masterkey
+* **i** PHI ID
+* **c** command to exec
+
+Returns command execution result (usually strings *OK*, *FAILED* or *not
+implemented*)
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Forbidden** PHI not found
+* **500 Internal Error** inaccessible PHI or PHI test is failed
+
+list_phi_mods - get list of available PHI modules
+-------------------------------------------------
+
+Returns a list of all available PHI modules.
+
+Parameters:
+
+* **k** masterkey
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+modinfo_phi - get PHI module info
+---------------------------------
+
+Returns a dict with information about PHI module.
+
+Parameters:
+
+* **k** masterkey
+* **m** PHI module
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **500 Internal Error** inaccessible PHI module
+
+modhelp_phi - get PHI module usage help
+---------------------------------------
+
+Returns a dict with PHI usage help.
+
+Parameters:
+
+* **k** masterkey
+* **m** PHI module
+* **c** help context (*cfg*, *get* or *set*)
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **500 Internal Error** inaccessible PHI module
+
+list_drivers - list loaded drivers
+----------------------------------
+
+Returns a list of loaded :doc:`drivers</drivers>`
+
+Parameters:
+
+* **k** masterkey
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+load_driver - load driver
+-------------------------
+
+Loads a :doc:`driver</drivers>`, combining previously loaded PHI and chosen LPI
+module.
+
+Parameters:
+
+* **k** masterkey
+* **i** LPI ID
+* **m** LPI module
+* **p** PHI ID
+* **c** Driver (LPI) configuration, optional
+
+Optionally:
+
+* **save==1** save driver configuration after successful call
+
+Driver ID is a combination of PHI and LPI IDs: DRIVER_ID = PHI_ID.LPI_ID
+
+Returns result="OK" if driver is loaded, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+get_driver - get loaded driver information
+------------------------------------------
+
+Parameters:
+
+* **k** masterkey
+* **i** PHI ID
+
+Returns a dict with information about driver (both LPI and PHI)
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **500 Internal Error** inaccessible driver
+
+unload driver - unload driver
+-----------------------------
+
+Unloads specified driver (LPI module only, leaving PHI untouched)
+
+Parameters:
+
+* **k** masterkey
+* **i** Driver ID
+
+Returns result="OK" if driver is unloaded, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+list_lpi_mods - get list of available LPI modules
+-------------------------------------------------
+
+Returns a list of all available LPI modules.
+
+Parameters:
+
+* **k** masterkey
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+modinfo_lpi - get LPI module info
+---------------------------------
+
+Returns a dict with information about LPI module.
+
+Parameters:
+
+* **k** masterkey
+* **m** LPI module
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **500 Internal Error** inaccessible LPI module
+
+modhelp_lpi - get LPI module usage help
+---------------------------------------
+
+Returns a dict with LPI usage help.
+
+Parameters:
+
+* **k** masterkey
+* **m** LPI module
+* **c** help context (*cfg*, *action* or *update*)
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **500 Internal Error** inaccessible LPI module
+
+set_driver - set driver to item
+-------------------------------
+
+Sets the specified driver to :doc:`item</items>`, automatically updating item
+props:
+
+* **action_driver_config**, **update_driver_config** to the specified
+  configuration
+* **action_exec**, **update_exec** to do all operations via driver function
+  calls (sets both to *|<driver_id>*)
+
+Parameters:
+
+* **k** masterkey
+* **i** item ID
+* **d** driver ID (if none - all above item props are set to *null*)
+* **c** configuration (e.g. port number)
+
+Optionally:
+
+* **save==1** save item configuration after successful call
+
+Returns result="OK" if driver is set, or result="ERROR", if an error occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
 
 .. include:: ../userauth.rst
 
