@@ -205,7 +205,7 @@ be serialized by parent class if requested:
         self.__functions = __functions__
         self.__help = __help__
         if info_only: return
-        # your code, i.e. to parse self.phi_cfg
+        # your code, i.e. parsing self.cfg
 
 The super().__init__ call should always be first.
 
