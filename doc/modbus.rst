@@ -39,7 +39,8 @@ where:
 
 * **-y** save ModBus port config after creation
 
-* **ID** virtual port ID which will be used later in PHI configurations
+* **ID** virtual port ID which will be used later in :doc:`PHI</drivers>`
+  configurations
 
 * **PARAMS** ModBus params
 
