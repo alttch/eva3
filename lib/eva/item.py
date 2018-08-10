@@ -1701,7 +1701,10 @@ class ItemAction(object):
             eva.core.critical()
             self.item_action_lock.release()
             return False
-        if self.is_finished(): return None
+        if self.is_finished():
+            self.item.queue_lock.release()
+            self.item_action_lock.release()
+            return None
         if self.is_status_running():
             result = self.item.terminate(lock=False)
             self.item.queue_lock.release()
