@@ -17,6 +17,7 @@ from eva.tools import format_json
 exts = {}
 env = {}
 
+# extension functions
 
 def get_version():
     return __api__
@@ -37,6 +38,7 @@ def critical():
 def log_traceback():
     return eva.core.log_traceback()
 
+# internal functions
 
 def get_ext(ext_id):
     return exts.get(ext_id)
