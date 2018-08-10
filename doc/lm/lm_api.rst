@@ -876,5 +876,118 @@ Errors:
 
 * **403 Forbidden** invalid API KEY
 
+list_ext - list loaded macro extensions
+---------------------------------------
+
+Returns a list which contains all loaded :doc:`macro extensions</lm/ext>`.
+
+Parameters:
+
+* **k** masterkey
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+load_ext - load macro extension
+-------------------------------
+
+Loads:doc:`macro extension</lm/ext>`.
+
+Parameters:
+
+* **k** masterkey
+* **i** macro extension ID, required
+* **m** macro extension module, required
+* **c** macro extension configuration
+
+Optionally:
+
+* **save==1** save extension configuration after successful call
+
+Returns a dict with information about extension if module is loaded, or
+result="ERROR", if an error occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+unload_ext - unload macro extension
+-----------------------------------
+
+Unloads macro extension.
+
+Parameters:
+
+* **k** masterkey
+* **i** macro extension ID
+
+Returns result="OK" if module is unloaded, or result="ERROR", if an error
+occurred.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+get_ext - get loaded macro extension information
+------------------------------------------------
+
+Returns a dict with information about macro extension
+
+Parameters:
+
+* **k** masterkey
+* **i** macro extension ID
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Forbidden** macro extension not found
+* **500 Internal Error** inaccessible macro extension
+
+list_ext_mods - get list of available macro extension modules
+-------------------------------------------------------------
+
+Returns a list of all available macro extension modules.
+
+Parameters:
+
+* **k** masterkey
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+
+modinfo_ext - get macro extension module info
+---------------------------------------------
+
+Returns a dict with information about macro extension module.
+
+Parameters:
+
+* **k** masterkey
+* **m** macro extension module
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **500 Internal Error** inaccessible macro extension module
+
+modhelp_ext - get extension module usage help
+---------------------------------------------
+
+Returns a dict with macro extension usage help.
+
+Parameters:
+
+* **k** masterkey
+* **m** macro extension module
+* **c** help context (*cfg* or *functions*)
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **500 Internal Error** inaccessible macro extension module
+
 .. include:: ../userauth.rst
 
