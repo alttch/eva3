@@ -506,13 +506,13 @@ class LM_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.lm.extapi.list_mods()
 
-    def modinfo_ext(self, k=None, i=None):
+    def modinfo_ext(self, k=None, m=None):
         if not apikey.check(k, master=True): return None
-        return eva.lm.extapi.modinfo(i)
+        return eva.lm.extapi.modinfo(m)
 
-    def modhelp_ext(self, k=None, i=None, c=None):
+    def modhelp_ext(self, k=None, m=None, c=None):
         if not apikey.check(k, master=True): return None
-        return eva.lm.extapi.modhelp(i, c)
+        return eva.lm.extapi.modhelp(m, c)
 
 
 class LM_HTTP_API(GenericHTTP_API, LM_API):
@@ -897,17 +897,17 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         if result is False: raise cp_api_404()
         return result
 
-    def modinfo_ext(self, k=None, i=None):
+    def modinfo_ext(self, k=None, m=None):
         cp_need_master(k)
-        result = super().modinfo_ext(k, i)
+        result = super().modinfo_ext(k, m)
         if not result:
             raise cp_api_error()
         else:
             return result
 
-    def modhelp_ext(self, k=None, i=None, c=None):
+    def modhelp_ext(self, k=None, m=None, c=None):
         cp_need_master(k)
-        result = super().modhelp_ext(k, i, c)
+        result = super().modhelp_ext(k, m, c)
         if result is None:
             raise cp_api_error()
         else:

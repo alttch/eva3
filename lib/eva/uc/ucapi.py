@@ -713,21 +713,21 @@ class UC_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.uc.driverapi.list_lpi_mods()
 
-    def modinfo_phi(self, k=None, i=None):
+    def modinfo_phi(self, k=None, m=None):
         if not apikey.check(k, master=True): return None
-        return eva.uc.driverapi.modinfo_phi(i)
+        return eva.uc.driverapi.modinfo_phi(m)
 
-    def modinfo_lpi(self, k=None, i=None):
+    def modinfo_lpi(self, k=None, m=None):
         if not apikey.check(k, master=True): return None
-        return eva.uc.driverapi.modinfo_lpi(i)
+        return eva.uc.driverapi.modinfo_lpi(m)
 
-    def modhelp_phi(self, k=None, i=None, c=None):
+    def modhelp_phi(self, k=None, m=None, c=None):
         if not apikey.check(k, master=True) or not c: return None
-        return eva.uc.driverapi.modhelp_phi(i, c)
+        return eva.uc.driverapi.modhelp_phi(m, c)
 
-    def modhelp_lpi(self, k=None, i=None, c=None):
+    def modhelp_lpi(self, k=None, m=None, c=None):
         if not apikey.check(k, master=True) or not c: return None
-        return eva.uc.driverapi.modhelp_lpi(i, c)
+        return eva.uc.driverapi.modhelp_lpi(m, c)
 
     def set_driver(self, k=None, i=None, d=None, c=None, save=False):
         if not apikey.check(k, master=True): return None
@@ -1235,14 +1235,14 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         result = super().test_phi(k, i, c)
         if result is False: raise cp_api_404()
         if result is None: raise cp_api_error()
-        return http_api_result_ok() if result is True else result
+        return result
 
     def exec_phi(self, k=None, i=None, c=None, a=None):
         cp_need_master(k)
         result = super().exec_phi(k, i, c, a)
         if result is False: raise cp_api_404()
         if result is None: raise cp_api_error()
-        return http_api_result_ok() if result is True else result
+        return result
 
     def list_phi_mods(self, k=None):
         cp_need_master(k)
@@ -1252,33 +1252,33 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         cp_need_master(k)
         return super().list_lpi_mods(k)
 
-    def modinfo_phi(self, k=None, i=None):
+    def modinfo_phi(self, k=None, m=None):
         cp_need_master(k)
-        result = super().modinfo_phi(k, i)
+        result = super().modinfo_phi(k, m)
         if not result:
             raise cp_api_error()
         else:
             return result
 
-    def modhelp_phi(self, k=None, i=None, c=None):
+    def modhelp_phi(self, k=None, m=None, c=None):
         cp_need_master(k)
-        result = super().modhelp_phi(k, i, c)
+        result = super().modhelp_phi(k, m, c)
         if result is None:
             raise cp_api_error()
         else:
             return result
 
-    def modinfo_lpi(self, k=None, i=None):
+    def modinfo_lpi(self, k=None, m=None):
         cp_need_master(k)
-        result = super().modinfo_lpi(k, i)
+        result = super().modinfo_lpi(k, m)
         if not result:
             raise cp_api_error()
         else:
             return result
 
-    def modhelp_lpi(self, k=None, i=None, c=None):
+    def modhelp_lpi(self, k=None, m=None, c=None):
         cp_need_master(k)
-        result = super().modhelp_lpi(k, i, c)
+        result = super().modhelp_lpi(k, m, c)
         if result is None:
             raise cp_api_error()
         else:

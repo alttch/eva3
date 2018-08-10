@@ -659,13 +659,13 @@ class UC_CLI(GenericCLI):
             action='store_true')
 
         sp_phi_modinfo = sp_phi.add_parser('modinfo', help='PHI module info')
-        sp_phi_modinfo.add_argument('i', help='PHI module', metavar='PHI_MOD')
+        sp_phi_modinfo.add_argument('m', help='PHI module', metavar='PHI_MOD')
 
         sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
-        sp_lpi_modinfo.add_argument('i', help='LPI module', metavar='LPI_MOD')
+        sp_lpi_modinfo.add_argument('m', help='LPI module', metavar='LPI_MOD')
 
         sp_phi_modhelp = sp_phi.add_parser('modhelp', help='PHI module help')
-        sp_phi_modhelp.add_argument('i', help='PHI module', metavar='PHI_MOD')
+        sp_phi_modhelp.add_argument('m', help='PHI module', metavar='PHI_MOD')
         sp_phi_modhelp.add_argument(
             'c',
             help='Help context (cfg, get, set)',
@@ -673,7 +673,7 @@ class UC_CLI(GenericCLI):
             choices=['cfg', 'get', 'set'])
 
         sp_lpi_modhelp = sp_lpi.add_parser('modhelp', help='LPI module help')
-        sp_lpi_modhelp.add_argument('i', help='LPI module', metavar='LPI_MOD')
+        sp_lpi_modhelp.add_argument('m', help='LPI module', metavar='LPI_MOD')
         sp_lpi_modhelp.add_argument(
             'c',
             help='Help context (cfg, action, update)',
