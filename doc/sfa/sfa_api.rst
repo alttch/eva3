@@ -162,7 +162,7 @@ All the connected clients receive the event with *subject="server"* and
 Server restart notification is sent automatically to all connected clients when
 the server is restarting. This API function allows to send server restart
 notification without actual server restart, which may be useful e.g. for
-testing, handling frontend restart and etc.
+testing, handling frontend restart etc.
 
 Parameters:
 
