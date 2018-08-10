@@ -82,7 +82,7 @@ Parameters:
 * **p** item type (short forms U for unit, S for sensor may be used)
 * **g** group filter, optional :ref:`mqtt<mqtt_>` masks can be used, for
   example group1/#, group1/+/lamps)
-* **f** if *1*, display extended item info, optional (config_changed,
+* **full** if *1*, display extended item info, optional (config_changed,
   description, virtual, status_labels and action_enabled for unit)
 
 Returns item state in JSON dict or array of dicts:
@@ -654,6 +654,10 @@ optionally:
 
 Returns result="OK" if the item is cloned, or result="ERROR", if an error
 occurred.
+
+.. note::
+
+    Multiupdates can not be cloned
 
 Errors:
 
