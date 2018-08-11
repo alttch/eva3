@@ -31,6 +31,7 @@ _api_functions = {
     'macro:props': 'list_macro_props',
     'macro:set': 'set_macro_prop',
     'macro:create': 'create_macro',
+    'macro:destroy': 'destroy_macro',
     'macro:run': 'run',
     'macro:result': 'result',
     'controller:list': 'list_controllers',
@@ -268,7 +269,7 @@ class LM_CLI(GenericCLI):
             action='store_true')
 
         ap_macro_create = sp_macro.add_parser('create', help='Create new macro')
-        ap_macro_create.add_argument('i', help='Macro ID', metavar='OID')
+        ap_macro_create.add_argument('i', help='Macro ID', metavar='ID')
         ap_macro_create.add_argument(
             '-g', '--group', help='Macro group', metavar='GROUP', dest='g')
         ap_macro_create.add_argument(
