@@ -241,6 +241,7 @@ class DecisionRule(eva.item.Item):
         self.chillout_time = 0
         self.last_matched = 0
         super().__init__(_uuid, 'dmatrix_rule')
+        self.respect_layout = False
         super().update_config({'group': 'dm_rules'})
 
     def serialize(self,

@@ -52,7 +52,7 @@ class LM_API(GenericAPI):
             groups = []
             m = None
             if tp == 'LV' or tp == 'lvar':
-                m = eva.lm.controller.lvars_by_id
+                m = eva.lm.controller.lvars_by_full_id
             if m:
                 for i, v in m.copy().items():
                     if apikey.check(k, v) and not v.group in groups:
@@ -68,7 +68,7 @@ class LM_API(GenericAPI):
             if not item or not apikey.check(k, item): return None
             return item.serialize(full=full)
         else:
-            gi = eva.lm.controller.lvars_by_id
+            gi = eva.lm.controller.lvars_by_full_id
             result = []
             for i, v in gi.copy().items():
                 if apikey.check(k, v) and \
@@ -295,9 +295,9 @@ class LM_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         result = []
         if tp == 'LV' or tp == 'lvar':
-            items = eva.lm.controller.lvars_by_id
+            items = eva.lm.controller.lvars_by_full_id
         else:
-            items = eva.lm.controller.items_by_id
+            items = eva.lm.controller.items_by_full_id
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
                 result.append(v.serialize(info=True))

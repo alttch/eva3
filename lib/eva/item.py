@@ -32,6 +32,7 @@ class Item(object):
         self._destroyed = False
         self.config_changed = False
         self.config_file_exists = False
+        self.respect_layout = True
 
     def set_group(self, group=None):
         if group: self.group = group
@@ -113,8 +114,11 @@ class Item(object):
         if fname:
             return fname
         else:
+            _id = self.full_id.replace('/', '___') if \
+                    eva.core.enterprise_layout and self.respect_layout else \
+                        self.item_id
             return eva.core.format_cfg_fname(eva.core.product_code + \
-                    '_%s.d/' % self.item_type + self.item_id + '.json', \
+                    '_%s.d/' % self.item_type + _id + '.json', \
                     cfg = None, runtime = True)
 
     def load(self, fname=None):

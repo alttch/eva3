@@ -13,7 +13,11 @@ import time
 
 class ActiveItemQueue(object):
 
-    def __init__(self, queue_id, keep_history=None, default_priority=100):
+    def __init__(self,
+                 queue_id,
+                 keep_history=None,
+                 default_priority=100,
+                 enterprise_layout=False):
         self.default_priority = default_priority
         self.q_id = queue_id
         if keep_history: self.keep_history = keep_history
@@ -33,6 +37,8 @@ class ActiveItemQueue(object):
         self.action_processor = None
         self.action_cleaner_active = False
         self.q = PriorityQueue()
+
+        self.enterprise_layout = enterprise_layout
 
     def put_task(self, action, priority=None):
         if priority: p = priority
@@ -73,12 +79,11 @@ class ActiveItemQueue(object):
         try:
             self.actions.append(action)
             self.actions_by_id[action.uuid] = action
-            if not action.item.item_id in self.actions_by_item_id:
-                self.actions_by_item_id[action.item.item_id] = []
-            self.actions_by_item_id[action.item.item_id].append(action)
-            if not action.item.full_id in self.actions_by_item_full_id:
-                self.actions_by_item_full_id[action.item.full_id] = []
-            self.actions_by_item_full_id[action.item.full_id].append(action)
+            if not self.enterprise_layout:
+                self.actions_by_item_id.setdefault(action.item.item_id,
+                                                   []).append(action)
+            self.actions_by_item_full_id.setdefault(action.item.full_id,
+                                                    []).append(action)
         except:
             self.actions_lock.release()
             eva.core.log_traceback()
@@ -92,7 +97,8 @@ class ActiveItemQueue(object):
             eva.core.critical()
             return False
         try:
-            self.actions_by_item_id[action.item.item_id].remove(action)
+            if not self.enterprise_layout:
+                self.actions_by_item_id[action.item.item_id].remove(action)
             self.actions_by_item_full_id[action.item.full_id].remove(action)
             self.actions.remove(action)
             del self.actions_by_id[action.uuid]

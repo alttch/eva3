@@ -110,6 +110,8 @@ _sigterm_sent = False
 
 start_time = time.time()
 
+enterprise_layout = False
+
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
@@ -336,6 +338,7 @@ def load(fname=None, initial=False, init_log=True):
     global exec_before_save
     global exec_after_save
     global mqtt_update_default
+    global enterprise_layout
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
     try:
@@ -434,10 +437,12 @@ def load(fname=None, initial=False, init_log=True):
             else: f = userdb_file
             logging.debug('server.userdb_file = %s' % f)
             try:
-                notify_on_start = (cfg.get('server',
-                                           'notify_on_start') == 'yes')
+                enterprise_layout = (cfg.get('server',
+                                             'layout') == 'enterprise')
             except:
                 pass
+            logging.debug('server.layout = %s' % ('enterprise' \
+                                        if enterprise_layout else 'simple'))
         try:
             polldelay = float(cfg.get('server', 'polldelay'))
         except:

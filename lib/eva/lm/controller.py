@@ -63,8 +63,8 @@ def get_item(item_id):
     item = None
     if i.find('/') > -1:
         if i in items_by_full_id: item = items_by_full_id[i]
-    else:
-        if i in items_by_id: item = items_by_id[i]
+    elif not eva.core.enterprise_layout and i in items_by_id:
+        item = items_by_id[i]
     return None if item and is_oid(item_id) and item.item_type != tp else item
 
 
@@ -101,8 +101,8 @@ def get_lvar(lvar_id):
     i = oid_to_id(lvar_id)
     if i.find('/') > -1:
         if i in lvars_by_full_id: return lvars_by_full_id[i]
-    else:
-        if i in lvars_by_id: return lvars_by_id[i]
+    elif not eva.core.enterprise_layout and i in lvars_by_id:
+        return lvars_by_id[i]
     return None
 
 
@@ -113,18 +113,16 @@ def append_item(item, start=False, load=True):
         eva.core.log_traceback()
         return False
     if item.item_type == 'lvar':
-        lvars_by_id[item.item_id] = item
-        if item.group not in lvars_by_group:
-            lvars_by_group[item.group] = {}
-        lvars_by_group[item.group][item.item_id] = item
+        if not eva.core.enterprise_layout:
+            lvars_by_id[item.item_id] = item
+        lvars_by_group.setdefault(item.group, {})[item.item_id] = item
         lvars_by_full_id[item.full_id] = item
-    items_by_id[item.item_id] = item
-    if item.group not in items_by_group:
-        items_by_group[item.group] = {}
-    items_by_group[item.group][item.item_id] = item
+    if not eva.core.enterprise_layout:
+        items_by_id[item.item_id] = item
+    items_by_group.setdefault(item.group, {})[item.item_id] = item
     items_by_full_id[item.full_id] = item
     if start: item.start_processors()
-    logging.debug('+ %s %s' % (item.item_type, item.item_id))
+    logging.debug('+ %s' % (item.oid))
     return True
 
 
@@ -143,7 +141,7 @@ def create_lvar_state_table():
 
 
 def save():
-    for i, v in lvars_by_id.items():
+    for i, v in lvars_by_full_id.items():
         if not save_lvar_state(v):
             return False
         if v.config_changed:
@@ -191,18 +189,19 @@ def save_lvar_state(item):
     try:
         db = eva.core.get_db()
         c = db.cursor()
+        _id = item.full_id if eva.core.enterprise_layout else item.item_id
         c.execute('update lvar_state set set_time = ?, status=?, value=?' + \
                 ' where id=?',
-                (item.set_time, item.status, item.value, item.item_id))
+                (item.set_time, item.status, item.value, _id))
         if not c.rowcount:
             c.close()
             c = db.cursor()
             c.execute('insert into lvar_state (id, set_time, status, value) ' +\
                     'values(?,?,?,?)',
-                    (item.item_id, item.set_time, item.status, item.value))
-            logging.debug('%s state inserted into db' % item.full_id)
+                    (_id, item.set_time, item.status, item.value))
+            logging.debug('%s state inserted into db' % item.oid)
         else:
-            logging.debug('%s state updated in db' % item.full_id)
+            logging.debug('%s state updated in db' % item.oid)
         db.commit()
         c.close()
         db.close()
@@ -282,10 +281,17 @@ def load_lvars(start=False):
         fnames = eva.core.format_cfg_fname(eva.core.product_code + \
                 '_lvar.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
-            unit_id = os.path.splitext(os.path.basename(ucfg))[0]
-            u = eva.lm.lvar.LVar(unit_id)
+            lvar_id = os.path.splitext(os.path.basename(ucfg))[0]
+            if eva.core.enterprise_layout:
+                _id = lvar_id.split('___')[-1]
+                lvar_id = lvar_id.replace('___', '/')
+            else:
+                _id = lvar_id
+            u = eva.lm.lvar.LVar(_id)
+            if eva.core.enterprise_layout:
+                u.set_group('/'.join(lvar_id.split('/')[:-1]))
             if append_item(u, start=False):
-                _loaded[unit_id] = u
+                _loaded[lvar_id] = u
         load_lvar_db_state(_loaded, clean=True)
         if start:
             for i, v in _loaded.items():
@@ -502,7 +508,9 @@ def create_item(item_id, item_type, group=None, virtual=False, save=False):
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
         return False
     i_full = grp + '/' + i
-    if i in items_by_id or i_full in items_by_full_id: return False
+    if (not eva.core.enterprise_layout and i in items_by_id) or \
+            i_full in items_by_full_id:
+        return False
     item = None
     if item_type == 'LV' or item_type == 'lvar':
         item = eva.lm.lvar.LVar(i)
@@ -533,11 +541,13 @@ def destroy_item(item):
             if not i: return False
         else:
             i = item
-        del items_by_id[i.item_id]
+        if not eva.core.enterprise_layout:
+            del items_by_id[i.item_id]
         del items_by_full_id[i.full_id]
         del items_by_group[i.group][i.item_id]
         if i.item_type == 'lvar':
-            del lvars_by_id[i.item_id]
+            if not eva.core.enterprise_layout:
+                del lvars_by_id[i.item_id]
             del lvars_by_full_id[i.full_id]
             del lvars_by_group[i.group][i.item_id]
             if not lvars_by_group[i.group]:
@@ -559,7 +569,7 @@ def destroy_item(item):
 
 def save_lvars():
     logging.info('Saving lvars')
-    for i, u in lvars_by_id.items():
+    for i, u in lvars_by_full_id.items():
         u.save()
 
 
@@ -568,7 +578,7 @@ def notify_all(skip_subscribed_mqtt=False):
 
 
 def notify_all_lvars(skip_subscribed_mqtt=False):
-    for i, u in lvars_by_id.items():
+    for i, u in lvars_by_full_id.items():
         u.notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 
@@ -581,7 +591,7 @@ def serialize():
 
 def serialize_lvars(full=False, config=False):
     d = {}
-    for i, u in lvars_by_id.items():
+    for i, u in lvars_by_full_id.items():
         d[i] = u.serialize(full, config)
     return d
 
@@ -614,14 +624,14 @@ def start():
         else:
             logging.error('Failed to add %s to the controller pool' % \
                     v.item_id)
-    for i, v in lvars_by_id.items():
+    for i, v in lvars_by_full_id.items():
         v.start_processors()
 
 
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.db_update == 1: save()
-    for i, v in items_by_id.copy().items():
+    for i, v in items_by_full_id.copy().items():
         v.stop_processors()
     if uc_pool:
         uc_pool.stop()
@@ -667,7 +677,7 @@ def exec_macro(macro,
 
 
 def dump(item_id=None):
-    if item_id: return items_by_id[item_id]
+    if item_id: return items_by_full_id[item_id]
     rcs = {}
     for i, v in remote_ucs.copy().items():
         rcs[i] = v.serialize()

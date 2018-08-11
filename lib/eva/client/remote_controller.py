@@ -22,6 +22,7 @@ class RemoteController(eva.item.Item):
         if item_id == None:
             item_id = ''
         super().__init__(item_id, item_type)
+        self.respect_layout = False
         if api:
             self.api = api
             self._key = api._key
