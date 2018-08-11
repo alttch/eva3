@@ -1851,7 +1851,7 @@ class MultiUpdate(UpdatableItem):
             ids = []
             if not config or self.items_to_update:
                 for i in self.items_to_update:
-                    ids.append(i.item_id)
+                    ids.append(i.oid)
                 d['items'] = ids
         return d
 

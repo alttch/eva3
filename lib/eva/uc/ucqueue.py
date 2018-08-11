@@ -4,6 +4,7 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.0"
 
 from eva.itemqueue import ActiveItemQueue
+import eva.core
 
 
 class UC_Queue(ActiveItemQueue):
@@ -12,4 +13,5 @@ class UC_Queue(ActiveItemQueue):
         super().__init__(
             queue_id=queue_id,
             keep_history=keep_history,
-            default_priority=default_priority)
+            default_priority=default_priority,
+            enterprise_layout=eva.core.enterprise_layout)

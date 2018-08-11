@@ -45,13 +45,13 @@ class UC_API(GenericAPI):
         if i:
             return eva.uc.controller.get_unit(i)
         else:
-            return eva.uc.controller.units_by_id
+            return eva.uc.controller.units_by_full_id
 
     def dev_uc_mu(self, k=None, i=None):
         if i:
             return eva.uc.controller.get_mu(i)
         else:
-            return eva.uc.controller.mu_by_id
+            return eva.uc.controller.mu_by_full_id
 
     def groups(self, k=None, tp=None):
         if apikey.check(k, master=True):
@@ -67,9 +67,9 @@ class UC_API(GenericAPI):
             groups = []
             m = None
             if tp == 'U' or tp == 'unit':
-                m = eva.uc.controller.units_by_id
+                m = eva.uc.controller.units_by_full_id
             elif tp == 'S' or tp == 'sensor':
-                m = eva.uc.controller.sensors_by_id
+                m = eva.uc.controller.sensors_by_full_id
             if m:
                 for i, v in m.copy().items():
                     if apikey.check(k, v) and not v.group in groups:
@@ -93,9 +93,9 @@ class UC_API(GenericAPI):
                 _tp = tp
                 grp = group
             if tp == 'U' or _tp == 'unit':
-                gi = eva.uc.controller.units_by_id
+                gi = eva.uc.controller.units_by_full_id
             elif tp == 'S' or _tp == 'sensor':
-                gi = eva.uc.controller.sensors_by_id
+                gi = eva.uc.controller.sensors_by_full_id
             else:
                 return None
             result = []
@@ -275,13 +275,13 @@ class UC_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         result = []
         if tp == 'U' or tp == 'unit':
-            items = eva.uc.controller.units_by_id
+            items = eva.uc.controller.units_by_full_id
         elif tp == 'S' or tp == 'sensor':
-            items = eva.uc.controller.sensors_by_id
+            items = eva.uc.controller.sensors_by_full_id
         elif tp == 'MU' or tp == 'mu':
-            items = eva.uc.controller.mu_by_id
+            items = eva.uc.controller.mu_by_full_id
         else:
-            items = eva.uc.controller.items_by_id
+            items = eva.uc.controller.items_by_full_id
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
                 result.append(v.serialize(info=True))

@@ -53,8 +53,8 @@ def get_item(item_id):
     item = None
     if i.find('/') > -1:
         if i in items_by_full_id: item = items_by_full_id[i]
-    else:
-        if i in items_by_id: item = items_by_id[i]
+    elif not eva.core.enterprise_layout and i in items_by_id:
+        item = items_by_id[i]
     return None if item and is_oid(item_id) and item.item_type != tp else item
 
 
@@ -64,8 +64,8 @@ def get_unit(unit_id):
     i = oid_to_id(unit_id)
     if i.find('/') > -1:
         if i in units_by_full_id: return units_by_full_id[i]
-    else:
-        if i in units_by_id: return units_by_id[i]
+    elif not eva.core.enterprise_layout and i in units_by_id:
+        return units_by_id[i]
     return None
 
 
@@ -76,8 +76,8 @@ def get_sensor(sensor_id):
     if i.find('/') > -1:
         if i in sensors_by_full_id:
             return sensors_by_full_id[i]
-    else:
-        if i in sensors_by_id: return sensors_by_id[i]
+    elif not eva.core.enterprise_layout and i in sensors_by_id:
+        return sensors_by_id[i]
     return None
 
 
@@ -87,8 +87,8 @@ def get_mu(mu_id):
     i = oid_to_id(mu_id)
     if i.find('/') > -1:
         if i in mu_by_full_id: return mu_by_full_id[i]
-    else:
-        if i in mu_by_id: return mu_by_id[i]
+    elif not eva.core.enterprise_layout and i in mu_by_id:
+        return mu_by_id[i]
     return None
 
 
@@ -99,27 +99,23 @@ def append_item(item, start=False, load=True):
         eva.core.log_traceback()
         return False
     if item.item_type == 'unit':
-        units_by_id[item.item_id] = item
-        if item.group not in units_by_group:
-            units_by_group[item.group] = {}
-        units_by_group[item.group][item.item_id] = item
+        if not eva.core.enterprise_layout:
+            units_by_id[item.item_id] = item
+        units_by_group.setdefault(item.group, {})[item.item_id] = item
         units_by_full_id[item.full_id] = item
     elif item.item_type == 'sensor':
-        sensors_by_id[item.item_id] = item
-        if item.group not in sensors_by_group:
-            sensors_by_group[item.group] = {}
-        sensors_by_group[item.group][item.item_id] = item
+        if not eva.core.enterprise_layout:
+            sensors_by_id[item.item_id] = item
+        sensors_by_group.setdefault(item.group, {})[item.item_id] = item
         sensors_by_full_id[item.full_id] = item
     elif item.item_type == 'mu':
-        mu_by_id[item.item_id] = item
-        if item.group not in mu_by_group:
-            mu_by_group[item.group] = {}
-        mu_by_group[item.group][item.item_id] = item
+        if not eva.core.enterprise_layout:
+            mu_by_id[item.item_id] = item
+        mu_by_group.setdefault(item.group, {})[item.item_id] = item
         mu_by_full_id[item.group + '/' + item.item_id] = item
-    items_by_id[item.item_id] = item
-    if item.group not in items_by_group:
-        items_by_group[item.group] = {}
-    items_by_group[item.group][item.item_id] = item
+    if not eva.core.enterprise_layout:
+        items_by_id[item.item_id] = item
+    items_by_group.setdefault(item.group, {})[item.item_id] = item
     items_by_full_id[item.full_id] = item
     if start: item.start_processors()
     logging.debug('+ %s %s' % (item.item_type, item.item_id))
@@ -139,7 +135,7 @@ def create_state_table():
 
 
 def save():
-    for i, v in items_by_id.items():
+    for i, v in items_by_full_id.items():
         if isinstance(v, eva.uc.unit.Unit) or \
                 isinstance(v, eva.uc.sensor.Sensor):
             if not save_item_state(v):
@@ -165,8 +161,9 @@ def save_item_state(item):
     try:
         db = eva.core.get_db()
         c = db.cursor()
+        _id = item.full_id if eva.core.enterprise_layout else item.item_id
         c.execute('update state set status=?, value=? where id=?',
-                  (item.status, item.value, item.item_id))
+                  (item.status, item.value, _id))
         if not c.rowcount:
             c.close()
             tp = ''
@@ -177,10 +174,10 @@ def save_item_state(item):
             c = db.cursor()
             c.execute('insert into state (id, tp, status, value) ' +\
                     'values(?,?,?,?)',
-                    (item.item_id, tp, item.status, item.value))
-            logging.debug('%s state inserted into db' % item.full_id)
+                    (_id, tp, item.status, item.value))
+            logging.debug('%s state inserted into db' % item.oid)
         else:
-            logging.debug('%s state updated in db' % item.full_id)
+            logging.debug('%s state updated in db' % item.oid)
         db.commit()
         c.close()
         db.close()
@@ -261,7 +258,14 @@ def load_units(start=False):
                 '_unit.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             unit_id = os.path.splitext(os.path.basename(ucfg))[0]
-            u = eva.uc.unit.Unit(unit_id)
+            if eva.core.enterprise_layout:
+                _id = unit_id.split('___')[-1]
+                unit_id = unit_id.replace('___', '/')
+            else:
+                _id = unit_id
+            u = eva.uc.unit.Unit(_id)
+            if eva.core.enterprise_layout:
+                u.set_group('/'.join(unit_id.split('/')[:-1]))
             if append_item(u, start=False):
                 _loaded[unit_id] = u
         load_db_state(_loaded, 'U', clean=True)
@@ -283,7 +287,14 @@ def load_sensors(start=False):
                 '_sensor.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             sensor_id = os.path.splitext(os.path.basename(ucfg))[0]
-            u = eva.uc.sensor.Sensor(sensor_id)
+            if eva.core.enterprise_layout:
+                _id = sensor_id.split('___')[-1]
+                sensor_id = sensor_id.replace('___', '/')
+            else:
+                _id = sensor_id
+            u = eva.uc.sensor.Sensor(_id)
+            if eva.core.enterprise_layout:
+                u.set_group('/'.join(sensor_id.split('/')[:-1]))
             if append_item(u, start=False):
                 _loaded[sensor_id] = u
         load_db_state(_loaded, 'S', clean=True)
@@ -317,7 +328,9 @@ def create_item(item_id,
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
         return False
     i_full = grp + '/' + i
-    if i in items_by_id or i_full in items_by_full_id: return False
+    if (not eva.core.enterprise_layout and i in items_by_id) or \
+            i_full in items_by_full_id:
+        return False
     item = None
     if item_type == 'U' or item_type == 'unit':
         item = eva.uc.unit.Unit(i)
@@ -428,23 +441,27 @@ def destroy_item(item):
             if not i: return False
         else:
             i = item
-        del items_by_id[i.item_id]
+        if not eva.core.enterprise_layout:
+            del items_by_id[i.item_id]
         del items_by_full_id[i.full_id]
         del items_by_group[i.group][i.item_id]
         if i.item_type == 'unit':
-            del units_by_id[i.item_id]
+            if not eva.core.enterprise_layout:
+                del units_by_id[i.item_id]
             del units_by_full_id[i.full_id]
             del units_by_group[i.group][i.item_id]
             if not units_by_group[i.group]:
                 del units_by_group[i.group]
         if i.item_type == 'sensor':
-            del sensors_by_id[i.item_id]
+            if not eva.core.enterprise_layout:
+                del sensors_by_id[i.item_id]
             del sensors_by_full_id[i.full_id]
             del sensors_by_group[i.group][i.item_id]
             if not sensors_by_group[i.group]:
                 del sensors_by_group[i.group]
         if i.item_type == 'mu':
-            del mu_by_id[i.item_id]
+            if not eva.core.enterprise_layout:
+                del mu_by_id[i.item_id]
             del mu_by_full_id[i.full_id]
             del mu_by_group[i.group][i.item_id]
             if not mu_by_group[i.group]:
@@ -471,7 +488,14 @@ def load_mu(start=False):
                 '_mu.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             mu_id = os.path.splitext(os.path.basename(ucfg))[0]
-            u = eva.uc.ucmu.UCMultiUpdate(mu_id)
+            if eva.core.enterprise_layout:
+                _id = mu_id.split('___')[-1]
+                mu_id = mu_id.replace('___', '/')
+            else:
+                _id = mu_id
+            u = eva.uc.ucmu.UCMultiUpdate(_id)
+            if eva.core.enterprise_layout:
+                u.set_group('/'.join(mu_id.split('/')[:-1]))
             u.get_item_func = get_item
             if u.load():
                 append_item(u, start=False)
@@ -485,19 +509,19 @@ def load_mu(start=False):
 
 def save_units():
     logging.info('Saving units')
-    for i, u in units_by_id.items():
+    for i, u in units_by_full_id.items():
         u.save()
 
 
 def save_sensors():
     logging.info('Saving sensors')
-    for i, u in sensors_by_id.items():
+    for i, u in sensors_by_full_id.items():
         u.save()
 
 
 def save_mu():
     logging.info('Saving multi updates')
-    for i, u in mu_by_id.items():
+    for i, u in mu_by_full_id.items():
         u.save()
 
 
@@ -507,12 +531,12 @@ def notify_all():
 
 
 def notify_all_units():
-    for i, u in units_by_id.items():
+    for i, u in units_by_full_id.items():
         u.notify()
 
 
 def notify_all_sensors():
-    for i, u in sensors_by_id.items():
+    for i, u in sensors_by_full_id.items():
         u.notify()
 
 
@@ -528,21 +552,21 @@ def serialize():
 
 def serialize_units(full=False, config=False):
     d = {}
-    for i, u in units_by_id.items():
+    for i, u in units_by_full_id.items():
         d[i] = u.serialize(full, config)
     return d
 
 
 def serialize_sensors(full=False, config=False):
     d = {}
-    for i, u in sensors_by_id.items():
+    for i, u in sensors_by_full_id.items():
         d[i] = u.serialize(full, config)
     return d
 
 
 def serialize_mu(full=False, config=False):
     d = {}
-    for i, u in mu_by_id.items():
+    for i, u in mu_by_full_id.items():
         d[i] = u.serialize(full, config)
     return d
 
@@ -558,14 +582,14 @@ def start():
     Q = eva.uc.ucqueue.UC_Queue('uc_queue')
     Q.start()
     logging.info('UC action queue started')
-    for i, v in items_by_id.items():
+    for i, v in items_by_full_id.items():
         v.start_processors()
 
 
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.db_update == 1: save()
-    for i, v in items_by_id.copy().items():
+    for i, v in items_by_full_id.copy().items():
         v.stop_processors()
     if Q: Q.stop()
     eva.uc.driverapi.stop()
@@ -626,7 +650,7 @@ def exec_unit_action(unit,
 
 
 def dump(item_id=None):
-    if item_id: return items_by_id[item_id]
+    if item_id: return items_by_full_id[item_id]
     else:
         return {
             'uc_items': items_by_full_id,
