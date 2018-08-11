@@ -30,14 +30,14 @@ PLC</lm/lm>` :doc:`items</items>` in real time:
 
 .. code-block:: bash
 
-    sfa-notifier create -i eva_1 -p mqtt -h localhost -s plant1 -A eva:secret -y
+    sfa-notifier create eva_1 mqtt:eva:secret@localhost -s plant1 -y
 
 We won't subscribe the notifier to anything, because all the data are received
 from it, and there is nothing to send instead.
 
 .. code-block:: bash
 
-    sfa-notifier get_config -i eva_1 
+    sfa-notifier config eva_1 
 
 .. code-block:: json
 
@@ -67,12 +67,12 @@ PLC</lm/lm>` to :doc:`/sfa/sfa` with the keys created specifically for SFA:
 
 .. code-block:: bash
 
-    sfa-cmd append_controller -g uc -u http://localhost:8812 -a secret_for_sfa -m eva_1 -y
-    sfa-cmd append_controller -g lm -u http://localhost:8817 -a secret_for_sfa2 -m eva_1 -y
+    sfa-cmd controller append http://localhost:8812 -a secret_for_sfa -m eva_1 -y
+    sfa-cmd controller append http://localhost:8817 -a secret_for_sfa2 -m eva_1 -y
 
 .. code-block:: bash
 
-    sfa-cmd list_remote -p S
+    sfa-cmd -J remote -p S
 
 .. code-block:: json
 
@@ -102,16 +102,16 @@ and :ref:`logic variables<lvar>`:
 
 .. code-block:: bash
 
-    sfa-cmd list_remote -p U
-    sfa-cmd list_remote -p LV
+    sfa-cmd -J remote -p U
+    sfa-cmd -J remote -p LV
 
 Let SFA reload the items from the connected controllers every 60 seconds, if
 the new ones are added in future:
 
 .. code-block:: bash
 
-    sfa-cmd set_controller_prop -i uc/uc1 -p reload_interval -v 60 -y
-    sfa-cmd set_controller_prop -i lm/lm1 -p reload_interval -v 60 -y
+    sfa-cmd controller set uc/uc1 reload_interval 60 -y
+    sfa-cmd controller set lm/lm1 reload_interval 60 -y
 
 
 Connecting external applications
@@ -132,8 +132,8 @@ The next step it to connect cron for it to run ventilation control macro (edit
 
 .. code-block:: bash
 
-    0 7 * * *    root   /path/to/sfa-cmd run -i control/vi_control -a "0 cron"
-    0 21 * * *    root   /path/to/sfa-cmd run -i control/vi_control -a "1 cron"
+    0 7 * * *    root   /path/to/sfa-cmd macro run control/vi_control -a "0 cron"
+    0 21 * * *    root   /path/to/sfa-cmd macro run control/vi_control -a "1 cron"
 
 As you can see, there is no rocket science here. :doc:`/sfa/sfa` is configured
 by a few commands and immediately starts collecting the data and events. In

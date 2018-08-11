@@ -24,15 +24,15 @@ allow Logic Manager to receive UC item states in real time:
 
 .. code-block:: bash
 
-    lm-notifier create -i eva_1 -p mqtt -h localhost -s plant1 -A eva:secret -y
+    lm-notifier create eva_1 mqtt:eva:secret@localhost -s plant1 -y
 
 then subscribe the notification system to receive the states of the local
 :ref:`logic variables<lvar>` which will be created later:
 
 .. code-block:: bash
 
-    lm-notifier subscribe -i eva_1 -p state -v lvar -g '#'
-    lm-notifier get_config -i eva_1  
+    lm-notifier subscribe state eva_1 -v lvar -g '#'
+    lm-notifier config eva_1
 
 .. code-block:: json
 
@@ -84,8 +84,8 @@ tutorial:
 
 .. code-block:: bash
 
-    lm-cmd append_controller -u http://localhost:8812 -a secret_for_lm -m eva_1 -y
-    lm-cmd list_remote -p S
+    lm-cmd controller append http://localhost:8812 -a secret_for_lm -m eva_1 -y
+    lm-cmd -J remote -p S
 
 .. code-block:: json
 
@@ -114,14 +114,14 @@ Looks correct, sensors are loaded, let's check the units:
 
 .. code-block:: bash
 
-    lm-cmd list_remote -p U
+    lm-cmd -J remote -p U
 
 Let LM PLC reload the items from the connected controller every 60 seconds, if
 the new ones are added in future:
 
 .. code-block:: bash
 
-    lm-cmd set_controller_prop -i uc1 -p reload_interval -v 60 -y
+    lm-cmd controller set uc1 reload_interval 60 -y
 
 Building logic
 --------------
@@ -182,13 +182,13 @@ The macro code will look like:
 
 .. code-block:: python
 
-    if  unit_status('ventilation/vi') and \
-        sensor_value('env/temp1') < value('ventilation/start_temp'):
+    if status('unit:ventilation/vi') and \
+        value('sensor:env/temp1') < value('ventilation/start_temp'):
       try: lock('ventilation/vi/control', 5, 300)
       except: exit()
       stop('ventilation/vi')
-    elif not unit_status('ventilation/vi') and \
-        sensor_value('env/temp1') >= value('ventilation/start_temp'):
+    elif not status('unit:ventilation/vi') and \
+        value('sensor:env/temp1') >= value('ventilation/start_temp'):
       try: lock('ventilation/vi/control', 5, 300)
       except: exit()
       start('ventilation/vi')
@@ -238,9 +238,9 @@ Create two :ref:`logic variables<lvar>`:
 
 .. code-block:: bash
 
-    lm-cmd create_lvar -i vi_auto -g ventilation -y
-    lm-cmd create_lvar -i vi_timer -g ventilation -y
-    lm-cmd set -i vi_auto -s 1 -v 1
+    lm-cmd create lvar:ventilation/vi_auto -y
+    lm-cmd create lvar:ventilation/vi_timer -y
+    lm-cmd set vi_auto -s 1 -v 1
 
 The first one will act as a flag for the ventilation control
 :doc:`macro</lm/macros>`: if the flag is on 1, the control is possible, if
@@ -255,7 +255,7 @@ system cron:
 
 .. code-block:: bash
 
-    lm-cmd create_macro -i vi_control -g control -y
+    lm-cmd macro create control/vi_control -y
 
 Put a macro code in **xc/lm/vi_control.py** file
 
@@ -269,10 +269,10 @@ Put a macro code in **xc/lm/vi_control.py** file
                 start('ventilation/vi') # start ventilation if allowed
         elif _2 == 'cron': # if it's a system cron
             # disable the ventilation automation for everyone but cron
-            set('ventilation/vi_auto', 0):
+            clear('ventilation/vi_auto', 0):
             start('ventilation/vi') # start ventilation
     else: # if it's a command to switch off
-        clear('ventilation/vi_timer', 0) # stop the delayed start timer
+        clear('ventilation/vi_timer') # stop the delayed start timer
         if value('ventilation/vi_auto') or _2 == 'cron':
             # in case the command is send by cron or
             # if allowed to stop - stop it
@@ -312,15 +312,15 @@ We will need one variable identifying whether the alarm is switched on or not:
 
 .. code-block:: bash
 
-    lm-cmd create_lvar -g security -i alarm_enabled -y
-    lm-cmd set -i alarm_enabled -s 1 -v 0
+    lm-cmd create lvar:security/alarm_enabled -y
+    lm-cmd set alarm_enabled -s 1 -v 0
 
 Additionally, we will need two macros. The first one will send API call to
 alarm system:
 
 .. code-block:: bash
 
-    lm-cmd create_macro -g security -i alarm_start -y
+    lm-cmd macro create security/alarm_start -y
 
 put its code to **xc/lm/alarm_start.py**:
 
@@ -337,7 +337,7 @@ alarm system or just turn on the lighting:
 
 .. code-block:: bash
 
-    lm-cmd create_macro -g security -i motion1_handler -y
+    lm-cmd macro create security/motion1_handler -y
 
 put its code to **xc/lm/motion1_handler.py**:
 

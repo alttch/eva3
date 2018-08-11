@@ -46,6 +46,12 @@ EVA **bin** folder is included in system **PATH**.
 
 All operations will be done using :doc:`command line applications</cli>`.
 
+.. note::
+
+    Since EVA 3.1 command line interface was significantly changed. Old CLI
+    tools are available in **legacy** folder. The examples described in
+    tutorial use only new CLI tools.
+
 * EVA Tutorial parts
 
   * :doc:`tut_uc`
