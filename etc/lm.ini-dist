@@ -28,6 +28,8 @@ dump_on_critical = yes
 stop_on_critical = yes
 ; default timeout
 timeout = 5
+; layout (simple or enterprise)
+layout = simple
 
 ; exec commands before/after config/db save,
 ; i.e. mount -o remount,rw / (then back to ro)
