@@ -274,3 +274,4 @@ def init():
     eva.core.append_save_func(save)
     eva.core.append_dump_func('sfa', dump)
     eva.core.append_stop_func(stop)
+    eva.core.enterprise_layout = None

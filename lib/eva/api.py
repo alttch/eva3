@@ -177,6 +177,9 @@ class GenericAPI(object):
             'uptime':
             int(time.time() - eva.core.start_time)
         })
+        if eva.core.enterprise_layout is not None:
+            result['layout'] = 'enterprise' if \
+                    eva.core.enterprise_layout else 'simple'
         if apikey.check(k, sysfunc=True):
             result['debug'] = eva.core.debug
             result['db_update'] = eva.core.db_update
