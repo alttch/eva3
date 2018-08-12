@@ -179,7 +179,7 @@ Interface
 ---------
 
 SFA interface is always specifically designed for a certain installation using
-doc:`sfa_templates`, :doc:`sfa_framework` and :doc:`sfa_pvt`. Interface files
+:doc:`sfa_templates`, :doc:`sfa_framework` and :doc:`sfa_pvt`. Interface files
 are stored in **ui** folder, interface is available at
 *http(s)://<IP_address_SFA:Port>/* (redirects to */ui/*) or
 *http(s)://<IP_address_SFA:Port>/ui/*.
