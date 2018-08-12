@@ -51,7 +51,7 @@ where:
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
   *LV* for :ref:`lvar<lvar>`), required
 
-* **k** `API key<sfa_apikey>` (use key ID instead of key itself)
+* **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
 The function is similar to SFA API :ref:`groups<sfa_groups>` except if API key
 is not specified, the current key is used.
@@ -74,7 +74,7 @@ where:
 * **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
   *LV* for :ref:`lvar<lvar>`), required
 
-* **k** `API key<sfa_apikey>` (use key ID instead of key itself)
+* **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
 The function is similar to SFA API :ref:`state<sfa_state>` except if API key
 is not specified, the current key is used.
