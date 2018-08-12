@@ -50,8 +50,8 @@ runtime/sfa_cvars.json variables file
 -------------------------------------
 
 sfa_cvars.json - file containing user variables. All SFA user variables are
-directly available in :doc:`sfa_framework` after login with any valid user or
-API key.
+directly available in :doc:`sfa_templates` and :doc:`sfa_framework` after login
+with any valid user or API key.
 
 The file contains a JSON dict:
 
