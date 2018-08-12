@@ -31,7 +31,7 @@ What is EVA
 * :doc:`Logic Manager</lm/lm>` programming logic controllers used for automatic
   data processing and decision-making.
 
-* :doc:`SFA Framework</sfa/sfa_framework>` and `SFA
+* :doc:`SFA Framework</sfa/sfa_framework>` and :doc:`SFA
   Templates</sfa/sfa_templates>`, allowing quick development of the interfaces
   for a specific configuration.
 
