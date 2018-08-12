@@ -106,12 +106,12 @@ this case the variable will be available only for the specified group.
 etc/uc_apikeys.ini API keys file
 --------------------------------
 
-API access keys are stored into etc/uc_apikeys.ini file. At least one full
-access key named masterkey should be present for proper functioning. Important:
-with master key and API anyone can receive full access to the system similar to
-root user or the user UC is run under), that is why it is recommended to use
-this key only in supervisory networks or even restrict its use to local
-host only.
+API access keys are stored into *etc/uc_apikeys.ini* file. At least one full
+access key named **masterkey** should be present for proper functioning.
+Important: with master key and API anyone can receive full access to the system
+similar to root user (or the user UC is run under), that is why it is
+recommended to use this key only in supervisory networks or even restrict its
+use to local host only.
 
 .. literalinclude:: ../../etc/uc_apikeys.ini-dist
     :language: ini
