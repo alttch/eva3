@@ -47,6 +47,9 @@ Other
   Launches an item script with UC :ref:`cvars<uc_cvars>` and EVA paths set in
   the environment.
 
+* **sbin/layout-converter** allows to convert **simple** :ref:`item
+  layout<item_layout>` to **enterprise**.
+
 :doc:`Virtual item</virtual>` management is performed using **xc/evirtual**
 application.
 

@@ -21,7 +21,8 @@ controller should be restarted to reload the configurations.
 Common item parameters
 ----------------------
 
-* **id** item ID, i.e. 'lamp1'. Must be unique within one controller, even if
+* **id** item ID, i.e. 'lamp1'. When using **simple**
+  :ref:`layout<item_layout>`, must be unique within one controller, even if
   items are in different groups. This creates some complications when designing
   the whole installation architecture but allows to keep EVA configuration and
   item scripts organized in a simple way and makes system administration and
@@ -30,7 +31,8 @@ Common item parameters
 * **group** item group, i.e. 'hall/lamps'. Assigned at the time of item
   creation, the group can't be changed later to avoid synchronization problems.
 
-* **full_id** full item id (i.e. 'hall/lamps/lamp1'), read-only
+* **full_id** full item id (i.e. 'hall/lamps/lamp1'), read-only. Must be unique
+  within one controller despite of layout being used.
 
 * **oid** object id, unique within the whole installation, same as full_id, but
   also contains the item type: 'unit:hall/lamps/lamp1', read-only
@@ -44,6 +46,37 @@ Common item parameters
 
     All EVA functions, commands and parameters can accept oid as the item
     identifier.
+
+.. _item_layout:
+
+Item layout
+-----------
+
+EVA ICS allows to use two types of item layouts: **simple** and **enterprise**.
+if the system is not being used yet and there are no items created, layout can
+be set in :doc:`/uc/uc` and :doc:`/lm/lm` configuration files (option within
+*[server]*: *layout=<simple|enterprise>*). Otherwise you should use
+*sbin/layout-converter* tool to convert **simple** layout to **enterprise**.
+Inverse conversion is not possible.
+
+Benefits of **simple** layout:
+
+* Good to use in simple installations or in the installations where each
+  component has no similar items. Each item should have own unique ID, despite
+  items are located in the different groups.
+
+* When doing controller maintenance tasks, you can address each item by its ID
+  instead of full ID or oid.
+
+* Item configuration files are named as *<ID>.json* and can be easily located.
+
+Benefit of **enterprise** layout: different items in different groups can have
+same IDs. Ideal for setups where multiple similar components are managed by one
+controller.
+
+In general, **simple** layout should be used only for testing and simple
+temporary setups. When using in production environment, **enterprise** layout
+is always recommended.
 
 .. _unit:
 

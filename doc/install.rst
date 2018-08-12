@@ -155,24 +155,30 @@ How to assign IDs to items
 --------------------------
 
 All system :doc:`items</items>` including :doc:`macros</lm/macros>` have their
-own ids. Item id should be unique within one server.
+own ids. Item id should be unique within one server in **simple**
+:ref:`layout<item_layout>`. When using **enterprise** layout, it is possible
+for items to have the same id in different groups, however full item id
+(*group/id*) should be always unique within one controller.
 
-Ideally, item id should also be unique in the whole system, but if
-cross-controller access control to certain items is not critical or is
-implemented through the groups, different items on different servers (for
-example, logic variable on one LM PLC and sensor on another) can have the same
-id.
+.. note::
+
+    Before adding items, consider what kind of :ref:`layout<item_layout>` you
+    want to use: simple or enterprise
 
 Item groups can coincide and often it is convenient to make them similar: for
 example, if you set *groups=security/#* in API key config file, you will allow
 the key to access all the items in the security group and its subgroups
-regardless of whether it is macro, sensor or logic variable.
+regardless of whether it is macro, sensor or logic variable. To set an access
+to the group of particular items, use oids, e.g. *groups=sensor:security/#*.
 
-The best practice is always to use unique id for the item e.g.
-*office1.room1.temperature1* and use groups only for better item filtering.
+This does not apply to :doc:`decision rules</lm/decision_matrix>` and
+:doc:`macros</lm/macros>`: a unique id is generated for each rule
+automatically, macro id should be always unique.
 
-This does not apply to decision rules: a unique id is generated for each rule
-automatically.
+.. note::
+
+    The triple underline (**___**) is used by system and should not be used in
+    item IDs or groups.
 
 Log file customization
 ----------------------
