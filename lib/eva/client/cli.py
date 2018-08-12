@@ -974,7 +974,7 @@ class GenericCLI(object):
                 api_func not in self.always_print:
             self.print_err('FAILED')
             return code
-        elif 'result' in result and api_func != 'test':
+        elif result and 'result' in result and api_func != 'test':
             if result['result'] != 'ERROR':
                 print(result['result'])
             else:
