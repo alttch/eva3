@@ -106,6 +106,10 @@ def stop():
     _t_dispatcher_active = False
 
 
+def check_access(address):
+    return hosts_allow and netacl_match(address, hosts_allow)
+
+
 def _t_dispatcher(host, port):
     global server_socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -118,12 +122,11 @@ def _t_dispatcher(host, port):
             address = address[0]
             data = data.decode()
             logging.debug('UDP API cmd from %s' % address)
-            if hosts_allow:
-                if not netacl_match(address, hosts_allow):
-                    logging.warning(
-                        'UDP API from %s denied by server configuration' % \
-                                address)
-                    continue
+            if not check_access(address):
+                logging.warning(
+                    'UDP API from %s denied by server configuration' % \
+                            address)
+                continue
             try:
                 cmd = data.split(' ')
                 item_id = cmd[0]

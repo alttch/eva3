@@ -1,4 +1,3 @@
-import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
@@ -15,6 +14,7 @@ from eva.api import http_api_result_error
 from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
+from eva.api import http_real_ip
 from eva.tools import dict_from_str
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
@@ -1294,7 +1294,18 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
     # return version for embedded hardware
     def info(self):
-        return {'platfrom': 'eva', 'product': 'uc', 'version': eva.core.version}
+        return {
+            'platfrom':
+            'eva',
+            'product':
+            'uc',
+            'version':
+            eva.core.version,
+            'system':
+            eva.core.system_name,
+            'udp_api_port':
+            eva.udpapi.port if eva.udpapi.check_access(http_real_ip()) else None
+        }
 
 
 def start():
