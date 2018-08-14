@@ -825,6 +825,8 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
 
         UC_HTTP_API.set_driver.exposed = True
 
+        UC_HTTP_API.info.exposed = True
+
     def groups(self, k=None, p=None):
         return super().groups(k, p)
 
@@ -1289,6 +1291,10 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         result = super().set_driver(k, i, d, c, save)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
+
+    # return version for embedded hardware
+    def info(self):
+        return {'platfrom': 'eva', 'product': 'uc', 'version': eva.core.version}
 
 
 def start():

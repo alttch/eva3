@@ -381,6 +381,7 @@ class GenericHTTP_API(GenericAPI):
         k = cp_client_key()
         if k is not None: cherrypy.serving.request.params['k'] = k
         if cherrypy.serving.request.path_info[:6] == '/login': return
+        if cherrypy.serving.request.path_info[:5] == '/info': return
         if cherrypy.serving.request.path_info[:4] == '/dev': dev = True
         else: dev = False
         if dev and not eva.core.development: raise cp_forbidden_key()
