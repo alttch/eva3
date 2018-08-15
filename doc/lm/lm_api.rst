@@ -990,4 +990,5 @@ Errors:
 * **500 Internal Error** inaccessible macro extension module
 
 .. include:: ../userauth.rst
+.. include:: ../common_reserved_funcs.rst
 

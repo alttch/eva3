@@ -1292,20 +1292,11 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    # return version for embedded hardware
     def info(self):
-        return {
-            'platfrom':
-            'eva',
-            'product':
-            'uc',
-            'version':
-            eva.core.version,
-            'system':
-            eva.core.system_name,
-            'udp_api_port':
-            eva.udpapi.port if eva.udpapi.check_access(http_real_ip()) else None
-        }
+        result = super().info()
+        result['udp_api_port'] = eva.udpapi.port if \
+                eva.udpapi.check_access(http_real_ip()) else None
+        return result
 
 
 def start():

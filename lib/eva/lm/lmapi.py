@@ -461,8 +461,7 @@ class LM_API(GenericAPI):
             if tp != 'lvar': return False
         else:
             i = lvar_id
-        return eva.lm.controller.create_lvar(
-            lvar_id=i, group=group, save=save)
+        return eva.lm.controller.create_lvar(lvar_id=i, group=group, save=save)
 
     def destroy_lvar(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -568,6 +567,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.get_ext.exposed = True
         LM_HTTP_API.modinfo_ext.exposed = True
         LM_HTTP_API.modhelp_ext.exposed = True
+        LM_HTTP_API.info.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -912,6 +912,16 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
             raise cp_api_error()
         else:
             return result
+
+    # return version for embedded hardware
+    def info(self):
+        return {
+            'platfrom': 'eva',
+            'product': 'lm',
+            'version': eva.core.version,
+            'system': eva.core.system_name
+        }
+
 
 def start():
     global api

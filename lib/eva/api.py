@@ -188,6 +188,19 @@ class GenericAPI(object):
                 result['development'] = True
         return result
 
+    # return version for embedded hardware
+    def info(self):
+        return {
+            'platfrom':
+            'eva',
+            'product':
+            eva.core.product_code,
+            'version':
+            eva.core.version,
+            'system':
+            eva.core.system_name,
+        }
+
     def get_state_history(self,
                           k=None,
                           a=None,
