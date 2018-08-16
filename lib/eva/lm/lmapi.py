@@ -913,15 +913,6 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         else:
             return result
 
-    # return version for embedded hardware
-    def info(self):
-        return {
-            'platfrom': 'eva',
-            'product': 'lm',
-            'version': eva.core.version,
-            'system': eva.core.system_name
-        }
-
 
 def start():
     global api
