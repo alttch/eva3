@@ -345,6 +345,14 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             eva.core.debug_off()
         return True
 
+    def setup_mode(self, k=None, setup=False):
+        if not eva.apikey.check(k, master=True):
+            return False
+        if setup:
+            eva.core.setup_on()
+        else:
+            eva.core.setup_off()
+        return True
 
 class SysHTTP_API(SysAPI):
 
@@ -405,6 +413,7 @@ class SysHTTP_API(SysAPI):
         SysHTTP_API.notifiers.exposed = True
         SysHTTP_API.log_rotate.exposed = True
         SysHTTP_API.set_debug.exposed = True
+        SysHTTP_API.setup_mode.exposed = True
 
         if eva.core.development:
             GenericAPI.dev_env.exposed = True
@@ -546,6 +555,13 @@ class SysHTTP_API(SysAPI):
         val = val_to_boolean(debug)
         if val is None: raise cp_api_error()
         return http_api_result_ok() if super().set_debug(k, val) \
+                else http_api_result_error()
+
+    def setup_mode(self, k=None, setup=None):
+        cp_need_master(k)
+        val = val_to_boolean(setup)
+        if val is None: raise cp_api_error()
+        return http_api_result_ok() if super().setup_mode(k, val) \
                 else http_api_result_error()
 
     def enable_notifier(self, k=None, i=None):
