@@ -173,6 +173,8 @@ def check(k,
           ip=None,
           master=False,
           sysfunc=False):
+    if eva.core.setup_mode:
+        return True
     if not k or not k in keys or (master and not keys[k].master): return False
     _k = keys[k]
     if ip and not netacl_match(ip, _k.hosts_allow):
