@@ -5,8 +5,8 @@ As macros are written in Python, you can use any Python module to extend your
 macros. Additionally :doc:`/lm/lm` has ability to extend macros with
 extensions.
 
-Modules are more flexible and are standard Python way to extend your software.
-However macro extensions are more simple, standartized and easy to configure.
+Modules are more flexible and are a standard Python way to extend your software.
+However macro extensions are more simple, standardized and easy to configure.
 As the goal is to keep macro code as simple as possible, macro extensions are
 the best choice in many cases.
 
@@ -56,8 +56,8 @@ When extension is loaded, its functions become available in all
 
 E.g. when extension **audio** is loaded with ID **a1**, its function **play**
 is available as **a1_play**. This allows you to load one extension multiple
-times and have a different functionality accroding to specified configuration
-without a need to configure module/class params in macros.
+times and have different functionality according to specified configuration
+without need to configure module/class params in macros.
 
 If you want to make a short alias for extension function, use
 :ref:`alias<m_alias>` (e.g. in *xc/lm/common.py*):
@@ -66,8 +66,8 @@ If you want to make a short alias for extension function, use
 
     alias('play', 'a1_play')
 
-Unlike *play=a1_play* **alias** doesn't throw an exception and let the macros
-work even if extension is failed to load or its functions are not available.
+Unlike *play=a1_play* **alias** doesn't throw an exception and let macros work
+even if extension is failed to load or its functions are not available.
 
 Included extensions
 -------------------
@@ -84,8 +84,8 @@ The following extensions are included in EVA ICS distribution by default:
 * **tts** Text-to-speech engine via Altertech TTS Broker
   (https://pypi.org/project/ttsbroker/)
 
-Developing own extension
-------------------------
+Developing personal extension
+-----------------------------
 
 Create new Python file in *xc/extensions* folder.
 
@@ -96,7 +96,7 @@ Required variables in a header
 * **__copyright__**     copyright
 * **__license__**       module license
 * **__version__**       module version
-* **__description__**   module descrption (keep it short)
+* **__description__**   module description (keep it short)
 * **__id__**            module ID (usually equals to file name, string)
 * **__api__**           module API (integer number)
 * **__mods_required__** required python modules (included neither in standard
@@ -104,7 +104,7 @@ Required variables in a header
 * **__config__help__**  module configuration help (on load)
 * **__functions__**     exported functions
 * **__help__** should contain the extended description and operation manual.
-  May be in any variable format and use restructured text directives for the
+  May be in any variable format and use restructured text directives for
   formatting.
 
 Configuration variable
@@ -116,7 +116,7 @@ containing dictionaries with the following context:
 * **name** property name
 * **help** property description (help)
 * **type** property type
-* **required** *True* if proprery is required, *False* if it's optinal
+* **required** *True* if property is required, *False* if it's optional
 
 Property **type** may be:
 
@@ -130,9 +130,9 @@ Property **type** may be:
 * **float** float number
 * **ufloat** unsigned float (greater or equal to 0)
 * **list:type** list of variables with type specified
-* **enum:type:a,b,c** list of the permitted specified type values
+* **enum:type:a,b,c** list of permitted specified type values
 
-If the property accepts multiple types, they should be listed via *or* (**|**)
+If a property accepts multiple types, they should be listed via *or* (**|**)
 symbol.
 
 Exported functions
@@ -160,10 +160,10 @@ extension help and in **__mods_required__** variable.
 
 .. warning::
 
-    All non-standard modules (included neither in Python install nor in EVA
+    All non-standard modules (not included neither in Python install nor in EVA
     ICS) should be imported with try/catch with **importlib**, their
-    unavailability shouldn't block loading extension for the informational
-    puproses.
+    unavailability shouldn't block loading extension for informational
+    purposes.
 
 Importing EVA modules and functions from **eva.lm.extapi**:
 
@@ -217,5 +217,5 @@ Exceptions
 ~~~~~~~~~~
 
 There's no standard way to handle exceptions, however if any of exported
-functions raise them, this should be specified in extenstion help and readme
+functions raise them, this should be specified in extension help and readme
 file.
