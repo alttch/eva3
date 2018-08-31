@@ -117,7 +117,7 @@ Looks correct, sensors are loaded, let's check the units:
     lm-cmd -J remote -p U
 
 Let LM PLC reload the items from the connected controller every 60 seconds, if
-the new ones are added in future:
+new ones are added in future:
 
 .. code-block:: bash
 

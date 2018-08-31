@@ -614,7 +614,7 @@ where:
 * **oid** item OID (or multiple, comma separated): **type:group/id**
 * **timeframe** timeframe to display, e.g. *5T* - last 5 min, *2H* - last 2
   hours, *2D* last 2 days etc.
-* **fill** precision, 10T-60T recommended. As more accurate precision is, as
+* **fill** precision, 10T-60T recommended. The more accurate precision is, the
   more data points are displayed (but chart is slower)
 * **update** chart update interval, in seconds. Set *0* or *null* to disable
   updates
@@ -660,8 +660,8 @@ where:
 * **btn1a** function to run if button 1 (or enter) is pressed
 * **btn2a** function(arg) to run if button 2 (or escape) is pressed. arg
   is *true* if the button was pressed, *false* if escape key or auto close.
-* **va** validate function which runs before btn1a. If the function return
-  *true*, the popup is closed and btn1a function is executed. otherwise the
+* **va** validate function which runs before btn1a. If the function returns
+  *true*, the popup is closed and btn1a function is executed. Otherwise the
   popup is kept and the function btn1a is not executed. *va* function is used
   to validate input, e.g. if popup contains any input fields.
 

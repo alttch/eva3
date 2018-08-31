@@ -737,10 +737,11 @@ params:
 * **device_tpl** device template, stored on the connected controller in
   *runtime/tpl*
 * **cfg** configuration params
-* **save** If *True*, save items configuration on disk immediately after operation
+* **save** If *True*, save items configuration on disk immediately after
+  operation
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
-config and the access error has been occured.
+config and the access error has occured.
 
 .. _m_update_device:
 
@@ -748,7 +749,7 @@ update_device - update device items
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Works similarly to :ref:`m_create_device` function but doesn't create new items,
-updating the item configuration of the existing ones.
+updating item configuration of the existing ones.
 
 .. code-block:: python
 
@@ -768,7 +769,7 @@ specified in the template.
 
     destroy_device(controller_id, device_tpl, cfg=None)
 
-Parameters and return data are the same except the function doesn't have
+Parameters and return data are the same except that the function doesn't have
 **save** param.
 
 File management functions

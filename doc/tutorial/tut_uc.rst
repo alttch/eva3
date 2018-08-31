@@ -17,7 +17,7 @@ So, let us proceed with our configuration. Connect the equipment to
 Connecting ventilation
 ----------------------
 
-create two :ref:`units<unit>` for the ventilation:
+create two :ref:`units<unit>` for ventilation:
 
 .. code-block:: bash
 
@@ -361,7 +361,7 @@ doesn't need any additional options. Just set it to our sensor:
     uc-cmd driver set sensor:security/motion1 md1.default -y
 
 The sensor is ready. It doesn't require any passive updates since its state is
-ypdate with SNMP traps parsed by driver.
+updated with SNMP traps parsed by driver.
 
 Connecting a hall light
 -----------------------

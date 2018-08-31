@@ -129,7 +129,7 @@ Errors:
 reload_clients - ask connected clients to reload
 ------------------------------------------------
 
-This function sends to all connected clients **reload** event asking them to
+This function sends **reload** event to all connected clients asking them to
 reload the interface.
 
 All the connected clients receive the event with *subject="reload"* and
@@ -152,8 +152,8 @@ Errors:
 notify_restart - notify about server restart
 --------------------------------------------
 
-This function sends to all connected clients a **server restart** event asking
-them to prepare for the server restart.
+This function sends a **server restart** event to all connected clients asking
+them to prepare for server restart.
 
 All the connected clients receive the event with *subject="server"* and
 *data="restart"*. If the clients use :doc:`sfa_framework`, they must define
@@ -224,8 +224,8 @@ Errors:
 state_history - get item state history
 --------------------------------------
 
-State history of the one :doc:`item</items>` or several items of the specified
-type can be obtained using **state_history** command.
+State history of one :doc:`item</items>` or several items of the specified type
+can be obtained using **state_history** command.
 
 Parameters:
 
@@ -244,7 +244,7 @@ Parameters:
 
 Returns state history for the chosen item(s) in the specified format.
 
-To get state history for the multiple items:
+To get state history for multiple items:
 
 * **w** param is required
 * **g** should be specified as **list**

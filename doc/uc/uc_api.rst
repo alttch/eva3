@@ -119,8 +119,8 @@ Errors:
 state_history - get item state history
 --------------------------------------
 
-State history of the one :doc:`item</items>` or several items of the specified
-type can be obtained using **state_history** command.
+State history of one :doc:`item</items>` or several items of the specified type
+can be obtained using **state_history** command.
 
 Parameters:
 
@@ -777,7 +777,7 @@ Errors:
 destroy_device - destroy device items
 -------------------------------------
 
-Works in opposite way to :ref:`create_device` function, destroying all items
+Works in an opposite way to :ref:`create_device` function, destroying all items
 specified in the template.
 
 Parameters:
@@ -861,7 +861,7 @@ Parameters:
 .. note::
 
     As ModBus UDP doesn't require a port to be connected, API call always
-    return "OK" result.
+    returns "OK" result.
 
 Returns result="OK" if port test is passed, or result="ERROR", if an error
 occurred.
@@ -955,7 +955,7 @@ Parameters:
 
 Optionally:
 
-* **force==1** overwrite PHI module file if exist
+* **force==1** overwrite PHI module file if exists
 
 Returns result="OK" if module is uploaded, or result="ERROR", if an error
 occurred.

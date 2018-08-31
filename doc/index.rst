@@ -97,7 +97,7 @@ System documentation
     * :ref:`unit` - controlled item
     * :ref:`sensor` - monitored item
     * :ref:`device` - set of items
-    * :doc:`/drivers` - drivers for the hardware equipment
+    * :doc:`/drivers` - drivers for hardware equipment
     * :doc:`/item_scripts` - action and update scripts
     * :doc:`ModBus equipment</modbus>`
     * :doc:`/virtual`

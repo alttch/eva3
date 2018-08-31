@@ -324,7 +324,7 @@ Notifier management
 -------------------
 
 These functions allow you to manage :doc:`notifiers<notifiers>` while EVA
-component is running. All changes are applied temporarly and are discarded
+component is running. All changes are applied temporarily and are discarded
 after controller restart.
 
 .. _s_notifiers:

@@ -157,8 +157,8 @@ notifier to with *-I ITEMS*.
 
 .. note::
 
-    For the each "state" subscription you must specify either type and groups
-    or item IDs.
+    For each "state" subscription you must specify either type and groups or
+    item IDs.
 
 Example:
 
@@ -263,7 +263,7 @@ should be set:
 Setting up MQTT QoS
 ~~~~~~~~~~~~~~~~~~~
 
-You may specify different :ref:`MQTT<mqtt_>` QoS for the events with different
+You may specify different :ref:`MQTT<mqtt_>` QoS for events with different
 subjects.
 
 To set the same QoS for all events, use command:
@@ -286,7 +286,7 @@ Quick facts about MQTT QoS:
   delivery
 * **1** guarantees message delivery
 * **2**  the maximum system/network load which provides 100% guarantee of
-  message delivery and the guarantees the particular message has been delivered
+  message delivery and guarantees the particular message has been delivered
   only once and has no duplicates.
 
 
@@ -343,8 +343,7 @@ DB Notifiers
 
 EVA ICS has a special notifier type: **db**, which is used to store items'
 state history. State history can be obtained later via API calls or :doc:`SFA
-Framework</sfa/sfa_framework>` for analysis and i.e. to build a graphical
-charts.
+Framework</sfa/sfa_framework>` for analysis and e.g. to build graphical charts.
 
 To create db notifier, specify notifier props as **db:<dbfile>[:keeptime]**,
 e.g. *db:history1.db:604800*, where *history1.db* - database file in
@@ -441,9 +440,8 @@ HTTP/GET (http, deprecated)
     This notifier type is deprecated and will be removed in the future
     versions. Please switch all your existing web hooks to JSON notifiers.
 
-As with http-post, event notification can be transferred to the remote apps
-using HTTP/GET method. In this case only one event notification can be sent at
-once.
+As with http-post, event notification can be transferred to remote apps using
+HTTP/GET method. In this case only one event notification can be sent at once.
 
 ET notifications are similar to POST except that k (key), s (subject of the
 message) and all the data fields are transferred directly in the query string.

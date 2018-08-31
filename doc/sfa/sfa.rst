@@ -20,7 +20,7 @@ oid form (*type:group/id*) and be unique in the whole installation.
 
 SFA is set up and controlled with **sfa-cmd** :doc:`console application</cli>`
 and :doc:`sfa_api`. The API doesn't have a user interface by default, it's
-developed specifically for a certain installation certain installation using
+developed specifically for certain installation certain installation using
 :doc:`sfa_templates` (server-side part) and :doc:`sfa_framework` (client-side
 part).
 

@@ -106,7 +106,7 @@ and :ref:`logic variables<lvar>`:
     sfa-cmd -J remote -p LV
 
 Let SFA reload the items from the connected controllers every 60 seconds, if
-the new ones are added in future:
+new ones are added in future:
 
 .. code-block:: bash
 

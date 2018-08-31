@@ -240,7 +240,7 @@ Append the following permission string to :ref:`API key<sfa_apikey>`:
 
     rpvt = 192.168.1.20/charts/#
 
-This will grant an access to all files on the specified host in /charts/ folder.
+This will grant access to all files on the specified host in /charts/ folder.
 
 Then include remote chart in your interface:
 
@@ -248,16 +248,16 @@ Then include remote chart in your interface:
 
     <img src="/rpvt?k=APIKEY&f=192.168.1.20/charts/zfs.png" />
 
-As you see, the remote client don't need to have a direct access to
+As you see, the remote client doesn't need to have a direct access to
 *192.168.1.20* web server, **/rpvt** API call acts for him as a content proxy.
 
 To use remote content feature, you must follow the rules:
 
-* protocol (http/https) don't need to be specified in **rpvt** API key param.
+* protocol (http/https) doesn't need to be specified in **rpvt** API key param.
 
 * **f** param of **/rpvt** request may contain uri protocol (e.g.
   *http://192.168.1.20/charts/zfs.png*). If the protocol is not specified, SFA
-  use plain HTTP without SSL.
+  uses plain HTTP without SSL.
 
 * You can not specify http(s) port in **f** param of **/rpvt** unless it's also
   specified in **rpvt** API key param.

@@ -111,8 +111,8 @@ Errors:
 state_history - get item state history
 --------------------------------------
 
-State history of the one :doc:`item</items>` or several items of the specified
-type can be obtained using **state_history** command.
+State history of one :doc:`item</items>` or several items of the specified type
+can be obtained using **state_history** command.
 
 Parameters:
 
@@ -131,7 +131,7 @@ Parameters:
 
 Returns state history for the chosen item(s) in the specified format.
 
-To get state history for the multiple items:
+To get state history for multiple items:
 
 * **w** param is required
 * **g** should be specified as **list**

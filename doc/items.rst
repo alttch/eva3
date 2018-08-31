@@ -32,14 +32,14 @@ Common item parameters
   creation, the group can't be changed later to avoid synchronization problems.
 
 * **full_id** full item id (i.e. 'hall/lamps/lamp1'), read-only. Must be unique
-  within one controller despite of layout being used.
+  within one controller despite of layout used.
 
 * **oid** object id, unique within the whole installation, same as full_id, but
   also contains the item type: 'unit:hall/lamps/lamp1', read-only
 
 * **description** item description
 
-* **virtual** boolean (true/false) param which say if the item is
+* **virtual** boolean (true/false) param which shows if the item is
   :doc:`virtual<virtual>` or real.
 
 .. note::
@@ -62,8 +62,8 @@ Inverse conversion is not possible.
 Benefits of **simple** layout:
 
 * Good to use in simple installations or in the installations where each
-  component has no similar items. Each item should have own unique ID, despite
-  items are located in the different groups.
+  component has no similar items. Each item should have its own unique ID,
+  despite that items are located in different groups.
 
 * When doing controller maintenance tasks, you can address each item by its ID
   instead of full ID or oid.
@@ -71,12 +71,12 @@ Benefits of **simple** layout:
 * Item configuration files are named as *<ID>.json* and can be easily located.
 
 Benefit of **enterprise** layout: different items in different groups can have
-same IDs. Ideal for setups where multiple similar components are managed by one
-controller.
+the same IDs. Ideal for setups where multiple similar components are managed by
+one controller.
 
 In general, **simple** layout should be used only for testing and simple
-temporary setups. When using in production environment, **enterprise** layout
-is always recommended.
+temporary setups. For usage in production environment, **enterprise** layout is
+always recommended.
 
 .. _unit:
 
@@ -215,13 +215,13 @@ Unit parameters
   indicated period of time (in seconds) after the last action performed for
   this unit. Set 0 to disable this feature. Minimum step is 0.1 sec.
 
-* **location** you may specify units's physical location, as GPS coordinates or
-  in custom format. To specify GPS coordinates, set the paramter to value
+* **location** you may specify units' physical location, as GPS coordinates or
+  in custom format. To specify GPS coordinates, set the parameter to value
   *longitude:latitude* or *longitude:latitude:altitude*. If you choose to set
-  location as GPS or some other coords, full unit state is appended with a
+  location as GPS or some other coords, full unit state is appended with
   virtual parameters **loc_x**, **loc_y** (and if altitude is specified -
   **loc_z**). These virtual parameters are parsed automatically from location
-  and can be used later e.g. to filter units by location or to put a units on
+  and can be used later e.g. to filter units by location or to put units on
   geographical map.
 
 * **mqtt_control = "notifier:qos"** item gets actions through notifications
@@ -236,11 +236,11 @@ Unit parameters
   :doc:`uc-cmd</cli>`, in the following way: status:number = label, e.g.
   "status:0" = "stop". By default the unit has labels "status:0" = "OFF",
   "status:1" = "ON". Status labels can be used as **status** param to execute
-  unit actions, in this case controllers checks the status match to the
+  unit actions, in this case controllers check the status match to the
   specified label (case insensitive).
 
 * **term_kill_interval** integer, difference (in seconds) between stopping and
-  forceful stopping the action or update script. Tip: sometimes it is useful to
+  forcible stopping the action or update script. Tip: sometimes it is useful to
   catch SIGTERM in the script to exit it gracefully. Cannot exceed the value of
   timeout** 2, where timeout** default timeout, set in a controller config.
 
@@ -468,7 +468,7 @@ servers.
 Multiupdate parameters
 ~~~~~~~~~~~~~~~~~~~~~~
 
-Multiupdates have the same parameters as :ref:`sensors<sensor>`, except
+Multiupdates have the same parameters as :ref:`sensors<sensor>`, except that
 "expires", "mqtt_update" and "snmp_trap", plus some additional:
 
 * items = item1, item2, item3... - the list of items for updating, may be
@@ -546,7 +546,7 @@ have *sensor1* and *relay1* items, so let's edit the template manually:
         ]
     }
 
-(template will also contain items' configurations which is omitted in the
+(template will also contain items' configurations which are omitted in the
 example)
 
 Save the final template as *runtime/tpl/mydevice.json* folder, and then
@@ -559,9 +559,9 @@ Save the final template as *runtime/tpl/mydevice.json* folder, and then
     uc-cmd device destroy mydevice -C ID=5
 
 Configurations of the newly created items of *device5* are exact copies of the
-items of *device1*. The only configuration difference are the params where
-we've put template variables instead of part or full param value (in our
-example: *{{ ID }}*).
+items of *device1*. The only configuration difference is the params where we've
+put template variables instead of part or full param value (in our example:
+*{{ ID }}*).
 
 .. note::
 

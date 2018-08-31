@@ -59,7 +59,7 @@ Legacy
 In case of significant changes in the commands or arguments, previous versions
 of command line tools are kept and moved to **legacy** folder. We strongly
 recommend using API calls only in all 3rd-party applications, but if your app
-use command line interface, you can get the previous version until the app is
+uses command line interface, you can get the previous version until the app is
 reprogrammed to use a new one.
 
 Device control apps

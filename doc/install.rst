@@ -168,8 +168,8 @@ for items to have the same id in different groups, however full item id
 Item groups can coincide and often it is convenient to make them similar: for
 example, if you set *groups=security/#* in API key config file, you will allow
 the key to access all the items in the security group and its subgroups
-regardless of whether it is macro, sensor or logic variable. To set an access
-to the group of particular items, use oids, e.g. *groups=sensor:security/#*.
+regardless of whether it is macro, sensor or logic variable. To set access to
+a group of particular items, use oids, e.g. *groups=sensor:security/#*.
 
 This does not apply to :doc:`decision rules</lm/decision_matrix>` and
 :doc:`macros</lm/macros>`: a unique id is generated for each rule
