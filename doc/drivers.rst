@@ -1,15 +1,15 @@
 Drivers
 =======
 
-:doc:`/uc/uc` has 2 ways for controlling and monitoring items:
+:doc:`/uc/uc` uses 2 ways for controlling and monitoring items:
 :doc:`item scripts</item_scripts>` and drivers. Drivers are the most advanced
 way, they are faster, contain all process logic and can be used to work with
-devices on the single bus, providing locking/unlocking mechanisms.
+devices on a single bus, providing locking/unlocking mechanisms.
 
 Code of driver is executed directly inside the controller core and unlike
-script can't be terminated, unless it get termination signal and decide to
-stop. If driver process cause timeout and there is no way to stop it,
-controller raise a critical exception and may terminate itself.
+script can't be terminated, unless it gets termination signal and decides to
+stop. If driver process causes timeout and there is no way to stop it,
+controller raises a critical exception and may terminate itself.
 
 You should always use only reliable and tested drivers, otherwise your system
 may become unstable.
@@ -42,7 +42,7 @@ You may either download the module manually or use
 
     uc-cmd phi download <phi_module_uri>
 
-command. Note that UC host don't need to have a direct connection to the host
+command. Note that UC host doesn't need to have a direct connection to the host
 you download PHI from, module is downloaded first to the host where uc-cmd is
 started, verified and then automatically uploaded to the controller.
 
@@ -70,7 +70,7 @@ after PHI is loaded.
 After the successful load, PHI will automatically create the most suitable
 driver for itself, called *<phi_id>.default*. This usually provides basic
 driver logic and doesn't mean the driver is suitable for your task. You may
-replace it's LPI module or define different driver with another LPI.
+replace it's LPI module or define a different driver with another LPI.
 
 To assign driver to the specified item, use the command:
 
@@ -87,8 +87,8 @@ Param *-c* is used to set driver configuration for the specified item: set
 port, logic etc.
 
 Advanced usage: EVA :doc:`item</items>` can have different drivers or scripts
-for actions and updates. To assign the different drivers, modify item
-properties **action_exec**, **update_exec**, **action_driver_config** and
+for actions and updates. To assign different drivers, modify item properties
+**action_exec**, **update_exec**, **action_driver_config** and
 **update_driver_config** (e.g. with *uc-cmd config props*). Driver is assigned
 to the property with *|driver_id* value, e.g. *|v1.default*.
 
@@ -106,7 +106,7 @@ to the property with *|driver_id* value, e.g. *|v1.default*.
 
 Note that params started with **_** are passed to PHI calls directly (without
 **_** prefix), this allows specifying different hosts, bus addresses (if PHI is
-developed as "universal") without a need to load different drivers for the each
+developed as "universal") without a need to load different drivers for each
 item.
 
 .. figure:: drivers-update.png
@@ -116,13 +116,13 @@ item.
     How the driver handles update commands
 
 Use commands *uc-cmd phi unload* and *uc-cmd phi unlink* to unload and unlink
-unnecesseary PHI modules, but note that driver and PHI can't be unloaded while
-they're assigned to items. You must first assign a different driver to item or
-use *uc-cmd driver unset* command.
+unnecessary PHI modules, but note that driver and PHI can't be unloaded while
+they're assigned to items. You must first assign a different driver to the item
+or use *uc-cmd driver unset* command.
 
-You can load PHI/driver with the same ID even if they are already present in a
-system without unloading them first. In this case, new modules/configuration
-replace the old ones.
+You can load PHIs/drivers with the same IDs even if they are already present in
+the system without unloading them first. In this case, new
+modules/configuration replace the old ones.
 
 .. _lpi:
 
@@ -130,12 +130,12 @@ Logical to physical interfaces (LPI)
 ------------------------------------
 
 LPI module handles the whole driver logic and doesn't contain any code,
-specific for the equipment. All it need is to process the logic and call the
+specific for the equipment. All it needs is to process the logic and call the
 assigned PHI.
 
 When the controller loads new PHI, it creates a driver called <phi_id>.default,
 assigning LPI to provide basic functionality, but you may want to replace it or
-use different logic for the different items.
+use different logic for different items.
 
 To list available LPI mods, use the command:
 
@@ -166,19 +166,19 @@ To get additional module info, use the following commands:
     uc-cmd lpi modhelp <lpi_module> update
 
 Configuration options are used when you load a driver (e.g. to modify LPI
-default behavor), separated with commas.
+default behavior), separated with commas.
 
-Action and update options are used when you assign driver to the specified
-item, separate them with commas. Options marked *required=True* should be
+Action and update options are used when you assign a driver to the specified
+item; separate them with commas. Options marked *required=True* should be
 always defined.
 
-Let's look what modules are available.
+Let's see what modules are available.
 
 basic LPI
 ~~~~~~~~~
 
-Basic status on/off LPI module, used to control a simple devices which have
-only status *0* (OFF) and *1* (ON), i.e. lamps, relay ports (directly) etc.
+Basic status on/off LPI module, used to control simple devices which have only
+status *0* (OFF) and *1* (ON), i.e. lamps, relay ports (directly) etc.
 
 Used in default drivers for relay, sockets and similar PHIs, doesn't need to be
 configured when loaded.
@@ -193,16 +193,15 @@ listed ports will be used in commands.
 .. note::
 
     If relay port number is specified as i:N e.g. i:2, LPI commands will
-    consider it's inverted meaning *0* is for *on* and *1* is for *off*. This
-    works as for **basic** as for any other relay control LPI.
+    consider it is inverted meaning *0* is for *on* and *1* is for *off*. This
+    works both for **basic** as well as for any other relay control LPI.
 
 sensor LPI
 ~~~~~~~~~~
 
-Basic sensor monotiring, used to get data from the specified sensors.
+Basic sensor monitiring, used to get data from specified sensors.
 
-Used in default drivers for the sensors, doesn't need to be configured when
-loaded.
+Used in default drivers for sensors, doesn't need to be configured when loaded.
 
 LPI doesn't provide *action* functionality. When assigning driver containing
 **sensor** LPI mod to the specified item (*uc-cmd driver set*), the assign
@@ -211,17 +210,17 @@ configuration should contain port or bus address number.
 ssp LPI
 ~~~~~~~
 
-Similar to **sensor** LPI but doesn't contain any options at all. Used when PHI
-can work only with one physical equipment (e.g. sensor with TCP/IP
-API) and all equipment options are already set in PHI.
+Similar to **sensor** LPI, but doesn't contain any options at all. Used when
+PHI can work only with one physical equipment (e.g. sensor with TCP/IP API) and
+all equipment options are already set in PHI.
 
 esensor LPI
 ~~~~~~~~~~~
 
 Sensor monitoring with advanced functions. Can monitor physical sensor groups
 returning average, maximum or minimum value. Can ignore sensor values if they
-seems to be invalid in case of one or several sensor in group are failed (while
-there's enough working sensors in a group).
+seem to be invalid in case one or several sensor in a group fail (while there
+are enough working sensors in a group).
 
 Configuration options (set with *uc-cmd driver load*):
 
@@ -248,21 +247,21 @@ Update options (set with *uc-cmd driver set*):
   for EVA multiupdate items should be made with double pipes (**||**)
 
 * any configuration option (optional). E.g. if *gpf=avg* is defined, it
-  overwrites default LPI behavor for the specified item.
+  overwrites default LPI behavior for the specified item.
 
 multistep LPI
 ~~~~~~~~~~~~~
 
 Module used for such common tasks as door or window opening. To use this module
-you must connect your requipment to 2 relay ports: one will give a power to
+you must connect your equipment to 2 relay ports: one will give power to
 motors, the second will set the direction.
 
 Configuration options (set with *uc-cmd driver load*):
 
-* **bose** (break on state error). The module requires to know what's current
-  door or window position is. If you set this option to *True* and  the current
-  item status is error, the action will be not executed. Otherwise LPI will
-  pass and consider the item status is *0*.
+* **bose** (break on state error). The module requires to know the current door
+  or window position is. If you set this option to *True* and  the current item
+  status is error, the action will be not executed. Otherwise LPI will pass and
+  consider the item status is *0*.
 
 Action options (set with *uc-cmd driver set*):
 
@@ -272,39 +271,39 @@ Action options (set with *uc-cmd driver set*):
 * **dport** contains one or several (separated with **|**) relay ports used to
   set a direction.
 
-* **steps** list of float numbers, contains a time (in seconds) how long to
-  give a power to motor to reach the next step. E.g. you have a door with 3
-  positions: closed, half-opened and completely opened. **steps** option will
+* **steps** list of float numbers, contains time (in seconds) of power access
+  period to the motor to reach the next step. E.g. you have a door with 3
+  positions: closed, half-open and completely open. **steps** option will
   contain 2 numbers (e.g. *20|25*) which tells LPI the door state from *0* to
   *1* is changed by running motor for *20* seconds, the state from *1* to *2*
   is changed by running motor for *25* seconds, so LPI can automatically
   calculate the full opening/closing cycle is *45* seconds.
 
-* **warmup** float number of seconds. LPI will add this value to the time for
-  running the motor if the state is neither *fully opened* nor *fully closed*,
-  to let it "warm up" before doing an actual work.
+* **warmup** float number (seconds). LPI will add this value to the time for
+  running the motor if the state is neither *fully open* nor *fully closed*, to
+  let it "warm up" before doing actual work.
 
-* **tuning** float number of seconds. LPI will add this value to the time, if
+* **tuning** float number (seconds). LPI will add this value to the time, if
   action is *open full* or *close full* to make sure the door is fully
-  opened/closed.
+  open/closed.
 
 * **ts** (to-start) number which indicates the following: e.g. you have a door
-  with a status from *0* (fully closed) to *5* (fully opened) and defined the
-  middle states with **steps**. But when calling action "set me this door to
-  *2*" you can't be sure the door position is equal when setting it from *fully
+  with status from *0* (fully closed) to *5* (fully open) and defined the
+  middle states with **steps**. But when calling action "set this door to *2*"
+  you can't be sure the door position is equal when setting it from *fully
   open* and *fully closed*. But if you set e.g. *ts=2* and the current status
-  is greater than *2*, it will tell LPi firstly completely close the door (go
-  to *status=0*) and then go to *status=2*.
+  is greater than *2*, it will tell LPi firstly to completely close the door
+  (go to *status=0*) and then go to *status=2*.
 
-* **te** (to-end) same as **ts** but in opposite way: set the status number,
-  starting from which the door will be fully opened first, then go to the
-  desired status.
+* **te** (to-end) same as **ts** but in an opposite way: set the status number,
+  starting from which the door will be fully open first, then go to the desired
+  status.
 
 .. note::
 
-    LPI will completely refuse to run the action if it calculate that doesn't
-    have enough time to complete it. Set item **action_timeout** to the proper
-    value.
+    LPI will completely refuse to run the action if it calculates that therese
+    is not enough time to complete it. Set item **action_timeout** to the
+    proper value.
 
 Update options:
 
@@ -314,7 +313,7 @@ door/window item states with real, use separate reed switch sensor.
 Loading driver with the chosen LPI
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Firstly you can list available LPIs with the command:
+Firstly, you can list available LPIs with the command:
 
 .. code-block:: bash
 
@@ -334,12 +333,12 @@ PHI+LPI, use the command:
 Physical interfaces (PHI)
 -------------------------
 
-PHIs are modules which contain no data processing logic but code to work
-directly with the hardware equipment.
+PHIs are modules, which contain no data processing logic but code to work
+directly with hardware equipment.
 
 We provide a basic set of PHIs for the popular automation equipment (at
 `<https://www.eva-ics.com/phi>`_), but if your equipment isn't supported, it's
-not so hard to :doc:`develop own PHI</phi_development>`.
+not so hard to :doc:`develop your own PHI</phi_development>`.
 
 We've already described how to :ref:`get and load PHIs<driver>`, here is some
 additional important information.
@@ -348,9 +347,9 @@ Universal PHIs
 ~~~~~~~~~~~~~~
 
 If the word "universal" is listed in PHI features, it means the module can be
-loaded once and provide the interface for all supoorted equipment. E.g. let's
-take a look on **sr201** PHI module which provides a support for SR-201
-compatible relays:
+loaded once and provide interface for all supported equipment. E.g. let's take
+a look on **sr201** PHI module which provides support for SR-201 compatible
+relays:
 
 .. code-block:: bash
 
@@ -366,18 +365,18 @@ compatible relays:
     # get PHI options for setting the data
     uc-cmd phi modhelp sr201 set
 
-Both **cfg**, **get** and **set** have an option **host** which should be
+All of **cfg**, **get** and **set** have an option **host** which should be
 defined ether in PHI configutation (*uc-cmd phi load* with *host* config option
 or in item driver configuration (*uc-cmd driver set* with *_host* config
-option). Setting diffrent **host** option value in item driver configuration
+option). Setting different **host** option value in item driver configuration
 lets one *sr201* PHI manage all available SR-201 relays.
 
 Physical events
 ~~~~~~~~~~~~~~~
 
 If the word "events" is listed in PHI features, it means the module can handle
-the hardware events e.g. react to the alarm sensors or update item state when
-the external event is received.
+hardware events e.g. react to the alarm sensors or update item state when an
+external event is received.
 
 .. figure:: drivers-event.png
     :scale: 60%
@@ -385,11 +384,11 @@ the external event is received.
 
     How the driver handles physical events
 
-In practice it means PHI provides data, obtained from the hardware, to
+In practice, it means PHI provides data, obtained from the hardware, to
 controller and asks it to update all items using drivers which contain PHI
-module which got an event.
+module which have an event.
 
-When doing update, drivers LPI modules don't ask PHI to get a hardware data
+When doing update, drivers LPI modules don't ask PHI to get hardware data
 working only with data already provided by the hardware.
 
 Drivers and multi updates
@@ -401,10 +400,10 @@ create multiupdates in :doc:`/uc/uc` to update several items at once. "aao_get"
 the controller to update all items using drivers which contain PHI equally to
 updating on physical events.
 
-How to use this feature: All PHIs with "aao_get" feature also have
-configuration param named *update* which means how frequently (in seconds) PHI
-should collect data from the equipment and initiate item updates. *update*
-value should be defined in PHI load config and be greater than zero.
+How to use this feature: All PHIs with "aao_get" feature also has configuration
+param named *update* which means how frequently (in seconds) PHI should collect
+data from the equipment and initiate item updates. *update* value should be
+defined in PHI load config and be greater than zero.
 
 Example:
 
@@ -427,7 +426,7 @@ the command:
 
 which returns result *"OK"* or *"FAILED"*.
 
-PHI can provide additional testing, to get a list of testing commands, execute:
+PHI can provide additional testing; to get a list of testing commands, execute:
 
 .. code-block:: bash
 

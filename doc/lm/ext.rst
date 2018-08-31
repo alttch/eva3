@@ -84,7 +84,7 @@ The following extensions are included in EVA ICS distribution by default:
 * **tts** Text-to-speech engine via Altertech TTS Broker
   (https://pypi.org/project/ttsbroker/)
 
-Developing personal extension
+Developing your own extension
 -----------------------------
 
 Create new Python file in *xc/extensions* folder.
