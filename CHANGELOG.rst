@@ -18,7 +18,7 @@ Core
     * JSON notifiers. GET/POST notifiers are marked as deprecated and should
       not be used any more.
     * exec function (cmd, run) string arguments splitted with ' ' now support
-      the spaces inside (i.e. 'this is "third argument"')
+      the spaces inside (e.g. 'this is "third argument"')
 
 UC
 ~~
@@ -34,7 +34,7 @@ UC
       if the label is not defined, API returns 404 error
     * new key permission: "device", allows calling device management functions.
     * uc-tpl device template validator and generator (alpha)
-    * unit and sensor items now have physical location. if location is specified
+    * unit and sensor items now have physical location. If location is specified
       as coordinates (x:y or x:y:z), loc_x, loc_y and loc_z props become
       available
     * UC EI now should be enabled/disabled in uc.ini
@@ -48,7 +48,7 @@ LM PLC
     * macro function "unlock" now return false if the lock hasn't been locked
       or doesn't exist
     * unlock macro function may throw an exception if the controller forbids its
-      functionality, in case the controller has no masterkey defined
+      functionality, in case the controller has no master key defined
     * new functions "state_history" in LM API and "history" (equivalent) in
       macros
     * new functions: status, value, nstatus, nvalue with oid support
@@ -75,7 +75,7 @@ SFA
     * full SFA states now have item descriptions and status labels (for units)
     * SFA API groups function now accept "g" parameter to filter group list
       (with MQTT-style wildcards)
-    * SFA rpvt function to load documents from the remote servers
+    * SFA rpvt function to load documents from remote servers
     * SFA cvars are automatically available in SFA Framework app. Note: SFA
       cvars are public and may be obtained with any valid API key
 
@@ -85,10 +85,10 @@ SFA
       fields
     * eva_sfa_groups function, returns item groups list (with optional filter)
     * eva_sfa_chart function, displays item state charts
-    * eva_sfa_popup function, displays popus and info windows
+    * eva_sfa_popup function, displays popups and info windows
     * new ws event: server restart and eva_sfa_server_restart_handler in a
       framework. SFA API function "notify_restart" allows to notify clients
-      about the server restart w/o actual restarting (i.e. when restarting
+      about the server restart w/o actual restarting (e.g. when restarting
       frontend)
 
     * jinja2 templates for SFA ui and PVT files (all files with .j2 extension
@@ -128,7 +128,7 @@ Core
 
     * fixes: remove empty controller group when all objects are deleted
     * fixes: remote items correctly display state in list_remote
-    * fixes: disabled sensors and lvars should not react to an expiration
+    * fixes: disabled sensors and lvars should not react to expiration
     * each set_prop call now logs what's actually changed
     * added item oid (type:group/item_id) - reserved for the future releases
     * added stop_on_critical option in config (default: yes),
@@ -140,7 +140,7 @@ Core
 UC
 ~~
 
-    * action_toggle function to quickly toggle status of the simple units 
+    * action_toggle function to quickly toggle status of simple units 
 
 LM PLC
 ~~~~~~
@@ -153,7 +153,7 @@ LM PLC
       (toggles lvar value between 0 and 1)
     * cmd macro function now accepts full controller id (uc/controller_id) as
       well as short
-    * new macro functions for the file management: ls, open_oldest, open_newest
+    * new macro functions for file management: ls, open_oldest, open_newest
 
 SFA
 ~~~
@@ -163,7 +163,7 @@ SFA
     * list_remote returns array instead of dict + controller_id proprety
     * list_macros contains now controller property
     * append_controller now tries to autodetect controller type if no type
-      specified
+      is specified
     * sfa pvt access logs
     * reset, toggle, clear, action_toggle, result and terminate by uuid funcs in
       sfa & sfa framework
@@ -200,7 +200,8 @@ UC
 ~~
 
     * 'update_delay' prop - item passive update may start with a delay to
-      prevent multiple updates run simultaneously producing high system load
+      prevent multiple updates running simultaneously producing high system
+      load
     * 'clone' function in UC API and uc-cmd to clone items
     * 'clone_group' function - clones all matching items in a group
     * 'destroy_group' function destroys all items in the specified group
