@@ -1,8 +1,8 @@
 EVA ICS License Agreement
 =========================
 
-Basic provisions, briefly
--------------------------
+Basic provisions
+----------------
 
 * You can use EVA ICS as you wish, for personal commercial or non-commercial
   use, including any code change, except deletion of copyright texts and contact
@@ -25,33 +25,33 @@ This Agreement is a legally binding User Agreement with Altertech s.r.o. (a
 company established in accordance with the legislation of the Czech Republic)
 and/or Altertech LLC (a company established in accordance with the legislation
 of Ukraine) and/or other legal entities of the ALTERTECH group of companies –
-(hereinafter, where appropriate, separately referred to as the Suppliers) which
+(hereinafter, where appropriate, separately referred to as the Supplier) which
 operate independently of each other, for the acquisition and use by the User of
 EVA ICS "Universal Controller, Logic Manager PLC, SCADA Final Aggregator, SFA
 Framework, EVA libraries, EVA technical documentation and its components"
 (hereinafter referred to as the Product). The User’s consent presented in
-electronic form, the installation of the Product or its use means that the User
-accepts the terms of this Agreement on one’s own behalf and on behalf of another
-natural or legal person which he represents or for the installation of which the
-User purchases the Product from the Supplier. If you do not agree to the terms
-of this Agreement, do not continue the installation process of the Product and
-remove any previously installed copies of the Product.
+electronic form, installation of the Product or its use mean that the User
+accepts the terms of this Agreement on his own behalf and on behalf of another
+natural or legal person which he represents or for the installation of
+which the User purchases the Product from the Supplier. If you do not agree to
+the terms of this Agreement, do not continue the installation process of the
+Product and remove any previously installed copies of the Product.
 
 This Agreement relates to the use by the User of the Product and services (in
 particular, all updates and upgrades) of the Supplier and all related
-Documentation. The Documentation in this Agreement refers to the technical
-documentation, user manuals and instructions that the Supplier provides with the
-Product. This Agreement supersedes and replaces all previously created
-agreements concerning the previous versions of the Product. The Supplier may at
-any time amend this Agreement by notifying the User thereof in accordance with
+Documentation. The Documentation in this Agreement refers to technical
+documentation, user manuals and instructions that the Supplier provides with
+the Product. This Agreement supersedes and replaces all previously created
+agreements concerning the previous versions of the Product. The Supplier may
+amend this Agreement any time by notifying the User thereof in accordance with
 the terms of this Agreement. Further use of the Product for at least 7 calendar
 days after the date of notification means that the User accepts amendments to
 this Agreement. The Supplier may require the User to accept the changes entered
 to the Agreement to continue using the previously acquired Product.
 
 If the User does not accept amendments to this Agreement, the Supplier has the
-right to limit the period of use by the User of the Product to which the
-amendments concern.
+right to limit the period of use of the Product by the User to which the
+amendments refer.
 
 1. License
 
@@ -64,7 +64,7 @@ amendments concern.
 
     1. The User can install and use the Product on any devices compatible with
        the Product (hereinafter such devices, including mobile devices, are
-       called the Devices).
+       referred to as the Devices).
     2. The Product can be used by the User for internal corporate, commercial
        and business and/or personal non-commercial use.
     3. The User has the right to use the Product in any way for educational
@@ -85,26 +85,26 @@ amendments concern.
 3. Updates
 
     1. The Supplier may periodically update or replace the Product without the
-       User’s separate consent and permission. As a result, there are cases
-       when the User will not be able to use the Product (or certain
-       functions of the Product) until he installs or activates the updates
-       in full. In accordance with this Agreement, updates are considered to
-       be the part of the Product.  Updates include both addition or removal
-       of individual functions of the Product, and complete replacement of it.
+       User’s separate consent and permission. As a result, in some cases when
+       the User will not be able to use the Product (or certain functions of
+       the Product) until he installs or activates the updates in full. In
+       accordance with this Agreement, updates are considered to be a part of
+       the Product.  Updates include both addition or removal of separate
+       functions of the Product, and complete replacement of it.
     2. The Supplier determines the content, functions and functionality of the
-       updated Product at one’s own discretion. There is a possibility that the
-       User will need to download and allow the installation of all available
-       updates in order to obtain the maximum benefit from the Product.
+       updated Product at his own discretion. It is possible that the User will
+       need to download and allow the installation of all available updates in
+       order to obtain the maximum benefit from the Product.
     3. The Supplier may terminate Product support until the User accepts and
-       installs all the updates. The Supplier, at one’s own discretion,
+       installs all the updates. The Supplier, at his own discretion,
        determines when and which updates should be provided, but he is not
        obliged to provide the User with access to any updates.
-    4. The Supplier, at one’s own discretion, may terminate the delivery of
+    4. The Supplier, at his own discretion, may terminate the delivery of
        updates for any version of the Product, or updates that support the
        use of the Product with certain versions of operating systems,
        browsers and other programs for which the Product is designed.
 
-4. Property right
+4. Property rights
 
     1. The Product and the Documentation are the intellectual property of the
        Supplier, which is protected by copyright laws, international
@@ -126,8 +126,8 @@ amendments concern.
        Agreement. The User does not have the right to carry out the following
        actions or allow them to be carried out by third parties:
 
-        1. Clone the Product or create any own product with the components of
-           the Product and/or include the Product or its components in one’s own
+        1. Clone the Product or create any new product with the components of
+           the Product and/or include the Product or its components in his own
            commercial software/hardware products or software/hardware products
            of third parties, excluding the following:
 
@@ -136,7 +136,7 @@ amendments concern.
             2. The product components included in the Product are used for work
                with a separately installed Product.
 
-    2. In any way, modify the Product for further public distribution;
+    2. Modify the Product for further public distribution in any way;
     3. Sub-license Product and/or Documentation;
     4. Use the Product to provide or create a product or services that compete
        with this Product;
@@ -151,7 +151,7 @@ amendments concern.
        obliged to provide support for the Product only subject to conclusion of
        an additional agreement for support of the Product between the User and
        the Supplier.
-    2. ALL THE PRODUCTS PROVIDED TO THE USER FREE OF CHARGE, ARE PROVIDED ON THE
+    2. ALL PRODUCTS PROVIDED TO THE USER FREE OF CHARGE, ARE PROVIDED ON THE
        TERMS “AS IS”, “WITH ALL POSSIBLE DISADVANTAGES” AND “ON THE TERMS OF
        AVAILABILITY” WITHOUT ANY WARRANTIES AND SUPPORT OR OTHER SERVICES FROM
        THE SUPPLIER.
@@ -172,9 +172,9 @@ amendments concern.
        by the User with any obligations set forth therein, which will result in
        loss of all rights associated with the update of the Product or
        reimbursement of costs. The Supplier reserves the right to take other
-       legal measures if the violation by the User of this Agreement adversely
+       legal measures if the violation of this Agreement by the User adversely
        affects the Supplier, its distributors or agents. If a specific provision
-       of this Agreement is found to be invalid or unlawful, the other part of
+       of this Agreement is found to be invalid or unlawful, the other parts of
        this Agreement will remain in full force and effect.
 
 9. Other provisions
@@ -187,16 +187,16 @@ amendments concern.
        Agreement will not violate the user’s rights guaranteed by the current
        consumer protection legislation or other applicable laws in the User’s
        jurisdiction, the effect of which cannot be canceled by the Agreement.
-       This Agreement, as well as the Documentation, will be agreed to as much
-       as possible among each other, but in case of a conflict they will have
+       This Agreement, as well as the Documentation, will match as much as
+       possible among each other, but in case of a conflict they will have
        legal force in the following order: (1) this Agreement (2)
        Documentation.
-    2. Notifications. The Supplier may at any time send to the User any messages
-       by e-mail, through a pop-up window, dialog window or other means, even
-       if the User cannot receive this message until he launches the Product.
-       Any notification is deemed to be delivered when the Supplier sends it to
-       the User or makes it available through the Product, regardless of the
-       actual date of its receipt by the User.
+    2. Notifications. The Supplier may send any messages to the User at any
+       time by e-mail, through a pop-up window, dialog window or other means,
+       even if the User cannot receive this message until he launches the
+       Product.  Any notification is deemed to be delivered when the Supplier
+       sends it to the User or makes it available through the Product,
+       regardless of the actual date of its receipt by the User.
     3. Impossibility of execution. The Supplier shall not be liable for any
        errors or productivity slowdown of the Product resulting from (in whole
        or in part) errors in the operation of the programs (in particular,
@@ -210,16 +210,15 @@ amendments concern.
        Supplier.
     4. Transfer of rights and duties. The User cannot transfer to
        third parties the rights and obligations related to this Agreement
-       without the written consent of the Supplier. The Supplier may, at one’s
+       without the written consent of the Supplier. The Supplier may, at his
        own discretion, transfer rights and obligations under this Agreement at
        any time without the prior consent of the User.
     5. Internet connection. If the Documentation provides for the need for an
        active and stable Internet connection for the normal operation of the
        Product, the User shall be responsible for ensuring an active and stable
        Internet connection.
-    6. The Product’s name. The Supplier reserves the
-       right to periodically change the name of the Product at one’s own
-       discretion.
+    6. The Product’s name. The Supplier reserves the right to periodically
+       change the name of the Product at his own discretion.
 
 10. Contact Information
 
@@ -256,9 +255,9 @@ amendments concern.
        hardware errors that are not yet resolved by the manufacturer, or
        problems with setting up the equipment, making it impossible or too
        difficult for the correct diagnosis and solution of the problem by the
-       Supplier. So, by this document the User acknowledges and agrees that the
-       Supplier’s efforts may not be sufficient to solve the problems with
-       which the User has addressed, or that these problems can be resolved
+       Supplier. Therefore, by this document the User acknowledges and agrees
+       that the Suppliers efforts may not be sufficient to solve the problems
+       with which the User has appealed, or that these problems can be resolved
        later than the due date.
     3. During the provision of technical support, the Supplier may need remote
        access to the User’s Devices or the Supplier may request the
