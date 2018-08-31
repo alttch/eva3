@@ -1,8 +1,8 @@
 EVA ICS CHANGELOG
 =================
 
-3.1.0 (TBA)
------------
+3.1.0 (2018-09-01)
+------------------
 
 UC drivers, device templates, state history, charts and other new features
 
