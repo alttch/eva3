@@ -2,8 +2,8 @@ SFA Templates
 =============
 
 :doc:`/sfa/sfa` uses `jinja2 <http://jinja.pocoo.org/>`_ template engine to
-serve server-side templates. You can use SFA templates as for the regular HTML,
-as for javascript and JSON data files. Both *ui* and *pvt* folders can contain
+serve server-side templates. You can use SFA templates for regular HTML,
+javascript and JSON data files. Both *ui* and *pvt* folders can contain
 template files, the difference is only that templates in *ui* are public while
 templates in *pvt* are served via :doc:`SFA PVT<sfa_pvt>`.
 
@@ -28,7 +28,7 @@ The following variables are available in all templates:
   **remote_ip** which contains either request IP address or value of
   *X-Real-IP* variable (if set by frontend server).
 
-* **request** contains a dict will all request GET or POST params.
+* **request** contains a dict with all request GET or POST params.
 
 Template functions
 ------------------
@@ -53,8 +53,8 @@ where:
 
 * **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
-The function is similar to SFA API :ref:`groups<sfa_groups>` except if API key
-is not specified, the current key is used.
+The function is similar to SFA API :ref:`groups<sfa_groups>` except that if API
+key is not specified, the current key is used.
 
 state
 ~~~~~
@@ -76,6 +76,6 @@ where:
 
 * **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
-The function is similar to SFA API :ref:`state<sfa_state>` except if API key
-is not specified, the current key is used.
+The function is similar to SFA API :ref:`state<sfa_state>` except that if API
+key is not specified, the current key is used.
 
