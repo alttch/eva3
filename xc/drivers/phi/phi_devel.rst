@@ -2,8 +2,8 @@ Developing own PHI (Physical Interface) for EVA ICS. HOWTO
 ==========================================================
 
 PHI (Physical interface) is a low level driver which communicates directly with
-an equipment. PHI should not contain any logic, it's job is only get/set an
-equipment to state, requested by LPI.
+an equipment. PHI should not contain any logic, its job is only to get/set an
+equipment to the state requested by LPI.
 
 Required variables in a header
 ------------------------------
@@ -15,7 +15,7 @@ PHI info
 * **__copyright__**     copyright
 * **__license__**       module license
 * **__version__**       module version
-* **__description__**   module descrption (keep it short)
+* **__description__**   module description (keep it short)
 
 
 PHI system info
@@ -38,8 +38,8 @@ the next fields are processed by controller, so make them exactly as required
  * **value** process item values
  * **action** unit actions
 
-* **__mods_required__** required python modules (included neither in standard
-  Python install nor in EVA ICS)
+* **__mods_required__** required python modules (not included neither in
+  standard Python install nor in EVA ICS)
 
 * **__lpi_default__** if specified, the default driver will be created for this
   PHI when loaded.
@@ -48,11 +48,11 @@ the next fields are processed by controller, so make them exactly as required
 
  * **port_get** get single port data
  * **port_set** set single port data
- * **aao_get** get all ports at once (if no port specified)
+ * **aao_get** get all ports at once (if no port is specified)
  * **aao_set** set all ports at once (if list of ports and
    list of data is given)
  * **universal** PHI is universal and process **cfg** in requests.
- * **cache** PHI supports state caching (useful for a slow devices)
+ * **cache** PHI supports state caching (useful for slow devices)
 
 PHI help
 ~~~~~~~~
@@ -60,10 +60,10 @@ PHI help
 Each PHI module should contain 4 help variables:
 
 * **__config__help__** module configuration help (on load)
-* **__get_help__** additional configuration params which possible for LPI to
-  send with **get** command
-* **__set_help__** additional configuration params which possible for LPI to
-  send with **set** command
+* **__get_help__** additional configuration params possible for LPI to send
+  with **get** command
+* **__set_help__** additional configuration params possible for LPI to send
+  with **set** command
 
 First variable should be human readable, others may copy, join or process the
 first one or each other in any way.
@@ -74,7 +74,7 @@ following context:
 * **name** property name
 * **help** property description (help)
 * **type** property type
-* **required** *True* if proprery is required, *False* if it's optinal
+* **required** *True* if property is required, *False* if it's optional
 
 Property **type** may be:
 
@@ -98,7 +98,7 @@ The last one variable is
 * **__help__**
 
 It should contain the extended PHI description and operation manual. May be in
-any variable format and use restructured text directives for the formatting.
+any variable format and use restructured text directives for formatting.
 
 Classes and modules
 -------------------
@@ -109,9 +109,9 @@ and in **__mods_required__** variable.
 
 .. warning::
 
-    All non-standard modules (included neither in Python install nor in EVA
+    All non-standard modules (not included neither in Python install nor in EVA
     ICS) should be imported with try/catch with **importlib**, their
-    unavailability shouldn't block loading PHI for the informational puproses.
+    unavailability shouldn't block loading PHI for informational puproses.
 
 Importing modules **eva.uc.drivers.tools**, **eva.tools**, **eva.traphandler**,
 **eva.uc.modbus**, **eva.uc.smbus** and functions from
@@ -171,11 +171,11 @@ be serialized by parent class if requested:
 
 The super().__init__ call should always be first.
 
-If the constructor faces a problem (i.e. parsing a config or checking
-equipment, i.e. local bus) it may set *self.ready=False* to abort controller
+If the constructor faces a problem (e.g. parsing a config or checking
+equipment, e.g. local bus) it may set *self.ready=False* to abort controller
 loading the module.
 
-If PHI methods get/set can't work with a single ports at all (i.e. equipment
+If PHI methods get/set can't work with single ports at all (e.g. equipment
 returns state of all ports at once only), constructor should set variables:
 
 * **self.aao_get=True** tells LPI the returned with PHI.get method data will
@@ -187,8 +187,8 @@ The parent constructor sets the variable **self.phi_cfg** to phi_cfg or to {},
 so it's safe to work with it with *self.phi_cfg.get(cfgvar)*.
 
 If **info_only** param is true, it means the controller loaded module only to
-get its info and the module don't need to intialize itself for work and perform
-initial tests.
+get its info and the module doesn't need to initialize itself to work and
+perform initial tests.
 
 Primary methods
 ---------------
@@ -230,13 +230,13 @@ universal, it should handle them properly.
 
 .. warning::
 
-    watch out the timeout - if it's expired, the controller may crash or be
-    forcely restarted.  Always calculate the remaining time for the external
-    calls and return error as soon as it comes closer to the expiration.
+    watch out for the timeout - if it's expired, the controller may crash or be
+    forcedly restarted.  Always calculate the remaining time for the external
+    calls and return error as soon as it comes closer to expiration.
 
 Method **test** should perform a self-test (equipment test) if cmd=='self',
-other methods are variable and may be used i.e. for debugging. If command is
-not understood by the method, it's a rule of a good taste to return a help text
+other methods are variable and may be used e.g. for debugging. If command is
+not understood by the method, it's a rule of good taste to return a help text
 (dict *{ 'command': 'command help' }*).
 
 .. code-block:: python
@@ -245,7 +245,7 @@ not understood by the method, it's a rule of a good taste to return a help text
         #<your code>
 
 Method **exec** may be implemented to perform some actions on the equipment,
-i.e. changing the equipment settings or manage the firmware. You can implement
+e.g. changing the equipment settings or manage the firmware. You can implement
 any commands in any form you wish using **cmd** and **args** params.
 
 .. code-block:: python
@@ -253,12 +253,12 @@ any commands in any form you wish using **cmd** and **args** params.
     def exec(self, cmd=None, args=None):
         #<your code>
 
-The method should be used for the real commands only, all the tests (i.e.
-testing **get** method, obtaining equipment info for testing or informational
-puproses) should be implemented in **test**. After the command execution, the
-method should return *OK* on success or *FAILED* on failure. If command is not
-understood by the method, it's a rule of a good taste to return a help text
-(dict *{ 'command': 'command help' }*).
+The method should be used for real commands only, all the tests (e.g. testing
+**get** method, obtaining equipment info for testing or informational purposes)
+should be implemented in **test**. After the command execution, the method
+should return *OK* on success or *FAILED* on failure. If command is not
+understood by the method, it's a rule of good taste to return a help text (dict
+*{ 'command': 'command help' }*).
 
 The following methods may be used to call or register/unregister anything on
 driver load/unload:
@@ -281,7 +281,7 @@ Parent class provides the following useful functions:
 * **self.get_cached_state()** return the state cached before. If the cache is
   expired (self.cache param handled by parent), the method return None
 
-All the logging should be made with the following methods:
+All the logging should be done with the following methods:
 
 * **self.log_debug(msg)**
 * **self.log_info(msg)**
@@ -306,7 +306,7 @@ can be done with method
 where:
 
 * **phi** = **self**
-* **port** = port, where the event has been happened
+* **port** = port, where the event has happened
 * **data** = port state values, as much as possible (dict *{'port': state }*)
 
 The controller will call update() method for all items using the caller PHI for
@@ -351,8 +351,8 @@ subscribed, so let's create it inside a primary class:
 **data** a dict with name/value pairs, where name is SNMP numeric OID without a
 first dot, and value is always a string. Check if this trap belongs to your
 device and perform the required actions. Don't worry about the timeout (except
-about the actual reaction time on a trap event) because every method is being
-executed in the own thread.
+for the actual reaction time on a trap event) because every method is being
+executed in its own thread.
 
 EVA traphandler doesn't care about the method return value and you must process
 all the errors by yourself.
@@ -370,7 +370,7 @@ Working with I2C/SMBus
 
 It's highly recommended to use internal UC locking for I2C bus. Then you can
 use any module available to work with I2C/SMBus. As there are a lot of modules
-with a similar functions, you can choose it on your own. See the code example
+with similar functions, you can choose it on your own. See the code example
 below:
 
 .. code-block:: python
@@ -421,7 +421,7 @@ module.
         # with one modbus request
         self.aao_get = True
         self.modbus_port = self.phi_cfg.get('port')
-        # check in constructor is the specified modbus port defined
+        # check in constructor if the specified modbus port is defined
         if not modbus.is_port(self.modbus_port):
             self.log_error('modbus port ID not specified or invalid')
             self.ready = False
@@ -464,8 +464,8 @@ module.
 
 The variable **client_type** of the port object (*mb.client_type*) holds the
 port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
-working with the equipment of the same type which uses i.e. different registers
-for the different connection types.
+work with the equipment of the same type which uses e.g. different registers
+for different connection types.
 
 Exceptions
 ----------
