@@ -29,7 +29,7 @@ To create new ModBus virtual port, execute the following command:
 where:
 
 * **-l** lock port on operations, which means to wait while ModBus port is
-  used by other controller thread (driver command)
+  used by another controller thread (driver command)
 
 * **-t SEC** ModBus operations timeout (in seconds, default: default timeout)
 
@@ -78,7 +78,7 @@ of the ModBus relay 192.168.11.11 connected via TCP.
     virtual port return an error.
 
 If you need to change ModBus port params or options, you can always create new
-ModBus virtual port with the same ID, without deleting a previous one. Port
+ModBus virtual port with the same ID, without deleting the previous one. Port
 configuration and options will be overwritten.
 
 Testing ModBus virtual port
@@ -110,6 +110,6 @@ To delete ModBus virtual port, execute the command:
     # e.g.
     uc-cmd modbus destroy p1
 
-Note that controller doesn't check is the port in use or not, so double check
-this manually before deleting it.
+Note that controller doesn't check if the port is in use or not, so double
+check this manually before deleting it.
 
