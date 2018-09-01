@@ -1,7 +1,7 @@
 .. EVA Documentation
 
 EVA ICS documentation
-=====================
+*********************
 
 `EVA ICS <https://www.eva-ics.com/>`_ is a platform for automated control and
 monitoring systems development, for any needs, from home/office to industrial
@@ -92,8 +92,8 @@ What you get with EVA
     :caption:  API and system objects
     :maxdepth: 2
 
-    SYS API - common API for all subsystems <sys_api>
-    Notification system - a link between subsystems and third-party applications <notifiers>
+    sys_api
+    notifiers
 
 .. toctree::
     :caption:  Application development
