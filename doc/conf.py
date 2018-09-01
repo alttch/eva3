@@ -109,14 +109,20 @@ todo_include_todos = False
 # a list of builtin themes.
 html_theme = 'alabaster'
 
+html_style = None
+html_theme_options = {
+    'sidebar_includehidden': True,
+    'collapse_navigation': True,
+    'sticky_navigation': True,
+    'navigation_depth': 4,
+    'includehidden': True,
+    'titles_only': False
+    }
+# using_rtd_theme = True
+
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
-html_theme_options = {
-    'navigation_depth': 1,
-}
-
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
 
