@@ -1,5 +1,5 @@
 SCADA Final Aggregator
-----------------------
+======================
 
 SCADA Final Aggregator (SFA) is a subsystem usually installed directly in the
 host wherein the user interface or third-party applications are installed.

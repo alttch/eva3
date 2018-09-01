@@ -70,60 +70,37 @@ What you get with EVA
   :doc:`/sfa/sfa_framework`
 * and much more
 
-System documentation
---------------------
+.. toctree::
+    :caption:  System Documentation
+    :maxdepth: 2
 
-* :doc:`Installation</install>`
+    install
+    security
+    items
+    tutorial/tutorial
 
-* :doc:`Security recommendations</security>`
+.. toctree::
+    :caption:  Components
+    :maxdepth: 2
 
-* :doc:`Tutorial</tutorial/tutorial>`
+    uc/uc
+    lm/lm
+    sfa/sfa
 
-* System components
 
-  * :doc:`/uc/uc`
-  * :doc:`/lm/lm`
-  * :doc:`/sfa/sfa`
+.. toctree::
+    :caption:  API and system objects
+    :maxdepth: 2
 
-* :doc:`items`
+    SYS API - common API for all subsystems <sys_api>
+    Notification system - a link between subsystems and third-party applications <notifiers>
 
-* API and system objects
+.. toctree::
+    :caption:  Application development
+    :maxdepth: 2
 
-  * :doc:`/sys_api` - common API for all subsystems
-  * :doc:`/notifiers` - a link between subsystems and third-party applications
-  * :doc:`/uc/uc` - a  management and monitoring controller
-
-    * :doc:`/uc/uc_api` - API of the Universal Controller subsystem
-    * :ref:`unit` - controlled item
-    * :ref:`sensor` - monitored item
-    * :ref:`device` - set of items
-    * :doc:`/drivers` - drivers for hardware equipment
-    * :doc:`/item_scripts` - action and update scripts
-    * :doc:`ModBus equipment</modbus>`
-    * :doc:`/virtual`
-
-  * :doc:`/lm/lm` - a programmable logic controller
-
-    * :doc:`/lm/lm_api` - API of the Logic Manager subsystem
-    * :ref:`lvar` -  item used by system components to exchange logic data
-
-    * :doc:`/lm/macros`
-    * :doc:`/lm/ext`
-    * :doc:`/lm/decision_matrix`
-
- * :doc:`/sfa/sfa` server
-
-    * :doc:`/sfa/sfa_api` - API of the SCADA Final Aggregator
-    * :doc:`/sfa/sfa_pvt` - Private data web server
-
-* :doc:`/cli`
-
-* Application development
-
-    * :doc:`/api_clients`
-    * :doc:`/sfa/sfa_templates`
-    * :doc:`/sfa/sfa_framework`
-    * :doc:`Physical interfaces for drivers</phi_development>`
-
-* :doc:`/faq`
+    api_clients
+    sfa/sfa_templates
+    sfa/sfa_framework
+    Physical interfaces for drivers <phi_development>
 
