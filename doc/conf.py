@@ -113,6 +113,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     # 'canonical_url': '',
     # 'analytics_id': '',
+    'prev_next_buttons_location': None,
     'logo_only': True,
     'display_version': True,
     # 'prev_next_buttons_location': 'bottom',
@@ -141,7 +142,7 @@ html_theme_options = {
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'images/logo.svg'
+html_logo = 'images/logo.png'
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

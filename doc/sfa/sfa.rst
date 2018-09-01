@@ -13,7 +13,7 @@ function calls directly to SFA. Ids of the items should be always specified in
 oid form (*type:group/id*) and be unique in the whole installation.
 
 .. figure:: sfa.png
-    :scale: 75%
+    :scale: 100%
     :alt: SCADA Final Aggregator
 
     Example of the controller aggregation with the use of two SFA servers
