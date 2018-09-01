@@ -1,5 +1,5 @@
 Logic control macros
-====================
+********************
 
 In :doc:`lm` macros can be triggered on the list of events, third-party
 applications or user via :doc:`LM EI<lm_ei>` interface or :doc:`LM API<lm_api>`
@@ -21,13 +21,13 @@ files of the controller.
 .. contents::
 
 Executing macros
-----------------
+================
 
 To execute a macro, use **run** command of :doc:`lm-cmd</cli>` or LM API
 :ref:`run<lm_run>` function.
 
 Debugging macros
-----------------
+================
 
 Macro compilation and execution errors are written into the logs of the
 controller on DEBUG level, the exceptions are also added to **err** field of
@@ -40,7 +40,7 @@ To receive information about errors you may run the following command:
     lm-cmd run -i <macro_id> -w 3600 | grep -v ^Exec | jq -r .err
 
 Macros configuration
---------------------
+====================
 
 After the macro code is placed into *xc/lm/<macro_id>.py* file, it should be
 appended to the controller using :ref:`create_macro<lm_create_macro>` LM API
@@ -64,7 +64,7 @@ Parameters:
   execution (false by default)
 
 Common principles of macros operation
--------------------------------------
+=====================================
 
 Macros are launched simultaneously: system does not wait for the completion of
 the macro and launches its next copy or another macro in parallel. If you want
@@ -80,7 +80,7 @@ matrix<decision_matrix>`. The working cycles should be implemented with
 :ref:`logic variables<lvar>` timers.
 
 System macros
--------------
+=============
 
 If defined, macro named **system/autoexec** is launched automatically at the
 controller startup. This macro is not always the first one executed, as far as
@@ -105,7 +105,7 @@ Example of **autoexec** macro usage:
         reset('timers/timer1')
 
 Macros and security
--------------------
+===================
 
 As all Python features are available for macros, including execution of
 external programs or working with any local files, the code of macros should be
@@ -117,7 +117,7 @@ should take into account the following: if a macro runs other macros using
 allows to run only the initial macro.
 
 Macros built-ins
-----------------
+================
 
 Macros can execute any Python functions or use Python modules installed on the
 local server. In addition, macros have a set of built-in functions and
@@ -129,7 +129,7 @@ API function, item id is always transmitted in full. When calling other macros
 and working with logic variables, it's possible to use the short ids only.
 
 Variables
----------
+=========
 
 Macros have the following built-in variables:
 
@@ -157,7 +157,7 @@ Macros have the following built-in variables:
 
 
 Log messaging functions
------------------------
+=======================
 
 Macros may send messages to the log of the controller with the following
 functions:
@@ -171,7 +171,7 @@ functions:
 In addition, **print** function is an alias of **info**.
 
 Shared variables
-----------------
+================
 
 Apart from the :ref:`logic variables<lvar>` macros, can exchange variables
 between each other within the single controller with the following functions:
@@ -182,7 +182,7 @@ between each other within the single controller with the following functions:
 Shared variables are not saved in case the controller is restarted.
 
 Locking features
-----------------
+================
 
 These functions implement internal locking which may be used e.g. to block
 other macros to run until the current one is finished.
@@ -190,7 +190,7 @@ other macros to run until the current one is finished.
 .. _m_lock:
 
 lock - lock token request
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 .. code-block:: python
 
@@ -211,7 +211,7 @@ config and the locking wasn't successful.
 .. _m_unlock:
 
 unlock - release lock token
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 .. code-block:: python
 
@@ -224,12 +224,12 @@ params:
 Returns *True* if the lock is unlocked, *False*, if the lock does not exist.
 
 Item functions
---------------
+==============
 
 The following functions are used to control the :doc:`items</items>`:
 
 lvar_status - get logic variable status
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------
 
 .. code-block:: python
 
@@ -246,7 +246,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
 
 lvar_value, value - get logic variable value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------------
 
 .. code-block:: python
 
@@ -265,7 +265,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
 
 set - set logic variable value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 .. code-block:: python
 
@@ -284,7 +284,7 @@ config and the variable is not found.
 .. _m_clear:
 
 clear - stop timer/flag clear
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 If lvar is being used as a timer and has **expires** set, this function sets
 its status to *0* which works like a timer stop.
@@ -306,7 +306,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
 
 toggle - toggle a flag value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 Sets lvar value to *1* if it has value *"0"*, otherwise *"1"*. If lvar is used
 as a flag, this works like a switching between *False* and *True*.
@@ -325,7 +325,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
 
 expires - set the lvar expiration time
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 Function is used to set/change lvar expiration time and is useful for changing
 timers' durations.
@@ -350,7 +350,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
 
 is_expired - check timer expiration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 Function is useful when lvar is used as a timer to quickly check if it's
 still running or not.
@@ -372,7 +372,7 @@ config and the variable is not found.
 .. _m_status:
 
 status - get item status
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 .. code-block:: python
 
@@ -390,7 +390,7 @@ config and the item is not found.
 .. _m_value:
 
 value - get item value
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 .. code-block:: python
 
@@ -409,7 +409,7 @@ config and the item is not found.
 .. _m_unit_status:
 
 unit_status - get unit status
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 .. code-block:: python
 
@@ -425,7 +425,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 unit_value - get unit value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 .. code-block:: python
 
@@ -442,7 +442,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 unit_nstatus - get unit future status
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 .. code-block:: python
 
@@ -461,7 +461,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 unit_nvalue - get unit future value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 .. code-block:: python
 
@@ -481,7 +481,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 is_busy - check if the unit has action running
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------
 
 Compares current and future unit state, the difference means the unit is
 currently is running an action and is busy.
@@ -502,7 +502,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 history - get lvar state history
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 Returns list or dict with state history records for the specified lvar(s).
 
@@ -535,7 +535,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the lvar or history database is not found.
 
 action, start, stop - start unit action
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------------
 
 Starts the action for the unit.
 
@@ -564,7 +564,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
 
 result - get action result
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Obtain action result, either all results for the unit by **unit_id** or the
 particular action result by **uuid**
@@ -596,7 +596,7 @@ config and the unit is not found.
     results of local macros only.
 
 terminate - terminate the current action
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 Terminate the current unit action, either by **unit_id** or by action **uuid**
 
@@ -621,7 +621,7 @@ action doesn't exist (or is already finished).
 Does not raise any exceptions.
 
 q_clean - clean unit action queue
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 Cleans the unit action queue but keeps the current action running if it already
 has already been started.
@@ -640,7 +640,7 @@ Returns queue clean result in the same dict format as UC API
 Does not raise any exceptions.
 
 kill - clean unit queue and terminate current action
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------------
 
 Cleans the unit action queue and terminates the current action running if it
 has already been started.
@@ -659,7 +659,7 @@ Returns queue clean result in the same dict format as UC API
 Does not raise any exceptions.
 
 sensor_status - get sensor status
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 .. code-block:: python
 
@@ -675,7 +675,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the sensor is not found.
 
 sensor_value - get sensor value
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 .. code-block:: python
 
@@ -692,12 +692,12 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the sensor is not found.
 
 Rule management functions
--------------------------
+=========================
 
 .. _m_set_rule_prop:
 
 set_rule_prop - set rule parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 .. code-block:: python
 
@@ -717,7 +717,7 @@ optionally:
   creation
 
 Device management functions
----------------------------
+===========================
 
 Macros can create, update and destroy :ref:`devices<device>` with pre-defined
 device templates.
@@ -725,7 +725,7 @@ device templates.
 .. _m_create_device:
 
 create_device - create device items
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 .. code-block:: python
 
@@ -746,7 +746,7 @@ config and the access error has occured.
 .. _m_update_device:
 
 update_device - update device items
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 Works similarly to :ref:`m_create_device` function but doesn't create new items,
 updating item configuration of the existing ones.
@@ -760,7 +760,7 @@ Parameters and return data are the same.
 .. _m_destroy_device:
 
 destroy_device - destroy device items
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 Works in opposite way to :ref:`m_create_device` function, destroying all items
 specified in the template.
@@ -773,10 +773,10 @@ Parameters and return data are the same except that the function doesn't have
 **save** param.
 
 File management functions
--------------------------
+=========================
 
 ls - list files by mask
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 .. code-block:: python
 
@@ -814,7 +814,7 @@ where
 * **time/m** file modification time (mtime)
 
 open_newest - open newest file
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Tries to find and open the newest file by the specified mask. Useful i.e. for
 the folders where security cameras periodically upload an images.
@@ -836,7 +836,7 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the file can not be opened.
 
 open_oldest - open oldest file
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 Tries to find and open the oldest file by the specified mask.
 
@@ -855,12 +855,12 @@ Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the file can not be opened.
 
 System functions
-----------------
+================
 
 .. _m_alias:
 
 alias - create object alias
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 The functions allows to create object alias, e.g. make a short alias for a
 long-named function.
@@ -890,7 +890,7 @@ macro function will pass an error and return *False*.
 .. _m_sleep:
 
 sleep - pause operations
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 .. code-block:: python
 
@@ -899,7 +899,7 @@ sleep - pause operations
 
 
 mail - send email message
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 .. code-block:: python
 
@@ -918,7 +918,7 @@ specified).
 Returns *True* if the message is sent successfully.
 
 get - HTTP/GET request
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 .. code-block:: python
 
@@ -929,7 +929,7 @@ See `requests <http://docs.python-requests.org/en/master/>`_ documentation for
 more info.
 
 post - HTTP/POST request
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 .. code-block:: python
 
@@ -940,7 +940,7 @@ See `requests <http://docs.python-requests.org/en/master/>`_ documentation for
 more info.
 
 system - execute OS command
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 .. code-block:: python
 
@@ -951,7 +951,7 @@ system - execute OS command
 .. _m_cmd:
 
 cmd - execute command script
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 Executes a :ref:`command script<cmd>` on the chosen controller.
 
@@ -973,7 +973,7 @@ Returns the result equal to the result of SYS API :ref:`cmd<s_cmd>` function.
 .. _m_run:
 
 run - execute another local macro
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 .. code-block:: python
 
@@ -990,7 +990,7 @@ params:
 Returns the result equal to the result of LM API :ref:`run<lm_run>` function.
 
 exit - exit macro
-~~~~~~~~~~~~~~~~~
+-----------------
 
 Finishes macro execution
 
@@ -1003,7 +1003,7 @@ params:
 * **code** macro exit code (0 - no errors)
 
 Extending macros functionality
-------------------------------
+==============================
 
 Macros function set can be extended with pre-made or custom :doc:`macro
 extensions</lm/ext>`. As soon as extension is loaded, its functions become

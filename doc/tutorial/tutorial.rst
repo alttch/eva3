@@ -1,5 +1,5 @@
 Tutorial
-========
+********
 
 In this section, we will focus on EVA configuration which is illustrated by the
 following example.
@@ -52,9 +52,10 @@ All operations will be done using :doc:`command line applications</cli>`.
     tools are available in **legacy** folder. The examples described in
     tutorial use only new CLI tools.
 
-* EVA Tutorial parts
+.. toctree::
+    :maxdepth: 1
 
-  * :doc:`tut_uc`
-  * :doc:`tut_lm`
-  * :doc:`tut_sfa`
-  * :doc:`tut_ui`
+    tut_uc
+    tut_lm
+    tut_sfa
+    tut_ui

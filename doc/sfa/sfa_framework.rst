@@ -1,5 +1,5 @@
 SFA Framework
-=============
+*************
 
 SFA Framework is a component of :doc:`/sfa/sfa` that allows you to quickly
 create a web application with EVA interface for a specific configuration.
@@ -12,7 +12,7 @@ files often used for web application development.
 .. contents::
 
 Framework connection
---------------------
+====================
 
 Open the file *ui/index.html* in the editor, connect jQuery and SFA Framework:
 
@@ -22,10 +22,10 @@ Open the file *ui/index.html* in the editor, connect jQuery and SFA Framework:
     <script src="js/eva_sfa.min.js"></script>
 
 Framework variables
--------------------
+===================
 
 eva_sfa_login, eva_sfa_password
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 The following variables contain the user login/password, and are used for the
 initial authentication:
@@ -36,7 +36,7 @@ initial authentication:
     eva_sfa_password = '';
 
 eva_sfa_apikey
-~~~~~~~~~~~~~~
+--------------
 
 Another way is to use the variable
 
@@ -47,7 +47,7 @@ Another way is to use the variable
 in case its value is not NULL, the authentication is done with API key
 
 eva_sfa_cb_login_success, eva_sfa_cb_login_error
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------------------
 
 The following two variables contain functions called when the authentication
 either succeeded or failed (**data** parameter is equal to `jQuery post
@@ -59,7 +59,7 @@ either succeeded or failed (**data** parameter is equal to `jQuery post
     eva_sfa_cb_login_error = null;
 
 eva_sfa_cb_states_loaded
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 This function called after framework loads initial item states
 
@@ -68,7 +68,7 @@ This function called after framework loads initial item states
     eva_sfa_cb_states_loaded = null;
 
 eva_sfa_heartbeat_interval
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 The interval for a server ping test (heartbeat)
 
@@ -77,7 +77,7 @@ The interval for a server ping test (heartbeat)
     eva_sfa_heartbeat_interval = 5;
 
 eva_sfa_heartbeat_error
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 The following function is automatically called in case of a server heartbeat
 error:
@@ -91,7 +91,7 @@ without parameter if such data is not available (e. g. the error occurred when
 attempting to send data via WebSocket).
 
 eva_sfa_ajax_reload_interval
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 Interval (seconds) for updating data when framework is in AJAX mode:
 
@@ -100,7 +100,7 @@ Interval (seconds) for updating data when framework is in AJAX mode:
     eva_sfa_ajax_reload_interval = 2;
 
 eva_sfa_force_reload_interval
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 The next variable forces ajax updates if the framework is running in WebSocket
 mode. *0* value disables updating via AJAX completely, but it's recommended to
@@ -112,7 +112,7 @@ websocket events are lost.
     eva_sfa_force_reload_interval = 5;
 
 eva_sfa_rule_monitor_interval
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 Interval (seconds) for updating settings of the :doc:`decision-making matrix
 rules</lm/decision_matrix>`. Rule settings are updated via AJAX only.
@@ -122,7 +122,7 @@ rules</lm/decision_matrix>`. Rule settings are updated via AJAX only.
     eva_sfa_rule_monitor_interval = 60;
 
 eva_sfa_server_info
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 The next variable is updated by heartbeat and contains API **test** call
 results.  This variable may be used by the application to check whether the
@@ -134,7 +134,7 @@ framework has established connection to the server - if not, the variable is
     eva_sfa_server_info = null;
 
 eva_sfa_tsdiff
-~~~~~~~~~~~~~~
+--------------
 
 This variable contains the time difference (in seconds) between server and
 connected client. The value is updated every time client gets new server info.
@@ -144,7 +144,7 @@ connected client. The value is updated every time client gets new server info.
     eva_sfa_tsdiff = null;
 
 eva_sfa_ws_mode
-~~~~~~~~~~~~~~~
+---------------
 
 This variable sets the framework working mode. If its value is *true*, SFA
 framework operates via WebSocket, if false - via AJAX. This value is changed by
@@ -157,7 +157,7 @@ after the initial framework initialization.
     eva_sfa_ws_mode = true;
 
 eva_sfa_ws_event_handler
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 The next variable contains function processing WebSocket data. If the user
 declares this function, it should return *true* (in case the data processing is
@@ -171,7 +171,7 @@ function is called via **data** parameter with the event data set herein.
 .. _sfw_reload:
 
 eva_sfa_reload_handler
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 This variable contains function which's called when :doc:`/sfa/sfa` asks
 connected clients to reload the interface. If you want the interface to handle
@@ -189,7 +189,7 @@ the reload event, you must define this function.
 .. _sfw_server_restart:
 
 eva_sfa_server_restart_handler
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 This variable contains function which's called when :doc:`/sfa/sfa` notifies
 connected clients about server restart. Client application can prepare user for
@@ -197,7 +197,7 @@ the server restart (e.g. display warning message) and forcibly reload data when
 the server is back online.
 
 SFA cvars
-~~~~~~~~~
+---------
 
 All :ref:`user-defined SFA variables<sfa_cvars>` are directly available in SFA
 Framework after login with any valid user or API key.
@@ -205,10 +205,10 @@ Framework after login with any valid user or API key.
 .. _sf_init:
 
 Initialization, authentication
-------------------------------
+==============================
 
 eva_sfa_init
-~~~~~~~~~~~~
+------------
 
 To initialize the framework run
 
@@ -217,7 +217,7 @@ To initialize the framework run
     eva_sfa_init();
 
 eva_sfa_start
-~~~~~~~~~~~~~
+-------------
 
 To start the framework, run
 
@@ -229,7 +229,7 @@ that will authorize the user and run the data update and event handling
 threads.
 
 eva_sfa_start_rule_monitor
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 After the initialization succeeds, you may additionally start reloading the
 :doc:`decision rules</lm/decision_matrix>`. The following function is not
@@ -240,7 +240,7 @@ called by init/start and you should call it separately:
     eva_sfa_start_rule_monitor();
 
 eva_sfa_stop
-~~~~~~~~~~~~
+------------
 
 To stop the framework, call:
 
@@ -249,10 +249,10 @@ To stop the framework, call:
     eva_sfa_stop();
 
 Event Handling
---------------
+==============
 
 eva_sfa_state
-~~~~~~~~~~~~~
+-------------
 
 To manually get :doc:`item</items>` state, use the function
 
@@ -273,7 +273,7 @@ case the function returns the array of all item with oids matching the
 specified mask.
 
 eva_sfa_state_history
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Returns state history for the chosen item(s)
 
@@ -292,7 +292,7 @@ where:
 .. code-block:: javascript
 
 eva_sfa_groups
-~~~~~~~~~~~~~~
+--------------
 
 Returns a list of item groups.
 
@@ -308,7 +308,7 @@ where
   either succeeded or failed.
 
 eva_sfa_register_update_state
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 When the new data is obtained from the server, the framework may run a
 specified function to handle events. To register such function in the
@@ -331,7 +331,7 @@ case the specified state update function will be called always when item oid
 matches the specified mask.
 
 eva_sfa_register_rule
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Similarly, you can process the :doc:`decision rules</lm/decision_matrix>`
 settings. When rule params are changed, the framework runs the function
@@ -348,10 +348,10 @@ where:
   props (similar to LM API `list_rule_props<lm_list_rule_props>`)
 
 Macro execution and unit management
------------------------------------
+===================================
 
 eva_sfa_run
-~~~~~~~~~~~
+-----------
 
 To execute :doc:`macro</lm/macros>`, call the function:
 
@@ -366,7 +366,7 @@ either succeeded or failed. The functions are called with **data** param which
 contains the API response.
 
 eva_sfa_action
-~~~~~~~~~~~~~~
+--------------
 
 To run the :ref:`unit<unit>` action, call the function:
 
@@ -381,7 +381,7 @@ when the access to API has either succeeded or failed. The functions are called
 with **data** param which contains the API response.
 
 eva_sfa_action_toggle
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 In case you want to switch :ref:`unit<unit>` status between *0* and *1*, call:
 
@@ -390,7 +390,7 @@ In case you want to switch :ref:`unit<unit>` status between *0* and *1*, call:
     eva_sfa_action_toggle(unit_id, wait, priority, uuid, cb_success, cb_error);
 
 eva_sfa_result, eva_sfa_result_by_uuid
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 To obtain a result of the executed actions, use the functions:
 
@@ -400,7 +400,7 @@ To obtain a result of the executed actions, use the functions:
     eva_sfa_result_by_uuid(uuid, cb_success, cb_error);
 
 eva_sfa_kill
-~~~~~~~~~~~~
+------------
 
 Terminate unit action and clean up queued commands:
 
@@ -409,7 +409,7 @@ Terminate unit action and clean up queued commands:
     eva_sfa_kill(unit_id, cb_success, cb_error);
 
 eva_sfa_q_clean
-~~~~~~~~~~~~~~~
+---------------
 
 Clean unit action queue but keep the current action running:
 
@@ -418,7 +418,7 @@ Clean unit action queue but keep the current action running:
     eva_sfa_q_clean(unit_id, cb_success, cb_error);
 
 eva_sfa_terminate, eva_sfa_terminate_by_uuid
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------------
 
 Terminate the current unit action either by unit id, or by action uuid:
 
@@ -428,10 +428,10 @@ Terminate the current unit action either by unit id, or by action uuid:
     eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error);
 
 Working with logic variables
-----------------------------
+============================
 
 eva_sfa_set
-~~~~~~~~~~~
+-----------
 
 To set the :ref:`logic variable<lvar>` status, use the function:
 
@@ -440,7 +440,7 @@ To set the :ref:`logic variable<lvar>` status, use the function:
     eva_sfa_set(lvar_id, value, cb_success, cb_error);
 
 eva_sfa_toggle
-~~~~~~~~~~~~~~
+--------------
 
 To switch lvar value between *0* and *1* use
 
@@ -449,7 +449,7 @@ To switch lvar value between *0* and *1* use
     eva_sfa_toggle(lvar_id, cb_success, cb_error);
 
 eva_sfa_reset
-~~~~~~~~~~~~~
+-------------
 
 To reset lvar when used as timer or flag:
 
@@ -458,7 +458,7 @@ To reset lvar when used as timer or flag:
     eva_sfa_reset(lvar_id, cb_success, cb_error);
 
 eva_sfa_clear
-~~~~~~~~~~~~~
+-------------
 
 To clear lvar flag or stop the timer:
 
@@ -467,7 +467,7 @@ To clear lvar flag or stop the timer:
     eva_sfa_clear(lvar_id, cb_success, cb_error);
 
 eva_sfa_expires_in
-~~~~~~~~~~~~~~~~~~
+------------------
 
 Get timer expiration (in seconds). Allows to :ref:`display
 timers<sfw_example_timer>` and interactive progress bars of the production
@@ -487,10 +487,10 @@ Returns float number of seconds to timer expiration, or:
 * **-2** if the timer is disabled (stopped) and has status *0*
 
 Modifying decision rules
-------------------------
+========================
 
 eva_sfa_set_rule_prop
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 To change :doc:`decision rules</lm/decision_matrix>` properties, call:
 
@@ -499,7 +499,7 @@ To change :doc:`decision rules</lm/decision_matrix>` properties, call:
     eva_sfa_set_rule_prop(rule_id, prop, value, save, cb_success, cb_error);
 
 Processing logs
----------------
+===============
 
 SFA Framework has built-in functions to display SFA logs. In case
 :doc:`SFA</sfa/sfa>` is a :doc:`log aggregator</notifiers>`, this allows to
@@ -511,7 +511,7 @@ SFA Framework has built-in functions to display SFA logs. In case
     *sysfunc=yes* permission.
 
 eva_sfa_log_reload_interval
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 This variable sets log reload interval if the framework works in AJAX mode.
 
@@ -520,7 +520,7 @@ This variable sets log reload interval if the framework works in AJAX mode.
     eva_sfa_log_reload_interval = 2;
 
 eva_sfa_log_records_max
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 Maximum number of log records to get initially
 
@@ -529,7 +529,7 @@ Maximum number of log records to get initially
   eva_sfa_log_records_max = 200;
 
 eva_sfa_process_log_record
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Function called with log record param, when the new log event arrives
 
@@ -538,7 +538,7 @@ Function called with log record param, when the new log event arrives
   eva_sfa_process_log_record = null;
 
 eva_sfa_log_postprocess
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 Function called when all new log records are processed, i.e. to autoscroll the
 log viewer
@@ -548,7 +548,7 @@ log viewer
   eva_sfa_log_postprocess = null;
 
 eva_sfa_log_start
-~~~~~~~~~~~~~~~~~
+-----------------
 
 This function starts log processing engine
 
@@ -560,7 +560,7 @@ This function starts log processing engine
 processed by default, if not specified.
 
 eva_sfa_change_log_level
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 This function allows to change log level processing
 
@@ -572,7 +572,7 @@ Here **log_level** param is required. The function reloads all log records with
 the specified level, so it's a good idea to clean log viewer before.
 
 eva_sfa_log_level_name
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 This function returns log level name matching the given log level code:
 
@@ -584,10 +584,10 @@ Returns *DEBUG* for *10*, *INFO* for *20*, *WARNING* for *30*, *ERROR* for
 *40*, *CRITICAL* for *50*.
 
 UI functions
-------------
+============
 
 eva_sfa_load_animation
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Draws load animation inside specified <div />
 
@@ -596,7 +596,7 @@ Draws load animation inside specified <div />
     eva_sfa_load_animation(div_id)
 
 eva_sfa_chart
-~~~~~~~~~~~~~
+-------------
 
 Calls **eva_sfa_load_animation**, then **eva_sfa_state_history** and builds a
 chart inside specified <div />
@@ -628,7 +628,7 @@ where:
 See :ref:`Chart example<sfw_chart_example>`.
 
 eva_sfa_popup
-~~~~~~~~~~~~~
+-------------
 
 Opens HTML5 popups
 
@@ -691,7 +691,7 @@ somewhere in HTML):
     }
 
 Examples
---------
+========
 
 Examples of the SFA framework usage are provided in ":doc:`/tutorial/tut_ui`"
 part of the EVA :doc:`tutorial</tutorial/tutorial>`.
@@ -699,7 +699,7 @@ part of the EVA :doc:`tutorial</tutorial/tutorial>`.
 .. _sfw_example_timer:
 
 Timer example
-~~~~~~~~~~~~~
+-------------
 
 The following example shows how to display the timer countdown. The countdown
 is updated every 500 ms.
@@ -727,7 +727,7 @@ is updated every 500 ms.
 .. _sfw_chart_example:
 
 Chart example
-~~~~~~~~~~~~~
+-------------
 
 We have 2 sensors, for internal and external air temperature and want their
 data to be placed in one chart.
@@ -818,7 +818,7 @@ seconds:
 .. _sfw_example_log:
 
 Log viewer example
-~~~~~~~~~~~~~~~~~~
+------------------
 
 The following example shows how to build a log viewer, similar to included in
 :doc:`/uc/uc_ei` and :doc:`/lm/lm_ei`.
@@ -947,7 +947,7 @@ The following example shows how to build a log viewer, similar to included in
     </html>
 
 Controlling reliability of the connection
------------------------------------------
+=========================================
 
 An important moment of the web interface chosen for automation systems is
 reliability of the connection.

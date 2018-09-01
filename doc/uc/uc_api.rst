@@ -1,5 +1,5 @@
 UC API
-======
+******
 
 :doc:`Universal Controller<uc>` UC API is called through URL request
 
@@ -26,7 +26,7 @@ used, the parameters can be passed to functions either as www-form or as JSON.
 .. _uc_test:
 
 test - test API/key and get system info
----------------------------------------
+=======================================
 
 Test can be executed with any valid :ref:`API KEY<uc_apikey>`
 
@@ -70,7 +70,7 @@ Errors:
 .. _uc_state:
 
 state - get item state
-----------------------
+======================
 
 State of the :doc:`item</items>` or all items of the specified type can be
 obtained using **state** command.
@@ -117,7 +117,7 @@ Errors:
 .. _uc_state_history:
 
 state_history - get item state history
---------------------------------------
+======================================
 
 State history of one :doc:`item</items>` or several items of the specified type
 can be obtained using **state_history** command.
@@ -153,7 +153,7 @@ Errors:
 .. _uc_action:
 
 action - unit control actions
------------------------------
+=============================
 
 Create unit control action and put it into the queue of the controller.
 
@@ -213,7 +213,7 @@ Additionally, **time** will be supplemented by *completed*, *failed* or
 .. _uc_action_toggle:
 
 action_toggle - simple unit control
------------------------------------
+===================================
 
 Create unit control action to switch its status between 0 and 1. Useful for
 simple units.
@@ -245,7 +245,7 @@ Errors:
 .. _uc_result:
 
 result - get action status
---------------------------
+==========================
 
 Checks the result of the action by its UUID or returns the actions for the
 specified unit.
@@ -274,7 +274,7 @@ Errors:
 .. _uc_terminate:
 
 terminate - terminate action
-----------------------------
+============================
 
 Terminate action execution or cancel the action if it's still queued
 
@@ -299,7 +299,7 @@ Errors:
 .. _uc_q_clean:
 
 q_clean - clean up the action queue
------------------------------------
+===================================
 
 Cancel all queued actions, keep the current action running
 
@@ -318,7 +318,7 @@ Errors:
 .. _uc_kill:
 
 kill - clean up the queue and terminate the actions
----------------------------------------------------
+===================================================
 
 Apart from canceling all queued commands, this function also terminates the
 current running action.
@@ -341,7 +341,7 @@ Errors:
 .. _uc_disable_actions:
 
 disable_actions - disable actions for the unit
-----------------------------------------------
+==============================================
 
 Disables unit to run and queue new actions.
 
@@ -360,7 +360,7 @@ Errors:
 .. _uc_enable_actions:
 
 enable_actions - enable actions for the unit
---------------------------------------------
+============================================
 
 Enables unit to run and queue new actions.
 
@@ -379,7 +379,7 @@ Errors:
 .. _uc_update:
 
 update - set item status
-------------------------
+========================
 
 Updates the status and value of the :doc:`item</items>`. This is one of the
 ways of passive state update, for example with the use of an external
@@ -402,7 +402,7 @@ Errors:
 .. _uc_groups:
 
 groups - get item group list
-----------------------------
+============================
 
 Get the list of item groups. Useful e.g. for custom interfaces.
 
@@ -428,7 +428,7 @@ Errors:
 .. _uc_list:
 
 list - get item list
---------------------
+====================
 
 Returns the list of all items available
 
@@ -463,7 +463,7 @@ Errors:
 .. _uc_get_config:
 
 get_config - get item configuration
------------------------------------
+===================================
 
 Returns complete :doc:`item configuration</items>`
 
@@ -480,7 +480,7 @@ Errors:
 .. _uc_save_config:
 
 save_config - save item configuration on disk
----------------------------------------------
+=============================================
 
 Saves item configuration on disk (even if it hasn't been changed)
 
@@ -498,7 +498,7 @@ Errors:
 .. _uc_list_props:
 
 list_props - get editable item parameters
------------------------------------------
+=========================================
 
 Allows to get all editable parameters of the
 :doc:`item configuration</items>`
@@ -516,7 +516,7 @@ Errors:
 .. _uc_set_prop:
 
 set_prop - set item parameters
-------------------------------
+==============================
 
 Allows to set configuration parameters of the item.
 
@@ -537,7 +537,7 @@ Errors:
 .. _uc_create:
 
 create - create new item
-------------------------
+========================
 
 Creates new :doc:`item</items>`.
 
@@ -561,7 +561,7 @@ Errors:
 .. _uc_create_unit:
 
 create_unit - create new unit
------------------------------
+=============================
 
 Creates new :ref:`unit<unit>`.
 
@@ -586,7 +586,7 @@ Errors:
 .. _uc_create_sensor:
 
 create_sensor - create new sensor
----------------------------------
+=================================
 
 Creates new :ref:`sensor<sensor>`.
 
@@ -611,7 +611,7 @@ Errors:
 .. _uc_create_mu:
 
 create_mu - create multiupdate
-------------------------------
+==============================
 
 Creates new :ref:`multiupdate<multiupdate>`.
 
@@ -637,7 +637,7 @@ Errors:
 .. _uc_clone:
 
 clone - clone item
-------------------
+==================
 
 Creates a copy of the :doc:`item</items>`.
 
@@ -666,7 +666,7 @@ Errors:
 .. _uc_clone_group:
 
 clone_group - clone all items in the group
-------------------------------------------
+==========================================
 
 Creates a copy of all items from the group.
 
@@ -693,7 +693,7 @@ Errors:
 .. _uc_destroy:
 
 destroy - delete item or group
-------------------------------
+==============================
 
 Deletes the :doc:`item</items>` or the group (and all the items in it) from the
 system.
@@ -724,7 +724,7 @@ Errors:
 .. _create_device:
 
 create_device - create device items
------------------------------------
+===================================
 
 Creates the :ref:`device<device>` from the specified template.
 
@@ -749,7 +749,7 @@ Errors:
 .. _update_device:
 
 update_device - update device items
------------------------------------
+===================================
 
 Works similarly to :ref:`create_device` function but doesn't create new items,
 updating the item configuration of the existing ones.
@@ -775,7 +775,7 @@ Errors:
 .. _destroy_device:
 
 destroy_device - destroy device items
--------------------------------------
+=====================================
 
 Works in an opposite way to :ref:`create_device` function, destroying all items
 specified in the template.
@@ -795,7 +795,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 list_modbus_ports - list virtual ModBus ports
----------------------------------------------
+=============================================
 
 Returns a list which contains all virtual ModBus ports.
 
@@ -808,7 +808,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 create_modbus_port - create virtual ModBus port
------------------------------------------------
+===============================================
 
 Creates virtual :doc:`ModBus port</modbus>` with the specified configuration.
 
@@ -848,7 +848,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 test_modbus_port - verifies virtual ModBus port
------------------------------------------------
+===============================================
 
 Verifies virtual :doc:`ModBus port</modbus>` by calling connect() ModBus client
 method.
@@ -867,7 +867,7 @@ Returns result="OK" if port test is passed, or result="ERROR", if an error
 occurred.
 
 destroy_modbus_port - delete virtual ModBus port
-------------------------------------------------
+================================================
 
 Deletes virtual :doc:`ModBus port</modbus>`.
 
@@ -884,7 +884,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 list_phi - list loaded PHIs
----------------------------
+===========================
 
 Returns a list which contains all loaded :doc:`Physical Interfaces</drivers>`.
 
@@ -897,7 +897,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 load_phi - load PHI
--------------------
+===================
 
 Loads :doc:`Physical Interface</drivers>`.
 
@@ -925,7 +925,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 unload_phi - unload PHI 
------------------------
+=======================
 
 Unloads PHI. PHI should not be used by any :doc:`driver</drivers>` (except
 *default*, but the driver should not be in use by any :doc:`item</items>`).
@@ -943,7 +943,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 put_phi_mod - upload PHI module
--------------------------------
+===============================
 
 Allows to upload new PHI module to *xc/drivers/phi* folder.
 
@@ -965,7 +965,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 unlink_phi_mod - delete PHI module file
----------------------------------------
+=======================================
 
 Deletes PHI module file, if the module is loaded, all its instances should be
 unloaded first.
@@ -983,7 +983,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 get_phi - get loaded PHI information
-------------------------------------
+====================================
 
 Returns a dict with information about PHI
 
@@ -999,7 +999,7 @@ Errors:
 * **500 Internal Error** inaccessible PHI
 
 test_phi - test PHI
--------------------
+===================
 
 Returns PHI test result. All PHIs respond to **self** command, **help** command
 returns all available test commands.
@@ -1020,7 +1020,7 @@ Errors:
 * **500 Internal Error** inaccessible PHI or PHI test is failed
 
 exec_phi - execute additional PHI commands
-------------------------------------------
+==========================================
 
 Returns PHI command execution result. **help** command returns all available
 commands.
@@ -1041,7 +1041,7 @@ Errors:
 * **500 Internal Error** inaccessible PHI or PHI test is failed
 
 list_phi_mods - get list of available PHI modules
--------------------------------------------------
+=================================================
 
 Returns a list of all available PHI modules.
 
@@ -1054,7 +1054,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 modinfo_phi - get PHI module info
----------------------------------
+=================================
 
 Returns a dict with information about PHI module.
 
@@ -1069,7 +1069,7 @@ Errors:
 * **500 Internal Error** inaccessible PHI module
 
 modhelp_phi - get PHI module usage help
----------------------------------------
+=======================================
 
 Returns a dict with PHI usage help.
 
@@ -1085,7 +1085,7 @@ Errors:
 * **500 Internal Error** inaccessible PHI module
 
 list_drivers - list loaded drivers
-----------------------------------
+==================================
 
 Returns a list of loaded :doc:`drivers</drivers>`
 
@@ -1098,7 +1098,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 load_driver - load driver
--------------------------
+=========================
 
 Loads a :doc:`driver</drivers>`, combining previously loaded PHI and chosen LPI
 module.
@@ -1127,7 +1127,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 get_driver - get loaded driver information
-------------------------------------------
+==========================================
 
 Parameters:
 
@@ -1142,7 +1142,7 @@ Errors:
 * **500 Internal Error** inaccessible driver
 
 unload driver - unload driver
------------------------------
+=============================
 
 Unloads specified driver (LPI only, leaving PHI untouched)
 
@@ -1159,7 +1159,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 list_lpi_mods - get list of available LPI modules
--------------------------------------------------
+=================================================
 
 Returns a list of all available LPI modules.
 
@@ -1172,7 +1172,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 modinfo_lpi - get LPI module info
----------------------------------
+=================================
 
 Returns a dict with information about LPI module.
 
@@ -1187,7 +1187,7 @@ Errors:
 * **500 Internal Error** inaccessible LPI module
 
 modhelp_lpi - get LPI module usage help
----------------------------------------
+=======================================
 
 Returns a dict with LPI usage help.
 
@@ -1203,7 +1203,7 @@ Errors:
 * **500 Internal Error** inaccessible LPI module
 
 set_driver - set driver to item
--------------------------------
+===============================
 
 Sets the specified driver to :doc:`item</items>`, automatically updating item
 props:
@@ -1236,7 +1236,7 @@ Errors:
 .. _uc_udp_api:
 
 UDP API
--------
+=======
 
 UDP API enables to call API action and update functions by sending a simple UDP
 packet.

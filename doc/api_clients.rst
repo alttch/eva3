@@ -1,5 +1,5 @@
 API Clients
-===========
+***********
 
 All EVA API servers were designed as a simple and user-friendly way to work
 from a command line using traditional calling methods of Linux http requests:
@@ -22,7 +22,7 @@ If you want to integrate EVA API in your Python or PHP application, EVA can
 offer ready-made client libraries.
 
 API client for Python
----------------------
+=====================
 
 API client for Python has already been installed on all EVA servers and is
 used by the system itself. If you want to use the client module on another
@@ -35,7 +35,7 @@ Example of working with API from Python is located in **include/python/**
 folder of EVA.
 
 API classes for Python
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 API has two classes:
 
@@ -62,7 +62,7 @@ API requires `jsonpickle <https://jsonpickle.github.io/>`_ and `requests
 <http://docs.python-requests.org/en/master/>`_ modules.
 
 API initialization
-~~~~~~~~~~~~~~~~~~
+------------------
 
 API is initialized with the use of the following functions:
 
@@ -90,7 +90,7 @@ Example:
     api.set_product('uc')
 
 API function call
-~~~~~~~~~~~~~~~~~
+-----------------
 
 API functions are invoked by calling the **call** function:
 
@@ -119,7 +119,7 @@ The function returns a tuple of two variables:
 * *result* the result itself (JSON response converted to Python dict or array).
 
 API result codes
-~~~~~~~~~~~~~~~~
+----------------
 
 Result codes are stored in module variables (i.e. **apiclient.result_ok**)
 
@@ -152,7 +152,7 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
     result_invalid_params = 11
 
 API client for PHP
-------------------
+==================
 
 API client for PHP has already been installed on all EVA servers. If you want
 to use the client library on another system, just copy
@@ -162,7 +162,7 @@ Example of working with API from PHP is located in **include/php/**
 folder of EVA.
 
 API classes for PHP
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 API has two classes:
 
@@ -189,7 +189,7 @@ API requires PHP extensions `JSON <http://php.net/manual/en/book.json.php>`_
 and `cURL <http://php.net/manual/en/book.curl.php>`_.
 
 API initialization
-~~~~~~~~~~~~~~~~~~
+------------------
 
 API is initialized with the use of the following functions:
 
@@ -219,7 +219,7 @@ Example:
     ?>
 
 API function call
-~~~~~~~~~~~~~~~~~
+-----------------
 
 API functions are invoked by calling the **call** function:
 
@@ -252,7 +252,7 @@ The function returns an array of two variables:
 * *1* the result itself (JSON response converted to Python dict or array).
 
 API result codes
-~~~~~~~~~~~~~~~~
+----------------
 
 Result codes are stored in module variables:
 

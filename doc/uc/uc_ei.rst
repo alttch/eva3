@@ -1,5 +1,5 @@
 UC EI
-=====
+*****
 
 UC EI is a minimal interface for controlling the :doc:`uc` subsystem. The
 interface is not intended for daily use. It is designed solely for
@@ -7,7 +7,7 @@ configuration, debugging and use in case of emergency, e. g. when the primary
 system interface is unavailable.
 
 Logging in
-----------
+==========
 
 To log into the interface, open *\http://IP_address_UC:port/* url (the default
 port is 8812), enter :ref:`API KEY<uc_apikey>` and press Enter to log in or
@@ -18,7 +18,7 @@ port is 8812), enter :ref:`API KEY<uc_apikey>` and press Enter to log in or
     :alt: Login page
 
 Navigation
-----------
+==========
 
 The navigation menu is at the top of the interface.
 
@@ -30,7 +30,7 @@ Use **Save** button to immediately store the runtime data base/configuration to
 the disk.
 
 System information
-------------------
+==================
 
 .. figure:: uc-ei.sysinfo.png
     :scale: 70%
@@ -40,7 +40,7 @@ System information is at the bottom of the interface. Clicking on the **Debug
 mode** enables or disables the controller debugging mode.
 
 Units
------
+=====
 
 The :ref:`units<unit>` page opens after you've logged in. On the top you see
 the controller name, key type (masterkey or the regular one) and data
@@ -66,7 +66,7 @@ On the page, you can:
 * clean up the action queue and terminate the current action (**KILL**)
 
 Sensors
--------
+=======
 
 On the :ref:`sensors<sensor>` page you can review the current value of each
 sensor, make it enabled or disabled.
@@ -76,7 +76,7 @@ sensor, make it enabled or disabled.
     :alt: Sensors page
 
 Log viewer
-----------
+==========
 
 The log page allows you to review the system log since the controller launch.
 If you set the report level to *DEBUG*, interface automatically prompts you to
@@ -87,7 +87,7 @@ switch the controller to debugging mode.
     :alt: Log viewer
 
 Disabling the interface
------------------------
+=======================
 
 For security reasons, it may be a good idea to disable the interface after the
 initial configuration and system debug. To do this, set *ei_enabled = no* in

@@ -1,5 +1,5 @@
 ModBus
-======
+******
 
 :doc:`/uc/uc` provides native support of `ModBus <http://www.modbus.org/>`_
 protocol for ModBus :doc:`physical interfaces (PHIs)</drivers>`. Core support
@@ -8,7 +8,7 @@ but with additional functionality, such as bus locking, automatic retry
 attempts, virtual ports for drivers etc.
 
 Defining ModBus virtual port
-----------------------------
+============================
 
 Before using any ModBus PHI, you must define ModBus virtual port. ModBus PHIs
 work with ModBus virtual ports only, while UC handles all hardware calls and
@@ -82,7 +82,7 @@ ModBus virtual port with the same ID, without deleting the previous one. Port
 configuration and options will be overwritten.
 
 Testing ModBus virtual port
----------------------------
+===========================
 
 To test defined ModBus virtual port, execute the following command:
 
@@ -100,7 +100,7 @@ The command connects UC to ModBus port and checks the operation status.
     always return "OK" result.
 
 Deleting ModBus virtual port
-----------------------------
+============================
 
 To delete ModBus virtual port, execute the command:
 

@@ -1,5 +1,5 @@
 SCADA Final Aggregator
-======================
+**********************
 
 SCADA Final Aggregator (SFA) is a subsystem usually installed directly in the
 host wherein the user interface or third-party applications are installed.
@@ -37,7 +37,7 @@ configuration files generally match the other components.
 .. _sfa_ini:
 
 etc/sfa.ini configuration file
-------------------------------
+==============================
 
 sfa.ini - primary configuration file of SFA
 
@@ -47,7 +47,7 @@ sfa.ini - primary configuration file of SFA
 .. _sfa_cvars:
 
 runtime/sfa_cvars.json variables file
--------------------------------------
+=====================================
 
 sfa_cvars.json - file containing user variables. All SFA user variables are
 directly available in :doc:`sfa_templates` and :doc:`sfa_framework` after login
@@ -68,7 +68,7 @@ well as :doc:`sfa-cmd</cli>` **cvar get** and **cvar set** commands.
 .. _sfa_apikey:
 
 etc/sfa_apikeys.ini API keys file
----------------------------------
+=================================
 
 API access keys are stored into *etc/sfa_apikeys.ini* file. At least one full
 access key named **masterkey** should be present for proper functioning.
@@ -83,7 +83,7 @@ use to local host only.
 .. _sfa_remote_c:
 
 Connecting UC and LM PLC controllers
-------------------------------------
+====================================
 
 SFA works only with the :doc:`items</items>` known to the controller. Prior to
 connecting :doc:`UC</uc/uc>` and :doc:`LM PLC</lm/lm>` remote controllers, it
@@ -176,7 +176,7 @@ When managing the connected controllers, ID should be always provided in the
 full format: *controller_type/ID* (i.e.  *uc/controller1*).
 
 Interface
----------
+=========
 
 SFA interface is always specifically designed for a certain installation using
 :doc:`sfa_templates`, :doc:`sfa_framework` and :doc:`sfa_pvt`. Interface files
@@ -185,7 +185,7 @@ are stored in **ui** folder, interface is available at
 *http(s)://<IP_address_SFA:Port>/ui/*.
 
 Startup and shutdown
---------------------
+====================
 
 To manage SFA server use ./sbin/sfa-control script with the following options:
 

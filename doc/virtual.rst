@@ -1,11 +1,11 @@
 Virtual items
-=============
+*************
 
 :doc:`/uc/uc` items may be either virtual or real. You may toggle the item by
 changing configuration while the server is running.
 
 What are virtual items?
------------------------
+=======================
 
 Virtual items were originally developed for testing EVA, but we decided to
 include them in the final product. Virtual items allow you to:
@@ -50,7 +50,7 @@ After the item is made real, its virtual configuration is preserved and can be
 used later if the item is made virtual again.
 
 Basic operations with virtual items
------------------------------------
+===================================
 
 To display all virtual configurations, you should run a command
 
@@ -96,7 +96,7 @@ To delete the virtual item configuration, you should run the following command:
     ./xc/evirtual mu multiupdate1 rm
 
 Active virtual items
---------------------
+====================
 
 Active virtual items automatically send their state to the :doc:`/uc/uc` after
 being changed via :doc:`/uc/uc_api`.
@@ -113,7 +113,7 @@ After running the command
 the item is no longer active and automatically stops sending its status.
 
 Errors and delays simulation
-----------------------------
+============================
 
 Simulation of action failures for the unit may be set up as follows:
 
@@ -156,7 +156,7 @@ For all items: to complete the passive state update with the error code 1
 To disable the error code, set it to 0.
 
 Virtual drivers
----------------
+===============
 
 Primary goal of virtual items is to test :doc:`item scripts</item_scripts>`. If
 you just want to build a virtual setup, it may be a good idea to use virtual

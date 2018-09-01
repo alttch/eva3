@@ -1,5 +1,5 @@
 SFA PVT
-=======
+*******
 
 While developing the interfaces for :doc:`/sfa/sfa` you face the issue of the
 private data protection: the UI is loaded with the javascript application that
@@ -39,7 +39,7 @@ If the client is authenticated in advance, the future requests do not require
 .. contents::
 
 Loading files from PVT Server
------------------------------
+=============================
 
 The file can be loaded with the following request:
 
@@ -53,7 +53,7 @@ where
 * **f** a full relative file path, i.e. *map.jpg* or *c2/content.js*
 
 Receiving the file list
------------------------
+=======================
 
 Use **c=list** request param to receive the file list by the specified mask:
 
@@ -99,7 +99,7 @@ where
 * **time/m** file modification time (mtime)
 
 Receiving the newest and the oldest file
-----------------------------------------
+========================================
 
 Use **c=newest** (**c=oldest**) param to do the typical job of the management
 interfaces - receiving the newest file from the specified folder.
@@ -126,7 +126,7 @@ and easily receive the newest file with the following request:
     http(s)://<IP_address_SFA:Port>/pvt?k=APIKEY&f=cam1/*.jpg&c=newest
 
 Image Processing
-----------------
+================
 
 Use **ic=resize** to ask the server to preprocess the image file. To let the
 server process images, Python PIL (`pillow <https://python-pillow.org/>_`)
@@ -184,7 +184,7 @@ client demands a specific format.
 The maximum size of source file for the image processing is 10 megabytes.
 
 Disabling cache
----------------
+===============
 
 To ensure the request cashing is disabled, add **nocache** parameter with any
 value:
@@ -198,7 +198,7 @@ random value is used). Besides, the server will set **Cache-Control**,
 **Expires** and **Pragma** headers to the values which prohibit any caching.
 
 Using frontend
---------------
+==============
 
 If you work via frontend, you can use the pvt folder as a usual one (in case
 the authentication succeeded) by accessing files by their path without **f**
@@ -217,7 +217,7 @@ The additional commands will keep working:
     GET "http://eva.sfa.domain/pvt/data/cam3/*.jp*?c=newest&ic=resize:320x200x50:jpeg&nocache=1508070344872"
 
 Remote content
---------------
+==============
 
 SFA PVT can act as a proxy, fetching allowed resources in local network and
 displaying them to user.

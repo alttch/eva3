@@ -1,5 +1,5 @@
 Control and monitoring items
-============================
+****************************
 
 An item in EVA means any object which can be controlled or monitored.
 :doc:`/uc/uc` has 2 native item types: :ref:`unit<unit>` and
@@ -19,7 +19,7 @@ configuration file settings are changed manually or by 3rd party software,
 controller should be restarted to reload the configurations.
 
 Common item parameters
-----------------------
+======================
 
 * **id** item ID, i.e. 'lamp1'. When using **simple**
   :ref:`layout<item_layout>`, must be unique within one controller, even if
@@ -50,7 +50,7 @@ Common item parameters
 .. _item_layout:
 
 Item layout
------------
+===========
 
 EVA ICS allows to use two types of item layouts: **simple** and **enterprise**.
 if the system is not being used yet and there are no items created, layout can
@@ -81,7 +81,7 @@ always recommended.
 .. _unit:
 
 Unit
-----
+====
 
 A unit is a physical item, a device that we control. A unit is not a relay
 port, a dimmer or a controlled resistor. This is an object, for example: an
@@ -110,7 +110,7 @@ Unit parameters are set via configuration. The unit can be either physical or
 :doc:`virtual<virtual>`.
 
 Status of the unit state
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 Status of the unit state is always an integer (a positive number or 0), and is
 by default 0 - unit is "off" (inactive) and 1 - "on" (active).
@@ -125,7 +125,7 @@ or by the system itself if the unit wasn't updated for more than "expires"
 (value from item config) seconds.
 
 Value of the unit state
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 Sometimes it's not necessary to create multiple new statuses for the unit. In
 such cases, the unit also has a "value" parameter (which can include both
@@ -142,7 +142,7 @@ because such values cannot be transmitted via :ref:`MQTT<mqtt_>` correctly. In
 most cases, the system itself replaces the blank value with "null".
 
 Units in EVA hive
-~~~~~~~~~~~~~~~~~
+-----------------
 
 All units have oids like **unit:group/unit_id** e.g. *unit:light/room1/lamp1*
 
@@ -158,7 +158,7 @@ units
   unit or not (boolean, True/False)
 
 Unit parameters
-~~~~~~~~~~~~~~~
+---------------
 
 * **expires** integer value, time (seconds) after which the item state is
   considered "expired". If the item state was not updated during this period,
@@ -258,7 +258,7 @@ Unit parameters
 .. _sensor:
 
 Sensor
-------
+======
 
 The sensor value is the parameter measured by the sensor: temperature, humidity,
 pressure etc.
@@ -310,7 +310,7 @@ updates to several addresses at once.
     (disabled)
 
 Sensors in EVA hive
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 All sensors have oids like **sensor:group/sensor_id** e.g. *sensor:temp/t1*
 
@@ -321,7 +321,7 @@ units
 * **[space/]sensor/<group>/<sensor_id>/value** sensor value
 
 Sensor parameters
-~~~~~~~~~~~~~~~~~
+-----------------
 
 Sensors have the same parameters as :ref:`units<unit>`, except they don't have
 action_*, auto_off, mqtt_control and status_labels.
@@ -329,7 +329,7 @@ action_*, auto_off, mqtt_control and status_labels.
 .. _lvar:
 
 Logic variable
---------------
+==============
 
 EVA :doc:`Logic Manager</lm/lm>` uses the logic variables (lvars) to make
 decisions and organize production cycle timers.
@@ -386,7 +386,7 @@ However, when used in industrial configurations, it is recommended to
 synchronize time on all computers without any additional software hotfixes.
 
 LVars in EVA hive
-~~~~~~~~~~~~~~~~~
+-----------------
 
 All logic variables have oids like **lvar:group/lvar_id** e.g.
 *lvar:service/var1*
@@ -400,7 +400,7 @@ units
 * **[space/]lvar/<group>/<lvar_id>/expires** value expiration time (seconds)
 
 LVar parameters
-~~~~~~~~~~~~~~~
+---------------
 
 As LVars behavior is similar to :ref:`sensors<sensor>` except the values are
 set by user/system, they have the same parameters, except lvars can't be
@@ -410,7 +410,7 @@ default).
 .. _lvar_examples:
 
 Examples using LVars
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 You may use lvar as a
 
@@ -445,7 +445,7 @@ You may use lvar as a
 .. _multiupdate:
 
 Multiupdates
-------------
+============
 
 Multiupdates allow :doc:`/uc/uc` updating the state of several items with the
 use of one :doc:`script</item_scripts>`. This could be reasonable in case all
@@ -457,7 +457,7 @@ and without status and value. In turn, it updates statuses of the included
 items. Multiupdate can be :doc:`virtual<virtual>`.
 
 Multiupdates in EVA hive
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 All multiupdates have oids like **mu:group/mu_id** e.g.
 *mu:environment/mu1*
@@ -466,7 +466,7 @@ Multiupdates don't have their own state, so they are not synchronized between
 servers.
 
 Multiupdate parameters
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Multiupdates have the same parameters as :ref:`sensors<sensor>`, except that
 "expires", "mqtt_update" and "snmp_trap", plus some additional:
@@ -486,7 +486,7 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except that
 .. _device:
 
 Device
-------
+======
 
 Multiple cvars, units, sensors and multiupdates can be merged in logical groups
 called **devices**. It's completely up to you how to merge items into device,
@@ -502,7 +502,7 @@ devices.
 Device management requires master key or a key with *allow=device* permission.
 
 Device example
-~~~~~~~~~~~~~~
+--------------
 
 Let's imagine we have some hardware device, which has 1 relay and 2 sensors.
 We have a lot of devices like this and we want to create them using template.
@@ -570,7 +570,7 @@ put template variables instead of part or full param value (in our example:
     etc.)
 
 Device limitations
-~~~~~~~~~~~~~~~~~~
+------------------
 
 * :ref:`Custom variables<uc_cvars>`, :ref:`units<unit>`, :ref:`sensors<sensor>`
   and :ref:`multiupdates<multiupdate>` can be part of the device

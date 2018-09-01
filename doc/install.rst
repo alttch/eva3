@@ -1,5 +1,5 @@
 Installation
-============
+************
 
 All you need to install EVA  is to download the latest update from
 https://www.eva-ics.com/, unpack the archive to any folder and everything is
@@ -8,7 +8,7 @@ almost ready to use.
 .. contents::
 
 System Requirements
--------------------
+===================
 
 * Python version 3 (preferably 3.4+) or later, plus pip3 for automatic
   installation of the additional modules
@@ -34,7 +34,7 @@ System Requirements
         * **pysnmp** (python3-pysnmp4)
 
 Initial configuration
----------------------
+=====================
 
 .. note::
 
@@ -43,7 +43,7 @@ Initial configuration
 
 
 Easy setup
-~~~~~~~~~~
+----------
 
 .. warning::
 
@@ -70,7 +70,7 @@ Easy setup
     and *etc/sfa.ini* configs first.
 
 Manual setup
-~~~~~~~~~~~~
+------------
 
 * Run *./install/install-without-setup* in EVA folder
 * In *etc* folder copy *uc.ini-dist* into *uc.ini*; if you plan to use
@@ -117,7 +117,7 @@ The system is ready.
     database permissions.
 
 Upgrading
----------
+=========
 
 * Backup everything
 * Run the following command:
@@ -137,7 +137,7 @@ Upgrading
     The system downgrade is officially not supported and not recommended.
 
 Watchdog
---------
+========
 
 Watchdog process is started automatically for each EVA controller and tests it
 with the specified interval. Controller should respond to API call **test**
@@ -152,7 +152,7 @@ params:
   dump before restarting (default: no).
 
 How to assign IDs to items
---------------------------
+==========================
 
 All system :doc:`items</items>` including :doc:`macros</lm/macros>` have their
 own ids. Item id should be unique within one server in **simple**
@@ -181,7 +181,7 @@ automatically, macro id should be always unique.
     item IDs or groups.
 
 Log file customization
-----------------------
+======================
 
 Perform these on the installed Python modules to avoid any extra information in
 logs:
@@ -195,7 +195,7 @@ logs:
          if not conn.is_verified:warnings.warn((....
 
 Using NGINX as a frontend for SFA interface
--------------------------------------------
+===========================================
 
 Suppose `NGINX <https://www.nginx.com/>`_ operates on 8443 port with SSL, and
 :doc:`/sfa/sfa` - without SSL. Let's make the task even more complicated: let

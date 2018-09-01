@@ -113,8 +113,8 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     # 'canonical_url': '',
     # 'analytics_id': '',
-    # 'logo_only': False,
-    # 'display_version': True,
+    'logo_only': True,
+    'display_version': True,
     # 'prev_next_buttons_location': 'bottom',
     # 'style_external_links': False,
     # 'vcs_pageview_mode': '',
@@ -173,7 +173,7 @@ html_static_path = ['_static']
 # template names.
 #html_additional_pages = {}
 
-html_add_permalinks = False
+html_add_permalinks = ''
 
 # If false, no module index is generated.
 #html_domain_indices = True

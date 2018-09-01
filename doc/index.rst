@@ -1,5 +1,3 @@
-.. EVA Documentation
-
 EVA ICS documentation
 *********************
 
@@ -19,7 +17,7 @@ technology as a basis, we simplify everything else to the maximum. Automation
 is simple and available for everyone!
 
 What is EVA
------------
+===========
 
 * :doc:`Universal controllers</uc/uc>` for management and monitoring of all
   your equipment, on the basis of which you can develop your own automation
@@ -47,7 +45,7 @@ subsystems and collecting all data to a unified database.
 The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 
 What you get with EVA
----------------------
+=====================
 
 * use pre-made :doc:`drivers</drivers>` or write simple
   :doc:`scripts</item_scripts>` for your automation hardware and keep them
@@ -72,35 +70,61 @@ What you get with EVA
 
 .. toctree::
     :caption:  System Documentation
-    :maxdepth: 2
+    :maxdepth: 1
 
     install
+    What's new <changelog>
     security
-    items
+    notifiers
+    cli
     tutorial/tutorial
+    faq
 
 .. toctree::
     :caption:  Components
-    :maxdepth: 2
+    :maxdepth: 1
 
     uc/uc
     lm/lm
     sfa/sfa
-
+    items
 
 .. toctree::
-    :caption:  API and system objects
-    :maxdepth: 2
+    :caption:  Equipment management
+    :maxdepth: 1
+
+    drivers
+    item_scripts
+    modbus
+    snmp_traps
+    virtual
+
+.. toctree::
+    :caption:  Logic control
+    :maxdepth: 1
+
+    lm/macros
+    lm/decision_matrix
+
+.. toctree::
+    :caption:  Interface development
+    :maxdepth: 1
+
+    sfa/sfa_framework
+    sfa/sfa_templates
+    sfa/sfa_pvt
+
+.. toctree::
+    :caption:  Extension development
+    :maxdepth: 1
 
     sys_api
-    notifiers
-
-.. toctree::
-    :caption:  Application development
-    :maxdepth: 2
-
+    uc/uc_api
+    lm/lm_api
+    sfa/sfa_api
     api_clients
     sfa/sfa_templates
     sfa/sfa_framework
     Physical interfaces for drivers <phi_development>
+    Logic macro extensions <lm/ext>
 

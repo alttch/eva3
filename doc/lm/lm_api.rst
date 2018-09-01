@@ -1,5 +1,5 @@
 LM API
-======
+******
 
 :doc:`Logic Manager<lm>` LM API is called through URL request
 
@@ -26,7 +26,7 @@ used, the parameters can be passed to functions either as www-form or as JSON.
 .. _lm_test:
 
 test - test API/key and get system info
----------------------------------------
+=======================================
 
 Test can be executed with any valid :ref:`API KEY<lm_apikey>`
 
@@ -70,7 +70,7 @@ Errors:
 .. _lm_state:
 
 state - get logic variable state
---------------------------------
+================================
 
 State of the :ref:`lvar<lvar>` or all logic variables can be obtained using
 **state** command.
@@ -109,7 +109,7 @@ Errors:
 .. _lm_state_history:
 
 state_history - get item state history
---------------------------------------
+======================================
 
 State history of one :doc:`item</items>` or several items of the specified type
 can be obtained using **state_history** command.
@@ -146,7 +146,7 @@ Errors:
 .. _lm_set:
 
 set - set lvar state
---------------------
+====================
 
 Allows to set status and value of a :ref:`logic variable<lvar>`.
 
@@ -167,7 +167,7 @@ Errors:
 .. _lm_reset:
 
 reset - reset lvar state
-------------------------
+========================
 
 Allows to set status and value of a :ref:`logic variable<lvar>` to *1*. Useful
 when lvar is being used as a timer to reset it, or as a flag to set it *True*.
@@ -187,7 +187,7 @@ Errors:
 .. _lm_clear:
 
 clear - clear lvar state
-------------------------
+========================
 
 Allows to set status (if **expires** lvar param > 0) or value (if **expires**
 isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as
@@ -208,7 +208,7 @@ Errors:
 .. _lm_toggle:
 
 toggle - toggle lvar value
---------------------------
+==========================
 
 Allows to switch value of a :ref:`logic variable<lvar>` between *0* and *1*.
 Useful when lvar is being used as a flag to switch it between *True*/*False*.
@@ -226,7 +226,7 @@ Errors:
 * **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
 
 groups - get lvar groups list
------------------------------
+=============================
 Get the list of the lvar groups. Useful i.e. for custom interfaces.
 
 Parameters:
@@ -247,7 +247,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 groups_macro - get macro groups list
-------------------------------------
+====================================
 Get the list of macro groups.
 
 Parameters:
@@ -268,7 +268,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 list_macros - get macro list
-----------------------------
+============================
 
 Get the list of all available :doc:`macros<macros>`.
 
@@ -301,7 +301,7 @@ Errors:
 .. _lm_run:
 
 run - execute macro
--------------------
+===================
 
 Executes a :doc:`macro<macros>` with the specified arguments.
 
@@ -358,7 +358,7 @@ for the exit code of the macro. Additionally, **time** will be supplemented by
 .. _lm_result:
 
 result - macro execution result
--------------------------------
+===============================
 
 Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
 
@@ -388,7 +388,7 @@ Actions remain in the system until they receive the status *completed*,
     This function doesn't return results of the unit actions executed by macros
 
 list - get list of all logic variables
---------------------------------------
+======================================
 
 Parameters:
 
@@ -418,7 +418,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 get_config - get logic variable configuration
----------------------------------------------
+=============================================
 
 Parameters:
 
@@ -433,7 +433,7 @@ Errors:
 * **404 Not Found** lvar doesn't exist
 
 save_config - save lvar configuration on disk
----------------------------------------------
+=============================================
 
 Saves lvar configuration on disk (even if it wasn't changed)
 
@@ -451,7 +451,7 @@ Errors:
 .. _lm_list_props:
 
 list_props - get editable lvar parameters
------------------------------------------
+=========================================
 
 Allows to get all editable parameters of the :ref:`lvar configuration<lvar>`.
 
@@ -468,7 +468,7 @@ Errors:
 .. _lm_set_prop:
 
 set_prop - set item parameters
-------------------------------
+==============================
 
 Allows to set configuration parameters of the lvar.
 
@@ -487,7 +487,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 create_lvar - create new lvar
------------------------------
+=============================
 
 Creates new :ref:`lvar<lvar>`.
 
@@ -509,7 +509,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 destroy_lvar - delete lvar
---------------------------
+==========================
 
 Deletes :ref:`lvar<lvar>`.
 
@@ -538,7 +538,7 @@ Errors:
 .. _lm_list_macro_props:
 
 list_macro_props - get editable macro parameters
-------------------------------------------------
+================================================
 
 Allows to get all editable parameters of the :doc:`macro
 configuration<macros>`.
@@ -556,7 +556,7 @@ Errors:
 .. _lm_set_macro_prop:
 
 set_macro_prop - set macro parameters
--------------------------------------
+=====================================
 
 Allows to set configuration parameters of the macro.
 
@@ -577,7 +577,7 @@ Errors:
 .. _lm_create_macro:
 
 create_macro - create new macro
--------------------------------
+===============================
 
 Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm**
 manually.
@@ -600,7 +600,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 destroy_macro - delete macro
-----------------------------
+============================
 
 Deletes :doc:`macro<macros>`.
 
@@ -617,7 +617,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 list_rules - get rules list
----------------------------
+===========================
 
 Get the list of all available :doc:`decision rules<decision_matrix>`.
 
@@ -634,7 +634,7 @@ Errors:
 .. _lm_list_rule_props:
 
 list_rule_props - get editable rule parameters
------------------------------------------------
+===============================================
 
 Allows to get all editable parameters of the :doc:`decision
 rule<decision_matrix>`.
@@ -655,7 +655,7 @@ Errors:
 .. _lm_set_rule_prop:
 
 set_rule_prop - set rule parameters
------------------------------------
+===================================
 
 Allows to set configuration parameters of the rule.
 
@@ -676,7 +676,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 create_rule - create new rule
-------------------------------
+==============================
 
 Creates new :doc:`decision rule<decision_matrix>`. Rule id is always generated
 automatically.
@@ -697,7 +697,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 destroy_rule - delete rule
-----------------------------
+============================
 
 Deletes :doc:`decision rule<decision_matrix>`.
 
@@ -716,7 +716,7 @@ Errors:
 .. _lm_list_remote:
 
 list_remote - get a list of items from connected UCs
-----------------------------------------------------
+====================================================
 
 Get a list of the items loaded from the connected :ref:`UC
 controllers<lm_remote_uc>`.  Useful to debug the controller connections.
@@ -741,7 +741,7 @@ Errors:
 .. _lm_list_controllers:
 
 list_controllers - get controllers list
----------------------------------------
+=======================================
 
 Get the list of all connected :ref:`UC controllers<lm_remote_uc>`.
 
@@ -771,7 +771,7 @@ Errors:
 .. _lm_list_controller_props:
 
 list_controller_props - get editable controller parameters
-----------------------------------------------------------
+==========================================================
 
 Allows to get all editable parameters of the connected :ref:`UC
 controller<lm_remote_uc>`.
@@ -787,7 +787,7 @@ Errors:
 .. _lm_set_controller_prop:
 
 set_controller_prop - set controller parameters
------------------------------------------------
+===============================================
 
 Allows to set configuration parameters of the connected UC.
 
@@ -808,7 +808,7 @@ Errors:
 .. _lm_append_controller:
 
 append_controller - connect remote UC
--------------------------------------
+=====================================
 
 Connects remote :ref:`UC controller<lm_remote_uc>` to the local.
 
@@ -840,7 +840,7 @@ Errors:
 .. _lm_remove_controller:
 
 remove_controller - disconnect UC
----------------------------------
+=================================
 
 Disconnects the remote :ref:`UC controller<lm_remote_uc>`.
 
@@ -859,7 +859,7 @@ Errors:
 .. _lm_reload_controller:
 
 reload_controller - reload items from UC
-----------------------------------------
+========================================
 
 Allows to immediately reload all the :doc:`items</items>` and their status from
 the remote :ref:`UC controller<lm_remote_uc>`.
@@ -877,7 +877,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 list_ext - list loaded macro extensions
----------------------------------------
+=======================================
 
 Returns a list which contains all loaded :doc:`macro extensions</lm/ext>`.
 
@@ -890,7 +890,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 load_ext - load macro extension
--------------------------------
+===============================
 
 Loads:doc:`macro extension</lm/ext>`.
 
@@ -913,7 +913,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 unload_ext - unload macro extension
------------------------------------
+===================================
 
 Unloads macro extension.
 
@@ -930,7 +930,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 get_ext - get loaded macro extension information
-------------------------------------------------
+================================================
 
 Returns a dict with information about macro extension
 
@@ -946,7 +946,7 @@ Errors:
 * **500 Internal Error** inaccessible macro extension
 
 list_ext_mods - get list of available macro extension modules
--------------------------------------------------------------
+=============================================================
 
 Returns a list of all available macro extension modules.
 
@@ -959,7 +959,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 modinfo_ext - get macro extension module info
----------------------------------------------
+=============================================
 
 Returns a dict with information about macro extension module.
 
@@ -974,7 +974,7 @@ Errors:
 * **500 Internal Error** inaccessible macro extension module
 
 modhelp_ext - get extension module usage help
----------------------------------------------
+=============================================
 
 Returns a dict with macro extension usage help.
 

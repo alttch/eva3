@@ -1,15 +1,15 @@
 Developing own PHI (Physical Interface) for EVA ICS. HOWTO
-==========================================================
+**********************************************************
 
 PHI (Physical interface) is a low level driver which communicates directly with
 an equipment. PHI should not contain any logic, its job is only to get/set an
 equipment to the state requested by LPI.
 
 Required variables in a header
-------------------------------
+==============================
 
 PHI info
-~~~~~~~~
+--------
 
 * **__author__**        module author
 * **__copyright__**     copyright
@@ -19,7 +19,7 @@ PHI info
 
 
 PHI system info
-~~~~~~~~~~~~~~~
+---------------
 
 the next fields are processed by controller, so make them exactly as required
 
@@ -55,7 +55,7 @@ the next fields are processed by controller, so make them exactly as required
  * **cache** PHI supports state caching (useful for slow devices)
 
 PHI help
-~~~~~~~~
+--------
 
 Each PHI module should contain 4 help variables:
 
@@ -101,7 +101,7 @@ It should contain the extended PHI description and operation manual. May be in
 any variable format and use restructured text directives for formatting.
 
 Classes and modules
--------------------
+===================
 
 It's allowed to import any Python system module or module installed by EVA ICS.
 If PHI requires installing more modules, they should be listed in PHI help file
@@ -142,7 +142,7 @@ The main class is defined as:
         #<your code>
 
 Constructor
------------
+===========
 
 The constructor should set the above constants to class variables to let them
 be serialized by parent class if requested:
@@ -191,7 +191,7 @@ get its info and the module doesn't need to initialize itself to work and
 perform initial tests.
 
 Primary methods
----------------
+===============
 
 The following methods should be defined. **cfg** param may contain
 configuration params which should override the default ones for the current
@@ -273,7 +273,7 @@ driver load/unload:
 
 
 Parent methods
---------------
+==============
 
 Parent class provides the following useful functions:
 
@@ -294,7 +294,7 @@ The last two methods do the same, logging an event and calling controller
 critical() method.
 
 Handling events
----------------
+===============
 
 If the equipment sends any event, PHI should ask Driver API to handle it. This
 can be done with method
@@ -317,7 +317,7 @@ Value *-1* can be used to set unit error status, value *False* to set sensor
 error status.
 
 Handling SNMP traps
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 First you need to subscribe to EVA trap handler. Import **eva.traphandler** mod
 and modify PHI start and stop methods:
@@ -358,7 +358,7 @@ EVA traphandler doesn't care about the method return value and you must process
 all the errors by yourself.
 
 Schedule events
-~~~~~~~~~~~~~~~
+---------------
 
 If the equipment doesn't send any events, PHI can initiate updating the items
 by itself. To perform this, PHI should support **aao_get** feature and be
@@ -366,7 +366,7 @@ loaded with *update=N* config param. Updates, intervals as well as the whole
 update process are handled by parent class.
 
 Working with I2C/SMBus
-----------------------
+======================
 
 It's highly recommended to use internal UC locking for I2C bus. Then you can
 use any module available to work with I2C/SMBus. As there are a lot of modules
@@ -404,7 +404,7 @@ All I2C/SMBus exceptions, timeouts and retries should be handled by the code of
 your PHI.
 
 Working with ModBus
--------------------
+===================
 
 Working with ModBus is pretty easy. PHIs don't need to care about the ModBus
 connection and data exchange at all, everything is managed by **eva.uc.modbus**
@@ -468,7 +468,7 @@ work with the equipment of the same type which uses e.g. different registers
 for different connection types.
 
 Exceptions
-----------
+==========
 
 The methods of PHI should not raise any exceptions and handle/log all errors by
 themselves.

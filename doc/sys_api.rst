@@ -1,5 +1,5 @@
 SYS API
-=======
+*******
 
 SYS API is a common API present in all EVA controllers. SYS API functions are
 used to manage controller itself.
@@ -19,7 +19,7 @@ used, the parameters can be passed to functions either as www-form or as JSON.
 .. _s_test:
 
 test - test API/key and get system info
----------------------------------------
+=======================================
 
 Test can be executed with any valid API key of the controller the function is
 called to.
@@ -64,7 +64,7 @@ Errors:
 .. _s_cmd:
 
 cmd - execute a remote command
-------------------------------
+==============================
 
 Executes a :ref:`command script<cmd>` on the server where the controller is
 installed.
@@ -113,7 +113,7 @@ Errors:
 .. _s_lock:
 
 lock - lock token request
--------------------------
+=========================
 
 Lock tokens can be used similarly to file locking by the specific process. The
 difference is that SYS API tokens can be:
@@ -147,7 +147,7 @@ Errors:
 .. _s_unlock:
 
 unlock - release lock token
----------------------------
+===========================
 
 Releases the previously requested lock token.
 
@@ -167,7 +167,7 @@ Errors:
 .. _s_log_rotate:
 
 log_rotate - rotate controller's log file
------------------------------------------
+=========================================
 
 Rotates log file similarly to kill -HUP <controller_id>
 
@@ -185,7 +185,7 @@ Errors:
 .. _s_log:
 
 log_debug, log_info, log_warning, log_error, log_critical - write to the log
-----------------------------------------------------------------------------
+============================================================================
 
 An external application can put a message in the logs on behalf of the
 controller.
@@ -204,7 +204,7 @@ Errors:
 .. _s_log_get:
 
 log_get - get log records
--------------------------
+=========================
 
 This command allows to read log records from the controller. Log records are
 stored in the controllers' memory until restart or the time (*keep_logmem*)
@@ -235,7 +235,7 @@ Errors:
 .. _s_set_debug:
 
 set_debug - switch debugging mode
----------------------------------
+=================================
 
 Enables and disables debugging mode while the controller is running. After the
 controller is restarted, this parameter is lost and controller switches back to
@@ -255,7 +255,7 @@ Errors:
 .. _s_get_cvar:
 
 get_cvar - get variable
------------------------
+=======================
 
 Returns one or all user-defined variables.
 
@@ -284,7 +284,7 @@ Errors:
 .. _s_set_cvar:
 
 set_cvar - set variable value
------------------------------
+=============================
 
 Sets the value of user-defined variable.
 
@@ -303,7 +303,7 @@ Errors:
 .. _s_save:
 
 save - save database and runtime configuration
-----------------------------------------------
+==============================================
 
 All modified items, their status, and configuration will be written to the
 disk. If **exec_before_save** command is defined in the controller's
@@ -321,7 +321,7 @@ Errors:
 * **403 Forbidden** the API key has no access to this function
 
 Notifier management
--------------------
+===================
 
 These functions allow you to manage :doc:`notifiers<notifiers>` while EVA
 component is running. All changes are applied temporarily and are discarded
@@ -330,7 +330,7 @@ after controller restart.
 .. _s_notifiers:
 
 notifiers - get list of notifiers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 Get the list of configured notifiers as well as their configuration.
 
@@ -345,7 +345,7 @@ Errors:
 * **403 Forbidden** the API key has no access to this function
 
 enable_notifier
-~~~~~~~~~~~~~~~
+---------------
 
 Enables selected notifier
 
@@ -361,7 +361,7 @@ Errors:
 * **403 Forbidden** the API key has no access to this function
 
 disable_notifier
-~~~~~~~~~~~~~~~~
+----------------
 
 Disables selected notifier
 
@@ -377,7 +377,7 @@ Errors:
 * **403 Forbidden** the API key has no access to this function
 
 User management
----------------
+===============
 
 Apart from authorization via API keys, requests to API can be authorized using
 login/password. A specific API key is assigned to each user (thhe same key can
@@ -398,7 +398,7 @@ EVA controllers running on different hosts.
 .. _s_list_keys:
 
 list_keys - get API keys list
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 Get the list of available API keys
 
@@ -415,7 +415,7 @@ Errors:
 .. _s_list_users:
 
 list_users - get users list
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 Get the list of the defined users and API keys assigned to them
 
@@ -453,7 +453,7 @@ Errors:
 .. _s_create_user:
 
 create_user - create new user
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 Creates a new user in the database
 
@@ -473,7 +473,7 @@ Errors:
 .. _s_set_user_password:
 
 set_user_password - change user password
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 Changes user password
 
@@ -492,7 +492,7 @@ Errors:
 .. _s_set_user_key:
 
 set_user_key - change assigned API key
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------------
 
 Assigns another API key to user
 
@@ -511,7 +511,7 @@ Errors:
 .. _s_destroy_user:
 
 destroy_user - delete user
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Deletes user from the database
 
@@ -527,7 +527,7 @@ Errors:
 * **403 Forbidden** the API key has no access to this function
 
 File operations in runtime
---------------------------
+==========================
 
 SYS API allows operations with any text files in "runtime" folder. According to
 the program architecture, all files in this folder (except for databases) are
@@ -541,7 +541,7 @@ configuration file.
 .. _s_file_get:
 
 file_get - get file from runtime
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------------
 
 Gets a content of the file from runtime folder.
 
@@ -569,7 +569,7 @@ Errors:
 .. _s_file_put:
 
 file_put - upload file into runtime
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 Puts a new file into runtime folder. If the file with such name exists, it will
 be overwritten.
@@ -589,7 +589,7 @@ Errors:
 .. _s_file_set_exec:
 
 file_set_exec - file exec permission management
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------------------
 
 Sets file permissions to allow its execution.
 
@@ -610,7 +610,7 @@ Errors:
 .. _s_file_unlink:
 
 file_unlink - file exec permission management
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------------------
 
 Deletes the file from the runtime folder.
 
