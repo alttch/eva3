@@ -258,7 +258,7 @@ To manually get :doc:`item</items>` state, use the function
 
 .. code-block:: javascript
 
-    eva_sfa_state(oid)
+    eva_sfa_state(oid);
 
 where:
 
@@ -279,7 +279,7 @@ Returns state history for the chosen item(s)
 
 .. code-block:: javascript
 
-    eva_sfa_state_history(oid, params, cb_success, cb_error)
+    eva_sfa_state_history(oid, params, cb_success, cb_error);
 
 where:
 
@@ -289,8 +289,6 @@ where:
 * **params** dict with history formatting params equal to SFA API function
   :ref:`state_history<sfa_state_history>`.
 
-.. code-block:: javascript
-
 eva_sfa_groups
 --------------
 
@@ -298,7 +296,7 @@ Returns a list of item groups.
 
 .. code-block:: javascript
 
-    eva_sfa_groups(p, g, cb_success, cb_error)
+    eva_sfa_groups(p, g, cb_success, cb_error);
 
 where
 
@@ -578,7 +576,7 @@ This function returns log level name matching the given log level code:
 
 .. code-block:: javascript
 
-  eva_sfa_log_level_name(log_level)
+  eva_sfa_log_level_name(log_level);
 
 Returns *DEBUG* for *10*, *INFO* for *20*, *WARNING* for *30*, *ERROR* for
 *40*, *CRITICAL* for *50*.
@@ -593,7 +591,7 @@ Draws load animation inside specified <div />
 
 .. code-block:: javascript
 
-    eva_sfa_load_animation(div_id)
+    eva_sfa_load_animation(div_id);
 
 eva_sfa_chart
 -------------
@@ -603,7 +601,7 @@ chart inside specified <div />
 
 .. code-block:: javascript
 
-    eva_sfa_chart(ctx, cfg, oid, timeframe, fill, update, prop)
+    eva_sfa_chart(ctx, cfg, oid, timeframe, fill, update, prop);
 
 where:
 
@@ -645,7 +643,7 @@ Opens HTML5 popups
       btn1a,
       btn2a,
       va
-      )
+      );
 
 where:
 
@@ -813,7 +811,7 @@ seconds:
         'sensor:env/temp_inside,sensor:env/temp_outside',
         '8H',
         '15T',
-        10)
+        10);
 
 .. _sfw_example_log:
 
