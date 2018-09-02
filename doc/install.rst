@@ -12,9 +12,9 @@ System Requirements
 
 * Python version 3 (preferably 3.4+) or later, plus pip3 for automatic
   installation of the additional modules
-* Linux or UNIX-compatible system * For :doc:`/sfa/sfa_pvt` to work with
-  images: libjpeg-dev and libjpeg8-dev (for PIL / `pillow
-  <https://python-pillow.org/>`_ installation)
+* Linux or UNIX-compatible system
+* For :doc:`/sfa/sfa_pvt` to work with images: libjpeg-dev and libjpeg8-dev
+  (for PIL / `pillow <https://python-pillow.org/>`_ installation)
 * `realpath <http://www.gnu.org/software/coreutils/realpath>`_ (available in
   all modern Linux distributions)
 * EVA ICS can run on any Linux or UNIX-compatible system, but for the smooth
