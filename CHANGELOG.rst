@@ -1,13 +1,13 @@
 EVA ICS CHANGELOG
-=================
+*****************
 
 3.1.0 (2018-09-01)
-------------------
+==================
 
 UC drivers, device templates, state history, charts and other new features
 
 Core
-~~~~
+----
 
     * working with locks now require allow=lock apikey permission
     * new notifier type: db, used to store item state history
@@ -21,7 +21,7 @@ Core
       the spaces inside (e.g. 'this is "third argument"')
 
 UC
-~~
+--
 
     * new uc-cmd cli
     * old uc-cmd renamed to uc-api
@@ -40,7 +40,7 @@ UC
     * UC EI now should be enabled/disabled in uc.ini
 
 LM PLC
-~~~~~~
+------
 
     * new lm-cmd cli
     * old lm-cmd renamed to lm-api
@@ -61,7 +61,7 @@ LM PLC
     * LM EI now should be enabled/disabled in lm.ini
 
 SFA
-~~~
+---
 
     * fixes: rule management functions
 
@@ -95,12 +95,12 @@ SFA
       are served as templates). index.j2 has more priority than index.html
 
 API Client
-~~~~~~~~~~
+----------
 
     * new API function call result: "result_invalid_params" (11)
 
 Common
-~~~~~~
+------
 
     * new notifier management CLI (old CLI tools available in **legacy** folder)
     * watchdog to test/automatically restart controllers in case of failure
@@ -108,7 +108,7 @@ Common
     * other stability improvements
 
 3.0.2 (2018-06-23)
-------------------
+==================
 
 Bugfix release, some new urgent features, stability improvements
 
@@ -116,7 +116,7 @@ EVA documentation is now available in reStructuredText format and at
 https://eva-ics.readthedocs.io
 
 Emergency interfaces
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
     * fixes: correct display of long item names
     * fixes: various bug fixes
@@ -124,7 +124,7 @@ Emergency interfaces
     * LM EI: reset button and expire timer in LM EI show/hide when prop changed
 
 Core
-~~~~
+----
 
     * fixes: remove empty controller group when all objects are deleted
     * fixes: remote items correctly display state in list_remote
@@ -138,12 +138,12 @@ Core
     * API functions now support JSON requests
 
 UC
-~~
+--
 
     * action_toggle function to quickly toggle status of simple units 
 
 LM PLC
-~~~~~~
+------
 
     * list_remote returns array + controller_id proprety instead of dict
     * result function in macro api. terminate and result function accept action
@@ -156,7 +156,7 @@ LM PLC
     * new macro functions for file management: ls, open_oldest, open_newest
 
 SFA
-~~~
+---
 
     * fixes: dm_rule_props acl in SFA
 
@@ -173,19 +173,19 @@ SFA
     * wildcard masks in eva_sfa_state and eva_sfa_register_update_state
 
 Common
-~~~~~~
+------
 
     * easy-setup.sh - an interactive/automatic script to quickly set up the
       current host
     * ability to run controllers under restricted user
 
 3.0.1 (2018-02-21)
-------------------
+==================
 
 Minor release with some urgent features
 
 Core
-~~~~
+----
 
     * EVA_ITEM_PARENT_GROUP variable in script ENV which contains the parent
       group of the item
@@ -197,7 +197,7 @@ Core
       script manage different items
 
 UC
-~~
+--
 
     * 'update_delay' prop - item passive update may start with a delay to
       prevent multiple updates running simultaneously producing high system
@@ -207,12 +207,12 @@ UC
     * 'destroy_group' function destroys all items in the specified group
 
 LM
-~~
+--
 
     * item id in LM rules match by simple mask (i.e. '\*id\'* or 'id\'* or
       '\*id')
 
 3.0.0 (2017-10-19)
-------------------
+==================
 
 First public release
