@@ -1,7 +1,5 @@
-.. EVA Documentation
-
 EVA ICS documentation
-=====================
+*********************
 
 `EVA ICS <https://www.eva-ics.com/>`_ is a platform for automated control and
 monitoring systems development, for any needs, from home/office to industrial
@@ -19,7 +17,7 @@ technology as a basis, we simplify everything else to the maximum. Automation
 is simple and available for everyone!
 
 What is EVA
------------
+===========
 
 * :doc:`Universal controllers</uc/uc>` for management and monitoring of all
   your equipment, on the basis of which you can develop your own automation
@@ -47,7 +45,7 @@ subsystems and collecting all data to a unified database.
 The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 
 What you get with EVA
----------------------
+=====================
 
 * use pre-made :doc:`drivers</drivers>` or write simple
   :doc:`scripts</item_scripts>` for your automation hardware and keep them
@@ -70,60 +68,63 @@ What you get with EVA
   :doc:`/sfa/sfa_framework`
 * and much more
 
-System documentation
---------------------
+.. toctree::
+    :caption:  System Documentation
+    :maxdepth: 1
 
-* :doc:`Installation</install>`
+    install
+    What's new <changelog>
+    security
+    notifiers
+    cli
+    tutorial/tutorial
+    faq
 
-* :doc:`Security recommendations</security>`
+.. toctree::
+    :caption:  Components
+    :maxdepth: 1
 
-* :doc:`Tutorial</tutorial/tutorial>`
+    uc/uc
+    lm/lm
+    sfa/sfa
+    items
 
-* System components
+.. toctree::
+    :caption:  Equipment management
+    :maxdepth: 1
 
-  * :doc:`/uc/uc`
-  * :doc:`/lm/lm`
-  * :doc:`/sfa/sfa`
+    drivers
+    item_scripts
+    modbus
+    snmp_traps
+    virtual
 
-* :doc:`items`
+.. toctree::
+    :caption:  Logic control
+    :maxdepth: 1
 
-* API and system objects
+    lm/macros
+    lm/decision_matrix
 
-  * :doc:`/sys_api` - common API for all subsystems
-  * :doc:`/notifiers` - a link between subsystems and third-party applications
-  * :doc:`/uc/uc` - a  management and monitoring controller
+.. toctree::
+    :caption:  Interface development
+    :maxdepth: 1
 
-    * :doc:`/uc/uc_api` - API of the Universal Controller subsystem
-    * :ref:`unit` - controlled item
-    * :ref:`sensor` - monitored item
-    * :ref:`device` - set of items
-    * :doc:`/drivers` - drivers for hardware equipment
-    * :doc:`/item_scripts` - action and update scripts
-    * :doc:`ModBus equipment</modbus>`
-    * :doc:`/virtual`
+    sfa/sfa_framework
+    sfa/sfa_templates
+    sfa/sfa_pvt
 
-  * :doc:`/lm/lm` - a programmable logic controller
+.. toctree::
+    :caption:  Extension development
+    :maxdepth: 1
 
-    * :doc:`/lm/lm_api` - API of the Logic Manager subsystem
-    * :ref:`lvar` -  item used by system components to exchange logic data
-
-    * :doc:`/lm/macros`
-    * :doc:`/lm/ext`
-    * :doc:`/lm/decision_matrix`
-
- * :doc:`/sfa/sfa` server
-
-    * :doc:`/sfa/sfa_api` - API of the SCADA Final Aggregator
-    * :doc:`/sfa/sfa_pvt` - Private data web server
-
-* :doc:`/cli`
-
-* Application development
-
-    * :doc:`/api_clients`
-    * :doc:`/sfa/sfa_templates`
-    * :doc:`/sfa/sfa_framework`
-    * :doc:`Physical interfaces for drivers</phi_development>`
-
-* :doc:`/faq`
+    sys_api
+    uc/uc_api
+    lm/lm_api
+    sfa/sfa_api
+    api_clients
+    sfa/sfa_templates
+    sfa/sfa_framework
+    Physical interfaces for drivers <phi_development>
+    Logic macro extensions <lm/ext>
 

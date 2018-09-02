@@ -1,5 +1,5 @@
 Logic Manager
-=============
+*************
 
 EVA Logic Manager (LM PLC) - is a programmable logic controller.
 
@@ -35,7 +35,7 @@ configuration files generally match the other components.
 .. _lm_ini:
 
 etc/lm.ini configuration file
------------------------------
+=============================
 
 lm.ini - primary configuration file of LM PLC
 
@@ -45,7 +45,7 @@ lm.ini - primary configuration file of LM PLC
 .. _lm_cvars:
 
 runtime/lm_cvars.json variables file
-------------------------------------
+====================================
 
 lm_cvars.json - file containing user variables passed to all logic control
 :doc:`macros<macros>`.
@@ -66,7 +66,7 @@ well as :doc:`lm-cmd</cli>` **cvar get** and **cvar set** commands.
 .. _lm_apikey:
 
 etc/lm_apikeys.ini API keys file
---------------------------------
+================================
 
 API access keys are stored into *etc/lm_apikeys.ini* file. At least one full
 access key named **masterkey** should be present for proper functioning.
@@ -81,7 +81,7 @@ usage to local host only.
 .. _lm_remote_uc:
 
 Connecting UC controllers
--------------------------
+=========================
 
 Logic :doc:`macros<macros>` and :doc:`decision-making matrix<decision_matrix>`
 work only with the :doc:`items</items>` known to the controller, so Logic
@@ -157,7 +157,7 @@ only or the full ID in the following format: *controller_type/ID* (i.e.
 *uc/controller1*).
 
 Macro execution queues
-----------------------
+======================
 
 Prior to execution, the :doc:`macros<macros>` are put into global queue. The
 macros are executed progressively without waiting for the completion of the
@@ -170,7 +170,7 @@ The status of the macro in queue is similar to the status of the :ref:`Universal
 Controller actions<uc_queues>`.
 
 Startup and shutdown
---------------------
+====================
 
 To manage LM controller use ./sbin/lm-control script with the following
 options:

@@ -1,11 +1,11 @@
 User authorization using login/password
----------------------------------------
+=======================================
 
 Third-party apps may authorize :doc:`users</sys_api>` using login and password
 as an alternative for authorization via API key.
 
 login - user authorization
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Authorizes user in the system and and opens a new authorized session.  Session
 ID is stored in cookie.
@@ -30,7 +30,7 @@ Errors:
 * **403 Forbidden** invalid user name / password
 
 logout
-~~~~~~
+------
 
 Finishes the authorized session
 

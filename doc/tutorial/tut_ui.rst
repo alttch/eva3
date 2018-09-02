@@ -1,5 +1,5 @@
 Building an interface with SFA Framework
-========================================
+****************************************
 
 * EVA Tutorial parts
 
@@ -17,7 +17,7 @@ The last step is to create the user interface with :doc:`/sfa/sfa_framework`.
 .. contents::
 
 Configuring authentication keys
--------------------------------
+===============================
 
 .. include:: skip_easy.rst
 
@@ -39,7 +39,7 @@ and restart :doc:`SFA</sfa/sfa>`:
     ./sbin/sfa-control restart
 
 Configuring users
------------------
+=================
 
 Create a login for the user to use with **operator** key:
 
@@ -48,7 +48,7 @@ Create a login for the user to use with **operator** key:
     sfa-cmd user create john verysecret operator
 
 Create a web application
-------------------------
+========================
 
 Use :doc:`/sfa/sfa_framework` to write a simple web application to manage our
 example setup. Create a new **index.html** file and put it to **ui** folder:

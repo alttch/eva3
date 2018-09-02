@@ -1,5 +1,5 @@
 Macro extensions
-================
+****************
 
 As macros are written in Python, you can use any Python module to extend your
 macros. Additionally :doc:`/lm/lm` has ability to extend macros with
@@ -11,7 +11,7 @@ As the goal is to keep macro code as simple as possible, macro extensions are
 the best choice in many cases.
 
 Loading macro extension
------------------------
+=======================
 
 Macro extensions are stored in *xc/extensions* folder. To list available macro
 extension modules, use command:
@@ -49,7 +49,7 @@ where:
 * **-y** save extension config after successful load
 
 Extension functions
--------------------
+===================
 
 When extension is loaded, its functions become available in all
 :doc:`macros</lm/macros>` automatically with names *<ext_id>_<function>*.
@@ -70,7 +70,7 @@ Unlike *play=a1_play* **alias** doesn't throw an exception and let macros work
 even if extension is failed to load or its functions are not available.
 
 Included extensions
--------------------
+===================
 
 The following extensions are included in EVA ICS distribution by default:
 
@@ -85,12 +85,12 @@ The following extensions are included in EVA ICS distribution by default:
   (https://pypi.org/project/ttsbroker/)
 
 Developing your own extension
------------------------------
+=============================
 
 Create new Python file in *xc/extensions* folder.
 
 Required variables in a header
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------
 
 * **__author__**        module author
 * **__copyright__**     copyright
@@ -108,7 +108,7 @@ Required variables in a header
   formatting.
 
 Configuration variable
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Configuration variable (**__config_help__**) should be in list format,
 containing dictionaries with the following context:
@@ -136,7 +136,7 @@ If a property accepts multiple types, they should be listed via *or* (**|**)
 symbol.
 
 Exported functions
-~~~~~~~~~~~~~~~~~~
+------------------
 
 Exported functions (**__functions__**) variable is a dictionary in format:
 
@@ -152,7 +152,7 @@ Exported functions (**__functions__**) variable is a dictionary in format:
 All exported functions should be defined in a primary extension class.
 
 Classes and modules
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 It's allowed to import any Python system module or module installed by EVA ICS.
 If extension requires installing more modules, they should be listed in
@@ -185,7 +185,7 @@ The main class is defined as:
         #<your code>
 
 Constructor
-~~~~~~~~~~~
+-----------
 
 The constructor should set the above constants to class variables to let them
 be serialized by parent class if requested:
@@ -214,7 +214,7 @@ required modules) it may set *self.ready=False* to abort controller loading the
 extension.
 
 Exceptions
-~~~~~~~~~~
+----------
 
 There's no standard way to handle exceptions, however if any of exported
 functions raise them, this should be specified in extension help and readme

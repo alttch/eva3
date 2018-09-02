@@ -1,5 +1,5 @@
 SFA API
-=======
+*******
 
 :doc:`SCADA Final Aggregator<sfa>` SFA API is called through URL request
 
@@ -24,7 +24,7 @@ used, the parameters can be passed to functions either as www-form or as JSON.
 .. contents::
 
 Functions passed to the remote controllers
-------------------------------------------
+==========================================
 
 The following functions are passed to the :ref:`connected remote
 controllers<sfa_remote_c>` and return the result as-is.
@@ -35,7 +35,7 @@ controllers<sfa_remote_c>` and return the result as-is.
     execution results.
 
 Units control
-~~~~~~~~~~~~~
+-------------
 
 * :ref:`action<uc_action>` - UC API call for :ref:`unit<unit>` control actions
 * :ref:`action_toggle<uc_action_toggle>` - UC API call for :ref:`unit<unit>`
@@ -54,7 +54,7 @@ Units control
   :ref:`unit<unit>` actions
 
 Logic variables control
-~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------
 
 * :ref:`set<lm_set>` - LM API call to set :ref:`logic variable<lvar>` state
 * :ref:`reset<lm_reset>` - LM API call to reset :ref:`logic variable<lvar>`
@@ -65,7 +65,7 @@ Logic variables control
   state
 
 Macros control
-~~~~~~~~~~~~~~
+--------------
 
 * :ref:`run<lm_run>` - LM API call to execute :doc:`logic control
   macro</lm/macros>`
@@ -73,7 +73,7 @@ Macros control
   oid (**lmacro/group/id**) or uuid
 
 Decision rules control
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 * :ref:`list_rule_props<lm_list_rule_props>` - LM API call to list
   :doc:`decision rule</lm/decision_matrix>` props
@@ -83,7 +83,7 @@ Decision rules control
 .. _sfa_test:
 
 test - test API/key and get system info
----------------------------------------
+=======================================
 
 Test can be executed with any valid :ref:`API KEY<sfa_apikey>`
 
@@ -127,7 +127,7 @@ Errors:
 .. _sfa_reload_clients:
 
 reload_clients - ask connected clients to reload
-------------------------------------------------
+================================================
 
 This function sends **reload** event to all connected clients asking them to
 reload the interface.
@@ -150,7 +150,7 @@ Errors:
 .. _sfa_notify_restart:
 
 notify_restart - notify about server restart
---------------------------------------------
+============================================
 
 This function sends a **server restart** event to all connected clients asking
 them to prepare for server restart.
@@ -178,7 +178,7 @@ Errors:
 .. _sfa_state:
 
 state - get item state
-----------------------
+======================
 
 State of the known :doc:`item</items>` or all the items of the specified type
 can be obtained using **state** command.
@@ -222,7 +222,7 @@ Errors:
 .. _sfa_state_history:
 
 state_history - get item state history
---------------------------------------
+======================================
 
 State history of one :doc:`item</items>` or several items of the specified type
 can be obtained using **state_history** command.
@@ -258,7 +258,7 @@ Errors:
 .. _sfa_groups:
 
 groups - get item group list
-----------------------------
+============================
 
 Get the list of the item groups. Useful e.g. for custom interfaces.
 
@@ -286,7 +286,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 groups_macro - get macro groups list
-------------------------------------
+====================================
 Get the list of the macro groups.
 
 Parameters:
@@ -307,7 +307,7 @@ Errors:
 * **403 Forbidden** invalid API KEY
 
 list_macros - get macro list
-----------------------------
+============================
 
 Get the list of all available :doc:`macros</lm/macros>`.
 
@@ -340,7 +340,7 @@ Errors:
 .. _sfa_list_remote:
 
 list_remote - get a list of items from connected controllers
-------------------------------------------------------------
+============================================================
 
 Get a list of the items loaded from the connected
 :ref:`controllers<sfa_remote_c>`.  Useful to debug the controller connections.
@@ -366,7 +366,7 @@ Errors:
 .. _sfa_list_controllers:
 
 list_controllers - get controllers list
----------------------------------------
+=======================================
 
 Get the list of all connected :ref:`controllers<sfa_remote_c>`.
 
@@ -397,7 +397,7 @@ Errors:
 .. _sfa_list_controller_props:
 
 list_controller_props - get editable controller parameters
-----------------------------------------------------------
+==========================================================
 
 Allows to get all editable parameters of the connected
 :ref:`controller<sfa_remote_c>`.
@@ -413,7 +413,7 @@ Errors:
 .. _sfa_set_controller_prop:
 
 set_controller_prop - set controller parameters
------------------------------------------------
+===============================================
 
 Allows to set configuration parameters of the connected controller.
 
@@ -434,7 +434,7 @@ Errors:
 .. _sfa_append_controller:
 
 append_controller - connect remote controller
----------------------------------------------
+=============================================
 
 Connects remote :ref:`controller<sfa_remote_c>` to the local.
 
@@ -466,7 +466,7 @@ Errors:
 .. _sfa_remove_controller:
 
 remove_controller - disconnect remote controller
-------------------------------------------------
+================================================
 
 Disconnects the remote :ref:`controller<sfa_remote_c>`.
 
@@ -485,7 +485,7 @@ Errors:
 .. _sfa_reload_controller:
 
 reload_controller - reload items from UC
-----------------------------------------
+========================================
 
 Allows to immediately reload all the :doc:`items</items>`,
 :doc:`macros</lm/macros>` and their status from the remote

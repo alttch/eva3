@@ -1,5 +1,5 @@
 Item scripts
-============
+************
 
 Item scripts are used to update :doc:`items'<items>` state and execute actions.
 Scripts are placed in xc folder (**xc/uc** for :doc:`/uc/uc`, **xc/lm** for
@@ -47,7 +47,7 @@ Script or program always gets the environment variables:
 The system considers the script to be successful if its exit code is 0.
 
 Item actions
-~~~~~~~~~~~~
+------------
 
 Item actions are used to control the units. After the :ref:`unit<unit>` action
 has been called, the controller executes the appropriate script. By default,
@@ -130,7 +130,7 @@ signal. Warning:, the system does not track/stop child processes executed after
 SIGTERM is sent to the script.
 
 Passive updates of item state
------------------------------
+=============================
 
 Passive updates are used to collect the state of the equipment which doesn't
 report its state by itself. By default, scripts for passive updating of item
@@ -196,7 +196,7 @@ where in :ref:`uc_cvars<uc_cvars>`:
     RELAY1_UPDATE_CMD = snmpget -v2c -c public RELAY_IP_ADDRESS .1.3.6.1.4.1.42505.6.2.3.1.3
 
 Multiupdate scripts
--------------------
+===================
 
 :ref:`Multiupdates<multiupdate>` allow updating the state of several items with
 one script which works like a normal passive update script and outputs the
@@ -243,7 +243,7 @@ relay port.
 .. _cmd:
 
 Commands
---------
+========
 
 Commands are used if you need to run some commands remotely on the server where
 EVA controller is installed. Commands are executed with :doc:`controller cli

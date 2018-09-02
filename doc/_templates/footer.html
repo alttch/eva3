@@ -1,0 +1,11 @@
+{% extends '!footer.html' %}
+{%- set show_copyright = False %}
+{%- set show_sphinx = False %}
+
+{% block extrafooter %}
+<div class="footer">
+    <a href="https://www.eva-ics.com/">EVA ICS</a> version {{ version }}
+    &copy;2018, <a href="https://www.altertech.com/">AlterTech Group</a>.<br />
+    The product is available under <a href="license.html">EVA LICENSE</a>
+</div>
+{% endblock %}

@@ -1,5 +1,5 @@
 Universal Controller configuration
-==================================
+**********************************
 
 * EVA Tutorial parts
 
@@ -15,7 +15,7 @@ So, let us proceed with our configuration. Connect the equipment to
 .. contents::
 
 Connecting ventilation
-----------------------
+======================
 
 create two :ref:`units<unit>` for ventilation:
 
@@ -25,7 +25,7 @@ create two :ref:`units<unit>` for ventilation:
     uc-cmd create unit:ventilation/ve -y # external
 
 Method 1: with scripts
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 As a first step, create the variable for controlling SR-201 in order not to
 write the full relay control commands anew:
@@ -115,7 +115,7 @@ set a multiupdate to update unit states every 30 seconds
     uc-cmd config set mu:ventilation/mu1 update_interval 30 -y
 
 Method 2: with driver
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Starting from EVA 3.1 you can use pre-made :doc:`drivers</drivers>`. Let's do
 the above with driver.
@@ -151,7 +151,7 @@ ventilation units:
 
 
 Connecting a temperature sensor
--------------------------------
+===============================
 
 Create sensor in UC:
 
@@ -169,7 +169,7 @@ Let's find our sensor on a 1-Wire bus:
     28-000006ef85d7
 
 Method 1: with scripts
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 Here it is. Create a script named **xc/uc/temp1_update**
 
@@ -186,7 +186,7 @@ Let the temperature update every 20 seconds:
     uc-cmd config set sensor:env/temp1 update_interval 20 -y
 
 Method 2: with driver
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Download PHI module:
 
@@ -219,7 +219,7 @@ passively update itself every 20 seconds:
     uc-cmd config set sensor:env/temp1 update_interval 20 -y
 
 Connecting a motion sensor
---------------------------
+==========================
 
 Create a sensor in UC:
 
@@ -231,7 +231,7 @@ and configure the sensors controller to send :doc:`/snmp_traps` to our server
 IP.
 
 Method 1: with SNMP trap parser
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 Switch on the debugging mode and look into the log file:
 
@@ -338,7 +338,7 @@ The sensor is ready. It doesn't require any passive update script since its
 state is updated with SNMP traps by the equipment.
 
 Method 2: with driver
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Download PHI module:
 
@@ -364,7 +364,7 @@ The sensor is ready. It doesn't require any passive updates since its state is
 updated with SNMP traps parsed by driver.
 
 Connecting a hall light
------------------------
+=======================
 
 Create hall light unit:
 
@@ -386,7 +386,7 @@ and enable the actions to be always executed:
     uc-cmd config set unit:light/lamp1 action_always_exec 1 -y
 
 Method 1: with scripts
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 So, now we have to connect the lamp to Denkovi IP-16R relay. Connect it
 similarly to ventilation:
@@ -423,7 +423,7 @@ Let's update the lamp state every 30 seconds:
     uc-cmd config set unit:light/lamp1 update_interval 30 -y
 
 Method 2: with driver
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 Download PHI module:
 
@@ -458,7 +458,7 @@ Now open :doc:`/uc/uc_ei`, check the setup, switch on/off the units, see how the
 sensor values are updated.
 
 API keys configuration
-----------------------
+======================
 
 .. include:: skip_easy.rst
 
@@ -483,7 +483,7 @@ After adding the new keys, you need to restart UC, which we'll do later.
 Firstly, you should connect it to :ref:`MQTT<mqtt_>`.
 
 Notification system configuration
----------------------------------
+=================================
 
 .. include:: skip_easy.rst
 

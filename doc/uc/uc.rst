@@ -1,5 +1,5 @@
 Universal Controller
-====================
+********************
 
 EVA Universal Controller (UC) is a control and monitoring subsystem.
 
@@ -9,7 +9,7 @@ application.  Additionally, it can be integrated into other subsystems and
 third-party programs using :doc:`uc_api`.
 
 .. figure:: uc.png
-    :scale: 50%
+    :scale: 75%
     :alt: Universal Controller subsystem
     
     You may use Universal Controller independently or integrate it with
@@ -34,7 +34,7 @@ All changes of item status, current control commands, and progress logs are
 sent to the :doc:`notification system</notifiers>`.
 
 UC POLL DELAY
--------------
+=============
 
 EVA is a real-time system. Being one of its essential components, UC also
 follows this rule. The value of poll delay is set in configuration in seconds
@@ -56,7 +56,7 @@ The minimum value of POLL DELAY is 0.001 (1 millisecond).
 .. _uc_ini:
 
 etc/uc.ini configuration file
------------------------------
+=============================
 
 uc.ini - primary configuration file of UC server
 
@@ -66,7 +66,7 @@ uc.ini - primary configuration file of UC server
 .. _uc_cvars:
 
 runtime/uc_cvars.json variables file
-------------------------------------
+====================================
 
 uc_cvars.json - file containing user variables passed to all commands and
 :doc:`item scripts</item_scripts>` within the system environment.
@@ -104,7 +104,7 @@ this case the variable will be available only for the specified group.
 .. _uc_apikey:
 
 etc/uc_apikeys.ini API keys file
---------------------------------
+================================
 
 API access keys are stored into *etc/uc_apikeys.ini* file. At least one full
 access key named **masterkey** should be present for proper functioning.
@@ -119,7 +119,7 @@ use to local host only.
 .. _uc_queues:
 
 Action queues
--------------
+=============
 
 All the unit control actions are queued right after they're created. Item status
 update actions are not queued and just run in accordance with the set intervals.
@@ -159,7 +159,7 @@ Queued action can have the following status:
 * **completed** the action finished successfully
 
 Startup and shutdown
---------------------
+====================
 
 To manage UC server use **./sbin/uc-control** script with the following options:
 

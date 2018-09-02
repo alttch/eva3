@@ -107,8 +107,24 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-# html_theme = 'sphinx_rtd_theme'
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
+# html_theme = 'alabaster'
+
+html_theme_options = {
+    # 'canonical_url': '',
+    # 'analytics_id': '',
+    'prev_next_buttons_location': None,
+    'logo_only': True,
+    'display_version': True,
+    # 'prev_next_buttons_location': 'bottom',
+    # 'style_external_links': False,
+    # 'vcs_pageview_mode': '',
+    'collapse_navigation': True,
+    'sticky_navigation': True,
+    # 'navigation_depth': 4,
+    # 'includehidden': True,
+    # 'titles_only': False
+}
 
 # html_style = None
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -126,7 +142,7 @@ html_theme = 'alabaster'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'images/logo.svg'
+html_logo = 'images/logo.png'
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -158,7 +174,7 @@ html_static_path = ['_static']
 # template names.
 #html_additional_pages = {}
 
-html_add_permalinks = False
+html_add_permalinks = ''
 
 # If false, no module index is generated.
 #html_domain_indices = True

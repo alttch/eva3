@@ -1,5 +1,5 @@
 Logic Manager configuration
-===========================
+***************************
 
 * EVA Tutorial parts
 
@@ -15,7 +15,7 @@ already configured, let us move on with :doc:`/lm/lm`.
 .. contents::
 
 Configuring notification system and API key for SFA
----------------------------------------------------
+===================================================
 
 .. include:: skip_easy.rst
 
@@ -74,7 +74,7 @@ Restart LM PLC:
     ./sbin/lm-control restart
 
 Connecting UC controller
-------------------------
+========================
 
 .. include:: skip_easy.rst
 
@@ -124,7 +124,7 @@ new ones are added in future:
     lm-cmd controller set uc1 reload_interval 60 -y
 
 Building logic
---------------
+==============
 
 We have two tasks: to switch on the inside ventilation if the temperature is
 above 25 degrees, and handle the events received from the motion sensor. Do not
@@ -133,7 +133,7 @@ will be later implemented via **sfa-cmd** and system **cron**, we should get
 it prepared now.
 
 Ventilation logic
-~~~~~~~~~~~~~~~~~
+-----------------
 
 We chose our example, as far as the boundary conditions of the sensor is a very
 common problem for such tasks.
@@ -306,7 +306,7 @@ delayed start timer finishes the countdown:
     lm-rules add -E -y --type lvar --group ventilation --item vi_timer --exp -m vi_control -a "1 timer"
 
 Motion sensor logic
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 We will need one variable identifying whether the alarm is switched on or not:
 

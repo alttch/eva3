@@ -1,5 +1,5 @@
 Decision-making matrix
-======================
+**********************
 
 Decision-making matrix is a set of rules and conditions under which :doc:`lm`
 runs the specified :doc:`macros<macros>` when certain events occur.
@@ -11,7 +11,7 @@ interface section.
 Rule configuration is stored in **runtime/lm_dmatrix_rule.d/** folder.
 
 Event analysis algorithms
--------------------------
+=========================
 
 Event means any change of the :doc:`item</items>` state. The events are
 analyzed and processed in the following way:
@@ -52,7 +52,7 @@ analyzed and processed in the following way:
       match for the specified time.
 
 Rule configuration
-------------------
+==================
 
 Unmodifiable rule parameters:
 
@@ -107,7 +107,7 @@ Modifiable Parameters:
   priority, 100 by default)
 
 Tips for rule configuration
----------------------------
+===========================
 
 * to set "x == value" condition via `lm_api`: if the value is numeric, use
   "value <= x <= value". If the value is string, you may set only

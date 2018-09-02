@@ -1,5 +1,5 @@
 Drivers
-=======
+*******
 
 :doc:`/uc/uc` uses 2 ways for controlling and monitoring items:
 :doc:`item scripts</item_scripts>` and drivers. Drivers are the most advanced
@@ -17,7 +17,7 @@ may become unstable.
 .. _driver:
 
 Structure
----------
+=========
 
 Each driver contains **2 modules**: LPI (logical to physical interface) and PHI
 (physical interface). To load new driver into controller, follow the steps:
@@ -127,7 +127,7 @@ modules/configuration replace the old ones.
 .. _lpi:
 
 Logical to physical interfaces (LPI)
-------------------------------------
+====================================
 
 LPI module handles the whole driver logic and doesn't contain any code,
 specific for the equipment. All it needs is to process the logic and call the
@@ -175,7 +175,7 @@ always defined.
 Let's see what modules are available.
 
 basic LPI
-~~~~~~~~~
+---------
 
 Basic status on/off LPI module, used to control simple devices which have only
 status *0* (OFF) and *1* (ON), i.e. lamps, relay ports (directly) etc.
@@ -197,7 +197,7 @@ listed ports will be used in commands.
     works both for **basic** as well as for any other relay control LPI.
 
 sensor LPI
-~~~~~~~~~~
+----------
 
 Basic sensor monitiring, used to get data from specified sensors.
 
@@ -208,14 +208,14 @@ LPI doesn't provide *action* functionality. When assigning driver containing
 configuration should contain port or bus address number.
 
 ssp LPI
-~~~~~~~
+-------
 
 Similar to **sensor** LPI, but doesn't contain any options at all. Used when
 PHI can work only with one physical equipment (e.g. sensor with TCP/IP API) and
 all equipment options are already set in PHI.
 
 esensor LPI
-~~~~~~~~~~~
+-----------
 
 Sensor monitoring with advanced functions. Can monitor physical sensor groups
 returning average, maximum or minimum value. Can ignore sensor values if they
@@ -250,7 +250,7 @@ Update options (set with *uc-cmd driver set*):
   overwrites default LPI behavior for the specified item.
 
 multistep LPI
-~~~~~~~~~~~~~
+-------------
 
 Module used for such common tasks as door or window opening. To use this module
 you must connect your equipment to 2 relay ports: one will give power to
@@ -311,7 +311,7 @@ The module doesn't provide any state update functionality. If you want to sync
 door/window item states with real, use separate reed switch sensor.
 
 Loading driver with the chosen LPI
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 Firstly, you can list available LPIs with the command:
 
@@ -331,7 +331,7 @@ PHI+LPI, use the command:
 .. _phi:
 
 Physical interfaces (PHI)
--------------------------
+=========================
 
 PHIs are modules, which contain no data processing logic but code to work
 directly with hardware equipment.
@@ -344,7 +344,7 @@ We've already described how to :ref:`get and load PHIs<driver>`, here is some
 additional important information.
 
 Universal PHIs
-~~~~~~~~~~~~~~
+--------------
 
 If the word "universal" is listed in PHI features, it means the module can be
 loaded once and provide interface for all supported equipment. E.g. let's take
@@ -372,7 +372,7 @@ option). Setting different **host** option value in item driver configuration
 lets one *sr201* PHI manage all available SR-201 relays.
 
 Physical events
-~~~~~~~~~~~~~~~
+---------------
 
 If the word "events" is listed in PHI features, it means the module can handle
 hardware events e.g. react to the alarm sensors or update item state when an
@@ -392,7 +392,7 @@ When doing update, drivers LPI modules don't ask PHI to get hardware data
 working only with data already provided by the hardware.
 
 Drivers and multi updates
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
 
 If the word "aao_get" is listed in PHI features, it means you don't need to
 create multiupdates in :doc:`/uc/uc` to update several items at once. "aao_get"
@@ -415,7 +415,7 @@ As soon as the driver is assigned to item (*uc-cmd driver set*), it starts
 getting state updates every *5* seconds.
 
 Testing PHIs and additional PHI commands
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------
 
 As soon as PHI is loaded, you can test how it works. All PHI modules respond to
 the command:

@@ -1,5 +1,5 @@
 SCADA Final Aggregator configuration
-====================================
+************************************
 
 * EVA Tutorial parts
 
@@ -20,7 +20,7 @@ the ventilation schedule.
 .. contents::
 
 Notification system configuration
----------------------------------
+=================================
 
 .. include:: skip_easy.rst
 
@@ -58,7 +58,7 @@ Restart SFA:
     ./sbin/sfa-control restart
 
 Connecting controllers
-----------------------
+======================
 
 .. include:: skip_easy.rst
 
@@ -115,7 +115,7 @@ new ones are added in future:
 
 
 Connecting external applications
---------------------------------
+================================
 
 There is only one external application - system cron. We won't connect it via
 SFA API, but simply by running **sfa-cmd** :doc:`console application</cli>`.

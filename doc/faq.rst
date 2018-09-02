@@ -1,10 +1,10 @@
 FAQ
-===
+***
 
 .. contents::
 
 Is this a "smart home"?
------------------------
+=======================
 
 EVA is a universal system used for the construction of both "smart home" and
 automated control system (`ICS
@@ -18,7 +18,7 @@ and constantly evolving :doc:`/lm/lm` for automatic
 :doc:`decision-making</lm/decision_matrix>`.
 
 Is this IoT?
-------------
+============
 
 In a way, yes. As far as `IoT
 <https://en.wikipedia.org/wiki/Internet_of_things>`_ is a part of the
@@ -47,7 +47,7 @@ that's going on. The system doesn't require Internet access. Everything works
 fine in the secure local network.
 
 If the system is free and open, what is your interest?
-------------------------------------------------------
+======================================================
 
 We have been engaged in the automation activities for both private and
 enterprise sectors for many years. Our clients work with different systems,
@@ -70,20 +70,20 @@ you should `contact us <https://www.altertech.com/>`_ and we will make a
 siutable offer to you.
 
 Is EVA complex and difficult to learn?
---------------------------------------
+======================================
 
 We try to make our system as simple and user-friendly as possible even for
 those who have never encountered the process automation.
 
 Is it reliable?
----------------
+===============
 
 It is reliable enough for home and office setups, as well as for small
 industrial configurations, but if you use EVA on an enterprise, you should at
 least understand the system well.
 
 How about security?
--------------------
+===================
 
 Traditionally, automation systems and protocols have been designed as not
 completely secure. As for reliability, you may agree that it would be a pity if
@@ -93,7 +93,7 @@ stability and :doc:`security</security>` and it's really different for every
 setup.
 
 What programming languages can I use to write scripts and macros?
------------------------------------------------------------------
+=================================================================
 
 As for :doc:`scripts</item_scripts>` - you can use any. A script or a program
 runs as a separate process in the system. It's only necessary that it reads the
@@ -108,7 +108,7 @@ Besides, you can create your own applications working through API. The
 distribution includes :doc:`API clients</api_clients>` for Python and PHP.
 
 What if I have zero experience in programming?
-----------------------------------------------
+==============================================
 
 Programming for EVA is only about creating :doc:`item management
 scripts</item_scripts>`. You can find plenty of examples in the documentation.
@@ -134,7 +134,7 @@ For example, a macro that runs a pump for watering plants:
 As you can see, it is not rocket science.
 
 What automation is all about? What are automation components?
--------------------------------------------------------------
+=============================================================
 
 The automation components mostly look like relay block, "smart" sockets,
 "smart" switches - however, there is still some kind of relay inside. Usually,
@@ -160,7 +160,7 @@ from the environment and making its own decisions - humidity and temperature
 In EVA, all decisions are made either by the user or :doc:`/lm/lm` subsystem.
 
 Where is the interface? I want a web interface!
------------------------------------------------
+===============================================
 
 Each automated setup needs an interface. EVA has a very powerful
 :doc:`/sfa/sfa` component, which combines the whole setup itself and provides a

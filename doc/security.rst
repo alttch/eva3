@@ -1,8 +1,8 @@
 Security
-========
+********
 
 Common recommendations
-----------------------
+======================
 
 Traditionally, automation systems and protocols have been designed as not
 completely secure. As for reliability, you may agree that it would be a pity if
@@ -26,7 +26,7 @@ for API calls to avoid making setup complex and increasing load on your
 equipment.
 
 Network design
---------------
+==============
 
 The recommended enterprise configuration of the system is represented in the
 following scheme:
@@ -71,7 +71,7 @@ It is not recommended to keep debugging mode enabled in the production system,
 because some important data may be recorded in the log files.
 
 Should I run it as root?
-------------------------
+========================
 
 * :doc:`/uc/uc` is designed to be run on virtual machines, microcomputers, and
   embedded systems. If server directly controls connected devices, you should
@@ -91,10 +91,10 @@ Should I run it as root?
   firewall.
 
 API recommendations
--------------------
+===================
 
 Universal Controller API keys
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 * The key should contain at least 14 characters, including numbers, lowercase,
   and uppercase letters. Default keys generated during :doc:`easy
@@ -120,7 +120,7 @@ Universal Controller API keys
   permissions (and owned by the user you are running the controller under)
 
 Logic Manager API keys
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 * After the initial configuration is complete, it is recommended to connect
   external applications only via keys with certain rights. Master key should
@@ -135,7 +135,7 @@ Logic Manager API keys
   parameter.
 
 SCADA Final Aggregator interfaces
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 * If interface is available from within a public network, you should always use
   frontend with additional authentication
@@ -144,7 +144,7 @@ SCADA Final Aggregator interfaces
   protected in other way.
 
 Common API security recommendations
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 If server is present in several VLANs, make sure that API listens only on
 Supervisory network address. If you do not use :ref:`UDP API<uc_udp_api>` or
@@ -153,7 +153,7 @@ configuration. Do not enable the remote file control function unless it's
 necessary for external apps.
 
 Developer mode
-~~~~~~~~~~~~~~
+--------------
 
 Every component may be started in a "developer mode": if enabled, all data,
 including API keys, is openly written in the log file. That is why we do

@@ -1,12 +1,12 @@
 Notification system
-===================
+*******************
 
 The Notification System is embedded in all EVA subsystems. All the events of
 these subsystems are sent to the notification servers via objects called
 "notifiers" which contain the configuration of the notification endpoints.
 
 Event structure
----------------
+===============
 
 Each event includes the following data:
 
@@ -18,13 +18,13 @@ Each event includes the following data:
 * **Event data** (usually JSON dict with) data on what's actually happened
 
 Event subjects
-~~~~~~~~~~~~~~
+--------------
 
 There are several event subjects in EVA. Each notification endpoint can be
 subscribed either to one of them or to several ones.
 
 state - item state change event
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------
 
 The event notifications with the "state" subject are sent by :doc:`/uc/uc` and
 :doc:`/lm/lm` whenever the :doc:`items<items>` change their status.
@@ -38,7 +38,7 @@ status data is updated correctly and the sensor is back online or until the
 data is expired.
 
 action - unit and macro action events
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 Every time the :ref:`unit<unit>` :ref:`action<uc_action>` or :doc:`macro
 action</lm/macros>` changes its :ref:`status<uc_queues>`, the notification
@@ -48,7 +48,7 @@ Notification sends data similar to ones that can be obtained using UC API
 :ref:`result<uc_result>` command.
 
 log - logged event
-~~~~~~~~~~~~~~~~~~
+------------------
 
 When the system or you add record to the logs, the notification system sends
 'log' event notification. The log notification data have the following format:
@@ -79,7 +79,7 @@ only into the local log files. This was done for the notification system not to
 send the records in cycles.
 
 Configuring the notification endpoints
---------------------------------------
+======================================
 
 Configuration is done using the :doc:`console commands</cli>` uc-notifier for
 :doc:`/uc/uc`, lm-notifier for :doc:`/lm/lm` and sfa-notifier for
@@ -88,7 +88,7 @@ folder on the same server, they have different notification endpoints
 configurations.
 
 Basic Configuration
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Let's play with notification system e.g. of :doc:`/uc/uc`. This command will
 give us the list of notifiers, including their types, IDs, status and endpoint
@@ -136,7 +136,7 @@ Except for endpoint configuration, notifiers have some additional params:
   controllers and have the records available locally in SFA.
 
 Subscribing the notifier to events
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------
 
 By default, the new notifier is not subscribed to any events. You can
 review all the subscriptions using "get_config" command.
@@ -195,7 +195,7 @@ configuration.
 .. _mqtt_:
 
 MQTT (mqtt)
------------
+===========
 
 MQTT is a major endpoint type used to link several EVA subsystems. For
 instance, it enables :doc:`/lm/lm` and :doc:`/sfa/sfa` controllers to
@@ -205,7 +205,7 @@ supporting `MQTT <http://mqtt.org/>`_ protocol.  As far as MQTT is the major
 type of the EVA notification system, let us examine it in detailed.
 
 MQTT and state notifications
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------
 
 :doc:`Items<items>` in MQTT form a subject hive so-called "EVA hive". Hive may
 have a space e.g. "plant1/" to separate several EVA systems which use the same
@@ -216,7 +216,7 @@ Item's state is stored in a hive with the subject
 configuration params in the :doc:`subtopics<items>`.
 
 MQTT and action notifications
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 :ref:`Unit<unit>` action notifications are sent to the topic
 
@@ -230,7 +230,7 @@ These messages include the serialized action information in JSON format. As
 soon as action state is changed, the new notification is sent.
 
 MQTT and log notifications
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 Log messages are sent to the MQTT server as JSON with the following MQTT
 subject:
@@ -247,7 +247,7 @@ this function, set param *collect_logs* to true in the notifier configuration:
     sfa-notifier set eva_1 collect_logs true
 
 Setting up MQTT SSL
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 If MQTT server requires SSL connection, the following notifier properties
 should be set:
@@ -261,7 +261,7 @@ should be set:
 * **keyfile** SSL key file for SSL cert
 
 Setting up MQTT QoS
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 You may specify different :ref:`MQTT<mqtt_>` QoS for events with different
 subjects.
@@ -291,7 +291,7 @@ Quick facts about MQTT QoS:
 
 
 Use MQTT for updating the item states
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------------------
 
 MQTT is the only EVA notifier type performing two functions at once: both
 sending and receiving messages.
@@ -318,7 +318,7 @@ configuration param of the connected controller, the value
 **mqtt_update_default** from *lm.ini*/*sfa.ini* is used by default.
 
 MQTT and unit actions
-~~~~~~~~~~~~~~~~~~~~~
+---------------------
 
 MQTT can be also used as API to send actions to the :ref:`units<unit>`. In
 order to send an action to the unit via MQTT, send a message with the
@@ -339,7 +339,7 @@ To let unit responding to MQTT control messages, set its configuration param
 semicolon, similarly as for **mqtt_update**.
 
 DB Notifiers
-------------
+============
 
 EVA ICS has a special notifier type: **db**, which is used to store items'
 state history. State history can be obtained later via API calls or :doc:`SFA
@@ -359,10 +359,10 @@ called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically.
 History database format is `sqlite3 <https://www.sqlite.org/index.html>`_.
 
 HTTP Notifiers
---------------
+==============
 
 JSON (json)
-~~~~~~~~~~~
+-----------
 
 HTTP notifications (aka web hooks) can be transferred to servers which, for
 some reasons, cannot work with MQTT in real time, e.g. servers containing
@@ -398,7 +398,7 @@ As HTTP/POST notifier type is no longer supported, we recommend creating web
 hooks only with JSON notifier type.
 
 HTTP/POST (http-post, deprecated)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 .. note::
 
@@ -433,7 +433,7 @@ When EVA controllers test remote http-post endpoint, they send notifications
 with subject="test" and the remote app should respond with { "result": "OK" }.
 
 HTTP/GET (http, deprecated)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 .. note::
 
