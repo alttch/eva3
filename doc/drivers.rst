@@ -400,10 +400,10 @@ create multiupdates in :doc:`/uc/uc` to update several items at once. "aao_get"
 the controller to update all items using drivers which contain PHI equally to
 updating on physical events.
 
-How to use this feature: All PHIs with "aao_get" feature also has configuration
-param named *update* which means how frequently (in seconds) PHI should collect
-data from the equipment and initiate item updates. *update* value should be
-defined in PHI load config and be greater than zero.
+How to use this feature: All PHIs with "aao_get" feature also have
+configuration param named *update* which means how frequently (in seconds) PHI
+should collect data from the equipment and initiate item updates. *update*
+value should be defined in PHI load config and be greater than zero.
 
 Example:
 
