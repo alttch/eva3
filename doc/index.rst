@@ -123,8 +123,6 @@ What you get with EVA
     lm/lm_api
     sfa/sfa_api
     api_clients
-    sfa/sfa_templates
-    sfa/sfa_framework
     Physical interfaces for drivers <phi_development>
     Logic macro extensions <lm/ext>
 
