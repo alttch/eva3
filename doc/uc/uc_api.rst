@@ -910,7 +910,7 @@ Parameters:
 
 Optionally:
 
-* **save==1** save driver configuration after successful call
+* **save=1** save driver configuration after successful call
 
 Returns a dict with information about PHI if module is loaded, or
 result="ERROR", if an error occurred.
@@ -1113,7 +1113,7 @@ Parameters:
 
 Optionally:
 
-* **save==1** save driver configuration after successful call
+* **save=1** save driver configuration after successful call
 
 .. note::
 
@@ -1222,7 +1222,7 @@ Parameters:
 
 Optionally:
 
-* **save==1** save item configuration after successful call
+* **save=1** save item configuration after successful call
 
 Returns result="OK" if driver is set, or result="ERROR", if an error occurred.
 

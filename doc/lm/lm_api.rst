@@ -903,7 +903,7 @@ Parameters:
 
 Optionally:
 
-* **save==1** save extension configuration after successful call
+* **save=1** save extension configuration after successful call
 
 Returns a dict with information about extension if module is loaded, or
 result="ERROR", if an error occurred.
