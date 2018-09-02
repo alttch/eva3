@@ -99,7 +99,7 @@ to the property with *|driver_id* value, e.g. *|v1.default*.
     logic-specific options as global or for the particular item group.
 
 .. figure:: drivers-action.png
-    :scale: 60%
+    :scale: 75%
     :alt: Drivers and actions
 
     How the driver handles action commands
@@ -110,7 +110,7 @@ developed as "universal") without a need to load different drivers for each
 item.
 
 .. figure:: drivers-update.png
-    :scale: 60%
+    :scale: 75%
     :alt: Drivers and updates
 
     How the driver handles update commands
@@ -379,7 +379,7 @@ hardware events e.g. react to the alarm sensors or update item state when an
 external event is received.
 
 .. figure:: drivers-event.png
-    :scale: 60%
+    :scale: 75%
     :alt: Drivers and events
 
     How the driver handles physical events
