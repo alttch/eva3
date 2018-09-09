@@ -484,7 +484,7 @@ requires test scenario file, which may contain the following functions:
 
 * **nodebug()** turn off debug mode
 
-* **modbus(params)** create virtual ModBus port with ID=*default* *
+* **modbus(params)** create virtual ModBus port with ID *default*
 
 * **load(phi_mod, phi_cfg=None)** load PHI module for tests. PHI cfg may be
   specified either as string or as dictionary.
