@@ -489,14 +489,14 @@ requires test scenario file, which may contain the following functions:
 * **load(phi_mod, phi_cfg=None)** load PHI module for tests. PHI cfg may be
   specified either as string or as dictionary
 
-* **get(port=None, cfg=None, timeout=None)** calls PHI **get** function
+* **get(port=None, cfg=None, timeout=None)** call PHI **get** function
 
-* **set(port=None, data=None, cfg=None, timeout=None)** calls PHI **set**
+* **set(port=None, data=None, cfg=None, timeout=None)** call PHI **set**
   function
 
-* **test(cmd=None)** calls PHI **test** function
+* **test(cmd=None)** call PHI **test** function
 
-* **exec(cmd=None, args=None)** calls PHI **exec** function
+* **exec(cmd=None, args=None)** call PHI **exec** function
 
 additionally, each function automatically prints the result. Test scenario is
 actually a Python code and may contain any Python logic, additional module
