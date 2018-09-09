@@ -13,9 +13,9 @@ import argparse
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
+import eva.core
 import eva.uc.driverapi as da
 import logging
-logging.basicConfig(level=logging.DEBUG)
 
 import json
 import jsonpickle
@@ -49,13 +49,14 @@ def print_result(result):
             j = highlight(j, lexers.JsonLexer(), formatters.TerminalFormatter())
         print(j)
     else:
-        if result == 'OK':
+        if result == 'OK' or result is True:
             print(colored(result, color='green', attrs=['bold']))
         elif result == 'FAILED':
-            print(colored(result, color='red'), attrs=['bold'])
+            print(colored(result, color='red', attrs=['bold']))
         else:
             print(result)
     print(colored('-' * 50, color='grey'))
+    return result
 
 
 def print_command(cmd):
@@ -89,7 +90,7 @@ class PHITester(object):
         _timeout = default_timeout if timeout is None else timeout
         print_command('get(port={}, cfg={}, timeout={})'.format(
             port, _c, _timeout))
-        print_result(self.phi.get(port=port, cfg=_c, timeout=_timeout))
+        return print_result(self.phi.get(port=port, cfg=_c, timeout=_timeout))
 
     def set(self, port=None, data=None, cfg=None, timeout=None):
         if isinstance(cfg, str):
@@ -101,18 +102,20 @@ class PHITester(object):
         _timeout = default_timeout if timeout is None else timeout
         print_command('set(port={}, data={}, cfg={}, timeout={})'.format(
             port, data, _c, _timeout))
-        print_result(self.phi.get(port=port, cfg=_c, timeout=_timeout))
+        return print_result(
+            self.phi.set(port=port, data=data, cfg=_c, timeout=_timeout))
 
     def test(self, cmd=None):
         print_command('test({})'.format(cmd))
-        print_result(self.phi.test(cmd))
+        return print_result(self.phi.test(cmd))
 
     def exec(self, cmd=None, args=None):
         print_command('exec(cmd={}, args={})'.format(cmd, args))
-        print_result(self.phi.exec(cmd))
+        return print_result(self.phi.exec(cmd))
 
     def modbus(self, port_id, params):
         import eva.uc.modbus
+        print_command('modbus({}, {})'.format(port_id, params))
         eva.uc.modbus.create_modbus_port(port_id, params)
 
 
@@ -129,6 +132,13 @@ ap.add_argument(
     metavar='TIMEOUT',
     default=10)
 ap.add_argument(
+    '-D',
+    '--debug',
+    help='Enable debug messages',
+    dest='debug',
+    action='store_true',
+    default=False)
+ap.add_argument(
     '-R',
     '--raw-output',
     help='Print raw result (no colors)',
@@ -144,10 +154,11 @@ except:
     pass
 
 a = ap.parse_args()
-
 suppress_colors = a.raw
-
 default_timeout = a.timeout
+
+if a.debug:
+    eva.core.debug_on()
 
 d = {}
 
