@@ -111,6 +111,10 @@ class PHITester(object):
         print_command('exec(cmd={}, args={})'.format(cmd, args))
         print_result(self.phi.exec(cmd))
 
+    def modbus(self, port_id, params):
+        import eva.uc.modbus
+        eva.uc.modbus.create_modbus_port(port_id, params)
+
 
 _me = 'EVA ICS PHI tester version {}'.format(__version__)
 
@@ -154,6 +158,7 @@ d['get'] = tester.get
 d['set'] = tester.set
 d['test'] = tester.test
 d['exec'] = tester.exec
+d['modbus'] = tester.modbus
 
 try:
     code = open(a.fname).read()
