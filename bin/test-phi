@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2018 Altertech Group"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.1.0"
+
+import sys
+import os
+import argparse
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+sys.path.append(dir_lib)
+
+import eva.uc.driverapi as da
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+import json
+import jsonpickle
+import termcolor
+from pygments import lexers, highlight, formatters
+
+from eva.tools import print_json
+
+suppress_colors = False
+
+
+def colored(text, color=None, on_color=None, attrs=None):
+    if suppress_colors or \
+            not sys.stdout.isatty():
+        return text
+    return termcolor.colored(text, color=color, on_color=on_color, attrs=attrs)
+
+
+def format_json(obj, minimal=False, unpicklable=False):
+    return json.dumps(json.loads(jsonpickle.encode(obj,
+            unpicklable = unpicklable)), indent=4, sort_keys=True) \
+                if not minimal else \
+                jsonpickle.encode(obj, unpicklable = False)
+
+
+def print_result(result):
+    if isinstance(result, dict):
+        j = format_json(result)
+        if not suppress_colors and \
+                sys.stdout.isatty():
+            j = highlight(j, lexers.JsonLexer(), formatters.TerminalFormatter())
+        print(j)
+    else:
+        if result == 'OK':
+            print(colored(result, color='green', attrs=['bold']))
+        elif result == 'FAILED':
+            print(colored(result, color='red'), attrs=['bold'])
+        else:
+            print(result)
+    print(colored('-' * 50, color='grey'))
+
+
+def print_command(cmd):
+    print('{} {}'.format(
+        colored('> ', color='white'),
+        colored(cmd, color='yellow', attrs=['bold'])))
+
+
+class PHITester(object):
+
+    def __init__(self):
+        self.phi = None
+
+    def load(self, phi_id):
+        da.load_phi('t1', phi_id)
+        self.phi = da.get_phi('t1')
+
+    def get(self, port=None, cfg=None, timeout=None):
+        _timeout = default_timeout if timeout is None else timeout
+        print_command('get(port={}, cfg={}, timeout={})'.format(
+            port, cfg, _timeout))
+        print_result(self.phi.get(port=port, cfg=cfg, timeout=_timeout))
+
+    def set(self, port=None, data=None, cfg=None, timeout=None):
+        _timeout = default_timeout if timeout is None else timeout
+        print_command('set(port={}, data={}, cfg={}, timeout={})'.format(
+            port, data, cfg, _timeout))
+        print_result(self.phi.get(port=port, cfg=cfg, timeout=_timeout))
+
+    def test(self, cmd=None):
+        print_command('test({})'.format(cmd))
+        print_result(self.phi.test(cmd))
+
+    def exec(self, cmd=None, args=None):
+        print_command('exec(cmd={}, args={})'.format(cmd, args))
+        print_result(self.phi.exec(cmd))
+
+
+_me = 'EVA ICS PHI tester version {}'.format(__version__)
+
+ap = argparse.ArgumentParser(description=_me)
+
+ap.add_argument(
+    '-T',
+    '--timeout',
+    help='default PHI timeout (default: 10 sec)',
+    dest='timeout',
+    type=float,
+    metavar='TIMEOUT',
+    default=10)
+ap.add_argument(
+    '-R',
+    '--raw-output',
+    help='Print raw result (no colors)',
+    dest='raw',
+    action='store_true',
+    default=False)
+ap.add_argument('fname', metavar='TEST_FILE', help='File with a test code')
+
+try:
+    import argcomplete
+    argcomplete.autocomplete(ap)
+except:
+    pass
+
+a = ap.parse_args()
+
+suppress_colors = a.raw
+
+default_timeout = a.timeout
+
+d = {}
+
+tester = PHITester()
+
+d['load'] = tester.load
+d['get'] = tester.get
+d['set'] = tester.set
+d['test'] = tester.test
+d['exec'] = tester.exec
+
+try:
+    code = open(a.fname).read()
+except:
+    print('Unable to open file: ' + a.fname)
+    sys.exit(5)
+
+exec(code, d)
