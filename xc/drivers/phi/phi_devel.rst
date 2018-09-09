@@ -476,8 +476,8 @@ themselves.
 Testing
 =======
 
-Use **bin/test-phi** command-line tool for PHI modules tests. The tool requires
-testing scenario file, which may contain the following functions:
+Use **bin/test-phi** command-line tool to perform PHI module tests. The tool
+requires test scenario file, which may contain the following functions:
 
 * **debug()** turn on debug mode (verbose output), equal to *-D* command-line
   option.
@@ -498,9 +498,9 @@ testing scenario file, which may contain the following functions:
 
 * **exec(cmd=None, args=None)** calls PHI **exec** function.
 
-additionally, each function automatically prints the result. The testing
-scenario is actually a Python code and can contain any Python logic, additional
-module imports etc.
+additionally, each function automatically prints the result. Test scenario is
+actually a Python code and may contain any Python logic, additional module
+imports etc.
 
 Example test scenario. Let's test *dae_ro16_modbus* module:
 
