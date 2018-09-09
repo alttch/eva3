@@ -81,6 +81,8 @@ class PHITester(object):
         self.phi = da.get_phi('t1')
 
     def get(self, port=None, cfg=None, timeout=None):
+        if self.phi is None:
+            raise Exception('no PHI module loaded')
         if isinstance(cfg, str):
             _c = dict_from_str(cfg)
         elif isinstance(cfg, dict):
@@ -93,6 +95,8 @@ class PHITester(object):
         return print_result(self.phi.get(port=port, cfg=_c, timeout=_timeout))
 
     def set(self, port=None, data=None, cfg=None, timeout=None):
+        if self.phi is None:
+            raise Exception('no PHI module loaded')
         if isinstance(cfg, str):
             _c = dict_from_str(cfg)
         elif isinstance(cfg, dict):
@@ -106,17 +110,21 @@ class PHITester(object):
             self.phi.set(port=port, data=data, cfg=_c, timeout=_timeout))
 
     def test(self, cmd=None):
+        if self.phi is None:
+            raise Exception('no PHI module loaded')
         print_command('test({})'.format(cmd))
         return print_result(self.phi.test(cmd))
 
     def exec(self, cmd=None, args=None):
+        if self.phi is None:
+            raise Exception('no PHI module loaded')
         print_command('exec(cmd={}, args={})'.format(cmd, args))
         return print_result(self.phi.exec(cmd))
 
-    def modbus(self, port_id, params):
+    def modbus(self, params):
         import eva.uc.modbus
-        print_command('modbus({}, {})'.format(port_id, params))
-        eva.uc.modbus.create_modbus_port(port_id, params)
+        print_command('modbus({})'.format(params))
+        eva.uc.modbus.create_modbus_port('default', params)
 
     def debug(self):
         print_command('debug')
