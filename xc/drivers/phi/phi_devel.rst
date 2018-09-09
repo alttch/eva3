@@ -480,23 +480,23 @@ Use **bin/test-phi** command-line tool to perform PHI module tests. The tool
 requires test scenario file, which may contain the following functions:
 
 * **debug()** turn on debug mode (verbose output), equal to *-D* command-line
-  option.
+  option
 
 * **nodebug()** turn off debug mode
 
 * **modbus(params)** create virtual ModBus port with ID *default*
 
 * **load(phi_mod, phi_cfg=None)** load PHI module for tests. PHI cfg may be
-  specified either as string or as dictionary.
+  specified either as string or as dictionary
 
-* **get(port=None, cfg=None, timeout=None)** calls PHI **get** function.
+* **get(port=None, cfg=None, timeout=None)** calls PHI **get** function
 
 * **set(port=None, data=None, cfg=None, timeout=None)** calls PHI **set**
-  function.
+  function
 
-* **test(cmd=None)** calls PHI **test** function.
+* **test(cmd=None)** calls PHI **test** function
 
-* **exec(cmd=None, args=None)** calls PHI **exec** function.
+* **exec(cmd=None, args=None)** calls PHI **exec** function
 
 additionally, each function automatically prints the result. Test scenario is
 actually a Python code and may contain any Python logic, additional module
