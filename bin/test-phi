@@ -22,7 +22,7 @@ import jsonpickle
 import termcolor
 from pygments import lexers, highlight, formatters
 
-from eva.tools import print_json
+from eva.tools import print_json, dict_from_str
 
 suppress_colors = False
 
@@ -69,8 +69,14 @@ class PHITester(object):
     def __init__(self):
         self.phi = None
 
-    def load(self, phi_id):
-        da.load_phi('t1', phi_id)
+    def load(self, phi_id, phi_cfg=None):
+        if isinstance(phi_cfg, str):
+            _c = dict_from_str(phi_cfg)
+        elif isinstance(phi_cfg, dict):
+            _c = phi_cfg
+        else:
+            _c = None
+        da.load_phi('t1', phi_id, _c)
         self.phi = da.get_phi('t1')
 
     def get(self, port=None, cfg=None, timeout=None):
