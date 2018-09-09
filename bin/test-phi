@@ -51,8 +51,8 @@ def print_result(result):
     else:
         if result == 'OK' or result is True:
             print(colored(result, color='green', attrs=['bold']))
-        elif result == 'FAILED':
-            print(colored(result, color='red', attrs=['bold']))
+        elif result == 'FAILED' or result is False:
+            print(colored(result, color='red'))
         else:
             print(result)
     print(colored('-' * 50, color='grey'))
