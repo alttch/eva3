@@ -161,7 +161,7 @@ ap.add_argument(
     dest='raw',
     action='store_true',
     default=False)
-ap.add_argument('fname', metavar='TEST_FILE', help='File with a test code')
+ap.add_argument('fname', metavar='TEST_FILE', help='Test scenario file')
 
 try:
     import argcomplete
