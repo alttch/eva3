@@ -80,16 +80,28 @@ class PHITester(object):
         self.phi = da.get_phi('t1')
 
     def get(self, port=None, cfg=None, timeout=None):
+        if isinstance(cfg, str):
+            _c = dict_from_str(cfg)
+        elif isinstance(cfg, dict):
+            _c = cfg
+        else:
+            _c = None
         _timeout = default_timeout if timeout is None else timeout
         print_command('get(port={}, cfg={}, timeout={})'.format(
-            port, cfg, _timeout))
-        print_result(self.phi.get(port=port, cfg=cfg, timeout=_timeout))
+            port, _c, _timeout))
+        print_result(self.phi.get(port=port, cfg=_c, timeout=_timeout))
 
     def set(self, port=None, data=None, cfg=None, timeout=None):
+        if isinstance(cfg, str):
+            _c = dict_from_str(cfg)
+        elif isinstance(cfg, dict):
+            _c = cfg
+        else:
+            _c = None
         _timeout = default_timeout if timeout is None else timeout
         print_command('set(port={}, data={}, cfg={}, timeout={})'.format(
-            port, data, cfg, _timeout))
-        print_result(self.phi.get(port=port, cfg=cfg, timeout=_timeout))
+            port, data, _c, _timeout))
+        print_result(self.phi.get(port=port, cfg=_c, timeout=_timeout))
 
     def test(self, cmd=None):
         print_command('test({})'.format(cmd))
