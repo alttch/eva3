@@ -498,6 +498,9 @@ requires test scenario file, which may contain the following functions:
 
 * **exec(cmd=None, args=None)** call PHI **exec** function
 
+* **sleep(seconds)** delay execution for a given number of seconds (alias for
+  *time.sleep*)
+
 additionally, each function automatically prints the result. Test scenario is
 actually a Python code and may contain any Python logic, additional module
 imports etc.

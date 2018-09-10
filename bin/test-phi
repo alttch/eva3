@@ -20,6 +20,7 @@ import logging
 import json
 import jsonpickle
 import termcolor
+import time
 from pygments import lexers, highlight, formatters
 
 from eva.tools import print_json, dict_from_str
@@ -188,6 +189,7 @@ d['exec'] = tester.exec
 d['modbus'] = tester.modbus
 d['debug'] = tester.debug
 d['nodebug'] = tester.nodebug
+d['sleep'] = time.sleep
 
 try:
     code = open(a.fname).read()
