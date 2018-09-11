@@ -3,13 +3,16 @@ __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.0"
 
+import hashlib
+import os
+import uuid
 import logging
 import configparser
 import eva.core
 import eva.item
 
 from netaddr import IPNetwork
-
+from distutils.util import strtobool
 from eva.tools import netacl_match
 
 masterkey = None
@@ -132,8 +135,11 @@ def load(fname=None):
                     logging.info('+ masterkey loaded')
             except:
                 pass
+        _keys_from_db, _keys_from_db_by_id = _load_keys_from_db()
         keys = _keys
+        keys.update(_keys_from_db)
         keys_by_id = _keys_by_id
+        keys_by_id.update(_keys_from_db_by_id)
         masterkey = _masterkey
         if not _masterkey:
             logging.warning('no masterkey in this configuration')
@@ -241,3 +247,186 @@ def serialized_acl(k):
     for a in allows:
         r['allow'][a] = True if a in _k.allow else False
     return r
+
+
+def add_api_key(name=None, s=False, i=None, g=None,
+                    a=None, hal=None, has=None, pvt=None, rpvt=None):
+    if name is None or hal is None or name in keys_by_id:
+        return False
+    key_hash = gen_random_hash()
+    key = APIKey(key_hash, name)
+    key.master = False
+    key.sysfunc = True if strtobool(str(s)) else False
+    if hal:
+        try:
+            _hosts_allow = list(
+                filter(None, [x.strip() for x in hal.split(',')]))
+            key.hosts_allow = \
+                    [ IPNetwork(h) for h in _hosts_allow ]
+        except:
+            logging.error('key %s bad host acl!, skipping' % name)
+            eva.core.log_traceback()
+    if has:
+        try:
+            _hosts_assign = list(
+                filter(None, [x.strip() for x in has.split(',')]))
+            key.hosts_assign = \
+                    [ IPNetwork(h) for h in _hosts_assign ]
+        except:
+            logging.warning('key %s bad hosts_assign' % name)
+            eva.core.log_traceback()
+    for k, v in {'item_ids': i, 'groups': g, 'allow': a,
+                 'pvt_files': pvt, 'rpvt_uris': rpvt}.items():
+        if v:
+            try:
+                parsed = list(
+                    filter(None, [
+                        x.strip() for x in v.split(',')
+                    ]))
+                setattr(key, k, parsed)
+            except:
+                pass
+    if not all([i in ['lock', 'device', 'cmd'] for i in key.allow]):
+        return False
+    keys_by_id[key.key_id] = key
+    keys[key.key] = key
+    result = key.__dict__
+    result['hosts_allow'] = str(key.hosts_allow)
+    result['hosts_assign'] = str(key.hosts_assign)
+    return  result if _save_key_to_db(key) else False
+
+def delete_api_key(name):
+    if name is None or name not in keys_by_id or keys_by_id[name].master \
+    or _check_users_keys(name):
+        return False
+    del keys[keys_by_id[name].key]
+    del keys_by_id[name]
+    return _delete_key_from_db(name)
+
+def _delete_key_from_db(name):
+    try:
+        db = eva.core.get_db()
+        c = db.cursor()
+        c.execute('delete from apikeys where k_id = ?', (name,))
+        db.commit()
+        c.close()
+        db.close()
+        return True
+    except:
+        logging.critical('apikey db error')
+        eva.core.log_traceback()
+
+
+def _save_key_to_db(key=None, create=True):
+
+    try:
+        db = eva.core.get_db()
+        c = db.cursor()
+        c.execute('select k from apikeys where k_id = ?', (key.key_id,))
+        row = c.fetchone()
+        db.commit()
+        c.close()
+        db.close()
+        if row:
+            logging.info('can not create key %s - already exist' % (key.key_id))
+            return False
+    except:
+        if not create:
+            logging.critical('db error')
+            eva.core.log_traceback()
+            return False
+        else:
+            logging.info('no apikeys table in db, creating new')
+            _create_apikeys_table()
+            _save_key_to_db(create=False)
+    try:
+        db = eva.core.get_db()
+        c = db.cursor()
+        c.execute('insert into apikeys (k_id, k, m, s, i, g, a, hal, has, pvt,\
+         rpvt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                  (key.key_id, key.key, key.master, key.sysfunc,
+                   ','.join([str(i) for i in key.item_ids]),
+                   ','.join([str(i) for i in key.groups]),
+                   ','.join([str(i) for i in key.allow]),
+                   ','.join([str(i) for i in key.hosts_allow]),
+                   ','.join([str(i) for i in key.hosts_assign]),
+                   ','.join([str(i) for i in key.pvt_files]),
+                   ','.join([str(i) for i in key.rpvt_uris]),))
+        db.commit()
+        c.close()
+        db.close()
+        logging.info('apikey %s created' % (key.key_id))
+        return True
+    except:
+        logging.critical('apikeys db error')
+        eva.core.log_traceback()
+
+
+def _load_keys_from_db():
+        _keys = {}
+        _keys_by_id = {}
+        try:
+            db = eva.core.get_db()
+            c = db.cursor()
+            c.execute('select * from apikeys')
+            rows = c.fetchall()
+            db.commit()
+            c.close()
+            db.close()
+            for i in rows:
+                key = APIKey(i[1], i[0])
+                key.sysfunc = True if strtobool(str(i[3])) else False
+                for k, v in {4: 'item_ids', 5: 'groups', 6: 'allow',
+                             9: 'pvt_files', 10: 'rpvt_uris'}.items():
+                    setattr(key, v, list(
+                        filter(None, [j.strip() for j in i[k].split(',')])))
+
+                _hosts_allow = list(
+                    filter(None, [j.strip() for j in i[7].split(',')]))
+                key.hosts_allow = [ IPNetwork(h) for h in _hosts_allow ]
+
+                _hosts_assign = list(
+                    filter(None, [x.strip() for x in i[8].split(',')]))
+                key.hosts_assign = \
+                        [ IPNetwork(h) for h in _hosts_assign ]
+
+                _keys[key.key] = key
+                _keys_by_id[key.key_id] = key
+        except:
+            logging.critical('apikeys db error')
+            eva.core.log_traceback()
+        return _keys, _keys_by_id
+
+
+def _create_apikeys_table():
+    try:
+        db = eva.core.get_db()
+        c = db.cursor()
+        c.execute('create table apikeys (k_id primary key, k, m, s, i, g, a,\
+                   hal, has, pvt, rpvt)')
+        db.commit()
+        c.close()
+    except:
+        logging.critical('unable to create apikeys table in db')
+
+
+def _check_users_keys(key_id):
+    try:
+        db = eva.core.get_user_db()
+        c = db.cursor()
+        c.execute('select u, k from users where k = ?', (key_id,))
+        row = c.fetchone()
+        db.commit()
+        c.close()
+        return True if row else False
+    except:
+        logging.critical('apikeys db error')
+        eva.core.log_traceback()
+
+
+def gen_random_hash():
+    s = hashlib.sha256()
+    s.update(os.urandom(1024))
+    s.update(str(uuid.uuid4()).encode())
+    s.update(os.urandom(1024))
+    return s.hexdigest()
