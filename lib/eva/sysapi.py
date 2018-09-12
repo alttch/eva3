@@ -350,9 +350,16 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         if not eva.apikey.check(key, master=True): return False
         return eva.apikey.add_api_key(name, s, i, g, a, hal, has, pvt, rpvt)
 
+    def change_api_key(self, key=None, name=None, s=None, i=None, g=None,
+                    a=None, hal=None, has=None, pvt=None, rpvt=None):
+        if not eva.apikey.check(key, master=True): return False
+        return eva.apikey.change_api_key(name, s, i, g, a, hal, has, pvt, rpvt)
+
     def delete_api_key(self, key=None, name=None):
         if not eva.apikey.check(key, master=True): return False
         return eva.apikey.delete_api_key(name)
+
+
 class SysHTTP_API(SysAPI):
 
     _cp_config = {
@@ -448,6 +455,7 @@ class SysHTTP_API(SysAPI):
         SysHTTP_API.disable_notifier.exposed = True
 
         SysHTTP_API.add_api_key.exposed = True
+        SysHTTP_API.change_api_key.exposed = True
         SysHTTP_API.delete_api_key.exposed = True
 
     def lock(self, k=None, l=None, t=None, e=None):
@@ -625,6 +633,12 @@ class SysHTTP_API(SysAPI):
                     a=None, hal=None, has=None, pvt=None, rpvt=None):
         cp_need_master(k)
         result = super().add_api_key(k, n, s, i, g, a, hal, has, pvt, rpvt)
+        return result if result else http_api_result_error()
+
+    def change_api_key(self, k=None, n=None, s=None, i=None, g=None,
+                    a=None, hal=None, has=None, pvt=None, rpvt=None):
+        cp_need_master(k)
+        result = super().change_api_key(k, n, s, i, g, a, hal, has, pvt, rpvt)
         return result if result else http_api_result_error()
 
     def delete_api_key(self, k=None, n=None):
