@@ -129,7 +129,7 @@ Image Processing
 ================
 
 Use **ic=resize** to ask the server to preprocess the image file. To let the
-server process images, Python PIL (`pillow <https://python-pillow.org/>_`)
+server process images, Python PIL (`pillow <https://python-pillow.org/>`_)
 library should be installed. :doc:`EVA installer</install>` automatically
 installs the library using pip3.
 
