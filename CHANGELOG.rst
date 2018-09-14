@@ -9,6 +9,11 @@ UC
 
     * test-phi CLI tool
 
+LM
+--
+
+    * "action_toggle" macro func, "toggle" acts as an alias for unit oids
+
 3.1.0 (2018-09-01)
 ==================
 
