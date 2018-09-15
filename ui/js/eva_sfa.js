@@ -1120,25 +1120,37 @@ function eva_sfa_process_ws(evt) {
 
 function eva_sfa_process_state(state) {
   var oid = state.type + ':' + state.group + '/' + state.id;
-  eva_sfa_states[oid] = state;
-  if (oid in eva_sfa_update_state_functions) {
-    var f = eva_sfa_update_state_functions[oid];
-    if (typeof f === 'string' || f instanceof String) {
-      eval(f);
-    } else {
-      f(state);
-    }
+  // copy missing fields from old state
+  if (oid in eva_sfa_states) {
+    var old_state = eva_sfa_states[oid];
+    $.each(Object.getOwnPropertyNames(old_state), function(k, v) {
+      if (!(v in state)) {
+        state[v] = old_state[v];
+      }
+    });
   }
-  $.each(Object.keys(eva_sfa_update_state_mask_functions), function(i, v) {
-    if (eva_sfa_oid_match(oid, v)) {
-      var f = eva_sfa_update_state_mask_functions[v];
+  eva_sfa_states[oid] = state;
+
+  if (!eva_sfa_cmp(state, old_state)) {
+    if (oid in eva_sfa_update_state_functions) {
+      var f = eva_sfa_update_state_functions[oid];
       if (typeof f === 'string' || f instanceof String) {
         eval(f);
       } else {
         f(state);
       }
     }
-  });
+    $.each(Object.keys(eva_sfa_update_state_mask_functions), function(i, v) {
+      if (eva_sfa_oid_match(oid, v)) {
+        var f = eva_sfa_update_state_mask_functions[v];
+        if (typeof f === 'string' || f instanceof String) {
+          eval(f);
+        } else {
+          f(state);
+        }
+      }
+    });
+  }
 }
 
 function eva_sfa_preprocess_log_record(l) {
@@ -1390,4 +1402,22 @@ function eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct) {
   setTimeout(function() {
     eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct - 1);
   }, 1000);
+}
+
+function eva_sfa_cmp(a, b) {
+  if (a === undefined || b === undefined) {
+    return false;
+  }
+  var a_props = Object.getOwnPropertyNames(a);
+  var b_props = Object.getOwnPropertyNames(b);
+  if (a_props.length != b_props.length) {
+    return false;
+  }
+  for (var i = 0; i < a_props.length; i++) {
+    var prop_name = a_props[i];
+    if (!Array.isArray(a[prop_name]) && a[prop_name] !== b[prop_name]) {
+      return false;
+    }
+  }
+  return true;
 }
