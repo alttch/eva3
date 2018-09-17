@@ -1223,9 +1223,9 @@ function eva_sfa_stop_engine() {
 
 function eva_sfa_heartbeat(on_login, data) {
   if (on_login) eva_sfa_last_ping = null;
-  var q = '';
+  var q = '?';
   if (eva_sfa_apikey !== null && eva_sfa_apikey != '')
-    q += '?k=' + eva_sfa_apikey;
+    q += 'k=' + eva_sfa_apikey;
   if (on_login) {
     q += '&icvars=1';
   }
