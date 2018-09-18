@@ -103,6 +103,9 @@ rm -f _upgrade/eva-${VERSION}/upgrade.sh
 
 cp -rf _upgrade/eva-${VERSION}/* . || exit 1
 
+ln -sf ../../../xc/drivers lib/eva/uc/drivers
+ln -sf ../../../xc/extensions lib/eva/lm/extensions
+
 echo "- Cleaning up"
 
 rm -rf _upgrade
