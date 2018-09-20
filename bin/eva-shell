@@ -9,11 +9,14 @@ __version__ = "3.1.0"
 import sys
 import os
 
+dir_eva = os.path.dirname(os.path.realpath(__file__)) + '/../'
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 dir_etc = os.path.dirname(os.path.realpath(__file__)) + '/../etc'
 dir_sbin = os.path.dirname(os.path.realpath(__file__)) + '/../sbin'
 dir_bin = os.path.dirname(os.path.realpath(__file__)) + '/../bin'
 sys.path.append(dir_lib)
+
+os.chdir(dir_eva)
 
 import eva.core
 from eva.client.cli import GenericCLI
