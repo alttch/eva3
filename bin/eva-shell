@@ -8,8 +8,12 @@ __version__ = "3.1.0"
 
 import sys
 import os
+import subprocess
+import time
+import glob
 
 dir_eva = os.path.dirname(os.path.realpath(__file__)) + '/../'
+dir_backup = os.path.dirname(os.path.realpath(__file__)) + '/../backup'
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 dir_etc = os.path.dirname(os.path.realpath(__file__)) + '/../etc'
 dir_sbin = os.path.dirname(os.path.realpath(__file__)) + '/../sbin'
@@ -24,11 +28,22 @@ from eva.client.cli import GenericCLI
 
 class ManagementCLI(GenericCLI):
 
+    def prepare_result_data(self, data, api_func, api_func_full, itype):
+        if itype not in ['backup']:
+            return super().prepare_result_data(data, api_func, api_func_full,
+                                               itype)
+        result = []
+        for d in data.copy():
+            d['time'] = time.ctime(d['time'])
+            result.append(d)
+        return result
+
     def add_functions(self):
         super().add_functions()
         self.process_configuration()
         self.add_manager_common_functions()
         self.add_manager_control_functions()
+        self.add_manager_backup_functions()
         self.add_management_shells()
 
     def process_configuration(self):
@@ -38,6 +53,22 @@ class ManagementCLI(GenericCLI):
                     dir_etc, f)) and os.path.isfile('{}/{}_apikeys.ini'.format(
                         dir_etc, f)):
                 self.products_configured.append(f)
+
+    def add_manager_backup_functions(self):
+        ap_backup = self.sp.add_parser('backup', help='Backup management')
+
+        sp_backup = ap_backup.add_subparsers(
+            dest='_func', metavar='func', help='Backup commands')
+
+        sp_backup_save = sp_backup.add_parser(
+            'save', help='Backup system state')
+        sp_backup_save.add_argument(
+            'f', help='Backup name', metavar='NAME', nargs='?')
+
+        sp_backup_list = sp_backup.add_parser('list', help='List backups')
+
+        sp_backup_unlink = sp_backup.add_parser('unlink', help='Delete backup')
+        sp_backup_unlink.add_argument('f', help='Backup name', metavar='NAME')
 
     def add_manager_control_functions(self):
         if not self.products_configured:
@@ -142,6 +173,47 @@ sys.argv = ['{}/{}-cmd', '-I']
         result = {'version': data[0].strip(), 'build': data[1].strip()}
         return 0, result
 
+    def backup_save(self, params):
+        fname = params.get('f')
+        if fname is None: fname = '{}'.format(time.strftime('%Y%m%d%H%M%S'))
+        try:
+            os.mkdir(dir_backup)
+        except FileExistsError:
+            pass
+        except:
+            self.print_err('Failed to create backup folder')
+            return self.local_func_result_failed
+        if os.path.isfile(dir_backup + '/' + fname + '.tgz'):
+            self.print_err('File already exists')
+            return self.local_func_result_failed
+        cmd = ('tar', 'czf', 'backup/{}.tgz'.format(fname),
+               '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime',
+               'xc/cmd', 'xc/drivers', 'xc/extensions', 'etc')
+        child = subprocess.Popen(cmd)
+        child.communicate()
+        rc = child.returncode
+        if rc:
+            return self.local_func_result_failed
+        return 0, {'backup': fname}
+
+    def backup_list(self, params):
+        files = glob.glob('backup/*.tgz')
+        files.sort(key=os.path.getmtime, reverse=True)
+        result = []
+        for f in files:
+            result.append({
+                'name': f[7:-4],
+                'time': os.path.getmtime(f)
+            })
+        return 0, result
+
+    def backup_unlink(self, params):
+        try:
+            os.unlink(dir_backup + '/' + params.get('f') + '.tgz')
+        except:
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
 
 _me = 'EVA ICS Management CLI version %s' % (__version__)
 
@@ -154,12 +226,15 @@ _api_functions = {
     'start': cli.start_controller,
     'stop': cli.stop_controller,
     'restart': cli.restart_controller,
-    'version': cli.print_version
+    'version': cli.print_version,
+    'backup:save': cli.backup_save,
+    'backup:list': cli.backup_list,
+    'backup:unlink': cli.backup_unlink
 }
 
 eva.core.set_product('eva-cmd', '-1')
 cli.ap.prog = 'eva-cmd'
-# cli.arg_sections += ['subscribe']
+cli.arg_sections += ['backup']
 cli.set_api_functions(_api_functions)
 # cli.set_pd_cols(_pd_cols)
 # cli.set_pd_idx(_pd_idx)
