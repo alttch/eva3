@@ -7,7 +7,6 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.0"
 
 import sys
-sys.argv = [sys.argv[0]] + ['-I']
 import os
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
@@ -140,6 +139,8 @@ sys.argv = ['{}/{}-cmd', '-I']
 
 _me = 'EVA ICS Management CLI version %s' % (__version__)
 
+sys.argv = [sys.argv[0]] + ['-I']
+
 cli = ManagementCLI('eva', _me, remote_api=False)
 
 _api_functions = {
@@ -156,5 +157,16 @@ cli.set_api_functions(_api_functions)
 # cli.set_pd_cols(_pd_cols)
 # cli.set_pd_idx(_pd_idx)
 # cli.set_fancy_tabsp(_fancy_tabsp)
+banner = """     _______    _____       _______________
+    / ____/ |  / /   |     /  _/ ____/ ___/
+   / __/  | | / / /| |     / // /    \__ \\
+  / /___  | |/ / ___ |   _/ // /___ ___/ /
+ /_____/  |___/_/  |_|  /___/\____//____/
+
+  www.eva-ics.com (c) 2012-2018 Altertech
+"""
+print(cli.colored(banner, color='blue'))
+cli.do_run(['version'])
+print()
 code = cli.run()
 sys.exit(code)
