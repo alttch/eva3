@@ -31,7 +31,8 @@ _sysapi_func = [
     'enable_notifier', 'disable_notifier', 'save', 'get_cvar', 'set_cvar',
     'set_debug', 'file_unlink', 'file_get', 'file_put', 'file_set_exec',
     'create_user', 'set_user_password', 'set_user_key', 'destroy_user',
-    'list_keys', 'list_users', 'dump'
+    'list_keys', 'add_api_key', 'change_api_key', 'delete_api_key',
+    'list_users', 'dump'
 ]
 
 _sysapi_func_cr = [

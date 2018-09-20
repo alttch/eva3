@@ -57,6 +57,9 @@ class GenericCLI(object):
                 'file:upload': 'file_put',
                 'file:mod': 'file_set_exec',
                 'key:list': 'list_keys',
+                'key:add': 'add_api_key',
+                'key:change': 'change_api_key',
+                'key:delete': 'delete_api_key',
                 'user:list': 'list_users',
                 'user:create': 'create_user',
                 'user:password': 'set_user_password',
@@ -647,6 +650,76 @@ class GenericCLI(object):
             dest='_func', metavar='func', help='API key commands')
 
         sp_key_list = sp_key.add_parser('list', help='List API keys')
+
+        sp_key_delete = sp_key.add_parser('delete', help='Delete API key')
+        sp_key_delete.add_argument(
+            'n',
+            help='APIKey name',
+            metavar='APIKEY_NAME')
+
+        sp_key_change = sp_key.add_parser('change', help='Change API keys')
+
+        sp_key_add = sp_key.add_parser('add', help='Add API key')
+        for i in (sp_key_add, sp_key_change):
+            i.add_argument(
+                'n',
+                help='APIKey name',
+                metavar='APIKEY_NAME')
+            if 'add' in i.prog:
+                i.add_argument(
+                    'hal',
+                    help='Allowed hosts, coma separated',
+                    metavar='HOSTS_ALLOW')
+            else:
+                i.add_argument(
+                    '-hal',
+                    dest='hal',
+                    help='Allowed hosts, coma separated',
+                    metavar='HOSTS_ALLOW')
+            i.add_argument(
+                '-has',
+                dest='has',
+                help='Hosts assigned, coma separated',
+                metavar='HOSTS_ASSIGN'
+                )
+            i.add_argument(
+                '-a',
+                dest='a',
+                help='Operations permissions, comma separated. Avalilable options:\
+                      lock - permission to lock keys,\
+                      device - permission to operate devices,\
+                      cmd - permission to execute remote commands',
+                metavar='PERMISSIONS'
+                )
+            i.add_argument(
+                '-s',
+                dest='s',
+                help='Permission to views system details, comma separated.\
+                      Avalilable options: True, False, true, false',
+                choices=[True, False, 'true', 'false', '1', '0'],
+                metavar='SYSFUNC'
+                )
+            i.add_argument(
+                '-i',
+                dest='i',
+                help='Items allowed to operate with, coma separated',
+                metavar='ITEMS')
+            i.add_argument(
+                '-g',
+                dest='g',
+                help='Groups allowed to operate with, coma separated',
+                metavar='GROUPS')
+            i.add_argument(
+                '-pvt',
+                dest='pvt',
+                help='Private files that key gives access to, coma separated',
+                metavar='PVT_FILES')
+            i.add_argument(
+                '-rpvt',
+                dest='rpvt',
+                help='Proxy uris with resourses that key gives access to,\
+                coma separated',
+                metavar='RPVT_URIS')
 
     def _add_user_functions(self):
         ap_user = self.sp.add_parser('user', help='user management')

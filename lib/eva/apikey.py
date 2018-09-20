@@ -330,7 +330,7 @@ def parse_key_args(key, saved_args):
             _hosts_assign = list(
                 filter(None, [x.strip() for x in saved_args['has'].split(',')]))
             key.hosts_assign = \
-                    [ IPNetwork(h) for h in _hosts_assign ]
+                    [ IPNetwork(h).ip for h in _hosts_assign ]
         except:
             logging.error('key %s bad hosts_assign' % saved_args['has'])
             eva.core.log_traceback()
@@ -465,8 +465,7 @@ def _load_keys_from_db():
                 _hosts_assign = list(
                     filter(None, [x.strip() for x in i[8].split(',')]))
                 key.hosts_assign = \
-                        [ IPNetwork(h) for h in _hosts_assign ]
-
+                        [ IPNetwork(h).ip for h in _hosts_assign ]
                 _keys[key.key] = key
                 _keys_by_id[key.key_id] = key
         except:
