@@ -258,8 +258,6 @@ class GenericCLI(object):
     def reset_argcomplete(self):
         if self.argcomplete:
             completer = self.argcomplete.CompletionFinder(self.ap)
-            print(self.ap)
-            print(completer)
             readline.set_completer_delims("")
             readline.set_completer(completer.rl_complete)
             readline.parse_and_bind("tab: complete")

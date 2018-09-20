@@ -11,6 +11,8 @@ import os
 import subprocess
 import time
 import glob
+import requests
+import jsonpickle
 
 dir_eva = os.path.dirname(os.path.realpath(__file__)) + '/../'
 dir_backup = os.path.dirname(os.path.realpath(__file__)) + '/../backup'
@@ -95,8 +97,13 @@ class ManagementCLI(GenericCLI):
     def add_manager_common_functions(self):
         ap_version = self.sp.add_parser(
             'version', help='Display version and build')
-        ap_shell = self.sp.add_parser('sh', help='Execute system shell')
-        ap_top = self.sp.add_parser('top', help='Execute top command')
+        ap_upgrade = self.sp.add_parser(
+            'upgrade', help='Check and upgrade to new version if exists')
+        ap_upgrade.add_argument(
+            '--YES',
+            dest='y',
+            help='Upgrade without any prompts',
+            action='store_true')
 
     def add_management_shells(self):
         for p in self.products_configured:
@@ -203,10 +210,7 @@ sys.argv = ['{}/{}-cmd', '-I']
         files.sort(key=os.path.getmtime, reverse=True)
         result = []
         for f in files:
-            result.append({
-                'name': f[7:-4],
-                'time': os.path.getmtime(f)
-            })
+            result.append({'name': f[7:-4], 'time': os.path.getmtime(f)})
         return 0, result
 
     def backup_unlink(self, params):
@@ -214,6 +218,49 @@ sys.argv = ['{}/{}-cmd', '-I']
             os.unlink(dir_backup + '/' + params.get('f') + '.tgz')
         except:
             return self.local_func_result_failed
+        return self.local_func_result_ok
+
+    def upgrade(self, params):
+        try:
+            with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
+                data = p.read()
+                build = int(data.strip())
+        except:
+            return local_func_result_failed
+        try:
+            r = requests.get(
+                'https://www.eva-ics.com/download/upgrade_info.json')
+            if r.status_code != 200:
+                raise ('HTTP ERROR')
+            result = jsonpickle.decode(r.text)
+            new_build = int(result['build'])
+            new_version = result['version']
+        except:
+            return self.local_func_result_failed
+        print(
+            self.colored('Current build', color='blue', attrs=['bold']) +
+            ' : ' + self.colored(build, color='yellow'))
+        print(
+            self.colored(
+                'Latest available build', color='blue', attrs=['bold']) +
+            ' : ' + self.colored(
+                '{} (v{})'.format(new_build, new_version), color='yellow'))
+        # if build == new_build:
+        # return self.local_func_result_ok
+        if build > new_build:
+            print('Where did you get this build from? Invented a time machine?')
+            return self.local_func_result_failed
+        if not params.get('y'):
+            u = input('Type ' +
+                      self.colored('YES', color='red', attrs=['bold']) +
+                      ' (uppercase) to upgrade, or press ' +
+                      self.colored('ENTER', color='white') + ' to abort > ')
+            if u != 'YES':
+                return self.local_func_result_empty
+        url = 'https://www.eva-ics.com/download/{}/stable/upgrade.sh'.format(
+            new_version)
+        cmd = ('bash', '-c', 'curl -s ' + url + ' | bash /dev/stdin')
+        print(cmd)
         return self.local_func_result_ok
 
 
@@ -229,6 +276,7 @@ _api_functions = {
     'stop': cli.stop_controller,
     'restart': cli.restart_controller,
     'version': cli.print_version,
+    'upgrade': cli.upgrade,
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink
