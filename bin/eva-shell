@@ -99,11 +99,14 @@ sys.argv = ['{}/{}-cmd', '-I']
                 exec(c)
             except SystemExit:
                 self.reset_argcomplete()
+                eva.client.cli.say_bye = True
                 return True
         except:
             self.reset_argcomplete()
+            eva.client.cli.say_bye = True
             return False
         self.reset_argcomplete()
+        eva.client.cli.say_bye = True
         return True
 
     def start_controller(self, params):
