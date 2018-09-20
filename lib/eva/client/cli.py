@@ -22,6 +22,7 @@ from eva.client import apiclient
 from pygments import highlight, lexers, formatters
 
 say_bye = True
+parent_shell_name = None
 
 
 class GenericCLI(object):
@@ -141,9 +142,11 @@ class GenericCLI(object):
             h = ' ' + self.apiuri.replace('https://', '').replace('http://', '')
         else:
             h = ''
+        ppeva = '' if not parent_shell_name else \
+                self.colored(parent_shell_name, 'green', attrs=['bold']) + '/'
         if self.product:
             prompt = '[%s%s] %s' % (
-                self.colored(self.product, 'green', attrs=['bold']),
+                ppeva + self.colored(self.product, 'green', attrs=['bold']),
                 self.colored(h, 'blue', attrs=['bold']), prompt)
         return prompt
 

@@ -139,6 +139,7 @@ class ManagementCLI(GenericCLI):
             c = """import sys
 import eva.client.cli
 eva.client.cli.say_bye = False
+eva.client.cli.parent_shell_name = 'eva'
 sys.argv = ['{}/{}-cmd', '-I']
 
 """.format(dir_bin, p) + c
@@ -157,6 +158,7 @@ sys.argv = ['{}/{}-cmd', '-I']
         self.setup_parser()
         self.reset_argcomplete()
         eva.client.cli.say_bye = True
+        eva.client.cli.parent_shell_name = None
 
     def start_controller(self, params):
         c = params['p']
