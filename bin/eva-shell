@@ -1,0 +1,160 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2018 Altertech Group"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.1.0"
+
+import sys
+sys.argv = [sys.argv[0]] + ['-I']
+import os
+
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+dir_etc = os.path.dirname(os.path.realpath(__file__)) + '/../etc'
+dir_sbin = os.path.dirname(os.path.realpath(__file__)) + '/../sbin'
+dir_bin = os.path.dirname(os.path.realpath(__file__)) + '/../bin'
+sys.path.append(dir_lib)
+
+import eva.core
+from eva.client.cli import GenericCLI
+
+
+class ManagementCLI(GenericCLI):
+
+    def add_functions(self):
+        super().add_functions()
+        self.process_configuration()
+        self.add_manager_common_functions()
+        self.add_manager_control_functions()
+        self.add_management_shells()
+
+    def process_configuration(self):
+        self.products_configured = []
+        for f in ['uc', 'lm', 'sfa']:
+            if os.path.isfile('{}/{}.ini'.format(
+                    dir_etc, f)) and os.path.isfile('{}/{}_apikeys.ini'.format(
+                        dir_etc, f)):
+                self.products_configured.append(f)
+
+    def add_manager_control_functions(self):
+        if not self.products_configured:
+            return
+        ap_start = self.sp.add_parser('start', help='Start controller(s)')
+        ap_start.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            choices=self.products_configured,
+            nargs='?')
+        ap_stop = self.sp.add_parser('stop', help='Stop controller(s)')
+        ap_stop.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            choices=self.products_configured,
+            nargs='?')
+        ap_restart = self.sp.add_parser('restart', help='Stop controller(s)')
+        ap_restart.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            choices=self.products_configured,
+            nargs='?')
+
+    def add_manager_common_functions(self):
+        ap_version = self.sp.add_parser(
+            'version', help='Display version and build')
+        ap_shell = self.sp.add_parser('sh', help='Execute system shell')
+        ap_top = self.sp.add_parser('top', help='Execute top command')
+
+    def add_management_shells(self):
+        for p in self.products_configured:
+            ap = self.sp.add_parser(p, help='{} shell'.format(p.upper()))
+            self.api_functions[p] = getattr(self, '{}_shell'.format(p))
+
+    def exec_control_script(self, product, command):
+        if product is None: script = 'eva-control'
+        else: script = '%s-control' % product
+        os.system('{}/{} {}'.format(dir_sbin, script, command))
+
+    def uc_shell(self, params):
+        if not self.start_shell('uc'): return self.local_func_result_failed
+        return self.local_func_result_empty
+
+    def lm_shell(self, params):
+        if not self.start_shell('lm'): return self.local_func_result_failed
+        return self.local_func_result_empty
+
+    def sfa_shell(self, params):
+        if not self.start_shell('sfa'): return self.local_func_result_failed
+        return self.local_func_result_empty
+
+    def start_shell(self, p):
+        try:
+            c = open('{}/{}-cmd'.format(dir_bin, p)).read()
+            c = """import sys
+import eva.client.cli
+eva.client.cli.say_bye = False
+sys.argv = ['{}/{}-cmd', '-I']
+
+""".format(dir_bin, p) + c
+            try:
+                exec(c)
+            except SystemExit:
+                self.reset_argcomplete()
+                return True
+        except:
+            self.reset_argcomplete()
+            return False
+        self.reset_argcomplete()
+        return True
+
+    def start_controller(self, params):
+        c = params['p']
+        if c is not None and c not in self.products_configured:
+            return self.local_func_result_failed
+        self.exec_control_script(c, 'start')
+        return self.local_func_result_ok
+
+    def stop_controller(self, params):
+        c = params['p']
+        if c is not None and c not in self.products_configured:
+            return self.local_func_result_failed
+        self.exec_control_script(c, 'stop')
+        return self.local_func_result_ok
+
+    def restart_controller(self, params):
+        c = params['p']
+        if c is not None and c not in self.products_configured:
+            return self.local_func_result_failed
+        self.exec_control_script(c, 'restart')
+        return self.local_func_result_ok
+
+    def print_version(self, params):
+        with os.popen('{}/eva-tinyapi -V; {}/eva-tinyapi -B'.format(
+                dir_sbin, dir_sbin)) as p:
+            data = p.readlines()
+        if len(data) != 2:
+            return self.local_func_result_failed
+        result = {'version': data[0].strip(), 'build': data[1].strip()}
+        return 0, result
+
+
+_me = 'EVA ICS Management CLI version %s' % (__version__)
+
+cli = ManagementCLI('eva', _me, remote_api=False)
+
+_api_functions = {
+    'start': cli.start_controller,
+    'stop': cli.stop_controller,
+    'restart': cli.restart_controller,
+    'version': cli.print_version
+}
+
+eva.core.set_product('eva-cmd', '-1')
+cli.ap.prog = 'eva-cmd'
+# cli.arg_sections += ['subscribe']
+cli.set_api_functions(_api_functions)
+# cli.set_pd_cols(_pd_cols)
+# cli.set_pd_idx(_pd_idx)
+# cli.set_fancy_tabsp(_fancy_tabsp)
+code = cli.run()
+sys.exit(code)

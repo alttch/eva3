@@ -20,6 +20,8 @@ from datetime import datetime
 from eva.client import apiclient
 from pygments import highlight, lexers, formatters
 
+say_bye = True
+
 
 class GenericCLI(object):
 
@@ -45,6 +47,7 @@ class GenericCLI(object):
         self.local_func_result_failed = (apiclient.result_func_failed, {
             'result': 'ERROR'
         })
+        self.local_func_result_empty = (apiclient.result_ok, '')
         if remote_api:
             self.always_print = ['cmd']
             self.common_api_functions = {
@@ -159,6 +162,7 @@ class GenericCLI(object):
         print('sh: start system shell')
         print('top: display system processes')
         print('w: display uptime and who is online')
+        print('date: display system date and time')
         print()
         print('or command to execute')
         print()
@@ -244,6 +248,13 @@ class GenericCLI(object):
             self.argcomplete = importlib.import_module('argcomplete')
         except:
             pass
+
+    def reset_argcomplete(self):
+        if self.argcomplete:
+            completer = self.argcomplete.CompletionFinder(self.ap)
+            readline.set_completer_delims("")
+            readline.set_completer(completer.rl_complete)
+            readline.parse_and_bind("tab: complete")
 
     def print_err(self, s):
         print(self.colored(s, color='red', attrs=[]))
@@ -711,11 +722,7 @@ class GenericCLI(object):
             return self.do_run()
         else:
             # interactive mode
-            if self.argcomplete:
-                completer = self.argcomplete.CompletionFinder(self.ap)
-                readline.set_completer_delims("")
-                readline.set_completer(completer.rl_complete)
-                readline.parse_and_bind("tab: complete")
+            self.reset_argcomplete()
             while True:
                 d = None
                 while not d:
@@ -723,12 +730,12 @@ class GenericCLI(object):
                         d = shlex.split(input(self.get_prompt()))
                     except EOFError:
                         print()
-                        print('Bye')
+                        if say_bye: print('Bye')
                         return 0
                     except:
                         self.print_err('parse error')
                 if d[0] in ['q', 'quit', 'exit', 'bye']:
-                    print('Bye')
+                    if say_bye: print('Bye')
                     return 0
                 elif d[0] == 'a' and self.remote_api:
                     print('API uri: %s' % (self.apiuri
@@ -791,6 +798,12 @@ class GenericCLI(object):
                         os.system('w')
                     except:
                         self.print_err('Failed to run system "w" command')
+                elif d[0] == 'date':
+                    try:
+                        os.system('date')
+                    except:
+                        self.print_err(
+                            'Failed to run system "date command')
                 elif d[0] == 'sh':
                     print('Executing system shell')
                     shell = os.environ.get('SHELL')
