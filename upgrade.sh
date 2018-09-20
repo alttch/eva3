@@ -96,6 +96,11 @@ if [ ! -d runtime/tpl ]; then
     chown ${UC_USER} runtime/tpl
 fi
 
+if [ ! -d backup ]; then
+    mkdir backup
+    chmod 700 backup
+fi
+
 echo "- Installing new files"
 
 rm -f _upgrade/eva-${VERSION}/ui/index.html

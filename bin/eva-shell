@@ -108,7 +108,7 @@ class ManagementCLI(GenericCLI):
             '-i',
             '--info-only',
             dest='i',
-            help='Just check for a new version',
+            help='Check for a new version without upgrading',
             action='store_true')
 
     def add_management_shells(self):
