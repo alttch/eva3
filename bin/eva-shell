@@ -132,16 +132,18 @@ sys.argv = ['{}/{}-cmd', '-I']
             try:
                 exec(c)
             except SystemExit:
-                self.reset_argcomplete()
-                eva.client.cli.say_bye = True
+                self.full_reset_after_shell()
                 return True
         except:
-            self.reset_argcomplete()
-            eva.client.cli.say_bye = True
+            self.full_reset_after_shell()
             return False
+        self.full_reset_after_shell()
+        return True
+
+    def full_reset_after_shell(self):
+        self.setup_parser()
         self.reset_argcomplete()
         eva.client.cli.say_bye = True
-        return True
 
     def start_controller(self, params):
         c = params['p']

@@ -15,6 +15,7 @@ import shlex
 import readline
 import json
 import jsonpickle
+import copy
 from termcolor import colored
 from datetime import datetime
 from eva.client import apiclient
@@ -104,10 +105,15 @@ class GenericCLI(object):
         self.pd_idx = self.common_pd_idx
         self.batch_file = None
         self.batch_stop_on_err = True
+        self.prog_name = prog
         self.interactive = False
         self.parse_primary_args()
+        self.setup_parser()
+
+    def setup_parser(self):
         if not self.interactive and not self.batch_file:
-            self.ap = argparse.ArgumentParser(description=self.name, prog=prog)
+            self.ap = argparse.ArgumentParser(
+                description=self.name, prog=self.prog_name)
         else:
             self.ap = argparse.ArgumentParser(usage=argparse.SUPPRESS, prog='')
         self.add_primary_options()
@@ -252,6 +258,8 @@ class GenericCLI(object):
     def reset_argcomplete(self):
         if self.argcomplete:
             completer = self.argcomplete.CompletionFinder(self.ap)
+            print(self.ap)
+            print(completer)
             readline.set_completer_delims("")
             readline.set_completer(completer.rl_complete)
             readline.parse_and_bind("tab: complete")
@@ -802,8 +810,7 @@ class GenericCLI(object):
                     try:
                         os.system('date')
                     except:
-                        self.print_err(
-                            'Failed to run system "date command')
+                        self.print_err('Failed to run system "date command')
                 elif d[0] == 'sh':
                     print('Executing system shell')
                     shell = os.environ.get('SHELL')
