@@ -104,6 +104,12 @@ class ManagementCLI(GenericCLI):
             dest='y',
             help='Upgrade without any prompts',
             action='store_true')
+        ap_upgrade.add_argument(
+            '-i',
+            '--info-only',
+            dest='i',
+            help='Just check for a new version',
+            action='store_true')
 
     def add_management_shells(self):
         for p in self.products_configured:
@@ -229,7 +235,7 @@ sys.argv = ['{}/{}-cmd', '-I']
             return local_func_result_failed
         try:
             r = requests.get(
-                'https://www.eva-ics.com/download/upgrade_info.json')
+                'https://www.eva-ics.com/download/upgrade_info.json', timeout=5)
             if r.status_code != 200:
                 raise ('HTTP ERROR')
             result = jsonpickle.decode(r.text)
@@ -237,6 +243,13 @@ sys.argv = ['{}/{}-cmd', '-I']
             new_version = result['version']
         except:
             return self.local_func_result_failed
+        if params.get('i'):
+            return 0, {
+                'build': build,
+                'new_build': new_build,
+                'new_version': new_version,
+                'upgrade_available': build < new_build
+            }
         print(
             self.colored('Current build', color='blue', attrs=['bold']) +
             ' : ' + self.colored(build, color='yellow'))
@@ -245,8 +258,8 @@ sys.argv = ['{}/{}-cmd', '-I']
                 'Latest available build', color='blue', attrs=['bold']) +
             ' : ' + self.colored(
                 '{} (v{})'.format(new_build, new_version), color='yellow'))
-        # if build == new_build:
-        # return self.local_func_result_ok
+        if build == new_build:
+            return self.local_func_result_ok
         if build > new_build:
             print('Where did you get this build from? Invented a time machine?')
             return self.local_func_result_failed
@@ -260,7 +273,11 @@ sys.argv = ['{}/{}-cmd', '-I']
         url = 'https://www.eva-ics.com/download/{}/stable/upgrade.sh'.format(
             new_version)
         cmd = ('bash', '-c', 'curl -s ' + url + ' | bash /dev/stdin')
-        print(cmd)
+        child = subprocess.Popen(cmd)
+        child.communicate()
+        rc = child.returncode
+        if rc:
+            return self.local_func_result_failed
         return self.local_func_result_ok
 
 
