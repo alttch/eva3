@@ -70,17 +70,18 @@ class ManagementCLI(GenericCLI):
             'restore', help='Restore system state')
         sp_backup_restore.add_argument('f', help='Backup name', metavar='NAME')
         sp_backup_restore.add_argument(
-            '--db',
-            dest='db',
-            help='Restore everything in runtime (including databases)',
+            '-r',
+            '--runtime',
+            dest='r',
+            help='Completely restore runtime (including databases)',
             action='store_true')
         sp_backup_restore.add_argument(
             '--xc',
             dest='xc',
-            help='Restore xc cmd, drivers and macro extensions',
+            help='Restore xc (cmd, drivers and macro extensions)',
             action='store_true')
         sp_backup_restore.add_argument(
-            '--full',
+            '-a', '--full',
             dest='full',
             help='Restore everything',
             action='store_true')
@@ -247,48 +248,80 @@ sys.argv = ['{}/{}-cmd', '-I']
         return self.local_func_result_ok
 
     def backup_restore(self, params):
+        f = dir_backup + '/' + params.get('f') + '.tgz'
+        if not os.path.isfile(f):
+            self.print_err('no such backup')
+            return self.local_func_result_failed
         if params.get('full'):
             self.clear_runtime(full=True)
             self.clear_xc()
             try:
-                if not self.backup_restore_runtime(keep=False):
+                if not self.backup_restore_runtime(fname=f, json_only=False):
                     raise Exception('restore failed')
-                if not self.backup_restore_etc():
+                if not self.backup_restore_etc(fname=f):
                     raise Exception('restore failed')
-                if not self.backup_restore_xc():
+                if not self.backup_restore_xc(fname=f):
                     raise Exception('restore failed')
             except:
                 return self.local_func_result_failed
             return self.local_func_result_ok
-        self.clear_runtime(full=params.get('runtime'))
         try:
-            if not self.backup_restore_runtime(keep=True):
-                    raise Exception('restore failed')
-            self.backup_restore_etc()
-                    raise Exception('restore failed')
             if params.get('xc'):
                 self.clear_xc()
-                if not self.backup_restore_xc():
+                if not self.backup_restore_xc(fname=f):
+                    raise Exception('restore failed')
+            else:
+                self.clear_runtime(full=params.get('r'))
+                if not self.backup_restore_runtime(fname=f, json_only=True):
+                    raise Exception('restore failed')
+                if not self.backup_restore_etc(fname=f):
                     raise Exception('restore failed')
         except:
             return self.local_func_result_failed
         return self.local_func_result_ok
 
-
-    def clear_runtime(full=False):
-        if full: cmd = 'rm -rf runtime'
-        else: cmd = 'find runtime -type f -name "*.json" -exec rm -f {} \\;'
-        print(cmd)
+    def clear_runtime(self, full=False):
+        print('Removing runtime' + (' (completely)...' if full else '...'))
+        cmd = 'rm -rf runtime' if full else \
+                'find runtime -type f -name "*.json" -exec rm -f {} \\;'
+        os.system(cmd)
         return True
 
-    def clear_xc():
+    def clear_xc(self):
+        print('Removing xc')
         cmd = 'rm -rf xc/drivers xc/extensions xc/cmd'
-        print(cmd)
+        os.system(cmd)
         return True
 
+    def backup_restore_runtime(self, fname, json_only=True):
+        print(
+            self.colored('Restoring runtime' + \
+                         (' (completely)...' if not json_only else ' (json)...'),
+            color='green',
+            attrs=[]))
+        cmd = ('tar', 'xpf', fname)
+        if json_only: cmd += ('--wildcards', '*.json')
+        cmd += ('runtime',)
+        child = subprocess.Popen(cmd)
+        child.communicate()
+        rc = child.returncode
+        return False if rc else True
 
-    def 
+    def backup_restore_etc(self, fname):
+        print(self.colored('Restoring configs...', color='green', attrs=[]))
+        cmd = ('tar', 'xpf', fname, 'etc')
+        child = subprocess.Popen(cmd)
+        child.communicate()
+        rc = child.returncode
+        return False if rc else True
 
+    def backup_restore_xc(self, fname):
+        print(self.colored('Restoring xc...', color='green', attrs=[]))
+        cmd = ('tar', 'xpf', fname, 'xc')
+        child = subprocess.Popen(cmd)
+        child.communicate()
+        rc = child.returncode
+        return False if rc else True
 
     def upgrade(self, params):
         try:
