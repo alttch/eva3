@@ -4,6 +4,12 @@ EVA ICS CHANGELOG
 3.1.1 (TBA)
 ===========
 
+Common
+------
+
+    * New management CLI: eva-shell (interactive by default)
+    * Backup/restore operations (with eva-shell)
+
 UC
 --
 
