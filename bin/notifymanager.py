@@ -415,7 +415,10 @@ class NotifierCLI(GenericCLI):
         return self.local_func_result_ok
 
 
-product = os.environ['EVA_PRODUCT']
+try:
+    product
+except:
+    product = os.environ['EVA_PRODUCT']
 
 _me = 'EVA ICS Notification System Manager CLI for %s version %s' % (
     product.upper(), __version__)
