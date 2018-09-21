@@ -35,9 +35,22 @@ class ManagementCLI(GenericCLI):
             return super().prepare_result_data(data, api_func, api_func_full,
                                                itype)
         result = []
+        if itype == 'status':
+            for k, v in data.copy():
+                print(k, v)
+            return result
         for d in data.copy():
             d['time'] = time.ctime(d['time'])
             result.append(d)
+        return result
+
+    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+        if itype not in ['status']:
+            return super().prepare_result_dict(data, api_func, api_func_full,
+                                               itype)
+        result = {}
+        for k, v in data.copy().items():
+            result[k] = 'running' if v else 'stopped'
         return result
 
     def add_functions(self):
@@ -100,18 +113,32 @@ class ManagementCLI(GenericCLI):
         ap_start.add_argument(
             'p',
             metavar='CONTROLLER',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')',
             choices=self.products_configured,
             nargs='?')
         ap_stop = self.sp.add_parser('stop', help='Stop controller(s)')
         ap_stop.add_argument(
             'p',
             metavar='CONTROLLER',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')',
             choices=self.products_configured,
             nargs='?')
         ap_restart = self.sp.add_parser('restart', help='Stop controller(s)')
         ap_restart.add_argument(
             'p',
             metavar='CONTROLLER',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')',
+            choices=self.products_configured,
+            nargs='?')
+        ap_status = self.sp.add_parser('status', help='Stop controller(s)')
+        ap_status.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')',
             choices=self.products_configured,
             nargs='?')
 
@@ -151,34 +178,54 @@ class ManagementCLI(GenericCLI):
         for p in self.products_configured:
             ap = self.sp.add_parser(p, help='{} shell'.format(p.upper()))
             self.api_functions[p] = getattr(self, '{}_shell'.format(p))
+        ap_ns = self.sp.add_parser('ns', help='Notifier management')
+        ap_ns.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            choices=self.products_configured,
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')')
 
-    def exec_control_script(self, product, command):
-        if product is None: script = 'eva-control'
-        else: script = '%s-control' % product
-        os.system('{}/{} {}'.format(dir_sbin, script, command))
+    def exec_control_script(self, product, command, collect_output=False):
+        script = 'eva-control' if not product else product + '-control'
+        cmd = '{}/{} {}'.format(dir_sbin, script, command)
+        if collect_output:
+            with os.popen(cmd) as p:
+                result = p.readlines()
+            return result
+        else:
+            os.system(cmd)
 
     def uc_shell(self, params):
-        if not self.start_shell('uc'): return self.local_func_result_failed
-        return self.local_func_result_empty
+        return self.local_func_result_empty if \
+            self.start_shell('uc') else self.local_func_result_failed
 
     def lm_shell(self, params):
-        if not self.start_shell('lm'): return self.local_func_result_failed
-        return self.local_func_result_empty
+        return self.local_func_result_empty if \
+            self.start_shell('lm') else self.local_func_result_failed
 
     def sfa_shell(self, params):
-        if not self.start_shell('sfa'): return self.local_func_result_failed
-        return self.local_func_result_empty
+        return self.local_func_result_empty if \
+            self.start_shell('sfa') else self.local_func_result_failed
 
-    def start_shell(self, p):
+    def manage_ns(self, params):
+        return self.local_func_result_empty if \
+            self.start_shell('notifymanager',
+                    '.py',
+                    'product=\'{}\''.format(params.get('p'))) else \
+            self.local_func_result_failed
+
+    def start_shell(self, p, x='-cmd', xp=''):
         try:
-            c = open('{}/{}-cmd'.format(dir_bin, p)).read()
+            c = open('{}/{}{}'.format(dir_bin, p, x)).read()
             c = """import sys
 import eva.client.cli
 eva.client.cli.say_bye = False
 eva.client.cli.parent_shell_name = 'eva'
-sys.argv = ['{}/{}-cmd', '-I']
+sys.argv = ['{}/{}-{}', '-I']
+{}
 
-""".format(dir_bin, p) + c
+""".format(dir_bin, p, x, xp) + c
             try:
                 exec(c)
             except SystemExit:
@@ -216,6 +263,26 @@ sys.argv = ['{}/{}-cmd', '-I']
             return self.local_func_result_failed
         self.exec_control_script(c, 'restart')
         return self.local_func_result_ok
+
+    def status_controller(self, params):
+        c = params['p']
+        if c is not None and c not in self.products_configured:
+            return self.local_func_result_failed
+        out = self.exec_control_script(c, 'status', collect_output=True)
+        result = {}
+        if c:
+            try:
+                result[c] = out[0].strip() == 'running'
+            except:
+                return self.local_func_result_failed
+        else:
+            for r in out:
+                try:
+                    c, s = r.strip().split(': ')
+                    result[c.lower()] = s == 'running'
+                except:
+                    pass
+        return 0, result
 
     def print_version(self, params):
         with os.popen('{}/eva-tinyapi -V; {}/eva-tinyapi -B'.format(
@@ -347,7 +414,7 @@ sys.argv = ['{}/{}-cmd', '-I']
                 data = p.read()
                 build = int(data.strip())
         except:
-            return local_func_result_failed
+            return self.local_func_result_failed
         try:
             r = requests.get(
                 'https://www.eva-ics.com/download/upgrade_info.json', timeout=5)
@@ -411,7 +478,8 @@ sys.argv = ['{}/{}-cmd', '-I']
         child = subprocess.Popen(('reboot',))
         child.communicate()
         rc = child.returncode
-        return self.local_func_result_failed if rc else self.local_func_result_ok
+        return self.local_func_result_failed if \
+                rc else self.local_func_result_ok
 
     def power_poweroff(self, params):
         if not params.get('y'):
@@ -425,7 +493,8 @@ sys.argv = ['{}/{}-cmd', '-I']
         child = subprocess.Popen(('poweroff',))
         child.communicate()
         rc = child.returncode
-        return self.local_func_result_failed if rc else self.local_func_result_ok
+        return self.local_func_result_failed if \
+                rc else self.local_func_result_ok
 
 
 _me = 'EVA ICS Management CLI version %s' % (__version__)
@@ -439,10 +508,12 @@ _api_functions = {
     'start': cli.start_controller,
     'stop': cli.stop_controller,
     'restart': cli.restart_controller,
+    'status': cli.status_controller,
     'version': cli.print_version,
     'upgrade': cli.upgrade,
     'reboot': cli.power_reboot,
     'poweroff': cli.power_poweroff,
+    'ns': cli.manage_ns,
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
