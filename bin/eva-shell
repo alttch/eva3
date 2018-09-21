@@ -47,6 +47,7 @@ class ManagementCLI(GenericCLI):
         self.add_manager_control_functions()
         self.add_manager_backup_functions()
         self.add_management_shells()
+        self.add_manager_power_functions()
 
     def process_configuration(self):
         self.products_configured = []
@@ -81,7 +82,8 @@ class ManagementCLI(GenericCLI):
             help='Restore xc (cmd, drivers and macro extensions)',
             action='store_true')
         sp_backup_restore.add_argument(
-            '-a', '--full',
+            '-a',
+            '--full',
             dest='full',
             help='Restore everything',
             action='store_true')
@@ -128,6 +130,21 @@ class ManagementCLI(GenericCLI):
             '--info-only',
             dest='i',
             help='Check for a new version without upgrading',
+            action='store_true')
+
+    def add_manager_power_functions(self):
+        ap_reboot = self.sp.add_parser('reboot', help='Reboot the system')
+        ap_reboot.add_argument(
+            '--YES',
+            dest='y',
+            help='Reboot without any prompts',
+            action='store_true')
+        ap_poweroff = self.sp.add_parser(
+            'poweroff', help='Power off the system')
+        ap_poweroff.add_argument(
+            '--YES',
+            dest='y',
+            help='Power off without any prompts',
             action='store_true')
 
     def add_management_shells(self):
@@ -296,7 +313,8 @@ sys.argv = ['{}/{}-cmd', '-I']
     def backup_restore_runtime(self, fname, json_only=True):
         print(
             self.colored('Restoring runtime' + \
-                         (' (completely)...' if not json_only else ' (json)...'),
+                         (' (completely)...' if \
+                         not json_only else ' (json)...'),
             color='green',
             attrs=[]))
         cmd = ('tar', 'xpf', fname)
@@ -361,10 +379,14 @@ sys.argv = ['{}/{}-cmd', '-I']
             print('Where did you get this build from? Invented a time machine?')
             return self.local_func_result_failed
         if not params.get('y'):
-            u = input('Type ' +
-                      self.colored('YES', color='red', attrs=['bold']) +
-                      ' (uppercase) to upgrade, or press ' +
-                      self.colored('ENTER', color='white') + ' to abort > ')
+            try:
+                u = input('Type ' +
+                          self.colored('YES', color='red', attrs=['bold']) +
+                          ' (uppercase) to upgrade, or press ' +
+                          self.colored('ENTER', color='white') + ' to abort > ')
+            except:
+                print()
+                u = ''
             if u != 'YES':
                 return self.local_func_result_empty
         url = 'https://www.eva-ics.com/download/{}/stable/upgrade.sh'.format(
@@ -375,6 +397,28 @@ sys.argv = ['{}/{}-cmd', '-I']
         rc = child.returncode
         if rc:
             return self.local_func_result_failed
+        return self.local_func_result_ok
+
+    def power_reboot(self, params):
+        if not params.get('y'):
+            try:
+                a = input('Reboot this system? (y/N) ')
+            except:
+                print()
+                a = ''
+            if a.lower() != 'y': return self.local_func_result_empty
+        print(self.colored('Rebooting...', color='red', attrs=['bold']))
+        return self.local_func_result_ok
+
+    def power_poweroff(self, params):
+        if not params.get('y'):
+            try:
+                a = input('Power off this system? (y/N) ')
+            except:
+                print()
+                a = ''
+            if a.lower() != 'y': return self.local_func_result_empty
+        print(self.colored('Powering off...', color='red', attrs=['bold']))
         return self.local_func_result_ok
 
 
@@ -391,6 +435,8 @@ _api_functions = {
     'restart': cli.restart_controller,
     'version': cli.print_version,
     'upgrade': cli.upgrade,
+    'reboot': cli.power_reboot,
+    'poweroff': cli.power_poweroff,
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
