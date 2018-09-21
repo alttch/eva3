@@ -374,7 +374,7 @@ sys.argv = ['{}/{}-cmd', '-I']
             ' : ' + self.colored(
                 '{} (v{})'.format(new_build, new_version), color='yellow'))
         if build == new_build:
-            return self.local_func_result_ok
+            return self.local_func_result_empty
         if build > new_build:
             print('Where did you get this build from? Invented a time machine?')
             return self.local_func_result_failed
