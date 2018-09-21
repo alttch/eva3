@@ -392,26 +392,31 @@ class GenericCLI(object):
         else:
             return data
 
+    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+        return data
+
     def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
         if result and isinstance(result, dict):
+            _result=self.prepare_result_dict(result, api_func, api_func_full,
+                                              itype)
             rprinted = False
             h = None
             out = None
             err = None
             tabsp = self.fancy_tabsp.get(api_func)
             if not tabsp: tabsp = 10
-            for v in sorted(result.keys()):
+            for v in sorted(_result.keys()):
                 if v == 'help':
                     if not tab:
-                        h = result[v]
+                        h = _result[v]
                     else:
                         pass
                 elif v == 'out' and not tab:
-                    out = result[v]
+                    out = _result[v]
                 elif v == 'err' and not tab:
-                    err = result[v]
-                elif v != 'result':
-                    if isinstance(result[v], dict):
+                    err = _result[v]
+                elif v != '_result':
+                    if isinstance(_result[v], dict):
                         if tab:
                             print(
                                 ' ' * (tab * tabsp),
@@ -420,26 +425,26 @@ class GenericCLI(object):
                             '{:>%u} ', color='blue', attrs=['bold']) +
                                 self.colored(':') + self.colored(
                                     '  {}', color='yellow')) % max(
-                                        map(len, result))).format(v, ''))
-                        self.fancy_print_result(result[v], api_func,
+                                        map(len, _result))).format(v, ''))
+                        self.fancy_print_result(_result[v], api_func,
                                                 api_func_full, itype, tab + 1)
                     else:
                         if tab:
                             print(
                                 ' ' * (tab * tabsp),
                                 end=self.colored('>' * tab) + ' ')
-                        if isinstance(result[v], list):
+                        if isinstance(_result[v], list):
                             _r = []
-                            for vv in result[v]:
+                            for vv in _result[v]:
                                 _r.append(str(vv))
                             _v = ', '.join(_r)
                         else:
-                            _v = result[v]
+                            _v = _result[v]
                         print(((self.colored(
                             '{:>%u} ', color='blue', attrs=['bold']) +
                                 self.colored(':') + self.colored(
                                     ' {}', color='yellow')) % max(
-                                        map(len, result))).format(v, _v))
+                                        map(len, _result))).format(v, _v))
                     rprinted = True
             if h:
                 print(self.colored('-' * 81, color='grey'))
