@@ -408,7 +408,10 @@ sys.argv = ['{}/{}-cmd', '-I']
                 a = ''
             if a.lower() != 'y': return self.local_func_result_empty
         print(self.colored('Rebooting...', color='red', attrs=['bold']))
-        return self.local_func_result_ok
+        child = subprocess.Popen(('reboot',))
+        child.communicate()
+        rc = child.returncode
+        return self.local_func_result_failed if rc else self.local_func_result_ok
 
     def power_poweroff(self, params):
         if not params.get('y'):
@@ -419,7 +422,10 @@ sys.argv = ['{}/{}-cmd', '-I']
                 a = ''
             if a.lower() != 'y': return self.local_func_result_empty
         print(self.colored('Powering off...', color='red', attrs=['bold']))
-        return self.local_func_result_ok
+        child = subprocess.Popen(('poweroff',))
+        child.communicate()
+        rc = child.returncode
+        return self.local_func_result_failed if rc else self.local_func_result_ok
 
 
 _me = 'EVA ICS Management CLI version %s' % (__version__)
