@@ -66,6 +66,24 @@ class ManagementCLI(GenericCLI):
             'save', help='Backup system state')
         sp_backup_save.add_argument(
             'f', help='Backup name', metavar='NAME', nargs='?')
+        sp_backup_restore = sp_backup.add_parser(
+            'restore', help='Restore system state')
+        sp_backup_restore.add_argument('f', help='Backup name', metavar='NAME')
+        sp_backup_restore.add_argument(
+            '--db',
+            dest='db',
+            help='Restore everything in runtime (including databases)',
+            action='store_true')
+        sp_backup_restore.add_argument(
+            '--xc',
+            dest='xc',
+            help='Restore xc cmd, drivers and macro extensions',
+            action='store_true')
+        sp_backup_restore.add_argument(
+            '--full',
+            dest='full',
+            help='Restore everything',
+            action='store_true')
 
         sp_backup_list = sp_backup.add_parser('list', help='List backups')
 
@@ -203,7 +221,7 @@ sys.argv = ['{}/{}-cmd', '-I']
         if os.path.isfile(dir_backup + '/' + fname + '.tgz'):
             self.print_err('File already exists')
             return self.local_func_result_failed
-        cmd = ('tar', 'czf', 'backup/{}.tgz'.format(fname),
+        cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime',
                'xc/cmd', 'xc/drivers', 'xc/extensions', 'etc')
         child = subprocess.Popen(cmd)
@@ -227,6 +245,50 @@ sys.argv = ['{}/{}-cmd', '-I']
         except:
             return self.local_func_result_failed
         return self.local_func_result_ok
+
+    def backup_restore(self, params):
+        if params.get('full'):
+            self.clear_runtime(full=True)
+            self.clear_xc()
+            try:
+                if not self.backup_restore_runtime(keep=False):
+                    raise Exception('restore failed')
+                if not self.backup_restore_etc():
+                    raise Exception('restore failed')
+                if not self.backup_restore_xc():
+                    raise Exception('restore failed')
+            except:
+                return self.local_func_result_failed
+            return self.local_func_result_ok
+        self.clear_runtime(full=params.get('runtime'))
+        try:
+            if not self.backup_restore_runtime(keep=True):
+                    raise Exception('restore failed')
+            self.backup_restore_etc()
+                    raise Exception('restore failed')
+            if params.get('xc'):
+                self.clear_xc()
+                if not self.backup_restore_xc():
+                    raise Exception('restore failed')
+        except:
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
+
+    def clear_runtime(full=False):
+        if full: cmd = 'rm -rf runtime'
+        else: cmd = 'find runtime -type f -name "*.json" -exec rm -f {} \\;'
+        print(cmd)
+        return True
+
+    def clear_xc():
+        cmd = 'rm -rf xc/drivers xc/extensions xc/cmd'
+        print(cmd)
+        return True
+
+
+    def 
+
 
     def upgrade(self, params):
         try:
@@ -298,7 +360,8 @@ _api_functions = {
     'upgrade': cli.upgrade,
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
-    'backup:unlink': cli.backup_unlink
+    'backup:unlink': cli.backup_unlink,
+    'backup:restore': cli.backup_restore
 }
 
 eva.core.set_product('eva-cmd', '-1')
