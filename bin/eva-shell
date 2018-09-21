@@ -125,7 +125,7 @@ class ManagementCLI(GenericCLI):
             ')',
             choices=self.products_configured,
             nargs='?')
-        ap_restart = self.sp.add_parser('restart', help='Stop controller(s)')
+        ap_restart = self.sp.add_parser('restart', help='Restart controller(s)')
         ap_restart.add_argument(
             'p',
             metavar='CONTROLLER',
@@ -133,7 +133,8 @@ class ManagementCLI(GenericCLI):
             ')',
             choices=self.products_configured,
             nargs='?')
-        ap_status = self.sp.add_parser('status', help='Stop controller(s)')
+        ap_status = self.sp.add_parser(
+            'status', help='Status of the controller(s)')
         ap_status.add_argument(
             'p',
             metavar='CONTROLLER',
