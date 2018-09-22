@@ -150,14 +150,14 @@ class ManagementCLI(GenericCLI):
             'rw', help='Mount EVA partition read/write')
         ap_version = self.sp.add_parser(
             'ro', help='Mount EVA partition read only')
-        ap_upgrade = self.sp.add_parser(
-            'upgrade', help='Check and upgrade to new version if exists')
-        ap_upgrade.add_argument(
+        ap_update = self.sp.add_parser(
+            'update', help='Check and update to new version if exists')
+        ap_update.add_argument(
             '--YES',
             dest='y',
-            help='Upgrade without any prompts',
+            help='Update without any prompts',
             action='store_true')
-        ap_upgrade.add_argument(
+        ap_update.add_argument(
             '-i',
             '--info-only',
             dest='i',
@@ -413,7 +413,7 @@ sys.argv = ['{}/{}-{}', '-I']
         rc = child.returncode
         return False if rc else True
 
-    def upgrade(self, params):
+    def update(self, params):
         try:
             with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
                 data = p.read()
@@ -422,7 +422,7 @@ sys.argv = ['{}/{}-{}', '-I']
             return self.local_func_result_failed
         try:
             r = requests.get(
-                'https://www.eva-ics.com/download/upgrade_info.json', timeout=5)
+                'https://www.eva-ics.com/download/update_info.json', timeout=5)
             if r.status_code != 200:
                 raise ('HTTP ERROR')
             result = jsonpickle.decode(r.text)
@@ -435,7 +435,7 @@ sys.argv = ['{}/{}-{}', '-I']
                 'build': build,
                 'new_build': new_build,
                 'new_version': new_version,
-                'upgrade_available': build < new_build
+                'update_available': build < new_build
             }
         print(
             self.colored('Current build', color='blue', attrs=['bold']) +
@@ -454,14 +454,14 @@ sys.argv = ['{}/{}-{}', '-I']
             try:
                 u = input('Type ' +
                           self.colored('YES', color='red', attrs=['bold']) +
-                          ' (uppercase) to upgrade, or press ' +
+                          ' (uppercase) to update, or press ' +
                           self.colored('ENTER', color='white') + ' to abort > ')
             except:
                 print()
                 u = ''
             if u != 'YES':
                 return self.local_func_result_empty
-        url = 'https://www.eva-ics.com/download/{}/stable/upgrade.sh'.format(
+        url = 'https://www.eva-ics.com/download/{}/stable/update.sh'.format(
             new_version)
         cmd = ('bash', '-c', 'curl -s ' + url + ' | bash /dev/stdin')
         child = subprocess.Popen(cmd)
@@ -534,7 +534,7 @@ _api_functions = {
     'restart': cli.restart_controller,
     'status': cli.status_controller,
     'version': cli.print_version,
-    'upgrade': cli.upgrade,
+    'update': cli.update,
     'reboot': cli.power_reboot,
     'poweroff': cli.power_poweroff,
     'ns': cli.manage_ns,

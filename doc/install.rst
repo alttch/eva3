@@ -116,19 +116,19 @@ The system is ready.
     running under, use *./set-run-under-user.sh* script to adjust runtime and
     database permissions.
 
-Upgrading
-=========
+Updating
+========
 
 * Backup everything
 * Run the following command:
 
 .. code-block:: bash
 
-    curl -s <UPGRADE_SCRIPT_URL> | bash /dev/stdin
+    curl -s <UPDATE_SCRIPT_URL> | bash /dev/stdin
     #i.e.
-    #curl -s https://www.eva-ics.com/download/3.1.0/stable/upgrade.sh | bash /dev/stdin
+    #curl -s https://www.eva-ics.com/download/3.1.0/stable/update.sh | bash /dev/stdin
 
-* If upgrading from 3.0.2 or below, you may also want to enable controller
+* If updating from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if
   required)
 
