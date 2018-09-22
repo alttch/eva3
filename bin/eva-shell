@@ -146,6 +146,10 @@ class ManagementCLI(GenericCLI):
     def add_manager_common_functions(self):
         ap_version = self.sp.add_parser(
             'version', help='Display version and build')
+        ap_version = self.sp.add_parser(
+            'rw', help='Mount EVA partition read/write')
+        ap_version = self.sp.add_parser(
+            'ro', help='Mount EVA partition read only')
         ap_upgrade = self.sp.add_parser(
             'upgrade', help='Check and upgrade to new version if exists')
         ap_upgrade.add_argument(
@@ -497,6 +501,25 @@ sys.argv = ['{}/{}-{}', '-I']
         return self.local_func_result_failed if \
                 rc else self.local_func_result_ok
 
+    def remount_readonly(self, params):
+        return self.local_func_result_ok if self.remount_eva('ro') else \
+                self.local_func_result_failed
+
+    def remount_readwrite(self, params):
+        return self.local_func_result_ok if self.remount_eva('rw') else \
+                self.local_func_result_failed
+
+    def remount_eva(self, mode):
+        cmd = (
+            '/bin/sh', '-c',
+            'mount -o remount,{} '.format(mode) + \
+                    '`df -h /opt/eva/bin/..|tail -1|awk \'{ print $NF }\'`'
+        )
+        child = subprocess.Popen(cmd)
+        child.communicate()
+        rc = child.returncode
+        return rc == 0
+
 
 _me = 'EVA ICS Management CLI version %s' % (__version__)
 
@@ -518,7 +541,9 @@ _api_functions = {
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
-    'backup:restore': cli.backup_restore
+    'backup:restore': cli.backup_restore,
+    'ro': cli.remount_readonly,
+    'rw': cli.remount_readwrite
 }
 
 eva.core.set_product('eva-cmd', '-1')
