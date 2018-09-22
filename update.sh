@@ -30,20 +30,20 @@ if [ -f ./sbin/eva-tinyapi ]; then
     fi
     
     if [ $CURRENT_BUILD -ge $BUILD ]; then
-        echo "Your build is ${CURRENT_BUILD}, this script can updatee EVA ICS to ${BUILD} only"
+        echo "Your build is ${CURRENT_BUILD}, this script can update EVA ICS to ${BUILD} only"
         exit 1
     fi
 fi
 
-rm -rf _updatee
+rm -rf _update
 
-echo "- Starting updatee to ${VERSION} build ${BUILD}"
+echo "- Starting update to ${VERSION} build ${BUILD}"
 
-mkdir -p _updatee
+mkdir -p _update
 
 echo "- Downloading new version tarball"
 
-cd _updatee || exit 1
+cd _update || exit 1
 
 wget https://www.eva-ics.com/download/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz || exit 1
 
@@ -59,7 +59,7 @@ echo "- Stopping everything"
 
 echo "- Installing missing modules"
 
-./_updatee/eva-${VERSION}/install/check_mods install || exit 2
+./_update/eva-${VERSION}/install/check_mods install || exit 2
 
 echo "- Removing obsolete files and folders"
 
@@ -103,17 +103,17 @@ fi
 
 echo "- Installing new files"
 
-rm -f _updatee/eva-${VERSION}/ui/index.html
-rm -f _updatee/eva-${VERSION}/updatee.sh
+rm -f _update/eva-${VERSION}/ui/index.html
+rm -f _update/eva-${VERSION}/update.sh
 
-cp -rf _updatee/eva-${VERSION}/* . || exit 1
+cp -rf _update/eva-${VERSION}/* . || exit 1
 
 ln -sf ../../../xc/drivers lib/eva/uc/drivers
 ln -sf ../../../xc/extensions lib/eva/lm/extensions
 
 echo "- Cleaning up"
 
-rm -rf _updatee
+rm -rf _update
 
 CURRENT_BUILD=`./sbin/eva-tinyapi -B`
 
