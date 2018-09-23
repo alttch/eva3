@@ -26,7 +26,7 @@ __config_help__ = [{
 }]
 
 __functions__ = {
-    'run(macro, args=None, priority=None, w=None, q=None, _uuid=None)':
+    'run(macro, args=None, wait=None, priority=None, q=None, _uuid=None)':
     'Launch macro on remote LM PLC'
 }
 
