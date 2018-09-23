@@ -6,7 +6,7 @@ if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
 fi
 
 VERSION=3.1.0
-BUILD=2018091501
+BUILD=2018092301
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh sbin/check_mods set-run-under-user.sh"
 
@@ -40,6 +40,13 @@ rm -rf _update
 echo "- Starting update to ${VERSION} build ${BUILD}"
 
 mkdir -p _update
+
+touch _update/test
+
+if [ $? -ne 0 ]; then
+    echo "Unable to write on partition. Read only file system?"
+    exit 1
+fi
 
 echo "- Downloading new version tarball"
 
