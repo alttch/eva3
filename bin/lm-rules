@@ -10,6 +10,7 @@ import sys
 import getopt
 import jsonpickle
 import termcolor
+import shlex
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -392,7 +393,11 @@ if func in cmd_list:
     for r in result:
         args = []
         if r['macro_args']:
-            for o in r['macro_args'].split(' '):
+            try:
+                ma = shlex.split(r['macro_args'])
+            except:
+                ma = r['macro_args'].split(' ')
+            for o in ma:
                 args.append('\'' + o + '\'')
         m = ''
         if r['for_prop'] == 'status' and \

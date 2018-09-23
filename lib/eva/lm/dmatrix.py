@@ -268,7 +268,10 @@ class DecisionRule(eva.item.Item):
         d['in_range_max_eq'] = self.in_range_max_eq
         d['macro'] = self.macro
         if self.macro_args:
-            d['macro_args'] = ' '.join(self.macro_args)
+            d['macro_args'] = ''
+            for a in self.macro_args:
+                if d['macro_args']: d['macro_args'] += ' '
+                d['macro_args'] += '"{}"'.format(a)
         else:
             d['macro_args'] = None
         d['break_after_exec'] = self.break_after_exec
@@ -516,7 +519,10 @@ class DecisionRule(eva.item.Item):
             return True
         elif prop == 'macro_args':
             if val is not None:
-                v = val.split(' ')
+                try:
+                    v = shlex.split(val)
+                except:
+                    v = val.split(' ')
             else:
                 v = None
             if self.macro_args != v:
