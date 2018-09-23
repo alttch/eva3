@@ -5,7 +5,7 @@ if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
     exit 98
 fi
 
-VERSION=3.1.0
+VERSION=3.1.1
 BUILD=2018092301
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh sbin/check_mods set-run-under-user.sh"

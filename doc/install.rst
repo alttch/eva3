@@ -126,7 +126,7 @@ Updating
 
     curl -s <UPDATE_SCRIPT_URL> | bash /dev/stdin
     #i.e.
-    #curl -s https://www.eva-ics.com/download/3.1.0/stable/update.sh | bash /dev/stdin
+    #curl -s https://www.eva-ics.com/download/3.1.1/stable/update.sh | bash /dev/stdin
 
 * If updating from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if
