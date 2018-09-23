@@ -34,7 +34,7 @@ ap.add_argument(
     default=False)
 ap.add_argument('e', metavar='EXTENSION', help='Extension to test')
 ap.add_argument(
-    'fname', metavar='TEST_FILE', help='Test scenario file (call ext.FUNCTION)')
+    'fname', metavar='TEST_FILE', help='Test scenario file (call __FUNCTION)')
 ap.add_argument(
     '-c', metavar='PARAMS', help='Extension configuration params')
 
@@ -49,14 +49,7 @@ a = ap.parse_args()
 if a.debug:
     eva.core.debug_on()
 
-d = {}
-
-ea.load_ext('ext', a.e, cfg=dict_from_str(a.c))
-
-d['ext'] = ea.get_ext('ext')
-
-if not d['ext']:
-    ea.stop()
+if not ea.load_ext('_', a.e, cfg=dict_from_str(a.c)):
     sys.exit(2)
 
 try:
@@ -66,5 +59,5 @@ except:
     ea.stop()
     sys.exit(5)
 
-exec(code, d)
+exec(code, ea.env)
 ea.stop()
