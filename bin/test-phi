@@ -202,6 +202,8 @@ try:
     code = open(a.fname).read()
 except:
     print('Unable to open file: ' + a.fname)
+    da.stop()
     sys.exit(5)
 
 exec(code, d)
+da.stop()
