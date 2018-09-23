@@ -122,10 +122,17 @@ class PHITester(object):
         print_command('exec(cmd={}, args={})'.format(cmd, args))
         return print_result(self.phi.exec(cmd))
 
-    def modbus(self, params):
+    def modbus(self, params, **kwargs):
         import eva.uc.modbus
-        print_command('modbus({})'.format(params))
-        eva.uc.modbus.create_modbus_port('default', params)
+        ka = ''
+        for k, v in kwargs.items():
+            ka += ', {}='.format(k)
+            if isinstance(v, str):
+                ka += '\'{}\''.format(v)
+            else:
+                ka += str(v)
+        print_command('modbus({}{})'.format(params, ka))
+        eva.uc.modbus.create_modbus_port('default', params, **kwargs)
 
     def debug(self):
         print_command('debug')
