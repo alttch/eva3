@@ -803,18 +803,18 @@ class GenericCLI(object):
                     try:
                         top = '/usr/bin/htop' if os.path.isfile(
                             '/usr/bin/htop') else 'top'
-                        os.system(top)
+                        if os.system(top): raise Exception('exec error')
                     except:
                         self.print_err(
                             'Failed to run system "%s" command' % top)
                 elif d[0] == 'w':
                     try:
-                        os.system('w')
+                        if os.system('w'): raise Exception('exec error')
                     except:
                         self.print_err('Failed to run system "w" command')
                 elif d[0] == 'date':
                     try:
-                        os.system('date')
+                        if os.system('date'): raise Exception('exec error')
                     except:
                         self.print_err('Failed to run system "date command')
                 elif d[0] == 'sh':
