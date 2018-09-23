@@ -50,6 +50,9 @@ eva.core.init()
 eva.core.set_product(product_code, product_build)
 eva.core.product_name = 'Layout Converter'
 
+eva.notify.init()
+eva.notify.load()
+
 cfg = eva.core.load(initial=True, init_log=False)
 if not cfg: sys.exit(2)
 
