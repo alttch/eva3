@@ -392,13 +392,8 @@ if func in cmd_list:
     data3 = []
     for r in result:
         args = []
-        if r['macro_args']:
-            try:
-                ma = shlex.split(r['macro_args'])
-            except:
-                ma = r['macro_args'].split(' ')
-            for o in ma:
-                args.append('\'' + o + '\'')
+        for o in r['macro_args']:
+            args.append('\'' + o + '\'')
         m = ''
         if r['for_prop'] == 'status' and \
             isinstance(r['in_range_max'], float) and \
