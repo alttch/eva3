@@ -60,9 +60,9 @@ class LMExt(GenericExt):
                 self.log_error('no audio files directory specified')
                 raise Exception('no audio files directory specified')
             try:
-                self.gain = float(self.cfg.get('gain', 0))
+                self.gain = float(self.cfg.get('g', 0))
             except:
-                self.log_error('invalid gain value: %s' % self.cfg.get('gain'))
+                self.log_error('invalid gain value: %s' % self.cfg.get('g'))
                 raise
             try:
                 if 'd' in self.cfg: self.device = int(self.cfg.get('d'))
