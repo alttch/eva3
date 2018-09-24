@@ -15,7 +15,6 @@ import shlex
 import readline
 import json
 import jsonpickle
-import copy
 from termcolor import colored
 from datetime import datetime
 from eva.client import apiclient
