@@ -15,13 +15,35 @@ import shlex
 import readline
 import json
 import jsonpickle
-from termcolor import colored
+import termcolor
 from datetime import datetime
 from eva.client import apiclient
 from pygments import highlight, lexers, formatters
 
 say_bye = True
 parent_shell_name = None
+
+def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
+    if os.getenv('ANSI_COLORS_DISABLED') is None:
+        fmt_str = '\033[%dm'
+        if rlsafe:
+            fmt_str = '\001' + fmt_str + '\002'
+        fmt_str += '%s'
+        if color is not None:
+            text = fmt_str % (termcolor.COLORS[color], text)
+
+        if on_color is not None:
+            text = fmt_str % (termcolor.HIGHLIGHTS[on_color], text)
+
+        if attrs is not None:
+            for attr in attrs:
+                text = fmt_str % (termcolor.ATTRIBUTES[attr], text)
+
+        if rlsafe:
+            text += '\001' + termcolor.RESET + '\002'
+        else:
+            text += termcolor.RESET
+    return text
 
 
 class GenericCLI(object):
@@ -142,18 +164,22 @@ class GenericCLI(object):
         else:
             h = ''
         ppeva = '' if not parent_shell_name else \
-                self.colored(parent_shell_name, 'green', attrs=['bold']) + '/'
+                self.colored(parent_shell_name,
+                        'green', attrs=['bold'], rlsafe=True) + '/'
         if self.product:
             prompt = '[%s%s] %s' % (
-                ppeva + self.colored(self.product, 'green', attrs=['bold']),
-                self.colored(h, 'blue', attrs=['bold']), prompt)
+                ppeva + self.colored(
+                    self.product, 'green', attrs=['bold'], rlsafe=True),
+                self.colored(h, 'blue', attrs=['bold'], rlsafe=True), prompt)
         return prompt
 
-    def colored(self, text, color=None, on_color=None, attrs=None):
+    def colored(self, text, color=None, on_color=None, attrs=None,
+                rlsafe=False):
         if self.suppress_colors or self.always_suppress_colors or \
                 not sys.stdout.isatty():
             return str(text)
-        return colored(text, color=color, on_color=on_color, attrs=attrs)
+        return safe_colored(
+            text, color=color, on_color=on_color, attrs=attrs, rlsafe=rlsafe)
 
     def print_interactive_help(self):
         print('q: quit')
@@ -396,8 +422,8 @@ class GenericCLI(object):
 
     def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
         if result and isinstance(result, dict):
-            _result=self.prepare_result_dict(result, api_func, api_func_full,
-                                              itype)
+            _result = self.prepare_result_dict(result, api_func, api_func_full,
+                                               itype)
             rprinted = False
             h = None
             out = None

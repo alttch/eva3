@@ -7,6 +7,8 @@ EVA ICS CHANGELOG
 Common
 ------
 
+    * fixes: interactive prompt behavior
+
     * New management CLI: eva-shell (interactive by default)
     * Backup/restore operations (with eva-shell)
 
