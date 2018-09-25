@@ -196,7 +196,8 @@ class ManagementCLI(GenericCLI):
                 result = p.readlines()
             return result
         else:
-            os.system(cmd)
+            os.system(cmd + ' &')
+            time.sleep(1)
 
     def uc_shell(self, params):
         return self.local_func_result_empty if \
@@ -224,6 +225,7 @@ class ManagementCLI(GenericCLI):
 import eva.client.cli
 eva.client.cli.say_bye = False
 eva.client.cli.parent_shell_name = 'eva'
+eva.client.cli.readline_processing = False
 sys.argv = ['{}/{}-{}', '-I']
 {}
 
@@ -241,8 +243,10 @@ sys.argv = ['{}/{}-{}', '-I']
 
     def full_reset_after_shell(self):
         self.setup_parser()
-        self.reset_argcomplete()
+        self.start_interactive()
         eva.client.cli.say_bye = True
+        eva.client.cli.readline_processing = True if \
+                not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
         eva.client.cli.parent_shell_name = None
 
     def start_controller(self, params):

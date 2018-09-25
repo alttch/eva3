@@ -9,6 +9,8 @@ Common
 
     * fixes: interactive prompt behavior
 
+    * history for interactive shell mode (to turn off set
+      EVA_CLI_DISABLE_HISTORY=1 system environment variable)
     * New management CLI: eva-shell (interactive by default)
     * Backup/restore operations (with eva-shell)
 

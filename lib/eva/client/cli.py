@@ -21,7 +21,12 @@ from eva.client import apiclient
 from pygments import highlight, lexers, formatters
 
 say_bye = True
+readline_processing = True if \
+        not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
 parent_shell_name = None
+
+history_length = 100
+history_file = os.path.expanduser('~') + '/.eva_history'
 
 def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
     if os.getenv('ANSI_COLORS_DISABLED') is None:
@@ -180,6 +185,23 @@ class GenericCLI(object):
             return str(text)
         return safe_colored(
             text, color=color, on_color=on_color, attrs=attrs, rlsafe=rlsafe)
+
+    def start_interactive(self):
+        self.reset_argcomplete()
+        if readline_processing:
+            readline.set_history_length(history_length)
+            try:
+                readline.read_history_file(history_file)
+            except:
+                pass
+
+    def finish_interactive(self):
+        if say_bye: print('Bye')
+        if readline_processing:
+            try:
+                readline.write_history_file(history_file)
+            except:
+                pass
 
     def print_interactive_help(self):
         print('q: quit')
@@ -761,7 +783,7 @@ class GenericCLI(object):
             return self.do_run()
         else:
             # interactive mode
-            self.reset_argcomplete()
+            self.start_interactive()
             while True:
                 d = None
                 while not d:
@@ -769,12 +791,16 @@ class GenericCLI(object):
                         d = shlex.split(input(self.get_prompt()))
                     except EOFError:
                         print()
-                        if say_bye: print('Bye')
+                        self.finish_interactive()
                         return 0
+                    except KeyboardInterrupt:
+                        print()
+                        pass
                     except:
+                        raise
                         self.print_err('parse error')
                 if d[0] in ['q', 'quit', 'exit', 'bye']:
-                    if say_bye: print('Bye')
+                    self.finish_interactive()
                     return 0
                 elif d[0] == 'a' and self.remote_api:
                     print('API uri: %s' % (self.apiuri
@@ -806,7 +832,7 @@ class GenericCLI(object):
                           ('on' if self.debug else 'off'))
                 elif d[0] == 't.' and self.remote_api:
                     self.timeout = self.default_timeout
-                    print('timeout: %f' % self.timeout)
+                    print('timeout: %.2f' % self.timeout)
                 elif d[0] == 'k' and self.remote_api:
                     if len(d) > 1:
                         self.apikey = d[1]
@@ -823,7 +849,7 @@ class GenericCLI(object):
                             self.timeout = float(d[1])
                         except:
                             self.print_err('FAILED')
-                    print('timeout: %f' % self.timeout)
+                    print('timeout: %.2f' % self.timeout)
                 elif d[0] == 'top':
                     try:
                         top = '/usr/bin/htop' if os.path.isfile(
@@ -971,7 +997,7 @@ class GenericCLI(object):
         if debug and self.remote_api:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)
-            self.print_debug('timeout: %s' % timeout)
+            self.print_debug('timeout: %.2f' % timeout)
             self.print_debug('params %s' % params)
         if isinstance(api_func, str) and self.remote_api:
             code, result = api.call(api_func, params, timeout, _debug=debug)
