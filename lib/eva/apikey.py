@@ -265,7 +265,7 @@ def add_api_key(name=None, s=False, i=None, g=None,
         keys[key.key] = key
         result = copy.copy(key.__dict__)
         result['hosts_allow'] = [str(i) for i in key.hosts_allow]
-        result['hosts_assign'] = [str(i) for i in key.hosts_assign]
+        result['hosts_assign'] = [str(i.ip) for i in key.hosts_assign]
         return  result if _save_key_to_db(key) else False
     return False
 
@@ -296,7 +296,7 @@ def change_api_key(name=None, s=None, i=None, g=None,
         keys[key.key] = key
         result = copy.copy(key.__dict__)
         result['hosts_allow'] = [str(i) for i in key.hosts_allow]
-        result['hosts_assign'] = [str(i) for i in key.hosts_assign]
+        result['hosts_assign'] = [str(i.ip) for i in key.hosts_assign]
         return  result if _update_key_in_db(key) else False
     return False
 
@@ -330,7 +330,7 @@ def parse_key_args(key, saved_args):
             _hosts_assign = list(
                 filter(None, [x.strip() for x in saved_args['has'].split(',')]))
             key.hosts_assign = \
-                    [ IPNetwork(h).ip for h in _hosts_assign ]
+                    [ IPNetwork(h) for h in _hosts_assign ]
         except:
             logging.error('key %s bad hosts_assign' % saved_args['has'])
             eva.core.log_traceback()
@@ -465,7 +465,7 @@ def _load_keys_from_db():
                 _hosts_assign = list(
                     filter(None, [x.strip() for x in i[8].split(',')]))
                 key.hosts_assign = \
-                        [ IPNetwork(h).ip for h in _hosts_assign ]
+                        [ IPNetwork(h) for h in _hosts_assign ]
                 _keys[key.key] = key
                 _keys_by_id[key.key_id] = key
         except:
