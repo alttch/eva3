@@ -17,6 +17,8 @@ Common
 UC
 --
 
+    * fixes: "destroy" command in enterpise layout
+
     * test-phi CLI tool
 
 LM
