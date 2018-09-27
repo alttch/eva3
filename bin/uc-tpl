@@ -44,15 +44,15 @@ Template commands:
                                                     outputs formatted json if
                                                     success
 
-    generate [-i items] [-v cvars] [-c config] [-t output_file]
+    generate [-i items] [-g groups] [-v cvars] [-c config] [-t output_file]
                                                     generate new template
 
                                                     items - items to fetch,
-                                                    comma separated. For the
-                                                    whole group specify '/' at
-                                                    the end, e.g. group1/
-                                                    Groups may also contain
-                                                    MQTT-style wildcards
+                                                    comma separated.
+
+                                                    groups - item groups, comma
+                                                    separated (MQTT-style
+                                                    wildcards are allowed)
 
                                                     cvars - cvars to fetch,
                                                     comma separated
@@ -105,6 +105,7 @@ tpl_file = None
 debug = False
 
 items = []
+groups = []
 cvars = []
 c = []
 config = {}
@@ -112,7 +113,7 @@ config_rev = {}
 
 try:
     func = sys.argv[1]
-    o, a = getopt.getopt(sys.argv[2:], 'K:T:U:t:c:i:v:D')
+    o, a = getopt.getopt(sys.argv[2:], 'K:T:U:t:c:i:g:v:D')
 except:
     usage()
     sys.exit(99)
@@ -124,6 +125,8 @@ for i, v in o:
         c = v.split(',')
     elif i == '-i':
         items = v.split(',')
+    elif i == '-g':
+        groups = v.split(',')
     elif i == '-v':
         cvars = v.split(',')
     elif i == '-T':
@@ -185,6 +188,7 @@ elif func == 'generate':
     api.ssl_verify(False)
     print_debug('Generating new template')
     print_debug('items:', items)
+    print_debug('groups:', groups)
     print_debug('cvars:', cvars)
     print_debug()
     for cvar in cvars:
@@ -197,18 +201,14 @@ elif func == 'generate':
         print_debug(' = %s' % v)
         if not 'cvars' in tpl: tpl['cvars'] = {}
         tpl['cvars'][c_replace(cvar, config_rev)] = c_replace(v, config_rev)
-    items_all = []
+    for group in groups:
+        c, r = api.call('list', {'g': group}, _debug=debug)
+        if c:
+            print('\nAPI call failed, code %u' % c)
+            sys.exit(1)
+        for i in r:
+            items.append(i['oid'])
     for item in items:
-        if item.find('/') == -1:
-            items_all.append(item)
-        else:
-            c, r = api.call('list', {'g': item[:item.find('/')]}, _debug=debug)
-            if c:
-                print('\nAPI call failed, code %u' % c)
-                sys.exit(1)
-            for i in r:
-                items_all.append(i['oid'])
-    for item in items_all:
         print_debug('item %s' % item, end='')
         c, r = api.call('get_config', {'i': item}, _debug=debug)
         if c:
