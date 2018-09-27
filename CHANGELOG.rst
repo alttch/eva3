@@ -17,7 +17,7 @@ Common
 UC
 --
 
-    * fixes: "destroy" command in enterpise layout
+    * fixes: device commands in enterpise layout
 
     * test-phi CLI tool
 

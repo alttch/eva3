@@ -470,10 +470,12 @@ class UC_API(GenericAPI):
             for u in units:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save, True):
+                    if not api._set_props(_k, 'unit:{}/{}'.format(g, i),
+                                          u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -483,10 +485,12 @@ class UC_API(GenericAPI):
             for u in sensors:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save, True):
+                    if not api._set_props(_k, 'sensor:{}/{}'.format(g, i),
+                                          u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -496,10 +500,12 @@ class UC_API(GenericAPI):
             for u in mu:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save):
+                    if not api._set_props(_k, 'mu:{}/{}'.format(g, i),
+                                          u.get('props'), save):
                         return False
                 except:
                     eva.core.log_traceback()
