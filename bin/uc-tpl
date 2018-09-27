@@ -48,7 +48,11 @@ Template commands:
                                                     generate new template
 
                                                     items - items to fetch,
-                                                    comma separated
+                                                    comma separated. For the
+                                                    whole group specify '/' at
+                                                    the end, e.g. group1/
+                                                    Groups may also contain
+                                                    MQTT-style wildcards
 
                                                     cvars - cvars to fetch,
                                                     comma separated
@@ -193,7 +197,18 @@ elif func == 'generate':
         print_debug(' = %s' % v)
         if not 'cvars' in tpl: tpl['cvars'] = {}
         tpl['cvars'][c_replace(cvar, config_rev)] = c_replace(v, config_rev)
+    items_all = []
     for item in items:
+        if item.find('/') == -1:
+            items_all.append(item)
+        else:
+            c, r = api.call('list', {'g': item[:item.find('/')]}, _debug=debug)
+            if c:
+                print('\nAPI call failed, code %u' % c)
+                sys.exit(1)
+            for i in r:
+                items_all.append(i['oid'])
+    for item in items_all:
         print_debug('item %s' % item, end='')
         c, r = api.call('get_config', {'i': item}, _debug=debug)
         if c:
