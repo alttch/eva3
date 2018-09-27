@@ -96,6 +96,11 @@ class ManagementCLI(GenericCLI):
             help='Restore xc (cmd, drivers and macro extensions)',
             action='store_true')
         sp_backup_restore.add_argument(
+            '--ui',
+            dest='ui',
+            help='Restore ui folder',
+            action='store_true')
+        sp_backup_restore.add_argument(
             '-a',
             '--full',
             dest='full',
@@ -314,7 +319,7 @@ sys.argv = ['{}/{}-{}', '-I']
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime',
-               'xc/cmd', 'xc/drivers', 'xc/extensions', 'etc')
+               'xc/cmd', 'xc/drivers', 'xc/extensions', 'etc', 'ui')
         return self.local_func_result_failed if \
                 os.system(' '.join(cmd)) else \
                 0, {'backup': fname}
@@ -342,12 +347,15 @@ sys.argv = ['{}/{}-{}', '-I']
         if params.get('full'):
             self.clear_runtime(full=True)
             self.clear_xc()
+            self.clear_ui()
             try:
                 if not self.backup_restore_runtime(fname=f, json_only=False):
                     raise Exception('restore failed')
-                if not self.backup_restore_etc(fname=f):
+                if not self.backup_restore_dir(fname=f, dirname='etc'):
                     raise Exception('restore failed')
-                if not self.backup_restore_xc(fname=f):
+                if not self.backup_restore_dir(fname=f, dirname='xc'):
+                    raise Exception('restore failed')
+                if not self.backup_restore_dir(fname=f, dirname='ui'):
                     raise Exception('restore failed')
             except:
                 return self.local_func_result_failed
@@ -355,13 +363,17 @@ sys.argv = ['{}/{}-{}', '-I']
         try:
             if params.get('xc'):
                 self.clear_xc()
-                if not self.backup_restore_xc(fname=f):
+                if not self.backup_restore_dir(fname=f, dirname='xc'):
+                    raise Exception('restore failed')
+            if params.get('ui'):
+                self.clear_ui()
+                if not self.backup_restore_dir(fname=f, dirname='ui'):
                     raise Exception('restore failed')
             else:
                 self.clear_runtime(full=params.get('r'))
                 if not self.backup_restore_runtime(fname=f, json_only=True):
                     raise Exception('restore failed')
-                if not self.backup_restore_etc(fname=f):
+                if not self.backup_restore_dir(fname=f, dirname='etc'):
                     raise Exception('restore failed')
         except:
             return self.local_func_result_failed
@@ -380,6 +392,12 @@ sys.argv = ['{}/{}-{}', '-I']
         os.system(cmd)
         return True
 
+    def clear_ui(self):
+        print('Removing ui')
+        cmd = 'rm -rf ui'
+        os.system(cmd)
+        return True
+
     def backup_restore_runtime(self, fname, json_only=True):
         print(
             self.colored('Restoring runtime' + \
@@ -392,14 +410,9 @@ sys.argv = ['{}/{}-{}', '-I']
         cmd += ('runtime',)
         return False if os.system(' '.join(cmd)) else True
 
-    def backup_restore_etc(self, fname):
-        print(self.colored('Restoring configs...', color='green', attrs=[]))
-        cmd = ('tar', 'xpf', fname, 'etc')
-        return False if os.system(' '.join(cmd)) else True
-
-    def backup_restore_xc(self, fname):
-        print(self.colored('Restoring xc...', color='green', attrs=[]))
-        cmd = ('tar', 'xpf', fname, 'xc')
+    def backup_restore_dir(self, fname, dirname):
+        print(self.colored('Restoring {}...'.format(dirname), color='green', attrs=[]))
+        cmd = ('tar', 'xpf', fname, dirname)
         return False if os.system(' '.join(cmd)) else True
 
     def update(self, params):
