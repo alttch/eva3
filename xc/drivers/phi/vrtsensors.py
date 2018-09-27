@@ -10,7 +10,7 @@ __api__ = 1
 __required__ = ['port_get', 'value']
 __mods_required__ = []
 __lpi_default__ = 'sensor'
-__features__ = ['port_get', 'port_set', 'aao_set', 'aao_get']
+__features__ = ['port_get', 'aao_get']
 __config_help__ = [{
     'name': 'default_value',
     'help': 'sensors value on load (default: None)',
