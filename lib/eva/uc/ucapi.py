@@ -517,10 +517,11 @@ class UC_API(GenericAPI):
             for m in mu:
                 try:
                     i = m['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'mu:{}/{}'.format(g, i))
                 except:
                     pass
         units = cfg.get('units')
@@ -528,10 +529,11 @@ class UC_API(GenericAPI):
             for u in units:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'unit:{}/{}'.format(g, i))
                 except:
                     pass
         sensors = cfg.get('sensors')
@@ -539,10 +541,11 @@ class UC_API(GenericAPI):
             for u in sensors:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'sensor:{}/{}'.format(g, i))
                 except:
                     pass
         cvars = cfg.get('cvars')
