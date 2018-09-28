@@ -123,7 +123,8 @@ function create_notifier {
     fi
     if [ "x$T" = "xsfa" ]; then
         [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
-        BATCH="${BATCH}create db_1 db:db/sfa_history.db -y;subscribe state db_1 -v '#' -g '#'"
+        BATCH="${BATCH};set eva_1 collect_logs 1"
+        BATCH="${BATCH};create db_1 db:db/sfa_history.db -y;subscribe state db_1 -v '#' -g '#'"
     fi
     [ "x${BATCH}" = "x" ] && return 0
     echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
@@ -652,9 +653,6 @@ hosts_allow = 0.0.0.0/0
 EOF
     chmod 600 etc/sfa_apikeys.ini
     create_notifier sfa || exit 1
-    #if [ "x$MQTT_HOST" != "x" ]; then
-        #./bin/sfa-notifier set_prop -i eva_1 -p collect_logs -v 1 || exit 1
-    #fi
     SFA_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
