@@ -19,6 +19,7 @@ from eva.tools import netacl_match
 masterkey = None
 keys = {}
 keys_by_id = {}
+_keys_loaded_from_ini = {}
 
 allows = []
 
@@ -45,6 +46,7 @@ def load(fname=None):
     _keys_by_id = {}
     _masterkey = None
     logging.info('Loading API keys')
+    eva.core.append_save_func(_save)
     fname_full = eva.core.format_cfg_fname(fname, 'apikeys')
     if not fname_full:
         logging.warning('No file or product specified ' + \
@@ -136,6 +138,7 @@ def load(fname=None):
                     logging.info('+ masterkey loaded')
             except:
                 pass
+        _keys_loaded_from_ini.update(_keys_by_id)
         _keys_from_db, _keys_from_db_by_id = _load_keys_from_db()
         keys = _keys
         keys.update(_keys_from_db)
@@ -266,13 +269,15 @@ def add_api_key(name=None, s=False, i=None, g=None,
         result = copy.copy(key.__dict__)
         result['hosts_allow'] = [str(i) for i in key.hosts_allow]
         result['hosts_assign'] = [str(i.ip) for i in key.hosts_assign]
-        return  result if _save_key_to_db(key) else False
+        if eva.core.db_update == 1:
+            return  result if _save_key_to_db(key) else False
+        return  result
     return False
 
 def change_api_key(name=None, s=None, i=None, g=None,
                     a=None, hal=None, has=None, pvt=None, rpvt=None):
     if name is None or hal is '' or name not in keys_by_id or \
-        keys_by_id[name].master:
+        keys_by_id[name].master or name in _keys_loaded_from_ini:
         return False
     saved_args = {k: v for k,v in locals().items() if k in ('rpvt', 'pvt',
                   'has', 'hal', 'a' , 'g', 'i', 's', 'name') and v is not None}
@@ -297,16 +302,20 @@ def change_api_key(name=None, s=None, i=None, g=None,
         result = copy.copy(key.__dict__)
         result['hosts_allow'] = [str(i) for i in key.hosts_allow]
         result['hosts_assign'] = [str(i.ip) for i in key.hosts_assign]
-        return  result if _update_key_in_db(key) else False
+        if eva.core.db_update == 1:
+            return  result if _update_key_in_db(key) else False
+        return  result
     return False
 
 def delete_api_key(name):
     if name is None or name not in keys_by_id or keys_by_id[name].master \
-    or _check_users_keys(name):
+    or name in _keys_loaded_from_ini or _check_users_keys(name):
         return False
     del keys[keys_by_id[name].key]
     del keys_by_id[name]
-    return _delete_key_from_db(name)
+    if eva.core.db_update == 1:
+        return _delete_key_from_db(name)
+    return True
 
 
 def parse_key_args(key, saved_args):
@@ -354,11 +363,17 @@ def parse_key_args(key, saved_args):
     return key
 
 
-def _delete_key_from_db(name):
+def _delete_key_from_db(name=None, keys_list=None):
+    if name is None and keys_list is None:
+        return False
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
-        c.execute('delete from apikeys where k_id = ?', (name,))
+        if keys_list:
+            c.execute('delete from apikeys where k_id in (%s)'%','.join(['?'] *\
+                       len(keys_list)), keys_list)
+        else:
+            c.execute('delete from apikeys where k_id = ?', (name,))
         db.commit()
         c.close()
         db.close()
@@ -368,12 +383,13 @@ def _delete_key_from_db(name):
         eva.core.log_traceback()
 
 
-def _save_key_to_db(key=None, create=True):
-    if key is None:
+def _save_key_to_db(key=None, keys_list = None, create=True):
+    if key is None and keys_list is None:
         return False
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
+        key = keys_by_id[keys_list[0]] if keys_list else key
         c.execute('select k from apikeys where k_id = ?', (key.key_id,))
         row = c.fetchone()
         db.commit()
@@ -394,19 +410,36 @@ def _save_key_to_db(key=None, create=True):
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
-        c.execute('insert into apikeys (k_id, k, m, s, i, g, a, hal, has, pvt,\
-         rpvt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                  (key.key_id, key.key, key.master, key.sysfunc,
+        if keys_list:
+            keys = [keys_by_id[k_id] for k_id in keys_list]
+            keys_to_insert = [(key.key_id, key.key, key.master, key.sysfunc,
                    ','.join([str(i) for i in key.item_ids]),
                    ','.join([str(i) for i in key.groups]),
                    ','.join([str(i) for i in key.allow]),
                    ','.join([str(i) for i in key.hosts_allow]),
                    ','.join([str(i) for i in key.hosts_assign]),
                    ','.join([str(i) for i in key.pvt_files]),
-                   ','.join([str(i) for i in key.rpvt_uris]),))
+                   ','.join([str(i) for i in key.rpvt_uris])) for key in keys]
+            c.executemany('insert into apikeys (k_id, k, m, s, i, g, a, hal, \
+                has, pvt, rpvt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                keys_to_insert)
+        else:
+            c.execute('insert into apikeys (k_id, k, m, s, i, g, a, hal, has, pvt,\
+             rpvt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                      (key.key_id, key.key, key.master, key.sysfunc,
+                       ','.join([str(i) for i in key.item_ids]),
+                       ','.join([str(i) for i in key.groups]),
+                       ','.join([str(i) for i in key.allow]),
+                       ','.join([str(i) for i in key.hosts_allow]),
+                       ','.join([str(i) for i in key.hosts_assign]),
+                       ','.join([str(i) for i in key.pvt_files]),
+                       ','.join([str(i) for i in key.rpvt_uris]),))
         db.commit()
         c.close()
         db.close()
+        if keys_list:
+            logging.info('multiple apikeys created' )
+            return True
         logging.info('apikey %s created' % (key.key_id))
         return True
     except:
@@ -414,13 +447,13 @@ def _save_key_to_db(key=None, create=True):
         eva.core.log_traceback()
 
 
-def _update_key_in_db(key=None):
+def _update_key_in_db(key=None, keys_list=None):
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
-        c.execute('update apikeys set s=?, i=?, g=?, a=?, hal=?, has=?, pvt=?,\
-         rpvt=? where k_id=?',
-                  (key.sysfunc,
+        if keys_list:
+            keys = [keys_by_id[k_id] for k_id in keys_list]
+            keys_to_update = [(key.sysfunc,
                    ','.join([str(i) for i in key.item_ids]),
                    ','.join([str(i) for i in key.groups]),
                    ','.join([str(i) for i in key.allow]),
@@ -428,11 +461,28 @@ def _update_key_in_db(key=None):
                    ','.join([str(i) for i in key.hosts_assign]),
                    ','.join([str(i) for i in key.pvt_files]),
                    ','.join([str(i) for i in key.rpvt_uris]),
-                   key.key_id,))
+                   key.key_id,) for key in keys]
+            c.executemany('update apikeys set s=?, i=?, g=?, a=?, hal=?, has=?,\
+             pvt=?, rpvt=? where k_id=?', keys_to_update)
+        else:
+            c.execute('update apikeys set s=?, i=?, g=?, a=?, hal=?, has=?, pvt=?,\
+             rpvt=? where k_id=?',
+                      (key.sysfunc,
+                       ','.join([str(i) for i in key.item_ids]),
+                       ','.join([str(i) for i in key.groups]),
+                       ','.join([str(i) for i in key.allow]),
+                       ','.join([str(i) for i in key.hosts_allow]),
+                       ','.join([str(i) for i in key.hosts_assign]),
+                       ','.join([str(i) for i in key.pvt_files]),
+                       ','.join([str(i) for i in key.rpvt_uris]),
+                       key.key_id,))
         db.commit()
         c.close()
         db.close()
-        logging.info('apikey %s created' % (key.key_id))
+        if keys_list:
+            logging.info('multiple apikeys updated' )
+            return True
+        logging.info('apikey %s updated' % (key.key_id))
         return True
     except:
         logging.critical('apikeys update db error')
@@ -498,6 +548,36 @@ def _check_users_keys(key_id):
     except:
         logging.critical('apikeys db error')
         eva.core.log_traceback()
+
+
+def _save():
+    try:
+        db = eva.core.get_user_db()
+        c = db.cursor()
+        rows_in_mem = list(filter(lambda x: x != "masterkey" and \
+            x not in _keys_loaded_from_ini, keys_by_id.keys()))
+        c.execute('select k_id from apikeys')
+        db.commit()
+        rows_in_db = [i[0] for i in c.fetchall()]
+        c.close()
+        db.close()
+        rows_to_add = list(set(rows_in_mem) - set(rows_in_db))
+        rows_to_delete = list(set(rows_in_db) - set(rows_in_mem))
+        rows_to_update = list(set(rows_in_db) & set(rows_in_mem))
+        if rows_to_add:
+            _save_key_to_db(keys_list=rows_to_add)
+        if rows_to_update:
+            _update_key_in_db(keys_list=rows_to_update)
+        if rows_to_delete:
+            _delete_key_from_db(keys_list=rows_to_delete)
+        return True
+    except Exception as e:
+        if 'no such table: apikeys' in e.args:
+            _save_key_to_db(keys_list=rows_in_mem)
+            return True
+        else:
+            logging.critical('apikeys db error')
+            eva.core.log_traceback()
 
 
 def gen_random_hash():
