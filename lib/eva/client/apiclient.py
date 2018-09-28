@@ -233,8 +233,7 @@ class APIClient(object):
                 (result is None or \
                     result == 'FAILED' or \
                         (isinstance(result, dict) and \
-                        (not 'result' in result or \
-                        result['result'] != 'OK')))) or \
+                        (result.get('result', 'OK') != 'OK')))) or \
                 (check_exitcode and \
                     'exitcode' in result and \
                     result['exitcode']):

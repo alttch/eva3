@@ -427,7 +427,7 @@ class EVA_APIClient {
             ($check_result &&
                 (!$result || $result == 'FAILED' ||
                 (is_array($result) &&
-                    (!array_key_exists('result', $result) ||
+                    (array_key_exists('result', $result) &&
                         $result['result'] != 'OK')))) ||
                 ($check_exitcode && array_key_exists('exitcode', $result) &&
                     $result['exitcode'])
