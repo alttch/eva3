@@ -50,6 +50,7 @@ class PHI(GenericPHI):
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        self.__help = __help__
         if info_only: return
         d = self.phi_cfg.get('default_value')
         if d is None: d = None
