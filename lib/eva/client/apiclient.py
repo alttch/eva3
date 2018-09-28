@@ -68,7 +68,7 @@ _api_func = {
             'update_device', 'clone', 'clone_group', 'destroy',
             'destroy_device', 'login', 'logout', 'destroy_modbus_port',
             'test_modbus_port', 'unload_phi', 'unlink_phi_mod', 'unload_driver',
-            'set_driver'
+            'set_driver', 'test_phi', 'exec_phi'
         ],
         'ce': ['action', 'action_toggle']
     },
@@ -231,8 +231,9 @@ class APIClient(object):
             return (result_bad_data, r.text)
         if (check_result and \
                 (result is None or \
-                    not 'result' in result or \
-                    result['result'] != 'OK')) or \
+                    result == 'FAILED' or \
+                        (isinstance(result, dict) and \
+                        (result.get('result', 'OK') != 'OK')))) or \
                 (check_exitcode and \
                     'exitcode' in result and \
                     result['exitcode']):

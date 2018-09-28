@@ -8,6 +8,8 @@ Common
 ------
 
     * fixes: interactive prompt behavior
+    * fixes: API client libs check result of "phi_test" and "phi_exec"
+      functions 
 
     * history for interactive shell mode (to turn off set
       EVA_CLI_DISABLE_HISTORY=1 system environment variable)
@@ -16,6 +18,8 @@ Common
 
 UC
 --
+
+    * fixes: device commands in enterpise layout
 
     * test-phi CLI tool
 

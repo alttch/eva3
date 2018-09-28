@@ -105,7 +105,7 @@ class UC_API(GenericAPI):
                             eva.item.item_match(v, [], [grp])):
                     r = v.serialize(full=full)
                     result.append(r)
-            return sorted(result, key=lambda k: k['id'])
+            return sorted(result, key=lambda k: k['oid'])
 
     def state_history(self,
                       k=None,
@@ -470,10 +470,12 @@ class UC_API(GenericAPI):
             for u in units:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save, True):
+                    if not api._set_props(_k, 'unit:{}/{}'.format(g, i),
+                                          u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -483,10 +485,12 @@ class UC_API(GenericAPI):
             for u in sensors:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save, True):
+                    if not api._set_props(_k, 'sensor:{}/{}'.format(g, i),
+                                          u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -496,10 +500,12 @@ class UC_API(GenericAPI):
             for u in mu:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save):
+                    if not api._set_props(_k, 'mu:{}/{}'.format(g, i),
+                                          u.get('props'), save):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -517,10 +523,11 @@ class UC_API(GenericAPI):
             for m in mu:
                 try:
                     i = m['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'mu:{}/{}'.format(g, i))
                 except:
                     pass
         units = cfg.get('units')
@@ -528,10 +535,11 @@ class UC_API(GenericAPI):
             for u in units:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'unit:{}/{}'.format(g, i))
                 except:
                     pass
         sensors = cfg.get('sensors')
@@ -539,10 +547,11 @@ class UC_API(GenericAPI):
             for u in sensors:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'sensor:{}/{}'.format(g, i))
                 except:
                     pass
         cvars = cfg.get('cvars')

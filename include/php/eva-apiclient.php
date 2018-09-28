@@ -175,7 +175,9 @@ $_eva_api_func = array(
                     'list_drivers',
                     'get_phi',
                     'get_driver',
-                    'set_driver'
+                    'set_driver',
+                    'test_phi',
+                    'exec_phi'
                     ),
                 'ce' => array(
                     'action',
@@ -423,8 +425,10 @@ class EVA_APIClient {
         if (!$result) return array($GLOBALS['eva_result_bad_data'], array());
         if (
             ($check_result &&
-                (!array_key_exists('result', $result) ||
-                    $result['result'] != 'OK')) ||
+                (!$result || $result == 'FAILED' ||
+                (is_array($result) &&
+                    (array_key_exists('result', $result) &&
+                        $result['result'] != 'OK')))) ||
                 ($check_exitcode && array_key_exists('exitcode', $result) &&
                     $result['exitcode'])
             ) return array($GLOBALS['eva_result_func_failed'], $result);

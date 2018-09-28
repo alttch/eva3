@@ -28,6 +28,7 @@ parent_shell_name = None
 history_length = 100
 history_file = os.path.expanduser('~') + '/.eva_history'
 
+
 def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
     if os.getenv('ANSI_COLORS_DISABLED') is None:
         fmt_str = '\033[%dm'
@@ -799,7 +800,8 @@ class GenericCLI(object):
                     except:
                         raise
                         self.print_err('parse error')
-                if d[0] in ['q', 'quit', 'exit', 'bye']:
+                if d[0] in ['q', 'quit', 'exit', 'bye'
+                           ] or (d[0] == '..' and parent_shell_name):
                     self.finish_interactive()
                     return 0
                 elif d[0] == 'a' and self.remote_api:
