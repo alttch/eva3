@@ -81,7 +81,7 @@ class SFA_API(GenericAPI):
                         eva.item.item_match(v, [], [group])):
                 r = v.serialize(full=full)
                 result.append(r)
-        return sorted(result, key=lambda k: k['id'])
+        return sorted(result, key=lambda k: k['oid'])
 
     def state_history(self,
                       k=None,
