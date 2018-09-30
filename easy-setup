@@ -109,13 +109,13 @@ function create_notifier {
         [ "x${MQTT_PORT}" != "x" ] && port=":${MQTT_PORT}"
         BATCH="create eva_1 mqtt:${auth}${MQTT_HOST}${port} ${sp} -y"
         if [ "x$MQTT_CAFILE" != "x" ]; then
-            BATCH="$BATCH;set_eva_1 ca_certs $MQTT_CAFILE"
+            BATCH="$BATCH;set eva_1 ca_certs $MQTT_CAFILE"
         fi
         if [ "x$MQTT_CERT" != "x" ]; then
-            BATCH="$BATCH;set_eva_1 certfile $MQTT_CERT"
+            BATCH="$BATCH;set eva_1 certfile $MQTT_CERT"
         fi
         if [ "x$MQTT_KEY" != "x" ]; then
-            BATCH="$BATCH;set_eva_1 key $MQTT_KEY"
+            BATCH="$BATCH;set eva_1 key $MQTT_KEY"
         fi
         BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
@@ -123,7 +123,7 @@ function create_notifier {
     fi
     if [ "x$T" = "xsfa" ]; then
         [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
-        BATCH="${BATCH};set eva_1 collect_logs 1"
+        BATCH="${BATCH}set eva_1 collect_logs 1"
         BATCH="${BATCH};create db_1 db:db/sfa_history.db -y;subscribe state db_1 -v '#' -g '#'"
     fi
     [ "x${BATCH}" = "x" ] && return 0
