@@ -112,6 +112,8 @@ start_time = time.time()
 
 enterprise_layout = False
 
+started = False
+
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
@@ -173,6 +175,8 @@ def save(func=None):
 
 
 def block():
+    global started
+    started = True
     while not _sigterm_sent:
         time.sleep(sleep_step)
 
