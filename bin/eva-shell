@@ -15,7 +15,7 @@ import requests
 import jsonpickle
 from datetime import datetime
 
-dir_eva = os.path.dirname(os.path.realpath(__file__)) + '/../'
+dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
 dir_backup = os.path.dirname(os.path.realpath(__file__)) + '/../backup'
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 dir_etc = os.path.dirname(os.path.realpath(__file__)) + '/../etc'
@@ -24,6 +24,7 @@ dir_bin = os.path.dirname(os.path.realpath(__file__)) + '/../bin'
 sys.path.append(dir_lib)
 
 os.chdir(dir_eva)
+os.environ['EVA_DIR'] = dir_eva
 
 import eva.core
 from eva.client.cli import GenericCLI
