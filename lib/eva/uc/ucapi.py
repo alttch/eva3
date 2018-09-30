@@ -138,8 +138,12 @@ class UC_API(GenericAPI):
     def update(self, k=None, i=None, status=None, value=None, force_virtual=0):
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): return False
-        return item.update_set_state(
-            status=status, value=value, force_virtual=force_virtual)
+        if status or value:
+            return item.update_set_state(
+                status=status, value=value, force_virtual=force_virtual)
+        else:
+            item.need_update.set()
+            return True
 
     def action(self,
                k=None,

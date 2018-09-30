@@ -672,8 +672,6 @@ class UpdatableItem(Item):
             self.need_update.set()
 
     def start_update_scheduler(self):
-        if eva.core.started and self.updates_allowed():
-            self.need_update.set()
         self.update_scheduler_active = True
         if self.update_scheduler and \
                 self.update_scheduler.is_alive():
@@ -681,6 +679,8 @@ class UpdatableItem(Item):
         if not self.update_interval:
             self.update_scheduler_active = False
             return
+        if eva.core.started and self.updates_allowed():
+            self.need_update.set()
         self.update_scheduler = threading.Thread(target = \
                 self._t_update_scheduler,
                 name = '_t_update_scheduler_' + self.oid)

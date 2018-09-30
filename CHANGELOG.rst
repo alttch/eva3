@@ -21,6 +21,7 @@ UC
 
     * fixes: device commands in enterpise layout
 
+    * "update" command without params starts item passive update
     * test-phi CLI tool
 
 LM
