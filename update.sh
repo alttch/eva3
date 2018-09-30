@@ -115,9 +115,9 @@ CURRENT_BUILD=`./sbin/eva-tinyapi -B`
 if [ $CURRENT_BUILD = $BUILD ]; then
     echo "- Current build: ${BUILD}"
     echo "---------------------------------------------"
-    echo "Upgrade completed. Starting everything back"
+    echo "Update completed. Starting everything back"
     ./sbin/eva-control start
 else
-    echo "Upgrade failed"
+    echo "Update failed"
     exit 1
 fi
