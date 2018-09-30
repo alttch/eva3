@@ -798,7 +798,6 @@ class GenericCLI(object):
                         print()
                         pass
                     except:
-                        raise
                         self.print_err('parse error')
                 if d[0] in ['q', 'quit', 'exit', 'bye'
                            ] or (d[0] == '..' and parent_shell_name):
