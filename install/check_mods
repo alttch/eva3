@@ -5,6 +5,7 @@ import os
 import importlib
 
 mods = [
+    'argcomplete',
     'cherrypy',
     'collections',
     'configparser',

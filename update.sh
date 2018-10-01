@@ -5,8 +5,8 @@ if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
     exit 98
 fi
 
-VERSION=3.1.0
-BUILD=2018090101
+VERSION=3.1.1
+BUILD=2018092301
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh sbin/check_mods set-run-under-user.sh"
 
@@ -30,20 +30,27 @@ if [ -f ./sbin/eva-tinyapi ]; then
     fi
     
     if [ $CURRENT_BUILD -ge $BUILD ]; then
-        echo "Your build is ${CURRENT_BUILD}, this script can upgrade EVA ICS to ${BUILD} only"
+        echo "Your build is ${CURRENT_BUILD}, this script can update EVA ICS to ${BUILD} only"
         exit 1
     fi
 fi
 
-rm -rf _upgrade
+rm -rf _update
 
-echo "- Starting upgrade to ${VERSION} build ${BUILD}"
+echo "- Starting update to ${VERSION} build ${BUILD}"
 
-mkdir -p _upgrade
+mkdir -p _update
+
+touch _update/test
+
+if [ $? -ne 0 ]; then
+    echo "Unable to write on partition. Read only file system?"
+    exit 1
+fi
 
 echo "- Downloading new version tarball"
 
-cd _upgrade || exit 1
+cd _update || exit 1
 
 wget https://www.eva-ics.com/download/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz || exit 1
 
@@ -59,7 +66,7 @@ echo "- Stopping everything"
 
 echo "- Installing missing modules"
 
-./_upgrade/eva-${VERSION}/install/check_mods install || exit 2
+./_update/eva-${VERSION}/install/check_mods install || exit 2
 
 echo "- Removing obsolete files and folders"
 
@@ -96,25 +103,33 @@ if [ ! -d runtime/tpl ]; then
     chown ${UC_USER} runtime/tpl
 fi
 
+if [ ! -d backup ]; then
+    mkdir backup
+    chmod 700 backup
+fi
+
 echo "- Installing new files"
 
-rm -f _upgrade/eva-${VERSION}/ui/index.html
-rm -f _upgrade/eva-${VERSION}/upgrade.sh
+rm -f _update/eva-${VERSION}/ui/index.html
+rm -f _update/eva-${VERSION}/update.sh
 
-cp -rf _upgrade/eva-${VERSION}/* . || exit 1
+cp -rf _update/eva-${VERSION}/* . || exit 1
+
+ln -sf ../../../xc/drivers lib/eva/uc/drivers
+ln -sf ../../../xc/extensions lib/eva/lm/extensions
 
 echo "- Cleaning up"
 
-rm -rf _upgrade
+rm -rf _update
 
 CURRENT_BUILD=`./sbin/eva-tinyapi -B`
 
 if [ $CURRENT_BUILD = $BUILD ]; then
     echo "- Current build: ${BUILD}"
     echo "---------------------------------------------"
-    echo "Upgrade completed. Starting everything back"
+    echo "Update completed. Starting everything back"
     ./sbin/eva-control start
 else
-    echo "Upgrade failed"
+    echo "Update failed"
     exit 1
 fi

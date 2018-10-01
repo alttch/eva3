@@ -1,6 +1,38 @@
 EVA ICS CHANGELOG
 *****************
 
+3.1.1 (TBA)
+===========
+
+Common
+------
+
+    * fixes: interactive prompt behavior
+    * fixes: API client libs check result of "phi_test" and "phi_exec"
+      functions 
+
+    * history for interactive shell mode (to turn off set
+      EVA_CLI_DISABLE_HISTORY=1 system environment variable)
+    * New management CLI: eva-shell (interactive by default)
+    * Backup/restore operations (with eva-shell)
+
+UC
+--
+
+    * fixes: device commands in enterpise layout
+
+    * "update" command without params starts item passive update
+    * test-phi CLI tool
+
+LM
+--
+
+    * fixes: double quoted macro arguments in DM rules
+    * fixes: gain param in "tts" and "audio" extensions
+
+    * "action_toggle" macro func, "toggle" acts as an alias for unit oids
+    * test-ext CLI tool
+
 3.1.0 (2018-09-01)
 ==================
 

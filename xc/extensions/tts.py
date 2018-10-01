@@ -91,9 +91,9 @@ class LMExt(GenericExt):
                 self.log_error('no provider specified')
                 raise Exception('no provider specified')
             try:
-                gain = float(self.cfg.get('gain', 0))
+                gain = float(self.cfg.get('g', 0))
             except:
-                self.log_error('invalid gain value: %s' % self.cfg.get('gain'))
+                self.log_error('invalid gain value: %s' % self.cfg.get('g'))
                 raise
             try:
                 if 'd' in self.cfg: device = int(self.cfg.get('d'))

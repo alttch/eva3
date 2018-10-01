@@ -7,10 +7,10 @@
  * @author      Altertech Group, https://www.altertech.com/
  * @copyright   Copyright (C) 2012-2018 Altertech Group
  * @license     https://www.eva-ics.com/license
- * @version     3.1.0
+ * @version     3.1.1
  */
 
-$eva_version = '3.1.0';
+$eva_version = '3.1.1';
 
 $eva_result_ok = 0;
 $eva_result_not_found = 1;
@@ -175,7 +175,9 @@ $_eva_api_func = array(
                     'list_drivers',
                     'get_phi',
                     'get_driver',
-                    'set_driver'
+                    'set_driver',
+                    'test_phi',
+                    'exec_phi'
                     ),
                 'ce' => array(
                     'action',
@@ -423,8 +425,10 @@ class EVA_APIClient {
         if (!$result) return array($GLOBALS['eva_result_bad_data'], array());
         if (
             ($check_result &&
-                (!array_key_exists('result', $result) ||
-                    $result['result'] != 'OK')) ||
+                (!$result || $result == 'FAILED' ||
+                (is_array($result) &&
+                    (array_key_exists('result', $result) &&
+                        $result['result'] != 'OK')))) ||
                 ($check_exitcode && array_key_exists('exitcode', $result) &&
                     $result['exitcode'])
             ) return array($GLOBALS['eva_result_func_failed'], $result);

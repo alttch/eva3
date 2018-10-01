@@ -3,7 +3,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import sys
 import os
@@ -16,6 +16,7 @@ os.environ['EVA_DIR'] = os.path.normpath(
     os.path.dirname(os.path.realpath(__file__)) + '/..')
 
 import eva.core
+import eva.traphandler
 
 def usage(version_only=False):
     if not version_only: print()
@@ -70,6 +71,9 @@ if v != 'CONVERT':
     print('Operation aborted')
     sys.exit(4)
 
+eva.notify.init()
+eva.notify.load()
+
 if p == 'uc':
     import eva.uc.controller
     eva.uc.controller.init()
@@ -84,6 +88,7 @@ elif p == 'lm':
     controller = eva.lm.controller
 
 if not controller:
+    eva.core.shutdown()
     raise Exception('No controller loaded')
 
 print()
@@ -102,7 +107,8 @@ input('Press <ENTER> to continue...')
 cfg = eva.core.load(initial=True, init_log=False)
 
 if not eva.core.enterprise_layout:
-    print('Operation aborted')
+    eva.core.shutdown()
+    print('Layout is set to "simple". Operation aborted')
     sys.exit(4)
 
 print("""
@@ -117,7 +123,9 @@ for o in oc:
     print('- ' + o)
 
 if not controller.save():
+    eva.core.shutdown()
     sys.exit(6)
 
+eva.core.shutdown()
 print()
 print('Operation completed')

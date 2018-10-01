@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import argparse
 # to be compatible with argcomplete
@@ -15,10 +15,41 @@ import shlex
 import readline
 import json
 import jsonpickle
-from termcolor import colored
+import termcolor
 from datetime import datetime
 from eva.client import apiclient
 from pygments import highlight, lexers, formatters
+
+say_bye = True
+readline_processing = True if \
+        not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
+parent_shell_name = None
+
+history_length = 100
+history_file = os.path.expanduser('~') + '/.eva_history'
+
+
+def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
+    if os.getenv('ANSI_COLORS_DISABLED') is None:
+        fmt_str = '\033[%dm'
+        if rlsafe:
+            fmt_str = '\001' + fmt_str + '\002'
+        fmt_str += '%s'
+        if color is not None:
+            text = fmt_str % (termcolor.COLORS[color], text)
+
+        if on_color is not None:
+            text = fmt_str % (termcolor.HIGHLIGHTS[on_color], text)
+
+        if attrs is not None:
+            for attr in attrs:
+                text = fmt_str % (termcolor.ATTRIBUTES[attr], text)
+
+        if rlsafe:
+            text += '\001' + termcolor.RESET + '\002'
+        else:
+            text += termcolor.RESET
+    return text
 
 
 class GenericCLI(object):
@@ -45,6 +76,7 @@ class GenericCLI(object):
         self.local_func_result_failed = (apiclient.result_func_failed, {
             'result': 'ERROR'
         })
+        self.local_func_result_empty = (apiclient.result_ok, '')
         if remote_api:
             self.always_print = ['cmd']
             self.common_api_functions = {
@@ -104,10 +136,15 @@ class GenericCLI(object):
         self.pd_idx = self.common_pd_idx
         self.batch_file = None
         self.batch_stop_on_err = True
+        self.prog_name = prog
         self.interactive = False
         self.parse_primary_args()
+        self.setup_parser()
+
+    def setup_parser(self):
         if not self.interactive and not self.batch_file:
-            self.ap = argparse.ArgumentParser(description=self.name, prog=prog)
+            self.ap = argparse.ArgumentParser(
+                description=self.name, prog=self.prog_name)
         else:
             self.ap = argparse.ArgumentParser(usage=argparse.SUPPRESS, prog='')
         self.add_primary_options()
@@ -135,17 +172,40 @@ class GenericCLI(object):
             h = ' ' + self.apiuri.replace('https://', '').replace('http://', '')
         else:
             h = ''
+        ppeva = '' if not parent_shell_name else \
+                self.colored(parent_shell_name,
+                        'green', attrs=['bold'], rlsafe=True) + '/'
         if self.product:
             prompt = '[%s%s] %s' % (
-                self.colored(self.product, 'green', attrs=['bold']),
-                self.colored(h, 'blue', attrs=['bold']), prompt)
+                ppeva + self.colored(
+                    self.product, 'green', attrs=['bold'], rlsafe=True),
+                self.colored(h, 'blue', attrs=['bold'], rlsafe=True), prompt)
         return prompt
 
-    def colored(self, text, color=None, on_color=None, attrs=None):
+    def colored(self, text, color=None, on_color=None, attrs=None,
+                rlsafe=False):
         if self.suppress_colors or self.always_suppress_colors or \
                 not sys.stdout.isatty():
-            return text
-        return colored(text, color=color, on_color=on_color, attrs=attrs)
+            return str(text)
+        return safe_colored(
+            text, color=color, on_color=on_color, attrs=attrs, rlsafe=rlsafe)
+
+    def start_interactive(self):
+        self.reset_argcomplete()
+        if readline_processing:
+            readline.set_history_length(history_length)
+            try:
+                readline.read_history_file(history_file)
+            except:
+                pass
+
+    def finish_interactive(self):
+        if say_bye: print('Bye')
+        if readline_processing:
+            try:
+                readline.write_history_file(history_file)
+            except:
+                pass
 
     def print_interactive_help(self):
         print('q: quit')
@@ -162,6 +222,7 @@ class GenericCLI(object):
         print('sh: start system shell')
         print('top: display system processes')
         print('w: display uptime and who is online')
+        print('date: display system date and time')
         print()
         print('or command to execute')
         print()
@@ -247,6 +308,13 @@ class GenericCLI(object):
             self.argcomplete = importlib.import_module('argcomplete')
         except:
             pass
+
+    def reset_argcomplete(self):
+        if self.argcomplete:
+            completer = self.argcomplete.CompletionFinder(self.ap)
+            readline.set_completer_delims("")
+            readline.set_completer(completer.rl_complete)
+            readline.parse_and_bind("tab: complete")
 
     def print_err(self, s):
         print(self.colored(s, color='red', attrs=[]))
@@ -375,26 +443,31 @@ class GenericCLI(object):
         else:
             return data
 
+    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+        return data
+
     def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
         if result and isinstance(result, dict):
+            _result = self.prepare_result_dict(result, api_func, api_func_full,
+                                               itype)
             rprinted = False
             h = None
             out = None
             err = None
             tabsp = self.fancy_tabsp.get(api_func)
             if not tabsp: tabsp = 10
-            for v in sorted(result.keys()):
+            for v in sorted(_result.keys()):
                 if v == 'help':
                     if not tab:
-                        h = result[v]
+                        h = _result[v]
                     else:
                         pass
                 elif v == 'out' and not tab:
-                    out = result[v]
+                    out = _result[v]
                 elif v == 'err' and not tab:
-                    err = result[v]
-                elif v != 'result':
-                    if isinstance(result[v], dict):
+                    err = _result[v]
+                elif v != '_result':
+                    if isinstance(_result[v], dict):
                         if tab:
                             print(
                                 ' ' * (tab * tabsp),
@@ -403,26 +476,26 @@ class GenericCLI(object):
                             '{:>%u} ', color='blue', attrs=['bold']) +
                                 self.colored(':') + self.colored(
                                     '  {}', color='yellow')) % max(
-                                        map(len, result))).format(v, ''))
-                        self.fancy_print_result(result[v], api_func,
+                                        map(len, _result))).format(v, ''))
+                        self.fancy_print_result(_result[v], api_func,
                                                 api_func_full, itype, tab + 1)
                     else:
                         if tab:
                             print(
                                 ' ' * (tab * tabsp),
                                 end=self.colored('>' * tab) + ' ')
-                        if isinstance(result[v], list):
+                        if isinstance(_result[v], list):
                             _r = []
-                            for vv in result[v]:
+                            for vv in _result[v]:
                                 _r.append(str(vv))
                             _v = ', '.join(_r)
                         else:
-                            _v = result[v]
+                            _v = _result[v]
                         print(((self.colored(
                             '{:>%u} ', color='blue', attrs=['bold']) +
                                 self.colored(':') + self.colored(
                                     ' {}', color='yellow')) % max(
-                                        map(len, result))).format(v, _v))
+                                        map(len, _result))).format(v, _v))
                     rprinted = True
             if h:
                 print(self.colored('-' * 81, color='grey'))
@@ -784,11 +857,7 @@ class GenericCLI(object):
             return self.do_run()
         else:
             # interactive mode
-            if self.argcomplete:
-                completer = self.argcomplete.CompletionFinder(self.ap)
-                readline.set_completer_delims("")
-                readline.set_completer(completer.rl_complete)
-                readline.parse_and_bind("tab: complete")
+            self.start_interactive()
             while True:
                 d = None
                 while not d:
@@ -796,12 +865,16 @@ class GenericCLI(object):
                         d = shlex.split(input(self.get_prompt()))
                     except EOFError:
                         print()
-                        print('Bye')
+                        self.finish_interactive()
                         return 0
+                    except KeyboardInterrupt:
+                        print()
+                        pass
                     except:
                         self.print_err('parse error')
-                if d[0] in ['q', 'quit', 'exit', 'bye']:
-                    print('Bye')
+                if d[0] in ['q', 'quit', 'exit', 'bye'
+                           ] or (d[0] == '..' and parent_shell_name):
+                    self.finish_interactive()
                     return 0
                 elif d[0] == 'a' and self.remote_api:
                     print('API uri: %s' % (self.apiuri
@@ -833,7 +906,7 @@ class GenericCLI(object):
                           ('on' if self.debug else 'off'))
                 elif d[0] == 't.' and self.remote_api:
                     self.timeout = self.default_timeout
-                    print('timeout: %f' % self.timeout)
+                    print('timeout: %.2f' % self.timeout)
                 elif d[0] == 'k' and self.remote_api:
                     if len(d) > 1:
                         self.apikey = d[1]
@@ -850,20 +923,25 @@ class GenericCLI(object):
                             self.timeout = float(d[1])
                         except:
                             self.print_err('FAILED')
-                    print('timeout: %f' % self.timeout)
+                    print('timeout: %.2f' % self.timeout)
                 elif d[0] == 'top':
                     try:
                         top = '/usr/bin/htop' if os.path.isfile(
                             '/usr/bin/htop') else 'top'
-                        os.system(top)
+                        if os.system(top): raise Exception('exec error')
                     except:
                         self.print_err(
                             'Failed to run system "%s" command' % top)
                 elif d[0] == 'w':
                     try:
-                        os.system('w')
+                        if os.system('w'): raise Exception('exec error')
                     except:
                         self.print_err('Failed to run system "w" command')
+                elif d[0] == 'date':
+                    try:
+                        if os.system('date'): raise Exception('exec error')
+                    except:
+                        self.print_err('Failed to run system "date command')
                 elif d[0] == 'sh':
                     print('Executing system shell')
                     shell = os.environ.get('SHELL')
@@ -993,7 +1071,7 @@ class GenericCLI(object):
         if debug and self.remote_api:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)
-            self.print_debug('timeout: %s' % timeout)
+            self.print_debug('timeout: %.2f' % timeout)
             self.print_debug('params %s' % params)
         if isinstance(api_func, str) and self.remote_api:
             code, result = api.call(api_func, params, timeout, _debug=debug)

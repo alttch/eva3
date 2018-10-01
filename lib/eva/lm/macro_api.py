@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import logging
 import sys
@@ -20,6 +20,7 @@ import shlex
 from eva.tools import is_oid
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
+from eva.tools import oid_type
 
 _shared = {}
 _shared_lock = threading.Lock()
@@ -99,6 +100,7 @@ class MacroAPI(object):
             'toggle': self.toggle,
             'expires': self.expires,
             'action': self.action,
+            'action_toggle': self.action_toggle,
             'result': self.result,
             'start': self.action_start,
             'stop': self.action_stop,
@@ -346,13 +348,16 @@ class MacroAPI(object):
         else:
             return self.set(lvar_id=lvar_id, value=0)
 
-    def toggle(self, lvar_id):
-        v = self.lvar_value(lvar_id)
+    def toggle(self, item_id, wait=None, uuid=None, priority=None):
+        if is_oid(item_id) and oid_type(item_id) == 'unit':
+            return self.action_toggle(
+                unit_id=item_id, wait=wait, uuid=uuid, priority=priority)
+        v = self.lvar_value(item_id)
         if v is None: return False
         if v:
-            return self.clear(lvar_id)
+            return self.clear(item_id)
         else:
-            return self.reset(lvar_id)
+            return self.reset(item_id)
 
     def expires(self, lvar_id, etime=0):
         lvar = eva.lm.controller.get_lvar(lvar_id)
@@ -397,7 +402,7 @@ class MacroAPI(object):
                 raise Exception('unit unknown: ' + unit_id)
             return None
         return eva.lm.controller.uc_pool.action_toggle(
-            unit_id=unit_id, wait=wait, uuid=uuid, priority=priority)
+            unit_id=oid_to_id(unit_id), wait=wait, uuid=uuid, priority=priority)
 
     def result(self, unit_id=None, uuid=None, group=None, status=None):
         if unit_id:

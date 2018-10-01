@@ -26,7 +26,7 @@ __config_help__ = [{
 }]
 
 __functions__ = {
-    'run(macro, args=None, priority=None, w=None, q=None, _uuid=None)':
+    'run(macro, args=None, wait=None, priority=None, q=None, _uuid=None)':
     'Launch macro on remote LM PLC'
 }
 
@@ -67,7 +67,7 @@ class LMExt(GenericExt):
         if not url: self.ready = False
         else:
             apiclient = APIClient()
-            apiclient.set_uri(url)
+            apiclient.set_uri(url if url[:4] == 'http' else 'http://' + url)
             apiclient.set_key(k)
             apiclient.set_product('lm')
             apiclient.set_timeout(timeout)

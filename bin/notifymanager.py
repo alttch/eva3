@@ -4,7 +4,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import sys
 import os
@@ -415,7 +415,10 @@ class NotifierCLI(GenericCLI):
         return self.local_func_result_ok
 
 
-product = os.environ['EVA_PRODUCT']
+try:
+    product
+except:
+    product = os.environ['EVA_PRODUCT']
 
 _me = 'EVA ICS Notification System Manager CLI for %s version %s' % (
     product.upper(), __version__)

@@ -10,7 +10,7 @@ __api__ = 1
 __required__ = ['port_get', 'value']
 __mods_required__ = []
 __lpi_default__ = 'sensor'
-__features__ = ['port_get', 'port_set', 'aao_set', 'aao_get']
+__features__ = ['port_get', 'aao_get']
 __config_help__ = [{
     'name': 'default_value',
     'help': 'sensors value on load (default: None)',
@@ -50,6 +50,7 @@ class PHI(GenericPHI):
         self.__config_help = __config_help__
         self.__get_help = __get_help__
         self.__set_help = __set_help__
+        self.__help = __help__
         if info_only: return
         d = self.phi_cfg.get('default_value')
         if d is None: d = None

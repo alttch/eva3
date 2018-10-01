@@ -821,7 +821,7 @@ the folders where security cameras periodically upload an images.
 
 .. code-block:: python
 
-    open_newest(self, mask, mode='r', alt=True)
+    open_newest(mask, mode='r', alt=True)
 
 params:
 
@@ -842,7 +842,7 @@ Tries to find and open the oldest file by the specified mask.
 
 .. code-block:: python
 
-    open_oldest(self, mask, mode='r')
+    open_oldest(mask, mode='r')
 
 params:
 

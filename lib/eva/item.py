@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import copy
 import os
@@ -679,6 +679,8 @@ class UpdatableItem(Item):
         if not self.update_interval:
             self.update_scheduler_active = False
             return
+        if eva.core.started and self.updates_allowed():
+            self.need_update.set()
         self.update_scheduler = threading.Thread(target = \
                 self._t_update_scheduler,
                 name = '_t_update_scheduler_' + self.oid)

@@ -1,0 +1,541 @@
+#!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
+
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2018 Altertech Group"
+__license__ = "https://www.eva-ics.com/license"
+__version__ = "3.1.1"
+
+import sys
+import os
+import subprocess
+import time
+import glob
+import requests
+import jsonpickle
+from datetime import datetime
+
+dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
+dir_backup = os.path.dirname(os.path.realpath(__file__)) + '/../backup'
+dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+dir_etc = os.path.dirname(os.path.realpath(__file__)) + '/../etc'
+dir_sbin = os.path.dirname(os.path.realpath(__file__)) + '/../sbin'
+dir_bin = os.path.dirname(os.path.realpath(__file__)) + '/../bin'
+sys.path.append(dir_lib)
+
+os.chdir(dir_eva)
+os.environ['EVA_DIR'] = dir_eva
+
+import eva.core
+from eva.client.cli import GenericCLI
+
+
+class ManagementCLI(GenericCLI):
+
+    def prepare_result_data(self, data, api_func, api_func_full, itype):
+        if itype not in ['backup']:
+            return super().prepare_result_data(data, api_func, api_func_full,
+                                               itype)
+        result = []
+        if itype == 'status':
+            for k, v in data.copy():
+                print(k, v)
+            return result
+        for d in data.copy():
+            d['time'] = time.ctime(d['time'])
+            result.append(d)
+        return result
+
+    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+        if itype not in ['status']:
+            return super().prepare_result_dict(data, api_func, api_func_full,
+                                               itype)
+        result = {}
+        for k, v in data.copy().items():
+            result[k] = 'running' if v else 'stopped'
+        return result
+
+    def add_functions(self):
+        super().add_functions()
+        self.process_configuration()
+        self.add_manager_common_functions()
+        self.add_manager_control_functions()
+        self.add_manager_backup_functions()
+        self.add_management_shells()
+        self.add_manager_power_functions()
+
+    def process_configuration(self):
+        self.products_configured = []
+        for f in ['uc', 'lm', 'sfa']:
+            if os.path.isfile('{}/{}.ini'.format(
+                    dir_etc, f)) and os.path.isfile('{}/{}_apikeys.ini'.format(
+                        dir_etc, f)):
+                self.products_configured.append(f)
+
+    def add_manager_backup_functions(self):
+        ap_backup = self.sp.add_parser('backup', help='Backup management')
+
+        sp_backup = ap_backup.add_subparsers(
+            dest='_func', metavar='func', help='Backup commands')
+
+        sp_backup_save = sp_backup.add_parser(
+            'save', help='Backup system state')
+        sp_backup_save.add_argument(
+            'f', help='Backup name', metavar='NAME', nargs='?')
+        sp_backup_restore = sp_backup.add_parser(
+            'restore', help='Restore system state')
+        sp_backup_restore.add_argument('f', help='Backup name', metavar='NAME')
+        sp_backup_restore.add_argument(
+            '-r',
+            '--runtime',
+            dest='r',
+            help='Completely restore runtime (including databases)',
+            action='store_true')
+        sp_backup_restore.add_argument(
+            '--xc',
+            dest='xc',
+            help='Restore xc (cmd, drivers and macro extensions)',
+            action='store_true')
+        sp_backup_restore.add_argument(
+            '--ui',
+            dest='ui',
+            help='Restore ui folder',
+            action='store_true')
+        sp_backup_restore.add_argument(
+            '-a',
+            '--full',
+            dest='full',
+            help='Restore everything',
+            action='store_true')
+
+        sp_backup_list = sp_backup.add_parser('list', help='List backups')
+
+        sp_backup_unlink = sp_backup.add_parser('unlink', help='Delete backup')
+        sp_backup_unlink.add_argument('f', help='Backup name', metavar='NAME')
+
+    def add_manager_control_functions(self):
+        if not self.products_configured:
+            return
+        ap_start = self.sp.add_parser('start', help='Start controller(s)')
+        ap_start.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')',
+            choices=self.products_configured,
+            nargs='?')
+        ap_stop = self.sp.add_parser('stop', help='Stop controller(s)')
+        ap_stop.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')',
+            choices=self.products_configured,
+            nargs='?')
+        ap_restart = self.sp.add_parser('restart', help='Restart controller(s)')
+        ap_restart.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')',
+            choices=self.products_configured,
+            nargs='?')
+        ap_status = self.sp.add_parser(
+            'status', help='Status of the controller(s)')
+        ap_status.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')',
+            choices=self.products_configured,
+            nargs='?')
+
+    def add_manager_common_functions(self):
+        ap_version = self.sp.add_parser(
+            'version', help='Display version and build')
+        ap_update = self.sp.add_parser(
+            'update', help='Check and update to new version if exists')
+        ap_update.add_argument(
+            '--YES',
+            dest='y',
+            help='Update without any prompts',
+            action='store_true')
+        ap_update.add_argument(
+            '-i',
+            '--info-only',
+            dest='i',
+            help='Check for a new version without upgrading',
+            action='store_true')
+
+    def add_manager_power_functions(self):
+        ap_reboot = self.sp.add_parser('reboot', help='Reboot the system')
+        ap_reboot.add_argument(
+            '--YES',
+            dest='y',
+            help='Reboot without any prompts',
+            action='store_true')
+        ap_poweroff = self.sp.add_parser(
+            'poweroff', help='Power off the system')
+        ap_poweroff.add_argument(
+            '--YES',
+            dest='y',
+            help='Power off without any prompts',
+            action='store_true')
+
+    def add_management_shells(self):
+        for p in self.products_configured:
+            ap = self.sp.add_parser(p, help='{} shell'.format(p.upper()))
+            self.api_functions[p] = getattr(self, '{}_shell'.format(p))
+        ap_ns = self.sp.add_parser('ns', help='Notifier management')
+        ap_ns.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            choices=self.products_configured,
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')')
+
+    def exec_control_script(self, product, command, collect_output=False):
+        script = 'eva-control' if not product else product + '-control'
+        cmd = '{}/{} {}'.format(dir_sbin, script, command)
+        if collect_output:
+            with os.popen(cmd) as p:
+                result = p.readlines()
+            return result
+        else:
+            os.system(cmd + ' &')
+            time.sleep(1)
+
+    def uc_shell(self, params):
+        return self.local_func_result_empty if \
+            self.start_shell('uc') else self.local_func_result_failed
+
+    def lm_shell(self, params):
+        return self.local_func_result_empty if \
+            self.start_shell('lm') else self.local_func_result_failed
+
+    def sfa_shell(self, params):
+        return self.local_func_result_empty if \
+            self.start_shell('sfa') else self.local_func_result_failed
+
+    def manage_ns(self, params):
+        return self.local_func_result_empty if \
+            self.start_shell('notifymanager',
+                    '.py',
+                    'product=\'{}\''.format(params.get('p'))) else \
+            self.local_func_result_failed
+
+    def start_shell(self, p, x='-cmd', xp=''):
+        try:
+            c = open('{}/{}{}'.format(dir_bin, p, x)).read()
+            c = """import sys
+import eva.client.cli
+eva.client.cli.say_bye = False
+eva.client.cli.parent_shell_name = 'eva'
+eva.client.cli.readline_processing = False
+sys.argv = ['{}/{}-{}', '-I']
+{}
+
+""".format(dir_bin, p, x, xp) + c
+            try:
+                exec(c)
+            except SystemExit:
+                self.full_reset_after_shell()
+                return True
+        except:
+            self.full_reset_after_shell()
+            return False
+        self.full_reset_after_shell()
+        return True
+
+    def full_reset_after_shell(self):
+        self.setup_parser()
+        self.start_interactive()
+        eva.client.cli.say_bye = True
+        eva.client.cli.readline_processing = True if \
+                not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
+        eva.client.cli.parent_shell_name = None
+
+    def start_controller(self, params):
+        c = params['p']
+        if c is not None and c not in self.products_configured:
+            return self.local_func_result_failed
+        self.exec_control_script(c, 'start')
+        return self.local_func_result_ok
+
+    def stop_controller(self, params):
+        c = params['p']
+        if c is not None and c not in self.products_configured:
+            return self.local_func_result_failed
+        self.exec_control_script(c, 'stop')
+        return self.local_func_result_ok
+
+    def restart_controller(self, params):
+        c = params['p']
+        if c is not None and c not in self.products_configured:
+            return self.local_func_result_failed
+        self.exec_control_script(c, 'restart')
+        return self.local_func_result_ok
+
+    def status_controller(self, params):
+        c = params['p']
+        if c is not None and c not in self.products_configured:
+            return self.local_func_result_failed
+        out = self.exec_control_script(c, 'status', collect_output=True)
+        result = {}
+        if c:
+            try:
+                result[c] = out[0].strip() == 'running'
+            except:
+                return self.local_func_result_failed
+        else:
+            for r in out:
+                try:
+                    c, s = r.strip().split(': ')
+                    result[c.lower()] = s == 'running'
+                except:
+                    pass
+        return 0, result
+
+    def print_version(self, params):
+        with os.popen('{}/eva-tinyapi -V; {}/eva-tinyapi -B'.format(
+                dir_sbin, dir_sbin)) as p:
+            data = p.readlines()
+        if len(data) != 2:
+            return self.local_func_result_failed
+        result = {'version': data[0].strip(), 'build': data[1].strip()}
+        return 0, result
+
+    def backup_save(self, params):
+        fname = params.get('f')
+        if fname is None: fname = '{}'.format(time.strftime('%Y%m%d%H%M%S'))
+        try:
+            os.mkdir(dir_backup)
+        except FileExistsError:
+            pass
+        except:
+            self.print_err('Failed to create backup folder')
+            return self.local_func_result_failed
+        if os.path.isfile(dir_backup + '/' + fname + '.tgz'):
+            self.print_err('File already exists')
+            return self.local_func_result_failed
+        cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
+               '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime',
+               'xc/cmd', 'xc/drivers', 'xc/extensions', 'etc', 'ui')
+        return self.local_func_result_failed if \
+                os.system(' '.join(cmd)) else \
+                0, {'backup': fname}
+
+    def backup_list(self, params):
+        files = glob.glob('backup/*.tgz')
+        files.sort(key=os.path.getmtime, reverse=True)
+        result = []
+        for f in files:
+            result.append({'name': f[7:-4], 'time': os.path.getmtime(f)})
+        return 0, result
+
+    def backup_unlink(self, params):
+        try:
+            os.unlink(dir_backup + '/' + params.get('f') + '.tgz')
+        except:
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
+    def backup_restore(self, params):
+        f = dir_backup + '/' + params.get('f') + '.tgz'
+        if not os.path.isfile(f):
+            self.print_err('no such backup')
+            return self.local_func_result_failed
+        if params.get('full'):
+            self.clear_runtime(full=True)
+            self.clear_xc()
+            self.clear_ui()
+            try:
+                if not self.backup_restore_runtime(fname=f, json_only=False):
+                    raise Exception('restore failed')
+                if not self.backup_restore_dir(fname=f, dirname='etc'):
+                    raise Exception('restore failed')
+                if not self.backup_restore_dir(fname=f, dirname='xc'):
+                    raise Exception('restore failed')
+                if not self.backup_restore_dir(fname=f, dirname='ui'):
+                    raise Exception('restore failed')
+            except:
+                return self.local_func_result_failed
+            return self.local_func_result_ok
+        try:
+            if params.get('xc'):
+                self.clear_xc()
+                if not self.backup_restore_dir(fname=f, dirname='xc'):
+                    raise Exception('restore failed')
+            if params.get('ui'):
+                self.clear_ui()
+                if not self.backup_restore_dir(fname=f, dirname='ui'):
+                    raise Exception('restore failed')
+            else:
+                self.clear_runtime(full=params.get('r'))
+                if not self.backup_restore_runtime(fname=f, json_only=True):
+                    raise Exception('restore failed')
+                if not self.backup_restore_dir(fname=f, dirname='etc'):
+                    raise Exception('restore failed')
+        except:
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
+    def clear_runtime(self, full=False):
+        print('Removing runtime' + (' (completely)...' if full else '...'))
+        cmd = 'rm -rf runtime' if full else \
+                'find runtime -type f -name "*.json" -exec rm -f {} \\;'
+        os.system(cmd)
+        return True
+
+    def clear_xc(self):
+        print('Removing xc')
+        cmd = 'rm -rf xc/drivers xc/extensions xc/cmd'
+        os.system(cmd)
+        return True
+
+    def clear_ui(self):
+        print('Removing ui')
+        cmd = 'rm -rf ui'
+        os.system(cmd)
+        return True
+
+    def backup_restore_runtime(self, fname, json_only=True):
+        print(
+            self.colored('Restoring runtime' + \
+                         (' (completely)...' if \
+                         not json_only else ' (json)...'),
+            color='green',
+            attrs=[]))
+        cmd = ('tar', 'xpf', fname)
+        if json_only: cmd += ('--wildcards', '*.json')
+        cmd += ('runtime',)
+        return False if os.system(' '.join(cmd)) else True
+
+    def backup_restore_dir(self, fname, dirname):
+        print(self.colored('Restoring {}...'.format(dirname), color='green', attrs=[]))
+        cmd = ('tar', 'xpf', fname, dirname)
+        return False if os.system(' '.join(cmd)) else True
+
+    def update(self, params):
+        try:
+            with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
+                data = p.read()
+                build = int(data.strip())
+        except:
+            return self.local_func_result_failed
+        try:
+            r = requests.get(
+                'https://www.eva-ics.com/download/update_info.json', timeout=5)
+            if r.status_code != 200:
+                raise ('HTTP ERROR')
+            result = jsonpickle.decode(r.text)
+            new_build = int(result['build'])
+            new_version = result['version']
+        except:
+            return self.local_func_result_failed
+        if params.get('i'):
+            return 0, {
+                'build': build,
+                'new_build': new_build,
+                'new_version': new_version,
+                'update_available': build < new_build
+            }
+        print(
+            self.colored('Current build', color='blue', attrs=['bold']) +
+            ' : ' + self.colored(build, color='yellow'))
+        print(
+            self.colored(
+                'Latest available build', color='blue', attrs=['bold']) +
+            ' : ' + self.colored(
+                '{} (v{})'.format(new_build, new_version), color='yellow'))
+        if build == new_build:
+            return self.local_func_result_empty
+        if build > new_build:
+            print('Where did you get this build from? Invented a time machine?')
+            return self.local_func_result_failed
+        if not params.get('y'):
+            try:
+                u = input('Type ' +
+                          self.colored('YES', color='red', attrs=['bold']) +
+                          ' (uppercase) to update, or press ' +
+                          self.colored('ENTER', color='white') + ' to abort > ')
+            except:
+                print()
+                u = ''
+            if u != 'YES':
+                return self.local_func_result_empty
+        url = 'https://www.eva-ics.com/download/{}/stable/update.sh'.format(
+            new_version)
+        cmd = ('curl -s ' + url + ' | bash /dev/stdin')
+        return self.local_func_result_failed if os.system(cmd) else \
+                self.local_func_result_ok
+
+    def power_reboot(self, params):
+        if not params.get('y'):
+            try:
+                a = input('Reboot this system? (y/N) ')
+            except:
+                print()
+                a = ''
+            if a.lower() != 'y': return self.local_func_result_empty
+        print(self.colored('Rebooting...', color='red', attrs=['bold']))
+        return self.local_func_result_failed if \
+                os.system('reboot') else self.local_func_result_ok
+
+    def power_poweroff(self, params):
+        if not params.get('y'):
+            try:
+                a = input('Power off this system? (y/N) ')
+            except:
+                print()
+                a = ''
+            if a.lower() != 'y': return self.local_func_result_empty
+        print(self.colored('Powering off...', color='red', attrs=['bold']))
+        return self.local_func_result_failed if \
+                os.system('poweroff') else self.local_func_result_ok
+
+
+_me = 'EVA ICS Management CLI version %s' % (__version__)
+
+if len(sys.argv) < 2:
+    sys.argv = [sys.argv[0]] + ['-I']
+
+cli = ManagementCLI('eva', _me, remote_api=False)
+
+_api_functions = {
+    'start': cli.start_controller,
+    'stop': cli.stop_controller,
+    'restart': cli.restart_controller,
+    'status': cli.status_controller,
+    'version': cli.print_version,
+    'update': cli.update,
+    'reboot': cli.power_reboot,
+    'poweroff': cli.power_poweroff,
+    'ns': cli.manage_ns,
+    'backup:save': cli.backup_save,
+    'backup:list': cli.backup_list,
+    'backup:unlink': cli.backup_unlink,
+    'backup:restore': cli.backup_restore
+}
+
+eva.core.set_product('eva-cmd', '-1')
+cli.ap.prog = 'eva-cmd'
+cli.arg_sections += ['backup']
+cli.set_api_functions(_api_functions)
+# cli.set_pd_cols(_pd_cols)
+# cli.set_pd_idx(_pd_idx)
+# cli.set_fancy_tabsp(_fancy_tabsp)
+banner = """     _______    _____       _______________
+    / ____/ |  / /   |     /  _/ ____/ ___/
+   / __/  | | / / /| |     / // /    \__ \\
+  / /___  | |/ / ___ |   _/ // /___ ___/ /
+ /_____/  |___/_/  |_|  /___/\____//____/
+
+  www.eva-ics.com (c) 2012-2018 Altertech
+"""
+if '-I' in sys.argv or '--interactive' in sys.argv:
+    print(cli.colored(banner, color='blue'))
+    cli.do_run(['version'])
+    print()
+code = cli.run()
+sys.exit(code)

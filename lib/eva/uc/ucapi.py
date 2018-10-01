@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import cherrypy
 import eva.core
@@ -105,7 +105,7 @@ class UC_API(GenericAPI):
                             eva.item.item_match(v, [], [grp])):
                     r = v.serialize(full=full)
                     result.append(r)
-            return sorted(result, key=lambda k: k['id'])
+            return sorted(result, key=lambda k: k['oid'])
 
     def state_history(self,
                       k=None,
@@ -138,8 +138,12 @@ class UC_API(GenericAPI):
     def update(self, k=None, i=None, status=None, value=None, force_virtual=0):
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): return False
-        return item.update_set_state(
-            status=status, value=value, force_virtual=force_virtual)
+        if status or value:
+            return item.update_set_state(
+                status=status, value=value, force_virtual=force_virtual)
+        else:
+            item.need_update.set()
+            return True
 
     def action(self,
                k=None,
@@ -470,10 +474,12 @@ class UC_API(GenericAPI):
             for u in units:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save, True):
+                    if not api._set_props(_k, 'unit:{}/{}'.format(g, i),
+                                          u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -483,10 +489,12 @@ class UC_API(GenericAPI):
             for u in sensors:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save, True):
+                    if not api._set_props(_k, 'sensor:{}/{}'.format(g, i),
+                                          u.get('props'), save, True):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -496,10 +504,12 @@ class UC_API(GenericAPI):
             for u in mu:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    if not api._set_props(_k, i, u.get('props'), save):
+                    if not api._set_props(_k, 'mu:{}/{}'.format(g, i),
+                                          u.get('props'), save):
                         return False
                 except:
                     eva.core.log_traceback()
@@ -517,10 +527,11 @@ class UC_API(GenericAPI):
             for m in mu:
                 try:
                     i = m['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'mu:{}/{}'.format(g, i))
                 except:
                     pass
         units = cfg.get('units')
@@ -528,10 +539,11 @@ class UC_API(GenericAPI):
             for u in units:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'unit:{}/{}'.format(g, i))
                 except:
                     pass
         sensors = cfg.get('sensors')
@@ -539,10 +551,11 @@ class UC_API(GenericAPI):
             for u in sensors:
                 try:
                     i = u['id']
+                    g = u['group']
                 except:
                     return False
                 try:
-                    api.destroy(_k, i)
+                    api.destroy(_k, 'sensor:{}/{}'.format(g, i))
                 except:
                     pass
         cvars = cfg.get('cvars')

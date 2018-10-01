@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import cherrypy
 import jsonpickle
@@ -76,7 +76,7 @@ class LM_API(GenericAPI):
                             eva.item.item_match(v, [], [group])):
                     r = v.serialize(full=full)
                     result.append(r)
-            return sorted(result, key=lambda k: k['id'])
+            return sorted(result, key=lambda k: k['oid'])
 
     def state_history(self,
                       k=None,

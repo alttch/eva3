@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import sys
 import platform
@@ -112,6 +112,8 @@ start_time = time.time()
 
 enterprise_layout = False
 
+started = False
+
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
@@ -173,6 +175,8 @@ def save(func=None):
 
 
 def block():
+    global started
+    started = True
     while not _sigterm_sent:
         time.sleep(sleep_step)
 

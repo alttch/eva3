@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import logging
 import uuid
@@ -236,7 +236,7 @@ class DecisionRule(eva.item.Item):
         self.in_range_min_eq = False
         self.in_range_max_eq = False
         self.macro = None
-        self.macro_args = None
+        self.macro_args = []
         self.break_after_exec = False
         self.chillout_time = 0
         self.last_matched = 0
@@ -267,10 +267,7 @@ class DecisionRule(eva.item.Item):
         d['in_range_min_eq'] = self.in_range_min_eq
         d['in_range_max_eq'] = self.in_range_max_eq
         d['macro'] = self.macro
-        if self.macro_args:
-            d['macro_args'] = ' '.join(self.macro_args)
-        else:
-            d['macro_args'] = None
+        d['macro_args'] = self.macro_args
         d['break_after_exec'] = self.break_after_exec
         d['chillout_time'] = self.chillout_time
         if not config:
@@ -349,11 +346,13 @@ class DecisionRule(eva.item.Item):
             self.macro = data['macro']
         if 'macro_args' in data:
             m = data['macro_args']
-            if m is not None:
+            if isinstance(m, str):
                 try:
                     m = shlex.split(m)
                 except:
                     m = m.split(' ')
+            elif not m:
+                m = []
             self.macro_args = m
         if 'break_after_exec' in data:
             self.break_after_exec = data['break_after_exec']
@@ -516,13 +515,15 @@ class DecisionRule(eva.item.Item):
             return True
         elif prop == 'macro_args':
             if val is not None:
-                v = val.split(' ')
+                try:
+                    v = shlex.split(val)
+                except:
+                    v = val.split(' ')
             else:
-                v = None
-            if self.macro_args != v:
-                self.macro_args = v
-                self.log_set(prop, val)
-                self.set_modified(save)
+                v = []
+            self.macro_args = v
+            self.log_set(prop, val)
+            self.set_modified(save)
             return True
         elif prop == 'break_after_exec':
             v = val_to_boolean(val)

@@ -57,6 +57,11 @@ restart)
     ./sbin/eva-control start $2
     exit 0
     ;;
+status)
+    [ "x${UC_ENABLED}" == "xyes" ] && (echo -n "UC: "; ./sbin/uc-control status)
+    [ "x${LM_ENABLED}" == "xyes" ] && (echo -n "LM: "; ./sbin/lm-control status)
+    [ "x${SFA_ENABLED}" == "xyes" ] && (echo -n "SFA: "; ./sbin/sfa-control status)
+    ;;
 *)
     echo "Usage: eva-control start|stop|restart"
     exit 1

@@ -12,7 +12,7 @@ __config_help__ = [{
     'name':
     'cf',
     'help':
-    'Config file (default: /usr/local/etc/roboger_push.ini',
+    'Config file (default: /usr/local/etc/roboger_push.ini)',
     'type':
     'str',
     'required':

@@ -944,6 +944,27 @@ The following example shows how to build a log viewer, similar to included in
     </body>
     </html>
 
+Updating multiple values
+------------------------
+
+The following example will show how to update displayed values of 3 sensors
+with one function. Define HTML elements:
+
+.. code-block:: html
+
+    <div>Sensor 1 value: <span id="sensor:group1/sensor1"></span></div>
+    <div>Sensor 2 value: <span id="sensor:group1/sensor2"></span></div>
+    <div>Sensor 3 value: <span id="sensor:group1/sensor3"></span></div>
+
+Then register update event function:
+
+.. code-block:: javascript
+
+
+    eva_sfa_register_update_state('sensor:group1/*', function(state) {
+        $('#' + $.escapeSelector(state.oid)).html('S: ' + state.value);
+    }
+
 Controlling reliability of the connection
 =========================================
 

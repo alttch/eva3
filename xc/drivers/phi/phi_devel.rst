@@ -472,3 +472,49 @@ Exceptions
 
 The methods of PHI should not raise any exceptions and handle/log all errors by
 themselves.
+
+Testing
+=======
+
+Use **bin/test-phi** command-line tool to perform PHI module tests. The tool
+requires test scenario file, which may contain the following functions:
+
+* **debug()** turn on debug mode (verbose output), equal to *-D* command-line
+  option
+
+* **nodebug()** turn off debug mode
+
+* **modbus(params)** create virtual ModBus port with ID *default*
+
+* **load(phi_mod, phi_cfg=None)** load PHI module for tests. PHI cfg may be
+  specified either as string or as dictionary
+
+* **get(port=None, cfg=None, timeout=None)** call PHI **get** function
+
+* **set(port=None, data=None, cfg=None, timeout=None)** call PHI **set**
+  function
+
+* **test(cmd=None)** call PHI **test** function
+
+* **exec(cmd=None, args=None)** call PHI **exec** function
+
+* **sleep(seconds)** delay execution for a given number of seconds (alias for
+  *time.sleep*)
+
+additionally, each function automatically prints the result. Test scenario is
+actually a Python code and may contain any Python logic, additional module
+imports etc.
+
+Example test scenario. Let's test *dae_ro16_modbus* module:
+
+.. code-block:: python
+
+    debug()
+    modbus('tcp:192.168.55.11:502')
+    load('dae_ro16_modbus', 'port=default,unit=1')
+    if test('self') != 'OK': exit(1)
+    set(port=2,data=1)
+    set(port=5,data=1)
+    get()
+    set(port=2,data=0)
+

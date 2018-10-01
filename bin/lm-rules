@@ -3,13 +3,14 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "3.1.0"
+__version__ = "3.1.1"
 
 import os
 import sys
 import getopt
 import jsonpickle
 import termcolor
+import shlex
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -391,9 +392,8 @@ if func in cmd_list:
     data3 = []
     for r in result:
         args = []
-        if r['macro_args']:
-            for o in r['macro_args'].split(' '):
-                args.append('\'' + o + '\'')
+        for o in r['macro_args']:
+            args.append('\'' + o + '\'')
         m = ''
         if r['for_prop'] == 'status' and \
             isinstance(r['in_range_max'], float) and \

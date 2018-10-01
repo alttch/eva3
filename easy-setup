@@ -109,13 +109,13 @@ function create_notifier {
         [ "x${MQTT_PORT}" != "x" ] && port=":${MQTT_PORT}"
         BATCH="create eva_1 mqtt:${auth}${MQTT_HOST}${port} ${sp} -y"
         if [ "x$MQTT_CAFILE" != "x" ]; then
-            BATCH="$BATCH;set_eva_1 ca_certs $MQTT_CAFILE"
+            BATCH="$BATCH;set eva_1 ca_certs $MQTT_CAFILE"
         fi
         if [ "x$MQTT_CERT" != "x" ]; then
-            BATCH="$BATCH;set_eva_1 certfile $MQTT_CERT"
+            BATCH="$BATCH;set eva_1 certfile $MQTT_CERT"
         fi
         if [ "x$MQTT_KEY" != "x" ]; then
-            BATCH="$BATCH;set_eva_1 key $MQTT_KEY"
+            BATCH="$BATCH;set eva_1 key $MQTT_KEY"
         fi
         BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
@@ -123,7 +123,8 @@ function create_notifier {
     fi
     if [ "x$T" = "xsfa" ]; then
         [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
-        BATCH="${BATCH}create db_1 db:db/sfa_history.db -y;subscribe state db_1 -v '#' -g '#'"
+        BATCH="${BATCH}set eva_1 collect_logs 1"
+        BATCH="${BATCH};create db_1 db:db/sfa_history.db -y;subscribe state db_1 -v '#' -g '#'"
     fi
     [ "x${BATCH}" = "x" ] && return 0
     echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
@@ -411,7 +412,7 @@ if [ $FORCE -eq 0 ]; then
     done
 fi
 
-MASTERKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+[ $MASTERKEY ] || MASTERKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
 
 if [ $INTERACTIVE -eq 1 ]; then
     echo
@@ -461,9 +462,9 @@ if [ $INSTALL_UC -eq 1 ]; then
     bash install/install-uc || exit 1
     echo "UC_ENABLED=yes" >> etc/eva_servers
     echo
-    UC_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    UC_LM_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    UC_SFA_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    [ $UC_OPKEY ] || UC_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    [ $UC_LM_KEY ] || UC_LM_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    [ $UC_SFA_KEY ] || UC_SFA_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
     if [ $INTERACTIVE -eq 1 ]; then
         echo "Your UC operator key: ${UC_OPKEY}"
         echo "Your UC integration key for LM PLCs: ${UC_LM_KEY}"
@@ -537,8 +538,8 @@ if [ $INSTALL_LM -eq 1 ]; then
     bash install/install-lm || exit 1
     echo "LM_ENABLED=yes" >> etc/eva_servers
     echo
-    LM_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    LM_SFA_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    [ $LM_OPKEY ] || LM_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    [ $LM_SFA_KEY ] || LM_SFA_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
     if [ $INTERACTIVE -eq 1 ]; then
         echo "Your LM operator key: ${LM_OPKEY}"
         echo "Your LM integration key for SFA: ${LM_SFA_KEY}"
@@ -616,7 +617,7 @@ if [ $INSTALL_SFA -eq 1 ]; then
     bash install/install-sfa || exit 1
     echo "SFA_ENABLED=yes" >> etc/eva_servers
     echo
-    SFA_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+    [ $SFA_OPKEY ] || SFA_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
     if [ $INTERACTIVE -eq 1 ]; then
         echo "Your SFA operator key: ${SFA_OPKEY}"
         echo
@@ -652,9 +653,6 @@ hosts_allow = 0.0.0.0/0
 EOF
     chmod 600 etc/sfa_apikeys.ini
     create_notifier sfa || exit 1
-    #if [ "x$MQTT_HOST" != "x" ]; then
-        #./bin/sfa-notifier set_prop -i eva_1 -p collect_logs -v 1 || exit 1
-    #fi
     SFA_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
@@ -723,21 +721,24 @@ echo "MASTERKEY: ${MASTERKEY}"
 echo
 
 if [ $INSTALL_UC -eq 1 ]; then
-    echo "UC_OPERATOR_KEY: ${UC_OPKEY}"
-    echo "UC_LM_KEY: ${UC_LM_KEY}"
-    echo "UC_SFA_KEY: ${UC_SFA_KEY}"
+    echo "UC operator key: ${UC_OPKEY}"
+    echo "UC LM key: ${UC_LM_KEY}"
+    echo "UC SFA key: ${UC_SFA_KEY}"
     echo
 fi
 
 if [ $INSTALL_LM -eq 1 ]; then
-    echo "LM_OPERATOR_KEY: ${LM_OPKEY}"
-    echo "LM_SFA_KEY: ${LM_SFA_KEY}"
+    echo "LM operator key: ${LM_OPKEY}"
+    echo "LM SFA key: ${LM_SFA_KEY}"
     echo
 fi
 
 if [ $INSTALL_SFA -eq 1 ]; then
-    echo "SFA_OPERATOR_KEY: ${SFA_OPKEY}"
+    echo "SFA operator key: ${SFA_OPKEY}"
     echo
 fi
+
+mkdir -p backup
+chmod 700 backup
 
 exit 0

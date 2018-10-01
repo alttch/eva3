@@ -24,6 +24,8 @@ documentation.
 import logging
 import threading
 
+import eva.core
+
 from eva.uc.driverapi import critical
 from eva.uc.driverapi import get_sleep_step
 from eva.uc.driverapi import get_timeout
@@ -223,6 +225,8 @@ class PHI(object):
         self._update_processor.start()
 
     def _start_update_scheduler(self):
+        if eva.core.started:
+            self._perform_update()
         self._update_scheduler_active = True
         if self._update_scheduler and \
                 self._update_scheduler.is_alive():
