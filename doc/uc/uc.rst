@@ -87,7 +87,7 @@ For example, let's create a variable:
 
 .. code-block:: bash
 
-    uc-cmd set_cvar -i RELAY1_CMD -v "snmpset -v1 -c private 192.168.1.208 .1.3.6.1.4.1.19865.1.2."
+    uc-cmd cvar set RELAY1_CMD "snmpset -v1 -c private 192.168.1.208 .1.3.6.1.4.1.19865.1.2."
 
 After UC is started, it will become available for system environment, and unit
 management script on the port 2 of the given relay will be the following:
