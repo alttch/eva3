@@ -6,7 +6,7 @@ if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
 fi
 
 VERSION=3.1.0
-BUILD=2018091501
+BUILD=2018093002
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh sbin/check_mods set-run-under-user.sh"
 
@@ -99,7 +99,7 @@ fi
 echo "- Installing new files"
 
 rm -f _upgrade/eva-${VERSION}/ui/index.html
-rm -f _upgrade/eva-${VERSION}/upgrade.sh
+rm -f _upgrade/eva-${VERSION}/update.sh
 
 cp -rf _upgrade/eva-${VERSION}/* . || exit 1
 
@@ -115,9 +115,9 @@ CURRENT_BUILD=`./sbin/eva-tinyapi -B`
 if [ $CURRENT_BUILD = $BUILD ]; then
     echo "- Current build: ${BUILD}"
     echo "---------------------------------------------"
-    echo "Upgrade completed. Starting everything back"
+    echo "Update completed. Starting everything back"
     ./sbin/eva-control start
 else
-    echo "Upgrade failed"
+    echo "Update failed"
     exit 1
 fi

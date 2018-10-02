@@ -56,7 +56,7 @@ class PHI(GenericPHI):
             except:
                 d = -1
         self.data = {}
-        for i in range(1, 16):
+        for i in range(1, 17):
             self.data[str(i)] = d
 
     def get(self, port=None, cfg=None, timeout=0):
