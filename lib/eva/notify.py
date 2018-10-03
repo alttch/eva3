@@ -448,7 +448,7 @@ class GenericNotifier(object):
 class GenericNotifier_Client(GenericNotifier):
 
     def __init__(self, notifier_id=None, notifier_subtype=None, apikey=None):
-        if not notifier_id: _id = str(uuid.uuid1())
+        if not notifier_id: _id = str(uuid.uuid4())
         else: _id = notifier_id
         _tp = 'client'
         if notifier_subtype:
