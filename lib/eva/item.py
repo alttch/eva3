@@ -1555,7 +1555,7 @@ class ItemAction(object):
         if action_uuid:
             self.uuid = action_uuid
         else:
-            self.uuid = str(uuid.uuid1())
+            self.uuid = str(uuid.uuid4())
         self.exitcode = None
         self.out = ''
         self.err = ''

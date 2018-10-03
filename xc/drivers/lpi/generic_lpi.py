@@ -350,7 +350,7 @@ class LPI(object):
         return phi_cfg
 
     def gen_uuid(self):
-        return str(uuid.uuid1())
+        return str(uuid.uuid4())
 
     def _start(self):
         return self.start()

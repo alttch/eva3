@@ -222,7 +222,7 @@ class DecisionRule(eva.item.Item):
     def __init__(self, rule_uuid=None):
         self.priority = 100
         if not rule_uuid:
-            _uuid = str(uuid.uuid1())
+            _uuid = str(uuid.uuid4())
         else:
             _uuid = rule_uuid
         self.enabled = False

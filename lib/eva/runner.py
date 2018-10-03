@@ -80,7 +80,7 @@ class DriverCommand(GenericRunner):
         if _uuid:
             self._uuid = _uuid
         else:
-            self._uuid = str(uuid.uuid1())
+            self._uuid = str(uuid.uuid4())
         if update:
             self.driver_id = item.update_exec[1:]
         else:
