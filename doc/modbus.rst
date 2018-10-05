@@ -47,7 +47,7 @@ where:
 ModBus params should contain the configuration of hardware ModBus port. The
 following hardware port types are supported:
 
-* **tcp** , **udp** Modbus protocol implementations for TCP/IP networks. The
+* **tcp** , **udp** ModBus protocol implementations for TCP/IP networks. The
   params should be specified as: *<protocol>:<host>[:port]*, e.g.
   *tcp:192.168.11.11:502*
 
