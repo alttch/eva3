@@ -248,6 +248,7 @@ def create_dump(e='request', msg=''):
 
 def serialize():
     d = {}
+    proc = psutil.Process()
     d['version'] = version
     d['timeout'] = timeout
     d['system_name'] = system_name
@@ -273,6 +274,7 @@ def serialize():
     d['threads'] = {}
     d['uptime'] = int(time.time() - start_time)
     d['exceptions'] = _exceptions
+    d['fd'] = proc.open_files()
     for t in threading.enumerate().copy():
         d['threads'][t.name] = {}
         d['threads'][t.name]['daemon'] = t.daemon
