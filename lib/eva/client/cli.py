@@ -619,6 +619,7 @@ class GenericCLI(object):
         sp_log_rotate = sp_log.add_parser('rotate', help='Rotate logs')
         sp_log_debug = sp_log.add_parser('debug', help='Send debug message')
         sp_log_debug.add_argument('m', help='Message', metavar='MSG')
+        ap_dump = self.sp.add_parser('dump', help='Dump memory (for debugging)')
         sp_log_info = sp_log.add_parser('info', help='Send info message')
         sp_log_info.add_argument('m', help='Message', metavar='MSG')
         sp_log_warning = sp_log.add_parser(
@@ -799,8 +800,8 @@ class GenericCLI(object):
                         pass
                     except:
                         self.print_err('parse error')
-                if d[0] in ['q', 'quit', 'exit', 'bye'
-                           ] or (d[0] == '..' and parent_shell_name):
+                if d[0] in ['q', 'quit', 'exit', 'bye'] or (d[0] == '..' and
+                                                            parent_shell_name):
                     self.finish_interactive()
                     return 0
                 elif d[0] == 'a' and self.remote_api:
@@ -1052,7 +1053,7 @@ class GenericCLI(object):
                 api_func not in self.always_print:
             self.print_err('FAILED')
             return code
-        elif result and 'result' in result and api_func != 'test':
+        elif result and 'result' in result and api_func not in ['test', 'dump']:
             if result['result'] != 'ERROR':
                 print(result['result'])
             else:
