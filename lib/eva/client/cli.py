@@ -908,7 +908,7 @@ class GenericCLI(object):
                         pass
         return 0
 
-    def do_run(self, args=None):
+    def do_run(self, args=None, return_result=False):
         self.suppress_colors = False
         if self.argcomplete:
             self.argcomplete.autocomplete(self.ap)
@@ -1005,6 +1005,8 @@ class GenericCLI(object):
             code, result = api.call(api_func, params, timeout, _debug=debug)
         else:
             code, result = api_func(params)
+        if return_result:
+            return code, result
         if not isinstance(api_func, str): api_func = api_func.__name__
         if code != apiclient.result_ok and \
             code != apiclient.result_func_failed:
