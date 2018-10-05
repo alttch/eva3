@@ -7,6 +7,11 @@ is provided with `pymodbus <https://pymodbus.readthedocs.io>`_ Python module,
 but with additional functionality, such as bus locking, automatic retry
 attempts, virtual ports for drivers etc.
 
+:doc:`/uc/uc` works as ModBus master, connection links to all slave devices
+should be defined as virtual ports. After that, defined virtual ports and
+ModBus unit IDs should be set in corresponding :doc:`PHI modules</drivers>`
+load configurations.
+
 Defining ModBus virtual port
 ============================
 
