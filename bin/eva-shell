@@ -13,6 +13,7 @@ import time
 import glob
 import requests
 import jsonpickle
+import configparser
 from datetime import datetime
 
 dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
@@ -25,6 +26,14 @@ sys.path.append(dir_lib)
 
 os.chdir(dir_eva)
 os.environ['EVA_DIR'] = dir_eva
+if not 'PATH' in os.environ: os.environ['PATH'] = ''
+os.environ['PATH'] = '{}/xc/shell:'.format(dir_eva) + os.environ['PATH']
+
+exec_before_save = None
+exec_after_save = None
+cmds = []
+
+update_repo = 'https://www.eva-ics.com/download'
 
 import eva.core
 from eva.client.cli import GenericCLI
@@ -63,6 +72,7 @@ class ManagementCLI(GenericCLI):
         self.add_manager_backup_functions()
         self.add_management_shells()
         self.add_manager_power_functions()
+        self.add_user_defined_functions()
 
     def process_configuration(self):
         self.products_configured = []
@@ -97,10 +107,7 @@ class ManagementCLI(GenericCLI):
             help='Restore xc (cmd, drivers and macro extensions)',
             action='store_true')
         sp_backup_restore.add_argument(
-            '--ui',
-            dest='ui',
-            help='Restore ui folder',
-            action='store_true')
+            '--ui', dest='ui', help='Restore ui folder', action='store_true')
         sp_backup_restore.add_argument(
             '-a',
             '--full',
@@ -160,6 +167,13 @@ class ManagementCLI(GenericCLI):
             dest='y',
             help='Update without any prompts',
             action='store_true')
+        ap_update.add_argument(
+            '-u',
+            '--repository-url',
+            dest='u',
+            metavar='URL',
+            help='update repository url'
+            )
         ap_update.add_argument(
             '-i',
             '--info-only',
@@ -305,6 +319,16 @@ sys.argv = ['{}/{}-{}', '-I']
         result = {'version': data[0].strip(), 'build': data[1].strip()}
         return 0, result
 
+    def before_save(self):
+        if not exec_before_save:
+            return True
+        return os.system(exec_before_save) == 0
+
+    def after_save(self):
+        if not exec_after_save:
+            return True
+        return os.system(exec_after_save) == 0
+
     def backup_save(self, params):
         fname = params.get('f')
         if fname is None: fname = '{}'.format(time.strftime('%Y%m%d%H%M%S'))
@@ -321,9 +345,9 @@ sys.argv = ['{}/{}-{}', '-I']
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime',
                'xc/cmd', 'xc/drivers', 'xc/extensions', 'etc', 'ui')
-        return self.local_func_result_failed if \
-                os.system(' '.join(cmd)) else \
-                0, {'backup': fname}
+        if not self.before_save() or os.system(' '.join(cmd)) or not self.after_save():
+            return self.local_func_result_failed
+        return 0, {'backup': fname}
 
     def backup_list(self, params):
         files = glob.glob('backup/*.tgz')
@@ -334,10 +358,13 @@ sys.argv = ['{}/{}-{}', '-I']
         return 0, result
 
     def backup_unlink(self, params):
+        if not self.before_save(): return self.local_func_result_failed
         try:
             os.unlink(dir_backup + '/' + params.get('f') + '.tgz')
         except:
+            self.after_save()
             return self.local_func_result_failed
+        if not self.after_save(): return self.local_func_result_failed
         return self.local_func_result_ok
 
     def backup_restore(self, params):
@@ -345,6 +372,7 @@ sys.argv = ['{}/{}-{}', '-I']
         if not os.path.isfile(f):
             self.print_err('no such backup')
             return self.local_func_result_failed
+        if not self.before_save(): return self.local_func_result_failed
         if params.get('full'):
             self.clear_runtime(full=True)
             self.clear_xc()
@@ -359,7 +387,9 @@ sys.argv = ['{}/{}-{}', '-I']
                 if not self.backup_restore_dir(fname=f, dirname='ui'):
                     raise Exception('restore failed')
             except:
+                self.after_save()
                 return self.local_func_result_failed
+            if not self.after_save(): return self.local_func_result_failed
             return self.local_func_result_ok
         try:
             if params.get('xc'):
@@ -377,7 +407,9 @@ sys.argv = ['{}/{}-{}', '-I']
                 if not self.backup_restore_dir(fname=f, dirname='etc'):
                     raise Exception('restore failed')
         except:
+            self.after_save()
             return self.local_func_result_failed
+        if not self.after_save(): return self.local_func_result_failed
         return self.local_func_result_ok
 
     def clear_runtime(self, full=False):
@@ -412,11 +444,16 @@ sys.argv = ['{}/{}-{}', '-I']
         return False if os.system(' '.join(cmd)) else True
 
     def backup_restore_dir(self, fname, dirname):
-        print(self.colored('Restoring {}...'.format(dirname), color='green', attrs=[]))
+        print(
+            self.colored(
+                'Restoring {}...'.format(dirname), color='green', attrs=[]))
         cmd = ('tar', 'xpf', fname, dirname)
         return False if os.system(' '.join(cmd)) else True
 
     def update(self, params):
+        _update_repo = params.get('u')
+        if not _update_repo:
+            _update_repo = update_repo
         try:
             with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
                 data = p.read()
@@ -425,7 +462,7 @@ sys.argv = ['{}/{}-{}', '-I']
             return self.local_func_result_failed
         try:
             r = requests.get(
-                'https://www.eva-ics.com/download/update_info.json', timeout=5)
+                _update_repo + '/update_info.json', timeout=5)
             if r.status_code != 200:
                 raise ('HTTP ERROR')
             result = jsonpickle.decode(r.text)
@@ -464,11 +501,11 @@ sys.argv = ['{}/{}-{}', '-I']
                 u = ''
             if u != 'YES':
                 return self.local_func_result_empty
-        url = 'https://www.eva-ics.com/download/{}/stable/update.sh'.format(
-            new_version)
+        url = '{}/{}/stable/update.sh'.format(
+            _update_repo, new_version)
         cmd = ('curl -s ' + url + ' | bash /dev/stdin')
-        return self.local_func_result_failed if os.system(cmd) else \
-                self.local_func_result_ok
+        if not self.before_save() or os.system(cmd) or not self.after_save():
+            return self.local_func_result_failed
 
     def power_reboot(self, params):
         if not params.get('y'):
@@ -494,6 +531,23 @@ sys.argv = ['{}/{}-{}', '-I']
         return self.local_func_result_failed if \
                 os.system('poweroff') else self.local_func_result_ok
 
+    def add_user_defined_functions(self):
+        if not cmds: return
+        for c in cmds:
+            sp = self.sp.add_parser(c['cmd'], help=c['comment'])
+
+    def exec_cmd(self, a):
+        return self.local_func_result_failed if \
+                os.system(a) else self.local_func_result_ok
+
+
+def make_exec_cmd_func(cmd):
+
+    def _function(params):
+        return cli.exec_cmd(cmd)
+
+    return _function
+
 
 _me = 'EVA ICS Management CLI version %s' % (__version__)
 
@@ -518,10 +572,47 @@ _api_functions = {
     'backup:restore': cli.backup_restore
 }
 
+cfg = configparser.ConfigParser(inline_comment_prefixes=';')
+try:
+    cfg.read(dir_etc + '/eva_shell.ini')
+    try:
+        exec_before_save = cfg.get('shell', 'exec_before_save')
+    except:
+        pass
+    try:
+        exec_after_save = cfg.get('shell', 'exec_after_save')
+    except:
+        pass
+    try:
+        update_repo = cfg.get('update', 'url')
+    except:
+        pass
+    try:
+        for c in cfg.options('cmd'):
+            if c not in _api_functions:
+                try:
+                    x = cfg.get('cmd', c)
+                    if x.find('#') == -1:
+                        x = x.strip()
+                        comment = c
+                    else:
+                        x, comment = x.split('#', 1)
+                        x = x.strip()
+                        comment = comment.strip()
+                    cmds.append({'cmd': c, 'comment': comment})
+                    _api_functions[c] = make_exec_cmd_func(x)
+                except:
+                    pass
+    except:
+        pass
+except:
+    pass
+
 eva.core.set_product('eva-cmd', '-1')
 cli.ap.prog = 'eva-cmd'
 cli.arg_sections += ['backup']
 cli.set_api_functions(_api_functions)
+cli.add_user_defined_functions()
 # cli.set_pd_cols(_pd_cols)
 # cli.set_pd_idx(_pd_idx)
 # cli.set_fancy_tabsp(_fancy_tabsp)
