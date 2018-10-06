@@ -28,12 +28,12 @@ _shared_lock = threading.Lock()
 mbi_code = ''
 
 
-def shared(name):
+def shared(name, default=None):
     if not _shared_lock.acquire(timeout=eva.core.timeout):
         logging.critical('macro_api shared locking broken')
         eva.core.critical()
         return None
-    value = _shared[name] if name in _shared else None
+    value = _shared.get(name, default)
     _shared_lock.release()
     return value
 
@@ -204,27 +204,27 @@ class MacroAPI(object):
             return None
         return lvar.status
 
-    def value(self, item_id):
+    def value(self, item_id, default=''):
         if is_oid(item_id):
             tp, i = parse_oid(item_id)
         else:
             tp = 'lvar'
             i = item_id
         if tp == 'unit':
-            return self.unit_value(i)
+            return self.unit_value(i, default)
         if tp == 'sensor':
-            return self.sensor_value(i)
+            return self.sensor_value(i, default)
         if tp == 'lvar':
-            return self.lvar_value(i)
+            return self.lvar_value(i, default)
         raise Exception('Unknown item type: %s' % tp)
 
-    def lvar_value(self, lvar_id):
+    def lvar_value(self, lvar_id, default=''):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
             if not self.pass_errors:
                 raise Exception('lvar unknown: ' + lvar_id)
             return None
-        if lvar.value == 'null': return ''
+        if lvar.value == 'null': return default
         try:
             v = float(lvar.value)
         except:
@@ -251,26 +251,26 @@ class MacroAPI(object):
             return None
         return unit.nstatus
 
-    def unit_value(self, unit_id):
+    def unit_value(self, unit_id, default=''):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
             return None
-        if unit.value == 'null': return ''
+        if unit.value == 'null': return default
         try:
             v = float(unit.value)
         except:
             v = unit.value
         return v
 
-    def unit_nvalue(self, unit_id):
+    def unit_nvalue(self, unit_id, default=''):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             if not self.pass_errors:
                 raise Exception('unit unknown: ' + unit_id)
             return None
-        if unit.nvalue == 'null': return ''
+        if unit.nvalue == 'null': return default
         try:
             v = float(unit.nvalue)
         except:
@@ -294,14 +294,14 @@ class MacroAPI(object):
             return None
         return sensor.status
 
-    def sensor_value(self, sensor_id):
+    def sensor_value(self, sensor_id, default=''):
         sensor = eva.lm.controller.uc_pool.get_sensor(
             oid_to_id(sensor_id, 'sensor'))
         if not sensor:
             if not self.pass_errors:
                 raise Exception('sensor unknown: ' + sensor_id)
             return None
-        if sensor.value == 'null': return ''
+        if sensor.value == 'null': return default
         try:
             v = float(sensor.value)
         except:

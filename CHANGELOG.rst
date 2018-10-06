@@ -31,6 +31,7 @@ LM
     * fixes: gain param in "tts" and "audio" extensions
 
     * "action_toggle" macro func, "toggle" acts as an alias for unit oids
+    * "shared" and "value" macro funcs default return values
     * test-ext CLI tool
 
 3.1.0 (2018-09-01)
