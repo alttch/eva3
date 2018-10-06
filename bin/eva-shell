@@ -46,10 +46,6 @@ class ManagementCLI(GenericCLI):
             return super().prepare_result_data(data, api_func, api_func_full,
                                                itype)
         result = []
-        if itype == 'status':
-            for k, v in data.copy():
-                print(k, v)
-            return result
         for d in data.copy():
             d['time'] = time.ctime(d['time'])
             result.append(d)
@@ -345,7 +341,8 @@ sys.argv = ['{}/{}-{}', '-I']
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
                '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime',
                'xc/cmd', 'xc/drivers', 'xc/extensions', 'etc', 'ui')
-        if not self.before_save() or os.system(' '.join(cmd)) or not self.after_save():
+        if not self.before_save() or \
+                os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
         return 0, {'backup': fname}
 
