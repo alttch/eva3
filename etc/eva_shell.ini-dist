@@ -1,0 +1,18 @@
+[shell]
+; exec commands before/after file manipulations,
+; e.g. mount -o remount,rw / (then back to ro)
+
+;exec_before_save =
+;
+;exec_after_save =
+;
+
+[cmd]
+; define custom commands, set command comment via '#'
+; customs command scripts can be stored in xc/shell
+; ll = ls -lah # list files
+; mycmd1 = mycmd1 # exec mycmd1 script
+
+[update]
+; specify custom update repository url
+; url = https://www.eva-ics.com/download
