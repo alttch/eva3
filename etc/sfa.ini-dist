@@ -28,7 +28,7 @@ stop_on_critical = yes
 timeout = 5
 
 ; exec commands before/after config/db save,
-; i.e. mount -o remount,rw / (then back to ro)
+; e.g. mount -o remount,rw / (then back to ro)
 
 ;exec_before_save =
 ;
