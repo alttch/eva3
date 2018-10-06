@@ -16,6 +16,7 @@ import readline
 import json
 import jsonpickle
 import termcolor
+import time
 from datetime import datetime
 from eva.client import apiclient
 from pygments import highlight, lexers, formatters
@@ -1085,3 +1086,74 @@ class GenericCLI(object):
         print(self.colored('time' + out[0][4:], color='blue', attrs=[]))
         print(self.colored('-' * len(out[0]), color='grey'))
         [print(o) for o in out[2:]]
+
+
+class ControllerCLI(object):
+
+    def start_controller(self, params):
+        if self.apiuri:
+            return self.local_func_result_empty
+        self.exec_control_script('start')
+        return self.local_func_result_ok
+
+    def stop_controller(self, params):
+        if self.apiuri:
+            return self.local_func_result_empty
+        self.exec_control_script('stop')
+        return self.local_func_result_ok
+
+    def restart_controller(self, params):
+        if self.apiuri:
+            return self.local_func_result_empty
+        self.exec_control_script('restart')
+        return self.local_func_result_ok
+
+    def status_controller(self, params):
+        if self.apiuri:
+            return self.local_func_result_empty
+        out = self.exec_control_script('status', collect_output=True)
+        result = {}
+        try:
+            result[self._management_controller_id] = out[0].strip() == 'running'
+        except:
+            return self.local_func_result_failed
+        return 0, result
+
+    def exec_control_script(self, command, collect_output=False):
+        script = self._management_controller_id + '-control'
+        cmd = '{}/{} {}'.format(self.dir_sbin, script, command)
+        if collect_output:
+            with os.popen(cmd) as p:
+                result = p.readlines()
+            return result
+        else:
+            os.system(cmd + ' &')
+            time.sleep(1)
+
+    def prepare_controller_status_dict(self, data):
+        result = {}
+        for k, v in data.copy().items():
+            result[k] = 'running' if v else 'stopped'
+        return result
+
+    def add_manager_control_functions(self):
+        ap_start = self.sp.add_parser('start', help='Start controller')
+        ap_stop = self.sp.add_parser('stop', help='Stop controller')
+        ap_restart = self.sp.add_parser('restart', help='Restart controller')
+        ap_status = self.sp.add_parser(
+            'status', help='Status of the controller')
+
+    def enable_controller_management_functions(self, controller_id):
+        if self.apiuri:
+            return
+        self.dir_sbin = os.path.realpath(
+            os.path.dirname(os.path.realpath(__file__)) + '/../../../sbin')
+        self.add_manager_control_functions()
+        self._management_controller_id = controller_id
+        funcs = {
+            'start': self.start_controller,
+            'stop': self.stop_controller,
+            'restart': self.restart_controller,
+            'status': self.status_controller,
+        }
+        self.set_api_functions(funcs)

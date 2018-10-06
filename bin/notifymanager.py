@@ -15,10 +15,16 @@ sys.path.append(dir_lib)
 
 import eva.core
 from eva.client.cli import GenericCLI
+from eva.client.cli import ControllerCLI
 from eva.tools import parse_host_port
 
+class NotifierCLI(GenericCLI, ControllerCLI):
 
-class NotifierCLI(GenericCLI):
+    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+        if itype not in ['status']:
+            return super().prepare_result_dict(data, api_func, api_func_full,
+                                               itype)
+        return self.prepare_controller_status_dict(data)
 
     def add_functions(self):
         super().add_functions()
@@ -466,6 +472,7 @@ cli.ap.prog = '%s-notifier' % product
 cli.always_json += _always_json
 cli.arg_sections += ['subscribe']
 cli.set_api_functions(_api_functions)
+cli.enable_controller_management_functions(product)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_tabsp(_fancy_tabsp)

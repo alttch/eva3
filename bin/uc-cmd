@@ -15,6 +15,7 @@ dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
 from eva.client.cli import GenericCLI
+from eva.client.cli import ControllerCLI
 from eva.client import apiclient
 
 _me = 'EVA ICS UC CLI version %s' % __version__
@@ -98,7 +99,7 @@ _fancy_tabsp = {'list_props': 26, 'get_phi': 14, 'get_driver': 12}
 _always_json = ['get_config']
 
 
-class UC_CLI(GenericCLI):
+class UC_CLI(GenericCLI, ControllerCLI):
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
         if itype not in ['action', 'driver', 'phi', 'lpi']:
@@ -155,6 +156,12 @@ class UC_CLI(GenericCLI):
                 self.print_err('Download error: %s' % a._uri)
                 return 97
         return super().prepare_run(api_func, params, a)
+
+    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+        if itype not in ['status']:
+            return super().prepare_result_dict(data, api_func, api_func_full,
+                                               itype)
+        return self.prepare_controller_status_dict(data)
 
     def add_functions(self):
         super().add_functions()
@@ -703,6 +710,7 @@ cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'phi', 'lpi', 'driver'
 ]
 cli.set_api_functions(_api_functions)
+cli.enable_controller_management_functions('uc')
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_tabsp(_fancy_tabsp)
