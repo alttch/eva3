@@ -405,6 +405,9 @@ class GenericCLI(object):
 
     def set_api_functions(self, fn_table={}):
         self.api_functions = self.common_api_functions.copy()
+        self.append_api_functions(fn_table)
+
+    def append_api_functions(self, fn_table={}):
         self.api_functions.update(fn_table)
 
     def set_pd_cols(self, pd_cols={}):
@@ -1156,4 +1159,4 @@ class ControllerCLI(object):
             'restart': self.restart_controller,
             'status': self.status_controller,
         }
-        self.set_api_functions(funcs)
+        self.append_api_functions(funcs)
