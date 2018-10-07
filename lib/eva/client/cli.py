@@ -725,7 +725,8 @@ class GenericCLI(object):
             metavar='REMOTE_FILE')
 
     def _add_key_functions(self):
-        ap_key = self.sp.add_parser('key', help='API key management')
+        ap_key = self.sp.add_parser(
+            'key', help='API key management (dynamic keys only)')
         sp_key = ap_key.add_subparsers(
             dest='_func', metavar='func', help='API key commands')
 
