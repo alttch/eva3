@@ -232,8 +232,8 @@ def check(k,
 def serialized_acl(k):
     if not k or not k in keys: return None
     _k = keys[k]
-    r = {'key_id': _k.key_id, 'master': _k.master}
-    if _k.master: return r
+    r = {'key_id': _k.key_id, 'master': _k.master or eva.core.setup_mode}
+    if _k.master or eva.core.setup_mode: return r
     r['sysfunc'] = _k.sysfunc
     r['items'] = _k.item_ids
     r['groups'] = _k.groups

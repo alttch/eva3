@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
@@ -54,6 +55,7 @@ _lock_processor = None
 api = None
 
 api_file_management_allowed = False
+api_setup_mode_allowed = False
 
 cvars_public = False
 
@@ -346,7 +348,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         return True
 
     def setup_mode(self, k=None, setup=False):
-        if not eva.apikey.check(k, master=True):
+        if not eva.apikey.check(k, master=True) or not api_setup_mode_allowed:
             return False
         if setup:
             eva.core.setup_on()
@@ -629,7 +631,7 @@ class SysHTTP_API(SysAPI):
 
 
 def update_config(cfg):
-    global api_file_management_allowed
+    global api_file_management_allowed, api_setup_mode_allowed
     try:
         api_file_management_allowed = (cfg.get('sysapi',
                                                'file_management') == 'yes')
@@ -637,6 +639,13 @@ def update_config(cfg):
         pass
     logging.debug('sysapi.file_management = %s' % ('yes' \
             if api_file_management_allowed else 'no'))
+    try:
+        api_setup_mode_allowed = (cfg.get('sysapi',
+                                               'setup_mode') == 'yes')
+    except:
+        pass
+    logging.debug('sysapi.setup_mode = %s' % ('yes' \
+            if api_setup_mode_allowed else 'no'))
     return True
 
 

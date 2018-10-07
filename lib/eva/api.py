@@ -182,6 +182,7 @@ class GenericAPI(object):
                     eva.core.enterprise_layout else 'simple'
         if apikey.check(k, sysfunc=True):
             result['debug'] = eva.core.debug
+            result['setup_mode'] = eva.core.setup_mode
             result['db_update'] = eva.core.db_update
             result['polldelay'] = eva.core.polldelay
             if eva.core.development:

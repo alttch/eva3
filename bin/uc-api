@@ -131,6 +131,12 @@ if func == 'debug':
 elif func == 'nodebug':
     params['debug'] = 0
     func = 'set_debug'
+elif func == 'setup':
+    params['setup'] = 1
+    func = 'setup_mode'
+elif func == 'nosetup':
+    params['setup'] = 0
+    func = 'setup_mode'
 else:
     params.update(xparams)
 
