@@ -127,60 +127,64 @@ def _t_dispatcher(host, port):
                     'UDP API from %s denied by server configuration' % \
                             address)
                 continue
-            try:
-                cmd = data.split(' ')
-                item_id = cmd[0]
-                status = None
-                value = None
-                update = False
-                priority = None
-                if cmd[1] == 'u':
-                    update = True
-                    status = cmd[2]
-                    if len(cmd) > 3:
-                        value = cmd[3]
-                else:
-                    status = cmd[1]
-                    if len(cmd) > 2:
-                        value = cmd[2]
-                    if len(cmd) > 3:
-                        priority = cmd[3]
-                if status == 'None': status = None
-                if value == 'None': value = None
-                logging.debug('udp cmd data item_id = %s' % item_id)
-                logging.debug('udp cmd data update = %s' % update)
-                logging.debug('udp cmd data status = %s' % status)
-                logging.debug('udp cmd data value = "%s"' % value)
-                logging.debug('udp cmd data priority = "%s"' % priority)
-                item = None
-                if status: status = int(status)
-                if priority: priority = int(priority)
-                item = eva.uc.controller.get_item(item_id)
-                if not item:
-                    logging.warning('UDP API item unknown %s' % item_id)
-                    continue
-                if not item.item_type in ['unit', 'sensor']:
-                    logging.warning(
-                            'UDP API: item %s must be unit or sensor' % \
-                                    item_id)
-                    continue
-                if update:
-                    item.update_set_state(status, value)
-                else:
-                    if item.item_type in ['unit']:
-                        if status is None:
-                            logging.warning('UDP API no status - no action')
-                        else:
-                            eva.uc.controller.exec_unit_action(
-                                item_id, status, value, priority)
+            for _data in data.split('|'):
+                try:
+                    cmd = _data.split(' ')
+                    item_id = cmd[0]
+                    status = None
+                    value = None
+                    update = False
+                    priority = None
+                    if cmd[1] == 'u':
+                        update = True
+                        status = cmd[2]
+                        if len(cmd) > 3:
+                            value = cmd[3]
                     else:
+                        status = cmd[1]
+                        if len(cmd) > 2:
+                            value = cmd[2]
+                        if len(cmd) > 3:
+                            priority = cmd[3]
+                    if status == 'None': status = None
+                    if value == 'None': value = None
+                    logging.debug('udp cmd data item_id = %s' % item_id)
+                    logging.debug('udp cmd data update = %s' % update)
+                    logging.debug('udp cmd data status = %s' % status)
+                    logging.debug('udp cmd data value = "%s"' % value)
+                    logging.debug('udp cmd data priority = "%s"' % priority)
+                    item = None
+                    if status: status = int(status)
+                    if priority: priority = int(priority)
+                    item = eva.uc.controller.get_item(item_id)
+                    if not item:
+                        logging.warning('UDP API item unknown %s' % item_id)
+                        continue
+                    if not item.item_type in ['unit', 'sensor']:
                         logging.warning(
-                                'UDP API no action for %s' % \
-                                item.item_type)
-            except:
-                logging.warning('UDP API received bad cmd data from %s' % \
-                        address)
-                eva.core.log_traceback()
+                            'UDP API: item ' + \
+                            '%s must be either unit or sensor from %s' % \
+                            item_id, address)
+                        continue
+                    if update:
+                        item.update_set_state(status, value)
+                    else:
+                        if item.item_type in ['unit']:
+                            if status is None:
+                                logging.warning(
+                                    'UDP API no status - no action from %s' %
+                                    address)
+                            else:
+                                eva.uc.controller.exec_unit_action(
+                                    item_id, status, value, priority)
+                        else:
+                            logging.warning(
+                                    'UDP API no action for %s' % \
+                                    item.item_type)
+                except:
+                    logging.warning('UDP API received bad cmd data from %s' % \
+                            address)
+                    eva.core.log_traceback()
         except:
             logging.critical('UDP API dispatcher crashed, restarting')
             eva.core.log_traceback()
