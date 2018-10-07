@@ -412,7 +412,7 @@ class SysHTTP_API(SysAPI):
         else: dev = False
         if dev and not eva.core.development: raise cp_forbidden_key()
         p = cherrypy.serving.request.params.copy()
-        if not eva.core.development or 1:
+        if not eva.core.development:
             if 'k' in p: del p['k']
             if cherrypy.serving.request.path_info[:12] == '/create_user' or \
               cherrypy.serving.request.path_info[:18] == '/set_user_password':
