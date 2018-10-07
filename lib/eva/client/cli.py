@@ -70,6 +70,7 @@ class GenericCLI(object):
         self.suppress_colors = False
         self.always_suppress_colors = False
         self.default_timeout = 10
+        self.default_prompt = '> '
         self.timeout = self.default_timeout
         self.ssl_verify = False
         self.always_json = []
@@ -157,8 +158,7 @@ class GenericCLI(object):
 
     def print_json(self, obj):
         j = self.format_json(obj)
-        if not self.always_suppress_colors and not self.suppress_colors and \
-                sys.stdout.isatty():
+        if self.can_colorize():
             j = highlight(j, lexers.JsonLexer(), formatters.TerminalFormatter())
         print(j)
 
@@ -168,9 +168,14 @@ class GenericCLI(object):
                     if not minimal else \
                     jsonpickle.encode(obj, unpicklable = False)
 
+    def can_colorize(self):
+        return not self.suppress_colors and \
+                not self.always_suppress_colors and \
+                sys.stdout.isatty()
+
     def get_prompt(self):
         if self.prompt: return self.prompt
-        prompt = '> '
+        prompt = self.default_prompt
         if self.apiuri:
             h = ' ' + self.apiuri.replace('https://', '').replace('http://', '')
         else:
@@ -179,16 +184,47 @@ class GenericCLI(object):
                 self.colored(parent_shell_name,
                         'green', attrs=['bold'], rlsafe=True) + '/'
         if self.product:
-            prompt = '[%s%s] %s' % (
-                ppeva + self.colored(
-                    self.product, 'green', attrs=['bold'], rlsafe=True),
-                self.colored(h, 'blue', attrs=['bold'], rlsafe=True), prompt)
+            product_str = self.colored(
+                self.product, 'green', attrs=['bold'], rlsafe=True)
+            host_str = ''
+            if self.remote_api:
+                try:
+                    if not self.can_colorize():
+                        raise Exception('no colors required')
+                    cmd = []
+                    if self.timeout:
+                        cmd.append('-T')
+                        cmd.append(str(self.timeout))
+                    if self.apiuri:
+                        cmd.append('-U')
+                        cmd.append(self.apiuri)
+                    if self.apikey:
+                        cmd.append('-K')
+                        cmd.append(self.apikey)
+                    cmd.append('test')
+                    code, result = self.do_run(cmd, return_result=True)
+                    if code != apiclient.result_ok or \
+                            result['result'] != 'OK' or \
+                            not 'key_id' in result['acl']:
+                        raise Exception('test failed')
+                    if h: h = '@' + h[1:]
+                    else: h = ''
+                    h = ' ' + result['acl']['key_id'] + h
+                    host_str = self.colored(
+                        h, 'blue', attrs=['bold'], rlsafe=True)
+                    if result['acl'].get('master'):
+                        prompt = '# '
+                except:
+                    product_str = self.colored(
+                        self.product, 'grey', attrs=['bold'], rlsafe=True)
+                    host_str = self.colored(
+                        h, 'grey', attrs=['bold'], rlsafe=True)
+            prompt = '[%s%s]%s' % (ppeva + product_str, host_str, prompt)
         return prompt
 
     def colored(self, text, color=None, on_color=None, attrs=None,
                 rlsafe=False):
-        if self.suppress_colors or self.always_suppress_colors or \
-                not sys.stdout.isatty():
+        if not self.can_colorize():
             return str(text)
         return safe_colored(
             text, color=color, on_color=on_color, attrs=attrs, rlsafe=rlsafe)
