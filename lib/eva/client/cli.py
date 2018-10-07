@@ -271,8 +271,8 @@ class GenericCLI(object):
             if self.remote_api:
                 o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T:JIRD', [
                     'client-ini-file=', 'exec-batch=', 'pass-batch-err',
-                    'interactive', 'debug', 'raw-output', 'json', 'api-key',
-                    'api-url', 'api-timeout'
+                    'interactive', 'debug', 'raw-output', 'json', 'api-key=',
+                    'api-url=', 'api-timeout='
                 ])
             else:
                 o, a = getopt.getopt(sys.argv[1:], 'JIR', [
