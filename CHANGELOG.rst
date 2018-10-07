@@ -23,6 +23,7 @@ UC
 
     * "update" command without params starts item passive update
     * batch commands in UDP API (separated with new line) 
+    * encryption and authentication in UDP API
     * test-phi CLI tool
 
 LM

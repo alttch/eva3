@@ -36,18 +36,23 @@ to set value to "", just send double space at the end of packet
 import logging
 import threading
 import socket
+import base64
+import hashlib
 
 import eva.core
 import eva.uc.controller
 
 from eva.tools import parse_host_port
 from eva.tools import netacl_match
+from eva import apikey
 
 from netaddr import IPNetwork
+from cryptography.fernet import Fernet
 
 host = None
 port = None
 hosts_allow = []
+hosts_allow_encrypted = []
 
 default_port = 8881
 
@@ -57,7 +62,7 @@ server_socket = None
 
 
 def update_config(cfg):
-    global host, port, hosts_allow
+    global host, port, hosts_allow, hosts_allow_encrypted
     try:
         host, port = parse_host_port(cfg.get('udpapi', 'listen'), default_port)
         logging.debug('udpapi.listen = %s:%u' % (host, port))
@@ -73,7 +78,7 @@ def update_config(cfg):
                 filter(None, [x.strip() for x in _ha.split(',')]))
             hosts_allow = [IPNetwork(h) for h in _hosts_allow]
         except:
-            logging.error('udpapi bad host acl!')
+            logging.error('udpapi: invalid hosts allow acl!')
             host = None
             eva.core.log_traceback()
             return False
@@ -81,7 +86,26 @@ def update_config(cfg):
         logging.debug('udpapi.hosts_allow = %s' % \
                 ', '.join([ str(h) for h in hosts_allow ]))
     else:
-        logging.debug('udpapi.hosts_allow = 0.0.0.0/0')
+        logging.debug('udpapi.hosts_allow = none')
+    try:
+        _ha = cfg.get('udpapi', 'hosts_allow_encrypted')
+    except:
+        _ha = None
+    if _ha:
+        try:
+            _hosts_allow = list(
+                filter(None, [x.strip() for x in _ha.split(',')]))
+            hosts_allow_encrypted = [IPNetwork(h) for h in _hosts_allow]
+        except:
+            logging.error('udpapi: invalid encrypted hosts allow acl!')
+            host = None
+            eva.core.log_traceback()
+            return False
+    if hosts_allow_encrypted:
+        logging.debug('udpapi.hosts_allow_encrypted = %s' % \
+                ', '.join([ str(h) for h in hosts_allow_encrypted ]))
+    else:
+        logging.debug('udpapi.hosts_allow_encrypted = none')
     return True
 
 
@@ -106,8 +130,12 @@ def stop():
     _t_dispatcher_active = False
 
 
-def check_access(address):
-    return hosts_allow and netacl_match(address, hosts_allow)
+def check_access(address, data):
+    if data[0] == '|':
+        return hosts_allow_encrypted and netacl_match(address,
+                                                      hosts_allow_encrypted)
+    else:
+        return hosts_allow and netacl_match(address, hosts_allow)
 
 
 def _t_dispatcher(host, port):
@@ -122,11 +150,35 @@ def _t_dispatcher(host, port):
             address = address[0]
             data = data.decode()
             logging.debug('UDP API cmd from %s' % address)
-            if not check_access(address):
+            if not check_access(address, data):
                 logging.warning(
                     'UDP API from %s denied by server configuration' % \
                             address)
                 continue
+            if data[0] == '|':
+                try:
+                    x, api_key_id, data = data.split('|', 2)
+                    api_key = apikey.key_by_id(api_key_id)
+                    if api_key is None:
+                        logging.warning('udp api: invalid api key id in' + \
+                                ' encrypted packet from %s' % address)
+                        continue
+                    _k = base64.b64encode(
+                        hashlib.sha256(api_key.encode()).digest())
+                    try:
+                        data = Fernet(_k).decrypt(data.encode()).decode()
+                    except:
+                        logging.warning('udp api: invalid api key in' + \
+                                ' encrypted packet from %s' % address)
+                        continue
+                except:
+                    logging.warning('udp api: received invalid encrypted' + \
+                                ' packet from %s' % address)
+                    eva.core.log_traceback()
+                    continue
+            else:
+                api_key_id = None
+                api_key = None
             for _data in data.split('\n'):
                 try:
                     if not _data: continue
@@ -149,6 +201,9 @@ def _t_dispatcher(host, port):
                             priority = cmd[3]
                     if status == 'None': status = None
                     if value == 'None': value = None
+                    if api_key is not None:
+                        logging.debug('udp cmd data api_key = %s' % api_key_id)
+                    logging.debug('udp cmd data item_id = %s' % item_id)
                     logging.debug('udp cmd data item_id = %s' % item_id)
                     logging.debug('udp cmd data update = %s' % update)
                     logging.debug('udp cmd data status = %s' % status)
@@ -158,7 +213,7 @@ def _t_dispatcher(host, port):
                     if status: status = int(status)
                     if priority: priority = int(priority)
                     item = eva.uc.controller.get_item(item_id)
-                    if not item:
+                    if not item or not apikey.check(api_key, item):
                         logging.warning('UDP API item unknown %s' % item_id)
                         continue
                     if not item.item_type in ['unit', 'sensor']:
@@ -183,8 +238,8 @@ def _t_dispatcher(host, port):
                                     'UDP API no action for %s' % \
                                     item.item_type)
                 except:
-                    logging.warning('UDP API received bad cmd data from %s' % \
-                            address)
+                    logging.warning('udp api: received invalid cmd data' + \
+                            ' from %s' % address)
                     eva.core.log_traceback()
         except:
             logging.critical('UDP API dispatcher crashed, restarting')
