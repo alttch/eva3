@@ -348,7 +348,13 @@ class EVA_APIClient {
 
     function set_key($key) { $this->_key = $key; }
 
-    function set_uri($uri) { $this->_uri = $uri; }
+    function set_uri($uri) {
+        $this->_uri = $uri;
+        if (substr($this->_uri, 0, 7) != "http://" &&
+            substr($this->_uri, 0, 8) != 'https://') {
+            $this->_uri = 'http://'.$this->_uri;
+        }
+    }
 
     function set_timeout($timeout) { $this->_timeout = $timeout; }
 

@@ -269,14 +269,16 @@ class GenericCLI(object):
     def parse_primary_args(self):
         try:
             if self.remote_api:
-                o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T:JIR', [
+                o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T:JIRD', [
                     'client-ini-file=', 'exec-batch=', 'pass-batch-err',
-                    'interactive'
+                    'interactive', 'debug', 'raw-output', 'json', 'api-key',
+                    'api-url', 'api-timeout'
                 ])
             else:
-                o, a = getopt.getopt(
-                    sys.argv[1:], 'JIR',
-                    ['exec-batch=', 'pass-batch-err', 'interactive'])
+                o, a = getopt.getopt(sys.argv[1:], 'JIR', [
+                    'exec-batch=', 'pass-batch-err', 'interactive', 'debug',
+                    'raw-output', 'json'
+                ])
             for i, v in o:
                 if i == '--exec-batch':
                     self.batch_file = v
@@ -284,15 +286,17 @@ class GenericCLI(object):
                     self.batch_stop_on_err = False
                 elif i == '--interactive' or i == '-I':
                     self.interactive = True
-                elif i == '-U':
+                elif i == '-U' or i == '--api-url':
                     self.apiuri = v
-                elif i == '-K':
+                elif i == '-K' or i == '--api-key':
                     self.apikey = v
-                elif i == '-J':
+                elif i == '-J' or i == '--json':
                     self.in_json = True
-                elif i == '-R':
+                elif i == '-D' or i == '--debug':
+                    self.debug = True
+                elif i == '-R' or i == '--raw-output':
                     self.always_suppress_colors = True
-                elif i == '-T':
+                elif i == '-T' or i == '--api-timeout':
                     try:
                         self.timeout = float(v)
                     except:

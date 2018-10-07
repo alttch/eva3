@@ -149,6 +149,9 @@ class APIClient(object):
 
     def set_uri(self, uri):
         self._uri = uri
+        if not self._uri.startswith('http://') and \
+                not self._uri.startswith('https://'):
+            self._uri = 'http://' + self._uri
 
     def set_timeout(self, timeout):
         self._timeout = timeout
