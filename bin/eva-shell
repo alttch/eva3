@@ -34,6 +34,7 @@ exec_after_save = None
 cmds = []
 
 update_repo = 'https://www.eva-ics.com/download'
+interactive_mode = False
 
 import eva.core
 from eva.client.cli import GenericCLI
@@ -168,8 +169,7 @@ class ManagementCLI(GenericCLI):
             '--repository-url',
             dest='u',
             metavar='URL',
-            help='update repository url'
-            )
+            help='update repository url')
         ap_update.add_argument(
             '-i',
             '--info-only',
@@ -241,11 +241,11 @@ class ManagementCLI(GenericCLI):
 import eva.client.cli
 eva.client.cli.say_bye = False
 eva.client.cli.parent_shell_name = 'eva'
-eva.client.cli.readline_processing = False
+eva.client.cli.readline_processing = {}
 sys.argv = ['{}/{}-{}', '-I']
 {}
 
-""".format(dir_bin, p, x, xp) + c
+""".format(not interactive_mode, dir_bin, p, x, xp) + c
             try:
                 exec(c)
             except SystemExit:
@@ -458,8 +458,7 @@ sys.argv = ['{}/{}-{}', '-I']
         except:
             return self.local_func_result_failed
         try:
-            r = requests.get(
-                _update_repo + '/update_info.json', timeout=5)
+            r = requests.get(_update_repo + '/update_info.json', timeout=5)
             if r.status_code != 200:
                 raise ('HTTP ERROR')
             result = jsonpickle.decode(r.text)
@@ -498,8 +497,7 @@ sys.argv = ['{}/{}-{}', '-I']
                 u = ''
             if u != 'YES':
                 return self.local_func_result_empty
-        url = '{}/{}/stable/update.sh'.format(
-            _update_repo, new_version)
+        url = '{}/{}/stable/update.sh'.format(_update_repo, new_version)
         cmd = ('curl -s ' + url + ' | bash /dev/stdin')
         if not self.before_save() or os.system(cmd) or not self.after_save():
             return self.local_func_result_failed
@@ -622,6 +620,7 @@ banner = """     _______    _____       _______________
   www.eva-ics.com (c) 2012-2018 Altertech
 """
 if '-I' in sys.argv or '--interactive' in sys.argv:
+    interactive_mode = True
     print(cli.colored(banner, color='blue'))
     cli.do_run(['version'])
     print()
