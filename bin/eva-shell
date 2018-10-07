@@ -507,6 +507,8 @@ sys.argv = {}
         cmd = ('curl -s ' + url + ' | bash /dev/stdin')
         if not self.before_save() or os.system(cmd) or not self.after_save():
             return self.local_func_result_failed
+        print('Update completed. Now exit EVA shell and log in back')
+        return self.local_func_result_ok
 
     def power_reboot(self, params):
         if not params.get('y'):
