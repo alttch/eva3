@@ -176,10 +176,6 @@ class GenericCLI(object):
     def get_prompt(self):
         if self.prompt: return self.prompt
         prompt = self.default_prompt
-        if self.apiuri:
-            h = ' ' + self.apiuri.replace('https://', '').replace('http://', '')
-        else:
-            h = ''
         ppeva = '' if not parent_shell_name else \
                 self.colored(parent_shell_name,
                         'green', attrs=['bold'], rlsafe=True) + '/'
@@ -207,14 +203,17 @@ class GenericCLI(object):
                             result['result'] != 'OK' or \
                             not 'key_id' in result['acl']:
                         raise Exception('test failed')
-                    if h: h = '@' + h[1:]
-                    else: h = ''
-                    h = ' ' + result['acl']['key_id'] + h
+                    h = ' ' + result['acl']['key_id'] + '@' + result['system']
                     host_str = self.colored(
                         h, 'blue', attrs=['bold'], rlsafe=True)
                     if result['acl'].get('master'):
                         prompt = '# '
                 except:
+                    if self.apiuri:
+                        h = ' ' + self.apiuri.replace('https://', '').replace(
+                            'http://', '')
+                    else:
+                        h = ''
                     product_str = self.colored(
                         self.product, 'grey', attrs=['bold'], rlsafe=True)
                     host_str = self.colored(
@@ -253,6 +252,7 @@ class GenericCLI(object):
         print()
         if self.remote_api:
             print('a: show API params')
+            print('c <host:port> [key] [timeout]: connect to remote API')
             print('k: key display/set (k. for key reset)')
             print('u: api uri display/set (u. for uri reset)')
             print('t: timeout display/set (t. for timeout reset)')
@@ -912,6 +912,35 @@ class GenericCLI(object):
                                                             parent_shell_name):
                     self.finish_interactive()
                     return 0
+                if (d[0] == 'k.' or d[0] == 'c.') and self.remote_api:
+                    self.apikey = None
+                    print('Key has been reset to default')
+                if (d[0] == 'u.' or d[0] == 'c.') and self.remote_api:
+                    self.apiuri = None
+                    print('API uri has been reset to default')
+                if (d[0] == 't.' or d[0] == 'c.') and self.remote_api:
+                    self.timeout = self.default_timeout
+                    print('timeout: %.2f' % self.timeout)
+                if (d[0] == 'k' or d[0] == 'c') and self.remote_api:
+                    try:
+                        self.apikey = d[1 if d[0] == 'k' else 2]
+                    except:
+                        pass
+                    print('key: %s' % self.apikey
+                          if self.apikey is not None else '<default>')
+                if (d[0] == 'u' or d[0] == 'c') and self.remote_api:
+                    try:
+                        self.apiuri = d[1]
+                    except:
+                        pass
+                    print('API uri: %s' % self.apiuri
+                          if self.apiuri is not None else '<default>')
+                if (d[0] == 't' or d[0] == 'c') and self.remote_api:
+                    try:
+                        self.timeout = float(d[1 if d[0] == 't' else 3])
+                    except:
+                        pass
+                    print('timeout: %.2f' % self.timeout)
                 elif d[0] == 'a' and self.remote_api:
                     print('API uri: %s' % (self.apiuri
                                            if self.apiuri is not None else
@@ -922,12 +951,6 @@ class GenericCLI(object):
                     print('Client debug mode ' +
                           ('on' if self.debug else 'off'))
                     print('timeout: %.2f' % self.timeout)
-                elif d[0] == 'k.' and self.remote_api:
-                    self.apikey = None
-                    print('Key has been reset to default')
-                elif d[0] == 'u.' and self.remote_api:
-                    self.apiuri = None
-                    print('API uri has been reset to default')
                 elif d[0] == 'j':
                     self.in_json = not self.in_json
                     print('JSON mode ' + ('on' if self.in_json else 'off'))
@@ -940,26 +963,6 @@ class GenericCLI(object):
                     self.debug = not self.debug
                     print('Client debug mode ' +
                           ('on' if self.debug else 'off'))
-                elif d[0] == 't.' and self.remote_api:
-                    self.timeout = self.default_timeout
-                    print('timeout: %.2f' % self.timeout)
-                elif d[0] == 'k' and self.remote_api:
-                    if len(d) > 1:
-                        self.apikey = d[1]
-                    print('key: %s' % self.apikey
-                          if self.apikey is not None else '<default>')
-                elif d[0] == 'u' and self.remote_api:
-                    if len(d) > 1:
-                        self.apiuri = d[1]
-                    print('API uri: %s' % self.apiuri
-                          if self.apiuri is not None else '<default>')
-                elif d[0] == 't' and self.remote_api:
-                    if len(d) > 1:
-                        try:
-                            self.timeout = float(d[1])
-                        except:
-                            self.print_err('FAILED')
-                    print('timeout: %.2f' % self.timeout)
                 elif d[0] == 'top':
                     try:
                         top = '/usr/bin/htop' if os.path.isfile(
@@ -995,7 +998,7 @@ class GenericCLI(object):
                         self.do_run(['-h'])
                     except:
                         pass
-                else:
+                elif d[0] not in ['k', 'u', 'c', 't', 'k.', 'u.', 'c.', 't.']:
                     try:
                         opts = []
                         if self.remote_api:
