@@ -56,7 +56,8 @@ class RemoteController(eva.item.Item):
 
     def test(self):
         result = self.api_call('test')
-        if result['result'] != 'OK':
+        if not isinstance(result, dict): return None
+        if result.get('result') != 'OK':
             logging.error('Remote controller unknown access error %s' % \
                     api._uri)
             return None
@@ -176,7 +177,7 @@ class RemoteController(eva.item.Item):
         d = {}
         if config or props:
             d['uri'] = self.api._uri
-            if self._key is not None: d['key'] = self._key
+            d['key'] = self._key if self._key is not None else ''
             d['timeout'] = self.api._timeout
             d['ssl_verify'] = self.api._ssl_verify
             d['mqtt_update'] = self.mqtt_update
@@ -184,7 +185,7 @@ class RemoteController(eva.item.Item):
         if info:
             d['connected'] = self.connected
             d['version'] = self.version
-            d['build'] = self.product_build
+            d['build'] = str(self.product_build)
             d['mqtt_update'] = self.mqtt_update
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
@@ -360,7 +361,9 @@ class RemoteControllerPool(object):
         return False
 
     def reload_controller(self, controller_id):
-        pass
+        if not controller_id in self.controllers: return False
+        controller = self.controllers[controller_id]
+        return controller.load_remote()
 
     def start(self):
         if not eva.core.keep_action_history:
@@ -607,7 +610,8 @@ class RemoteUCPool(RemoteControllerPool):
         return True
 
     def reload_controller(self, controller_id):
-        if not controller_id in self.controllers: return False
+        if not super().reload_controller(controller_id):
+            return False
         uc = self.controllers[controller_id]
         units = uc.load_units()
         if units is not None:
@@ -898,7 +902,8 @@ class RemoteLMPool(RemoteControllerPool):
         return True
 
     def reload_controller(self, controller_id):
-        if not controller_id in self.controllers: return False
+        if not super().reload_controller(controller_id):
+            return False
         lm = self.controllers[controller_id]
         lvars = lm.load_lvars()
         if lvars is not None:
