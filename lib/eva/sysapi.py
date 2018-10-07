@@ -286,8 +286,10 @@ class UserAPI(object):
     def list_keys(self, k):
         if not eva.apikey.check(k, master=True): return False
         result = []
-        for k in eva.apikey.keys:
-            r = eva.apikey.serialized_acl(k)
+        for _k in eva.apikey.keys:
+            r = eva.apikey.serialized_acl(_k)
+            r['dynamic'] = r[
+                'key_id'] not in eva.apikey._keys_loaded_from_ini.keys()
             result.append(r)
         return sorted(
             sorted(result, key=lambda k: k['key_id']),
@@ -299,16 +301,16 @@ class UserAPI(object):
         return eva.users.list_users()
 
     def create_key(self,
-                key=None,
-                name=None,
-                s=False,
-                i=None,
-                g=None,
-                a=None,
-                hal=None,
-                has=None,
-                pvt=None,
-                rpvt=None):
+                   key=None,
+                   name=None,
+                   s=False,
+                   i=None,
+                   g=None,
+                   a=None,
+                   hal=None,
+                   has=None,
+                   pvt=None,
+                   rpvt=None):
         if not eva.apikey.check(key, master=True): return False
         _hal = hal if hal else '0.0.0.0/0'
         _a = a if a != 'none' else ''
@@ -670,16 +672,16 @@ class SysHTTP_API(SysAPI):
         return super().list_users(k)
 
     def create_key(self,
-                k=None,
-                n=None,
-                s=False,
-                i=None,
-                g=None,
-                a=None,
-                hal=None,
-                has=None,
-                pvt=None,
-                rpvt=None):
+                   k=None,
+                   n=None,
+                   s=False,
+                   i=None,
+                   g=None,
+                   a=None,
+                   hal=None,
+                   has=None,
+                   pvt=None,
+                   rpvt=None):
         cp_need_master(k)
         result = super().create_key(k, n, s, i, g, a, hal, has, pvt, rpvt)
         return result if result else http_api_result_error()

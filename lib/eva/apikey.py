@@ -279,7 +279,7 @@ def add_api_key(name=None,
     if key:
         keys_by_id[key.key_id] = key
         keys[key.key] = key
-        result = copy.copy(key.__dict__)
+        result = key.__dict__.copy()
         result['hosts_allow'] = [str(i) for i in key.hosts_allow]
         result['hosts_assign'] = [str(i.ip) for i in key.hosts_assign]
         if eva.core.db_update == 1:
@@ -331,7 +331,7 @@ def modify_api_key(name=None,
             setattr(key, args_table[k], getattr(temp_key, args_table[k]))
         keys_by_id[name] = key
         keys[key.key] = key
-        result = copy.copy(key.__dict__)
+        result = key.__dict__.copy()
         result['hosts_allow'] = [str(i) for i in key.hosts_allow]
         result['hosts_assign'] = [str(i.ip) for i in key.hosts_assign]
         if eva.core.db_update == 1:

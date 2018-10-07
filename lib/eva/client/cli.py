@@ -101,7 +101,8 @@ class GenericCLI(object):
                 'user:destroy': 'destroy_user'
             }
             self.common_pd_cols = {
-                'list_keys': ['key_id', 'master', 'sysfunc', 'allow'],
+                'list_keys':
+                ['key_id', 'dynamic', 'master', 'sysfunc', 'allow'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
                 'log_get_':
                 ['time', 'host', 'p', 'level', 'mod', 'thread', 'message']
