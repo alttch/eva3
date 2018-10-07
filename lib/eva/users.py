@@ -42,7 +42,7 @@ def create_user_table():
         db.commit()
         c.close()
     except:
-        logging.critical('unable to create state table in db')
+        logging.critical('unable to create users table in db')
     db.close()
 
 

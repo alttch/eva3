@@ -31,14 +31,16 @@ _sysapi_func = [
     'enable_notifier', 'disable_notifier', 'save', 'get_cvar', 'set_cvar',
     'set_debug', 'setup_mode', 'file_unlink', 'file_get', 'file_put',
     'file_set_exec', 'create_user', 'set_user_password', 'set_user_key',
-    'destroy_user', 'list_keys', 'list_users', 'dump'
+    'destroy_user', 'list_keys', 'create_key', 'modify_key', 'destroy_key',
+    'list_users', 'dump'
 ]
 
 _sysapi_func_cr = [
     'lock', 'unlock', 'log_rotate', 'log_debug', 'log_info', 'log_warning',
     'log_error', 'log_critical', 'save', 'set_debug', 'setup_mode', 'set_cvar',
-    'file_unlink', 'file_put', 'file_set_exec', 'create_user',
-    'set_user_password', 'set_user_key', 'destroy_user', 'dump'
+    'file_unlink', 'file_put', 'file_set_exec', 'create_user', 'create_key',
+    'modify_key', 'destroy_key', 'set_user_password', 'set_user_key',
+    'destroy_user', 'dump'
 ]
 
 _sysapi_func_ce = ['cmd']

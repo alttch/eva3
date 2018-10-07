@@ -298,6 +298,41 @@ class UserAPI(object):
         if not eva.apikey.check(k, master=True): return False
         return eva.users.list_users()
 
+    def create_key(self,
+                key=None,
+                name=None,
+                s=False,
+                i=None,
+                g=None,
+                a=None,
+                hal=None,
+                has=None,
+                pvt=None,
+                rpvt=None):
+        if not eva.apikey.check(key, master=True): return False
+        _hal = hal if hal else '0.0.0.0/0'
+        _a = a if a != 'none' else ''
+        return eva.apikey.add_api_key(name, s, i, g, _a, _hal, has, pvt, rpvt)
+
+    def modify_key(self,
+                   key=None,
+                   name=None,
+                   s=None,
+                   i=None,
+                   g=None,
+                   a=None,
+                   hal=None,
+                   has=None,
+                   pvt=None,
+                   rpvt=None):
+        if not eva.apikey.check(key, master=True): return False
+        _a = a if a != 'none' else ''
+        return eva.apikey.modify_api_key(name, s, i, g, _a, hal, has, pvt, rpvt)
+
+    def destroy_key(self, key=None, name=None):
+        if not eva.apikey.check(key, master=True): return False
+        return eva.apikey.delete_api_key(name)
+
 
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
@@ -355,6 +390,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         else:
             eva.core.setup_off()
         return True
+
 
 class SysHTTP_API(SysAPI):
 
@@ -450,6 +486,10 @@ class SysHTTP_API(SysAPI):
 
         SysHTTP_API.enable_notifier.exposed = True
         SysHTTP_API.disable_notifier.exposed = True
+
+        SysHTTP_API.create_key.exposed = True
+        SysHTTP_API.modify_key.exposed = True
+        SysHTTP_API.destroy_key.exposed = True
 
     def lock(self, k=None, l=None, t=None, e=None):
         if not l:
@@ -629,6 +669,41 @@ class SysHTTP_API(SysAPI):
         cp_need_master(k)
         return super().list_users(k)
 
+    def create_key(self,
+                k=None,
+                n=None,
+                s=False,
+                i=None,
+                g=None,
+                a=None,
+                hal=None,
+                has=None,
+                pvt=None,
+                rpvt=None):
+        cp_need_master(k)
+        result = super().create_key(k, n, s, i, g, a, hal, has, pvt, rpvt)
+        return result if result else http_api_result_error()
+
+    def modify_key(self,
+                   k=None,
+                   n=None,
+                   s=None,
+                   i=None,
+                   g=None,
+                   a=None,
+                   hal=None,
+                   has=None,
+                   pvt=None,
+                   rpvt=None):
+        cp_need_master(k)
+        result = super().modify_key(k, n, s, i, g, a, hal, has, pvt, rpvt)
+        return result if result else http_api_result_error()
+
+    def destroy_key(self, k=None, n=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().destroy_key(k, n) \
+                else http_api_result_error()
+
 
 def update_config(cfg):
     global api_file_management_allowed, api_setup_mode_allowed
@@ -640,8 +715,7 @@ def update_config(cfg):
     logging.debug('sysapi.file_management = %s' % ('yes' \
             if api_file_management_allowed else 'no'))
     try:
-        api_setup_mode_allowed = (cfg.get('sysapi',
-                                               'setup_mode') == 'yes')
+        api_setup_mode_allowed = (cfg.get('sysapi', 'setup_mode') == 'yes')
     except:
         pass
     logging.debug('sysapi.setup_mode = %s' % ('yes' \

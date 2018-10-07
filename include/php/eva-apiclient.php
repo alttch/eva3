@@ -54,8 +54,11 @@ $_eva_sysapi_func = array(
         'set_user_password',
         'set_user_key',
         'destroy_user',
-        'list_keys',
         'list_users',
+        'list_keys',
+        'create_key',
+        'change_key',
+        'destroy_key',
         'dump'
         );
 
@@ -79,7 +82,10 @@ $_eva_sysapi_func_cr = array(
         'set_user_password',
         'set_user_key',
         'destroy_user',
-        'dump',
+        'create_key',
+        'change_key',
+        'destroy_key',
+        'dump'
         );
 
 $_eva_sysapi_func_ce = array(
