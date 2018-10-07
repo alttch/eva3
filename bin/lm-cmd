@@ -36,6 +36,7 @@ _api_functions = {
     'macro:run': 'run',
     'macro:result': 'result',
     'controller:list': 'list_controllers',
+    'controller:test': 'test_controller',
     'controller:props': 'list_controller_props',
     'controller:set': 'set_controller_prop',
     'controller:reload': 'reload_controller',
@@ -61,7 +62,7 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_controllers': ['id', 'description'],
+    'list_controllers': ['id', 'connected', 'version', 'build', 'description'],
     'list_ext_': ['id', 'mod', 'description', 'version'],
     'list_ext_mods': ['mod', 'description', 'version', 'api'],
     'modhelp_ext': ['name', 'type', 'required', 'help']
@@ -341,6 +342,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         sp_controller_list = sp_controller.add_parser(
             'list', help='List connected UCs')
+
+        sp_controller_test = sp_controller.add_parser(
+            'test', help='Test connected UC')
+        sp_controller_test.add_argument(
+            'i', help='Controller ID', metavar='ID')
 
         sp_controller_list_props = sp_controller.add_parser(
             'props', help='List controller config props')

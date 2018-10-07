@@ -35,10 +35,13 @@ class RemoteController(eva.item.Item):
         self.pool = None
         self.mqtt_update = mqtt_update
         self.reload_interval = 10
+        self.connected = False
 
     def api_call(self, func, params=None, timeout=None):
         if not self.api: return None
         (code, result) = self.api.call(func, params, timeout)
+        if func in ['test', 'state']:
+            self.connected = code == eva.client.apiclient.result_ok
         if code == eva.client.apiclient.result_forbidden:
             logging.error('Remote controller access forbidden %s' % \
                     self.api._uri)
@@ -51,8 +54,16 @@ class RemoteController(eva.item.Item):
             return None
         return result
 
-    def load_remote(self):
+    def test(self):
         result = self.api_call('test')
+        if result['result'] != 'OK':
+            logging.error('Remote controller unknown access error %s' % \
+                    api._uri)
+            return None
+        return result
+
+    def load_remote(self):
+        result = self.test()
         if not result: return False
         if result['result'] != 'OK':
             logging.error('Remote controller unknown access error %s' % \
@@ -60,9 +71,8 @@ class RemoteController(eva.item.Item):
             return False
         time_diff = abs(time.time() - float(result['time']))
         if eva.core.version != result['version']:
-            logging.error('Remote controller EVA version is %s, my: %s' % \
+            logging.warning('Remote controller EVA version is %s, my: %s' % \
                     (result['version'], eva.core.version))
-            return False
         self.item_id = result['system']
         self.config_changed = True
         self.set_group(result['product_code'])
@@ -171,6 +181,11 @@ class RemoteController(eva.item.Item):
             d['ssl_verify'] = self.api._ssl_verify
             d['mqtt_update'] = self.mqtt_update
             d['reload_interval'] = self.reload_interval
+        if info:
+            d['connected'] = self.connected
+            d['version'] = self.version
+            d['build'] = self.product_build
+            d['mqtt_update'] = self.mqtt_update
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         return d

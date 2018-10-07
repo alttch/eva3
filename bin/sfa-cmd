@@ -33,6 +33,7 @@ _api_functions = {
     'macro:run': 'run',
     'macro:result': 'result',
     'controller:list': 'list_controllers',
+    'controller:test': 'test_controller',
     'controller:props': 'list_controller_props',
     'controller:set': 'set_controller_prop',
     'controller:reload': 'reload_controller',
@@ -60,7 +61,7 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_controllers': ['id', 'description'],
+    'list_controllers': ['id', 'connected', 'version', 'build', 'description']
 }
 
 _pd_idx = {'state': 'oid', 'result': 'time'}
@@ -378,9 +379,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         ap_notify = self.sp.add_parser(
             'notify', help='Notify connected clients')
         sp_notify = ap_notify.add_subparsers(
-            dest='_func',
-            metavar='func',
-            help='Client notification commands')
+            dest='_func', metavar='func', help='Client notification commands')
 
         sp_notify_reload = sp_notify.add_parser(
             'reload', help='Ask connected clients to reload the interface')
@@ -399,6 +398,11 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
         sp_controller_list = sp_controller.add_parser(
             'list', help='List connected controllers')
+
+        sp_controller_test = sp_controller.add_parser(
+            'test', help='Test connected controller')
+        sp_controller_test.add_argument(
+            'i', help='Controller ID', metavar='ID')
 
         sp_controller_list_props = sp_controller.add_parser(
             'props', help='List controller config props')

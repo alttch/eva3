@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
@@ -408,6 +409,12 @@ class LM_API(GenericAPI):
         item = eva.lm.controller.get_controller(i)
         return item.serialize(props=True) if item else None
 
+    def test_controller(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        item = eva.lm.controller.get_controller(i)
+        if item is None: return None
+        return True if item.test() else False
+
     def set_prop(self, k=None, i=None, p=None, v=None, save=False):
         if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_item(i)
@@ -551,6 +558,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.list_props.exposed = True
         LM_HTTP_API.list_macro_props.exposed = True
         LM_HTTP_API.list_controller_props.exposed = True
+        LM_HTTP_API.test_controller.exposed = True
         LM_HTTP_API.set_prop.exposed = True
         LM_HTTP_API.set_macro_prop.exposed = True
         LM_HTTP_API.set_controller_prop.exposed = True
@@ -826,6 +834,14 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         result = super().list_controller_props(k, i)
         if not result: raise cp_api_404()
         return result
+
+    def test_controller(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().test_controller(k, i)
+        if result is None:
+            raise cp_api_404()
+        return http_api_result_ok() if \
+                result else http_api_result_error()
 
     def set_prop(self, k=None, i=None, p=None, v=None, save=None):
         cp_need_master(k)

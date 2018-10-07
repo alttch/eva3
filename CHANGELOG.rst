@@ -25,6 +25,7 @@ UC
     * "update" command without params starts item passive update
     * batch commands in UDP API (separated with new line) 
     * encryption and authentication in UDP API
+    * new API function: "test_controller", detailed info in "list controllers"
     * test-phi CLI tool
 
 LM
@@ -35,6 +36,7 @@ LM
 
     * "action_toggle" macro func, "toggle" acts as an alias for unit oids
     * "shared" and "value" macro funcs default return values
+    * new API function: "test_controller", detailed info in "list controllers"
     * test-ext CLI tool
 
 
