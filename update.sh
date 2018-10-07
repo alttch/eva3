@@ -6,7 +6,7 @@ if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
 fi
 
 VERSION=3.1.1
-BUILD=2018100301
+BUILD=2018100701
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh sbin/check_mods set-run-under-user.sh"
 
