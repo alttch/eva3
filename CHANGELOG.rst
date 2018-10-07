@@ -15,6 +15,7 @@ Common
       EVA_CLI_DISABLE_HISTORY=1 system environment variable)
     * New management CLI: eva-shell (interactive by default)
     * Backup/restore operations (with eva-shell)
+    * Dynamic API key management via CLI and API
 
 UC
 --
@@ -35,6 +36,7 @@ LM
     * "action_toggle" macro func, "toggle" acts as an alias for unit oids
     * "shared" and "value" macro funcs default return values
     * test-ext CLI tool
+
 
 3.1.0 (2018-09-01)
 ==================
