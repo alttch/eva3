@@ -127,8 +127,9 @@ def _t_dispatcher(host, port):
                     'UDP API from %s denied by server configuration' % \
                             address)
                 continue
-            for _data in data.split('|'):
+            for _data in data.split('\n'):
                 try:
+                    if not _data: continue
                     cmd = _data.split(' ')
                     item_id = cmd[0]
                     status = None
