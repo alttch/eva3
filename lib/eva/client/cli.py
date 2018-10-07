@@ -1200,27 +1200,34 @@ class GenericCLI(object):
 
 class ControllerCLI(object):
 
+    def print_local_only(self):
+        self.print_err('This function is available for local controller only')
+
     def start_controller(self, params):
         if self.apiuri:
-            return self.local_func_result_empty
+            self.print_local_only()
+            return self.local_func_result_failed
         self.exec_control_script('start')
         return self.local_func_result_ok
 
     def stop_controller(self, params):
         if self.apiuri:
-            return self.local_func_result_empty
+            self.print_local_only()
+            return self.local_func_result_failed
         self.exec_control_script('stop')
         return self.local_func_result_ok
 
     def restart_controller(self, params):
         if self.apiuri:
-            return self.local_func_result_empty
+            self.print_local_only()
+            return self.local_func_result_failed
         self.exec_control_script('restart')
         return self.local_func_result_ok
 
     def status_controller(self, params):
         if self.apiuri:
-            return self.local_func_result_empty
+            self.print_local_only()
+            return self.local_func_result_failed
         out = self.exec_control_script('status', collect_output=True)
         result = {}
         try:
