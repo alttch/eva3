@@ -427,7 +427,7 @@ class GenericCLI(object):
         self.ap.add_argument(
             '-R',
             '--raw-output',
-            help='Print raw result (no colors)',
+            help='Print raw results (no colors) and suppress prompt updates',
             action='store_true',
             dest='_raw',
             default=False)
