@@ -95,6 +95,7 @@ class GenericCLI(object):
                 'key:modify': 'modify_key',
                 'key:get': 'modify_key',
                 'key:destroy': 'destroy_key',
+                'key:regenerate': 'regenerate_key',
                 'user:list': 'list_users',
                 'user:create': 'create_user',
                 'user:password': 'set_user_password',
@@ -776,6 +777,11 @@ class GenericCLI(object):
         sp_key_delete.add_argument('n', help='API key ID', metavar='ID')
 
         sp_key_modify = sp_key.add_parser('modify', help='Modify API key')
+
+        sp_key_regenerate = sp_key.add_parser(
+            'regenerate', help='Regenerate API key')
+        sp_key_regenerate.add_argument('n', help='API key ID', metavar='ID')
+
         sp_key_get = sp_key.add_parser('get', help='Get API key info')
         sp_key_get.add_argument('n', help='API key ID', metavar='ID')
 

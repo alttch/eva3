@@ -59,6 +59,7 @@ $_eva_sysapi_func = array(
         'create_key',
         'change_key',
         'destroy_key',
+        'regenerate_key',
         'dump'
         );
 
@@ -85,6 +86,7 @@ $_eva_sysapi_func_cr = array(
         'create_key',
         'change_key',
         'destroy_key',
+        'regenerate_key',
         'dump'
         );
 
