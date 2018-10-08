@@ -38,6 +38,7 @@ LM
     * "action_toggle" macro func, "toggle" acts as an alias for unit oids
     * "shared" and "value" macro funcs default return values
     * new API function: "test_controller", detailed info in "list controllers"
+    * new LPI: usp (unit single port)
     * test-ext CLI tool
 
 
