@@ -19,7 +19,7 @@ __state_help__ = []
 __state_help__ += __config_help__
 
 __help__ = """
-LPI to work with sensor PHIs which provide the state for single sensor only
+LPI to work with sensor PHIs which provide state for single sensor only
 (port=1), doesn't process sensor value in any way, returning it to controller
 as-is. """
 
@@ -47,7 +47,6 @@ class LPI(GenericLPI):
         self.__action_help = __action_help__
         self.__state_help = __state_help__
         self.__help = __help__
-        # if info_only: return
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()
@@ -60,6 +59,8 @@ class LPI(GenericLPI):
         else:
             value = self.phi.get(
                 phi_cfg=phi_cfg, timeout=timeout + time_start - time())
+            if isinstance(value, dict):
+                value = value.get(list(value)[0])
         if value is None and evh:
             return self.state_result_skip(_uuid)
         if value is None or value is False:
