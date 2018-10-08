@@ -43,7 +43,6 @@ class APIKey(object):
         result = copy.copy(self.__dict__)
         result['hosts_allow'] = [str(i) for i in self.hosts_allow]
         result['hosts_assign'] = [str(i.ip) for i in self.hosts_assign]
-        del result['modified']
         return result
 
 def load(fname=None):
@@ -359,7 +358,6 @@ def regenerate_key(name):
     key = keys_by_id[name]
     old_key = key.key
     key.key = gen_random_hash()
-    key.modified = True
     keys[key.key] = keys.pop(old_key)
     result = key.serialize()
     if eva.core.db_update == 1:
