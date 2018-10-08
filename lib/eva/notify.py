@@ -34,6 +34,8 @@ default_mqtt_qos = 1
 sqlite_default_keep = 86400
 sqlite_default_id = 'db_1'
 
+default_notifier_id = 'eva_1'
+
 logging.getLogger('requests').setLevel(logging.CRITICAL)
 logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 
@@ -293,7 +295,7 @@ class GenericNotifier(object):
                             self.lse_lock.release()
                         except:
                             self.lse_lock.release()
-                            eva.core.log_traceback()
+                            eva.core.log_traceback(notifier=True)
             elif subject == 'action':
                 fdata = []
                 for d in data_in:
@@ -663,7 +665,7 @@ class SQLiteNotifier(GenericNotifier):
                         logging.error(
                             '.%s: failed to create state_history table' %
                             self.db)
-                        eva.core.log_traceback()
+                        eva.core.log_traceback(notifier=True)
                         db.close()
                         self.connected = False
                         return False
@@ -677,7 +679,7 @@ class SQLiteNotifier(GenericNotifier):
             else:
                 self.connected = False
         except:
-            eva.core.log_traceback()
+            eva.core.log_traceback(notifier=True)
             self.connected = False
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
@@ -767,9 +769,9 @@ class SQLiteNotifier(GenericNotifier):
                 except:
                     c.close()
                     db.close()
-                    eva.core.log_traceback()
+                    eva.core.log_traceback(notifier=True)
             except:
-                eva.core.log_traceback()
+                eva.core.log_traceback(notifier=True)
             i = 0
             while i < self.cleanup_time and \
                     self.history_cleaner_active:
@@ -1103,13 +1105,14 @@ class GenericMQTTNotifier(GenericNotifier):
                 self.mq.tls_set(
                     ca_certs=ca_certs, certfile=certfile, keyfile=keyfile)
             except:
-                eva.core.log_traceback()
+                eva.core.log_traceback(notifier=True)
                 self.log_error(message='can not load ssl files')
                 pass
         self.items_to_update = set()
         self.items_to_update_by_topic = {}
         self.items_to_control = set()
         self.items_to_control_by_topic = {}
+        self.custom_handlers = {}
         if (username is not None and password is not None):
             self.mq.username_pw_set(username, password)
         if not qos:
@@ -1160,6 +1163,31 @@ class GenericMQTTNotifier(GenericNotifier):
                         (self.notifier_id, self.log_topic))
         except:
             eva.core.log_traceback(notifier=True)
+
+    def handler_append(self, topic, func, qos=1):
+        _topic = self.space + '/' + topic if \
+                self.space is not None else topic
+        if not self.custom_handlers.get(_topic):
+            self.custom_handlers[_topic] = set()
+            self.mq.subscribe(_topic, qos=qos)
+            logging.debug(
+                '%s subscribed to %s for handler' % (self.notifier_id, _topic))
+        self.custom_handlers[_topic].add(func)
+        logging.debug('%s new handler for topic %s: %s' % (self.notifier_id,
+                                                           _topic, func))
+
+    def handler_remove(self, topic, func):
+        _topic = self.space + '/' + topic if \
+                self.space is not None else topic
+        if _topic in self.custom_handlers:
+            self.custom_handlers[_topic].remove(func)
+            logging.debug('%s removed handler for topic %s: %s' %
+                          (self.notifier_id, _topic, func))
+        if not self.custom_handlers.get(_topic):
+            self.mq.unsubscribe(_topic)
+            del self.custom_handlers[_topic]
+            logging.debug('%s unsubscribed from %s, last handler left' %
+                          (self.notifier_id, _topic))
 
     def update_item_append(self, item):
         logging.debug('%s subscribing to %s updates' % \
@@ -1244,6 +1272,15 @@ class GenericMQTTNotifier(GenericNotifier):
         if not self.enabled: return
         t = msg.topic
         d = msg.payload.decode()
+        if t in self.custom_handlers:
+            for h in self.custom_handlers.get(t):
+                try:
+                    h(d, t, msg.qos, msg.retain)
+                except:
+                    logging.error(
+                        'Unable to process topic ' + \
+                                '%s with custom handler %s' % (t, h))
+                    eva.core.log_traceback(notifier=True)
         if self.collect_logs and t == self.log_topic:
             try:
                 r = jsonpickle.decode(d)
@@ -1251,7 +1288,7 @@ class GenericMQTTNotifier(GenericNotifier):
                         r['p'] != eva.core.product_code:
                     eva.logs.log_append(rd=r, skip_mqtt=True)
             except:
-                eva.core.log_traceback()
+                eva.core.log_traceback(notifier=True)
         elif t in self.items_to_update_by_topic:
             i = self.items_to_update_by_topic[t]
             i.mqtt_set_state(t, d)
@@ -1302,6 +1339,30 @@ class GenericMQTTNotifier(GenericNotifier):
                     jsonpickle.encode(i, unpicklable=False),
                     qos,
                     retain=_retain)
+
+    def send_message(self, topic, data, retain=None, qos=1, use_space=True):
+        self.check_connection()
+        if isinstance(data, list):
+            _data = data
+        else:
+            _data = [data]
+        if retain is not None: _retain = retain
+        else: _retain = False
+        for d in _data:
+            if isinstance(d, dict):
+                _d = jsonpickle.encode(data, unpicklable=False)
+            else:
+                _d = d
+            if use_space and self.space is not None:
+                _topic = self.space + '/' + topic
+            else:
+                _topic = topic
+            try:
+                self.mq.publish(_topic, _d, qos, retain=_retain)
+            except:
+                eva.core.log_traceback(notifier=True)
+                print(topic, _d)
+                print(1)
 
     def test(self):
         try:
@@ -1748,10 +1809,10 @@ def load(test=True, connect=True):
                 logging.debug('+ notifier %s' % n.notifier_id)
             except:
                 logging.error('Can not load notifier from %s' % notifier_fname)
-                eva.core.log_traceback()
+                eva.core.log_traceback(notifier=True)
     except:
         logging.error('Notifiers load error')
-        eva.core.log_traceback()
+        eva.core.log_traceback(notifier=True)
         return False
     notifiers = _notifiers
     # exec custom load for notifiers
@@ -1779,7 +1840,7 @@ def save_notifier(notifier_id):
         open(fname_full, 'w').write(format_json(data, minimal=False))
     except:
         logging.error('can not save notifiers config into %s' % fname_full)
-        eva.core.log_traceback()
+        eva.core.log_traceback(notifier=True)
         return False
 
 
@@ -1807,7 +1868,7 @@ def _t_notify(notifier, subject, data, retain):
         notifier.notify(subject, data, retain=retain)
     except:
         logging.error('.Can not notify %s' % notifier.notifier_id)
-        eva.core.log_traceback()
+        eva.core.log_traceback(notifier=True)
 
 
 def notify(subject,
@@ -1834,7 +1895,7 @@ def notify(subject,
             nt.start()
             if wait: nt.join()
         except:
-            eva.core.log_traceback()
+            eva.core.log_traceback(notifier=True)
     else:
         for i in notifiers.copy():
             notify(
@@ -1848,8 +1909,12 @@ def notify(subject,
 
 
 def get_notifier(notifier_id):
-    if notifier_id in notifiers: return notifiers[notifier_id]
-    else: return None
+    return notifiers.get(notifier_id) if \
+        notifier_id is not None else get_default_notifier()
+
+
+def get_default_notifier():
+    return notifiers.get(default_notifier_id)
 
 
 def get_db_notifier(notifier_id):
