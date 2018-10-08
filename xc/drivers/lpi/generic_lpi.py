@@ -344,9 +344,10 @@ class LPI(object):
 
     def prepare_phi_cfg(self, cfg):
         phi_cfg = {}
-        for k, v in cfg.copy().items():
-            if k[0] == '_':
-                phi_cfg[k[1:]] = v
+        if isinstance(cfg, dict):
+            for k, v in cfg.copy().items():
+                if k[0] == '_':
+                    phi_cfg[k[1:]] = v
         return phi_cfg
 
     def gen_uuid(self):
