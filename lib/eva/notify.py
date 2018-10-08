@@ -1113,6 +1113,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.items_to_control = set()
         self.items_to_control_by_topic = {}
         self.custom_handlers = {}
+        self.custom_handlers_qos = {}
         if (username is not None and password is not None):
             self.mq.username_pw_set(username, password)
         if not qos:
@@ -1157,6 +1158,11 @@ class GenericMQTTNotifier(GenericNotifier):
                 client.subscribe(i, qos=v.mqtt_control_qos)
                 logging.debug('%s resubscribed to %s q%u control' % \
                         (self.notifier_id, i, v.mqtt_control_qos))
+            for i in list(self.custom_handlers):
+                qos = self.custom_handlers_qos.get(i)
+                client.subscribe(i, qos=qos)
+                logging.debug('%s resubscribed to %s q%u custom' % \
+                        (self.notifier_id, i, qos))
             if self.collect_logs:
                 client.subscribe(self.log_topic, qos=self.qos['log'])
                 logging.debug('%s subscribed to %s' % \
@@ -1169,6 +1175,7 @@ class GenericMQTTNotifier(GenericNotifier):
                 self.space is not None else topic
         if not self.custom_handlers.get(_topic):
             self.custom_handlers[_topic] = set()
+            self.custom_handlers_qos[_topic] = qos
             self.mq.subscribe(_topic, qos=qos)
             logging.debug(
                 '%s subscribed to %s for handler' % (self.notifier_id, _topic))
@@ -1186,6 +1193,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if not self.custom_handlers.get(_topic):
             self.mq.unsubscribe(_topic)
             del self.custom_handlers[_topic]
+            del self.custom_handlers_qos[_topic]
             logging.debug('%s unsubscribed from %s, last handler left' %
                           (self.notifier_id, _topic))
 
@@ -1361,8 +1369,6 @@ class GenericMQTTNotifier(GenericNotifier):
                 self.mq.publish(_topic, _d, qos, retain=_retain)
             except:
                 eva.core.log_traceback(notifier=True)
-                print(topic, _d)
-                print(1)
 
     def test(self):
         try:
@@ -1908,7 +1914,7 @@ def notify(subject,
                 skip_mqtt=skip_mqtt)
 
 
-def get_notifier(notifier_id):
+def get_notifier(notifier_id=None):
     return notifiers.get(notifier_id) if \
         notifier_id is not None else get_default_notifier()
 
