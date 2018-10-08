@@ -58,7 +58,8 @@ class LPI(GenericLPI):
         if _state_in:
             value = _state_in.get(list(_state_in)[0])
         else:
-            value = self.phi.get(phi_cfg=phi_cfg, timeout=timeout + time_start - time())
+            value = self.phi.get(
+                phi_cfg=phi_cfg, timeout=timeout + time_start - time())
         if value is None and evh:
             return self.state_result_skip(_uuid)
         if value is None or value is False:
