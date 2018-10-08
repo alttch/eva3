@@ -334,6 +334,9 @@ class UserAPI(object):
         if not eva.apikey.check(key, master=True): return False
         return eva.apikey.delete_api_key(name)
 
+    def regenerate_key(self, key=None, name=None):
+        if not eva.apikey.check(key, master=True): return False
+        return eva.apikey.regenerate_key(name)
 
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
@@ -491,6 +494,7 @@ class SysHTTP_API(SysAPI):
         SysHTTP_API.create_key.exposed = True
         SysHTTP_API.modify_key.exposed = True
         SysHTTP_API.destroy_key.exposed = True
+        SysHTTP_API.regenerate_key.exposed = True
 
     def lock(self, k=None, l=None, t=None, e=None):
         if not l:
@@ -704,6 +708,12 @@ class SysHTTP_API(SysAPI):
         cp_need_master(k)
         return http_api_result_ok() if super().destroy_key(k, n) \
                 else http_api_result_error()
+
+
+    def regenerate_key(self, k=None, n=None):
+        cp_need_master(k)
+        result = super().regenerate_key(k, n)
+        return result if result else http_api_result_error()
 
 
 def update_config(cfg):

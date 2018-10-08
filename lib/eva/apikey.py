@@ -39,6 +39,12 @@ class APIKey(object):
         self.pvt_files = []
         self.rpvt_uris = []
 
+    def serialize(self):
+        result = copy.copy(self.__dict__)
+        result['hosts_allow'] = [str(i) for i in self.hosts_allow]
+        result['hosts_assign'] = [str(i.ip) for i in self.hosts_assign]
+        del result['modified']
+        return result
 
 def load(fname=None):
     global keys, keys_by_id, masterkey
@@ -279,9 +285,7 @@ def add_api_key(name=None,
     if key:
         keys_by_id[key.key_id] = key
         keys[key.key] = key
-        result = key.__dict__.copy()
-        result['hosts_allow'] = [str(i) for i in key.hosts_allow]
-        result['hosts_assign'] = [str(i.ip) for i in key.hosts_assign]
+        result = key.serialize()
         if eva.core.db_update == 1:
             return result if _save_key_to_db(key) else False
         return result
@@ -331,9 +335,7 @@ def modify_api_key(name=None,
             setattr(key, args_table[k], getattr(temp_key, args_table[k]))
         keys_by_id[name] = key
         keys[key.key] = key
-        result = key.__dict__.copy()
-        result['hosts_allow'] = [str(i) for i in key.hosts_allow]
-        result['hosts_assign'] = [str(i.ip) for i in key.hosts_assign]
+        result = key.serialize()
         if eva.core.db_update == 1:
             return result if _update_key_in_db(key) else False
         return result
@@ -350,6 +352,19 @@ def delete_api_key(name):
         return _delete_key_from_db(name)
     return True
 
+def regenerate_key(name):
+    if name is None or name not in keys_by_id or keys_by_id[name].master \
+    or name in _keys_loaded_from_ini:
+        return False
+    key = keys_by_id[name]
+    old_key = key.key
+    key.key = gen_random_hash()
+    key.modified = True
+    keys[key.key] = keys.pop(old_key)
+    result = key.serialize()
+    if eva.core.db_update == 1:
+        return result if _update_key_in_db(key) else False
+    return result
 
 def parse_key_args(key, saved_args):
     try:
@@ -498,6 +513,7 @@ def _update_key_in_db(key=None, keys_list=None):
             keys = [keys_by_id[k_id] for k_id in keys_list]
             keys_to_update = [(
                 key.sysfunc,
+                key.key,
                 ','.join([str(i) for i in key.item_ids]),
                 ','.join([str(i) for i in key.groups]),
                 ','.join([str(i) for i in key.allow]),
@@ -508,13 +524,14 @@ def _update_key_in_db(key=None, keys_list=None):
                 key.key_id,
             ) for key in keys]
             c.executemany(
-                'update apikeys set s=?, i=?, g=?, a=?, hal=?, has=?,\
+                'update apikeys set s=?, k=?, i=?, g=?, a=?, hal=?, has=?,\
              pvt=?, rpvt=? where k_id=?', keys_to_update)
         else:
             c.execute(
-                'update apikeys set s=?, i=?, g=?, a=?, hal=?, has=?, pvt=?,\
+                'update apikeys set s=?, k=?, i=?, g=?, a=?, hal=?, has=?, pvt=?,\
              rpvt=? where k_id=?', (
                     key.sysfunc,
+                    key.key,
                     ','.join([str(i) for i in key.item_ids]),
                     ','.join([str(i) for i in key.groups]),
                     ','.join([str(i) for i in key.allow]),
