@@ -26,6 +26,7 @@ UC
     * batch commands in UDP API (separated with new line) 
     * encryption and authentication in UDP API
     * new API function: "test_controller", detailed info in "list controllers"
+    * MQTT tools for PHIs
     * test-phi CLI tool
 
 LM
