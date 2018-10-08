@@ -264,7 +264,8 @@ class GenericCLI(object):
         print('w: display uptime and who is online')
         print('date: display system date and time')
         print()
-        print('or command to execute')
+        print('or command to exec. Append |N' + \
+                    ' to repeat every |N sec (|cN to clear screen)')
         print()
 
     def parse_primary_args(self):
@@ -986,7 +987,12 @@ class GenericCLI(object):
                     try:
                         if os.system('date'): raise Exception('exec error')
                     except:
-                        self.print_err('Failed to run system "date command')
+                        self.print_err('Failed to run system "date" command')
+                elif d[0] == 'clear' or d[0] == 'cls':
+                    try:
+                        if os.system('clear'): raise Exception('exec error')
+                    except:
+                        self.print_err('Failed to run system "clear" command')
                 elif d[0] == 'sh':
                     print('Executing system shell')
                     shell = os.environ.get('SHELL')
@@ -1018,9 +1024,35 @@ class GenericCLI(object):
                                 opts += ['-D']
                         if self.in_json:
                             opts += ['-J']
-                        code = self.do_run(opts + d)
+                        clear_screen = False
+                        if d[-1][0] == '|':
+                            try:
+                                c = d[-1][1:]
+                                if c[0] == 'c':
+                                    c = c[1:]
+                                    clear_screen = True
+                                repeat_delay = float(c)
+                                if repeat_delay < 0:
+                                    raise Exception
+                            except:
+                                repeat_delay = None
+                            d = d[:-1]
+                        else:
+                            repeat_delay = None
+                        while True:
+                            if clear_screen:
+                                os.system('clear')
+                                if repeat_delay:
+                                    print(time.ctime() + '  ' + \
+                                        self.colored('{}'.format(' '.join(d)),
+                                            color='yellow') + \
+                                        '  (interval {:.2f} sec)'.format(
+                                            repeat_delay))
+                            code = self.do_run(opts + d)
+                            if self.debug: self.print_debug('\nCode: %s' % code)
+                            if not repeat_delay: break
+                            time.sleep(repeat_delay)
                         self.suppress_colors = False
-                        if self.debug: self.print_debug('\nCode: %s' % code)
                     except:
                         pass
         return 0
