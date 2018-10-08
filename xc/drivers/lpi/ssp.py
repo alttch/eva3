@@ -58,7 +58,7 @@ class LPI(GenericLPI):
             value = _state_in.get(list(_state_in)[0])
         else:
             value = self.phi.get(
-                phi_cfg=phi_cfg, timeout=timeout + time_start - time())
+                cfg=phi_cfg, timeout=timeout + time_start - time())
             if isinstance(value, dict):
                 value = value.get(list(value)[0])
         if value is None and evh:
