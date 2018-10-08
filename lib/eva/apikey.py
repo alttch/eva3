@@ -22,6 +22,7 @@ keys_by_id = {}
 _keys_loaded_from_ini = {}
 
 allows = []
+all_allows = ['cmd', 'lock', 'device', 'dm_rules_props', 'dm_rules_list']
 
 
 class APIKey(object):
@@ -406,7 +407,7 @@ def parse_key_args(key, saved_args):
                 logging.error('bad arguments')
                 eva.core.log_traceback()
                 return False
-    if not all([i in allows for i in key.allow]):
+    if not all([i in all_allows for i in key.allow]):
         return False
     return key
 
