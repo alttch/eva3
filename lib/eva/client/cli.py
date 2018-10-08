@@ -1052,6 +1052,8 @@ class GenericCLI(object):
                             if self.debug: self.print_debug('\nCode: %s' % code)
                             if not repeat_delay: break
                             time.sleep(repeat_delay)
+                            if not clear_screen:
+                                print()
                         self.suppress_colors = False
                     except:
                         pass
