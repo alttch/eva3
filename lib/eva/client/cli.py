@@ -915,8 +915,8 @@ class GenericCLI(object):
                         pass
                     except:
                         self.print_err('parse error')
-                if d[0] in ['q', 'quit', 'exit', 'bye'] or (d[0] == '..' and
-                                                            parent_shell_name):
+                if d[0] in ['q', 'quit', 'exit', 'bye'] or \
+                        (d[0] in ['..', '/'] and parent_shell_name):
                     self.finish_interactive()
                     return 0
                 if (d[0] == 'k.' or d[0] == 'c.') and self.remote_api:
