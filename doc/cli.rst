@@ -10,6 +10,15 @@ EVA apps are used to configure the system and call controller API functions
 from the command line or by external scripts. All of the following apps are
 located in **bin** folder.
 
+EVA shell
+---------
+
+EVA shell is a primary CLI tool. It allows you to manage local system as well
+as calling other tools directly from CLI interactive command line.
+
+With EVA shell you can install updates, backup and restore configuration,
+start and stop EVA components.
+
 Universal Controller
 --------------------
 

@@ -46,6 +46,7 @@ class APIKey(object):
         result['hosts_assign'] = [str(i.ip) for i in self.hosts_assign]
         return result
 
+
 def load(fname=None):
     global keys, keys_by_id, masterkey
     _keys = {}
@@ -352,6 +353,7 @@ def delete_api_key(name):
         return _delete_key_from_db(name)
     return True
 
+
 def regenerate_key(name):
     if name is None or name not in keys_by_id or keys_by_id[name].master \
     or name in _keys_loaded_from_ini:
@@ -365,6 +367,7 @@ def regenerate_key(name):
         return result if _update_key_in_db(key) else False
     return result
 
+
 def parse_key_args(key, saved_args):
     try:
         key.sysfunc = True if val_to_boolean(str(
@@ -372,20 +375,29 @@ def parse_key_args(key, saved_args):
     except:
         logging.error('key %s bad sysfunc arg, skipping' % saved_args.get('s'))
         eva.core.log_traceback()
-    if saved_args.get('hal'):
+    if 'hal' in saved_args:
         try:
-            _hosts_allow = list(
-                filter(None, [x.strip() for x in saved_args['hal'].split(',')]))
+            if isinstance(saved_args['hal'], list):
+                _hosts_allow = saved_args['hal']
+            else:
+                _hosts_allow = list(
+                    filter(None,
+                           [x.strip() for x in saved_args['hal'].split(',')]))
             key.hosts_allow = \
                     [ IPNetwork(h) for h in _hosts_allow ]
         except:
-            logging.error('key %s bad host acl!, skipping' % saved_args['hal'])
+            logging.error(
+                'key %s invalid host acl!, skipping' % saved_args['hal'])
             eva.core.log_traceback()
             return False
-    if saved_args.get('has'):
+    if 'has' in saved_args:
         try:
-            _hosts_assign = list(
-                filter(None, [x.strip() for x in saved_args['has'].split(',')]))
+            if isinstance(saved_args['has'], list):
+                _hosts_assign = saved_args['has']
+            else:
+                _hosts_assign = list(
+                    filter(None,
+                           [x.strip() for x in saved_args['has'].split(',')]))
             key.hosts_assign = \
                     [ IPNetwork(h) for h in _hosts_assign ]
         except:
@@ -401,7 +413,11 @@ def parse_key_args(key, saved_args):
     }.items():
         if v:
             try:
-                parsed = list(filter(None, [x.strip() for x in v.split(',')]))
+                if isinstance(v, list):
+                    parsed = v
+                else:
+                    parsed = list(
+                        filter(None, [x.strip() for x in v.split(',')]))
                 setattr(key, k, parsed)
             except:
                 logging.error('bad arguments')

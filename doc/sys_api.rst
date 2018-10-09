@@ -376,6 +376,127 @@ Errors:
 
 * **403 Forbidden** the API key has no access to this function
 
+API key management
+==================
+
+Each EVA component allows you to manage its API keys. Keys, stored in
+configuration files are called static and can not be managed. Also you can not
+dynamically create keys with *masterkey* permissions.
+
+Each EVA controller has its own API key list written in the local database of
+the certain server by default. If you set same *userdb_file* value in the
+controllers' configurations, they will use a common key list.
+
+.. _s_list_keys:
+
+list_keys - get API keys list
+-----------------------------
+
+Get the list of available API keys
+
+Parameters:
+
+* **k** API key with masterkey permissions
+
+returns JSON array of the API keys available on the controller.
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+create_key - create new API key
+-------------------------------
+
+Creates new dynamic API key.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **n** new API key ID, required
+
+Optionally:
+
+* **s** Allow system functions (*sysfunc*)
+* **i** Item IDs, list or comma separated (*items*)
+* **g** Item groups (*groups*)
+* **a** Allow permissions (*cmd*, *device*, *lock* etc., *allow*)
+* **hal** Hosts and networks allowed to use this key (*hosts_allow*), default:
+  *0.0.0.0/0* (allow for all hosts)
+* **has** Hosts and networks for which the key is automatically assigned if no
+  key provided (*hosts_assign*)
+* **pvt** :doc:`/sfa/sfa_pvt` files access list (*pvt*)
+* **rpvt** :ref:`SFA remote files<sfa_rpvt>` access list (*rpvt*)
+
+Returns serialized key dict in case of succcess or JSON dict { "result":
+"ERROR" } in case of error.
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+modify_key - modify existing API key
+------------------------------------
+
+Allows to modify existing dynamic API key.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **n** API key ID, required
+
+Optionally:
+
+* **s** Allow system functions (*sysfunc*)
+* **i** Item IDs, list or comma separated (*items*)
+* **g** Item groups (*groups*)
+* **a** Allow permissions (*cmd*, *device*, *lock* etc., *allow*)
+* **hal** Hosts and networks allowed to use this key (*hosts_allow*)
+* **has** Hosts and networks for which the key is automatically assigned if
+  no key provided (*hosts_assign*)
+* **pvt** :doc:`/sfa/sfa_pvt` files access list (*pvt*)
+* **rpvt** :ref:`SFA remote files<sfa_rpvt>` access list (*rpvt*)
+
+Returns serialized key dict in case of succcess or JSON dict { "result":
+"ERROR" } in case of error.
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+regenerate_key - regenerate existing API key
+--------------------------------------------
+
+Allows to regenerate existing dynamic API key leaving its permissions
+unchanged.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **n** API key ID, required
+
+Returns serialized key dict in case of succcess or JSON dict { "result":
+"ERROR" } in case of error.
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+destroy_key - delete API key
+----------------------------
+
+Deletes dynamic API key from the database.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **n** API key ID, required
+
+returns JSON dict { "result": "OK" }
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
 User management
 ===============
 
@@ -394,23 +515,6 @@ controllers' configurations, they will use a common user list.
 As far as controllers don't write anything to the database during user
 authorization tasks, it can easily be stored on the network drive and used by
 EVA controllers running on different hosts.
-
-.. _s_list_keys:
-
-list_keys - get API keys list
------------------------------
-
-Get the list of available API keys
-
-Parameters:
-
-* **k** API key with masterkey permissions
-
-returns JSON array of the API keys available on the controller.
-
-Errors:
-
-* **403 Forbidden** the API key has no access to this function
 
 .. _s_list_users:
 

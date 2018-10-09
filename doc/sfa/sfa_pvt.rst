@@ -216,6 +216,8 @@ The additional commands will keep working:
 
     GET "http://eva.sfa.domain/pvt/data/cam3/*.jp*?c=newest&ic=resize:320x200x50:jpeg&nocache=1508070344872"
 
+.. _sfa_rpvt:
+
 Remote content
 ==============
 
