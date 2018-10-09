@@ -41,6 +41,11 @@ LM
     * new LPI: usp (unit single port)
     * test-ext CLI tool
 
+SFA
+---
+
+    * new API function: "test_controller", detailed info in "list controllers"
+    * SFA framework fixes and improvements
 
 3.1.0 (2018-09-01)
 ==================
