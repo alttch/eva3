@@ -1040,18 +1040,24 @@ class GenericCLI(object):
                         else:
                             repeat_delay = None
                         while True:
+                            start_time = time.time()
                             if clear_screen:
                                 os.system('clear')
                                 if repeat_delay:
                                     print(time.ctime() + '  ' + \
                                         self.colored('{}'.format(' '.join(d)),
                                             color='yellow') + \
-                                        '  (interval {:.2f} sec)'.format(
+                                        '  (interval {} sec)'.format(
                                             repeat_delay))
                             code = self.do_run(opts + d)
                             if self.debug: self.print_debug('\nCode: %s' % code)
                             if not repeat_delay: break
-                            time.sleep(repeat_delay)
+                            time_to_sleep = repeat_delay - \
+                                    time.time() + start_time
+                            if time_to_sleep > repeat_delay:
+                                time_to_sleep = repeat_delay
+                            if time_to_sleep > 0:
+                                time.sleep(time_to_sleep)
                             if not clear_screen:
                                 print()
                         self.suppress_colors = False
