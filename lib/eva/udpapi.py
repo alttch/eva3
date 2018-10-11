@@ -246,7 +246,6 @@ def _t_dispatcher(host, port):
                     if api_key is not None:
                         logging.debug('udp cmd data api_key = %s' % api_key_id)
                     logging.debug('udp cmd data item_id = %s' % item_id)
-                    logging.debug('udp cmd data item_id = %s' % item_id)
                     logging.debug('udp cmd data update = %s' % update)
                     logging.debug('udp cmd data status = %s' % status)
                     logging.debug('udp cmd data value = "%s"' % value)
