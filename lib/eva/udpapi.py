@@ -177,9 +177,10 @@ def _t_dispatcher(host, port):
                     'UDP API from %s denied by server configuration' % \
                             address)
                 continue
-            if data[0] == b'\x01':
+            if data[0] == 1:
                 try:
                     p, handler, dt = data.split(b'\x01', 2)
+                    handler = handler.decode()
                 except:
                     logging.warning(
                         'UDP API: invalid custom packet from %s' % address)
