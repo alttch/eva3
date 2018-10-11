@@ -686,7 +686,8 @@ class SQLiteNotifier(GenericNotifier):
         if subject == 'state':
             t = time.time()
             for d in data:
-                v = d['value'] if d['value'] != 'null' else None
+                v = d['value'] if 'value' in d and \
+                        d['value'] != 'null' else None
                 db = self.get_db()
                 c = db.cursor()
                 space = self.space if self.space is not None else ''
