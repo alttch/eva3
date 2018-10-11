@@ -1327,3 +1327,16 @@ Python example:
 
 Fernet implementation is simple and pre-made libraries are available for all
 major programming languages.
+
+Custom packets
+--------------
+
+You can send a custom packet to let it be parsed by loaded
+:doc:`PHI</drivers>`.
+
+Custom packet format is (\\x = hex):
+
+    \\x01 HANDLER_ID \\x01 DATA
+
+**DATA** is always transmitted to handler in binary format. Encryption,
+authentication and batch commands in custom packets are not supported.
