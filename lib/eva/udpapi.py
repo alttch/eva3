@@ -190,11 +190,11 @@ def _t_dispatcher(host, port):
                     logging.warning('UDP API: no handlers for %s from %s' %
                                     (handler, address))
                     continue
-                    for h in custom_handlers.get(handler):
-                        try:
-                            h(dt, address)
-                        except:
-                            eva.core.log_traceback()
+                for h in custom_handlers.get(handler):
+                    try:
+                        h(dt, address)
+                    except:
+                        eva.core.log_traceback()
                 continue
             data = data.decode()
             if data[0] == '|':
