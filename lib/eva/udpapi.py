@@ -53,12 +53,35 @@ host = None
 port = None
 hosts_allow = []
 hosts_allow_encrypted = []
+custom_handlers = {}
 
 default_port = 8881
 
 _t_dispatcher_active = False
 
 server_socket = None
+
+
+def subscribe(handler_id, func):
+    custom_handlers.setdefault(handler_id, set()).add(func)
+    logging.debug(
+        'UDP API: added custom handler %s, function %s' % (handler_id, func))
+    return True
+
+
+def unsubscribe(handler_id, func):
+    try:
+        custom_handlers[handler_id].remove(func)
+        logging.debug('UDP API: removed custom handler %s, function %s' %
+                      (handler_id, func))
+        if not custom_handlers.get(handler_id):
+            del custom_handlers[handler_id]
+            logging.debug(
+                'UDP API: removing custom handler id %s, last handler left' %
+                handler_id)
+    except:
+        return False
+    return True
 
 
 def update_config(cfg):
@@ -148,19 +171,37 @@ def _t_dispatcher(host, port):
             data, address = server_socket.recvfrom(256)
             if not _t_dispatcher_active: return
             address = address[0]
-            data = data.decode()
             logging.debug('UDP API cmd from %s' % address)
             if not check_access(address, data):
                 logging.warning(
                     'UDP API from %s denied by server configuration' % \
                             address)
                 continue
+            if data[0] == b'\x01':
+                try:
+                    p, handler, dt = data.split(b'\x01', 2)
+                except:
+                    logging.warning(
+                        'UDP API: invalid custom packet from %s' % address)
+                    continue
+                if not handler in custom_handlers or \
+                        not custom_handlers.get(handler):
+                    logging.warning('UDP API: no handlers for %s from %s' %
+                                    (handler, address))
+                    continue
+                    for h in custom_handlers.get(handler):
+                        try:
+                            h(dt, address)
+                        except:
+                            eva.core.log_traceback()
+                continue
+            data = data.decode()
             if data[0] == '|':
                 try:
                     x, api_key_id, data = data.split('|', 2)
                     api_key = apikey.key_by_id(api_key_id)
                     if api_key is None:
-                        logging.warning('udp api: invalid api key id in' + \
+                        logging.warning('UDP API: invalid api key id in' + \
                                 ' encrypted packet from %s' % address)
                         continue
                     _k = base64.b64encode(
@@ -168,11 +209,11 @@ def _t_dispatcher(host, port):
                     try:
                         data = Fernet(_k).decrypt(data.encode()).decode()
                     except:
-                        logging.warning('udp api: invalid api key in' + \
+                        logging.warning('UDP API: invalid api key in' + \
                                 ' encrypted packet from %s' % address)
                         continue
                 except:
-                    logging.warning('udp api: received invalid encrypted' + \
+                    logging.warning('UDP API: received invalid encrypted' + \
                                 ' packet from %s' % address)
                     eva.core.log_traceback()
                     continue
@@ -240,7 +281,7 @@ def _t_dispatcher(host, port):
                                     'UDP API no action for %s' % \
                                     item.item_type)
                 except:
-                    logging.warning('udp api: received invalid cmd data' + \
+                    logging.warning('UDP API: received invalid cmd data' + \
                             ' from %s' % address)
                     eva.core.log_traceback()
         except:
