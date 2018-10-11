@@ -213,7 +213,9 @@ def _t_dispatcher(host, port):
                     if status: status = int(status)
                     if priority: priority = int(priority)
                     item = eva.uc.controller.get_item(item_id)
-                    if not item or not apikey.check(api_key, item):
+                    if not item or \
+                            (api_key is not None and \
+                            not apikey.check(api_key, item)):
                         logging.warning('UDP API item unknown %s' % item_id)
                         continue
                     if not item.item_type in ['unit', 'sensor']:

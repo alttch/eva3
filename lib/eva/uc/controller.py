@@ -192,9 +192,11 @@ def save_item_state(item):
             pass
         return False
 
+
 def load_drivers():
     eva.uc.modbus.load()
     eva.uc.driverapi.load()
+
 
 def load_db_state(items, item_type, clean=False, create=True):
     _db_loaded_ids = []
