@@ -18,6 +18,7 @@ from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.tools import parse_host_port
 
+
 class NotifierCLI(GenericCLI, ControllerCLI):
 
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
@@ -275,6 +276,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                     n['params'] = '%s%s@' % (i.username, ':*'
                                              if i.password else '')
                 n['params'] += '%s:%u' % (i.host, i.port)
+                if i.space is not None and i.space != '':
+                    n['params'] += '/' + i.space
             result.append(n)
         return 0, result
 
@@ -361,7 +364,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         level = params.get('l')
         if not level: level = 20
         else:
-            try: level = int(level)
+            try:
+                level = int(level)
             except:
                 try:
                     level = int(self.get_log_level_code(level))
