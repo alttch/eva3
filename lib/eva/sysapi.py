@@ -287,8 +287,7 @@ class UserAPI(object):
         result = []
         for _k in eva.apikey.keys:
             r = eva.apikey.serialized_acl(_k)
-            r['dynamic'] = r[
-                'key_id'] not in eva.apikey._keys_loaded_from_ini.keys()
+            r['dynamic'] = eva.apikey.keys[_k].dynamic
             result.append(r)
         return sorted(
             sorted(result, key=lambda k: k['key_id']),
@@ -299,44 +298,28 @@ class UserAPI(object):
         if not eva.apikey.check(k, master=True): return False
         return eva.users.list_users()
 
-    def create_key(self,
-                   key=None,
-                   name=None,
-                   s=False,
-                   i=None,
-                   g=None,
-                   a=None,
-                   hal=None,
-                   has=None,
-                   pvt=None,
-                   rpvt=None):
-        if not eva.apikey.check(key, master=True): return False
-        _hal = hal if hal else '0.0.0.0/0'
-        _a = a if a != 'none' else ''
-        return eva.apikey.add_api_key(name, s, i, g, _a, _hal, has, pvt, rpvt)
+    def create_key(self, k, i=None, save=False):
+        if not eva.apikey.check(k, master=True): return False
+        return eva.apikey.add_api_key(i, save)
 
-    def modify_key(self,
-                   key=None,
-                   name=None,
-                   s=None,
-                   i=None,
-                   g=None,
-                   a=None,
-                   hal=None,
-                   has=None,
-                   pvt=None,
-                   rpvt=None):
-        if not eva.apikey.check(key, master=True): return False
-        _a = a if a != 'none' else ''
-        return eva.apikey.modify_api_key(name, s, i, g, _a, hal, has, pvt, rpvt)
+    def list_key_props(self, k=None, i=None):
+        if not eva.apikey.check(k, master=True): return False
+        key = eva.apikey.keys_by_id.get(i)
+        return None if not key or not key.dynamic else key.serialize()
 
-    def destroy_key(self, key=None, name=None):
-        if not eva.apikey.check(key, master=True): return False
-        return eva.apikey.delete_api_key(name)
+    def set_key_prop(self, k=None, i=None, prop=None, value=None, save=False):
+        if not eva.apikey.check(k, master=True): return False
+        key = eva.apikey.keys_by_id.get(i)
+        return None if not key else key.set_prop(prop, value, save)
 
-    def regenerate_key(self, key=None, name=None):
+    def regenerate_key(self, key=None, i=None, save=False):
         if not eva.apikey.check(key, master=True): return False
-        return eva.apikey.regenerate_key(name)
+        return eva.apikey.regenerate_key(i, save)
+
+    def destroy_key(self, k=None, i=None):
+        if not eva.apikey.check(k, master=True): return False
+        return eva.apikey.delete_api_key(i)
+
 
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
@@ -492,9 +475,10 @@ class SysHTTP_API(SysAPI):
         SysHTTP_API.disable_notifier.exposed = True
 
         SysHTTP_API.create_key.exposed = True
-        SysHTTP_API.modify_key.exposed = True
-        SysHTTP_API.destroy_key.exposed = True
+        SysHTTP_API.list_key_props.exposed = True
+        SysHTTP_API.set_key_prop.exposed = True
         SysHTTP_API.regenerate_key.exposed = True
+        SysHTTP_API.destroy_key.exposed = True
 
     def lock(self, k=None, l=None, t=None, e=None):
         if not l:
@@ -674,46 +658,32 @@ class SysHTTP_API(SysAPI):
         cp_need_master(k)
         return super().list_users(k)
 
-    def create_key(self,
-                   k=None,
-                   n=None,
-                   s=False,
-                   i=None,
-                   g=None,
-                   a=None,
-                   hal=None,
-                   has=None,
-                   pvt=None,
-                   rpvt=None):
+    def create_key(self, k=None, i=None, save=None):
         cp_need_master(k)
-        result = super().create_key(k, n, s, i, g, a, hal, has, pvt, rpvt)
+        result = super().create_key(k, i, save)
         return result if result else http_api_result_error()
 
-    def modify_key(self,
-                   k=None,
-                   n=None,
-                   s=None,
-                   i=None,
-                   g=None,
-                   a=None,
-                   hal=None,
-                   has=None,
-                   pvt=None,
-                   rpvt=None):
+    def list_key_props(self, k=None, i=None):
         cp_need_master(k)
-        result = super().modify_key(k, n, s, i, g, a, hal, has, pvt, rpvt)
+        result = super().list_key_props(k, i)
         return result if result else http_api_result_error()
 
-    def destroy_key(self, k=None, n=None):
+    def set_key_prop(self, k=None, i=None, p=None, v=None, save=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().destroy_key(k, n) \
+        return http_api_result_ok() if \
+                super().set_key_prop(k, i, p, v, save) else \
+                http_api_result_error()
+
+    def destroy_key(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().destroy_key(k, i) \
                 else http_api_result_error()
 
-
-    def regenerate_key(self, k=None, n=None):
+    def regenerate_key(self, k=None, i=None, save=None):
         cp_need_master(k)
-        result = super().regenerate_key(k, n)
-        return result if result else http_api_result_error()
+        result = super().regenerate_key(k, i, save)
+        return http_api_result_ok({'key':result}) if \
+                result else http_api_result_error()
 
 
 def update_config(cfg):

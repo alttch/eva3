@@ -92,10 +92,10 @@ class GenericCLI(object):
                 'file:mod': 'file_set_exec',
                 'key:list': 'list_keys',
                 'key:create': 'create_key',
-                'key:modify': 'modify_key',
-                'key:get': 'modify_key',
-                'key:destroy': 'destroy_key',
+                'key:props': 'list_key_props',
+                'key:set': 'set_key_prop',
                 'key:regenerate': 'regenerate_key',
+                'key:destroy': 'destroy_key',
                 'user:list': 'list_users',
                 'user:create': 'create_user',
                 'user:password': 'set_user_password',
@@ -774,68 +774,43 @@ class GenericCLI(object):
 
         sp_key_list = sp_key.add_parser('list', help='List API keys')
 
-        sp_key_delete = sp_key.add_parser('destroy', help='Delete API key')
-        sp_key_delete.add_argument('n', help='API key ID', metavar='ID')
+        sp_key_create = sp_key.add_parser('create', help='Create new API key')
+        sp_key_create.add_argument('i', help='API key ID', metavar='ID')
+        sp_key_create.add_argument(
+            '-y',
+            '--save',
+            help='Save key after creation',
+            dest='_save',
+            action='store_true')
 
-        sp_key_modify = sp_key.add_parser('modify', help='Modify API key')
+        sp_key_props = sp_key.add_parser('props', help='List API key props')
+        sp_key_props.add_argument('i', help='API key ID', metavar='ID')
+
+        sp_key_set_prop = sp_key.add_parser('set', help='Set API key prop')
+        sp_key_set_prop.add_argument('i', help='API key ID', metavar='ID')
+        sp_key_set_prop.add_argument(
+            'p', help='Config property', metavar='PROP')
+        sp_key_set_prop.add_argument(
+            'v', help='Value', metavar='VAL', nargs='?')
+        sp_key_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save key config after set',
+            dest='_save',
+            action='store_true')
 
         sp_key_regenerate = sp_key.add_parser(
             'regenerate', help='Regenerate API key')
-        sp_key_regenerate.add_argument('n', help='API key ID', metavar='ID')
+        sp_key_regenerate.add_argument('i', help='API key ID', metavar='ID')
+        sp_key_regenerate.add_argument(
+            '-y',
+            '--save',
+            help='Save key after regeneration',
+            dest='_save',
+            action='store_true')
 
-        sp_key_get = sp_key.add_parser('get', help='Get API key info')
-        sp_key_get.add_argument('n', help='API key ID', metavar='ID')
-
-        sp_key_create = sp_key.add_parser('create', help='Create new API key')
-        for i in (sp_key_create, sp_key_modify):
-            i.add_argument('n', help='API key ID', metavar='ID')
-            i.add_argument(
-                '--hosts-allow',
-                dest='hal',
-                help='Allowed hosts, coma separated',
-                metavar='HOSTS_ALLOW')
-            i.add_argument(
-                '--hosts-assign',
-                dest='has',
-                help='Hosts assigned, coma separated',
-                metavar='HOSTS_ASSIGN')
-            i.add_argument(
-                '-a',
-                '--allow',
-                dest='a',
-                help=
-                'Operation permissions, comma separated ("none" to revoke all)',
-                metavar='PERMISSIONS')
-            i.add_argument(
-                '-s',
-                '--sysfunc',
-                dest='s',
-                help='Permission to access system functions',
-                choices=['yes', 'no'])
-            i.add_argument(
-                '-i',
-                '--items',
-                dest='i',
-                help='Items allowed to operate with, coma separated',
-                metavar='ITEMS')
-            i.add_argument(
-                '-g',
-                '--groups',
-                dest='g',
-                help='Groups allowed to operate with, coma separated',
-                metavar='GROUPS')
-            i.add_argument(
-                '--pvt',
-                dest='pvt',
-                help='SFA PVT files that key gives access to, coma separated',
-                metavar='PVT_FILES')
-            i.add_argument(
-                '--rpvt',
-                dest='rpvt',
-                help=
-                'Proxy uris with resourses that key gives' + \
-                        ' access to, coma separated',
-                metavar='RPVT_URIS')
+        sp_key_delete = sp_key.add_parser('destroy', help='Delete API key')
+        sp_key_delete.add_argument('i', help='API key ID', metavar='ID')
 
     def _add_user_functions(self):
         ap_user = self.sp.add_parser('user', help='user management')
@@ -1212,7 +1187,9 @@ class GenericCLI(object):
                 api_func not in self.always_print:
             self.print_err('FAILED')
             return code
-        elif result and 'result' in result and api_func not in ['test', 'dump']:
+        elif result and 'result' in result and api_func not in [
+                'test', 'dump', 'regenerate_key'
+        ]:
             if result['result'] != 'ERROR':
                 print(result['result'])
             else:

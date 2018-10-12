@@ -19,10 +19,11 @@ from eva.tools import val_to_boolean
 masterkey = None
 keys = {}
 keys_by_id = {}
-_keys_loaded_from_ini = {}
 
 allows = []
 all_allows = ['cmd', 'lock', 'device', 'dm_rules_props', 'dm_rules_list']
+
+keys_to_delete = set()
 
 
 class APIKey(object):
@@ -39,12 +40,181 @@ class APIKey(object):
         self.hosts_assign = []
         self.pvt_files = []
         self.rpvt_uris = []
+        self.config_changed = False
+        self.in_db = False
+        self.dynamic = False
 
     def serialize(self):
-        result = copy.copy(self.__dict__)
+        result = {
+            'id': self.key_id,
+            'master': self.master,
+            'key': self.key,
+            'sysfunc': self.sysfunc,
+            'items': self.item_ids,
+            'groups': self.groups,
+            'allow': self.allow,
+            'pvt': self.pvt_files,
+            'rpvt': self.rpvt_uris
+        }
         result['hosts_allow'] = [str(i) for i in self.hosts_allow]
-        result['hosts_assign'] = [str(i.ip) for i in self.hosts_assign]
+        result['hosts_assign'] = [str(i) for i in self.hosts_assign]
+        result['dynamic'] = self.dynamic
         return result
+
+    def set_prop(self, prop, value=None, save=False):
+        if not self.dynamic: return False
+        if prop == 'sysfunc':
+            val = val_to_boolean(value)
+            if self.sysfunc != val:
+                self.sysfunc = val
+                self.set_modified(save)
+            return True
+        elif prop == 'items':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            if self.item_ids != val:
+                self.item_ids = val
+                self.set_modified(save)
+            return True
+        elif prop == 'groups':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            if self.groups != val:
+                self.groups = val
+                self.set_modified(save)
+            return True
+        elif prop == 'allow':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            for v in val:
+                if v not in all_allows:
+                    return False
+            if self.allow != val:
+                self.allow = val
+                self.set_modified(save)
+            return True
+        elif prop == 'hosts_allow':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = ['0.0.0.0/0']
+            val = [IPNetwork(h) for h in val]
+            if self.hosts_allow != val:
+                self.hosts_allow = val
+                self.set_modified(save)
+            return True
+        elif prop == 'hosts_assign':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            val = [IPNetwork(h) for h in val]
+            if self.hosts_assign != val:
+                self.hosts_assign = val
+                self.set_modified(save)
+            return True
+        elif prop == 'pvt':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            if self.pvt_files != val:
+                self.pvt_files = val
+                self.set_modified(save)
+            return True
+        elif prop == 'rpvt':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            if self.rpvt_uris != val:
+                self.rpvt_uris = val
+                self.set_modified(save)
+            return True
+        return False
+
+    def set_modified(self, save):
+        if save:
+            self.save()
+        else:
+            self.config_changed = True
+
+    def save(self, create=True):
+        if not self.dynamic:
+            return False
+        db = eva.core.get_user_db()
+        c = db.cursor()
+        data = self.serialize()
+        for d in [
+                'items', 'groups', 'allow', 'hosts_allow', 'hosts_assign',
+                'pvt', 'rpvt'
+        ]:
+            data[d] = ','.join(data[d])
+        try:
+            if not self.in_db:
+                c.execute('insert into apikeys(k_id, k, m, s, i, g, a,' + \
+                        ' hal, has, pvt, rpvt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        (
+                            data['id'],
+                            data['key'],
+                            data['master'],
+                            data['sysfunc'],
+                            data['items'],
+                            data['groups'],
+                            data['allow'],
+                            data['hosts_allow'],
+                            data['hosts_assign'],
+                            data['pvt'],
+                            data['rpvt'])
+                        )
+            else:
+                c.execute(
+                    'update apikeys set k=?, s=?, i=?, g=?, a=?, hal=?, has=?, pvt=?,\
+                 rpvt=? where k_id=?',
+                     (self.key, data['sysfunc'], data['items'], data['groups'],
+                     data['allow'], data['hosts_allow'], data['hosts_assign'],
+                     data['pvt'], data['rpvt'], data['id']))
+        except:
+            if not create:
+                logging.critical('apikeys db error')
+                eva.core.log_traceback()
+                return False
+            else:
+                logging.info('no apikeys table in db, creating new')
+                create_apikeys_table()
+                self.save(create=False)
+        db.commit()
+        c.close()
+        db.close()
+        self.in_db = True
+        return True
 
 
 def load(fname=None):
@@ -53,7 +223,6 @@ def load(fname=None):
     _keys_by_id = {}
     _masterkey = None
     logging.info('Loading API keys')
-    eva.core.append_save_func(_save)
     fname_full = eva.core.format_cfg_fname(fname, 'apikeys')
     if not fname_full:
         logging.warning('No file or product specified ' + \
@@ -145,8 +314,7 @@ def load(fname=None):
                     logging.info('+ masterkey loaded')
             except:
                 pass
-        _keys_loaded_from_ini.update(_keys_by_id)
-        _keys_from_db, _keys_from_db_by_id = _load_keys_from_db()
+        _keys_from_db, _keys_from_db_by_id = load_keys_from_db()
         keys = _keys
         keys.update(_keys_from_db)
         keys_by_id = _keys_by_id
@@ -262,314 +430,58 @@ def serialized_acl(k):
     return r
 
 
-def add_api_key(name=None,
-                s=False,
-                i=None,
-                g=None,
-                a=None,
-                hal=None,
-                has=None,
-                pvt=None,
-                rpvt=None):
-    if name is None or hal is None or name in keys_by_id:
+def add_api_key(key_id=None, save=False):
+    if key_id is None or key_id in keys_by_id:
         return False
-    saved_args = {
-        k: v
-        for k, v in locals().items()
-        if k in ('rpvt', 'pvt', 'has', 'hal', 'a', 'g', 'i', 's',
-                 'name') and v is not None
-    }
     key_hash = gen_random_hash()
-    key = APIKey(key_hash, name)
+    key = APIKey(key_hash, key_id)
     key.master = False
-    key = parse_key_args(key, saved_args)
-    if key:
-        keys_by_id[key.key_id] = key
-        keys[key.key] = key
-        result = key.serialize()
-        if eva.core.db_update == 1:
-            return result if _save_key_to_db(key) else False
-        return result
-    return False
-
-
-def modify_api_key(name=None,
-                   s=None,
-                   i=None,
-                   g=None,
-                   a=None,
-                   hal=None,
-                   has=None,
-                   pvt=None,
-                   rpvt=None):
-    if name is None or hal is '' or name not in keys_by_id or \
-        keys_by_id[name].master or name in _keys_loaded_from_ini:
-        return False
-    saved_args = {
-        k: v
-        for k, v in locals().items()
-        if k in ('rpvt', 'pvt', 'has', 'hal', 'a', 'g', 'i', 's',
-                 'name') and v is not None
-    }
-
-    temp_key = APIKey(None)
-    try:
-        temp_key = parse_key_args(temp_key, saved_args)
-    except:
-        logging.error('error while parsing arguments')
-        eva.core.log_traceback()
-        return False
-    del saved_args['name']
-    key = keys_by_id[name]
-    args_table = {
-        'i': 'item_ids',
-        'g': 'groups',
-        'a': 'allow',
-        'pvt': 'pvt_files',
-        'rpvt': 'rpvt_uris',
-        'has': 'hosts_assign',
-        'hal': 'hosts_allow',
-        's': 'sysfunc'
-    }
-    if temp_key:
-        for k in saved_args.keys():
-            setattr(key, args_table[k], getattr(temp_key, args_table[k]))
-        keys_by_id[name] = key
-        keys[key.key] = key
-        result = key.serialize()
-        if eva.core.db_update == 1:
-            return result if _update_key_in_db(key) else False
-        return result
-    return False
-
-
-def delete_api_key(name):
-    if name is None or name not in keys_by_id or keys_by_id[name].master \
-            or name in _keys_loaded_from_ini:
-        return False
-    del keys[keys_by_id[name].key]
-    del keys_by_id[name]
-    if eva.core.db_update == 1:
-        return _delete_key_from_db(name)
-    return True
-
-
-def regenerate_key(name):
-    if name is None or name not in keys_by_id or keys_by_id[name].master \
-    or name in _keys_loaded_from_ini:
-        return False
-    key = keys_by_id[name]
-    old_key = key.key
-    key.key = gen_random_hash()
-    keys[key.key] = keys.pop(old_key)
+    key.dynamic = True
+    key.set_prop('hosts_allow', '0.0.0.0/0', save)
+    keys_by_id[key.key_id] = key
+    keys[key.key] = key
     result = key.serialize()
-    if eva.core.db_update == 1:
-        return result if _update_key_in_db(key) else False
+    if key_id in keys_to_delete:
+        keys_to_delete.remove(key_id)
     return result
 
 
-def parse_key_args(key, saved_args):
-    try:
-        key.sysfunc = True if val_to_boolean(str(
-            saved_args.get('s'))) else False
-    except:
-        logging.error('key %s bad sysfunc arg, skipping' % saved_args.get('s'))
-        eva.core.log_traceback()
-    if 'hal' in saved_args:
+def delete_api_key(key_id):
+    if key_id is None or key_id not in keys_by_id or keys_by_id[key_id].master \
+        or not keys_by_id[key_id].dynamic:
+        return False
+    del keys[keys_by_id[key_id].key]
+    del keys_by_id[key_id]
+    if eva.core.db_update == 1:
+        db = eva.core.get_user_db()
+        c = db.cursor()
         try:
-            if isinstance(saved_args['hal'], list):
-                _hosts_allow = saved_args['hal']
-            else:
-                _hosts_allow = list(
-                    filter(None,
-                           [x.strip() for x in saved_args['hal'].split(',')]))
-            key.hosts_allow = \
-                    [ IPNetwork(h) for h in _hosts_allow ]
+            c.execute('delete from apikeys where k_id=?', (key_id,))
+            db.commit()
         except:
-            logging.error(
-                'key %s invalid host acl!, skipping' % saved_args['hal'])
+            logging.critical('apikeys db error')
             eva.core.log_traceback()
             return False
-    if 'has' in saved_args:
-        try:
-            if isinstance(saved_args['has'], list):
-                _hosts_assign = saved_args['has']
-            else:
-                _hosts_assign = list(
-                    filter(None,
-                           [x.strip() for x in saved_args['has'].split(',')]))
-            key.hosts_assign = \
-                    [ IPNetwork(h) for h in _hosts_assign ]
-        except:
-            logging.error('key %s bad hosts_assign' % saved_args['has'])
-            eva.core.log_traceback()
-            return False
-    for k, v in {
-            'item_ids': saved_args.get('i'),
-            'groups': saved_args.get('g'),
-            'allow': saved_args.get('a'),
-            'pvt_files': saved_args.get('pvt'),
-            'rpvt_uris': saved_args.get('rpvt')
-    }.items():
-        if v:
-            try:
-                if isinstance(v, list):
-                    parsed = v
-                else:
-                    parsed = list(
-                        filter(None, [x.strip() for x in v.split(',')]))
-                setattr(key, k, parsed)
-            except:
-                logging.error('bad arguments')
-                eva.core.log_traceback()
-                return False
-    if not all([i in all_allows for i in key.allow]):
+        c.close()
+        db.close()
+    else:
+        keys_to_delete.add(key_id)
+    return True
+
+
+def regenerate_key(key_id, save=False):
+    if key_id is None or key_id not in keys_by_id or keys_by_id[key_id].master \
+            or not keys_by_id[key_id].dynamic:
         return False
-    return key
+    key = keys_by_id[key_id]
+    old_key = key.key
+    key.key = gen_random_hash()
+    keys[key.key] = keys.pop(old_key)
+    key.set_modified(save)
+    return key.key
 
 
-def _delete_key_from_db(name=None, keys_list=None):
-    if name is None and keys_list is None:
-        return False
-    try:
-        db = eva.core.get_user_db()
-        c = db.cursor()
-        if keys_list:
-            c.execute('delete from apikeys where k_id in (%s)'%','.join(['?'] *\
-                       len(keys_list)), keys_list)
-        else:
-            c.execute('delete from apikeys where k_id = ?', (name,))
-        db.commit()
-        c.close()
-        db.close()
-        return True
-    except:
-        logging.critical('apikey db error')
-        eva.core.log_traceback()
-
-
-def _save_key_to_db(key=None, keys_list=None, create=True):
-    if key is None and keys_list is None:
-        return False
-    try:
-        db = eva.core.get_user_db()
-        c = db.cursor()
-        key = keys_by_id[keys_list[0]] if keys_list else key
-        c.execute('select k from apikeys where k_id = ?', (key.key_id,))
-        row = c.fetchone()
-        db.commit()
-        c.close()
-        db.close()
-        if row:
-            logging.info('can not create key %s - already exist' % (key.key_id))
-            return False
-    except:
-        if not create:
-            logging.critical('db error')
-            eva.core.log_traceback()
-            return False
-        else:
-            logging.info('no apikeys table in db, creating new')
-            _create_apikeys_table()
-            _save_key_to_db(create=False)
-    try:
-        db = eva.core.get_user_db()
-        c = db.cursor()
-        if keys_list:
-            keys = [keys_by_id[k_id] for k_id in keys_list]
-            keys_to_insert = [
-                (key.key_id, key.key, key.master, key.sysfunc, ','.join([
-                    str(i) for i in key.item_ids
-                ]), ','.join([str(i) for i in key.groups]), ','.join([
-                    str(i) for i in key.allow
-                ]), ','.join([str(i) for i in key.hosts_allow]),
-                 ','.join([str(i) for i in key.hosts_assign]), ','.join([
-                     str(i) for i in key.pvt_files
-                 ]), ','.join([str(i) for i in key.rpvt_uris])) for key in keys
-            ]
-            c.executemany(
-                'insert into apikeys (k_id, k, m, s, i, g, a, hal, \
-                has, pvt, rpvt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                keys_to_insert)
-        else:
-            c.execute(
-                'insert into apikeys (k_id, k, m, s, i, g, a, hal, has, pvt,\
-             rpvt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (
-                    key.key_id,
-                    key.key,
-                    key.master,
-                    key.sysfunc,
-                    ','.join([str(i) for i in key.item_ids]),
-                    ','.join([str(i) for i in key.groups]),
-                    ','.join([str(i) for i in key.allow]),
-                    ','.join([str(i) for i in key.hosts_allow]),
-                    ','.join([str(i) for i in key.hosts_assign]),
-                    ','.join([str(i) for i in key.pvt_files]),
-                    ','.join([str(i) for i in key.rpvt_uris]),
-                ))
-        db.commit()
-        c.close()
-        db.close()
-        if keys_list:
-            logging.info('multiple apikeys created')
-            return True
-        logging.info('apikey %s created' % (key.key_id))
-        return True
-    except:
-        logging.critical('apikeys db error')
-        eva.core.log_traceback()
-
-
-def _update_key_in_db(key=None, keys_list=None):
-    try:
-        db = eva.core.get_user_db()
-        c = db.cursor()
-        if keys_list:
-            keys = [keys_by_id[k_id] for k_id in keys_list]
-            keys_to_update = [(
-                key.sysfunc,
-                key.key,
-                ','.join([str(i) for i in key.item_ids]),
-                ','.join([str(i) for i in key.groups]),
-                ','.join([str(i) for i in key.allow]),
-                ','.join([str(i) for i in key.hosts_allow]),
-                ','.join([str(i) for i in key.hosts_assign]),
-                ','.join([str(i) for i in key.pvt_files]),
-                ','.join([str(i) for i in key.rpvt_uris]),
-                key.key_id,
-            ) for key in keys]
-            c.executemany(
-                'update apikeys set s=?, k=?, i=?, g=?, a=?, hal=?, has=?,\
-             pvt=?, rpvt=? where k_id=?', keys_to_update)
-        else:
-            c.execute(
-                'update apikeys set s=?, k=?, i=?, g=?, a=?, hal=?, has=?, pvt=?,\
-             rpvt=? where k_id=?', (
-                    key.sysfunc,
-                    key.key,
-                    ','.join([str(i) for i in key.item_ids]),
-                    ','.join([str(i) for i in key.groups]),
-                    ','.join([str(i) for i in key.allow]),
-                    ','.join([str(i) for i in key.hosts_allow]),
-                    ','.join([str(i) for i in key.hosts_assign]),
-                    ','.join([str(i) for i in key.pvt_files]),
-                    ','.join([str(i) for i in key.rpvt_uris]),
-                    key.key_id,
-                ))
-        db.commit()
-        c.close()
-        db.close()
-        if keys_list:
-            logging.info('multiple apikeys updated')
-            return True
-        logging.info('apikey %s updated' % (key.key_id))
-        return True
-    except:
-        logging.critical('apikeys update db error')
-        eva.core.log_traceback()
-
-
-def _load_keys_from_db():
+def load_keys_from_db():
     _keys = {}
     _keys_by_id = {}
     try:
@@ -602,6 +514,8 @@ def _load_keys_from_db():
                 filter(None, [x.strip() for x in i[8].split(',')]))
             key.hosts_assign = \
                     [ IPNetwork(h) for h in _hosts_assign ]
+            key.dynamic = True
+            key.in_db = True
             _keys[key.key] = key
             _keys_by_id[key.key_id] = key
     except:
@@ -610,7 +524,7 @@ def _load_keys_from_db():
     return _keys, _keys_by_id
 
 
-def _create_apikeys_table():
+def create_apikeys_table():
     try:
         db = eva.core.get_user_db()
         c = db.cursor()
@@ -622,34 +536,29 @@ def _create_apikeys_table():
         logging.critical('unable to create apikeys table in db')
 
 
-def _save():
+def save():
+    for i, k in keys_by_id.copy().items():
+        if k.config_changed and not k.save():
+            return False
+    db = eva.core.get_user_db()
+    c = db.cursor()
     try:
-        db = eva.core.get_user_db()
-        c = db.cursor()
-        rows_in_mem = list(filter(lambda x: x != "masterkey" and \
-            x not in _keys_loaded_from_ini, keys_by_id.keys()))
-        c.execute('select k_id from apikeys')
+        for k in keys_to_delete:
+            c.execute('delete from apikeys where k_id=?', (k,))
         db.commit()
-        rows_in_db = [i[0] for i in c.fetchall()]
+        c.close()
+    except:
+        logging.critical('apikeys db error')
+        eva.core.log_traceback()
         c.close()
         db.close()
-        rows_to_add = list(set(rows_in_mem) - set(rows_in_db))
-        rows_to_delete = list(set(rows_in_db) - set(rows_in_mem))
-        rows_to_update = list(set(rows_in_db) & set(rows_in_mem))
-        if rows_to_add:
-            _save_key_to_db(keys_list=rows_to_add)
-        if rows_to_update:
-            _update_key_in_db(keys_list=rows_to_update)
-        if rows_to_delete:
-            _delete_key_from_db(keys_list=rows_to_delete)
-        return True
-    except Exception as e:
-        if 'no such table: apikeys' in e.args:
-            _save_key_to_db(keys_list=rows_in_mem)
-            return True
-        else:
-            logging.critical('apikeys db error')
-            eva.core.log_traceback()
+        return False
+    db.close()
+    return True
+
+
+def init():
+    eva.core.append_save_func(save)
 
 
 def gen_random_hash():
