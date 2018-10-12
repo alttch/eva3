@@ -84,11 +84,35 @@ _always_json = ['get_config']
 
 class LM_CLI(GenericCLI, ControllerCLI):
 
+    def parse_rule_for_oid(self, param):
+        if not param:
+            tp, prop, item_id, group = ('#', 'status', '#', '#')
+        else:
+            tp, full_id_v = param.split(':')
+            i = full_id_v.split('/')
+            prop = i[-1]
+            item_id = i[-2]
+            group = '/'.join(i[:-2])
+        if tp not in ['unit', 'U', 'sensor', 'S', 'lvar', 'LV', '#']:
+            raise Exception('invalid type')
+        return {
+            'for_item_group': group,
+            'for_item_type': tp,
+            'for_prop': prop,
+            'for_item_id': item_id
+        }
+
     def prepare_run(self, api_func, params, a):
         if api_func == 'set_rule_prop':
             if a._func in ['enable', 'disable']:
                 params['p'] = 'enabled'
                 params['v'] = 1 if a._func == 'enable' else 0
+            elif params.get('p') == 'for_oid':
+                try:
+                    params['_j'] = self.parse_rule_for_oid(params.get('v'))
+                except:
+                    self.print_err('unable to parse for_oid')
+                    return 97
         super().prepare_run(api_func, params, a)
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
