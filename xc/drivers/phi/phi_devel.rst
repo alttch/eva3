@@ -480,8 +480,8 @@ subscriptions.
 
     If **space** is specified in EVA MQTT notifier, all topics should be
     relative, e.g. if *space=test*, MQTT can send and subscribe only to topics
-    below the space level: *equipment1/POWER will send/subscribe to
-    test/equipment1/POWER*.
+    below the space level: *equipment1/POWER* will send/subscribe to
+    *test/equipment1/POWER*.
 
 Use **eva.uc.drivers.tools.mqtt.MQTT** class to deal with notifiers. If no
 notifier_id is specified **eva_1** notifier is used.
@@ -537,7 +537,7 @@ Working with UDP API
 ====================
 
 You may use EVA UDP API to receive custom UDP packets and then parse them in
-PHI. This allows to create various hardware bridges e.g. from 315/433/866Mhz
+PHI. This allows to create various hardware bridges e.g. from 315/433/866 MHz
 radio protocols, obtaining radio packets with custom programmed hardware
 appliance and then send them to EVA ICS to handle. 
 
@@ -545,8 +545,9 @@ Custom packet format is (\\x = hex):
 
     \\x01 HANDLER_ID \\x01 DATA
 
-**DATA** is always transmitted to handler in binary format. Encryption,
-authentication and batch commands in custom packets are not supported.
+**DATA** is always transmitted to handler in binary format. UDP API encryption,
+authentication and batch commands in custom packets are not supported (unless
+managed by handler).
 
 .. code-block:: python
 
