@@ -176,8 +176,10 @@ Shared variables
 Apart from the :ref:`logic variables<lvar>` macros, can exchange variables
 between each other within the single controller with the following functions:
 
-* **shared(varname)** get value of the shared variable
-* **set_shared(varname, value)** set value of the shared variable
+* **shared(varname, default_value)** get value of the shared variable or return
+  *default_value* if shared variable doesn't exist
+
+**set_shared(varname, value)** set value of the shared variable
 
 Shared variables are not saved in case the controller is restarted.
 
@@ -250,19 +252,25 @@ lvar_value, value - get logic variable value
 
 .. code-block:: python
 
-    lvar_value(lvar_id)
+    lvar_value(lvar_id, default='')
     # is equal to
-    value(lvar_id)
+    value(lvar_id, default='')
 
 params:
 
 * **lvar_id** :ref:`logic variable<lvar>` id (full or short)
 
 Returns value (float if the value is numeric) of logic variable, *None* if
-variable is not found. If the value is *null*, returns an empty string.
+variable is not found. If the value is *null*, returns an empty string by
+default or *default* value if specified.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
+
+.. note::
+
+    You may use **value** function to return sensor or unit values specifying
+    their OIDs
 
 set - set logic variable value
 ------------------------------
@@ -323,6 +331,11 @@ Returns *True* on success, *False* if the variable is not found.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the variable is not found.
+
+.. code-block :: python
+
+    # You may use this function to toggle unit status  specifying its OID:
+    toggle(unit_oid, wait=0, uuid=None, priority=None)
 
 expires - set the lvar expiration time
 --------------------------------------
@@ -429,14 +442,17 @@ unit_value - get unit value
 
 .. code-block:: python
 
-    unit_value(unit_id)
+    unit_value(unit_id, default='')
+    # is equal to
+    value(unit_oid, default='')
 
 params:
 
 * **unit_id** :ref:`unit<unit>` id (full)
 
 Returns value (float if the value is numeric) of the unit state, *None* if the
-unit is not found. If the value is *null*, returns an empty string.
+unit is not found. If the value is *null*, returns an empty string by
+default or *default* value if specified.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the unit is not found.
@@ -534,8 +550,8 @@ To get state history for the multiple items:
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the lvar or history database is not found.
 
-action, start, stop - start unit action
----------------------------------------
+action, action_toggle, start, stop - start unit action
+------------------------------------------------------
 
 Starts the action for the unit.
 
@@ -546,6 +562,11 @@ Starts the action for the unit.
     start(unit_id, value=None, wait=0, uuid=None, priority=None)
     # same as action with status=0
     stop(unit_id, value=None, wait=0, uuid=None, priority=None)
+    # same as start (without a value) if status=0 or stop if status=1
+    action_toggle(unit_id, wait=0, uuid=None, priority=None)
+    # if unit OID (unit:group/unit_id) is specified, you may use "toggle"
+    # instead:
+    toggle(unit_oid, wait=0, uuid=None, priority=None)
 
 params:
 
@@ -679,14 +700,17 @@ sensor_value - get sensor value
 
 .. code-block:: python
 
-    sensor_value(sensor_id)
+    sensor_value(sensor_id, default='')
+    # is equal to
+    value(sensor_oid, default='')
 
 params:
 
 * **sensor_id** :ref:`sensor<sensor>` id (full)
 
 Returns value (float if the value is numeric) of sensor state, *None* if the
-sensor is not found. If the value is *null*, returns an empty string.
+sensor is not found. If the value is *null*, returns an empty string by
+default or *default* value if specified.
 
 Raises an exception if the parameter *pass_errors=false* is set in the macro
 config and the sensor is not found.
