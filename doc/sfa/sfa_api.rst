@@ -381,18 +381,38 @@ Returns JSON array:
 
     [
         {
+        "build": "BUILD",
+        "connected": true,
         "description": "<controller_description>",
         "full_id": "<type/controller_id>",
         "group": "<type>",
         "id": "<controller_id>",
         "oid": "remote_<type>:<type>/<controller_id>",
-        "type": "remote_<type>"
+        "type": "remote_<type>",
+        "version": "VERSION"
         }
     ]
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
+
+.. _sfa_test_controller:
+
+test_controller - test connection to remote controller
+======================================================
+
+Allows to test connection to the :ref:`controller<sfa_remote_c>`.
+
+* **k** masterkey
+* **i** controller id
+
+Returns result="OK" if the test is passed, or result="ERROR", if failed.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** controller doesn't exist
 
 .. _sfa_list_controller_props:
 

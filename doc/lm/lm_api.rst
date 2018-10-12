@@ -755,18 +755,38 @@ Returns JSON array:
 
     [
         {
+        "build": "BUILD",
+        "connected": true,
         "description": "<controller_description>",
         "full_id": "<uc/controller_id>",
         "group": "uc",
         "id": "<controller_id>",
         "oid": "<remote_uc:uc/controller_id>",
-        "type": "remote_uc"
+        "type": "remote_uc",
+        "version": "VERSION"
         }
     ]
 
 Errors:
 
 * **403 Forbidden** invalid API KEY
+
+.. _lm_test_controller:
+
+test_controller - test connection to remote controller
+======================================================
+
+Allows to test connection to the :ref:`UC controller<lm_remote_uc>`.
+
+* **k** masterkey
+* **i** controller id
+
+Returns result="OK" if the test is passed, or result="ERROR", if failed.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
+* **404 Not Found** controller doesn't exist
 
 .. _lm_list_controller_props:
 
