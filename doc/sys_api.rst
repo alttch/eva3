@@ -407,25 +407,12 @@ Errors:
 create_key - create new API key
 -------------------------------
 
-Creates new dynamic API key.
+Creates new dynamic API key without any access permissions.
 
 Parameters:
 
 * **k** API key with masterkey permissions
-* **n** new API key ID, required
-
-Optionally:
-
-* **s** Allow system functions (*sysfunc*)
-* **i** Item IDs, list or comma separated (*items*)
-* **g** Item groups (*groups*)
-* **a** Allow permissions (*cmd*, *device*, *lock* etc., *allow*)
-* **hal** Hosts and networks allowed to use this key (*hosts_allow*), default:
-  *0.0.0.0/0* (allow for all hosts)
-* **has** Hosts and networks for which the key is automatically assigned if no
-  key provided (*hosts_assign*)
-* **pvt** :doc:`/sfa/sfa_pvt` files access list (*pvt*)
-* **rpvt** :ref:`SFA remote files<sfa_rpvt>` access list (*rpvt*)
+* **i** new API key ID, required
 
 Returns serialized key dict in case of succcess or JSON dict { "result":
 "ERROR" } in case of error.
@@ -434,34 +421,36 @@ Errors:
 
 * **403 Forbidden** the API key has no access to this function
 
-modify_key - modify existing API key
-------------------------------------
+list_key_props - get API key parameters
+---------------------------------------
 
-Allows to modify existing dynamic API key.
+Allows to list API key parameters.
 
-Parameters:
-
-* **k** API key with masterkey permissions
-* **n** API key ID, required
-
-Optionally:
-
-* **s** Allow system functions (*sysfunc*)
-* **i** Item IDs, list or comma separated (*items*)
-* **g** Item groups (*groups*)
-* **a** Allow permissions (*cmd*, *device*, *lock* etc., *allow*)
-* **hal** Hosts and networks allowed to use this key (*hosts_allow*)
-* **has** Hosts and networks for which the key is automatically assigned if
-  no key provided (*hosts_assign*)
-* **pvt** :doc:`/sfa/sfa_pvt` files access list (*pvt*)
-* **rpvt** :ref:`SFA remote files<sfa_rpvt>` access list (*rpvt*)
-
-Returns serialized key dict in case of succcess or JSON dict { "result":
-"ERROR" } in case of error.
+* **k** masterkey
+* **i** API key ID
 
 Errors:
 
-* **403 Forbidden** the API key has no access to this function
+* **403 Forbidden** invalid API KEY
+
+set_key_prop - set API key parameters
+-------------------------------------
+
+Allows to set access parameters of API key.
+
+Parameters:
+
+* **k** masterkey
+* **i** API key ID
+* **p** access param
+* **v** param value (if not specified - the param is cleared)
+
+Returns result="OK" if the parameter is set, or result="ERROR", if an error
+occurs. Paramters **id** and **key** can not be changed with this function.
+
+Errors:
+
+* **403 Forbidden** invalid API KEY
 
 regenerate_key - regenerate existing API key
 --------------------------------------------
