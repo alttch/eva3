@@ -717,10 +717,13 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
             return http_api_result_ok() if super().set_rule_prop(
                 k, i, p, v, _save) else http_api_result_error()
         else:
-            try:
-                data = jsonpickle.decode(_j)
-            except:
-                raise cp_api_error('_j is no JSON')
+            if isinstance(_j, dict):
+                data = _j
+            else:
+                try:
+                    data = jsonpickle.decode(_j)
+                except:
+                    raise cp_api_error('_j is no JSON')
             return http_api_result_ok() if \
                     self._set_rule_prop_batch(k, i, data, _save) \
                     else http_api_result_error()
