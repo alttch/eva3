@@ -219,3 +219,19 @@ Exceptions
 There's no standard way to handle exceptions, however if any of exported
 functions raise them, this should be specified in extension help and readme
 file.
+
+Testing
+-------
+
+Use **bin/test-ext** command-line tool to perform PHI module tests. The tool
+requires test Python file, which loads extension as *_* and contains all its
+functions (e.g. *__test* for *extension.test*):
+
+.. code-block:: python
+
+    print('Testing extension')
+    __test(params)
+    __func2(params)
+    __func3(params)
+    print('Test completed')
+
