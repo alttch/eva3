@@ -467,6 +467,108 @@ port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
 work with the equipment of the same type which uses e.g. different registers
 for different connection types.
 
+Working with MQTT
+=================
+
+The best way to work with MQTT is to use EVA ICS notification system
+connections. Instead of creating own MQTT connection and manage topics, let EVA
+core do its job. If your equipment and EVA ICS use different MQTT servers,
+just create new MQTT notifier to equipment server in EVA ICS without any
+subscriptions.
+
+.. note::
+
+    If **space** is specified in EVA MQTT notifier, all topics should be
+    relative, e.g. if *space=test*, MQTT can send and subscribe only to topics
+    below the space level: *equipment1/POWER will send/subscribe to
+    test/equipment1/POWER*.
+
+Use **eva.uc.drivers.tools.mqtt.MQTT** class to deal with notifiers. If no
+notifier_id is specified **eva_1** notifier is used.
+
+Let's deal with an equipment which has MQTT topic *topic/POWER* with values
+*ON/OFF*:
+
+.. code-block:: python
+
+    # everything you need is just import class
+    from eva.uc.drivers.tools.mqtt import MQTT
+    # and a function to handle events
+    from eva.uc.driverapi import handle_phi_event
+
+    def __init__(self, phi_cfg=None, info_only=False):
+    # ....
+    self.topic = self.phi_cfg.get('t')
+    self.mqtt = MQTT(self.phi_cfg.get('n'))
+    self.current_status = { '1': None }
+    if self.topic is None or self.mqtt is None:
+        self.ready = False
+
+    def get(self, port=None, cfg=None, timeout=0):
+        # as we can not query equipment, return saved status instead
+        return self.current_status
+
+
+    def set(self, port=None, data=None, cfg=None, timeout=0):
+        # .... check data, prepare
+        try:
+            state = int(data)
+        except:
+            return False
+        # then use MQTT.send function to send data to desired topic
+        self.mqtt.send(self.topic + '/POWER', 'ON' if state else 'OFF')
+        return True
+
+    def start(self):
+        # register a custom handler for MQTT topic
+        self.mqtt.register(self.topic + '/POWER', self.mqtt_handler)
+
+    def stop(self):
+        # don't forget to unregister a custom handler when PHI is unloaded
+        self.mqtt.unregister(self.topic + '/POWER', self.mqtt_handler)
+
+    def mqtt_state_handler(self, data, topic, qos, retain):
+        # update current status
+        self.current_status['1'] = 1 if data == 'ON' else 0
+        # then handle PHI event
+        handle_phi_event(self, 1, self.get())
+
+Working with UDP API
+====================
+
+You may use EVA UDP API to receive custom UDP packets and then parse them in
+PHI. This allows to create various hardware bridges e.g. from 315/433/866Mhz
+radio protocols, obtaining radio packets with custom programmed hardware
+appliance and then send them to EVA ICS to handle. 
+
+Custom packet format is (\\x = hex):
+
+    \\x01 HANDLER_ID \\x01 DATA
+
+**DATA** is always transmitted to handler in binary format. Encryption,
+authentication and batch commands in custom packets are not supported.
+
+.. code-block:: python
+
+    import eva.udpapi as udp
+
+    def __init__(self, phi_cfg=None, info_only=False):
+    # ....
+
+    def start(self):
+        # subscribe to UDP API using PHI ID as handler ID
+        udp.subscribe(__id__, self.udp_handler)
+
+    def stop(self):
+        # don't forget to unsubscribe when PHI is unloaded
+        udp.unsubscribe(__id__, self.udp_handler)
+
+    def udp_handler(self, data, address):
+        _data = data.decode()
+        self.log_debug('got data: {} from {}'.format(_data, address))
+        # process the data
+        # ...
+
 Exceptions
 ==========
 
