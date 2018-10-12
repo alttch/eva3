@@ -228,7 +228,7 @@ class LM_API(GenericAPI):
 
     def set_rule_prop(self, k=None, i=None, p=None, v=None, save=False):
         item = eva.lm.controller.get_dm_rule(i)
-        if not item: return None
+        if not item or not p or not isinstance(p, str): return None
         if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
             if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
                     not apikey.check(k, item):
