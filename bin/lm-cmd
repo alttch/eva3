@@ -35,6 +35,13 @@ _api_functions = {
     'macro:destroy': 'destroy_macro',
     'macro:run': 'run',
     'macro:result': 'result',
+    'rule:list': 'list_rules',
+    'rule:create': 'create_rule',
+    'rule:enable': 'set_rule_prop',
+    'rule:disable': 'set_rule_prop',
+    'rule:props': 'list_rule_props',
+    'rule:set': 'set_rule_prop',
+    'rule:destroy': 'destroy_rule',
     'controller:list': 'list_controllers',
     'controller:test': 'test_controller',
     'controller:props': 'list_controller_props',
@@ -77,6 +84,13 @@ _always_json = ['get_config']
 
 class LM_CLI(GenericCLI, ControllerCLI):
 
+    def prepare_run(self, api_func, params, a):
+        if api_func == 'set_rule_prop':
+            if a._func in ['enable', 'disable']:
+                params['p'] = 'enabled'
+                params['v'] = 1 if a._func == 'enable' else 0
+        super().prepare_run(api_func, params, a)
+
     def prepare_result_data(self, data, api_func, api_func_full, itype):
         if api_func not in [
                 'state', 'list_macros', 'list_controllers', 'result'
@@ -100,9 +114,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 isinstance(result, dict):
             self.print_tdf(result, 't')
             return 0
-        else:
-            return super().process_result(result, code, api_func, api_func_full,
-                                          itype, a)
+        if api_func == 'create_rule' and result and result.get(
+                'result') == 'OK':
+            del result['result']
+        return super().process_result(result, code, api_func, api_func_full,
+                                      itype, a)
 
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
         if itype not in ['status']:
@@ -116,6 +132,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
         self.add_lm_configure_functions()
         self.add_lm_remote_functions()
         self.add_lm_macro_functions()
+        self.add_lm_rule_functions()
         self.add_lm_ext_functions()
         self.add_lm_controller_functions()
 
@@ -334,6 +351,60 @@ class LM_CLI(GenericCLI, ControllerCLI):
         ap_destroy = sp_macro.add_parser('destroy', help='Delete macro')
         ap_destroy.add_argument('i', help='Macro ID', metavar='ID')
 
+    def add_lm_rule_functions(self):
+        ap_rule = self.sp.add_parser('rule', help='Decision-making rules')
+        sp_rule = ap_rule.add_subparsers(
+            dest='_func', metavar='func', help='Rules commands')
+
+        sp_rule_list = sp_rule.add_parser('list', help='List defined rules')
+
+        sp_rule_create = sp_rule.add_parser('create', help='Create new rule')
+        sp_rule_create.add_argument(
+            '-y',
+            '--save',
+            help='Save rule config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_rule_enable = sp_rule.add_parser('enable', help='Enable rule')
+        sp_rule_enable.add_argument('i', help='Rule ID', metavar='ID')
+        sp_rule_enable.add_argument(
+            '-y',
+            '--save',
+            help='Save rule config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_rule_disable = sp_rule.add_parser('disable', help='Disable rule')
+        sp_rule_disable.add_argument('i', help='Rule ID', metavar='ID')
+        sp_rule_disable.add_argument(
+            '-y',
+            '--save',
+            help='Save rule config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_rule_list_props = sp_rule.add_parser(
+            'props', help='List rule config props')
+        sp_rule_list_props.add_argument('i', help='Rule ID', metavar='ID')
+
+        sp_rule_set_prop = sp_rule.add_parser(
+            'set', help='Set rule config prop')
+        sp_rule_set_prop.add_argument('i', help='Rule ID', metavar='ID')
+        sp_rule_set_prop.add_argument(
+            'p', help='Config property', metavar='PROP')
+        sp_rule_set_prop.add_argument(
+            'v', help='Value', metavar='VAL', nargs='?')
+        sp_rule_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save rule config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_rule_destroy = sp_rule.add_parser('destroy', help='Delete rule')
+        sp_rule_destroy.add_argument('i', help='Rule ID', metavar='ID')
+
     def add_lm_controller_functions(self):
         ap_controller = self.sp.add_parser(
             'controller', help='Connected UC controllers functions')
@@ -345,8 +416,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         sp_controller_test = sp_controller.add_parser(
             'test', help='Test connected UC')
-        sp_controller_test.add_argument(
-            'i', help='Controller ID', metavar='ID')
+        sp_controller_test.add_argument('i', help='Controller ID', metavar='ID')
 
         sp_controller_list_props = sp_controller.add_parser(
             'props', help='List controller config props')
@@ -470,7 +540,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
 cli = LM_CLI('lm', _me)
 cli.always_json += _always_json
 cli.always_print += ['run']
-cli.arg_sections += ['config', 'macro', 'controller', 'ext']
+cli.arg_sections += ['config', 'macro', 'rule', 'controller', 'ext']
 cli.set_api_functions(_api_functions)
 cli.enable_controller_management_functions('lm')
 cli.set_pd_cols(_pd_cols)
