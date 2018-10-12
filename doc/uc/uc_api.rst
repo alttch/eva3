@@ -1332,7 +1332,7 @@ Custom packets
 --------------
 
 You can send a custom packet to let it be parsed by loaded
-:doc:`PHI</drivers>`.
+:doc:`PHI</phi_development>`.
 
 Custom packet format is (\\x = hex):
 
