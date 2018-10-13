@@ -227,6 +227,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             group = '/'.join(i[:-2])
         if tp not in ['unit', 'U', 'sensor', 'S', 'lvar', 'LV', '#']:
             raise Exception('invalid type')
+        if prop not in ['status', 'value']:
+            raise Exception('invalid state prop')
         return {
             'for_item_group': group,
             'for_item_type': tp,
@@ -239,7 +241,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             if a._func in ['enable', 'disable']:
                 params['p'] = 'enabled'
                 params['v'] = 1 if a._func == 'enable' else 0
-            elif params.get('p') == 'for_oid':
+            elif params.get('p') in ['o', 'oid', 'for_oid']:
                 try:
                     params['_j'] = self.parse_rule_for_oid(params.get('v'))
                 except:
