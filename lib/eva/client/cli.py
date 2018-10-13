@@ -605,7 +605,7 @@ class GenericCLI(object):
         if not self.pd:
             self.pd = importlib.import_module('pandas')
             self.pd.set_option('display.expand_frame_repr', False)
-            self.pd.options.display.max_colwidth = 90
+            self.pd.options.display.max_colwidth = 100
 
     def add_functions(self):
         if self.remote_api:
