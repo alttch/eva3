@@ -82,7 +82,83 @@ _fancy_tabsp = {'list_props': 26}
 _always_json = ['get_config']
 
 
+def bool2yn(b):
+    return 'Y' if b else 'N'
+
+
 class LM_CLI(GenericCLI, ControllerCLI):
+
+    def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
+        if api_func == 'list_rules':
+            self.print_list_rules(result)
+        else:
+            super().fancy_print_result(result, api_func, api_func_full, itype,
+                                       tab)
+
+    def print_list_rules(self, result):
+        if not result:
+            print('no data')
+            return
+        self.import_pandas()
+        data2 = []
+        data3 = []
+        for r in result:
+            args = []
+            for o in r['macro_args']:
+                args.append('\'' + o + '\'')
+            m = ''
+            if r['for_prop'] == 'status' and \
+                isinstance(r['in_range_max'], float) and \
+                r['in_range_min'] is None and \
+                r['in_range_max'] == -1 and \
+                r['in_range_max_eq']:
+                m = ' (expire)'
+            elif r['for_prop'] == 'status' and \
+                isinstance(r['in_range_min'], float) and \
+                isinstance(r['in_range_max'], float) and \
+                r['in_range_min'] == 1 and \
+                r['in_range_max'] == 1 and \
+                r['in_range_min_eq'] and \
+                r['in_range_max_eq']:
+                m = ' (set)'
+            if r['macro']:
+                macro = r['macro'] + '(' + ', '.join(args) + ')'
+            else:
+                macro = ''
+            data2.append({'for_oid': r['for_oid'], 'macro': macro})
+            data3.append({
+                'id':
+                r['id'],
+                'E':
+                bool2yn(r['enabled']),
+                'Prio':
+                r['priority'],
+                'Condition':
+                r['condition'] + m,
+                'Initial':
+                r['for_initial'],
+                'Chillout':
+                '%.2f/%.2f' % (r['chillout_time'], r['chillout_ends_in']),
+                'Brk':
+                bool2yn(r['break_after_exec']),
+                'description':
+                r['description']
+            })
+        df2 = self.pd.DataFrame(data2)
+        df2.set_index('for_oid', inplace=True)
+        df3 = self.pd.DataFrame(data3)
+        df3 = df3.ix[:, [
+            'id', 'E', 'Prio', 'Condition', 'Initial', 'Chillout', 'Brk'
+        ]]
+        df3.set_index('id', inplace=True)
+        out2 = df2.to_string().split('\n')
+        out3 = df3.to_string().split('\n')
+        print(self.colored(out3[0], color='blue'))
+        print(self.colored('-' * max(len(out2[0]), len(out3[0])), color='grey'))
+        for i in range(0, len(data2)):
+            print(out3[i + 2])
+            print(' ' + out2[i + 2])
+            print()
 
     def parse_rule_for_oid(self, param):
         if not param:
