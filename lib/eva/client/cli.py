@@ -30,7 +30,6 @@ history_length = 100
 history_file = os.path.expanduser('~') + '/.eva_history'
 
 
-
 def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
     if os.getenv('ANSI_COLORS_DISABLED') is None:
         fmt_str = '\033[%dm'
@@ -878,10 +877,10 @@ class GenericCLI(object):
             # interactive mode
             self.start_interactive()
             while True:
-                d = None
-                while not d:
+                parsed = None
+                while not parsed:
                     try:
-                        d = shlex.split(input(self.get_prompt()))
+                        parsed = shlex.split(input(self.get_prompt()))
                     except EOFError:
                         print()
                         self.finish_interactive()
@@ -891,154 +890,172 @@ class GenericCLI(object):
                         pass
                     except:
                         self.print_err('parse error')
-                if d[0] in ['q', 'quit', 'exit', 'bye'] or \
-                        (d[0] in ['..', '/'] and parent_shell_name):
-                    self.finish_interactive()
-                    return 0
-                if (d[0] == 'k.' or d[0] == 'c.') and self.remote_api:
-                    self.apikey = None
-                    print('Key has been reset to default')
-                if (d[0] == 'u.' or d[0] == 'c.') and self.remote_api:
-                    self.apiuri = None
-                    print('API uri has been reset to default')
-                if (d[0] == 't.' or d[0] == 'c.') and self.remote_api:
-                    self.timeout = self.default_timeout
-                    print('timeout: %.2f' % self.timeout)
-                if (d[0] == 'k' or d[0] == 'c') and self.remote_api:
-                    try:
-                        self.apikey = d[1 if d[0] == 'k' else 2]
-                    except:
-                        pass
-                    print('key: %s' % self.apikey
-                          if self.apikey is not None else '<default>')
-                if (d[0] == 'u' or d[0] == 'c') and self.remote_api:
-                    try:
-                        self.apiuri = d[1]
-                    except:
-                        pass
-                    print('API uri: %s' % self.apiuri
-                          if self.apiuri is not None else '<default>')
-                if (d[0] == 't' or d[0] == 'c') and self.remote_api:
-                    try:
-                        self.timeout = float(d[1 if d[0] == 't' else 3])
-                    except:
-                        pass
-                    print('timeout: %.2f' % self.timeout)
-                elif d[0] == 'a' and self.remote_api:
-                    print('API uri: %s' % (self.apiuri
-                                           if self.apiuri is not None else
+                cmds = [[]]
+                cix = 0
+                for p in parsed:
+                    if p == ';':
+                        cmds.append([])
+                        cix += 1
+                    else:
+                        cmds[cix].append(p)
+                for i in range(0, len(cmds)):
+                    d = cmds[i]
+                    if i and i < len(cmds): print()
+                    if d[0] in ['q', 'quit', 'exit', 'bye'] or \
+                            (d[0] in ['..', '/'] and parent_shell_name):
+                        self.finish_interactive()
+                        return 0
+                    if (d[0] == 'k.' or d[0] == 'c.') and self.remote_api:
+                        self.apikey = None
+                        print('Key has been reset to default')
+                    if (d[0] == 'u.' or d[0] == 'c.') and self.remote_api:
+                        self.apiuri = None
+                        print('API uri has been reset to default')
+                    if (d[0] == 't.' or d[0] == 'c.') and self.remote_api:
+                        self.timeout = self.default_timeout
+                        print('timeout: %.2f' % self.timeout)
+                    if (d[0] == 'k' or d[0] == 'c') and self.remote_api:
+                        try:
+                            self.apikey = d[1 if d[0] == 'k' else 2]
+                        except:
+                            pass
+                        print('key: %s' % self.apikey
+                              if self.apikey is not None else '<default>')
+                    if (d[0] == 'u' or d[0] == 'c') and self.remote_api:
+                        try:
+                            self.apiuri = d[1]
+                        except:
+                            pass
+                        print('API uri: %s' % self.apiuri
+                              if self.apiuri is not None else '<default>')
+                    if (d[0] == 't' or d[0] == 'c') and self.remote_api:
+                        try:
+                            self.timeout = float(d[1 if d[0] == 't' else 3])
+                        except:
+                            pass
+                        print('timeout: %.2f' % self.timeout)
+                    elif d[0] == 'a' and self.remote_api:
+                        print('API uri: %s' % (self.apiuri
+                                               if self.apiuri is not None else
+                                               '<default>'))
+                        print('key: %s' % (self.apikey
+                                           if self.apikey is not None else
                                            '<default>'))
-                    print('key: %s' % (self.apikey if self.apikey is not None
-                                       else '<default>'))
-                    print('JSON mode ' + ('on' if self.in_json else 'off'))
-                    print('Client debug mode ' +
-                          ('on' if self.debug else 'off'))
-                    print('timeout: %.2f' % self.timeout)
-                elif d[0] == 'j':
-                    self.in_json = not self.in_json
-                    print('JSON mode ' + ('on' if self.in_json else 'off'))
-                elif d[0] == 'r':
-                    self.always_suppress_colors = \
-                            not self.always_suppress_colors
-                    print('Raw mode ' +
-                          ('on' if self.always_suppress_colors else 'off'))
-                elif d[0] == 'd' and self.remote_api:
-                    self.debug = not self.debug
-                    print('Client debug mode ' +
-                          ('on' if self.debug else 'off'))
-                elif d[0] == 'top':
-                    try:
-                        top = '/usr/bin/htop' if os.path.isfile(
-                            '/usr/bin/htop') else 'top'
-                        if os.system(top): raise Exception('exec error')
-                    except:
-                        self.print_err(
-                            'Failed to run system "%s" command' % top)
-                elif d[0] == 'w':
-                    try:
-                        if os.system('w'): raise Exception('exec error')
-                    except:
-                        self.print_err('Failed to run system "w" command')
-                elif d[0] == 'date':
-                    try:
-                        if os.system('date'): raise Exception('exec error')
-                    except:
-                        self.print_err('Failed to run system "date" command')
-                elif d[0] == 'clear' or d[0] == 'cls':
-                    try:
-                        if os.system('clear'): raise Exception('exec error')
-                    except:
-                        self.print_err('Failed to run system "clear" command')
-                elif d[0] == 'sh':
-                    print('Executing system shell')
-                    shell = os.environ.get('SHELL')
-                    if shell is None:
-                        if os.path.isfile('/bin/bash'): shell = '/bin/bash'
-                        else: shell = 'sh'
-                    try:
-                        os.system(shell)
-                    except:
-                        self.print_err(
-                            'Failed to run system shell "%s"' % shell)
-                elif d[0] in ['?', 'h', 'help']:
-                    self.print_interactive_help()
-                    try:
-                        self.do_run(['-h'])
-                    except:
-                        pass
-                elif d[0] not in ['k', 'u', 'c', 't', 'k.', 'u.', 'c.', 't.']:
-                    try:
-                        opts = []
-                        if self.remote_api:
-                            if self.apikey is not None:
-                                opts += ['-K', self.apikey]
-                            if self.apiuri is not None:
-                                opts += ['-U', self.apiuri]
-                            if self.timeout is not None:
-                                opts += ['-T', str(self.timeout)]
-                            if self.debug:
-                                opts += ['-D']
-                        if self.in_json:
-                            opts += ['-J']
-                        clear_screen = False
-                        if d[-1][0] == '|':
-                            try:
-                                c = d[-1][1:]
-                                if c[0] == 'c':
-                                    c = c[1:]
-                                    clear_screen = True
-                                repeat_delay = float(c)
-                                if repeat_delay < 0:
-                                    raise Exception
-                            except:
+                        print('JSON mode ' + ('on' if self.in_json else 'off'))
+                        print('Client debug mode ' +
+                              ('on' if self.debug else 'off'))
+                        print('timeout: %.2f' % self.timeout)
+                    elif d[0] == 'j':
+                        self.in_json = not self.in_json
+                        print('JSON mode ' + ('on' if self.in_json else 'off'))
+                    elif d[0] == 'r':
+                        self.always_suppress_colors = \
+                                not self.always_suppress_colors
+                        print('Raw mode ' +
+                              ('on' if self.always_suppress_colors else 'off'))
+                    elif d[0] == 'd' and self.remote_api:
+                        self.debug = not self.debug
+                        print('Client debug mode ' +
+                              ('on' if self.debug else 'off'))
+                    elif d[0] == 'top':
+                        try:
+                            top = '/usr/bin/htop' if os.path.isfile(
+                                '/usr/bin/htop') else 'top'
+                            if os.system(top): raise Exception('exec error')
+                        except:
+                            self.print_err(
+                                'Failed to run system "%s" command' % top)
+                    elif d[0] == 'w':
+                        try:
+                            if os.system('w'): raise Exception('exec error')
+                        except:
+                            self.print_err('Failed to run system "w" command')
+                    elif d[0] == 'date':
+                        try:
+                            if os.system('date'): raise Exception('exec error')
+                        except:
+                            self.print_err(
+                                'Failed to run system "date" command')
+                    elif d[0] == 'clear' or d[0] == 'cls':
+                        try:
+                            if os.system('clear'): raise Exception('exec error')
+                        except:
+                            self.print_err(
+                                'Failed to run system "clear" command')
+                    elif d[0] == 'sh':
+                        print('Executing system shell')
+                        shell = os.environ.get('SHELL')
+                        if shell is None:
+                            if os.path.isfile('/bin/bash'): shell = '/bin/bash'
+                            else: shell = 'sh'
+                        try:
+                            os.system(shell)
+                        except:
+                            self.print_err(
+                                'Failed to run system shell "%s"' % shell)
+                    elif d[0] in ['?', 'h', 'help']:
+                        self.print_interactive_help()
+                        try:
+                            self.do_run(['-h'])
+                        except:
+                            pass
+                    elif d[0] not in [
+                            'k', 'u', 'c', 't', 'k.', 'u.', 'c.', 't.'
+                    ]:
+                        try:
+                            opts = []
+                            if self.remote_api:
+                                if self.apikey is not None:
+                                    opts += ['-K', self.apikey]
+                                if self.apiuri is not None:
+                                    opts += ['-U', self.apiuri]
+                                if self.timeout is not None:
+                                    opts += ['-T', str(self.timeout)]
+                                if self.debug:
+                                    opts += ['-D']
+                            if self.in_json:
+                                opts += ['-J']
+                            clear_screen = False
+                            if d[-1][0] == '|':
+                                try:
+                                    c = d[-1][1:]
+                                    if c[0] == 'c':
+                                        c = c[1:]
+                                        clear_screen = True
+                                    repeat_delay = float(c)
+                                    if repeat_delay < 0:
+                                        raise Exception
+                                except:
+                                    repeat_delay = None
+                                d = d[:-1]
+                            else:
                                 repeat_delay = None
-                            d = d[:-1]
-                        else:
-                            repeat_delay = None
-                        while True:
-                            start_time = time.time()
-                            if clear_screen:
-                                os.system('clear')
-                                if repeat_delay:
-                                    print(time.ctime() + '  ' + \
-                                        self.colored('{}'.format(' '.join(d)),
-                                            color='yellow') + \
-                                        '  (interval {} sec)'.format(
-                                            repeat_delay))
-                            code = self.do_run(opts + d)
-                            if self.debug: self.print_debug('\nCode: %s' % code)
-                            if not repeat_delay: break
-                            time_to_sleep = repeat_delay - \
-                                    time.time() + start_time
-                            if time_to_sleep > repeat_delay:
-                                time_to_sleep = repeat_delay
-                            if time_to_sleep > 0:
-                                time.sleep(time_to_sleep)
-                            if not clear_screen:
-                                print()
-                        self.suppress_colors = False
-                    except:
-                        pass
+                            while True:
+                                start_time = time.time()
+                                if clear_screen:
+                                    os.system('clear')
+                                    if repeat_delay:
+                                        print(time.ctime() + '  ' + \
+                                            self.colored(
+                                                '{}'.format(' '.join(d)),
+                                                color='yellow') + \
+                                            '  (interval {} sec)'.format(
+                                                repeat_delay))
+                                code = self.do_run(opts + d)
+                                if self.debug:
+                                    self.print_debug('\nCode: %s' % code)
+                                if not repeat_delay: break
+                                time_to_sleep = repeat_delay - \
+                                        time.time() + start_time
+                                if time_to_sleep > repeat_delay:
+                                    time_to_sleep = repeat_delay
+                                if time_to_sleep > 0:
+                                    time.sleep(time_to_sleep)
+                                if not clear_screen:
+                                    print()
+                            self.suppress_colors = False
+                        except:
+                            pass
         return 0
 
     def do_run(self, args=None, return_result=False):
