@@ -30,6 +30,7 @@ history_length = 100
 history_file = os.path.expanduser('~') + '/.eva_history'
 
 
+
 def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
     if os.getenv('ANSI_COLORS_DISABLED') is None:
         fmt_str = '\033[%dm'
@@ -1297,3 +1298,7 @@ class ControllerCLI(object):
             'status': self.status_controller,
         }
         self.append_api_functions(funcs)
+
+    @staticmethod
+    def bool2yn(b):
+        return 'Y' if b else 'N'

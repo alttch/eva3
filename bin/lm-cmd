@@ -83,9 +83,6 @@ _fancy_tabsp = {'list_props': 26}
 _always_json = ['get_config']
 
 
-def bool2yn(b):
-    return 'Y' if b else 'N'
-
 
 class LM_CLI(GenericCLI, ControllerCLI):
 
@@ -131,7 +128,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 'id':
                 r['id'],
                 'E':
-                bool2yn(r['enabled']),
+                self.bool2yn(r['enabled']),
                 'Prio':
                 r['priority'],
                 'Condition':
@@ -141,7 +138,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 'Chillout':
                 '%.2f/%.2f' % (r['chillout_time'], r['chillout_ends_in']),
                 'Brk':
-                bool2yn(r['break_after_exec']),
+                self.bool2yn(r['break_after_exec']),
                 'description':
                 r['description']
             })
@@ -251,6 +248,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 try:
                     params['_j'] = self.parse_rule_condition(params.get('v'))
                 except:
+                    raise
                     self.print_err('unable to parse condition')
                     return 97
         super().prepare_run(api_func, params, a)
