@@ -921,6 +921,13 @@ sleep - pause operations
     # alias for python time.sleep
     sleep(seconds.milliseconds)
 
+time - get current UNIX timestamp
+---------------------------------
+
+.. code-block:: python
+
+    # alias for python time.time
+    time()
 
 mail - send email message
 -------------------------
