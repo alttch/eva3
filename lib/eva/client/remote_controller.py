@@ -624,6 +624,11 @@ class RemoteUCPool(RemoteControllerPool):
                     self.units[u.full_id] = u
                     self.controllers_by_unit[u.full_id] = uc
                     u.start_processors()
+                else:
+                    self.units[u.full_id].status = u.status
+                    self.units[u.full_id].value = u.value
+                    self.units[u.full_id].nstatus = u.nstatus
+                    self.units[u.full_id].nvalue = u.nvalue
                 p[u.full_id] = u
                 _u = self.get_unit(u.full_id)
                 if _u: _u.update_config(u.serialize(config=True))
@@ -657,6 +662,9 @@ class RemoteUCPool(RemoteControllerPool):
                         self.sensors[u.full_id].is_destroyed():
                     self.sensors[u.full_id] = u
                     u.start_processors()
+                else:
+                    self.sensors[u.full_id].status = u.status
+                    self.sensors[u.full_id].value = u.value
                 p[u.full_id] = u
                 _u = self.get_sensor(u.full_id)
                 if _u: _u.update_config(u.serialize(config=True))
