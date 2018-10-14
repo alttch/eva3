@@ -120,11 +120,11 @@ function create_notifier {
         BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
         BATCH="$BATCH;test eva_1"
-    fi
-    if [ "x$T" = "xsfa" ]; then
-        [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
-        BATCH="${BATCH}set eva_1 collect_logs 1"
-        BATCH="${BATCH};create db_1 db:db/sfa_history.db -y;subscribe state db_1 -v '#' -g '#'"
+        if [ "x$T" = "xsfa" ]; then
+            [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
+            BATCH="${BATCH}set eva_1 collect_logs 1"
+            BATCH="${BATCH};create db_1 db:db/sfa_history.db -y;subscribe state db_1 -v '#' -g '#'"
+        fi
     fi
     [ "x${BATCH}" = "x" ] && return 0
     echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
