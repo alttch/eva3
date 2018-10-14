@@ -30,7 +30,7 @@ class ActiveItemQueue(object):
 
         self.actions_lock = threading.Lock()
 
-        self.action_cleaner_delay = 3600
+        self.action_cleaner_delay = 60
         self.action_cleaner = None
         self.action_cleaner_active = False
 
@@ -43,7 +43,8 @@ class ActiveItemQueue(object):
     def put_task(self, action, priority=None):
         if priority: p = priority
         else: p = self.default_priority
-        self.history_append(action)
+        if self.keep_history:
+            self.history_append(action)
         if action.set_pending():
             self.q.put(action, p)
             return True
@@ -168,8 +169,9 @@ class ActiveItemQueue(object):
             self.action_cleaner = threading.Thread(
                 target=self._t_action_cleaner,
                 name='_t_itemqueue_cleaner_' + self.q_id)
-            self.action_cleaner_active = True
-            self.action_cleaner.start()
+            if self.keep_history:
+                self.action_cleaner_active = True
+                self.action_cleaner.start()
         else:
             self._t_action_processor(False)
 
