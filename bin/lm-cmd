@@ -248,7 +248,6 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 try:
                     params['_j'] = self.parse_rule_condition(params.get('v'))
                 except:
-                    raise
                     self.print_err('unable to parse condition')
                     return 97
         super().prepare_run(api_func, params, a)
