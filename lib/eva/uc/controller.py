@@ -123,15 +123,17 @@ def append_item(item, start=False, load=True):
 
 
 def create_state_table():
+    db = eva.core.get_db()
     try:
-        db = eva.core.get_db()
         c = db.cursor()
         c.execute('create table state(id primary key, tp, status, value)')
         db.commit()
         c.close()
     except:
         logging.critical('unable to create state table in db')
-    db.close()
+    if db:
+        db.close()
+        eva.core.release_db()
 
 
 def save():
@@ -158,8 +160,8 @@ def save():
 
 
 def save_item_state(item):
+    db = eva.core.get_db()
     try:
-        db = eva.core.get_db()
         c = db.cursor()
         _id = item.full_id if eva.core.enterprise_layout else item.item_id
         c.execute('update state set status=?, value=? where id=?',
@@ -181,15 +183,21 @@ def save_item_state(item):
         db.commit()
         c.close()
         db.close()
+        eva.core.release_db()
         return True
     except:
         logging.critical('db error')
         eva.core.log_traceback()
         try:
             c.close()
-            db.close()
         except:
             pass
+        if db:
+            try:
+                db.close()
+                eva.core.release_db()
+            except:
+                eva.core.critical()
         return False
 
 
@@ -245,11 +253,20 @@ def load_db_state(items, item_type, clean=False, create=True):
             logging.critical('db error')
             eva.core.log_traceback()
         else:
-            c.close()
+            try:
+                c.close()
+            except:
+                pass
+            if db:
+                db.close()
+                eva.core.release_db()
+                db = None
             logging.info('No state table in db, creating new')
             create_state_table()
             load_db_state(items, item_type, clean, create=False)
-    db.close()
+    if db:
+        db.close()
+        eva.core.release_db()
 
 
 def load_units(start=False):

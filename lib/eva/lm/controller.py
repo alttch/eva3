@@ -127,8 +127,8 @@ def append_item(item, start=False, load=True):
 
 
 def create_lvar_state_table():
+    db = eva.core.get_db()
     try:
-        db = eva.core.get_db()
         c = db.cursor()
         c.execute('create table lvar_state(id primary key, ' + \
                 'set_time, status, value)')
@@ -137,8 +137,9 @@ def create_lvar_state_table():
     except:
         logging.critical('unable to create lvar_state table in db')
         eva.core.critical()
-    db.close()
-
+    if db:
+        db.close()
+        eva.core.release_db()
 
 def save():
     for i, v in lvars_by_full_id.items():
@@ -186,8 +187,8 @@ def save():
 
 
 def save_lvar_state(item):
+    db = eva.core.get_db()
     try:
-        db = eva.core.get_db()
         c = db.cursor()
         _id = item.full_id if eva.core.enterprise_layout else item.item_id
         c.execute('update lvar_state set set_time = ?, status=?, value=?' + \
@@ -205,15 +206,21 @@ def save_lvar_state(item):
         db.commit()
         c.close()
         db.close()
+        eva.core.release_db()
         return True
     except:
         logging.critical('db error')
         eva.core.critical()
         try:
             c.close()
-            db.close()
         except:
             pass
+        try:
+            if db:
+                db.close()
+                eva.core.release_db()
+        except:
+            eva.core.critical()
         return False
 
 
@@ -225,6 +232,10 @@ def load_lvar_db_state(items, clean=False, create=True):
     _db_loaded_ids = []
     _db_to_clean_ids = []
     db = eva.core.get_db()
+    if not db:
+        logging.critical('unable to get db')
+        eva.core.critical()
+        return
     c = db.cursor()
     try:
         c.execute('select id, set_time, status, value from lvar_state')
@@ -267,11 +278,20 @@ def load_lvar_db_state(items, clean=False, create=True):
             logging.critical('db error')
             eva.core.critical()
         else:
-            c.close()
+            try:
+                c.close()
+            except:
+                pass
+            if db:
+                db.close()
+                eva.core.release_db()
+                db = None
             logging.info('No lvar_state table in db, creating new')
             create_lvar_state_table()
             load_lvar_db_state(items, clean, create=False)
-    db.close()
+    if db:
+        db.close()
+        eva.core.release_db()
 
 
 def load_lvars(start=False):

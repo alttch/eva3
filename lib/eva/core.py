@@ -72,6 +72,8 @@ _exceptions = []
 
 _exception_log_lock = threading.Lock()
 
+_db_lock = threading.Lock()
+
 db_update_codes = ['manual', 'instant', 'on_exit']
 
 notify_on_start = True
@@ -296,9 +298,13 @@ def set_product(code, build):
 
 
 def get_db():
+    if not _db_lock.acquire(timeout=timeout):
+        return None
     db = sqlite3.connect(db_file)
     return db
 
+def release_db():
+    _db_lock.release()
 
 def get_user_db():
     if userdb_file:

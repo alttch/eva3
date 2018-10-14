@@ -180,7 +180,8 @@ class APIKey(object):
         try:
             if not self.in_db:
                 c.execute('insert into apikeys(k_id, k, m, s, i, g, a,' + \
-                        ' hal, has, pvt, rpvt) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        ' hal, has, pvt, rpvt) values ' + \
+                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                         (
                             data['id'],
                             data['key'],
@@ -196,9 +197,10 @@ class APIKey(object):
                         )
             else:
                 c.execute(
-                    'update apikeys set k=?, s=?, i=?, g=?, a=?, hal=?, has=?, pvt=?,\
-                 rpvt=? where k_id=?',
-                     (self.key, data['sysfunc'], data['items'], data['groups'],
+                    'update apikeys set k=?, s=?, i=?, g=?, a=?,' + \
+                            ' hal=?, has=?, pvt=?,\
+                             rpvt=? where k_id=?',
+                    (self.key, data['sysfunc'], data['items'], data['groups'],
                      data['allow'], data['hosts_allow'], data['hosts_assign'],
                      data['pvt'], data['rpvt'], data['id']))
         except:
@@ -481,7 +483,7 @@ def regenerate_key(key_id, save=False):
     return key.key
 
 
-def load_keys_from_db():
+def load_keys_from_db(create=True):
     _keys = {}
     _keys_by_id = {}
     try:
@@ -519,8 +521,12 @@ def load_keys_from_db():
             _keys[key.key] = key
             _keys_by_id[key.key_id] = key
     except:
-        logging.warning('unable to load API keys from db')
-        eva.core.log_traceback()
+        if create:
+            create_apikeys_table()
+            load_keys_from_db(create=False)
+        else:
+            logging.warning('unable to load API keys from db')
+            eva.core.log_traceback()
     return _keys, _keys_by_id
 
 
