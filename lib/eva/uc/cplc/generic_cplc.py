@@ -20,6 +20,10 @@ import eva.core
 
 from eva.uc.coreplc import critical
 from eva.uc.coreplc import log_traceback
+from eva.uc.coreplc import register_event_handler
+from eva.uc.coreplc import register_action_handler
+from eva.uc.coreplc import unregister_event_handler
+from eva.uc.coreplc import unregister_action_handler
 
 from time import time
 from time import sleep
@@ -51,6 +55,7 @@ class CPLC(object):
         if info_only: return
         self._loops = set()
         self._event_handlers = set()
+        self._action_handlers = set()
         self._loop_processors = []
         self.loops_active = False
 
@@ -105,6 +110,14 @@ class CPLC(object):
                 'func': func,
             })
 
+    def register_action_handler(self, item_id, func):
+        result = register_action_handler(item_id, func)
+        if result:
+            self._action_handlers.add({
+                'id': item_id,
+                'func': func,
+            })
+
     def log_debug(self, msg):
         i = self.cplc_id if self.cplc_id is not None else self.mod_id
         logging.debug('CORE PLC %s: %s' % (i, msg))
@@ -148,6 +161,9 @@ class CPLC(object):
         for h in self._event_handlers:
             unregister_event_handler(h.get('id'), h.get('func'))
         self._event_handlers = []
+        for h in self._action_handlers:
+            unregister_action_handler(h.get('id'), h.get('func'))
+        self._action_handlers = []
         for l in self._loop_processors:
             if l.isActive():
                 l.join()
