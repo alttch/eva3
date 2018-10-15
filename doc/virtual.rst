@@ -20,9 +20,10 @@ virtual. When using virtual drivers, set item option *virtual=false*.
 Classic virtual items
 =====================
 
-Classic virtual items are deprecated and will be removed in future releases of
-EVA ICS. Item option *virtual=true* will be used for the new CORE PLC logic
-controller.
+.. warning:: 
+
+    Classic virtual items are deprecated and will be removed in future releases
+    of EVA ICS.
 
 What are virtual items?
 -----------------------
