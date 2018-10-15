@@ -60,9 +60,6 @@ class CPLC(object):
     def stop(self):
         return True
 
-    def get_default_lpi(self):
-        return self.__lpi_default
-
     def serialize(self, full=False, config=False, helpinfo=None):
         d = {}
         if helpinfo:
