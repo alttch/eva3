@@ -159,6 +159,17 @@ from the environment and making its own decisions - humidity and temperature
 
 In EVA, all decisions are made either by the user or :doc:`/lm/lm` subsystem.
 
+Is EVA ICS IEC 61131-3 compliant?
+=================================
+
+EVA :doc:`/lm/lm` is a "cloud" PLC and can't handle events in real-time. EVA
+ICS is not a hardware PLC replacement, it brings together equipment of
+different kind and automates the tasks usually performed by the system operator
+manually.
+
+However new local nearly real-time PLC and support of **ST** and **FBD**
+languages are planned in the next releases. We are hardly working on it!
+
 Where is the interface? I want a web interface!
 ===============================================
 
@@ -178,4 +189,3 @@ websocket-powered web interface with a few strings of javascript
         }
 
 no rocket science as well.
-

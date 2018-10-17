@@ -9,6 +9,7 @@ import eva.item
 import eva.core
 import time
 import shlex
+import threading
 
 from eva.tools import val_to_boolean
 
@@ -183,16 +184,21 @@ class DecisionMatrix(object):
                 continue
             rule.last_matched = time.time()
             if rule.macro:
-                if not eva.lm.controller.exec_macro(
-                        macro=rule.macro, argv=rule.macro_args, source=item):
-                    logging.error('Decision matrix can not exec macro' + \
-                            ' %s for event %s' % (rule.macro, event_code))
+                t = threading.Thread(
+                    target=self.run_macro, args=(event_code, rule, item))
+                t.start()
             if rule.break_after_exec:
                 logging.debug('Decision matrix rule ' + \
                         '%s is an event %s breaker, stopping event' % \
                         (rule_id, event_code))
                 break
         return True
+
+    def run_macro(self, event_code, rule, item):
+        if not eva.lm.controller.exec_macro(
+                macro=rule.macro, argv=rule.macro_args, source=item):
+            logging.error('Decision matrix can not exec macro' + \
+                    ' %s for event %s' % (rule.macro, event_code))
 
     def append_rule(self, d_rule, do_sort=True):
         if d_rule in self.rules: return False

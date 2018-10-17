@@ -45,6 +45,8 @@ configs_to_remove = set()
 
 custom_event_handlers = {}
 
+benchmark_lock = threading.Lock()
+
 
 def handle_event(item):
     oid = item.oid
@@ -95,12 +97,16 @@ def unregister_benchmark_handler():
 
 
 def benchmark_handler(item):
+    if not benchmark_lock.acquire(timeout=eva.core.timeout):
+        logging.critical('Core benchmark failed to obtain action lock')
+        return False
     status = item.status
     value = item.value
     if status == 1:
         value = float(value)
         if value > 100:
             exec_unit_action('unit:eva_benchmarks/eva_benchmark_unit', 1)
+    benchmark_lock.release()
 
 
 def get_item(item_id):

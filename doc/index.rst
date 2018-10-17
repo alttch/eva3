@@ -79,6 +79,7 @@ What you get with EVA
     cli
     tutorial/tutorial
     faq
+    highload
 
 .. toctree::
     :caption:  Components

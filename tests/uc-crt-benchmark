@@ -12,7 +12,9 @@ from eva.client.apiclient import result_ok
 
 c = APIClientLocal('uc')
 
-iterations = 500
+iterations = 1000
+
+turn_debug = False
 
 
 def api_call(func, params=None, eoe=True):
@@ -37,8 +39,9 @@ if result.get('db_update') == 1:
     )
 
 if result.get('debug'):
-    print('Please disable UC debug mode')
-    sys.exit(9)
+    print('Disabling debug mode')
+    api_call('set_debug', {'debug': False})
+    turn_debug = True
 
 api_call(
     'destroy', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor'}, eoe=False)
@@ -52,6 +55,12 @@ api_call(
         'p': 'action_always_exec',
         'v': 1
     })
+api_call('set_prop', {
+    'i': 'unit:eva_benchmarks/eva_benchmark_unit',
+    'p': 'action_queue',
+    'v': 1
+})
+api_call('enable_actions', {'i': 'unit:eva_benchmarks/eva_benchmark_unit'})
 
 api_call('load_phi', {'i': 'eva_benchmark_vr', 'm': 'vrtrelay'})
 api_call('load_phi', {
@@ -112,6 +121,10 @@ api_call(
 api_call('destroy', {'i': 'unit:eva_benchmarks/eva_benchmark_unit'}, eoe=False)
 api_call('unload_phi', {'i': 'eva_benchmark_vr'})
 api_call('unload_phi', {'i': 'eva_benchmark_vs'})
+
+if turn_debug:
+    print('Enabling debug mode back')
+    api_call('set_debug', {'debug': True})
 
 print()
 avg = result.get('benchmark_crt')
