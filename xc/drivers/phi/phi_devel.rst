@@ -486,6 +486,11 @@ subscriptions.
 Use **eva.uc.drivers.tools.mqtt.MQTT** class to deal with notifiers. If no
 notifier_id is specified **eva_1** notifier is used.
 
+.. warning::
+
+    MQTT custom handlers may be started in different threads. Don't forget to
+    use locking mechanisms if required.
+
 Let's deal with an equipment which has MQTT topic *topic/POWER* with values
 *ON/OFF*:
 
@@ -548,6 +553,11 @@ Custom packet format is (\\x = hex):
 **DATA** is always transmitted to handler in binary format. UDP API encryption,
 authentication and batch commands in custom packets are not supported (unless
 managed by handler).
+
+.. warning::
+
+    UDP API custom handlers may be started in different threads. Don't forget to
+    use locking mechanisms if required.
 
 .. code-block:: python
 
