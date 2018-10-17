@@ -10,6 +10,7 @@ import jsonpickle
 import re
 import glob
 import os
+import threading
 
 import eva.core
 import eva.sysapi
@@ -74,7 +75,8 @@ def handle_phi_event(phi, port, data):
             if i.updates_allowed() and not i.is_destroyed():
                 logging.debug('event on PHI %s, port %s, updating item %s' %
                               (phi.phi_id, port, i.full_id))
-                update_item(i, data)
+                t = threading.Thread(target=update_item, args=(i, data))
+                t.start()
 
 
 def get_phi(phi_id):

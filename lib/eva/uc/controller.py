@@ -51,7 +51,8 @@ def handle_event(item):
     if oid in custom_event_handlers:
         for f in custom_event_handlers.get(oid):
             try:
-                f(item)
+                t = threading.Thread(target=f, args=(item,))
+                t.start()
             except:
                 eva.core.log_traceback()
     return True
