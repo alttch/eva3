@@ -11,12 +11,14 @@ import threading
 import time
 
 from eva.tools import val_to_boolean
+from eva.uc.ucitem import UCItem
 
 status_label_off = 'OFF'
 status_label_on = 'ON'
 
 
-class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
+class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
+           UCItem):
 
     def __init__(self, unit_id):
         super().__init__(unit_id, 'unit')
@@ -341,7 +343,6 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem):
                 '%s status = %u, value = "%s", nstatus = %u, nvalue = "%s"' % \
                         (self.oid, self.status, self.value,
                             self.nstatus, self.nvalue))
-            if eva.core.db_update == 1: eva.uc.controller.save_item_state(self)
             if self.status == -1:
                 logging.error('%s status is -1 (failed)' % self.oid)
             self.notify(skip_subscribed_mqtt=from_mqtt)
@@ -408,8 +409,8 @@ class UnitAction(eva.item.ItemAction):
                 self.item.set_state_to_n()
                 smsg = 'status=%u value="%s"' % (self.item.status,
                                                  self.item.value)
-            logging.debug('action %s completed, %s %s' %
-                          (self.uuid, self.item.oid, smsg))
+            logging.debug(
+                'action %s completed, %s %s' % (self.uuid, self.item.oid, smsg))
         if lock: self.unit_action_lock.release()
         return True
 

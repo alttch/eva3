@@ -78,6 +78,7 @@ class PHI(GenericPHI):
         if cmd == 'critical':
             self.log_critical('test')
             return True
+        eva.benchmark.report('UPDATE TIME')
         try:
             port, val = cmd.split('=')
             try:

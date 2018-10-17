@@ -27,6 +27,7 @@ from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
 from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
 
+import eva.benchmark
 
 class PHI(GenericPHI):
 
@@ -88,6 +89,8 @@ class PHI(GenericPHI):
             if not _port in self.data:
                 return False
             self.data[_port] = _data
+            eva.benchmark.report('ACTION TIME', clear=True)
+
         if self.phi_cfg.get('event_on_set'):
             handle_phi_event(self.phi_id, port, self.data)
         return True
@@ -100,6 +103,13 @@ class PHI(GenericPHI):
         if cmd == 'critical':
             self.log_critical('test')
             return True
+        if cmd == 'start_benchmark':
+            eva.benchmark.enabled = True
+            eva.benchmark.reset()
+            return 'OK'
+        if cmd == 'stop_benchmark':
+            eva.benchmark.enabled = False
+            return 'OK'
         try:
             port, val = cmd.split('=')
             port = int(port)
