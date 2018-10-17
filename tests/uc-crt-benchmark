@@ -36,6 +36,10 @@ if result.get('db_update') == 1:
                 ', this may slow down core benchmark'
     )
 
+if result.get('debug'):
+    print('Please disable UC debug mode')
+    sys.exit(9)
+
 api_call(
     'destroy', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor'}, eoe=False)
 api_call('destroy', {'i': 'unit:eva_benchmarks/eva_benchmark_unit'}, eoe=False)
