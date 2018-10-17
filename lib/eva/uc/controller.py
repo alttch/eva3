@@ -53,11 +53,18 @@ def handle_event(item):
     if oid in custom_event_handlers:
         for f in custom_event_handlers.get(oid):
             try:
-                t = threading.Thread(target=f, args=(item,))
+                t = threading.Thread(target=exec_event_handler, args=(f, item))
                 t.start()
             except:
                 eva.core.log_traceback()
     return True
+
+def exec_event_handler(func, item):
+    try:
+        func(item)
+    except:
+        logging.error('Failed to exec event handler %s' % func)
+        eva.core.log_traceback()
 
 
 def register_event_handler(item_id, func):

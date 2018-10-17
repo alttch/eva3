@@ -84,6 +84,14 @@ def unsubscribe(handler_id, func):
     return True
 
 
+def exec_custom_handler(func, data, address):
+    try:
+        func(data, address)
+    except:
+        logging.error('UDP API: failed to exec custom handler %s' % func)
+        eva.core.log_traceback()
+
+
 def update_config(cfg):
     global host, port, hosts_allow, hosts_allow_encrypted
     try:
@@ -192,7 +200,8 @@ def _t_dispatcher(host, port):
                     continue
                 for h in custom_handlers.get(handler):
                     try:
-                        t = threading.Thread(target=h, args=(dt, address))
+                        t = threading.Thread(
+                            target=exec_custom_handler, args=(h, dt, address))
                         t.start()
                     except:
                         eva.core.log_traceback()

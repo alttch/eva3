@@ -303,8 +303,10 @@ def get_db():
     db = sqlite3.connect(db_file)
     return db
 
+
 def release_db():
     _db_lock.release()
+
 
 def get_user_db():
     if userdb_file:
@@ -582,11 +584,13 @@ def debug_off():
     if logger: logger.setLevel(logging.INFO)
     logging.info('Debug mode OFF')
 
+
 def setup_off():
     global setup_mode
     setup_mode = False
     if logger: logger.setLevel(logging.INFO)
     logging.info('Setup mode OFF')
+
 
 def setup_on():
     global setup_mode
@@ -594,6 +598,7 @@ def setup_on():
     logging.basicConfig(level=logging.WARNING)
     if logger: logger.setLevel(logging.WARNING)
     logging.info('Setup mode ON')
+
 
 def fork():
     if os.fork():

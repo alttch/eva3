@@ -1277,6 +1277,14 @@ class GenericMQTTNotifier(GenericNotifier):
     def control_item_exists(self, item):
         return item in self.items_to_control
 
+    def exec_custom_handler(self, func, d, t, qos, retain):
+        try:
+            func(d, t, qos, retain)
+        except:
+            logging.error('Unable to process topic ' + \
+                            '%s with custom handler %s' % (t, func))
+            eva.core.log_traceback(notifier=True)
+
     def on_message(self, client, userdata, msg):
         if not self.enabled: return
         t = msg.topic
@@ -1284,11 +1292,11 @@ class GenericMQTTNotifier(GenericNotifier):
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
                 try:
-                    h(d, t, msg.qos, msg.retain)
+                    t = threading.thread(
+                        target=self.exec_custom_handler,
+                        args=(h, d, t, msg.qos, msg.retain))
+                    t.start()
                 except:
-                    logging.error(
-                        'Unable to process topic ' + \
-                                '%s with custom handler %s' % (t, h))
                     eva.core.log_traceback(notifier=True)
         if self.collect_logs and t == self.log_topic:
             try:
