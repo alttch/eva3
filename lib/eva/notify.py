@@ -1292,7 +1292,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
                 try:
-                    t = threading.thread(
+                    t = threading.Thread(
                         target=self.exec_custom_handler,
                         args=(h, d, t, msg.qos, msg.retain))
                     t.start()
