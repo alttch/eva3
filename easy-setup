@@ -431,6 +431,11 @@ EOF
     echo
 fi
 
+# check mods
+
+echo "Checking mods"
+./install/check_mods install || exit 1
+
 # ASK SOME QUESTIONS
 
 echo

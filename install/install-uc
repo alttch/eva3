@@ -15,11 +15,6 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-if [ ! -x ./install/check_mods ]; then
-    echo "please run in EVA dir!"
-    exit 1
-fi
-
 echo "Installing EVA UC to `pwd`"
 
 echo "Creating dirs"
@@ -47,9 +42,6 @@ ln -sf ../runtime/xc/uc
 cd ..
 
 ln -sf ../../../xc/drivers lib/eva/uc/drivers
-
-echo "Checking mods"
-./install/check_mods install || exit 1
 
 echo "Doing initial config"
 

@@ -15,11 +15,6 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
-if [ ! -x ./install/check_mods ]; then
-    echo "please run in EVA dir!"
-    exit 1
-fi
-
 echo "Installing EVA SFA to `pwd`"
 
 echo "Creating dirs"
@@ -39,9 +34,6 @@ touch runtime/db/sfa.db || exit 1
 mkdir -p ./xc/cmd || exit 1
 mkdir -p pvt
 chmod 700 pvt
-
-echo "Checking mods"
-./install/check_mods install || exit 1
 
 echo "Doing initial config"
 
