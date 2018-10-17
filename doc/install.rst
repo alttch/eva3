@@ -53,6 +53,10 @@ Easy setup
     you've customized ini files in *etc*, make sure the restricted user has an
     access to both <component>.ini and <component>_apikeys.ini.
 
+    If you want to make some initial customization, e.g. name the controllers
+    different from the host name, make changes in *etc/uc.ini*, *etc/lm.ini*
+    and *etc/sfa.ini* configs first.
+
 * For the interactive setup, run *./easy-setup* in EVA folder and follow the
   instructions.
 * For the automatic setup, run *./easy-setup -h* in EVA folder and choose
@@ -60,14 +64,16 @@ Easy setup
 * Setup log rotation by placing *etc/logrotate.d/eva-\** files to
   */etc/logrotate.d* system folder. Correct the paths to EVA files if
   necessary.
-* Setup automatic launch at boot time by placing *EVADIR/sbin/eva-control
-  start* command into system startup i.e. to */etc/rc.local*.
 
-.. note::
+Setup automatic launch at boot time by placing *EVADIR/sbin/eva-control start*
+command into system startup e.g. either to */etc/rc.local* on System V, or for
+systems with *systemd* (all modern Linux distributions):
 
-    If you want to make some initial customization, e.g. name the controllers
-    different from the host name, make changes in *etc/uc.ini*, *etc/lm.ini*
-    and *etc/sfa.ini* configs first.
+.. code-block:: bash
+
+    cp /opt/eva/etc/systemd/eva-ics.service /etc/systemd/system/
+    systemctl daemon-reload
+    systemctl enable eva-ics
 
 Manual setup
 ------------
@@ -108,7 +114,8 @@ Manual setup
 
     ./sbin/eva-control start
 
-The system is ready.
+The system is ready. Enable automatic launch in the same way as for
+*easy-setup*.
 
 .. note::
 

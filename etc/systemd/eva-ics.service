@@ -1,0 +1,13 @@
+[Unit]
+Description=EVA ICS
+After=network.target
+
+[Service]
+Type=forking
+User=root
+WorkingDirectory=/opt/eva
+ExecStart=/opt/eva/sbin/eva-control start
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
