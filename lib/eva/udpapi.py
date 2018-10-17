@@ -153,8 +153,8 @@ def stop():
     _t_dispatcher_active = False
 
 
-def check_access(address, data):
-    if data[0] == '|':
+def check_access(address, data=None):
+    if data and data[0] == '|':
         return hosts_allow_encrypted and netacl_match(address,
                                                       hosts_allow_encrypted)
     else:
