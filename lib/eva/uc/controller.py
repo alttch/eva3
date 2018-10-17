@@ -43,6 +43,64 @@ Q = None
 
 configs_to_remove = set()
 
+custom_event_handlers = {}
+
+
+def handle_event(item):
+    oid = item.oid
+    if oid in custom_event_handlers:
+        for f in custom_event_handlers.get(oid):
+            try:
+                f(item)
+            except:
+                eva.core.log_traceback()
+    return True
+
+
+def register_event_handler(item_id, func):
+    item = get_item(item_id)
+    if not item: return False
+    custom_event_handlers.setdefault(item.oid, set()).add(func)
+    logging.info(
+        'added custom event handler for %s, function %s' % (item.oid, func))
+    return True
+
+
+def unregister_event_handler(item_id, func):
+    item = get_item(item_id)
+    if not item: return False
+    try:
+        custom_event_handlers[item.oid].remove(func)
+        logging.debug('removed custom event handler for %s, function %s' %
+                      (item.oid, func))
+        if not custom_event_handlers.get(item.oid):
+            del custom_event_handlers[item.oid]
+            logging.debug(
+                'removing custom event handler for %s, last handler left' %
+                item.oid)
+    except:
+        return False
+    return True
+
+
+def register_benchmark_handler():
+    register_event_handler('sensor:eva_benchmarks/eva_benchmark_sensor',
+                           benchmark_handler)
+
+
+def unregister_benchmark_handler():
+    register_event_handler('sensor:eva_benchmarks/eva_benchmark_sensor',
+                           benchmark_handler)
+
+
+def benchmark_handler(item):
+    status = item.status
+    value = item.value
+    if status == 1:
+        value = float(value)
+        if value > 100:
+            exec_unit_action('unit:eva_benchmarks/eva_benchmark_unit', 1)
+
 
 def get_item(item_id):
     if not item_id: return None

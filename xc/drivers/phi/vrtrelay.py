@@ -28,6 +28,8 @@ from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
 
 import eva.benchmark
+from eva.uc.controller import register_benchmark_handler
+from eva.uc.controller import unregister_benchmark_handler
 
 class PHI(GenericPHI):
 
@@ -105,10 +107,12 @@ class PHI(GenericPHI):
             return True
         if cmd == 'start_benchmark':
             eva.benchmark.enabled = True
+            register_benchmark_handler()
             eva.benchmark.reset()
             return 'OK'
         if cmd == 'stop_benchmark':
             eva.benchmark.enabled = False
+            unregister_benchmark_handler()
             return 'OK'
         try:
             port, val = cmd.split('=')

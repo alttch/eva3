@@ -31,6 +31,8 @@ from eva.uc.driverapi import handle_phi_event
 from eva.uc.driverapi import log_traceback
 from eva.uc.driverapi import critical
 
+import eva.benchmark
+
 
 class PHI(GenericPHI):
 

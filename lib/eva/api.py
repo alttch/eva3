@@ -21,6 +21,7 @@ from eva.tools import parse_host_port
 
 import eva.users
 import eva.notify
+import eva.benchmark
 
 host = None
 ssl_host = None
@@ -187,19 +188,22 @@ class GenericAPI(object):
             result['polldelay'] = eva.core.polldelay
             if eva.core.development:
                 result['development'] = True
+            if eva.benchmark.enabled and eva.benchmark.intervals:
+                try:
+                    result['benchmark_crt'] = sum(
+                        eva.benchmark.intervals) / float(
+                            len(eva.benchmark.intervals))
+                except:
+                    result['benchmark_crt'] = -1
         return result
 
     # return version for embedded hardware
     def info(self):
         return {
-            'platfrom':
-            'eva',
-            'product':
-            eva.core.product_code,
-            'version':
-            eva.core.version,
-            'system':
-            eva.core.system_name,
+            'platfrom': 'eva',
+            'product': eva.core.product_code,
+            'version': eva.core.version,
+            'system': eva.core.system_name,
         }
 
     def get_state_history(self,
