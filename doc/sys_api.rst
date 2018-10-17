@@ -461,7 +461,7 @@ unchanged.
 Parameters:
 
 * **k** API key with masterkey permissions
-* **n** API key ID, required
+* **i** API key ID, required
 
 Returns serialized key dict in case of succcess or JSON dict { "result":
 "ERROR" } in case of error.
@@ -478,7 +478,7 @@ Deletes dynamic API key from the database.
 Parameters:
 
 * **k** API key with masterkey permissions
-* **n** API key ID, required
+* **i** API key ID, required
 
 returns JSON dict { "result": "OK" }
 
