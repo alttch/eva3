@@ -126,6 +126,20 @@ The system is ready. Enable automatic launch in the same way as for
 Updating
 ========
 
+Using EVA Shell
+---------------
+
+* Backup everything in system shell
+
+* Launch EVA Shell (*/opt/eva/bin/eva-shell*)
+
+* Backup configuration (type *backup save* command in EVA Shell)
+
+* Type *update* command in EVA Shell
+
+Using system shell
+------------------
+
 * Backup everything
 * Run the following command:
 
