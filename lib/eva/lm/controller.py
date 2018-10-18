@@ -657,7 +657,7 @@ def stop():
         uc_pool.stop()
     if plc: plc.stop_processors()
     if Q: Q.stop()
-    eva.uc.extapi.stop()
+    eva.lm.extapi.stop()
 
 
 def exec_macro(macro,
