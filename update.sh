@@ -115,8 +115,8 @@ rm -f _update/eva-${VERSION}/update.sh
 
 cp -rf _update/eva-${VERSION}/* . || exit 1
 
-ln -sf ../../../xc/drivers lib/eva/uc/drivers
-ln -sf ../../../xc/extensions lib/eva/lm/extensions
+( cd lib/eva/uc && ln -sf ../../../xc/drivers ) || exit 1
+( cd lib/eva/lm && ln -sf ../../../xc/extensions ) || exit 1
 
 echo "- Cleaning up"
 
