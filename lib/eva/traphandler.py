@@ -124,16 +124,20 @@ def start():
 
     logging.info('Starting SNMP trap handler, listening at %s:%u' % \
             (host, _port))
-    config.addV1System(snmpEngine, eva.core.product_code, _community)
-    ntfrcv.NotificationReceiver(snmpEngine, __cbFun)
-    snmpEngine.transportDispatcher.jobStarted(1)
-    eva.core.append_stop_func(stop)
-    _t_dispatcher = threading.Thread(
-        target=_t_dispatcher,
-        name='traphandler_t_dispatcher',
-        args=(snmpEngine,))
-    _t_dispatcher_active = True
-    _t_dispatcher.start()
+    try:
+        config.addV1System(snmpEngine, eva.core.product_code, _community)
+        ntfrcv.NotificationReceiver(snmpEngine, __cbFun)
+        snmpEngine.transportDispatcher.jobStarted(1)
+        eva.core.append_stop_func(stop)
+        _t_dispatcher = threading.Thread(
+            target=_t_dispatcher,
+            name='traphandler_t_dispatcher',
+            args=(snmpEngine,))
+        _t_dispatcher_active = True
+        _t_dispatcher.start()
+    except:
+        logging.error('Failed to start SNMP trap handler')
+        eva.core.log_traceback()
     return True
 
 
