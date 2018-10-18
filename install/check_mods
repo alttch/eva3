@@ -10,6 +10,7 @@ mods = [
     'collections',
     'configparser',
     'copy',
+    'cryptography',
     'getopt',
     'glob',
     'hashlib',
