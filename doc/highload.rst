@@ -72,3 +72,13 @@ time may be higher than CRT, depending on the equipment connected.
 
     It's not recommended to perform a real benchmarking tests on SOHO and light
     industry relays due to their limited lifetime (~100-200k switches)
+
+Below are benchmark results on a test systems (lower CRT is better):
+
++--------------------+-----------------------------+-------+-----------+
+| System             |           CPU               | Cores |  CRT, ms  |
++====================+=============================+=======+===========+
+| VMWare ESXi 5.5    | Intel Xeon D-1528 (1.90GHz) |   1   |     5     |
++--------------------+-----------------------------+-------+-----------+
+| VMWare ESXi 5.5    | Intel Xeon D-1528 (1.90GHz) |   4   |    3.5    |
++--------------------+-----------------------------+-------+-----------+
