@@ -3,12 +3,10 @@ __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.1"
 
-from pysnmp.entity import engine, config
-from pysnmp.carrier.asyncore.dgram import udp
-from pysnmp.entity.rfc3413 import ntfrcv
 import eva.core
 import threading
 import logging
+import importlib
 
 from eva.tools import parse_host_port
 from eva.tools import netacl_match
@@ -24,8 +22,6 @@ hosts_allow = []
 
 default_port = 162
 default_community = 'eva'
-
-snmpEngine = engine.SnmpEngine()
 
 _t_dispatcher_active = False
 
@@ -107,21 +103,28 @@ def start():
     global _t_dispatcher
     global _t_dispatcher_active
     if not host: return False
-
     if not port: _port = default_port
     else: _port = port
-
     if not community: _community = default_community
     else: _community = community
-
     try:
+        engine = importlib.import_module('pysnmp.entity.engine')
+        config = importlib.import_module('pysnmp.entity.config')
+        udp = importlib.import_module('pysnmp.carrier.asyncore.dgram.udp')
+        ntfrcv = importlib.import_module('pysnmp.entity.rfc3413.ntfrcv')
+    except:
+        logging.error(
+            'Failed to import SNMP modules. Try updating pysnmp library')
+        eva.core.log_traceback()
+        return False
+    try:
+        snmpEngine = engine.SnmpEngine()
         config.addTransport(snmpEngine, udp.domainName + (1,),
                             udp.UdpTransport().openServerMode((host, _port)))
     except:
         logging.error('Can not bind SNMP handler to %s:%s' % (host, _port))
         eva.core.log_traceback()
         return False
-
     logging.info('Starting SNMP trap handler, listening at %s:%u' % \
             (host, _port))
     try:
@@ -136,7 +139,8 @@ def start():
         _t_dispatcher_active = True
         _t_dispatcher.start()
     except:
-        logging.error('Failed to start SNMP trap handler')
+        logging.error(
+            'Failed to start SNMP trap handler. Try updating pysnmp library')
         eva.core.log_traceback()
     return True
 
