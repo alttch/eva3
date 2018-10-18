@@ -34,14 +34,65 @@ System Requirements
         * **pysnmp** (python3-pysnmp4)
         * **cryptography** (python3-cryptography)
 
-Initial configuration
-=====================
+Initial setup
+=============
 
 .. note::
 
     If you are going to run any controllers under restricted user account,
     make sure it has a valid shell set.
 
+Preparing the system
+--------------------
+
+Install required system packages and heavy Python modules from the OS
+repository. here is an example how to install them on Debian-based Linux (i.e.
+Ubuntu):
+
+.. code-block:: bash
+
+    apt install -y curl python3 python3-pip python3-pandas python3-pysnmp4 python3-cryptography
+
+Installing local MQTT server
+----------------------------
+
+If you plan to use local MQTT server, here is an example how to install
+`mosquitto <https://mosquitto.org/>`_ MQTT server on Debian-based Linux (i.e.
+Ubuntu):
+
+.. code-block:: bash
+
+    apt install -y mosquitto
+    # stop mosquitto
+    /etc/init.d/mosquitto stop
+    # let the server listen to localhost only
+    echo "bind_address 127.0.0.1" >> /etc/mosquitto/mosquitto.conf
+    # start mosquitto back
+    /etc/init.d/mosquitto start
+    # make sure mosquitto is running
+    ps auxw|grep mosquitto
+
+Options for EVA ICS:
+
+* mqtt host: localhost
+* mqtt port: 1883 (default)
+* mqtt user, password: leave empty
+* mqtt space: leave empty
+* mqtt ssl: leave empty (answer 'n' if using *easy-setup*)
+
+Downloading and extracting EVA ICS distribution
+-----------------------------------------------
+
+Go to `EVA ICS website <https://www.eva-ics.com/>`_, download most recent
+distribution and unpack it e.g. to */opt/eva*:
+
+.. code-block:: bash
+
+    cd /opt
+    wget https://www.eva-ics.com/download/3.1.1/stable/eva-3.1.1-2018101701.tgz
+    tar xzvf eva-3.1.1-2018101701.tgz
+    mv eva-3.1.1 eva
+    cd eva
 
 Easy setup
 ----------
@@ -73,7 +124,6 @@ systems with *systemd* (all modern Linux distributions):
 .. code-block:: bash
 
     cp /opt/eva/etc/systemd/eva-ics.service /etc/systemd/system/
-    systemctl daemon-reload
     systemctl enable eva-ics
 
 Manual setup
