@@ -34,7 +34,7 @@ Hardware
 EVA ICS is written in Python 3. It is not the fastest programming language in
 the world, but thanks to EVA ICS architecture and optimization for modern
 multi-core CPUs, the platform can provide good results even on a
-microcomputers. System components and ;doc:`CLI</cli>` tools may require more
+microcomputers. System components and :doc:`CLI</cli>` tools may require more
 time to launch on architectures different than Intel x86_64, but the regular
 performance should not be affected even on an embedded ARM-based systems.
 
