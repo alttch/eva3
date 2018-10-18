@@ -208,6 +208,19 @@ Using system shell
 
     The system downgrade is officially not supported and not recommended.
 
+Moving to another folder
+========================
+
+EVA ICS doesn't depend on any system paths, this allows to easy rename or move
+its folder or clone the installation. Just do the following:
+
+* stop EVA ICS (*./sbin/eva-control stop*)
+* rename, move or copy EVA ICS folder
+* if you've copied the folder, edit configuration files to make sure components
+  use different ports and/or interfaces
+* start EVA ICS back (*./sbin/eva-control start*)
+* correct logrotate and on-boot startup paths
+
 Watchdog
 ========
 
