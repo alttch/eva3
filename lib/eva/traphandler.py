@@ -102,6 +102,7 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
 def start():
     global _t_dispatcher
     global _t_dispatcher_active
+    global snmpEngine
     if not host: return False
     if not port: _port = default_port
     else: _port = port
@@ -149,8 +150,11 @@ def stop():
     global _t_dispatcher_active
     if _t_dispatcher_active:
         _t_dispatcher_active = False
-        snmpEngine.transportDispatcher.jobFinished(1)
-        snmpEngine.transportDispatcher.closeDispatcher()
+        try:
+            snmpEngine.transportDispatcher.jobFinished(1)
+            snmpEngine.transportDispatcher.closeDispatcher()
+        except:
+            pass
         _t_dispatcher.join()
 
 
