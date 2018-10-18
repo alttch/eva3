@@ -44,7 +44,7 @@ Benchmarks
 ==========
 
 Benchmark tests for :doc:`/uc/uc` can be performed with
-*tests/uc-crt-benchmark* tool. Benchmark results may be different on a systems
+*tests/benchmark-uc-crt* tool. Benchmark results may be different on a systems
 with different background load, so please stop all unnecesseary processes
 before starting a test.
 
