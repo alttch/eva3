@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __description__ = "Emulates 16-port relay"
 
 __id__ = 'vrtrelay'
