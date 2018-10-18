@@ -159,7 +159,9 @@ Manual setup
   */etc/logrotate.d* system folder. Correct the paths to EVA files if
   necessary.
 * Setup automatic launch at boot time by placing *EVADIR/sbin/eva-control
-  start* command into system startup i.e. to */etc/rc.local*.
+  start* command into system startup e.g. to */etc/rc.local* or place
+  ./etc/systemd/eva-ics.service to /etc/systemd/system/ for systemd-based
+  startup.
 
 * Configure the :doc:`notification system</notifiers>` if required.
 
