@@ -189,10 +189,15 @@ class GenericAPI(object):
             if eva.core.development:
                 result['development'] = True
             if eva.benchmark.enabled and eva.benchmark.intervals:
+                intervals = []
+                for k, v in eva.benchmark.intervals.items():
+                    s = v.get('s')
+                    e = v.get('e')
+                    if s is None or e is None: continue
+                    intervals.append(e - s)
                 try:
-                    result['benchmark_crt'] = sum(
-                        eva.benchmark.intervals) / float(
-                            len(eva.benchmark.intervals))
+                    result['benchmark_crt'] = sum(intervals) / float(
+                        len(intervals))
                 except:
                     result['benchmark_crt'] = -1
         return result

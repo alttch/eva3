@@ -59,6 +59,7 @@ def handle_event(item):
                 eva.core.log_traceback()
     return True
 
+
 def exec_event_handler(func, item):
     try:
         func(item)
@@ -104,7 +105,7 @@ def unregister_benchmark_handler():
 
 
 def benchmark_handler(item):
-    if not benchmark_lock.acquire(timeout=eva.core.timeout):
+    if not benchmark_lock.acquire(timeout=600):
         logging.critical('Core benchmark failed to obtain action lock')
         return False
     status = item.status
@@ -112,7 +113,8 @@ def benchmark_handler(item):
     if status == 1:
         value = float(value)
         if value > 100:
-            exec_unit_action('unit:eva_benchmarks/eva_benchmark_unit', 1)
+            exec_unit_action(
+                'unit:eva_benchmarks/eva_benchmark_unit', int(value))
     benchmark_lock.release()
 
 

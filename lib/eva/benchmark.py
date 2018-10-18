@@ -1,28 +1,21 @@
 import time
 import logging
 
-prevstep = None
-
-intervals = []
+intervals = {}
 
 enabled = False
 
 
-def report(s, clear=False):
-    global prevstep, enabled
+def report(s, i, end=False):
     if not enabled: return False
     ctime = time.time()
-    interval = ctime - prevstep if prevstep else None
-    if clear:
-        prevstep = None
+    if end:
+        intervals.setdefault(i, {})['e'] = ctime
     else:
-        prevstep = ctime
-    logging.warning('BENCHMARK STEP {} at {} (diff: {})'.format(
-        s, ctime, interval))
-    if interval is not None and clear: intervals.append(interval)
+        ts = ctime
+        intervals.setdefault(i, {})['s'] = ctime
+    logging.warning('BENCHMARK {} STEP {} at {}'.format(i, s, ctime))
 
 
 def reset():
-    global prevstep
-    prevstep = None
     intervals.clear()

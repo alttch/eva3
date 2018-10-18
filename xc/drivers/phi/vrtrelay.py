@@ -71,6 +71,7 @@ class PHI(GenericPHI):
             return None
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
+        print(data)
         if isinstance(port, list):
             ports = port
             multi = True
@@ -91,7 +92,7 @@ class PHI(GenericPHI):
             if not _port in self.data:
                 return False
             self.data[_port] = _data
-            eva.benchmark.report('ACTION TIME', clear=True)
+            eva.benchmark.report('ACTION', _data, end=True)
 
         if self.phi_cfg.get('event_on_set'):
             handle_phi_event(self.phi_id, port, self.data)

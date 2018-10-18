@@ -2,7 +2,7 @@
 
 import sys
 import os
-import random
+import time
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -12,7 +12,7 @@ from eva.client.apiclient import result_ok
 
 c = APIClientLocal('uc')
 
-iterations = 1000
+iterations = 100
 
 turn_debug = False
 
@@ -100,15 +100,18 @@ params['i'] = 'eva_benchmark_vs'
 print('Executing {} iterations...'.format(iterations))
 
 for a in range(0, iterations):
-    params['c'] = '1000=' + str(random.randint(101, 100000))
+    params['c'] = '1000=' + str(a + 101)
     p = a / iterations * 100
     if p and p / 10 == int(p / 10):
         print('%u%%' % p)
     api_call('test_phi', params)
+    time.sleep(0.03)
 
 print('100%')
 
 print('Benchmark completed')
+
+time.sleep(1)
 
 code, result = api_call('test')
 
