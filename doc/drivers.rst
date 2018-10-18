@@ -78,7 +78,7 @@ To assign driver to the specified item, use the command:
 
     uc-cmd driver set <item_id> <driver_id> [-c config] [-y]
     # example, set test_lamp to 5th relay port of driver v1
-    uc-cmd driver set unit:lamps/test_lamp v1 -c port=5
+    uc-cmd driver set unit:lamps/test_lamp v1.default -c port=5
 
 Param *-y* is used to ask the controller to save item configuration right after
 driver is assigned.
