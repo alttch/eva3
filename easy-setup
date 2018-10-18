@@ -355,7 +355,7 @@ do
             shift
         ;;
         --clear)
-            echo "Warning: asked to clear runtime. Doing"
+            echo "Warning: asked to clear runtime. Performing"
             ./sbin/eva-control stop
             rm -rf runtime/*
             shift

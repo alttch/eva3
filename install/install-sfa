@@ -35,7 +35,7 @@ mkdir -p ./xc/cmd || exit 1
 mkdir -p pvt
 chmod 700 pvt
 
-echo "Doing initial config"
+echo "Performing initial config"
 
 [ -f ./runtime/sfa_cvars.json ] || echo "{}" > ./runtime/sfa_cvars.json
 
