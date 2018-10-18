@@ -8,7 +8,7 @@ fi
 VERSION=3.1.1
 BUILD=2018101701
 
-OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh sbin/check_mods set-run-under-user.sh"
+OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh install/check_mods sbin/check_mods sbin/check_mqtt set-run-under-user.sh"
 
 UC_NEW_CFG="runtime/uc_drivers.json"
 UC_NEW_CFG_L="runtime/uc_modbus.json"
@@ -66,7 +66,7 @@ echo "- Stopping everything"
 
 echo "- Installing missing modules"
 
-./_update/eva-${VERSION}/install/check_mods install || exit 2
+./_update/eva-${VERSION}/install/check-mods install || exit 2
 
 echo "- Removing obsolete files and folders"
 

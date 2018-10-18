@@ -43,9 +43,6 @@ cd ..
 
 ln -sf ../../../xc/extensions lib/eva/lm/extensions
 
-echo "Checking mods"
-./install/check_mods install || exit 1
-
 echo "Doing initial config"
 
 [ -f ./runtime/lm_cvars.json ] || echo "{}" > ./runtime/lm_cvars.json
