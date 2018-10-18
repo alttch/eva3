@@ -4,7 +4,13 @@ Logic Manager
 EVA Logic Manager (LM PLC) - is a programmable logic controller.
 
 This subsystem is designed to automatically manage hardware and decision-making
-process when the metrics are changed.
+process when the metrics are changed. Unlike standard PL controllers, LM PLC is
+a network-based controller, its mission is to control equipment in local
+networks and work as cloud controller via the Internet.
+
+Decision-making system of LM PLC is event-based instead of cycle-based, however
+you can organize cycles with :ref:`logic variables<lvar>` using them as a cycle
+timers.
 
 LM PLC is customized and controlled via :doc:`lm_ei` web interface or
 :doc:`lm-cmd</cli>` console application. It can also be integrated into other
