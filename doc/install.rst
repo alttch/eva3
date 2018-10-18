@@ -89,9 +89,9 @@ distribution and unpack it e.g. to */opt/eva*:
 .. code-block:: bash
 
     cd /opt
-    wget https://www.eva-ics.com/download/3.1.1/stable/eva-3.1.1-2018101701.tgz
-    tar xzvf eva-3.1.1-2018101701.tgz
-    mv eva-3.1.1 eva
+    wget https://www.eva-ics.com/download/3.x.x/stable/eva-3.x.x-xxxxxxxxxx.tgz
+    tar xzvf eva-3.x.x-xxxxxxxxxx.tgz
+    mv eva-3.x.x eva
     cd eva
 
 Easy setup
