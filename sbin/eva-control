@@ -41,9 +41,9 @@ function start_controller() {
 case $1 in
 start)
     echo 'Starting EVA'
-    [ "x${UC_ENABLED}" == "xyes" ] && start_controller uc
-    [ "x${LM_ENABLED}" == "xyes" ] && start_controller lm
-    [ "x${SFA_ENABLED}" == "xyes" ] && start_controller sfa
+    [ "x${UC_ENABLED}" == "xyes" ] && (start_controller uc || exit 1)
+    [ "x${LM_ENABLED}" == "xyes" ] && (start_controller lm || exit 1)
+    [ "x${SFA_ENABLED}" == "xyes" ] && (start_controller sfa || exit 1)
     ;;
 stop)
     echo 'Stopping EVA'
@@ -66,3 +66,4 @@ status)
     echo "Usage: eva-control start|stop|restart"
     exit 1
 esac
+exit 0
