@@ -32,6 +32,7 @@ System Requirements
 
         * **pandas** (python3-pandas)
         * **pysnmp** (python3-pysnmp4)
+        * **cryptography** (python3-cryptography)
 
 Initial configuration
 =====================
