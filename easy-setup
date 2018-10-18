@@ -229,7 +229,7 @@ function askMQTT {
             [ "x$MQTT_CERT" != "x" ] && SSL_OPTS="$SSL_OPTS --cert $MQTT_CERT"
             [ "x$MQTT_KEY" != "x" ] && SSL_OPTS="$SSL_OPTS --key $MQTT_KEY"
         fi
-        ./sbin/check_mqtt ${SSL_OPTS} \
+        ./sbin/check-mqtt ${SSL_OPTS} \
             ${MQTT_USER}:${MQTT_PASSWORD}@${MQTT_HOST}:${MQTT_PORT}/${MQTT_SPACE} > /dev/null 2>&1
         if [ $? -ne 0 ]; then
             if [ ${INTERACTIVE} -ne 1 ]; then
