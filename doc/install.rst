@@ -113,9 +113,13 @@ Easy setup
   instructions.
 * For the automatic setup, run *./easy-setup -h* in EVA folder and choose
   the installation type.
-* Setup log rotation by placing *etc/logrotate.d/eva-\** files to
-  */etc/logrotate.d* system folder. Correct the paths to EVA files if
-  necessary.
+
+Setup log rotation by placing *etc/logrotate.d/eva-\** files to
+*/etc/logrotate.d* system folder. Correct the paths to EVA files if necessary.
+
+.. code-block:: bash
+
+    cp ./etc/logrotate.d/eva-* /etc/logrotate.d/
 
 Setup automatic launch at boot time by placing *EVADIR/sbin/eva-control start*
 command into system startup e.g. either to */etc/rc.local* on System V, or for
@@ -123,7 +127,7 @@ systems with *systemd* (all modern Linux distributions):
 
 .. code-block:: bash
 
-    cp /opt/eva/etc/systemd/eva-ics.service /etc/systemd/system/
+    cp ./etc/systemd/eva-ics.service /etc/systemd/system/
     systemctl enable eva-ics
 
 Manual setup
