@@ -53,7 +53,7 @@ the controller to:
 
 * obtain :doc:`item</items>` state from :doc:`driver</drivers>`
 
-* call a simple in-core event handling (convert item value to float and then
+* perform a simple in-core event handling (convert item value to float and then
   compare with a float number) with self thread-locking
 
 * get action requiest from event handler and execute it using another driver
