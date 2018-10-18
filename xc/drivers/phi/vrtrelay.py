@@ -71,7 +71,6 @@ class PHI(GenericPHI):
             return None
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
-        print(data)
         if isinstance(port, list):
             ports = port
             multi = True
