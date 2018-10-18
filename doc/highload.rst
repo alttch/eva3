@@ -4,7 +4,7 @@ High-load environments
 Tuning EVA ICS
 ==============
 
-To use EVA ICS in the high-load environments, remember the following:
+To use EVA ICS in high-load environments, remember the following:
 
 * Always turn off debug mode. Debug mode significantly slows down all EVA ICS
   components.
