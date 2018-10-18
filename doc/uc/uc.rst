@@ -23,12 +23,15 @@ necessary, it terminates the current script and keeps the command history.
 Additionally, Universal Controller collects data from the connected
 :doc:`items</items>` using active and passive status updates.
 
+Universal Controller can control equipment directly and/or act as a gateway for
+other controllers installed.
+
 Item status and values are stored in the local database. Other subsystems
 or third-party programs can read them using :doc:`uc_api`.
 
 Units and :any:`sensors<sensor>` are controlled via :doc:`uc_ei` interface,
-:doc:`configured</items>` via :doc:`uc_api`. States are
-controlled and updated using :doc:`item scripts</item_scripts>`.
+:doc:`configured</items>` via :doc:`uc_api`. States are controlled and updated
+using :doc:`drivers</drivers>` and :doc:`item scripts</item_scripts>`.
 
 All changes of item status, current control commands, and progress logs are
 sent to the :doc:`notification system</notifiers>`.
