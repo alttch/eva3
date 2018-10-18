@@ -24,7 +24,7 @@ Additionally, Universal Controller collects data from the connected
 :doc:`items</items>` using active and passive status updates.
 
 Universal Controller can control equipment directly and/or act as a gateway for
-other controllers installed.
+other local controllers.
 
 Item status and values are stored in the local database. Other subsystems
 or third-party programs can read them using :doc:`uc_api`.
