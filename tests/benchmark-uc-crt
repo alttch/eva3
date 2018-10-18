@@ -130,7 +130,7 @@ if turn_debug:
 
 print()
 avg = result.get('benchmark_crt')
-if avg:
+if avg > 0:
     print('CRT: {:.3f} ms'.format(avg * 1000))
 else:
     print('FAILED TO OBTAIN CRT')
