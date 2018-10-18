@@ -116,9 +116,8 @@ api_call('test_phi', {'i': 'eva_benchmark_vr', 'c': 'stop_benchmark'})
 
 print('Cleaning up...')
 
-api_call(
-    'destroy', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor'}, eoe=False)
-api_call('destroy', {'i': 'unit:eva_benchmarks/eva_benchmark_unit'}, eoe=False)
+api_call('destroy', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor'})
+api_call('destroy', {'i': 'unit:eva_benchmarks/eva_benchmark_unit'})
 api_call('unload_phi', {'i': 'eva_benchmark_vr'})
 api_call('unload_phi', {'i': 'eva_benchmark_vs'})
 
