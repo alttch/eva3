@@ -115,8 +115,11 @@ rm -f _update/eva-${VERSION}/update.sh
 
 cp -rf _update/eva-${VERSION}/* . || exit 1
 
-( cd lib/eva/uc && ln -sf ../../../xc/drivers ) || exit 1
-( cd lib/eva/lm && ln -sf ../../../xc/extensions ) || exit 1
+(cd lib/eva/uc && ln -sf ../../../xc/drivers ) || exit 1
+(cd xc/drivers/phi && ln -sf ln -sf ../../../lib/eva/uc/generic/generic_phi.py ) || exit 1
+(cd xc/drivers/lpi && ln -sf ln -sf ../../../lib/eva/uc/generic/generic_lpi.py ) || exit 1
+(cd lib/eva/lm && ln -sf ../../../xc/extensions ) || exit 1
+(cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
 
 echo "- Cleaning up"
 

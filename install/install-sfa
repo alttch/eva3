@@ -41,3 +41,4 @@ echo "Performing initial config"
 
 echo "Finished"
 
+exit 0
