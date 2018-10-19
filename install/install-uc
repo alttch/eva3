@@ -38,8 +38,8 @@ mkdir -p ./xc/cmd || exit 1
 
 (cd xc && ln -sf ../runtime/xc/uc) || exit 1
 (cd lib/eva/uc && ln -sf ../../../xc/drivers) || exit 1
-(cd xc/drivers/phi && ln -sf ln -sf ../../../lib/eva/uc/generic/generic_phi.py) || exit 1
-(cd xc/drivers/lpi && ln -sf ln -sf ../../../lib/eva/uc/generic/generic_lpi.py) || exit 1
+(cd xc/drivers/phi && ln -sf ../../../lib/eva/uc/generic/generic_phi.py) || exit 1
+(cd xc/drivers/lpi && ln -sf ../../../lib/eva/uc/generic/generic_lpi.py) || exit 1
 
 echo "Performing initial config"
 
