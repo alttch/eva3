@@ -21,7 +21,7 @@ UC
 --
 
     * fixes: device commands in enterpise layout
-    * perfomance improvements
+    * performance improvements
 
     * "update" command without params starts item passive update
     * batch commands in UDP API (separated with new line) 
