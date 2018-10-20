@@ -74,6 +74,7 @@ class ManagementCLI(GenericCLI):
         self.add_manager_common_functions()
         self.add_manager_control_functions()
         self.add_manager_backup_functions()
+        self.add_manager_edit_functions()
         self.add_management_shells()
         self.add_manager_power_functions()
         self.add_user_defined_functions()
@@ -123,6 +124,14 @@ class ManagementCLI(GenericCLI):
 
         sp_backup_unlink = sp_backup.add_parser('unlink', help='Delete backup')
         sp_backup_unlink.add_argument('f', help='Backup name', metavar='NAME')
+
+    def add_manager_edit_functions(self):
+        ap_edit = self.sp.add_parser('edit', help='Edit configs')
+
+        sp_edit = ap_edit.add_subparsers(
+            dest='_func', metavar='func', help='Edit commands')
+
+        sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
 
     def add_manager_control_functions(self):
         if not self.products_configured:
@@ -550,6 +559,9 @@ sys.argv = {}
         return self.local_func_result_failed if \
                 os.system(a) else self.local_func_result_ok
 
+    def edit_crontab(self, params):
+        return self.exec_cmd('crontab -e')
+
 
 def make_exec_cmd_func(cmd):
 
@@ -579,7 +591,8 @@ _api_functions = {
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
-    'backup:restore': cli.backup_restore
+    'backup:restore': cli.backup_restore,
+    'edit:crontab': cli.edit_crontab
 }
 
 cfg = configparser.ConfigParser(inline_comment_prefixes=';')
