@@ -634,6 +634,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_phi_unlink.add_argument('m', help='PHI module', metavar='PHI_MOD')
 
     def edit_action(self, props):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
         code, data = self.do_run(
             args=['config', 'props', props.get('i')], return_result=True)
         if code or not isinstance(data, dict):
@@ -666,6 +669,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         return self.local_func_result_ok
 
     def edit_update(self, props):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
         code, data = self.do_run(
             args=['config', 'props', props.get('i')], return_result=True)
         if code or not isinstance(data, dict):

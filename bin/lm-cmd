@@ -648,6 +648,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             choices=['cfg', 'functions'])
 
     def edit_macro(self, props):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
         code, data = self.do_run(
             args=['macro', 'props', props.get('i')], return_result=True)
         if code or not isinstance(data, dict):
