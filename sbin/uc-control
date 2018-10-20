@@ -39,7 +39,7 @@ start)
     ${WATCHDOG} uc ${UC} > /dev/null &
     ;;
 launch)
-    ${PYTHON} ${UC} ${UC_ARGS}
+    env EVA_CORE_ENABLE_CC=1 ${PYTHON} ${UC} ${UC_ARGS}
     ;;
 stop)
     ps xa|grep -v grep|grep ${UC} > /dev/null 2>&1

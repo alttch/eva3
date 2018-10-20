@@ -39,7 +39,7 @@ start)
     ${WATCHDOG} sfa ${SFA} > /dev/null &
     ;;
 launch)
-    ${PYTHON} ${SFA} ${SFA_ARGS}
+    env EVA_CORE_ENABLE_CC=1 ${PYTHON} ${SFA} ${SFA_ARGS}
     ;;
 stop)
     ps xa|grep -v grep|grep ${SFA} > /dev/null 2>&1

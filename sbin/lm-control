@@ -39,7 +39,7 @@ start)
     ${WATCHDOG} lm ${LM} > /dev/null &
     ;;
 launch)
-    ${PYTHON} ${LM} ${LM_ARGS}
+    env EVA_CORE_ENABLE_CC=1 ${PYTHON} ${LM} ${LM_ARGS}
     ;;
 stop)
     ps xa|grep -v grep|grep ${LM} > /dev/null 2>&1
