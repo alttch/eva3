@@ -459,12 +459,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_edit = ap_edit.add_subparsers(
             dest='_func', metavar='func', help='Edit commands')
 
-        sp_edit_action = sp_edit.add_parser('macro', help='Edit macro code')
-        sp_edit_action.add_argument('i', help='Macro ID', metavar='ID')
-
-        sp_edit_update = sp_edit.add_parser(
-            'update', help='Edit item update script')
-        sp_edit_update.add_argument('i', help='Item ID', metavar='ID')
+        sp_edit_macro = sp_edit.add_parser('macro', help='Edit macro code')
+        sp_edit_macro.add_argument('i', help='Macro ID', metavar='ID')
 
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')
