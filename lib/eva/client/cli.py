@@ -1247,11 +1247,11 @@ class GenericCLI(object):
         print(self.colored('-' * len(out[0]), color='grey'))
         [print(o) for o in out[2:]]
 
-
-class ControllerCLI(object):
-
     def print_local_only(self):
         self.print_err('This function is available for local controller only')
+
+
+class ControllerCLI(object):
 
     def start_controller(self, params):
         if self.apiuri:
