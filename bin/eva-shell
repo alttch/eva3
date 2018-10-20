@@ -458,6 +458,7 @@ sys.argv = {}
         _update_repo = params.get('u')
         if not _update_repo:
             _update_repo = update_repo
+        os.environ['EVA_REPOSITORY_URL'] = _update_repo
         try:
             with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
                 data = p.read()
