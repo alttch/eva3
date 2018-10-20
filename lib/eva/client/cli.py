@@ -27,7 +27,7 @@ readline_processing = True if \
         not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
 parent_shell_name = None
 
-history_length = 100
+history_length = 300
 history_file = os.path.expanduser('~') + '/.eva_history'
 
 

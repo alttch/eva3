@@ -8,6 +8,7 @@ __version__ = "3.1.1"
 
 import sys
 import os
+import time
 from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
@@ -46,11 +47,11 @@ _api_functions = {
 _pd_cols = {
     'state': [
         'oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue', 'set',
-        'expires'
+        'exp_in'
     ],
     'state_': [
         'oid', 'virtual', 'action_enabled', 'description', 'location', 'status',
-        'value', 'nstatus', 'nvalue', 'set', 'expires'
+        'value', 'nstatus', 'nvalue', 'set', 'expires', 'exp_in'
     ],
     'result': [
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
@@ -89,6 +90,22 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             elif itype == 'state':
                 try:
                     d['set'] = datetime.fromtimestamp(d['set_time']).isoformat()
+                    if d['expires']:
+                        if d['status'] == 0:
+                            d['exp_in'] = 'S'
+                        else:
+                            try:
+                                if d['status'] == -1:
+                                    raise Exception('expired')
+                                exp_in = d['set_time'] + \
+                                        d['expires'] - time.time()
+                                if exp_in <= 0:
+                                    raise Exception('expired')
+                                d['exp_in'] = '{:.1f}'.format(exp_in)
+                            except Exception as e:
+                                d['exp_in'] = 'E'
+                    else:
+                        d['exp_in'] = '-'
                 except:
                     pass
             result.append(d)
@@ -401,8 +418,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
         sp_controller_test = sp_controller.add_parser(
             'test', help='Test connected controller')
-        sp_controller_test.add_argument(
-            'i', help='Controller ID', metavar='ID')
+        sp_controller_test.add_argument('i', help='Controller ID', metavar='ID')
 
         sp_controller_list_props = sp_controller.add_parser(
             'props', help='List controller config props')
