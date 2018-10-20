@@ -15,6 +15,7 @@ import shlex
 import readline
 import json
 import jsonpickle
+import platform
 import termcolor
 import time
 from datetime import datetime
@@ -204,8 +205,8 @@ class GenericCLI(object):
                             result['result'] != 'OK' or \
                             not 'key_id' in result['acl']:
                         raise Exception('test failed')
-                    h = ' ' + result['acl']['key_id'] + '@' + result['system']
-                    host_str = self.colored(
+                    h = result['acl']['key_id'] + '@' + result['system']
+                    host_str = ':' + self.colored(
                         h, 'blue', attrs=['bold'], rlsafe=True)
                     if result['acl'].get('master'):
                         prompt = '# '
@@ -216,9 +217,15 @@ class GenericCLI(object):
                     else:
                         h = ''
                     product_str = self.colored(
-                        self.product, 'grey', attrs=['bold'], rlsafe=True)
+                        self.product + ':' + platform.node(),
+                        'grey',
+                        attrs=['bold'],
+                        rlsafe=True)
                     host_str = self.colored(
                         h, 'grey', attrs=['bold'], rlsafe=True)
+            else:
+                product_str += self.colored(
+                    ':' + platform.node(), 'green', attrs=['bold'], rlsafe=True)
             prompt = '[%s%s]%s' % (ppeva + product_str, host_str, prompt)
         return prompt
 

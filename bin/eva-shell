@@ -15,6 +15,7 @@ import glob
 import requests
 import jsonpickle
 import configparser
+import platform
 from datetime import datetime
 
 dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
@@ -241,7 +242,7 @@ class ManagementCLI(GenericCLI):
     def start_shell(self, p, x='-cmd', xp=''):
         try:
             c = open('{}/{}{}'.format(dir_bin, p, x)).read()
-            sysargs = [ '{}/{}{}'.format(dir_bin, p, x), '-I']
+            sysargs = ['{}/{}{}'.format(dir_bin, p, x), '-I']
             if self.in_json:
                 sysargs.append('-J')
             if self.always_suppress_colors:
@@ -249,12 +250,12 @@ class ManagementCLI(GenericCLI):
             c = """import sys
 import eva.client.cli
 eva.client.cli.say_bye = False
-eva.client.cli.parent_shell_name = 'eva'
+eva.client.cli.parent_shell_name = 'eva:{}'
 eva.client.cli.readline_processing = {}
 sys.argv = {}
 {}
 
-""".format(not interactive_mode, sysargs, xp) + c
+""".format(platform.node(), not interactive_mode, sysargs, xp) + c
             try:
                 exec(c)
             except SystemExit:
