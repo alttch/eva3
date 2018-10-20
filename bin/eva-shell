@@ -24,6 +24,8 @@ dir_etc = os.path.dirname(os.path.realpath(__file__)) + '/../etc'
 dir_sbin = os.path.dirname(os.path.realpath(__file__)) + '/../sbin'
 dir_bin = os.path.realpath(
     os.path.dirname(os.path.realpath(__file__)) + '/../bin')
+dir_runtime = os.path.realpath(
+    os.path.dirname(os.path.realpath(__file__)) + '/../runtime')
 sys.path.append(dir_lib)
 
 os.chdir(dir_eva)
