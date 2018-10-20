@@ -650,9 +650,14 @@ class LM_CLI(GenericCLI, ControllerCLI):
             if os.system('mkdir -p ' + macro_dir):
                 return self.local_func_result_failed
         editor = os.environ.get('EDITOR', 'vi')
-        return self.local_func_result_ok if \
-                not os.system(editor + ' ' + fname) else \
-                self.local_func_result_failed
+        if os.system(editor + ' ' + fname):
+            return self.local_func_result_failed
+        try:
+            compile(open(fname).read(), fname, 'exec')
+        except Exception as e:
+            self.print_err('Macro code error: ' + str(e))
+            return self.local_func_result_failed
+        return self.local_func_result_ok
 
 
 _me = 'EVA ICS LM CLI version %s' % __version__
