@@ -12,91 +12,13 @@ import requests
 from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+dir_runtime = os.path.realpath(
+    os.path.dirname(os.path.realpath(__file__)) + '/../runtime')
 sys.path.append(dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client import apiclient
-
-_me = 'EVA ICS UC CLI version %s' % __version__
-
-_api_functions = {
-    'history': 'state_history',
-    'action:exec': 'action',
-    'action:result': 'result',
-    'action:enable': 'enable_actions',
-    'action:disable': 'disable_actions',
-    'action:terminate': 'terminate',
-    'action:clear': 'q_clean',
-    'action:kill': 'kill',
-    'config:get': 'get_config',
-    'config:save': 'save_config',
-    'config:props': 'list_props',
-    'config:set': 'set_prop',
-    'clone:item': 'clone',
-    'device:create': 'create_device',
-    'device:update': 'update_device',
-    'device:destroy': 'destroy_device',
-    'modbus:list': 'list_modbus_ports',
-    'modbus:create': 'create_modbus_port',
-    'modbus:destroy': 'destroy_modbus_port',
-    'modbus:test': 'test_modbus_port',
-    'phi:list': 'list_phi',
-    'phi:get': 'get_phi',
-    'phi:mods': 'list_phi_mods',
-    'phi:test': 'test_phi',
-    'phi:exec': 'exec_phi',
-    'phi:load': 'load_phi',
-    'phi:unload': 'unload_phi',
-    'phi:unlink': 'unlink_phi_mod',
-    'phi:download': 'put_phi_mod',
-    'phi:modinfo': 'modinfo_phi',
-    'phi:modhelp': 'modhelp_phi',
-    'lpi:mods': 'list_lpi_mods',
-    'lpi:modinfo': 'modinfo_lpi',
-    'lpi:modhelp': 'modhelp_lpi',
-    'driver:list': 'list_drivers',
-    'driver:get': 'get_driver',
-    'driver:load': 'load_driver',
-    'driver:unload': 'unload_driver',
-    'driver:set': 'set_driver',
-    'driver:unset': 'set_driver'
-}
-
-_pd_cols = {
-    'state': ['oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue'],
-    'state_': [
-        'oid', 'action_enabled', 'description', 'location', 'status', 'value',
-        'nstatus', 'nvalue'
-    ],
-    'result': [
-        'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
-        'status'
-    ],
-    'list': ['oid', 'description'],
-    'list_modbus_ports':
-    ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
-    'list_phi_': ['id', 'mod', 'description', 'version'],
-    'list_drivers_':
-    ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
-    'list_drivers': ['id', 'mod', 'phi_id'],
-    'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
-    'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
-    'modhelp_lpi': ['name', 'type', 'required', 'help'],
-    'modhelp_phi': ['name', 'type', 'required', 'help']
-}
-
-_pd_idx = {
-    'state': 'oid',
-    'list': 'oid',
-    'result': 'time',
-    'list_phi_mods': 'mod',
-    'list_lpi_mods': 'mod'
-}
-
-_fancy_tabsp = {'list_props': 26, 'get_phi': 14, 'get_driver': 12}
-
-_always_json = ['get_config']
 
 
 class UC_CLI(GenericCLI, ControllerCLI):
@@ -167,6 +89,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         super().add_functions()
         self.add_uc_common_functions()
         self.add_uc_action_functions()
+        self.add_uc_edit_functions()
         self.add_uc_configure_functions()
         self.add_uc_device_functions()
         self.add_uc_modbus_functions()
@@ -345,6 +268,20 @@ class UC_CLI(GenericCLI, ControllerCLI):
             metavar='STATE',
             dest='s',
             choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
+
+    def add_uc_edit_functions(self):
+        ap_edit = self.sp.add_parser('edit', help='Edit item scripts')
+
+        sp_edit = ap_edit.add_subparsers(
+            dest='_func', metavar='func', help='Edit commands')
+
+        sp_edit_action = sp_edit.add_parser(
+            'action', help='Edit item action script')
+        sp_edit_action.add_argument('i', help='Item ID', metavar='ID')
+
+        sp_edit_update = sp_edit.add_parser(
+            'update', help='Edit item update script')
+        sp_edit_update.add_argument('i', help='Item ID', metavar='ID')
 
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')
@@ -696,8 +633,155 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'unlink', help='Unlink PHI (delete mod file)')
         sp_phi_unlink.add_argument('m', help='PHI module', metavar='PHI_MOD')
 
+    def edit_action(self, props):
+        code, data = self.do_run(
+            args=['config', 'props', props.get('i')], return_result=True)
+        if code or not isinstance(data, dict):
+            return self.local_func_result_failed
+        if not 'action_exec' in data:
+            self.print_err('no actions available for this item type')
+            return self.local_func_result_failed
+        action_file = data.get('action_exec') if data.get(
+            'action_exec') else props.get('i').split('/')[-1]
+        if action_file.startswith('|'):
+            self.print_err('Action is set to driver: ' + action_file[1:])
+            return self.local_func_result_failed
+        fname = '{}/xc/uc/{}'.format(dir_runtime, action_file) if \
+                not action_file.startswith('/') else action_file
+        if action_file.find('/') != -1:
+            action_dir = '/'.join(fname.split('/')[:-1])
+            if os.system('mkdir -p ' + action_dir):
+                return self.local_func_result_failed
+        editor = os.environ.get('EDITOR', 'vi')
+        if os.system(editor + ' ' + fname):
+            return self.local_func_result_failed
+        try:
+            os.chmod(fname, 0o755)
+        except:
+            self.print_err('Unable to set action file permissions: ' + fname)
+            return self.local_func_result_failed
+        if not os.path.isfile(fname):
+            self.print_err('Action script not created: ' + fname)
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
+    def edit_update(self, props):
+        code, data = self.do_run(
+            args=['config', 'props', props.get('i')], return_result=True)
+        if code or not isinstance(data, dict):
+            return self.local_func_result_failed
+        if not 'update_exec' in data:
+            self.print_err('no updates available for this item type')
+            return self.local_func_result_failed
+        update_file = data.get('update_exec') if data.get(
+            'update_exec') else props.get('i').split('/')[-1] + '_update'
+        if update_file.startswith('|'):
+            self.print_err('Update is set to driver: ' + update_file[1:])
+            return self.local_func_result_failed
+        fname = '{}/xc/uc/{}'.format(dir_runtime, update_file) if \
+                not update_file.startswith('/') else update_file
+        if update_file.find('/') != -1:
+            update_dir = '/'.join(fname.split('/')[:-1])
+            if os.system('mkdir -p ' + update_dir):
+                return self.local_func_result_failed
+        editor = os.environ.get('EDITOR', 'vi')
+        if os.system(editor + ' ' + fname):
+            return self.local_func_result_failed
+        try:
+            os.chmod(fname, 0o755)
+        except:
+            self.print_err('Unable to set update file permissions: ' + fname)
+            return self.local_func_result_failed
+        if not os.path.isfile(fname):
+            self.print_err('Update script not created: ' + fname)
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
+
+_me = 'EVA ICS UC CLI version %s' % __version__
 
 cli = UC_CLI('uc', _me)
+
+_api_functions = {
+    'history': 'state_history',
+    'action:exec': 'action',
+    'action:result': 'result',
+    'action:enable': 'enable_actions',
+    'action:disable': 'disable_actions',
+    'action:terminate': 'terminate',
+    'action:clear': 'q_clean',
+    'action:kill': 'kill',
+    'config:get': 'get_config',
+    'config:save': 'save_config',
+    'config:props': 'list_props',
+    'config:set': 'set_prop',
+    'clone:item': 'clone',
+    'device:create': 'create_device',
+    'device:update': 'update_device',
+    'device:destroy': 'destroy_device',
+    'modbus:list': 'list_modbus_ports',
+    'modbus:create': 'create_modbus_port',
+    'modbus:destroy': 'destroy_modbus_port',
+    'modbus:test': 'test_modbus_port',
+    'phi:list': 'list_phi',
+    'phi:get': 'get_phi',
+    'phi:mods': 'list_phi_mods',
+    'phi:test': 'test_phi',
+    'phi:exec': 'exec_phi',
+    'phi:load': 'load_phi',
+    'phi:unload': 'unload_phi',
+    'phi:unlink': 'unlink_phi_mod',
+    'phi:download': 'put_phi_mod',
+    'phi:modinfo': 'modinfo_phi',
+    'phi:modhelp': 'modhelp_phi',
+    'lpi:mods': 'list_lpi_mods',
+    'lpi:modinfo': 'modinfo_lpi',
+    'lpi:modhelp': 'modhelp_lpi',
+    'driver:list': 'list_drivers',
+    'driver:get': 'get_driver',
+    'driver:load': 'load_driver',
+    'driver:unload': 'unload_driver',
+    'driver:set': 'set_driver',
+    'driver:unset': 'set_driver',
+    'edit:action': cli.edit_action,
+    'edit:update': cli.edit_update
+}
+
+_pd_cols = {
+    'state': ['oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue'],
+    'state_': [
+        'oid', 'action_enabled', 'description', 'location', 'status', 'value',
+        'nstatus', 'nvalue'
+    ],
+    'result': [
+        'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
+        'status'
+    ],
+    'list': ['oid', 'description'],
+    'list_modbus_ports':
+    ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
+    'list_phi_': ['id', 'mod', 'description', 'version'],
+    'list_drivers_':
+    ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
+    'list_drivers': ['id', 'mod', 'phi_id'],
+    'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
+    'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
+    'modhelp_lpi': ['name', 'type', 'required', 'help'],
+    'modhelp_phi': ['name', 'type', 'required', 'help']
+}
+
+_pd_idx = {
+    'state': 'oid',
+    'list': 'oid',
+    'result': 'time',
+    'list_phi_mods': 'mod',
+    'list_lpi_mods': 'mod'
+}
+
+_fancy_tabsp = {'list_props': 26, 'get_phi': 14, 'get_driver': 12}
+
+_always_json = ['get_config']
+
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle']
 cli.arg_sections += [

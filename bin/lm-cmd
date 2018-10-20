@@ -230,6 +230,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
         self.add_lm_configure_functions()
         self.add_lm_remote_functions()
         self.add_lm_macro_functions()
+        self.add_lm_edit_functions()
         self.add_lm_rule_functions()
         self.add_lm_ext_functions()
         self.add_lm_controller_functions()
@@ -452,6 +453,19 @@ class LM_CLI(GenericCLI, ControllerCLI):
         ap_destroy = sp_macro.add_parser('destroy', help='Delete macro')
         ap_destroy.add_argument('i', help='Macro ID', metavar='ID')
 
+    def add_lm_edit_functions(self):
+        ap_edit = self.sp.add_parser('edit', help='Edit item scripts')
+
+        sp_edit = ap_edit.add_subparsers(
+            dest='_func', metavar='func', help='Edit commands')
+
+        sp_edit_action = sp_edit.add_parser('macro', help='Edit macro code')
+        sp_edit_action.add_argument('i', help='Macro ID', metavar='ID')
+
+        sp_edit_update = sp_edit.add_parser(
+            'update', help='Edit item update script')
+        sp_edit_update.add_argument('i', help='Item ID', metavar='ID')
+
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')
         sp_rule = ap_rule.add_subparsers(
@@ -644,7 +658,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             return self.local_func_result_failed
         macro_file = data.get('action_exec') if data.get(
             'action_exec') else props.get('i').split('/')[-1] + '.py'
-        fname = '{}/xc/lm/{}'.format(dir_runtime, macro_file)
+        fname = '{}/xc/lm/{}'.format(dir_runtime, macro_file) if \
+                not macro_file.startswith('/') else macro_file
         if macro_file.find('/') != -1:
             macro_dir = '/'.join(fname.split('/')[:-1])
             if os.system('mkdir -p ' + macro_dir):
@@ -701,7 +716,8 @@ _api_functions = {
     'ext:unload': 'unload_ext',
     'ext:modhelp': 'modhelp_ext',
     'ext:modinfo': 'modinfo_ext',
-    'macro:edit': cli.edit_macro
+    'macro:edit': cli.edit_macro,
+    'edit:macro': cli.edit_macro
 }
 
 _pd_cols = {
