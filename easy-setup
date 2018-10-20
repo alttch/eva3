@@ -495,7 +495,7 @@ if [ $INSTALL_UC -eq 1 ]; then
 [masterkey]
 key = ${MASTERKEY}
 master = yes
-hosts_allow = 127.0.0.1
+hosts_allow = ${REMOTES}
 
 [operator]
 key = ${UC_OPKEY}
@@ -569,7 +569,7 @@ if [ $INSTALL_LM -eq 1 ]; then
 [masterkey]
 key = ${MASTERKEY}
 master = yes
-hosts_allow = 127.0.0.1
+hosts_allow = ${REMOTES}
 
 [operator]
 key = ${LM_OPKEY}
@@ -646,7 +646,7 @@ if [ $INSTALL_SFA -eq 1 ]; then
 [masterkey]
 key = ${MASTERKEY}
 master = yes
-hosts_allow = 127.0.0.1
+hosts_allow = ${REMOTES}
 
 [operator]
 key = ${SFA_OPKEY}
