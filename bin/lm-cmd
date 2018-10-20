@@ -630,9 +630,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='_full',
             action='store_true')
 
-        sp_ext_show = sp_ext.add_parser(
-            'show', help='Show loaded extension info')
-        sp_ext_show.add_argument('i', help='EXT id', metavar='EXT_ID')
+        sp_ext_get = sp_ext.add_parser(
+            'get', help='Get loaded extension info')
+        sp_ext_get.add_argument('i', help='EXT id', metavar='EXT_ID')
 
         sp_ext_mods = sp_ext.add_parser(
             'mods', help='List available extension mods')
@@ -737,7 +737,7 @@ _api_functions = {
     'controller:append': 'append_controller',
     'controller:remove': 'remove_controller',
     'ext:list': 'list_ext',
-    'ext:show': 'get_ext',
+    'ext:get': 'get_ext',
     'ext:mods': 'list_ext_mods',
     'ext:load': 'load_ext',
     'ext:unload': 'unload_ext',
