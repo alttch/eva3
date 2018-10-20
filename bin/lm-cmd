@@ -386,7 +386,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         ap_edit = sp_macro.add_parser('edit', help='Edit macro code')
-        ap_edit.add_argument('i', help='Macro ID', metavar='ID')
+        ap_edit.add_argument(
+            'i', help='Macro ID (common.py for common code)', metavar='ID')
 
         sp_macro_list_props = sp_macro.add_parser(
             'props', help='List macro config props')
@@ -460,7 +461,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='_func', metavar='func', help='Edit commands')
 
         sp_edit_macro = sp_edit.add_parser('macro', help='Edit macro code')
-        sp_edit_macro.add_argument('i', help='Macro ID', metavar='ID')
+        sp_edit_macro.add_argument(
+            'i', help='Macro ID (common.py for common code)', metavar='ID')
 
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')
@@ -651,12 +653,15 @@ class LM_CLI(GenericCLI, ControllerCLI):
         if self.apiuri:
             self.print_local_only()
             return self.local_func_result_failed
-        code, data = self.do_run(
-            args=['macro', 'props', props.get('i')], return_result=True)
-        if code or not isinstance(data, dict):
-            return self.local_func_result_failed
-        macro_file = data.get('action_exec') if data.get(
-            'action_exec') else props.get('i').split('/')[-1] + '.py'
+        if props.get('i') == 'common.py':
+            macro_file = 'common.py'
+        else:
+            code, data = self.do_run(
+                args=['macro', 'props', props.get('i')], return_result=True)
+            if code or not isinstance(data, dict):
+                return self.local_func_result_failed
+            macro_file = data.get('action_exec') if data.get(
+                'action_exec') else props.get('i').split('/')[-1] + '.py'
         fname = '{}/xc/lm/{}'.format(dir_runtime, macro_file) if \
                 not macro_file.startswith('/') else macro_file
         if macro_file.find('/') != -1:
