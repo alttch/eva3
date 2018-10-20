@@ -169,16 +169,6 @@ class Macro(eva.item.ActiveItem):
                 return True
             else:
                 return False
-        if prop == 'group':
-            if val:
-                v = val
-            else:
-                v = 'nogroup'
-            if self.group != v:
-                self.update_config({'group': v})
-                self.log_set(prop, v)
-                self.set_modified(save)
-            return True
         return super().set_prop(prop, val, save)
 
     def notify(self, retain=None, skip_subscribed_mqtt=False):

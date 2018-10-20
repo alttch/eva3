@@ -643,7 +643,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
         if code or not isinstance(data, dict):
             return self.local_func_result_failed
         macro_file = data.get('action_exec') if data.get(
-            'action_exec') else props.get('i') + '.py'
+            'action_exec') else props.get('i').split('/')[-1] + '.py'
         fname = '{}/xc/lm/{}'.format(dir_runtime, macro_file)
         if macro_file.find('/') != -1:
             macro_dir = '/'.join(fname.split('/')[:-1])
