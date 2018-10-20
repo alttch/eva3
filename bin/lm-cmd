@@ -373,6 +373,20 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_macro_list.add_argument(
             '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
 
+        ap_macro_create = sp_macro.add_parser('create', help='Create new macro')
+        ap_macro_create.add_argument('i', help='Macro ID', metavar='ID')
+        ap_macro_create.add_argument(
+            '-g', '--group', help='Macro group', metavar='GROUP', dest='g')
+        ap_macro_create.add_argument(
+            '-y',
+            '--save',
+            help='Save macro config after creation',
+            dest='_save',
+            action='store_true')
+
+        ap_edit = sp_macro.add_parser('edit', help='Edit macro code')
+        ap_edit.add_argument('i', help='Macro ID', metavar='ID')
+
         sp_macro_list_props = sp_macro.add_parser(
             'props', help='List macro config props')
         sp_macro_list_props.add_argument('i', help='Macro ID', metavar='ID')
@@ -390,20 +404,6 @@ class LM_CLI(GenericCLI, ControllerCLI):
             help='Save macro config after set',
             dest='_save',
             action='store_true')
-
-        ap_macro_create = sp_macro.add_parser('create', help='Create new macro')
-        ap_macro_create.add_argument('i', help='Macro ID', metavar='ID')
-        ap_macro_create.add_argument(
-            '-g', '--group', help='Macro group', metavar='GROUP', dest='g')
-        ap_macro_create.add_argument(
-            '-y',
-            '--save',
-            help='Save macro config after creation',
-            dest='_save',
-            action='store_true')
-
-        ap_edit = sp_macro.add_parser('edit', help='Edit macro code')
-        ap_edit.add_argument('i', help='Macro ID', metavar='ID')
 
         sp_macro_run = sp_macro.add_parser('run', help='Execute macro')
         sp_macro_run.add_argument('i', help='Macro ID', metavar='ID')
