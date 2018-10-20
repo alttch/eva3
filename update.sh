@@ -6,7 +6,7 @@ if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
 fi
 
 VERSION=3.1.1
-BUILD=2018102019
+BUILD=2018102020
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://www.eva-ics.com/download
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh install/check_mods sbin/check_mods sbin/check_mqtt set-run-under-user.sh"
@@ -72,7 +72,6 @@ echo "- Installing missing modules"
 echo "- Removing obsolete files and folders"
 
 for o in ${OBS}; do
-    echo $o
     rm -rf ${o}
 done
 
