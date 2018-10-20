@@ -365,7 +365,10 @@ class GenericCLI(object):
 
     def reset_argcomplete(self):
         if self.argcomplete:
-            completer = self.argcomplete.CompletionFinder(self.ap)
+            completer = self.argcomplete.CompletionFinder(
+                self.ap,
+                default_completer=self.argcomplete.completers.SuppressCompleter(
+                ))
             readline.set_completer_delims("")
             readline.set_completer(completer.rl_complete)
             readline.parse_and_bind("tab: complete")
@@ -1070,7 +1073,10 @@ class GenericCLI(object):
     def do_run(self, args=None, return_result=False):
         self.suppress_colors = False
         if self.argcomplete:
-            self.argcomplete.autocomplete(self.ap)
+            self.argcomplete.autocomplete(
+                self.ap,
+                default_completer=self.argcomplete.completers.SuppressCompleter(
+                ))
         try:
             a = self.ap.parse_args(args)
         except:
