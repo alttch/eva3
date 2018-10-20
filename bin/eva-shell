@@ -560,7 +560,10 @@ sys.argv = {}
                 os.system(a) else self.local_func_result_ok
 
     def edit_crontab(self, params):
-        return self.exec_cmd('crontab -e')
+        if not self.before_save(): return self.local_func_result_failed
+        c = os.system('crontab -e')
+        if not self.after_save() or c: return self.local_func_result_failed
+        return self.local_func_result_ok
 
 
 def make_exec_cmd_func(cmd):
