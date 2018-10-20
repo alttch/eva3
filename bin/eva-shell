@@ -18,6 +18,8 @@ import configparser
 import platform
 from datetime import datetime
 
+nodename = platform.node()
+
 dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
 dir_backup = os.path.dirname(os.path.realpath(__file__)) + '/../backup'
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
@@ -255,7 +257,7 @@ eva.client.cli.readline_processing = {}
 sys.argv = {}
 {}
 
-""".format(platform.node(), not interactive_mode, sysargs, xp) + c
+""".format(self.nodename, not interactive_mode, sysargs, xp) + c
             try:
                 exec(c)
             except SystemExit:
@@ -584,6 +586,10 @@ cfg = configparser.ConfigParser(inline_comment_prefixes=';')
 try:
     cfg.read(dir_etc + '/eva_shell.ini')
     try:
+        nodename = cfg.get('shell', 'nodename')
+    except:
+        pass
+    try:
         exec_before_save = cfg.get('shell', 'exec_before_save')
     except:
         pass
@@ -622,6 +628,7 @@ cli.default_prompt = '# '
 cli.arg_sections += ['backup']
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()
+cli.nodename = nodename
 # cli.set_pd_cols(_pd_cols)
 # cli.set_pd_idx(_pd_idx)
 # cli.set_fancy_tabsp(_fancy_tabsp)

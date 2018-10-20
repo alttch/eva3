@@ -68,6 +68,7 @@ class GenericCLI(object):
         self.apiuri = None
         self.api_func = None
         self.in_json = False
+        self.nodename = None
         self.suppress_colors = False
         self.always_suppress_colors = False
         self.default_timeout = 10
@@ -185,6 +186,7 @@ class GenericCLI(object):
             product_str = self.colored(
                 self.product, 'green', attrs=['bold'], rlsafe=True)
             host_str = ''
+            nodename = self.nodename if self.nodename else platform.node()
             if self.remote_api:
                 try:
                     if not self.can_colorize():
@@ -217,7 +219,7 @@ class GenericCLI(object):
                     else:
                         h = ''
                     product_str = self.colored(
-                        self.product + ':' + platform.node(),
+                        self.product + ':' + nodename,
                         'grey',
                         attrs=['bold'],
                         rlsafe=True)
@@ -225,7 +227,7 @@ class GenericCLI(object):
                         h, 'grey', attrs=['bold'], rlsafe=True)
             else:
                 product_str += self.colored(
-                    ':' + platform.node(), 'green', attrs=['bold'], rlsafe=True)
+                    ':' + nodename, 'green', attrs=['bold'], rlsafe=True)
             prompt = '[%s%s]%s' % (ppeva + product_str, host_str, prompt)
         return prompt
 
