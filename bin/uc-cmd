@@ -66,8 +66,8 @@ _api_functions = {
 _pd_cols = {
     'state': ['oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue'],
     'state_': [
-        'oid', 'virtual', 'action_enabled', 'description', 'location', 'status',
-        'value', 'nstatus', 'nvalue'
+        'oid', 'action_enabled', 'description', 'location', 'status', 'value',
+        'nstatus', 'nvalue'
     ],
     'result': [
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
@@ -391,12 +391,6 @@ class UC_CLI(GenericCLI, ControllerCLI):
             '--save',
             help='Save item config after creation',
             dest='_save',
-            action='store_true')
-        ap_create.add_argument(
-            '-z',
-            '--virtual',
-            help='Create virtual item',
-            dest='_virtual',
             action='store_true')
 
         ap_clone = self.sp.add_parser('clone', help='Clone items')
