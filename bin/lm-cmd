@@ -12,76 +12,13 @@ import re
 from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
+dir_runtime = os.path.realpath(
+    os.path.dirname(os.path.realpath(__file__)) + '/../runtime')
 sys.path.append(dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client import apiclient
-
-_me = 'EVA ICS LM CLI version %s' % __version__
-
-_api_functions = {
-    'history': 'state_history',
-    'config:get': 'get_config',
-    'config:save': 'save_config',
-    'config:props': 'list_props',
-    'config:set': 'set_prop',
-    'create': 'create_lvar',
-    'destroy': 'destroy_lvar',
-    'remote': 'list_remote',
-    'macro:list': 'list_macros',
-    'macro:props': 'list_macro_props',
-    'macro:set': 'set_macro_prop',
-    'macro:create': 'create_macro',
-    'macro:destroy': 'destroy_macro',
-    'macro:run': 'run',
-    'macro:result': 'result',
-    'rule:list': 'list_rules',
-    'rule:create': 'create_rule',
-    'rule:enable': 'set_rule_prop',
-    'rule:disable': 'set_rule_prop',
-    'rule:props': 'list_rule_props',
-    'rule:set': 'set_rule_prop',
-    'rule:destroy': 'destroy_rule',
-    'controller:list': 'list_controllers',
-    'controller:test': 'test_controller',
-    'controller:props': 'list_controller_props',
-    'controller:set': 'set_controller_prop',
-    'controller:reload': 'reload_controller',
-    'controller:append': 'append_controller',
-    'controller:remove': 'remove_controller',
-    'ext:list': 'list_ext',
-    'ext:show': 'get_ext',
-    'ext:mods': 'list_ext_mods',
-    'ext:load': 'load_ext',
-    'ext:unload': 'unload_ext',
-    'ext:modhelp': 'modhelp_ext',
-    'ext:modinfo': 'modinfo_ext'
-}
-
-_pd_cols = {
-    'state': ['oid', 'status', 'value', 'set', 'expires'],
-    'state_':
-    ['oid', 'description', 'location', 'status', 'value', 'set', 'expires'],
-    'result': ['time', 'uuid', 'priority', 'item_oid', 'exitcode', 'status'],
-    'list': ['oid', 'description'],
-    'list_remote': [
-        'oid', 'description', 'controller_id', 'status', 'value', 'nstatus',
-        'nvalue'
-    ],
-    'list_macros': ['id', 'description', 'action_enabled'],
-    'list_controllers': ['id', 'connected', 'version', 'build', 'description'],
-    'list_ext_': ['id', 'mod', 'description', 'version'],
-    'list_ext_mods': ['mod', 'description', 'version', 'api'],
-    'modhelp_ext': ['name', 'type', 'required', 'help']
-}
-
-_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time'}
-
-_fancy_tabsp = {'list_props': 26}
-
-_always_json = ['get_config']
-
 
 
 class LM_CLI(GenericCLI, ControllerCLI):
@@ -465,6 +402,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='_save',
             action='store_true')
 
+        ap_edit = sp_macro.add_parser('edit', help='Edit macro')
+        ap_edit.add_argument('i', help='Macro ID', metavar='ID')
+
         sp_macro_run = sp_macro.add_parser('run', help='Execute macro')
         sp_macro_run.add_argument('i', help='Macro ID', metavar='ID')
         sp_macro_run.add_argument(
@@ -697,8 +637,91 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='CONTEXT',
             choices=['cfg', 'functions'])
 
+    def edit_macro(self, props):
+        code, data = self.do_run(
+            args=['macro', 'props', props.get('i')], return_result=True)
+        if code or not isinstance(data, dict):
+            return self.local_func_result_failed
+        macro_file = data.get('action_exec') if data.get(
+            'action_exec') else props.get('i') + '.py'
+        fname = '{}/xc/lm/{}'.format(dir_runtime, macro_file)
+        if macro_file.find('/') != -1:
+            macro_dir = '/'.join(fname.split('/')[:-1])
+            if os.system('mkdir -p ' + macro_dir):
+                return self.local_func_result_failed
+        editor = os.environ.get('EDITOR', 'vi')
+        return self.local_func_result_ok if \
+                not os.system(editor + ' ' + fname) else \
+                self.local_func_result_failed
+
+
+_me = 'EVA ICS LM CLI version %s' % __version__
 
 cli = LM_CLI('lm', _me)
+
+_api_functions = {
+    'history': 'state_history',
+    'config:get': 'get_config',
+    'config:save': 'save_config',
+    'config:props': 'list_props',
+    'config:set': 'set_prop',
+    'create': 'create_lvar',
+    'destroy': 'destroy_lvar',
+    'remote': 'list_remote',
+    'macro:list': 'list_macros',
+    'macro:props': 'list_macro_props',
+    'macro:set': 'set_macro_prop',
+    'macro:create': 'create_macro',
+    'macro:destroy': 'destroy_macro',
+    'macro:run': 'run',
+    'macro:result': 'result',
+    'rule:list': 'list_rules',
+    'rule:create': 'create_rule',
+    'rule:enable': 'set_rule_prop',
+    'rule:disable': 'set_rule_prop',
+    'rule:props': 'list_rule_props',
+    'rule:set': 'set_rule_prop',
+    'rule:destroy': 'destroy_rule',
+    'controller:list': 'list_controllers',
+    'controller:test': 'test_controller',
+    'controller:props': 'list_controller_props',
+    'controller:set': 'set_controller_prop',
+    'controller:reload': 'reload_controller',
+    'controller:append': 'append_controller',
+    'controller:remove': 'remove_controller',
+    'ext:list': 'list_ext',
+    'ext:show': 'get_ext',
+    'ext:mods': 'list_ext_mods',
+    'ext:load': 'load_ext',
+    'ext:unload': 'unload_ext',
+    'ext:modhelp': 'modhelp_ext',
+    'ext:modinfo': 'modinfo_ext',
+    'macro:edit': cli.edit_macro
+}
+
+_pd_cols = {
+    'state': ['oid', 'status', 'value', 'set', 'expires'],
+    'state_':
+    ['oid', 'description', 'location', 'status', 'value', 'set', 'expires'],
+    'result': ['time', 'uuid', 'priority', 'item_oid', 'exitcode', 'status'],
+    'list': ['oid', 'description'],
+    'list_remote': [
+        'oid', 'description', 'controller_id', 'status', 'value', 'nstatus',
+        'nvalue'
+    ],
+    'list_macros': ['id', 'description', 'action_enabled'],
+    'list_controllers': ['id', 'connected', 'version', 'build', 'description'],
+    'list_ext_': ['id', 'mod', 'description', 'version'],
+    'list_ext_mods': ['mod', 'description', 'version', 'api'],
+    'modhelp_ext': ['name', 'type', 'required', 'help']
+}
+
+_pd_idx = {'state': 'oid', 'list': 'oid', 'result': 'time'}
+
+_fancy_tabsp = {'list_props': 26}
+
+_always_json = ['get_config']
+
 cli.always_json += _always_json
 cli.always_print += ['run']
 cli.arg_sections += ['config', 'macro', 'rule', 'controller', 'ext']
