@@ -6,7 +6,7 @@ if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
 fi
 
 VERSION=3.1.1
-BUILD=2018102014
+BUILD=2018102015
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://www.eva-ics.com/download
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh install/check_mods sbin/check_mods sbin/check_mqtt set-run-under-user.sh"

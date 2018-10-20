@@ -985,7 +985,7 @@ class GenericCLI(object):
                         except:
                             self.print_err(
                                 'Failed to run system "date" command')
-                    elif d[0] == 'clear' or d[0] == 'cls':
+                    elif d[0] == 'cls':
                         try:
                             if os.system('clear'): raise Exception('exec error')
                         except:
