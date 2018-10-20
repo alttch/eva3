@@ -1,4 +1,6 @@
 [shell]
+;nodename = node1
+
 ; exec commands before/after file manipulations,
 ; e.g. mount -o remount,rw / (then back to ro)
 
