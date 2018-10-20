@@ -742,8 +742,10 @@ _api_functions = {
 
 _pd_cols = {
     'state': ['oid', 'status', 'value', 'set', 'exp_in'],
-    'state_':
-    ['oid', 'description', 'location', 'status', 'value', 'set', 'expires', 'exp_in'],
+    'state_': [
+        'oid', 'description', 'location', 'status', 'value', 'set', 'expires',
+        'exp_in'
+    ],
     'result': ['time', 'uuid', 'priority', 'item_oid', 'exitcode', 'status'],
     'list': ['oid', 'description'],
     'list_remote': [
