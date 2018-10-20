@@ -138,6 +138,8 @@ def sighandler_term(signum, frame):
     logging.info('EVA core shut down')
     sys.exit(0)
 
+def sighandler_int(signum, frame):
+    pass
 
 def prepare_save():
     if not exec_before_save: return True
@@ -698,6 +700,7 @@ def init():
     append_dump_func('eva_core', serialize)
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
+    signal.signal(signal.SIGINT, sighandler_int)
 
 
 #BD: 20.05.2017
