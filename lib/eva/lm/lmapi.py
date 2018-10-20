@@ -340,7 +340,9 @@ class LM_API(GenericAPI):
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
                             result.append(v.serialize(full=True))
-        return result
+        return sorted(
+            sorted(result, key=lambda k: k['oid']),
+            key=lambda k: ['controller_id'])
 
     def list_controllers(self, k=None):
         if not apikey.check(k, master=True): return None
