@@ -257,6 +257,13 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_state.add_argument(
             '-g', '--group', help='LVar group', metavar='GROUP', dest='g')
         sp_state.add_argument(
+            '-p',
+            '--type',
+            help='Item type',
+            metavar='TYPE',
+            dest='p',
+            choices=['lvar', 'LV'])
+        sp_state.add_argument(
             '-y',
             '--full',
             help='Full information about LVar',

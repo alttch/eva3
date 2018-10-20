@@ -581,12 +581,14 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
     def groups(self, k=None, p=None):
         return super().groups(k, p)
 
-    def state(self, k=None, i=None, full=None, g=None, p='LV'):
+    def state(self, k=None, i=None, full=None, g=None, p=None):
+        if p is None: _p = 'LV'
+        else: _p = p
         if full:
             _full = True
         else:
             _full = False
-        result = super().state(k, i, _full, g, p)
+        result = super().state(k, i, _full, g, _p)
         if result is None:
             raise cp_api_404()
         return result
