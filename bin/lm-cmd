@@ -402,7 +402,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='_save',
             action='store_true')
 
-        ap_edit = sp_macro.add_parser('edit', help='Edit macro')
+        ap_edit = sp_macro.add_parser('edit', help='Edit macro code')
         ap_edit.add_argument('i', help='Macro ID', metavar='ID')
 
         sp_macro_run = sp_macro.add_parser('run', help='Execute macro')
