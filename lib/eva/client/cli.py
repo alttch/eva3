@@ -969,7 +969,7 @@ class GenericCLI(object):
             self.start_interactive()
             while True:
                 parsed = None
-                while not parsed:
+                while True:
                     try:
                         parsed = shlex.split(input(self.get_prompt()))
                     except EOFError:
@@ -981,6 +981,7 @@ class GenericCLI(object):
                         pass
                     except:
                         self.print_err('parse error')
+                    if parsed: break
                     self.setup_parser()
                 cmds = [[]]
                 cix = 0
@@ -1091,6 +1092,7 @@ class GenericCLI(object):
                             self.do_run(['-h'])
                         except:
                             pass
+                        self.setup_parser()
                     elif d[0] not in [
                             'k', 'u', 'c', 't', 'k.', 'u.', 'c.', 't.'
                     ]:
