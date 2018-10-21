@@ -89,6 +89,17 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 result.add(v['full_id'])
             return list(result)
 
+    class ComplUnitGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('state -p unit')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
+
     class ComplItemProp(ComplGeneric):
 
         def __call__(self, prefix, **kwargs):
@@ -445,7 +456,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_action_result.add_argument(
             '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
         sp_action_result.add_argument(
-            '-g', '--group', help='Unit group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Unit group', metavar='GROUP',
+            dest='g').completer = self.ComplUnitGroup(self)
         sp_action_result.add_argument(
             '-s',
             '--state',
@@ -543,7 +555,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             '--group',
             help='Group for new item',
             metavar='GROUP',
-            dest='g')
+            dest='g').completer = self.ComplItemGroupList(self)
         sp_clone_item.add_argument(
             '-y',
             '--save',
@@ -554,7 +566,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_clone_group = sp_clone.add_parser(
             'group', help='Clone group of the items')
         sp_clone_group.add_argument(
-            'g', help='Source group', metavar='SRC_GROUP')
+            'g', help='Source group',
+            metavar='SRC_GROUP').completer = self.ComplItemGroupList(self)
         sp_clone_group.add_argument(
             'n', help='Target group', metavar='TGT_GROUP')
         sp_clone_group.add_argument(
@@ -573,7 +586,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='Item ID', metavar='ID',
             nargs='?').completer = self.ComplItemOID(self)
         ap_destroy.add_argument(
-            '-g', '--group', help='Destroy group of items',
+            '-g',
+            '--group',
+            help='Destroy group of items',
+            metavar='GROUP',
             dest='g').completer = self.ComplItemGroupList(self)
 
     def add_uc_device_functions(self):

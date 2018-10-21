@@ -16,6 +16,7 @@ sys.path.append(dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
+from eva.client.cli import ComplGeneric
 from eva.client import apiclient
 
 _me = 'EVA ICS SFA CLI version %s' % __version__
@@ -73,6 +74,130 @@ _always_json = []
 
 
 class SFA_CLI(GenericCLI, ControllerCLI):
+
+    class ComplItemOID(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            p = None
+            if hasattr(kwargs.get('parsed_args'), 'p'):
+                p = kwargs.get('parsed_args').p
+                fld = 'full_id'
+            if not p and prefix.find(':') != -1:
+                p = prefix.split(':', 1)[0]
+                fld = 'oid'
+            if p:
+                code, data = self.cli.call(['state', '-p', p])
+                if code: return True
+                result = set()
+                for v in data:
+                    result.add(v[fld])
+                return list(result)
+            else:
+                return ['sensor:', 'unit:', 'lvar:']
+
+    class ComplItemGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            if not hasattr(kwargs.get('parsed_args'),
+                           'p') or not kwargs.get('parsed_args').p:
+                return True
+            code, data = self.cli.call(
+                ['state', '-p', kwargs.get('parsed_args').p])
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
+    class ComplUnit(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('state -p unit')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['full_id'])
+            return list(result)
+
+    class ComplUnitGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('state -p unit')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
+    class ComplLVAR(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('state -p lvar')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['full_id'])
+            return list(result)
+
+    class ComplMacro(ComplGeneric):
+
+        def __init__(self, cli, field='full_id'):
+            self.field = field
+            super().__init__(cli)
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('macro list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v[self.field])
+            return list(result)
+
+    class ComplMacroGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('macro list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
+    class ComplController(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('controller list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['full_id'])
+            return list(result)
+
+    class ComplControllerProp(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['controller', 'props',
+                 kwargs.get('parsed_args').i])
+            if code: return True
+            result = list(data.keys())
+            return result
+
+    class ComplRemoteGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            opts = []
+            if not kwargs.get('ignore_p') and hasattr(
+                    kwargs.get('parsed_args'), 'p'):
+                p = kwargs.get('parsed_args').p
+                if p:
+                    opts = ['-p', p]
+            code, data = self.cli.call(['remote'] + opts)
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
         if api_func not in [
@@ -142,9 +267,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             'i',
             help='Item ID (specify either ID or item type)',
             metavar='ID',
-            nargs='?')
-        sp_state.add_argument(
-            '-g', '--group', help='Item group', metavar='GROUP', dest='g')
+            nargs='?').completer = self.ComplItemOID(self)
         sp_state.add_argument(
             '-p',
             '--type',
@@ -152,6 +275,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             metavar='TYPE',
             dest='p',
             choices=['unit', 'sensor', 'lvar', 'U', 'S', 'LV'])
+        sp_state.add_argument(
+            '-g', '--group', help='Item group', metavar='GROUP',
+            dest='g').completer = self.ComplItemGroup(self)
         sp_state.add_argument(
             '-y',
             '--full',
@@ -165,7 +291,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             'i',
             help=
             'Item ID or multiple IDs (-w param is required), comma separated',
-            metavar='ID')
+            metavar='ID').completer = self.ComplItemOID(self)
         sp_history.add_argument(
             '-a',
             '--notifier',
@@ -203,9 +329,10 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             '--controller',
             help='Filter by controller ID',
             metavar='CONTROLLER_ID',
-            dest='i')
+            dest='i').completer = self.ComplController(self)
         ap_remote.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Filter by group', metavar='GROUP',
+            dest='g').completer = self.ComplRemoteGroup(self)
         ap_remote.add_argument(
             '-p',
             '--type',
@@ -222,15 +349,18 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
         sp_action_enable = sp_action.add_parser(
             'enable', help='Enable unit actions')
-        sp_action_enable.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_enable.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
         sp_action_disable = sp_action.add_parser(
             'disable', help='Disable unit actions')
-        sp_action_disable.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_disable.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
         sp_action_exec = sp_action.add_parser(
             'exec', help='Execute unit action')
-        sp_action_exec.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_exec.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
         sp_action_exec.add_argument('s', help='New status', metavar='STATUS')
         sp_action_exec.add_argument(
             '-v', '--value', help='New value', metavar='VALUE', dest='v')
@@ -260,7 +390,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
         sp_action_toggle = sp_action.add_parser(
             'toggle', help='Execute unit toggle action')
-        sp_action_toggle.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_toggle.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
         sp_action_toggle.add_argument(
             '-p',
             '--priority',
@@ -288,17 +419,20 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         sp_action_terminate = sp_action.add_parser(
             'terminate', help='Terminate unit action')
         sp_action_terminate.add_argument(
-            'i', help='Unit ID', metavar='ID', nargs='?')
+            'i', help='Unit ID', metavar='ID',
+            nargs='?').completer = self.ComplUnit(self)
         sp_action_terminate.add_argument(
             '-u', '--uuid', help='Action uuid', metavar='UUID', dest='u')
 
         sp_action_qclean = sp_action.add_parser(
             'clear', help='Clean up unit action queue')
-        sp_action_qclean.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_qclean.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
         sp_action_kill = sp_action.add_parser(
             'kill', help='Terminate action and clean queue')
-        sp_action_kill.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_kill.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
         sp_action_result = sp_action.add_parser(
             'result', help='Get unit action results')
@@ -307,11 +441,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             '--id',
             help='Unit ID (specify either unit ID or action UUID)',
             metavar='ID',
-            dest='i')
+            dest='i').completer = self.ComplUnit(self)
         sp_action_result.add_argument(
             '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
         sp_action_result.add_argument(
-            '-g', '--group', help='Unit group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Unit group', metavar='GROUP',
+            dest='g').completer = self.ComplUnitGroup(self)
         sp_action_result.add_argument(
             '-s',
             '--state',
@@ -327,10 +462,13 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
         sp_macro_list = sp_macro.add_parser('list', help='List macros')
         sp_macro_list.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Filter by group', metavar='GROUP',
+            dest='g').completer = self.ComplMacroGroup(self)
 
         sp_macro_run = sp_macro.add_parser('run', help='Execute macro')
-        sp_macro_run.add_argument('i', help='Macro ID', metavar='ID')
+        sp_macro_run.add_argument(
+            'i', help='Macro ID',
+            metavar='ID').completer = self.ComplMacro(self)
         sp_macro_run.add_argument(
             '-a', '--args', help='Macro arguments', metavar='ARGS', dest='a')
         sp_macro_run.add_argument(
@@ -357,11 +495,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             '--id',
             help='Macro ID (specify either macro ID or action UUID)',
             metavar='ID',
-            dest='i')
+            dest='i').completer = self.ComplMacro(self, 'oid')
         sp_macro_result.add_argument(
             '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
         sp_macro_result.add_argument(
-            '-g', '--group', help='Macro group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Macro group', metavar='GROUP',
+            dest='g').completer = self.ComplMacroGroup(self)
         sp_macro_result.add_argument(
             '-s',
             '--state',
@@ -372,7 +511,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
     def add_sfa_lvar_functions(self):
         sp_set = self.sp.add_parser('set', help='Set LVar state')
-        sp_set.add_argument('i', help='LVar ID', metavar='ID')
+        sp_set.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
         sp_set.add_argument(
             '-s',
             '--status',
@@ -384,13 +524,16 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             '-v', '--value', help='LVar value', metavar='VALUE', dest='v')
 
         sp_reset = self.sp.add_parser('reset', help='Reset LVar state')
-        sp_reset.add_argument('i', help='LVar ID', metavar='ID')
+        sp_reset.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
         sp_clear = self.sp.add_parser('clear', help='Clear LVar state')
-        sp_clear.add_argument('i', help='LVar ID', metavar='ID')
+        sp_clear.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
         sp_toggle = self.sp.add_parser('toggle', help='Toggle LVar state')
-        sp_toggle.add_argument('i', help='LVar ID', metavar='ID')
+        sp_toggle.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
     def add_sfa_notify_functions(self):
         ap_notify = self.sp.add_parser(
@@ -418,19 +561,24 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
         sp_controller_test = sp_controller.add_parser(
             'test', help='Test connected controller')
-        sp_controller_test.add_argument('i', help='Controller ID', metavar='ID')
+        sp_controller_test.add_argument(
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
         sp_controller_list_props = sp_controller.add_parser(
             'props', help='List controller config props')
         sp_controller_list_props.add_argument(
-            'i', help='Controller ID', metavar='ID')
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
         sp_controller_set_prop = sp_controller.add_parser(
             'set', help='Set controller config prop')
         sp_controller_set_prop.add_argument(
-            'i', help='Controller ID', metavar='ID')
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
         sp_controller_set_prop.add_argument(
-            'p', help='Config property', metavar='PROP')
+            'p', help='Config property',
+            metavar='PROP').completer = self.ComplControllerProp(self)
         sp_controller_set_prop.add_argument(
             'v', help='Value', metavar='VAL', nargs='?')
         sp_controller_set_prop.add_argument(
@@ -443,7 +591,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         sp_controller_reload = sp_controller.add_parser(
             'reload', help='Reload items from the connected controller')
         sp_controller_reload.add_argument(
-            'i', help='Controller ID', metavar='ID')
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
         sp_controller_append = sp_controller.add_parser(
             'append', help='Connect controller')
@@ -488,7 +637,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         sp_controller_remove = sp_controller.add_parser(
             'remove', help='Remove connected controller')
         sp_controller_remove.add_argument(
-            'i', help='Controller ID', metavar='ID')
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
 
 cli = SFA_CLI('sfa', _me)
