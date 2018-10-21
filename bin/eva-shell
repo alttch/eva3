@@ -45,6 +45,18 @@ interactive_mode = False
 
 import eva.core
 from eva.client.cli import GenericCLI
+from eva.client.cli import ComplGeneric
+
+
+class ComplBackupList(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('backup list')
+        result = []
+        if code: return result
+        for v in data:
+            result.append(v['name'])
+        return result
 
 
 class ManagementCLI(GenericCLI):
@@ -97,9 +109,12 @@ class ManagementCLI(GenericCLI):
             'save', help='Backup system state')
         sp_backup_save.add_argument(
             'f', help='Backup name', metavar='NAME', nargs='?')
+
         sp_backup_restore = sp_backup.add_parser(
             'restore', help='Restore system state')
-        sp_backup_restore.add_argument('f', help='Backup name', metavar='NAME')
+        sp_backup_restore.add_argument(
+            'f', help='Backup name',
+            metavar='NAME').completer = ComplBackupList(self)
         sp_backup_restore.add_argument(
             '-r',
             '--runtime',
@@ -123,7 +138,9 @@ class ManagementCLI(GenericCLI):
         sp_backup_list = sp_backup.add_parser('list', help='List backups')
 
         sp_backup_unlink = sp_backup.add_parser('unlink', help='Delete backup')
-        sp_backup_unlink.add_argument('f', help='Backup name', metavar='NAME')
+        sp_backup_unlink.add_argument(
+            'f', help='Backup name',
+            metavar='NAME').completer = ComplBackupList(self)
 
     def add_manager_edit_functions(self):
         ap_edit = self.sp.add_parser('edit', help='Edit configs')

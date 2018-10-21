@@ -18,7 +18,80 @@ sys.path.append(dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
+from eva.client.cli import ComplGeneric
 from eva.client import apiclient
+
+
+class ComplItemOID(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        p = None
+        if hasattr(kwargs.get('parsed_args'), 'p'):
+            p = kwargs.get('parsed_args').p
+            fld = 'full_id'
+        if not p and prefix.find(':') != -1:
+            p = prefix.split(':', 1)[0]
+            fld = 'oid'
+        if p:
+            code, data = self.cli.call(['state', '-p', p])
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v[fld])
+            return list(result)
+        else:
+            return ['sensor:', 'unit:']
+
+
+class ComplItemGroup(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        if not hasattr(kwargs.get('parsed_args'),
+                       'p') or not kwargs.get('parsed_args').p:
+            return True
+        code, data = self.cli.call(['state', '-p', kwargs.get('parsed_args').p])
+        if code: return True
+        result = set()
+        for v in data:
+            result.add(v['group'])
+        return list(result)
+
+
+class ComplItemGroupList(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        opts = []
+        if hasattr(kwargs.get('parsed_args'), 'p'):
+            p = kwargs.get('parsed_args').p
+            if p:
+                opts = ['-p', p]
+        code, data = self.cli.call(['list'] + opts)
+        if code: return True
+        result = set()
+        for v in data:
+            result.add(v['group'])
+        return list(result)
+
+
+class ComplUnit(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('state -p unit')
+        if code: return True
+        result = set()
+        for v in data:
+            result.add(v['full_id'])
+        return list(result)
+
+
+class ComplItemProp(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call(
+            ['config', 'props', kwargs.get('parsed_args').i])
+        if code: return True
+        result = list(data.keys())
+        return result
 
 
 class UC_CLI(GenericCLI, ControllerCLI):
@@ -101,9 +174,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i',
             help='Item ID (specify either ID or item type)',
             metavar='ID',
-            nargs='?')
-        sp_state.add_argument(
-            '-g', '--group', help='Item group', metavar='GROUP', dest='g')
+            nargs='?').completer = ComplItemOID(self)
         sp_state.add_argument(
             '-p',
             '--type',
@@ -111,6 +182,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
             metavar='TYPE',
             dest='p',
             choices=['unit', 'sensor', 'U', 'S'])
+        sp_state.add_argument(
+            '-g', '--group', help='Item group', metavar='GROUP',
+            dest='g').completer = ComplItemGroup(self)
         sp_state.add_argument(
             '-y',
             '--full',
@@ -124,7 +198,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i',
             help=
             'Item ID or multiple IDs (-w param is required), comma separated',
-            metavar='ID')
+            metavar='ID').completer = ComplItemOID(self)
         sp_history.add_argument(
             '-a',
             '--notifier',
@@ -175,15 +249,18 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         sp_action_enable = sp_action.add_parser(
             'enable', help='Enable unit actions')
-        sp_action_enable.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_enable.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = ComplUnit(self)
 
         sp_action_disable = sp_action.add_parser(
             'disable', help='Disable unit actions')
-        sp_action_disable.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_disable.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = ComplUnit(self)
 
         sp_action_exec = sp_action.add_parser(
             'exec', help='Execute unit action')
-        sp_action_exec.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_exec.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = ComplUnit(self)
         sp_action_exec.add_argument('s', help='New status', metavar='STATUS')
         sp_action_exec.add_argument(
             '-v', '--value', help='New value', metavar='VALUE', dest='v')
@@ -213,7 +290,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         sp_action_toggle = sp_action.add_parser(
             'toggle', help='Execute unit toggle action')
-        sp_action_toggle.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_toggle.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = ComplUnit(self)
         sp_action_toggle.add_argument(
             '-p',
             '--priority',
@@ -241,22 +319,26 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_action_terminate = sp_action.add_parser(
             'terminate', help='Terminate unit action')
         sp_action_terminate.add_argument(
-            'i', help='Unit ID', metavar='ID', nargs='?')
+            'i', help='Unit ID', metavar='ID',
+            nargs='?').completer = ComplUnit(self)
         sp_action_terminate.add_argument(
             '-u', '--uuid', help='Action uuid', metavar='UUID', dest='u')
 
         sp_action_qclean = sp_action.add_parser(
             'clear', help='Clean up unit action queue')
-        sp_action_qclean.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_qclean.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = ComplUnit(self)
 
         sp_action_kill = sp_action.add_parser(
             'kill', help='Terminate action and clean queue')
-        sp_action_kill.add_argument('i', help='Unit ID', metavar='ID')
+        sp_action_kill.add_argument(
+            'i', help='Unit ID', metavar='ID').completer = ComplUnit(self)
 
         sp_action_result = sp_action.add_parser(
             'result', help='Get unit action results')
         sp_action_result.add_argument(
-            '-i', '--id', help='Unit ID', metavar='ID', dest='i')
+            '-i', '--id', help='Unit ID', metavar='ID',
+            dest='i').completer = ComplUnit(self)
         sp_action_result.add_argument(
             '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
         sp_action_result.add_argument(
@@ -277,16 +359,16 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         sp_edit_action = sp_edit.add_parser(
             'action', help='Edit item action script')
-        sp_edit_action.add_argument('i', help='Item ID', metavar='ID')
+        sp_edit_action.add_argument(
+            'i', help='Item ID', metavar='ID').completer = ComplUnit(self)
 
         sp_edit_update = sp_edit.add_parser(
             'update', help='Edit item update script')
-        sp_edit_update.add_argument('i', help='Item ID', metavar='ID')
+        sp_edit_update.add_argument(
+            'i', help='Item ID', metavar='ID').completer = ComplItemOID(self)
 
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')
-        sp_list.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
         sp_list.add_argument(
             '-p',
             '--type',
@@ -294,24 +376,33 @@ class UC_CLI(GenericCLI, ControllerCLI):
             metavar='TYPE',
             dest='p',
             choices=['unit', 'sensor', 'mu', 'U', 'S'])
+        sp_list.add_argument(
+            '-g', '--group', help='Filter by group', metavar='GROUP',
+            dest='g').completer = ComplItemGroupList(self)
 
         ap_config = self.sp.add_parser('config', help='Item configuration')
         sp_config = ap_config.add_subparsers(
             dest='_func', metavar='func', help='Configuration commands')
 
         sp_config_get = sp_config.add_parser('get', help='Get item config')
-        sp_config_get.add_argument('i', help='Item ID', metavar='ID')
+        sp_config_get.add_argument(
+            'i', help='Item ID', metavar='ID').completer = ComplItemOID(self)
 
         sp_config_save = sp_config.add_parser('save', help='Save item config')
-        sp_config_save.add_argument('i', help='Item ID', metavar='ID')
+        sp_config_save.add_argument(
+            'i', help='Item ID', metavar='ID').completer = ComplItemOID(self)
 
         sp_list_props = sp_config.add_parser(
             'props', help='List item config props')
-        sp_list_props.add_argument('i', help='Item ID', metavar='ID')
+        sp_list_props.add_argument(
+            'i', help='Item ID', metavar='ID').completer = ComplItemOID(self)
 
         sp_set_prop = sp_config.add_parser('set', help='Set item config prop')
-        sp_set_prop.add_argument('i', help='Item ID', metavar='ID')
-        sp_set_prop.add_argument('p', help='Config property', metavar='PROP')
+        sp_set_prop.add_argument(
+            'i', help='Item ID', metavar='ID').completer = ComplItemOID(self)
+        sp_set_prop.add_argument(
+            'p', help='Config property',
+            metavar='PROP').completer = ComplItemProp(self)
         sp_set_prop.add_argument('v', help='Value', metavar='VAL', nargs='?')
         sp_set_prop.add_argument(
             '-y',
@@ -369,9 +460,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         ap_destroy = self.sp.add_parser('destroy', help='Delete item')
-        ap_destroy.add_argument('i', help='Item ID', metavar='ID', nargs='?')
         ap_destroy.add_argument(
-            '-g', '--group', help='Destroy group of items', dest='g')
+            'i', help='Item ID', metavar='ID',
+            nargs='?').completer = ComplItemOID(self)
+        ap_destroy.add_argument(
+            '-g', '--group', help='Destroy group of items',
+            dest='g').completer = ComplItemGroupList(self)
 
     def add_uc_device_functions(self):
         ap_device = self.sp.add_parser('device', help='Device management')
@@ -637,8 +731,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if self.apiuri:
             self.print_local_only()
             return self.local_func_result_failed
-        code, data = self.do_run(
-            args=['config', 'props', props.get('i')], return_result=True)
+        code, data = self.call(args=['config', 'props', props.get('i')])
         if code or not isinstance(data, dict):
             return self.local_func_result_failed
         if not 'action_exec' in data:
@@ -672,8 +765,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if self.apiuri:
             self.print_local_only()
             return self.local_func_result_failed
-        code, data = self.do_run(
-            args=['config', 'props', props.get('i')], return_result=True)
+        code, data = self.call(args=['config', 'props', props.get('i')])
         if code or not isinstance(data, dict):
             return self.local_func_result_failed
         if not 'update_exec' in data:

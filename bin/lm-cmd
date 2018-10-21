@@ -630,8 +630,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='_full',
             action='store_true')
 
-        sp_ext_get = sp_ext.add_parser(
-            'get', help='Get loaded extension info')
+        sp_ext_get = sp_ext.add_parser('get', help='Get loaded extension info')
         sp_ext_get.add_argument('i', help='EXT id', metavar='EXT_ID')
 
         sp_ext_mods = sp_ext.add_parser(
@@ -679,8 +678,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
         if props.get('i') == 'common.py':
             macro_file = 'common.py'
         else:
-            code, data = self.do_run(
-                args=['macro', 'props', props.get('i')], return_result=True)
+            code, data = self.call(args=['macro', 'props', props.get('i')])
             if code or not isinstance(data, dict):
                 return self.local_func_result_failed
             macro_file = data.get('action_exec') if data.get(

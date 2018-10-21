@@ -54,6 +54,66 @@ def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
     return text
 
 
+class ComplGeneric(object):
+
+    def __init__(self, cli):
+        self.cli = cli if cli.interactive else None
+
+
+class ComplCVAR(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('cvar all')
+        result = []
+        if code: return result
+        return data.keys()
+
+
+class ComplKey(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('key list')
+        result = []
+        if code: return result
+        for v in data:
+            result.append(v['key_id'])
+        return result
+
+
+class ComplKeyDynamic(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('key list')
+        result = []
+        if code: return result
+        for v in data:
+            if v.get('dynamic'):
+                result.append(v['key_id'])
+        return result
+
+
+class ComplKeyProp(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call(
+            ['key', 'props', kwargs.get('parsed_args').i])
+        if code: return True
+        result = list(data.keys())
+        result.remove('key')
+        return result
+
+
+class ComplUser(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('user list')
+        result = []
+        if code: return result
+        for v in data:
+            result.append(v['user'])
+        return result
+
+
 class GenericCLI(object):
 
     def __init__(self, product, name, prog=None, remote_api=True):
@@ -717,12 +777,15 @@ class GenericCLI(object):
             dest='_func', metavar='func', help='CVAR commands')
         sp_cvar_all = sp_cvar.add_parser('all', help='Get all CVARS')
         sp_cvar_get = sp_cvar.add_parser('get', help='Get CVAR value')
-        sp_cvar_get.add_argument('i', help='CVAR ID', metavar='ID')
+        sp_cvar_get.add_argument(
+            'i', help='CVAR ID', metavar='ID').completer = ComplCVAR(self)
         sp_cvar_set = sp_cvar.add_parser('set', help='Set CVAR value')
-        sp_cvar_set.add_argument('i', help='CVAR ID', metavar='ID')
+        sp_cvar_set.add_argument(
+            'i', help='CVAR ID', metavar='ID').completer = ComplCVAR(self)
         sp_cvar_set.add_argument('v', help='Value', metavar='VALUE')
         sp_cvar_delete = sp_cvar.add_parser('delete', help='Delete CVAR')
-        sp_cvar_delete.add_argument('i', help='CVAR ID', metavar='ID')
+        sp_cvar_delete.add_argument(
+            'i', help='CVAR ID', metavar='ID').completer = ComplCVAR(self)
 
     def _add_debug_functions(self):
         ap_debug = self.sp.add_parser('debug', help='Debug control')
@@ -796,12 +859,17 @@ class GenericCLI(object):
             action='store_true')
 
         sp_key_props = sp_key.add_parser('props', help='List API key props')
-        sp_key_props.add_argument('i', help='API key ID', metavar='ID')
+        sp_key_props.add_argument(
+            'i', help='API key ID',
+            metavar='ID').completer = ComplKeyDynamic(self)
 
         sp_key_set_prop = sp_key.add_parser('set', help='Set API key prop')
-        sp_key_set_prop.add_argument('i', help='API key ID', metavar='ID')
         sp_key_set_prop.add_argument(
-            'p', help='Config property', metavar='PROP')
+            'i', help='API key ID',
+            metavar='ID').completer = ComplKeyDynamic(self)
+        sp_key_set_prop.add_argument(
+            'p', help='Config property',
+            metavar='PROP').completer = ComplKeyProp(self)
         sp_key_set_prop.add_argument(
             'v', help='Value', metavar='VAL', nargs='?')
         sp_key_set_prop.add_argument(
@@ -813,7 +881,9 @@ class GenericCLI(object):
 
         sp_key_regenerate = sp_key.add_parser(
             'regenerate', help='Regenerate API key')
-        sp_key_regenerate.add_argument('i', help='API key ID', metavar='ID')
+        sp_key_regenerate.add_argument(
+            'i', help='API key ID',
+            metavar='ID').completer = ComplKeyDynamic(self)
         sp_key_regenerate.add_argument(
             '-y',
             '--save',
@@ -822,7 +892,9 @@ class GenericCLI(object):
             action='store_true')
 
         sp_key_delete = sp_key.add_parser('destroy', help='Delete API key')
-        sp_key_delete.add_argument('i', help='API key ID', metavar='ID')
+        sp_key_delete.add_argument(
+            'i', help='API key ID',
+            metavar='ID').completer = ComplKeyDynamic(self)
 
     def _add_user_functions(self):
         ap_user = self.sp.add_parser('user', help='user management')
@@ -835,20 +907,27 @@ class GenericCLI(object):
         sp_user_create.add_argument('u', help='User login', metavar='LOGIN')
         sp_user_create.add_argument(
             'p', help='User password', metavar='PASSWORD')
-        sp_user_create.add_argument('a', help='API key ID', metavar='APIKEY_ID')
+        sp_user_create.add_argument(
+            'a', help='API key ID',
+            metavar='APIKEY_ID').completer = ComplKey(self)
 
         sp_user_password = sp_user.add_parser(
             'password', help='Change password for user')
-        sp_user_password.add_argument('u', help='User login', metavar='LOGIN')
+        sp_user_password.add_argument(
+            'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
         sp_user_password.add_argument(
             'p', help='User password', metavar='PASSWORD')
 
         sp_user_key = sp_user.add_parser('key', help='Change API key for user')
-        sp_user_key.add_argument('u', help='User login', metavar='LOGIN')
-        sp_user_key.add_argument('a', help='API key ID', metavar='APIKEY_ID')
+        sp_user_key.add_argument(
+            'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
+        sp_user_key.add_argument(
+            'a', help='API key ID',
+            metavar='APIKEY_ID').completer = ComplKey(self)
 
         sp_user_destroy = sp_user.add_parser('destroy', help='Delete user')
-        sp_user_destroy.add_argument('u', help='User login', metavar='LOGIN')
+        sp_user_destroy.add_argument(
+            'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
 
     def prepare_run(self, api_func, params, a):
         if api_func == 'file_put' and a._func == 'upload':
@@ -1069,6 +1148,18 @@ class GenericCLI(object):
                         except:
                             pass
         return 0
+
+    def call(self, args=None, direct=True):
+        opts = []
+        if self.remote_api:
+            if self.apikey is not None:
+                opts += ['-K', self.apikey]
+            if self.apiuri is not None:
+                opts += ['-U', self.apiuri]
+            if self.timeout is not None:
+                opts += ['-T', str(self.timeout)]
+        _args = args if isinstance(args, list) else shlex.split(args)
+        return self.do_run(args=opts + _args, return_result=True)
 
     def do_run(self, args=None, return_result=False):
         self.suppress_colors = False
