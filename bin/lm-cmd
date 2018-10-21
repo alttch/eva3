@@ -415,6 +415,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
                                                itype)
         return self.prepare_controller_status_dict(data)
 
+    def setup_parser(self):
+        super().setup_parser()
+        self.enable_controller_management_functions('lm')
+
     def add_functions(self):
         super().add_functions()
         self.add_lm_common_functions()
@@ -1003,7 +1007,6 @@ cli.always_json += _always_json
 cli.always_print += ['run']
 cli.arg_sections += ['config', 'macro', 'rule', 'controller', 'ext']
 cli.set_api_functions(_api_functions)
-cli.enable_controller_management_functions('lm')
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_tabsp(_fancy_tabsp)

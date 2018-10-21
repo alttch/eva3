@@ -972,6 +972,7 @@ class GenericCLI(object):
                 while not parsed:
                     try:
                         parsed = shlex.split(input(self.get_prompt()))
+                        self.setup_parser()
                     except EOFError:
                         print()
                         self.finish_interactive()
@@ -1149,7 +1150,7 @@ class GenericCLI(object):
                             pass
         return 0
 
-    def call(self, args=None, direct=True):
+    def call(self, args=None):
         opts = []
         if self.remote_api:
             if self.apikey is not None:
@@ -1350,6 +1351,9 @@ class GenericCLI(object):
 
 class ControllerCLI(object):
 
+    def __init__(self):
+        self.management_controller_id = None
+
     def start_controller(self, params):
         if self.apiuri:
             self.print_local_only()
@@ -1406,9 +1410,12 @@ class ControllerCLI(object):
         sp_controller = ap_controller.add_subparsers(
             dest='_func', metavar='func', help='Management commands')
 
-        ap_start = sp_controller.add_parser('start', help='Start controller server')
-        ap_stop = sp_controller.add_parser('stop', help='Stop controller server')
-        ap_restart = sp_controller.add_parser('restart', help='Restart controller server')
+        ap_start = sp_controller.add_parser(
+            'start', help='Start controller server')
+        ap_stop = sp_controller.add_parser(
+            'stop', help='Stop controller server')
+        ap_restart = sp_controller.add_parser(
+            'restart', help='Restart controller server')
         ap_status = sp_controller.add_parser(
             'status', help='Status of the controller server')
 
@@ -1421,12 +1428,13 @@ class ControllerCLI(object):
         self.dir_sbin = os.path.realpath(
             os.path.dirname(os.path.realpath(__file__)) + '/../../../sbin')
         self.add_manager_control_functions()
-        self._management_controller_id = controller_id
+        if controller_id:
+            self._management_controller_id = controller_id
         funcs = {
-                'server:start': self.start_controller,
-                'server:stop': self.stop_controller,
-                'server:restart': self.restart_controller,
-                'server:status': self.status_controller,
+            'server:start': self.start_controller,
+            'server:stop': self.stop_controller,
+            'server:restart': self.restart_controller,
+            'server:status': self.status_controller,
         }
         self.append_api_functions(funcs)
 

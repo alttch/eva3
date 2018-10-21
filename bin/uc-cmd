@@ -99,7 +99,6 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 result.add(v['group'])
             return list(result)
 
-
     class ComplItemProp(ComplGeneric):
 
         def __call__(self, prefix, **kwargs):
@@ -269,6 +268,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return super().prepare_result_dict(data, api_func, api_func_full,
                                                itype)
         return self.prepare_controller_status_dict(data)
+
+    def setup_parser(self):
+        super().setup_parser()
+        self.enable_controller_management_functions('uc')
 
     def add_functions(self):
         super().add_functions()
@@ -1052,7 +1055,6 @@ cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'phi', 'lpi', 'driver'
 ]
 cli.set_api_functions(_api_functions)
-cli.enable_controller_management_functions('uc')
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_tabsp(_fancy_tabsp)
