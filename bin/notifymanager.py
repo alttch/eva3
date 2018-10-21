@@ -16,10 +16,35 @@ sys.path.append(dir_lib)
 import eva.core
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
+from eva.client.cli import ComplGeneric
 from eva.tools import parse_host_port
 
 
 class NotifierCLI(GenericCLI, ControllerCLI):
+
+    class ComplNProto(object):
+
+        def __call__(self, prefix, **kwargs):
+            return ['mqtt:', 'json:', 'db:'] if \
+                    prefix.find(':') == -1 else True
+
+    class ComplN(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
+    class ComplNProp(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(['props', kwargs.get('parsed_args').i])
+            if code: return True
+            result = list(data.keys())
+            return result
 
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
         if itype not in ['status']:
@@ -38,7 +63,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create.add_argument('p', help='Notifier properties: ' + \
                 'json:http(s)://[key]@uri or ' + \
                 'mqtt:[username:password]@host:[port] or ' + \
-                'db:dbfile[:keeptime]', metavar='PROPS')
+                'db:dbfile[:keeptime]',
+                metavar='PROPS').completer = self.ComplNProto()
         ap_create.add_argument(
             '-s',
             '--space',
@@ -59,19 +85,33 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             dest='y',
             action='store_true')
         ap_enable = self.sp.add_parser('enable', help='Enable notifier')
-        ap_enable.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
+        ap_enable.add_argument(
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
         ap_disable = self.sp.add_parser('disable', help='Disable notifier')
-        ap_disable.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
+        ap_disable.add_argument(
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
         ap_config = self.sp.add_parser('config', help='Get notifier config')
-        ap_config.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
+        ap_config.add_argument(
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
         ap_props = self.sp.add_parser('props', help='Get notifier properties')
-        ap_props.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
+        ap_props.add_argument(
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
         ap_set_prop = self.sp.add_parser('set', help='Set notifier property')
-        ap_set_prop.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
-        ap_set_prop.add_argument('p', help='Config property', metavar='PROP')
+        ap_set_prop.add_argument(
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
+        ap_set_prop.add_argument(
+            'p', help='Config property',
+            metavar='PROP').completer = self.ComplNProp(self)
         ap_set_prop.add_argument('v', help='Value', metavar='VAL', nargs='?')
         ap_test = self.sp.add_parser('test', help='Test notifier')
-        ap_test.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
+        ap_test.add_argument(
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
 
         ap_subscribe = self.sp.add_parser(
             'subscribe', help='Subscribe notifier')
@@ -84,7 +124,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         sp_subscribe_log = sp_subscribe.add_parser(
             'log', help='Subscribe to log messages')
         sp_subscribe_log.add_argument(
-            'i', help='Notifier ID', metavar='NOTIFIER_ID')
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
         sp_subscribe_log.add_argument(
             '-l',
             '--level',
@@ -97,7 +138,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         sp_subscribe_state = sp_subscribe.add_parser(
             'state', help='Subscribe to state updates')
         sp_subscribe_state.add_argument(
-            'i', help='Notifier ID', metavar='NOTIFIER_ID')
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
         sp_subscribe_state.add_argument(
             '-v',
             '--types',
@@ -123,7 +165,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         sp_subscribe_action = sp_subscribe.add_parser(
             'action', help='Subscribe to action status')
         sp_subscribe_action.add_argument(
-            'i', help='Notifier ID', metavar='NOTIFIER_ID')
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
         sp_subscribe_action.add_argument(
             '-a',
             '--action-status',
@@ -165,11 +208,13 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             nargs='?',
             choices=['log', 'state', 'action'])
         ap_unsubscribe.add_argument(
-            'i', help='Notifier ID', metavar='NOTIFIER_ID')
-
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
 
         ap_destroy = self.sp.add_parser('destroy', help='Destroy notifier')
-        ap_destroy.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
+        ap_destroy.add_argument(
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
 
     def create_notifier(self, params):
         n = self.get_notifier(params['i'], pass_errors=True)
