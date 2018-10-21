@@ -399,7 +399,7 @@ def create_macro(m_id, group=None, save=False):
     if i in macros_by_id or i_full in macros_by_full_id: return False
     m = eva.lm.plc.Macro(i)
     m.set_prop('action_enabled', 'true', False)
-    if grp: m.set_prop('group', grp, False)
+    if grp: m.update_config({'group': grp})
     macros_by_id[i] = m
     macros_by_full_id[m.full_id] = m
     if save: m.save()

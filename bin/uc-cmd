@@ -8,6 +8,7 @@ __version__ = "3.1.1"
 
 import sys
 import os
+import re
 import requests
 from datetime import datetime
 
@@ -43,6 +44,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 return list(result)
             else:
                 return ['sensor:', 'unit:']
+
+    class ComplItemOIDType(object):
+
+        def __call__(self, prefix, **kwargs):
+            return ['unit:', 'sensor:'] if prefix.find(':') == -1 else True
 
     class ComplItemGroup(ComplGeneric):
 
@@ -120,7 +126,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             if code: return True
             result = set()
             for v in data:
-                result.add(v['id'] + ('.' if self.for_driver else ''))
+                result.add(v['id'] + (':' if self.for_driver else ''))
             return list(result)
 
     class ComplDriver(ComplGeneric):
@@ -229,7 +235,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
     def prepare_run(self, api_func, params, a):
         if api_func == 'load_driver':
             try:
-                params['p'], params['i'] = params['i'].split('.')
+                params['p'], params['i'] = re.split('[.:]', params['i'])
             except:
                 self.print_err("Invalid driver ID")
                 return 98
@@ -325,7 +331,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
             dest='w')
 
         sp_update = self.sp.add_parser('update', help='Update item state')
-        sp_update.add_argument('i', help='Item ID', metavar='ID')
+        sp_update.add_argument(
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
         sp_update.add_argument(
             '-s',
             '--status',
@@ -513,7 +521,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         ap_create = self.sp.add_parser('create', help='Create new item')
         ap_create.add_argument(
-            'i', help='Item OID (type:group/id)', metavar='OID')
+            'i', help='Item OID (type:group/id)',
+            metavar='OID').completer = self.ComplItemOIDType()
         ap_create.add_argument(
             '-y',
             '--save',

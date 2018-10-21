@@ -200,6 +200,4 @@ class Macro(eva.item.ActiveItem):
             del d['mqtt_control']
         if 'term_kill_interval' in d:
             del d['term_kill_interval']
-        if props:
-            d['group'] = self.group
         return d

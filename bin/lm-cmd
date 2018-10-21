@@ -19,10 +19,76 @@ sys.path.append(dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
+from eva.client.cli import ComplGeneric
 from eva.client import apiclient
 
 
 class LM_CLI(GenericCLI, ControllerCLI):
+
+    class ComplLVAR(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('state -p lvar')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['full_id'])
+            return list(result)
+
+    class ComplItemOIDType(object):
+
+        def __call__(self, prefix, **kwargs):
+            return ['lvar:'] if prefix.find(':') == -1 else True
+
+    class ComplLVARGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('state -p lvar')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
+    class ComplLVARProp(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['config', 'props',
+                 kwargs.get('parsed_args').i])
+            if code: return True
+            result = list(data.keys())
+            return result
+
+    class ComplMacro(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('macro list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
+    class ComplMacroGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('macro list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
+    class ComplMacroProp(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['macro', 'props',
+                 kwargs.get('parsed_args').i])
+            if code: return True
+            result = list(data.keys())
+            return result
 
     def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
         if api_func == 'list_rules':
@@ -253,9 +319,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
     def add_lm_common_functions(self):
         sp_state = self.sp.add_parser('state', help='Get LVar state')
-        sp_state.add_argument('i', help='LVar ID', metavar='ID', nargs='?')
         sp_state.add_argument(
-            '-g', '--group', help='LVar group', metavar='GROUP', dest='g')
+            'i', help='LVar ID', metavar='ID',
+            nargs='?').completer = self.ComplLVAR(self)
+        sp_state.add_argument(
+            '-g', '--group', help='LVar group', metavar='GROUP',
+            dest='g').completer = self.ComplLVARGroup(self)
         sp_state.add_argument(
             '-p',
             '--type',
@@ -276,7 +345,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i',
             help=
             'LVar ID or multiple IDs (-w param is required), comma separated',
-            metavar='ID')
+            metavar='ID').completer = self.ComplLVAR(self)
         sp_history.add_argument(
             '-a',
             '--notifier',
@@ -308,7 +377,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='w')
 
         sp_set = self.sp.add_parser('set', help='Set LVar state')
-        sp_set.add_argument('i', help='LVar ID', metavar='ID')
+        sp_set.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
         sp_set.add_argument(
             '-s',
             '--status',
@@ -320,36 +390,46 @@ class LM_CLI(GenericCLI, ControllerCLI):
             '-v', '--value', help='LVar value', metavar='VALUE', dest='v')
 
         sp_reset = self.sp.add_parser('reset', help='Reset LVar state')
-        sp_reset.add_argument('i', help='LVar ID', metavar='ID')
+        sp_reset.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
         sp_clear = self.sp.add_parser('clear', help='Clear LVar state')
-        sp_clear.add_argument('i', help='LVar ID', metavar='ID')
+        sp_clear.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
         sp_toggle = self.sp.add_parser('toggle', help='Toggle LVar state')
-        sp_toggle.add_argument('i', help='LVar ID', metavar='ID')
+        sp_toggle.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
     def add_lm_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List LVars')
         sp_list.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Filter by group', metavar='GROUP',
+            dest='g').completer = self.ComplLVARGroup(self)
 
         ap_config = self.sp.add_parser('config', help='LVar configuration')
         sp_config = ap_config.add_subparsers(
             dest='_func', metavar='func', help='Configuration commands')
 
         sp_config_get = sp_config.add_parser('get', help='Get LVar config')
-        sp_config_get.add_argument('i', help='LVar ID', metavar='ID')
+        sp_config_get.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
         sp_config_save = sp_config.add_parser('save', help='Save LVar config')
-        sp_config_save.add_argument('i', help='LVar ID', metavar='ID')
+        sp_config_save.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
         sp_list_props = sp_config.add_parser(
             'props', help='List LVar config props')
-        sp_list_props.add_argument('i', help='LVar ID', metavar='ID')
+        sp_list_props.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
         sp_set_prop = sp_config.add_parser('set', help='Set LVar config prop')
-        sp_set_prop.add_argument('i', help='LVar ID', metavar='ID')
-        sp_set_prop.add_argument('p', help='Config property', metavar='PROP')
+        sp_set_prop.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
+        sp_set_prop.add_argument(
+            'p', help='Config property',
+            metavar='PROP').completer = self.ComplLVARProp(self)
         sp_set_prop.add_argument('v', help='Value', metavar='VAL', nargs='?')
         sp_set_prop.add_argument(
             '-y',
@@ -359,7 +439,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         ap_create = self.sp.add_parser('create', help='Create new LVar')
-        ap_create.add_argument('i', help='LVar ID or OID', metavar='OID')
+        ap_create.add_argument(
+            'i', help='LVar ID or OID',
+            metavar='OID').completer = self.ComplItemOIDType()
         ap_create.add_argument(
             '-y',
             '--save',
@@ -368,7 +450,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         ap_destroy = self.sp.add_parser('destroy', help='Delete LVar')
-        ap_destroy.add_argument('i', help='LVar ID', metavar='ID')
+        ap_destroy.add_argument(
+            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
 
     def add_lm_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')
@@ -400,7 +483,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         ap_macro_create = sp_macro.add_parser('create', help='Create new macro')
         ap_macro_create.add_argument('i', help='Macro ID', metavar='ID')
         ap_macro_create.add_argument(
-            '-g', '--group', help='Macro group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Macro group', metavar='GROUP',
+            dest='g').completer = self.ComplMacroGroup(self)
         ap_macro_create.add_argument(
             '-y',
             '--save',
@@ -410,17 +494,23 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         ap_edit = sp_macro.add_parser('edit', help='Edit macro code')
         ap_edit.add_argument(
-            'i', help='Macro ID (common.py for common code)', metavar='ID')
+            'i', help='Macro ID (common.py for common code)',
+            metavar='ID').completer = self.ComplMacro(self)
 
         sp_macro_list_props = sp_macro.add_parser(
             'props', help='List macro config props')
-        sp_macro_list_props.add_argument('i', help='Macro ID', metavar='ID')
+        sp_macro_list_props.add_argument(
+            'i', help='Macro ID',
+            metavar='ID').completer = self.ComplMacro(self)
 
         sp_macro_set_prop = sp_macro.add_parser(
             'set', help='Set macro config prop')
-        sp_macro_set_prop.add_argument('i', help='Macro ID', metavar='ID')
         sp_macro_set_prop.add_argument(
-            'p', help='Config property', metavar='PROP')
+            'i', help='Macro ID',
+            metavar='ID').completer = self.ComplMacro(self)
+        sp_macro_set_prop.add_argument(
+            'p', help='Config property',
+            metavar='PROP').completer = self.ComplMacroProp(self)
         sp_macro_set_prop.add_argument(
             'v', help='Value', metavar='VAL', nargs='?')
         sp_macro_set_prop.add_argument(
@@ -431,7 +521,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_macro_run = sp_macro.add_parser('run', help='Execute macro')
-        sp_macro_run.add_argument('i', help='Macro ID', metavar='ID')
+        sp_macro_run.add_argument(
+            'i', help='Macro ID',
+            metavar='ID').completer = self.ComplMacro(self)
         sp_macro_run.add_argument(
             '-a', '--args', help='Macro arguments', metavar='ARGS', dest='a')
         sp_macro_run.add_argument(
@@ -461,7 +553,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_macro_result = sp_macro.add_parser(
             'result', help='Get macro execution results')
         sp_macro_result.add_argument(
-            '-i', '--id', help='Macro ID', metavar='ID', dest='i')
+            '-i', '--id', help='Macro ID', metavar='ID',
+            dest='i').completer = self.ComplMacro(self)
         sp_macro_result.add_argument(
             '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
         sp_macro_result.add_argument(
@@ -475,7 +568,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
 
         ap_destroy = sp_macro.add_parser('destroy', help='Delete macro')
-        ap_destroy.add_argument('i', help='Macro ID', metavar='ID')
+        ap_destroy.add_argument(
+            'i', help='Macro ID',
+            metavar='ID').completer = self.ComplMacro(self)
 
     def add_lm_edit_functions(self):
         ap_edit = self.sp.add_parser('edit', help='Edit item scripts')
@@ -485,7 +580,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         sp_edit_macro = sp_edit.add_parser('macro', help='Edit macro code')
         sp_edit_macro.add_argument(
-            'i', help='Macro ID (common.py for common code)', metavar='ID')
+            'i', help='Macro ID (common.py for common code)',
+            metavar='ID').completer = self.ComplMacro(self)
 
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')
