@@ -93,6 +93,104 @@ class UC_CLI(GenericCLI, ControllerCLI):
             result = list(data.keys())
             return result
 
+    class ComplModBusProto(object):
+
+        def __call__(self, prefix, **kwargs):
+            return ['tcp:', 'udp:', 'rtu:', 'ascii:',
+                    'binary:'] if prefix.find(':') == -1 else True
+
+    class ComplModBus(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('modbus list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
+    class ComplPHI(ComplGeneric):
+
+        def __init__(self, cli, for_driver=False):
+            self.for_driver = for_driver
+            super().__init__(cli)
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('phi list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'] + ('.' if self.for_driver else ''))
+            return list(result)
+
+    class ComplDriver(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('driver list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
+    class ComplPHIMods(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('phi mods')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['mod'])
+            return list(result)
+
+    class ComplLPIMods(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('lpi mods')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['mod'])
+            return list(result)
+
+    class ComplPHIMods(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('phi mods')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['mod'])
+            return list(result)
+
+    class ComplPHITestCMD(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['phi', 'test',
+                 kwargs.get('parsed_args').i, 'help'])
+            if code or not isinstance(data, dict): return True
+            result = set()
+            result.add('self')
+            for d in data.keys():
+                result.add(d)
+            result.add('help')
+            return result
+
+    class ComplPHIExecCMD(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['phi', 'exec',
+                 kwargs.get('parsed_args').i, 'help'])
+            if code or not isinstance(data, dict): return True
+            result = set()
+            result.add('self')
+            for d in data.keys():
+                result.add(d)
+            result.add('help')
+            return result
+
     def prepare_result_data(self, data, api_func, api_func_full, itype):
         if itype not in ['action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, api_func_full,
@@ -362,7 +460,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_edit_update = sp_edit.add_parser(
             'update', help='Edit item update script')
         sp_edit_update.add_argument(
-            'i', help='Item ID', metavar='ID').completer = self.ComplItemOID(self)
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
 
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')
@@ -383,20 +482,24 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         sp_config_get = sp_config.add_parser('get', help='Get item config')
         sp_config_get.add_argument(
-            'i', help='Item ID', metavar='ID').completer = self.ComplItemOID(self)
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
 
         sp_config_save = sp_config.add_parser('save', help='Save item config')
         sp_config_save.add_argument(
-            'i', help='Item ID', metavar='ID').completer = self.ComplItemOID(self)
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
 
         sp_list_props = sp_config.add_parser(
             'props', help='List item config props')
         sp_list_props.add_argument(
-            'i', help='Item ID', metavar='ID').completer = self.ComplItemOID(self)
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
 
         sp_set_prop = sp_config.add_parser('set', help='Set item config prop')
         sp_set_prop.add_argument(
-            'i', help='Item ID', metavar='ID').completer = self.ComplItemOID(self)
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
         sp_set_prop.add_argument(
             'p', help='Config property',
             metavar='PROP').completer = self.ComplItemProp(self)
@@ -529,7 +632,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help=
             'Port parameters (proto:port/host:params, ' + \
                     'i.e. tcp:192.168.11.11:502 or rtu:/dev/ttyS0:9600:8:E:1)',
-            metavar='PARAMS')
+            metavar='PARAMS').completer = self.ComplModBusProto()
         sp_modbus_create.add_argument(
             '-l',
             '--lock',
@@ -564,10 +667,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
             dest='_save',
             action='store_true')
         sp_modbus_test = sp_modbus.add_parser('test', help='Test defined port')
-        sp_modbus_test.add_argument('i', help='Port ID', metavar='ID')
+        sp_modbus_test.add_argument(
+            'i', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
         sp_modbus_destroy = sp_modbus.add_parser(
             'destroy', help='Destroy (undefine) port')
-        sp_modbus_destroy.add_argument('i', help='Port ID', metavar='ID')
+        sp_modbus_destroy.add_argument(
+            'i', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
 
     def add_uc_driver_functions(self):
         ap_phi = self.sp.add_parser('phi', help='PHI (Physical interface)')
@@ -599,28 +706,42 @@ class UC_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_phi_get = sp_phi.add_parser('get', help='Get loaded PHI info')
-        sp_phi_get.add_argument('i', help='PHI ID', metavar='PHI_ID')
+        sp_phi_get.add_argument(
+            'i', help='PHI ID',
+            metavar='PHI_ID').completer = self.ComplPHI(self)
 
         sp_phi_mods = sp_phi.add_parser('mods', help='List available PHI mods')
         sp_lpi_mods = sp_lpi.add_parser('mods', help='List available LPI mods')
 
         sp_phi_test = sp_phi.add_parser('test', help='Send test call to PHI')
-        sp_phi_test.add_argument('i', help='PHI ID', metavar='PHI_ID')
-        sp_phi_test.add_argument('c', help='PHI test command', metavar='CMD')
+        sp_phi_test.add_argument(
+            'i', help='PHI ID',
+            metavar='PHI_ID').completer = self.ComplPHI(self)
+        sp_phi_test.add_argument(
+            'c', help='PHI test command',
+            metavar='CMD').completer = self.ComplPHITestCMD(self)
 
         sp_phi_exec = sp_phi.add_parser('exec', help='Send exec call to PHI')
-        sp_phi_exec.add_argument('i', help='PHI ID', metavar='PHI_ID')
-        sp_phi_exec.add_argument('c', help='PHI exec command', metavar='CMD')
+        sp_phi_exec.add_argument(
+            'i', help='PHI ID',
+            metavar='PHI_ID').completer = self.ComplPHI(self)
+        sp_phi_exec.add_argument(
+            'c', help='PHI exec command',
+            metavar='CMD').completer = self.ComplPHIExecCMD(self)
         sp_phi_exec.add_argument(
             'a', help='Command arguments', metavar='ARGS', nargs='?')
 
         sp_driver_get = sp_driver.add_parser(
             'get', help='Get loaded driver info')
-        sp_driver_get.add_argument('i', help='Driver ID', metavar='DRIVER_ID')
+        sp_driver_get.add_argument(
+            'i', help='Driver ID',
+            metavar='DRIVER_ID').completer = self.ComplDriver(self)
 
         sp_phi_load = sp_phi.add_parser('load', help='Load PHI')
         sp_phi_load.add_argument('i', help='PHI ID', metavar='PHI_ID')
-        sp_phi_load.add_argument('m', help='PHI module', metavar='PHI_MOD')
+        sp_phi_load.add_argument(
+            'm', help='PHI module',
+            metavar='PHI_MOD').completer = self.ComplPHIMods(self)
         sp_phi_load.add_argument(
             '-c',
             '--config',
@@ -636,8 +757,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         sp_driver_load = sp_driver.add_parser('load', help='Load driver')
         sp_driver_load.add_argument(
-            'i', help='Driver ID (PHI_ID.LPI.ID)', metavar='PHI_ID.LPI_ID')
-        sp_driver_load.add_argument('m', help='LPI module', metavar='LPI_MOD')
+            'i', help='Driver ID (PHI_ID.LPI.ID)',
+            metavar='PHI_ID.LPI_ID').completer = self.ComplPHI(
+                self, for_driver=True)
+        sp_driver_load.add_argument(
+            'm', help='LPI module',
+            metavar='LPI_MOD').completer = self.ComplLPIMods(self)
         sp_driver_load.add_argument(
             '-c',
             '--config',
@@ -652,16 +777,23 @@ class UC_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_phi_unload = sp_phi.add_parser('unload', help='Unload PHI')
-        sp_phi_unload.add_argument('i', help='PHI ID', metavar='PHI_ID')
+        sp_phi_unload.add_argument(
+            'i', help='PHI ID',
+            metavar='PHI_ID').completer = self.ComplPHI(self)
 
         sp_driver_unload = sp_driver.add_parser('unload', help='Unload driver')
         sp_driver_unload.add_argument(
-            'i', help='Driver ID', metavar='DRIVER_ID')
+            'i', help='Driver ID',
+            metavar='DRIVER_ID').completer = self.ComplDriver(self)
 
         sp_driver_set = sp_driver.add_parser(
             'set', help='Set for the item (action & update)')
-        sp_driver_set.add_argument('i', help='Item ID', metavar='ID')
-        sp_driver_set.add_argument('d', help='Driver ID', metavar='DRIVER_ID')
+        sp_driver_set.add_argument(
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
+        sp_driver_set.add_argument(
+            'd', help='Driver ID',
+            metavar='DRIVER_ID').completer = self.ComplDriver(self)
         sp_driver_set.add_argument(
             '-c',
             '--config',
@@ -679,7 +811,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'unset',
             help=
             'Unset for the item (set action, update and driver_config to null)')
-        sp_driver_unset.add_argument('i', help='Item ID', metavar='ID')
+        sp_driver_unset.add_argument(
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
         sp_driver_unset.add_argument(
             '-y',
             '--save',
@@ -688,13 +822,19 @@ class UC_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_phi_modinfo = sp_phi.add_parser('modinfo', help='PHI module info')
-        sp_phi_modinfo.add_argument('m', help='PHI module', metavar='PHI_MOD')
+        sp_phi_modinfo.add_argument(
+            'm', help='PHI module',
+            metavar='PHI_MOD').completer = self.ComplPHIMods(self)
 
         sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
-        sp_lpi_modinfo.add_argument('m', help='LPI module', metavar='LPI_MOD')
+        sp_lpi_modinfo.add_argument(
+            'm', help='LPI module',
+            metavar='LPI_MOD').completer = self.ComplLPIMods(self)
 
         sp_phi_modhelp = sp_phi.add_parser('modhelp', help='PHI module help')
-        sp_phi_modhelp.add_argument('m', help='PHI module', metavar='PHI_MOD')
+        sp_phi_modhelp.add_argument(
+            'm', help='PHI module',
+            metavar='PHI_MOD').completer = self.ComplPHIMods(self)
         sp_phi_modhelp.add_argument(
             'c',
             help='Help context (cfg, get, set)',
@@ -702,7 +842,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
             choices=['cfg', 'get', 'set'])
 
         sp_lpi_modhelp = sp_lpi.add_parser('modhelp', help='LPI module help')
-        sp_lpi_modhelp.add_argument('m', help='LPI module', metavar='LPI_MOD')
+        sp_lpi_modhelp.add_argument(
+            'm', help='LPI module',
+            metavar='LPI_MOD').completer = self.ComplLPIMods(self)
         sp_lpi_modhelp.add_argument(
             'c',
             help='Help context (cfg, action, update)',
@@ -722,7 +864,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         sp_phi_unlink = sp_phi.add_parser(
             'unlink', help='Unlink PHI (delete mod file)')
-        sp_phi_unlink.add_argument('m', help='PHI module', metavar='PHI_MOD')
+        sp_phi_unlink.add_argument(
+            'm', help='PHI module',
+            metavar='PHI_MOD').completer = self.ComplPHIMods(self)
 
     def edit_action(self, props):
         if self.apiuri:
