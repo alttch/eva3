@@ -972,7 +972,6 @@ class GenericCLI(object):
                 while not parsed:
                     try:
                         parsed = shlex.split(input(self.get_prompt()))
-                        self.setup_parser()
                     except EOFError:
                         print()
                         self.finish_interactive()
@@ -982,6 +981,7 @@ class GenericCLI(object):
                         pass
                     except:
                         self.print_err('parse error')
+                    self.setup_parser()
                 cmds = [[]]
                 cix = 0
                 for p in parsed:
