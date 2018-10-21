@@ -153,7 +153,13 @@ class ManagementCLI(GenericCLI):
     def add_manager_control_functions(self):
         if not self.products_configured:
             return
-        ap_start = self.sp.add_parser('start', help='Start controller(s)')
+        ap_controller = self.sp.add_parser(
+            'server', help='Controllers server management functions')
+        sp_controller = ap_controller.add_subparsers(
+            dest='_func', metavar='func', help='Management commands')
+
+        ap_start = sp_controller.add_parser(
+            'start', help='Start controller server(s)')
         ap_start.add_argument(
             'p',
             metavar='CONTROLLER',
@@ -161,7 +167,8 @@ class ManagementCLI(GenericCLI):
             ')',
             choices=self.products_configured,
             nargs='?')
-        ap_stop = self.sp.add_parser('stop', help='Stop controller(s)')
+        ap_stop = sp_controller.add_parser(
+            'stop', help='Stop controller server(s)')
         ap_stop.add_argument(
             'p',
             metavar='CONTROLLER',
@@ -169,7 +176,8 @@ class ManagementCLI(GenericCLI):
             ')',
             choices=self.products_configured,
             nargs='?')
-        ap_restart = self.sp.add_parser('restart', help='Restart controller(s)')
+        ap_restart = sp_controller.add_parser(
+            'restart', help='Restart controller server(s)')
         ap_restart.add_argument(
             'p',
             metavar='CONTROLLER',
@@ -177,8 +185,8 @@ class ManagementCLI(GenericCLI):
             ')',
             choices=self.products_configured,
             nargs='?')
-        ap_status = self.sp.add_parser(
-            'status', help='Status of the controller(s)')
+        ap_status = sp_controller.add_parser(
+            'status', help='Status of the controller server(s)')
         ap_status.add_argument(
             'p',
             metavar='CONTROLLER',
@@ -211,13 +219,18 @@ class ManagementCLI(GenericCLI):
             action='store_true')
 
     def add_manager_power_functions(self):
-        ap_reboot = self.sp.add_parser('reboot', help='Reboot the system')
+        ap_system = self.sp.add_parser('system', help='System functions')
+        sp_system = ap_system.add_subparsers(
+            dest='_func', metavar='func', help='System commands')
+
+        ap_reboot = sp_system.add_parser('reboot', help='Reboot the system')
         ap_reboot.add_argument(
             '--YES',
             dest='y',
             help='Reboot without any prompts',
             action='store_true')
-        ap_poweroff = self.sp.add_parser(
+
+        ap_poweroff = sp_system.add_parser(
             'poweroff', help='Power off the system')
         ap_poweroff.add_argument(
             '--YES',
@@ -599,14 +612,14 @@ if len(sys.argv) < 2:
 cli = ManagementCLI('eva', _me, remote_api=False)
 
 _api_functions = {
-    'start': cli.start_controller,
-    'stop': cli.stop_controller,
-    'restart': cli.restart_controller,
-    'status': cli.status_controller,
+    'server:start': cli.start_controller,
+    'server:stop': cli.stop_controller,
+    'server:restart': cli.restart_controller,
+    'server:status': cli.status_controller,
     'version': cli.print_version,
     'update': cli.update,
-    'reboot': cli.power_reboot,
-    'poweroff': cli.power_poweroff,
+    'system:reboot': cli.power_reboot,
+    'system:poweroff': cli.power_poweroff,
     'ns': cli.manage_ns,
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
@@ -658,7 +671,7 @@ except:
 eva.core.set_product('eva-cmd', '-1')
 cli.ap.prog = 'eva-cmd'
 cli.default_prompt = '# '
-cli.arg_sections += ['backup']
+cli.arg_sections += ['backup', 'server', 'edit', 'system']
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()
 cli.nodename = nodename

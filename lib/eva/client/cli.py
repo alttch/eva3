@@ -1401,11 +1401,19 @@ class ControllerCLI(object):
         return result
 
     def add_manager_control_functions(self):
-        ap_start = self.sp.add_parser('start', help='Start controller')
-        ap_stop = self.sp.add_parser('stop', help='Stop controller')
-        ap_restart = self.sp.add_parser('restart', help='Restart controller')
-        ap_status = self.sp.add_parser(
-            'status', help='Status of the controller')
+        ap_controller = self.sp.add_parser(
+            'server', help='Controller server management functions')
+        sp_controller = ap_controller.add_subparsers(
+            dest='_func', metavar='func', help='Management commands')
+
+        ap_start = sp_controller.add_parser('start', help='Start controller server')
+        ap_stop = sp_controller.add_parser('stop', help='Stop controller server')
+        ap_restart = sp_controller.add_parser('restart', help='Restart controller server')
+        ap_status = sp_controller.add_parser(
+            'status', help='Status of the controller server')
+
+        if 'server' not in self.arg_sections:
+            self.arg_sections.append('server')
 
     def enable_controller_management_functions(self, controller_id):
         if self.apiuri:
@@ -1415,10 +1423,10 @@ class ControllerCLI(object):
         self.add_manager_control_functions()
         self._management_controller_id = controller_id
         funcs = {
-            'start': self.start_controller,
-            'stop': self.stop_controller,
-            'restart': self.restart_controller,
-            'status': self.status_controller,
+                'server:start': self.start_controller,
+                'server:stop': self.stop_controller,
+                'server:restart': self.restart_controller,
+                'server:status': self.status_controller,
         }
         self.append_api_functions(funcs)
 
