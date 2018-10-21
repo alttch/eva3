@@ -90,6 +90,116 @@ class LM_CLI(GenericCLI, ControllerCLI):
             result = list(data.keys())
             return result
 
+    class ComplExt(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('ext list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
+    class ComplExtMods(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('ext mods')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['mod'])
+            return list(result)
+
+    class ComplController(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('controller list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
+    class ComplControllerProp(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['controller', 'props',
+                 kwargs.get('parsed_args').i])
+            if code: return True
+            result = list(data.keys())
+            return result
+
+    class ComplRemoteGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            opts = []
+            if not kwargs.get('ignore_p') and hasattr(kwargs.get('parsed_args'), 'p'):
+                p = kwargs.get('parsed_args').p
+                if p:
+                    opts = ['-p', p]
+            code, data = self.cli.call(['remote'] + opts)
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
+    class ComplRule(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('rule list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
+    class ComplRuleProp(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['rule', 'props', kwargs.get('parsed_args').i])
+            if code: return True
+            result = list(data.keys())
+            return result
+
+    class ComplRulePropVal(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            p = kwargs.get('parsed_args').p
+            if p == 'macro':
+                return self.cli.ComplMacro(self.cli)(prefix, **kwargs)
+            if p == 'for_initial':
+                return ['skip', 'only', 'any']
+            if p == 'for_item_type':
+                return ['unit', 'sensor', 'lvar', '#']
+            if p == 'for_prop':
+                return ['status', 'value', '#']
+            if p == 'for_item_group':
+                kwargs['ignore_p'] = True
+                result = self.cli.ComplRemoteGroup(self.cli)(prefix, **kwargs)
+                result.append('#')
+                return result
+            if p == 'for_item_id':
+                code, data = self.cli.call('remote')
+                if code: return True
+                result = []
+                for d in data:
+                    result.append(d['id'])
+                return result
+            if p == 'for_oid':
+                if prefix.find(':') == -1:
+                    return ['unit:', 'sensor:', 'lvar:']
+                code, data = self.cli.call('remote')
+                if code: return True
+                result = []
+                for d in data:
+                    result.append(d['oid'] + '/status')
+                    result.append(d['oid'] + '/value')
+                return result
+            return True
+
     def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
         if api_func == 'list_rules':
             self.print_list_rules(result)
@@ -460,9 +570,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
             '--controller',
             help='Filter by controller ID',
             metavar='CONTROLLER_ID',
-            dest='i')
+            dest='i').completer = self.ComplController(self)
         ap_remote.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Filter by group', metavar='GROUP',
+            dest='g').completer = self.ComplRemoteGroup(self)
         ap_remote.add_argument(
             '-p',
             '--type',
@@ -599,7 +710,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_rule_enable = sp_rule.add_parser('enable', help='Enable rule')
-        sp_rule_enable.add_argument('i', help='Rule ID', metavar='ID')
+        sp_rule_enable.add_argument(
+            'i', help='Rule ID', metavar='ID').completer = self.ComplRule(self)
         sp_rule_enable.add_argument(
             '-y',
             '--save',
@@ -608,7 +720,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_rule_disable = sp_rule.add_parser('disable', help='Disable rule')
-        sp_rule_disable.add_argument('i', help='Rule ID', metavar='ID')
+        sp_rule_disable.add_argument(
+            'i', help='Rule ID', metavar='ID').completer = self.ComplRule(self)
         sp_rule_disable.add_argument(
             '-y',
             '--save',
@@ -618,15 +731,19 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         sp_rule_list_props = sp_rule.add_parser(
             'props', help='List rule config props')
-        sp_rule_list_props.add_argument('i', help='Rule ID', metavar='ID')
+        sp_rule_list_props.add_argument(
+            'i', help='Rule ID', metavar='ID').completer = self.ComplRule(self)
 
         sp_rule_set_prop = sp_rule.add_parser(
             'set', help='Set rule config prop')
-        sp_rule_set_prop.add_argument('i', help='Rule ID', metavar='ID')
         sp_rule_set_prop.add_argument(
-            'p', help='Config property', metavar='PROP')
+            'i', help='Rule ID', metavar='ID').completer = self.ComplRule(self)
         sp_rule_set_prop.add_argument(
-            'v', help='Value', metavar='VAL', nargs='?')
+            'p', help='Config property',
+            metavar='PROP').completer = self.ComplRuleProp(self)
+        sp_rule_set_prop.add_argument(
+            'v', help='Value', metavar='VAL',
+            nargs='?').completer = self.ComplRulePropVal(self)
         sp_rule_set_prop.add_argument(
             '-y',
             '--save',
@@ -635,7 +752,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_rule_destroy = sp_rule.add_parser('destroy', help='Delete rule')
-        sp_rule_destroy.add_argument('i', help='Rule ID', metavar='ID')
+        sp_rule_destroy.add_argument(
+            'i', help='Rule ID', metavar='ID').completer = self.ComplRule(self)
 
     def add_lm_controller_functions(self):
         ap_controller = self.sp.add_parser(
@@ -648,19 +766,24 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         sp_controller_test = sp_controller.add_parser(
             'test', help='Test connected UC')
-        sp_controller_test.add_argument('i', help='Controller ID', metavar='ID')
+        sp_controller_test.add_argument(
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
         sp_controller_list_props = sp_controller.add_parser(
             'props', help='List controller config props')
         sp_controller_list_props.add_argument(
-            'i', help='Controller ID', metavar='ID')
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
         sp_controller_set_prop = sp_controller.add_parser(
             'set', help='Set controller config prop')
         sp_controller_set_prop.add_argument(
-            'i', help='Controller ID', metavar='ID')
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
         sp_controller_set_prop.add_argument(
-            'p', help='Config property', metavar='PROP')
+            'p', help='Config property',
+            metavar='PROP').completer = self.ComplControllerProp(self)
         sp_controller_set_prop.add_argument(
             'v', help='Value', metavar='VAL', nargs='?')
         sp_controller_set_prop.add_argument(
@@ -673,7 +796,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_controller_reload = sp_controller.add_parser(
             'reload', help='Reload items from the connected UC')
         sp_controller_reload.add_argument(
-            'i', help='Controller ID', metavar='ID')
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
         sp_controller_append = sp_controller.add_parser(
             'append', help='Connect UC')
@@ -711,7 +835,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_controller_remove = sp_controller.add_parser(
             'remove', help='Remove connected UC')
         sp_controller_remove.add_argument(
-            'i', help='Controller ID', metavar='ID')
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
     def add_lm_ext_functions(self):
         ap_ext = self.sp.add_parser('ext', help='Macro extension functions')
@@ -727,15 +852,20 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_ext_get = sp_ext.add_parser('get', help='Get loaded extension info')
-        sp_ext_get.add_argument('i', help='EXT id', metavar='EXT_ID')
+        sp_ext_get.add_argument(
+            'i', help='EXT id',
+            metavar='EXT_ID').completer = self.ComplExt(self)
 
         sp_ext_mods = sp_ext.add_parser(
             'mods', help='List available extension mods')
 
         sp_ext_load = sp_ext.add_parser('load', help='Load extension')
-        sp_ext_load.add_argument('i', help='Extension id', metavar='EXT_ID')
         sp_ext_load.add_argument(
-            'm', help='Extension module', metavar='EXT_MOD')
+            'i', help='Extension id',
+            metavar='EXT_ID').completer = self.ComplExt(self)
+        sp_ext_load.add_argument(
+            'm', help='Extension module',
+            metavar='EXT_MOD').completer = self.ComplExtMods(self)
         sp_ext_load.add_argument(
             '-c',
             '--config',
@@ -750,17 +880,21 @@ class LM_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_ext_unload = sp_ext.add_parser('unload', help='Unload extension')
-        sp_ext_unload.add_argument('i', help='Extension id', metavar='EXT_ID')
+        sp_ext_unload.add_argument(
+            'i', help='Extension id',
+            metavar='EXT_ID').completer = self.ComplExt(self)
 
         sp_ext_modinfo = sp_ext.add_parser(
             'modinfo', help='Extension module info')
         sp_ext_modinfo.add_argument(
-            'm', help='Extension module', metavar='EXT_MOD')
+            'm', help='Extension module',
+            metavar='EXT_MOD').completer = self.ComplExtMods(self)
 
         sp_ext_modhelp = sp_ext.add_parser(
             'modhelp', help='Extension module help')
         sp_ext_modhelp.add_argument(
-            'm', help='Extension module', metavar='EXT_MOD')
+            'm', help='Extension module',
+            metavar='EXT_MOD').completer = self.ComplExtMods(self)
         sp_ext_modhelp.add_argument(
             'c',
             help='Help context (cfg, functions)',
