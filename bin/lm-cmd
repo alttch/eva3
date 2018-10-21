@@ -134,7 +134,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             opts = []
-            if not kwargs.get('ignore_p') and hasattr(kwargs.get('parsed_args'), 'p'):
+            if not kwargs.get('ignore_p') and hasattr(
+                    kwargs.get('parsed_args'), 'p'):
                 p = kwargs.get('parsed_args').p
                 if p:
                     opts = ['-p', p]
