@@ -73,17 +73,6 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_test = self.sp.add_parser('test', help='Test notifier')
         ap_test.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
 
-        ap_unsubscribe = self.sp.add_parser(
-            'unsubscribe', help='Unsubscribe notifier')
-        ap_unsubscribe.add_argument(
-            's',
-            help='Notification subject (if empty - unsubscribe from all)',
-            metavar='SUBJECT',
-            nargs='?',
-            choices=['log', 'state', 'action'])
-        ap_unsubscribe.add_argument(
-            'i', help='Notifier ID', metavar='NOTIFIER_ID')
-
         ap_subscribe = self.sp.add_parser(
             'subscribe', help='Subscribe notifier')
         sp_subscribe = ap_subscribe.add_subparsers(
@@ -166,6 +155,18 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             help='Item groups, comma separated or # for all',
             dest='g',
             metavar='GROUPS')
+
+        ap_unsubscribe = self.sp.add_parser(
+            'unsubscribe', help='Unsubscribe notifier')
+        ap_unsubscribe.add_argument(
+            's',
+            help='Notification subject (if empty - unsubscribe from all)',
+            metavar='SUBJECT',
+            nargs='?',
+            choices=['log', 'state', 'action'])
+        ap_unsubscribe.add_argument(
+            'i', help='Notifier ID', metavar='NOTIFIER_ID')
+
 
         ap_destroy = self.sp.add_parser('destroy', help='Destroy notifier')
         ap_destroy.add_argument('i', help='Notifier ID', metavar='NOTIFIER_ID')
