@@ -163,6 +163,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 ['rule', 'props', kwargs.get('parsed_args').i])
             if code: return True
             result = list(data.keys())
+            result.append('oid')
             return result
 
     class ComplRulePropVal(ComplGeneric):
@@ -180,19 +181,16 @@ class LM_CLI(GenericCLI, ControllerCLI):
             if p == 'for_item_group':
                 kwargs['ignore_p'] = True
                 result = self.cli.ComplRemoteGroup(self.cli)(prefix, **kwargs)
+                result += self.cli.ComplLVARGroup(self.cli)(prefix, **kwargs)
                 result.append('#')
                 return result
-            if p == 'for_item_id':
-                code, data = self.cli.call('remote')
-                if code: return True
-                result = []
-                for d in data:
-                    result.append(d['id'])
-                return result
-            if p == 'for_oid':
+            if p in ['for_oid', 'oid']:
                 if prefix.find(':') == -1:
                     return ['unit:', 'sensor:', 'lvar:']
-                code, data = self.cli.call('remote')
+                if prefix.startswith('lvar:'):
+                    code, data = self.cli.call('state -p lvar')
+                else:
+                    code, data = self.cli.call('remote')
                 if code: return True
                 result = []
                 for d in data:
