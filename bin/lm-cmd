@@ -62,12 +62,18 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
     class ComplMacro(ComplGeneric):
 
+        def __init__(self, cli, with_common=False):
+            self.with_common = with_common
+            super().__init__(cli)
+
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('macro list')
             if code: return True
             result = set()
             for v in data:
                 result.add(v['id'])
+            if self.with_common:
+                result.add('common.py')
             return list(result)
 
     class ComplMacroGroup(ComplGeneric):
@@ -609,7 +615,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         ap_edit = sp_macro.add_parser('edit', help='Edit macro code')
         ap_edit.add_argument(
             'i', help='Macro ID (common.py for common code)',
-            metavar='ID').completer = self.ComplMacro(self)
+            metavar='ID').completer = self.ComplMacro(
+                self, with_common=True)
 
         sp_macro_list_props = sp_macro.add_parser(
             'props', help='List macro config props')
@@ -695,7 +702,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_edit_macro = sp_edit.add_parser('macro', help='Edit macro code')
         sp_edit_macro.add_argument(
             'i', help='Macro ID (common.py for common code)',
-            metavar='ID').completer = self.ComplMacro(self)
+            metavar='ID').completer = self.ComplMacro(
+                self, with_common=True)
 
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')
