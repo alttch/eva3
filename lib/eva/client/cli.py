@@ -664,7 +664,9 @@ class GenericCLI(object):
                     self.colored(
                         idxcol + out[0][len(idxcol):], color='blue', attrs=[]))
                 print(self.colored('-' * len(out[0]), color='grey'))
-                for o in out[2:]:
+                # dirty hack for old pandas ver
+                x = 2 if out[1].startswith(idxcol + ' ') else 1
+                for o in out[x:]:
                     s = re.sub('^NaN', '   ', o)
                     if api_func == 'log_get': s = self.format_log_str(s)
                     print(s)
