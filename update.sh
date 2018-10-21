@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
-    echo "Please run this script as root"
-    exit 98
-fi
+#if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
+    #echo "Please run this script as root"
+    #exit 98
+#fi
 
 VERSION=3.1.1
 BUILD=2018102111
