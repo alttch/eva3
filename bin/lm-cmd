@@ -72,6 +72,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             result = set()
             for v in data:
                 result.add(v['id'])
+                result.add(v['full_id'])
             if self.with_common:
                 result.add('common.py')
             return list(result)

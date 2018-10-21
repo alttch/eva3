@@ -550,7 +550,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
             dest='_func', metavar='func', help='Cloning commands')
 
         sp_clone_item = sp_clone.add_parser('item', help='Clone single item')
-        sp_clone_item.add_argument('i', help='Item ID', metavar='ID')
+        sp_clone_item.add_argument(
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
         sp_clone_item.add_argument(
             'n', help='New item ID (short)', metavar='ID')
         sp_clone_item.add_argument(
@@ -558,7 +560,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             '--group',
             help='Group for new item',
             metavar='GROUP',
-            dest='g').completer = self.ComplItemGroupList(self)
+            dest='g')
         sp_clone_item.add_argument(
             '-y',
             '--save',
