@@ -156,7 +156,7 @@ class CMDAPI(object):
             try:
                 _args = tuple(shlex.split(str(args)))
             except:
-                _args = tuple(args.split(' '))
+                _args = tuple(str(args).split(' '))
         else:
             _args = ()
         _c = CMD(cmd, _args, timeout)

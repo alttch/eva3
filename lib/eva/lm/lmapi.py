@@ -143,11 +143,13 @@ class LM_API(GenericAPI):
         else:
             if isinstance(args, list):
                 ar = args
-            else:
+            elif isinstance(args, str):
                 try:
-                    ar = shlex.split(str(args))
+                    ar = shlex.split(args)
                 except:
                     ar = args.split(' ')
+            else:
+                ar = [args]
         return eva.lm.controller.exec_macro(
             macro=macro,
             argv=ar,
