@@ -265,7 +265,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
     def setup_parser(self):
         super().setup_parser()
-        self.enable_controller_management_functions('uc')
+        self.enable_controller_management_functions('sfa')
 
     def add_functions(self):
         super().add_functions()
