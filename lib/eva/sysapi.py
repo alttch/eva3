@@ -154,7 +154,7 @@ class CMDAPI(object):
             return None
         if args is not None:
             try:
-                _args = tuple(shlex.split(args))
+                _args = tuple(shlex.split(str(args)))
             except:
                 _args = tuple(args.split(' '))
         else:

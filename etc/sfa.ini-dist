@@ -5,7 +5,7 @@
 polldelay = 0.01
 ; pid file (default var/sfa.pid)
 pid_file = var/sfa.pid
-; log file (default log/sfa.log)
+; log file
 log_file = log/sfa.log
 ; db updates - instant, manual or on_exit
 db_update = instant

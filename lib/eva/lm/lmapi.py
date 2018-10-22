@@ -145,7 +145,7 @@ class LM_API(GenericAPI):
                 ar = args
             else:
                 try:
-                    ar = shlex.split(args)
+                    ar = shlex.split(str(args))
                 except:
                     ar = args.split(' ')
         return eva.lm.controller.exec_macro(

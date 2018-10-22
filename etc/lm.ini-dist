@@ -5,7 +5,7 @@
 polldelay = 0.01
 ; pid file (default var/lm.pid)
 pid_file = var/lm.pid
-; log file (default log/lm.log)
+; log file
 log_file = log/lm.log
 ; db updates - instant, manual or on_exit
 db_update = instant
