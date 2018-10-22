@@ -116,7 +116,13 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             if code: return True
             result = set()
             for v in data:
-                result.add(v['full_id'])
+                if prefix.startswith('unit:'):
+                    result.add(v['oid'])
+                else:
+                    if v['full_id'].startswith(prefix):
+                        result.add(v['full_id'])
+            if not result:
+                result.add('unit:')
             return list(result)
 
     class ComplUnitGroup(ComplGeneric):
@@ -136,7 +142,13 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             if code: return True
             result = set()
             for v in data:
-                result.add(v['full_id'])
+                if prefix.startswith('lvar:'):
+                    result.add(v['oid'])
+                else:
+                    if v['full_id'].startswith(prefix):
+                        result.add(v['full_id'])
+            if not result:
+                result.add('lvar:')
             return list(result)
 
     class ComplMacro(ComplGeneric):
