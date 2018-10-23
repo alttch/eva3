@@ -281,6 +281,15 @@ class ManagementCLI(GenericCLI):
             self.local_func_result_failed
 
     def start_shell(self, p, x='-cmd', xp=''):
+        sst = p
+        result = False
+        while sst:
+            result = self.do_start_shell(sst, x, xp)
+            if not result: break
+            sst = eva.client.cli.shell_switch_to
+        return result
+
+    def do_start_shell(self, p, x='-cmd', xp=''):
         try:
             c = open('{}/{}{}'.format(dir_bin, p, x)).read()
             sysargs = ['{}/{}{}'.format(dir_bin, p, x), '-I']
@@ -291,12 +300,17 @@ class ManagementCLI(GenericCLI):
             c = """import sys
 import eva.client.cli
 eva.client.cli.say_bye = False
-eva.client.cli.parent_shell_name = 'eva:{}'
-eva.client.cli.readline_processing = {}
-sys.argv = {}
-{}
+eva.client.cli.parent_shell_name = 'eva:{nodename}'
+eva.client.cli.shells_available = {shells_available}
+eva.client.cli.readline_processing = {rlp}
+sys.argv = {argv}
+{xp}
 
-""".format(self.nodename, not interactive_mode, sysargs, xp) + c
+""".format(nodename=self.nodename,
+            shells_available=self.products_configured if x=='-cmd' else [],
+            rlp=not interactive_mode,
+            argv=sysargs,
+            xp=xp) + c
             try:
                 exec(c)
             except SystemExit:

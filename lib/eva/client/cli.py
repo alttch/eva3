@@ -26,6 +26,9 @@ say_bye = True
 readline_processing = True if \
         not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
 parent_shell_name = None
+shells_available = []
+
+shell_switch_to = None
 
 history_length = 300
 history_file = os.path.expanduser('~') + '/.eva_history'
@@ -968,6 +971,7 @@ class GenericCLI(object):
             return self.do_run()
         else:
             # interactive mode
+            globals()['shell_switch_to'] = None
             self.start_interactive()
             while True:
                 parsed = None
@@ -999,6 +1003,13 @@ class GenericCLI(object):
                     if d[0] in ['q', 'quit', 'exit', 'bye'] or \
                             (d[0] in ['..', '/'] and parent_shell_name):
                         self.finish_interactive()
+                        return 0
+                    if parent_shell_name and d[0] in shells_available:
+                        globals()['shell_switch_to'] = d[0]
+                        return 0
+                    if parent_shell_name and d[0].startswith(
+                            '/') and d[0][1:] in shells_available:
+                        globals()['shell_switch_to'] = d[0][1:]
                         return 0
                     if (d[0] == 'k.' or d[0] == 'c.') and self.remote_api:
                         self.apikey = None
