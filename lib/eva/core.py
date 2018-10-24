@@ -379,10 +379,11 @@ def load(fname=None, initial=False, init_log=True):
                 return None
             except:
                 pass
-            try:
-                log_file = cfg.get('server', 'log_file')
-            except:
-                log_file = None
+            if not os.environ.get('EVA_CORE_LOG_STDOUT'):
+                try:
+                    log_file = cfg.get('server', 'log_file')
+                except:
+                    log_file = None
             if log_file and log_file[0] != '/':
                 log_file = dir_eva + '/' + log_file
             if init_log: reset_log(initial)
@@ -405,7 +406,8 @@ def load(fname=None, initial=False, init_log=True):
                     show_traceback = False
             if not development and not debug:
                 try:
-                    debug = (cfg.get('server', 'debug') == 'yes')
+                    if os.environ.get('EVA_CORE_DEBUG'): debug = True
+                    else: debug = (cfg.get('server', 'debug') == 'yes')
                     if debug: debug_on()
                 except:
                     pass
