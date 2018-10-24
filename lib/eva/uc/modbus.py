@@ -199,8 +199,8 @@ class ModbusPort(object):
                         raise Exception('bits not in range 1..8')
                     if parity not in ['N', 'E', 'O', 'M', 'S']:
                         raise Exception('parity should be: N, E, O, M or S')
-                    if stopbits < 1 or stopbits > 8:
-                        raise Exception('stopbits not in range 1..8')
+                    if stopbits < 1 or stopbits > 2:
+                        raise Exception('stopbits not in range 1..2')
                     self.client = ModbusSerialClient(
                         method=p[0],
                         port=port,
