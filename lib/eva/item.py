@@ -1567,7 +1567,10 @@ class ItemAction(GenericAction):
             logging.debug('action %s created, %s: %s' % \
                 (self.uuid, self.item.item_type,
                     self.item.full_id))
-            eva.notify.notify('action', self)
+            t = threading.Thread(
+                target=eva.notify.notify, args=('action', self._copy()))
+            t.setDaemon(True)
+            t.start()
         self.item_action_lock.release()
 
     def __cmp__(self, other):
@@ -1581,6 +1584,9 @@ class ItemAction(GenericAction):
 
     def get_status_name(self):
         return ia_status_names[self.get_status()]
+
+    def _set_status_only(self, status):
+        super().set_status(status)
 
     def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
         if lock:
@@ -1614,7 +1620,10 @@ class ItemAction(GenericAction):
             self.err = err
         logging.debug('action %s new status: %s' % \
                 (self.uuid, ia_status_names[status]))
-        eva.notify.notify('action', self)
+        t = threading.Thread(
+            target=eva.notify.notify, args=('action', self._copy()))
+        t.setDaemon(True)
+        t.start()
         if lock: self.item_action_lock.release()
         return True
 
@@ -1651,9 +1660,14 @@ class ItemAction(GenericAction):
     def action_env(self):
         return {}
 
-    def copy(self):
-        result = copy.copy(self)
-        result.item = copy.copy(self.item)
+    def _copy(self):
+        result = ItemAction(None, self.priority, self.uuid)
+        result._set_status_only(self.get_status())
+        result.time = self.time.copy()
+        result.item = self.item.copy()
+        result.exitcode = self.exitcode
+        result.out = self.out
+        result.err = self.err
         return result
 
     def kill(self):

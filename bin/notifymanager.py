@@ -52,6 +52,10 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                                                itype)
         return self.prepare_controller_status_dict(data)
 
+    def setup_parser(self):
+        super().setup_parser()
+        self.enable_controller_management_functions(eva.core.product_name)
+
     def add_functions(self):
         super().add_functions()
         self.add_notifier_common_functions()
