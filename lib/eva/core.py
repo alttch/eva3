@@ -406,7 +406,9 @@ def load(fname=None, initial=False, init_log=True):
                     show_traceback = False
             if not development and not debug:
                 try:
-                    if os.environ.get('EVA_CORE_DEBUG'): debug = True
+                    if os.environ.get('EVA_CORE_DEBUG'):
+                        debug = True
+                        show_traceback = True
                     else: debug = (cfg.get('server', 'debug') == 'yes')
                     if debug: debug_on()
                 except:
