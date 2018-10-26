@@ -22,6 +22,9 @@ import inspect
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
 
+from evacpp.evacpp import action_wait_for_processed as _action_wait_for_processed
+from evacpp.evacpp import action_wait_for_finished as _action_wait_for_finished
+
 from eva.logs import MemoryLogHandler
 
 version = __version__
@@ -409,7 +412,8 @@ def load(fname=None, initial=False, init_log=True):
                     if os.environ.get('EVA_CORE_DEBUG'):
                         debug = True
                         show_traceback = True
-                    else: debug = (cfg.get('server', 'debug') == 'yes')
+                    else:
+                        debug = (cfg.get('server', 'debug') == 'yes')
                     if debug: debug_on()
                 except:
                     pass
@@ -475,6 +479,7 @@ def load(fname=None, initial=False, init_log=True):
             timeout = float(cfg.get('server', 'timeout'))
         except:
             pass
+        if not polldelay: polldelay = 0.01
         logging.debug('server.timeout = %s' % timeout)
         logging.debug('server.polldelay = %s  ( %s msec )' % \
                                             (polldelay, int(polldelay * 1000)))
@@ -634,6 +639,24 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     if delay: p = delay
     else: p = polldelay
     return _wait_for(func, t, p, wait_for_false)
+
+
+def action_wait_for_processed(a, wait_timeout=None, delay=None):
+    if wait_timeout: t = wait_timeout
+    else: t = timeout
+    if delay: p = delay
+    else: p = polldelay
+    return _action_wait_for_processed(a, t, p)
+    # return _wait_for(a.is_processed, t, p)
+
+
+def action_wait_for_finished(a, wait_timeout=None, delay=None):
+    if wait_timeout: t = wait_timeout
+    else: t = timeout
+    if delay: p = delay
+    else: p = polldelay
+    return _action_wait_for_finished(a, t, p)
+    # return _wait_for(a.is_finished, t, p)
 
 
 def log_traceback(display=False, notifier=False, force=False):

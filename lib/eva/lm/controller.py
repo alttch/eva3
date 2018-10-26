@@ -689,10 +689,10 @@ def exec_macro(macro,
         action_uuid=action_uuid,
         source=source)
     Q.put_task(a)
-    if not eva.core.wait_for(a.is_processed, q_timeout):
+    if not eva.core.action_wait_for_processed(a, q_timeout):
         if a.set_dead():
             return a
-    if wait: eva.core.wait_for(a.is_finished, wait)
+    if wait: eva.core.action_wait_for_finished(a, wait)
     return a
 
 

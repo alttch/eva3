@@ -735,10 +735,10 @@ def exec_unit_action(unit,
     else: qt = eva.core.timeout
     a = u.create_action(_s, nvalue, priority, action_uuid)
     Q.put_task(a)
-    if not eva.core.wait_for(a.is_processed, q_timeout):
+    if not eva.core.action_wait_for_processed(a, q_timeout):
         if a.set_dead():
             return a
-    if wait: eva.core.wait_for(a.is_finished, wait)
+    if wait: eva.core.action_wait_for_finished(a, wait)
     return a
 
 

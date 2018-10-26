@@ -20,7 +20,8 @@ from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.tools import is_oid
 from eva.tools import parse_oid
-from eva.generic import GenericAction
+from evacpp.evacpp import GenericAction
+# from eva.generic import GenericAction
 
 from eva.generic import ia_status_created
 from eva.generic import ia_status_pending
@@ -1566,7 +1567,7 @@ class ItemAction(GenericAction):
             logging.debug('action %s created, %s: %s' % \
                 (self.uuid, self.item.item_type,
                     self.item.full_id))
-            eva.notify.notify('action', self.copy())
+            eva.notify.notify('action', self)
         self.item_action_lock.release()
 
     def __cmp__(self, other):
@@ -1613,7 +1614,7 @@ class ItemAction(GenericAction):
             self.err = err
         logging.debug('action %s new status: %s' % \
                 (self.uuid, ia_status_names[status]))
-        eva.notify.notify('action', self.copy())
+        eva.notify.notify('action', self)
         if lock: self.item_action_lock.release()
         return True
 
