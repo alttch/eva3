@@ -106,11 +106,11 @@ bool action_wait_for(GenericAction *a, bool (*fptr)(GenericAction*), float timeo
 }
 
 bool fw_action_is_processed(GenericAction* a) {
-    return static_cast<GenericAction*>(a)->is_processed();
+    return dynamic_cast<GenericAction*>(a)->is_processed();
 }
 
 bool fw_action_is_finished(GenericAction* a) {
-    return static_cast<GenericAction*>(a)->is_finished();
+    return dynamic_cast<GenericAction*>(a)->is_finished();
 }
 
 bool action_wait_for_processed(GenericAction *a, float timeout, float delay) {
