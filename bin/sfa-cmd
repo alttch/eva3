@@ -258,7 +258,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                           itype, a)
 
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
-        if itype not in ['status']:
+        if api_func != 'status_controller':
             return super().prepare_result_dict(data, api_func, api_func_full,
                                                itype)
         return self.prepare_controller_status_dict(data)
