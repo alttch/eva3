@@ -19,6 +19,8 @@ import threading
 import gzip
 import inspect
 
+hs = True
+
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
 
@@ -646,8 +648,10 @@ def action_wait_for_processed(a, wait_timeout=None, delay=None):
     else: t = timeout
     if delay: p = delay
     else: p = polldelay
-    return _action_wait_for_processed(a, t, p)
-    # return _wait_for(a.is_processed, t, p)
+    if hs:
+        return _action_wait_for_processed(a, t, p)
+    else:
+        return _wait_for(a.is_processed, t, p)
 
 
 def action_wait_for_finished(a, wait_timeout=None, delay=None):
@@ -655,8 +659,10 @@ def action_wait_for_finished(a, wait_timeout=None, delay=None):
     else: t = timeout
     if delay: p = delay
     else: p = polldelay
-    return _action_wait_for_finished(a, t, p)
-    # return _wait_for(a.is_finished, t, p)
+    if hs:
+        return _action_wait_for_finished(a, t, p)
+    else:
+        return _wait_for(a.is_finished, t, p)
 
 
 def log_traceback(display=False, notifier=False, force=False):
