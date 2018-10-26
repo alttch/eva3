@@ -26,10 +26,10 @@ class GenericAction(object):
 
     def is_finished(self):
         return self._status in [
-            eva.item.ia_status_refused, eva.item.ia_status_dead,
-            eva.item.ia_status_canceled, eva.item.ia_status_ignored,
-            eva.item.ia_status_failed, eva.item.ia_status_terminated,
-            eva.item.ia_status_completed
+            ia_status_refused, ia_status_dead,
+            ia_status_canceled, ia_status_ignored,
+            ia_status_failed, ia_status_terminated,
+            ia_status_completed
         ]
 
     def is_status_created(self):

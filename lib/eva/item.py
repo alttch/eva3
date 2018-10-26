@@ -22,6 +22,18 @@ from eva.tools import is_oid
 from eva.tools import parse_oid
 from eva.generic import GenericAction
 
+from eva.generic import ia_status_created
+from eva.generic import ia_status_pending
+from eva.generic import ia_status_queued
+from eva.generic import ia_status_refused
+from eva.generic import ia_status_dead
+from eva.generic import ia_status_canceled
+from eva.generic import ia_status_ignored
+from eva.generic import ia_status_running
+from eva.generic import ia_status_failed
+from eva.generic import ia_status_terminated
+from eva.generic import ia_status_completed
+
 
 class Item(object):
 
@@ -1533,6 +1545,7 @@ ia_default_priority = 100
 class ItemAction(GenericAction):
 
     def __init__(self, item, priority=None, action_uuid=None):
+        super().__init__()
         self.item_action_lock = threading.Lock()
         if not self.item_action_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::__init___ locking broken')
