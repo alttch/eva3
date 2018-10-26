@@ -475,6 +475,7 @@ def load(fname=None, initial=False, init_log=True):
             timeout = float(cfg.get('server', 'timeout'))
         except:
             pass
+        if not polldelay: polldelay = 0.01
         logging.debug('server.timeout = %s' % timeout)
         logging.debug('server.polldelay = %s  ( %s msec )' % \
                                             (polldelay, int(polldelay * 1000)))
