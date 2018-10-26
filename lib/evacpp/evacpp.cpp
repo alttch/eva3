@@ -93,28 +93,32 @@ class GenericAction {
         }
 };
 
-bool action_wait_for_processed(GenericAction *a, float timeout, float delay) {
+bool action_wait_for(GenericAction *a, bool (*fptr)(GenericAction*), float timeout, float delay) {
     Py_BEGIN_ALLOW_THREADS
     int i = 0;
     float wait_loops = timeout / delay;
     float ts = delay * 1000000;
-    while (!a->is_processed() && (i++ < wait_loops)) {
+    while (!fptr(a) && (i++ < wait_loops)) {
         usleep(ts);
     }
     Py_END_ALLOW_THREADS
-    return a->is_processed();
+    return fptr(a);
+}
+
+bool fw_action_is_processed(GenericAction* a) {
+    return static_cast<GenericAction*>(a)->is_processed();
+}
+
+bool fw_action_is_finished(GenericAction* a) {
+    return static_cast<GenericAction*>(a)->is_finished();
+}
+
+bool action_wait_for_processed(GenericAction *a, float timeout, float delay) {
+    return action_wait_for(a, &fw_action_is_processed, timeout, delay);
 }
 
 bool action_wait_for_finished(GenericAction *a, float timeout, float delay) {
-    Py_BEGIN_ALLOW_THREADS
-    int i = 0;
-    float wait_loops = timeout / delay;
-    float ts = delay * 1000000;
-    while (!a->is_finished() && (i++ < wait_loops)) {
-        usleep(ts);
-    }
-    Py_END_ALLOW_THREADS   
-    return a->is_finished();
+    return action_wait_for(a, &fw_action_is_finished, timeout, delay);
 }
 
 using namespace boost::python;
