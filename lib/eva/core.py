@@ -631,8 +631,7 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     else: t = timeout
     if delay: p = delay
     else: p = polldelay
-    return _wait_for(
-        func=func, wait_timeout=t, delay=p, wait_for_false=wait_for_false)
+    return _wait_for(func, t, p, wait_for_false)
 
 
 def log_traceback(display=False, notifier=False, force=False):
