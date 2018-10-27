@@ -45,6 +45,8 @@ _notifier_client_cleaner_active = False
 
 _notifier_client_cleaner = None
 
+action_subscribed = False
+
 
 class Event(object):
 
@@ -174,6 +176,7 @@ class GenericNotifier(object):
                   item_types=[],
                   action_status=[],
                   log_level=None):
+        global action_subscribed
         _e = self.is_subscribed(subject)
         if subject == 'state':
             if _e: self.events.remove(_e)
@@ -187,6 +190,8 @@ class GenericNotifier(object):
                 item_types=item_types,
                 action_status=action_status)
             self.events.add(e)
+            if self.enabled:
+                action_subscribed = True
         elif subject == 'log':
             if log_level is not None:
                 try:
