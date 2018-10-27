@@ -46,15 +46,15 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             result = list(data.keys())
             return result
 
+    def setup_parser(self):
+        super().setup_parser()
+        self.enable_controller_management_functions(eva.core.product_code)
+
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
         if api_func != 'status_controller':
             return super().prepare_result_dict(data, api_func, api_func_full,
                                                itype)
         return self.prepare_controller_status_dict(data)
-
-    def setup_parser(self):
-        super().setup_parser()
-        self.enable_controller_management_functions(eva.core.product_name)
 
     def add_functions(self):
         super().add_functions()
@@ -480,6 +480,8 @@ try:
 except:
     product = os.environ['EVA_PRODUCT']
 
+eva.core.set_product(product, '-1')
+
 _me = 'EVA ICS Notification System Manager CLI for %s version %s' % (
     product.upper(), __version__)
 
@@ -521,12 +523,10 @@ _fancy_tabsp = {'list_props': 26, 'get_phi': 14, 'get_driver': 12}
 
 _always_json = ['get_notifier_config']
 
-eva.core.set_product(product, '-1')
 cli.ap.prog = '%s-notifier' % product
 cli.always_json += _always_json
 cli.arg_sections += ['subscribe']
 cli.set_api_functions(_api_functions)
-cli.enable_controller_management_functions(product)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_tabsp(_fancy_tabsp)
