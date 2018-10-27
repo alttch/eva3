@@ -109,4 +109,17 @@ eva.uc.controller.start()
 if eva.core.notify_on_start: eva.uc.controller.notify_all()
 
 eva.api.start()
+
+import cherrypy, jsonpickle
+req = jsonpickle.encode({
+    'k':
+    'c31854193a16906f5ceee99928259ab071a5aeb0b450517fd09e656dece048d1'
+})
+
+cherrypy.serving.request.app = cherrypy.tree.apps.get('/uc-api')
+
+print(
+    cherrypy.request.run('GET', '/uc-api/test', '', 'HTTP/1.0',
+                         [('X-JSON', req), ('X-Real-IP', 'eva-mqtt-gw')], None).body)
+
 eva.core.block()

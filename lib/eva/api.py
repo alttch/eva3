@@ -142,15 +142,17 @@ def http_remote_info(k=None):
 
 
 def cp_json_pre():
-    ct = cherrypy.request.headers.get('Content-Type')
-    if ct == 'application/json':
-        try:
+    try:
+        if cherrypy.request.headers.get('Content-Type') == 'application/json':
             cl = int(cherrypy.request.headers.get('Content-Length'))
-            rawbody = cherrypy.request.body.read(cl)
-            cherrypy.serving.request.params.update(
-                jsonpickle.decode(rawbody.decode()))
-        except:
-            raise cp_api_error('invalid JSON data')
+            raw = cherrypy.request.body.read(cl).decode()
+        elif 'X-JSON' in cherrypy.request.headers:
+            raw = cherrypy.request.headers.get('X-JSON')
+        else:
+            return
+        cherrypy.serving.request.params.update(jsonpickle.decode(raw))
+    except:
+        raise cp_api_error('invalid JSON data')
     return
 
 
@@ -385,7 +387,7 @@ def cp_client_key(_k=None):
             k = cherrypy.session.get('k')
         except:
             k = None
-        if k is None: k = eva.apikey.key_by_ip_address(http_real_ip())
+        if k is None: k = eva.apikey.key_by_ip_address(cherrypy.request.remote.ip)
     return k
 
 
