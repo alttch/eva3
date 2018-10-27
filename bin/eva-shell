@@ -526,7 +526,7 @@ sys.argv = {argv}
         try:
             r = requests.get(_update_repo + '/update_info.json', timeout=5)
             if r.status_code != 200:
-                raise ('HTTP ERROR')
+                raise Exception('HTTP ERROR')
             result = jsonpickle.decode(r.text)
             new_build = int(result['build'])
             new_version = result['version']

@@ -9,10 +9,14 @@ import uuid
 import logging
 import configparser
 import copy
+import base64
+import hashlib
+from cryptography.fernet import Fernet
+from netaddr import IPNetwork
+
 import eva.core
 import eva.item
 
-from netaddr import IPNetwork
 from eva.tools import netacl_match
 from eva.tools import val_to_boolean
 
@@ -29,7 +33,6 @@ keys_to_delete = set()
 class APIKey(object):
 
     def __init__(self, k, key_id=''):
-        self.key = k
         self.key_id = key_id
         self.master = False
         self.sysfunc = False
@@ -43,6 +46,7 @@ class APIKey(object):
         self.config_changed = False
         self.in_db = False
         self.dynamic = False
+        self.set_key(k)
 
     def serialize(self):
         result = {
@@ -60,6 +64,11 @@ class APIKey(object):
         result['hosts_assign'] = [str(i) for i in self.hosts_assign]
         result['dynamic'] = self.dynamic
         return result
+
+    def set_key(self, k):
+        self.key = k
+        _k = base64.b64encode(hashlib.sha256(str(k).encode()).digest())
+        self.ce = Fernet(_k)
 
     def set_prop(self, prop, value=None, save=False):
         if not self.dynamic: return False
@@ -198,8 +207,7 @@ class APIKey(object):
             else:
                 c.execute(
                     'update apikeys set k=?, s=?, i=?, g=?, a=?,' + \
-                            ' hal=?, has=?, pvt=?,\
-                             rpvt=? where k_id=?',
+                            ' hal=?, has=?, pvt=?, rpvt=? where k_id=?',
                     (self.key, data['sysfunc'], data['items'], data['groups'],
                      data['allow'], data['hosts_allow'], data['hosts_assign'],
                      data['pvt'], data['rpvt'], data['id']))
@@ -333,7 +341,12 @@ def load(fname=None):
 
 def key_by_id(key_id):
     return None if not key_id or not key_id in keys_by_id else \
-                                                keys_by_id[key_id].key
+        keys_by_id[key_id].key
+
+
+def key_ce(key_id):
+    return None if not key_id or not key_id in keys_by_id else \
+        keys_by_id[key_id].ce
 
 
 def key_id(k):
@@ -477,7 +490,7 @@ def regenerate_key(key_id, save=False):
         return False
     key = keys_by_id[key_id]
     old_key = key.key
-    key.key = gen_random_hash()
+    key.set_key(gen_random_hash())
     keys[key.key] = keys.pop(old_key)
     key.set_modified(save)
     return key.key

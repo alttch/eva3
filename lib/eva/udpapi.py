@@ -178,6 +178,7 @@ def _t_dispatcher(host, port):
         try:
             data, address = server_socket.recvfrom(256)
             if not _t_dispatcher_active: return
+            if not data: continue
             address = address[0]
             logging.debug('UDP API cmd from %s' % address)
             if not check_access(address, data):
@@ -210,15 +211,13 @@ def _t_dispatcher(host, port):
             if data[0] == '|':
                 try:
                     x, api_key_id, data = data.split('|', 2)
-                    api_key = apikey.key_by_id(api_key_id)
-                    if api_key is None:
+                    ce = apikey.key_ce(api_key_id)
+                    if ce is None:
                         logging.warning('UDP API: invalid api key id in' + \
                                 ' encrypted packet from %s' % address)
                         continue
-                    _k = base64.b64encode(
-                        hashlib.sha256(api_key.encode()).digest())
                     try:
-                        data = Fernet(_k).decrypt(data.encode()).decode()
+                        data = ce.decrypt(data.encode()).decode()
                     except:
                         logging.warning('UDP API: invalid api key in' + \
                                 ' encrypted packet from %s' % address)

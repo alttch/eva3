@@ -473,23 +473,38 @@ class GenericHTTP_API(GenericAPI):
 
 def mqtt_api_handler(notifier_id, data):
     try:
-        call_id, api_type, api_func, api_key_id, api_data = data.split('|', 4)
+        if not data or data[0] != '|':
+            raise Exception('invalid data')
+        pfx, api_key_id, d = data.split('|', 2)
+        try:
+            ce = apikey.key_ce(api_key_id)
+            if ce is None:
+                raise Exception('invalid key')
+            d = ce.decrypt(d.encode()).decode()
+            call_id, api_type, api_func, api_data = d.split('|', 3)
+        except:
+            logging.warning(
+                'MQTT API: invalid api key in encrypted packet from ' +
+                notifier_id)
+            raise
+            return
         app = cherrypy.serving.request.app = cherrypy.tree.apps.get(
             '/%s-api' % api_type)
-        if not app: raise ("Invalid app")
+        if not app: raise Exception("Invalid app")
         cherrypy.serving.request._eva_ics_gw = 'mqtt'
         try:
             cherrypy.serving.session = cherrypy.lib.sessions.RamSession()
-            r = cherrypy.serving.response
-            r.status = None
+            cherrypy.serving.response.status = None
             cherrypy.serving.request.run(
                 'GET', '/{}-api/{}'.format(api_type, api_func), '', 'HTTP/1.0',
                 [('X-JSON', api_data)], None)
         except:
             eva.notify.get_notifier(notifier_id).send_api_response(
                 call_id, '500|')
+        response = ce.encrypt(cherrypy.serving.response.body[0]).decode()
         eva.notify.get_notifier(notifier_id).send_api_response(
-                call_id, r.status.split()[0] + '|' + r.body[0].decode())
+            call_id,
+            cherrypy.serving.response.status.split()[0] + '|' + response)
     except:
         logging.warning('MQTT API: invalid data from ' + notifier_id)
         eva.core.log_traceback()
