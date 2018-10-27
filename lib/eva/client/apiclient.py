@@ -31,8 +31,8 @@ _sysapi_func = [
     'enable_notifier', 'disable_notifier', 'save', 'get_cvar', 'set_cvar',
     'set_debug', 'setup_mode', 'file_unlink', 'file_get', 'file_put',
     'file_set_exec', 'create_user', 'set_user_password', 'set_user_key',
-    'destroy_user', 'list_keys', 'create_key', 'list_key_props',
-    'set_key_prop', 'destroy_key', 'regenerate_key', 'list_users', 'dump'
+    'destroy_user', 'list_keys', 'create_key', 'list_key_props', 'set_key_prop',
+    'destroy_key', 'regenerate_key', 'list_users', 'dump'
 ]
 
 _sysapi_func_cr = [
@@ -164,6 +164,13 @@ class APIClient(object):
     def ssl_verify(self, v):
         self._ssl_verify = v
 
+    def do_call(self, api_uri, func, p, t):
+        return requests.post(
+            self._uri + api_uri + func,
+            json=p,
+            timeout=t,
+            verify=self._ssl_verify)
+
     def call(self,
              func,
              params=None,
@@ -202,11 +209,7 @@ class APIClient(object):
         if self._key is not None and 'k' not in p:
             p['k'] = self._key
         try:
-            r = requests.post(
-                self._uri + api_uri + func,
-                json=p,
-                timeout=t,
-                verify=self._ssl_verify)
+            r = self.do_call(api_uri, func, p, t)
         except requests.Timeout:
             return (result_server_timeout, {}) if \
                     not _return_raw else (-1, {})
