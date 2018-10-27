@@ -43,6 +43,8 @@ thread_pool = 15
 
 session_timeout = 3600
 
+use_x_real_ip = False
+
 
 def http_api_result(result, env):
     result = {'result': result}
@@ -63,6 +65,7 @@ def update_config(cfg):
     global host, port, ssl_host, ssl_port
     global ssl_module, ssl_cert, ssl_key, ssl_chain
     global session_timeout, thread_pool, ei_enabled
+    global use_x_real_ip
     try:
         host, port = parse_host_port(cfg.get('webapi', 'listen'), default_port)
         logging.debug('webapi.listen = %s:%u' % (host, port))
@@ -101,6 +104,12 @@ def update_config(cfg):
         pass
     logging.debug('webapi.ei_enabled = %s' % ('yes' \
                                 if ei_enabled else 'no'))
+    try:
+        use_x_real_ip = (cfg.get('webapi', 'x_real_ip') == 'yes')
+    except:
+        pass
+    logging.debug('webapi.x_real_ip = %s' % ('yes' \
+                                if use_x_real_ip else 'no'))
     return True
 
 
@@ -128,19 +137,19 @@ def log_api_request(func, auth=None, info=None, dev=False, debug=False):
             logging.warning(msg)
 
 
-def http_real_ip(skip_gw=False):
-    if 'X-Real-IP' in cherrypy.request.headers and \
+def http_real_ip(get_gw=False):
+    if use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
         ip = cherrypy.request.headers['X-Real-IP']
-        if ip in ['eva-mqtt-gw']:
-            ip = '127.0.0.1'
     else:
         ip = cherrypy.request.remote.ip
+    if get_gw and hasattr(cherrypy.serving.request, '_eva_ics_gw'):
+        ip = 'gateway/' + cherrypy.serving.request._eva_ics_gw
     return ip
 
 
 def http_remote_info(k=None):
-    return '%s@%s' % (apikey.key_id(k), http_real_ip(skip_gw=True))
+    return '%s@%s' % (apikey.key_id(k), http_real_ip(get_gw=True))
 
 
 def cp_json_pre():
@@ -389,7 +398,8 @@ def cp_client_key(_k=None):
             k = cherrypy.session.get('k')
         except:
             k = None
-        if k is None: k = eva.apikey.key_by_ip_address(cherrypy.request.remote.ip)
+        if k is None:
+            k = eva.apikey.key_by_ip_address(http_real_ip())
     return k
 
 

@@ -62,6 +62,8 @@ listen = 0.0.0.0:8812
 ;thread_pool = 15
 ; uncomment to disable UC EI
 ;ei_enabled = no
+; uncomment to use frontend X-Real-IP header to get client real IP address
+;x_real_ip = yes
 
 [snmptrap]
 ; snmp trap handler, default community is eva

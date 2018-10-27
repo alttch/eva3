@@ -93,6 +93,18 @@ Should I run it as root?
 API recommendations
 ===================
 
+X-Real-IP HTTP header
+---------------------
+
+HTTP API uses **X-Real-IP** header variable to determine real IP address of
+client when working behind frontend. This can be used by attacker to compromise
+real IP address and bypass *hosts_allow*/*hosts_assign* key access control
+lists. Frontend should always clear **X-Real-IP** header variable and set it to
+the real ip of remote client.
+
+**X-Real-IP** feature is disabled by default. To enable it, set param
+*x_real_ip=yes* in *webapi* section of controller configuration file.
+
 Universal Controller API keys
 -----------------------------
 
