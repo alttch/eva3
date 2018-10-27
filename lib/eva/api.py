@@ -128,17 +128,19 @@ def log_api_request(func, auth=None, info=None, dev=False, debug=False):
             logging.warning(msg)
 
 
-def http_real_ip():
+def http_real_ip(skip_gw=False):
     if 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
         ip = cherrypy.request.headers['X-Real-IP']
+        if ip in ['eva-mqtt-gw']:
+            ip = '127.0.0.1'
     else:
         ip = cherrypy.request.remote.ip
     return ip
 
 
 def http_remote_info(k=None):
-    return '%s@%s' % (apikey.key_id(k), http_real_ip())
+    return '%s@%s' % (apikey.key_id(k), http_real_ip(skip_gw=True))
 
 
 def cp_json_pre():

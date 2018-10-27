@@ -94,8 +94,11 @@ def parse_host_port(hp, default_port=None):
 
 
 def netacl_match(host, acl):
-    for a in acl:
-        if IPAddress(host) in a: return True
+    try:
+        for a in acl:
+            if IPAddress(host) in a: return True
+    except:
+        pass
     return False
 
 
