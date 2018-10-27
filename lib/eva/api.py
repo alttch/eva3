@@ -471,7 +471,7 @@ class GenericHTTP_API(GenericAPI):
         return http_api_result_ok()
 
 
-def mqtt_api_handler(notifier_id, data):
+def mqtt_api_handler(notifier_id, data, callback):
     try:
         if not data or data[0] != '|':
             raise Exception('invalid data')
@@ -499,11 +499,9 @@ def mqtt_api_handler(notifier_id, data):
                 'GET', '/{}-api/{}'.format(api_type, api_func), '', 'HTTP/1.0',
                 [('X-JSON', api_data)], None)
         except:
-            eva.notify.get_notifier(notifier_id).send_api_response(
-                call_id, '500|')
+            callback(call_id, '500|')
         response = ce.encrypt(cherrypy.serving.response.body[0]).decode()
-        eva.notify.get_notifier(notifier_id).send_api_response(
-            call_id,
+        callback(call_id,
             cherrypy.serving.response.status.split()[0] + '|' + response)
     except:
         logging.warning('MQTT API: invalid data from ' + notifier_id)

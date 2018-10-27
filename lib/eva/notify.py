@@ -1306,7 +1306,8 @@ class GenericMQTTNotifier(GenericNotifier):
         d = msg.payload.decode()
         if t == self.api_request_topic and self.api_handler:
             t = threading.Thread(
-                target=self.api_handler, args=(self.notifier_id, d))
+                target=self.api_handler,
+                args=(self.notifier_id, d, self.send_api_response))
             t.start()
             return
         if t in self.custom_handlers:
