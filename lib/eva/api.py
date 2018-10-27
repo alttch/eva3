@@ -4,7 +4,6 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.1"
 
 import cherrypy
-import eva.core
 import logging
 import threading
 import time
@@ -15,6 +14,7 @@ import dateutil
 import pytz
 import pandas as pd
 
+import eva.core
 from eva import apikey
 from eva.tools import format_json
 from eva.tools import parse_host_port
@@ -469,6 +469,31 @@ class GenericHTTP_API(GenericAPI):
     def logout(self, k=None):
         cherrypy.session['k'] = ''
         return http_api_result_ok()
+
+
+def mqtt_api_handler(notifier_id, data):
+    try:
+        call_id, api_type, api_func, api_key_id, api_data = data.split('|', 4)
+        app = cherrypy.serving.request.app = cherrypy.tree.apps.get(
+            '/%s-api' % api_type)
+        if not app: raise ("Invalid app")
+        cherrypy.serving.request._eva_ics_gw = 'mqtt'
+        try:
+            cherrypy.serving.session = cherrypy.lib.sessions.RamSession()
+            r = cherrypy.serving.response
+            r.status = None
+            cherrypy.serving.request.run(
+                'GET', '/{}-api/{}'.format(api_type, api_func), '', 'HTTP/1.0',
+                [('X-JSON', api_data)], None)
+        except:
+            eva.notify.get_notifier(notifier_id).send_api_response(
+                call_id, '500|')
+        eva.notify.get_notifier(notifier_id).send_api_response(
+                call_id, r.status.split()[0] + '|' + r.body[0].decode())
+    except:
+        logging.warning('MQTT API: invalid data from ' + notifier_id)
+        eva.core.log_traceback()
+        return
 
 
 def start():

@@ -15,6 +15,7 @@ import dateutil.parser
 import pytz
 import glob
 import os
+import sys
 import uuid
 import threading
 import sqlite3
@@ -1074,6 +1075,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  keepalive=None,
                  timeout=None,
                  collect_logs=None,
+                 api_enabled=None,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
@@ -1121,7 +1123,8 @@ class GenericMQTTNotifier(GenericNotifier):
             self.qos = {
                 'state': default_mqtt_qos,
                 'action': default_mqtt_qos,
-                'log': default_mqtt_qos
+                'log': default_mqtt_qos,
+                'system': default_mqtt_qos
             }
         else:
             self.qos = qos
@@ -1131,6 +1134,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 self.qos['action'] = default_mqtt_qos
             if not 'log' in qos:
                 self.qos['log'] = default_mqtt_qos
+            if not 'system' in qos:
+                self.qos['system'] = default_mqtt_qos
         self._qos = qos
         self.collect_logs = collect_logs
         if space is not None:
@@ -1138,6 +1143,12 @@ class GenericMQTTNotifier(GenericNotifier):
         else:
             pfx = ''
         self.log_topic = pfx + 'log'
+        self.api_enabled = api_enabled
+        self.controller_topic = '{}controller/{}/{}/'.format(
+            pfx, eva.core.product_code, eva.core.system_name)
+        self.api_request_topic = self.controller_topic + 'api_request'
+        self.api_response_topic = self.controller_topic + 'api_response'
+        self.api_handler = eva.api.mqtt_api_handler
 
     def connect(self):
         self.check_connection()
@@ -1168,6 +1179,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 client.subscribe(self.log_topic, qos=self.qos['log'])
                 logging.debug('%s subscribed to %s' % \
                         (self.notifier_id, self.log_topic))
+            if self.api_enabled:
+                client.subscribe(self.api_request_topic, qos=self.qos['system'])
+                logging.debug('%s subscribed to %s' % \
+                        (self.notifier_id, self.api_request_topic))
         except:
             eva.core.log_traceback(notifier=True)
 
@@ -1289,6 +1304,11 @@ class GenericMQTTNotifier(GenericNotifier):
         if not self.enabled: return
         t = msg.topic
         d = msg.payload.decode()
+        if t == self.api_request_topic and self.api_handler:
+            t = threading.Thread(
+                target=self.api_handler, args=(self.notifier_id, d))
+            t.start()
+            return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
                 try:
@@ -1379,6 +1399,15 @@ class GenericMQTTNotifier(GenericNotifier):
             except:
                 eva.core.log_traceback(notifier=True)
 
+    def send_api_response(self, call_id, data):
+        if not self.api_enabled: return False
+        self.mq.publish(
+            self.api_response_topic + '/' + call_id,
+            data,
+            self.qos['system'],
+            retain=False)
+        return True
+
     def test(self):
         try:
             logging.debug('.Testing mqtt notifier %s (%s:%u)' % \
@@ -1408,6 +1437,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if self._qos or props: d['qos'] = self._qos
         if self._keepalive or props: d['keepalive'] = self._keepalive
         if self.collect_logs or props: d['collect_logs'] = self.collect_logs
+        if self.api_enabled or props: d['api_enabled'] = self.api_enabled
         if self.ca_certs or props: d['ca_certs'] = self.ca_certs
         if self.certfile or props: d['certfile'] = self.certfile
         if self.keyfile or props: d['keyfile'] = self.keyfile
@@ -1418,6 +1448,10 @@ class GenericMQTTNotifier(GenericNotifier):
         if prop == 'collect_logs':
             v = eva.tools.val_to_boolean(value)
             self.collect_logs = v
+            return True
+        if prop == 'api_enabled':
+            v = eva.tools.val_to_boolean(value)
+            self.api_enabled = v
             return True
         elif prop == 'ca_certs':
             if value is None:
@@ -1483,11 +1517,11 @@ class GenericMQTTNotifier(GenericNotifier):
             except:
                 return False
             if not 0 <= val <= 2: return False
-            self._qos = {'action': val, 'state': val, 'log': val}
+            self._qos = {'action': val, 'state': val, 'log': val, 'system': val}
             return True
         elif prop[:4] == 'qos.':
             q = prop[4:]
-            if not q in ['action', 'state', 'log']: return False
+            if not q in ['action', 'state', 'log', 'system']: return False
             if not value:
                 if self._qos and q in self._qos:
                     del self._qos[q]
@@ -1517,6 +1551,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  keepalive=None,
                  timeout=None,
                  collect_logs=None,
+                 api_enabled=None,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
@@ -1531,6 +1566,7 @@ class MQTTNotifier(GenericMQTTNotifier):
             keepalive=keepalive,
             timeout=timeout,
             collect_logs=collect_logs,
+            api_enabled=api_enabled,
             ca_certs=ca_certs,
             certfile=certfile,
             keyfile=keyfile)
@@ -1694,6 +1730,8 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         else: timeout = None
         if 'collect_logs' in ncfg: collect_logs = ncfg['collect_logs']
         else: collect_logs = False
+        if 'api_enabled' in ncfg: api_enabled = ncfg['api_enabled']
+        else: api_enabled = False
         n = MQTTNotifier(
             _notifier_id,
             host=host,
@@ -1705,6 +1743,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             keepalive=keepalive,
             timeout=timeout,
             collect_logs=collect_logs,
+            api_enabled=api_enabled,
             ca_certs=ca_certs,
             certfile=certfile,
             keyfile=keyfile)
