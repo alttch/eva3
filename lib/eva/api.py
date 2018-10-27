@@ -500,11 +500,12 @@ def mqtt_api_handler(notifier_id, data, callback):
                 [('X-JSON', api_data)], None)
         except:
             callback(call_id, '500|')
+            raise Exception('API error')
         response = ce.encrypt(cherrypy.serving.response.body[0]).decode()
         callback(call_id,
             cherrypy.serving.response.status.split()[0] + '|' + response)
     except:
-        logging.warning('MQTT API: invalid data from ' + notifier_id)
+        logging.warning('MQTT API: API call failed from ' + notifier_id)
         eva.core.log_traceback()
         return
 
