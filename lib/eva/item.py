@@ -20,8 +20,8 @@ from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.tools import is_oid
 from eva.tools import parse_oid
-from evacpp.evacpp import GenericAction
-# from eva.generic import GenericAction
+# from evacpp.evacpp import GenericAction
+from eva.generic import GenericAction
 
 from eva.generic import ia_status_created
 from eva.generic import ia_status_pending
@@ -94,9 +94,10 @@ class Item(object):
     def notify(self, retain=None, skip_subscribed_mqtt=False):
         if skip_subscribed_mqtt: s = self
         else: s = None
+        d = self.serialize(notify=True)
         eva.notify.notify(
             'state',
-            data=self.copy(),
+            data=(self, self.serialize(notify=True)),
             retain=retain,
             skip_subscribed_mqtt_item=s)
 
@@ -1567,10 +1568,11 @@ class ItemAction(GenericAction):
             logging.debug('action %s created, %s: %s' % \
                 (self.uuid, self.item.item_type,
                     self.item.full_id))
-            t = threading.Thread(
-                target=eva.notify.notify, args=('action', self._copy()))
-            t.setDaemon(True)
-            t.start()
+            # t = threading.Thread(
+                # target=eva.notify.notify,
+                # args=('action', (self, self.serialize())))
+            # t.setDaemon(True)
+            # t.start()
         self.item_action_lock.release()
 
     def __cmp__(self, other):
@@ -1620,10 +1622,10 @@ class ItemAction(GenericAction):
             self.err = err
         logging.debug('action %s new status: %s' % \
                 (self.uuid, ia_status_names[status]))
-        t = threading.Thread(
-            target=eva.notify.notify, args=('action', self._copy()))
-        t.setDaemon(True)
-        t.start()
+        # t = threading.Thread(
+            # target=eva.notify.notify, args=('action', (self, self.serialize())))
+        # t.setDaemon(True)
+        # t.start()
         if lock: self.item_action_lock.release()
         return True
 

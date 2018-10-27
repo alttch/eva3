@@ -12,7 +12,7 @@ from eva.client.apiclient import result_ok
 
 c = APIClientLocal('uc')
 
-iterations = 1000
+iterations = 10000
 
 turn_debug = False
 
@@ -105,7 +105,6 @@ for a in range(0, iterations):
     if p and p / 10 == int(p / 10):
         print('%u%%' % p)
     api_call('test_phi', params)
-    time.sleep(0.03)
 
 print('100%')
 

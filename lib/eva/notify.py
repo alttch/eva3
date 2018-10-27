@@ -267,7 +267,8 @@ class GenericNotifier(object):
                         fdata.append(d)
             elif subject == 'state':
                 fdata = []
-                for d in data_in:
+                for din in data_in:
+                    d, dts = din
                     if e.item_types and ('#' in e.item_types
                                     or d.item_type in e.item_types) \
                                     and eva.item.item_match(d, e.item_ids,
@@ -278,7 +279,6 @@ class GenericNotifier(object):
                             eva.core.critical()
                             return None
                         need_notify = False
-                        dts = d.serialize(notify=True)
                         try:
                             if d.item_id in self.last_state_event:
                                 lse = self.last_state_event[d.item_id]
@@ -298,14 +298,15 @@ class GenericNotifier(object):
                             eva.core.log_traceback(notifier=True)
             elif subject == 'action':
                 fdata = []
-                for d in data_in:
+                for din in data_in:
+                    d, dts = din
                     if e.item_types and ('#' in e.item_types \
                                     or d.item.item_type in e.item_types) \
                             and e.action_status and ('#' in e.action_status \
                                 or d.get_status_name() in e.action_status) \
                             and eva.item.item_match(d.item, e.item_ids,
                                     e.groups):
-                        fdata.append(d.serialize())
+                        fdata.append(dts)
             else:
                 return None
             return fdata
@@ -328,8 +329,11 @@ class GenericNotifier(object):
             logging.error('.Failed to notify %s, error response: %s' % \
                     (self.notifier_id, message))
 
+    def can_notify(self):
+        return self.enabled and self.connected
+
     def notify(self, subject, data, unpicklable=False, retain=False):
-        if not self.enabled or not self.connected: return False
+        if not self.can_notify(): return False
         data_to_send = self.format_data(subject, data)
         if not data_to_send: return None
         self.log_notify()
@@ -1895,7 +1899,8 @@ def notify(subject,
            skip_mqtt=False):
     if notifier_id:
         try:
-            if skip_mqtt and notifiers[notifier_id].notifier_type[:4] == 'mqtt':
+            if skip_mqtt and \
+                    notifiers[notifier_id].notifier_type[:4] == 'mqtt':
                 return
             if skip_subscribed_mqtt_item and \
                 notifiers[notifier_id].notifier_type[:4] == 'mqtt' and \
@@ -1912,15 +1917,16 @@ def notify(subject,
         except:
             eva.core.log_traceback(notifier=True)
     else:
-        for i in notifiers.copy():
-            notify(
-                subject=subject,
-                data=data,
-                notifier_id=i,
-                wait=wait,
-                retain=retain,
-                skip_subscribed_mqtt_item=skip_subscribed_mqtt_item,
-                skip_mqtt=skip_mqtt)
+        for i in notifiers:
+            if notifiers[i].can_notify():
+                notify(
+                    subject=subject,
+                    data=data,
+                    notifier_id=i,
+                    wait=wait,
+                    retain=retain,
+                    skip_subscribed_mqtt_item=skip_subscribed_mqtt_item,
+                    skip_mqtt=skip_mqtt)
 
 
 def get_notifier(notifier_id=None):

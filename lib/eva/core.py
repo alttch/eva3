@@ -19,7 +19,7 @@ import threading
 import gzip
 import inspect
 
-hs = 1
+hs = 0
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for

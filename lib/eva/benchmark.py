@@ -14,7 +14,7 @@ def report(s, i, end=False):
     else:
         ts = ctime
         intervals.setdefault(i, {})['s'] = ctime
-    logging.warning('BENCHMARK {} STEP {} at {}'.format(i, s, ctime))
+    logging.debug('BENCHMARK {} STEP {} at {}'.format(i, s, ctime))
 
 
 def reset():

@@ -63,8 +63,8 @@ moment when the second driver is ready to call equipment action is named
 **Core Reaction Time (CRT)**.
 
 The benchmark tool for :doc:`/uc/uc` turns on internal controller benchmark,
-performs 1000 CRT tests with 30ms delays on a single sensor/unit pair and
-displays the average CRT value in milliseconds.
+performs 10000 CRT tests on a single sensor/unit pair and displays the average
+CRT value in milliseconds.
 
 The benchmark is performed on virtual drivers, so the actual system reaction
 time may be higher than CRT, depending on the equipment connected.
