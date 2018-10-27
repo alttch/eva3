@@ -1662,16 +1662,6 @@ class ItemAction(GenericAction):
     def action_env(self):
         return {}
 
-    def _copy(self):
-        result = ItemAction(None, self.priority, self.uuid)
-        result._set_status_only(self.get_status())
-        result.time = self.time.copy()
-        result.item = self.item.copy()
-        result.exitcode = self.exitcode
-        result.out = self.out
-        result.err = self.err
-        return result
-
     def kill(self):
         if not self.item_action_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::terminate locking broken')
