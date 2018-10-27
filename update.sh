@@ -6,7 +6,7 @@
 #fi
 
 VERSION=3.1.1
-BUILD=2018102502
+BUILD=2018102701
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://www.eva-ics.com/download
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh install/check_mods sbin/check_mods sbin/check_mqtt set-run-under-user.sh"

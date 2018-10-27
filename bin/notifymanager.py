@@ -47,10 +47,14 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             return result
 
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
-        if itype not in ['status']:
+        if api_func != 'status_controller':
             return super().prepare_result_dict(data, api_func, api_func_full,
                                                itype)
         return self.prepare_controller_status_dict(data)
+
+    def setup_parser(self):
+        super().setup_parser()
+        self.enable_controller_management_functions(eva.core.product_name)
 
     def add_functions(self):
         super().add_functions()

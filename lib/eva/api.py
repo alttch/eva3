@@ -385,7 +385,8 @@ def cp_client_key(_k=None):
             k = cherrypy.session.get('k')
         except:
             k = None
-        if k is None: k = eva.apikey.key_by_ip_address(http_real_ip())
+        if k is None:
+            k = eva.apikey.key_by_ip_address(cherrypy.request.remote.ip)
     return k
 
 
