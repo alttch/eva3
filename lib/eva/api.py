@@ -138,13 +138,13 @@ def log_api_request(func, auth=None, info=None, dev=False, debug=False):
 
 
 def http_real_ip(get_gw=False):
+    if get_gw and hasattr(cherrypy.serving.request, '_eva_ics_gw'):
+        return 'gateway/' + cherrypy.serving.request._eva_ics_gw
     if use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
         ip = cherrypy.request.headers['X-Real-IP']
     else:
         ip = cherrypy.request.remote.ip
-    if get_gw and hasattr(cherrypy.serving.request, '_eva_ics_gw'):
-        ip = 'gateway/' + cherrypy.serving.request._eva_ics_gw
     return ip
 
 
