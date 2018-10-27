@@ -59,6 +59,8 @@ listen = 0.0.0.0:8817
 ;thread_pool = 15
 ; uncomment to disable LM EI
 ;ei_enabled = no
+; uncomment to use frontend X-Real-IP header to get client real IP address
+;x_real_ip = yes
 
 [mailer]
 ; mailer for mail() macro function

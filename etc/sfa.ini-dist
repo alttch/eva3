@@ -51,6 +51,9 @@ listen = 0.0.0.0:8828
 ;ssl_chain = test.pam
 ; session timeout
 ;session_timeout = 3600
-; server thread pool                                                                                                                                                                                                                     
+; server thread pool
 ;thread_pool = 15
+
+; uncomment to use frontend X-Real-IP header to get client real IP address
+;x_real_ip = yes
 

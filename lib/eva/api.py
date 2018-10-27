@@ -43,6 +43,8 @@ thread_pool = 15
 
 session_timeout = 3600
 
+use_x_real_ip = False
+
 
 def http_api_result(result, env):
     result = {'result': result}
@@ -63,6 +65,7 @@ def update_config(cfg):
     global host, port, ssl_host, ssl_port
     global ssl_module, ssl_cert, ssl_key, ssl_chain
     global session_timeout, thread_pool, ei_enabled
+    global use_x_real_ip
     try:
         host, port = parse_host_port(cfg.get('webapi', 'listen'), default_port)
         logging.debug('webapi.listen = %s:%u' % (host, port))
@@ -101,6 +104,12 @@ def update_config(cfg):
         pass
     logging.debug('webapi.ei_enabled = %s' % ('yes' \
                                 if ei_enabled else 'no'))
+    try:
+        use_x_real_ip = (cfg.get('webapi', 'x_real_ip') == 'yes')
+    except:
+        pass
+    logging.debug('webapi.x_real_ip = %s' % ('yes' \
+                                if use_x_real_ip else 'no'))
     return True
 
 
@@ -129,7 +138,7 @@ def log_api_request(func, auth=None, info=None, dev=False, debug=False):
 
 
 def http_real_ip():
-    if 'X-Real-IP' in cherrypy.request.headers and \
+    if use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
         ip = cherrypy.request.headers['X-Real-IP']
     else:
