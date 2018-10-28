@@ -360,15 +360,7 @@ class SFA_API(GenericAPI):
         if not apikey.check(k, master=True) or not controller_id:
             return False
         if not controller_id or controller_id.find('/') == -1: return False
-        try:
-            ct, ci = controller_id.split('/')
-        except:
-            return False
-        if ct == 'uc':
-            return eva.sfa.controller.remove_uc(ci)
-        if ct == 'lm':
-            return eva.sfa.controller.remove_lm(ci)
-        return False
+        return eva.sfa.controller.remove_controller(controller_id)
 
     def list_controller_props(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -627,7 +619,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
     def list_controllers(self, k=None, g=None):
         cp_need_master(k)
         result = super().list_controllers(k, g)
-        if not result: raise cp_api_404()
+        if result is None: raise cp_api_404()
         return result
 
     def action(self, k=None, i=None, u=None, s=None, v='', p=None, q=None, w=0):

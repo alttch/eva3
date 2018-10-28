@@ -40,7 +40,7 @@ class RemoteController(eva.item.Item):
         self.version = None
         self.pool = None
         self.mqtt_update = mqtt_update
-        self.reload_interval = 3
+        self.reload_interval = 300
         self.connected = False
         self.static = static
         self.wait_for_autoremove = False
@@ -78,7 +78,7 @@ class RemoteController(eva.item.Item):
             if not self.static and self.pool and not self.wait_for_autoremove:
                 self.wait_for_autoremove = True
                 t = threading.Thread(
-                    target=eva.api.remove_controller, args=(self.item_id,))
+                    target=eva.api.remove_controller, args=(self.full_id,))
                 t.start()
             return False
         if result['result'] != 'OK':

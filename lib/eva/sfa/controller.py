@@ -11,6 +11,7 @@ import threading
 import time
 
 import eva.core
+import eva.api
 import eva.apikey
 import eva.item
 import eva.client.remote_controller
@@ -62,7 +63,8 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            if i.static:
+                configs_to_remove.remove(v.get_fname())
         except:
             pass
     for i, v in remote_lms.items():
@@ -70,7 +72,8 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            if i.static:
+                configs_to_remove.remove(v.get_fname())
         except:
             pass
     for f in configs_to_remove:
@@ -117,12 +120,51 @@ def load_remote_lms():
         return False
 
 
+def handle_discovered_controller(notifier_id, controller_id):
+    try:
+        ct, c_id = controller_id.split('/')
+        if ct not in ['uc', 'lm']:
+            return True
+        if (ct == 'uc' and c_id in uc_pool.controllers) or \
+                (ct == 'lm' and c_id in lm_pool.controllers):
+            logging.debug(
+                'Controller {} already exists, skipped (discovered from {})'.
+                format(controller_id, notifier_id))
+            return True
+        key = eva.apikey.key_by_id('default')
+        if not key:
+            logging.debug('Controller {} discovered, (discovered from {}), '.
+                          format(controller_id, notifier_id) +
+                          'but no API key with ID=default')
+            return False
+        logging.info(
+            'Controller {} discovered, appending (discovered from {})'.format(
+                controller_id, notifier_id))
+        if ct == 'uc':
+            _append_controller = append_uc
+        elif ct == 'lm':
+            _append_controller = append_lm
+        else:
+            return False
+        return _append_controller(
+            'mqtt:{}:{}'.format(notifier_id, controller_id),
+            key="$default",
+            mqtt_update=notifier_id,
+            static=False)
+    except:
+        logging.warning('Unable to process controller, discovered from ' +
+                        notifier_id)
+        eva.core.log_traceback()
+        return False
+
+
 def append_uc(uri,
               key=None,
               mqtt_update=None,
               ssl_verify=True,
               timeout=None,
-              save=False):
+              save=False,
+              static=True):
     api = eva.client.coreapiclient.CoreAPIClient()
     api.set_product('uc')
     if key is not None: api.set_key(eva.apikey.format_key(key))
@@ -137,7 +179,8 @@ def append_uc(uri,
     api.set_uri(uri)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
-    u = eva.client.remote_controller.RemoteUC(None, api=api, mqtt_update=mqu)
+    u = eva.client.remote_controller.RemoteUC(
+        None, api=api, mqtt_update=mqu, static=static)
     u._key = key
     if not uc_pool.append(u): return False
     remote_ucs[u.item_id] = u
@@ -173,7 +216,8 @@ def append_lm(uri,
               mqtt_update=None,
               ssl_verify=True,
               timeout=None,
-              save=False):
+              save=False,
+              static=True):
     api = eva.client.coreapiclient.CoreAPIClient()
     api.set_product('lm')
     if key is not None: api.set_key(eva.apikey.format_key(key))
@@ -188,7 +232,8 @@ def append_lm(uri,
     api.set_uri(uri)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
-    u = eva.client.remote_controller.RemoteLM(None, api=api, mqtt_update=mqu)
+    u = eva.client.remote_controller.RemoteLM(
+        None, api=api, mqtt_update=mqu, static=static)
     u._key = key
     if not lm_pool.append(u): return False
     remote_lms[u.item_id] = u
@@ -217,6 +262,19 @@ def remove_lm(controller_id):
         except:
             eva.core.log_traceback()
     return False
+
+
+def remove_controller(controller_id):
+    try:
+        ct, ci = controller_id.split('/')
+    except:
+        return False
+    if ct == 'uc':
+        return remove_uc(ci)
+    elif ct == 'lm':
+        return remove_lm(ci)
+    else:
+        return False
 
 
 def serialize():
@@ -278,3 +336,7 @@ def init():
     eva.core.append_dump_func('sfa', dump)
     eva.core.append_stop_func(stop)
     eva.core.enterprise_layout = None
+
+
+eva.api.mqtt_discovery_handler = handle_discovered_controller
+eva.api.remove_controller = remove_controller
