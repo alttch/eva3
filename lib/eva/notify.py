@@ -1424,7 +1424,7 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def cancel_api_request(self, request_id):
         if request_id not in self.api_callback:
-            logging.error('.GenericMQTTNotifier: API request ID not found')
+            logging.warning('.GenericMQTTNotifier: API request ID not found')
             return False
         if not self.api_callback_lock.acquire(timeout=eva.core.timeout):
             logging.critical(
