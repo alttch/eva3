@@ -73,7 +73,9 @@ class APIKey(object):
     def set_prop(self, prop, value=None, save=False):
         if not self.dynamic: return False
         if prop == 'key':
-            if value is None or value == '': return False
+            if value is None or value == '' or value.find(
+                    ':') != -1 or value.find('|') != -1:
+                return False
             if self.key != value:
                 regenerate_key(self.key_id, k=value, save=False)
                 self.set_modified(save)
