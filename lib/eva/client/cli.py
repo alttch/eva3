@@ -102,7 +102,6 @@ class ComplKeyProp(ComplGeneric):
             ['key', 'props', kwargs.get('parsed_args').i])
         if code: return True
         result = list(data.keys())
-        result.remove('key')
         return result
 
 

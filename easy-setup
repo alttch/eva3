@@ -14,6 +14,7 @@ MQTT_SPACE=
 MQTT_CAFILE=
 MQTT_CERT=
 MQTT_KEY=
+MQTT_API_ENABLED=
 LINK=0
 ALLOW_ROOT=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -93,6 +94,42 @@ function start_controller() {
     return 0
 }
 
+function
+
+
+function create_operator_key {
+    local P=$1
+    (./sbin/eva-tinyapi -S -C $P -F create_key \
+        i=operator | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=operator p=key v=$OPKEY | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=operator p=groups v='#' | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=operator p=pvt v='#' | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=operator p=allow v=lock,dm_rule_props,dm_rules_list | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=operator p=sysfunc v=1 | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F save | grep OK) > /dev/null 2>&1 || return 1
+    return 0
+}
+
+function create_default_key {
+    local P=$1
+    local ALLOW=$1
+    (./sbin/eva-tinyapi -S -C $P -F create_key \
+        i=default | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=operator p=key v=$DEFAULTKEY | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=default p=groups v='#' | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=default p=allow v=$ALLOW | grep OK) > /dev/null 2>&1 || return 1
+    (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
+        i=default p=hosts_allow v=$REMOTES | grep OK) > /dev/null 2>&1 || return 1
+    return 0
+}
 
 function create_notifier {
     local T=$1
@@ -119,7 +156,7 @@ function create_notifier {
         fi
         BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
-        BATCH="$BATCH;set eva_1 api_enabled 1"
+        [ $MQTT_API_ENABLED ] && BATCH="$BATCH;set eva_1 api_enabled 1"
         BATCH="$BATCH;test eva_1"
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
@@ -238,6 +275,8 @@ function askMQTT {
                 exit 5
             fi
         else
+            askYN "Enable MQTT API"
+            MQTT_API_ENABLED=$VALUE
             return
         fi
         echo "MQTT test failed"
@@ -494,9 +533,11 @@ master = yes
 hosts_allow = ${REMOTES}
 
 EOF
-    # TODO - insert default and operator key as dynamic keys
     chmod 600 etc/uc_apikeys.ini
     create_notifier uc || exit 1
+    echo "Creating UC keys"
+    create_operator_key uc
+    create_default_key uc cmd,device
     UC_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
@@ -545,9 +586,11 @@ master = yes
 hosts_allow = ${REMOTES}
 
 EOF
-    # TODO - insert default and operator key as dynamic keys
     chmod 600 etc/lm_apikeys.ini
     create_notifier lm || exit 1
+    echo "Creating LM keys"
+    create_operator_key lm
+    create_default_key lm dm_rule_props,dm_rules_list
     LM_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
@@ -562,7 +605,7 @@ EOF
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
         (./sbin/eva-tinyapi -C lm -F append_controller \
-            u=http://localhost:8812 a=${UC_LM_KEY} m=eva_1 save=1 | grep OK) > /dev/null 2>&1
+            u=http://localhost:8812 a=${DEFAULTKEY} m=eva_1 save=1 | grep OK) > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -606,7 +649,6 @@ master = yes
 hosts_allow = ${REMOTES}
 
 EOF
-    # TODO - insert operator key as dynamic key
     chmod 600 etc/sfa_apikeys.ini
     create_notifier sfa || exit 1
     SFA_USER=${USER}
@@ -620,10 +662,12 @@ EOF
         ./sbin/eva-control stop
         exit 5
     fi
+    echo "Creating SFA keys"
+    create_operator_key sfa
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
         (./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=uc u=http://localhost:8812 a=${UC_SFA_KEY} m=eva_1 save=1 | grep OK ) > /dev/null 2>&1
+            g=uc u=http://localhost:8812 a=${DEFAULTKEY} m=eva_1 save=1 | grep OK ) > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -633,7 +677,7 @@ EOF
     if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
         echo "Linking local LM PLC to SFA"
         (./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=lm u=http://localhost:8817 a=${LM_SFA_KEY} m=eva_1 save=1 | grep OK ) > /dev/null 2>&1
+            g=lm u=http://localhost:8817 a=${DEFAULTKEY} m=eva_1 save=1 | grep OK ) > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop

@@ -72,7 +72,13 @@ class APIKey(object):
 
     def set_prop(self, prop, value=None, save=False):
         if not self.dynamic: return False
-        if prop == 'sysfunc':
+        if prop == 'key':
+            if value is None or value == '': return False
+            if self.key != value:
+                regenerate_key(self.key_id, k=value, save=False)
+                self.set_modified(save)
+            return True
+        elif prop == 'sysfunc':
             val = val_to_boolean(value)
             if self.sysfunc != val:
                 self.sysfunc = val
@@ -484,13 +490,13 @@ def delete_api_key(key_id):
     return True
 
 
-def regenerate_key(key_id, save=False):
+def regenerate_key(key_id, k=None, save=False):
     if key_id is None or key_id not in keys_by_id or keys_by_id[key_id].master \
             or not keys_by_id[key_id].dynamic:
         return False
     key = keys_by_id[key_id]
     old_key = key.key
-    key.set_key(gen_random_hash())
+    key.set_key(gen_random_hash() if k is None else k)
     keys[key.key] = keys.pop(old_key)
     key.set_modified(save)
     return key.key
