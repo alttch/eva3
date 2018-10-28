@@ -118,7 +118,6 @@ class CoreAPIClient(APIClient):
         request_id = str(uuid.uuid4())
         data = '{}|{}|{}|{}'.format(request_id, api_type, func,
                                     jsonpickle.encode(p))
-        print(self._key_id)
         cb = self.MQTTCallback()
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(
