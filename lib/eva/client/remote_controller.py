@@ -7,7 +7,7 @@ import eva.core
 import eva.item
 import eva.tools
 import eva.apikey
-import eva.client.apiclient
+import eva.client.coreapiclient
 import eva.client.remote_item
 import logging
 import time
@@ -27,7 +27,7 @@ class RemoteController(eva.item.Item):
             self.api = api
             self._key = api._key
         else:
-            self.api = eva.client.apiclient.APIClient()
+            self.api = eva.client.coreapiclient.CoreAPIClient()
             self.api.set_timeout(eva.core.timeout)
             self._key = None
         self.product_build = None
@@ -103,6 +103,11 @@ class RemoteController(eva.item.Item):
             self.reload_interval = data['reload_interval']
         super().update_config(data)
 
+    def set_modified(self, save):
+        super().set_modified(save)
+        self.connected = False
+        self.test()
+
     def set_prop(self, prop, val=None, save=False):
         if prop == 'uri' and val:
             if self.api._uri != val:
@@ -176,7 +181,12 @@ class RemoteController(eva.item.Item):
         if not self.item_id: return None
         d = {}
         if config or props:
-            d['uri'] = self.api._uri
+            d['uri'] = ''
+            if self.api.mode == 1:
+                d['uri'] = 'mqtt:'
+                if self.api._notifier_id:
+                    d['uri'] += self.api._notifier_id + ':'
+            d['uri'] += self.api._uri
             d['key'] = self._key if self._key is not None else ''
             d['timeout'] = self.api._timeout
             d['ssl_verify'] = self.api._ssl_verify
@@ -184,6 +194,12 @@ class RemoteController(eva.item.Item):
             d['reload_interval'] = self.reload_interval
         if info:
             d['connected'] = self.connected
+            if self.api.mode == 0:
+                d['mode'] = 'http'
+            elif self.api.mode == 1:
+                d['mode'] = 'mqtt'
+            else:
+                d['mode'] = 'unknown'
             d['version'] = self.version
             d['build'] = str(self.product_build)
             d['mqtt_update'] = self.mqtt_update

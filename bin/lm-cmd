@@ -131,6 +131,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             result = set()
             for v in data:
                 result.add(v['id'])
+                result.add(v['full_id'])
             return list(result)
 
     class ComplControllerProp(ComplGeneric):
@@ -1006,7 +1007,8 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_controllers': ['id', 'connected', 'version', 'build', 'description'],
+    'list_controllers':
+    ['id', 'connected', 'mode', 'version', 'build', 'description'],
     'list_ext_': ['id', 'mod', 'description', 'version'],
     'list_ext_mods': ['mod', 'description', 'version', 'api'],
     'modhelp_ext': ['name', 'type', 'required', 'help']

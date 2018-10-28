@@ -63,7 +63,8 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_controllers': ['id', 'connected', 'version', 'build', 'description']
+    'list_controllers':
+    ['id', 'connected', 'mode', 'version', 'build', 'description']
 }
 
 _pd_idx = {'state': 'oid', 'result': 'time'}

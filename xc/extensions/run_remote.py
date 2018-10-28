@@ -39,7 +39,7 @@ from eva.lm.extensions.generic import LMExt as GenericExt
 from eva.lm.extapi import get_timeout
 from eva.lm.extapi import log_traceback
 
-from eva.client.apiclient import APIClient
+from eva.client.coreapiclient import CoreAPIClient
 
 
 class LMExt(GenericExt):
@@ -66,8 +66,8 @@ class LMExt(GenericExt):
             timeout = get_timeout()
         if not url: self.ready = False
         else:
-            apiclient = APIClient()
-            apiclient.set_uri(url if url[:4] == 'http' else 'http://' + url)
+            apiclient = CoreAPIClient()
+            apiclient.set_uri(url)
             apiclient.set_key(k)
             apiclient.set_product('lm')
             apiclient.set_timeout(timeout)

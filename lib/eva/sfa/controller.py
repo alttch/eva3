@@ -14,7 +14,7 @@ import eva.core
 import eva.apikey
 import eva.item
 import eva.client.remote_controller
-import eva.client.apiclient
+import eva.client.coreapiclient
 
 remote_ucs = {}
 remote_lms = {}
@@ -123,7 +123,7 @@ def append_uc(uri,
               ssl_verify=True,
               timeout=None,
               save=False):
-    api = eva.client.apiclient.APIClient()
+    api = eva.client.coreapiclient.CoreAPIClient()
     api.set_product('uc')
     if key is not None: api.set_key(eva.apikey.format_key(key))
     if timeout is not None:
@@ -174,7 +174,7 @@ def append_lm(uri,
               ssl_verify=True,
               timeout=None,
               save=False):
-    api = eva.client.apiclient.APIClient()
+    api = eva.client.coreapiclient.CoreAPIClient()
     api.set_product('lm')
     if key is not None: api.set_key(eva.apikey.format_key(key))
     if timeout is not None:

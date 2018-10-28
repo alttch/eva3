@@ -145,6 +145,7 @@ class APIClient(object):
         self._timeout = 5
         self._product_code = 'sfa'
         self._ssl_verify = True
+        self.do_call = self.do_call_http
 
     def set_key(self, key):
         self._key = key
@@ -164,7 +165,7 @@ class APIClient(object):
     def ssl_verify(self, v):
         self._ssl_verify = v
 
-    def do_call(self, api_uri, api_type, func, p, t):
+    def do_call_http(self, api_uri, api_type, func, p, t):
         return requests.post(
             self._uri + api_uri + func,
             json=p,

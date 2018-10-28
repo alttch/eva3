@@ -1167,6 +1167,8 @@ class GenericMQTTNotifier(GenericNotifier):
         self.connected = True
         try:
             client.subscribe(self.pfx_api_response + '+/+/api/response/+')
+            logging.debug(self.notifier_id + ' resubscribed to ' +
+                          self.pfx_api_response + '+/+/api/response/+')
             for i, v in self.items_to_update_by_topic.copy().items():
                 client.subscribe(i, qos=v.mqtt_update_qos)
                 logging.debug('%s resubscribed to %s q%u updates' % \
@@ -1294,26 +1296,26 @@ class GenericMQTTNotifier(GenericNotifier):
         t = msg.topic
         d = msg.payload.decode()
         if t == self.api_request_topic and self.api_handler:
-            t = threading.Thread(
+            th = threading.Thread(
                 target=self.api_handler,
                 args=(self.notifier_id, d, self.send_api_response))
-            t.start()
+            th.start()
             return
         if t.startswith(self.pfx_api_response):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
-                t = threading.Thread(
+                th = threading.Thread(
                     target=self.api_callback[response_id], args=(d,))
-                t.start()
+                th.start()
                 self.cancel_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
                 try:
-                    t = threading.Thread(
+                    th = threading.Thread(
                         target=self.exec_custom_handler,
                         args=(h, d, t, msg.qos, msg.retain))
-                    t.start()
+                    th.start()
                 except:
                     eva.core.log_traceback(notifier=True)
         if self.collect_logs and t == self.log_topic:

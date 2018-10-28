@@ -15,7 +15,7 @@ import eva.apikey
 import eva.item
 import eva.lm.lvar
 import eva.client.remote_controller
-import eva.client.apiclient
+import eva.client.coreapiclient
 import eva.lm.plc
 import eva.lm.lremote
 import eva.lm.lmqueue
@@ -468,7 +468,7 @@ def append_controller(uri,
                       ssl_verify=True,
                       timeout=None,
                       save=False):
-    api = eva.client.apiclient.APIClient()
+    api = eva.client.coreapiclient.CoreAPIClient()
     api.set_product('uc')
     if key is not None: api.set_key(eva.apikey.format_key(key))
     if timeout is not None:
