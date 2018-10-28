@@ -33,8 +33,11 @@ class MQTTAPIClient(APIClient):
 
         def data_handler(self, data):
             self._completed = True
-            self.code, self.body = data.split('|', 1)
-            self.code = int(self.code)
+            try:
+                self.code, self.body = data.split('|', 1)
+                self.code = int(self.code)
+            except:
+                self.code = 500
 
     class Response(object):
         status_code = 500
