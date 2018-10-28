@@ -32,6 +32,7 @@ class Item(object):
         self._destroyed = False
         self.config_changed = False
         self.config_file_exists = False
+        # generate long config names or use IDs in enterprise layout
         self.respect_layout = True
 
     def set_group(self, group=None):

@@ -4,6 +4,7 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.1"
 
 import eva.core
+import eva.api
 import eva.item
 import eva.tools
 import eva.apikey
@@ -18,7 +19,12 @@ _warning_time_diff = 1
 
 class RemoteController(eva.item.Item):
 
-    def __init__(self, item_id, item_type, api=None, mqtt_update=None):
+    def __init__(self,
+                 item_id,
+                 item_type,
+                 api=None,
+                 mqtt_update=None,
+                 static=True):
         if item_id == None:
             item_id = ''
         super().__init__(item_id, item_type)
@@ -34,8 +40,10 @@ class RemoteController(eva.item.Item):
         self.version = None
         self.pool = None
         self.mqtt_update = mqtt_update
-        self.reload_interval = 10
+        self.reload_interval = 3
         self.connected = False
+        self.static = static
+        self.wait_for_autoremove = False
 
     def api_call(self, func, params=None, timeout=None):
         if not self.api: return None
@@ -66,7 +74,13 @@ class RemoteController(eva.item.Item):
 
     def load_remote(self):
         result = self.test()
-        if not result: return False
+        if not result:
+            if not self.static and self.pool and not self.wait_for_autoremove:
+                self.wait_for_autoremove = True
+                t = threading.Thread(
+                    target=eva.api.remove_controller, args=(self.item_id,))
+                t.start()
+            return False
         if result['result'] != 'OK':
             logging.error('Remote controller unknown access error %s' % \
                     api._uri)
@@ -87,6 +101,9 @@ class RemoteController(eva.item.Item):
         else:
             logging.info(msg)
         return True
+
+    def save(self, fname=None):
+        return super().save(fname=fname) if self.static else True
 
     def update_config(self, data):
         if 'uri' in data:
@@ -137,6 +154,20 @@ class RemoteController(eva.item.Item):
                 self.api.set_timeout(eva.core.timeout)
                 self.set_modified(save)
                 return True
+        elif prop == 'static':
+            if val is not None:
+                try:
+                    v = eva.tools.val_to_boolean(val)
+                    if not v: return False
+                    if self.static != v:
+                        self.static = v
+                        self.log_set(prop, v)
+                        self.set_modified(save)
+                    return True
+                except:
+                    return False
+            else:
+                return False
         elif prop == 'ssl_verify':
             if val is not None:
                 try:
@@ -182,6 +213,7 @@ class RemoteController(eva.item.Item):
                   notify=False):
         if not self.item_id: return None
         d = {}
+        d['static'] = self.static
         if config or props:
             d['uri'] = ''
             if self.api.mode == 1:
@@ -212,13 +244,14 @@ class RemoteController(eva.item.Item):
     def destroy(self):
         super().destroy()
         if self.pool:
-            self.pool.remove(self.item_id)
+            t = threading.Thread(target=self.pool.remove, args=(self.item_id,))
+            t.start()
 
 
 class RemoteUC(RemoteController):
 
-    def __init__(self, uc_id=None, api=None, mqtt_update=None):
-        super().__init__(uc_id, 'remote_uc', api, mqtt_update)
+    def __init__(self, uc_id=None, api=None, mqtt_update=None, static=True):
+        super().__init__(uc_id, 'remote_uc', api, mqtt_update, static)
         self.api.set_product('uc')
 
     def create_remote_unit(self, state):
@@ -254,8 +287,8 @@ class RemoteUC(RemoteController):
 
 class RemoteLM(RemoteController):
 
-    def __init__(self, lm_id=None, api=None, mqtt_update=None):
-        super().__init__(lm_id, 'remote_lm', api, mqtt_update)
+    def __init__(self, lm_id=None, api=None, mqtt_update=None, static=True):
+        super().__init__(lm_id, 'remote_lm', api, mqtt_update, static)
         self.api.set_product('lm')
 
     def create_remote_lvar(self, state):

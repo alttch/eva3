@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
 __license__ = "https://www.eva-ics.com/license"
@@ -113,9 +114,12 @@ class CoreAPIClient(APIClient):
 
     def do_call_mqtt(self, api_uri, api_type, func, p, t):
         n = eva.notify.get_notifier(self._notifier_id)
+        r = self.Response()
+        if not n: return r
         request_id = str(uuid.uuid4())
         data = '{}|{}|{}|{}'.format(request_id, api_type, func,
                                     jsonpickle.encode(p))
+        print(self._key_id)
         cb = self.MQTTCallback()
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(
@@ -124,7 +128,6 @@ class CoreAPIClient(APIClient):
         if not eva.core.wait_for(cb.is_completed, self._timeout):
             n.finish_api_request(request_id)
             raise requests.Timeout()
-        r = self.Response()
         if cb.code:
             try:
                 r.text = self.ce.decrypt(cb.body.encode()).decode()

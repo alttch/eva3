@@ -471,6 +471,13 @@ class GenericHTTP_API(GenericAPI):
         return http_api_result_ok()
 
 
+def mqtt_discovery_handler(notifier_id, d):
+    logging.info(
+        'MQTT discovery handler got info from %s' % notifier_id + \
+        ' about %s, but no real handler registered' % d
+    )
+
+
 def mqtt_api_handler(notifier_id, data, callback):
     try:
         if not data or data[0] != '|':
@@ -503,7 +510,7 @@ def mqtt_api_handler(notifier_id, data, callback):
             raise Exception('API error')
         response = ce.encrypt(cherrypy.serving.response.body[0]).decode()
         callback(call_id,
-            cherrypy.serving.response.status.split()[0] + '|' + response)
+                 cherrypy.serving.response.status.split()[0] + '|' + response)
     except:
         logging.warning('MQTT API: API call failed from ' + notifier_id)
         eva.core.log_traceback()

@@ -11,6 +11,7 @@ import threading
 import time
 
 import eva.core
+import eva.api
 import eva.apikey
 import eva.item
 import eva.lm.lvar
@@ -158,7 +159,8 @@ def save():
             if not v.save():
                 return False
         try:
-            configs_to_remove.remove(v.get_fname())
+            if i.static:
+                configs_to_remove.remove(v.get_fname())
         except:
             pass
     for i, v in macros_by_id.items():
@@ -463,12 +465,44 @@ def destroy_dm_rule(r_id):
     return False
 
 
+def handle_discovered_controller(notifier_id, controller_id):
+    try:
+        ct, c_id = controller_id.split('/')
+        if ct != 'uc':
+            return True
+        if c_id in uc_pool.controllers:
+            logging.debug(
+                'Controller {} already exists, skipped (discovered from {})'.
+                format(controller_id, notifier_id))
+            return True
+        key = eva.apikey.key_by_id('default')
+        if not key:
+            logging.debug(
+                'Controller {} discovered, (discovered from {}), '.format
+                (controller_id, notifier_id) + 'but no API key with ID=default')
+            return False
+        logging.info(
+            'Controller {} discovered, appending (discovered from {})'.format(
+                controller_id, notifier_id))
+        return append_controller(
+            'mqtt:{}:{}'.format(notifier_id, controller_id),
+            key="$default",
+            mqtt_update=notifier_id,
+            static=False)
+    except:
+        logging.warning('Unable to process controller, discovered from ' +
+                        notifier_id)
+        eva.core.log_traceback()
+        return False
+
+
 def append_controller(uri,
                       key=None,
                       mqtt_update=None,
                       ssl_verify=True,
                       timeout=None,
-                      save=False):
+                      save=False,
+                      static=True):
     api = eva.client.coreapiclient.CoreAPIClient()
     api.set_product('uc')
     if key is not None: api.set_key(eva.apikey.format_key(key))
@@ -483,7 +517,7 @@ def append_controller(uri,
     api.set_uri(uri)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
-    u = eva.lm.lremote.LRemoteUC(None, api=api, mqtt_update=mqu)
+    u = eva.lm.lremote.LRemoteUC(None, api=api, mqtt_update=mqu, static=static)
     u._key = key
     if not uc_pool.append(u): return False
     remote_ucs[u.item_id] = u
@@ -493,21 +527,25 @@ def append_controller(uri,
 
 
 def remove_controller(controller_id):
-    if controller_id in remote_ucs:
+    if controller_id.find('/') == -1:
+        _controller_id = controller_id
+    else:
+        _controller_id = controller_id.split('/')[-1]
+    if _controller_id in remote_ucs:
         try:
-            i = remote_ucs[controller_id]
+            i = remote_ucs[_controller_id]
             i.destroy()
             if eva.core.db_update == 1 and i.config_file_exists:
                 try:
                     os.unlink(i.get_fname())
                 except:
                     logging.error('Can not remove controller %s config' % \
-                            controller_id)
+                            _controller_id)
                     eva.core.log_traceback()
             elif i.config_file_exists:
                 configs_to_remove.add(i.get_fname())
-            del (remote_ucs[controller_id])
-            logging.info('controller %s removed' % controller_id)
+            del (remote_ucs[_controller_id])
+            logging.info('controller %s removed' % _controller_id)
             return True
         except:
             eva.core.log_traceback()
@@ -721,3 +759,8 @@ def init():
     eva.core.append_save_func(save)
     eva.core.append_dump_func('lm', dump)
     eva.core.append_stop_func(stop)
+
+
+eva.api.mqtt_discovery_handler = handle_discovered_controller
+eva.api.remove_controller = remove_controller
+
