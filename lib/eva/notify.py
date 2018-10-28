@@ -1142,13 +1142,17 @@ class GenericMQTTNotifier(GenericNotifier):
             pfx = space + '/'
         else:
             pfx = ''
+        self.pfx = pfx
+        self.pfx_api_response = pfx + 'controller/'
         self.log_topic = pfx + 'log'
         self.api_enabled = api_enabled
         self.controller_topic = '{}controller/{}/{}/'.format(
             pfx, eva.core.product_code, eva.core.system_name)
-        self.api_request_topic = self.controller_topic + 'api_request'
-        self.api_response_topic = self.controller_topic + 'api_response'
+        self.api_request_topic = self.controller_topic + 'api/request'
+        self.api_response_topic = self.controller_topic + 'api/response'
         self.api_handler = eva.api.mqtt_api_handler
+        self.api_callback = {}
+        self.api_callback_lock = threading.Lock()
 
     def connect(self):
         self.check_connection()
@@ -1162,6 +1166,7 @@ class GenericMQTTNotifier(GenericNotifier):
         logging.debug('%s mqtt reconnect' % self.notifier_id)
         self.connected = True
         try:
+            client.subscribe(self.pfx_api_response + '+/+/api/response/+')
             for i, v in self.items_to_update_by_topic.copy().items():
                 client.subscribe(i, qos=v.mqtt_update_qos)
                 logging.debug('%s resubscribed to %s q%u updates' % \
@@ -1217,12 +1222,8 @@ class GenericMQTTNotifier(GenericNotifier):
         logging.debug('%s subscribing to %s updates' % \
                 (self.notifier_id, item.full_id))
         self.items_to_update.add(item)
-        if self.space is not None:
-            pfx = self.space + '/'
-        else:
-            pfx = ''
         for t in item.mqtt_update_topics:
-            topic = pfx + item.item_type + '/' + \
+            topic = self.pfx + item.item_type + '/' + \
                     item.full_id + '/' + t
             self.items_to_update_by_topic[topic] = item
             self.mq.subscribe(topic, qos=item.mqtt_update_qos)
@@ -1233,11 +1234,7 @@ class GenericMQTTNotifier(GenericNotifier):
     def control_item_append(self, item):
         logging.debug('%s subscribing to %s control' % \
                 (self.notifier_id, item.full_id))
-        if self.space is not None:
-            pfx = self.space + '/'
-        else:
-            pfx = ''
-        topic_control = pfx + item.item_type + '/' +\
+        topic_control = self.pfx + item.item_type + '/' +\
                 item.full_id + '/control'
         self.items_to_control.add(item)
         self.items_to_control_by_topic[topic_control] = item
@@ -1249,14 +1246,10 @@ class GenericMQTTNotifier(GenericNotifier):
     def update_item_remove(self, item):
         logging.debug('%s unsubscribing from %s updates' % \
                 (self.notifier_id, item.full_id))
-        if self.space is not None:
-            pfx = self.space + '/'
-        else:
-            pfx = ''
         if item not in self.items_to_update: return False
         try:
             for t in item.mqtt_update_topics:
-                topic = pfx + item.item_type + '/' + \
+                topic = self.pfx + item.item_type + '/' + \
                         item.full_id + '/' + t
                 self.mq.unsubscribe(topic)
                 logging.debug('%s unsubscribed from %s updates' %
@@ -1270,12 +1263,8 @@ class GenericMQTTNotifier(GenericNotifier):
     def control_item_remove(self, item):
         logging.debug('%s unsubscribing from %s control' % \
                 (self.notifier_id, item.full_id))
-        if self.space is not None:
-            pfx = self.space + '/'
-        else:
-            pfx = ''
         if item not in self.items_to_control: return False
-        topic_control = pfx + item.item_type + '/' +\
+        topic_control = self.pfx + item.item_type + '/' +\
                 item.full_id + '/control'
         self.mq.unsubscribe(topic_control)
         try:
@@ -1310,6 +1299,14 @@ class GenericMQTTNotifier(GenericNotifier):
                 args=(self.notifier_id, d, self.send_api_response))
             t.start()
             return
+        if t.startswith(self.pfx_api_response):
+            response_id = t.split('/')[-1]
+            if response_id in self.api_callback:
+                t = threading.Thread(
+                    target=self.api_callback[response_id], args=(d,))
+                t.start()
+                self.cancel_api_request(response_id)
+                return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
                 try:
@@ -1349,22 +1346,20 @@ class GenericMQTTNotifier(GenericNotifier):
         self.check_connection()
         if self.qos and subject in self.qos: qos = self.qos[subject]
         else: qos = 1
-        if self.space: pfx = self.space + '/'
-        else: pfx = ''
         if subject == 'state':
             if retain is not None: _retain = retain
             else: _retain = True
             for i in data:
                 for k in i:
                     if not k in ['id', 'group', 'type', 'full_id', 'oid']:
-                        self.mq.publish(pfx + i['type'] + '/' + i['group'] +\
+                        self.mq.publish(self.pfx + i['type'] + '/' + i['group'] +\
                                     '/' + i['id'] + '/' + k, i[k], qos,
                                     retain = _retain)
         elif subject == 'action':
             if retain is not None: _retain = retain
             else: _retain = False
             for i in data:
-                self.mq.publish(pfx + i['item_type'] + '/' + i['item_group'] +\
+                self.mq.publish(self.pfx + i['item_type'] + '/' + i['item_group'] +\
                     '/' + i['item_id'] + '/action',
                     jsonpickle.encode(i, unpicklable=unpicklable),
                     qos, retain = _retain)
@@ -1397,8 +1392,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 _topic = topic
             try:
                 self.mq.publish(_topic, _d, qos, retain=_retain)
+                return True
             except:
                 eva.core.log_traceback(notifier=True)
+                return False
 
     def send_api_response(self, call_id, data):
         if not self.api_enabled: return False
@@ -1409,14 +1406,40 @@ class GenericMQTTNotifier(GenericNotifier):
             retain=False)
         return True
 
+    def send_api_request(self, request_id, controller_id, data, callback):
+        if request_id in self.api_callback:
+            logging.error('.GenericMQTTNotifier: duplicate API request ID')
+            return False
+        if not self.api_callback_lock.acquire(timeout=eva.core.timeout):
+            logging.critical(
+                '.GenericMQTTNotifier::api_callback locking broken')
+            eva.core.critical()
+            return False
+        self.api_callback[request_id] = callback
+        self.api_callback_lock.release()
+        return self.send_message(
+            'controller/' + controller_id + '/api/request',
+            data,
+            qos=self.qos['system'])
+
+    def cancel_api_request(self, request_id):
+        if request_id not in self.api_callback:
+            logging.error('.GenericMQTTNotifier: API request ID not found')
+            return False
+        if not self.api_callback_lock.acquire(timeout=eva.core.timeout):
+            logging.critical(
+                '.GenericMQTTNotifier::api_callback locking broken')
+            eva.core.critical()
+            return False
+        del self.api_callback[request_id]
+        self.api_callback_lock.release()
+
     def test(self):
         try:
             logging.debug('.Testing mqtt notifier %s (%s:%u)' % \
                     (self.notifier_id,self.host, self.port))
             self.check_connection()
-            if self.space: pfx = self.space + '/'
-            else: pfx = ''
-            result = self.mq.publish(pfx + 'test', 1, qos=2, retain=False)
+            result = self.mq.publish(self.pfx + 'test', 1, qos=2, retain=False)
             return eva.core.wait_for(result.is_published, self.get_timeout())
         except:
             eva.core.log_traceback(notifier=True)

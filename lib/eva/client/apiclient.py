@@ -164,7 +164,7 @@ class APIClient(object):
     def ssl_verify(self, v):
         self._ssl_verify = v
 
-    def do_call(self, api_uri, func, p, t):
+    def do_call(self, api_uri, api_type, func, p, t):
         return requests.post(
             self._uri + api_uri + func,
             json=p,
@@ -178,7 +178,8 @@ class APIClient(object):
              _return_raw=False,
              _api_uri=None,
              _debug=False):
-        if not self._uri: return (result_not_ready, {})
+        if not self._uri or not self._product_code:
+            return (result_not_ready, {})
         if timeout: t = timeout
         else: t = self._timeout
         api_uri = None
@@ -189,12 +190,14 @@ class APIClient(object):
                     self._product_code in _api_func and \
                     func in _api_func[self._product_code]['func']:
                 api_uri = _api_func[self._product_code]['uri']
+                api_type = self._product_code
                 if func in _api_func[self._product_code]['cr']:
                     check_result = True
                 if func in _api_func[self._product_code]['ce']:
                     check_exitcode = True
             elif func in _sysapi_func:
                 api_uri = _sysapi_uri
+                api_type = 'sys'
                 if func in _sysapi_func_cr:
                     check_result = True
                 if func in _sysapi_func_ce:
@@ -209,7 +212,7 @@ class APIClient(object):
         if self._key is not None and 'k' not in p:
             p['k'] = self._key
         try:
-            r = self.do_call(api_uri, func, p, t)
+            r = self.do_call(api_uri, api_type, func, p, t)
         except requests.Timeout:
             return (result_server_timeout, {}) if \
                     not _return_raw else (-1, {})
