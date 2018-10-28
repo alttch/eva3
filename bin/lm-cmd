@@ -391,7 +391,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 d['id'] = d['full_id']
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
-            if api_func == 'result':
+            elif api_func == 'result':
                 d['time'] = datetime.fromtimestamp(
                     d['time']['created']).isoformat()
             elif itype == 'state':
@@ -1010,7 +1010,7 @@ _pd_cols = {
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
     'list_controllers':
-    ['id', 'type', 'connected', 'mode', 'version', 'build', 'description'],
+    ['id', 'type', 'connected', 'proto', 'version', 'build', 'description'],
     'list_ext_': ['id', 'mod', 'description', 'version'],
     'list_ext_mods': ['mod', 'description', 'version', 'api'],
     'modhelp_ext': ['name', 'type', 'required', 'help']

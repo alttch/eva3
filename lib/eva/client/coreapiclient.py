@@ -49,7 +49,7 @@ class CoreAPIClient(APIClient):
         self._key_id = ''
         # 0 - http
         # 1 - mqtt
-        self.mode = 0
+        self.protocol_mode = 0
 
     def set_uri(self, uri):
         # mqtt uri format: mqtt:notifier_id:controller/group
@@ -62,7 +62,7 @@ class CoreAPIClient(APIClient):
                 notifier_id, controller_id = None, n
             self.set_notifier(notifier_id)
             self.set_controller_id(controller_id)
-            self.set_mode(1)
+            self.set_protocol_mode(1)
         elif not uri.startswith('http://') and \
                 not uri.startswith('https://') and uri.find('/') != -1:
             if uri.find('@') != -1:
@@ -71,19 +71,19 @@ class CoreAPIClient(APIClient):
                 notifier_id, controller_id = None, uri
             self.set_notifier(notifier_id)
             self.set_controller_id(controller_id)
-            self.set_mode(1)
+            self.set_protocol_mode(1)
         else:
             super().set_uri(uri)
-            self.set_mode(0)
+            self.set_protocol_mode(0)
 
-    def set_mode(self, mode):
-        if not mode:
+    def set_protocol_mode(self, protocol_mode):
+        if not protocol_mode:
             self.do_call = self.do_call_http
-        elif mode == 1:
+        elif protocol_mode == 1:
             self.do_call = self.do_call_mqtt
         else:
-            raise Exception('mode unknown')
-        self.mode = mode
+            raise Exception('protocol_mode unknown')
+        self.protocol_mode = protocol_mode
 
     def set_controller_id(self, uri):
         _u = uri

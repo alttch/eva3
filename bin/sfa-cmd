@@ -64,7 +64,7 @@ _pd_cols = {
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
     'list_controllers':
-    ['id', 'connected', 'mode', 'version', 'build', 'description']
+    ['id', 'type', 'connected', 'proto', 'version', 'build', 'description']
 }
 
 _pd_idx = {'state': 'oid', 'result': 'time'}
@@ -223,6 +223,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             if itype == 'action' or api_func == 'result':
                 d['time'] = datetime.fromtimestamp(
                     d['time']['created']).isoformat()
+            if api_func == 'list_controllers':
+                d['type'] = 'static' if d['static'] else 'dynamic'
             elif api_func in ['list_macros', 'list_controllers']:
                 d['id'] = d['full_id']
             elif itype == 'state':

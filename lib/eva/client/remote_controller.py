@@ -216,7 +216,7 @@ class RemoteController(eva.item.Item):
         d['static'] = self.static
         if config or props:
             d['uri'] = ''
-            if self.api.mode == 1:
+            if self.api.protocol_mode == 1:
                 d['uri'] = 'mqtt:'
                 if self.api._notifier_id:
                     d['uri'] += self.api._notifier_id + ':'
@@ -228,12 +228,12 @@ class RemoteController(eva.item.Item):
             d['reload_interval'] = self.reload_interval
         if info:
             d['connected'] = self.connected
-            if self.api.mode == 0:
-                d['mode'] = 'http'
-            elif self.api.mode == 1:
-                d['mode'] = 'mqtt'
+            if self.api.protocol_mode == 0:
+                d['proto'] = 'http'
+            elif self.api.protocol_mode == 1:
+                d['proto'] = 'mqtt'
             else:
-                d['mode'] = 'unknown'
+                d['proto'] = 'unknown'
             d['version'] = self.version
             d['build'] = str(self.product_build)
             d['mqtt_update'] = self.mqtt_update
