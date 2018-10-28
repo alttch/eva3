@@ -119,6 +119,7 @@ function create_notifier {
         fi
         BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
+        BATCH="$BATCH;set eva_1 api_enabled 1"
         BATCH="$BATCH;test eva_1"
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
@@ -413,10 +414,14 @@ if [ $FORCE -eq 0 ]; then
 fi
 
 [ $MASTERKEY ] || MASTERKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+[ $DEFAULTKEY ] || DEFAULTKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+[ $OPKEY ] || OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
 
 if [ $INTERACTIVE -eq 1 ]; then
     echo
     echo "Your new masterkey: ${MASTERKEY}"
+    echo "Your new controller default key: ${DEFAULTKEY}"
+    echo "Your new operator key: ${OPKEY}"
     echo
     cat << EOF
 WARNING: If you want to run some components under restricted users, create
@@ -467,15 +472,6 @@ if [ $INSTALL_UC -eq 1 ]; then
     bash install/install-uc || exit 1
     echo "UC_ENABLED=yes" >> etc/eva_servers
     echo
-    [ $UC_OPKEY ] || UC_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    [ $UC_LM_KEY ] || UC_LM_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    [ $UC_SFA_KEY ] || UC_SFA_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    if [ $INTERACTIVE -eq 1 ]; then
-        echo "Your UC operator key: ${UC_OPKEY}"
-        echo "Your UC integration key for LM PLCs: ${UC_LM_KEY}"
-        echo "Your UC integration key for SFA: ${UC_SFA_KEY}"
-        echo
-    fi
     askUser "Enter the user account to run under (root is recommended for UC)" ${DEFAULT_USER}
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -497,24 +493,8 @@ key = ${MASTERKEY}
 master = yes
 hosts_allow = ${REMOTES}
 
-[operator]
-key = ${UC_OPKEY}
-sysfunc = yes
-groups = #
-hosts_allow = 0.0.0.0/0
-
-[lm]
-key = ${UC_LM_KEY}
-groups = #
-allow = cmd, device
-hosts_allow = ${REMOTES}
-
-[sfa]
-key = ${UC_SFA_KEY}
-groups = #
-hosts_allow = ${REMOTES}
-
 EOF
+    # TODO - insert default and operator key as dynamic keys
     chmod 600 etc/uc_apikeys.ini
     create_notifier uc || exit 1
     UC_USER=${USER}
@@ -543,13 +523,6 @@ if [ $INSTALL_LM -eq 1 ]; then
     bash install/install-lm || exit 1
     echo "LM_ENABLED=yes" >> etc/eva_servers
     echo
-    [ $LM_OPKEY ] || LM_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    [ $LM_SFA_KEY ] || LM_SFA_KEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    if [ $INTERACTIVE -eq 1 ]; then
-        echo "Your LM operator key: ${LM_OPKEY}"
-        echo "Your LM integration key for SFA: ${LM_SFA_KEY}"
-        echo
-    fi
     askUser "Enter the user account to run under (use root only if you are sure)" ${DEFAULT_USER}
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -571,19 +544,8 @@ key = ${MASTERKEY}
 master = yes
 hosts_allow = ${REMOTES}
 
-[operator]
-key = ${LM_OPKEY}
-sysfunc = yes
-groups = #
-hosts_allow = 0.0.0.0/0
-
-[sfa]
-key = ${LM_SFA_KEY}
-groups = #
-allow = dm_rule_props, dm_rules_list
-hosts_allow = ${REMOTES}
-
 EOF
+    # TODO - insert default and operator key as dynamic keys
     chmod 600 etc/lm_apikeys.ini
     create_notifier lm || exit 1
     LM_USER=${USER}
@@ -622,11 +584,6 @@ if [ $INSTALL_SFA -eq 1 ]; then
     bash install/install-sfa || exit 1
     echo "SFA_ENABLED=yes" >> etc/eva_servers
     echo
-    [ $SFA_OPKEY ] || SFA_OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-    if [ $INTERACTIVE -eq 1 ]; then
-        echo "Your SFA operator key: ${SFA_OPKEY}"
-        echo
-    fi
     askUser "Enter the user account to run under (root is not recommended!)" ${DEFAULT_USER}
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -648,14 +605,8 @@ key = ${MASTERKEY}
 master = yes
 hosts_allow = ${REMOTES}
 
-[operator]
-key = ${SFA_OPKEY}
-groups = #
-pvt = #
-allow = dm_rule_props, dm_rules_list
-hosts_allow = 0.0.0.0/0
-
 EOF
+    # TODO - insert operator key as dynamic key
     chmod 600 etc/sfa_apikeys.ini
     create_notifier sfa || exit 1
     SFA_USER=${USER}
@@ -723,25 +674,9 @@ fi
 echo "Setup completed!"
 echo
 echo "MASTERKEY: ${MASTERKEY}"
+echo "Controller default key: ${DEFAULTKEY}"
+echo "Operator key: ${OPKEY}"
 echo
-
-if [ $INSTALL_UC -eq 1 ]; then
-    echo "UC operator key: ${UC_OPKEY}"
-    echo "UC LM key: ${UC_LM_KEY}"
-    echo "UC SFA key: ${UC_SFA_KEY}"
-    echo
-fi
-
-if [ $INSTALL_LM -eq 1 ]; then
-    echo "LM operator key: ${LM_OPKEY}"
-    echo "LM SFA key: ${LM_SFA_KEY}"
-    echo
-fi
-
-if [ $INSTALL_SFA -eq 1 ]; then
-    echo "SFA operator key: ${SFA_OPKEY}"
-    echo
-fi
 
 mkdir -p backup
 chmod 700 backup
