@@ -122,7 +122,7 @@ class CoreAPIClient(APIClient):
                 self._key_id,
                 self.ce.encrypt(data.encode()).decode()), cb.data_handler)
         if not eva.core.wait_for(cb.is_completed, self._timeout):
-            n.cancel_api_request(request_id)
+            n.finish_api_request(request_id)
             raise requests.Timeout()
         r = self.Response()
         if cb.code:

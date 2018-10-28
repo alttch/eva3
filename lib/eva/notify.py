@@ -1151,6 +1151,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.api_request_topic = self.controller_topic + 'api/request'
         self.api_response_topic = self.controller_topic + 'api/response'
         self.api_handler = eva.api.mqtt_api_handler
+        # dict of tuples (topic, handler)
         self.api_callback = {}
         self.api_callback_lock = threading.Lock()
 
@@ -1166,9 +1167,10 @@ class GenericMQTTNotifier(GenericNotifier):
         logging.debug('%s mqtt reconnect' % self.notifier_id)
         self.connected = True
         try:
-            client.subscribe(self.pfx_api_response + '+/+/api/response/+')
-            logging.debug(self.notifier_id + ' resubscribed to ' +
-                          self.pfx_api_response + '+/+/api/response/+')
+            for i, v in self.api_callback.copy():
+                client.subscribe(v[0], qos=self.qos['system'])
+                logging.debug('%s resubscribed to %s q%u API response' % \
+                        (self.notifier_id, i, self.qos['system']))
             for i, v in self.items_to_update_by_topic.copy().items():
                 client.subscribe(i, qos=v.mqtt_update_qos)
                 logging.debug('%s resubscribed to %s q%u updates' % \
@@ -1305,9 +1307,9 @@ class GenericMQTTNotifier(GenericNotifier):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
                 th = threading.Thread(
-                    target=self.api_callback[response_id], args=(d,))
+                    target=self.api_callback[response_id][1], args=(d,))
                 th.start()
-                self.cancel_api_request(response_id)
+                self.finish_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
@@ -1354,15 +1356,15 @@ class GenericMQTTNotifier(GenericNotifier):
             for i in data:
                 for k in i:
                     if not k in ['id', 'group', 'type', 'full_id', 'oid']:
-                        self.mq.publish(self.pfx + i['type'] + '/' + i['group'] +\
-                                    '/' + i['id'] + '/' + k, i[k], qos,
+                        self.mq.publish(self.pfx + i['type'] + '/' + \
+                                i['group'] + '/' + i['id'] + '/' + k, i[k], qos,
                                     retain = _retain)
         elif subject == 'action':
             if retain is not None: _retain = retain
             else: _retain = False
             for i in data:
-                self.mq.publish(self.pfx + i['item_type'] + '/' + i['item_group'] +\
-                    '/' + i['item_id'] + '/action',
+                self.mq.publish(self.pfx + i['item_type'] + '/' + \
+                        i['item_group'] + '/' + i['item_id'] + '/action',
                     jsonpickle.encode(i, unpicklable=unpicklable),
                     qos, retain = _retain)
         elif subject == 'log':
@@ -1417,14 +1419,17 @@ class GenericMQTTNotifier(GenericNotifier):
                 '.GenericMQTTNotifier::api_callback locking broken')
             eva.core.critical()
             return False
-        self.api_callback[request_id] = callback
+        t = '{}controller/{}/api/response/{}'.format(self.pfx, controller_id,
+                                                     request_id)
+        self.api_callback[request_id] = (t, callback)
         self.api_callback_lock.release()
+        self.mq.subscribe(t, qos=self.qos['system'])
         return self.send_message(
             'controller/' + controller_id + '/api/request',
             data,
             qos=self.qos['system'])
 
-    def cancel_api_request(self, request_id):
+    def finish_api_request(self, request_id):
         if request_id not in self.api_callback:
             logging.warning('.GenericMQTTNotifier: API request ID not found')
             return False
@@ -1433,8 +1438,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 '.GenericMQTTNotifier::api_callback locking broken')
             eva.core.critical()
             return False
+        t = self.api_callback[request_id][0]
         del self.api_callback[request_id]
         self.api_callback_lock.release()
+        self.mq.unsubscribe(t)
 
     def test(self):
         try:

@@ -39,7 +39,8 @@ class RemoteController(eva.item.Item):
 
     def api_call(self, func, params=None, timeout=None):
         if not self.api: return None
-        (code, result) = self.api.call(func, params, timeout)
+        (code, result) = self.api.call(
+            func, params, timeout, _debug=eva.core.debug)
         if func in ['test', 'state']:
             self.connected = code == eva.client.apiclient.result_ok
         if code == eva.client.apiclient.result_forbidden:
