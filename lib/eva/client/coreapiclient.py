@@ -52,8 +52,8 @@ class CoreAPIClient(APIClient):
         self.protocol_mode = 0
 
     def set_uri(self, uri):
-        # mqtt uri format: mqtt:notifier_id:controller/group
-        # or mqtt:controller/group or controller/group@notifier
+        # mqtt uri format: mqtt:notifier_id:type/controller
+        # or mqtt:type/controller or type/controller@notifier
         if uri.startswith('mqtt:'):
             n = uri[5:]
             if n.find(':') != -1:
