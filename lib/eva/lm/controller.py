@@ -141,6 +141,7 @@ def create_lvar_state_table():
         db.close()
         eva.core.release_db()
 
+
 def save():
     for i, v in lvars_by_full_id.items():
         if not save_lvar_state(v):
@@ -638,14 +639,19 @@ def start():
     uc_pool = eva.client.remote_controller.RemoteUCPool()
     uc_pool.start()
     for i, v in remote_ucs.items():
-        if uc_pool.append(v):
-            logging.info('%s added to the controller pool' % \
-                    v.item_id)
-        else:
-            logging.error('Failed to add %s to the controller pool' % \
-                    v.item_id)
+        t = threading.Thread(target=connect_remote_controller, args=(v,))
+        t.start()
     for i, v in lvars_by_full_id.items():
         v.start_processors()
+
+
+def connect_remote_controller(v):
+    if uc_pool.append(v):
+        logging.info('%s added to the controller pool' % \
+                v.full_id)
+    else:
+        logging.error('Failed to add %s to the controller pool' % \
+                v.full_id)
 
 
 def stop():

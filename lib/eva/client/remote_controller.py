@@ -107,7 +107,8 @@ class RemoteController(eva.item.Item):
     def set_modified(self, save):
         super().set_modified(save)
         self.connected = False
-        self.test()
+        t = threading.Thread(target=self.test)
+        t.start()
 
     def set_prop(self, prop, val=None, save=False):
         if prop == 'uri' and val:

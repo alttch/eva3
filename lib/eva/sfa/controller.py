@@ -230,21 +230,24 @@ def start():
     uc_pool = eva.client.remote_controller.RemoteUCPool()
     uc_pool.start()
     for i, v in remote_ucs.items():
-        if uc_pool.append(v):
-            logging.info('%s added to the controller pool' % \
-                    v.full_id)
-        else:
-            logging.error('Failed to add %s to the controller pool' % \
-                    v.full_id)
+        t = threading.Thread(
+            target=connect_remote_controller, args=(uc_pool, v))
+        t.start()
     lm_pool = eva.client.remote_controller.RemoteLMPool()
     lm_pool.start()
     for i, v in remote_lms.items():
-        if lm_pool.append(v):
-            logging.info('%s added to the controller pool' % \
-                    v.full_id)
-        else:
-            logging.error('Failed to add %s to the controller pool' % \
-                    v.full_id)
+        t = threading.Thread(
+            target=connect_remote_controller, args=(lm_pool, v))
+        t.start()
+
+
+def connect_remote_controller(pool, v):
+    if pool.append(v):
+        logging.info('%s added to the controller pool' % \
+                v.item_id)
+    else:
+        logging.error('Failed to add %s to the controller pool' % \
+                v.item_id)
 
 
 def stop():
