@@ -25,7 +25,7 @@ keys = {}
 keys_by_id = {}
 
 allows = []
-all_allows = ['cmd', 'lock', 'device', 'dm_rules_props', 'dm_rules_list']
+all_allows = ['cmd', 'lock', 'device', 'dm_rule_props', 'dm_rules_list']
 
 keys_to_delete = set()
 
