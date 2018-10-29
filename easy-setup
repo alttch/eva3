@@ -22,6 +22,7 @@ MQTT_ANNOUNCE_ENABLED=0
 MQTT_DISCOVERY_ENABLED=0
 LINK=0
 ALLOW_ROOT=0
+BENCHMARK=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
 
 REMOTES='0.0.0.0/0'
@@ -163,11 +164,11 @@ function create_notifier {
         fi
         BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
-        if [ $MQTT_ANNOUNCE_ENABLED -eq 1 ]; then
+        if [ "x$MQTT_ANNOUNCE_ENABLED" == "x1" ]; then
             BATCH="$BATCH;set eva_1 api_enabled 1"
             BATCH="$BATCH;set eva_1 announce_interval 10"
         fi
-        [ $MQTT_DISCOVERY_ENABLED -eq 1 ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
+        [ "x$MQTT_DISCOVERY_ENABLED" == "x1" ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
         BATCH="$BATCH;test eva_1"
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
@@ -435,6 +436,18 @@ do
         ;;
         --root)
             ALLOW_ROOT=1
+            shift
+        ;;
+        --benchmark)
+            echo "Will setup UC and do benchmark"
+            if [ -f ./etc/uc.ini ]; then
+                echo "etc/uc.ini already exists. Aborting"
+                exit 5
+            fi
+            INTERACTIVE=0
+            INSTALL_UC=1
+            cp -v ./etc/uc.ini-benchmark ./etc/uc.ini
+            BENCHMARK=1
             shift
         ;;
         *)
@@ -776,5 +789,11 @@ chmod 700 backup
 
 echo "MQTT_DISCOVERY_ENABLED=$MQTT_DISCOVERY_ENABLED" > ./etc/easy_setup
 echo "LINK=$LINK" >> ./etc/easy_setup
+
+if [ $BENCHMARK -eq 1 ]; then
+    echo "Starting CRT benchmark"
+    echo
+    ./tests/benchmark-uc-crt
+fi
 
 exit 0

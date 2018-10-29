@@ -65,4 +65,4 @@ if n:
     print('MQTT_CERT=' + data.get('certfile', ''))
     print('MQTT_KEY=' + data.get('keyfile', ''))
     print('MQTT_ANNOUNCE_ENABLED=' +
-          ('1' if data.get('announce_interval', 0) > 0 else ''))
+          ('1' if data.get('announce_interval', 0) > 0 else '0'))
