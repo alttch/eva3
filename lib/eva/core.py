@@ -118,6 +118,8 @@ enterprise_layout = False
 
 started = False
 
+shutdown_requested = False
+
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
@@ -190,6 +192,8 @@ def block():
 
 
 def shutdown():
+    global shutdown_requested
+    shutdown_requested = True
     for f in _stop_func:
         try:
             f()
@@ -410,7 +414,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                     if os.environ.get('EVA_CORE_DEBUG'):
                         debug = True
                         show_traceback = True
-                    else: debug = (cfg.get('server', 'debug') == 'yes')
+                    else:
+                        debug = (cfg.get('server', 'debug') == 'yes')
                     if debug: debug_on()
                 except:
                     pass
