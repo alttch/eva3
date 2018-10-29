@@ -212,6 +212,7 @@ def _t_dispatcher(host, port):
                 try:
                     x, api_key_id, data = data.split('|', 2)
                     ce = apikey.key_ce(api_key_id)
+                    api_key = apikey.key_by_id(api_key_id)
                     if ce is None:
                         logging.warning('UDP API: invalid api key id in' + \
                                 ' encrypted packet from %s' % address)
@@ -252,7 +253,7 @@ def _t_dispatcher(host, port):
                             priority = cmd[3]
                     if status == 'None': status = None
                     if value == 'None': value = None
-                    if api_key is not None:
+                    if api_key_id is not None:
                         logging.debug('udp cmd data api_key = %s' % api_key_id)
                     logging.debug('udp cmd data item_id = %s' % item_id)
                     logging.debug('udp cmd data update = %s' % update)
