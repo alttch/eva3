@@ -349,7 +349,7 @@ def reset_log(initial=False):
         logger.addHandler(MemoryLogHandler())
 
 
-def load(fname=None, initial=False, init_log=True):
+def load(fname=None, initial=False, init_log=True, check_pid=True):
     global system_name, log_file, pid_file, debug, development, show_traceback
     global stop_on_critical, dump_on_critical
     global notify_on_start, db_file, userdb_file
@@ -371,6 +371,7 @@ def load(fname=None, initial=False, init_log=True):
             except:
                 pass
             try:
+                if not check_pid: raise Exception('no check required')
                 pid = int(open(pid_file).readline().strip())
                 p = psutil.Process(pid)
                 print('Can not start %s with config %s. ' % \

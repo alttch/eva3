@@ -1,6 +1,10 @@
 #!/bin/bash
 
+UC_ENABLED=
+LM_ENABLED=
+SFA_ENABLED=
 FORCE=0
+APPEND=0
 INTERACTIVE=1
 DEFAULT_USER=root
 INSTALL_UC=0
@@ -15,6 +19,7 @@ MQTT_CAFILE=
 MQTT_CERT=
 MQTT_KEY=
 MQTT_ANNOUNCE_ENABLED=
+MQTT_DISCOVERY_ENABLED=
 LINK=0
 ALLOW_ROOT=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -158,11 +163,11 @@ function create_notifier {
         fi
         BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
-        if [ $MQTT_ANNOUNCE_ENABLED  ];then
+        if [ $MQTT_ANNOUNCE_ENABLED -eq 1 ]; then
             BATCH="$BATCH;set eva_1 api_enabled 1"
             BATCH="$BATCH;set eva_1 announce_interval 10"
         fi
-        [ $MQTT_DISCOVERY_ENABLED ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
+        [ $MQTT_DISCOVERY_ENABLED -eq 1 ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
         BATCH="$BATCH;test eva_1"
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
@@ -460,14 +465,16 @@ cd `dirname ${D}`
 echo
 
 
-if [ $FORCE -eq 0 ]; then
-    CFGS="eva_servers watchdog uc_apikeys.ini lm_apikeys.ini sfa_apikeys.ini"
-    for c in ${CFGS}; do
-        if [ -f etc/$c ]; then
-            echo "Error: etc/$c already present. Remove configs or use --force option. Use --force --clear to perform a clean install"
-            exit 2
-        fi
-    done
+if [ -f ./etc/eva_servers ]; then
+    echo "Installed system detected"
+    source ./etc/eva_servers
+    source ./etc/easy_setup
+    [ -f ./etc/uc_apikeys.ini ] && PRD=uc
+    [ -f ./etc/lm_apikeys.ini ] && PRD=lm
+    [ -f ./etc/lm_apikeys.ini ] && PRD=sfa
+    echo "Will use settings from $PRD"
+    eval "`./sbin/get-setup-options $PRD`" || exit 1
+    APPEND=1
 fi
 
 [ $MASTERKEY ] || MASTERKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
@@ -476,9 +483,9 @@ fi
 
 if [ $INTERACTIVE -eq 1 ]; then
     echo
-    echo "Your new masterkey: ${MASTERKEY}"
-    echo "Your new controller default key: ${DEFAULTKEY}"
-    echo "Your new operator key: ${OPKEY}"
+    echo "Your masterkey: ${MASTERKEY}"
+    echo "Your controller default key: ${DEFAULTKEY}"
+    echo "Your operator key: ${OPKEY}"
     echo
     cat << EOF
 WARNING: If you want to run some components under restricted users, create
@@ -498,29 +505,38 @@ fi
 echo "Checking mods"
 ./install/check-mods install || exit 1
 
+echo
+
 # ASK SOME QUESTIONS
 
-echo
-askYN "Should this controller grant API access for the local instances only"
-[ $VALUE == "1" ] && REMOTES="127.0.0.1"
+if [ $APPEND -ne 1 ]; then
+    echo
+    askYN "Should this controller grant API access for the local instances only"
+    [ $VALUE == "1" ] && REMOTES="127.0.0.1"
+    askMQTT
+fi
 
-askMQTT
 
-if [ "x$MQTT_HOST" != "x" ]; then
+if [ "x$MQTT_HOST" != "x" ] && [ $APPEND -ne 1 ]; then
     echo
     askYN "Link controllers statically"
     [ $VALUE == "1" ] && LINK=1
 fi
 
-echo -n > etc/eva_servers
+[ $APPEND -ne 1 ] && echo -n > etc/eva_servers
 
 [ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
 
 # INSTALL UC
 
-echo
-askYN "Install EVA Universal Controller on this host"
-[ $VALUE == "1" ] && INSTALL_UC=1
+if [ "x$UC_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
+    echo
+    askYN "Install EVA Universal Controller on this host"
+    [ $VALUE == "1" ] && INSTALL_UC=1
+else
+    echo "UC is already installed. Skipping"
+    INSTALL_UC=0
+fi
 
 echo
 
@@ -573,8 +589,13 @@ fi
 
 # INSTALL LM
 
-askYN "Install EVA Logical Manager PLC on this host"
-[ $VALUE == "1" ] && INSTALL_LM=1
+if [ "x$LM_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
+    askYN "Install EVA Logical Manager PLC on this host"
+    [ $VALUE == "1" ] && INSTALL_LM=1
+else
+    echo "LM is already installed. Skipping"
+    INSTALL_LM=0
+fi
 
 echo
 
@@ -637,8 +658,13 @@ fi
 
 # INSTALL SFA
 
-askYN "Install SCADA Final Aggregator on this host"
-[ $VALUE == "1" ] && INSTALL_SFA=1
+if [ "x$SFA_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
+    askYN "Install SCADA Final Aggregator on this host"
+    [ $VALUE == "1" ] && INSTALL_SFA=1
+else
+    echo "SFA is already installed. Skipping"
+    INSTALL_SFA=0
+fi
 
 echo
 
@@ -746,5 +772,8 @@ echo
 
 mkdir -p backup
 chmod 700 backup
+
+echo "MQTT_DISCOVERY_ENABLED=$MQTT_DISCOVERY_ENABLED" > ./etc/easy_setup
+echo "LINK=$LINK" >> ./etc/easy_setup
 
 exit 0
