@@ -1154,28 +1154,31 @@ class GenericMQTTNotifier(GenericNotifier):
             pfx, eva.core.product_code, eva.core.system_name)
         self.api_request_topic = self.controller_topic + 'api/request'
         self.api_response_topic = self.controller_topic + 'api/response'
-        self.annouce_topic = self.pfx + 'controller/discovery'
-        self.annouce_msg = eva.core.product_code + '/' + eva.core.system_name
+        self.announce_topic = self.pfx + 'controller/discovery'
+        self.announce_msg = eva.core.product_code + '/' + eva.core.system_name
         self.api_handler = eva.api.mqtt_api_handler
         self.discovery_handler = eva.api.mqtt_discovery_handler
         # dict of tuples (topic, handler)
         self.api_callback = {}
         self.api_callback_lock = threading.Lock()
         self.announce_enabled = False
-        self.annoucer = None
+        self.announcer = None
 
     def _t_announcer(self):
-        logging.debug('%s annoucer started' % self.notifier_id)
+        logging.debug('%s announcer started' % self.notifier_id)
         while self.announce_enabled:
             self.send_message(
-                self.annouce_topic, self.annouce_msg, qos=self.qos['system'])
+                self.announce_topic,
+                self.announce_msg,
+                qos=self.qos['system'],
+                use_space=False)
             i = 0
             while i < self.announce_interval and self.announce_enabled:
                 time.sleep(eva.core.sleep_step)
                 i += eva.core.sleep_step
             if not self.announce_enabled:
                 break
-        logging.debug('%s annoucer stopped' % self.notifier_id)
+        logging.debug('%s announcer stopped' % self.notifier_id)
 
     def connect(self):
         self.check_connection()
@@ -1184,18 +1187,18 @@ class GenericMQTTNotifier(GenericNotifier):
         super().disconnect()
         self.mq.loop_stop()
         self.mq.disconnect()
-        if self.annoucer and self.annoucer.isAlive():
+        if self.announcer and self.announcer.isAlive():
             self.announce_enabled = False
-            self.annoucer.join()
+            self.announcer.join()
 
     def on_connect(self, client, userdata, flags, rc):
         logging.debug('%s mqtt reconnect' % self.notifier_id)
         self.connected = True
         if self.announce_interval and \
-                (not self.annoucer or not self.annoucer.isAlive()):
+                (not self.announcer or not self.announcer.isAlive()):
             self.announce_enabled = True
-            self.annoucer = threading.Thread(target=self._t_announcer)
-            self.annoucer.start()
+            self.announcer = threading.Thread(target=self._t_announcer)
+            self.announcer.start()
         try:
             for i, v in self.api_callback.copy():
                 client.subscribe(v[0], qos=self.qos['system'])
@@ -1223,9 +1226,9 @@ class GenericMQTTNotifier(GenericNotifier):
                 logging.debug('%s subscribed to %s' % \
                         (self.notifier_id, self.api_request_topic))
             if self.discovery_enabled:
-                client.subscribe(self.annouce_topic, qos=self.qos['system'])
+                client.subscribe(self.announce_topic, qos=self.qos['system'])
                 logging.debug('%s subscribed to %s' % \
-                        (self.notifier_id, self.annouce_topic))
+                        (self.notifier_id, self.announce_topic))
         except:
             eva.core.log_traceback(notifier=True)
 
@@ -1331,12 +1334,11 @@ class GenericMQTTNotifier(GenericNotifier):
         if not self.enabled: return
         t = msg.topic
         d = msg.payload.decode()
-        if t == self.annouce_topic and \
-                d != self.annouce_msg and \
+        if t == self.announce_topic and \
+                d != self.announce_msg and \
                 self.discovery_handler:
             th = threading.Thread(
-                target=self.discovery_handler,
-                args=(self.notifier_id, d))
+                target=self.discovery_handler, args=(self.notifier_id, d))
             th.start()
             return
         if t == self.api_request_topic and self.api_handler:
