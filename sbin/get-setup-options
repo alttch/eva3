@@ -12,6 +12,8 @@ import getopt
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
+os.environ['EVA_DIR'] = os.path.dirname(os.path.realpath(__file__)) + '/..'
+
 import eva.sysapi
 import eva.core
 import eva.traphandler
@@ -42,7 +44,9 @@ print('MASTERKEY=' +
       (eva.apikey.masterkey if eva.apikey.masterkey is not None else ''))
 print('REMOTES=', end='')
 if eva.apikey.masterkey:
-    print(','.join(eva.apikey.keys.get(eva.apikey.masterkey).serialize().get('hosts_allow','')))
+    print(','.join(
+        eva.apikey.keys.get(eva.apikey.masterkey).serialize().get(
+            'hosts_allow', '')))
 else:
     print('')
 key = eva.apikey.key_by_id('default')

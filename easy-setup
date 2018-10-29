@@ -18,8 +18,8 @@ MQTT_SPACE=
 MQTT_CAFILE=
 MQTT_CERT=
 MQTT_KEY=
-MQTT_ANNOUNCE_ENABLED=
-MQTT_DISCOVERY_ENABLED=
+MQTT_ANNOUNCE_ENABLED=0
+MQTT_DISCOVERY_ENABLED=0
 LINK=0
 ALLOW_ROOT=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -406,7 +406,7 @@ do
             shift
             shift
         ;;
-    --local-only)
+        --local-only)
             echo "This controller will be installed with local-only key access"
             REMOTES="127.0.0.1"
             shift
@@ -421,6 +421,7 @@ do
             echo "Warning: asked to clear runtime. Performing"
             ./sbin/eva-control stop
             rm -rf runtime/*
+            rm -f etc/eva_servers
             shift
         ;;
         -h|--help)
@@ -469,9 +470,9 @@ if [ -f ./etc/eva_servers ]; then
     echo "Installed system detected"
     source ./etc/eva_servers
     source ./etc/easy_setup
-    [ -f ./etc/uc_apikeys.ini ] && PRD=uc
-    [ -f ./etc/lm_apikeys.ini ] && PRD=lm
-    [ -f ./etc/lm_apikeys.ini ] && PRD=sfa
+    [ "x$UC_ENABLED" == 'xyes' ] && PRD=uc
+    [ "x$LM_ENABLED" == 'xyes' ] && PRD=lm
+    [ "x$SFA_ENABLED" == 'xyes' ] && PRD=sfa
     echo "Will use settings from $PRD"
     eval "`./sbin/get-setup-options $PRD`" || exit 1
     APPEND=1
