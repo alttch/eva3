@@ -108,7 +108,6 @@ for a in range(0, iterations):
     if code != 0:
         print('FAILED')
         sys.exit(4)
-
     # time.sleep(0.03)
 
 print('100%')
