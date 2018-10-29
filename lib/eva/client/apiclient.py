@@ -82,21 +82,22 @@ _api_func = {
             'reset', 'clear', 'toggle', 'run', 'result', 'get_config',
             'save_config', 'list', 'list_remote', 'list_controllers',
             'list_macros', 'create_macro', 'destroy_macro', 'append_controller',
-            'remove_controller', 'list_props', 'list_macro_props',
-            'list_controller_props', 'set_prop', 'set_macro_prop',
-            'set_controller_prop', 'reload_controller', 'test_controller',
-            'create_lvar', 'destroy_lvar', 'list_rules', 'list_rule_props',
-            'set_rule_prop', 'create_rule', 'destroy_rule', 'login', 'logout',
-            'load_ext', 'unload_ext', 'list_ext', 'get_ext', 'list_ext_mods',
-            'modinfo_ext', 'modhelp_ext'
+            'remove_controller', 'enable_controller', 'disable_controller',
+            'list_props', 'list_macro_props', 'list_controller_props',
+            'set_prop', 'set_macro_prop', 'set_controller_prop',
+            'reload_controller', 'test_controller', 'create_lvar',
+            'destroy_lvar', 'list_rules', 'list_rule_props', 'set_rule_prop',
+            'create_rule', 'destroy_rule', 'login', 'logout', 'load_ext',
+            'unload_ext', 'list_ext', 'get_ext', 'list_ext_mods', 'modinfo_ext',
+            'modhelp_ext'
         ],
         'cr': [
             'set', 'reset', 'clear', 'toggle', 'save_config', 'set_prop',
             'set_macro_prop', 'set_controller_prop', 'create_macro',
             'destroy_macro', 'append_controller', 'remove_controller',
-            'reload_controller', 'test_controller', 'create_lvar',
-            'destroy_lvar', 'set_rule_prop', 'create_rule', 'destroy_rule',
-            'login', 'logout', 'unload_ext'
+            'enable_controller', 'disable_controller', 'reload_controller',
+            'test_controller', 'create_lvar', 'destroy_lvar', 'set_rule_prop',
+            'create_rule', 'destroy_rule', 'login', 'logout', 'unload_ext'
         ],
         'ce': ['run']
     },
@@ -108,7 +109,8 @@ _api_func = {
             'action_toggle', 'result', 'terminate', 'kill', 'q_clean',
             'disable_actions', 'enable_actions', 'set', 'reset', 'toggle',
             'clear', 'list_macros', 'groups_macro', 'run', 'list_controllers',
-            'append_controller', 'remove_controller', 'list_controller_props',
+            'append_controller', 'remove_controller', 'enable_controller',
+            'disable_controller', 'list_controller_props',
             'set_controller_prop', 'reload_controller', 'test_controller',
             'list_remote', 'list_rule_props', 'set_rule_prop', 'login',
             'logout', 'reload_clients', 'notify_restart'
@@ -116,9 +118,9 @@ _api_func = {
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',
             'set', 'reset', 'toggle', 'clear', 'set_controller_prop',
-            'append_controller', 'remove_controller', 'reload_controller',
-            'test_controller', 'set_rule_prop', 'login', 'logout',
-            'reload_clients'
+            'append_controller', 'remove_controller', 'enable_controller',
+            'disable_controller', 'reload_controller', 'test_controller',
+            'set_rule_prop', 'login', 'logout', 'reload_clients'
         ],
         'ce': ['action', 'action_toggle', 'run']
     }

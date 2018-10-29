@@ -1,6 +1,27 @@
 EVA ICS CHANGELOG
 *****************
 
+3.1.2 (TBA)
+===========
+
+Common
+------
+
+    * Perfomance improvements
+    * Controller/node autodiscovery
+    * JSON API via MQTT
+
+LM
+--
+
+    * new API functions: enable_controller, disable_controller
+
+SFA
+---
+
+    * new API functions: enable_controller, disable_controller
+
+
 3.1.1 (2018-10-22)
 ==================
 

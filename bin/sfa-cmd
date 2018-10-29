@@ -40,6 +40,8 @@ _api_functions = {
     'controller:set': 'set_controller_prop',
     'controller:reload': 'reload_controller',
     'controller:append': 'append_controller',
+    'controller:enable': 'enable_controller',
+    'controller:disable': 'disable_controller',
     'controller:remove': 'remove_controller',
     'notify:reload': 'reload_clients',
     'notify:restart': 'notify_restart'
@@ -63,8 +65,10 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_controllers':
-    ['id', 'type', 'connected', 'proto', 'version', 'build', 'description']
+    'list_controllers': [
+        'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
+        'description'
+    ]
 }
 
 _pd_idx = {'state': 'oid', 'result': 'time'}
@@ -652,6 +656,18 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Save controller config after connection',
             dest='_save',
             action='store_true')
+
+        sp_controller_enable = sp_controller.add_parser(
+            'enable', help='Enable connected controller')
+        sp_controller_enable.add_argument(
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
+
+        sp_controller_disable = sp_controller.add_parser(
+            'disable', help='Disable connected controller')
+        sp_controller_disable.add_argument(
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
         sp_controller_remove = sp_controller.add_parser(
             'remove', help='Remove connected controller')

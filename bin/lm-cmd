@@ -853,6 +853,18 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='_save',
             action='store_true')
 
+        sp_controller_enable = sp_controller.add_parser(
+            'enable', help='Enable connected UC')
+        sp_controller_enable.add_argument(
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
+
+        sp_controller_disable = sp_controller.add_parser(
+            'disable', help='Disable connected UC')
+        sp_controller_disable.add_argument(
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
+
         sp_controller_remove = sp_controller.add_parser(
             'remove', help='Remove connected UC')
         sp_controller_remove.add_argument(
@@ -984,6 +996,8 @@ _api_functions = {
     'controller:set': 'set_controller_prop',
     'controller:reload': 'reload_controller',
     'controller:append': 'append_controller',
+    'controller:enable': 'enable_controller',
+    'controller:disable': 'disable_controller',
     'controller:remove': 'remove_controller',
     'ext:list': 'list_ext',
     'ext:get': 'get_ext',
@@ -1009,8 +1023,10 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_controllers':
-    ['id', 'type', 'connected', 'proto', 'version', 'build', 'description'],
+    'list_controllers': [
+        'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
+        'description'
+    ],
     'list_ext_': ['id', 'mod', 'description', 'version'],
     'list_ext_mods': ['mod', 'description', 'version', 'api'],
     'modhelp_ext': ['name', 'type', 'required', 'help']

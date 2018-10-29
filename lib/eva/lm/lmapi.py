@@ -440,6 +440,28 @@ class LM_API(GenericAPI):
         else:
             return None
 
+    def enable_controller(self, k=None, i=None, save=False):
+        if not apikey.check(k, master=True): return None
+        controller = eva.lm.controller.get_controller(i)
+        if controller:
+            result = controller.set_prop('enabled', 1, save)
+            if result and controller.config_changed and save:
+                controller.save()
+            return result
+        else:
+            return None
+
+    def disable_controller(self, k=None, i=None, save=False):
+        if not apikey.check(k, master=True): return None
+        controller = eva.lm.controller.get_controller(i)
+        if controller:
+            result = controller.set_prop('enabled', 0, save)
+            if result and controller.config_changed and save:
+                controller.save()
+            return result
+        else:
+            return None
+
     def set_macro_prop(self, k=None, i=None, p=None, v=None, save=False):
         if not apikey.check(k, master=True): return None
         macro = eva.lm.controller.get_macro(i)
@@ -556,6 +578,8 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.create_macro.exposed = True
         LM_HTTP_API.destroy_macro.exposed = True
         LM_HTTP_API.append_controller.exposed = True
+        LM_HTTP_API.enable_controller.exposed = True
+        LM_HTTP_API.disable_controller.exposed = True
         LM_HTTP_API.remove_controller.exposed = True
 
         LM_HTTP_API.list_props.exposed = True
@@ -819,6 +843,16 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         sv = eva.tools.val_to_boolean(s)
         return http_api_result_ok() if super().append_controller(
             k, u, a, m, sv, t, save) else http_api_result_error()
+
+    def enable_controller(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().enable_controller(k, i) \
+                else http_api_result_error()
+
+    def disable_controller(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().disable_controller(k, i) \
+                else http_api_result_error()
 
     def remove_controller(self, k=None, i=None):
         cp_need_master(k)
