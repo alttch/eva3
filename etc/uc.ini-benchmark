@@ -15,7 +15,7 @@ db_file = runtime/db/uc.db
 ; one user db may be used by multiple controllers at once
 ;userdb_file = runtime/db/users.db
 ; keep action history in seconds
-keep_action_history = 0
+keep_action_history = 86400
 ; keep memory log in seconds
 keep_logmem = 86400
 ; notify state on start
