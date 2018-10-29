@@ -14,7 +14,7 @@ MQTT_SPACE=
 MQTT_CAFILE=
 MQTT_CERT=
 MQTT_KEY=
-MQTT_API_ENABLED=
+MQTT_ANNOUNCE_ENABLED=
 LINK=0
 ALLOW_ROOT=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -45,7 +45,7 @@ function usage {
     echo " --local-only             accept API keys (except operator) only from local host"
     echo " -u USER                 set up all controllers to run under specified user"
     echo
-    echo " --link                   link all controllers together (requires --mqtt)"
+    echo " --link                   link all controllers statically (requires --mqtt)"
     echo "                          WARNING: it's not possible to change controller id"
     echo "                          after linking. IDs of all controllers are automatically"
     echo "                          set to the current host name. If you want to use different"
@@ -54,9 +54,11 @@ function usage {
     echo
     echo " --mqtt user:password@host:port/space"
     echo "                          specify MQTT server access"
-    echo " --mqtt-cafile FILE            MQTT CA file to enable MQTT via SSL"
+    echo " --mqtt-cafile FILE       MQTT CA file to enable MQTT via SSL"
     echo " --mqtt-cert FILE         MQTT authorization cert"
     echo " --mqtt-key FILE          MQTT authorization key"
+    echo " --mqtt-announce          Enable MQTT announces and API calls via MQTT"
+    echo " --mqtt-discovery         Enable autodiscovery of other nodes via MQTT"
     echo
     echo " -p {uc,lm,sfa,all}       specify which controller to set up or all, may be used"
     echo "                          several times"
@@ -156,7 +158,11 @@ function create_notifier {
         fi
         BATCH="$BATCH;subscribe state eva_1 -v '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
-        [ $MQTT_API_ENABLED ] && BATCH="$BATCH;set eva_1 api_enabled 1"
+        if [ $MQTT_ANNOUNCE_ENABLED -eq 1 ];then
+            BATCH="$BATCH;set eva_1 api_enabled 1"
+            BATCH="$BATCH;set eva_1 announce_interval 30"
+        fi
+        [ $MQTT_DISCOVERY_ENABLED ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
         BATCH="$BATCH;test eva_1"
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
@@ -275,8 +281,12 @@ function askMQTT {
                 exit 5
             fi
         else
-            askYN "Enable API calls via MQTT"
-            MQTT_API_ENABLED=$VALUE
+            if [ $INTERACTIVE -eq 1 ]; then
+                askYN "Enable node announcements and API calls via MQTT"
+                MQTT_ANNOUNCE_ENABLED=$VALUE
+                askYN "Enable autodiscovery of other nodes via MQTT"
+                MQTT_DISCOVERY_ENABLED=$VALUE
+            fi
             return
         fi
         echo "MQTT test failed"
@@ -353,6 +363,14 @@ do
                 exit 5
             fi
             shift
+            shift
+        ;;
+        --mqtt-announce)
+            MQTT_ANNOUNCE_ENABLED=1
+            shift
+        ;;
+        --mqtt-discovery)
+            MQTT_DISCOVERY_ENABLED=1
             shift
         ;;
         -u)
@@ -490,7 +508,7 @@ askMQTT
 
 if [ "x$MQTT_HOST" != "x" ]; then
     echo
-    askYN "Link controllers together"
+    askYN "Link controllers statically"
     [ $VALUE == "1" ] && LINK=1
 fi
 
@@ -666,6 +684,7 @@ EOF
     fi
     echo "Creating SFA keys"
     create_operator_key sfa || exit 1
+    create_default_key sfa || exit 1
     save_controller_state sfa || exit 1
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
