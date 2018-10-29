@@ -104,8 +104,12 @@ for a in range(0, iterations):
     p = a / iterations * 100
     if p and p / 10 == int(p / 10):
         print('%u%%' % p)
-    api_call('test_phi', params)
-    time.sleep(0.03)
+    code, result = api_call('test_phi', params)
+    if code != 0:
+        print('FAILED')
+        sys.exit(4)
+
+    # time.sleep(0.03)
 
 print('100%')
 

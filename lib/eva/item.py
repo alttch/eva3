@@ -20,6 +20,20 @@ from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.tools import is_oid
 from eva.tools import parse_oid
+# from evacpp.evacpp import GenericAction
+from eva.generic import GenericAction
+
+from eva.generic import ia_status_created
+from eva.generic import ia_status_pending
+from eva.generic import ia_status_queued
+from eva.generic import ia_status_refused
+from eva.generic import ia_status_dead
+from eva.generic import ia_status_canceled
+from eva.generic import ia_status_ignored
+from eva.generic import ia_status_running
+from eva.generic import ia_status_failed
+from eva.generic import ia_status_terminated
+from eva.generic import ia_status_completed
 
 
 class Item(object):
@@ -81,11 +95,9 @@ class Item(object):
     def notify(self, retain=None, skip_subscribed_mqtt=False):
         if skip_subscribed_mqtt: s = self
         else: s = None
+        d = self.serialize(notify=True)
         eva.notify.notify(
-            'state',
-            data=self.copy(),
-            retain=retain,
-            skip_subscribed_mqtt_item=s)
+            'state', data=(self, d), retain=retain, skip_subscribed_mqtt_item=s)
 
     def serialize(self,
                   full=False,
@@ -1522,18 +1534,6 @@ class ActiveItem(Item):
         super().destroy()
 
 
-ia_status_created = 0  # action just created
-ia_status_pending = 1  # put in global queue
-ia_status_queued = 2  # queued in item action processor queue
-ia_status_refused = 3  # refused to queue (item doesn't support queues)
-ia_status_dead = 4  # queueing into item queue took too long
-ia_status_canceled = 5  # canceled for some reason
-ia_status_ignored = 6  # queued but ignored to run (item already in state)
-ia_status_running = 7  # currently running
-ia_status_failed = 8  # failed to run
-ia_status_terminated = 9  # executed but terminated
-ia_status_completed = 10  # executed and finished successfully
-
 ia_status_names = [
     'created', 'pending', 'queued', 'refused', 'dead', 'canceled', 'ignored',
     'running', 'failed', 'terminated', 'completed'
@@ -1542,15 +1542,15 @@ ia_status_names = [
 ia_default_priority = 100
 
 
-class ItemAction(object):
+class ItemAction(GenericAction):
 
     def __init__(self, item, priority=None, action_uuid=None):
+        super().__init__()
         self.item_action_lock = threading.Lock()
         if not self.item_action_lock.acquire(timeout=eva.core.timeout):
             logging.critical('ItemAction::__init___ locking broken')
             eva.core.critical()
             return False
-        self.status = ia_status_created
         if priority: self.priority = priority
         else: self.priority = ia_default_priority
         self.time = {ia_status_created: time.time()}
@@ -1566,7 +1566,12 @@ class ItemAction(object):
             logging.debug('action %s created, %s: %s' % \
                 (self.uuid, self.item.item_type,
                     self.item.full_id))
-            eva.notify.notify('action', self.copy())
+            if eva.notify.action_subscribed:
+                t = threading.Thread(
+                    target=eva.notify.notify,
+                    args=('action', (self, self.serialize())))
+                t.setDaemon(True)
+                t.start()
         self.item_action_lock.release()
 
     def __cmp__(self, other):
@@ -1579,7 +1584,10 @@ class ItemAction(object):
         return self.priority > other.priority
 
     def get_status_name(self):
-        return ia_status_names[self.status]
+        return ia_status_names[self.get_status()]
+
+    def _set_status_only(self, status):
+        super().set_status(status)
 
     def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
         if lock:
@@ -1595,14 +1603,15 @@ class ItemAction(object):
                 not self.is_status_pending():
             if lock: self.item_action_lock.release()
             return False
+        s = self.get_status()
         if status == ia_status_canceled and ( \
-                self.status == ia_status_running or \
-                self.status == ia_status_failed or \
-                self.status == ia_status_terminated or \
-                self.status == ia_status_completed):
+                s == ia_status_running or \
+                s == ia_status_failed or \
+                s == ia_status_terminated or \
+                s == ia_status_completed):
             if lock: self.item_action_lock.release()
             return False
-        self.status = status
+        super().set_status(status)
         self.time[status] = time.time()
         if exitcode is not None:
             self.exitcode = exitcode
@@ -1611,92 +1620,48 @@ class ItemAction(object):
         if err is not None:
             self.err = err
         logging.debug('action %s new status: %s' % \
-                (self.uuid, ia_status_names[self.status]))
-        eva.notify.notify('action', self.copy())
+                (self.uuid, ia_status_names[status]))
+        if eva.notify.action_subscribed:
+            t = threading.Thread(
+                target=eva.notify.notify,
+                args=('action', (self, self.serialize())))
+            t.setDaemon(True)
+            t.start()
         if lock: self.item_action_lock.release()
         return True
-
-    def is_processed(self):
-        return not self.status in [ia_status_created, ia_status_pending]
-
-    def is_finished(self):
-        return self.status in [
-            eva.item.ia_status_refused, eva.item.ia_status_dead,
-            eva.item.ia_status_canceled, eva.item.ia_status_ignored,
-            eva.item.ia_status_failed, eva.item.ia_status_terminated,
-            eva.item.ia_status_completed
-        ]
-
-    def is_status_created(self):
-        return self.status == ia_status_created
 
     def set_pending(self):
         return self.set_status(ia_status_pending)
 
-    def is_status_pending(self):
-        return self.status == ia_status_pending
-
     def set_queued(self):
         return self.set_status(ia_status_queued)
-
-    def is_status_queued(self):
-        return self.status == ia_status_queued
 
     def set_refused(self):
         return self.set_status(ia_status_refused)
 
-    def is_status_refused(self):
-        return self.status == ia_status_refused
-
     def set_dead(self):
         return self.set_status(ia_status_dead)
-
-    def is_status_dead(self):
-        return self.status == ia_status_dead
 
     def set_canceled(self):
         return self.set_status(ia_status_canceled)
 
-    def is_status_canceled(self):
-        return self.status == ia_status_canceled
-
     def set_ignored(self):
         return self.set_status(ia_status_ignored)
-
-    def is_status_ignored(self):
-        return self.status == ia_status_ignored
 
     def set_running(self):
         return self.set_status(ia_status_running)
 
-    def is_status_running(self):
-        return self.status == ia_status_running
-
     def set_failed(self, exitcode=None, out=None, err=None):
         return self.set_status(ia_status_failed, exitcode, out, err)
-
-    def is_status_failed(self):
-        return self.status == ia_status_failed
 
     def set_terminated(self, exitcode=None, out=None, err=None):
         return self.set_status(ia_status_terminated, exitcode, out, err)
 
-    def is_status_terminated(self):
-        return self.status == ia_status_terminated
-
     def set_completed(self, exitcode=None, out=None, err=None):
         return self.set_status(ia_status_completed, exitcode, out, err)
 
-    def is_status_completed(self):
-        return self.status == ia_status_completed
-
     def action_env(self):
         return {}
-
-    def copy(self):
-        result = copy.copy(self)
-        result.item = copy.copy(self.item)
-        return result
 
     def kill(self):
         if not self.item_action_lock.acquire(timeout=eva.core.timeout):
@@ -1726,7 +1691,7 @@ class ItemAction(object):
     def serialize(self):
         d = {}
         d['uuid'] = self.uuid
-        d['status'] = ia_status_names[self.status]
+        d['status'] = ia_status_names[self.get_status()]
         d['priority'] = self.priority
         d['exitcode'] = self.exitcode
         d['out'] = self.out
