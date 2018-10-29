@@ -794,6 +794,7 @@ if [ $BENCHMARK -eq 1 ]; then
     echo "Starting CRT benchmark"
     echo
     ./tests/benchmark-uc-crt
+    ./sbin/eva-control stop
 fi
 
 exit 0
