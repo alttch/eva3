@@ -225,7 +225,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     d['time']['created']).isoformat()
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
-            elif api_func in ['list_macros', 'list_controllers']:
+            if api_func in ['list_macros', 'list_controllers']:
                 d['id'] = d['full_id']
             elif itype == 'state':
                 try:
