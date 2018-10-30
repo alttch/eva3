@@ -7,8 +7,8 @@ EVA ICS CHANGELOG
 Common
 ------
 
-    * Perfomance improvements
-    * Controller/node autodiscovery
+    * perfomance improvements
+    * controller/node autodiscovery
     * JSON API via MQTT
 
 UC
@@ -39,9 +39,9 @@ Common
 
     * history for interactive shell mode (to turn off set
       EVA_CLI_DISABLE_HISTORY=1 system environment variable)
-    * New management CLI: eva-shell (interactive by default)
-    * Backup/restore operations (with eva-shell)
-    * Dynamic API key management via CLI and API
+    * new management CLI: eva-shell (interactive by default)
+    * backup/restore operations (with eva-shell)
+    * dynamic API key management via CLI and API
 
 UC
 --
