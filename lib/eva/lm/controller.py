@@ -477,9 +477,9 @@ def handle_discovered_controller(notifier_id, controller_id):
             return True
         key = eva.apikey.key_by_id('default')
         if not key:
-            logging.debug(
-                'Controller {} discovered, (discovered from {}), '.format
-                (controller_id, notifier_id) + 'but no API key with ID=default')
+            logging.debug('Controller {} discovered, (discovered from {}), '.
+                          format(controller_id, notifier_id) +
+                          'but no API key with ID=default')
             return False
         logging.info(
             'Controller {} discovered, appending (discovered from {})'.format(
@@ -706,6 +706,7 @@ def stop():
 
 def exec_macro(macro,
                argv=[],
+               kwargs={},
                priority=None,
                q_timeout=None,
                wait=0,
@@ -729,6 +730,7 @@ def exec_macro(macro,
     a = eva.lm.plc.MacroAction(
         m,
         argv=_argvf,
+        kwargs=kwargs,
         priority=priority,
         action_uuid=action_uuid,
         source=source)
@@ -763,4 +765,3 @@ def init():
 
 eva.api.mqtt_discovery_handler = handle_discovered_controller
 eva.api.remove_controller = remove_controller
-

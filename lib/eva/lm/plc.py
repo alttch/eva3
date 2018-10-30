@@ -88,17 +88,23 @@ class PLC(eva.item.ActiveItem):
         env_globals.update(eva.lm.extapi.env)
         env_globals.update(a.item.api.get_globals())
         env_globals['_source'] = a.source
-        env_globals['argv'] = []
+        argv = []
         for x in a.argv:
             try:
-                env_globals['argv'].append(float(x))
+                value = float(x)
             except:
-                env_globals['argv'].append(x)
+                value = x
+            argv.append(value)
+        env_globals['argv'] = argv
+        env_globals['kwargs'] = a.kwargs
+        for i, v in a.kwargs.items():
+            env_globals[i] = v
         env_globals['_0'] = a.item.item_id
         env_globals['_00'] = a.item.full_id
         for i, v in eva.core.cvars.copy().items():
             try:
-                env_globals[i] = float(v)
+                value = v
+                env_globals[i] = value
             except:
                 env_globals[i] = v
         for i in range(1, 9):
@@ -133,16 +139,19 @@ class MacroAction(eva.item.ItemAction):
     def __init__(self,
                  item,
                  argv=[],
+                 kwargs={},
                  priority=None,
                  action_uuid=None,
                  source=None):
         self.argv = argv
+        self.kwargs = kwargs
         self.source = source
         super().__init__(item=item, priority=priority, action_uuid=action_uuid)
 
     def serialize(self):
         d = super().serialize()
         d['argv'] = self.argv
+        d['kwargs'] = self.kwargs
         return d
 
 

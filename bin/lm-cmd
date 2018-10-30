@@ -658,6 +658,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_macro_run.add_argument(
             '-a', '--args', help='Macro arguments', metavar='ARGS', dest='a')
         sp_macro_run.add_argument(
+            '--kwargs',
+            help='Macro keyword arguments (name=value), comma separated',
+            metavar='ARGS',
+            dest='kw')
+        sp_macro_run.add_argument(
             '-p',
             '--priority',
             help='Action priority',
@@ -1039,7 +1044,7 @@ _fancy_tabsp = {'list_props': 26}
 _always_json = ['get_config']
 
 cli.always_json += _always_json
-cli.always_print += ['run']
+cli.always_print += ['run', 'cmd']
 cli.arg_sections += ['config', 'macro', 'rule', 'controller', 'ext']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)

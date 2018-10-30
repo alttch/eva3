@@ -296,12 +296,20 @@ class SFA_API(GenericAPI):
                 result.append(v.group)
         return sorted(result)
 
-    def run(self, k=None, i=None, args=None, priority=None, wait=0, uuid=None):
+    def run(self,
+            k=None,
+            i=None,
+            args=None,
+            kwargs=None,
+            priority=None,
+            wait=0,
+            uuid=None):
         macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
         if not macro or not apikey.check(k, macro): return False
         return eva.sfa.controller.lm_pool.run(
             macro=oid_to_id(i, 'lmacro'),
             args=args,
+            kwargs=kwargs,
             priority=priority,
             wait=wait,
             uuid=uuid)
@@ -779,7 +787,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
     def groups_macro(self, k=None):
         return super().groups_macro(k)
 
-    def run(self, k=None, i=None, u=None, a=None, p=None, w=0):
+    def run(self, k=None, i=None, u=None, a=None, kw=None, p=None, w=0):
         if w:
             try:
                 _w = float(w)
@@ -794,7 +802,8 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
                 raise cp_api_error('priority is not an integer')
         else:
             _p = None
-        a = super().run(k=k, i=i, args=a, priority=_p, wait=_w, uuid=u)
+        a = super().run(
+            k=k, i=i, args=a, kwargs=kw, priority=_p, wait=_w, uuid=u)
         if not a:
             raise cp_api_404()
         return a

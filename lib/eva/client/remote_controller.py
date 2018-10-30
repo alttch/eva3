@@ -971,11 +971,18 @@ class RemoteLMPool(RemoteControllerPool):
             p['save'] = '1'
         return lm.api_call('set_rule_prop', p)
 
-    def run(self, macro, args=None, wait=0, uuid=None, priority=None):
+    def run(self,
+            macro,
+            args=None,
+            kwargs=None,
+            wait=0,
+            uuid=None,
+            priority=None):
         if not macro in self.controllers_by_macro: return None
         lm = self.controllers_by_macro[macro]
         p = {'i': macro}
         if args: p['a'] = args
+        if kwargs: p['kw'] = kwargs
         if wait: p['w'] = wait
         if uuid: p['u'] = uuid
         if priority: p['p'] = priority

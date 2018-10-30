@@ -1102,7 +1102,7 @@ _fancy_tabsp = {'list_props': 26, 'get_phi': 14, 'get_driver': 12}
 _always_json = ['get_config']
 
 cli.always_json += _always_json
-cli.always_print += ['action', 'action_toggle']
+cli.always_print += ['action', 'action_toggle', 'cmd']
 cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'phi', 'lpi', 'driver'
 ]

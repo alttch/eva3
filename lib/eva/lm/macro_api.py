@@ -22,6 +22,8 @@ from eva.tools import oid_to_id
 from eva.tools import parse_oid
 from eva.tools import oid_type
 
+from eva.tools import dict_from_str
+
 _shared = {}
 _shared_lock = threading.Lock()
 
@@ -483,7 +485,13 @@ class MacroAPI(object):
             return False
         return True
 
-    def run(self, macro, argv=None, wait=0, uuid=None, priority=None):
+    def run(self,
+            macro,
+            argv=None,
+            kwargs=None,
+            wait=0,
+            uuid=None,
+            priority=None):
         _argv = []
         if isinstance(argv, str):
             try:
@@ -494,9 +502,19 @@ class MacroAPI(object):
             _argv = [str(argv)]
         elif isinstance(argv, list):
             _argv = argv
+        if isinstance(kwargs, str):
+            try:
+                kw = dict_from_str(kwargs)
+            except:
+                kw = {}
+        elif isinstance(kwargs, dict):
+            kw = kwargs
+        else:
+            kw = {}
         return eva.lm.controller.exec_macro(
             macro=oid_to_id(macro, 'lmacro'),
             argv=_argv,
+            kwargs=kw,
             priority=priority,
             action_uuid=uuid,
             wait=wait)

@@ -132,6 +132,7 @@ class LM_API(GenericAPI):
             k=None,
             i=None,
             args=None,
+            kwargs=None,
             priority=None,
             q_timeout=None,
             wait=0,
@@ -150,9 +151,21 @@ class LM_API(GenericAPI):
                     ar = args.split(' ')
             else:
                 ar = [args]
+        if isinstance(kwargs, str):
+            try:
+                kw = dict_from_str(kwargs)
+            except:
+                logging.error('LM API: unable to parse kwargs for macro ' + i)
+                eva.core.log_traceback()
+                return False
+        elif isinstance(kwargs, dict):
+            kw = kwargs
+        else:
+            kw = {}
         return eva.lm.controller.exec_macro(
             macro=macro,
             argv=ar,
+            kwargs=kw,
             priority=priority,
             q_timeout=q_timeout,
             wait=wait,
@@ -690,7 +703,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         else:
             raise cp_api_404()
 
-    def run(self, k=None, i=None, u=None, a=None, p=None, q=None, w=0):
+    def run(self, k=None, i=None, u=None, a=None, kw=None, p=None, q=None, w=0):
         if w:
             try:
                 _w = float(w)
@@ -713,7 +726,14 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         else:
             _q = None
         a = super().run(
-            k=k, i=i, args=a, priority=_p, q_timeout=_q, wait=_w, uuid=u)
+            k=k,
+            i=i,
+            args=a,
+            kwargs=kw,
+            priority=_p,
+            q_timeout=_q,
+            wait=_w,
+            uuid=u)
         if not a:
             raise cp_api_404()
         if a.is_status_dead():
