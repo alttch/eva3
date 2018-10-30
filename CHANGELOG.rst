@@ -20,11 +20,14 @@ LM
 --
 
     * new API functions: enable_controller, disable_controller
+    * kwargs in macros (kwargs dict, plus all keyword arguments are available
+      as variables)
 
 SFA
 ---
 
     * new API functions: enable_controller, disable_controller
+    * SFA Framework: "kwargs" option in eva_sfa_run
 
 
 3.1.1 (2018-10-22)
