@@ -133,7 +133,7 @@ class GenericCLI(object):
         self.nodename = None
         self.suppress_colors = False
         self.always_suppress_colors = False
-        self.default_timeout = 10
+        self.default_timeout = 20
         self.default_prompt = '> '
         self.timeout = self.default_timeout
         self.ssl_verify = False
