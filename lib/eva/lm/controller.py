@@ -724,9 +724,11 @@ def exec_macro(macro,
     _argvf = []
     for x in _argv:
         try:
-            _argvf.append(float(x))
+            _value = float(x)
+            if _value == int(_value): _value = int(_value)
         except:
-            _argvf.append(x)
+            _value = x
+        _argvf.append(_value)
     a = eva.lm.plc.MacroAction(
         m,
         argv=_argvf,

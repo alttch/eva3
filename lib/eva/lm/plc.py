@@ -88,16 +88,9 @@ class PLC(eva.item.ActiveItem):
         env_globals.update(eva.lm.extapi.env)
         env_globals.update(a.item.api.get_globals())
         env_globals['_source'] = a.source
-        argv = []
-        for x in a.argv:
-            try:
-                value = float(x)
-            except:
-                value = x
-            argv.append(value)
-        env_globals['argv'] = argv
-        env_globals['kwargs'] = a.kwargs
-        for i, v in a.kwargs.items():
+        env_globals['argv'] = a.argv.copy()
+        env_globals['kwargs'] = a.kwargs.copy()
+        for i, v in env_globals['kwargs'].items():
             env_globals[i] = v
         env_globals['_0'] = a.item.item_id
         env_globals['_00'] = a.item.full_id
