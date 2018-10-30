@@ -43,14 +43,21 @@ class RemoteController(eva.item.Item):
         self.mqtt_update = mqtt_update
         self.reload_interval = 300
         self.connected = False
+        self.retries = 2
         self.static = static
         self.enabled = enabled
         self.wait_for_autoremove = False
 
     def api_call(self, func, params=None, timeout=None):
         if not self.api: return None
-        (code, result) = self.api.call(
-            func, params, timeout, _debug=eva.core.debug)
+        for tries in range(self.retries + 1):
+            (code, result) = self.api.call(
+                func, params, timeout, _debug=eva.core.debug)
+            if code not in [
+                    eva.client.apiclient.result_server_error,
+                    eva.client.apiclient.result_server_timeout
+            ]:
+                break
         if func in ['test', 'state']:
             self.connected = code == eva.client.apiclient.result_ok
         if code == eva.client.apiclient.result_forbidden:
@@ -115,6 +122,8 @@ class RemoteController(eva.item.Item):
             self._key = data['key']
         if 'timeout' in data:
             self.api.set_timeout(data['timeout'])
+        if 'retries' in data:
+            self.retries = data['retries']
         if 'ssl_verify' in data:
             self.api.ssl_verify(data['ssl_verify'])
         if 'mqtt_update' in data:
@@ -158,6 +167,18 @@ class RemoteController(eva.item.Item):
                 self.api.set_timeout(eva.core.timeout)
                 self.set_modified(save)
                 return True
+        elif prop == 'retries':
+            if val is not None:
+                try:
+                    v = int(val)
+                    if v < 0: return False
+                    self.retries = v
+                    self.log_set(prop, val)
+                    self.set_modified(save)
+                    return True
+                except:
+                    return False
+            return False
         elif prop == 'static':
             try:
                 v = eva.tools.val_to_boolean(val)
@@ -239,6 +260,7 @@ class RemoteController(eva.item.Item):
         d['static'] = self.static
         d['enabled'] = self.enabled
         if config or props:
+            d['retries'] = self.retries
             d['uri'] = ''
             if self.api.protocol_mode == 1:
                 d['uri'] = 'mqtt:'
