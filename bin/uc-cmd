@@ -105,6 +105,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 result.add(v['group'])
             return list(result)
 
+    class ComplDeviceTPL(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('device templates')
+            if code: return True
+            return data
+
     class ComplItemProp(ComplGeneric):
 
         def __call__(self, prefix, **kwargs):
@@ -214,6 +221,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return result
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
+        if api_func == 'list_device_tpl':
+            result = []
+            for d in data:
+                result.append({'name': d, 'type': 'JSON device template'})
+            return result
         if itype not in ['action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, api_func_full,
                                                itype)
@@ -476,7 +488,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
 
     def add_uc_edit_functions(self):
-        ap_edit = self.sp.add_parser('edit', help='Edit item scripts')
+        ap_edit = self.sp.add_parser('edit', help='Edit scripts and templates')
 
         sp_edit = ap_edit.add_subparsers(
             dest='_func', metavar='func', help='Edit commands')
@@ -491,6 +503,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_edit_update.add_argument(
             'i', help='Item ID',
             metavar='ID').completer = self.ComplItemOID(self)
+
+        sp_edit_tpl = sp_edit.add_parser(
+            'template', help='Edit device template')
+        sp_edit_tpl.add_argument(
+            'i', help='Template name',
+            metavar='NAME').completer = self.ComplDeviceTPL(self)
 
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')
@@ -607,6 +625,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
         ap_device = self.sp.add_parser('device', help='Device management')
         sp_device = ap_device.add_subparsers(
             dest='_func', metavar='func', help='Device commands')
+
+        sp_device_templates = sp_device.add_parser(
+            'templates', help='List device templates')
+
         sp_device_create = sp_device.add_parser(
             'create', help='Create device with a template')
         sp_device_create.add_argument(
@@ -972,6 +994,19 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return self.local_func_result_failed
         return self.local_func_result_ok
 
+    def edit_tpl(self, props):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        tpl = props.get('i')
+        if not tpl:
+            return self.local_func_result_failed
+        fname = '{}/tpl/{}.json'.format(dir_runtime, tpl)
+        editor = os.environ.get('EDITOR', 'vi')
+        if os.system(editor + ' ' + fname):
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
 
 _me = 'EVA ICS UC CLI version %s' % __version__
 
@@ -991,6 +1026,7 @@ _api_functions = {
     'config:props': 'list_props',
     'config:set': 'set_prop',
     'clone:item': 'clone',
+    'device:templates': 'list_device_tpl',
     'device:create': 'create_device',
     'device:update': 'update_device',
     'device:destroy': 'destroy_device',
@@ -1019,7 +1055,8 @@ _api_functions = {
     'driver:set': 'set_driver',
     'driver:unset': 'set_driver',
     'edit:action': cli.edit_action,
-    'edit:update': cli.edit_update
+    'edit:update': cli.edit_update,
+    'edit:template': cli.edit_tpl
 }
 
 _pd_cols = {
@@ -1048,6 +1085,7 @@ _pd_cols = {
 _pd_idx = {
     'state': 'oid',
     'list': 'oid',
+    'list_device_tpl': 'name',
     'result': 'time',
     'list_phi_mods': 'mod',
     'list_lpi_mods': 'mod'

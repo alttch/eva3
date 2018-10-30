@@ -122,6 +122,7 @@ $_eva_api_func = array(
                     'create_unit',
                     'create_sensor',
                     'create_mu',
+                    'list_device_tpl',
                     'create_device',
                     'update_device',
                     'clone',

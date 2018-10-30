@@ -11,6 +11,11 @@ Common
     * Controller/node autodiscovery
     * JSON API via MQTT
 
+UC
+--
+
+    * new API function: list_device_tpl
+
 LM
 --
 

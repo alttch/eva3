@@ -4,6 +4,8 @@ __license__ = "https://www.eva-ics.com/license"
 __version__ = "3.1.2"
 
 import cherrypy
+import os
+import glob
 import eva.core
 from eva.api import GenericHTTP_API
 from eva.api import GenericAPI
@@ -396,6 +398,13 @@ class UC_API(GenericAPI):
             eva.core.log_traceback()
             return None
         return cfg
+
+    def list_device_tpl(self, k=None):
+        if not apikey.check(k, allow=['device']): return None
+        result = []
+        for i in glob.glob(eva.core.dir_runtime + '/tpl/*.json'):
+            result.append(os.path.basename(i)[:-5])
+        return sorted(result)
 
     def create_device(self, k=None, tpl_config={}, device_tpl=None, save=False):
         if not apikey.check(k, allow=['device']): return None
@@ -798,6 +807,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.create_unit.exposed = True
         UC_HTTP_API.create_sensor.exposed = True
         UC_HTTP_API.create_mu.exposed = True
+        UC_HTTP_API.list_device_tpl.exposed = True
         UC_HTTP_API.create_device.exposed = True
         UC_HTTP_API.update_device.exposed = True
 
@@ -1072,6 +1082,10 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         return http_api_result_ok() if super().create_mu(
             k, i, g, val_to_boolean(virtual),
             save) else http_api_result_error()
+
+    def list_device_tpl(self, k):
+        result = super().list_device_tpl(k)
+        return result if result is not None else http_api_result_error()
 
     def create_device(self, k=None, c=None, t=None, save=None):
         config = {}

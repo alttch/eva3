@@ -54,14 +54,15 @@ _api_func = {
             'action_toggle', 'result', 'terminate', 'q_clean', 'kill',
             'disable_actions', 'enable_actions', 'get_config', 'save_config',
             'list', 'list_props', 'set_prop', 'create', 'create_unit',
-            'create_sensor', 'create_mu', 'create_device', 'update_device',
-            'clone', 'clone_group', 'destroy', 'destroy_device', 'login',
-            'logout', 'create_modbus_port', 'destroy_modbus_port',
-            'list_modbus_ports', 'test_modbus_port', 'load_phi', 'unload_phi',
-            'unlink_phi_mod', 'put_phi_mod', 'load_driver', 'unload_driver',
-            'list_phi', 'list_drivers', 'get_phi', 'get_driver', 'test_phi',
-            'exec_phi', 'list_lpi_mods', 'list_phi_mods', 'modinfo_phi',
-            'modinfo_lpi', 'modhelp_phi', 'modhelp_lpi', 'set_driver'
+            'create_sensor', 'create_mu', 'list_device_tpl', 'create_device',
+            'update_device', 'clone', 'clone_group', 'destroy',
+            'destroy_device', 'login', 'logout', 'create_modbus_port',
+            'destroy_modbus_port', 'list_modbus_ports', 'test_modbus_port',
+            'load_phi', 'unload_phi', 'unlink_phi_mod', 'put_phi_mod',
+            'load_driver', 'unload_driver', 'list_phi', 'list_drivers',
+            'get_phi', 'get_driver', 'test_phi', 'exec_phi', 'list_lpi_mods',
+            'list_phi_mods', 'modinfo_phi', 'modinfo_lpi', 'modhelp_phi',
+            'modhelp_lpi', 'set_driver'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
