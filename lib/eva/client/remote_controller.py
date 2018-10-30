@@ -411,10 +411,12 @@ class RemoteControllerPool(object):
 
     def append(self, controller):
         if controller.load_remote() or controller.item_id != '':
-            if controller.item_id in self.controllers: return False
             if not self.management_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('RemoteControllerPool::append locking broken')
                 eva.core.critical()
+                return False
+            if controller.item_id in self.controllers:
+                self.management_lock.release()
                 return False
             self.controllers[controller.item_id] = controller
             controller.pool = self
@@ -425,15 +427,16 @@ class RemoteControllerPool(object):
         return False
 
     def remove(self, controller_id):
+        if not self.management_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('RemoteControllerPool::remove locking broken')
+            eva.core.critical()
+            return False
         if controller_id in self.controllers:
-            if not self.management_lock.acquire(timeout=eva.core.timeout):
-                logging.critical('RemoteControllerPool::remove locking broken')
-                eva.core.critical()
-                return False
             self.stop_controller_reload_thread(controller_id)
             del (self.controllers[controller_id])
             self.management_lock.release()
             return True
+        self.management_lock.release()
         return False
 
     def enable(self, controller):
