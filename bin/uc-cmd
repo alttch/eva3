@@ -10,6 +10,7 @@ import sys
 import os
 import re
 import requests
+import jsonpickle
 from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
@@ -1004,6 +1005,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
         fname = '{}/tpl/{}.json'.format(dir_runtime, tpl)
         editor = os.environ.get('EDITOR', 'vi')
         if os.system(editor + ' ' + fname):
+            return self.local_func_result_failed
+        try:
+            jsonpickle.decode(open(fname).read())
+        except Exception as e:
+            self.print_err('Unable to validate template. ' + str(e))
             return self.local_func_result_failed
         return self.local_func_result_ok
 
