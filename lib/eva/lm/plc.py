@@ -347,7 +347,7 @@ class Cycle(eva.item.Item):
                         argv=['exec_error', result.serialize()],
                         source=self)
             t = time.time()
-            if prev:
+            if prev is not None:
                 real_interval = t - prev
                 c += 1
                 tc += real_interval
