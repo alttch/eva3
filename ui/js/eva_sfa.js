@@ -207,6 +207,18 @@ function eva_sfa_register_update_state(oid, cb) {
 }
 
 /**
+ * Calls any available API function
+ *
+ * @param func - API function
+ * @param params - function params
+ * @param cb_success - function called on success
+ * @param cb_error - function called if error occured
+ */
+function eva_sfa_call(func, params, cb_success, cb_error) {
+  eva_sfa_api_call(func, params, cb_success, cb_error);
+}
+
+/**
  * Register rule to be monitored
  *
  * @param rule_id - rule ID
@@ -331,6 +343,8 @@ function eva_sfa_groups(params, cb_success, cb_error) {
  * Get item state history
  *
  * @param params - state history params
+ * @param cb_success - function called on success
+ * @param cb_error - function called if error occured
  */
 function eva_sfa_state_history(oid, params, cb_success, cb_error) {
   var q = eva_sfa_prepare(params);
@@ -461,7 +475,7 @@ function eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error) {
  * @param value - new lvar value, optional
  */
 function eva_sfa_set(lvar_id, value, cb_success, cb_error) {
-  var q = eva_sfa_prepare()
+  var q = eva_sfa_prepare();
   q['i'] = lvar_id;
   q['v'] = value;
   eva_sfa_api_call('set', q, cb_success, cb_error);
@@ -474,7 +488,7 @@ function eva_sfa_set(lvar_id, value, cb_success, cb_error) {
  * @param lvar_id - full lvar ID
  */
 function eva_sfa_toggle(lvar_id, cb_success, cb_error) {
-  var q = eva_sfa_prepare()
+  var q = eva_sfa_prepare();
   q['i'] = lvar_id;
   eva_sfa_api_call('toggle', q, cb_success, cb_error);
 }
@@ -491,7 +505,7 @@ function eva_sfa_set_toggle(lvar_id, cb_success, cb_error) {
  * @param lvar_id - full lvar ID
  */
 function eva_sfa_reset(lvar_id, cb_success, cb_error) {
-  var q = eva_sfa_prepare()
+  var q = eva_sfa_prepare();
   q['i'] = lvar_id;
   eva_sfa_api_call('reset', q, cb_success, cb_error);
 }
@@ -502,7 +516,7 @@ function eva_sfa_reset(lvar_id, cb_success, cb_error) {
  * @param lvar_id - full lvar ID
  */
 function eva_sfa_clear(lvar_id, cb_success, cb_error) {
-  var q = eva_sfa_prepare()
+  var q = eva_sfa_prepare();
   q['i'] = lvar_id;
   eva_sfa_api_call('clear', q, cb_success, cb_error);
 }
@@ -523,24 +537,14 @@ function eva_sfa_set_rule_prop(
   cb_success,
   cb_error
 ) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
+  var q = eva_sfa_prepare();
+  q['i'] = rule_id;
+  q['p'] = prop;
+  q['v'] = value;
+  if (save) {
+    q['save'] = 1;
   }
-  q += '&i=' + rule_id;
-  q += '&p=' + prop;
-  if (value !== undefined && value !== null) {
-    q += '&v=' + value;
-  }
-  if (save !== undefined && save !== null && save) {
-    q += '&save=1';
-  }
-  # TODO
-  $.post('/sfa-api/set_rule_prop', q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  eva_sfa_api_call('set_rule_prop', q, cb_success, cb_error);
 }
 
 /**
@@ -868,8 +872,45 @@ eva_sfa_log_level_names = {
   50: 'CRITICAL'
 };
 
+eva_sfa_sysapi_func = [
+  'cmd',
+  'lock',
+  'unlock',
+  'log_rotate',
+  'log_debug',
+  'log_info',
+  'log_warning',
+  'log_error',
+  'log_critical',
+  'log_get',
+  'notifiers',
+  'enable_notifier',
+  'disable_notifier',
+  'save',
+  'get_cvar',
+  'set_cvar',
+  'set_debug',
+  'setup_mode',
+  'file_unlink',
+  'file_get',
+  'file_put',
+  'file_set_exec',
+  'create_user',
+  'set_user_password',
+  'set_user_key',
+  'destroy_user',
+  'list_keys',
+  'create_key',
+  'list_key_props',
+  'set_key_prop',
+  'destroy_key',
+  'regenerate_key',
+  'list_users',
+  'dump'
+];
+
 function eva_sfa_api_call(func, params, cb_success, cb_error, use_sysapi) {
-  var api = use_sysapi ? 'sys-api' : 'sfa-api';
+  var api = eva_sfa_sysapi_func.indexOf(func) == -1 ? 'sfa-api' : 'sys-api';
   return $.ajax({
     type: 'POST',
     url: '/' + api + '/' + func,
@@ -1054,11 +1095,9 @@ function eva_sfa_stop_engine() {
 
 function eva_sfa_heartbeat(on_login, data) {
   if (on_login) eva_sfa_last_ping = null;
-  var q = '?';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '')
-    q += 'k=' + eva_sfa_apikey;
+  var q = eva_sfa_prepare();
   if (on_login) {
-    q += '&icvars=1';
+    q['icvars'] = 1;
   }
   if (eva_sfa_ws_mode) {
     if (eva_sfa_last_ping !== null) {
@@ -1082,18 +1121,23 @@ function eva_sfa_heartbeat(on_login, data) {
       }
     }
   }
-  $.getJSON('/sfa-api/test' + q, function(data) {
-    eva_sfa_server_info = data;
-    eva_sfa_tsdiff = new Date().getTime() / 1000 - data.time;
-    if (on_login !== undefined && on_login) {
-      eva_sfa_set_cvars(data['cvars']);
-      if (eva_sfa_cb_login_success !== null) eva_sfa_cb_login_success(data);
+  eva_sfa_api_call(
+    'test',
+    q,
+    function(data) {
+      eva_sfa_server_info = data;
+      eva_sfa_tsdiff = new Date().getTime() / 1000 - data.time;
+      if (on_login !== undefined && on_login) {
+        eva_sfa_set_cvars(data['cvars']);
+        if (eva_sfa_cb_login_success !== null) eva_sfa_cb_login_success(data);
+      }
+    },
+    function(data) {
+      if (eva_sfa_heartbeat_error !== null) {
+        eva_sfa_heartbeat_error(data);
+      }
     }
-  }).fail(function(data) {
-    if (eva_sfa_heartbeat_error !== null) {
-      eva_sfa_heartbeat_error(data);
-    }
-  });
+  );
 }
 
 function eva_sfa_set_cvars(cvars) {
@@ -1109,22 +1153,18 @@ function eva_sfa_rule_monitor() {
 }
 
 function eva_sfa_load_rule_props(rule_id, cb) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '')
-    q += 'k=' + eva_sfa_apikey;
-  q += '&i=' + rule_id;
-  $.post('/sfa-api/list_rule_props', q, function(data) {
+  var q = eva_sfa_prepare();
+  q['i'] = rule_id;
+  eva_sfa_api_call('list_rule_props', q, function(data) {
     eva_sfa_rule_props_data[rule_id] = data;
     if (cb !== undefined && cb !== null) cb(data);
   });
 }
 
+// TODO: load only subscribed items
+
 function eva_sfa_load_initial_states(on_login, reload) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += '?k=' + eva_sfa_apikey;
-  }
-  $.getJSON('/sfa-api/state_all' + q, function(data) {
+  eva_sfa_api_call('state_all', eva_sfa_prepare(), function(data) {
     $.each(data, function(i, s) {
       eva_sfa_process_state(s);
     });
@@ -1139,16 +1179,12 @@ function eva_sfa_load_initial_states(on_login, reload) {
 
 function eva_sfa_load_log_entries(r, postprocess) {
   if (eva_sfa_ws_mode) eva_sfa_lr2p = new Array();
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += '?k=' + eva_sfa_apikey;
-  }
-  $.getJSON(
-    '/sys-api/log_get?l=' +
-      eva_sfa_log_level +
-      '&n=' +
-      eva_sfa_log_records_max +
-      q,
+  var q = eva_sfa_prepare();
+  q['l'] = eva_sfa_log_level;
+  q['n'] = eva_sfa_log_records_max;
+  eva_sfa_call(
+    'log_get',
+    q,
     function(data) {
       if (eva_sfa_ws_mode && eva_sfa_log_first_load) {
         eva_sfa_set_ws_log_level(eva_sfa_log_level);
@@ -1173,14 +1209,15 @@ function eva_sfa_load_log_entries(r, postprocess) {
         }, eva_sfa_log_reload_interval * 1000);
       }
       eva_sfa_log_first_load = false;
+    },
+    function(data) {
+      if ((!eva_sfa_ws_mode && eva_sfa_log_first_load) || r) {
+        setTimeout(function() {
+          eva_sfa_load_log_entries(true, false);
+        }, eva_sfa_log_reload_interval * 1000);
+      }
     }
-  ).fail(function(data) {
-    if ((!eva_sfa_ws_mode && eva_sfa_log_first_load) || r) {
-      setTimeout(function() {
-        eva_sfa_load_log_entries(true, false);
-      }, eva_sfa_log_reload_interval * 1000);
-    }
-  });
+  );
 }
 
 function eva_sfa_oid_match(oid, mask) {
