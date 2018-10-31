@@ -381,7 +381,6 @@ function eva_sfa_state_history(oid, params, cb_success, cb_error) {
 function eva_sfa_run(
   macro_id,
   args,
-  kwargs,
   wait,
   priority,
   uuid,
@@ -395,9 +394,6 @@ function eva_sfa_run(
   q += '&i=' + macro_id;
   if (args !== undefined && args !== null) {
     q += '&a=' + encodeURIComponent(args);
-  }
-  if (kwargs !== undefined && args !== null) {
-    q += '&kw=' + encodeURIComponent(kwargs);
   }
   if (priority !== undefined && priority !== null) {
     q += '&p=' + priority;
