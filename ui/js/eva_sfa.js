@@ -803,7 +803,9 @@ function eva_sfa_chart(
   } else if (timeframe[timeframe.length - 1] == 'H') {
     d.setHours(d.getHours() - timeframe.substring(0, timeframe.length - 1));
   } else if (timeframe[timeframe.length - 1] == 'D') {
-    d.setDays(d.getDays() - timeframe.substring(0, timeframe.length - 1));
+    d.setHours(
+      d.getHours() - timeframe.substring(0, timeframe.length - 1) * 24
+    );
   }
   if (!_do_update) eva_sfa_load_animation(ctx);
   var x = 'value';
