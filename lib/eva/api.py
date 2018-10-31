@@ -161,7 +161,8 @@ def cp_json_pre():
             raw = cherrypy.request.headers.get('X-JSON')
         else:
             return
-        cherrypy.serving.request.params.update(jsonpickle.decode(raw))
+        if raw:
+            cherrypy.serving.request.params.update(jsonpickle.decode(raw))
     except:
         raise cp_api_error('invalid JSON data')
     return
