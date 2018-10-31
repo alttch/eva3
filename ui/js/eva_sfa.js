@@ -132,17 +132,14 @@ function eva_sfa_start() {
   if (eva_sfa_logged_in) return;
   eva_sfa_last_ping = null;
   eva_sfa_last_pong = null;
-  var q = '';
   if (eva_sfa_apikey !== null) {
     if (eva_sfa_apikey != '') {
-      q += 'k=' + eva_sfa_apikey;
+      q = eva_sfa_prepare();
     }
   } else {
-    q += 'u=' + eva_sfa_login + '&p=' + eva_sfa_password;
+    q = {u: eva_sfa_login, p: eva_sfa_password};
   }
-  $.post('/sfa-api/login', q, function(data) {
-    eva_sfa_after_login(data);
-  }).fail(function(data) {
+  eva_sfa_api_call('login', q, eva_sfa_after_login, function(data) {
     eva_sfa_logged_in = false;
     eva_sfa_stop_engine();
     if (eva_sfa_cb_login_error !== null) eva_sfa_cb_login_error(data);
@@ -183,11 +180,7 @@ function eva_sfa_start_rule_monitor() {
 function eva_sfa_stop(cb) {
   eva_sfa_stop_engine();
   eva_sfa_logged_in = false;
-  $.getJSON('/sfa-api/logout', function(data) {
-    if (cb !== undefined && cb !== null) cb(data);
-  }).fail(function(data) {
-    if (cb !== undefined && cb !== null) cb(data);
-  });
+  eva_sfa_api_call('logout', undefined, cb, cb);
 }
 
 /**
@@ -324,91 +317,49 @@ function eva_sfa_value(oid) {
 /**
  * Get groups list
  *
- * @param p - item type (U for unit, S for sensor, LV for lvar)
- * @param g - group filter (mqtt style)
+ * @param params: object with props
+ *              p = item type (U for unit, S for sensor, LV for lvar)
+ *              g - group filter (mqtt style)
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
-function eva_sfa_groups(p, g, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  if (p !== undefined && p !== null) {
-    q += '&p=' + p;
-  }
-  if (g !== undefined && g !== null) {
-    q += '&g=' + g;
-  }
-  $.getJSON('/sfa-api/groups?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+function eva_sfa_groups(params, cb_success, cb_error) {
+  eva_sfa_api_call('groups', eva_sfa_prepare(params), cb_success, cb_error);
 }
 
 /**
  * Get item state history
  *
- * @param uuid - action uuid
+ * @param params - state history params
  */
 function eva_sfa_state_history(oid, params, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + oid;
-  $.getJSON(
-    '/sfa-api/state_history?' + q + '&' + eva_sfa_serialize(params),
-    function(data) {
-      if (cb_success !== undefined && cb_success !== null) cb_success(data);
-    }
-  ).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare(params);
+  q['i'] = oid;
+  eva_sfa_api_call('state_history', q, cb_success, cb_error);
 }
 
 /**
  * Run macro
  *
  * @param macro_id - full macro ID
- * @param args - macro args (string)
- * @param kwargs - macro kwargs (string)
- * @param wait - seconds to wait until complete
- * @param priority - action priority (optional)
- * @param uuid - action uuid (optional)
+ * @param params: object with props
+ *              a - macro args
+ *              kw - macro kwargs
+ *              w - seconds to wait until complete
+ *              p - action priority
+ *              u - action uuid
+ * @param cb_success - function called on success
+ * @param cb_error - function called if error occured
  */
 function eva_sfa_run(
   macro_id,
-  args,
-  wait,
-  priority,
-  uuid,
+  params,
   cb_success,
   cb_error
 ) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + macro_id;
-  if (args !== undefined && args !== null) {
-    q += '&a=' + encodeURIComponent(args);
-  }
-  if (priority !== undefined && priority !== null) {
-    q += '&p=' + priority;
-  }
-  if (uuid !== undefined && uuid !== null) {
-    q += '&u=' + uuid;
-  }
-  if (wait !== undefined && wait !== null) {
-    q += '&w=' + wait;
-  }
-  $.getJSON('/sfa-api/run?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare(params);
+  q['i'] = macro_id;
+  eva_sfa_api_call('run', q, cb_success, cb_error);
 }
 
 /**
@@ -1051,6 +1002,19 @@ eva_sfa_log_level_names = {
   50: 'CRITICAL'
 };
 
+function eva_sfa_api_call(func, params, cb_success, cb_error, use_sysapi) {
+  var api = use_sysapi ? 'sys-api' : 'sfa-api';
+  return $.ajax({
+    type: 'POST',
+    url: '/' + api + '/' + func,
+    contentType: 'application/json',
+    data: JSON.stringify(params),
+    dataType: 'json',
+    success: cb_success,
+    error: cb_error
+  });
+}
+
 function eva_sfa_after_login(data) {
   eva_sfa_logged_in = true;
   eva_sfa_load_initial_states(true, false);
@@ -1361,16 +1325,6 @@ function _eva_sfa_deprecated(f1, f2) {
   console.log('!!! function ' + f1 + ' is deprecated. Use ' + f2 + 'instead');
 }
 
-function eva_sfa_serialize(obj) {
-  if (obj === undefined || obj == null) return '';
-  var str = [];
-  for (var p in obj)
-    if (obj.hasOwnProperty(p)) {
-      str.push(encodeURIComponent(p) + '=' + encodeURIComponent(obj[p]));
-    }
-  return str.join('&');
-}
-
 function eva_sfa_close_popup(ctx) {
   $(document).off('keydown');
   $('#' + ctx).hide();
@@ -1421,4 +1375,16 @@ function eva_sfa_cmp(a, b) {
     }
   }
   return true;
+}
+
+function eva_sfa_prepare(params) {
+  if (params === null || params === undefined) {
+    var params = {};
+  } else {
+    var params = params;
+  }
+  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
+    params['k'] = eva_sfa_apikey;
+  }
+  return params;
 }
