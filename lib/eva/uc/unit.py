@@ -41,6 +41,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
         self.status_labels = self.default_status_labels.copy()
 
     def status_by_label(self, label):
+        if label is None: return None
         for k, v in self.status_labels.copy().items():
             if v.lower() == label.lower():
                 try:

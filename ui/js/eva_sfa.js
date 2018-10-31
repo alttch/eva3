@@ -366,126 +366,63 @@ function eva_sfa_run(
  * Execute unit action
  *
  * @param unit_id - full unit ID
- * @param nstatus - new unit status (int)
- * @param nvalue - new unit value (optional)
- * @param wait - seconds to wait until complete
- * @param priority - action priority (optional)
- * @param uuid - action uuid (optional)
+ * @param params: object with props
+ *              s - new unit status (int)
+ *              v - new unit value (optional)
+ *              w - seconds to wait until complete
+ *              p - action priority (optional)
+ *              u - action uuid (optional)
+ * @param cb_success - function called on success
+ * @param cb_error - function called if error occured
  */
 function eva_sfa_action(
   unit_id,
-  nstatus,
-  nvalue,
-  wait,
-  priority,
-  uuid,
+  params,
   cb_success,
   cb_error
 ) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + unit_id;
-  q += '&s=' + nstatus;
-  if (nvalue !== undefined && nvalue !== null) {
-    q += '&v=' + nvalue;
-  }
-  if (priority !== undefined && priority !== null) {
-    q += '&p=' + priority;
-  }
-  if (uuid !== undefined && uuid !== null) {
-    q += '&u=' + uuid;
-  }
-  if (wait !== undefined && wait !== null) {
-    q += '&w=' + wait;
-  }
-  $.getJSON('/sfa-api/action?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare(params);
+  q['i'] = unit_id
+  eva_sfa_api_call('action', q, cb_success, cb_error);
 }
 
 /**
  * Execute unit action, toggle status beteween 0 and 1
  *
  * @param unit_id - full unit ID
- * @param nstatus - new unit status (int)
- * @param nvalue - new unit value (optional)
- * @param wait - seconds to wait until complete
- * @param priority - action priority (optional)
- * @param uuid - action uuid (optional)
+ * @param params: object with props
+ *              s - new unit status (int)
+ *              v - new unit value (optional)
+ *              w - seconds to wait until complete
+ *              p - action priority (optional)
+ *              u - action uuid (optional)
+ * @param cb_success - function called on success
+ * @param cb_error - function called if error occured
  */
 function eva_sfa_action_toggle(
   unit_id,
-  wait,
-  priority,
-  uuid,
+  params,
   cb_success,
   cb_error
 ) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + unit_id;
-  if (priority !== undefined && priority !== null) {
-    q += '&p=' + priority;
-  }
-  if (uuid !== undefined && uuid !== null) {
-    q += '&u=' + uuid;
-  }
-  if (wait !== undefined && wait !== null) {
-    q += '&w=' + wait;
-  }
-  $.getJSON('/sfa-api/action_toggle?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare(params);
+  q['i'] = unit_id
+  eva_sfa_api_call('action_toggle', q, cb_success, cb_error);
 }
 
 /**
  * Get action results by unit ID
  *
- * @param unit_id - full unit ID
+ * @param params: object with props
+ *              i - object oid (type:group/id), unit or lmacro
+ *              u - action uuid (either i or u must be specified)
+ *              g - filter by group
+ *              s - filter by status (Q, R, F - queued, running, finished)
+ * @param cb_success - function called on success
+ * @param cb_error - function called if error occured
  */
-function eva_sfa_result(unit_id, g, s, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + unit_id;
-  if (g !== undefined && g !== null) {
-    q += '&g=' + g;
-  }
-  if (s !== undefined && s !== null) {
-    q += '&s=' + s;
-  }
-  $.getJSON('/sfa-api/result?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
-}
-
-/**
- * Get action result by uuid
- *
- * @param uuid - action uuid
- */
-function eva_sfa_result_by_uuid(uuid, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&u=' + uuid;
-  $.getJSON('/sfa-api/result?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+function eva_sfa_result(params, cb_success, cb_error) {
+  eva_sfa_api_call('result', eva_sfa_prepare(params), cb_success, cb_error);
 }
 
 /**
