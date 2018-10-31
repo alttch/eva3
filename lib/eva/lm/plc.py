@@ -238,6 +238,8 @@ class Cycle(eva.item.Item):
 
     def set_prop(self, prop, val=None, save=False):
         if prop == 'macro':
+            if self.cycle_enabled:
+                return False
             macro = eva.lm.controller.get_macro(val)
             if macro:
                 if not self.macro or self.macro.oid != macro.oid:
@@ -258,6 +260,8 @@ class Cycle(eva.item.Item):
             else:
                 return False
         elif prop == 'interval':
+            if self.cycle_enabled:
+                return False
             try:
                 interval = float(val)
             except:
