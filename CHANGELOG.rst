@@ -10,6 +10,9 @@ Common
     * perfomance improvements
     * controller/node autodiscovery
     * JSON API via MQTT
+    * enterprise layout is now default item layout
+    * using item ids in API key properties is not allowed any longer in
+      enterprise layout, item oid (type:group/id) must always be specified
 
 UC
 --
@@ -22,12 +25,14 @@ LM
     * new API functions: enable_controller, disable_controller
     * kwargs in macros (kwargs dict, plus all keyword arguments are available
       as variables)
+    * cycles, cycle control API and macro functions
 
 SFA
 ---
 
     * new API functions: enable_controller, disable_controller
-    * SFA Framework: "kwargs" option in eva_sfa_run
+    * cycle control API functions
+    * SFA framework: "kwargs" option in eva_sfa_run, cycles
 
 
 3.1.1 (2018-10-22)

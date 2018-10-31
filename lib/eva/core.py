@@ -114,7 +114,7 @@ _sigterm_sent = False
 
 start_time = time.time()
 
-enterprise_layout = False
+enterprise_layout = True
 
 started = False
 
@@ -464,7 +464,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             logging.debug('server.userdb_file = %s' % f)
             try:
                 enterprise_layout = (cfg.get('server',
-                                             'layout') == 'enterprise')
+                                             'layout') != 'simple')
             except:
                 pass
             logging.debug('server.layout = %s' % ('enterprise' \
