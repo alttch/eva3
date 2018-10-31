@@ -1160,7 +1160,7 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_cycles': ['id', 'description', 'enabled', 'status', 'int', 'avg'],
+    'list_cycles': ['id', 'description', 'status', 'int', 'avg'],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
         'description'
