@@ -145,12 +145,12 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             'i', help='Notifier ID',
             metavar='NOTIFIER_ID').completer = self.ComplN(self)
         sp_subscribe_state.add_argument(
-            '-v',
+            '-p',
             '--types',
             help=
             'Item types, comma separated (unit, sensor, lvar or # ' + \
                     '[default] for all)',
-            dest='v',
+            dest='p',
             metavar='TYPE',
             default='#')
         sp_subscribe_state.add_argument(
@@ -182,12 +182,12 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             metavar='TYPE',
             default='#')
         sp_subscribe_action.add_argument(
-            '-v',
+            '-p',
             '--types',
             help=
             'Item types, comma separated (unit, sensor, lvar or # [default]' + \
                     'for all)',
-            dest='v',
+            dest='p',
             metavar='TYPE',
             default='#')
         sp_subscribe_action.add_argument(
@@ -436,7 +436,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         n = self.get_notifier(params['i'])
         if not n or not n.subscribe(
                 subject='state',
-                item_types=params['v'].split(',') if params.get('v') else None,
+                item_types=params['p'].split(',') if params.get('p') else None,
                 items=params['items'].split(',')
                 if params.get('items') else None,
                 groups=params['g'].split(',') if params.get('g') else None):
@@ -454,7 +454,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 subject='action',
                 action_status=params['a'].split(',')
                 if params.get('a') else None,
-                item_types=params['v'].split(',') if params.get('v') else None,
+                item_types=params['p'].split(',') if params.get('p') else None,
                 items=params['items'].split(',')
                 if params.get('items') else None,
                 groups=params['g'].split(',') if params.get('g') else None):
