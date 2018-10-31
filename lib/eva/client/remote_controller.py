@@ -777,81 +777,93 @@ class RemoteUCPool(RemoteControllerPool):
             logging.critical('RemoteUCPool::reload_controller locking broken')
             eva.core.critical()
             return False
-        if units is not None:
-            p = {}
-            for u in units:
-                if u.full_id in self.units and u.controller != uc:
-                    self.units[u.full_id].destroy()
-                if not u.full_id in self.units or \
-                        self.units[u.full_id].is_destroyed():
-                    self.units[u.full_id] = u
-                    self.controllers_by_unit[u.full_id] = uc
-                    u.start_processors()
-                else:
-                    self.units[u.full_id].status = u.status
-                    self.units[u.full_id].value = u.value
-                    self.units[u.full_id].nstatus = u.nstatus
-                    self.units[u.full_id].nvalue = u.nvalue
-                p[u.full_id] = u
-                _u = self.get_unit(u.full_id)
-                if _u: _u.update_config(u.serialize(config=True))
-            if controller_id in self.units_by_controller:
-                for i in self.units_by_controller[controller_id].copy().keys():
-                    if i not in p:
-                        self.units[i].destroy()
-                        try:
-                            del (self.units[i])
-                            del (self.controllers_by_unit[i])
-                            del (self.units_by_controller[controller_id][i])
-                        except:
-                            eva.core.log_traceback()
+        try:
+            if units is not None:
+                p = {}
                 for u in units:
-                    if u.full_id not in self.units_by_controller[
-                            controller_id].keys():
-                        self.units_by_controller[controller_id][u.full_id] = u
-            else:
-                self.units_by_controller[controller_id] = p
-            logging.debug('Loaded %u units from %s' % (len(p), controller_id))
-        else:
-            logging.error('Failed to reload units from %s' % controller_id)
-            self.item_management_lock.release()
-            return False
-        sensors = uc.load_sensors()
-        if sensors is not None:
-            p = {}
-            for u in sensors:
-                if u.full_id in self.sensors and u.controller != uc:
-                    self.sensors[u.full_id].destroy()
-                if not u.full_id in self.sensors or \
-                        self.sensors[u.full_id].is_destroyed():
-                    self.sensors[u.full_id] = u
-                    u.start_processors()
+                    if u.full_id in self.units and u.controller != uc:
+                        self.units[u.full_id].destroy()
+                    if not u.full_id in self.units or \
+                            self.units[u.full_id].is_destroyed():
+                        self.units[u.full_id] = u
+                        self.controllers_by_unit[u.full_id] = uc
+                        u.start_processors()
+                    else:
+                        self.units[u.full_id].status = u.status
+                        self.units[u.full_id].value = u.value
+                        self.units[u.full_id].nstatus = u.nstatus
+                        self.units[u.full_id].nvalue = u.nvalue
+                    p[u.full_id] = u
+                    _u = self.get_unit(u.full_id)
+                    if _u: _u.update_config(u.serialize(config=True))
+                if controller_id in self.units_by_controller:
+                    for i in self.units_by_controller[
+                            controller_id].copy().keys():
+                        if i not in p:
+                            self.units[i].destroy()
+                            try:
+                                del (self.units[i])
+                                del (self.controllers_by_unit[i])
+                                del (self.units_by_controller[controller_id][i])
+                            except:
+                                eva.core.log_traceback()
+                    for u in units:
+                        if u.full_id not in self.units_by_controller[
+                                controller_id].keys():
+                            self.units_by_controller[controller_id][
+                                u.full_id] = u
                 else:
-                    self.sensors[u.full_id].status = u.status
-                    self.sensors[u.full_id].value = u.value
-                p[u.full_id] = u
-                _u = self.get_sensor(u.full_id)
-                if _u: _u.update_config(u.serialize(config=True))
-            if controller_id in self.sensors_by_controller:
-                for i in self.sensors_by_controller[
-                        controller_id].copy().keys():
-                    if i not in p:
-                        self.sensors[i].destroy()
-                        try:
-                            del (self.sensors[i])
-                            del (self.sensors_by_controller[controller_id][i])
-                        except:
-                            eva.core.log_traceback()
-                for u in sensors:
-                    if u.full_id not in self.sensors_by_controller[
-                            controller_id].keys():
-                        self.sensors_by_controller[controller_id][u.full_id] = u
+                    self.units_by_controller[controller_id] = p
+                logging.debug(
+                    'Loaded %u units from %s' % (len(p), controller_id))
             else:
-                self.sensors_by_controller[controller_id] = p
-            logging.debug('Loaded %u sensors from %s' % \
-                    (len(p), controller_id))
-        else:
-            logging.error('Failed to reload sensors from %s' % controller_id)
+                logging.error('Failed to reload units from %s' % controller_id)
+                self.item_management_lock.release()
+                return False
+            sensors = uc.load_sensors()
+            if sensors is not None:
+                p = {}
+                for u in sensors:
+                    if u.full_id in self.sensors and u.controller != uc:
+                        self.sensors[u.full_id].destroy()
+                    if not u.full_id in self.sensors or \
+                            self.sensors[u.full_id].is_destroyed():
+                        self.sensors[u.full_id] = u
+                        u.start_processors()
+                    else:
+                        self.sensors[u.full_id].status = u.status
+                        self.sensors[u.full_id].value = u.value
+                    p[u.full_id] = u
+                    _u = self.get_sensor(u.full_id)
+                    if _u: _u.update_config(u.serialize(config=True))
+                if controller_id in self.sensors_by_controller:
+                    for i in self.sensors_by_controller[
+                            controller_id].copy().keys():
+                        if i not in p:
+                            self.sensors[i].destroy()
+                            try:
+                                del (self.sensors[i])
+                                del (self.sensors_by_controller[controller_id][
+                                    i])
+                            except:
+                                eva.core.log_traceback()
+                    for u in sensors:
+                        if u.full_id not in self.sensors_by_controller[
+                                controller_id].keys():
+                            self.sensors_by_controller[controller_id][
+                                u.full_id] = u
+                else:
+                    self.sensors_by_controller[controller_id] = p
+                logging.debug('Loaded %u sensors from %s' % \
+                        (len(p), controller_id))
+            else:
+                logging.error(
+                    'Failed to reload sensors from %s' % controller_id)
+                self.item_management_lock.release()
+                return False
+        except:
+            logging.error('failed to reload controller ' + controller_id)
+            eva.core.log_traceback()
             self.item_management_lock.release()
             return False
         self.item_management_lock.release()
@@ -1100,104 +1112,119 @@ class RemoteLMPool(RemoteControllerPool):
             logging.critical('RemoteLMPool::reload_controller locking broken')
             eva.core.critical()
             return False
-        if lvars is not None:
-            p = {}
-            for u in lvars:
-                if u.full_id in self.lvars and u.controller != lm:
-                    self.lvars[u.full_id].destroy()
-                if not u.full_id in self.lvars or \
-                        self.lvars[u.full_id].is_destroyed():
-                    self.lvars[u.full_id] = u
-                    self.controllers_by_lvar[u.full_id] = lm
-                    u.start_processors()
-                p[u.full_id] = u
-                _u = self.get_lvar(u.full_id)
-                if _u: _u.update_config(u.serialize(config=True))
-            if controller_id in self.lvars_by_controller:
-                for i in self.lvars_by_controller[controller_id].copy().keys():
-                    if i not in p:
-                        self.lvars[i].destroy()
-                        try:
-                            del (self.lvars[i])
-                            del (self.controllers_by_lvar[i])
-                            del (self.lvars_by_controller[controller_id][i])
-                        except:
-                            eva.core.log_traceback()
+        try:
+            if lvars is not None:
+                p = {}
                 for u in lvars:
-                    if u.full_id not in self.lvars_by_controller[
-                            controller_id].keys():
-                        self.lvars_by_controller[controller_id][u.full_id] = u
+                    if u.full_id in self.lvars and u.controller != lm:
+                        self.lvars[u.full_id].destroy()
+                    if not u.full_id in self.lvars or \
+                            self.lvars[u.full_id].is_destroyed():
+                        self.lvars[u.full_id] = u
+                        self.controllers_by_lvar[u.full_id] = lm
+                        u.start_processors()
+                    p[u.full_id] = u
+                    _u = self.get_lvar(u.full_id)
+                    if _u: _u.update_config(u.serialize(config=True))
+                if controller_id in self.lvars_by_controller:
+                    for i in self.lvars_by_controller[
+                            controller_id].copy().keys():
+                        if i not in p:
+                            self.lvars[i].destroy()
+                            try:
+                                del (self.lvars[i])
+                                del (self.controllers_by_lvar[i])
+                                del (self.lvars_by_controller[controller_id][i])
+                            except:
+                                eva.core.log_traceback()
+                    for u in lvars:
+                        if u.full_id not in self.lvars_by_controller[
+                                controller_id].keys():
+                            self.lvars_by_controller[controller_id][
+                                u.full_id] = u
+                else:
+                    self.lvars_by_controller[controller_id] = p
+                logging.debug(
+                    'Loaded %u lvars from %s' % (len(p), controller_id))
             else:
-                self.lvars_by_controller[controller_id] = p
-            logging.debug('Loaded %u lvars from %s' % (len(p), controller_id))
-        else:
-            logging.error('Failed to reload lvars from %s' % controller_id)
-            self.item_management_lock.release()
-            return False
-        macros = lm.load_macros(skip_system=True)
-        if macros is not None:
-            p = {}
-            for u in macros:
-                if u.full_id in self.macros and u.controller != lm:
-                    self.macros[u.full_id].destroy()
-                if not u.full_id in self.macros or \
-                        self.macros[u.full_id].is_destroyed():
-                    self.macros[u.full_id] = u
-                    self.controllers_by_macro[u.full_id] = lm
-                    u.start_processors()
-                p[u.full_id] = u
-                _u = self.get_macro(u.full_id)
-                if _u: _u.update_config(u.serialize(config=True))
-            if controller_id in self.macros_by_controller:
-                for i in self.macros_by_controller[controller_id].copy().keys():
-                    if i not in p:
-                        self.macros[i].destroy()
-                        try:
-                            del (self.macros[i])
-                            del (self.controllers_by_macro[i])
-                            del (self.macros_by_controller[controller_id][i])
-                        except:
-                            eva.core.log_traceback()
+                logging.error('Failed to reload lvars from %s' % controller_id)
+                self.item_management_lock.release()
+                return False
+            macros = lm.load_macros(skip_system=True)
+            if macros is not None:
+                p = {}
                 for u in macros:
-                    if u.full_id not in self.macros_by_controller[
-                            controller_id].keys():
-                        self.macros_by_controller[controller_id][u.full_id] = u
+                    if u.full_id in self.macros and u.controller != lm:
+                        self.macros[u.full_id].destroy()
+                    if not u.full_id in self.macros or \
+                            self.macros[u.full_id].is_destroyed():
+                        self.macros[u.full_id] = u
+                        self.controllers_by_macro[u.full_id] = lm
+                        u.start_processors()
+                    p[u.full_id] = u
+                    _u = self.get_macro(u.full_id)
+                    if _u: _u.update_config(u.serialize(config=True))
+                if controller_id in self.macros_by_controller:
+                    for i in self.macros_by_controller[
+                            controller_id].copy().keys():
+                        if i not in p:
+                            self.macros[i].destroy()
+                            try:
+                                del (self.macros[i])
+                                del (self.controllers_by_macro[i])
+                                del (
+                                    self.macros_by_controller[controller_id][i])
+                            except:
+                                eva.core.log_traceback()
+                    for u in macros:
+                        if u.full_id not in self.macros_by_controller[
+                                controller_id].keys():
+                            self.macros_by_controller[controller_id][
+                                u.full_id] = u
+                else:
+                    self.macros_by_controller[controller_id] = p
+                logging.debug(
+                    'Loaded %u macros from %s' % (len(p), controller_id))
             else:
-                self.macros_by_controller[controller_id] = p
-            logging.debug('Loaded %u macros from %s' % (len(p), controller_id))
-        else:
-            logging.error('Failed to reload macros from %s' % controller_id)
+                logging.error('Failed to reload macros from %s' % controller_id)
+                self.item_management_lock.release()
+                return False
+            rules = lm.load_rules()
+            if rules is not None:
+                p = {}
+                for u in rules:
+                    if u.item_id in self.rules and u.controller != lm:
+                        self.rules[u.item_id].destroy()
+                    if not u.item_id in self.rules or \
+                            self.rules[u.item_id].is_destroyed():
+                        self.rules[u.item_id] = u
+                        self.controllers_by_rule[u.item_id] = lm
+                        u.start_processors()
+                    p[u.item_id] = u
+                if controller_id in self.rules_by_controller:
+                    for i in self.rules_by_controller[
+                            controller_id].copy().keys():
+                        if i not in p:
+                            self.rules[i].destroy()
+                            try:
+                                del (self.rules[i])
+                                del (self.controllers_by_rule[i])
+                                del (self.rules_by_controller[controller_id][i])
+                            except:
+                                eva.core.log_traceback()
+                    for u in rules:
+                        if u.item_id not in self.rules_by_controller[
+                                controller_id].keys():
+                            self.rules_by_controller[controller_id][
+                                u.item_id] = u
+                else:
+                    self.rules_by_controller[controller_id] = p
+                logging.debug('Loaded %u DM rules from %s' % \
+                        (len(p), controller_id))
+        except:
+            logging.error('failed to reload controller ' + controller_id)
+            eva.core.log_traceback()
             self.item_management_lock.release()
             return False
-        rules = lm.load_rules()
-        if rules is not None:
-            p = {}
-            for u in rules:
-                if u.item_id in self.rules and u.controller != lm:
-                    self.rules[u.item_id].destroy()
-                if not u.item_id in self.rules or \
-                        self.rules[u.item_id].is_destroyed():
-                    self.rules[u.item_id] = u
-                    self.controllers_by_rule[u.item_id] = lm
-                    u.start_processors()
-                p[u.item_id] = u
-            if controller_id in self.rules_by_controller:
-                for i in self.rules_by_controller[controller_id].copy().keys():
-                    if i not in p:
-                        self.rules[i].destroy()
-                        try:
-                            del (self.rules[i])
-                            del (self.controllers_by_rule[i])
-                            del (self.rules_by_controller[controller_id][i])
-                        except:
-                            eva.core.log_traceback()
-                for u in rules:
-                    if u.item_id not in self.rules_by_controller[
-                            controller_id].keys():
-                        self.rules_by_controller[controller_id][u.item_id] = u
-            else:
-                self.rules_by_controller[controller_id] = p
-            logging.debug('Loaded %u DM rules from %s' % \
-                    (len(p), controller_id))
         self.item_management_lock.release()
         return True

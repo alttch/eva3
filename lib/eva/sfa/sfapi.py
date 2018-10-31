@@ -617,11 +617,14 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
                       t=None,
                       w=None,
                       g=None):
-        if i and i.find(',') != -1:
+        if i and isinstance(i, list) or i.find(',') != -1:
             if not w:
                 raise cp_api_error(
                     '"w" param required to process multiple items')
-            items = i.split(',')
+            if isinstance(i, list):
+                items = i
+            else:
+                items = i.split(',')
             if not g or g == 'list':
                 result = {}
             else:

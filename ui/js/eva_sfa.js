@@ -317,7 +317,7 @@ function eva_sfa_value(oid) {
 /**
  * Get groups list
  *
- * @param params: object with props
+ * @param params - object with props
  *              p = item type (U for unit, S for sensor, LV for lvar)
  *              g - group filter (mqtt style)
  * @param cb_success - function called on success
@@ -342,7 +342,7 @@ function eva_sfa_state_history(oid, params, cb_success, cb_error) {
  * Run macro
  *
  * @param macro_id - full macro ID
- * @param params: object with props
+ * @param params - object with props
  *              a - macro args
  *              kw - macro kwargs
  *              w - seconds to wait until complete
@@ -351,12 +351,7 @@ function eva_sfa_state_history(oid, params, cb_success, cb_error) {
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
-function eva_sfa_run(
-  macro_id,
-  params,
-  cb_success,
-  cb_error
-) {
+function eva_sfa_run(macro_id, params, cb_success, cb_error) {
   var q = eva_sfa_prepare(params);
   q['i'] = macro_id;
   eva_sfa_api_call('run', q, cb_success, cb_error);
@@ -366,7 +361,7 @@ function eva_sfa_run(
  * Execute unit action
  *
  * @param unit_id - full unit ID
- * @param params: object with props
+ * @param params - object with props
  *              s - new unit status (int)
  *              v - new unit value (optional)
  *              w - seconds to wait until complete
@@ -375,14 +370,9 @@ function eva_sfa_run(
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
-function eva_sfa_action(
-  unit_id,
-  params,
-  cb_success,
-  cb_error
-) {
+function eva_sfa_action(unit_id, params, cb_success, cb_error) {
   var q = eva_sfa_prepare(params);
-  q['i'] = unit_id
+  q['i'] = unit_id;
   eva_sfa_api_call('action', q, cb_success, cb_error);
 }
 
@@ -390,7 +380,7 @@ function eva_sfa_action(
  * Execute unit action, toggle status beteween 0 and 1
  *
  * @param unit_id - full unit ID
- * @param params: object with props
+ * @param params - object with props
  *              s - new unit status (int)
  *              v - new unit value (optional)
  *              w - seconds to wait until complete
@@ -399,21 +389,16 @@ function eva_sfa_action(
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
-function eva_sfa_action_toggle(
-  unit_id,
-  params,
-  cb_success,
-  cb_error
-) {
+function eva_sfa_action_toggle(unit_id, params, cb_success, cb_error) {
   var q = eva_sfa_prepare(params);
-  q['i'] = unit_id
+  q['i'] = unit_id;
   eva_sfa_api_call('action_toggle', q, cb_success, cb_error);
 }
 
 /**
  * Get action results by unit ID
  *
- * @param params: object with props
+ * @param params - object with props
  *              i - object oid (type:group/id), unit or lmacro
  *              u - action uuid (either i or u must be specified)
  *              g - filter by group
@@ -658,25 +643,24 @@ function eva_sfa_log_level_name(log_level) {
  * @param ctx - html container element id to draw in (must have fixed
  *              width/height)
  * @param cfg - Chart.js configuration
- * @param oid - item oid or oids, comma separated (type:full_id)
- * @param timeframe - timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2 days
- *                    etc.)
- * @param fill - precision (10T - 60T recommended, more accurate - more data)
- * @param update - update interval in seconds, set 0 or null to skip updates
- * @param prop - item property to use (default is value)
+ * @param oid - item oid or oids, array or comma separated (type:full_id)
+ * @param params - object with props
+ *              timeframe - timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2
+ *                          days etc.), default: 1D
+ *              fill - precision (10T - 60T recommended, more accurate - more
+ *                     data), default: 30T
+ *              update - update interval in seconds
+ *              prop - item property to use (default is value)
  *
  * note: if the conteiner is no longer visible, chart ends updating forever
  */
-function eva_sfa_chart(
-  ctx,
-  cfg,
-  oid,
-  timeframe,
-  fill,
-  update,
-  prop,
-  _do_update
-) {
+function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
+  var timeframe = params['timeframe'];
+  if (!timeframe) { timeframe='1D' }
+  var fill = params['fill'];
+  if (!fill) { fill = '30T'; }
+  var update = params['update'];
+  var prop = params['prop'];
   var cc = $('#' + ctx);
   var chart = null;
   if (_do_update) {
@@ -692,7 +676,7 @@ function eva_sfa_chart(
   } else if (timeframe[timeframe.length - 1] == 'H') {
     d.setHours(d.getHours() - timeframe.substring(0, timeframe.length - 1));
   } else if (timeframe[timeframe.length - 1] == 'D') {
-    d.setDays(d.getDays() - timeframe.substring(0, timeframe.length - 1));
+    d.setHours(d.getHours() - timeframe.substring(0, timeframe.length - 1)*24);
   }
   if (!_do_update) eva_sfa_load_animation(ctx);
   var x = 'value';
@@ -747,7 +731,7 @@ function eva_sfa_chart(
 
   if (update) {
     setTimeout(function() {
-      eva_sfa_chart(ctx, cfg, oid, timeframe, fill, update, prop, chart);
+      eva_sfa_chart(ctx, cfg, oid, params, chart);
     }, update * 1000);
   }
 }
