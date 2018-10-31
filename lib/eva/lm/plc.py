@@ -370,7 +370,7 @@ class Cycle(eva.item.Item):
                 corr = 0
             prev = t
             cycle_end -= corr
-            while time.time() < cycle_end:
+            while time.time() < cycle_end and self.cycle_enabled:
                 time.sleep(eva.core.polldelay)
         logging.debug('%s cycle thread stopped' % self.full_id)
 
