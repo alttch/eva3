@@ -416,16 +416,9 @@ function eva_sfa_result(params, cb_success, cb_error) {
  * @param unit_id - full unit ID
  */
 function eva_sfa_kill(unit_id, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + unit_id;
-  $.getJSON('/sfa-api/kill?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare();
+  q['i'] = unit_id;
+  eva_sfa_api_call('kill', q, cb_success, cb_error);
 }
 
 /**
@@ -434,16 +427,9 @@ function eva_sfa_kill(unit_id, cb_success, cb_error) {
  * @param unit_id - full unit ID
  */
 function eva_sfa_q_clean(unit_id, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + unit_id;
-  $.getJSON('/sfa-api/q_clean?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare();
+  q['i'] = unit_id;
+  eva_sfa_api_call('q_clean', q, cb_success, cb_error);
 }
 
 /**
@@ -452,16 +438,9 @@ function eva_sfa_q_clean(unit_id, cb_success, cb_error) {
  * @param unit_id - full unit ID
  */
 function eva_sfa_terminate(unit_id, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + unit_id;
-  $.getJSON('/sfa-api/terminate?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare();
+  q['i'] = unit_id;
+  eva_sfa_api_call('terminate', q, cb_success, cb_error);
 }
 
 /**
@@ -470,16 +449,9 @@ function eva_sfa_terminate(unit_id, cb_success, cb_error) {
  * @param uuid - action uuid
  */
 function eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&u=' + uuid;
-  $.getJSON('/sfa-api/terminate?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare();
+  q['u'] = uuid;
+  eva_sfa_api_call('terminate', q, cb_success, cb_error);
 }
 
 /**
@@ -489,17 +461,10 @@ function eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error) {
  * @param value - new lvar value, optional
  */
 function eva_sfa_set(lvar_id, value, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + lvar_id;
-  q += '&v=' + value;
-  $.getJSON('/sfa-api/set?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare()
+  q['i'] = lvar_id;
+  q['v'] = value;
+  eva_sfa_api_call('set', q, cb_success, cb_error);
 }
 
 /**
@@ -507,20 +472,11 @@ function eva_sfa_set(lvar_id, value, cb_success, cb_error) {
  * useful when lvar is being used as flag
  *
  * @param lvar_id - full lvar ID
- * @returns true - if set started
- *          false - if no value loaded
  */
 function eva_sfa_toggle(lvar_id, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + lvar_id;
-  $.getJSON('/sfa-api/toggle?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare()
+  q['i'] = lvar_id;
+  eva_sfa_api_call('toggle', q, cb_success, cb_error);
 }
 
 /* deprecated - use eva_sfa_toggle instead */
@@ -535,16 +491,9 @@ function eva_sfa_set_toggle(lvar_id, cb_success, cb_error) {
  * @param lvar_id - full lvar ID
  */
 function eva_sfa_reset(lvar_id, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + lvar_id;
-  $.getJSON('/sfa-api/reset?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare()
+  q['i'] = lvar_id;
+  eva_sfa_api_call('reset', q, cb_success, cb_error);
 }
 
 /**
@@ -553,16 +502,9 @@ function eva_sfa_reset(lvar_id, cb_success, cb_error) {
  * @param lvar_id - full lvar ID
  */
 function eva_sfa_clear(lvar_id, cb_success, cb_error) {
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += 'k=' + eva_sfa_apikey;
-  }
-  q += '&i=' + lvar_id;
-  $.getJSON('/sfa-api/clear?' + q, function(data) {
-    if (cb_success !== undefined && cb_success !== null) cb_success(data);
-  }).fail(function(data) {
-    if (cb_error !== undefined && cb_error !== null) cb_error(data);
-  });
+  var q = eva_sfa_prepare()
+  q['i'] = lvar_id;
+  eva_sfa_api_call('clear', q, cb_success, cb_error);
 }
 
 /**
@@ -593,6 +535,7 @@ function eva_sfa_set_rule_prop(
   if (save !== undefined && save !== null && save) {
     q += '&save=1';
   }
+  # TODO
   $.post('/sfa-api/set_rule_prop', q, function(data) {
     if (cb_success !== undefined && cb_success !== null) cb_success(data);
   }).fail(function(data) {
@@ -656,9 +599,13 @@ function eva_sfa_log_level_name(log_level) {
  */
 function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   var timeframe = params['timeframe'];
-  if (!timeframe) { timeframe='1D' }
+  if (!timeframe) {
+    timeframe = '1D';
+  }
   var fill = params['fill'];
-  if (!fill) { fill = '30T'; }
+  if (!fill) {
+    fill = '30T';
+  }
   var update = params['update'];
   var prop = params['prop'];
   var cc = $('#' + ctx);
@@ -676,7 +623,9 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   } else if (timeframe[timeframe.length - 1] == 'H') {
     d.setHours(d.getHours() - timeframe.substring(0, timeframe.length - 1));
   } else if (timeframe[timeframe.length - 1] == 'D') {
-    d.setHours(d.getHours() - timeframe.substring(0, timeframe.length - 1)*24);
+    d.setHours(
+      d.getHours() - timeframe.substring(0, timeframe.length - 1) * 24
+    );
   }
   if (!_do_update) eva_sfa_load_animation(ctx);
   var x = 'value';
@@ -761,32 +710,28 @@ function eva_sfa_load_animation(el_id) {
  *                 if '!' is put before the class (i.e. !info)
  * @param title - popup window title
  * @param msg - popup window message
- * @param ct - popup auto close time (sec), equal to pressing escape
- * @param btn1 - button 1 name ('OK' if not specified)
- * @param btn2 - button 2 name
- * @param btn1a - function to run if button 1 (or enter) is pressed
- * @param btn2a - function(arg) to run if button 2 (or escape) is pressed. arg
- *                is true if the button was pressed, false if escape key or
- *                auto close.
- * @param va - validate function which runs before btn1a.
- *             if the function return true, the popup is closed and btn1a
- *             function is executed. otherwise the popup is kept and the
- *             function btn1a is not executed. va function is used to validate
- *             an input, if popup contains any input fields.
+ * @param params - object with handlers and additional parameters:
+ *              ct - popup auto close time (sec), equal to pressing escape
+ *              btn1 - button 1 name ('OK' if not specified)
+ *              btn2 - button 2 name
+ *              btn1a - function to run if button 1 (or enter) is pressed
+ *              btn2a - function(arg) to run if button 2 (or escape) is
+ *                      pressed. arg is true if the button was pressed, false
+ *                      if escape key or auto close.
+ *              va - validate function which runs before btn1a.
+ *                   if the function return true, the popup is closed and btn1a
+ *                   function is executed. otherwise the popup is kept and the
+ *                   function btn1a is not executed. va function is used to
+ *                   validate an input, if popup contains any input fields.
  *
  */
-function eva_sfa_popup(
-  ctx,
-  pclass,
-  title,
-  msg,
-  ct,
-  btn1,
-  btn2,
-  btn1a,
-  btn2a,
-  va
-) {
+function eva_sfa_popup(ctx, pclass, title, msg, params) {
+  var ct = params['ct'];
+  var btn1 = params['btn1'];
+  var btn2 = params['btn2'];
+  var btn1a = params['btn1a'];
+  var btn2a = params['btn2a'];
+  var va = params['va'];
   var _pclass = pclass;
   if (pclass[0] == '!') {
     _pclass = pclass.substr(1);
