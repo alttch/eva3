@@ -32,7 +32,9 @@ SFA
 
     * new API functions: enable_controller, disable_controller
     * cycle control API functions
-    * SFA framework: "kwargs" option in eva_sfa_run, cycles
+    * SFA framework: code optimization, cycles (warning: some functions are
+      incompatible with previous version, use eva_sfa.3.1.js library or call
+      the functions in new format only, look UPDATE-HOWTO for more info)
 
 
 3.1.1 (2018-10-22)
