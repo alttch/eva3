@@ -324,7 +324,7 @@ class Cycle(eva.item.Item):
             if self.macro:
                 try:
                     result = eva.lm.controller.exec_macro(
-                        self.macro, wait=self.interval)
+                        self.macro, wait=self.interval, source=self)
                 except Exception as e:
                     ex = e
                     result = None
@@ -332,18 +332,20 @@ class Cycle(eva.item.Item):
                     logging.error('cycle %s exception %s' % (self.full_id, ex))
                     if self.on_error:
                         eva.lm.controller.exec_macro(
-                            self.on_error, argv=['exception', ex])
+                            self.on_error, argv=['exception', ex], source=self)
                 elif time.time() > cycle_end:
                     logging.error('cycle %s timeout' % (self.full_id))
                     if self.on_error:
                         eva.lm.controller.exec_macro(
-                            self.on_error, argv=['timeout',
-                                                 result.serialize()])
+                            self.on_error,
+                            argv=['timeout', result.serialize()],
+                            source=self)
                 elif not result.is_status_completed():
                     logging.error('cycle %s exec error' % (self.full_id))
                     eva.lm.controller.exec_macro(
-                        self.on_error, argv=['exec_error',
-                                             result.serialize()])
+                        self.on_error,
+                        argv=['exec_error', result.serialize()],
+                        source=self)
             t = time.time()
             if prev:
                 real_interval = t - prev

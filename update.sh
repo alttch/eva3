@@ -15,6 +15,7 @@ OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.
 UC_NEW_CFG="runtime/uc_drivers.json"
 UC_NEW_CFG_L="runtime/uc_modbus.json"
 LM_NEW_CFG="runtime/lm_extensions.json"
+LM_NEW_DIR="runtime/lm_lcycle.d"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
     echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"
@@ -94,6 +95,13 @@ done
 
 for f in ${LM_NEW_CFG}; do
     [ ! -f $f ] && echo "{}" > $f
+    if [ "x$LM_USER" != "x" ]; then
+        chown ${LM_USER} $f
+    fi
+done
+
+for f in ${LM_NEW_DIR}; do
+    mkdir -p $f
     if [ "x$LM_USER" != "x" ]; then
         chown ${LM_USER} $f
     fi
