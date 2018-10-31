@@ -240,6 +240,12 @@ class Cycle(eva.item.Item):
         if prop == 'macro':
             if self.cycle_enabled:
                 return False
+            if val is None:
+                if self.macro is not None:
+                    self.macro = val
+                    self.log_set(prop, val)
+                    self.set_modified(save)
+                return True
             macro = eva.lm.controller.get_macro(val)
             if macro:
                 if not self.macro or self.macro.oid != macro.oid:
@@ -250,6 +256,12 @@ class Cycle(eva.item.Item):
             else:
                 return False
         elif prop == 'on_error':
+            if val is None:
+                if self.on_error is not None:
+                    self.on_error = val
+                    self.log_set(prop, val)
+                    self.set_modified(save)
+                return True
             macro = eva.lm.controller.get_macro(val)
             if macro:
                 if not self.on_error or self.on_error.oid != macro.oid:

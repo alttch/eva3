@@ -652,7 +652,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         sp_macro_list = sp_macro.add_parser('list', help='List macros')
         sp_macro_list.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Filter by group', metavar='GROUP',
+            dest='g').completer = self.ComplMacroGroup(self)
 
         ap_macro_create = sp_macro.add_parser('create', help='Create new macro')
         ap_macro_create.add_argument('i', help='Macro ID', metavar='ID')
@@ -738,7 +739,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_macro_result.add_argument(
             '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
         sp_macro_result.add_argument(
-            '-g', '--group', help='Macros group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Macros group', metavar='GROUP',
+            dest='g').completer = self.ComplMacroGroup(self)
         sp_macro_result.add_argument(
             '-s',
             '--state',
@@ -759,7 +761,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         sp_cycle_list = sp_cycle.add_parser('list', help='List cycles')
         sp_cycle_list.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+            '-g', '--group', help='Filter by group', metavar='GROUP',
+            dest='g').completer = self.ComplCycleGroup(self)
 
         ap_cycle_create = sp_cycle.add_parser('create', help='Create new cycle')
         ap_cycle_create.add_argument('i', help='Cycle ID', metavar='ID')
