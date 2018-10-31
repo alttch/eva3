@@ -216,9 +216,12 @@ class Cycle(eva.item.Item):
         self.on_error = None
         self.interval = 1
         self.ict = 100
-        self.enabled = False
+        self.c = 0
+        self.tc = 0
+        self.autostart = False
         self.cycle_thread = None
         self.cycle_enabled = False
+        self.stats_lock = threading.Lock()
 
     def update_config(self, data):
         if 'macro' in data:
@@ -229,8 +232,8 @@ class Cycle(eva.item.Item):
             self.interval = data['interval']
         if 'ict' in data:
             self.ict = data['ict']
-        if 'enabled' in data:
-            self.enabled = data['enabled']
+        if 'autostart' in data:
+            self.autostart = data['autostart']
         super().update_config(data)
 
     def set_prop(self, prop, val=None, save=False):
@@ -280,17 +283,16 @@ class Cycle(eva.item.Item):
                 return True
             else:
                 return False
-        elif prop == 'enabled':
+        elif prop == 'autostart':
             try:
-                enabled = val_to_boolean(val)
-                if enabled is None: raise ('Invalid val')
+                autostart = val_to_boolean(val)
+                if autostart is None: raise ('Invalid val')
             except:
                 return False
-            if self.enabled != enabled:
-                self.enabled = enabled
+            if self.autostart != autostart:
+                self.autostart = autostart
                 self.log_set(prop, val)
                 self.set_modified(save)
-                self.start() if enabled else self.stop()
             return True
         else:
             return super().set_prop(prop, val, save)
@@ -319,20 +321,33 @@ class Cycle(eva.item.Item):
                     logging.error('cycle %s timeout' % (self.full_id))
                     if self.on_error:
                         eva.lm.controller.exec_macro(
-                            self.on_error, argv=['timeout', result.serialize()])
+                            self.on_error, argv=['timeout',
+                                                 result.serialize()])
                 elif not result.is_status_completed():
                     logging.error('cycle %s exec error' % (self.full_id))
                     eva.lm.controller.exec_macro(
-                        self.on_error, argv=['exec_error', result.serialize()])
+                        self.on_error, argv=['exec_error',
+                                             result.serialize()])
             t = time.time()
             if prev:
                 real_interval = t - prev
                 c += 1
                 tc += real_interval
+                self.stats_lock.acquire()
+                try:
+                    self.c += 1
+                    self.tc += real_interval
+                except:
+                    self.c = 0
+                    self.tc = 0
+                self.stats_lock.release()
                 if c >= self.ict:
                     corr = tc / c - self.interval
                     c = 0
                     tc = 0
+                    th = threading.Thread(target=self.notify())
+                    th.setDaemon(True)
+                    th.start()
             else:
                 corr = 0
             prev = t
@@ -341,16 +356,30 @@ class Cycle(eva.item.Item):
                 time.sleep(eva.core.polldelay)
         logging.debug('%s cycle thread stopped' % self.full_id)
 
-    def start(self):
-        if not self.enabled: return
+    def start(self, autostart=False):
+        if (autostart and not self.autostart) or not self.macro:
+            self.notify()
+            return False
+        self.c = 0
+        self.tc = 0
         self.cycle_enabled = True
         self.cycle_thread = threading.Thread(target=self._t_cycle)
         self.cycle_thread.start()
+        self.notify()
+        return True
 
-    def stop(self):
+    def stop(self, wait=True):
         self.cycle_enabled = False
-        if self.cycle_thread and self.cycle_thread.isAlive():
+        if wait and self.cycle_thread and self.cycle_thread.isAlive():
             self.cycle_thread.join()
+        self.notify()
+
+    def reset_stats(self):
+        self.stats_lock.acquire()
+        self.c = 0
+        self.tc = 0
+        self.stats_lock.release()
+        self.notify()
 
     def serialize(self,
                   full=False,
@@ -361,7 +390,20 @@ class Cycle(eva.item.Item):
         d = {}
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
-        d['enabled'] = self.enabled
         d['interval'] = self.interval
-        d['macro'] = self.macro.full_id if self.macro else None
-        d['on_error'] = self.on_error.full_id if self.on_error else None
+        if notify or info:
+            if self.cycle_enabled:
+                d['status'] = 'running'
+            else:
+                if self.cycle_thread and self.cycle_thread.isAlive():
+                    d['status'] = 'stopping'
+                else:
+                    d['status'] = 'stopped'
+            d['avg'] = self.tc / self.c if self.c else self.interval
+        if not notify:
+            d['ict'] = self.ict
+            d['macro'] = self.macro.full_id if self.macro else None
+            d['on_error'] = self.on_error.full_id if self.on_error else None
+        if config or props:
+            d['autostart'] = self.autostart
+        return d

@@ -28,6 +28,7 @@ chmod 700 ./runtime/lm_notify.d || exit 1
 mkdir -p ./runtime/lm_dmatrix_rule.d || exit 1
 chmod 700 ./runtime/lm_dmatrix_rule.d || exit 1
 mkdir -p ./runtime/lm_lmacro.d || exit 1
+mkdir -p ./runtime/lm_lcycle.d || exit 1
 mkdir -p ./runtime/lm_lvar.d || exit 1
 mkdir -p ./runtime/lm_remote_uc.d || exit 1
 chmod 700 ./runtime/lm_remote_uc.d || exit 1

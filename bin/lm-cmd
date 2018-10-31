@@ -83,10 +83,31 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 result.add('common.py')
             return list(result)
 
+    class ComplCycle(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('cycle list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+                result.add(v['full_id'])
+            return list(result)
+
     class ComplMacroGroup(ComplGeneric):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('macro list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
+    class ComplCycleGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('cycle list')
             if code: return True
             result = set()
             for v in data:
@@ -98,6 +119,16 @@ class LM_CLI(GenericCLI, ControllerCLI):
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call(
                 ['macro', 'props',
+                 kwargs.get('parsed_args').i])
+            if code: return True
+            result = list(data.keys())
+            return result
+
+    class ComplCycleProp(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['cycle', 'props',
                  kwargs.get('parsed_args').i])
             if code: return True
             result = list(data.keys())
@@ -211,6 +242,14 @@ class LM_CLI(GenericCLI, ControllerCLI):
                     result.append(d['oid'] + '/status')
                     result.append(d['oid'] + '/value')
                 return result
+            return True
+
+    class ComplCyclePropVal(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            p = kwargs.get('parsed_args').p
+            if p in ['macro', 'on_error']:
+                return self.cli.ComplMacro(self.cli)(prefix, **kwargs)
             return True
 
     def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
@@ -381,14 +420,18 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
         if api_func not in [
-                'state', 'list_macros', 'list_controllers', 'result'
+                'state', 'list_macros', 'list_cycles', 'list_controllers',
+                'result'
         ]:
             return super().prepare_result_data(data, api_func, api_func_full,
                                                itype)
         result = []
         for d in data.copy():
-            if api_func in ['list_macros', 'list_controllers']:
+            if api_func in ['list_macros', 'list_cycles', 'list_controllers']:
                 d['id'] = d['full_id']
+            if api_func == 'list_cycles':
+                d['int'] = d['interval']
+                d['avg'] = '{:.4f}'.format(d['avg'])
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
             elif api_func == 'result':
@@ -441,6 +484,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
         self.add_lm_configure_functions()
         self.add_lm_remote_functions()
         self.add_lm_macro_functions()
+        self.add_lm_cycle_functions()
         self.add_lm_edit_functions()
         self.add_lm_rule_functions()
         self.add_lm_ext_functions()
@@ -708,6 +752,71 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='Macro ID',
             metavar='ID').completer = self.ComplMacro(self)
 
+    def add_lm_cycle_functions(self):
+        ap_cycle = self.sp.add_parser('cycle', help='Cycle functions')
+        sp_cycle = ap_cycle.add_subparsers(
+            dest='_func', metavar='func', help='Cycle commands')
+
+        sp_cycle_list = sp_cycle.add_parser('list', help='List cycles')
+        sp_cycle_list.add_argument(
+            '-g', '--group', help='Filter by group', metavar='GROUP', dest='g')
+
+        ap_cycle_create = sp_cycle.add_parser('create', help='Create new cycle')
+        ap_cycle_create.add_argument('i', help='Cycle ID', metavar='ID')
+        ap_cycle_create.add_argument(
+            '-g', '--group', help='Cycle group', metavar='GROUP',
+            dest='g').completer = self.ComplCycleGroup(self)
+        ap_cycle_create.add_argument(
+            '-y',
+            '--save',
+            help='Save cycle config after creation',
+            dest='_save',
+            action='store_true')
+
+        sp_cycle_list_props = sp_cycle.add_parser(
+            'props', help='List cycle config props')
+        sp_cycle_list_props.add_argument(
+            'i', help='Cycle ID',
+            metavar='ID').completer = self.ComplCycle(self)
+
+        sp_cycle_set_prop = sp_cycle.add_parser(
+            'set', help='Set cycle config prop')
+        sp_cycle_set_prop.add_argument(
+            'i', help='Cycle ID',
+            metavar='ID').completer = self.ComplCycle(self)
+        sp_cycle_set_prop.add_argument(
+            'p', help='Config property',
+            metavar='PROP').completer = self.ComplCycleProp(self)
+        sp_cycle_set_prop.add_argument(
+            'v', help='Value', metavar='VAL',
+            nargs='?').completer = self.ComplCyclePropVal(self)
+        sp_cycle_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save cycle config after set',
+            dest='_save',
+            action='store_true')
+
+        ap_start = sp_cycle.add_parser('start', help='Start cycle')
+        ap_start.add_argument(
+            'i', help='Cycle ID',
+            metavar='ID').completer = self.ComplCycle(self)
+
+        ap_stop = sp_cycle.add_parser('stop', help='Stop cycle')
+        ap_stop.add_argument(
+            'i', help='Cycle ID',
+            metavar='ID').completer = self.ComplCycle(self)
+
+        ap_stop = sp_cycle.add_parser('reset', help='Reset cycle stats (avg)')
+        ap_stop.add_argument(
+            'i', help='Cycle ID',
+            metavar='ID').completer = self.ComplCycle(self)
+
+        ap_destroy = sp_cycle.add_parser('destroy', help='Delete cycle')
+        ap_destroy.add_argument(
+            'i', help='Cycle ID',
+            metavar='ID').completer = self.ComplCycle(self)
+
     def add_lm_edit_functions(self):
         ap_edit = self.sp.add_parser('edit', help='Edit item scripts')
 
@@ -863,12 +972,24 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_controller_enable.add_argument(
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
+        sp_controller_enable.add_argument(
+            '-y',
+            '--save',
+            help='Save controller config after set',
+            dest='_save',
+            action='store_true')
 
         sp_controller_disable = sp_controller.add_parser(
             'disable', help='Disable connected UC')
         sp_controller_disable.add_argument(
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
+        sp_controller_disable.add_argument(
+            '-y',
+            '--save',
+            help='Save controller config after set',
+            dest='_save',
+            action='store_true')
 
         sp_controller_remove = sp_controller.add_parser(
             'remove', help='Remove connected UC')
@@ -981,6 +1102,14 @@ _api_functions = {
     'create': 'create_lvar',
     'destroy': 'destroy_lvar',
     'remote': 'list_remote',
+    'cycle:list': 'list_cycles',
+    'cycle:props': 'list_cycle_props',
+    'cycle:set': 'set_cycle_prop',
+    'cycle:create': 'create_cycle',
+    'cycle:destroy': 'destroy_cycle',
+    'cycle:start': 'start_cycle',
+    'cycle:stop': 'stop_cycle',
+    'cycle:reset': 'reset_cycle_stats',
     'macro:list': 'list_macros',
     'macro:props': 'list_macro_props',
     'macro:set': 'set_macro_prop',
@@ -1028,6 +1157,7 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
+    'list_cycles': ['id', 'description', 'enabled', 'status', 'int', 'avg'],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
         'description'
@@ -1045,7 +1175,7 @@ _always_json = ['get_config']
 
 cli.always_json += _always_json
 cli.always_print += ['run', 'cmd']
-cli.arg_sections += ['config', 'macro', 'rule', 'controller', 'ext']
+cli.arg_sections += ['config', 'macro', 'cycle', 'rule', 'controller', 'ext']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)

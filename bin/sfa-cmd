@@ -667,12 +667,24 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         sp_controller_enable.add_argument(
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
+        sp_controller_enable.add_argument(
+            '-y',
+            '--save',
+            help='Save controller config after set',
+            dest='_save',
+            action='store_true')
 
         sp_controller_disable = sp_controller.add_parser(
             'disable', help='Disable connected controller')
         sp_controller_disable.add_argument(
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
+        sp_controller_disable.add_argument(
+            '-y',
+            '--save',
+            help='Save controller config after set',
+            dest='_save',
+            action='store_true')
 
         sp_controller_remove = sp_controller.add_parser(
             'remove', help='Remove connected controller')

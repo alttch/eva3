@@ -98,6 +98,7 @@ eva.lm.controller.load_lvars()
 eva.lm.controller.load_remote_ucs()
 eva.lm.controller.load_macros()
 eva.lm.controller.load_dm_rules()
+eva.lm.controller.load_cycles()
 
 eva.sysapi.start()
 eva.wsapi.start()

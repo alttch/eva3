@@ -36,6 +36,9 @@ lvars_by_full_id = {}
 macros_by_id = {}
 macros_by_full_id = {}
 
+cycles_by_id = {}
+cycles_by_full_id = {}
+
 dm_rules = {}
 
 items_by_id = {}
@@ -87,6 +90,16 @@ def get_macro(macro_id):
         if _macro_id in macros_by_full_id: return macros_by_full_id[_macro_id]
     else:
         if _macro_id in macros_by_id: return macros_by_id[_macro_id]
+    return None
+
+
+def get_cycle(cycle_id):
+    _cycle_id = oid_to_id(cycle_id, 'lcycle')
+    if not _cycle_id: return None
+    if _cycle_id.find('/') > -1:
+        if _cycle_id in cycles_by_full_id: return cycles_by_full_id[_cycle_id]
+    else:
+        if _cycle_id in cycles_by_id: return cycles_by_id[_cycle_id]
     return None
 
 
@@ -164,6 +177,14 @@ def save():
         except:
             pass
     for i, v in macros_by_id.items():
+        if v.config_changed:
+            if not v.save():
+                return False
+        try:
+            configs_to_remove.remove(v.get_fname())
+        except:
+            pass
+    for i, v in cycles_by_id.items():
         if v.config_changed:
             if not v.save():
                 return False
@@ -362,6 +383,25 @@ def load_macros():
         return False
 
 
+def load_cycles():
+    logging.info('Loading cycle configs')
+    try:
+        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+                '_lcycle.d/*.json', runtime = True)
+        for mcfg in glob.glob(fnames):
+            m_id = os.path.splitext(os.path.basename(mcfg))[0]
+            m = eva.lm.plc.Cycle(m_id)
+            if m.load():
+                cycles_by_id[m_id] = m
+                cycles_by_full_id[m.full_id] = m
+                logging.debug('cycle "%s" config loaded' % m_id)
+        return True
+    except:
+        logging.error('Cycle configs load error')
+        eva.core.log_traceback()
+        return False
+
+
 def load_dm_rules():
     logging.info('Loading DM rules')
     try:
@@ -427,6 +467,54 @@ def destroy_macro(m_id):
             del (macros_by_id[i.item_id])
             del (macros_by_full_id[i.full_id])
             logging.info('macro "%s" removed' % i.full_id)
+            return True
+        except:
+            eva.core.log_traceback()
+    return False
+
+
+def create_cycle(m_id, group=None, save=False):
+    _m_id = oid_to_id(m_id, 'lcycle')
+    if not _m_id: return False
+    if group and _m_id.find('/') != -1: return False
+    if _m_id.find('/') == -1:
+        i = _m_id
+        grp = group
+    else:
+        i = _m_id.split('/')[-1]
+        grp = '/'.join(_m_id.split('/')[:-1])
+    if not grp: grp = 'nogroup'
+    if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
+        not re.match("^[A-Za-z0-9_\./-]*$", grp):
+        return False
+    i_full = grp + '/' + i
+    if i in cycles_by_id or i_full in cycles_by_full_id: return False
+    m = eva.lm.plc.Cycle(i)
+    if grp: m.update_config({'group': grp})
+    cycles_by_id[i] = m
+    cycles_by_full_id[m.full_id] = m
+    if save: m.save()
+    logging.info('cycle "%s" created' % m.full_id)
+    return True
+
+
+def destroy_cycle(m_id):
+    i = get_cycle(m_id)
+    if i:
+        try:
+            i.destroy()
+            if eva.core.db_update == 1 and i.config_file_exists:
+                try:
+                    os.unlink(i.get_fname())
+                except:
+                    logging.error('Can not remove cycle "%s" config' % \
+                            m_id)
+                    eva.core.log_traceback()
+            elif i.config_file_exists:
+                configs_to_remove.add(i.get_fname())
+            del (cycles_by_id[i.item_id])
+            del (cycles_by_full_id[i.full_id])
+            logging.info('cycle "%s" removed' % i.full_id)
             return True
         except:
             eva.core.log_traceback()
@@ -681,6 +769,8 @@ def start():
         t.start()
     for i, v in lvars_by_full_id.items():
         v.start_processors()
+    for i, v in cycles_by_id.copy().items():
+        v.start(autostart=True)
 
 
 def connect_remote_controller(v):
@@ -695,6 +785,8 @@ def connect_remote_controller(v):
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.db_update == 1: save()
+    for i, v in cycles_by_id.copy().items():
+        v.stop(wait=False)
     for i, v in items_by_full_id.copy().items():
         v.stop_processors()
     if uc_pool:

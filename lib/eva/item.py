@@ -1893,8 +1893,9 @@ class VariableItem(UpdatableItem):
 
 def item_match(item, item_ids, groups=None):
     if (groups and ('#' in groups) or (item.group in groups)) \
-            or '#' in item_ids or item.item_id in item_ids or \
-            item.oid in item_ids:
+            or '#' in item_ids or \
+            item.oid in item_ids or \
+            (not eva.core.enterprise_layout and item.item_id in item_ids):
         return True
     if groups:
         for grp in groups:

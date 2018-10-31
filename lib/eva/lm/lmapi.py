@@ -296,6 +296,14 @@ class LM_API(GenericAPI):
                 result.append(v.group)
         return sorted(result)
 
+    def groups_cycle(self, k=None):
+        result = []
+        for i, v in eva.lm.controller.cycles_by_id.copy().items():
+            if apikey.check(k, v) and \
+                    v.group not in result:
+                result.append(v.group)
+        return sorted(result)
+
     def get_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_item(i)
@@ -382,6 +390,22 @@ class LM_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.lm.controller.destroy_macro(i)
 
+    def list_cycles(self, k=None, group=None):
+        result = []
+        for i, v in eva.lm.controller.cycles_by_id.copy().items():
+            if apikey.check(k, v) and \
+                    (not group or eva.item.item_match(v, [], [ group ])):
+                result.append(v.serialize(info=True))
+        return sorted(result, key=lambda k: k['full_id'])
+
+    def create_cycle(self, k=None, i=None, g=None, save=False):
+        if not apikey.check(k, master=True): return None
+        return eva.lm.controller.create_cycle(i, g, save)
+
+    def destroy_cycle(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        return eva.lm.controller.destroy_cycle(i)
+
     def append_controller(self,
                           k=None,
                           uri=None,
@@ -418,6 +442,11 @@ class LM_API(GenericAPI):
     def list_macro_props(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_macro(i)
+        return item.serialize(props=True) if item else None
+
+    def list_cycle_props(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        item = eva.lm.controller.get_cycle(i)
         return item.serialize(props=True) if item else None
 
     def list_controller_props(self, k=None, i=None):
@@ -483,6 +512,43 @@ class LM_API(GenericAPI):
             if result and macro.config_changed and save:
                 macro.save()
             return result
+        else:
+            return None
+
+    def set_cycle_prop(self, k=None, i=None, p=None, v=None, save=False):
+        if not apikey.check(k, master=True): return None
+        cycle = eva.lm.controller.get_cycle(i)
+        if cycle:
+            result = cycle.set_prop(p, v, save)
+            if result and cycle.config_changed and save:
+                cycle.save()
+            return result
+        else:
+            return None
+
+    def start_cycle(self, k=None, i=None):
+        if not apikey.check(k, i): return None
+        cycle = eva.lm.controller.get_cycle(i)
+        if cycle:
+            return cycle.start()
+        else:
+            return None
+
+    def stop_cycle(self, k=None, i=None, wait=False):
+        if not apikey.check(k, i): return None
+        cycle = eva.lm.controller.get_cycle(i)
+        if cycle:
+            cycle.stop(wait=wait)
+            return True
+        else:
+            return None
+
+    def reset_cycle_stats(self, k=None, i=None):
+        if not apikey.check(k, i): return None
+        cycle = eva.lm.controller.get_cycle(i)
+        if cycle:
+            cycle.reset_stats()
+            return True
         else:
             return None
 
@@ -582,6 +648,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.destroy_rule.exposed = True
 
         LM_HTTP_API.groups_macro.exposed = True
+        LM_HTTP_API.groups_cycle.exposed = True
         LM_HTTP_API.get_config.exposed = True
         LM_HTTP_API.save_config.exposed = True
         LM_HTTP_API.list.exposed = True
@@ -590,6 +657,9 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         LM_HTTP_API.list_macros.exposed = True
         LM_HTTP_API.create_macro.exposed = True
         LM_HTTP_API.destroy_macro.exposed = True
+        LM_HTTP_API.list_cycles.exposed = True
+        LM_HTTP_API.create_cycle.exposed = True
+        LM_HTTP_API.destroy_cycle.exposed = True
         LM_HTTP_API.append_controller.exposed = True
         LM_HTTP_API.enable_controller.exposed = True
         LM_HTTP_API.disable_controller.exposed = True
@@ -597,10 +667,15 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
 
         LM_HTTP_API.list_props.exposed = True
         LM_HTTP_API.list_macro_props.exposed = True
+        LM_HTTP_API.list_cycle_props.exposed = True
         LM_HTTP_API.list_controller_props.exposed = True
         LM_HTTP_API.test_controller.exposed = True
         LM_HTTP_API.set_prop.exposed = True
         LM_HTTP_API.set_macro_prop.exposed = True
+        LM_HTTP_API.set_cycle_prop.exposed = True
+        LM_HTTP_API.start_cycle.exposed = True
+        LM_HTTP_API.stop_cycle.exposed = True
+        LM_HTTP_API.reset_cycle_stats.exposed = True
         LM_HTTP_API.set_controller_prop.exposed = True
 
         LM_HTTP_API.reload_controller.exposed = True
@@ -808,6 +883,9 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
     def groups_macro(self, k=None):
         return super().groups_macro(k)
 
+    def groups_cycle(self, k=None):
+        return super().groups_cycle(k)
+
     def get_config(self, k=None, i=None):
         cp_need_master(k)
         result = super().get_config(k, i)
@@ -851,6 +929,21 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         return http_api_result_ok() if super().destroy_macro(k, i) \
                 else http_api_result_error()
 
+    def list_cycles(self, k=None, g=None):
+        result = super().list_cycles(k, g)
+        if result is None: raise cp_api_404()
+        return result
+
+    def create_cycle(self, k=None, i=None, g=None, save=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().create_cycle(k, i, g, save) \
+                else http_api_result_error()
+
+    def destroy_cycle(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().destroy_cycle(k, i) \
+                else http_api_result_error()
+
     def append_controller(self,
                           k=None,
                           u=None,
@@ -891,6 +984,12 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         if not result: raise cp_api_404()
         return result
 
+    def list_cycle_props(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().list_cycle_props(k, i)
+        if not result: raise cp_api_404()
+        return result
+
     def list_controller_props(self, k=None, i=None):
         cp_need_master(k)
         result = super().list_controller_props(k, i)
@@ -922,6 +1021,27 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
             _save = False
         return http_api_result_ok() if super().set_macro_prop(
             k, i, p, v, _save) else http_api_result_error()
+
+    def set_cycle_prop(self, k=None, i=None, p=None, v=None, save=None):
+        cp_need_master(k)
+        if save:
+            _save = True
+        else:
+            _save = False
+        return http_api_result_ok() if super().set_cycle_prop(
+            k, i, p, v, _save) else http_api_result_error()
+
+    def start_cycle(self, k=None, i=None):
+        return http_api_result_ok() if super().start_cycle(
+            k, i) else http_api_result_error()
+
+    def stop_cycle(self, k=None, i=None, wait=None):
+        return http_api_result_ok() if super().stop_cycle(
+            k, i, wait) else http_api_result_error()
+
+    def reset_cycle_stats(self, k=None, i=None):
+        return http_api_result_ok() if super().reset_cycle_stats(
+            k, i,) else http_api_result_error()
 
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
         cp_need_master(k)
