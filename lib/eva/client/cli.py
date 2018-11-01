@@ -995,7 +995,12 @@ class GenericCLI(object):
                         cmds.append([])
                         cix += 1
                     else:
-                        cmds[cix].append(p)
+                        if p.endswith(';'):
+                            cmds[cix].append(p[:-1])
+                            cmds.append([])
+                            cix += 1
+                        else:
+                            cmds[cix].append(p)
                 for i in range(0, len(cmds)):
                     d = cmds[i]
                     if i and i < len(cmds): print()
