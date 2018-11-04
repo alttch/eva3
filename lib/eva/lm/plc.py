@@ -375,7 +375,8 @@ class Cycle(eva.item.Item):
         logging.debug('%s cycle thread stopped' % self.full_id)
 
     def start(self, autostart=False):
-        if (autostart and not self.autostart) or not self.macro:
+        if (autostart and
+                not self.autostart) or not self.macro or self.cycle_enabled:
             self.notify()
             return False
         self.c = 0
@@ -391,6 +392,7 @@ class Cycle(eva.item.Item):
         if wait and self.cycle_thread and self.cycle_thread.isAlive():
             self.cycle_thread.join()
         self.notify()
+        return True
 
     def reset_stats(self):
         self.stats_lock.acquire()
@@ -398,6 +400,10 @@ class Cycle(eva.item.Item):
         self.tc = 0
         self.stats_lock.release()
         self.notify()
+        return True
+
+    def is_running(self):
+        return self.cycle_enabled
 
     def serialize(self,
                   full=False,

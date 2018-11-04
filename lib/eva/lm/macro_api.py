@@ -120,7 +120,14 @@ class MacroAPI(object):
             'create_device': self.create_device,
             'update_device': self.update_device,
             'destroy_device': self.destroy_device,
-            'set_rule_prop': self.set_rule_prop
+            'set_rule_prop': self.set_rule_prop,
+            'start_cycle': self.start_cycle,
+            'stop_cycle': self.stop_cycle,
+            'reset_cycle_stats': self.reset_cycle_stats,
+            'list_cycle_props': self.list_cycle_props,
+            'set_cycle_prop': self.set_cycle_prop,
+            'get_cycle_info': self.get_cycle_info,
+            'is_cycle_running': self.is_cycle_running
         }
 
     def history(self,
@@ -606,6 +613,61 @@ class MacroAPI(object):
             eva.apikey.masterkey, i=rule_id, p=prop, v=value, save=save)
         return result
 
+    def start_cycle(self, cycle_id):
+        cycle = eva.lm.controller.get_cycle(cycle_id)
+        if not cycle:
+            if not self.pass_errors:
+                raise Exception('cycle unknown: ' + cycle_id)
+            return None
+        return cycle.start()
+
+    def stop_cycle(self, cycle_id):
+        cycle = eva.lm.controller.get_cycle(cycle_id)
+        if not cycle:
+            if not self.pass_errors:
+                raise Exception('cycle unknown: ' + cycle_id)
+            return None
+        return cycle.stop()
+
+    def reset_cycle_stats(self, cycle_id):
+        cycle = eva.lm.controller.get_cycle(cycle_id)
+        if not cycle:
+            if not self.pass_errors:
+                raise Exception('cycle unknown: ' + cycle_id)
+            return None
+        return cycle.reset_stats()
+
+    def list_cycle_props(self, cycle_id):
+        cycle = eva.lm.controller.get_cycle(cycle_id)
+        if not cycle:
+            if not self.pass_errors:
+                raise Exception('cycle unknown: ' + cycle_id)
+            return None
+        return cycle.serialize(props=True)
+
+    def set_cycle_prop(self, cycle_id, prop=None, value=None, save=False):
+        cycle = eva.lm.controller.get_cycle(cycle_id)
+        if not cycle:
+            if not self.pass_errors:
+                raise Exception('cycle unknown: ' + cycle_id)
+            return None
+        return cycle.set_prop(prop, value, save)
+
+    def get_cycle_info(self, cycle_id):
+        cycle = eva.lm.controller.get_cycle(cycle_id)
+        if not cycle:
+            if not self.pass_errors:
+                raise Exception('cycle unknown: ' + cycle_id)
+            return None
+        return cycle.serialize(info=True)
+
+    def is_cycle_running(self, cycle_id):
+        cycle = eva.lm.controller.get_cycle(cycle_id)
+        if not cycle:
+            if not self.pass_errors:
+                raise Exception('cycle unknown: ' + cycle_id)
+            return None
+        return cycle.is_running()
 
 def init():
     global mbi_code
