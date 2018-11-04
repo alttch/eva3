@@ -365,7 +365,7 @@ class Cycle(eva.item.Item):
                     corr = tc / c - self.interval
                     c = 0
                     tc = 0
-                    th = threading.Thread(target=self.notify())
+                    th = threading.Thread(target=self.notify)
                     th.setDaemon(True)
                     th.start()
             else:
