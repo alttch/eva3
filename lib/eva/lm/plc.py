@@ -221,6 +221,7 @@ class Cycle(eva.item.Item):
         self.autostart = False
         self.cycle_thread = None
         self.cycle_enabled = False
+        self.cycle_stopped = True
         self.stats_lock = threading.Lock()
 
     def update_config(self, data):
@@ -315,6 +316,7 @@ class Cycle(eva.item.Item):
 
     def _t_cycle(self):
         logging.debug('%s cycle thread started' % self.full_id)
+        self.cycle_stopped = False
         prev = None
         c = 0
         tc = 0
@@ -373,6 +375,8 @@ class Cycle(eva.item.Item):
             while time.time() < cycle_end and self.cycle_enabled:
                 time.sleep(eva.core.polldelay)
         logging.debug('%s cycle thread stopped' % self.full_id)
+        self.cycle_stopped = True
+        self.notify()
 
     def start(self, autostart=False):
         if (autostart and
@@ -417,12 +421,12 @@ class Cycle(eva.item.Item):
         d['interval'] = self.interval
         if notify or info:
             if self.cycle_enabled:
-                d['status'] = 'running'
+                d['status'] = 1
             else:
-                if self.cycle_thread and self.cycle_thread.isAlive():
-                    d['status'] = 'stopping'
+                if not self.cycle_stopped:
+                    d['status'] = 2
                 else:
-                    d['status'] = 'stopped'
+                    d['status'] = 0
             d['avg'] = self.tc / self.c if self.c else self.interval
         if not notify:
             d['ict'] = self.ict

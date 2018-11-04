@@ -44,7 +44,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         cfg.update(state)
         self.update_config(cfg)
         self.status = state['status']
-        self.value = state['value']
+        self.value = state.get('value')
 
     def notify(self, retain=None, skip_subscribed_mqtt=False):
         super().notify(skip_subscribed_mqtt=True)
@@ -207,3 +207,60 @@ class RemoteMacro(eva.item.Item):
         d['controller_id'] = self.controller.full_id
         d['action_enabled'] = self.action_enabled
         return d
+
+
+class RemoteCycle(RemoteUpdatableItem):
+
+    def __init__(self, remote_lm, state):
+        super().__init__('lcycle', remote_lm, state)
+        self.mqtt_update_topics.append('interval')
+        self.mqtt_update_topics.append('avg')
+
+    def update_config(self, cfg):
+        super().update_config(cfg)
+        if 'interval' in cfg:
+            try:
+                self.interval = float(cfg['interval'])
+            except:
+                eva.core.log_traceback()
+        if 'avg' in cfg:
+            try:
+                self.avg = float(cfg['avg'])
+            except:
+                eva.core.log_traceback()
+
+    def serialize(self,
+                  full=False,
+                  config=False,
+                  info=False,
+                  props=False,
+                  notify=False):
+        d = super().serialize(
+            full=full, config=config, info=info, props=props, notify=notify)
+        d['controller_id'] = self.controller.full_id
+        d['interval'] = self.interval
+        d['status'] = self.status
+        d['avg'] = self.avg
+        return d
+
+    def notify(self, retain=None, skip_subscribed_mqtt=False):
+        super().notify(skip_subscribed_mqtt=True)
+
+    def mqtt_set_state(self, topic, data):
+        super().mqtt_set_state(topic, data)
+        try:
+            if topic.endswith('/avg'):
+                try:
+                    self.avg = float(data)
+                    self.notify()
+                except:
+                    eva.core.log_traceback()
+            elif topic.endswith('/interval'):
+                try:
+                    self.interval = float(data)
+                    self.notify()
+                except:
+                    eva.core.log_traceback()
+        except:
+            eva.core.log_traceback()
+

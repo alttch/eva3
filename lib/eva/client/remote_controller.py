@@ -345,6 +345,11 @@ class RemoteLM(RemoteController):
         m.update_config(mcfg)
         return m
 
+    def create_remote_cycle(self, mcfg):
+        m = eva.client.remote_item.RemoteCycle(self, mcfg)
+        m.update_config(mcfg)
+        return m
+
     def load_lvars(self):
         if not self.item_id: return None
         states = self.api_call('state', {'full': '1'})
@@ -368,6 +373,19 @@ class RemoteLM(RemoteController):
                             m['group'] != 'system' and \
                             m['group'][:7] != 'system/')):
                     i = self.create_remote_macro(m)
+                    result.append(i)
+            return result
+        else:
+            return None
+
+    def load_cycles(self, skip_system=False):
+        if not self.item_id: return None
+        cycles = self.api_call('list_cycles')
+        result = []
+        if cycles is not None:
+            for m in cycles:
+                if 'id' in m:
+                    i = self.create_remote_cycle(m)
                     result.append(i)
             return result
         else:
@@ -772,12 +790,12 @@ class RemoteUCPool(RemoteControllerPool):
         if not super().reload_controller(controller_id):
             return False
         uc = self.controllers[controller_id]
-        units = uc.load_units()
         if not self.item_management_lock.acquire(timeout=eva.core.timeout):
             logging.critical('RemoteUCPool::reload_controller locking broken')
             eva.core.critical()
             return False
         try:
+            units = uc.load_units()
             if units is not None:
                 p = {}
                 for u in units:
@@ -950,6 +968,10 @@ class RemoteLMPool(RemoteControllerPool):
         self.macros_by_controller = {}
         self.controllers_by_macro = {}
 
+        self.cycles = {}
+        self.cycles_by_controller = {}
+        self.controllers_by_cycle = {}
+
         self.rules = {}
         self.rules_by_controller = {}
         self.controllers_by_rule = {}
@@ -964,6 +986,10 @@ class RemoteLMPool(RemoteControllerPool):
 
     def get_macro(self, macro_id):
         return self.macros[macro_id] if macro_id in self.macros \
+                else None
+
+    def get_cycle(self, cycle_id):
+        return self.cycles[cycle_id] if cycle_id in self.cycles \
                 else None
 
     def set(self, lvar_id, status=None, value=None):
@@ -1107,12 +1133,12 @@ class RemoteLMPool(RemoteControllerPool):
         if not super().reload_controller(controller_id):
             return False
         lm = self.controllers[controller_id]
-        lvars = lm.load_lvars()
         if not self.item_management_lock.acquire(timeout=eva.core.timeout):
             logging.critical('RemoteLMPool::reload_controller locking broken')
             eva.core.critical()
             return False
         try:
+            lvars = lm.load_lvars()
             if lvars is not None:
                 p = {}
                 for u in lvars:
@@ -1187,6 +1213,45 @@ class RemoteLMPool(RemoteControllerPool):
                     'Loaded %u macros from %s' % (len(p), controller_id))
             else:
                 logging.error('Failed to reload macros from %s' % controller_id)
+                self.item_management_lock.release()
+                return False
+            cycles = lm.load_cycles()
+            if cycles is not None:
+                p = {}
+                for u in cycles:
+                    if u.full_id in self.cycles and u.controller != lm:
+                        self.cycles[u.full_id].destroy()
+                    if not u.full_id in self.cycles or \
+                            self.cycles[u.full_id].is_destroyed():
+                        self.cycles[u.full_id] = u
+                        self.controllers_by_cycle[u.full_id] = lm
+                        u.start_processors()
+                    p[u.full_id] = u
+                    _u = self.get_cycle(u.full_id)
+                    if _u: _u.update_config(u.serialize(config=True))
+                if controller_id in self.cycles_by_controller:
+                    for i in self.cycles_by_controller[
+                            controller_id].copy().keys():
+                        if i not in p:
+                            self.cycles[i].destroy()
+                            try:
+                                del (self.cycles[i])
+                                del (self.controllers_by_cycle[i])
+                                del (
+                                    self.cycles_by_controller[controller_id][i])
+                            except:
+                                eva.core.log_traceback()
+                    for u in cycles:
+                        if u.full_id not in self.cycles_by_controller[
+                                controller_id].keys():
+                            self.cycles_by_controller[controller_id][
+                                u.full_id] = u
+                else:
+                    self.cycles_by_controller[controller_id] = p
+                logging.debug(
+                    'Loaded %u cycles from %s' % (len(p), controller_id))
+            else:
+                logging.error('Failed to reload cycles from %s' % controller_id)
                 self.item_management_lock.release()
                 return False
             rules = lm.load_rules()

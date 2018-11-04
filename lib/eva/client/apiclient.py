@@ -113,12 +113,13 @@ _api_func = {
             'test', 'state', 'state_all', 'state_history', 'groups', 'action',
             'action_toggle', 'result', 'terminate', 'kill', 'q_clean',
             'disable_actions', 'enable_actions', 'set', 'reset', 'toggle',
-            'clear', 'list_macros', 'groups_macro', 'run', 'list_controllers',
-            'append_controller', 'remove_controller', 'enable_controller',
-            'disable_controller', 'list_controller_props',
-            'set_controller_prop', 'reload_controller', 'test_controller',
-            'list_remote', 'list_rule_props', 'set_rule_prop', 'login',
-            'logout', 'reload_clients', 'notify_restart'
+            'clear', 'list_macros', 'groups_macro', 'run', 'list_cycles',
+            'groups_cycle', 'list_controllers', 'append_controller',
+            'remove_controller', 'enable_controller', 'disable_controller',
+            'list_controller_props', 'set_controller_prop', 'reload_controller',
+            'test_controller', 'list_remote', 'list_rule_props',
+            'set_rule_prop', 'login', 'logout', 'reload_clients',
+            'notify_restart'
         ],
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',

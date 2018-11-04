@@ -31,6 +31,7 @@ _api_functions = {
     'action:clear': 'q_clean',
     'action:kill': 'kill',
     'remote': 'list_remote',
+    'cycle:list': 'list_cycles',
     'macro:list': 'list_macros',
     'macro:run': 'run',
     'macro:result': 'result',
@@ -65,6 +66,7 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
+    'list_cycles': ['id', 'description', 'status', 'int', 'avg'],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
         'description'
@@ -180,6 +182,16 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 result.add(v['group'])
             return list(result)
 
+    class ComplCycleGroup(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('cycle list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['group'])
+            return list(result)
+
     class ComplController(ComplGeneric):
 
         def __call__(self, prefix, **kwargs):
@@ -218,7 +230,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
         if api_func not in [
-                'state', 'list_macros', 'list_controllers', 'result'
+                'state', 'list_macros', 'list_cycles', 'list_controllers',
+                'result'
         ] and itype not in ['action']:
             return super().prepare_result_data(data, api_func, api_func_full,
                                                itype)
@@ -229,8 +242,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     d['time']['created']).isoformat()
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
-            if api_func in ['list_macros', 'list_controllers']:
+            if api_func in ['list_macros', 'list_cycles', 'list_controllers']:
                 d['id'] = d['full_id']
+            if api_func == 'list_cycles':
+                d['int'] = d['interval']
+                d['avg'] = '{:.4f}'.format(d['avg'])
+                d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             elif itype == 'state':
                 try:
                     d['set'] = datetime.fromtimestamp(d['set_time']).isoformat()
@@ -280,6 +297,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         self.add_sfa_remote_functions()
         self.add_sfa_action_functions()
         self.add_sfa_macro_functions()
+        self.add_sfa_cycle_functions()
         self.add_sfa_lvar_functions()
         self.add_sfa_notify_functions()
         self.add_sfa_controller_functions()
@@ -537,6 +555,16 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             dest='s',
             choices=['queued', 'running', 'finished', 'Q', 'R', 'F'])
 
+    def add_sfa_cycle_functions(self):
+        ap_cycle = self.sp.add_parser('cycle', help='Cycle functions')
+        sp_cycle = ap_cycle.add_subparsers(
+            dest='_func', metavar='func', help='Cycle commands')
+
+        sp_cycle_list = sp_cycle.add_parser('list', help='List cycles')
+        sp_cycle_list.add_argument(
+            '-g', '--group', help='Filter by group', metavar='GROUP',
+            dest='g').completer = self.ComplCycleGroup(self)
+
     def add_sfa_lvar_functions(self):
         sp_set = self.sp.add_parser('set', help='Set LVar state')
         sp_set.add_argument(
@@ -696,7 +724,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 cli = SFA_CLI('sfa', _me)
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'run', 'cmd']
-cli.arg_sections += ['action', 'macro', 'notify', 'controller']
+cli.arg_sections += ['action', 'macro', 'cycle', 'notify', 'controller']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)

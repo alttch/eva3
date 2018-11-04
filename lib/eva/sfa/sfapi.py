@@ -314,6 +314,40 @@ class SFA_API(GenericAPI):
             wait=wait,
             uuid=uuid)
 
+    def list_cycles(self, k=None, controller_id=None, group=None):
+        result = []
+        if not controller_id:
+            for c, d in \
+                eva.sfa.controller.lm_pool.cycles_by_controller.copy().items():
+                for a, v in d.copy().items():
+                    if apikey.check(k, v) and \
+                        (not group or \
+                            eva.item.item_match(v, [], [ group ])):
+                        result.append(v.serialize(info=True))
+        else:
+            if controller_id.find('/') != -1:
+                c = controller_id.split('/')
+                if len(c) > 2 or c[0] != 'lm': return None
+                c_id = c[1]
+            else:
+                c_id = controller_id
+            if c_id not in eva.sfa.controller.lm_pool.cycles_by_controller:
+                return None
+            for a, v in \
+                eva.sfa.controller.lm_pool.cycles_by_controller[\
+                                                        c_id].copy().items():
+                if apikey.check(k, v) and (not group or \
+                        eva.item.item_match(v, [], [ group ])):
+                    result.append(v.serialize(info=True))
+        return sorted(result, key=lambda k: k['id'])
+
+    def groups_cycle(self, k=None):
+        result = []
+        for a, v in eva.sfa.controller.lm_pool.cycles.copy().items():
+            if apikey.check(k, v) and not v.group in result:
+                result.append(v.group)
+        return sorted(result)
+
     def list_controllers(self, k=None, g=None):
         if not apikey.check(k, master = True) or \
                 (g is not None and \
@@ -560,6 +594,9 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         SFA_HTTP_API.groups_macro.exposed = True
         SFA_HTTP_API.run.exposed = True
 
+        SFA_HTTP_API.list_cycles.exposed = True
+        SFA_HTTP_API.groups_cycle.exposed = True
+
         SFA_HTTP_API.list_controllers.exposed = True
         SFA_HTTP_API.append_controller.exposed = True
         SFA_HTTP_API.enable_controller.exposed = True
@@ -596,6 +633,10 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
                 result += self.state(k, p=p, full=True)
             except:
                 pass
+        try:
+            result += self.list_cycles(k)
+        except:
+            pass
         return sorted(
             sorted(result, key=lambda k: k['id']), key=lambda k: k['type'])
 
@@ -789,6 +830,14 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
     def groups_macro(self, k=None):
         return super().groups_macro(k)
+
+    def list_cycles(self, k=None, i=None, g=None):
+        result = super().list_cycles(k, i, g)
+        if result is None: raise cp_api_404()
+        return result
+
+    def groups_cycle(self, k=None):
+        return super().groups_cycle(k)
 
     def run(self, k=None, i=None, u=None, a=None, kw=None, p=None, w=0):
         if w:
