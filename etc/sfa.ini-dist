@@ -16,6 +16,8 @@ db_file = runtime/db/sfa.db
 ;userdb_file = runtime/db/users.db
 ; keep action history in seconds
 keep_action_history = 86400
+; action cleaner interval, in seconds
+action_cleaner_interval = 60
 ; keep memory log in seconds
 keep_logmem = 86400
 ; debug mode

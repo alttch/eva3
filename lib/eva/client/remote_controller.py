@@ -398,7 +398,7 @@ class RemoteControllerPool(object):
         self.action_history_lock = threading.Lock()
         self.action_cleaner = None
         self.action_cleaner_active = False
-        self.action_cleaner_delay = 3600
+        self.action_cleaner_interval = eva.core.action_cleaner_interval
 
     def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
         if controller_id not in self.controllers: return None
@@ -555,7 +555,7 @@ class RemoteControllerPool(object):
             except:
                 eva.core.log_traceback()
             i = 0
-            while i < self.action_cleaner_delay and \
+            while i < self.action_cleaner_interval and \
                     self.action_cleaner_active:
                 time.sleep(eva.core.sleep_step)
                 i += eva.core.sleep_step

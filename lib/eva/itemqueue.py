@@ -30,7 +30,7 @@ class ActiveItemQueue(object):
 
         self.actions_lock = threading.Lock()
 
-        self.action_cleaner_delay = 60
+        self.action_cleaner_interval = eva.core.action_cleaner_interval
         self.action_cleaner = None
         self.action_cleaner_active = False
 
@@ -151,7 +151,7 @@ class ActiveItemQueue(object):
             except:
                 eva.core.log_traceback()
             i = 0
-            while i < self.action_cleaner_delay and \
+            while i < self.action_cleaner_interval and \
                     self.action_cleaner_active:
                 time.sleep(eva.core.sleep_step)
                 i += eva.core.sleep_step

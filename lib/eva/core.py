@@ -40,6 +40,10 @@ keep_logmem = 3600
 
 keep_action_history = 3600
 
+action_cleaner_interval = 60
+
+default_action_cleaner_interval = 60
+
 dir_eva_default = '/opt/eva'
 
 debug = False
@@ -265,6 +269,7 @@ def serialize():
     d['product_build'] = product_build
     d['keep_logmem'] = keep_logmem
     d['keep_action_history'] = keep_action_history
+    d['action_cleaner_interval'] = action_cleaner_interval
     d['debug'] = debug
     d['development'] = development
     d['show_traceback'] = show_traceback
@@ -353,7 +358,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
     global system_name, log_file, pid_file, debug, development, show_traceback
     global stop_on_critical, dump_on_critical
     global notify_on_start, db_file, userdb_file
-    global polldelay, db_update, keep_action_history, keep_logmem
+    global polldelay, db_update, keep_action_history, action_cleaner_interval
+    global keep_logmem
     global timeout
     global exec_before_save
     global exec_after_save
@@ -463,8 +469,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             else: f = userdb_file
             logging.debug('server.userdb_file = %s' % f)
             try:
-                enterprise_layout = (cfg.get('server',
-                                             'layout') != 'simple')
+                enterprise_layout = (cfg.get('server', 'layout') != 'simple')
             except:
                 pass
             logging.debug('server.layout = %s' % ('enterprise' \
@@ -492,6 +497,14 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             pass
         logging.debug('server.keep_action_history = %s sec' % \
                 keep_action_history)
+        try:
+            action_cleaner_interval = int(
+                cfg.get('server', 'action_cleaner_interval'))
+            if action_cleaner_interval < 0: raise Exception('invalid interval')
+        except:
+            action_cleaner_interval = default_action_cleaner_interval
+        logging.debug('server.action_cleaner_interval = %s sec' % \
+                action_cleaner_interval)
         try:
             keep_logmem = int(cfg.get('server', 'keep_logmem'))
         except:
