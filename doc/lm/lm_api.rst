@@ -312,7 +312,8 @@ Parameters:
 
 optionally:
 
-* **a** macro arguments, space separated
+* **a** macro arguments, array or space separated
+* **kw** macro keyword arguments, name=value, comma separated or dict
 * **p** queue priority (less value - higher priority, default 100)
 * **u** unique action id (use this option only if you know what you do, the
   system assigns the unique ID by default)

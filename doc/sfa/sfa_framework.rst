@@ -204,8 +204,8 @@ Framework after login with any valid user or API key.
 
 .. _sf_init:
 
-Initialization, authentication
-==============================
+Primary functions
+=================
 
 eva_sfa_init
 ------------
@@ -247,6 +247,16 @@ To stop the framework, call:
 .. code-block:: javascript
 
     eva_sfa_stop();
+
+eva_sfa_call
+------------
+
+Calls any available API function (:doc:`/sfa/sfa_api` or :doc:`/sys_api`),
+params - object, containing function parameters.
+
+.. code-block:: javascript
+
+    eva_sfa_call(func, params, cb_success, cb_error)
 
 Event Handling
 ==============
@@ -292,16 +302,13 @@ where:
 eva_sfa_groups
 --------------
 
-Returns a list of item groups.
+Returns a list of item groups, **params** - object containing function
+parameters (p - item type, g - group filter, mqtt style):
 
 .. code-block:: javascript
 
-    eva_sfa_groups(p, g, cb_success, cb_error);
+    eva_sfa_groups(params, cb_success, cb_error);
 
-where
-
-* **p** item type (U for unit, S for sensor, LV for lvar)
-* **g** optional group filter (MQTT-style wildcards)
 * **cb_success**, **cb_error** - functions called when the access to API has
   either succeeded or failed.
 
@@ -355,13 +362,13 @@ To execute :doc:`macro</lm/macros>`, call the function:
 
 .. code-block:: javascript
 
-    eva_sfa_run(macro_id, args, wait, priority, uuid, cb_success, cb_error);
+    eva_sfa_run(macro_id, params, cb_success, cb_error);
 
 where **macro_id** - macro id (in a full format, *group/macro_id*) to execute,
-other params are equal to LM API :ref:`run<lm_run>` function, and
-**cb_success**, **cb_error** - functions called when the access to API has
-either succeeded or failed. The functions are called with **data** param which
-contains the API response.
+**params** - object containing paramterers equal to LM API :ref:`run<lm_run>`
+function, and **cb_success**, **cb_error** - functions called when the access
+to API has either succeeded or failed. The functions are called with **data**
+param which contains the API response.
 
 eva_sfa_action
 --------------
@@ -370,13 +377,13 @@ To run the :ref:`unit<unit>` action, call the function:
 
 .. code-block:: javascript
 
-    eva_sfa_action(unit_id, nstatus, nvalue, wait, priority, uuid, cb_success,
-    cb_error);
+    eva_sfa_action(unit_id, params, cb_success, cb_error);
 
-Where unit_id - full unit id (*group/id*), other parameters are equal to UC API
-:ref:`action<uc_action>`, and **cb_success**, **cb_error** - functions called
-when the access to API has either succeeded or failed. The functions are called
-with **data** param which contains the API response.
+Where unit_id - full unit id (*group/id*), **params** - object containing
+parameters, equal to UC API :ref:`action<uc_action>`, and **cb_success**,
+**cb_error** - functions called when the access to API has either succeeded or
+failed. The functions are called with **data** param which contains the API
+response.
 
 eva_sfa_action_toggle
 ---------------------
@@ -385,17 +392,23 @@ In case you want to switch :ref:`unit<unit>` status between *0* and *1*, call:
 
 .. code-block:: javascript
 
-    eva_sfa_action_toggle(unit_id, wait, priority, uuid, cb_success, cb_error);
+    eva_sfa_action_toggle(unit_id, params, cb_success, cb_error);
 
-eva_sfa_result, eva_sfa_result_by_uuid
+eva_sfa_result
 --------------------------------------
 
 To obtain a result of the executed actions, use the functions:
 
 .. code-block:: javascript
 
-    eva_sfa_result(unit_id, g, s, cb_success, cb_error);
-    eva_sfa_result_by_uuid(uuid, cb_success, cb_error);
+    eva_sfa_result(params, cb_success, cb_error);
+
+where params - object containing function parameters:
+
+* *i* - object oid (type:group/id), unit or lmacro
+* *u* - action uuid (either i or u must be specified)
+* *g* - filter by group
+* *s* - filter by status (Q, R, F - queued, running, finished)
 
 eva_sfa_kill
 ------------
@@ -601,7 +614,7 @@ chart inside specified <div />
 
 .. code-block:: javascript
 
-    eva_sfa_chart(ctx, cfg, oid, timeframe, fill, update, prop);
+    eva_sfa_chart(ctx, cfg, oid, params);
 
 where:
 
@@ -609,14 +622,15 @@ where:
 * **cfg** chart configuration. SFA Framework uses `Chart.js
   <https://www.chartjs.org/>`_ library. At this moment, *line* and *bar* charts
   are supported
-* **oid** item OID (or multiple, comma separated): **type:group/id**
-* **timeframe** timeframe to display, e.g. *5T* - last 5 min, *2H* - last 2
-  hours, *2D* last 2 days etc.
-* **fill** precision, 10T-60T recommended. The more accurate precision is, the
-  more data points are displayed (but chart is slower)
-* **update** chart update interval, in seconds. Set *0* or *null* to disable
-  updates
-* **prop** item state property to use (default: *'value'*)
+* **oid** item OID (or multiple, array or comma separated): **type:group/id**
+* **params** (object):
+    * **timeframe** timeframe to display, e.g. *5T* - last 5 min, *2H* - last 2
+      hours, *2D* last 2 days etc.
+    * **fill** precision, 10T-60T recommended. The more accurate precision is,
+      the more data points are displayed (but chart is slower)
+    * **update** chart update interval, in seconds. Set *0* or *null* to disable
+      updates
+    * **prop** item state property to use (default: *'value'*)
 
 .. note::
 
@@ -632,36 +646,26 @@ Opens HTML5 popups
 
 .. code-block:: javascript
 
-  eva_sfa_popup(
-      ctx,
-      pclass,
-      title,
-      msg,
-      ct,
-      btn1,
-      btn2,
-      btn1a,
-      btn2a,
-      va
-      );
+  eva_sfa_popup(ctx, pclass, title, msg, params);
 
 where:
 
 * **ctx** html element id to use as popup (any empty <div /> is fine)
 * **pclass** popup class: *info*, *warning* or *error*. opens big popup window
-  if '!' is put before the class (i.e. *!info*)
+  if '!' is put before the class (e.g. *!info*)
 * **title** popup window title
 * **msg** popup window message
-* **ct** popup auto close time (sec), equal to pressing escape
-* **btn1** button 1 name (default: *'OK'*)
-* **btn2** button 2 name
-* **btn1a** function to run if button 1 (or enter) is pressed
-* **btn2a** function(arg) to run if button 2 (or escape) is pressed. arg
-  is *true* if the button was pressed, *false* if escape key or auto close.
-* **va** validate function which runs before btn1a. If the function returns
-  *true*, the popup is closed and btn1a function is executed. Otherwise the
-  popup is kept and the function btn1a is not executed. *va* function is used
-  to validate input, e.g. if popup contains any input fields.
+* **params** (object):
+    * **ct** popup auto close time (sec), equal to pressing escape
+    * **btn1** button 1 name (default: *'OK'*)
+    * **btn2** button 2 name
+    * **btn1a** function to run if button 1 (or enter) is pressed
+    * **btn2a** function(arg) to run if button 2 (or escape) is pressed. arg
+      is *true* if the button was pressed, *false* if escape key or auto close.
+    * **va** validate function which runs before btn1a. If the function returns
+      *true*, the popup is closed and btn1a function is executed. Otherwise the
+      popup is kept and the function btn1a is not executed. *va* function is
+      used to validate input, e.g. if popup contains any input fields.
 
 Example (consider *<div id="popup" style="display: none"></div>* is placed
 somewhere in HTML):
@@ -669,7 +673,7 @@ somewhere in HTML):
 .. code-block:: javascript
 
     // after successful login
-    eva_sfa_popup('popup', 'info', 'Logged in', 'You are logged in', 2);
+    eva_sfa_popup('popup', 'info', 'Logged in', 'You are logged in', {ct:2});
     // .......
     // reload handler
     function reload_me() {
@@ -681,11 +685,11 @@ somewhere in HTML):
           'warning',
           null,
           'Reloading interface',
-          2,
-          null,
-          null,
-          reload_me,
-          reload_me);
+          {
+          ct:2,
+          btn1a: reload_me,
+          btn2a: reload_me}
+          );
     }
 
 Examples
@@ -809,9 +813,7 @@ seconds:
         'chart1',
         chart_cfg,
         'sensor:env/temp_inside,sensor:env/temp_outside',
-        '8H',
-        '15T',
-        10);
+        {timeframe: '8H', fill:'15T', update:10});
 
 .. _sfw_example_log:
 
