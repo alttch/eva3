@@ -317,6 +317,8 @@ $_eva_api_func = array(
                     'clear',
                     'list_macros',
                     'groups_macro',
+                    'list_cycles',
+                    'groups_cycle',
                     'run',
                     'list_controllers',
                     'append_controller',

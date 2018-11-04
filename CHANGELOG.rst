@@ -30,11 +30,10 @@ LM
 SFA
 ---
 
-    * new API functions: enable_controller, disable_controller
-    * cycle control API functions
-    * SFA framework: code optimization, cycles (warning: some functions are
-      incompatible with previous version, use eva_sfa.3.1.js library or call
-      the functions in new format only, look UPDATE-HOWTO for more info)
+    * new API functions: enable_controller, disable_controller, list_cycles
+    * SFA framework: code optimization, cycle states (warning: some functions
+      are incompatible with previous version, use eva_sfa.3.1.js library or
+      call the functions in new format only, look UPDATE-HOWTO for more info)
 
 
 3.1.1 (2018-10-22)
