@@ -26,6 +26,8 @@ import eva.benchmark
 host = None
 ssl_host = None
 
+response = threading.local()
+
 port = None
 ssl_port = None
 
