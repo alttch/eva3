@@ -1128,6 +1128,11 @@ class GenericCLI(object):
                             if self.in_json:
                                 opts += ['-J']
                             clear_screen = False
+                            if '|' in d[-1] and not d[-1].startswith('|'):
+                                cmd = d[-1].split('|')
+                                cmd[-1] = '|' + cmd[-1]
+                                d.pop(-1)
+                                d.extend(cmd)
                             if d[-1][0] == '|':
                                 try:
                                     c = d[-1][1:]
@@ -1145,31 +1150,33 @@ class GenericCLI(object):
                         except:
                             pass
                         full_cmds.append(opts + d)
-
-                while True:
-                    start_time = time.time()
-                    if clear_screen:
-                        os.system('clear')
-                        if repeat_delay:
-                            print(time.ctime() + '  ' + \
-                                self.colored(
-                                    '{}'.format(' '.join(d)),
-                                    color='yellow') + \
-                                '  (interval {} sec)'.format(
-                                    repeat_delay))
-                    for i in full_cmds:
-                        code = self.do_run(i)
-                    if self.debug:
-                        self.print_debug('\nCode: %s' % code)
-                    if not repeat_delay: break
-                    time_to_sleep = repeat_delay - \
-                            time.time() + start_time
-                    if time_to_sleep > repeat_delay:
-                        time_to_sleep = repeat_delay
-                    if time_to_sleep > 0:
-                        time.sleep(time_to_sleep)
-                    if not clear_screen:
-                        print()
+                try:
+                    while True:
+                        start_time = time.time()
+                        if clear_screen:
+                            os.system('clear')
+                            if repeat_delay:
+                                print(time.ctime() + '  ' + \
+                                    self.colored(
+                                        '{}'.format(' '.join(d)),
+                                        color='yellow') + \
+                                    '  (interval {} sec)'.format(
+                                        repeat_delay))
+                        for i in full_cmds:
+                            code = self.do_run(i)
+                        if self.debug:
+                            self.print_debug('\nCode: %s' % code)
+                        if not repeat_delay: break
+                        time_to_sleep = repeat_delay - \
+                                time.time() + start_time
+                        if time_to_sleep > repeat_delay:
+                            time_to_sleep = repeat_delay
+                        if time_to_sleep > 0:
+                            time.sleep(time_to_sleep)
+                        if not clear_screen:
+                            print()
+                except:
+                    pass
                 self.suppress_colors = False
         return 0
 
