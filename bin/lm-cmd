@@ -438,7 +438,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 d['id'] = d['full_id']
             if api_func == 'list_cycles':
                 d['int'] = d['interval']
-                d['avg'] = '{:.4f}'.format(d['avg'])
+                d['avg'] = '{:.4f}'.format(float(d['value']))
                 d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'

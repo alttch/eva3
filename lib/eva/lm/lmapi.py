@@ -395,7 +395,7 @@ class LM_API(GenericAPI):
         for i, v in eva.lm.controller.cycles_by_id.copy().items():
             if apikey.check(k, v) and \
                     (not group or eva.item.item_match(v, [], [ group ])):
-                result.append(v.serialize(info=True))
+                result.append(v.serialize(full=True))
         return sorted(result, key=lambda k: k['full_id'])
 
     def create_cycle(self, k=None, i=None, g=None, save=False):

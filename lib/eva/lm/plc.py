@@ -445,7 +445,7 @@ class Cycle(eva.item.Item):
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         d['interval'] = self.interval
-        if notify or info:
+        if not info and not config and not props:
             if self.cycle_enabled:
                 d['status'] = 1
             else:
@@ -453,7 +453,7 @@ class Cycle(eva.item.Item):
                     d['status'] = 2
                 else:
                     d['status'] = 0
-            d['avg'] = self.tc / self.c if self.c else self.interval
+            d['value'] = str(self.tc / self.c if self.c else self.interval)
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None

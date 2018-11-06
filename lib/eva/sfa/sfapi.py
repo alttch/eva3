@@ -323,7 +323,7 @@ class SFA_API(GenericAPI):
                     if apikey.check(k, v) and \
                         (not group or \
                             eva.item.item_match(v, [], [ group ])):
-                        result.append(v.serialize(info=True))
+                        result.append(v.serialize(full=True))
         else:
             if controller_id.find('/') != -1:
                 c = controller_id.split('/')
