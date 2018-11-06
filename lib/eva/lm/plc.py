@@ -155,11 +155,14 @@ class Macro(eva.item.ActiveItem):
     def __init__(self, item_id):
         super().__init__(item_id, 'lmacro')
         self.respect_layout = False
-        self.api = eva.lm.macro_api.MacroAPI(pass_errors=False)
+        self.api = eva.lm.macro_api.MacroAPI(
+            pass_errors=False, send_critical=False)
 
     def update_config(self, data):
         if 'pass_errors' in data:
             self.api.pass_errors = data['pass_errors']
+        if 'send_critical' in data:
+            self.api.send_critical = data['send_critical']
         super().update_config(data)
 
     def set_prop(self, prop, val=None, save=False):
@@ -168,6 +171,16 @@ class Macro(eva.item.ActiveItem):
             if v is not None:
                 if self.api.pass_errors != v:
                     self.api.pass_errors = v
+                    self.log_set(prop, v)
+                    self.set_modified(save)
+                return True
+            else:
+                return False
+        if prop == 'send_critical':
+            v = val_to_boolean(val)
+            if v is not None:
+                if self.api.send_critical != v:
+                    self.api.send_critical = v
                     self.log_set(prop, v)
                     self.set_modified(save)
                 return True
@@ -187,6 +200,7 @@ class Macro(eva.item.ActiveItem):
         d = {}
         if full or config or props:
             d['pass_errors'] = self.api.pass_errors
+            d['send_critical'] = self.api.send_critical
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         if not notify:

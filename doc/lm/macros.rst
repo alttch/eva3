@@ -62,6 +62,8 @@ Parameters:
 * **pass_errors** if *true*, in case the function called by macro is completed
   with an exception, the controller ignores this and continues the code
   execution (false by default)
+* **send_critical** if *true*, allows to send critical events to controller
+  with *critical(msg, send_event=True)*
 
 Common principles of macros operation
 =====================================
@@ -166,7 +168,10 @@ functions:
 * **info(msg)** send INFO level message
 * **warning(msg)** send WARNING message
 * **error(msg)** send ERROR message
-* **critical(msg)** send  CRITICAL message
+
+* **critical(msg, send_event=False)** send CRITICAL message, send critical
+  event to controller if *send_event=True* and *send_critical* parameter is set
+  to *true* in macro configuration.
 
 In addition, **print** function is an alias of **info**.
 

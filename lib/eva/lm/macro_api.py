@@ -54,8 +54,9 @@ def set_shared(name, value=None):
 
 class MacroAPI(object):
 
-    def __init__(self, pass_errors=False):
+    def __init__(self, pass_errors=False, send_critical=False):
         self.pass_errors = pass_errors
+        self.send_critical = send_critical
         self.on = 1
         self.off = 0
         self.yes = True
@@ -169,8 +170,11 @@ class MacroAPI(object):
     def error(self, msg):
         logging.error(msg)
 
-    def critical(self, msg):
+    def critical(self, msg, send_event=False):
         logging.critical(msg)
+        if send_event and self.send_critical:
+            t = threading.Thread(target=eva.core.critical, args=(True,True))
+            t.start()
 
     def exit(self, code=0):
         sys.exit(code)
@@ -668,6 +672,7 @@ class MacroAPI(object):
                 raise Exception('cycle unknown: ' + cycle_id)
             return None
         return cycle.is_running()
+
 
 def init():
     global mbi_code
