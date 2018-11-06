@@ -929,6 +929,16 @@ The difference between Python code *f1=very_long_function* is that such code
 will throw an exception if *very_long_function* is not found, while **alias**
 macro function will pass an error and return *False*.
 
+.. _m_is_shutdown:
+
+is_shutdown - is shutdown event received
+----------------------------------------
+
+Returns *True* if controller global shutdown event is received.
+
+If macro is started in cycle, returns *True* until cycle stop event is
+received, controller global shutdown events are ignored.
+
 .. _m_sleep:
 
 sleep - pause operations
