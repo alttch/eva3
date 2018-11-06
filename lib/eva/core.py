@@ -123,6 +123,8 @@ enterprise_layout = True
 
 started = False
 
+shutdown_requested = False
+
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
@@ -194,7 +196,13 @@ def block():
         time.sleep(sleep_step)
 
 
+def is_shutdown_requested():
+    return shutdown_requested
+
+
 def shutdown():
+    global shutdown_requested
+    shutdown_requested = True
     for f in _shutdown_func:
         try:
             f()
