@@ -734,6 +734,14 @@ def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
         return fname
 
 
+def dummy_true():
+    return True
+
+
+def dummy_false():
+    return False
+
+
 def init():
     append_save_func(save_modified)
     append_dump_func('eva_core', serialize)

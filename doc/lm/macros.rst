@@ -155,6 +155,8 @@ Macros have the following built-in variables:
   system to call the macro. You may directly access the item and e.g. use its
   internal variables such as *_source.item_id*, *_source.full_id*,
   *_source.oid* etc.
+* **_polldelay** controller poll delay
+* **_timeout** controller default timeout
 * **argv** array list of arguments the macro is being executed with
 * **_0** current macro id (i.e. *'test'*)
 * **_00** current macro full id (i.e. *'group1/test'*)
@@ -932,10 +934,18 @@ macro function will pass an error and return *False*.
 sleep - pause operations
 ------------------------
 
+If parameter *safe=False*, pauses operaitons for exact given period, otherwise
+pause is canceled if controller global shutdown event is received.
+
+If macro is started in cycle, pause is canceled when cycle stop event is
+received, controller global shutdown events are ignored while cycle is
+running.
+
 .. code-block:: python
 
-    # alias for python time.sleep
-    sleep(seconds.milliseconds)
+    sleep(seconds.milliseconds, safe=True)
+
+Returns *True* if success, *False* if canceled.
 
 time - get current UNIX timestamp
 ---------------------------------

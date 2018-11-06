@@ -70,7 +70,6 @@ class MacroAPI(object):
             'no': self.no,
             'shared': shared,
             'set_shared': set_shared,
-            'sleep': self.sleep,
             'print': self.info,
             'mail': eva.mailer.send,
             'get': requests.get,
@@ -81,6 +80,7 @@ class MacroAPI(object):
             'error': self.error,
             'critical': self.critical,
             'exit': self.exit,
+            '_sleep': time.sleep,
             'lock': self.lock,
             'unlock': self.unlock,
             'lvar_status': self.lvar_status,
@@ -178,9 +178,6 @@ class MacroAPI(object):
 
     def exit(self, code=0):
         sys.exit(code)
-
-    def sleep(self, t):
-        time.sleep(t)
 
     def lock(self, lock_id, timeout=None, expires=None):
         result = eva.sysapi.api.lock(
@@ -672,7 +669,6 @@ class MacroAPI(object):
                 raise Exception('cycle unknown: ' + cycle_id)
             return None
         return cycle.is_running()
-
 
 def init():
     global mbi_code

@@ -803,7 +803,8 @@ def exec_macro(macro,
                q_timeout=None,
                wait=0,
                action_uuid=None,
-               source=None):
+               source=None,
+               is_shutdown_func=None):
     if isinstance(macro, str):
         m = get_macro(macro)
     else:
@@ -827,7 +828,8 @@ def exec_macro(macro,
         kwargs=kwargs,
         priority=priority,
         action_uuid=action_uuid,
-        source=source)
+        source=source,
+        is_shutdown_func=is_shutdown_func)
     Q.put_task(a)
     if not eva.core.wait_for(a.is_processed, q_timeout):
         if a.set_dead():

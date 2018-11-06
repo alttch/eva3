@@ -92,6 +92,9 @@ class PLC(eva.item.ActiveItem):
         env_globals['_source'] = a.source
         env_globals['argv'] = a.argv.copy()
         env_globals['kwargs'] = a.kwargs.copy()
+        env_globals['is_shutdown'] = a.is_shutdown_func
+        env_globals['_polldelay'] = eva.core.polldelay
+        env_globals['_timeout'] = eva.core.timeout
         for i, v in env_globals['kwargs'].items():
             env_globals[i] = v
         env_globals['_0'] = a.item.item_id
@@ -137,10 +140,13 @@ class MacroAction(eva.item.ItemAction):
                  kwargs={},
                  priority=None,
                  action_uuid=None,
-                 source=None):
+                 source=None,
+                 is_shutdown_func=None):
         self.argv = argv
         self.kwargs = kwargs
         self.source = source
+        self.is_shutdown_func = is_shutdown_func if \
+                is_shutdown_func else eva.core.is_shutdown_requested
         super().__init__(item=item, priority=priority, action_uuid=action_uuid)
 
     def serialize(self):
@@ -340,7 +346,10 @@ class Cycle(eva.item.Item):
             if self.macro:
                 try:
                     result = eva.lm.controller.exec_macro(
-                        self.macro, wait=self.interval, source=self)
+                        self.macro,
+                        wait=self.interval,
+                        source=self,
+                        is_shutdown_func=self.is_shutdown)
                 except Exception as e:
                     ex = e
                     result = None
@@ -422,6 +431,9 @@ class Cycle(eva.item.Item):
 
     def is_running(self):
         return self.cycle_enabled
+
+    def is_shutdown(self):
+        return not self.cycle_enabled
 
     def serialize(self,
                   full=False,
