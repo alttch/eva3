@@ -416,9 +416,9 @@ class Cycle(eva.item.Item):
 
     def stop(self, wait=True):
         self.cycle_enabled = False
+        self.notify()
         if wait and self.cycle_thread and self.cycle_thread.isAlive():
             self.cycle_thread.join()
-        self.notify()
         return True
 
     def reset_stats(self):
