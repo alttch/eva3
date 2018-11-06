@@ -84,6 +84,9 @@ matrix<decision_matrix>`. The working cycles should be implemented with
 System macros
 =============
 
+On startup
+----------
+
 If defined, macro named **system/autoexec** is launched automatically at the
 controller startup. This macro is not always the first one executed, as far as
 some initial :doc:`decision-making rules<decision_matrix>` may call assigned
@@ -105,6 +108,14 @@ Example of **autoexec** macro usage:
         action('pumps/pump1', on)
         # start the first cycle timer
         reset('timers/timer1')
+
+On shutdown
+-----------
+
+If defined, macro named **system/shutdown** is launched automatically at the
+controller startup. This macro can, for example, gracefully stop cycles and
+set/reset required :ref:`logic variables<lvar>`. The macro should end its work
+in default controller timeout.
 
 Macros and security
 ===================

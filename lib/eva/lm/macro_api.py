@@ -173,7 +173,7 @@ class MacroAPI(object):
     def critical(self, msg, send_event=False):
         logging.critical(msg)
         if send_event and self.send_critical:
-            t = threading.Thread(target=eva.core.critical, args=(True,True))
+            t = threading.Thread(target=eva.core.critical, args=(True, True))
             t.start()
 
     def exit(self, code=0):
@@ -678,3 +678,9 @@ def init():
     global mbi_code
     mbi_code = open(eva.core.dir_lib +
                     '/eva/lm/macro_builtins.py').read() + '\n\n'
+    eva.core.append_shutdown_func(shutdown)
+
+
+def shutdown():
+    eva.lm.controller.exec_macro(
+        'system/shutdown', priority=1, wait=eva.core.timeout)

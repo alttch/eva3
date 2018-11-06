@@ -113,6 +113,7 @@ mqtt_update_default = None
 _save_func = set()
 _dump_func = {}
 _stop_func = set()
+_shutdown_func = set()
 
 _sigterm_sent = False
 
@@ -194,6 +195,11 @@ def block():
 
 
 def shutdown():
+    for f in _shutdown_func:
+        try:
+            f()
+        except:
+            log_traceback()
     for f in _stop_func:
         try:
             f()
@@ -226,6 +232,10 @@ def remove_dump_func(fid):
 
 def append_stop_func(func):
     _stop_func.add(func)
+
+
+def append_shutdown_func(func):
+    _shutdown_func.add(func)
 
 
 def remove_stop_func(func):
