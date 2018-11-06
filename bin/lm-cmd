@@ -292,7 +292,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             if r['macro']:
                 macro = r['macro'] + '(' + ', '.join(args)
                 if kwargs:
-                    macro += '|' + ', '.join(kwargs)
+                    macro += '|' + ','.join(kwargs)
                 macro += ')'
             else:
                 macro = ''
