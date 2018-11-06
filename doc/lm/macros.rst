@@ -939,6 +939,10 @@ Returns *True* if controller global shutdown event is received.
 If macro is started in cycle, returns *True* until cycle stop event is
 received, controller global shutdown events are ignored.
 
+.. code-block:: python
+
+    is_shutdown()
+
 .. _m_sleep:
 
 sleep - pause operations
