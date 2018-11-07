@@ -991,6 +991,7 @@ class GenericCLI(object):
                 cmds = [[]]
                 cix = 0
                 full_cmds = []
+                cmd_title = ''
                 for p in parsed:
                     if p == ';':
                         cmds.append([])
@@ -1150,6 +1151,8 @@ class GenericCLI(object):
                         except:
                             pass
                         full_cmds.append(opts + d)
+                        if cmd_title: cmd_title += '; '
+                        cmd_title += ' '.join(d)
                 try:
                     while True:
                         start_time = time.time()
@@ -1158,12 +1161,14 @@ class GenericCLI(object):
                             if repeat_delay:
                                 print(time.ctime() + '  ' + \
                                     self.colored(
-                                        '{}'.format(' '.join(d)),
+                                        '{}'.format(cmd_title),
                                         color='yellow') + \
                                     '  (interval {} sec)'.format(
                                         repeat_delay))
-                        for i in full_cmds:
-                            code = self.do_run(i)
+                        for i in range(len(full_cmds)):
+                            code = self.do_run(full_cmds[i])
+                            if i < len(full_cmds) - 1:
+                                print()
                         if self.debug:
                             self.print_debug('\nCode: %s' % code)
                         if not repeat_delay: break
