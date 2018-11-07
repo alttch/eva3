@@ -241,7 +241,7 @@ class Cycle(eva.item.Item):
         self.autostart = False
         self.cycle_thread = None
         self.cycle_enabled = False
-        self.cycle_stopped = True
+        self.cycle_status = 0
         self.stats_lock = threading.Lock()
 
     def update_config(self, data):
@@ -336,7 +336,8 @@ class Cycle(eva.item.Item):
 
     def _t_cycle(self):
         logging.debug('%s cycle thread started' % self.full_id)
-        self.cycle_stopped = False
+        self.cycle_status = 1
+        self.notify()
         prev = None
         c = 0
         tc = 0
@@ -398,7 +399,9 @@ class Cycle(eva.item.Item):
             while time.time() < cycle_end and self.cycle_enabled:
                 time.sleep(eva.core.polldelay)
         logging.debug('%s cycle thread stopped' % self.full_id)
-        self.cycle_stopped = True
+        self.cycle_status = 0
+        # dirty - wait for prev. state to be sent
+        time.sleep(eva.core.sleep_step)
         self.notify()
 
     def start(self, autostart=False):
@@ -411,14 +414,16 @@ class Cycle(eva.item.Item):
         self.cycle_enabled = True
         self.cycle_thread = threading.Thread(target=self._t_cycle)
         self.cycle_thread.start()
-        self.notify()
         return True
 
     def stop(self, wait=True):
-        self.cycle_enabled = False
-        self.notify()
-        if wait and self.cycle_thread and self.cycle_thread.isAlive():
-            self.cycle_thread.join()
+        if self.cycle_thread and self.cycle_thread.isAlive():
+            self.cycle_status = 2
+            self.notify()
+            self.cycle_enabled = False
+            if wait: self.cycle_thread.join()
+        else:
+            self.cycle_enabled = False
         return True
 
     def reset_stats(self):
@@ -446,13 +451,7 @@ class Cycle(eva.item.Item):
             full=full, config=config, info=info, props=props, notify=notify))
         d['interval'] = self.interval
         if not info and not config and not props:
-            if self.cycle_enabled:
-                d['status'] = 1
-            else:
-                if not self.cycle_stopped:
-                    d['status'] = 2
-                else:
-                    d['status'] = 0
+            d['status'] = self.cycle_status
             d['value'] = str(self.tc / self.c if self.c else self.interval)
         if not notify:
             d['ict'] = self.ict
