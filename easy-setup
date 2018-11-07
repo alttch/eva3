@@ -166,7 +166,7 @@ function create_notifier {
         BATCH="$BATCH;subscribe log eva_1"
         if [ "x$MQTT_ANNOUNCE_ENABLED" == "x1" ]; then
             BATCH="$BATCH;set eva_1 api_enabled 1"
-            BATCH="$BATCH;set eva_1 announce_interval 10"
+            BATCH="$BATCH;set eva_1 announce_interval 60"
         fi
         [ "x$MQTT_DISCOVERY_ENABLED" == "x1" ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
         BATCH="$BATCH;test eva_1"
