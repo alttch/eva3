@@ -42,7 +42,7 @@ for production use sfa-control only to start/stop SFA
 """)
 
 
-product_build = 2018110401
+product_build = 2018110901
 
 product_code = 'sfa'
 
@@ -93,6 +93,7 @@ eva.notify.load()
 eva.notify.start()
 
 eva.sfa.controller.init()
+eva.sfa.controller.update_config(cfg)
 eva.sfa.controller.load_remote_ucs()
 eva.sfa.controller.load_remote_lms()
 

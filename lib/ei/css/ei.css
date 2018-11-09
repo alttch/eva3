@@ -5,7 +5,7 @@ body {
 
 div { outline: none; }
 
-.board { min-height: 330px; }
+.board { min-height: 350px; }
 
 
 .chBox {
@@ -81,6 +81,12 @@ img.tbtn.disabled {
 .lvar_s0 { color: #999999; }
 
 .lvar_s-1 { color: #EE0000; }
+
+.cycle_s1 { color: #009900; }
+
+.cycle_s0 { color: #999999; }
+
+.cycle_s2 { color: #EE0000; }
 	
 .row-device {
     padding-top: 20px;

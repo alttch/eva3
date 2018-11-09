@@ -92,6 +92,9 @@ class PLC(eva.item.ActiveItem):
         env_globals['_source'] = a.source
         env_globals['argv'] = a.argv.copy()
         env_globals['kwargs'] = a.kwargs.copy()
+        env_globals['is_shutdown'] = a.is_shutdown_func
+        env_globals['_polldelay'] = eva.core.polldelay
+        env_globals['_timeout'] = eva.core.timeout
         for i, v in env_globals['kwargs'].items():
             env_globals[i] = v
         env_globals['_0'] = a.item.item_id
@@ -137,10 +140,13 @@ class MacroAction(eva.item.ItemAction):
                  kwargs={},
                  priority=None,
                  action_uuid=None,
-                 source=None):
+                 source=None,
+                 is_shutdown_func=None):
         self.argv = argv
         self.kwargs = kwargs
         self.source = source
+        self.is_shutdown_func = is_shutdown_func if \
+                is_shutdown_func else eva.core.is_shutdown_requested
         super().__init__(item=item, priority=priority, action_uuid=action_uuid)
 
     def serialize(self):
@@ -155,11 +161,14 @@ class Macro(eva.item.ActiveItem):
     def __init__(self, item_id):
         super().__init__(item_id, 'lmacro')
         self.respect_layout = False
-        self.api = eva.lm.macro_api.MacroAPI(pass_errors=False)
+        self.api = eva.lm.macro_api.MacroAPI(
+            pass_errors=False, send_critical=False)
 
     def update_config(self, data):
         if 'pass_errors' in data:
             self.api.pass_errors = data['pass_errors']
+        if 'send_critical' in data:
+            self.api.send_critical = data['send_critical']
         super().update_config(data)
 
     def set_prop(self, prop, val=None, save=False):
@@ -168,6 +177,16 @@ class Macro(eva.item.ActiveItem):
             if v is not None:
                 if self.api.pass_errors != v:
                     self.api.pass_errors = v
+                    self.log_set(prop, v)
+                    self.set_modified(save)
+                return True
+            else:
+                return False
+        if prop == 'send_critical':
+            v = val_to_boolean(val)
+            if v is not None:
+                if self.api.send_critical != v:
+                    self.api.send_critical = v
                     self.log_set(prop, v)
                     self.set_modified(save)
                 return True
@@ -187,6 +206,7 @@ class Macro(eva.item.ActiveItem):
         d = {}
         if full or config or props:
             d['pass_errors'] = self.api.pass_errors
+            d['send_critical'] = self.api.send_critical
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         if not notify:
@@ -221,7 +241,7 @@ class Cycle(eva.item.Item):
         self.autostart = False
         self.cycle_thread = None
         self.cycle_enabled = False
-        self.cycle_stopped = True
+        self.cycle_status = 0
         self.stats_lock = threading.Lock()
 
     def update_config(self, data):
@@ -316,7 +336,8 @@ class Cycle(eva.item.Item):
 
     def _t_cycle(self):
         logging.debug('%s cycle thread started' % self.full_id)
-        self.cycle_stopped = False
+        self.cycle_status = 1
+        self.notify()
         prev = None
         c = 0
         tc = 0
@@ -326,7 +347,10 @@ class Cycle(eva.item.Item):
             if self.macro:
                 try:
                     result = eva.lm.controller.exec_macro(
-                        self.macro, wait=self.interval, source=self)
+                        self.macro,
+                        wait=self.interval,
+                        source=self,
+                        is_shutdown_func=self.is_shutdown)
                 except Exception as e:
                     ex = e
                     result = None
@@ -375,7 +399,9 @@ class Cycle(eva.item.Item):
             while time.time() < cycle_end and self.cycle_enabled:
                 time.sleep(eva.core.polldelay)
         logging.debug('%s cycle thread stopped' % self.full_id)
-        self.cycle_stopped = True
+        self.cycle_status = 0
+        # dirty - wait for prev. state to be sent
+        time.sleep(eva.core.sleep_step)
         self.notify()
 
     def start(self, autostart=False):
@@ -388,14 +414,16 @@ class Cycle(eva.item.Item):
         self.cycle_enabled = True
         self.cycle_thread = threading.Thread(target=self._t_cycle)
         self.cycle_thread.start()
-        self.notify()
         return True
 
     def stop(self, wait=True):
-        self.cycle_enabled = False
-        if wait and self.cycle_thread and self.cycle_thread.isAlive():
-            self.cycle_thread.join()
-        self.notify()
+        if self.cycle_thread and self.cycle_thread.isAlive():
+            self.cycle_status = 2
+            self.notify()
+            self.cycle_enabled = False
+            if wait: self.cycle_thread.join()
+        else:
+            self.cycle_enabled = False
         return True
 
     def reset_stats(self):
@@ -409,6 +437,9 @@ class Cycle(eva.item.Item):
     def is_running(self):
         return self.cycle_enabled
 
+    def is_shutdown(self):
+        return not self.cycle_enabled
+
     def serialize(self,
                   full=False,
                   config=False,
@@ -419,15 +450,9 @@ class Cycle(eva.item.Item):
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         d['interval'] = self.interval
-        if notify or info:
-            if self.cycle_enabled:
-                d['status'] = 1
-            else:
-                if not self.cycle_stopped:
-                    d['status'] = 2
-                else:
-                    d['status'] = 0
-            d['avg'] = self.tc / self.c if self.c else self.interval
+        if not info and not config and not props:
+            d['status'] = self.cycle_status
+            d['value'] = str(self.tc / self.c if self.c else self.interval)
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None

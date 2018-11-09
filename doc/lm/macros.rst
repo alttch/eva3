@@ -62,6 +62,8 @@ Parameters:
 * **pass_errors** if *true*, in case the function called by macro is completed
   with an exception, the controller ignores this and continues the code
   execution (false by default)
+* **send_critical** if *true*, allows to send critical events to controller
+  with *critical(msg, send_event=True)*
 
 Common principles of macros operation
 =====================================
@@ -81,6 +83,9 @@ matrix<decision_matrix>`. The working cycles should be implemented with
 
 System macros
 =============
+
+On startup
+----------
 
 If defined, macro named **system/autoexec** is launched automatically at the
 controller startup. This macro is not always the first one executed, as far as
@@ -103,6 +108,14 @@ Example of **autoexec** macro usage:
         action('pumps/pump1', on)
         # start the first cycle timer
         reset('timers/timer1')
+
+On shutdown
+-----------
+
+If defined, macro named **system/shutdown** is launched automatically at the
+controller startup. This macro can, for example, gracefully stop cycles and
+set/reset required :ref:`logic variables<lvar>`. The macro should end its work
+in default controller timeout.
 
 Macros and security
 ===================
@@ -142,6 +155,8 @@ Macros have the following built-in variables:
   system to call the macro. You may directly access the item and e.g. use its
   internal variables such as *_source.item_id*, *_source.full_id*,
   *_source.oid* etc.
+* **_polldelay** controller poll delay
+* **_timeout** controller default timeout
 * **argv** array list of arguments the macro is being executed with
 * **_0** current macro id (i.e. *'test'*)
 * **_00** current macro full id (i.e. *'group1/test'*)
@@ -166,7 +181,10 @@ functions:
 * **info(msg)** send INFO level message
 * **warning(msg)** send WARNING message
 * **error(msg)** send ERROR message
-* **critical(msg)** send  CRITICAL message
+
+* **critical(msg, send_event=False)** send CRITICAL message, send critical
+  event to controller if *send_event=True* and *send_critical* parameter is set
+  to *true* in macro configuration.
 
 In addition, **print** function is an alias of **info**.
 
@@ -911,15 +929,37 @@ The difference between Python code *f1=very_long_function* is that such code
 will throw an exception if *very_long_function* is not found, while **alias**
 macro function will pass an error and return *False*.
 
+.. _m_is_shutdown:
+
+is_shutdown - is shutdown event received
+----------------------------------------
+
+Returns *True* if controller global shutdown event is received.
+
+If macro is started in cycle, returns *True* until cycle stop event is
+received, controller global shutdown events are ignored.
+
+.. code-block:: python
+
+    is_shutdown()
+
 .. _m_sleep:
 
 sleep - pause operations
 ------------------------
 
+If parameter *safe=False*, pauses operaitons for exact given period, otherwise
+pause is canceled if controller global shutdown event is received.
+
+If macro is started in cycle, pause is canceled when cycle stop event is
+received, controller global shutdown events are ignored while cycle is
+running.
+
 .. code-block:: python
 
-    # alias for python time.sleep
-    sleep(seconds.milliseconds)
+    sleep(seconds.milliseconds, safe=True)
+
+Returns *True* if success, *False* if canceled.
 
 time - get current UNIX timestamp
 ---------------------------------

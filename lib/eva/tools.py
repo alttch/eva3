@@ -41,6 +41,7 @@ def fname_remove_unsafe(fname):
 def dict_from_str(s):
     if not isinstance(s, str): return s
     result = {}
+    if not s: return result
     vals = s.split(',')
     for v in vals:
         name, value = v.split('=')

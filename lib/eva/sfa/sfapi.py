@@ -18,6 +18,7 @@ from eva.tools import format_json
 from eva.tools import is_oid
 from eva.tools import parse_oid
 from eva.tools import oid_to_id
+from eva.tools import dict_from_str
 
 import eva.core
 import eva.notify
@@ -53,6 +54,20 @@ def cp_need_dm_rule_props(k):
 
 
 class SFA_API(GenericAPI):
+
+    def management_api_call(self, k=None, i=None, f=None, p=None):
+        if not eva.sfa.controller.cloud_manager or \
+                not apikey.check(k, master=True):
+            return None, None
+        controller = eva.sfa.controller.get_controller(i)
+        if not controller: return None, -1
+        if isinstance(p, dict):
+            params = p
+        elif isinstance(p, str):
+            params = dict_from_str(p)
+        else:
+            params = None
+        return controller.management_api_call(f, params)
 
     def state(self, k=None, i=None, group=None, tp=None, full=None):
         if is_oid(i):
@@ -323,7 +338,7 @@ class SFA_API(GenericAPI):
                     if apikey.check(k, v) and \
                         (not group or \
                             eva.item.item_match(v, [], [ group ])):
-                        result.append(v.serialize(info=True))
+                        result.append(v.serialize(full=True))
         else:
             if controller_id.find('/') != -1:
                 c = controller_id.split('/')
@@ -615,8 +630,23 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
         SFA_HTTP_API.reload_clients.exposed = True
         SFA_HTTP_API.notify_restart.exposed = True
 
+        if eva.sfa.controller.cloud_manager:
+            SFA_HTTP_API.management_api_call.exposed = True
+
+    def management_api_call(self, k=None, i=None, f=None, p=None):
+        cp_need_master(k)
+        code, data = super().management_api_call(k, i=i, f=f, p=p)
+        if code is None:
+            if data is None:
+                raise cp_forbidden_key()
+            elif data == -1:
+                raise cp_api_404()
+        result = {'code': code, 'data': data}
+        return result
+
     def test(self, k=None, icvars=None):
         result = super().test(k)
+        result['cloud_manager'] = eva.sfa.controller.cloud_manager
         if (icvars):
             cvars = eva.sysapi.api.get_cvar(k=k)
             if cvars is False:

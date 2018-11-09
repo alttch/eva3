@@ -12,6 +12,7 @@ import shlex
 import threading
 
 from eva.tools import val_to_boolean
+from eva.tools import dict_from_str
 
 
 class DecisionMatrix(object):
@@ -196,7 +197,10 @@ class DecisionMatrix(object):
 
     def run_macro(self, event_code, rule, item):
         if not eva.lm.controller.exec_macro(
-                macro=rule.macro, argv=rule.macro_args, source=item):
+                macro=rule.macro,
+                argv=rule.macro_args,
+                kwargs=rule.macro_kwargs,
+                source=item):
             logging.error('Decision matrix can not exec macro' + \
                     ' %s for event %s' % (rule.macro, event_code))
 
@@ -243,6 +247,7 @@ class DecisionRule(eva.item.Item):
         self.in_range_max_eq = False
         self.macro = None
         self.macro_args = []
+        self.macro_kwargs = {}
         self.break_after_exec = False
         self.chillout_time = 0
         self.last_matched = 0
@@ -274,6 +279,7 @@ class DecisionRule(eva.item.Item):
         d['in_range_max_eq'] = self.in_range_max_eq
         d['macro'] = self.macro
         d['macro_args'] = self.macro_args
+        d['macro_kwargs'] = self.macro_kwargs
         d['break_after_exec'] = self.break_after_exec
         d['chillout_time'] = self.chillout_time
         if not config:
@@ -360,6 +366,8 @@ class DecisionRule(eva.item.Item):
             elif not m:
                 m = []
             self.macro_args = m
+        if 'macro_kwargs' in data:
+            self.macro_kwargs = dict_from_str(data['macro_kwargs'])
         if 'break_after_exec' in data:
             self.break_after_exec = data['break_after_exec']
         if 'chillout_time' in data:
@@ -528,6 +536,14 @@ class DecisionRule(eva.item.Item):
             else:
                 v = []
             self.macro_args = v
+            self.log_set(prop, val)
+            self.set_modified(save)
+            return True
+        elif prop == 'macro_kwargs':
+            if val is None:
+                self.macro_kwargs = {}
+            else:
+                self.macro_kwargs = dict_from_str(val)
             self.log_set(prop, val)
             self.set_modified(save)
             return True

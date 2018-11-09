@@ -54,8 +54,9 @@ def set_shared(name, value=None):
 
 class MacroAPI(object):
 
-    def __init__(self, pass_errors=False):
+    def __init__(self, pass_errors=False, send_critical=False):
         self.pass_errors = pass_errors
+        self.send_critical = send_critical
         self.on = 1
         self.off = 0
         self.yes = True
@@ -69,7 +70,6 @@ class MacroAPI(object):
             'no': self.no,
             'shared': shared,
             'set_shared': set_shared,
-            'sleep': self.sleep,
             'print': self.info,
             'mail': eva.mailer.send,
             'get': requests.get,
@@ -80,6 +80,7 @@ class MacroAPI(object):
             'error': self.error,
             'critical': self.critical,
             'exit': self.exit,
+            '_sleep': time.sleep,
             'lock': self.lock,
             'unlock': self.unlock,
             'lvar_status': self.lvar_status,
@@ -169,14 +170,14 @@ class MacroAPI(object):
     def error(self, msg):
         logging.error(msg)
 
-    def critical(self, msg):
+    def critical(self, msg, send_event=False):
         logging.critical(msg)
+        if send_event and self.send_critical:
+            t = threading.Thread(target=eva.core.critical, args=(True, True))
+            t.start()
 
     def exit(self, code=0):
         sys.exit(code)
-
-    def sleep(self, t):
-        time.sleep(t)
 
     def lock(self, lock_id, timeout=None, expires=None):
         result = eva.sysapi.api.lock(
@@ -673,3 +674,9 @@ def init():
     global mbi_code
     mbi_code = open(eva.core.dir_lib +
                     '/eva/lm/macro_builtins.py').read() + '\n\n'
+    eva.core.append_shutdown_func(shutdown)
+
+
+def shutdown():
+    eva.lm.controller.exec_macro(
+        'system/shutdown', priority=1, wait=eva.core.timeout)

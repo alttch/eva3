@@ -113,6 +113,7 @@ mqtt_update_default = None
 _save_func = set()
 _dump_func = {}
 _stop_func = set()
+_shutdown_func = set()
 
 _sigterm_sent = False
 
@@ -121,6 +122,8 @@ start_time = time.time()
 enterprise_layout = True
 
 started = False
+
+shutdown_requested = False
 
 
 def sighandler_hup(signum, frame):
@@ -193,7 +196,18 @@ def block():
         time.sleep(sleep_step)
 
 
+def is_shutdown_requested():
+    return shutdown_requested
+
+
 def shutdown():
+    global shutdown_requested
+    shutdown_requested = True
+    for f in _shutdown_func:
+        try:
+            f()
+        except:
+            log_traceback()
     for f in _stop_func:
         try:
             f()
@@ -226,6 +240,10 @@ def remove_dump_func(fid):
 
 def append_stop_func(func):
     _stop_func.add(func)
+
+
+def append_shutdown_func(func):
+    _shutdown_func.add(func)
 
 
 def remove_stop_func(func):
@@ -714,6 +732,14 @@ def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
         return _path + '/' + fname
     else:
         return fname
+
+
+def dummy_true():
+    return True
+
+
+def dummy_false():
+    return False
 
 
 def init():

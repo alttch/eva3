@@ -268,8 +268,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
         data3 = []
         for r in result:
             args = []
+            kwargs = []
             for o in r['macro_args']:
                 args.append('\'' + o + '\'')
+            if r.get('macro_kwargs'):
+                for i, v in r['macro_kwargs'].items():
+                    kwargs.append('{}=\'{}\''.format(i, v))
             m = ''
             if r['for_prop'] == 'status' and \
                 isinstance(r['in_range_max'], float) and \
@@ -286,7 +290,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 r['in_range_max_eq']:
                 m = ' (set)'
             if r['macro']:
-                macro = r['macro'] + '(' + ', '.join(args) + ')'
+                macro = r['macro'] + '(' + ', '.join(args)
+                if kwargs:
+                    macro += '|' + ','.join(kwargs)
+                macro += ')'
             else:
                 macro = ''
             data2.append({'for_oid': r['for_oid'], 'macro': macro})
@@ -431,7 +438,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 d['id'] = d['full_id']
             if api_func == 'list_cycles':
                 d['int'] = d['interval']
-                d['avg'] = '{:.4f}'.format(d['avg'])
+                d['avg'] = '{:.4f}'.format(float(d['value']))
                 d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'

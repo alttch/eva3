@@ -11,12 +11,17 @@
         'action': 'show_macros()'
     },
     {
+        'id': 'cycles',
+        'title': 'Show cycles',
+        'action': 'show_cycles()'
+    },
+    {
         'id': 'rules',
         'title': 'Show rules'
     }
 ] %}
-{%- set toolmenu_height = 470 %}
-{%- set boards = [ 'lvars', 'macros', 'rules' ] %}
+{%- set toolmenu_height = 530 %}
+{%- set boards = [ 'lvars', 'macros', 'cycles', 'rules' ] %}
 {% block props %}
 // json refresh for items
 jrInterval = 2000;
@@ -48,11 +53,20 @@ apikey = ''
             alt="Reload" title="Reload"
             onclick="reload_macros()" />
 </div>
+<div class="col-xs-10 col-sm-7" id="toolbar_cycles"
+                                style="display: none">
+    <select id="s_cycle_group" data-role="none" class="st1"
+                        onchange="load_cycles()"></select>
+    <img id="tbtn_reload_cycles" src="i/reload.png" class="tbtn_l"
+            alt="Reload" title="Reload"
+            onclick="reload_cycles()" />
+</div>
 <div class="col-xs-10 col-sm-7" id="toolbar_rules"
                                 style="display: none">
     <button class="st0"
         onclick='edit_rule_dialog()'
-        style="width: 120px; font-weight: bold; vertical-align: super;">NEW RULE</button>
+            style="width: 120px; font-weight: bold; vertical-align: super;"
+            >NEW RULE</button>
     <select id="s_rule_group" data-role="none" class="st1"
                         onchange="load_rules()"></select>
     <img id="tbtn_reload_rules" src="i/reload.png" class="tbtn_l"

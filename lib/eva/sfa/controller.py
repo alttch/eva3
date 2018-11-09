@@ -25,6 +25,8 @@ configs_to_remove = set()
 uc_pool = None
 lm_pool = None
 
+cloud_manager = False
+
 
 def get_controller(controller_id):
     if not controller_id: return None
@@ -337,6 +339,17 @@ def init():
     eva.core.append_stop_func(stop)
     eva.core.enterprise_layout = None
 
+def update_config(cfg):
+    global cloud_manager
+    try:
+        cloud_manager = (cfg.get('features',
+                                   'cloud_manager') == 'yes')
+    except:
+        pass
+    logging.debug('features.cloud_manager = %s' % ('yes' \
+                                if cloud_manager else 'no'))
+    eva.client.remote_controller.cloud_manager = cloud_manager
 
 eva.api.mqtt_discovery_handler = handle_discovered_controller
 eva.api.remove_controller = remove_controller
+

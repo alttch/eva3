@@ -22,7 +22,7 @@ def usage():
     print()
     print('EVA SFA API CLI version %s' % (apiclient.version))
     print("""
-Usage: sfa-cmd <command> [args] [-U API uri] [-K key] [-T sec] [-D]
+Usage: sfa-api <command> [args] [-U API uri] [-K key] [-T sec] [-D]
 
     -U   specify API uri (http://host:port), if no uri specified, API will be
          called in local mode (with data from ../etc/sfa.ini and
@@ -68,7 +68,7 @@ debug = False
 try:
     func = sys.argv[1]
     o, a = getopt.getopt(sys.argv[2:],
-            'K:T:U:m:a:c:l:t:e:n:i:u:g:p:q:s:v:w:x:yzD')
+            'K:T:U:m:a:c:l:t:f:e:n:i:u:g:p:q:s:v:w:x:yzD')
 except:
     usage()
     sys.exit(99)
