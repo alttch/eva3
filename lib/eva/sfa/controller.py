@@ -17,6 +17,9 @@ import eva.item
 import eva.client.remote_controller
 import eva.client.coreapiclient
 
+from eva.tools import is_oid
+from eva.tools import parse_oid
+
 remote_ucs = {}
 remote_lms = {}
 
@@ -30,12 +33,18 @@ cloud_manager = False
 
 def get_controller(controller_id):
     if not controller_id: return None
-    if controller_id.find('/') > -1:
-        i = controller_id.split('/')
+    if is_oid(controller_id):
+        tp, i = parse_oid(controller_id)
+    else:
+        tp, i = None, controller_id
+    if i.find('/') > -1:
+        i = i.split('/')
         if len(i) > 2: return None
-        if i[0] == 'uc' and i[1] in remote_ucs:
+        if i[0] == 'uc' and i[1] in remote_ucs and (tp is None or
+                                                    tp == 'remote_uc'):
             return remote_ucs[i[1]]
-        if i[0] == 'lm' and i[1] in remote_lms:
+        if i[0] == 'lm' and i[1] in remote_lms and (tp is None or
+                                                    tp == 'remote_lm'):
             return remote_lms[i[1]]
     else:
         return None
@@ -339,17 +348,17 @@ def init():
     eva.core.append_stop_func(stop)
     eva.core.enterprise_layout = None
 
+
 def update_config(cfg):
     global cloud_manager
     try:
-        cloud_manager = (cfg.get('features',
-                                   'cloud_manager') == 'yes')
+        cloud_manager = (cfg.get('features', 'cloud_manager') == 'yes')
     except:
         pass
     logging.debug('features.cloud_manager = %s' % ('yes' \
                                 if cloud_manager else 'no'))
     eva.client.remote_controller.cloud_manager = cloud_manager
 
+
 eva.api.mqtt_discovery_handler = handle_discovered_controller
 eva.api.remove_controller = remove_controller
-

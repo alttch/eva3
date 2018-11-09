@@ -73,13 +73,14 @@ def get_item(item_id):
 
 
 def get_controller(controller_id):
-    if not controller_id: return None
-    if controller_id.find('/') > -1:
-        i = controller_id.split('/')
+    _controller_id = oid_to_id(controller_id, 'remote_uc')
+    if not _controller_id: return None
+    if _controller_id.find('/') > -1:
+        i = _controller_id.split('/')
         if len(i) > 2 or i[0] != 'uc': return None
         if i[1] in remote_ucs: return remote_ucs[i[1]]
     else:
-        if controller_id in remote_ucs: return remote_ucs[controller_id]
+        if _controller_id in remote_ucs: return remote_ucs[_controller_id]
     return None
 
 

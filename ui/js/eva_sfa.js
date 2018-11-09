@@ -215,7 +215,9 @@ function eva_sfa_register_update_state(oid, cb) {
  * @param cb_error - function called if error occured
  */
 function eva_sfa_call(func, params, cb_success, cb_error) {
-  eva_sfa_api_call(func, params, cb_success, cb_error);
+  var p = params;
+  if (p === null || p === undefined) p = {};
+  eva_sfa_api_call(func, p, cb_success, cb_error);
 }
 
 /**

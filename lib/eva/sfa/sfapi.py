@@ -36,6 +36,7 @@ from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva import apikey
 import eva.sfa.controller
+import eva.sfa.cloudmanager
 import eva.sysapi
 
 from PIL import Image
@@ -1193,3 +1194,4 @@ def start():
                 'tools.staticdir.on': True
             }
         })
+    eva.sfa.cloudmanager.start()
