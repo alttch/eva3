@@ -335,7 +335,8 @@ $_eva_api_func = array(
                     'login',
                     'logout',
                     'notify_restart',
-                    'reload_clients'
+                    'reload_clients',
+                    'management_api_call'
                     ),
                 'cr' => array(
                     'terminate',

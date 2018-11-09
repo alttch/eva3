@@ -59,3 +59,7 @@ listen = 0.0.0.0:8828
 ; uncomment to use frontend X-Real-IP header to get client real IP address
 ;x_real_ip = yes
 
+[features]
+; enable cloud manager services
+;cloud_manager = yes
+

@@ -16,6 +16,8 @@ import threading
 
 _warning_time_diff = 1
 
+cloud_manager = False
+
 
 class RemoteController(eva.item.Item):
 
@@ -37,6 +39,8 @@ class RemoteController(eva.item.Item):
             self.api = eva.client.coreapiclient.CoreAPIClient()
             self.api.set_timeout(eva.core.timeout)
             self._key = None
+        self.masterkey = None
+        self._masterkey = None
         self.product_build = None
         self.version = None
         self.pool = None
@@ -71,6 +75,21 @@ class RemoteController(eva.item.Item):
                     (self.api._uri, code))
             return None
         return result
+
+    def management_api_call(self, func, params=None, timeout=None):
+        if not self.api or not cloud_manager or not self.masterkey:
+            return eva.client.apiclient.result_not_ready, None
+        p = params.copy() if isinstance(params, dict) else {}
+        p['k'] = self.masterkey
+        for tries in range(self.retries + 1):
+            (code, result) = self.api.call(
+                func, p, timeout, _debug=eva.core.debug)
+            if code not in [
+                    eva.client.apiclient.result_server_error,
+                    eva.client.apiclient.result_server_timeout
+            ]:
+                break
+        return code, result
 
     def test(self):
         result = self.api_call('test')
@@ -115,6 +134,10 @@ class RemoteController(eva.item.Item):
         return super().save(fname=fname) if self.static else True
 
     def update_config(self, data):
+        if cloud_manager:
+            if 'masterkey' in data:
+                self.masterkey = eva.apikey.format_key(data['masterkey'])
+                self._masterkey = data['masterkey']
         if 'uri' in data:
             self.api.set_uri(data['uri'])
         if 'key' in data:
@@ -151,6 +174,14 @@ class RemoteController(eva.item.Item):
             if self._key != val:
                 self._key = val
                 self.api.set_key(eva.apikey.format_key(val))
+                self.log_set(prop, '*****')
+                self.set_modified(save)
+            return True
+        elif prop == 'masterkey':
+            if not cloud_manager: return False
+            if self._masterkey != val:
+                self._masterkey = val
+                self.masterkey = eva.apikey.format_key(val)
                 self.log_set(prop, '*****')
                 self.set_modified(save)
             return True
@@ -272,8 +303,12 @@ class RemoteController(eva.item.Item):
             d['ssl_verify'] = self.api._ssl_verify
             d['mqtt_update'] = self.mqtt_update
             d['reload_interval'] = self.reload_interval
+            if cloud_manager:
+                d['masterkey'] = self._masterkey if \
+                        self._masterkey is not None else ''
         if info:
             d['connected'] = self.connected
+            d['managed'] = True if cloud_manager and self.masterkey else False
             if self.api.protocol_mode == 0:
                 d['proto'] = 'http'
             elif self.api.protocol_mode == 1:

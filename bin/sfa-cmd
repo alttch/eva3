@@ -68,8 +68,8 @@ _pd_cols = {
     'list_macros': ['id', 'description', 'action_enabled'],
     'list_cycles': ['id', 'description', 'status', 'int', 'avg'],
     'list_controllers': [
-        'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
-        'description'
+        'id', 'type', 'enabled', 'connected', 'managed', 'proto', 'version',
+        'build', 'description'
     ]
 }
 
