@@ -646,6 +646,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
     def test(self, k=None, icvars=None):
         result = super().test(k)
+        result['cloud_manager'] = eva.sfa.controller.cloud_manager
         if (icvars):
             cvars = eva.sysapi.api.get_cvar(k=k)
             if cvars is False:
