@@ -1,0 +1,38 @@
+<html>
+  <head>
+   <title>EVA ICS Cloud Manager</title>
+    <link rel="stylesheet" href="css/eva_sfa.css" />
+    <link rel="stylesheet" href="css/cm.css" />
+    <link rel="stylesheet" href="lib/bootstrap.min.css" />
+    <script src="lib/jquery.min.js"></script>
+    <script src="js/eva_sfa.js"></script>
+    <script src="js/cm.js"></script>
+    <script src="lib/moment.min.js"></script>
+    <script src="lib/chart.min.js"></script>
+  </head>
+  <body>
+    <div id="main" style="display: none">
+        <div>
+          Universal Controllers
+          <span id="ucs"></span>
+        </div>
+        <div>
+          Logic Manager PLCs
+          <span id="lms"></span>
+        </div>
+    </div>
+  <script type="text/javascript">
+    eva_sfa_init();
+    eva_sfa_apikey="c31854193a16906f5ceee99928259ab071a5aeb0b450517fd09e656dece048d1";
+    eva_sfa_cb_login_success = function(data) {
+      if (!eva_sfa_server_info.acl.master) {
+        console.log('masterkey is required');
+        logout();
+      }
+      $('#main').show();
+      eva_sfa_call('list_controllers', null, update_controllers, function(){load_error('controllers')});
+    }
+    eva_sfa_start();
+  </script>
+  </body>
+</html>

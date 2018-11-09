@@ -1,0 +1,14 @@
+.controller-link {
+  font-weight: bold;
+  color: blue;
+  text-decoration: underline;
+  cursor: hand;
+}
+.controller-unmanaged {
+  color: grey;
+}
+
+.btn-manage-controller {
+  margin-left: 10px; 
+  height: 20px;
+}
