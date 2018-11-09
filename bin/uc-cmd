@@ -816,7 +816,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         sp_driver_load = sp_driver.add_parser('load', help='Load driver')
         sp_driver_load.add_argument(
-            'i', help='Driver ID (PHI_ID.LPI.ID)',
+            'i', help='Driver ID (PHI_ID.LPI_ID)',
             metavar='PHI_ID.LPI_ID').completer = self.ComplPHI(
                 self, for_driver=True)
         sp_driver_load.add_argument(
