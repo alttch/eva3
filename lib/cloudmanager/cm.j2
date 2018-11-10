@@ -12,9 +12,9 @@
   </head>
   <body>
    <div id="popup"></div>
-    <div id="main" class="container" style="display: none">
+    <div id="main" class="container" style="display: none; margin-top: 10px;">
         <div class="row">
-            <div class="col-xs-12 col-md-5">
+            <div class="col-sm-12 col-md-5">
               <div id="controller-list">
                 <div>
                   Universal Controllers
@@ -26,6 +26,10 @@
                 </div>
               </div>
             </div>
+            <div class="col-sm-12 col-md-7">
+                <table id="tbl-remote-items" style="width: 100%">
+                </table>
+            </div>
         </div>
     <div style="margin-top: 50px;"></div>
       <div class="row">
@@ -34,11 +38,13 @@
     </div>
   <script type="text/javascript">
     eva_sfa_init();
+    // TESTS
     eva_sfa_apikey="c31854193a16906f5ceee99928259ab071a5aeb0b450517fd09e656dece048d1";
     eva_sfa_cb_login_success = function(data) {
       if (!eva_sfa_server_info.acl.master) {
           logout();
-          eva_sfa_popup('popup', 'error', 'Access denied', 'Masterkey is required', {'ct':5});
+          eva_sfa_popup('popup',
+            'error', 'Access denied', 'Masterkey is required', {'ct':5});
       } else {
         start();
       }

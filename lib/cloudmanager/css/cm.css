@@ -21,6 +21,18 @@
   height: 20px;
 }
 
+.btn-manage-controller-disabled {
+    color: grey;
+}
+
+.tbl-remote-items-hdr { 
+    font-weight: bold;
+}
+
+td.vtop {
+    vertical-align: top;
+}
+
 #logr {
     outline: none;
     width: 100%;
@@ -58,3 +70,19 @@
 /*@keyframes blinker {  
   50% { opacity: 0; }
 }*/
+
+.item-status--1 {
+    color: red;
+}
+
+.item-status-0 {
+    color: grey;
+}
+
+.item-status-1 {
+    color: green;
+}
+
+.item-descr {
+    font-style: italic;
+}
