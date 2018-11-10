@@ -11,6 +11,7 @@
     <script src="lib/chart.min.js"></script>
   </head>
   <body>
+    <div id="popup"></div>
     <div id="main" style="display: none">
         <div>
           Universal Controllers
@@ -26,11 +27,11 @@
     eva_sfa_apikey="c31854193a16906f5ceee99928259ab071a5aeb0b450517fd09e656dece048d1";
     eva_sfa_cb_login_success = function(data) {
       if (!eva_sfa_server_info.acl.master) {
-        console.log('masterkey is required');
-        logout();
+          logout();
+          eva_sfa_popup('popup', 'error', 'Access denied', 'Masterkey is required', {'ct':5});
+      } else {
+        start();
       }
-      $('#main').show();
-      eva_sfa_call('list_controllers', null, update_controllers, function(){load_error('controllers')});
     }
     eva_sfa_start();
   </script>

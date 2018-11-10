@@ -3,6 +3,7 @@
   color: blue;
   text-decoration: underline;
   cursor: hand;
+  font-size: 16px;
 }
 .controller-unmanaged {
   color: grey;
