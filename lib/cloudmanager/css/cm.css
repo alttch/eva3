@@ -33,10 +33,25 @@ td.vtop {
     vertical-align: top;
 }
 
+#tbl-remote-items {
+    width: 100%;
+}
+
+#tbl-remote-items thead, #tbl-remote-items tbody {
+    float: left;
+    width: 100%;
+}
+
+#tbl-remote-items tbody {
+    overflow: scroll;
+    overflow-x: hidden;
+    max-height: 400px;
+}
+
 #logr {
     outline: none;
     width: 100%;
-    height: 20% !important;
+    height: 150px !important;
     font-size: 11px;
     overflow: scroll;
     overflow-x: hidden;

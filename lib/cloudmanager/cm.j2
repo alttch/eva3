@@ -15,7 +15,7 @@
     <div id="main" class="container" style="display: none; margin-top: 10px;">
         <div class="row">
             <div class="col-sm-12 col-md-5">
-              <div id="controller-list">
+              <div id="controller-list" style="margin-bottom: 20px">
                 <div>
                   Universal Controllers
                   <span id="ucs"></span>
@@ -27,7 +27,18 @@
               </div>
             </div>
             <div class="col-sm-12 col-md-7">
-                <table id="tbl-remote-items" style="width: 100%">
+                <table id="tbl-remote-items">
+                    <thead>
+                        <tr class="tbl-remote-items-hdr">
+                            <td width="160">Controller</td>
+                            <td width="60">Type</td>
+                            <td width="395">Item ID</td>
+                            <td width="60">S</td>
+                            <td width="60">V</td>
+                        </tr>
+                    </thead>
+                    <tbody id="tbl-remote-items-body">
+                    </tbody>
                 </table>
             </div>
         </div>
