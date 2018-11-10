@@ -310,7 +310,7 @@ class RemoteController(eva.item.Item):
                 d['masterkey'] = self._masterkey if \
                         self._masterkey is not None else ''
         if info:
-            d['connected'] = self.connected
+            d['connected'] = self.connected if self.enabled else False
             d['managed'] = True if cloud_manager and self.masterkey else False
             if self.api.protocol_mode == 0:
                 d['proto'] = 'http'
