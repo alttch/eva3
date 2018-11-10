@@ -426,7 +426,13 @@ class GenericHTTP_API(GenericAPI):
         else: dev = False
         if dev and not eva.core.development: raise cp_forbidden_key()
         p = cherrypy.serving.request.params.copy()
-        if not eva.core.development and 'k' in p: del (p['k'])
+        if not eva.core.development:
+            if 'k' in p: del (p['k'])
+            if cherrypy.serving.request.path_info.startswith('/set_'):
+                try:
+                    if p.get('p') in ['key', 'masterkey']: del p['v']
+                except:
+                    pass
         if rlp:
             for rp in rlp:
                 try:
