@@ -1773,7 +1773,7 @@ class NWebSocket(WebSocket):
                     action_status=action_status,
                     log_level=log_level)
         except:
-            logging.debug('.WS %s:%u got bad JSON data: %s' % \
+            logging.debug('.WS %s:%u got invalid JSON data: %s' % \
                     (self.peer_address[0], self.peer_address[1],
                         message.data.decode()))
 
