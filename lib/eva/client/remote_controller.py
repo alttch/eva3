@@ -178,7 +178,9 @@ class RemoteController(eva.item.Item):
                 self.set_modified(save)
             return True
         elif prop == 'masterkey':
-            if not cloud_manager: return False
+            if not cloud_manager or \
+                    not self.set_prop('static', 1):
+                return False
             if self._masterkey != val:
                 self._masterkey = val
                 self.masterkey = eva.apikey.format_key(val)
