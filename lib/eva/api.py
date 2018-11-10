@@ -133,10 +133,9 @@ def log_api_request(func, auth=None, info=None, dev=False, debug=False):
         logging.debug(msg)
     else:
         if not dev:
-            if func == 'test': logging.debug(msg)
-            else: logging.info(msg)
+            logging.debug(msg)
         else:
-            logging.warning(msg)
+            logging.info(msg)
 
 
 def http_real_ip(get_gw=False):

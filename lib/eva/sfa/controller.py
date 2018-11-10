@@ -276,14 +276,11 @@ def remove_lm(controller_id):
 
 
 def remove_controller(controller_id):
-    try:
-        ct, ci = controller_id.split('/')
-    except:
-        return False
-    if ct == 'uc':
-        return remove_uc(ci)
-    elif ct == 'lm':
-        return remove_lm(ci)
+    c = get_controller(controller_id)
+    if c.item_type == 'remote_uc':
+        return remove_uc(c.item_id)
+    elif c.item_type == 'remote_lm':
+        return remove_lm(c.item_id)
     else:
         return False
 

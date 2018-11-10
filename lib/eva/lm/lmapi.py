@@ -426,13 +426,7 @@ class LM_API(GenericAPI):
     def remove_controller(self, k=None, controller_id=None):
         if not apikey.check(k, master=True) or not controller_id:
             return False
-        if controller_id.find('/') > -1:
-            c = controller_id.split('/')
-            if len(c) > 2 or c[0] != 'uc': return None
-            _i = c[1]
-        else:
-            _i = controller_id
-        return eva.lm.controller.remove_controller(_i)
+        return eva.lm.controller.remove_controller(controller_id)
 
     def list_props(self, k=None, i=None):
         if not apikey.check(k, master=True): return None

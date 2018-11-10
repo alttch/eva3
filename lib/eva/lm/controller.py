@@ -616,10 +616,10 @@ def append_controller(uri,
 
 
 def remove_controller(controller_id):
-    if controller_id.find('/') == -1:
-        _controller_id = controller_id
-    else:
-        _controller_id = controller_id.split('/')[-1]
+    _controller_id = oid_to_id(controller_id, 'remote_uc')
+    if not _controller_id: return False
+    if _controller_id.find('/') != -1:
+        _controller_id = _controller_id.split('/')[-1]
     if _controller_id in remote_ucs:
         try:
             i = remote_ucs[_controller_id]

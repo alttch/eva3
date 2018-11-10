@@ -5,8 +5,15 @@
   cursor: hand;
   font-size: 16px;
 }
-.controller-unmanaged {
+.controller-disconnected {
   color: grey;
+  font-size: 16px;
+}
+
+.controller-connected {
+  color: green;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .btn-manage-controller {
