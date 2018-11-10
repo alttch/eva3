@@ -94,19 +94,22 @@ class Item(object):
         return copy.copy(self)
 
     def notify(self, retain=None, skip_subscribed_mqtt=False):
-        if not self.notify_lock.acquire(timeout=eva.core.timeout):
-            logging.critical('Item::notify locking broken')
-            eva.core.critical()
-            return False
+        # if not self.notify_lock.acquire(timeout=eva.core.timeout):
+            # logging.critical('Item::notify locking broken')
+            # eva.core.critical()
+            # return False
         try:
             if skip_subscribed_mqtt: s = self
             else: s = None
             d = self.serialize(notify=True)
             eva.notify.notify(
-                'state', data=(self, d), retain=retain, skip_subscribed_mqtt_item=s)
+                'state',
+                data=(self, d),
+                retain=retain,
+                skip_subscribed_mqtt_item=s)
         except:
             eva.core.log_traceback()
-        self.notify_lock.release()
+        # self.notify_lock.release()
 
     def serialize(self,
                   full=False,

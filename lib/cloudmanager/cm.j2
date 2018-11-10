@@ -12,17 +12,25 @@
   </head>
   <body>
    <div id="popup"></div>
-    <div id="main" style="display: none">
-        <div>
-          Universal Controllers
-          <span id="ucs"></span>
-        </div>
-        <div>
-          Logic Manager PLCs
-          <span id="lms"></span>
+    <div id="main" class="container" style="display: none">
+        <div class="row">
+            <div class="col-xs-12 col-md-5">
+              <div id="controller-list">
+                <div>
+                  Universal Controllers
+                  <span id="ucs"></span>
+                </div>
+                <div>
+                  Logic Manager PLCs
+                  <span id="lms"></span>
+                </div>
+              </div>
+            </div>
         </div>
     <div style="margin-top: 50px;"></div>
-    <div id="logr"></div>
+      <div class="row">
+        <div id="logr" class="col-xs-12"></div>
+      </div>
     </div>
   <script type="text/javascript">
     eva_sfa_init();

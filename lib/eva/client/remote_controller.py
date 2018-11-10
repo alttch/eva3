@@ -224,6 +224,7 @@ class RemoteController(eva.item.Item):
             except:
                 return False
         elif prop == 'enabled':
+            if not self.set_prop('static', 1): return False
             if val is not None:
                 try:
                     v = eva.tools.val_to_boolean(val)
