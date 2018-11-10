@@ -517,6 +517,11 @@ def mqtt_api_handler(notifier_id, data, callback):
             callback(call_id, '500|')
             raise Exception('API error')
         response = ce.encrypt(cherrypy.serving.response.body[0]).decode()
+        for ww in range(10):
+            if cherrypy.serving.response.status: break
+            time.sleep(eva.core.sleep_step)
+        if not cherrypy.serving.response.status:
+            raise Exception('No response from API')
         callback(call_id,
                  cherrypy.serving.response.status.split()[0] + '|' + response)
     except:
