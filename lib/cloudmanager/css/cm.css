@@ -29,12 +29,25 @@
     font-weight: bold;
 }
 
+.tbl-remote-items-even {
+    background-color: #F5F5F5;
+}
+
+.tbl-remote-items-odd {
+    background-color: #FEFEFE;
+}
+
 td.vtop {
     vertical-align: top;
+    padding: 5px;
 }
 
 #tbl-remote-items {
     width: 100%;
+}
+
+#tbl-remote-items tbody tr:hover {
+    background-color: #C5C5C5;
 }
 
 #tbl-remote-items thead, #tbl-remote-items tbody {
@@ -99,5 +112,6 @@ td.vtop {
 }
 
 .item-descr {
+    font-size: 13px;
     font-style: italic;
 }
