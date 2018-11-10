@@ -12,7 +12,7 @@
   </head>
   <body>
    <div id="popup"></div>
-    <div id="main" class="container" style="display: none; margin-top: 10px;">
+   <div id="main" class="container" style="display: none; margin-top: 10px;">
         <div class="row">
             <div class="col-sm-12 col-md-5">
               <div id="controller-list" style="margin-bottom: 20px">
@@ -42,10 +42,19 @@
                 </table>
             </div>
         </div>
-    <div style="margin-top: 50px;"></div>
-      <div class="row">
-        <div id="logr" class="col-xs-12"></div>
-      </div>
+        <div style="margin-top: 50px;"></div>
+        <div class="row">
+            <div id="logr" class="col-xs-12"></div>
+        </div>
+        <div class="row" id="version_info">
+            <div class="col-xs-12">
+                EVA ICS Cloud Manager version: <span id="i_version"></span>
+                build <span id="i_build"></span>.
+                <a href="https://www.eva-ics.com/">EVA ICS</a>
+                Copyright &copy; 2012-2018
+                <a href="https://www.altertech.com/">Altertech Group</a>
+            </div>
+        </div>
     </div>
   <script type="text/javascript">
     eva_sfa_init();

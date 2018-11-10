@@ -115,3 +115,6 @@ td.vtop {
     font-size: 13px;
     font-style: italic;
 }
+
+#version_info { color: #4D4D4D;
+    font-size: 12px; margin-top: 10px; margin-bottom: 10px; }
