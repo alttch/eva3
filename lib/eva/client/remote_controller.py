@@ -1153,6 +1153,18 @@ class RemoteLMPool(RemoteControllerPool):
                 del (self.macros_by_controller[controller_id])
             except:
                 eva.core.log_traceback()
+        if controller_id in self.cycles_by_controller:
+            for i in self.cycles_by_controller[controller_id].keys():
+                try:
+                    self.cycles[i].destroy()
+                    del (self.cycles[i])
+                    del (self.controllers_by_cycle[i])
+                except:
+                    eva.core.log_traceback()
+            try:
+                del (self.cycles_by_controller[controller_id])
+            except:
+                eva.core.log_traceback()
         if controller_id in self.rules_by_controller:
             for i in self.rules_by_controller[controller_id].keys():
                 try:
