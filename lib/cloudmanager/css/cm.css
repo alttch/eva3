@@ -64,7 +64,7 @@ td.vtop {
 #tbl-remote-cycles tbody {
     overflow: scroll;
     overflow-x: hidden;
-    max-height: 400px;
+    max-height: 300px;
 }
 
 #logr {
@@ -108,6 +108,7 @@ td.vtop {
 
 .item-status--1 {
     color: red;
+    font-weight: bold;
 }
 
 .item-status-0 {
@@ -116,6 +117,7 @@ td.vtop {
 
 .item-status-1 {
     color: green;
+    font-weight: bold;
 }
 
 .cycle-status-1 {
