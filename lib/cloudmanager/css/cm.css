@@ -25,15 +25,15 @@
     color: grey;
 }
 
-.tbl-remote-items-hdr { 
+.tbl-items-hdr { 
     font-weight: bold;
 }
 
-.tbl-remote-items-even {
+.tbl-items-even {
     background-color: #F5F5F5;
 }
 
-.tbl-remote-items-odd {
+.tbl-items-odd {
     background-color: #FEFEFE;
 }
 
@@ -42,20 +42,26 @@ td.vtop {
     padding: 5px;
 }
 
-#tbl-remote-items {
+.tbl-items {
     width: 100%;
 }
 
-#tbl-remote-items tbody tr:hover {
+.tbl-items tbody tr:hover {
     background-color: #C5C5C5;
 }
 
-#tbl-remote-items thead, #tbl-remote-items tbody {
+.tbl-items thead, .tbl-items tbody {
     float: left;
     width: 100%;
 }
 
 #tbl-remote-items tbody {
+    overflow: scroll;
+    overflow-x: hidden;
+    max-height: 400px;
+}
+
+#tbl-remote-cycles tbody {
     overflow: scroll;
     overflow-x: hidden;
     max-height: 400px;
@@ -95,9 +101,10 @@ td.vtop {
     font-size: 20px;
     animation: blinker 0.5s linear infinite;
 }
-/*@keyframes blinker {  
+
+@keyframes blinker {  
   50% { opacity: 0; }
-}*/
+}
 
 .item-status--1 {
     color: red;
@@ -109,6 +116,21 @@ td.vtop {
 
 .item-status-1 {
     color: green;
+}
+
+.cycle-status-1 {
+    color: green;
+    font-weight: bold;
+}
+
+.cycle-status-0 {
+    color: grey;
+}
+
+.cycle-status-2 {
+    color: red;
+    font-weight: bold;
+    animation: blinker 0.5s linear infinite;
 }
 
 .item-descr {
