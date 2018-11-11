@@ -84,17 +84,19 @@ class SFA_API(GenericAPI):
         elif _tp == 'LV' or _tp == 'lvar':
             gi = eva.sfa.controller.lm_pool.lvars
         else:
-            return None
+            return []
         if _i:
             if _i in gi and apikey.check(k, gi[_i]):
                 return gi[_i].serialize(full=full)
             else:
                 return None
         result = []
+        if isinstance(group, list): _group = group
+        else: _group = str(group).split(',')
         for i, v in gi.copy().items():
             if apikey.check(k, v) and \
                     (not group or \
-                        eva.item.item_match(v, [], [group])):
+                        eva.item.item_match(v, [], _group)):
                 r = v.serialize(full=full)
                 result.append(r)
         return sorted(result, key=lambda k: k['oid'])
@@ -332,13 +334,15 @@ class SFA_API(GenericAPI):
 
     def list_cycles(self, k=None, controller_id=None, group=None):
         result = []
+        if isinstance(group, list): _group = group
+        else: _group = str(group).split(',')
         if not controller_id:
             for c, d in \
                 eva.sfa.controller.lm_pool.cycles_by_controller.copy().items():
                 for a, v in d.copy().items():
                     if apikey.check(k, v) and \
                         (not group or \
-                            eva.item.item_match(v, [], [ group ])):
+                            eva.item.item_match(v, [], _group)):
                         result.append(v.serialize(full=True))
         else:
             if controller_id.find('/') != -1:
@@ -353,7 +357,7 @@ class SFA_API(GenericAPI):
                 eva.sfa.controller.lm_pool.cycles_by_controller[\
                                                         c_id].copy().items():
                 if apikey.check(k, v) and (not group or \
-                        eva.item.item_match(v, [], [ group ])):
+                        eva.item.item_match(v, [], _group)):
                     result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['id'])
 
@@ -657,19 +661,24 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
             result['cvars'] = cvars
         return result
 
-    def state_all(self, k=None):
+    def state_all(self, k=None, p=None, g=None):
         result = []
-        for p in ['U', 'S', 'LV']:
+        if p is None: _p = ['U', 'S', 'LV']
+        else:
+            _p = p
+            if not _p: return []
+        for tp in _p:
             try:
-                result += self.state(k, p=p, full=True)
+                result += self.state(k, p=tp, g=g, full=True)
             except:
                 pass
-        try:
-            result += self.list_cycles(k)
-        except:
-            pass
+        if p is None or 'lcycle' in _p:
+            try:
+                result += self.list_cycles(k, g=g)
+            except:
+                pass
         return sorted(
-            sorted(result, key=lambda k: k['id']), key=lambda k: k['type'])
+            sorted(result, key=lambda k: k['oid']), key=lambda k: k['type'])
 
     def state(self, k=None, i=None, g=None, p=None, full=None):
         result = super().state(k, i, g, p, full)

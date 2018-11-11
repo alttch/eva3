@@ -34,6 +34,8 @@ SFA
     * SFA framework: code optimization, cycle states (warning: some functions
       are incompatible with previous version, use eva_sfa.3.1.js library or
       call the functions in new format only, look UPDATE-HOWTO for more info)
+    * SFA framework: data exchange optimization with eva_sfa_state_updates
+      variable
 
 
 3.1.1 (2018-10-22)

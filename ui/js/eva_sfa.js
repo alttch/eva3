@@ -110,6 +110,16 @@ eva_sfa_tsdiff = null;
 eva_sfa_ws_mode = true;
 
 /**
+ * Update item states via AJAX and subscribe to state updates via websocket
+ *
+ * Possible values:
+ *  true - get states of all items API key has access to
+ *  {'p': [types], 'g': [groups]} - subscribe to specified types and groups
+ *  false - disable state updates
+ */
+eva_sfa_state_updates = true;
+
+/**
  * Initializes eva_sfa javascript API
  * automatically sets WebSocket or AJAX mode depending on the browser features
  *
@@ -1058,7 +1068,26 @@ function eva_sfa_start_ws() {
     eva_sfa_process_ws(evt);
   };
   eva_sfa_ws.addEventListener('open', function(event) {
-    eva_sfa_ws.send(JSON.stringify({s: 'state'}));
+    var st = null;
+    if (eva_sfa_state_updates) {
+      st = {s: 'state'};
+      if (eva_sfa_state_updates !== true) {
+        var groups = eva_sfa_state_updates['g'];
+        if (!groups) {
+          groups = '#';
+        }
+        var tp = eva_sfa_state_updates['p'];
+        if (!tp) {
+          tp = '#';
+        }
+        st['g'] = groups;
+        st['tp'] = tp;
+        st['i'] = [];
+      }
+    }
+    if (st) {
+      eva_sfa_ws.send(JSON.stringify(st));
+    }
     if (eva_sfa_log_subscribed) {
       eva_sfa_set_ws_log_level(eva_sfa_log_level);
     }
@@ -1168,10 +1197,27 @@ function eva_sfa_load_rule_props(rule_id, cb) {
   });
 }
 
-// TODO: load only subscribed items
+function eva_sfa_do_load_states(cb) {
+  if (!eva_sfa_state_updates) {
+    cb([]);
+  } else {
+    var params = {};
+    if (eva_sfa_state_updates !== true) {
+      var groups = eva_sfa_state_updates['g'];
+      var tp = eva_sfa_state_updates['p'];
+      if (groups) {
+        params['g'] = groups;
+      }
+      if (tp) {
+        params['p'] = tp;
+      }
+    }
+    eva_sfa_api_call('state_all', eva_sfa_prepare(params), cb);
+  }
+}
 
 function eva_sfa_load_initial_states(on_login, reload) {
-  eva_sfa_api_call('state_all', eva_sfa_prepare(), function(data) {
+  eva_sfa_do_load_states(function(data) {
     $.each(data, function(i, s) {
       eva_sfa_process_state(s);
     });
