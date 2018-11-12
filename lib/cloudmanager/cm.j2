@@ -17,10 +17,17 @@
        <form action="#" onsubmit="do_login(); return false">
        Login: <input type="text" size="10" id="f_login" /><br />
        Password: <input type="password" size="10" id="f_password" /><br />
+       <label for="f_remember">Remember</label>
+       <input type="checkbox" id="f_remember" />
        <input type="submit" value="GO" />
        </form>
    </div>
    <div id="main" class="container" style="display: none; margin-top: 10px;">
+       <div class="row" style="margin-bottom: 10px">
+           <div class="col-xs-12">
+               <input type="button" value="Logout" onclick="stop()" />
+           </div>
+       </div>
         <div class="row">
             <div class="col-sm-12 col-md-5">
               <div id="controller-list" style="margin-bottom: 20px">
