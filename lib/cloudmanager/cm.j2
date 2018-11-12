@@ -6,12 +6,20 @@
     <link rel="stylesheet" href="lib/bootstrap.min.css" />
     <script src="lib/jquery.min.js"></script>
     <script src="js/eva_sfa.js"></script>
+    <script src="js/cookie.js"></script>
     <script src="js/cm.js"></script>
     <script src="lib/moment.min.js"></script>
     <script src="lib/chart.min.js"></script>
   </head>
   <body>
    <div id="popup"></div>
+   <div id="loginform">
+       <form action="#" onsubmit="do_login(); return false">
+       Login: <input type="text" size="10" id="f_login" /><br />
+       Password: <input type="password" size="10" id="f_password" /><br />
+       <input type="submit" value="GO" />
+       </form>
+   </div>
    <div id="main" class="container" style="display: none; margin-top: 10px;">
         <div class="row">
             <div class="col-sm-12 col-md-5">
@@ -73,21 +81,5 @@
             </div>
         </div>
     </div>
-  <script type="text/javascript">
-    eva_sfa_state_updates = false;
-    eva_sfa_init();
-    // TESTS
-    eva_sfa_apikey="c31854193a16906f5ceee99928259ab071a5aeb0b450517fd09e656dece048d1";
-    eva_sfa_cb_login_success = function(data) {
-      if (!eva_sfa_server_info.acl.master) {
-          logout();
-          eva_sfa_popup('popup',
-            'error', 'Access denied', 'Masterkey is required', {'ct':5});
-      } else {
-        start();
-      }
-    }
-    eva_sfa_start();
-  </script>
   </body>
 </html>

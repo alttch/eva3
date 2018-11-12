@@ -18,6 +18,12 @@ eva_sfa_password = '';
 eva_sfa_apikey = null;
 
 /**
+ * True if framework engine is started and user is logged in, false if not.
+ * should not be changed outside framework functions
+ */
+eva_sfa_logged_in = false;
+
+/**
  * Contains functions called after either successful or failed login
  */
 eva_sfa_cb_login_success = null;
@@ -860,7 +866,6 @@ function eva_sfa_popup(ctx, pclass, title, msg, params) {
 eva_sfa_update_state_functions = Array();
 eva_sfa_update_state_mask_functions = Array();
 eva_sfa_rules_to_monitor = Array();
-eva_sfa_logged_in = false;
 eva_sfa_ws = null;
 eva_sfa_ajax_reload = null;
 eva_sfa_heartbeat_reload = null;
