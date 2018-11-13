@@ -1,3 +1,8 @@
+.tbar {
+    height: 350px;
+    min-height: 350px;
+}
+
 .controller-link {
   font-weight: bold;
   color: blue;
@@ -23,48 +28,6 @@
 
 .btn-manage-controller-disabled {
     color: grey;
-}
-
-.tbl-items-hdr { 
-    font-weight: bold;
-}
-
-.tbl-items-even {
-    background-color: #F5F5F5;
-}
-
-.tbl-items-odd {
-    background-color: #FEFEFE;
-}
-
-td.vtop {
-    vertical-align: top;
-    padding: 5px;
-}
-
-.tbl-items {
-    width: 100%;
-}
-
-.tbl-items tbody tr:hover {
-    background-color: #C5C5C5;
-}
-
-.tbl-items thead, .tbl-items tbody {
-    float: left;
-    width: 100%;
-}
-
-#tbl-remote-items tbody {
-    overflow: scroll;
-    overflow-x: hidden;
-    max-height: 400px;
-}
-
-#tbl-remote-cycles tbody {
-    overflow: scroll;
-    overflow-x: hidden;
-    max-height: 300px;
 }
 
 #logr {

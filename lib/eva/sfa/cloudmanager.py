@@ -29,7 +29,7 @@ class CloudManager():
 
 cp_cm_config = {}
 
-for u in ['css', 'fonts', 'i', 'js', 'lib']:
+for u in ['css', 'fonts', 'i', 'images', 'js', 'lib']:
     cp_cm_config['/' + u] = {
         'tools.staticdir.dir': eva.core.dir_lib + '/cloudmanager/' + u,
         'tools.staticdir.on': True

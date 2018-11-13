@@ -4,7 +4,9 @@
     <link rel="stylesheet" href="css/eva_sfa.css" />
     <link rel="stylesheet" href="css/cm.css" />
     <link rel="stylesheet" href="lib/bootstrap.min.css" />
+    <link rel="stylesheet" href="lib/jquery.dataTables.min.css" />
     <script src="lib/jquery.min.js"></script>
+    <script src="lib/jquery.dataTables.min.js"></script>
     <script src="js/eva_sfa.js"></script>
     <script src="js/cookie.js"></script>
     <script src="js/cm.js"></script>
@@ -42,36 +44,58 @@
               </div>
             </div>
             <div class="col-sm-12 col-md-7">
-                <table id="tbl-remote-items" class="tbl-items">
+                <input type="button" value="Items"
+                    onclick="tbar_show('remote-items')" />
+                <input type="button" value="Macros"
+                    onclick="tbar_show('remote-macros')" />
+                <input type="button" value="Cycles"
+                    onclick="tbar_show('remote-cycles')" />
+                <div>&nbsp;</div>
+                <div id="tbar-remote-items" class="tbar">
+                  <table id="tbl-remote-items" class="display tbl">
+                      <thead>
+                          <tr>
+                              <th>Controller</th>
+                              <th>Type</th>
+                              <th>Item ID</th>
+                              <th>A</th>
+                              <th>S</th>
+                              <th>V</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                  </table>
+                </div>
+                <div id="tbar-remote-macros" class="tbar" style="display: none">
+                  <table id="tbl-remote-macros"
+                         class="display tbl">
+                      <thead>
+                          <tr>
+                              <th>Controller</th>
+                              <th>Macro ID</th>
+                              <th>A</th>
+                          </tr>
+                      </thead>
+                      <tbody>
+                      </tbody>
+                  </table>
+                </div>
+                <div id="tbar-remote-cycles" class="tbar" style="display: none">
+                  <table id="tbl-remote-cycles" class="display tbl">
                     <thead>
-                        <tr class="tbl-items-hdr">
-                            <td width="160">Controller</td>
-                            <td width="60">Type</td>
-                            <td width="395">Item ID</td>
-                            <td width="60">S</td>
-                            <td width="60">V</td>
+                        <tr>
+                            <th>Controller</th>
+                            <th>Cycle ID</th>
+                            <th>Status</th>
+                            <th>Interval</th>
+                            <th>Average</th>
                         </tr>
                     </thead>
-                    <tbody id="tbl-remote-items-body">
+                    <tbody>
                     </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="row" style="margin-top: 10px">
-            <div class="col-xs-12">
-                <table id="tbl-remote-cycles" class="tbl-items">
-                    <thead>
-                        <tr class="tbl-items-hdr">
-                            <td width="160">Controller</td>
-                            <td width="350">Cycle ID</td>
-                            <td width="110">Status</td>
-                            <td width="160">Interval</td>
-                            <td width="160">Average</td>
-                        </tr>
-                    </thead>
-                    <tbody id="tbl-remote-cycles-body">
-                    </tbody>
-                </table>
+                  </table>
+                </div>
             </div>
         </div>
         <div style="margin-top: 50px;"></div>

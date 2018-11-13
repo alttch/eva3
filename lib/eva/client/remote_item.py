@@ -176,7 +176,11 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = {'nstatus': self.nstatus, 'nvalue': self.nvalue}
+        d = {
+            'nstatus': self.nstatus,
+            'nvalue': self.nvalue,
+            'action_enabled': self.action_enabled
+        }
         if full and self.status_labels:
             d['status_labels'] = self.status_labels
         d.update(super().serialize(
