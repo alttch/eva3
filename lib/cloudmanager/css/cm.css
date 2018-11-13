@@ -3,27 +3,37 @@
     min-height: 350px;
 }
 
+.controllers {
+    outline: none;
+    max-height: 250px !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.controllers td {
+    padding: 5px;
+    font-size: 14px;
+}
+
 .controller-link {
   font-weight: bold;
   color: blue;
   text-decoration: underline;
   cursor: hand;
-  font-size: 16px;
 }
 .controller-disconnected {
   color: grey;
-  font-size: 16px;
 }
 
 .controller-connected {
   color: green;
   font-weight: bold;
-  font-size: 16px;
 }
 
 .btn-manage-controller {
-  margin-left: 10px; 
+  margin-left: 5px; 
   height: 20px;
+  font-size: 14px;
 }
 
 .btn-manage-controller-disabled {
