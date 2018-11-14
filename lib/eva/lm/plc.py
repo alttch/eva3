@@ -161,6 +161,7 @@ class Macro(eva.item.ActiveItem):
     def __init__(self, item_id):
         super().__init__(item_id, 'lmacro')
         self.respect_layout = False
+        self._drivers_allowed = False
         self.api = eva.lm.macro_api.MacroAPI(
             pass_errors=False, send_critical=False)
 
