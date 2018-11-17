@@ -11,14 +11,10 @@ __logic__ = 'multistep with delays'
 __features__ = ['action', 'action_mp', 'port_set', 'aao_set']
 
 __config_help__ = [{
-    'name':
-    'bose',
-    'help':
-    'allow action even if current status is error',
-    'type':
-    'bool',
-    'required':
-    False
+    'name': 'bose',
+    'help': 'allow action even if current status is error',
+    'type': 'bool',
+    'required': False
 }]
 
 __action_help__ = [{
@@ -112,8 +108,16 @@ class LPI(BasicLPI):
         self.__action_help = __action_help__
         self.__state_help = __state_help__
         self.__help = __help__
+        self.connections = {'port': 'power', 'dport': 'destination'}
         if info_only: return
         self.bose = val_to_boolean(self.lpi_cfg.get('bose'))
+
+    def get_item_cmap(self, cfg):
+        result = super().get_item_cmap(cfg)
+        dport = cfg.get('d' + self.io_label)
+        if not isinstance(dport, list): dport = [dport]
+        result['dport'] = dport
+        return result
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         self.log_error('state function not implemented')

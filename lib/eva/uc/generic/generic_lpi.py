@@ -71,6 +71,15 @@ class LPI(object):
     def stop(self):
         return True
 
+    """
+    Get item connection map
+    """
+
+    def get_item_cmap(self, cfg):
+        port = cfg.get(self.io_label)
+        if not isinstance(port, list): port = [port]
+        return {'port': port}
+
     def serialize(self, full=False, config=False, helpinfo=None):
         d = {}
         if helpinfo:
@@ -93,6 +102,7 @@ class LPI(object):
             d['oid'] = self.oid
             d['logic'] = self.__logic
             d['help'] = self.__help
+            d['connections'] = self.connections
             if self.phi:
                 d['phi'] = self.phi.serialize(full=True, config=True)
         if config:
@@ -244,6 +254,7 @@ class LPI(object):
         self.driver_id = None  # set by driverapi on load
         self.phi = None  # set by driverapi on each call
         self.oid = None
+        self.connections = {'port': 'primary'}
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW

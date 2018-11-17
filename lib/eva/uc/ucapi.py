@@ -679,6 +679,10 @@ class UC_API(GenericAPI):
         if result and eva.core.db_update == 1: eva.uc.driverapi.save()
         return result
 
+    def get_phi_map(self, k=None, phi_id=None, action_map=None):
+        if not apikey.check(k, master=True): return None
+        return eva.uc.driverapi.get_map(phi_id, action_map)
+
     def list_phi(self, k=None, full=False):
         if not apikey.check(k, master=True): return None
         return sorted(
@@ -827,6 +831,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.unlink_phi_mod.exposed = True
         UC_HTTP_API.put_phi_mod.exposed = True
         UC_HTTP_API.list_phi.exposed = True
+        UC_HTTP_API.get_phi_map.exposed = True
         UC_HTTP_API.get_phi.exposed = True
 
         UC_HTTP_API.load_driver.exposed = True
@@ -1226,6 +1231,12 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
     def list_phi(self, k=None, full=None):
         cp_need_master(k)
         result = super().list_phi(k, full)
+        if result is None: raise cp_api_error()
+        return result
+
+    def get_phi_map(self, k=None, i=None, a=None):
+        cp_need_master(k)
+        result = super().get_phi_map(k, i, a)
         if result is None: raise cp_api_error()
         return result
 

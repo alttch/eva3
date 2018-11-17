@@ -93,6 +93,50 @@ def get_driver(driver_id):
 # private API functions, not recommended to use
 
 
+def _gen_phi_map(phi_id, pmap, action_map=False):
+    g = {}
+    if action_map: prop = 'action'
+    else: prop = 'update'
+    for i in pmap:
+        if hasattr(i, prop + '_exec') and \
+            hasattr(i, prop + '_driver_config') and \
+            getattr(i, prop + '_exec').startswith('|'):
+            try:
+                driver_id = getattr(i, prop + '_exec')[1:]
+                cfg = getattr(i, prop + '_driver_config')
+                info = {
+                    'oid': i.oid,
+                    'driver': driver_id,
+                    'info': get_driver(driver_id).serialize(full=False),
+                    'cmap': get_driver(driver_id).get_item_cmap(cfg),
+                    'cfg': getattr(i, prop + '_driver_config')
+                }
+            except:
+                raise
+                continue
+            g.setdefault('items', []).append(info)
+            g.setdefault('lpi', {}).setdefault(
+                getattr(i, prop + '_exec')[1:].split('.')[1], []).append(info)
+            g['info'] = get_phi(phi_id).serialize(full=False)
+    result = {phi_id: g}
+    return result
+
+
+def get_map(phi_id=None, action_map=False):
+    try:
+        result = {}
+        ibp = items_by_phi.copy()
+        if phi_id:
+            if not phi_id in ibp: return None
+            return _gen_phi_map(phi_id, ibp[phi_id], action_map)
+        for k, v in ibp.items():
+            result.update(_gen_phi_map(k, v, action_map))
+        return result
+    except:
+        eva.core.log_traceback()
+        return None
+
+
 def unlink_phi_mod(mod):
     if mod.find('/') != -1 or mod == 'generic_phi': return False
     for k, p in phis.copy().items():
