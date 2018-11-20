@@ -175,7 +175,22 @@ def serialize(full=False, config=False):
     return result
 
 
+<<<<<<< HEAD
 @eva.core.dump
+=======
+def set_ext_prop(ext_id, p, v):
+    ext = get_ext(ext_id)
+    cfg = ext.cfg
+    mod_id = ext.mod_id
+    cfg[p] = v
+    if v is None: del cfg[p]
+    ext = load_ext(ext_id, mod_id, cfg)
+    if ext:
+        exts[ext_id] = ext
+        return True
+
+
+>>>>>>> 91c72e6... add set prop for ext
 def dump():
     return serialize(full=True, config=True)
 

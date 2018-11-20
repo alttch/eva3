@@ -1071,6 +1071,25 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='CONTEXT',
             choices=['cfg', 'functions'])
 
+        sp_ext_set_prop = sp_ext.add_parser(
+            'set_prop', help='Set extension config prop')
+        sp_ext_set_prop.add_argument(
+            'i', help='EXT_ID',
+            metavar='EXT ID').completer = self.ComplExt(self)
+        sp_ext_set_prop.add_argument(
+            'p', help='Config property',
+            metavar='PROP')
+        sp_ext_set_prop.add_argument(
+            'v', help='Value',
+            nargs='?',
+            metavar='VAL')
+        sp_ext_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save ext config after set',
+            dest='_save',
+            action='store_true')
+
     def edit_macro(self, props):
         if self.apiuri:
             self.print_local_only()
@@ -1151,6 +1170,7 @@ _api_functions = {
     'ext:unload': 'unload_ext',
     'ext:modhelp': 'modhelp_ext',
     'ext:modinfo': 'modinfo_ext',
+    'ext:set_prop': 'set_ext_prop',
     'macro:edit': cli.edit_macro,
     'edit:macro': cli.edit_macro
 }

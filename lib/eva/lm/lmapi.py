@@ -619,6 +619,14 @@ class LM_API(GenericAPI):
         if not apikey.check(k, master=True): return None
         return eva.lm.extapi.modhelp(m, c)
 
+    def set_ext_prop(self, k=None, i=None, p=None, v=None, save=False):
+        if not apikey.check(k, master=True): return None
+        ext = eva.lm.extapi.get_ext(i)
+        if ext:
+            if eva.lm.extapi.set_ext_prop(i, p, v):
+                if save: eva.lm.extapi.save()
+                return True
+        return False
 
 class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
@@ -687,6 +695,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         LM_HTTP_API.modinfo_ext.exposed = True
         LM_HTTP_API.modhelp_ext.exposed = True
         LM_HTTP_API.info.exposed = True
+        LM_HTTP_API.set_ext_prop.exposed = True
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)
@@ -1107,6 +1116,12 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         else:
             return result
 
+    def set_ext_prop(self, k=None, i=None, p=None, v=None, save=None):
+        cp_need_master(k)
+        result = super().set_ext_prop(k, i, p, v, save)
+        if result is None: raise cp_api_error()
+        if result is False: raise cp_api_404()
+        return http_api_result_ok()
 
 def start():
     global api
