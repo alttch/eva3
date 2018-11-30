@@ -291,8 +291,11 @@ class ManagementCLI(GenericCLI):
 
     def do_start_shell(self, p, x='-cmd', xp=''):
         try:
+            if getattr(self, 'extra', None):
+                sysargs = ['{}/{}{}'.format(dir_bin, p, x)] + self.extra
+            else:
+                sysargs = ['{}/{}{}'.format(dir_bin, p, x), '-I']
             c = open('{}/{}{}'.format(dir_bin, p, x)).read()
-            sysargs = ['{}/{}{}'.format(dir_bin, p, x), '-I']
             if self.in_json:
                 sysargs.append('-J')
             if self.always_suppress_colors:
@@ -313,6 +316,7 @@ sys.argv = {argv}
             xp=xp) + c
             try:
                 exec(c)
+                self.extra = None
             except SystemExit:
                 self.full_reset_after_shell()
                 return True

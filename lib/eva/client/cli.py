@@ -1213,7 +1213,8 @@ class GenericCLI(object):
                 default_completer=self.argcomplete.completers.SuppressCompleter(
                 ))
         try:
-            a = self.ap.parse_args(args)
+            a, extra = self.ap.parse_known_args(args)
+            self.extra = extra
         except:
             return 99
         params = vars(a).copy()
