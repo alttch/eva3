@@ -731,8 +731,6 @@ def exec_unit_action(unit,
     except:
         _s = u.status_by_label(nstatus)
     if _s is None: return None
-    if q_timeout: qt = q_timeout
-    else: qt = eva.core.timeout
     a = u.create_action(_s, nvalue, priority, action_uuid)
     Q.put_task(a)
     if not eva.core.wait_for(a.is_processed, q_timeout):
