@@ -1106,6 +1106,7 @@ cli.always_print += ['action', 'action_toggle', 'cmd']
 cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'phi', 'lpi', 'driver'
 ]
+cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)

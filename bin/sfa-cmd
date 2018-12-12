@@ -726,6 +726,7 @@ cli = SFA_CLI('sfa', _me)
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'run', 'cmd']
 cli.arg_sections += ['action', 'macro', 'cycle', 'notify', 'controller']
+cli.api_cmds_timeout_correction = ['cmd', 'action', 'run']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)

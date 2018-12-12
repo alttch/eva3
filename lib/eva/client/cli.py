@@ -207,6 +207,7 @@ class GenericCLI(object):
         self.batch_stop_on_err = True
         self.prog_name = prog
         self.interactive = False
+        self.api_cmds_timeout_correction = []
         self.parse_primary_args()
         self.setup_parser()
 
@@ -1287,7 +1288,16 @@ class GenericCLI(object):
             timeout = c.get('timeout')
         else:
             timeout = self.default_timeout
-        if hasattr(a, '_timeout') and a._timeout: timeout = a._timeout
+        if hasattr(a, '_timeout') and a._timeout:
+            timeout = a._timeout
+            wait = params.get('w')
+            if a._timeout == float(self.default_timeout) and \
+                wait is not None and \
+                (itype in self.api_cmds_timeout_correction or \
+                func in self.api_cmds_timeout_correction) and \
+                wait + 2 > self.default_timeout:
+                timeout = wait + 2
+
         if debug and self.remote_api:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)
