@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 while [ 1 ]; do
     if [ -f /.installed  ]; then
         /opt/eva/sbin/eva-control start
@@ -8,13 +9,26 @@ while [ 1 ]; do
         done
     else
         # download EVA ICS
+        VERSION=`curl -s https://www.eva-ics.com/download/update_info.json|jq -r .version`
+        BUILD=`curl -s https://www.eva-ics.com/download/update_info.json|jq -r .build`
         mkdir -p /opt
         cd /opt
-        wget https://www.eva-ics.com/download/3.1.1/stable/eva-3.1.1-2018103001.tgz -O eva.tgz
-        tar xzf eva.tgz
-        mv -f eva-3.1.1 eva
-        rm -f eva.tgz
+        rm -f eva-dist.tgz
+        wget https://www.eva-ics.com/download/${VERSION}/stable/eva-${VERSION}-${BUILD}.tgz -O eva-dist.tgz
+        tar xzf eva-dist.tgz
+        mv -f eva-${VERSION} eva
+        rm -f eva-dist.tgz
         # setup EVA ICS
-        /opt/eva/easy-setup --force --clear && touch /.installed
+        /opt/eva/easy-setup --force --clear
+        if [ $? -eq 0 ]; then
+            # preconfigure logging
+            /opt/eva/sbin/eva-control stop
+            rm -f /opt/eva/log/*
+            ln -sf /dev/stdout /opt/eva/log/uc.log
+            ln -sf /dev/stdout /opt/eva/log/lm.log
+            ln -sf /dev/stdout /opt/eva/log/sfa.log
+            # create install flag
+            touch /.installed
+        fi
     fi
 done
