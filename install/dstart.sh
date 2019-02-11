@@ -3,16 +3,17 @@
 
 while [ 1 ]; do
     if [ -f /.installed  ]; then
+        rm -f /opt/eva/log/*.log
         /opt/eva/sbin/eva-control start
         while [ 1 ]; do
-            sleep 86400
+            tail -F /opt/eva/log/*.log
         done
     else
         # download EVA ICS
         VERSION=`curl -s https://www.eva-ics.com/download/update_info.json|jq -r .version`
         BUILD=`curl -s https://www.eva-ics.com/download/update_info.json|jq -r .build`
         if [ "x${BUILD}" = "x" ] || [ "x${VERSION}" = "x" ]; then
-            echo "Unable to connect to eva-ics.com. Will try again in 30 seconds"
+            echo "Unable to connect to eva-ics.com. Will try again in 30 seconds..."
             sleep 30
             continue
         fi
@@ -28,10 +29,6 @@ while [ 1 ]; do
         if [ $? -eq 0 ]; then
             # preconfigure logging
             /opt/eva/sbin/eva-control stop
-            rm -f /opt/eva/log/*
-            ln -sf /dev/stdout /opt/eva/log/uc.log
-            ln -sf /dev/stdout /opt/eva/log/lm.log
-            ln -sf /dev/stdout /opt/eva/log/sfa.log
             # create install flag
             touch /.installed
         fi
