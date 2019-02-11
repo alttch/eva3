@@ -25,7 +25,7 @@ while [ 1 ]; do
         mv -f eva-${VERSION} eva
         rm -f eva-dist.tgz
         # setup EVA ICS
-        /opt/eva/easy-setup --force --clear
+        cd /opt/eva && ./easy-setup --force --clear
         if [ $? -eq 0 ]; then
             # preconfigure logging
             /opt/eva/sbin/eva-control stop
