@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 
 while [ 1 ]; do
@@ -11,6 +11,11 @@ while [ 1 ]; do
         # download EVA ICS
         VERSION=`curl -s https://www.eva-ics.com/download/update_info.json|jq -r .version`
         BUILD=`curl -s https://www.eva-ics.com/download/update_info.json|jq -r .build`
+        if [ "x${BUILD}" = "x" ] || [ "x${VERSION}" = "x" ]; then
+            echo "Unable to connect to eva-ics.com. Will try again in 30 seconds"
+            sleep 30
+            continue
+        fi
         mkdir -p /opt
         cd /opt
         rm -f eva-dist.tgz
