@@ -28,7 +28,6 @@ while [ 1 ]; do
         # setup EVA ICS
         cd /opt/eva && ./easy-setup --force --clear
         if [ $? -eq 0 ]; then
-            # preconfigure logging
             /opt/eva/sbin/eva-control stop
             # create install flag
             touch /.installed
