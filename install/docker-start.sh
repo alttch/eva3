@@ -1,5 +1,6 @@
 #!/bin/bash
 
+echo $$ > /var/run/start.pid
 
 while [ 1 ]; do
     if [ -f /.installed  ]; then
