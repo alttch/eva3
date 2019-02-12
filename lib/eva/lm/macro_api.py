@@ -670,6 +670,7 @@ class MacroAPI(object):
             return None
         return cycle.is_running()
 
+
 def init():
     global mbi_code
     mbi_code = open(eva.core.dir_lib +
