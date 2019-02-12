@@ -1,0 +1,98 @@
+version: '3'
+services:
+  mqtt:
+    container_name: farm_mqtt
+    image: eclipse-mosquitto
+    networks:
+      ic:
+        ipv4_address: 10.27.11.200
+
+  eva-uc1:
+    container_name: farm_uc1
+    hostname: farm_uc1
+    environment:
+      - auto_install=1
+      - mqtt=10.27.11.200
+      - product=uc
+      - layout=enterprise
+      - MASTERKEY=demo123
+    image: altertech/eva-ics
+    volumes:
+        - runtime_uc1:/runtime
+        - ./backup/farm_uc1:/backup
+        - ./tools:/tools
+    networks:
+      ic:
+        ipv4_address: 10.27.11.101
+
+  eva-uc2:
+    container_name: farm_uc2
+    hostname: farm_uc2
+    environment:
+      - auto_install=1
+      - mqtt=10.27.11.200
+      - product=uc
+      - layout=enterprise
+      - MASTERKEY=demo123
+    image: altertech/eva-ics
+    volumes:
+        - runtime_uc2:/runtime
+        - ./backup/farm_uc2:/backup
+        - ./tools:/tools
+    networks:
+      ic:
+        ipv4_address: 10.27.11.102
+
+  eva-lm:
+    container_name: farm_lm1
+    hostname: farm_lm1
+    environment:
+      - auto_install=1
+      - mqtt=10.27.11.200
+      - product=lm
+      - layout=enterprise
+      - MASTERKEY=demo123
+    image: altertech/eva-ics
+    volumes:
+        - runtime_lm1:/runtime
+        - ./backup/farm_lm1:/backup
+        - ./tools:/tools
+    networks:
+      ic:
+        ipv4_address: 10.27.11.111
+
+  eva-sfa:
+    container_name: farm_sfa
+    hostname: farm_sfa
+    ports:
+      - "8828:8828"
+    environment:
+      - auto_install=1
+      - mqtt=10.27.11.200
+      - product=sfa
+      - layout=enterprise
+      - MASTERKEY=demo123
+    image: altertech/eva-ics
+    volumes:
+        - runtime_sfa:/runtime
+        - ./backup/farm_sfa:/backup
+        - ui:/ui
+        - ./tools:/tools
+    networks:
+      ic:
+        ipv4_address: 10.27.11.199
+
+networks:
+  ic:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.27.11.0/24
+
+volumes:
+  ui:
+  runtime_uc1:
+  runtime_uc2:
+  runtime_lm1:
+  runtime_sfa:
