@@ -14,6 +14,7 @@ services:
     volumes:
         - runtime:/runtime
         - ui:/ui
+        - backup:/backup
     networks:
       ic:
         ipv4_address: 10.27.5.10
@@ -37,3 +38,4 @@ networks:
 volumes:
   ui:
   runtime:
+  backup:
