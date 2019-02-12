@@ -15,7 +15,7 @@ services:
         - runtime:/runtime
         - ui:/ui
     networks:
-      eva:
+      ic:
         ipv4_address: 10.27.5.10
 
   mqtt:
@@ -27,7 +27,7 @@ services:
         ipv4_address: 10.27.5.200
 
 networks:
-  eva:
+  ic:
     driver: bridge
     ipam:
       driver: default
