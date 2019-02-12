@@ -23,7 +23,7 @@ services:
     image: eclipse-mosquitto
     restart: always
     networks:
-      eva:
+      ic:
         ipv4_address: 10.27.5.200
 
 networks:
