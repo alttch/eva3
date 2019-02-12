@@ -307,7 +307,7 @@ sys.argv = {argv}
 {xp}
 
 """.format(nodename=self.nodename,
-            shells_available=self.products_configured if x=='-cmd' else [],
+            shells_available=self.products_configured if x == '-cmd' else [],
             rlp=not interactive_mode,
             argv=sysargs,
             xp=xp) + c
@@ -404,8 +404,9 @@ sys.argv = {argv}
             self.print_err('File already exists')
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
-               '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime',
-               'xc/cmd', 'xc/drivers/phi', 'xc/extensions', 'etc', 'ui')
+               '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime/*',
+               'xc/cmd/*', 'xc/drivers/phi/*', 'xc/extensions/*', 'etc/*',
+               'ui/*')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
@@ -476,20 +477,20 @@ sys.argv = {argv}
 
     def clear_runtime(self, full=False):
         print('Removing runtime' + (' (completely)...' if full else '...'))
-        cmd = 'rm -rf runtime' if full else \
+        cmd = 'rm -rf runtime/*' if full else \
                 'find runtime -type f -name "*.json" -exec rm -f {} \\;'
         os.system(cmd)
         return True
 
     def clear_xc(self):
         print('Removing xc')
-        cmd = 'rm -rf xc/drivers/phi xc/extensions xc/cmd'
+        cmd = 'rm -rf xc/drivers/phi/* xc/extensions/* xc/cmd/*'
         os.system(cmd)
         return True
 
     def clear_ui(self):
         print('Removing ui')
-        cmd = 'rm -rf ui'
+        cmd = 'rm -rf ui/*'
         os.system(cmd)
         return True
 
