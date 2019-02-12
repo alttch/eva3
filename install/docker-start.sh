@@ -1,15 +1,27 @@
 #!/bin/bash
 
+TERMFLAG=
+
+function _term {
+    /opt/eva/sbin/eva-control stop
+    TERMFLAG=1
+    [ -f /var/run/start-tail.pid ] && kill `cat /var/run/start-tail.pid` || killall tail
+}
+
 function show_logs {
-    while [ 1 ]; do
-        tail -F /opt/eva/log/*.log
+    while [ ! ${TERMFLAG} ]; do
+        tail -F /opt/eva/log/*.log &
+        c=$!
+        echo $c > /var/run/start-tail.pid
+        wait $c
     done
 }
 
 echo $$ > /var/run/start.pid
 
-while [ 1 ]; do
+while [ ! ${TERMFLAG} ]; do
     if [ -f /.installed  ]; then
+        trap _term SIGTERM
         # remove old pid files
         rm -f /opt/eva/var/*.pid
         # start EVA ICS
@@ -54,11 +66,11 @@ while [ 1 ]; do
         MQTT_OPTS=
         LINK_OPTS=
         PRODUCT_OPTS=
-        if [ "x${auto_install}" != "x" ]; then
+        if [ ${auto_install} ]; then
             AUTO_OPTS=--auto
             [ "x${link}" = "x1" ] && LINK_OPTS="--link"
-            [ "x${mqtt}" != "x" ] && MQTT_OPTS="--mqtt"
-            [ "x${product}" != "x" ] && PRODUCT_OPTS="-p"
+            [ ${mqtt} ] && MQTT_OPTS="--mqtt"
+            [ ${product} ] && PRODUCT_OPTS="-p"
         fi
         cd /opt/eva
         rm -rf runtime/*_notify.d runtime/*_remote_*.d
@@ -66,9 +78,12 @@ while [ 1 ]; do
         if [ $? -eq 0 ]; then
             # create install flag
             touch /.installed
+            trap _term SIGTERM
             show_logs
         else
             sleep 10
         fi
     fi
 done
+
+exit 0
