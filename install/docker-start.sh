@@ -47,6 +47,8 @@ while [ 1 ]; do
             rm -rf /opt/eva/ui
             ln -sf /ui /opt/eva/ui
         fi
+        # connect backup volume if exists
+        [ -d /backup ] && ln -sf /backup /opt/eva/backup
         # setup EVA ICS
         AUTO_OPTS=
         MQTT_OPTS=
