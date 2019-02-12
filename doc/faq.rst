@@ -193,7 +193,7 @@ no rocket science as well.
 Why EVA ICS has no RESTful API?
 ===============================
 
-EVA ICS goal is to allow all possible clients perform API calls.
+EVA ICS goal is to allow any possible client perform API calls.
 
 RESTful is a perfect API design architecture when you are 100% sure your client
 can use it. But there's still many old equipment/software, which can perform
