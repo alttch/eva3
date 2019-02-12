@@ -189,3 +189,15 @@ websocket-powered web interface with a few strings of javascript
         }
 
 no rocket science as well.
+
+Why EVA ICS has no RESTful API?
+===============================
+
+EVA ICS goal is to allow all possible clients perform API calls.
+
+RESTful is a perfect API design architecture when you are 100% sure your client
+can use it. But there's still many old equipment/software, which can perform
+HTTP/GET (plus HTTP/POST, if you're lucky) requests only.
+
+We have a plans to implement true RESTful API in EVA ICS v4, but HTTP/GET API
+compatibility will be kept at least until 2030.
