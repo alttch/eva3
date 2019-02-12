@@ -1,0 +1,39 @@
+version: '3'
+services:
+  eva-ics:
+    container_name: eva_1
+    hostname: eva_1
+    environment:
+      - auto_install=1
+      - mqtt=10.27.5.200
+      - link=1
+      - product=all
+      - layout=enterprise
+    image: altertech/eva-ics
+    restart: always
+    volumes:
+        - runtime:/runtime
+        - ui:/ui
+    networks:
+      eva:
+        ipv4_address: 10.27.5.10
+
+  mqtt:
+    container_name: mqtt
+    image: eclipse-mosquitto
+    restart: always
+    networks:
+      eva:
+        ipv4_address: 10.27.5.200
+
+networks:
+  eva:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.27.5.0/24
+
+volumes:
+  ui:
+  runtime:
