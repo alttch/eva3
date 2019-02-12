@@ -153,6 +153,19 @@ def http_remote_info(k=None):
     return '%s@%s' % (apikey.key_id(k), http_real_ip(get_gw=True))
 
 
+def cp_bearer_pre():
+    a = cherrypy.request.headers.get('Authorization')
+    if a:
+        try:
+            atype, atoken = a.split()
+        except:
+            raise cp_api_error('Invalid authorization header')
+        if atype.lower() != 'bearer':
+            raise cp_api_error(
+                'Unsupported authorization type: {}'.format(atype))
+        cherrypy.serving.request.params['k'] = atoken
+
+
 def cp_json_pre():
     try:
         if cherrypy.request.headers.get('Content-Type') == 'application/json':
@@ -408,6 +421,7 @@ def cp_client_key(_k=None):
 class GenericHTTP_API(GenericAPI):
 
     _cp_config = {
+        'tools.bearer_pre.on': True,
         'tools.json_pre.on': True,
         'tools.json_out.on': True,
         'tools.json_out.handler': cp_json_handler,
@@ -445,6 +459,8 @@ class GenericHTTP_API(GenericAPI):
         raise cp_forbidden_key()
 
     def __init__(self):
+        cherrypy.tools.bearer_pre = cherrypy.Tool(
+            'before_handler', cp_bearer_pre, priority=5)
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.auth = cherrypy.Tool(
