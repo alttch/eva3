@@ -21,6 +21,9 @@ Also, greenhouses are equipped with units:
 
 which can be turned on/off by operator or PLC.
 
+Units are using virtual relay drivers, port 1 for pump, port 2 for lamps.
+Sensors doesn't use any driver.
+
 Logic
 =====
 
@@ -80,4 +83,6 @@ Components:
 * http://10.27.11.101:8812 - UC in greenhouse 1 API/EI
 * http://10.27.11.102:8812 - UC in greenhouse 2 API/EI
 * http://10.27.11.111:8817 - LM PLC API/EI
+
+Sensor events can be generated with:
 
