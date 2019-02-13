@@ -1,5 +1,5 @@
-EVA ICS demo: Farm control
-**************************
+EVA ICS demo: Farm management
+*****************************
 
 Layout
 ======
