@@ -2,8 +2,13 @@
 
 CONTAINERS="farm_uc1:10.27.11.101:8812 farm_uc2:10.27.11.102:8812 farm_lm1:10.27.11.111:8817 farm_sfa:10.27.11.199:8828"
 
-
 MASTERKEY=`grep MASTERKEY docker-compose.yml |head -1|awk -F= '{ print $2 }'`
+
+which curl > /dev/null
+if [ $? -ne 0 ]; then
+    echo "Please install curl"
+    exit 10
+fi
 
 echo "Deploying EVA ICS cluster"
 
