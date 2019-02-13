@@ -21,8 +21,9 @@ Also, greenhouses are equipped with units:
 
 which can be turned on/off by operator or PLC.
 
-Units are using virtual relay drivers, port 1 for pump, port 2 for lamps.
-Sensors doesn't use any driver.
+In this setup, units use virtual relay drivers, port 1 for pump, port 2 for
+lamps. Sensors don't use any driver, user can set their values manually and
+simulate different events.
 
 Logic
 =====
@@ -89,3 +90,4 @@ Components:
 
 Sensor events can be generated with:
 
+*./sensor-set.sh <greenhouse_number> <temp|hum|soilm|ldr> <value>*
