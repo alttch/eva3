@@ -10,6 +10,7 @@ echo Deploying EVA ICS cluster
 
 docker-compose up -d || exit 1
 
+echo
 echo -n Waiting for cluster startup
 
 OK=0
