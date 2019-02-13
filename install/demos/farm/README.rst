@@ -69,7 +69,7 @@ Deployment
 ==========
 
 * Execute *docker-compose up* and wait until all components are up
-* Then run *./deploy.sh* to deploy farm configuration
+* Then run *./deploy.sh* to deploy demo configuration
 
 Management
 ==========
