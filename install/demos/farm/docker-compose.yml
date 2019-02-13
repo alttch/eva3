@@ -1,14 +1,14 @@
 version: '3'
 services:
   mqtt:
-    container_name: farm_mqtt
+    container_name: eva_farm_mqtt
     image: eclipse-mosquitto
     networks:
       ic:
         ipv4_address: 10.27.11.200
 
   eva-uc1:
-    container_name: farm_uc1
+    container_name: eva_farm_uc1
     hostname: farm_uc1
     environment:
       - auto_install=1
@@ -26,7 +26,7 @@ services:
         ipv4_address: 10.27.11.101
 
   eva-uc2:
-    container_name: farm_uc2
+    container_name: eva_farm_uc2
     hostname: farm_uc2
     environment:
       - auto_install=1
@@ -44,7 +44,7 @@ services:
         ipv4_address: 10.27.11.102
 
   eva-lm:
-    container_name: farm_lm1
+    container_name: eva_farm_lm1
     hostname: farm_lm1
     environment:
       - auto_install=1
@@ -62,7 +62,7 @@ services:
         ipv4_address: 10.27.11.111
 
   eva-sfa:
-    container_name: farm_sfa
+    container_name: eva_farm_sfa
     hostname: farm_sfa
     ports:
       - "8828:8828"
