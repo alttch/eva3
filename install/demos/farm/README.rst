@@ -59,10 +59,10 @@ Network and containers
   useful to run LM PLC and SFA on same EVA ICS node
 
 * **eva_farm_mqtt** local MQTT server (mosquitto), *10.27.11.200*
-* **eva_farm_uc1** - UC in greenhouse 1, *10.27.11.101*
-* **eva_farm_uc2** - UC in greenhouse 2, *10.27.11.102*
-* **eva_farm_lm1** - LM PLC (logic controller), *10.27.11.111*
-* **eva_farm_sfa** - SFA, *10.27.11.199*
+* **eva_farm_uc1** UC in greenhouse 1, *10.27.11.101*
+* **eva_farm_uc2** UC in greenhouse 2, *10.27.11.102*
+* **eva_farm_lm1** LM PLC (logic controller), *10.27.11.111*
+* **eva_farm_sfa** SFA, *10.27.11.199*
 
 Deployment
 ==========
