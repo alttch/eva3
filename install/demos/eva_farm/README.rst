@@ -68,6 +68,12 @@ Network and containers
 Deployment
 ==========
 
+Download and extract demo file:
+
+  wget https://www.eva-ics.com/download/demos/eva_farm.tgz
+  tar xzvf eva_basic.tgz
+  cd eva_basic
+
 Execute *./deploy.sh* to deploy containers and demo configuration
 
 Management

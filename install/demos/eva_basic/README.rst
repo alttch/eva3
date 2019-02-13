@@ -17,6 +17,12 @@ Network and containers
 Deployment
 ==========
 
+Download and extract demo file:
+
+  wget https://www.eva-ics.com/download/demos/eva_basic.tgz
+  tar xzvf eva_basic.tgz
+  cd eva_basic
+
 Execute *docker-compose up* to deploy containers
 
 Management
