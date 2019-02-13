@@ -79,7 +79,7 @@ The port **8828** is also mapped to main host.
 
 From command line: *docker exec -it <container_name> eva-shell*
 
-The default masterkey is: *demo123*
+Default masterkey is: *demo123*
 
 Components:
 
