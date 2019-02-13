@@ -2,6 +2,8 @@
 
 TERMFLAG=
 
+[ ${repo_uri} ] || repo_uri=https://www.eva-ics.com/download
+
 function _term {
     /opt/eva/sbin/eva-control stop
     TERMFLAG=1
@@ -29,10 +31,10 @@ while [ ! ${TERMFLAG} ]; do
         show_logs
     else
         # download EVA ICS
-        VERSION=`curl -s https://www.eva-ics.com/download/update_info.json|jq -r .version`
-        BUILD=`curl -s https://www.eva-ics.com/download/update_info.json|jq -r .build`
+        VERSION=`curl -s ${repo_uri}/update_info.json|jq -r .version`
+        BUILD=`curl -s ${repo_uri}/update_info.json|jq -r .build`
         if [ "x${BUILD}" = "x" ] || [ "x${VERSION}" = "x" ]; then
-            echo "Unable to connect to eva-ics.com. Will try again in 30 seconds..."
+            echo "Unable to connect to EVA ICS repository. Will try again in 30 seconds..."
             sleep 30
             continue
         fi
@@ -40,7 +42,7 @@ while [ ! ${TERMFLAG} ]; do
         cd /opt
         rm -rf eva
         rm -f eva-dist.tgz
-        wget https://www.eva-ics.com/download/${VERSION}/stable/eva-${VERSION}-${BUILD}.tgz -O eva-dist.tgz
+        wget ${repo_uri}/${VERSION}/stable/eva-${VERSION}-${BUILD}.tgz -O eva-dist.tgz || exit 1
         tar xzf eva-dist.tgz
         mv -f eva-${VERSION} eva
         rm -f eva-dist.tgz
