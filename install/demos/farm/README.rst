@@ -68,8 +68,7 @@ Network and containers
 Deployment
 ==========
 
-* Execute *docker-compose up* and wait until all components start
-* Then run *./deploy.sh* to deploy demo configuration
+Execute *./deploy.sh* to deploy containers and demo configuration
 
 Management
 ==========
