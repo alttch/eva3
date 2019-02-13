@@ -8,6 +8,7 @@ Common
 ------
 
     * fixes: correct backup/restore if configuration folders are symlinks
+    * fixes: correct restore if --runtime flag is specified
 
     * perfomance improvements
     * controller/node autodiscovery
