@@ -28,7 +28,7 @@ while [ ${OK} -ne 1 ]; do
 done
 
 echo
-echo "Deploying EVA ICS configuration"
+echo Deploying EVA ICS configuration
 
 for c in ${CONTAINERS}; do
     docker exec -t eva_${c} /tools/restore.sh || exit 1
