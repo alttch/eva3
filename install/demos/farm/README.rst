@@ -53,7 +53,10 @@ Network and containers
 ======================
 
 * Both UCs are statically connected to LM PLC via HTTP API
-* UCs and LM PLC are statically connected to SFA via HTTP API as well
+* UCs and LM PLC are statically connected to SFA via HTTP API as well * All
+  cluster components are running in the separate contaners
+* Components are separated for demo only, in similar real case it would be
+  useful to run LM PLC and SFA on same EVA ICS node
 
 * **eva_farm_mqtt** local MQTT server (mosquitto), *10.27.11.200*
 * **eva_farm_uc1** - UC in greenhouse 1, *10.27.11.101*
