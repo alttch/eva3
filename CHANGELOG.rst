@@ -16,7 +16,7 @@ Common
     * enterprise layout is now default item layout
     * using item ids in API key properties is not allowed any longer in
       enterprise layout, item oid (type:group/id) must always be specified
-    * Bearer authorization support (API key can be transmitted as Bearer token)
+    * X-Auth-Key header authorization support
 
 UC
 --

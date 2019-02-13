@@ -24,7 +24,7 @@ from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
-from eva.api import cp_bearer_pre
+from eva.api import cp_auth_pre
 from eva.api import cp_json_pre
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
@@ -383,7 +383,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 class SysHTTP_API(SysAPI):
 
     _cp_config = {
-        'tools.bearer_pre.on': True,
+        'tools.auth_pre.on': True,
         'tools.json_pre.on': True,
         'tools.json_out.on': True,
         'tools.json_out.handler': cp_json_handler,
@@ -425,8 +425,8 @@ class SysHTTP_API(SysAPI):
         return
 
     def __init__(self):
-        cherrypy.tools.bearer_pre = cherrypy.Tool(
-            'before_handler', cp_bearer_pre, priority=5)
+        cherrypy.tools.auth_pre = cherrypy.Tool(
+            'before_handler', cp_auth_pre, priority=5)
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.auth_sysfunc = cherrypy.Tool(
