@@ -37,9 +37,9 @@ LM PLC has the following rules:
   turn the pump off
 
 * If the pump is turned on by operator, it should be automatically turned off
-  in 30 seconds for greenhouse 1, for 45 seconds for greenhouse 2
+  in 30 seconds for greenhouse 1, in 45 seconds for greenhouse 2
 
-* The pump should not be automatically turned off, if it was turned on by
+* The pump should not be automatically turned off if it was turned on by
   operator but then measure monitoring detected that soil is dry
 
 * macro **start_manual_watering** is called by operator, other macros are
@@ -84,7 +84,7 @@ Execute *./deploy.sh* to deploy containers and demo configuration
 Management
 ==========
 
-http://10.27.11.199:8828 - SFA API/primary operator interface (#todo)
+http://10.27.11.199:8828 - SFA API/primary operator interface (#TODO)
 
 The port **8828** is also mapped to main host.
 
@@ -101,3 +101,4 @@ Components:
 Sensor events can be generated with:
 
 *./sensor-set.sh <greenhouse_number> <temp|hum|soilm|ldr> <value>*
+
