@@ -68,7 +68,7 @@ Network and containers
 Deployment
 ==========
 
-* Execute *docker-compose up* and wait until installation is finished
+* Execute *docker-compose up* and wait until all components are up
 * Then run *./deploy.sh* to deploy configuration of the components
 
 Management
