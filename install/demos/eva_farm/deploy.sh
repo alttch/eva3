@@ -40,7 +40,7 @@ echo "Verifying"
 for c in ${CONTAINERS}; do
     cn=`echo ${c} | cut -d: -f1`
     a=`echo ${c}| cut -d: -f2-`
-    echo -n "${cn}: "
+    echo -n "eva_${cn}: "
     curl -m3 -sd "k=${MASTERKEY}" http://${a}/sys-api/test|grep '"result": "OK"' > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         docker exec -t eva_${cn} /tools/restart.sh > /dev/null 2>&1
