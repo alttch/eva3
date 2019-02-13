@@ -43,7 +43,12 @@ for c in ${CONTAINERS}; do
     echo -n "${cn}: "
     curl -m3 -sd "k=${MASTERKEY}" http://${a}/sys-api/test|grep '"result": "OK"' > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-        docker exec -t eva_${cn} /tools/restart.sh > /dev/null 2>&1 || exit 1
+        docker exec -t eva_${cn} /tools/restart.sh > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            echo
+            echo "Unable to restart EVA ICS node, container: eva_${cn}"
+            exit 2
+        fi
         curl -m3 -sd "k=${MASTERKEY}" http://${a}/sys-api/test|grep '"result": "OK"' > /dev/null 2>&1
         if [ $? -ne 0 ]; then
             echo "FAILED!"

@@ -1,7 +1,7 @@
 version: '3'
 services:
   eva-ics:
-    container_name: eva_1
+    container_name: eva_basic_1
     hostname: eva_1
     environment:
       - auto_install=1
@@ -20,7 +20,7 @@ services:
         ipv4_address: 10.27.5.10
 
   mqtt:
-    container_name: eva_mqtt
+    container_name: eva_basic_mqtt
     image: eclipse-mosquitto
     networks:
       ic:
