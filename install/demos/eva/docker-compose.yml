@@ -9,6 +9,7 @@ services:
       - link=1
       - product=all
       - layout=enterprise
+      - MASTERKEY=demo123
     image: altertech/eva-ics
     restart: always
     volumes:
@@ -20,7 +21,7 @@ services:
         ipv4_address: 10.27.5.10
 
   mqtt:
-    container_name: mqtt
+    container_name: eva_mqtt
     image: eclipse-mosquitto
     restart: always
     networks:
