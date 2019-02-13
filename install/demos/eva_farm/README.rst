@@ -68,6 +68,9 @@ Network and containers
 Deployment
 ==========
 
+Requirements: `Docker <https://www.docker.com/>`_, `docker-compose
+<https://docs.docker.com/compose/>`_.
+
 Download and extract demo file:
 
 .. code-block:: bash
