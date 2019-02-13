@@ -7,6 +7,8 @@ EVA ICS CHANGELOG
 Common
 ------
 
+    * fixes: correct backup/restore if configuration folders are symlinks
+
     * perfomance improvements
     * controller/node autodiscovery
     * JSON API via MQTT
