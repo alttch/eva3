@@ -70,9 +70,11 @@ Deployment
 
 Download and extract demo file:
 
+.. code-block:: bash
+
   wget https://www.eva-ics.com/download/demos/eva_farm.tgz
-  tar xzvf eva_basic.tgz
-  cd eva_basic
+  tar xzvf eva_farm.tgz
+  cd eva_farm
 
 Execute *./deploy.sh* to deploy containers and demo configuration
 
