@@ -40,7 +40,7 @@ exec_before_save = None
 exec_after_save = None
 cmds = []
 
-update_repo = 'https://www.eva-ics.com/download'
+update_repo = 'https://get.eva-ics.com'
 interactive_mode = False
 
 import eva.core
