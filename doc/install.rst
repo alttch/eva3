@@ -194,6 +194,15 @@ Using EVA Shell
 
 * Type *update* command in EVA Shell
 
+.. note::
+
+    EVA ICS repository URL has been changed to https://get.eva-ics.com. If
+    you've got "Update completed" message but update process hasn't even been
+    started, try executing *update* command specifying EVA ICS repository
+    directly:
+    
+    *update -u https://get.eva-ics.com*
+
 Using system shell
 ------------------
 
