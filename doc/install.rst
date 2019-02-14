@@ -89,8 +89,8 @@ distribution and unpack it e.g. to */opt/eva*:
 .. code-block:: bash
 
     cd /opt
-    wget https://www.eva-ics.com/download/3.x.x/stable/eva-3.x.x-xxxxxxxxxx.tgz
-    tar xzvf eva-3.x.x-xxxxxxxxxx.tgz
+    curl https://get.eva-ics.com/3.x.x/stable/eva-3.x.x-xxxxxxxxxx.tgz -o eva.tgz
+    tar xzvf eva.tgz
     mv eva-3.x.x eva
     cd eva
 
@@ -203,8 +203,8 @@ Using system shell
 .. code-block:: bash
 
     curl -s <UPDATE_SCRIPT_URL> | bash /dev/stdin
-    #i.e.
-    #curl -s https://www.eva-ics.com/download/3.1.1/stable/update.sh | bash /dev/stdin
+    #e.g.
+    #curl -s https://get.eva-ics.com/3.1.1/stable/update.sh | bash /dev/stdin
 
 * If updating from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if

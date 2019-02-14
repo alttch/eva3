@@ -55,7 +55,7 @@ echo "- Downloading new version tarball"
 
 cd _update || exit 1
 
-wget ${EVA_REPOSITORY_URL}/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz || exit 1
+curl ${EVA_REPOSITORY_URL}/${VERSION}/nightly/eva-${VERSION}-${BUILD}.tgz -o eva-${VERSION}-${BUILD}.tgz || exit 1
 
 echo "- Extracting"
 

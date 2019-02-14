@@ -75,7 +75,7 @@ Download and extract demo file:
 
 .. code-block:: bash
 
-  wget https://www.eva-ics.com/download/demos/eva_farm.tgz
+  curl https://get.eva-ics.com/demos/eva_farm.tgz -o eva_farm.tgz
   tar xzvf eva_farm.tgz
   cd eva_farm
 

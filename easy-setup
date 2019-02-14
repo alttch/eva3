@@ -29,7 +29,7 @@ REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 pip3 sha256sum curl wget"
+REQUIRED="realpath python3 pip3 sha256sum curl"
 
 MAX_START_WAIT=180
 

@@ -3,7 +3,7 @@ FROM ubuntu
 RUN apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade
 RUN env DEBIAN_FRONTEND=noninteractive apt-get install -y tzdata
 RUN ln -sf /usr/share/zoneinfo/Etc/UTC /etc/localtime
-RUN apt-get -y install wget curl python3 python3-pip python3-pandas python3-cryptography python3-pysnmp4 jq vim-tiny cron iproute2 net-tools psmisc
+RUN apt-get -y install curl python3 python3-pip python3-pandas python3-cryptography python3-pysnmp4 jq vim-tiny cron iproute2 net-tools psmisc
 RUN rm -f /etc/cron.daily/*
 RUN apt-get -y install logrotate
 # install python modules

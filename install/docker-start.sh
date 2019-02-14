@@ -2,7 +2,7 @@
 
 TERMFLAG=
 
-[ ${repo_uri} ] || repo_uri=https://www.eva-ics.com/download
+[ ${repo_uri} ] || repo_uri=https://get.eva-ics.com
 
 function _term {
     /opt/eva/sbin/eva-control stop
@@ -42,7 +42,7 @@ while [ ! ${TERMFLAG} ]; do
         cd /opt
         rm -rf eva
         rm -f eva-dist.tgz
-        wget ${repo_uri}/${VERSION}/stable/eva-${VERSION}-${BUILD}.tgz -O eva-dist.tgz || exit 1
+        curl ${repo_uri}/${VERSION}/stable/eva-${VERSION}-${BUILD}.tgz -o eva-dist.tgz || exit 1
         tar xzf eva-dist.tgz
         mv -f eva-${VERSION} eva
         rm -f eva-dist.tgz
