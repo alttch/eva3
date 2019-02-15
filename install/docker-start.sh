@@ -55,7 +55,7 @@ while [ ! ${TERMFLAG} ]; do
         if [ ${layout} ]; then
             sed -i "s/^layout =.*/layout = ${layout}/g" eva/etc/*.ini-dist
         fi
-        # turn on debug mode mode
+        # turn on debug mode
         if [ ${debug} ] || [ ${development_mode} ]; then
             [ ${development_mode} ] && devmode='\ndevelopment = yes' || devmode=
             sed -i "s/^debug =.*/debug = yes${devmode}/g" eva/etc/*.ini-dist
