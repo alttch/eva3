@@ -32,8 +32,7 @@ while [ ! ${TERMFLAG} ]; do
     else
         cd /opt
         # download EVA ICS
-        if [ ${download} ]; then
-            #env force_version=${force_version} force_build=${force_build}
+        if [ ${download} ] || [ ${force_distro} ]; then
             /download.sh
             if [ $? -ne 0 ]; then
                 echo "Unable to connect to EVA ICS repository. Will try again in 30 seconds..."
@@ -80,6 +79,10 @@ while [ ! ${TERMFLAG} ]; do
         fi
         cd /opt/eva
         rm -rf runtime/*_notify.d runtime/*_remote_*.d
+        if [ ${skip_install} ]; then
+            echo "Done. Sleeping forever"
+            while [ 1 ]; do sleep 8640; done
+        fi
         ./easy-setup --force ${AUTO_OPTS} ${MQTT_OPTS} ${mqtt} ${LINK_OPTS} ${PRODUCT_OPTS} ${product}
         if [ $? -eq 0 ]; then
             # create install flag

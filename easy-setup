@@ -516,7 +516,7 @@ fi
 
 # check mods
 
-if [ ! ${SKIP_CHECK_MODS} ]; then
+if [ ! $SKIP_CHECK_MODS ]; then
     echo "Checking mods"
     ./install/check-mods install || exit 1
     echo
