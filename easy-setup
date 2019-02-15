@@ -466,11 +466,13 @@ if [ $LINK -eq 1 ] && [ "x$MQTT_HOST" = "x" ]; then
     option_error
 fi
 
-e=0
-for r in ${REQUIRED}; do
-    check_required_exec $r || e=1
-done
-[ $e -ne 0 ] && exit 1
+if [ ! $SKIP_CHECK ]; then
+    e=0
+    for r in ${REQUIRED}; do
+        check_required_exec $r || e=1
+    done
+    [ $e -ne 0 ] && exit 1
+fi
 
 
 D=`realpath $0`
@@ -516,7 +518,7 @@ fi
 
 # check mods
 
-if [ ! $SKIP_CHECK_MODS ]; then
+if [ ! $SKIP_CHECK ]; then
     echo "Checking mods"
     ./install/check-mods install || exit 1
     echo
@@ -596,9 +598,9 @@ EOF
         exit 5
     fi
     echo "Creating UC keys"
-    create_operator_key uc || exit 1
-    create_default_key uc cmd,device || exit 1
-    save_controller_state uc || exit 1
+    create_operator_key uc || exit 21
+    create_default_key uc cmd,device || exit 22
+    save_controller_state uc || exit 23
     echo
 fi
 
@@ -655,9 +657,9 @@ EOF
         exit 5
     fi
     echo "Creating LM keys"
-    create_operator_key lm || exit 1
-    create_default_key lm dm_rule_props,dm_rules_list || exit 1
-    save_controller_state lm || exit 1
+    create_operator_key lm || exit 21
+    create_default_key lm dm_rule_props,dm_rules_list || exit 22
+    save_controller_state lm || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
         (./sbin/eva-tinyapi -C lm -F append_controller \
@@ -724,9 +726,9 @@ EOF
         exit 5
     fi
     echo "Creating SFA keys"
-    create_operator_key sfa || exit 1
-    create_default_key sfa || exit 1
-    save_controller_state sfa || exit 1
+    create_operator_key sfa || exit 21
+    create_default_key sfa || exit 22
+    save_controller_state sfa || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
         (./sbin/eva-tinyapi -C sfa -F append_controller \
