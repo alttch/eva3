@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[ ${debug} ] && set -o xtrace
+
 UC_ENABLED=
 LM_ENABLED=
 SFA_ENABLED=
