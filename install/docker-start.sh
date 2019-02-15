@@ -52,8 +52,13 @@ while [ ! ${TERMFLAG} ]; do
         # connect runtime volume if exists
         [ -d /runtime ] && ln -sf /runtime /opt/eva/runtime
         # set layout if defined
-        if [ "x${layout}" != "x" ]; then
+        if [ ${layout} ]; then
             sed -i "s/^layout =.*/layout = ${layout}/g" eva/etc/*.ini-dist
+        fi
+        # turn on debug mode mode
+        if [ ${debug} ] || [ ${development_mode} ]; then
+            [ ${development_mode} ] && devmode='\ndevelopment = yes' || devmode=
+            sed -i "s/^debug =.*/debug = yes${devmode}/g" eva/etc/*.ini-dist
         fi
         # connect ui volume if exists
         if [ -d /ui ]; then
