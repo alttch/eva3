@@ -794,6 +794,8 @@ fi
 
 echo "Setup completed!"
 echo
+echo "EVA ICS v`./sbin/eva-tinyapi -V` build `./sbin/eva-tinyapi -B`"
+echo
 echo "MASTERKEY: ${MASTERKEY}"
 echo "Controller default key: ${DEFAULTKEY}"
 echo "Operator key: ${OPKEY}"
