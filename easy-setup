@@ -516,10 +516,11 @@ fi
 
 # check mods
 
-echo "Checking mods"
-./install/check-mods install || exit 1
-
-echo
+if [ ! ${SKIP_CHECK_MODS} ]; then
+    echo "Checking mods"
+    ./install/check-mods install || exit 1
+    echo
+fi
 
 # ASK SOME QUESTIONS
 
