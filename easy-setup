@@ -110,7 +110,11 @@ function save_controller_state {
 
 function create_operator_key {
     local P=$1
-    ./sbin/eva-tinyapi -S -C $P -F list_key_props i=operator | grep ERROR > /dev/null 2>&1 || return 0
+    ./sbin/eva-tinyapi -S -C $P -F list_key_props i=operator | grep ERROR > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Key 'operator' already exists, recreating"
+        ( ./sbin/eva-tinyapi -S -C $P -F destroy_key i=operator | grep OK ) > /dev/null 2>&1 || return 1
+    fi
     (./sbin/eva-tinyapi -S -C $P -F create_key \
         i=operator | grep key) > /dev/null 2>&1 || return 1
     (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
@@ -129,7 +133,11 @@ function create_operator_key {
 function create_default_key {
     local P=$1
     local ALLOW=$2
-    ./sbin/eva-tinyapi -S -C $P -F list_key_props i=default | grep ERROR > /dev/null 2>&1 || return 0
+    ( ./sbin/eva-tinyapi -S -C $P -F list_key_props i=default | grep ERROR ) > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "Key 'default' already exists, recreating"
+        ( ./sbin/eva-tinyapi -S -C $P -F destroy_key i=default | grep OK ) > /dev/null 2>&1 || return 1
+    fi
     (./sbin/eva-tinyapi -S -C $P -F create_key \
         i=default | grep key) > /dev/null 2>&1 || return 1
     (./sbin/eva-tinyapi -S -C $P -F set_key_prop \
