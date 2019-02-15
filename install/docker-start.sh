@@ -84,13 +84,15 @@ while [ ! ${TERMFLAG} ]; do
             while [ 1 ]; do sleep 8640; done
         fi
         ./easy-setup --force ${AUTO_OPTS} ${MQTT_OPTS} ${mqtt} ${LINK_OPTS} ${PRODUCT_OPTS} ${product}
-        if [ $? -eq 0 ]; then
+        result=$?
+        if [ ${result} -eq 0 ]; then
             # create install flag
             touch /.installed
             trap _term SIGTERM
             show_logs
         else
-            sleep 10
+            echo "SETUP FAILED. CODE: ${result}"
+            while [ 1 ]; do sleep 86400; done
         fi
     fi
 done
