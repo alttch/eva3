@@ -17,6 +17,8 @@ RUN ln -sf /opt/eva/bin/eva-shell /usr/local/bin/eva-shell
 # copy dstart
 COPY docker-start.sh /start
 COPY docker-stop.sh /stop
+COPY download.sh /
+RUN cd /opt && /download.sh
 RUN ln -sf /stop /usr/local/bin/stop
 EXPOSE 162/udp 8881/udp 8812 8813 8817 8818 8828 8829
 CMD [ "/bin/bash", "/start" ]

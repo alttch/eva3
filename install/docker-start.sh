@@ -30,21 +30,25 @@ while [ ! ${TERMFLAG} ]; do
         /opt/eva/sbin/eva-control start
         show_logs
     else
+        cd /opt
         # download EVA ICS
-        VERSION=`curl -s ${repo_uri}/update_info.json|jq -r .version`
-        BUILD=`curl -s ${repo_uri}/update_info.json|jq -r .build`
-        if [ "x${BUILD}" = "x" ] || [ "x${VERSION}" = "x" ]; then
-            echo "Unable to connect to EVA ICS repository. Will try again in 30 seconds..."
+        if [ ${download} ]; then
+            #env force_version=${force_version} force_build=${force_build}
+            /download.sh
+            if [ $? -ne 0 ]; then
+                echo "Unable to connect to EVA ICS repository. Will try again in 30 seconds..."
+                sleep 30
+                continue
+            fi
+        fi
+        find . -maxdepth 1 -type d -name "eva*" -exec rm -rf {} \;
+        tar xzf eva-dist.tgz
+        if [ $? -ne 0 ]; then
+            echo "Unable to get EVA ICS distribution. Will try again in 30 seconds..."
             sleep 30
             continue
         fi
-        mkdir -p /opt
-        cd /opt
-        rm -rf eva
-        rm -f eva-dist.tgz
-        curl ${repo_uri}/${VERSION}/stable/eva-${VERSION}-${BUILD}.tgz -o eva-dist.tgz || exit 1
-        tar xzf eva-dist.tgz
-        mv -f eva-${VERSION} eva
+        find . -maxdepth 1 -type d -name "eva-*" -exec mv -f {} eva \;
         rm -f eva-dist.tgz
         # connect runtime volume if exists
         [ -d /runtime ] && ln -sf /runtime /opt/eva/runtime
