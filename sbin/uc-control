@@ -36,8 +36,8 @@ if [ ${UC_SUPERVISORD} ]; then
             exit $?
         ;;
         restart)
-            supervisorctl restart watchdog-${UC_SUPERVISORD}
             supervisorctl restart ${UC_SUPERVISORD}
+            supervisorctl restart watchdog-${UC_SUPERVISORD}
             exit $?
         ;;
     esac

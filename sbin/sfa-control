@@ -44,8 +44,8 @@ if [ ${SFA_SUPERVISORD} ]; then
             exit $?
         ;;
         restart)
-            supervisorctl restart watchdog-${SFA_SUPERVISORD}
             supervisorctl restart ${SFA_SUPERVISORD}
+            supervisorctl restart watchdog-${SFA_SUPERVISORD}
             exit $?
         ;;
     esac
