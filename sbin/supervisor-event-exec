@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+import subprocess
+import sys
+try:
+    import xmlrpc.client as xmlrpclib
+except ImportError:
+    import xmlrpclib
+
+from supervisor import childutils
+from supervisor.options import make_namespec
+from supervisor.states import ProcessStates
+
+
+class SupervisorEventExec(object):
+
+    def write(self, msg):
+        self.stderr.write('%s\n' % msg)
+        self.stderr.flush()
+
+    def __init__(self, rpc, command, restart_programs, restart_any_program):
+        self.rpc = rpc
+        self.command = command
+        self.programs = restart_programs
+        self.any = restart_any_program
+        self.stdin = sys.stdin
+        self.stdout = sys.stdout
+        self.stderr = sys.stderr
+
+    def _restart(self):
+        try:
+            specs = self.rpc.supervisor.getAllProcessInfo()
+        except Exception as e:
+            write('Exception retrieving process info %s, not acting' % e)
+            return
+        for spec in specs:
+            name = spec['name']
+            group = spec['group']
+            namespec = make_namespec(group, name)
+            if name in self.programs or namespec in self.programs or self.any:
+                try:
+                    self.rpc.supervisor.stopProcess(namespec)
+                except xmlrpclib.Fault as e:
+                    self.write('Failed to stop process %s: %s' % (namespec, e))
+
+                try:
+                    self.rpc.supervisor.startProcess(namespec)
+                except xmlrpclib.Fault as e:
+                    self.write('Failed to start process %s: %s' % (namespec, e))
+                else:
+                    self.write('%s restarted' % namespec)
+
+    def runforever(self):
+        while True:
+            headers, payload = childutils.listener.wait(self.stdin, self.stdout)
+            if headers['eventname'].startswith('TICK'):
+                self.write("Executing command: {}.".format(self.command))
+                exit_status = subprocess.Popen(
+                    self.command,
+                    shell=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE).wait()
+                if exit_status != 0 and self.programs:
+                    self.write(
+                        "The command exit status was {}, restarting processes.".
+                        format(exit_status))
+                    self._restart()
+                pass
+            childutils.listener.ok(self.stdout)
+
+
+def main():
+    import argparse
+    import os
+    parser = argparse.ArgumentParser("supervisor-event-exec")
+    parser.add_argument(
+        "-e",
+        "--execute",
+        metavar="COMMAND",
+        dest="command",
+        required=True,
+        help="Command or script to execute on supervisor events.")
+    parser.add_argument(
+        "-p",
+        "--programs",
+        type=str,
+        metavar="PROGRAM",
+        required=True,
+        nargs="*",
+        help=
+        "Supervisor processes name to be restarted " + \
+                "on non-zero exit status if in RUNNING state."
+    )
+    parser.add_argument(
+        "-a",
+        "--restart-any-program",
+        action="store_true",
+        help=
+        "Restart any supervisor processes in RUNNING state " + \
+                "on non-zero exit status."
+    )
+    args = parser.parse_args()
+
+    try:
+        rpc = childutils.getRPCInterface(os.environ)
+    except KeyError as e:
+        if e.args[0] == "SUPERVISOR_SERVER_URL":
+            print(
+                "supervisor-event-exec must be run as a " + \
+                        "supervisor event listener."
+            )
+            sys.exit(1)
+        else:
+            raise
+
+    event_exec = SupervisorEventExec(rpc, args.command, args.programs,
+                                     args.restart_any_program)
+    event_exec.runforever()
+
+
+if __name__ == "__main__":
+    main()
