@@ -19,6 +19,30 @@ WATCHDOG=${EVA_DIR}/sbin/watchdog.sh
 
 source ./etc/eva_servers
 
+if [ ${UC_SUPERVISORD} ]; then
+    case $1 in
+        start)
+            supervisorctl start ${UC_SUPERVISORD}
+            supervisorctl start watchdog-${UC_SUPERVISORD}
+            exit $?
+        ;;
+        stop)
+            supervisorctl stop watchdog-${UC_SUPERVISORD}
+            supervisorctl stop ${UC_SUPERVISORD}
+            exit $?
+        ;;
+        status)
+            supervisorctl status ${UC_SUPERVISORD}
+            exit $?
+        ;;
+        restart)
+            supervisorctl restart watchdog-${UC_SUPERVISORD}
+            supervisorctl restart ${UC_SUPERVISORD}
+            exit $?
+        ;;
+    esac
+fi
+
 function exec_cmd {
     if [ "x${UC_USER}" == "x" ]; then
         $*
@@ -92,9 +116,9 @@ logrotate)
 status)
     ps xa|grep -v grep|grep ${UC} > /dev/null 2>&1
     if [ $? == 0 ]; then
-        echo "running"
+        echo " running "
     else
-        echo "stopped"
+        echo " stopped "
     fi
     ;;
 version)

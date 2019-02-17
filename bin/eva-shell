@@ -359,14 +359,14 @@ sys.argv = {argv}
         result = {}
         if c:
             try:
-                result[c] = out[0].strip() == 'running'
+                result[c] = out[0].strip().lower.find(' running ') != -1
             except:
                 return self.local_func_result_failed
         else:
             for r in out:
                 try:
-                    c, s = r.strip().split(': ')
-                    result[c.lower()] = s == 'running'
+                    c, s = r.strip().split(': ', 1)
+                    result[c.lower()] = s.lower().find(' running ') != -1
                 except:
                     pass
         return 0, result

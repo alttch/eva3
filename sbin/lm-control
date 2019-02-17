@@ -27,6 +27,30 @@ function exec_cmd {
     fi
 }
 
+if [ ${LM_SUPERVISORD} ]; then
+    case $1 in
+        start)
+            supervisorctl start ${LM_SUPERVISORD}
+            supervisorctl start watchdog-${LM_SUPERVISORD}
+            exit $?
+        ;;
+        stop)
+            supervisorctl stop watchdog-${LM_SUPERVISORD}
+            supervisorctl stop ${LM_SUPERVISORD}
+            exit $?
+        ;;
+        status)
+            supervisorctl status ${LM_SUPERVISORD}
+            exit $?
+        ;;
+        restart)
+            supervisorctl restart watchdog-${LM_SUPERVISORD}
+            supervisorctl restart ${LM_SUPERVISORD}
+            exit $?
+        ;;
+    esac
+fi
+
 case $1 in
 start)
     echo 'Starting LM server'

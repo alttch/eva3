@@ -1427,7 +1427,8 @@ class ControllerCLI(object):
         out = self.exec_control_script('status', collect_output=True)
         result = {}
         try:
-            result[self._management_controller_id] = out[0].strip() == 'running'
+            result[self._management_controller_id] = out[0].strip().lower(
+            ).find(' running ') != -1
         except:
             return self.local_func_result_failed
         return 0, result

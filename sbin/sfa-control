@@ -27,6 +27,30 @@ function exec_cmd {
     fi
 }
 
+if [ ${SFA_SUPERVISORD} ]; then
+    case $1 in
+        start)
+            supervisorctl start ${SFA_SUPERVISORD}
+            supervisorctl start watchdog-${SFA_SUPERVISORD}
+            exit $?
+        ;;
+        stop)
+            supervisorctl stop watchdog-${SFA_SUPERVISORD}
+            supervisorctl stop ${SFA_SUPERVISORD}
+            exit $?
+        ;;
+        status)
+            supervisorctl status ${SFA_SUPERVISORD}
+            exit $?
+        ;;
+        restart)
+            supervisorctl restart watchdog-${SFA_SUPERVISORD}
+            supervisorctl restart ${SFA_SUPERVISORD}
+            exit $?
+        ;;
+    esac
+fi
+
 case $1 in
 start)
     echo 'Starting SFA server'

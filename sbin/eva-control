@@ -41,15 +41,15 @@ function start_controller() {
 case $1 in
 start)
     echo 'Starting EVA'
-    [ "x${UC_ENABLED}" == "xyes" ] && (start_controller uc || exit 1)
-    [ "x${LM_ENABLED}" == "xyes" ] && (start_controller lm || exit 1)
-    [ "x${SFA_ENABLED}" == "xyes" ] && (start_controller sfa || exit 1)
+    [ ${UC_SUPERVISORD} ] || [ "x${UC_ENABLED}" == "xyes" ] && (start_controller uc || exit 1)
+    [ ${LM_SUPERVISORD} ] || [ "x${LM_ENABLED}" == "xyes" ] && (start_controller lm || exit 1)
+    [ ${SFA_SUPERVISORD} ] || [ "x${SFA_ENABLED}" == "xyes" ] && (start_controller sfa || exit 1)
     ;;
 stop)
     echo 'Stopping EVA'
-    [ "x${SFA_ENABLED}" == "xyes" ] && ./sbin/sfa-control stop
-    [ "x${LM_ENABLED}" == "xyes" ] && ./sbin/lm-control stop
-    [ "x${UC_ENABLED}" == "xyes" ] && ./sbin/uc-control stop
+    [ ${SFA_SUPERVISORD} ] || [ "x${SFA_ENABLED}" == "xyes" ] && ./sbin/sfa-control stop
+    [ ${LM_SUPERVISORD} ] || [ "x${LM_ENABLED}" == "xyes" ] && ./sbin/lm-control stop
+    [ ${UC_SUPERVISORD} ] || [ "x${UC_ENABLED}" == "xyes" ] && ./sbin/uc-control stop
     exit 0
     ;;
 restart)
@@ -58,9 +58,9 @@ restart)
     exit 0
     ;;
 status)
-    [ "x${UC_ENABLED}" == "xyes" ] && (echo -n "UC: "; ./sbin/uc-control status)
-    [ "x${LM_ENABLED}" == "xyes" ] && (echo -n "LM: "; ./sbin/lm-control status)
-    [ "x${SFA_ENABLED}" == "xyes" ] && (echo -n "SFA: "; ./sbin/sfa-control status)
+    [ ${UC_SUPERVISORD} ] || [ "x${UC_ENABLED}" == "xyes" ] && (echo -n "UC: "; ./sbin/uc-control status)
+    [ ${LM_SUPERVISORD} ] || [ "x${LM_ENABLED}" == "xyes" ] && (echo -n "LM: "; ./sbin/lm-control status)
+    [ ${SFA_SUPERVISORD} ] || [ "x${SFA_ENABLED}" == "xyes" ] && (echo -n "SFA: "; ./sbin/sfa-control status)
     ;;
 *)
     echo "Usage: eva-control start|stop|restart"
