@@ -1,8 +1,8 @@
 /*
  * Author: Altertech Group, https://www.altertech.com/
- * Copyright: (C) 2012-2018 Altertech Group
+ * Copyright: (C) 2012-2019 Altertech Group
  * License: Apache License 2.0
- * Version: 3.1.1
+ * Version: 3.1.2
  */
 
 /**
