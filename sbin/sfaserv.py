@@ -1,6 +1,6 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2018 Altertech Group"
-__license__ = "https://www.eva-ics.com/license"
+__license__ = "Apache License 2.0"
 __version__ = "3.1.1"
 
 import sys
@@ -42,7 +42,7 @@ for production use sfa-control only to start/stop SFA
 """)
 
 
-product_build = 2018102705
+product_build = 2019021801
 
 product_code = 'sfa'
 
