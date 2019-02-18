@@ -56,6 +56,7 @@ class LPI(GenericLPI):
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         time_start = time()
         _state_in = state_in
+        # for events - skip update if PHI not provided any value
         if _state_in: evh = True
         else: evh = False
         if cfg is None or cfg.get(self.io_label) is None:
