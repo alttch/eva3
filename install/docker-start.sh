@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ $$ -ne 1 ]; then
+    echo "This is Docker container startup script"
+    exit 99
+fi
+
 TERMFLAG=
 
 [ ${repo_uri} ] || repo_uri=https://get.eva-ics.com
@@ -18,8 +23,6 @@ function show_logs {
         wait $c
     done
 }
-
-echo $$ > /var/run/start.pid
 
 while [ ! ${TERMFLAG} ]; do
     if [ -f /.installed  ]; then
