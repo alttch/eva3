@@ -6,7 +6,7 @@
  *
  * @author      Altertech Group, https://www.altertech.com/
  * @copyright   Copyright (C) 2012-2018 Altertech Group
- * @license     https://www.eva-ics.com/license
+ * @license     Apache License 2.0
  * @version     3.1.2
  */
 
