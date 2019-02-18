@@ -1,271 +1,178 @@
-EVA ICS License Agreement
-=========================
+Copyright Altertech Group and other contributors, https://www.altertech.com/
 
-Basic provisions
-----------------
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
 
-* You can use EVA ICS as you wish, for personal commercial or non-commercial
-  use, including any code change, except deletion of copyright texts and contact
-  information of authors.
-* You cannot clone EVA ICS, or create your own similar products on the basis of
-  its code.
-* You cannot carry out public commercial support of EVA ICS without additional
-  certification or authorization from us.
-* You cannot include EVA ICS in your own commercial products without additional
-  certification or permission from us.
-* In the absence of additional agreements for technical support, you are fully
-  responsible for any damage caused during the use of our product.
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
-License agreement
------------------
+   1. Definitions.
 
-Version as of October 3, 2017
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
 
-This Agreement is a legally binding User Agreement with Altertech s.r.o. (a
-company established in accordance with the legislation of the Czech Republic)
-and/or Altertech LLC (a company established in accordance with the legislation
-of Ukraine) and/or other legal entities of the ALTERTECH group of companies –
-(hereinafter, where appropriate, separately referred to as the Supplier) which
-operate independently of each other, for the acquisition and use by the User of
-EVA ICS "Universal Controller, Logic Manager PLC, SCADA Final Aggregator, SFA
-Framework, EVA libraries, EVA technical documentation and its components"
-(hereinafter referred to as the Product). The User’s consent presented in
-electronic form, installation of the Product or its use mean that the User
-accepts the terms of this Agreement on his own behalf and on behalf of another
-natural or legal person which he represents or for the installation of
-which the User purchases the Product from the Supplier. If you do not agree to
-the terms of this Agreement, do not continue the installation process of the
-Product and remove any previously installed copies of the Product.
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
 
-This Agreement relates to the use by the User of the Product and services (in
-particular, all updates and upgrades) of the Supplier and all related
-Documentation. The Documentation in this Agreement refers to technical
-documentation, user manuals and instructions that the Supplier provides with
-the Product. This Agreement supersedes and replaces all previously created
-agreements concerning the previous versions of the Product. The Supplier may
-amend this Agreement any time by notifying the User thereof in accordance with
-the terms of this Agreement. Further use of the Product for at least 7 calendar
-days after the date of notification means that the User accepts amendments to
-this Agreement. The Supplier may require the User to accept the changes entered
-to the Agreement to continue using the previously acquired Product.
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
 
-If the User does not accept amendments to this Agreement, the Supplier has the
-right to limit the period of use of the Product by the User to which the
-amendments refer.
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
 
-1. License
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
 
-    1. The Supplier grants to the User a limited and non-exclusive license that
-       is not transferable (without the right to sub-license) for the use of the
-       Product and Documentation, including all continuations and updates,
-       provided the User accepts the terms of this Agreement.
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
 
-2. Terms of Use of the Product
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
 
-    1. The User can install and use the Product on any devices compatible with
-       the Product (hereinafter such devices, including mobile devices, are
-       referred to as the Devices).
-    2. The Product can be used by the User for internal corporate, commercial
-       and business and/or personal non-commercial use.
-    3. The User has the right to use the Product in any way for educational
-       purposes.
-    4. The User has the right to make changes to the source code of the Product
-       on a particular Device except for:
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
 
-        1. deletion of the Supplier’s copyright;
-        2. deletion or change of links to the Web sites of the Supplier and/or
-           the Product;
-        3. deletion of any other contact information of the Supplier included in
-           the Product.
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
 
-    5. THE USE OF THE PRODUCT IN ANY WAY NOT SPECIFIED DIRECTLY IN THIS CLAUSE,
-       AND ALSO RESALE AND FURTHER DISTRIBUTION OF THE PRODUCT IS A SERIOUS
-       VIOLATION OF THIS AGREEMENT AND COPYRIGHT LEGISLATION.
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
 
-3. Updates
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
 
-    1. The Supplier may periodically update or replace the Product without the
-       User’s separate consent and permission. As a result, in some cases when
-       the User will not be able to use the Product (or certain functions of
-       the Product) until he installs or activates the updates in full. In
-       accordance with this Agreement, updates are considered to be a part of
-       the Product.  Updates include both addition or removal of separate
-       functions of the Product, and complete replacement of it.
-    2. The Supplier determines the content, functions and functionality of the
-       updated Product at his own discretion. It is possible that the User will
-       need to download and allow the installation of all available updates in
-       order to obtain the maximum benefit from the Product.
-    3. The Supplier may terminate Product support until the User accepts and
-       installs all the updates. The Supplier, at his own discretion,
-       determines when and which updates should be provided, but he is not
-       obliged to provide the User with access to any updates.
-    4. The Supplier, at his own discretion, may terminate the delivery of
-       updates for any version of the Product, or updates that support the
-       use of the Product with certain versions of operating systems,
-       browsers and other programs for which the Product is designed.
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
 
-4. Property rights
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
 
-    1. The Product and the Documentation are the intellectual property of the
-       Supplier, which is protected by copyright laws, international
-       agreements and other provisions of the current legislation of the
-       country in which the Product is used. The structure, organization
-       and code of the Product are an important trade secret and
-       confidential information of the Supplier.
-    2. Except as provided in this License the ownership, installation and use
-       of the Product does not give the User any intellectual property
-       rights to the Product and Documentation. All rights to the Product
-       and Documentation, including all related types of copyright, right
-       to trade secret, trademarks and other intellectual property rights,
-       belong to the Supplier.
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
 
-5. Restrictions
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
 
-    1. The User does not have the right to copy and use the Product and
-       Documentation in a manner different from that stated in Clause 2 of this
-       Agreement. The User does not have the right to carry out the following
-       actions or allow them to be carried out by third parties:
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
 
-        1. Clone the Product or create any new product with the components of
-           the Product and/or include the Product or its components in his own
-           commercial software/hardware products or software/hardware products
-           of third parties, excluding the following:
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
 
-            1. The product is an appendix or extension of the Product and cannot
-               function without the original Product installed separately;
-            2. The product components included in the Product are used for work
-               with a separately installed Product.
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
 
-    2. Modify the Product for further public distribution in any way;
-    3. Sub-license Product and/or Documentation;
-    4. Use the Product to provide or create a product or services that compete
-       with this Product;
-    5. Publicly implement commercial support of the Product without
-       certification or written authorization of the Supplier;
-    6. Bypass, attempt to bypass, authorize or assist third parties to bypass
-       restrictions on installation or use of copies of the Product.
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
 
-6. Warranty obligations
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
 
-    1. In accordance with Clause 6, the Supplier provides guarantees and is
-       obliged to provide support for the Product only subject to conclusion of
-       an additional agreement for support of the Product between the User and
-       the Supplier.
-    2. ALL PRODUCTS PROVIDED TO THE USER FREE OF CHARGE, ARE PROVIDED ON THE
-       TERMS “AS IS”, “WITH ALL POSSIBLE DISADVANTAGES” AND “ON THE TERMS OF
-       AVAILABILITY” WITHOUT ANY WARRANTIES AND SUPPORT OR OTHER SERVICES FROM
-       THE SUPPLIER.
-    3. The Supplier is liable for any emergency situations, software or hardware
-       failure, damage to health, trespassing, data loss or other losses caused
-       by the Product, only if the User enters into an additional warranty
-       agreement with the Supplier.
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
 
-7. Confidentiality
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
 
-    1. The Supplier may process information and data (for example personal
-       information and/or personal data) associated with the User of the Product
-       and/or any other device using the Product.
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
 
-8. Termination of the agreement
-
-    1. This Agreement will be immediately terminated in case of non-compliance
-       by the User with any obligations set forth therein, which will result in
-       loss of all rights associated with the update of the Product or
-       reimbursement of costs. The Supplier reserves the right to take other
-       legal measures if the violation of this Agreement by the User adversely
-       affects the Supplier, its distributors or agents. If a specific provision
-       of this Agreement is found to be invalid or unlawful, the other parts of
-       this Agreement will remain in full force and effect.
-
-9. Other provisions
-
-    1. This Agreement is the entire agreement between the User and the Supplier
-       on the use by the User of the Product and Documentation. This Agreement
-       supersedes all previous and current verbal and written communications,
-       proposals, approvals, warranties and statements relating to the use of
-       the Product and Documentation. Notwithstanding the foregoing, this
-       Agreement will not violate the user’s rights guaranteed by the current
-       consumer protection legislation or other applicable laws in the User’s
-       jurisdiction, the effect of which cannot be canceled by the Agreement.
-       This Agreement, as well as the Documentation, will match as much as
-       possible among each other, but in case of a conflict they will have
-       legal force in the following order: (1) this Agreement (2)
-       Documentation.
-    2. Notifications. The Supplier may send any messages to the User at any
-       time by e-mail, through a pop-up window, dialog window or other means,
-       even if the User cannot receive this message until he launches the
-       Product.  Any notification is deemed to be delivered when the Supplier
-       sends it to the User or makes it available through the Product,
-       regardless of the actual date of its receipt by the User.
-    3. Impossibility of execution. The Supplier shall not be liable for any
-       errors or productivity slowdown of the Product resulting from (in whole
-       or in part) errors in the operation of the programs (in particular,
-       related to power supply), problems related to the Internet,
-       telecommunication or information technology services or
-       telecommunication or information technology equipment, strikes, wars or
-       terrorist acts, attacks that cause failure of service or other
-       information attacks and violations affecting the Supplier, due to
-       floods, sabotage, fire, other natural disasters or force majeure
-       circumstances, as well as other circumstances independent of the
-       Supplier.
-    4. Transfer of rights and duties. The User cannot transfer to
-       third parties the rights and obligations related to this Agreement
-       without the written consent of the Supplier. The Supplier may, at his
-       own discretion, transfer rights and obligations under this Agreement at
-       any time without the prior consent of the User.
-    5. Internet connection. If the Documentation provides for the need for an
-       active and stable Internet connection for the normal operation of the
-       Product, the User shall be responsible for ensuring an active and stable
-       Internet connection.
-    6. The Product’s name. The Supplier reserves the right to periodically
-       change the name of the Product at his own discretion.
-
-10. Contact Information
-
-    1. Website of the Product: https://www.eva-ics.com/
-    2. Website of the Supplier: https://www.altertech.com/
-
-11. Definitions
-
-    1. Terms that are not given elsewhere in this Agreement, but which are used
-       in it and/or Documentation, are understood as follows:
-
-        1. EVA libraries – software libraries associated with the Product,
-           compiled by the Supplier, supplied during the sale of the Product or
-           received by the User in a different way from the Supplier;
-        2. EVA APIs are the public interfaces of the Product used to communicate
-           with the software of the User or third parties and are described as
-           API (application programming interface or API) in EVA documentation;
-        3. Initial integration is the condition, in which the Product is
-           installed, tested, configured and modified in accordance with the
-           needs of the particular User or third party, but is not yet used for
-           commercial or personal purposes.
-
-12. Technical support
-
-    1. The Supplier may, on the basis of separately concluded contracts with the
-       User, provide him with high-quality technical support of the Product,
-       through which he can help the User to install, configure and debug the
-       User’s Product, equipment and systems, and provide other assistance in
-       working with the Product.
-    2. The User is aware of the possibility of situations where the Supplier
-       will not be able to solve the problem, which may be due to the
-       complexity and variety of technologies available in the market. For
-       example, such cases may include problems that arise from software or
-       hardware errors that are not yet resolved by the manufacturer, or
-       problems with setting up the equipment, making it impossible or too
-       difficult for the correct diagnosis and solution of the problem by the
-       Supplier. Therefore, by this document the User acknowledges and agrees
-       that the Suppliers efforts may not be sufficient to solve the problems
-       with which the User has appealed, or that these problems can be resolved
-       later than the due date.
-    3. During the provision of technical support, the Supplier may need remote
-       access to the User’s Devices or the Supplier may request the
-       installation of auxiliary software. In this case, the User acknowledges
-       and agrees to such actions of the Supplier. If the User cannot or does
-       not want to download and install auxiliary software on the device,
-       comply with other instructions of the Supplier, or if the Supplier
-       acknowledges that the User’s Device does not meet the requirements for
-       obtaining technical support, the Supplier has the right to refuse from
-       provision of technical support.
-
+   END OF TERMS AND CONDITIONS
