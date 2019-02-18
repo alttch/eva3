@@ -14,7 +14,7 @@ LM PLC is customized and controlled via :doc:`lm_ei` web interface or
 :doc:`lm-cmd</cli>` console application. It can also be integrated into other
 subsystems and third-party programs using :doc:`lm_api`.
 
-Additionally, you can use :doc:`console applications<cli>` for better control
+Additionally, you can use :doc:`console applications</cli>` for better control
 of the :doc:`decision-making rules<decision_matrix>`.
 
 LM PLC additionally introduces one more control and monitoring item:

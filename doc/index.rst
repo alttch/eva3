@@ -5,8 +5,7 @@ EVA ICS documentation
 monitoring systems development, for any needs, from home/office to industrial
 setups. It is completely free for non-commercial use as well as for commercial,
 on condition that enterprise integrates it on its own. The product is
-distributed as an open source software and is available under
-:doc:`EVA License</license>`.
+distributed as a free software and is available under Apache License 2.0.
 
 Automated control systems are facing a new stage of evolution: IoT-devices
 become interesting for those, who have never dealt with automation, cheap
