@@ -5,10 +5,10 @@ In :doc:`lm` macros can be triggered on the list of events, third-party
 applications or user via :doc:`LM EI<lm_ei>` interface or :doc:`LM API<lm_api>`
 functions.
 
-Macro code is located a file written in Python and located in the folder
-**xc/lm/** under the name <macro_id>.py, i.e. *test.py* for "test" macro. Macro
-id should be unique within the single LM PLC, full id (group/id) - within the
-whole installation.
+Macro code is a file written in Python and located in the folder **xc/lm/**
+under the name <macro_id>.py, i.e. *test.py* for "test" macro. Macro id should
+be unique within the single LM PLC, full id (group/id) - within the whole
+installation.
 
 Additionally, each macro is automatically appended with **common.py** file
 located in the same folder enabling to quickly assign common functions to
@@ -23,7 +23,7 @@ files of the controller.
 Executing macros
 ================
 
-To execute a macro, use **run** command of :doc:`lm-cmd</cli>` or LM API
+To execute a macro, use **macro run** command of :doc:`lm-cmd</cli>` or LM API
 :ref:`run<lm_run>` function.
 
 Debugging macros
@@ -37,7 +37,7 @@ To receive information about errors you may run the following command:
 
 .. code-block:: bash
 
-    lm-cmd run -i <macro_id> -w 3600 | grep -v ^Exec | jq -r .err
+    lm-cmd -J run <macro_id> -w 3600 | jq -r .err
 
 Macros configuration
 ====================

@@ -124,7 +124,7 @@ Download PHI module:
 
 .. code-block:: bash
 
-    uc-cmd phi download https://www.eva-ics.com/download/phi/relays/sr201.py
+    uc-cmd phi download https://get.eva-ics.com/phi/relays/sr201.py
 
 Load PHI module to controller. As **sr201** PHI provides **aao_get** feature,
 set *update=30* to update all items which use drivers with this PHI every 30
@@ -192,7 +192,7 @@ Download PHI module:
 
 .. code-block:: bash
 
-    uc-cmd phi download https://www.eva-ics.com/download/phi/sensors/env/w1_ds18n20.py
+    uc-cmd phi download https://get.eva-ics.com/phi/sensors/env/w1_ds18n20.py
 
 Load PHI module to controller. This is **universal** PHI which means you don't
 need to specify particular sensor address when loading, it should be specified
@@ -344,7 +344,7 @@ Download PHI module:
 
 .. code-block:: bash
 
-    uc-cmd phi download https://www.eva-ics.com/download/phi/sensors/alarm/akcp_md.py
+    uc-cmd phi download https://get.eva-ics.com/phi/sensors/alarm/akcp_md.py
 
 Load PHI module to controller. Consider motion sensor is connected to AKCP
 sensor controller port #1 and it has IP address *192.168.22.5*. 
@@ -429,7 +429,7 @@ Download PHI module:
 
 .. code-block:: bash
 
-    uc-cmd phi download https://www.eva-ics.com/download/phi/relays/dae_ip16r.py
+    uc-cmd phi download https://get.eva-ics.com/phi/relays/dae_ip16r.py
 
 Load PHI module to controller. This is **universal** PHI which means you don't
 need to specify particular relay host when loading, it may be specified later

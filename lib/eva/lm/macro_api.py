@@ -494,12 +494,22 @@ class MacroAPI(object):
             _argv = [str(argv)]
         elif isinstance(argv, list):
             _argv = argv
-        return eva.lm.controller.exec_macro(
+        a = eva.lm.controller.exec_macro(
             macro=oid_to_id(macro, 'lmacro'),
             argv=_argv,
             priority=priority,
             action_uuid=uuid,
             wait=wait)
+        if not a:
+            if not self.pass_errors:
+                raise Exception('no such macro')
+            return None
+        elif a.is_status_dead():
+            if not self.pass_errors:
+                raise Exception('queue error')
+            return None
+        else:
+            return a.serialize()
 
     def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
         return eva.lm.controller.uc_pool.cmd(
@@ -530,7 +540,7 @@ class MacroAPI(object):
             return open(min(fls, key=os.path.getmtime), mode)
         except:
             if not self.pass_errors:
-                raise 'file open error'
+                raise Exception('file open error')
             return None
 
     def open_newest(self, mask, mode='r', alt=True):
@@ -549,7 +559,7 @@ class MacroAPI(object):
             return o
         except:
             if not self.pass_errors:
-                raise 'file open error'
+                raise Exception('file open error')
             return None
 
     def create_device(self, controller_id, device_tpl, cfg=None, save=None):

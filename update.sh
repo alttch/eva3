@@ -7,7 +7,7 @@
 
 VERSION=3.1.1
 BUILD=2019021801
-[ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://www.eva-ics.com/download
+[ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh install/check_mods sbin/check_mods sbin/check_mqtt set-run-under-user.sh"
 
