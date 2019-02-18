@@ -10,7 +10,7 @@ non-commercial use as well as for commercial, on condition that enterprise
 integrates it on its own. The product is distributed as a free software and is
 available under Apache License 2.0.
 
-![What is EVA ICS](doc/promo/what-is-eva.png?raw=true "What is EVA ICS")
+![What is EVA ICS](doc/promo/what-is-eva-ics.png?raw=true "What is EVA ICS")
 
 Automated control systems are facing a new stage of evolution: IoT-devices
 become interesting for those, who have never dealt with automation, cheap
