@@ -420,7 +420,7 @@ do
             shift
         ;;
         --local-only)
-            echo "This controller will be installed with local-only key access"
+            echo "This node will be installed with local-only key access"
             REMOTES="127.0.0.1"
             shift
         ;;
@@ -540,7 +540,7 @@ fi
 
 if [ $APPEND -ne 1 ]; then
     echo
-    askYN "Should this controller grant API access for the local instances only"
+    askYN "Should this node grant API access for the local instances only"
     [ $VALUE == "1" ] && REMOTES="127.0.0.1"
     askMQTT
 fi
