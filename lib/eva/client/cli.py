@@ -440,7 +440,7 @@ class GenericCLI(object):
         print(self.colored(s, color='red', attrs=[]))
 
     def print_warn(self, s):
-        print(self.colored(s, color='orangle', attrs=['bold']))
+        print(self.colored(s, color='yellow', attrs=['bold']))
 
     def print_debug(self, s):
         print(self.colored(s, color='grey', attrs=['bold']))
