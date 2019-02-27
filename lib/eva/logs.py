@@ -41,7 +41,12 @@ def log_append(record=None, rd=None, skip_mqtt=False):
         return
     if not _mute and _r['msg'] and _r['msg'][0] != '.' and \
             _r['mod'] != '_cplogging':
+        if _r['l'] >= 20 or eva.core.debug:
+            if getattr(eva.core.g, 'api_call_log', None) is not None:
+                eva.core.g.api_call_log.setdefault(_r['l'],
+                                                   []).append(_r['msg'])
         _log_records.append(_r)
+        t = threading.local()
         eva.notify.notify('log', [_r], skip_mqtt=skip_mqtt)
 
 

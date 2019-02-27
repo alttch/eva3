@@ -18,8 +18,11 @@ Common
     * using item ids in API key properties is not allowed any longer in
       enterprise layout, item oid (type:group/id) must always be specified
     * X-Auth-Key header authorization support
+    * API results (except lists) now contain "_log" field which contains
+      warning and error messages logged during API request (all messages in
+      debug mode)
 
-UC
+UC 
 --
 
     * new API function: list_device_tpl

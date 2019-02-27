@@ -113,8 +113,8 @@ def benchmark_handler(item):
     if status == 1:
         value = float(value)
         if value > 100:
-            exec_unit_action(
-                'unit:eva_benchmarks/eva_benchmark_unit', int(value))
+            exec_unit_action('unit:eva_benchmarks/eva_benchmark_unit',
+                             int(value))
     benchmark_lock.release()
 
 
@@ -408,7 +408,10 @@ def create_item(item_id,
                 start=True,
                 save=False):
     if not item_id: return False
-    if group and item_id.find('/') != -1: return False
+    if group and item_id.find('/') != -1:
+        logging.error(
+            'Unable to create item: invalid symbols in ID {}'.format(item_id))
+        return False
     if item_id.find('/') == -1:
         i = item_id
         grp = group
@@ -419,10 +422,13 @@ def create_item(item_id,
         grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
+        logging.error(
+            'Unable to create item: invalid symbols in ID {}'.format(item_id))
         return False
     i_full = grp + '/' + i
     if (not eva.core.enterprise_layout and i in items_by_id) or \
             i_full in items_by_full_id:
+        logging.error('Unable to create item {}: already exists'.format(i_full))
         return False
     item = None
     if item_type == 'U' or item_type == 'unit':
@@ -431,7 +437,9 @@ def create_item(item_id,
         item = eva.uc.sensor.Sensor(i)
     elif item_type == 'MU' or item_type == 'mu':
         item = eva.uc.ucmu.UCMultiUpdate(i)
-    if not item: return False
+    if not item:
+        logging.error('Unable to create item {}: internal error'.format(i_full))
+        return False
     if virtual: virt = True
     else: virt = False
     cfg = {'group': grp, 'virtual': virt}

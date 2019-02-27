@@ -439,6 +439,9 @@ class GenericCLI(object):
     def print_err(self, s):
         print(self.colored(s, color='red', attrs=[]))
 
+    def print_warn(self, s):
+        print(self.colored(s, color='orangle', attrs=['bold']))
+
     def print_debug(self, s):
         print(self.colored(s, color='grey', attrs=['bold']))
 
@@ -1345,6 +1348,17 @@ class GenericCLI(object):
                                            api_func_full, itype, a)
         return 0
 
+    def print_failed_result(self, result):
+        self.print_err('FAILED')
+        if '_log' in result:
+            log = result['_log']
+            for i in log.get('30', []):
+                self.print_warn(i)
+            for i in log.get('40', []):
+                self.print_err(i)
+            for i in log.get('50', []):
+                self.print_err('CRITICAL: ' + i)
+
     def process_result(self, result, code, api_func, api_func_full, itype, a):
         if api_func == 'file_get':
             try:
@@ -1355,7 +1369,7 @@ class GenericCLI(object):
                 return 95
         elif code == apiclient.result_func_failed and \
                 api_func not in self.always_print:
-            self.print_err('FAILED')
+            self.print_failed_result(result)
             return code
         elif result and 'result' in result and api_func not in [
                 'test', 'dump', 'regenerate_key'
@@ -1363,7 +1377,7 @@ class GenericCLI(object):
             if result['result'] != 'ERROR':
                 print(result['result'])
             else:
-                self.print_err('FAILED')
+                self.print_failed_result(result)
             if result['result'] == 'ERROR':
                 return apiclient.result_func_failed
         else:

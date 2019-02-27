@@ -125,6 +125,7 @@ started = False
 
 shutdown_requested = False
 
+g = threading.local()
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
