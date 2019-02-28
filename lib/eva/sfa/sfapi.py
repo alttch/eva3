@@ -23,6 +23,7 @@ from eva.tools import dict_from_str
 import eva.core
 import eva.notify
 from eva.api import GenericHTTP_API
+from eva.api import JSON_RPC_API
 from eva.api import GenericAPI
 from eva.api import cp_json_handler
 from eva.api import cp_forbidden_key
@@ -587,7 +588,7 @@ class SFA_API(GenericAPI):
         return True
 
 
-class SFA_HTTP_API(GenericHTTP_API, SFA_API):
+class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
 
     def __init__(self):
         super().__init__()

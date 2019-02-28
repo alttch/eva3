@@ -8,6 +8,7 @@ import jsonpickle
 import shlex
 import eva.core
 from eva.api import GenericHTTP_API
+from eva.api import JSON_RPC_API
 from eva.api import GenericAPI
 from eva.api import cp_json_handler
 from eva.api import cp_forbidden_key
@@ -619,7 +620,7 @@ class LM_API(GenericAPI):
         return eva.lm.extapi.modhelp(m, c)
 
 
-class LM_HTTP_API(GenericHTTP_API, LM_API):
+class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
     def __init__(self):
         super().__init__()

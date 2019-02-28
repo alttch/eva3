@@ -521,7 +521,7 @@ class JSON_RPC_API:
         return result
 
 
-class GenericHTTP_API(GenericAPI, JSON_RPC_API):
+class GenericHTTP_API(GenericAPI):
 
     _cp_config = {
         'tools.session_pre.on': True,

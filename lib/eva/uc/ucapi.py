@@ -8,6 +8,7 @@ import os
 import glob
 import eva.core
 from eva.api import GenericHTTP_API
+from eva.api import JSON_RPC_API
 from eva.api import GenericAPI
 from eva.api import cp_json_handler
 from eva.api import cp_forbidden_key
@@ -836,14 +837,14 @@ class UC_API(GenericAPI):
         return True
 
 
-class UC_HTTP_API(GenericHTTP_API, UC_API):
+class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
     def cp_check_perm(self, api_key=None, k=None, path_info=None):
         if cherrypy.serving.request.path_info[:8] == '/put_phi':
             rlp = ['c']
         else:
             rlp = None
-        super().cp_check_perm(api_key=k, rlp=rlp, path_info=path_info)
+        super().cp_check_perm(api_key=api_key, rlp=rlp, path_info=path_info)
 
     def __init__(self):
         super().__init__()
