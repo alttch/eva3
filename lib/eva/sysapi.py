@@ -26,7 +26,7 @@ from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva.api import cp_auth_pre
 from eva.api import cp_json_pre
-from eva.api import cp_log_pre
+from eva.api import cp_api_pre
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
 from eva.api import session_timeout
@@ -432,7 +432,7 @@ class SysHTTP_API(SysAPI):
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.log_pre = cherrypy.Tool(
-            'before_handler', cp_log_pre, priority=20)
+            'before_handler', cp_api_pre, priority=20)
         cherrypy.tools.auth_sysfunc = cherrypy.Tool(
             'before_handler', self.cp_check_perm, priority=60)
         super().__init__()

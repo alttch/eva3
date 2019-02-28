@@ -159,7 +159,7 @@ def cp_auth_pre():
         cherrypy.serving.request.params['k'] = k
 
 
-def cp_log_pre():
+def cp_api_pre():
     eva.core.g.api_call_log = {}
 
 
@@ -422,7 +422,7 @@ class GenericHTTP_API(GenericAPI):
     _cp_config = {
         'tools.auth_pre.on': True,
         'tools.json_pre.on': True,
-        'tools.log_pre.on': True,
+        'tools.api_pre.on': True,
         'tools.json_out.on': True,
         'tools.json_out.handler': cp_json_handler,
         'tools.auth.on': True,
@@ -463,8 +463,8 @@ class GenericHTTP_API(GenericAPI):
             'before_handler', cp_auth_pre, priority=5)
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
-        cherrypy.tools.log_pre = cherrypy.Tool(
-            'before_handler', cp_log_pre, priority=10)
+        cherrypy.tools.api_pre = cherrypy.Tool(
+            'before_handler', cp_api_pre, priority=20)
         cherrypy.tools.auth = cherrypy.Tool(
             'before_handler', self.cp_check_perm, priority=60)
         GenericAPI.test.exposed = True
