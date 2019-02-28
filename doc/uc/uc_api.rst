@@ -11,6 +11,9 @@ calls.
 All functions can be called using GET and POST methods. When POST method is
 used, the parameters can be passed to functions either as www-form or as JSON.
 
+API key can be sent in request parameters, session (if user is logged in) or in
+HTTP **X-Auth-Key** header.
+
 .. note::
 
     Object creation and modification functions don't save configurations
@@ -20,6 +23,14 @@ used, the parameters can be passed to functions either as www-form or as JSON.
 
     If you need to save any changes made without this parameter, restart the
     controller gracefully or use :doc:`/sys_api` **save** function.
+
+Additionally, each EVA ICS API supports `JSON RPC 2.0
+<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC API URL for UC API
+is:
+
+**\http://<IP_address:Port>/uc-api**
+
+JSON RPC doesn't support sessions, so user authorization is not possible.
 
 .. contents::
 

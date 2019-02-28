@@ -5,6 +5,12 @@ All you need to install EVA  is to download the latest update from
 https://www.eva-ics.com/, unpack the archive to any folder and everything is
 almost ready to use.
 
+.. note::
+
+    Each EVA ICS installation (**node**) can run multiple components. Despite
+    they share node resources, they still act as independent processes and
+    require :ref:`MQTT server<mqtt_>` for inter-connection.
+
 .. contents::
 
 System Requirements

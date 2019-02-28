@@ -285,3 +285,56 @@ Result codes are stored in module variables:
     # the function is called with invalid params
     $result_invalid_params = 11;
     ?>
+
+.. json_rpc_client_:
+
+JSON RPC API client
+===================
+
+As EVA ICS uses standard `JSON RPC 2.0 protocol
+<https://www.jsonrpc.org/specification>`_, any JSON RPC client may be used. In
+the example below, we'll use simple `JSON RPC client for Python 3
+<https://github.com/bcb/jsonrpcclient>`_.
+
+Installing
+----------
+
+Install Python3 module:
+
+.. code-block:: bash
+
+    pip3 install jsonrpcclient
+
+Usage example
+-------------
+
+Let's call :doc:`/uc/uc_api` method **state** and obtain states of sensors:
+
+.. code-block:: python
+
+    from jsonrpcclient import request as rpc
+
+    r = rpc('http://localhost:8812/uc-api', 'state', k='YOUR_API_KEY', p='sensor')
+    for s in r.data.result:
+        print(s['oid'])
+
+.. note::
+
+    If using custom API client, you may still put API key to *X-Auth-Key*
+    request header. This is against JSON RPC standard, so if you want to keep
+    it right, you must put *k* to params of each request.
+
+API result codes
+----------------
+
+JSON RPC API responds in standard JSON RPC way with HTTP code *200 (OK)*. In
+case JSON RPC request has no **id**, no body is returned and HTTP response code
+will be *202 (Accepted)*.
+
+In case of API method errors, HTTP code is still *200 (OK)*. Error codes can
+be found in the response body:
+
+* **2** Access is forbiden
+* **6** Object or method is not found
+* **10** Function failed
+

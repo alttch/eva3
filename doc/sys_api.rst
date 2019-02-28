@@ -14,6 +14,17 @@ calls.
 All functions can be called using GET and POST methods. When POST method is
 used, the parameters can be passed to functions either as www-form or as JSON.
 
+API key can be sent in request parameters, session (if user is logged in) or in
+HTTP **X-Auth-Key** header.
+
+Additionally, each EVA ICS API supports `JSON RPC 2.0
+<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC API URL for SYS
+API is:
+
+**\http://<IP_address:Port>/sys-api**
+
+JSON RPC doesn't support sessions, so user authorization is not possible.
+
 .. contents::
 
 .. _s_test:
