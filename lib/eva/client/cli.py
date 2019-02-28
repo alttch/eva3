@@ -1220,16 +1220,13 @@ class GenericCLI(object):
         if not itype:
             self.ap.print_help()
             return 99
-        if hasattr(a, '_func'):
-            func = a._func
-        else:
-            func = None
+        func = getattr(a, '_func', None)
         if itype in self.arg_sections and func is None:
             try:
                 self.ap.parse_args([itype, '--help'])
             except:
                 return 96
-        if hasattr(a, '_ini_file') and a._ini_file:
+        if getattr(a, '_ini_file', None):
             c = self.parse_ini(a._ini_file)
         else:
             c = {}
@@ -1241,7 +1238,7 @@ class GenericCLI(object):
             debug = c.get('debug')
         else:
             debug = False
-        if hasattr(a, '_debug') and a._debug: debug = a._debug
+        if getattr(a, '_debug', False): debug = a._debug
         api_func = self.get_api_func(itype, func)
         if not api_func:
             self.ap.print_help()
@@ -1250,12 +1247,12 @@ class GenericCLI(object):
             apiuri = c.get('uri')
         else:
             apiuri = None
-        if hasattr(a, '_api_uri') and a._api_uri: apiuri = a._api_uri
+        if getattr(a, '_api_uri', None): apiuri = a._api_uri
         if 'key' in c:
             apikey = c.get('key')
         else:
             apikey = None
-        if hasattr(a, '_api_key') and a._api_key:
+        if getattr(a, '_api_key', None):
             apikey = a._api_key
         if self.remote_api:
             if not apiuri:
@@ -1272,18 +1269,19 @@ class GenericCLI(object):
             if apikey is not None:
                 api.set_key(apikey)
             api.ssl_verify(self.ssl_verify)
-        if hasattr(a, '_full') and a._full:
+        api_func_full = ''
+        if getattr(a, '_full', False):
             params['full'] = 1
             api_func_full = '_'
-        elif hasattr(a, '_full_display') and a._full_display:
+        if getattr(a, '_has_all', False):
+            params['has_all'] = 1
+        elif getattr(a, '_full_display', False):
             api_func_full = '_'
-        else:
-            api_func_full = ''
-        if hasattr(a, '_virtual') and a._virtual:
+        if getattr(a, '_virtual', False):
             params['virtual'] = 1
-        if hasattr(a, '_save') and a._save:
+        if getattr(a, '_save', False):
             params['save'] = 1
-        if hasattr(a, '_force') and a._force:
+        if getattr(a, '_force', False):
             params['force'] = 1
         code = self.prepare_run(api_func, params, a)
         if code: return code

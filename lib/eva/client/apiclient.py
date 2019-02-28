@@ -58,11 +58,13 @@ _api_func = {
             'update_device', 'clone', 'clone_group', 'destroy',
             'destroy_device', 'login', 'logout', 'create_modbus_port',
             'destroy_modbus_port', 'list_modbus_ports', 'test_modbus_port',
-            'load_phi', 'unload_phi', 'unlink_phi_mod', 'put_phi_mod',
-            'load_driver', 'unload_driver', 'list_phi', 'get_phi_map',
-            'list_drivers', 'get_phi', 'get_driver', 'test_phi', 'exec_phi',
-            'list_lpi_mods', 'list_phi_mods', 'modinfo_phi', 'modinfo_lpi',
-            'modhelp_phi', 'modhelp_lpi', 'set_driver'
+            'create_owfs_bus', 'destroy_owfs_bus', 'list_owfs_buses',
+            'test_owfs_bus', 'scan_owfs_bus', 'load_phi', 'unload_phi',
+            'unlink_phi_mod', 'put_phi_mod', 'load_driver', 'unload_driver',
+            'list_phi', 'get_phi_map', 'list_drivers', 'get_phi', 'get_driver',
+            'test_phi', 'exec_phi', 'list_lpi_mods', 'list_phi_mods',
+            'modinfo_phi', 'modinfo_lpi', 'modhelp_phi', 'modhelp_lpi',
+            'set_driver'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
@@ -70,8 +72,9 @@ _api_func = {
             'create_unit', 'create_sensor', 'create_mu', 'create_device',
             'update_device', 'clone', 'clone_group', 'destroy',
             'destroy_device', 'login', 'logout', 'destroy_modbus_port',
-            'test_modbus_port', 'unload_phi', 'unlink_phi_mod', 'unload_driver',
-            'set_driver', 'test_phi', 'exec_phi'
+            'test_modbus_port', 'destroy_owfs_bus', 'test_owfs_bus',
+            'unload_phi', 'unlink_phi_mod', 'unload_driver', 'set_driver',
+            'test_phi', 'exec_phi'
         ],
         'ce': ['action', 'action_toggle']
     },

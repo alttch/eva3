@@ -26,6 +26,7 @@ UC
 --
 
     * new API function: list_device_tpl
+    * 1-Wire OWFS support (virtual buses, PHIs), OWFS API functions
 
 LM
 --

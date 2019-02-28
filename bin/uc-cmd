@@ -139,6 +139,16 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 result.add(v['id'])
             return list(result)
 
+    class ComplOWFS(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('owfs list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
     class ComplPHI(ComplGeneric):
 
         def __init__(self, cli, for_driver=False):
@@ -227,12 +237,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
             for d in data:
                 result.append({'name': d, 'type': 'JSON device template'})
             return result
-        if itype not in ['action', 'driver', 'phi', 'lpi']:
+        if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, api_func_full,
                                                itype)
         result = []
         for d in data.copy():
-            if itype == 'action':
+            if api_func == 'scan_owfs_bus':
+                if 'attrs' in d: del d['attrs']
+            elif itype == 'action':
                 d['time'] = datetime.fromtimestamp(
                     d['time']['created']).isoformat()
             elif itype == 'driver':
@@ -300,6 +312,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         self.add_uc_configure_functions()
         self.add_uc_device_functions()
         self.add_uc_modbus_functions()
+        self.add_uc_owfs_functions()
         self.add_uc_driver_functions()
 
     def add_uc_common_functions(self):
@@ -690,7 +703,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'p',
             help=
             'Port parameters (proto:port/host:params, ' + \
-                    'i.e. tcp:192.168.11.11:502 or rtu:/dev/ttyS0:9600:8:E:1)',
+                    'e.g. tcp:192.168.11.11:502 or rtu:/dev/ttyS0:9600:8:E:1)',
             metavar='PARAMS').completer = self.ComplModBusProto()
         sp_modbus_create.add_argument(
             '-l',
@@ -734,6 +747,69 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_modbus_destroy.add_argument(
             'i', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
+
+    def add_uc_owfs_functions(self):
+        ap_owfs = self.sp.add_parser('owfs', help='OWFS buses')
+        sp_owfs = ap_owfs.add_subparsers(
+            dest='_func', metavar='func', help='OWFS bus commands')
+
+        sp_owfs_list = sp_owfs.add_parser('list', help='List defined buses')
+        sp_owfs_create = sp_owfs.add_parser(
+            'create', help='Create (define) new bus')
+        sp_owfs_create.add_argument('i', help='Bus ID', metavar='ID')
+        sp_owfs_create.add_argument(
+            'n',
+            help='Bus location (e.g. --i2c=/dev/i2c-1:ALL or localhost:4304)',
+            metavar='LOCATION')
+        sp_owfs_create.add_argument(
+            '-l',
+            '--lock',
+            help='Lock bus on operations',
+            action='store_true',
+            dest='l')
+        sp_owfs_create.add_argument(
+            '-y',
+            '--save',
+            help='save configuration on success load',
+            dest='_save',
+            action='store_true')
+        sp_owfs_test = sp_owfs.add_parser('test', help='Test defined bus')
+        sp_owfs_test.add_argument(
+            'i', help='Bus ID', metavar='ID').completer = self.ComplOWFS(self)
+        sp_owfs_scan = sp_owfs.add_parser('scan', help='Scan defined bus')
+        sp_owfs_scan.add_argument(
+            'i', help='Bus ID', metavar='ID').completer = self.ComplOWFS(self)
+        sp_owfs_scan.add_argument(
+            '-n', '--path', help='Equipment path', metavar='PATH', dest='n')
+        sp_owfs_scan.add_argument(
+            '-p',
+            '--type',
+            help='Equipment types (e.g. DS18S20,DS2405), comma separated',
+            metavar='TYPE',
+            dest='p')
+        sp_owfs_scan.add_argument(
+            '-a',
+            '--attr',
+            help='Equipment attributes (e.g. temperature, PIO, ' +
+            'comma separated)',
+            metavar='ATTRIBUTES',
+            dest='a')
+        sp_owfs_scan.add_argument(
+            '-A',
+            '--has-all',
+            help='Equipment should have all attributes',
+            action='store_true',
+            dest='_has_all')
+        sp_owfs_scan.add_argument(
+            '-y',
+            '--full',
+            help='Get attribute values',
+            action='store_true',
+            dest='_full')
+        sp_owfs_destroy = sp_owfs.add_parser(
+            'destroy', help='Destroy (undefine) bus')
+        sp_owfs_destroy.add_argument(
+            'i', help='Bus ID', metavar='ID').completer = self.ComplOWFS(self)
 
     def add_uc_driver_functions(self):
         ap_phi = self.sp.add_parser('phi', help='PHI (Physical interface)')
@@ -1040,6 +1116,11 @@ _api_functions = {
     'modbus:create': 'create_modbus_port',
     'modbus:destroy': 'destroy_modbus_port',
     'modbus:test': 'test_modbus_port',
+    'owfs:list': 'list_owfs_buses',
+    'owfs:create': 'create_owfs_bus',
+    'owfs:destroy': 'destroy_owfs_bus',
+    'owfs:test': 'test_owfs_bus',
+    'owfs:scan': 'scan_owfs_bus',
     'phi:list': 'list_phi',
     'phi:get': 'get_phi',
     'phi:mods': 'list_phi_mods',
@@ -1078,6 +1159,7 @@ _pd_cols = {
     'list': ['oid', 'description'],
     'list_modbus_ports':
     ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
+    'list_owfs_buses': ['id', 'location', 'lock'],
     'list_phi_': ['id', 'mod', 'description', 'version'],
     'list_drivers_':
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
@@ -1104,7 +1186,8 @@ _always_json = ['get_config']
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'cmd']
 cli.arg_sections += [
-    'action', 'config', 'clone', 'device', 'modbus', 'phi', 'lpi', 'driver'
+    'action', 'config', 'clone', 'device', 'modbus', 'owfs', 'phi', 'lpi',
+    'driver'
 ]
 cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)

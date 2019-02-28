@@ -27,6 +27,7 @@ import eva.sysapi
 import eva.uc.controller
 import eva.uc.driverapi
 import eva.uc.modbus
+import eva.uc.owfs
 import eva.ei
 import jinja2
 import jsonpickle
@@ -626,6 +627,69 @@ class UC_API(GenericAPI):
         if result: port.release()
         return result
 
+    # master functions for owfs bus management
+
+    def create_owfs_bus(self,
+                        k=None,
+                        i=None,
+                        location=None,
+                        lock=False,
+                        save=False):
+        if not apikey.check(k, master=True): return None
+        if not i or not location: return False
+        result = eva.uc.owfs.create_owfs_bus(i, location, lock=lock)
+        if result and save: eva.uc.owfs.save()
+        return result
+
+    def destroy_owfs_bus(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        result = eva.uc.owfs.destroy_owfs_bus(i)
+        if result and eva.core.db_update == 1: eva.uc.owfs.save()
+        return result
+
+    def list_owfs_buses(self, k=None):
+        if not apikey.check(k, master=True): return None
+        return sorted(eva.uc.owfs.serialize(), key=lambda k: k['id'])
+
+    def test_owfs_bus(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        bus = eva.uc.owfs.get_bus(i)
+        result = True if bus else False
+        if result: bus.release()
+        return result
+
+    def scan_owfs_bus(self,
+                      k=None,
+                      i=None,
+                      p=None,
+                      a=None,
+                      n=None,
+                      has_all=None,
+                      full=None):
+        if not apikey.check(k, master=True): return None
+        bus = eva.uc.owfs.get_bus(i)
+        if not bus: return None
+        bus.release()
+        kwargs = {}
+        if p: kwargs['sensor_type'] = p
+        if a:
+            kwargs['has_' + ('all' if has_all else 'one')] = a
+        if n:
+            data = [bus.ow.sensor(n)]
+        else:
+            data = bus.ow.find(**kwargs)
+        result = []
+        for r in data:
+            s = {'type': r.type, 'path': r.path}
+            if full:
+                s['attrs'] = r.attrs
+                if a:
+                    for attr in (a if isinstance(a, list) else [a]):
+                        s[attr] = getattr(r, attr, None)
+            result.append(s)
+        return sorted(
+            sorted(result, key=lambda k: k['path']), key=lambda k: k['type'])
+
     # master functions for driver configuration
 
     def load_phi(self, k=None, i=None, m=None, cfg=None, save=False):
@@ -825,6 +889,12 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.destroy_modbus_port.exposed = True
         UC_HTTP_API.list_modbus_ports.exposed = True
         UC_HTTP_API.test_modbus_port.exposed = True
+
+        UC_HTTP_API.create_owfs_bus.exposed = True
+        UC_HTTP_API.destroy_owfs_bus.exposed = True
+        UC_HTTP_API.list_owfs_buses.exposed = True
+        UC_HTTP_API.test_owfs_bus.exposed = True
+        UC_HTTP_API.scan_owfs_bus.exposed = True
 
         UC_HTTP_API.load_phi.exposed = True
         UC_HTTP_API.unload_phi.exposed = True
@@ -1206,6 +1276,45 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         cp_need_master(k)
         return http_api_result_ok() if super().test_modbus_port(
             k, i) else http_api_result_error()
+
+    def create_owfs_bus(self, k=None, i=None, n=None, l=None, save=False):
+        cp_need_master(k)
+        return http_api_result_ok() if super().create_owfs_bus(
+            k, i, n, val_to_boolean(l), save) else http_api_result_error()
+
+    def destroy_owfs_bus(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().destroy_owfs_bus(
+            k, i) else http_api_result_error()
+
+    def list_owfs_buses(self, k=None):
+        cp_need_master(k)
+        return super().list_owfs_buses(k)
+
+    def test_owfs_bus(self, k=None, i=None):
+        cp_need_master(k)
+        return http_api_result_ok() if super().test_owfs_bus(
+            k, i) else http_api_result_error()
+
+    def scan_owfs_bus(self,
+                      k=None,
+                      i=None,
+                      p=None,
+                      a=None,
+                      n=None,
+                      has_all=None,
+                      full=None):
+        cp_need_master(k)
+        if p:
+            _p = p if isinstance(p, list) else p.split(',')
+        else:
+            _p = None
+        if a:
+            _a = a if isinstance(a, list) else a.split(',')
+        else:
+            _a = None
+        result = super().scan_owfs_bus(k, i, _p, _a, n, has_all, full)
+        return result if result is not None else http_api_result_error()
 
     def load_phi(self, k=None, i=None, m=None, c=None, save=False):
         cp_need_master(k)

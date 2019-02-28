@@ -13,7 +13,7 @@ BUILD=2019021802
 OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh install/check_mods sbin/check_mods sbin/check_mqtt set-run-under-user.sh"
 
 UC_NEW_CFG="runtime/uc_drivers.json"
-UC_NEW_CFG_L="runtime/uc_modbus.json"
+UC_NEW_CFG_L="runtime/uc_modbus.json runtime/uc_owfs.json"
 LM_NEW_CFG="runtime/lm_extensions.json"
 LM_NEW_DIR="runtime/lm_lcycle.d"
 

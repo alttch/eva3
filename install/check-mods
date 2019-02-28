@@ -17,6 +17,7 @@ mods = [
     'jinja2',
     'json',
     'jsonpickle',
+    'onewire',
     'logging',
     'netaddr',
     'paho.mqtt.client',

@@ -17,6 +17,7 @@ import eva.uc.sensor
 import eva.uc.ucmu
 import eva.uc.driverapi
 import eva.uc.modbus
+import eva.uc.owfs
 
 from eva.tools import is_oid
 from eva.tools import parse_oid
@@ -276,6 +277,7 @@ def save_item_state(item):
 
 
 def load_drivers():
+    eva.uc.owfs.load()
     eva.uc.modbus.load()
     eva.uc.driverapi.load()
 
@@ -678,6 +680,7 @@ def serialize_actions():
 
 def start():
     global Q
+    eva.uc.owfs.start()
     eva.uc.modbus.start()
     eva.uc.driverapi.start()
     Q = eva.uc.ucqueue.UC_Queue('uc_queue')
@@ -695,6 +698,7 @@ def stop():
     if Q: Q.stop()
     eva.uc.driverapi.stop()
     eva.uc.modbus.stop()
+    eva.uc.owfs.stop()
 
 
 def exec_mqtt_unit_action(unit, msg):
