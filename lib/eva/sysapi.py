@@ -24,6 +24,7 @@ from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
+from eva.api import cp_session_pre
 from eva.api import cp_json_pre
 from eva.api import cp_api_pre
 from eva.api import http_api_result_ok
@@ -384,6 +385,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     _cp_config = {
+        'tools.session_pre.on': True,
         'tools.json_pre.on': True,
         'tools.log_pre.on': True,
         'tools.json_out.on': True,
@@ -430,6 +432,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return
 
     def __init__(self):
+        cherrypy.tools.session_pre = cherrypy.Tool(
+            'on_start_resource', cp_session_pre, priority=1)
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.log_pre = cherrypy.Tool(

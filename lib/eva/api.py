@@ -165,6 +165,25 @@ def http_remote_info(k=None):
     return '%s@%s' % (apikey.key_id(k), http_real_ip(get_gw=True))
 
 
+class DummySession:
+
+    @staticmethod
+    def acquire_lock(**kwargs):
+        pass
+
+    @staticmethod
+    def save(**kwargs):
+        pass
+
+
+def cp_session_pre():
+    # hack to prevent sessions for JSON RPC
+    if cherrypy.serving.request.path_info in ['', '/']:
+        cherrypy.serving.request._session_init_flag = True
+        cherrypy.session = DummySession()
+        cherrypy.serving.session = cherrypy.session
+
+
 def cp_api_pre():
     eva.core.g.api_call_log = {}
 
@@ -185,6 +204,7 @@ def cp_json_pre():
             else:
                 cherrypy.serving.request.json_rpc_payload = data
     except:
+        raise
         raise cp_api_error('invalid JSON data')
     return
 
@@ -442,7 +462,7 @@ class JSON_RPC_API:
         http_err_codes = {403: 2, 404: 6, 500: 10}
         result = []
         for p in payload if isinstance(payload, list) else [payload]:
-            if p.get('jsonrpc') != '2.0':
+            if not p or p.get('jsonrpc') != '2.0':
                 raise cp_api_error('unsupported RPC protocol')
             req_id = p.get('id')
             try:
@@ -504,6 +524,7 @@ class JSON_RPC_API:
 class GenericHTTP_API(GenericAPI, JSON_RPC_API):
 
     _cp_config = {
+        'tools.session_pre.on': True,
         'tools.json_pre.on': True,
         'tools.api_pre.on': True,
         'tools.json_out.on': True,
@@ -545,6 +566,8 @@ class GenericHTTP_API(GenericAPI, JSON_RPC_API):
         raise cp_forbidden_key()
 
     def __init__(self):
+        cherrypy.tools.session_pre = cherrypy.Tool(
+            'on_start_resource', cp_session_pre, priority=1)
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.api_pre = cherrypy.Tool(
