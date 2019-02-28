@@ -467,6 +467,54 @@ port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
 work with the equipment of the same type which uses e.g. different registers
 for different connection types.
 
+Working with 1-wire via OWFS
+============================
+
+As EVA ICS has virtual OWFS buses, you don't need to initialize OWFS by
+yourself, just use **eva.uc.owfs** module. OWFS virtual buses support locking,
+so don't forget to release bus after PHI job is finished.
+
+.. code-block:: python
+
+    # everything you need is just import module
+    import eva.uc.owfs as owfs
+
+    def __init__(self, phi_cfg=None, info_only=False):
+        # ....
+        # it's recommended to force aao_get in ModBus PHI to let it read states
+        # with one modbus request
+        self.owfs_bus = self.phi_cfg.get('owfs')
+        # check in constructor if the specified modbus port is defined
+        if not owfs.is_bus(self.owfs_bus):
+            self.log_error('owfs bus ID not specified or invalid')
+            self.ready = False
+            return
+        # store path of equipment PHI is loaded for
+        self.path = self.phi_cfg.get('path')
+        if not self.path:
+            self.log_error('owfs path is not specified')
+            self.ready = False
+            return
+
+    def get(self, port=None, cfg=None, timeout=0):
+        bus = owfs.get_bus(self.owfs_bus)
+        if not bus: return None
+        try:
+            me = bus.ow.sensor(self.path)
+            if not me: raise Exception('equipment not found')
+            return { '0': me.temperature }
+        except:
+            bus.release()
+            return None
+        finally:
+            bus.release()
+
+
+The variable **client_type** of the port object (*mb.client_type*) holds the
+port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
+work with the equipment of the same type which uses e.g. different registers
+for different connection types.
+
 Working with MQTT
 =================
 

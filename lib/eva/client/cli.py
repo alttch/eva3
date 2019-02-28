@@ -570,6 +570,10 @@ class GenericCLI(object):
             return data
 
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
+        if '_log' in data:
+            d = data.copy()
+            del d['_log']
+            return d
         return data
 
     def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
