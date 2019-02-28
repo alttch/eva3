@@ -24,7 +24,6 @@ from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
-from eva.api import cp_auth_pre
 from eva.api import cp_json_pre
 from eva.api import cp_api_pre
 from eva.api import http_api_result_ok
@@ -35,6 +34,7 @@ from eva.api import http_real_ip
 from eva.api import cp_client_key
 
 from eva.api import GenericAPI
+from eva.api import JSON_RPC_API
 
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
@@ -381,41 +381,44 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         return True
 
 
-class SysHTTP_API(SysAPI):
+class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     _cp_config = {
-        'tools.auth_pre.on': True,
         'tools.json_pre.on': True,
         'tools.log_pre.on': True,
         'tools.json_out.on': True,
         'tools.json_out.handler': cp_json_handler,
         'tools.auth_sysfunc.on': True,
         'tools.sessions.on': True,
-        'tools.sessions.timeout': session_timeout
+        'tools.sessions.timeout': session_timeout,
+        'tools.trailing_slash.on': False
     }
 
-    def cp_check_perm(self):
-        k = cp_client_key()
+    def cp_check_perm(self, api_key=None, path_info=None):
+        k = api_key if api_key else cp_client_key()
+        path = path_info if path_info is not None else \
+                cherrypy.serving.request.path_info
         if k is not None: cherrypy.serving.request.params['k'] = k
-        if cherrypy.serving.request.path_info[:6] == '/login': return
-        if cherrypy.serving.request.path_info[:4] == '/dev': dev = True
+        if path in ['', '/']: return
+        if path[:6] == '/login': return
+        if path[:4] == '/dev': dev = True
         else: dev = False
         if dev and not eva.core.development: raise cp_forbidden_key()
         p = cherrypy.serving.request.params.copy()
         if not eva.core.development:
             if 'k' in p: del p['k']
-            if cherrypy.serving.request.path_info[:12] == '/create_user' or \
-              cherrypy.serving.request.path_info[:18] == '/set_user_password':
+            if path[:12] == '/create_user' or \
+              path[:18] == '/set_user_password':
                 if 'p' in p: del p['p']
-        if cherrypy.serving.request.path_info[:6] == '/file_' and \
+        if path[:6] == '/file_' and \
                 not api_file_management_allowed:
             raise cp_forbidden_key()
-        if cherrypy.serving.request.path_info[:9] == '/file_put' and \
+        if path[:9] == '/file_put' and \
                 'm' in p:
             del p['m']
-        log_api_request(cherrypy.serving.request.path_info[1:],
+        log_api_request(path[1:],
                         http_remote_info(k), p, False)
-        if cherrypy.serving.request.path_info[:4] == '/cmd':
+        if path[:4] == '/cmd':
             allow = ['cmd']
             sysfunc = False
         else:
@@ -427,8 +430,6 @@ class SysHTTP_API(SysAPI):
         return
 
     def __init__(self):
-        cherrypy.tools.auth_pre = cherrypy.Tool(
-            'before_handler', cp_auth_pre, priority=5)
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.log_pre = cherrypy.Tool(
@@ -458,6 +459,7 @@ class SysHTTP_API(SysAPI):
             LockAPI.dev_locks.exposed = True
 
         GenericAPI.test.exposed = True
+        SysHTTP_API.index.exposed = True
 
         SysHTTP_API.log_debug.exposed = True
         SysHTTP_API.log_info.exposed = True

@@ -591,6 +591,7 @@ class SFA_HTTP_API(GenericHTTP_API, SFA_API):
 
     def __init__(self):
         super().__init__()
+        SFA_HTTP_API.index.exposed = True
         SFA_HTTP_API.test.exposed = True
         SFA_HTTP_API.state.exposed = True
         SFA_HTTP_API.state_history.exposed = True

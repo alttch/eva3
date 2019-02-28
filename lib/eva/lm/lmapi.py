@@ -625,6 +625,7 @@ class LM_HTTP_API(GenericHTTP_API, LM_API):
         super().__init__()
         if eva.core.development:
             LM_API.dev_lm_i.exposed = True
+        LM_HTTP_API.index.exposed = True
         LM_HTTP_API.groups.exposed = True
         LM_HTTP_API.state.exposed = True
         LM_HTTP_API.state_history.exposed = True

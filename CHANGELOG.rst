@@ -21,6 +21,7 @@ Common
     * API results (except lists) now contain "_log" field which contains
       warning and error messages logged during API request (all messages in
       debug mode)
+    * JSON RPC 2.0 API
 
 UC 
 --

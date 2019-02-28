@@ -838,12 +838,12 @@ class UC_API(GenericAPI):
 
 class UC_HTTP_API(GenericHTTP_API, UC_API):
 
-    def cp_check_perm(self):
+    def cp_check_perm(self, k=None, path_info=None):
         if cherrypy.serving.request.path_info[:8] == '/put_phi':
             rlp = ['c']
         else:
             rlp = None
-        super().cp_check_perm(rlp=rlp)
+        super().cp_check_perm(api_key=k, rlp=rlp, path_info=path_info)
 
     def __init__(self):
         super().__init__()
@@ -852,6 +852,7 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
             UC_API.dev_uc_i.exposed = True
             UC_API.dev_uc_u.exposed = True
             UC_API.dev_uc_mu.exposed = True
+        UC_HTTP_API.index.exposed = True
         UC_HTTP_API.groups.exposed = True
         UC_HTTP_API.state.exposed = True
         UC_HTTP_API.state_history.exposed = True
@@ -924,6 +925,56 @@ class UC_HTTP_API(GenericHTTP_API, UC_API):
         UC_HTTP_API.set_driver.exposed = True
 
         UC_HTTP_API.info.exposed = True
+
+    def index(self, k=None):
+        payload = getattr(cherrypy.serving.request, 'json_rpc_payload', None)
+        api_err_codes = {403: 2, 404: 6, 500: 10}
+        result = []
+        for p in payload if isinstance(payload, list) else [payload]:
+            if p.get('jsonrpc') != '2.0':
+                raise cp_api_error('unsupported RPC protocol')
+            req_id = p.get('id')
+            try:
+                r = {
+                    'jsonrpc': '2.0',
+                    'result': self._json_rpc(k, **p),
+                    'id': req_id
+                }
+            except cherrypy.HTTPError as e:
+                code = api_err_codes.get(e.code, 4)
+                msg = e._message
+                if not msg and code == 404: msg = 'API object not found'
+                r = {
+                    'jsonrpc': '2.0',
+                    'error': {
+                        'code': code,
+                        'message': msg if msg else e.reason
+                    }
+                }
+            except Exception as e:
+                err = str(e)
+                r = {'jsonrpc': '2.0', 'error': {'code': 10, 'message': err}}
+            if req_id:
+                r['id'] = req_id
+                if isinstance(payload, list):
+                    result.append(r)
+                else:
+                    result = r
+        return result if result else None
+
+    def _json_rpc(self, k, **kwargs):
+        try:
+            method = kwargs.get('method')
+            if not method: raise Exception
+            func = getattr(self, method)
+            if not func or not getattr(func, 'exposed', None):
+                raise Exception
+        except:
+            raise cp_api_404('API method not found')
+        params = kwargs.get('params', {})
+        if 'k' not in params: params['k'] = k
+        self.cp_check_perm(k=params['k'], path_info='/' + method)
+        return func(**params)
 
     def groups(self, k=None, p=None):
         return super().groups(k, p)

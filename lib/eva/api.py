@@ -56,11 +56,23 @@ def http_api_result(result, env):
 
 
 def http_api_result_ok(env=None):
-    return http_api_result('OK', env)
+    if hasattr(cherrypy.serving.request, 'json_rpc_payload'):
+        result = {'ok': True}
+        if env: result.update(env)
+        return result
+    else:
+        return http_api_result('OK', env)
 
 
 def http_api_result_error(env=None):
-    return http_api_result('ERROR', env)
+    if hasattr(cherrypy.serving.request, 'json_rpc_payload'):
+        print(eva.core.g.api_call_log)
+        msg = ', '.join(
+            eva.core.g.api_call_log.get(40, []) +
+            eva.core.g.api_call_log.get(50, []))
+        raise cp_api_error(msg if msg else 'API error')
+    else:
+        return http_api_result('ERROR', env)
 
 
 def update_config(cfg):
@@ -153,12 +165,6 @@ def http_remote_info(k=None):
     return '%s@%s' % (apikey.key_id(k), http_real_ip(get_gw=True))
 
 
-def cp_auth_pre():
-    k = cherrypy.request.headers.get('X-Auth-Key')
-    if k:
-        cherrypy.serving.request.params['k'] = k
-
-
 def cp_api_pre():
     eva.core.g.api_call_log = {}
 
@@ -173,7 +179,11 @@ def cp_json_pre():
         else:
             return
         if raw:
-            cherrypy.serving.request.params.update(jsonpickle.decode(raw))
+            data = jsonpickle.decode(raw)
+            if isinstance(data, dict) and not data.get('jsonrpc'):
+                cherrypy.serving.request.params.update(jsonpickle.decode(raw))
+            else:
+                cherrypy.serving.request.json_rpc_payload = data
     except:
         raise cp_api_error('invalid JSON data')
     return
@@ -382,8 +392,13 @@ class GenericAPI(object):
 
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
-    if isinstance(value, dict):
-        value['_log'] = eva.core.g.api_call_log
+    if getattr(cherrypy.serving.request, 'json_rpc_payload', None):
+        if value is None:
+            cherrypy.serving.response.status = 202
+            return
+    else:
+        if isinstance(value, dict):
+            value['_log'] = eva.core.g.api_call_log
     return format_json(value, minimal=not eva.core.development).encode('utf-8')
 
 
@@ -396,7 +411,8 @@ def cp_api_error(msg=''):
 
 
 def cp_api_404(msg=''):
-    return cherrypy.HTTPError('404 API Object Not Found', msg)
+    return cherrypy.HTTPError('404 Object Not Found', msg
+                              if msg else 'Object Not Found')
 
 
 def cp_need_master(k):
@@ -405,6 +421,8 @@ def cp_need_master(k):
 
 def cp_client_key(_k=None):
     if _k: return _k
+    k = cherrypy.request.headers.get('X-Auth-Key')
+    if k: return k
     if 'k' in cherrypy.serving.request.params:
         k = cherrypy.serving.request.params['k']
     else:
@@ -417,31 +435,100 @@ def cp_client_key(_k=None):
     return k
 
 
-class GenericHTTP_API(GenericAPI):
+class JSON_RPC_API:
+
+    def index(self, k=None):
+        payload = getattr(cherrypy.serving.request, 'json_rpc_payload', None)
+        http_err_codes = {403: 2, 404: 6, 500: 10}
+        result = []
+        for p in payload if isinstance(payload, list) else [payload]:
+            if p.get('jsonrpc') != '2.0':
+                raise cp_api_error('unsupported RPC protocol')
+            req_id = p.get('id')
+            try:
+                r = {
+                    'jsonrpc': '2.0',
+                    'result': self._json_rpc(k, **p),
+                    'id': req_id
+                }
+            except cherrypy.HTTPError as e:
+                code = http_err_codes.get(e.code, 4)
+                msg = e._message
+                if not msg and code == 404: msg = 'API object not found'
+                r = {
+                    'jsonrpc': '2.0',
+                    'error': {
+                        'code': code,
+                        'message': msg if msg else e.reason
+                    }
+                }
+            except Exception as e:
+                err = str(e)
+                r = {'jsonrpc': '2.0', 'error': {'code': 10, 'message': err}}
+            if req_id:
+                r['id'] = req_id
+                if isinstance(payload, list):
+                    result.append(r)
+                else:
+                    result = r
+        return result if result else None
+
+    def _json_rpc(self, k, **kwargs):
+        try:
+            method = kwargs.get('method')
+            if not method: raise Exception
+            func = getattr(self, method)
+            if not func or not getattr(func, 'exposed', None):
+                raise Exception
+        except:
+            raise cp_api_404('API method not found')
+        params = kwargs.get('params', {})
+        if 'k' not in params: params['k'] = k
+        self.cp_check_perm(api_key=params['k'], path_info='/' + method)
+        return func(**params)
+
+    def groups(self, k=None, p=None):
+        return super().groups(k, p)
+
+    def state(self, k=None, i=None, full=None, g=None, p=None):
+        if full:
+            _full = True
+        else:
+            _full = False
+        result = super().state(k, i, _full, g, p)
+        if result is None:
+            raise cp_api_404()
+        return result
+
+
+class GenericHTTP_API(GenericAPI, JSON_RPC_API):
 
     _cp_config = {
-        'tools.auth_pre.on': True,
         'tools.json_pre.on': True,
         'tools.api_pre.on': True,
         'tools.json_out.on': True,
         'tools.json_out.handler': cp_json_handler,
         'tools.auth.on': True,
         'tools.sessions.on': True,
-        'tools.sessions.timeout': session_timeout
+        'tools.sessions.timeout': session_timeout,
+        'tools.trailing_slash.on': False
     }
 
-    def cp_check_perm(self, rlp=None):
-        k = cp_client_key()
+    def cp_check_perm(self, api_key=None, rlp=None, path_info=None):
+        k = api_key if api_key else cp_client_key()
+        path = path_info if path_info is not None else \
+                cherrypy.serving.request.path_info
         if k is not None: cherrypy.serving.request.params['k'] = k
-        if cherrypy.serving.request.path_info[:6] == '/login': return
-        if cherrypy.serving.request.path_info[:5] == '/info': return
-        if cherrypy.serving.request.path_info[:4] == '/dev': dev = True
+        if path in ['', '/']: return
+        if path[:6] == '/login': return
+        if path[:5] == '/info': return
+        if path[:4] == '/dev': dev = True
         else: dev = False
         if dev and not eva.core.development: raise cp_forbidden_key()
         p = cherrypy.serving.request.params.copy()
         if not eva.core.development:
             if 'k' in p: del (p['k'])
-            if cherrypy.serving.request.path_info.startswith('/set_'):
+            if path.startswith('/set_'):
                 try:
                     if p.get('p') in ['key', 'masterkey']: del p['v']
                 except:
@@ -452,15 +539,12 @@ class GenericHTTP_API(GenericAPI):
                     del p[rp]
                 except:
                     pass
-        log_api_request(cherrypy.serving.request.path_info[1:],
-                        http_remote_info(k), p, dev)
+        log_api_request(path[1:], http_remote_info(k), p, dev)
         if apikey.check(k, master=dev, ip=http_real_ip()):
             return
         raise cp_forbidden_key()
 
     def __init__(self):
-        cherrypy.tools.auth_pre = cherrypy.Tool(
-            'before_handler', cp_auth_pre, priority=5)
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.api_pre = cherrypy.Tool(
