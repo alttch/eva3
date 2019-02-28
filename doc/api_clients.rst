@@ -21,6 +21,8 @@ JSON for POST.
 If you want to integrate EVA API in your Python or PHP application, EVA can
 offer ready-made client libraries.
 
+.. contents::
+
 API client for Python
 =====================
 
@@ -299,7 +301,7 @@ the example below, we'll use simple `JSON RPC client for Python 3
 Installing
 ----------
 
-Install Python3 module:
+Install Python 3 module:
 
 .. code-block:: bash
 
@@ -308,7 +310,7 @@ Install Python3 module:
 Usage example
 -------------
 
-Let's call :doc:`/uc/uc_api` method **state** and obtain states of sensors:
+Let's call :doc:`/uc/uc_api` method **state** and obtain state of sensors:
 
 .. code-block:: python
 
@@ -322,7 +324,7 @@ Let's call :doc:`/uc/uc_api` method **state** and obtain states of sensors:
 
     If using custom API client, you may still put API key to *X-Auth-Key*
     request header. This is against JSON RPC standard, so if you want to keep
-    it right, you must put *k* to params of each request.
+    it right, you must have *k* in params of each request.
 
 API result codes
 ----------------
