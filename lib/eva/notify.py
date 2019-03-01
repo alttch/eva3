@@ -153,39 +153,38 @@ class EventLog(Event):
         return d
 
 
-class NotifierWorker(BackgroundWorker):
-
-    def __init__(self, notifier):
-        super().__init__(name='notifier_worker_%s' % notifier.notifier_id)
-        self.notifier = notifier
-        self._Q = Queue()
-
-    def after_stop(self):
-        self._Q.put(None)
-
-    def push(self, event):
-        self._Q.put(event)
-
-    def run(self):
-        while self.is_active():
-            try:
-                event = self._Q.get()
-                if not self.is_active(): break
-                if event:
-                    try:
-                        self.notifier.send_notification(
-                            subject=event[0],
-                            data=event[1],
-                            retain=event[2],
-                            unpicklable=event[3])
-                    except:
-                        self.notifier.log_error()
-                        eva.core.log_traceback(notifier=True)
-            except:
-                eva.core.log_traceback(notifier=True)
-
-
 class GenericNotifier(object):
+
+    class NotifierWorker(BackgroundWorker):
+
+        def __init__(self, notifier):
+            super().__init__(name='notifier_worker_%s' % notifier.notifier_id)
+            self.notifier = notifier
+            self._Q = Queue()
+
+        def after_stop(self):
+            self._Q.put(None)
+
+        def push(self, event):
+            self._Q.put(event)
+
+        def run(self):
+            while self.is_active():
+                try:
+                    event = self._Q.get()
+                    if not self.is_active(): break
+                    if event:
+                        try:
+                            self.notifier.send_notification(
+                                subject=event[0],
+                                data=event[1],
+                                retain=event[2],
+                                unpicklable=event[3])
+                        except:
+                            self.notifier.log_error()
+                            eva.core.log_traceback(notifier=True)
+                except:
+                    eva.core.log_traceback(notifier=True)
 
     def __init__(self,
                  notifier_id,
@@ -201,7 +200,7 @@ class GenericNotifier(object):
         self.connected = False
         self.nt_client = False
         self._skip_test = None
-        self.worker = NotifierWorker(self)
+        self.worker = self.NotifierWorker(self)
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
 
