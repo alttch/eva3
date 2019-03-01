@@ -23,7 +23,9 @@ API is:
 
 **\http://<IP_address:Port>/sys-api**
 
-JSON RPC doesn't support sessions, so user authorization is not possible.
+JSON RPC doesn't support sessions, so user authorization is not possible. Also
+note that default JSON RPC result is *{ "ok": true }* (instead of *{ "result":
+"OK" }*). There's no error result, as JSON RPC sends errors in "error" field.
 
 .. contents::
 
