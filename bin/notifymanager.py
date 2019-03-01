@@ -65,7 +65,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create = self.sp.add_parser('create', help='Create notifier')
         ap_create.add_argument('i', help='Notifier ID', metavar='ID')
         ap_create.add_argument('p', help='Notifier properties: ' + \
-                'json:http(s)://[key]@uri or ' + \
+                'json:http(s)://[key]@uri[|method] or ' + \
                 'mqtt:[username:password]@host:[port] or ' + \
                 'db:dbfile[:keeptime]',
                 metavar='PROPS').completer = self.ComplNProto()
@@ -230,7 +230,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         space = params.get('s')
         timeout = params.get('t')
         if len(p) < 2: return self.local_func_result_failed
-        if p[0] in ['http', 'http-post', 'http-json', 'json']:
+        if p[0] in ['json']:
             u = (':'.join(p[1:])).split('/')
             if len(u) < 3: return self.local_func_result_failed
             if u[2].find('@') != -1:
@@ -318,7 +318,9 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             if isinstance(i, eva.notify.HTTPNotifier) or \
                     isinstance(i, eva.notify.HTTP_POSTNotifier) or \
                     isinstance(i, eva.notify.HTTP_JSONNotifier):
-                n['params'] = 'uri: %s ' % i.uri
+                method = getattr(i, 'method', None)
+                n['params'] = 'uri: {}{} '.format(i.uri, ('|{}'.format(method)
+                                                          if method else ''))
             elif isinstance(i, eva.notify.SQLiteNotifier):
                 n['params'] = 'db: %s' % i.db
             elif isinstance(i, eva.notify.MQTTNotifier):
