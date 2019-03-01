@@ -48,7 +48,6 @@ class Item(object):
         self.config_file_exists = False
         # generate long config names or use IDs in enterprise layout
         self.respect_layout = True
-        self.notify_lock = threading.Lock()
 
     def set_group(self, group=None):
         if group: self.group = group
@@ -94,10 +93,6 @@ class Item(object):
         return copy.copy(self)
 
     def notify(self, retain=None, skip_subscribed_mqtt=False):
-        # if not self.notify_lock.acquire(timeout=eva.core.timeout):
-            # logging.critical('Item::notify locking broken')
-            # eva.core.critical()
-            # return False
         try:
             if skip_subscribed_mqtt: s = self
             else: s = None
@@ -109,7 +104,6 @@ class Item(object):
                 skip_subscribed_mqtt_item=s)
         except:
             eva.core.log_traceback()
-        # self.notify_lock.release()
 
     def serialize(self,
                   full=False,
