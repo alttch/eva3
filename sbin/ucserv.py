@@ -10,8 +10,8 @@ import getopt
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
-import eva.sysapi
 import eva.core
+import eva.sysapi
 import eva.traphandler
 import eva.udpapi
 import eva.notify

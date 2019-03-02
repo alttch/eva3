@@ -21,16 +21,18 @@ import uuid
 import threading
 import sqlite3
 
+from pyaltt import background_worker
+from pyaltt import background_job
+
 from eva import apikey
 from eva.tools import format_json
 from eva.tools import val_to_boolean
-from eva.threads import BackgroundWorker
 
 from ws4py.websocket import WebSocket
 
 default_log_level = 20
 
-notifier_client_clean_delay = 1
+notifier_client_clean_delay = 30
 
 default_mqtt_qos = 1
 
@@ -44,11 +46,9 @@ logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 
 notifiers = {}
 
-_notifier_client_cleaner_active = False
-
-_notifier_client_cleaner = None
-
 action_subscribed = False
+
+_ne_kw = {'notifier': True}
 
 
 class Event(object):
@@ -155,36 +155,14 @@ class EventLog(Event):
 
 class GenericNotifier(object):
 
-    class NotifierWorker(BackgroundWorker):
-
-        def __init__(self, notifier):
-            super().__init__(name='notifier_worker_%s' % notifier.notifier_id)
-            self.notifier = notifier
-            self._Q = Queue()
-
-        def after_stop(self):
-            self._Q.put(None)
-
-        def push(self, event):
-            self._Q.put(event)
-
-        def run(self):
-            while self.is_active():
-                try:
-                    event = self._Q.get()
-                    if not self.is_active(): break
-                    if event:
-                        try:
-                            self.notifier.send_notification(
-                                subject=event[0],
-                                data=event[1],
-                                retain=event[2],
-                                unpicklable=event[3])
-                        except:
-                            self.notifier.log_error()
-                            eva.core.log_traceback(notifier=True)
-                except:
-                    eva.core.log_traceback(notifier=True)
+    @background_worker(
+        q=True, on_error=eva.core.log_traceback, on_error_kwargs=_ne_kw)
+    def notifier_worker(event, o, **kwargs):
+        o.send_notification(
+            subject=event[0],
+            data=event[1],
+            retain=event[2],
+            unpicklable=event[3])
 
     def __init__(self,
                  notifier_id,
@@ -200,7 +178,6 @@ class GenericNotifier(object):
         self.connected = False
         self.nt_client = False
         self._skip_test = None
-        self.worker = self.NotifierWorker(self)
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
 
@@ -373,11 +350,11 @@ class GenericNotifier(object):
         return self.enabled and self.connected
 
     def start(self):
-        self.worker.start()
+        self.notifier_worker.start(o=self, _name=self.notifier_id)
         self.connect()
 
     def stop(self):
-        self.worker.stop()
+        self.notifier_worker.stop()
         self.disconnect()
 
     def notify(self, subject, data, unpicklable=False, retain=False):
@@ -385,7 +362,7 @@ class GenericNotifier(object):
         data_to_send = self.format_data(subject, data)
         if not data_to_send: return None
         self.log_notify()
-        self.worker.push((subject, data_to_send, retain, unpicklable))
+        self.notifier_worker.put((subject, data_to_send, retain, unpicklable))
         # self.send_notification(subject, data_to_send, retain, unpicklable)
         return True
 
@@ -561,14 +538,11 @@ class SQLiteNotifier(GenericNotifier):
         self.keep = keep if keep else \
             sqlite_default_keep
         self._keep = keep
-        self.cleanup_time = 3600
         self._db = db
         if db and db[0] == '/':
             self.db = db
         else:
             self.db = eva.core.dir_runtime + '/' + db
-        self.history_cleaner_active = False
-        self.history_cleaner = None
 
     def test(self):
         if self.connected: return True
@@ -715,11 +689,8 @@ class SQLiteNotifier(GenericNotifier):
                         self.connected = False
                         return False
                 db.close()
-                self.history_cleaner_active = True
-                self.history_cleaner = threading.Thread(
-                    target=self._t_history_cleaner,
-                    name=self.notifier_id + '._t_history_cleaner')
-                self.history_cleaner.start()
+                self.history_cleaner.start(
+                    _name=self.notifier_id + '_cleaner', o=self)
                 self.connected = True
             else:
                 self.connected = False
@@ -784,52 +755,39 @@ class SQLiteNotifier(GenericNotifier):
         if self._db or props: d['db'] = self._db
         return d
 
-    def _t_history_cleaner(self):
-        logging.debug('.' + self.notifier_id +
-                      ' item state history cleaner started')
-        while self.history_cleaner_active:
+    @background_worker(
+        interval=3600, on_error=eva.core.log_traceback, on_error_kwargs=_ne_kw)
+    def history_cleaner(o, **kwargs):
+        db = o.get_db()
+        c = db.cursor()
+        try:
+            space = o.space if o.space is not None else ''
+            logging.debug(
+                '.%s: cleaning records older than %u sec' % (o.db, o.keep))
+            c.execute('select oid, max(t) from state_history ' + \
+                    ' where space = ? and t < ? group by oid',
+                    (space, time.time() - o.keep))
+            c2 = db.cursor()
             try:
-                db = self.get_db()
-                c = db.cursor()
-                try:
-                    space = self.space if self.space is not None else ''
-                    logging.debug('.%s: cleaning records older than %u sec' %
-                                  (self.db, self.keep))
-                    c.execute('select oid, max(t) from state_history ' + \
-                            ' where space = ? and t < ? group by oid',
-                            (space, time.time() - self.keep))
-                    c2 = db.cursor()
-                    try:
-                        for r in c:
-                            c2.execute(
-                            'delete from state_history where ' + \
-                                    ' space = ? and oid = ? and t < ?',
-                                    (space, r[0], r[1]))
-                    except:
-                        c2.close()
-                        raise
-                    db.commit()
-                    c2.close()
-                    c.close()
-                    db.close()
-                except:
-                    c.close()
-                    db.close()
-                    eva.core.log_traceback(notifier=True)
+                for r in c:
+                    c2.execute(
+                    'delete from state_history where ' + \
+                            ' space = ? and oid = ? and t < ?',
+                            (space, r[0], r[1]))
             except:
-                eva.core.log_traceback(notifier=True)
-            i = 0
-            while i < self.cleanup_time and \
-                    self.history_cleaner_active:
-                time.sleep(eva.core.sleep_step)
-                i += eva.core.sleep_step
-        logging.debug('.' + self.notifier_id +
-                      ' item state history cleaner stopped')
+                c2.close()
+                raise
+            db.commit()
+            c2.close()
+            c.close()
+            db.close()
+        except:
+            c.close()
+            db.close()
+            eva.core.log_traceback(notifier=True)
 
     def disconnect(self):
-        self.history_cleaner_active = False
-        if self.history_cleaner and self.history_cleaner.isAlive():
-            self.history_cleaner.join()
+        self.history_cleaner.stop()
 
 
 class GenericHTTPNotifier(GenericNotifier):
@@ -1260,24 +1218,14 @@ class GenericMQTTNotifier(GenericNotifier):
         # dict of tuples (topic, handler)
         self.api_callback = {}
         self.api_callback_lock = threading.RLock()
-        self.announce_enabled = False
-        self.announcer = None
 
-    def _t_announcer(self):
-        logging.debug('%s announcer started' % self.notifier_id)
-        while self.announce_enabled:
-            self.send_message(
-                self.announce_topic,
-                self.announce_msg,
-                qos=self.qos['system'],
-                use_space=False)
-            i = 0
-            while i < self.announce_interval and self.announce_enabled:
-                time.sleep(eva.core.sleep_step)
-                i += eva.core.sleep_step
-            if not self.announce_enabled:
-                break
-        logging.debug('%s announcer stopped' % self.notifier_id)
+    @background_worker(on_error=eva.core.log_traceback, on_error_kwargs=_ne_kw)
+    def announcer(o, **kwargs):
+        o.send_message(
+            o.announce_topic,
+            o.announce_msg,
+            qos=o.qos['system'],
+            use_space=False)
 
     def connect(self):
         self.check_connection()
@@ -1286,18 +1234,16 @@ class GenericMQTTNotifier(GenericNotifier):
         super().disconnect()
         self.mq.loop_stop()
         self.mq.disconnect()
-        if self.announcer and self.announcer.isAlive():
-            self.announce_enabled = False
-            self.announcer.join()
+        self.announcer.stop()
 
     def on_connect(self, client, userdata, flags, rc):
         logging.debug('%s mqtt reconnect' % self.notifier_id)
         self.connected = True
-        if self.announce_interval and \
-                (not self.announcer or not self.announcer.isAlive()):
-            self.announce_enabled = True
-            self.announcer = threading.Thread(target=self._t_announcer)
-            self.announcer.start()
+        if self.announce_interval:
+            self.announcer.start(
+                o=self,
+                _interval=self.announce_interval,
+                _name=self.notifier_id + '_announcer')
         try:
             for i, v in self.api_callback.copy():
                 client.subscribe(v[0], qos=self.qos['system'])
@@ -1436,33 +1382,22 @@ class GenericMQTTNotifier(GenericNotifier):
         if t == self.announce_topic and \
                 d != self.announce_msg and \
                 self.discovery_handler:
-            th = threading.Thread(
-                target=self.discovery_handler, args=(self.notifier_id, d))
-            th.start()
+            background_job(self.discovery_handler)(self.notifier_id, d)
             return
         if t == self.api_request_topic and self.api_handler:
-            th = threading.Thread(
-                target=self.api_handler,
-                args=(self.notifier_id, d, self.send_api_response))
-            th.start()
+            background_job(self.api_handler)(self.notifier_id, d,
+                                             self.send_api_response)
             return
         if t.startswith(self.pfx_api_response):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
-                th = threading.Thread(
-                    target=self.api_callback[response_id][1], args=(d,))
-                th.start()
+                background_job(self.api_callback[response_id][1])(d)
                 self.finish_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
-                try:
-                    th = threading.Thread(
-                        target=self.exec_custom_handler,
-                        args=(h, d, t, msg.qos, msg.retain))
-                    th.start()
-                except:
-                    eva.core.log_traceback(notifier=True)
+                background_job(self.exec_custom_handler)(h, d, t, msg.qos,
+                                                         msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
                 r = jsonpickle.decode(d)
@@ -2180,25 +2115,16 @@ def dump(notifier_id=None):
 
 
 def start():
-    global _notifier_client_cleaner
-    global _notifier_client_cleaner_active
-    _notifier_client_cleaner = threading.Thread(
-        target=_t_notifier_client_cleaner, name='_t_notifier_client_cleaner')
-    _notifier_client_cleaner_active = True
-    _notifier_client_cleaner.start()
+    notifier_client_cleaner.start()
     for i, n in notifiers.copy().items():
         if n.enabled: n.start()
 
 
 def stop():
-    global _notifier_client_cleaner
-    global _notifier_client_cleaner_active
     notify_restart()
     for i, n in notifiers.copy().items():
         n.stop()
-    if _notifier_client_cleaner_active:
-        _notifier_client_cleaner_active = False
-        _notifier_client_cleaner.join()
+    notifier_client_cleaner.stop()
 
 
 def reload_clients():
@@ -2213,17 +2139,11 @@ def notify_restart():
         if n.nt_client: n.send_server_event('restart')
 
 
-def _t_notifier_client_cleaner():
-    logging.debug('notifier client cleaner started')
-    while _notifier_client_cleaner_active:
-        for k, n in notifiers.copy().items():
-            if n.nt_client: n.cleanup()
-        i = 0
-        while i < notifier_client_clean_delay and \
-                _notifier_client_cleaner_active:
-            time.sleep(eva.core.sleep_step)
-            i += eva.core.sleep_step
-    logging.debug('notifier client cleaner stopped')
+@background_worker(
+    delay=notifier_client_clean_delay, on_error=eva.core.log_traceback)
+def notifier_client_cleaner(**kwargs):
+    for k, n in notifiers.copy().items():
+        if n.nt_client: n.cleanup()
 
 
 def init():

@@ -554,7 +554,7 @@ def destroy_dm_rule(r_id):
     return False
 
 
-def handle_discovered_controller(notifier_id, controller_id):
+def handle_discovered_controller(notifier_id, controller_id, **kwargs):
     try:
         ct, c_id = controller_id.split('/')
         if ct != 'uc':

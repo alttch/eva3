@@ -4,7 +4,6 @@ __license__ = "Apache License 2.0"
 __version__ = "3.1.2"
 
 import logging
-import eva.notify
 import eva.core
 import time
 import threading

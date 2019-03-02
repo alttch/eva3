@@ -671,7 +671,7 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     return _wait_for(func, t, p, wait_for_false)
 
 
-def log_traceback(display=False, notifier=False, force=False):
+def log_traceback(display=False, notifier=False, force=False, e=None):
     e_msg = traceback.format_exc()
     if (show_traceback or force) and not display:
         pfx = '.' if notifier else ''

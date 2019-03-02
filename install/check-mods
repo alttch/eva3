@@ -25,6 +25,7 @@ mods = [
     'PIL',
     'platform',
     'psutil',
+    'pyaltt',
     'pygments',
     'pytz',
     'pysnmp',

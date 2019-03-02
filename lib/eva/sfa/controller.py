@@ -131,7 +131,7 @@ def load_remote_lms():
         return False
 
 
-def handle_discovered_controller(notifier_id, controller_id):
+def handle_discovered_controller(notifier_id, controller_id, **kwargs):
     try:
         ct, c_id = controller_id.split('/')
         if ct not in ['uc', 'lm']:
