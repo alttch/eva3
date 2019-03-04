@@ -8,6 +8,8 @@ import eva.core
 import time
 import threading
 
+from pyaltt import g
+
 _log_records = []
 _mute = False
 
@@ -41,8 +43,8 @@ def log_append(record=None, rd=None, skip_mqtt=False):
     if not _mute and _r['msg'] and _r['msg'][0] != '.' and \
             _r['mod'] != '_cplogging':
         if _r['l'] >= 20 or eva.core.debug:
-            if getattr(eva.core.g, 'api_call_log', None) is not None:
-                eva.core.g.api_call_log.setdefault(_r['l'],
+            if g.get('api_call_log') is not None:
+                g.api_call_log.setdefault(_r['l'],
                                                    []).append(_r['msg'])
         _log_records.append(_r)
         t = threading.local()
@@ -62,11 +64,11 @@ def unmute():
 def start():
     global _log_cleaner
     global _log_cleaner_active
-    eva.core.append_stop_func(stop)
     _log_cleaner = threading.Thread(
         target=_t_log_cleaner, name='_t_log_cleaner')
     _log_cleaner_active = True
     _log_cleaner.start()
+    eva.core.stop.append(stop)
 
 
 def stop():

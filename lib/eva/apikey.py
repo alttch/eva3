@@ -563,6 +563,7 @@ def create_apikeys_table():
         logging.critical('unable to create apikeys table in db')
 
 
+@eva.core.save
 def save():
     for i, k in keys_by_id.copy().items():
         if k.config_changed and not k.save():
@@ -585,7 +586,7 @@ def save():
 
 
 def init():
-    eva.core.append_save_func(save)
+    pass
 
 
 def gen_random_hash():

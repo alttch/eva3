@@ -24,6 +24,9 @@ from eva.tools import wait_for as _wait_for
 
 from eva.logs import MemoryLogHandler
 
+from pyaltt import g
+from pyaltt import FunctionCollecton
+
 version = __version__
 
 timeout = 5
@@ -125,7 +128,30 @@ started = False
 
 shutdown_requested = False
 
-g = threading.local()
+
+def log_traceback(display=False, notifier=False, force=False, e=None):
+    e_msg = traceback.format_exc()
+    if (show_traceback or force) and not display:
+        pfx = '.' if notifier else ''
+        logging.error(pfx + e_msg)
+    elif display:
+        print(e_msg)
+    if not _exception_log_lock.acquire(timeout=timeout):
+        logging.critical('log_traceback locking broken')
+        critical(log=False)
+        return
+    e = {'t': time.strftime('%Y/%m/%d %H:%M:%S %z'), 'e': e_msg}
+    _exceptions.append(e)
+    if len(_exceptions) > keep_exceptions:
+        del _exceptions[0]
+    _exception_log_lock.release()
+
+
+dump = FunctionCollecton(on_error=log_traceback, include_exceptions=True)
+save = FunctionCollecton(on_error=log_traceback)
+shutdown = FunctionCollecton(on_error=log_traceback)
+stop = FunctionCollecton(on_error=log_traceback)
+
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
@@ -140,7 +166,7 @@ def sighandler_term(signum, frame):
     logging.info('got TERM signal, exiting')
     if db_update == 2:
         save()
-    shutdown()
+    core_shutdown()
     unlink_pid_file()
     _sigterm_sent = True
     logging.info('EVA core shut down')
@@ -175,19 +201,13 @@ def finish_save():
     return True
 
 
-def save(func=None):
-    result = True
+def do_save(func=None):
     if not prepare_save(): return False
     if func and func in _save_func:
         if not func(): result = False
-    else:
-        for f in _save_func:
-            try:
-                if not f(): result = False
-            except:
-                log_traceback()
+    success = save.execute()[1]
     if not finish_save(): return False
-    return result
+    return success
 
 
 def block():
@@ -201,73 +221,23 @@ def is_shutdown_requested():
     return shutdown_requested
 
 
-def shutdown():
+def core_shutdown():
     global shutdown_requested
     shutdown_requested = True
-    for f in _shutdown_func:
-        try:
-            f()
-        except:
-            log_traceback()
-    for f in _stop_func:
-        try:
-            f()
-        except:
-            log_traceback()
-
-
-def append_save_func(func):
-    _save_func.add(func)
-
-
-def remove_save_func(func):
-    try:
-        _save_func.remove(func)
-    except:
-        log_traceback()
-
-
-def append_dump_func(fid, func):
-    if not fid in _dump_func:
-        _dump_func[fid] = func
-
-
-def remove_dump_func(fid):
-    try:
-        del _dump_func[fid]
-    except:
-        log_traceback()
-
-
-def append_stop_func(func):
-    _stop_func.add(func)
-
-
-def append_shutdown_func(func):
-    _shutdown_func.add(func)
-
-
-def remove_stop_func(func):
-    try:
-        _stop_func.remove(func)
-    except:
-        log_traceback()
+    shutdown()
+    stop()
 
 
 def create_dump(e='request', msg=''):
-    dump = {'reason': {'event': e, 'info': str(msg)}}
     try:
-        for i, f in _dump_func.items():
-            try:
-                dump[i] = f()
-            except:
-                dump[i] = traceback.format_exc()
+        result = dump.run()
+        result.update({'reason': {'event': e, 'info': str(msg)}})
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
         gzip.open(filename, 'w')
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
         gzip.open(filename, 'a').write(
-            format_json(dump, minimal=not development,
+            format_json(result, minimal=not development,
                         unpicklable=True).encode())
         logging.warning(
             'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
@@ -277,6 +247,7 @@ def create_dump(e='request', msg=''):
     return filename
 
 
+@dump
 def serialize():
     d = {}
     proc = psutil.Process()
@@ -609,6 +580,7 @@ def set_cvar(var, value=None):
     return True
 
 
+@save
 def save_modified():
     return save_cvars() if cvars_modified else True
 
@@ -671,24 +643,6 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     return _wait_for(func, t, p, wait_for_false)
 
 
-def log_traceback(display=False, notifier=False, force=False, e=None):
-    e_msg = traceback.format_exc()
-    if (show_traceback or force) and not display:
-        pfx = '.' if notifier else ''
-        logging.error(pfx + e_msg)
-    elif display:
-        print(e_msg)
-    if not _exception_log_lock.acquire(timeout=timeout):
-        logging.critical('log_traceback locking broken')
-        critical(log=False)
-        return
-    e = {'t': time.strftime('%Y/%m/%d %H:%M:%S %z'), 'e': e_msg}
-    _exceptions.append(e)
-    if len(_exceptions) > keep_exceptions:
-        del _exceptions[0]
-    _exception_log_lock.release()
-
-
 def critical(log=True, from_driver=False):
     try:
         caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
@@ -744,8 +698,6 @@ def dummy_false():
 
 
 def init():
-    append_save_func(save_modified)
-    append_dump_func('eva_core', serialize)
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
     if not os.environ.get('EVA_CORE_ENABLE_CC'):

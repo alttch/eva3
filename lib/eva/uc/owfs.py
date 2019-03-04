@@ -51,6 +51,7 @@ def serialize(config=False):
     return result
 
 
+@eva.core.dump
 def dump():
     return serialize()
 
@@ -108,6 +109,7 @@ def load():
     return True
 
 
+@eva.core.save
 def save():
     try:
         open(eva.core.dir_runtime + '/uc_owfs.json', 'w').write(
@@ -120,8 +122,7 @@ def save():
 
 
 def start():
-    eva.core.append_dump_func('uc.owfs', dump)
-    eva.core.append_save_func(save)
+    pass
 
 
 def stop():

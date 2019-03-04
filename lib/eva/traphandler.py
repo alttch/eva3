@@ -132,7 +132,7 @@ def start():
         config.addV1System(snmpEngine, eva.core.product_code, _community)
         ntfrcv.NotificationReceiver(snmpEngine, __cbFun)
         snmpEngine.transportDispatcher.jobStarted(1)
-        eva.core.append_stop_func(stop)
+        eva.core.stop.append(stop)
         _t_dispatcher = threading.Thread(
             target=_t_dispatcher,
             name='traphandler_t_dispatcher',

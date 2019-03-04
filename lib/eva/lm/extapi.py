@@ -175,6 +175,7 @@ def serialize(full=False, config=False):
     return result
 
 
+@eva.core.dump
 def dump():
     return serialize(full=True, config=True)
 
@@ -194,6 +195,7 @@ def load():
     return True
 
 
+@eva.core.save
 def save():
     try:
         open(eva.core.dir_runtime + '/lm_extensions.json', 'w').write(
@@ -206,13 +208,11 @@ def save():
 
 
 def start():
-    eva.core.append_stop_func(stop)
-    eva.core.append_dump_func('lm.extapi', dump)
-    eva.core.append_save_func(save)
     for k, p in exts.items():
         p.start()
 
 
+@eva.core.stop
 def stop():
     for k, p in exts.items():
         p.stop()

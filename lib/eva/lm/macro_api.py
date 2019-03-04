@@ -675,9 +675,9 @@ def init():
     global mbi_code
     mbi_code = open(eva.core.dir_lib +
                     '/eva/lm/macro_builtins.py').read() + '\n\n'
-    eva.core.append_shutdown_func(shutdown)
 
 
+@eva.core.shutdown
 def shutdown():
     eva.lm.controller.exec_macro(
         'system/shutdown', priority=1, wait=eva.core.timeout)

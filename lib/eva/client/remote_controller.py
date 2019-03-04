@@ -572,7 +572,7 @@ class RemoteControllerPool(object):
     def start(self):
         if not eva.core.keep_action_history:
             return
-        eva.core.append_stop_func(self.stop)
+        eva.core.stop.append(self.stop)
         self.action_cleaner = threading.Thread(
             target=self._t_action_cleaner,
             name='_t_remote_uc_pool_action_cleaner')

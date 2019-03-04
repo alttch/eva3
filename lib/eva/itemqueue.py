@@ -159,7 +159,7 @@ class ActiveItemQueue(object):
 
     def start(self, loop=True):
         if loop:
-            eva.core.append_stop_func(self.stop)
+            eva.core.stop.append(self.stop)
             self.action_processor = threading.Thread(
                 target=self._t_action_processor,
                 name='_t_itemqueue_processor_' + self.q_id,

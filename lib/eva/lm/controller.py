@@ -157,6 +157,7 @@ def create_lvar_state_table():
         eva.core.release_db()
 
 
+@eva.core.save
 def save():
     for i, v in lvars_by_full_id.items():
         if not save_lvar_state(v):
@@ -783,6 +784,7 @@ def connect_remote_controller(v):
                 v.full_id)
 
 
+@eva.core.stop
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.db_update == 1: save()
@@ -839,6 +841,7 @@ def exec_macro(macro,
     return a
 
 
+@eva.core.dump
 def dump(item_id=None):
     if item_id: return items_by_full_id[item_id]
     rcs = {}
@@ -855,9 +858,6 @@ def dump(item_id=None):
 
 def init():
     eva.lm.macro_api.init()
-    eva.core.append_save_func(save)
-    eva.core.append_dump_func('lm', dump)
-    eva.core.append_stop_func(stop)
 
 
 eva.api.mqtt_discovery_handler = handle_discovered_controller

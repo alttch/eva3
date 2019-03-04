@@ -68,6 +68,7 @@ def get_lm(controller_id):
             return remote_lms[controller_id]
 
 
+@eva.core.save
 def save():
     for i, v in remote_ucs.items():
         if v.config_changed:
@@ -316,6 +317,7 @@ def connect_remote_controller(pool, v):
                 v.item_id)
 
 
+@eva.core.stop
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.db_update == 1: save()
@@ -325,6 +327,7 @@ def stop():
         lm_pool.stop()
 
 
+@eva.core.dump
 def dump():
     r_ucs = {}
     r_lms = {}
@@ -340,9 +343,6 @@ def dump():
 
 
 def init():
-    eva.core.append_save_func(save)
-    eva.core.append_dump_func('sfa', dump)
-    eva.core.append_stop_func(stop)
     eva.core.enterprise_layout = None
 
 

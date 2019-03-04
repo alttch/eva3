@@ -23,6 +23,8 @@ import eva.users
 import eva.notify
 import eva.benchmark
 
+from pyaltt import g
+
 host = None
 ssl_host = None
 
@@ -66,10 +68,9 @@ def http_api_result_ok(env=None):
 
 def http_api_result_error(env=None):
     if hasattr(cherrypy.serving.request, 'json_rpc_payload'):
-        print(eva.core.g.api_call_log)
         msg = ', '.join(
-            eva.core.g.api_call_log.get(40, []) +
-            eva.core.g.api_call_log.get(50, []))
+            g.api_call_log.get(40, []) +
+            g.api_call_log.get(50, []))
         raise cp_api_error(msg if msg else 'API error')
     else:
         return http_api_result('ERROR', env)
@@ -185,7 +186,7 @@ def cp_session_pre():
 
 
 def cp_api_pre():
-    eva.core.g.api_call_log = {}
+    g.api_call_log = {}
 
 
 def cp_json_pre():
@@ -418,7 +419,7 @@ def cp_json_handler(*args, **kwargs):
             return
     else:
         if isinstance(value, dict):
-            value['_log'] = eva.core.g.api_call_log
+            value['_log'] = g.api_call_log
     return format_json(value, minimal=not eva.core.development).encode('utf-8')
 
 
@@ -685,9 +686,9 @@ def start():
         cherrypy.log.error_log.propagate = False
     else:
         cherrypy.config.update({'global': {'engine.autoreload.on': False}})
-    eva.core.append_stop_func(stop)
     cherrypy.engine.start()
 
 
+@eva.core.stop
 def stop():
     cherrypy.engine.exit()

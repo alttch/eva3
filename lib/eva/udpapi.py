@@ -147,7 +147,7 @@ def start():
     else: _port = port
 
     logging.info('Starting UDP API, listening at %s:%u' % (host, _port))
-    eva.core.append_stop_func(stop)
+    eva.core.stop.append(stop)
     _t = threading.Thread(
         target=_t_dispatcher, name='udpapi_t_dispatcher', args=(host, _port))
     _t_dispatcher_active = True

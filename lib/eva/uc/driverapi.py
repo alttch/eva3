@@ -522,6 +522,7 @@ def serialize_lpi(full=False, config=False):
     return result
 
 
+@eva.core.dump
 def dump():
     return serialize(full=True, config=True)
 
@@ -550,6 +551,7 @@ def load():
     return True
 
 
+@eva.core.save
 def save():
     try:
         open(eva.core.dir_runtime + '/uc_drivers.json', 'w').write(
@@ -562,8 +564,6 @@ def save():
 
 
 def start():
-    eva.core.append_dump_func('uc.driverapi', dump)
-    eva.core.append_save_func(save)
     for k, p in drivers.items():
         try:
             p._start()

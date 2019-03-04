@@ -327,7 +327,7 @@ class UserAPI(object):
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     def save(self, k=None):
-        return eva.core.save()
+        return eva.core.do_save()
 
     def dump(self, k=None):
         return eva.core.create_dump()
@@ -724,13 +724,13 @@ def start():
     global api
     api = SysAPI()
     cherrypy.tree.mount(SysHTTP_API(), '/sys-api')
-    eva.core.append_stop_func(stop)
     _lock_processor = threading.Thread(
         target=_t_lock_processor, name='_t_lock_processor')
     _lock_processor_active = True
     _lock_processor.start()
 
 
+@eva.core.stop
 def stop():
     global _lock_processor_active
     if _lock_processor_active:
