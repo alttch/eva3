@@ -24,6 +24,7 @@ Common
     * JSON RPC 2.0 API
     * JSON notifiers will send JSON RPC 2.0 notifications to the target uri, if
       *method* param is set
+    * Database support for MySQL and PostgreSQL (limited)
 
 UC 
 --
