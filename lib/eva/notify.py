@@ -19,7 +19,7 @@ import os
 import sys
 import uuid
 import threading
-import sqlalchemy
+import sqlalchemy as sa
 
 from sqlalchemy import text as sql
 
@@ -601,7 +601,7 @@ class SQLANotifier(GenericNotifier):
         else:
             self.db_uri = None
         if self.db_uri:
-            self.db_engine = sqlalchemy.create_engine(self.db_uri)
+            self.db_engine = sa.create_engine(self.db_uri)
         else:
             self.db_engine = None
 
@@ -713,29 +713,26 @@ class SQLANotifier(GenericNotifier):
         try:
             if self.db_engine:
                 dbconn = self.db()
+                meta = sa.MetaData()
+                t_state_history = sa.Table(
+                    'state_history', meta,
+                    sa.Column('space', sa.String, primary_key=True),
+                    sa.Column('t', sa.Float, primary_key=True),
+                    sa.Column('oid', sa.String, primary_key=True),
+                    sa.Column('status', sa.Integer),
+                    sa.Column('value', sa.String))
+                sa.Index('i_t_oid', t_state_history.c.space,
+                         t_state_history.c.t, t_state_history.c.oid)
+                sa.Index('i_oid', t_state_history.c.space,
+                         t_state_history.c.oid)
                 try:
-                    dbconn.execute(sql('select t from state_history limit 1'))
+                    meta.create_all(dbconn)
                 except:
-                    logging.info(
-                        '.%s: no state_history table, crating new' % self.db)
-                    try:
-                        dbconn.execute(sql(
-                            'create table state_history(space, t, oid,' + \
-                            ' status, value, primary key(space, t, oid))'
-                        ))
-                        dbconn.execute(
-                            sql('create index i_t_oid on ' +
-                                'state_history(space,t,oid)'))
-                        dbconn.execute(
-                            sql('create index i_oid on state_history(space,oid)'
-                               ))
-                    except:
-                        logging.error(
-                            '.%s: failed to create state_history table' %
-                            self.db)
-                        eva.core.log_traceback(notifier=True)
-                        self.connected = False
-                        return False
+                    logging.error('.%s: failed to create state_history table' %
+                                  self.db_uri)
+                    eva.core.log_traceback(notifier=True)
+                    self.connected = False
+                    return False
                 if not self.test_only_mode:
                     self.history_cleaner.start(_name=self.notifier_id +
                                                '_cleaner')
