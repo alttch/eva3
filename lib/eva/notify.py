@@ -560,8 +560,7 @@ class SQLANotifier(GenericNotifier):
         def run(self, o, **kwargs):
             dbconn = o.db()
             space = o.space if o.space is not None else ''
-            logging.debug(
-                '.%s: cleaning records older than %u sec' % (o.db_uri, o.keep))
+            logging.debug('.cleaning records older than %u sec' % o.keep)
             result = dbconn.execute(
                 sql('select oid, max(t) as maxt from state_history where ' +
                     'space = :space and t < :t group by oid'),
@@ -716,11 +715,11 @@ class SQLANotifier(GenericNotifier):
                 meta = sa.MetaData()
                 t_state_history = sa.Table(
                     'state_history', meta,
-                    sa.Column('space', sa.String, primary_key=True),
-                    sa.Column('t', sa.Float, primary_key=True),
-                    sa.Column('oid', sa.String, primary_key=True),
+                    sa.Column('space', sa.String(64), primary_key=True),
+                    sa.Column('t', sa.Numeric(20, 8), primary_key=True),
+                    sa.Column('oid', sa.String(256), primary_key=True),
                     sa.Column('status', sa.Integer),
-                    sa.Column('value', sa.String))
+                    sa.Column('value', sa.String(256)))
                 sa.Index('i_t_oid', t_state_history.c.space,
                          t_state_history.c.t, t_state_history.c.oid)
                 sa.Index('i_oid', t_state_history.c.space,
