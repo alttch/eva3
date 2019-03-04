@@ -68,7 +68,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create.add_argument('p', help='Notifier properties: ' + \
                 'json:http(s)://[key]@uri[|method] or ' + \
                 'mqtt:[username:password]@host:[port] or ' + \
-                'db:db_uri[:keeptime]',
+                'db:db_uri',
                 metavar='PROPS').completer = self.ComplNProto()
         ap_create.add_argument(
             '-s',
@@ -287,16 +287,9 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 space=space,
                 timeout=timeout)
         elif p[0] == 'db':
-            db_uri = p[1]
-            if len(p) > 2:
-                try:
-                    keep = int(p[2])
-                except:
-                    return self.local_func_result_failed
-            else:
-                keep = None
+            db_uri = ':'.join(p[1:])
             n = eva.notify.SQLANotifier(
-                notifier_id=notifier_id, db_uri=db_uri, keep=keep, space=space)
+                notifier_id=notifier_id, db_uri=db_uri, keep=None, space=space)
         else:
             self.print_err('notifier type unknown %s' % p[0])
             return self.local_func_result_failed
@@ -337,6 +330,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
     def get_notifier(self, notifier_id, pass_errors=False):
         try:
             n = eva.notify.load_notifier(notifier_id, test=False, connect=False)
+            n.test_only_mode = True
             return n
         except:
             if not pass_errors:

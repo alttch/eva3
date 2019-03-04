@@ -187,6 +187,7 @@ class GenericNotifier(object):
         self.events = set()
         self.timeout = timeout
         self.enabled = False
+        self.test_only_mode = False
         self.connected = False
         self.nt_client = False
         self._skip_test = None
@@ -365,10 +366,12 @@ class GenericNotifier(object):
 
     def start(self):
         self.connect()
-        self.notifier_worker.start()
+        if not self.test_only_mode:
+            self.notifier_worker.start()
 
     def stop(self):
-        self.notifier_worker.stop()
+        if not self.test_only_mode:
+            self.notifier_worker.stop()
         self.disconnect()
 
     def notify(self, subject, data, unpicklable=False, retain=False):
@@ -584,14 +587,19 @@ class SQLANotifier(GenericNotifier):
         self.db_lock = threading.RLock()
         self.set_db(db_uri)
 
-    def set_db(self, db_uri):
+    def set_db(self, db_uri=None):
         self._db = db_uri
-        if db_uri and db_uri.find('://') == -1:
-            if db_uri[0] == '/':
-                self.db_uri = db_uri
+        if db_uri:
+            if db_uri.find('://') == -1:
+                if db_uri[0] == '/':
+                    self.db_uri = db_uri
+                else:
+                    self.db_uri = eva.core.dir_runtime + '/' + db_uri
+                self.db_uri = 'sqlite:///' + self.db_uri
             else:
-                self.db_uri = eva.core.dir_runtime + '/' + db_uri
-            self.db_uri = 'sqlite:///' + self.db_uri
+                self.db_uri = db_uri
+        else:
+            self.db_uri = None
         if self.db_uri:
             self.db_engine = sqlalchemy.create_engine(self.db_uri)
         else:
@@ -728,7 +736,9 @@ class SQLANotifier(GenericNotifier):
                         eva.core.log_traceback(notifier=True)
                         self.connected = False
                         return False
-                self.history_cleaner.start(_name=self.notifier_id + '_cleaner')
+                if not self.test_only_mode:
+                    self.history_cleaner.start(_name=self.notifier_id +
+                                               '_cleaner')
                 self.connected = True
             else:
                 self.connected = False
@@ -1248,7 +1258,7 @@ class GenericMQTTNotifier(GenericNotifier):
     def on_connect(self, client, userdata, flags, rc):
         logging.debug('%s mqtt reconnect' % self.notifier_id)
         self.connected = True
-        if self.announce_interval:
+        if self.announce_interval and not self.test_only_mode:
             self.announcer.start(_name=self.notifier_id + '_announcer')
         try:
             for i, v in self.api_callback.copy():
