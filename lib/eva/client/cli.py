@@ -1386,8 +1386,11 @@ class GenericCLI(object):
             self.fancy_print_result(result, api_func, api_func_full, itype)
         return 0
 
-    def print_tdf(self, result, time_field):
+    def print_tdf(self, result_in, time_field):
         self.import_pandas()
+        result = result_in.copy()
+        if '_log' in result:
+            del result['_log']
         # convert list to dict
         res = []
         for i in range(len(result[time_field])):
