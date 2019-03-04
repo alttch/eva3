@@ -16,8 +16,5 @@ class UCItem(eva.item.Item):
         if eva.core.db_update == 1: eva.uc.controller.save_item_state(self)
 
     def notify(self, skip_subscribed_mqtt=False):
-        t = threading.Thread(
-            target=self.do_notify, args=(skip_subscribed_mqtt,))
-        t.setDaemon(True)
-        t.start()
+        self.do_notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
         eva.uc.controller.handle_event(self)
