@@ -19,12 +19,15 @@ import os
 import sys
 import uuid
 import threading
-import sqlite3
+import sqlalchemy
+
+from sqlalchemy import text as sql
 
 from pyaltt import BackgroundWorker
 from pyaltt import BackgroundQueueWorker
 from pyaltt import background_worker
 from pyaltt import background_job
+from pyaltt import g
 
 from eva import apikey
 from eva.tools import format_json
@@ -190,7 +193,7 @@ class GenericNotifier(object):
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
         self.notifier_worker = self.NotifierWorker(
-            o=self, name=self.notifier_id)
+            o=self, name='notifier_' + self.notifier_id)
 
     def subscribe(self,
                   subject,
@@ -374,7 +377,6 @@ class GenericNotifier(object):
         if not data_to_send: return None
         self.log_notify()
         self.notifier_worker.put((subject, data_to_send, retain, unpicklable))
-        # self.send_notification(subject, data_to_send, retain, unpicklable)
         return True
 
     def serialize(self, props=False):
@@ -540,70 +542,72 @@ class GenericNotifier_Client(GenericNotifier):
             self.unregister()
 
 
-class SQLiteNotifier(GenericNotifier):
+class SQLANotifier(GenericNotifier):
 
     class HistoryCleaner(BackgroundWorker):
 
         def __init__(self, name=None, **kwargs):
             super().__init__(
                 name=name,
-                interval=3600,
+                interval=60,
                 on_error=eva.core.log_traceback,
                 on_error_kwargs=_ne_kw,
                 **kwargs)
 
         def run(self, o, **kwargs):
-            db = o.get_db()
-            c = db.cursor()
-            try:
-                space = o.space if o.space is not None else ''
-                logging.debug(
-                    '.%s: cleaning records older than %u sec' % (o.db, o.keep))
-                c.execute('select oid, max(t) from state_history ' + \
-                        ' where space = ? and t < ? group by oid',
-                        (space, time.time() - o.keep))
-                c2 = db.cursor()
-                try:
-                    for r in c:
-                        c2.execute(
-                        'delete from state_history where ' + \
-                                ' space = ? and oid = ? and t < ?',
-                                (space, r[0], r[1]))
-                except:
-                    c2.close()
-                    raise
-                db.commit()
-                c2.close()
-                c.close()
-                db.close()
-            except:
-                c.close()
-                db.close()
-                eva.core.log_traceback(notifier=True)
+            dbconn = o.db()
+            space = o.space if o.space is not None else ''
+            logging.debug(
+                '.%s: cleaning records older than %u sec' % (o.db_uri, o.keep))
+            result = dbconn.execute(
+                sql('select oid, max(t) as maxt from state_history where ' +
+                    'space = :space and t < :t group by oid'),
+                space=space,
+                t=time.time() - o.keep)
+            for r in result:
+                dbconn.execute(
+                    sql('delete from state_history where space = :space ' +
+                        'and oid = :oid and t < :maxt'),
+                    space=space,
+                    oid=r.oid,
+                    maxt=r.maxt)
 
-    def __init__(self, notifier_id, db=None, keep=None, space=None):
+    def __init__(self, notifier_id, db_uri=None, keep=None, space=None):
         notifier_type = 'db'
         super().__init__(
             notifier_id=notifier_id, notifier_type=notifier_type, space=space)
         self.keep = keep if keep else \
             sqlite_default_keep
         self._keep = keep
-        self._db = db
-        if db and db[0] == '/':
-            self.db = db
-        else:
-            self.db = eva.core.dir_runtime + '/' + db
         self.history_cleaner = self.HistoryCleaner(
             name=self.notifier_id + '_cleaner', o=self)
+        self.db_lock = threading.RLock()
+        self.set_db(db_uri)
+
+    def set_db(self, db_uri):
+        self._db = db_uri
+        if db_uri and db_uri.find('://') == -1:
+            if db_uri[0] == '/':
+                self.db_uri = db_uri
+            else:
+                self.db_uri = eva.core.dir_runtime + '/' + db_uri
+            self.db_uri = 'sqlite:///' + self.db_uri
+        if self.db_uri:
+            self.db_engine = sqlalchemy.create_engine(self.db_uri)
+        else:
+            self.db_engine = None
 
     def test(self):
         if self.connected: return True
         self.connect()
         return self.connected
 
-    def get_db(self):
-        db = sqlite3.connect(self.db)
-        return db
+    def db(self):
+        n = 'notifier_{}_db'.format(self.notifier_id)
+        with self.db_lock:
+            if not g.has(n):
+                g.set(n, self.db_engine.connect())
+            return g.get(n)
 
     def get_state(self,
                   oid,
@@ -633,13 +637,13 @@ class SQLiteNotifier(GenericNotifier):
                     t_e = None
         else:
             t_e = None
-        sql = ''
+        q = ''
         if t_s:
-            sql += ' and t>%f' % t_s
+            q += ' and t>%f' % t_s
         if t_e:
-            sql += ' and t<=%f' % t_e
+            q += ' and t<=%f' % t_e
         if l:
-            sql += ' order by t desc limit %u' % l
+            q += ' order by t desc limit %u' % l
         req_status = False
         req_value = False
         if prop in ['status', 'S']:
@@ -652,95 +656,78 @@ class SQLiteNotifier(GenericNotifier):
             props = 'status, value'
             req_status = True
             req_value = True
-        db = self.get_db()
-        c = db.cursor()
+        dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
         if time_format == 'iso':
             tz = pytz.timezone(time.tzname[0])
-        try:
-            data = []
-            # if we have start time - fetch newest record before it
-            if t_s:
-                c.execute(
-                    'select ' + props +
-                    ' from state_history where space = ? and ' + \
-                            'oid = ? and t <= ? order by t desc limit 1', (
-                        space,
-                        oid,
-                        t_s
-                    ))
-                r = c.fetchone()
-                if r:
-                    r = (t_s,) + r
-                    data += [r]
-            c.execute(
-                'select t, ' + props +
-                ' from state_history where space = ? and oid = ?' + sql, (
-                    space,
-                    oid,
-                ))
-            data += c.fetchall()
-            for d in data:
-                h = {}
-                if time_format == 'iso':
-                    h['t'] = datetime.fromtimestamp(d[0], tz).isoformat()
-                else:
-                    h['t'] = d[0]
+        data = []
+        # if we have start time - fetch newest record before it
+        if t_s:
+            r = dbconn.execute(
+                sql('select ' + props +
+                    ' from state_history where space = :space and oid = :oid' +
+                    ' and t <= :t order by t desc limit 1'),
+                space=space,
+                oid=oid,
+                t=t_s).fetchone()
+            if r:
+                r = (t_s,) + tuple(r)
+                data += [r]
+        data += list(
+            dbconn.execute(
+                sql('select t, ' + props +
+                    ' from state_history where space = :space and oid = :oid' +
+                    q),
+                space=space,
+                oid=oid).fetchall())
+        for d in data:
+            h = {}
+            if time_format == 'iso':
+                h['t'] = datetime.fromtimestamp(d[0], tz).isoformat()
+            else:
+                h['t'] = d[0]
+            if req_status:
+                h['status'] = d[1]
+            if req_value:
                 if req_status:
-                    h['status'] = d[1]
-                if req_value:
-                    if req_status:
-                        v = d[2]
-                    else:
-                        v = d[1]
-                    try:
-                        h['value'] = float(v)
-                    except:
-                        h['value'] = v
-                result.append(h)
-        except:
-            c.close()
-            db.close()
-            raise
-        c.close()
-        db.close()
+                    v = d[2]
+                else:
+                    v = d[1]
+                try:
+                    h['value'] = float(v)
+                except:
+                    h['value'] = v
+            result.append(h)
         return sorted(result, key=lambda k: k['t'])
 
     def connect(self):
         try:
-            if self.db:
-                db = self.get_db()
+            if self.db_engine:
+                dbconn = self.db()
                 try:
-                    c = db.cursor()
-                    c.execute('select t from state_history limit 1')
-                    c.close()
+                    dbconn.execute(sql('select t from state_history limit 1'))
                 except:
                     logging.info(
                         '.%s: no state_history table, crating new' % self.db)
-                    c.close()
-                    c = db.cursor()
                     try:
-                        c.execute(
+                        dbconn.execute(sql(
                             'create table state_history(space, t, oid,' + \
                             ' status, value, primary key(space, t, oid))'
-                        )
-                        c.execute(
-                            'create index i_t_oid on state_history(space,t,oid)'
-                        )
-                        c.execute(
-                            'create index i_oid on state_history(space,oid)')
-                        db.commit()
-                        c.close()
+                        ))
+                        dbconn.execute(
+                            sql('create index i_t_oid on ' +
+                                'state_history(space,t,oid)'))
+                        dbconn.execute(
+                            sql('create index i_oid on state_history(space,oid)'
+                               ))
                     except:
                         logging.error(
                             '.%s: failed to create state_history table' %
                             self.db)
                         eva.core.log_traceback(notifier=True)
-                        db.close()
                         self.connected = False
                         return False
-                db.close()
                 self.history_cleaner.start(_name=self.notifier_id + '_cleaner')
                 self.connected = True
             else:
@@ -755,32 +742,22 @@ class SQLiteNotifier(GenericNotifier):
             for d in data:
                 v = d['value'] if 'value' in d and \
                         d['value'] != 'null' else None
-                db = self.get_db()
-                c = db.cursor()
                 space = self.space if self.space is not None else ''
-                try:
-                    c.execute(
-                        'insert into state_history ' + \
-                                '(space, t, oid, status, value)' + \
-                                ' values (?, ?, ?, ?, ?)',
-                        (space, t, d['oid'], d['status'], v))
-                except:
-                    c.close()
-                    db.close()
-                    raise
-                db.commit()
-                c.close()
-                db.close()
+                dbconn = self.db()
+                dbconn.execute(
+                    sql('insert into state_history (space, t, oid, status, ' +
+                        'value) values (:space, :t, :oid, :status, :value)'),
+                    space=space,
+                    t=t,
+                    oid=d['oid'],
+                    status=d['status'],
+                    value=v)
         return True
 
     def set_prop(self, prop, value):
         if prop == 'db':
             if value is None or value == '': return False
-            self._db = value
-            if self._db[0] == '/':
-                self.db = self._db
-            else:
-                self.db = eva.core.dir_runtime + '/' + self._db
+            self.set_db(db_uri)
             return True
         elif prop == 'keep':
             if value is None:
@@ -797,7 +774,7 @@ class SQLiteNotifier(GenericNotifier):
 
     def serialize(self, props=False):
         d = super().serialize(props)
-        # sqlite sqlite has no timeout
+        # sqla has no timeout
         try:
             del d['timeout']
         except:
@@ -1909,7 +1886,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         db = ncfg.get('db')
         keep = ncfg.get('keep')
         space = ncfg.get('space')
-        n = SQLiteNotifier(_notifier_id, db=db, keep=keep, space=space)
+        n = SQLANotifier(_notifier_id, db_uri=db, keep=keep, space=space)
     elif ncfg['type'] in ['http', 'http-post', 'http-json']:
         space = ncfg.get('space')
         ssl_verify = ncfg.get('ssl_verify')

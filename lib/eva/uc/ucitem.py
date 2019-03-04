@@ -6,7 +6,6 @@ __version__ = "3.1.2"
 import eva.core
 import eva.item
 import eva.uc.controller
-import threading
 
 
 class UCItem(eva.item.Item):

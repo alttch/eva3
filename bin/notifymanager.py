@@ -68,7 +68,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create.add_argument('p', help='Notifier properties: ' + \
                 'json:http(s)://[key]@uri[|method] or ' + \
                 'mqtt:[username:password]@host:[port] or ' + \
-                'db:dbfile[:keeptime]',
+                'db:db_uri[:keeptime]',
                 metavar='PROPS').completer = self.ComplNProto()
         ap_create.add_argument(
             '-s',
@@ -287,7 +287,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 space=space,
                 timeout=timeout)
         elif p[0] == 'db':
-            dbfile = p[1]
+            db_uri = p[1]
             if len(p) > 2:
                 try:
                     keep = int(p[2])
@@ -295,8 +295,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                     return self.local_func_result_failed
             else:
                 keep = None
-            n = eva.notify.SQLiteNotifier(
-                notifier_id=notifier_id, db=dbfile, keep=keep, space=space)
+            n = eva.notify.SQLANotifier(
+                notifier_id=notifier_id, db_uri=db_uri, keep=keep, space=space)
         else:
             self.print_err('notifier type unknown %s' % p[0])
             return self.local_func_result_failed
@@ -322,8 +322,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 method = getattr(i, 'method', None)
                 n['params'] = 'uri: {}{} '.format(i.uri, ('|{}'.format(method)
                                                           if method else ''))
-            elif isinstance(i, eva.notify.SQLiteNotifier):
-                n['params'] = 'db: %s' % i.db
+            elif isinstance(i, eva.notify.SQLANotifier):
+                n['params'] = 'db: %s' % i.db_uri
             elif isinstance(i, eva.notify.MQTTNotifier):
                 if i.username is not None:
                     n['params'] = '%s%s@' % (i.username, ':*'

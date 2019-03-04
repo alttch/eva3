@@ -38,6 +38,7 @@ mods = [
     'signal',
     'socket',
     'sqlite3',
+    'sqlalchemy',
     'struct',
     'subprocess',
     'termcolor',
