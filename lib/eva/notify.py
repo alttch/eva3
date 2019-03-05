@@ -37,6 +37,8 @@ from ws4py.websocket import WebSocket
 
 default_log_level = 20
 
+db_pool_size = 15
+
 notifier_client_clean_delay = 30
 
 default_mqtt_qos = 1
@@ -600,7 +602,10 @@ class SQLANotifier(GenericNotifier):
         else:
             self.db_uri = None
         if self.db_uri:
-            self.db_engine = sa.create_engine(self.db_uri)
+            self.db_engine = sa.create_engine(
+                self.db_uri,
+                pool_size=db_pool_size,
+                max_overflow=db_pool_size * 2)
         else:
             self.db_engine = None
 

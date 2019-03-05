@@ -113,6 +113,7 @@ def update_config(cfg):
     except:
         pass
     logging.debug('webapi.thread_pool = %u' % thread_pool)
+    eva.notify.db_pool_size = thread_pool
     try:
         ei_enabled = (cfg.get('webapi', 'ei_enabled') == 'yes')
     except:
