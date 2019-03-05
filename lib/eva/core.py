@@ -71,6 +71,8 @@ polldelay = 0.01
 
 db_update = 0
 
+db_pool_size = 15
+
 sleep_step = 0.1
 
 keep_exceptions = 100
