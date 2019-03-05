@@ -325,7 +325,9 @@ class GenericAPI(object):
                     start=datetime.fromtimestamp(t_s, tz),
                     end=datetime.fromtimestamp(t_e, tz),
                     freq=fill)
-                sp = df.reindex(i2, method='pad').to_dict(orient='split')
+                sp1 = df.resample(fill).mean()
+                sp2 = df.reindex(i2, method='pad')
+                sp = sp1.fillna(sp2).to_dict(orient='split')
                 result = []
                 for i in range(0, len(sp['index'])):
                     t = sp['index'][i].timestamp()
