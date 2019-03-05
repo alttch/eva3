@@ -11,13 +11,14 @@ import logging
 import configparser
 import traceback
 import time
-import sqlite3
 import jsonpickle
 import signal
 import psutil
 import threading
 import gzip
 import inspect
+import sqlalchemy as sa
+import sqlite3
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -153,6 +154,27 @@ dump = FunctionCollecton(on_error=log_traceback, include_exceptions=True)
 save = FunctionCollecton(on_error=log_traceback)
 shutdown = FunctionCollecton(on_error=log_traceback)
 stop = FunctionCollecton(on_error=log_traceback)
+
+
+def format_db_uri(db_uri):
+    if not db_uri: return None
+    if db_uri.find('://') == -1:
+        if db_uri[0] == '/':
+            _uri = db_uri
+        else:
+            _uri = dir_runtime + '/' + db_uri
+        _uri = 'sqlite:///' + _uri
+    else:
+        _uri = db_uri
+    return _uri
+
+
+def db_engine(db_uri):
+    if db_uri.startswith('sqlite:///'):
+        return sa.create_engine(db_uri)
+    else:
+        return sa.create_engine(
+            db_uri, pool_size=db_pool_size, max_overflow=db_pool_size * 2)
 
 
 def sighandler_hup(signum, frame):

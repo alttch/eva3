@@ -588,27 +588,8 @@ class SQLANotifier(GenericNotifier):
 
     def set_db(self, db_uri=None):
         self._db = db_uri
-        if db_uri:
-            if db_uri.find('://') == -1:
-                if db_uri[0] == '/':
-                    self.db_uri = db_uri
-                else:
-                    self.db_uri = eva.core.dir_runtime + '/' + db_uri
-                self.db_uri = 'sqlite:///' + self.db_uri
-            else:
-                self.db_uri = db_uri
-        else:
-            self.db_uri = None
-        if self.db_uri:
-            if self.db_uri.startswith('sqlite:///'):
-                self.db_engine = sa.create_engine(self.db_uri)
-            else:
-                self.db_engine = sa.create_engine(
-                    self.db_uri,
-                    pool_size=eva.core.db_pool_size,
-                    max_overflow=eva.core.db_pool_size * 2)
-        else:
-            self.db_engine = None
+        self.db_uri = eva.core.format_db_uri(db_uri)
+        self.db_engine = eva.core.db_engine(self.db_uri)
 
     def test(self):
         if self.connected: return True
