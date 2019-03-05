@@ -321,12 +321,8 @@ class GenericAPI(object):
                 df = pd.DataFrame(result)
                 df = df.set_index('t')
                 df.index = pd.to_datetime(df.index, utc=True)
-                i2 = pd.date_range(
-                    start=datetime.fromtimestamp(t_s, tz),
-                    end=datetime.fromtimestamp(t_e, tz),
-                    freq=fill)
                 sp1 = df.resample(fill).mean()
-                sp2 = df.reindex(i2, method='pad')
+                sp2 = df.resample(fill).pad()
                 sp = sp1.fillna(sp2).to_dict(orient='split')
                 result = []
                 for i in range(0, len(sp['index'])):
