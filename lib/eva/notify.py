@@ -691,9 +691,9 @@ class SQLANotifier(GenericNotifier):
         for d in data:
             h = {}
             if time_format == 'iso':
-                h['t'] = datetime.fromtimestamp(d[0], tz).isoformat()
+                h['t'] = datetime.fromtimestamp(float(d[0]), tz).isoformat()
             else:
-                h['t'] = d[0]
+                h['t'] = float(d[0])
             if req_status:
                 h['status'] = d[1]
             if req_value:
