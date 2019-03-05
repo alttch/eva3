@@ -84,6 +84,7 @@ eva.udpapi.update_config(cfg)
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
 
+eva.core.start()
 eva.core.load_cvars()
 
 eva.apikey.allows = ['cmd', 'lock', 'device']

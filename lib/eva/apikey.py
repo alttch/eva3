@@ -11,11 +11,15 @@ import configparser
 import copy
 import base64
 import hashlib
+import sqlalchemy as sa
+from sqlalchemy import text as sql
 from cryptography.fernet import Fernet
 from netaddr import IPNetwork
 
 import eva.core
 import eva.item
+
+from eva.core import userdb
 
 from eva.tools import netacl_match
 from eva.tools import val_to_boolean
@@ -183,54 +187,53 @@ class APIKey(object):
         else:
             self.config_changed = True
 
-    def save(self, create=True):
+    def save(self):
         if not self.dynamic:
             return False
-        db = eva.core.get_user_db()
-        c = db.cursor()
         data = self.serialize()
         for d in [
                 'items', 'groups', 'allow', 'hosts_allow', 'hosts_assign',
                 'pvt', 'rpvt'
         ]:
             data[d] = ','.join(data[d])
+        dbconn = userdb()
         try:
             if not self.in_db:
-                c.execute('insert into apikeys(k_id, k, m, s, i, g, a,' + \
-                        ' hal, has, pvt, rpvt) values ' + \
-                        '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                        (
-                            data['id'],
-                            data['key'],
-                            data['master'],
-                            data['sysfunc'],
-                            data['items'],
-                            data['groups'],
-                            data['allow'],
-                            data['hosts_allow'],
-                            data['hosts_assign'],
-                            data['pvt'],
-                            data['rpvt'])
-                        )
+                dbconn.execute(
+                    sql('insert into apikeys(k_id, k, m, s, i,' +
+                        ' g, a,hal, has, pvt, rpvt) values ' +
+                        '(:k_id, :k, :m, :s, :i, :g, :a, :hal, :has,' +
+                        ' :pvt, :rpvt)'),
+                    k_id=data['id'],
+                    k=data['key'],
+                    m=1 if data['master'] else 0,
+                    s=1 if data['sysfunc'] else 0,
+                    i=data['items'],
+                    g=data['groups'],
+                    a=data['allow'],
+                    hal=data['hosts_allow'],
+                    has=data['hosts_assign'],
+                    pvt=data['pvt'],
+                    rpvt=data['rpvt'])
             else:
-                c.execute(
-                    'update apikeys set k=?, s=?, i=?, g=?, a=?,' + \
-                            ' hal=?, has=?, pvt=?, rpvt=? where k_id=?',
-                    (self.key, data['sysfunc'], data['items'], data['groups'],
-                     data['allow'], data['hosts_allow'], data['hosts_assign'],
-                     data['pvt'], data['rpvt'], data['id']))
+                dbconn.execute(
+                    sql('update apikeys set k=:k, s=:s, i=:i, g=:g, a=:a, ' +
+                        'hal=:hal, has=:has, pvt=:pvt, rpvt=:rpvt where ' +
+                        'k_id=:k_id'),
+                    k=self.key,
+                    s=1 if data['sysfunc'] else 0,
+                    i=data['items'],
+                    g=data['groups'],
+                    a=data['allow'],
+                    hal=data['hosts_allow'],
+                    has=data['hosts_assign'],
+                    pvt=data['pvt'],
+                    rpvt=data['rpvt'],
+                    k_id=data['id'])
         except:
-            if not create:
-                logging.critical('apikeys db error')
-                eva.core.log_traceback()
-                return False
-            else:
-                logging.info('no apikeys table in db, creating new')
-                create_apikeys_table()
-                self.save(create=False)
-        db.commit()
-        c.close()
-        db.close()
+            logging.critical('apikeys db error')
+            eva.core.log_traceback()
+            return False
         self.in_db = True
         return True
 
@@ -476,17 +479,14 @@ def delete_api_key(key_id):
     del keys[keys_by_id[key_id].key]
     del keys_by_id[key_id]
     if eva.core.db_update == 1:
-        db = eva.core.get_user_db()
-        c = db.cursor()
+        dbconn = userdb()
         try:
-            c.execute('delete from apikeys where k_id=?', (key_id,))
-            db.commit()
+            dbconn.execute(
+                sql('delete from apikeys where k_id=:key_id', key_id=key_id))
         except:
             logging.critical('apikeys db error')
             eva.core.log_traceback()
             return False
-        c.close()
-        db.close()
     else:
         keys_to_delete.add(key_id)
     return True
@@ -504,37 +504,48 @@ def regenerate_key(key_id, k=None, save=False):
     return key.key
 
 
-def load_keys_from_db(create=True):
+def load_keys_from_db():
     _keys = {}
     _keys_by_id = {}
+    dbconn = userdb()
+    meta = sa.MetaData()
+    t_apikeys = sa.Table('apikeys', meta,
+                         sa.Column('k_id', sa.String(64), primary_key=True),
+                         sa.Column('k', sa.String(64)),
+                         sa.Column('m', sa.Integer), sa.Column('s', sa.Integer),
+                         sa.Column('i', sa.String(1024)),
+                         sa.Column('g', sa.String(1024)),
+                         sa.Column('a', sa.String(256)),
+                         sa.Column('hal', sa.String(1024)),
+                         sa.Column('has', sa.String(1024)),
+                         sa.Column('pvt', sa.String(1024)),
+                         sa.Column('rpvt', sa.String(1024)))
     try:
-        db = eva.core.get_user_db()
-        c = db.cursor()
-        c.execute('select * from apikeys')
-        rows = c.fetchall()
-        db.commit()
-        c.close()
-        db.close()
-        for i in rows:
-            key = APIKey(i[1], i[0])
-            key.sysfunc = True if val_to_boolean(str(i[3])) else False
-            for k, v in {
-                    4: 'item_ids',
-                    5: 'groups',
-                    6: 'allow',
-                    9: 'pvt_files',
-                    10: 'rpvt_uris'
+        meta.create_all(dbconn)
+    except:
+        logging.critical('unable to create apikeys table in db')
+    try:
+        result = dbconn.execute(sql('select * from apikeys'))
+        while True:
+            r = result.fetchone()
+            if not r: break
+            key = APIKey(r.k, r.k_id)
+            key.sysfunc = True if val_to_boolean(r.s) else False
+            for i, v in {
+                    'item_ids': 'i',
+                    'groups': 'g',
+                    'allow': 'a',
+                    'pvt_files': 'pvt',
+                    'rpvt_uris': 'rpvt'
             }.items():
                 setattr(
-                    key, v,
-                    list(filter(None, [j.strip() for j in i[k].split(',')])))
-
+                    key, i,
+                    list(filter(None, [j.strip() for j in r[v].split(',')])))
             _hosts_allow = list(
-                filter(None, [j.strip() for j in i[7].split(',')]))
+                filter(None, [j.strip() for j in r.hal.split(',')]))
             key.hosts_allow = [IPNetwork(h) for h in _hosts_allow]
-
             _hosts_assign = list(
-                filter(None, [x.strip() for x in i[8].split(',')]))
+                filter(None, [x.strip() for x in r.has.split(',')]))
             key.hosts_assign = \
                     [ IPNetwork(h) for h in _hosts_assign ]
             key.dynamic = True
@@ -542,25 +553,9 @@ def load_keys_from_db(create=True):
             _keys[key.key] = key
             _keys_by_id[key.key_id] = key
     except:
-        if create:
-            create_apikeys_table()
-            load_keys_from_db(create=False)
-        else:
-            logging.warning('unable to load API keys from db')
-            eva.core.log_traceback()
+        logging.warning('unable to load API keys from db')
+        eva.core.log_traceback()
     return _keys, _keys_by_id
-
-
-def create_apikeys_table():
-    try:
-        db = eva.core.get_user_db()
-        c = db.cursor()
-        c.execute('create table apikeys (k_id primary key, k, m, s, i, g, a,\
-                   hal, has, pvt, rpvt)')
-        db.commit()
-        c.close()
-    except:
-        logging.critical('unable to create apikeys table in db')
 
 
 @eva.core.save
@@ -568,21 +563,15 @@ def save():
     for i, k in keys_by_id.copy().items():
         if k.config_changed and not k.save():
             return False
-    db = eva.core.get_user_db()
-    c = db.cursor()
+    dbconn = userdb()
     try:
         for k in keys_to_delete:
-            c.execute('delete from apikeys where k_id=?', (k,))
-        db.commit()
-        c.close()
+            dbconn.execute(sql('delete from apikeys where k_id=:k_id'), k_id=k)
+        return True
     except:
         logging.critical('apikeys db error')
         eva.core.log_traceback()
-        c.close()
-        db.close()
         return False
-    db.close()
-    return True
 
 
 def init():

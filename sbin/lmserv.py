@@ -82,6 +82,7 @@ eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
 eva.mailer.update_config(cfg)
 
+eva.core.start()
 eva.core.load_cvars()
 
 eva.apikey.allows = ['cmd', 'lock', 'dm_rules_props', 'dm_rules_list']
@@ -100,6 +101,7 @@ eva.lm.controller.load_macros()
 eva.lm.controller.load_dm_rules()
 eva.lm.controller.load_cycles()
 
+eva.core.start()
 eva.sysapi.start()
 eva.wsapi.start()
 eva.lm.lmapi.start()

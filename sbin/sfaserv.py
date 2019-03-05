@@ -82,6 +82,7 @@ eva.sysapi.update_config(cfg)
 
 eva.sysapi.cvars_public = True
 
+eva.core.start()
 eva.core.load_cvars()
 
 eva.apikey.allows = ['cmd', 'lock', 'dm_rule_props', 'dm_rules_list']
@@ -97,6 +98,7 @@ eva.sfa.controller.update_config(cfg)
 eva.sfa.controller.load_remote_ucs()
 eva.sfa.controller.load_remote_lms()
 
+eva.core.start()
 eva.sysapi.start()
 eva.wsapi.start()
 eva.sfa.sfapi.start()

@@ -82,7 +82,8 @@ _exceptions = []
 
 _exception_log_lock = threading.Lock()
 
-_db_lock = threading.Lock()
+_db_lock = threading.RLock()
+_userdb_lock = threading.RLock()
 
 db_update_codes = ['manual', 'instant', 'on_exit']
 
@@ -98,8 +99,11 @@ dir_pvt = dir_eva + '/pvt'
 dir_lib = dir_eva + '/lib'
 dir_runtime = dir_eva + '/runtime'
 
-userdb_file = None
-db_file = None
+db_uri = None
+userdb_uri = None
+
+db_engine = None
+userdb_engine = None
 
 pid_file = None
 
@@ -162,14 +166,15 @@ def format_db_uri(db_uri):
         if db_uri[0] == '/':
             _uri = db_uri
         else:
-            _uri = dir_runtime + '/' + db_uri
+            _uri = dir_eva + '/' + db_uri
         _uri = 'sqlite:///' + _uri
     else:
         _uri = db_uri
     return _uri
 
 
-def db_engine(db_uri):
+def create_db_engine(db_uri):
+    if not db_uri: return None
     if db_uri.startswith('sqlite:///'):
         return sa.create_engine(db_uri)
     else:
@@ -294,8 +299,8 @@ def serialize():
     d['db_update'] = db_update
     d['notify_on_start'] = notify_on_start
     d['dir_eva'] = dir_eva
-    d['userdb_file'] = userdb_file
-    d['db_file'] = db_file
+    d['db_uri'] = db_uri
+    d['userdb_uri'] = userdb_uri
     d['pid_file'] = pid_file
     d['log_file'] = log_file
     d['threads'] = {}
@@ -311,33 +316,41 @@ def serialize():
 
 def set_product(code, build):
     global product_code, product_build
-    global pid_file, log_file, db_file
+    global pid_file, log_file, db_uri, userdb_uri
     global primary_config
     product_code = code
     product_build = build
     pid_file = '%s/%s.pid' % (dir_var, product_code)
     primary_config = '%s/etc/%s.ini' % (dir_eva, product_code)
-    db_file = '%s/db/%s.db' % (dir_runtime, product_code)
+    db_uri = format_db_uri('db/%s.db' % product_code)
+    userdb_uri = db_uri
+    set_db(db_uri, userdb_uri)
 
 
-def get_db():
-    if not _db_lock.acquire(timeout=timeout):
-        return None
-    db = sqlite3.connect(db_file)
-    return db
+def set_db(db_uri=None, userdb_uri=None):
+    global db_engine, userdb_engine
+    db_engine = create_db_engine(db_uri)
+    userdb_engine = create_db_engine(userdb_uri)
 
 
-def release_db():
-    _db_lock.release()
+def db():
+    with _db_lock:
+        if not g.has('db'):
+            if db_update == 1:
+                g.db = db_engine.connect()
+            else:
+                g.db = db_engine
+        return g.db
 
 
-def get_user_db():
-    if userdb_file:
-        f = userdb_file
-    else:
-        f = db_file
-    db = sqlite3.connect(f)
-    return db
+def userdb():
+    with _userdb_lock:
+        if not g.has('userdb'):
+            if db_update == 1:
+                g.userdb = userdb_engine.connect()
+            else:
+                g.userdb = userdb_engine
+        return g.userdb
 
 
 def reset_log(initial=False):
@@ -371,7 +384,7 @@ def reset_log(initial=False):
 def load(fname=None, initial=False, init_log=True, check_pid=True):
     global system_name, log_file, pid_file, debug, development, show_traceback
     global stop_on_critical, dump_on_critical
-    global notify_on_start, db_file, userdb_file
+    global notify_on_start, db_uri, userdb_uri
     global polldelay, db_update, keep_action_history, action_cleaner_interval
     global keep_logmem
     global timeout
@@ -468,20 +481,28 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                                         if dump_on_critical else 'no'))
             try:
                 db_file = cfg.get('server', 'db_file')
-                if db_file and db_file[0] != '/':
-                    db_file = dir_eva + '/' + db_file
             except:
-                pass
-            logging.debug('server.db_file = %s' % db_file)
+                db_file = None
+            try:
+                db_uri = cfg.get('server', 'db')
+            except:
+                if db_file: db_uri = db_file
+            db_uri = format_db_uri(db_uri)
+            logging.debug('server.db = %s' % db_uri)
             try:
                 userdb_file = cfg.get('server', 'userdb_file')
-                if userdb_file and userdb_file[0] != '/':
-                    userdb_file = dir_eva + '/' + userdb_file
             except:
-                pass
-            if userdb_file is None: f = db_file
-            else: f = userdb_file
-            logging.debug('server.userdb_file = %s' % f)
+                userdb_file = None
+            try:
+                userdb_uri = cfg.get('server', 'userdb')
+            except:
+                if userdb_file: userdb_uri = userdb_file
+                else: userdb_uri = None
+            if userdb_uri:
+                userdb_uri = format_db_uri(userdb_uri)
+            else:
+                userdb_uri = db_uri
+            logging.debug('server.userdb = %s' % userdb_uri)
             try:
                 enterprise_layout = (cfg.get('server', 'layout') != 'simple')
             except:
@@ -726,6 +747,10 @@ def init():
     signal.signal(signal.SIGTERM, sighandler_term)
     if not os.environ.get('EVA_CORE_ENABLE_CC'):
         signal.signal(signal.SIGINT, sighandler_int)
+
+
+def start():
+    set_db(db_uri, userdb_uri)
 
 
 #BD: 20.05.2017

@@ -589,7 +589,7 @@ class SQLANotifier(GenericNotifier):
     def set_db(self, db_uri=None):
         self._db = db_uri
         self.db_uri = eva.core.format_db_uri(db_uri)
-        self.db_engine = eva.core.db_engine(self.db_uri)
+        self.db_engine = eva.core.create_db_engine(self.db_uri)
 
     def test(self):
         if self.connected: return True

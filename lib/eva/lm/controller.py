@@ -154,7 +154,6 @@ def create_lvar_state_table():
         eva.core.critical()
     if db:
         db.close()
-        eva.core.release_db()
 
 
 @eva.core.save
@@ -232,7 +231,6 @@ def save_lvar_state(item):
         db.commit()
         c.close()
         db.close()
-        eva.core.release_db()
         return True
     except:
         logging.critical('db error')
@@ -244,7 +242,6 @@ def save_lvar_state(item):
         try:
             if db:
                 db.close()
-                eva.core.release_db()
         except:
             eva.core.critical()
         return False
@@ -310,14 +307,12 @@ def load_lvar_db_state(items, clean=False, create=True):
                 pass
             if db:
                 db.close()
-                eva.core.release_db()
                 db = None
             logging.info('No lvar_state table in db, creating new')
             create_lvar_state_table()
             load_lvar_db_state(items, clean, create=False)
     if db:
         db.close()
-        eva.core.release_db()
 
 
 def load_lvars(start=False):
