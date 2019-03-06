@@ -27,6 +27,7 @@ class WS_API(object):
                 cherrypy.request.remote.ip + '_' + \
                 str(cherrypy.request.remote.port), _k, handler)
         handler.notifier = client
+        client.start()
 
 
 def start():

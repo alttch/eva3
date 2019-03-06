@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -535,6 +536,7 @@ class GenericNotifier_Client(GenericNotifier):
             if self.notifier_id in notifiers:
                 logging.debug('Unregistering client notifier %s' % \
                         self.notifier_id)
+                notifiers[self.notifier_id].stop()
                 del notifiers[self.notifier_id]
         except:
             eva.core.log_traceback(notifier=True)
