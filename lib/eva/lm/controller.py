@@ -572,7 +572,14 @@ def append_controller(uri,
         api.set_timeout(t)
     else:
         api.set_timeout(eva.core.timeout)
-    api.set_uri(uri)
+    uport = ''
+    if uri.startswith('http://') or uri.startswith('https://'):
+        if uri.count(':') == 1 and uri.count('/') == 2:
+            uport = ':8812'
+    else:
+        if uri.find(':') == -1 and uri.find('/') == -1:
+            uport = ':8812'
+    api.set_uri(uri + uport)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
     u = eva.lm.lremote.LRemoteUC(None, api=api, mqtt_update=mqu, static=static)

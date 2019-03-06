@@ -188,7 +188,14 @@ def append_uc(uri,
         api.set_timeout(t)
     else:
         api.set_timeout(eva.core.timeout)
-    api.set_uri(uri)
+    uport = ''
+    if uri.startswith('http://') or uri.startswith('https://'):
+        if uri.count(':') == 1 and uri.count('/') == 2:
+            uport = ':8812'
+    else:
+        if uri.find(':') == -1 and uri.find('/') == -1:
+            uport = ':8812'
+    api.set_uri(uri + uport)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
     u = eva.client.remote_controller.RemoteUC(
@@ -241,7 +248,14 @@ def append_lm(uri,
         api.set_timeout(t)
     else:
         api.set_timeout(eva.core.timeout)
-    api.set_uri(uri)
+    uport = ''
+    if uri.startswith('http://') or uri.startswith('https://'):
+        if uri.count(':') == 1 and uri.count('/') == 2:
+            uport = ':8817'
+    else:
+        if uri.find(':') == -1 and uri.find('/') == -1:
+            uport = ':8817'
+    api.set_uri(uri + uport)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.mqtt_update_default
     u = eva.client.remote_controller.RemoteLM(
