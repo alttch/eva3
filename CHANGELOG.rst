@@ -10,6 +10,9 @@ Common
     * fixes: correct backup/restore if configuration folders are symlinks
     * fixes: correct restore if --runtime flag is specified
 
+    * notifier perfomance improvements
+    * CLI improvements
+
     * license is changed to Apache License 2.0
     * perfomance improvements
     * controller/node autodiscovery
