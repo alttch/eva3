@@ -820,7 +820,7 @@ class UC_API(GenericAPI):
         if not apikey.check(k, master=True) or not c: return None
         return eva.uc.driverapi.modhelp_lpi(m, c)
 
-    def set_driver(self, k=None, i=None, d=None, c=None, save=False):
+    def assign_driver(self, k=None, i=None, d=None, c=None, save=False):
         if not apikey.check(k, master=True): return None
         item = eva.uc.controller.get_item(i)
         if not item: return None
@@ -923,7 +923,7 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         UC_HTTP_API.modhelp_phi.exposed = True
         UC_HTTP_API.modhelp_lpi.exposed = True
 
-        UC_HTTP_API.set_driver.exposed = True
+        UC_HTTP_API.assign_driver.exposed = True
 
         UC_HTTP_API.info.exposed = True
 
@@ -1422,9 +1422,9 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         else:
             return result
 
-    def set_driver(self, k=None, i=None, d=None, c=None, save=False):
+    def assign_driver(self, k=None, i=None, d=None, c=None, save=False):
         cp_need_master(k)
-        result = super().set_driver(k, i, d, c, save)
+        result = super().assign_driver(k, i, d, c, save)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 

@@ -158,7 +158,7 @@ $_eva_api_func = array(
                     'modinfo_lpi',
                     'modhelp_phi',
                     'modhelp_lpi',
-                    'set_driver'
+                    'assign_driver'
                     ),
                 'cr' => array(
                     'update',
@@ -192,7 +192,7 @@ $_eva_api_func = array(
                     'list_drivers',
                     'get_phi',
                     'get_driver',
-                    'set_driver',
+                    'assign_driver',
                     'test_phi',
                     'exec_phi'
                     ),

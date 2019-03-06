@@ -29,6 +29,8 @@ Common
 UC 
 --
 
+    * warning: API function *set_driver* renamed to *assign_driver*
+
     * new API function: list_device_tpl
     * 1-Wire OWFS support (virtual buses, PHIs), OWFS API functions
 

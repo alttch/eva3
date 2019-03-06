@@ -921,35 +921,35 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='Driver ID',
             metavar='DRIVER_ID').completer = self.ComplDriver(self)
 
-        sp_driver_set = sp_driver.add_parser(
-            'set', help='Set for the item (action & update)')
-        sp_driver_set.add_argument(
+        sp_driver_assign = sp_driver.add_parser(
+            'assign', help='Set for the item (action & update)')
+        sp_driver_assign.add_argument(
             'i', help='Item ID',
             metavar='ID').completer = self.ComplItemOID(self)
-        sp_driver_set.add_argument(
+        sp_driver_assign.add_argument(
             'd', help='Driver ID',
             metavar='DRIVER_ID').completer = self.ComplDriver(self)
-        sp_driver_set.add_argument(
+        sp_driver_assign.add_argument(
             '-c',
             '--config',
             help='item driver config (ports etc.)',
             dest='c',
             metavar='CONFIG')
-        sp_driver_set.add_argument(
+        sp_driver_assign.add_argument(
             '-y',
             '--save',
             help='save configuration',
             dest='_save',
             action='store_true')
 
-        sp_driver_unset = sp_driver.add_parser(
-            'unset',
-            help=
-            'Unset for the item (set action, update and driver_config to null)')
-        sp_driver_unset.add_argument(
+        sp_driver_unassign = sp_driver.add_parser(
+            'unassign',
+            help='Unassign from the item ' +
+            '(set action, update and driver_config to null)')
+        sp_driver_unassign.add_argument(
             'i', help='Item ID',
             metavar='ID').completer = self.ComplItemOID(self)
-        sp_driver_unset.add_argument(
+        sp_driver_unassign.add_argument(
             '-y',
             '--save',
             help='save configuration',
@@ -1139,8 +1139,8 @@ _api_functions = {
     'driver:get': 'get_driver',
     'driver:load': 'load_driver',
     'driver:unload': 'unload_driver',
-    'driver:set': 'set_driver',
-    'driver:unset': 'set_driver',
+    'driver:assign': 'assign_driver',
+    'driver:unassign': 'assign_driver',
     'edit:action': cli.edit_action,
     'edit:update': cli.edit_update,
     'edit:template': cli.edit_tpl
