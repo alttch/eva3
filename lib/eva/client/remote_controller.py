@@ -53,7 +53,7 @@ class RemoteController(eva.item.Item):
         self.wait_for_autoremove = False
 
     def api_call(self, func, params=None, timeout=None):
-        if not self.api: return None
+        if not self.api or not self.enabled: return None
         for tries in range(self.retries + 1):
             (code, result) = self.api.call(
                 func, params, timeout, _debug=eva.core.debug)
