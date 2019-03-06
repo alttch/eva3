@@ -95,8 +95,7 @@ class RemoteController(eva.item.Item):
         result = self.api_call('test')
         if not isinstance(result, dict): return None
         if result.get('result') != 'OK':
-            logging.error('Remote controller unknown access error %s' % \
-                    api._uri)
+            logging.error('Remote controller access error %s' % self.api._uri)
             return None
         return result
 
