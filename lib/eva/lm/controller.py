@@ -9,6 +9,9 @@ import re
 import logging
 import threading
 import time
+import sqlalchemy as sa
+
+from sqlalchemy import text as sql
 
 import eva.core
 import eva.api
@@ -28,6 +31,8 @@ from eva.tools import is_oid
 from eva.tools import oid_to_id
 from eva.tools import oid_type
 from eva.tools import parse_oid
+
+from eva.core import db
 
 lvars_by_id = {}
 lvars_by_group = {}
@@ -141,21 +146,6 @@ def append_item(item, start=False, load=True):
     return True
 
 
-def create_lvar_state_table():
-    db = eva.core.get_db()
-    try:
-        c = db.cursor()
-        c.execute('create table lvar_state(id primary key, ' + \
-                'set_time, status, value)')
-        db.commit()
-        c.close()
-    except:
-        logging.critical('unable to create lvar_state table in db')
-        eva.core.critical()
-    if db:
-        db.close()
-
-
 @eva.core.save
 def save():
     for i, v in lvars_by_full_id.items():
@@ -212,38 +202,30 @@ def save():
 
 
 def save_lvar_state(item):
-    db = eva.core.get_db()
+    dbconn = eva.core.db()
     try:
-        c = db.cursor()
         _id = item.full_id if eva.core.enterprise_layout else item.item_id
-        c.execute('update lvar_state set set_time = ?, status=?, value=?' + \
-                ' where id=?',
-                (item.set_time, item.status, item.value, _id))
-        if not c.rowcount:
-            c.close()
-            c = db.cursor()
-            c.execute('insert into lvar_state (id, set_time, status, value) ' +\
-                    'values(?,?,?,?)',
-                    (_id, item.set_time, item.status, item.value))
-            logging.debug('%s state inserted into db' % item.oid)
-        else:
+        if dbconn.execute(
+                sql('update lvar_state set set_time=:t,' +
+                    ' status=:status, value=:value where id=:id'),
+                t=item.set_time,
+                status=item.status,
+                value=item.value,
+                id=_id).rowcount:
             logging.debug('%s state updated in db' % item.oid)
-        db.commit()
-        c.close()
-        db.close()
+        else:
+            dbconn.execute(
+                sql('insert into lvar_state (id, set_time, status, value) ' +
+                    'values(:id, :t, :status, :value)'),
+                id=_id,
+                t=item.set_time,
+                status=item.status,
+                value=item.value)
+            logging.debug('{} state inserted into db'.format(item.oid))
         return True
     except:
         logging.critical('db error')
         eva.core.critical()
-        try:
-            c.close()
-        except:
-            pass
-        try:
-            if db:
-                db.close()
-        except:
-            eva.core.critical()
         return False
 
 
@@ -251,68 +233,59 @@ def load_extensions():
     eva.lm.extapi.load()
 
 
-def load_lvar_db_state(items, clean=False, create=True):
+def load_lvar_db_state(items, clean=False):
     _db_loaded_ids = []
     _db_to_clean_ids = []
-    db = eva.core.get_db()
-    if not db:
-        logging.critical('unable to get db')
-        eva.core.critical()
-        return
-    c = db.cursor()
     try:
-        c.execute('select id, set_time, status, value from lvar_state')
+        dbconn = eva.core.db()
+        if not dbconn:
+            logging.critical('unable to get db')
+            eva.core.critical()
+            return
+        meta = sa.MetaData()
+        t_state_history = sa.Table(
+            'lvar_state', meta, sa.Column(
+                'id', sa.String(256), primary_key=True),
+            sa.Column('set_time', sa.Numeric(20, 8)),
+            sa.Column('status', sa.Integer), sa.Column('value', sa.String(256)))
         try:
-            for d in c:
-                if d[0] in items.keys():
-                    items[d[0]].set_time = float(d[1])
-                    items[d[0]].status = int(d[2])
-                    items[d[0]].value = d[3]
-                    _db_loaded_ids.append(d[0])
-                    logging.debug(
-                      '%s state loaded, set_time=%f, status=%u, value="%s"' % \
-                            (
-                            items[d[0]].full_id,
-                            items[d[0]].set_time,
-                            items[d[0]].status,
-                            items[d[0]].value))
-                else:
-                    _db_to_clean_ids.append(d[0])
-            c.close()
-            c = db.cursor()
-            for i, v in items.items():
-                if i not in _db_loaded_ids:
-                    c.execute(
-                        'insert into lvar_state (id, set_time,' + \
-                         ' status, value) values (?, ?, ?, ?)',
-                            (v.item_id, v.set_time, v.status, v.value))
-                    logging.debug('%s state inserted into db' % v.full_id)
-            if clean:
-                for i in _db_to_clean_ids:
-                    c.execute('delete from lvar_state where id=?', (i,))
-                    logging.debug('%s state removed from db' % i)
+            meta.create_all(dbconn)
         except:
-            logging.critical('db error')
+            logging.critical('Failed to create lvar_state table')
             eva.core.critical()
-        db.commit()
-        c.close()
+            return False
+        r = dbconn.execute(
+            sql('select id, set_time, status, value from lvar_state'))
+        while True:
+            d = r.fetchone()
+            if not d: break
+            if d.id in items.keys():
+                items[d.id].set_time = float(d.set_time)
+                items[d.id].status = int(d.status)
+                items[d.id].value = d.value
+                _db_loaded_ids.append(d.id)
+                logging.debug(
+                    '{} state loaded, set_time={}, status={}, value="{}"'.
+                    format(d.id, d.set_time, d.status, d.value))
+            else:
+                _db_to_clean_ids.append(d.id)
+        for i, v in items.items():
+            if i not in _db_loaded_ids:
+                dbconn.execute(
+                    sql('insert into lvar_state (id, set_time, status, value) '
+                        + 'values (:id, :t, :status, :value)'),
+                    id=v.item_id,
+                    t=v.set_time,
+                    status=v.status,
+                    value=v.value)
+                logging.debug('{} state inserted into db'.format(v.oid))
+        if clean:
+            for i in _db_to_clean_ids:
+                dbconn.execute(sql('delete from lvar_state where id=:id'), id=i)
+                logging.debug('{} state removed from db'.format(i))
     except:
-        if not create:
-            logging.critical('db error')
-            eva.core.critical()
-        else:
-            try:
-                c.close()
-            except:
-                pass
-            if db:
-                db.close()
-                db = None
-            logging.info('No lvar_state table in db, creating new')
-            create_lvar_state_table()
-            load_lvar_db_state(items, clean, create=False)
-    if db:
-        db.close()
+        logging.critical('db error')
+        eva.core.critical()
 
 
 def load_lvars(start=False):

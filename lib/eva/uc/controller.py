@@ -263,11 +263,15 @@ def load_drivers():
     eva.uc.driverapi.load()
 
 
-def load_db_state(items, item_type, clean=False, create=True):
+def load_db_state(items, item_type, clean=False):
     _db_loaded_ids = []
     _db_to_clean_ids = []
     try:
         dbconn = eva.core.db()
+        if not dbconn:
+            logging.critical('unable to get db')
+            eva.core.critical()
+            return
         meta = sa.MetaData()
         t_state_history = sa.Table(
             'state', meta, sa.Column('id', sa.String(256), primary_key=True),
@@ -277,6 +281,7 @@ def load_db_state(items, item_type, clean=False, create=True):
             meta.create_all(dbconn)
         except:
             logging.critical('Failed to create state table')
+            eva.core.critical()
             return False
         r = dbconn.execute(
             sql('select id, status, value from state where tp = :tp'),
@@ -285,10 +290,10 @@ def load_db_state(items, item_type, clean=False, create=True):
             d = r.fetchone()
             if not d: break
             if d.id in items.keys():
-                items[d.id].status = d.status
+                items[d.id].status = int(d.status)
                 items[d.id].value = d.value
                 if item_type == 'U':
-                    items[d.id].nstatus = d.status
+                    items[d.id].nstatus = int(d.status)
                     items[d.id].nvalue = d.value
                 _db_loaded_ids.append(d.id)
                 logging.debug('{} state loaded, status={}, value="{}"'.format(
@@ -312,7 +317,7 @@ def load_db_state(items, item_type, clean=False, create=True):
                 logging.debug('{} state removed from db'.format(i))
     except:
         logging.critical('db error')
-        eva.core.log_traceback()
+        eva.core.critical()
 
 
 def load_units(start=False):
