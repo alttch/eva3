@@ -116,9 +116,9 @@ logrotate)
 status)
     ps xa|grep -v grep|grep ${UC} > /dev/null 2>&1
     if [ $? == 0 ]; then
-        echo " running "
+        echo "running"
     else
-        echo " stopped "
+        echo "stopped"
     fi
     ;;
 version)

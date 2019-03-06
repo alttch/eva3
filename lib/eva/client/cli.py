@@ -1448,7 +1448,7 @@ class ControllerCLI(object):
         result = {}
         try:
             result[self._management_controller_id] = out[0].strip().lower(
-            ).find(' running ') != -1
+            ).find('running') != -1
         except:
             return self.local_func_result_failed
         return 0, result

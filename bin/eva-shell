@@ -16,7 +16,6 @@ import requests
 import jsonpickle
 import configparser
 import platform
-import getpass
 from datetime import datetime
 
 nodename = platform.node()
@@ -59,10 +58,6 @@ class ComplBackupList(ComplGeneric):
             result.append(v['name'])
         return result
 
-class ComplUserList(ComplGeneric):
-
-    def __call__(self, prefix, **kwargs):
-        return (getpass.getuser(),)
 
 class ManagementCLI(GenericCLI):
 
@@ -217,28 +212,6 @@ class ManagementCLI(GenericCLI):
             help='Controller type (' + ', '.join(self.products_configured) +
             ')',
             choices=self.products_configured)
-
-        ap_get_user = sp_controller.add_parser(
-            'get_user', help='Get controller user')
-        ap_get_user.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')',
-            choices=self.products_configured)
-
-        ap_set_user = sp_controller.add_parser(
-            'set_user', help='Set controller user')
-        ap_set_user.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')',
-            choices=self.products_configured)
-        ap_set_user.add_argument(
-            'v',
-            metavar='USER',
-            help='User name').completer = ComplUserList(self)
 
     def add_manager_common_functions(self):
         ap_version = self.sp.add_parser(
@@ -408,14 +381,14 @@ sys.argv = {argv}
         result = {}
         if c:
             try:
-                result[c] = out[0].strip().lower.find(' running ') != -1
+                result[c] = out[0].strip().lower.find('running') != -1
             except:
                 return self.local_func_result_failed
         else:
             for r in out:
                 try:
                     c, s = r.strip().split(': ', 1)
-                    result[c.lower()] = s.lower().find(' running ') != -1
+                    result[c.lower()] = s.lower().find('running') != -1
                 except:
                     pass
         return 0, result
@@ -428,6 +401,9 @@ sys.argv = {argv}
             new_lines = []
             new_lines.append("{}_ENABLED=yes\n".format(params['p'].upper()))
             for line in lines:
+                if "{}_SUPERVISORD".format(params['p'].upper()) in line:
+                    self.print_err('Server is controlled by supervisord')
+                    return self.local_func_result_failed
                 if "{}_ENABLED".format(params['p'].upper()) not in line:
                     new_lines.append(line)
             with open(dir_etc + '/eva_servers', "w") as f:
@@ -443,6 +419,9 @@ sys.argv = {argv}
             new_lines = []
             new_lines.append("{}_ENABLED=no\n".format(params['p'].upper()))
             for line in lines:
+                if "{}_SUPERVISORD".format(params['p'].upper()) in line:
+                    self.print_err('Server is controlled by supervisord')
+                    return self.local_func_result_failed
                 if "{}_ENABLED".format(params['p'].upper()) not in line:
                     new_lines.append(line)
             with open(dir_etc + '/eva_servers', "w") as f:
@@ -457,7 +436,7 @@ sys.argv = {argv}
             f.close()
             new_lines = []
             new_lines.append("{}_USER={}\n".format(params['p'].upper(),
-                             params['v']))
+                                                   params['v']))
             for line in lines:
                 if "{}_USER".format(params['p'].upper()) not in line:
                     new_lines.append(line)
