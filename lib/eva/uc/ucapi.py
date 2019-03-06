@@ -769,6 +769,16 @@ class UC_API(GenericAPI):
         else:
             return False
 
+    def set_phi_prop(self, k=None, i=None, p=None, v=None, save=False):
+        if not apikey.check(k, master=True): return None
+        if not i: return None
+        phi = eva.uc.driverapi.get_phi(i)
+        if phi:
+            if eva.uc.driverapi.set_phi_prop(i, p, v):
+                if save: eva.uc.driverapi.save()
+                return True
+        return False
+
     def get_driver(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         if not i: return None
@@ -777,6 +787,16 @@ class UC_API(GenericAPI):
             return lpi.serialize(full=True, config=True)
         else:
             return False
+
+    def set_driver_prop(self, k=None, i=None, p=None, v=None, save=False):
+        if not apikey.check(k, master=True): return None
+        if not i or i.split('.')[-1] == 'default': return None
+        lpi = eva.uc.driverapi.get_driver(i)
+        if lpi:
+            if eva.uc.driverapi.set_driver_prop(i, p, v):
+                if save: eva.uc.driverapi.save()
+                return True
+        return False
 
     def test_phi(self, k=None, i=None, c=None):
         if not apikey.check(k, master=True): return None
@@ -923,6 +943,8 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         UC_HTTP_API.modhelp_phi.exposed = True
         UC_HTTP_API.modhelp_lpi.exposed = True
 
+        UC_HTTP_API.set_phi_prop.exposed = True
+        UC_HTTP_API.set_driver_prop.exposed = True
         UC_HTTP_API.assign_driver.exposed = True
 
         UC_HTTP_API.info.exposed = True
@@ -1345,6 +1367,13 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         if result is False: raise cp_api_404()
         return result
 
+    def set_phi_prop(self, k=None, i=None, p=None, v=None, save=None):
+        cp_need_master(k)
+        result = super().set_phi_prop(k, i, p, v, save)
+        if result is None: raise cp_api_error()
+        if result is False: raise cp_api_404()
+        return http_api_result_ok()
+
     def load_driver(self, k=None, i=None, m=None, p=None, c=None, save=False):
         cp_need_master(k)
         result = super().load_driver(k, i, m, p, c, save)
@@ -1367,6 +1396,13 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
         return result
+
+    def set_driver_prop(self, k=None, i=None, p=None, v=None, save=None):
+        cp_need_master(k)
+        result = super().set_driver_prop(k, i, p, v, save)
+        if result is None: raise cp_api_error()
+        if result is False: raise cp_api_404()
+        return http_api_result_ok()
 
     def test_phi(self, k=None, i=None, c=None):
         cp_need_master(k)

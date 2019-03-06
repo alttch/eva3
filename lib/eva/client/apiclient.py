@@ -64,7 +64,7 @@ _api_func = {
             'list_phi', 'get_phi_map', 'list_drivers', 'get_phi', 'get_driver',
             'test_phi', 'exec_phi', 'list_lpi_mods', 'list_phi_mods',
             'modinfo_phi', 'modinfo_lpi', 'modhelp_phi', 'modhelp_lpi',
-            'assign_driver'
+            'assign_driver', 'set_phi_prop', 'set_driver_prop'
         ],
         'cr': [
             'update', 'terminate', 'kill', 'q_clean', 'disable_actions',
@@ -74,7 +74,7 @@ _api_func = {
             'destroy_device', 'login', 'logout', 'destroy_modbus_port',
             'test_modbus_port', 'destroy_owfs_bus', 'test_owfs_bus',
             'unload_phi', 'unlink_phi_mod', 'unload_driver', 'assign_driver',
-            'test_phi', 'exec_phi'
+            'test_phi', 'exec_phi', 'set_phi_prop', 'set_driver_prop'
         ],
         'ce': ['action', 'action_toggle']
     },

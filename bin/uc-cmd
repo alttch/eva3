@@ -845,6 +845,19 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='PHI ID',
             metavar='PHI_ID').completer = self.ComplPHI(self)
 
+        sp_phi_set = sp_phi.add_parser('set', help='Set PHI config prop')
+        sp_phi_set.add_argument(
+            'i', help='PHI ID',
+            metavar='PHI ID').completer = self.ComplPHI(self)
+        sp_phi_set.add_argument('p', help='Config property', metavar='PROP')
+        sp_phi_set.add_argument('v', help='Value', nargs='?', metavar='VAL')
+        sp_phi_set.add_argument(
+            '-y',
+            '--save',
+            help='Save PHI config after set',
+            dest='_save',
+            action='store_true')
+
         sp_phi_mods = sp_phi.add_parser('mods', help='List available PHI mods')
         sp_lpi_mods = sp_lpi.add_parser('mods', help='List available LPI mods')
 
@@ -871,6 +884,20 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_driver_get.add_argument(
             'i', help='Driver ID',
             metavar='DRIVER_ID').completer = self.ComplDriver(self)
+
+        sp_driver_set = sp_driver.add_parser(
+            'set', help='Set driver config prop (driver can not be default)')
+        sp_driver_set.add_argument(
+            'i', help='DRIVER ID',
+            metavar='DRIVER ID').completer = self.ComplDriver(self)
+        sp_driver_set.add_argument('p', help='Config property', metavar='PROP')
+        sp_driver_set.add_argument('v', help='Value', nargs='?', metavar='VAL')
+        sp_driver_set.add_argument(
+            '-y',
+            '--save',
+            help='Save driver config after set',
+            dest='_save',
+            action='store_true')
 
         sp_phi_load = sp_phi.add_parser('load', help='Load PHI')
         sp_phi_load.add_argument('i', help='PHI ID', metavar='PHI_ID')
@@ -1123,6 +1150,7 @@ _api_functions = {
     'owfs:scan': 'scan_owfs_bus',
     'phi:list': 'list_phi',
     'phi:get': 'get_phi',
+    'phi:set': 'set_phi_prop',
     'phi:mods': 'list_phi_mods',
     'phi:test': 'test_phi',
     'phi:exec': 'exec_phi',
@@ -1137,6 +1165,7 @@ _api_functions = {
     'lpi:modhelp': 'modhelp_lpi',
     'driver:list': 'list_drivers',
     'driver:get': 'get_driver',
+    'driver:set': 'set_driver_prop',
     'driver:load': 'load_driver',
     'driver:unload': 'unload_driver',
     'driver:assign': 'assign_driver',

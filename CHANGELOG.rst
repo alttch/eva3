@@ -31,7 +31,7 @@ UC
 
     * warning: API function *set_driver* renamed to *assign_driver*
 
-    * new API function: list_device_tpl
+    * new API functions: list_device_tpl, set_driver_prop, set_phi_prop
     * 1-Wire OWFS support (virtual buses, PHIs), OWFS API functions
 
 LM
