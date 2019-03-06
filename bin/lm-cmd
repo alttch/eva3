@@ -307,19 +307,26 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 'Condition':
                 r['condition'] + m,
                 'Initial':
-                r['for_initial'],
+                r['for_initial'] if r['for_initial'] else 'any',
                 'Chillout':
                 '%.2f/%.2f' % (r['chillout_time'], r['chillout_ends_in']),
                 'Brk':
                 self.bool2yn(r['break_after_exec']),
-                'description':
+                'Description':
                 r['description']
             })
         df2 = self.pd.DataFrame(data2)
         df2.set_index('for_oid', inplace=True)
         df3 = self.pd.DataFrame(data3)
         df3 = df3.ix[:, [
-            'id', 'E', 'Prio', 'Condition', 'Initial', 'Chillout', 'Brk'
+            'id',
+            'E',
+            'Prio',
+            'Condition',
+            'Initial',
+            'Chillout',
+            'Brk',
+            'Description',
         ]]
         df3.set_index('id', inplace=True)
         out2 = df2.to_string().split('\n')
@@ -1077,12 +1084,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='EXT ID',
             metavar='EXT ID').completer = self.ComplExt(self)
         sp_ext_set_prop.add_argument(
-            'p', help='Config property',
-            metavar='PROP')
+            'p', help='Config property', metavar='PROP')
         sp_ext_set_prop.add_argument(
-            'v', help='Value',
-            nargs='?',
-            metavar='VAL')
+            'v', help='Value', nargs='?', metavar='VAL')
         sp_ext_set_prop.add_argument(
             '-y',
             '--save',
