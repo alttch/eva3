@@ -9,6 +9,9 @@ import re
 import logging
 import threading
 import time
+import sqlalchemy as sa
+
+from sqlalchemy import text as sql
 
 import eva.core
 import eva.uc.ucqueue
@@ -23,6 +26,8 @@ from eva.tools import is_oid
 from eva.tools import parse_oid
 from eva.tools import oid_type
 from eva.tools import oid_to_id
+
+from eva.core import db
 
 units_by_id = {}
 units_by_group = {}
@@ -197,19 +202,6 @@ def append_item(item, start=False, load=True):
     return True
 
 
-def create_state_table():
-    db = eva.core.get_db()
-    try:
-        c = db.cursor()
-        c.execute('create table state(id primary key, tp, status, value)')
-        db.commit()
-        c.close()
-    except:
-        logging.critical('unable to create state table in db')
-    if db:
-        db.close()
-
-
 @eva.core.save
 def save():
     for i, v in items_by_full_id.items():
@@ -235,42 +227,33 @@ def save():
 
 
 def save_item_state(item):
-    db = eva.core.get_db()
+    dbconn = eva.core.db()
     try:
-        c = db.cursor()
         _id = item.full_id if eva.core.enterprise_layout else item.item_id
-        c.execute('update state set status=?, value=? where id=?',
-                  (item.status, item.value, _id))
-        if not c.rowcount:
-            c.close()
+        if dbconn.execute(
+                sql('update state set status=:status, value=:value where id=:id'
+                   ),
+                status=item.status,
+                value=item.value,
+                id=_id).rowcount:
+            logging.debug('{} state updated in db'.format(item.oid))
+        else:
             tp = ''
             if item.item_type == 'unit':
                 tp = 'U'
             elif item.item_type == 'sensor':
                 tp = 'S'
-            c = db.cursor()
-            c.execute('insert into state (id, tp, status, value) ' +\
-                    'values(?,?,?,?)',
-                    (_id, tp, item.status, item.value))
-            logging.debug('%s state inserted into db' % item.oid)
-        else:
-            logging.debug('%s state updated in db' % item.oid)
-        db.commit()
-        c.close()
-        db.close()
+            dbconn.execute(
+                sql('insert into state (id, tp, status, value) ' +
+                    'values(:id, :tp, :status, :value)'),
+                id=_id,
+                tp=tp,
+                status=item.status,
+                value=item.value)
+            logging.debug('{} state inserted into db'.format(item.oid))
         return True
     except:
         logging.critical('db error')
-        eva.core.log_traceback()
-        try:
-            c.close()
-        except:
-            pass
-        if db:
-            try:
-                db.close()
-            except:
-                eva.core.critical()
         return False
 
 
@@ -283,62 +266,53 @@ def load_drivers():
 def load_db_state(items, item_type, clean=False, create=True):
     _db_loaded_ids = []
     _db_to_clean_ids = []
-    db = eva.core.get_db()
-    c = db.cursor()
     try:
-        c.execute('select id, status, value from state where tp = ?',
-                  (item_type,))
+        dbconn = eva.core.db()
+        meta = sa.MetaData()
+        t_state_history = sa.Table(
+            'state', meta, sa.Column('id', sa.String(256), primary_key=True),
+            sa.Column('tp', sa.String(10)), sa.Column('status', sa.Integer),
+            sa.Column('value', sa.String(256)))
         try:
-            for d in c:
-                if d[0] in items.keys():
-                    items[d[0]].status = int(d[1])
-                    items[d[0]].value = d[2]
-                    if item_type == 'U':
-                        items[d[0]].nstatus = int(d[1])
-                        items[d[0]].nvalue = d[2]
-                    _db_loaded_ids.append(d[0])
-                    logging.debug('%s state loaded, status=%u, value="%s"' % \
-                            (
-                            items[d[0]].full_id,
-                            items[d[0]].status,
-                            items[d[0]].value))
-                else:
-                    _db_to_clean_ids.append(d[0])
-            c.close()
-            c = db.cursor()
-            for i, v in items.items():
-                if i not in _db_loaded_ids:
-                    c.execute(
-                        'insert into state (id, tp, status, value) ' + \
-                        'values (?, ?, ?, ?)',
-                            (v.item_id, item_type, v.status, v.value))
-                    logging.debug('%s state inserted into db' % v.full_id)
-            if clean:
-                for i in _db_to_clean_ids:
-                    c.execute('delete from state where id=?', (i,))
-                    logging.debug('%s state removed from db' % i)
+            meta.create_all(dbconn)
         except:
-            logging.critical('db error')
-            eva.core.log_traceback()
-        db.commit()
-        c.close()
+            logging.critical('Failed to create state table')
+            return False
+        r = dbconn.execute(
+            sql('select id, status, value from state where tp = :tp'),
+            tp=item_type)
+        while True:
+            d = r.fetchone()
+            if not d: break
+            if d.id in items.keys():
+                items[d.id].status = d.status
+                items[d.id].value = d.value
+                if item_type == 'U':
+                    items[d.id].nstatus = d.status
+                    items[d.id].nvalue = d.value
+                _db_loaded_ids.append(d.id)
+                logging.debug('{} state loaded, status={}, value="{}"'.format(
+                    d.id, d.status, d.value))
+            else:
+                _db_to_clean_ids.append(d.id)
+        for i, v in items.items():
+            if i not in _db_loaded_ids:
+                dbconn.execute(
+                    sql('insert into state (id, tp, status, value) ' +
+                        'values (:id, :tp, :status, :value)'
+                       ),
+                    id=v.item_id,
+                    tp=item_type,
+                    status=v.status,
+                    value=v.value)
+                logging.debug('{} state inserted into db'.format(v.oid))
+        if clean:
+            for i in _db_to_clean_ids:
+                dbconn.execute(sql('delete from state where id=:id'), id=i)
+                logging.debug('{} state removed from db'.format(i))
     except:
-        if not create:
-            logging.critical('db error')
-            eva.core.log_traceback()
-        else:
-            try:
-                c.close()
-            except:
-                pass
-            if db:
-                db.close()
-                db = None
-            logging.info('No state table in db, creating new')
-            create_state_table()
-            load_db_state(items, item_type, clean, create=False)
-    if db:
-        db.close()
+        logging.critical('db error')
+        eva.core.log_traceback()
 
 
 def load_units(start=False):
