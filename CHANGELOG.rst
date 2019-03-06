@@ -37,7 +37,7 @@ UC
 LM
 --
 
-    * new API functions: enable_controller, disable_controller
+    * new API functions: enable_controller, disable_controller, set_ext_prop
     * kwargs in macros (kwargs dict, plus all keyword arguments are available
       as variables)
     * cycles, cycle control API and macro functions

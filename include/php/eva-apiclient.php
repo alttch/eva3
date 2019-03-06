@@ -265,7 +265,8 @@ $_eva_api_func = array(
                     'get_ext',
                     'list_ext_mods',
                     'modinfo_ext',
-                    'modhelp_ext'
+                    'modhelp_ext',
+                    'set_ext_prop'
                     ),
                 'cr' => array(
                     'set',
@@ -296,7 +297,9 @@ $_eva_api_func = array(
                     'create_rule',
                     'destroy_rule',
                     'login',
-                    'logout'
+                    'logout',
+                    'unload_ext',
+                    'set_ext_prop'
                     ),
                 'ce' => array(
                     'run'

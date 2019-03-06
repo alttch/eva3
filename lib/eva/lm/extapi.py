@@ -19,6 +19,7 @@ env = {}
 
 # extension functions
 
+
 def get_version():
     return __api__
 
@@ -38,7 +39,9 @@ def critical():
 def log_traceback():
     return eva.core.log_traceback()
 
+
 # internal functions
+
 
 def get_ext(ext_id):
     return exts.get(ext_id)
@@ -175,9 +178,6 @@ def serialize(full=False, config=False):
     return result
 
 
-<<<<<<< HEAD
-@eva.core.dump
-=======
 def set_ext_prop(ext_id, p, v):
     ext = get_ext(ext_id)
     cfg = ext.cfg
@@ -190,7 +190,7 @@ def set_ext_prop(ext_id, p, v):
         return True
 
 
->>>>>>> 91c72e6... add set prop for ext
+@eva.core.dump
 def dump():
     return serialize(full=True, config=True)
 

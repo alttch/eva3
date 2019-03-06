@@ -105,7 +105,8 @@ _api_func = {
             'reset_cycle_stats', 'append_controller', 'remove_controller',
             'enable_controller', 'disable_controller', 'reload_controller',
             'test_controller', 'create_lvar', 'destroy_lvar', 'set_rule_prop',
-            'create_rule', 'destroy_rule', 'login', 'logout', 'unload_ext'
+            'create_rule', 'destroy_rule', 'login', 'logout', 'unload_ext',
+            'set_ext_prop'
         ],
         'ce': ['run']
     },

@@ -1072,9 +1072,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             choices=['cfg', 'functions'])
 
         sp_ext_set_prop = sp_ext.add_parser(
-            'set_prop', help='Set extension config prop')
+            'set', help='Set extension config prop')
         sp_ext_set_prop.add_argument(
-            'i', help='EXT_ID',
+            'i', help='EXT ID',
             metavar='EXT ID').completer = self.ComplExt(self)
         sp_ext_set_prop.add_argument(
             'p', help='Config property',
@@ -1170,7 +1170,7 @@ _api_functions = {
     'ext:unload': 'unload_ext',
     'ext:modhelp': 'modhelp_ext',
     'ext:modinfo': 'modinfo_ext',
-    'ext:set_prop': 'set_ext_prop',
+    'ext:set': 'set_ext_prop',
     'macro:edit': cli.edit_macro,
     'edit:macro': cli.edit_macro
 }
