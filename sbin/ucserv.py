@@ -17,6 +17,7 @@ import eva.udpapi
 import eva.notify
 import eva.api
 import eva.apikey
+import eva.users
 import eva.uc.controller
 import eva.uc.ucapi
 import eva.logs
@@ -90,6 +91,8 @@ eva.core.load_cvars()
 eva.apikey.allows = ['cmd', 'lock', 'device']
 eva.apikey.init()
 eva.apikey.load()
+
+eva.users.init()
 
 eva.notify.init()
 eva.notify.load()

@@ -14,6 +14,7 @@ import eva.core
 import eva.notify
 import eva.api
 import eva.apikey
+import eva.users
 import eva.lm.controller
 import eva.lm.lmapi
 import eva.logs
@@ -88,6 +89,8 @@ eva.core.load_cvars()
 eva.apikey.allows = ['cmd', 'lock', 'dm_rules_props', 'dm_rules_list']
 eva.apikey.init()
 eva.apikey.load()
+
+eva.users.init()
 
 eva.notify.init()
 eva.notify.load()

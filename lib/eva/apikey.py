@@ -524,6 +524,7 @@ def load_keys_from_db():
         meta.create_all(dbconn)
     except:
         logging.critical('unable to create apikeys table in db')
+        return _keys, _keys_by_id
     try:
         result = dbconn.execute(sql('select * from apikeys'))
         while True:
