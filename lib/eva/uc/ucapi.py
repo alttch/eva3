@@ -635,10 +635,19 @@ class UC_API(GenericAPI):
                         i=None,
                         location=None,
                         lock=False,
+                        timeout=None,
+                        delay=None,
+                        retries=None,
                         save=False):
         if not apikey.check(k, master=True): return None
         if not i or not location: return False
-        result = eva.uc.owfs.create_owfs_bus(i, location, lock=lock)
+        result = eva.uc.owfs.create_owfs_bus(
+            i,
+            location,
+            lock=lock,
+            timeout=timeout,
+            delay=delay,
+            retries=retries)
         if result and save: eva.uc.owfs.save()
         return result
 
@@ -676,17 +685,18 @@ class UC_API(GenericAPI):
         if a:
             kwargs['has_' + ('all' if has_all else 'one')] = a
         if n:
-            data = [bus.ow.sensor(n)]
+            eq = [n]
         else:
-            data = bus.ow.find(**kwargs)
+            eq = [s.path for s in bus._ow.find(**kwargs)]
         result = []
-        for r in data:
-            s = {'type': r.type, 'path': r.path}
+        for r in eq:
+            sensor = bus._ow.sensor(r)
+            s = {'type': sensor.type, 'path': sensor.path}
             if full:
-                s['attrs'] = r.attrs
+                s['attrs'] = sensor.attrs
                 if a:
                     for attr in (a if isinstance(a, list) else [a]):
-                        s[attr] = getattr(r, attr, None)
+                        s[attr] = bus.read(r, attr)
             result.append(s)
         return sorted(
             sorted(result, key=lambda k: k['path']), key=lambda k: k['type'])
@@ -1288,10 +1298,40 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         return http_api_result_ok() if super().test_modbus_port(
             k, i) else http_api_result_error()
 
-    def create_owfs_bus(self, k=None, i=None, n=None, l=None, save=False):
+    def create_owfs_bus(self,
+                        k=None,
+                        i=None,
+                        n=None,
+                        l=None,
+                        t=None,
+                        d=None,
+                        r=None,
+                        save=False):
         cp_need_master(k)
+        if t:
+            try:
+                _t = float(t)
+            except:
+                raise cp_api_error()
+        else:
+            _t = None
+        if d:
+            try:
+                _d = float(d)
+            except:
+                raise cp_api_error()
+        else:
+            _d = None
+        if r:
+            try:
+                _r = int(r)
+            except:
+                raise cp_api_error()
+        else:
+            _r = None
         return http_api_result_ok() if super().create_owfs_bus(
-            k, i, n, val_to_boolean(l), save) else http_api_result_error()
+            k, i, n, val_to_boolean(l), _t, _d, _r,
+            save) else http_api_result_error()
 
     def destroy_owfs_bus(self, k=None, i=None):
         cp_need_master(k)
