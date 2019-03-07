@@ -169,8 +169,8 @@ class OWFSBus(object):
         self.last_action = 0
         try:
             self._ow = onewire.Onewire(('--' if location.find('=') != -1 and
-                                       not location.startswith('--') else '') +
-                                      location)
+                                        not location.startswith('--') else '') +
+                                       location)
         except:
             eva.core.log_traceback()
             self._ow = None
@@ -198,8 +198,9 @@ class OWFSBus(object):
         for i in range(self.tries):
             self.sleep()
             try:
-                result = self._ow.set(path + '/' + attr, str(value))
-                if result is not None: return True
+                val = str(value)
+                result = self._ow.set(path + '/' + attr, val)
+                if result == len(val): return True
             except:
                 pass
         return False
