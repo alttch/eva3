@@ -205,6 +205,7 @@ class LogAPI(object):
 class FileAPI(object):
 
     def file_unlink(self, k, fname=None):
+        if not eva.apikey.check(k, master=True): return None
         if fname is None or \
                 not eva.apikey.check(k, master = True) or \
                 fname[0] == '/' or \
@@ -220,6 +221,7 @@ class FileAPI(object):
             return False
 
     def file_get(self, k, fname=None):
+        if not eva.apikey.check(k, master=True): return None
         if fname is None or \
                 not eva.apikey.check(k, master = True) or \
                 fname[0] == '/' or \
@@ -233,6 +235,7 @@ class FileAPI(object):
             return None
 
     def file_put(self, k, fname=None, data=None):
+        if not eva.apikey.check(k, master=True): return None
         if fname is None or \
                 not eva.apikey.check(k, master = True) or \
                 fname[0] == '/' or \
@@ -250,6 +253,7 @@ class FileAPI(object):
             return False
 
     def file_set_exec(self, k, fname=None, e=False):
+        if not eva.apikey.check(k, master=True): return None
         if fname is None or \
                 not eva.apikey.check(k, master = True) or \
                 fname[0] == '/' or \
