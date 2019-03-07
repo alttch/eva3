@@ -471,8 +471,20 @@ Working with 1-wire via OWFS
 ============================
 
 As EVA ICS has virtual OWFS buses, you don't need to initialize OWFS by
-yourself, just use **eva.uc.owfs** module. OWFS virtual buses support locking,
-so don't forget to release bus after PHI job is finished.
+yourself.
+
+Methods available:
+
+* **owfs.is_bus(bus_id)** returns *True* if bus is defined
+* **bus = owfs.get_bus(bus_id)** get bus. If locking is defined, the bus becomes
+  exclusively locked.
+* **bus.read(path, attr)** read equipment attribute value
+* **bus.write(path, attr, value)** write equipment attribute value
+* **bus.release()** Release bus. As bus may be locked for others, the method
+  should be always called immediately after the work with bus is finished.
+
+*read(path, attr)* and *write(path, attr,
+value*).
 
 .. code-block:: python
 
@@ -500,20 +512,15 @@ so don't forget to release bus after PHI job is finished.
         bus = owfs.get_bus(self.owfs_bus)
         if not bus: return None
         try:
-            me = bus.ow.sensor(self.path)
-            if not me: raise Exception('equipment not found')
-            return { '0': me.temperature }
+            value = us.read(path, 'temperature')
+            if not value:
+                raise Exception('can not obtain temperature value')
+            return {'temperature': value}
         except:
-            bus.release()
             return None
         finally:
             bus.release()
 
-
-The variable **client_type** of the port object (*mb.client_type*) holds the
-port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
-work with the equipment of the same type which uses e.g. different registers
-for different connection types.
 
 Working with MQTT
 =================
