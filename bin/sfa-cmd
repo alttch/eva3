@@ -749,6 +749,10 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     raise Exception('Controller {} not found'.format(c))
                 code = ctest.get('code')
                 ctest = ctest.get('data')
+                if code == apiclient.result_not_ready:
+                    raise Exception(
+                        ('Controller {} management API not ready (no ' +
+                         'master access from SFA)').format(c))
                 if code == apiclient.result_forbidden:
                     raise Exception('Controller {} access forbidden'.format(c))
                 if code != apiclient.result_ok:
