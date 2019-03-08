@@ -1501,6 +1501,8 @@ class ControllerCLI(object):
             'stop', help='Stop controller server')
         ap_restart = sp_controller.add_parser(
             'restart', help='Restart controller server')
+        ap_restart = sp_controller.add_parser(
+            'reload', help='Reload controller server')
         ap_status = sp_controller.add_parser(
             'status', help='Status of the controller server')
 
@@ -1520,6 +1522,7 @@ class ControllerCLI(object):
             'server:stop': self.stop_controller,
             'server:restart': self.restart_controller,
             'server:status': self.status_controller,
+            'server:reload': 'shutdown_core'
         }
         self.append_api_functions(funcs)
 

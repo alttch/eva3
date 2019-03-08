@@ -61,7 +61,8 @@ $_eva_sysapi_func = array(
         'set_key_prop',
         'regenerate_key',
         'destroy_key',
-        'dump'
+        'dump',
+        'shutdown_core'
         );
 
 $_eva_sysapi_func_cr = array(
@@ -88,7 +89,8 @@ $_eva_sysapi_func_cr = array(
         'set_key_prop',
         'regenerate_key',
         'destroy_key',
-        'dump'
+        'dump',
+        'shutdown_core'
         );
 
 $_eva_sysapi_func_ce = array(

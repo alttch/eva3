@@ -9,12 +9,14 @@ Common
 
     * fixes: correct backup/restore if configuration folders are symlinks
     * fixes: correct restore if --runtime flag is specified
+    * fixes: LM PLC locking problems
 
     * notifier perfomance improvements
     * CLI improvements
 
     * license is changed to Apache License 2.0
     * perfomance improvements
+    * new SYS API function: shutdown_core
     * controller/node autodiscovery
     * JSON API via MQTT
     * enterprise layout is now default item layout

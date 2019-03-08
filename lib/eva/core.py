@@ -192,7 +192,7 @@ def sighandler_hup(signum, frame):
         log_traceback()
 
 
-def sighandler_term(signum, frame):
+def sighandler_term(signum=None, frame=None):
     global _sigterm_sent
     logging.info('got TERM signal, exiting')
     if db_update == 2:

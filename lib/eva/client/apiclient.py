@@ -32,7 +32,7 @@ _sysapi_func = [
     'set_debug', 'setup_mode', 'file_unlink', 'file_get', 'file_put',
     'file_set_exec', 'create_user', 'set_user_password', 'set_user_key',
     'destroy_user', 'list_keys', 'create_key', 'list_key_props', 'set_key_prop',
-    'destroy_key', 'regenerate_key', 'list_users', 'dump'
+    'destroy_key', 'regenerate_key', 'list_users', 'dump', 'shutdown_core'
 ]
 
 _sysapi_func_cr = [
@@ -40,7 +40,7 @@ _sysapi_func_cr = [
     'log_error', 'log_critical', 'save', 'set_debug', 'setup_mode', 'set_cvar',
     'file_unlink', 'file_put', 'file_set_exec', 'create_user', 'create_key',
     'modify_key', 'destroy_key', 'regenerate_key', 'set_user_password',
-    'set_user_key', 'destroy_user', 'dump'
+    'set_user_key', 'destroy_user', 'dump', 'shutdown_core'
 ]
 
 _sysapi_func_ce = ['cmd']

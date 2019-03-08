@@ -17,6 +17,8 @@ import eva.core
 import eva.runner
 import eva.logs
 
+from pyaltt import background_job
+
 from eva.api import cp_json_handler
 from eva.api import log_api_request
 from eva.api import http_remote_info
@@ -390,6 +392,12 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             eva.core.setup_off()
         return True
 
+    def shutdown_core(self, k=None):
+        if not eva.apikey.check(k, master=True):
+            return False
+        background_job(eva.core.sighandler_term)()
+        return True
+
 
 class SysHTTP_API(SysAPI, JSON_RPC_API):
 
@@ -460,6 +468,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         SysHTTP_API.log_rotate.exposed = True
         SysHTTP_API.set_debug.exposed = True
         SysHTTP_API.setup_mode.exposed = True
+        SysHTTP_API.shutdown_core.exposed = True
 
         if eva.core.development:
             GenericAPI.dev_env.exposed = True
@@ -609,6 +618,11 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         val = val_to_boolean(debug)
         if val is None: raise cp_api_error()
         return http_api_result_ok() if super().set_debug(k, val) \
+                else http_api_result_error()
+
+    def shutdown_core(self, k):
+        cp_need_master(k)
+        return http_api_result_ok() if super().shutdown_core(k) \
                 else http_api_result_error()
 
     def setup_mode(self, k=None, setup=None):
