@@ -363,10 +363,10 @@ def init():
 def update_config(cfg):
     global cloud_manager
     try:
-        cloud_manager = (cfg.get('features', 'cloud_manager') == 'yes')
+        cloud_manager = (cfg.get('cloud', 'cloud_manager') == 'yes')
     except:
         pass
-    logging.debug('features.cloud_manager = %s' % ('yes' \
+    logging.debug('cloud.cloud_manager = %s' % ('yes' \
                                 if cloud_manager else 'no'))
     eva.client.remote_controller.cloud_manager = cloud_manager
 
