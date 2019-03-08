@@ -614,7 +614,7 @@ def get_cvar(var):
 def set_cvar(var, value=None):
     if not var: return False
     if value is not None:
-        cvars[var] = value
+        cvars[var] = str(value)
     else:
         try:
             del cvars[var]
