@@ -82,6 +82,8 @@ _exceptions = []
 
 _exception_log_lock = threading.Lock()
 
+_cvars_lock = threading.RLock()
+
 _db_lock = threading.RLock()
 _userdb_lock = threading.RLock()
 
@@ -613,16 +615,17 @@ def get_cvar(var):
 
 def set_cvar(var, value=None):
     if not var: return False
-    if value is not None:
-        cvars[var] = str(value)
-    else:
-        try:
-            del cvars[var]
-        except:
-            return False
-    if db_update == 1: save_cvars()
-    else: cvars_modified = True
-    return True
+    with _cvars_lock:
+        if value is not None:
+            cvars[var] = str(value)
+        else:
+            try:
+                del cvars[var]
+            except:
+                return False
+        if db_update == 1: save_cvars()
+        else: cvars_modified = True
+        return True
 
 
 @save

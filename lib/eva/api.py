@@ -377,17 +377,17 @@ class GenericAPI(object):
     def dev_cvars(self, k=None):
         """ get only custom vars from ENV
         """
-        return eva.core.cvars
+        return eva.core.cvars.copy()
 
     def dev_env(self, k=None):
         """ get ENV (env is used for external scripts)
         """
-        return eva.core.env
+        return eva.core.env.copy()
 
     def dev_k(self, k=None):
         """ get all API keys
         """
-        return apikey.keys
+        return apikey.keys.copy()
 
     def dev_n(self, k=None, id=None):
         """ get all notifiers

@@ -342,7 +342,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         if var:
             return eva.core.get_cvar(var)
         else:
-            return eva.core.cvars
+            return eva.core.cvars.copy()
 
     def set_cvar(self, k=None, var=None, val=None):
         if not eva.apikey.check(k, master=True):
