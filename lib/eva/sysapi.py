@@ -351,8 +351,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             return eva.core.cvars.copy()
 
     def set_cvar(self, k=None, var=None, val=None):
-        if not eva.apikey.check(k, master=True):
-            return False
+        if not eva.apikey.check(k, master=True): return None
         return eva.core.set_cvar(var, val)
 
     def notifiers(self, k=None):
@@ -552,8 +551,9 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     def set_cvar(self, k=None, i=None, v=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().set_cvar(k, i, v) \
-                else http_api_result_error()
+        result = super().set_cvar(k, i, v)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def get_cvar(self, k=None, i=None):
         result = super().get_cvar(k, i)

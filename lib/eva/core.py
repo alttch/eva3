@@ -618,6 +618,8 @@ def set_cvar(var, value=None):
     with _cvars_lock:
         if value is not None:
             cvars[var] = str(value)
+        elif var not in cvars:
+            return None
         else:
             try:
                 del cvars[var]
