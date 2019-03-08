@@ -281,9 +281,9 @@ class LM_API(GenericAPI):
 
 # master functions for item configuration
 
-    def create_rule(self, k=None, save=False):
+    def create_rule(self, k=None, u=None, save=False):
         if not apikey.check(k, master=True): return None
-        return eva.lm.controller.create_dm_rule(save)
+        return eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
 
     def destroy_rule(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -628,6 +628,7 @@ class LM_API(GenericAPI):
                 return True
         return False
 
+
 class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
     def __init__(self):
@@ -857,7 +858,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                     self._set_rule_prop_batch(k, i, data, _save) \
                     else http_api_result_error()
 
-    def create_rule(self, k=None, save=None, _j=None):
+    def create_rule(self, k=None, u=None, save=None, _j=None):
         cp_need_master(k)
         if save:
             _save = True
@@ -867,15 +868,20 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
             _save_ac = _save
         else:
             _save_ac = False
-        rule_id = super().create_rule(k, _save_ac)
+        rule_id = super().create_rule(k, u, _save_ac)
         if not rule_id: return http_api_result_error()
         if _j is None:
             return http_api_result_ok({'rule_id': rule_id})
         else:
-            try:
-                data = jsonpickle.decode(_j)
-            except:
-                raise cp_api_error('_j is no JSON')
+            if isinstance(_j, str):
+                try:
+                    data = jsonpickle.decode(_j)
+                except:
+                    raise cp_api_error('Invalid JSON in _j')
+            elif isinstance(_j, dict):
+                data = _j
+            else:
+                raise cp_api_error('_j must be either string or dict')
             return http_api_result_ok() if \
                     self._set_rule_prop_batch(k, rule_id, data, _save) \
                     else http_api_result_error()
@@ -1046,7 +1052,9 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
     def reset_cycle_stats(self, k=None, i=None):
         return http_api_result_ok() if super().reset_cycle_stats(
-            k, i,) else http_api_result_error()
+            k,
+            i,
+        ) else http_api_result_error()
 
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
         cp_need_master(k)
@@ -1122,6 +1130,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
         return http_api_result_ok()
+
 
 def start():
     global api

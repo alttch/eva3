@@ -491,8 +491,10 @@ def destroy_cycle(m_id):
     return False
 
 
-def create_dm_rule(save=False):
-    r = eva.lm.dmatrix.DecisionRule()
+def create_dm_rule(save=False, rule_uuid=None):
+    if rule_uuid in dm_rules:
+        return None
+    r = eva.lm.dmatrix.DecisionRule(rule_uuid=rule_uuid)
     dm_rules[r.item_id] = r
     if save: r.save()
     DM.append_rule(r)

@@ -856,6 +856,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
         sp_rule_create = sp_rule.add_parser('create', help='Create new rule')
         sp_rule_create.add_argument(
+            '-u',
+            '--uuid',
+            help='Rule UUID (generated if not specified)',
+            dest='u',
+            metavar='UUID')
+        sp_rule_create.add_argument(
             '-y',
             '--save',
             help='Save rule config after set',

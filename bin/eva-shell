@@ -16,6 +16,8 @@ import requests
 import jsonpickle
 import configparser
 import platform
+import yaml
+from functools import partial
 from datetime import datetime
 
 nodename = platform.node()
@@ -31,6 +33,8 @@ dir_runtime = os.path.realpath(
     os.path.dirname(os.path.realpath(__file__)) + '/../runtime')
 sys.path.append(dir_lib)
 
+dir_cwd = os.getcwd()
+
 os.chdir(dir_eva)
 os.environ['EVA_DIR'] = dir_eva
 if not 'PATH' in os.environ: os.environ['PATH'] = ''
@@ -44,6 +48,7 @@ update_repo = 'https://get.eva-ics.com'
 interactive_mode = False
 
 import eva.core
+from eva.client import apiclient
 from eva.client.cli import GenericCLI
 from eva.client.cli import ComplGeneric
 
@@ -332,6 +337,7 @@ sys.argv = {argv}
             rlp=not interactive_mode,
             argv=sysargs,
             xp=xp) + c
+            os.chdir(dir_cwd)
             try:
                 exec(c)
                 self.extra = None
@@ -351,6 +357,7 @@ sys.argv = {argv}
         eva.client.cli.readline_processing = True if \
                 not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
         eva.client.cli.parent_shell_name = None
+        os.chdir(dir_eva)
 
     def start_controller(self, params):
         c = params['p']

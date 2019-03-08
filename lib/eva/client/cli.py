@@ -14,6 +14,7 @@ import os
 import shlex
 import readline
 import json
+import glob
 import jsonpickle
 import platform
 import termcolor
@@ -210,6 +211,17 @@ class GenericCLI(object):
         self.api_cmds_timeout_correction = []
         self.parse_primary_args()
         self.setup_parser()
+
+    class ComplGlob(object):
+
+        def __init__(self, mask=None):
+            self.mask = mask if mask else '*'
+
+        def __call__(self, prefix, **kwargs):
+            result = []
+            for m in self.mask:
+                result += glob.glob(prefix + m)
+            return result
 
     def setup_parser(self):
         if not self.interactive and not self.batch_file:
@@ -1274,6 +1286,8 @@ class GenericCLI(object):
             if apikey is not None:
                 api.set_key(apikey)
             api.ssl_verify(self.ssl_verify)
+        else:
+            api = None
         api_func_full = ''
         if getattr(a, '_full', False):
             params['full'] = 1
@@ -1312,6 +1326,7 @@ class GenericCLI(object):
         if isinstance(api_func, str) and self.remote_api:
             code, result = api.call(api_func, params, timeout, _debug=debug)
         else:
+            params['_api'] = api
             params['_timeout'] = timeout
             params['_debug'] = debug
             code, result = api_func(params)
