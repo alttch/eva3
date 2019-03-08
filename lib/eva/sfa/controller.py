@@ -209,25 +209,26 @@ def append_uc(uri,
 
 
 def remove_uc(controller_id):
-    if controller_id in remote_ucs:
-        try:
-            i = remote_ucs[controller_id]
-            i.destroy()
-            if eva.core.db_update == 1 and i.config_file_exists:
-                try:
-                    os.unlink(i.get_fname())
-                except:
-                    logging.error('Can not remove controller %s config' % \
-                            controller_id)
-                    eva.core.log_traceback()
-            elif i.config_file_exists:
-                configs_to_remove.add(i.get_fname())
-            del (remote_ucs[controller_id])
-            logging.info('controller uc/%s removed' % controller_id)
-            return True
-        except:
-            eva.core.log_traceback()
-    return False
+    if controller_id not in remote_ucs:
+        return False
+    try:
+        i = remote_ucs[controller_id]
+        i.destroy()
+        if eva.core.db_update == 1 and i.config_file_exists:
+            try:
+                os.unlink(i.get_fname())
+            except:
+                logging.error('Can not remove controller %s config' % \
+                        controller_id)
+                eva.core.log_traceback()
+        elif i.config_file_exists:
+            configs_to_remove.add(i.get_fname())
+        del (remote_ucs[controller_id])
+        logging.info('controller uc/%s removed' % controller_id)
+        return True
+    except:
+        eva.core.log_traceback()
+        return False
 
 
 def append_lm(uri,
@@ -269,29 +270,31 @@ def append_lm(uri,
 
 
 def remove_lm(controller_id):
-    if controller_id in remote_lms:
-        try:
-            i = remote_lms[controller_id]
-            i.destroy()
-            if eva.core.db_update == 1 and i.config_file_exists:
-                try:
-                    os.unlink(i.get_fname())
-                except:
-                    logging.error('Can not remove controller %s config' % \
-                            controller_id)
-                    eva.core.log_traceback()
-            elif i.config_file_exists:
-                configs_to_remove.add(i.get_fname())
-            del (remote_lms[controller_id])
-            logging.info('controller lm/%s removed' % controller_id)
-            return True
-        except:
-            eva.core.log_traceback()
-    return False
+    if controller_id not in remote_lms:
+        return False
+    try:
+        i = remote_lms[controller_id]
+        i.destroy()
+        if eva.core.db_update == 1 and i.config_file_exists:
+            try:
+                os.unlink(i.get_fname())
+            except:
+                logging.error('Can not remove controller %s config' % \
+                        controller_id)
+                eva.core.log_traceback()
+        elif i.config_file_exists:
+            configs_to_remove.add(i.get_fname())
+        del (remote_lms[controller_id])
+        logging.info('controller lm/%s removed' % controller_id)
+        return True
+    except:
+        eva.core.log_traceback()
+        return False
 
 
 def remove_controller(controller_id):
     c = get_controller(controller_id)
+    if not c: return None
     if c.item_type == 'remote_uc':
         return remove_uc(c.item_id)
     elif c.item_type == 'remote_lm':

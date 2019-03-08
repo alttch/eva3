@@ -210,9 +210,11 @@ class FileAPI(object):
                 not eva.apikey.check(k, master = True) or \
                 fname[0] == '/' or \
                 fname.find('..') != -1:
-            return False
+            return None
         try:
             if not eva.core.prepare_save(): return False
+            if not os.path.isfile(eva.core.dir_runtime + '/' + fname):
+                return None
             os.unlink(eva.core.dir_runtime + '/' + fname)
             if not eva.core.finish_save(): return False
             return True
@@ -228,11 +230,13 @@ class FileAPI(object):
                 fname.find('..') != -1:
             return None
         try:
+            if not os.path.isfile(eva.core.dir_runtime + '/' + fname):
+                return None
             data = ''.join(open(eva.core.dir_runtime + '/' + fname).readlines())
             return data
         except:
             eva.core.log_traceback()
-            return None
+            return False
 
     def file_put(self, k, fname=None, data=None):
         if not eva.apikey.check(k, master=True): return None
@@ -258,11 +262,13 @@ class FileAPI(object):
                 not eva.apikey.check(k, master = True) or \
                 fname[0] == '/' or \
                 fname.find('..') != -1:
-            return False
+            return None
         try:
             if e: perm = 0o755
             else: perm = 0o644
             if not eva.core.prepare_save(): return False
+            if not os.path.isfile(eva.core.dir_runtime + '/' + fname):
+                return None
             os.chmod(eva.core.dir_runtime + '/' + fname, perm)
             if not eva.core.finish_save(): return False
             return True
@@ -422,8 +428,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         if path[:9] == '/file_put' and \
                 'm' in p:
             del p['m']
-        log_api_request(path[1:],
-                        http_remote_info(k), p, False)
+        log_api_request(path[1:], http_remote_info(k), p, False)
         if path[:4] == '/cmd':
             allow = ['cmd']
             sysfunc = False
@@ -625,8 +630,9 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     def file_unlink(self, k=None, i=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().file_unlink(k, i) \
-                else http_api_result_error()
+        result = super().file_unlink(k, i)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def file_get(self, k=None, i=None):
         cp_need_master(k)
@@ -645,8 +651,9 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
             _e = val_to_boolean(e)
         except:
             raise cp_api_error()
-        return http_api_result_ok() if super().file_set_exec(k, i, _e) \
-                else http_api_result_error()
+        result = super().file_set_exec(k, i, _e)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def create_user(self, k=None, u=None, p=None, a=None):
         cp_need_master(k)
@@ -655,18 +662,21 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     def set_user_password(self, k=None, u=None, p=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().set_user_password(k, u, p) \
-                else http_api_result_error()
+        result = super().set_user_password(k, u, p)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def set_user_key(self, k=None, u=None, a=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().set_user_key(k, u, a) \
-                else http_api_result_error()
+        result = super().set_user_key(k, u, a)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def destroy_user(self, k=None, u=None, p=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().destroy_user(k, u) \
-                else http_api_result_error()
+        result = super().destroy_user(k, u)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def list_keys(self, k=None):
         cp_need_master(k)
@@ -684,22 +694,25 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
     def list_key_props(self, k=None, i=None):
         cp_need_master(k)
         result = super().list_key_props(k, i)
+        if result is None: raise cp_api_404()
         return result if result else http_api_result_error()
 
     def set_key_prop(self, k=None, i=None, p=None, v=None, save=None):
         cp_need_master(k)
-        return http_api_result_ok() if \
-                super().set_key_prop(k, i, p, v, save) else \
-                http_api_result_error()
+        result = super().set_key_prop(k, i, p, v, save)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def destroy_key(self, k=None, i=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().destroy_key(k, i) \
-                else http_api_result_error()
+        result = super().destroy_key(k, i)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def regenerate_key(self, k=None, i=None, save=None):
         cp_need_master(k)
         result = super().regenerate_key(k, i, save)
+        if result is None: raise cp_api_404()
         return http_api_result_ok({'key':result}) if \
                 result else http_api_result_error()
 

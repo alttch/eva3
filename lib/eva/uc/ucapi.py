@@ -1246,8 +1246,9 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
     def destroy(self, k=None, i=None, g=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().destroy(k, i, g) \
-                else http_api_result_error()
+        result = super().destroy(k, i, g)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def create_modbus_port(self,
                            k=None,
@@ -1374,8 +1375,9 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
     def unload_phi(self, k=None, i=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().unload_phi(k, i) \
-                else http_api_result_error()
+        result = super().unload_phi(k, i)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def unlink_phi_mod(self, k=None, m=None):
         cp_need_master(k)
@@ -1427,8 +1429,9 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
     def unload_driver(self, k=None, i=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().unload_driver(k, i) \
-                else http_api_result_error()
+        result = super().unload_driver(k, i)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def get_driver(self, k=None, i=None):
         cp_need_master(k)

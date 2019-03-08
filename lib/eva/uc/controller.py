@@ -304,8 +304,7 @@ def load_db_state(items, item_type, clean=False):
             if i not in _db_loaded_ids:
                 dbconn.execute(
                     sql('insert into state (id, tp, status, value) ' +
-                        'values (:id, :tp, :status, :value)'
-                       ),
+                        'values (:id, :tp, :status, :value)'),
                     id=v.item_id,
                     tp=item_type,
                     status=v.status,
@@ -506,7 +505,8 @@ def clone_group(group = None, new_group = None,\
 
 
 def destroy_group(group=None):
-    if group is None or group not in items_by_group: return False
+    if group is None: return False
+    if group not in items_by_group: return None
     for i in items_by_group[group].copy():
         if not destroy_item(i): return False
     return True
@@ -516,7 +516,7 @@ def destroy_item(item):
     try:
         if isinstance(item, str):
             i = get_item(item)
-            if not i: return False
+            if not i: return None
         else:
             i = item
         if not eva.core.enterprise_layout:
@@ -557,6 +557,7 @@ def destroy_item(item):
         return True
     except:
         eva.core.log_traceback()
+        return False
 
 
 def load_mu(start=False):

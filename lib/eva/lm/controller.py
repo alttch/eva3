@@ -422,25 +422,25 @@ def create_macro(m_id, group=None, save=False):
 
 def destroy_macro(m_id):
     i = get_macro(m_id)
-    if i:
-        try:
-            i.destroy()
-            if eva.core.db_update == 1 and i.config_file_exists:
-                try:
-                    os.unlink(i.get_fname())
-                except:
-                    logging.error('Can not remove macro "%s" config' % \
-                            m_id)
-                    eva.core.log_traceback()
-            elif i.config_file_exists:
-                configs_to_remove.add(i.get_fname())
-            del (macros_by_id[i.item_id])
-            del (macros_by_full_id[i.full_id])
-            logging.info('macro "%s" removed' % i.full_id)
-            return True
-        except:
-            eva.core.log_traceback()
-    return False
+    if not i: return None
+    try:
+        i.destroy()
+        if eva.core.db_update == 1 and i.config_file_exists:
+            try:
+                os.unlink(i.get_fname())
+            except:
+                logging.error('Can not remove macro "%s" config' % \
+                        m_id)
+                eva.core.log_traceback()
+        elif i.config_file_exists:
+            configs_to_remove.add(i.get_fname())
+        del (macros_by_id[i.item_id])
+        del (macros_by_full_id[i.full_id])
+        logging.info('macro "%s" removed' % i.full_id)
+        return True
+    except:
+        eva.core.log_traceback()
+        return False
 
 
 def create_cycle(m_id, group=None, save=False):
@@ -470,25 +470,25 @@ def create_cycle(m_id, group=None, save=False):
 
 def destroy_cycle(m_id):
     i = get_cycle(m_id)
-    if i:
-        try:
-            i.destroy()
-            if eva.core.db_update == 1 and i.config_file_exists:
-                try:
-                    os.unlink(i.get_fname())
-                except:
-                    logging.error('Can not remove cycle "%s" config' % \
-                            m_id)
-                    eva.core.log_traceback()
-            elif i.config_file_exists:
-                configs_to_remove.add(i.get_fname())
-            del (cycles_by_id[i.item_id])
-            del (cycles_by_full_id[i.full_id])
-            logging.info('cycle "%s" removed' % i.full_id)
-            return True
-        except:
-            eva.core.log_traceback()
-    return False
+    if not i: return None
+    try:
+        i.destroy()
+        if eva.core.db_update == 1 and i.config_file_exists:
+            try:
+                os.unlink(i.get_fname())
+            except:
+                logging.error('Can not remove cycle "%s" config' % \
+                        m_id)
+                eva.core.log_traceback()
+        elif i.config_file_exists:
+            configs_to_remove.add(i.get_fname())
+        del (cycles_by_id[i.item_id])
+        del (cycles_by_full_id[i.full_id])
+        logging.info('cycle "%s" removed' % i.full_id)
+        return True
+    except:
+        eva.core.log_traceback()
+        return False
 
 
 def create_dm_rule(save=False, rule_uuid=None):
@@ -503,26 +503,27 @@ def create_dm_rule(save=False, rule_uuid=None):
 
 
 def destroy_dm_rule(r_id):
-    if r_id in dm_rules:
-        try:
-            i = dm_rules[r_id]
-            i.destroy()
-            DM.remove_rule(i)
-            if eva.core.db_update == 1 and i.config_file_exists:
-                try:
-                    os.unlink(i.get_fname())
-                except:
-                    logging.error('Can not remove DM rule %s config' % \
-                            r_id)
-                    eva.core.log_traceback()
-            elif i.config_file_exists:
-                configs_to_remove.add(i.get_fname())
-            del (dm_rules[r_id])
-            logging.info('DM rule %s removed' % r_id)
-            return True
-        except:
-            eva.core.log_traceback()
-    return False
+    if r_id not in dm_rules:
+        return None
+    try:
+        i = dm_rules[r_id]
+        i.destroy()
+        DM.remove_rule(i)
+        if eva.core.db_update == 1 and i.config_file_exists:
+            try:
+                os.unlink(i.get_fname())
+            except:
+                logging.error('Can not remove DM rule %s config' % \
+                        r_id)
+                eva.core.log_traceback()
+        elif i.config_file_exists:
+            configs_to_remove.add(i.get_fname())
+        del (dm_rules[r_id])
+        logging.info('DM rule %s removed' % r_id)
+        return True
+    except:
+        eva.core.log_traceback()
+        return False
 
 
 def handle_discovered_controller(notifier_id, controller_id, **kwargs):
@@ -598,25 +599,26 @@ def remove_controller(controller_id):
     if not _controller_id: return False
     if _controller_id.find('/') != -1:
         _controller_id = _controller_id.split('/')[-1]
-    if _controller_id in remote_ucs:
-        try:
-            i = remote_ucs[_controller_id]
-            i.destroy()
-            if eva.core.db_update == 1 and i.config_file_exists:
-                try:
-                    os.unlink(i.get_fname())
-                except:
-                    logging.error('Can not remove controller %s config' % \
-                            _controller_id)
-                    eva.core.log_traceback()
-            elif i.config_file_exists:
-                configs_to_remove.add(i.get_fname())
-            del (remote_ucs[_controller_id])
-            logging.info('controller %s removed' % _controller_id)
-            return True
-        except:
-            eva.core.log_traceback()
-    return False
+    if _controller_id not in remote_ucs:
+        return None
+    try:
+        i = remote_ucs[_controller_id]
+        i.destroy()
+        if eva.core.db_update == 1 and i.config_file_exists:
+            try:
+                os.unlink(i.get_fname())
+            except:
+                logging.error('Can not remove controller %s config' % \
+                        _controller_id)
+                eva.core.log_traceback()
+        elif i.config_file_exists:
+            configs_to_remove.add(i.get_fname())
+        del (remote_ucs[_controller_id])
+        logging.info('controller %s removed' % _controller_id)
+        return True
+    except:
+        eva.core.log_traceback()
+        return False
 
 
 def create_item(item_id, item_type, group=None, virtual=False, save=False):
@@ -664,7 +666,7 @@ def destroy_item(item):
     try:
         if isinstance(item, str):
             i = get_item(item)
-            if not i: return False
+            if not i: return None
         else:
             i = item
         if not eva.core.enterprise_layout:
@@ -691,6 +693,7 @@ def destroy_item(item):
         return True
     except:
         eva.core.log_traceback()
+        return False
 
 
 def save_lvars():

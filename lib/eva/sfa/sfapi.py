@@ -928,8 +928,9 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
 
     def remove_controller(self, k=None, i=None):
         cp_need_master(k)
-        return http_api_result_ok() if super().remove_controller(k, i) \
-                else http_api_result_error()
+        result = super().remove_controller(k, i)
+        if result is None: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     def list_controller_props(self, k=None, i=None):
         cp_need_master(k)

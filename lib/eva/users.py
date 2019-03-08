@@ -83,7 +83,7 @@ def create_user(user=None, password=None, key=None):
 
 def set_user_password(user=None, password=None):
     if user is None or password is None:
-        return
+        return None
     try:
         dbconn = userdb()
         if dbconn.execute(
@@ -104,7 +104,7 @@ def set_user_password(user=None, password=None):
 
 def set_user_key(user=None, key=None):
     if user is None or key is None or key not in apikey.keys_by_id:
-        return
+        return None
     try:
         dbconn = userdb()
         if dbconn.execute(
@@ -123,7 +123,7 @@ def set_user_key(user=None, key=None):
 
 def destroy_user(user=None):
     if user is None:
-        return
+        return None
     try:
         dbconn = userdb()
         if dbconn.execute(

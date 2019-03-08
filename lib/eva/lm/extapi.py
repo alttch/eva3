@@ -159,11 +159,15 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
 
 def unload_ext(ext_id):
     ext = get_ext(ext_id)
-    if ext is None: return False
-    ext.stop()
-    del exts[ext_id]
-    rebuild_env()
-    return True
+    if not ext: return None
+    try:
+        ext.stop()
+        del exts[ext_id]
+        rebuild_env()
+        return True
+    except:
+        eva.core.log_traceback()
+        return False
 
 
 def serialize(full=False, config=False):

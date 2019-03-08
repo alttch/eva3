@@ -473,8 +473,9 @@ def add_api_key(key_id=None, save=False):
 
 
 def delete_api_key(key_id):
-    if key_id is None or key_id not in keys_by_id or keys_by_id[key_id].master \
-        or not keys_by_id[key_id].dynamic:
+    if key_id is None or key_id not in keys_by_id:
+        return None
+    if keys_by_id[key_id].master or not keys_by_id[key_id].dynamic:
         return False
     del keys[keys_by_id[key_id].key]
     del keys_by_id[key_id]
@@ -482,7 +483,7 @@ def delete_api_key(key_id):
         dbconn = userdb()
         try:
             dbconn.execute(
-                sql('delete from apikeys where k_id=:key_id', key_id=key_id))
+                sql('delete from apikeys where k_id=:key_id'), key_id=key_id)
         except:
             logging.critical('apikeys db error')
             eva.core.log_traceback()
@@ -493,8 +494,9 @@ def delete_api_key(key_id):
 
 
 def regenerate_key(key_id, k=None, save=False):
-    if key_id is None or key_id not in keys_by_id or keys_by_id[key_id].master \
-            or not keys_by_id[key_id].dynamic:
+    if key_id is None or key_id not in keys_by_id:
+        return None
+    if keys_by_id[key_id].master or not keys_by_id[key_id].dynamic:
         return False
     key = keys_by_id[key_id]
     old_key = key.key

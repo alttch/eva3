@@ -459,7 +459,7 @@ def set_phi_prop(phi_id, p, v):
 
 def unload_phi(phi_id):
     phi = get_phi(phi_id)
-    if phi is None: return False
+    if phi is None: return None
     err = False
     for k, l in drivers.copy().items():
         if l.phi_id == phi_id:
@@ -497,7 +497,7 @@ def set_driver_prop(driver_id, p, v):
 
 def unload_driver(driver_id):
     lpi = get_driver(driver_id)
-    if lpi is None: return False
+    if lpi is None: return None
     err = False
     for i in items_by_phi[lpi.phi_id]:
         if i.update_exec and i.update_exec[1:] == driver_id:
