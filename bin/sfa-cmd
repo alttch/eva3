@@ -740,8 +740,18 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                          v[p][1:], p, x, i))
                             controllers_fm_required.add(v['controller'])
             print('Checking remote controllers...')
-            for c in cfg.get('controller', {}).keys():
+            for c, v in cfg.get('controller', {}).items():
                 controllers.add(c)
+                if 'upload-runtime' in v:
+                    controllers_fm_required.add(c)
+                    for f in v['upload-runtime']:
+                        fname, remote_file = f.split(':')
+                        try:
+                            open(fname)
+                        except:
+                            raise Exception(
+                                '{}: {} unable to open local file for upload'.
+                                format(c, fname))
             macall = partial(call, 'management_api_call')
             for c in controllers:
                 code, ctest = macall({'i': c, 'f': 'test'})
@@ -767,16 +777,16 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         'Controller {} file management API is disabled'.format(
                             c))
             print('Starting deployment of {}'.format(props['f']))
-            print('Executing commands in before_deploy...')
+            print('Executing commands in before-deploy...')
             for c, v in cfg.get('controller', {}).items():
-                for a in v.get('before_deploy', []):
+                for a in v.get('before-deploy', []):
                     try:
                         func = a['api']
                         params = a.copy()
                         del params['api']
                     except:
                         raise Exception(
-                            'Controller {}, invalid before_deploy'.format(c))
+                            'Controller {}, invalid before-deploy'.format(c))
                     print(' -- {} {}'.format(func, params))
                     code = macall({
                         'i': c,
@@ -785,6 +795,42 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     })[1].get('code')
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
+            print('Uploading files...')
+            for c, v in cfg.get('controller', {}).items():
+                controllers.add(c)
+                if 'upload-runtime' in v:
+                    controllers_fm_required.add(c)
+                    for f in v['upload-runtime']:
+                        fname, remote_file = f.split(':')
+                        if not remote_file or remote_file.endswith('/'):
+                            remote_file += os.path.basename(fname)
+                        if remote_file.startswith('/'):
+                            remote_file = remote_file[1:]
+                        print(' -- {}: {} -> {}'.format(c, fname, remote_file))
+                        code = macall({
+                            'i': c,
+                            'f': 'file_put',
+                            'p': {
+                                'i': remote_file,
+                                'm': open(fname).read()
+                            }
+                        })[1].get('code')
+                        if code != apiclient.result_ok:
+                            raise Exception(
+                                'File upload failed, API code {}'.format(code))
+                        if os.access(fname, os.X_OK):
+                            code = macall({
+                                'i': c,
+                                'f': 'file_set_exec',
+                                'p': {
+                                    'i': remote_file,
+                                    'e': 1
+                                }
+                            })[1].get('code')
+                            if code != apiclient.result_ok:
+                                raise Exception(
+                                    'File set exec failed, API code {}'.format(
+                                        code))
             print('Creating cvars...')
             for c, v in cfg.get('controller', {}).items():
                 for i, vv in v.get('cvar', {}).items():
@@ -939,16 +985,16 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 })[1].get('code')
                 if code != apiclient.result_ok:
                     raise Exception('API call failed, code {}'.format(code))
-            print('Executing commands in after_deploy...')
+            print('Executing commands in after-deploy...')
             for c, v in cfg.get('controller', {}).items():
-                for a in v.get('after_deploy', []):
+                for a in v.get('after-deploy', []):
                     try:
                         func = a['api']
                         params = a.copy()
                         del params['api']
                     except:
                         raise Exception(
-                            'Controller {}, invalid after_deploy'.format(c))
+                            'Controller {}, invalid after-deploy'.format(c))
                     print(' -- {} {}'.format(func, params))
                     code = macall({
                         'i': c,
