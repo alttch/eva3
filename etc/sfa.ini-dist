@@ -61,5 +61,5 @@ listen = 0.0.0.0:8828
 
 [cloud]
 ; enable cloud manager services
-;cloud_manager = yes
+cloud_manager = yes
 
