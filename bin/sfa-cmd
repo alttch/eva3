@@ -699,7 +699,6 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             if not test.get('cloud_manager'):
                 raise Exception(
                     'SFA is not Cloud Manager. Enable feature in sfa.ini first')
-                return self.local_func_result_failed
             print('Checking deployment config...')
             for c in cfg.keys():
                 if c not in [
