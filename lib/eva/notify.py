@@ -1378,7 +1378,13 @@ class GenericMQTTNotifier(GenericNotifier):
     def on_message(self, client, userdata, msg):
         if not self.enabled: return
         t = msg.topic
-        d = msg.payload.decode()
+        try:
+            d = msg.payload.decode()
+        except:
+            logging.warning('Invalid message from MQTT server: {}'.format(
+                msg.payload))
+            eva.core.log_traceback()
+            return
         if t == self.announce_topic and \
                 d != self.announce_msg and \
                 self.discovery_handler:
