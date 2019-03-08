@@ -872,7 +872,6 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
         except Exception as e:
-            raise
             self.print_err(e)
             return self.local_func_result_failed
         print()
