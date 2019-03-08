@@ -72,6 +72,8 @@ if v != 'CONVERT':
     print('Operation aborted')
     sys.exit(4)
 
+eva.core.start()
+
 eva.notify.init()
 eva.notify.load()
 
