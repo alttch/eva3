@@ -794,6 +794,8 @@ if [ "x$X" != "x" ]; then
     chmod 700 runtime/db
 fi
 
+ln -sf eva-shell bin/eva
+
 echo "Setup completed!"
 echo
 echo "EVA ICS v`./sbin/eva-tinyapi -V` build `./sbin/eva-tinyapi -B`"
