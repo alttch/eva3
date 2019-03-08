@@ -750,7 +750,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             for c in cfg.keys():
                 if c not in [
                         'controller', 'unit', 'sensor', 'lvar', 'lmacro',
-                        'dmatrix_rule'
+                        'lcycle', 'dmatrix_rule'
                 ]:
                     raise Exception('Invalid config section: {}'.format(c))
             for c, v in cfg.get('controller', {}).items():
@@ -762,7 +762,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             # check basic items
             controllers = set()
             controllers_fm_required = set()
-            for x in ['unit', 'sensor', 'lvar', 'lmacro', 'dmatrix_rule']:
+            for x in [
+                    'unit', 'sensor', 'lvar', 'lmacro', 'lcycle', 'dmatrix_rule'
+            ]:
                 for i, v in cfg.get(x, {}).items():
                     if not v or not 'controller' in v:
                         raise Exception(
@@ -771,7 +773,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             ] and not v['controller'].startswith('uc/'):
                         raise Exception('Invalid controller specified ' +
                                         'for {} {} (uc required)'.format(x, i))
-                    if x in ['lvar', 'lmacro'
+                    if x in ['lvar', 'lmacro', 'lcycle', 'dmatrix_rule'
                             ] and not v['controller'].startswith('lm/'):
                         raise Exception('Invalid controller specified ' +
                                         'for {} {} (lm required)'.format(x, i))
@@ -984,8 +986,24 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 })[1].get('code')
                 if code != apiclient.result_ok:
                     raise Exception('API call failed, code {}'.format(code))
+        # ===== EXT =====
+        print('Loading extensions...')
+        for c, v in cfg.get('controller', {}).items():
+            for i, vv in v.get('ext', {}).items():
+                print(' -- {}: {} -> {}'.format(c, vv['module'], i))
+                code = macall({
+                    'i': c,
+                    'f': 'load_ext',
+                    'p': {
+                        'i': i,
+                        'm': vv['module'],
+                        'c': vv.get('config')
+                    }
+                })[1].get('code')
+                if code != apiclient.result_ok:
+                    raise Exception('API call failed, code {}'.format(code))
         # ===== ITEM AND MACRO CREATION =====
-        for tp in ['unit', 'sensor', 'lvar', 'lmacro']:
+        for tp in ['unit', 'sensor', 'lvar', 'lmacro', 'lcycle']:
             print(f'Creating {tp}s...')
             for i, v in cfg.get(tp, {}).items():
                 c = v.get('controller')
@@ -995,11 +1013,15 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     del item_props['controller']
                 if 'driver' in item_props:
                     del item_props['driver']
+                if tp == 'lmacro':
+                    tpc = 'macro'
+                elif tp == 'lcycle':
+                    tpc = 'cycle'
+                else:
+                    tpc = tp
                 code = macall({
-                    'i':
-                    c,
-                    'f':
-                    'create_{}'.format(tp if tp != 'lmacro' else 'macro'),
+                    'i': c,
+                    'f': 'create_' + tpc,
                     'p': {
                         'i': i
                     }
@@ -1034,7 +1056,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         'i':
                         c,
                         'f':
-                        'set_{}prop'.format('macro_' if tp == 'lmacro' else ''),
+                        'set_{}prop'.format((
+                            tpc + '_') if tp in ['lmacro', 'lcycle'] else ''),
                         'p': {
                             'i': i,
                             'p': prop,
@@ -1107,7 +1130,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             elif code != apiclient.result_ok:
                 raise Exception('API call failed, code {}'.format(code))
         # ===== ITEM AND MACRO DELETION =====
-        for tp in ['unit', 'sensor', 'lvar', 'lmacro']:
+        for tp in ['lcycle', 'lmacro', 'lvar', 'sensor', 'unit']:
             print(f'Deleting {tp}s...')
             for i, v in cfg.get(tp, {}).items():
                 c = v.get('controller')
@@ -1117,9 +1140,11 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     df += '_lvar'
                 elif tp == 'lmacro':
                     df += '_macro'
+                elif tp == 'lcycle':
+                    df += '_cycle'
                 code = macall({'i': c, 'f': df, 'p': {'i': i}})[1].get('code')
                 if code == apiclient.result_not_found:
-                    self.print_warn('{} not found'.format(tp))
+                    self.print_warn('{} {} not found'.format(tp, i))
                 elif code != apiclient.result_ok:
                     raise Exception('API call failed, code {}'.format(code))
                 if del_files:
@@ -1142,11 +1167,27 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             })[1].get('code')
                             if code == apiclient.result_not_found:
                                 self.print_warn(
-                                    'File {} not found'.format(remotefn))
+                                    'file {} not found'.format(remotefn))
                             elif code != apiclient.result_ok:
                                 raise Exception(
                                     'File deletion failed, API code {}'.format(
                                         code))
+        # ===== EXT UNLOAD =====
+        print('Unloading extensions...')
+        for c, v in cfg.get('controller', {}).items():
+            for i, vv in v.get('ext', {}).items():
+                print(' -- {}: {}'.format(c, i))
+                code = macall({
+                    'i': c,
+                    'f': 'unload_ext',
+                    'p': {
+                        'i': i,
+                    }
+                })[1].get('code')
+                if code == apiclient.result_not_found:
+                    self.print_warn('Extension {} not found'.format(i))
+                elif code != apiclient.result_ok:
+                    raise Exception('API call failed, code {}'.format(code))
         # ===== DRIVERS UNLOAD =====
         print('Unloading drivers...')
         for c, v in cfg.get('controller', {}).items():
@@ -1216,7 +1257,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         })[1].get('code')
                         if code == apiclient.result_not_found:
                             self.print_warn(
-                                'File {} not found'.format(remote_file))
+                                'file {} not found'.format(remote_file))
                         elif code != apiclient.result_ok:
                             raise Exception(
                                 'File deletion failed, API code {}'.format(
