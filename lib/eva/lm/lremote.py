@@ -8,6 +8,7 @@ import eva.client.remote_controller
 import eva.client.remote_item
 import eva.lm.controller
 import threading
+import logging
 
 
 class LRemoteUC(eva.client.remote_controller.RemoteUC):
@@ -42,36 +43,41 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
             logging.critical('LRemoteUnit::update_set_state locking broken')
             eva.core.critical()
             return False
-        _status = self.status
-        _value = self.value
-        if super().update_set_state(
-                status=status,
-                value=value,
-                from_mqtt=from_mqtt,
-                force_virtual=force_virtual):
-            self.prv_status = _status
-            self.prv_value = _value
-            eva.lm.controller.pdme(self)
+        try:
+            _status = self.status
+            _value = self.value
+            if super().update_set_state(
+                    status=status,
+                    value=value,
+                    from_mqtt=from_mqtt,
+                    force_virtual=force_virtual):
+                self.prv_status = _status
+                self.prv_value = _value
+                eva.lm.controller.pdme(self)
+                return True
+        except:
+            eva.core.log_traceback()
+            return False
+        finally:
             self.update_lock.release()
-            return True
-        self.update_lock.release()
-        return False
 
     def update_nstate(self, nstatus=None, nvalue=None):
         if not self.update_lock.acquire(timeout=eva.core.timeout):
             logging.critical('LRemoteUnit::update_set_state locking broken')
             eva.core.critical()
             return False
-        _nstatus = self.nstatus
-        _nvalue = self.nvalue
-        if super().update_nstate(nstatus, nvalue):
-            self.prv_nstatus = _nstatus
-            self.prv_nvalue = _nvalue
-            eva.lm.controller.pdme(self, ns=True)
+        try:
+            _nstatus = self.nstatus
+            _nvalue = self.nvalue
+            if super().update_nstate(nstatus, nvalue):
+                self.prv_nstatus = _nstatus
+                self.prv_nvalue = _nvalue
+                eva.lm.controller.pdme(self, ns=True)
+                return True
+        except:
+            return False
+        finally:
             self.update_lock.release()
-            return True
-        self.update_lock.release()
-        return False
 
 
 class LRemoteSensor(eva.client.remote_item.RemoteSensor):
@@ -95,17 +101,20 @@ class LRemoteSensor(eva.client.remote_item.RemoteSensor):
             logging.critical('LRemoteSensor::update_set_state locking broken')
             eva.core.critical()
             return False
-        _status = self.status
-        _value = self.value
-        if super().update_set_state(
-                status=status,
-                value=value,
-                from_mqtt=from_mqtt,
-                force_virtual=force_virtual):
-            self.prv_status = _status
-            self.prv_value = _value
-            eva.lm.controller.pdme(self)
+        try:
+            _status = self.status
+            _value = self.value
+            if super().update_set_state(
+                    status=status,
+                    value=value,
+                    from_mqtt=from_mqtt,
+                    force_virtual=force_virtual):
+                self.prv_status = _status
+                self.prv_value = _value
+                eva.lm.controller.pdme(self)
+                return True
+        except:
+            eva.core.log_traceback()
+            return False
+        finally:
             self.update_lock.release()
-            return True
-        self.update_lock.release()
-        return False
