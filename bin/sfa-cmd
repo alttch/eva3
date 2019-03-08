@@ -682,6 +682,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Save controllers\' configurations after deploy',
             dest='_save',
             action='store_true')
+        sp_cloud_deploy.add_argument(
+            '-u',
+            '--undeploy',
+            help='Undeploy old configuration first',
+            dest='und',
+            action='store_true')
 
         sp_cloud_undeploy = sp_cloud.add_parser(
             'undeploy', help='Undeploy items and configuration from file')
@@ -704,6 +710,10 @@ class SFA_CLI(GenericCLI, ControllerCLI):
     # cloud management
 
     def deploy(self, props):
+        if props.get('und'):
+            code, result = self.undeploy(props)
+            if code != apiclient.result_ok:
+                return code, result
         return self._deploy_undeploy(props, und=False)
 
     def undeploy(self, props):
@@ -782,9 +792,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             try:
                                 open(fname)
                             except:
-                                raise Exception(
-                                    '{}: {} unable to open local file for upload'.
-                                    format(c, fname))
+                                raise Exception(('{}: {} unable to open local '
+                                                 + 'file for upload').format(
+                                                     c, fname))
             macall = partial(call, 'management_api_call')
             for c in controllers:
                 code, ctest = macall({'i': c, 'f': 'test'})
@@ -877,6 +887,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         print()
         print('{}eployment completed for {}'.format('Und' if und else 'D',
                                                     props['f']))
+        print('-' * 60)
         return self.local_func_result_ok
 
     def _perform_deploy(self, props, cfg, macall):
