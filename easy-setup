@@ -6,6 +6,7 @@ UC_ENABLED=
 LM_ENABLED=
 SFA_ENABLED=
 FORCE=0
+CLEAR=0
 APPEND=0
 INTERACTIVE=1
 DEFAULT_USER=root
@@ -425,16 +426,13 @@ do
             shift
         ;;
         --force)
-            echo "Warning: using force installation, stopping EVA and removing old configs"
+            echo "WARNING: using force installation, will stop EVA and remove old configs"
             FORCE=1
-            ./sbin/eva-control stop
             shift
         ;;
         --clear)
-            echo "Warning: asked to clear runtime. Performing"
-            ./sbin/eva-control stop
-            rm -rf runtime/*
-            rm -f etc/eva_servers
+            echo "WARNING: asked to clear runtime. Will remove all files in runtime folder"
+            CLEAR=1
             shift
         ;;
         -h|--help)
@@ -493,7 +491,7 @@ cd `dirname ${D}`
 echo
 
 
-if [ -f ./etc/eva_servers ]; then
+if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
     echo "Installed system detected"
     source ./etc/eva_servers
     source ./etc/easy_setup
@@ -527,6 +525,10 @@ EOF
     read
     echo
 fi
+
+[ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && ./sbin/eva-control stop
+
+[ $CLEAR -eq 1 ] && (rm -rf runtime/*; rm -f etc/eva_servers)
 
 # check mods
 
