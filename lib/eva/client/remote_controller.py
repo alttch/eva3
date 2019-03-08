@@ -99,6 +99,18 @@ class RemoteController(eva.item.Item):
             return None
         return result
 
+    def matest(self):
+        result = self.management_api_call('test')[1]
+        if not isinstance(result, dict): return False
+        if result.get('result') != 'OK':
+            logging.error('Remote controller access error %s' % self.api._uri)
+            return False
+        if result.get('acl', {}).get('master') != True:
+            logging.error(
+                'Remote controller API %s has no master access' % self.api._uri)
+            return False
+        return True
+
     def load_remote(self):
         result = self.test()
         if not result:

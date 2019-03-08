@@ -122,16 +122,17 @@ _api_func = {
             'groups_cycle', 'list_controllers', 'append_controller',
             'remove_controller', 'enable_controller', 'disable_controller',
             'list_controller_props', 'set_controller_prop', 'reload_controller',
-            'test_controller', 'list_remote', 'list_rule_props',
-            'set_rule_prop', 'login', 'logout', 'reload_clients',
-            'notify_restart', 'management_api_call'
+            'test_controller', 'matest_controller', 'list_remote',
+            'list_rule_props', 'set_rule_prop', 'login', 'logout',
+            'reload_clients', 'notify_restart', 'management_api_call'
         ],
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',
             'set', 'reset', 'toggle', 'clear', 'set_controller_prop',
             'append_controller', 'remove_controller', 'enable_controller',
             'disable_controller', 'reload_controller', 'test_controller',
-            'set_rule_prop', 'login', 'logout', 'reload_clients'
+            'matest_controller', 'set_rule_prop', 'login', 'logout',
+            'reload_clients'
         ],
         'ce': ['action', 'action_toggle', 'run']
     }

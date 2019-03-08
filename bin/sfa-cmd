@@ -565,6 +565,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
 
+        sp_controller_matest = sp_controller.add_parser(
+            'ma-test', help='Test connected controller cloud management API')
+        sp_controller_matest.add_argument(
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
+
         sp_controller_list_props = sp_controller.add_parser(
             'props', help='List controller config props')
         sp_controller_list_props.add_argument(
@@ -1195,6 +1201,7 @@ _api_functions = {
     'macro:result': 'result',
     'controller:list': 'list_controllers',
     'controller:test': 'test_controller',
+    'controller:ma-test': 'matest_controller',
     'controller:props': 'list_controller_props',
     'controller:set': 'set_controller_prop',
     'controller:reload': 'reload_controller',

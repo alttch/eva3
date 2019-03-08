@@ -436,6 +436,12 @@ class SFA_API(GenericAPI):
         if item is None: return None
         return True if item.test() else False
 
+    def matest_controller(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        item = eva.sfa.controller.get_controller(i)
+        if item is None: return None
+        return True if item.matest() else False
+
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=False):
         if not apikey.check(k, master=True): return None
         controller = eva.sfa.controller.get_controller(i)
@@ -626,6 +632,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
         SFA_HTTP_API.remove_controller.exposed = True
         SFA_HTTP_API.list_controller_props.exposed = True
         SFA_HTTP_API.test_controller.exposed = True
+        SFA_HTTP_API.matest_controller.exposed = True
         SFA_HTTP_API.set_controller_prop.exposed = True
         SFA_HTTP_API.reload_controller.exposed = True
 
@@ -941,6 +948,14 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
     def test_controller(self, k=None, i=None):
         cp_need_master(k)
         result = super().test_controller(k, i)
+        if result is None:
+            raise cp_api_404()
+        return http_api_result_ok() if \
+                result else http_api_result_error()
+
+    def matest_controller(self, k=None, i=None):
+        cp_need_master(k)
+        result = super().matest_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if \
