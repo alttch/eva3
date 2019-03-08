@@ -48,7 +48,9 @@ layout = enterprise
 
 [sysapi]
 ; enable remote file management functions
-;file_management = yes 
+file_management = yes
+; allow entering setup mode
+setup_mode = yes
 
 [webapi]
 ; web api listen on IP/port
