@@ -10,6 +10,7 @@ import eva.core
 import time
 import shlex
 import threading
+import re
 
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
@@ -385,6 +386,36 @@ class DecisionRule(eva.item.Item):
                 return True
             else:
                 return False
+        elif prop in ['c', 'cond', 'condition']:
+            try:
+                d = self.parse_rule_condition(val)
+                for k, v in d.items():
+                    try:
+                        if not self.set_prop(k, v):
+                            return False
+                    except:
+                        eva.core.log_traceback()
+                        return False
+                return True
+            except Exception as e:
+                logging.error('Unable to parse condition: {}'.format(e))
+                eva.core.log_traceback()
+                return False
+        elif prop in ['o', 'oid', 'for_oid']:
+            try:
+                d = self.parse_rule_for_oid(val)
+                for k, v in d.items():
+                    try:
+                        if not self.set_prop(k, v):
+                            return False
+                    except:
+                        eva.core.log_traceback()
+                        return False
+                return True
+            except Exception as e:
+                logging.error('Unable to parse for_oid: {}'.format(e))
+                eva.core.log_traceback()
+                return False
         elif prop == 'for_expire':
             if not self.in_range_max_eq or \
                     self.in_range_min_eq or \
@@ -568,3 +599,80 @@ class DecisionRule(eva.item.Item):
                 self.set_modified(save)
             return True
         return super().set_prop(prop, val, save)
+
+    @staticmethod
+    def parse_rule_condition(condition=None):
+        r_imi = None
+        r_ixi = None
+        r_imiq = False
+        r_ixiq = False
+        if condition:
+            c = condition.replace(' ', '').replace('>=', '}').replace(
+                '=>', '}').replace('<=', '{').replace('=<', '{').replace(
+                    '===', '=').replace('==', '=')
+            vals = re.split('[<>}{=]', c)
+            if len(vals) not in [2, 3]:
+                raise Exception('invalid condition length')
+            for i in range(0, len(vals)):
+                v = vals[i]
+                if v == 'x':
+                    if len(vals) == 2:
+                        s = c[len(vals[0])]
+                        if s == '=':
+                            r_imi = vals[1 - i]
+                            r_ixi = r_imi
+                            r_imiq = True
+                            r_ixiq = True
+                        elif (s in ['}', '>'] and
+                              i == 0) or (s in ['{', '<'] and i == 1):
+                            r_imi = vals[1 - i]
+                            r_imiq = s in ['}', '{']
+                        elif (s in ['}', '>'] and
+                              i == 1) or (s in ['{', '<'] and i == 0):
+                            r_ixi = vals[1 - i]
+                            r_ixiq = s in ['}', '{']
+                    elif len(vals) == 3:
+                        if i != 1:
+                            raise Exception('invalid condition')
+                        s1 = c[len(vals[0])]
+                        s2 = c[len(vals[0]) + 2]
+                        if s1 and s2 in ['}', '>']:
+                            r_ixi = vals[i - 1]
+                            r_ixiq = s1 == '}'
+                            r_imi = vals[i + 1]
+                            r_imiq = s2 == '}'
+                        elif s1 and s2 in ['{', '<']:
+                            r_imi = vals[i - 1]
+                            r_imiq = s1 == '{'
+                            r_ixi = vals[i + 1]
+                            r_ixiq = s2 == '{'
+                        if float(r_ixi) <= float(r_imi):
+                            raise Exception('invalid condition')
+                    break
+        return {
+            'in_range_min': r_imi,
+            'in_range_min_eq': r_imiq,
+            'in_range_max': r_ixi,
+            'in_range_max_eq': r_ixiq
+        }
+
+    @staticmethod
+    def parse_rule_for_oid(param):
+        if not param:
+            tp, prop, item_id, group = ('#', 'status', '#', '#')
+        else:
+            tp, full_id_v = param.split(':')
+            i = full_id_v.split('/')
+            prop = i[-1]
+            item_id = i[-2]
+            group = '/'.join(i[:-2])
+        if tp not in ['unit', 'U', 'sensor', 'S', 'lvar', 'LV', '#']:
+            raise Exception('invalid type')
+        if prop not in ['status', 'value']:
+            raise Exception('invalid state prop')
+        return {
+            'for_item_group': group,
+            'for_item_type': tp,
+            'for_prop': prop,
+            'for_item_id': item_id
+        }

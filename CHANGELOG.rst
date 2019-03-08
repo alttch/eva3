@@ -43,6 +43,7 @@ LM
     * new API functions: enable_controller, disable_controller, set_ext_prop
     * kwargs in macros (kwargs dict, plus all keyword arguments are available
       as variables)
+    * set_rule_prop now accepts "condition" and "for_oid"
     * cycles, cycle control API and macro functions
 
 SFA
