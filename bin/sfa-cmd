@@ -9,6 +9,7 @@ __version__ = "3.1.2"
 import sys
 import os
 import time
+import yaml
 from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
@@ -19,66 +20,7 @@ from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
 from eva.client import apiclient
 
-_me = 'EVA ICS SFA CLI version %s' % __version__
-
-_api_functions = {
-    'history': 'state_history',
-    'action:exec': 'action',
-    'action:result': 'result',
-    'action:enable': 'enable_actions',
-    'action:disable': 'disable_actions',
-    'action:terminate': 'terminate',
-    'action:clear': 'q_clean',
-    'action:kill': 'kill',
-    'remote': 'list_remote',
-    'cycle:list': 'list_cycles',
-    'macro:list': 'list_macros',
-    'macro:run': 'run',
-    'macro:result': 'result',
-    'controller:list': 'list_controllers',
-    'controller:test': 'test_controller',
-    'controller:props': 'list_controller_props',
-    'controller:set': 'set_controller_prop',
-    'controller:reload': 'reload_controller',
-    'controller:append': 'append_controller',
-    'controller:enable': 'enable_controller',
-    'controller:disable': 'disable_controller',
-    'controller:remove': 'remove_controller',
-    'notify:reload': 'reload_clients',
-    'notify:restart': 'notify_restart'
-}
-
-_pd_cols = {
-    'state': [
-        'oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue', 'set',
-        'exp_in'
-    ],
-    'state_': [
-        'oid', 'virtual', 'action_enabled', 'description', 'location', 'status',
-        'value', 'nstatus', 'nvalue', 'set', 'expires', 'exp_in'
-    ],
-    'result': [
-        'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
-        'status'
-    ],
-    'list_remote': [
-        'oid', 'description', 'controller_id', 'status', 'value', 'nstatus',
-        'nvalue'
-    ],
-    'list_macros': ['id', 'description', 'action_enabled'],
-    'list_cycles':
-    ['id', 'description', 'controller_id', 'status', 'int', 'avg'],
-    'list_controllers': [
-        'id', 'type', 'enabled', 'connected', 'managed', 'proto', 'version',
-        'build', 'description'
-    ]
-}
-
-_pd_idx = {'state': 'oid', 'result': 'time'}
-
-_fancy_tabsp = {}
-
-_always_json = []
+from functools import partial
 
 
 class SFA_CLI(GenericCLI, ControllerCLI):
@@ -302,6 +244,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         self.add_sfa_lvar_functions()
         self.add_sfa_notify_functions()
         self.add_sfa_controller_functions()
+        self.add_sfa_cloud_functions()
 
     def add_sfa_common_functions(self):
         sp_state = self.sp.add_parser('state', help='Get item state')
@@ -721,11 +664,216 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
 
+    def add_sfa_cloud_functions(self):
+        ap_cloud = self.sp.add_parser(
+            'cloud',
+            help='Cloud functions (requires cloud_manager=yes in sfa.ini)')
+        sp_cloud = ap_cloud.add_subparsers(
+            dest='_func', metavar='func', help='Cloud management commands')
+
+        sp_cloud_deploy = sp_cloud.add_parser(
+            'deploy', help='Deploy items and configuration from file')
+        sp_cloud_deploy.add_argument('f', help='Deploy file', metavar='FILE')
+
+    # cloud management
+
+    def deploy(self, props):
+        try:
+            try:
+                cfg = yaml.load(open(props.get('f')).read())
+            except:
+                raise Exception('Unable to parse {}'.format(props.get('f')))
+            api = apiclient.APIClientLocal(self.product)
+            call = partial(
+                api.call,
+                timeout=props.get('_timeout', self.default_timeout),
+                _debug=props.get('_debug'))
+            code, test = call('test')
+            if code != apiclient.result_ok or test.get('result') != 'OK':
+                raise Exception(
+                    'SFA API is inaccessible, code: {}'.format(code))
+            if not test.get('acl', {}).get('master'):
+                self.print_err('Masterkey is required')
+            if not test.get('cloud_manager'):
+                raise Exception(
+                    'SFA is not Cloud Manager. Enable feature in sfa.ini first')
+                return self.local_func_result_failed
+            print('Checking deployment config...')
+            for c in cfg.keys():
+                if c not in ['controller', 'unit', 'sensor', 'lvar', 'lmacro']:
+                    raise Exception('Invalid config section: {}'.format(c))
+            for c, v in cfg.get('controller', {}).items():
+                for k, vv in v.get('phi', {}).items():
+                    if 'module' not in vv:
+                        raise Exception(
+                            'Controller {}, PHI {}: module is not defined'.
+                            format(c, k))
+            # check basic items
+            controllers = set()
+            controllers_fm_required = set()
+            for x in ['unit', 'sensor', 'lvar', 'lmacro']:
+                for i, v in cfg.get(x, {}).items():
+                    if not 'controller' in v:
+                        raise Exception(
+                            'No controller specified for {} {}'.format(x, i))
+                    controllers.add(v['controller'])
+                    for p in ['action_exec', 'update_exec']:
+                        if v.get(p, '').startswith('^'):
+                            try:
+                                open(v[p][1:])
+                            except:
+                                raise Exception(
+                                    ('{} is defined as {} for {} {}, ' +
+                                     'but local file is not found').format(
+                                         v[p][1:], p, x, i))
+                            controllers_fm_required.add(v['controller'])
+            print('Checking remote controllers...')
+            for c in cfg.get('controller', {}).keys():
+                controllers.add(c)
+            macall = partial(call, 'management_api_call')
+            for c in controllers:
+                code, ctest = macall({'i': c, 'f': 'test'})
+                if code == apiclient.result_not_found:
+                    raise Exception('Controller {} not found'.format(c))
+                code = ctest.get('code')
+                ctest = ctest.get('data')
+                if code == apiclient.result_forbidden:
+                    raise Exception('Controller {} access forbidden'.format(c))
+                if code != apiclient.result_ok:
+                    raise Exception(
+                        'Controller {} access error, code: {}'.format(c, code))
+                if not ctest.get('acl', {}).get('master'):
+                    raise Exception(
+                        'Controller {} master access is not set up'.format(c))
+                if c in controllers_fm_required and not ctest.get(
+                        'file_management'):
+                    raise Exception(
+                        'Controller {} file management API is disabled'.format(
+                            c))
+            print('Starting deployment of {}'.format(props['f']))
+            print('Executing commands in before_deploy...')
+            for c, v in cfg.get('controller', {}).items():
+                for a in v.get('before_deploy', []):
+                    try:
+                        func = a['api']
+                        params = a.copy()
+                        del params['api']
+                    except:
+                        raise Exception(
+                            'Controller {}, invalid before_deploy'.format(c))
+                    print(' -- {} {}'.format(func, params))
+                    code = macall({
+                        'i': c,
+                        'f': func,
+                        'p': params
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
+            print('Creating cvars...')
+            for c, v in cfg.get('controller', {}).items():
+                for i, vv in v.get('cvar', {}).items():
+                    print(' -- {}: {}={}'.format(c, k, vv))
+                    code = macall({
+                        'i': c,
+                        'f': 'set_cvar',
+                        'p': {
+                            'i': i,
+                            'v': vv
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
+            print('Loading PHIs...')
+            for c, v in cfg.get('controller', {}).items():
+                for i, vv in v.get('phi', {}).items():
+                    print(' -- {}: {} -> {}'.format(c, i, vv['module']))
+                    code = macall({
+                        'i': c,
+                        'f': 'load_phi',
+                        'p': {
+                            'i': i,
+                            'm': vv['module'],
+                            'c': vv.get('config')
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
+        except Exception as e:
+            raise
+            self.print_err(e)
+            return self.local_func_result_failed
+        return self.local_func_result_ok
+
+
+_me = 'EVA ICS SFA CLI version %s' % __version__
 
 cli = SFA_CLI('sfa', _me)
+
+_api_functions = {
+    'history': 'state_history',
+    'action:exec': 'action',
+    'action:result': 'result',
+    'action:enable': 'enable_actions',
+    'action:disable': 'disable_actions',
+    'action:terminate': 'terminate',
+    'action:clear': 'q_clean',
+    'action:kill': 'kill',
+    'remote': 'list_remote',
+    'cycle:list': 'list_cycles',
+    'macro:list': 'list_macros',
+    'macro:run': 'run',
+    'macro:result': 'result',
+    'controller:list': 'list_controllers',
+    'controller:test': 'test_controller',
+    'controller:props': 'list_controller_props',
+    'controller:set': 'set_controller_prop',
+    'controller:reload': 'reload_controller',
+    'controller:append': 'append_controller',
+    'controller:enable': 'enable_controller',
+    'controller:disable': 'disable_controller',
+    'controller:remove': 'remove_controller',
+    'notify:reload': 'reload_clients',
+    'notify:restart': 'notify_restart',
+    'cloud:deploy': cli.deploy
+}
+
+_pd_cols = {
+    'state': [
+        'oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue', 'set',
+        'exp_in'
+    ],
+    'state_': [
+        'oid', 'virtual', 'action_enabled', 'description', 'location', 'status',
+        'value', 'nstatus', 'nvalue', 'set', 'expires', 'exp_in'
+    ],
+    'result': [
+        'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
+        'status'
+    ],
+    'list_remote': [
+        'oid', 'description', 'controller_id', 'status', 'value', 'nstatus',
+        'nvalue'
+    ],
+    'list_macros': ['id', 'description', 'action_enabled'],
+    'list_cycles':
+    ['id', 'description', 'controller_id', 'status', 'int', 'avg'],
+    'list_controllers': [
+        'id', 'type', 'enabled', 'connected', 'managed', 'proto', 'version',
+        'build', 'description'
+    ]
+}
+
+_pd_idx = {'state': 'oid', 'result': 'time'}
+
+_fancy_tabsp = {}
+
+_always_json = []
+
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'run', 'cmd']
-cli.arg_sections += ['action', 'macro', 'cycle', 'notify', 'controller']
+cli.arg_sections += [
+    'action', 'macro', 'cycle', 'notify', 'controller', 'cloud'
+]
 cli.api_cmds_timeout_correction = ['cmd', 'action', 'run']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)

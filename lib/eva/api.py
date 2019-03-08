@@ -238,6 +238,8 @@ class GenericAPI(object):
         if eva.core.enterprise_layout is not None:
             result['layout'] = 'enterprise' if \
                     eva.core.enterprise_layout else 'simple'
+        if apikey.check(k, master=True):
+            result['file_management'] = eva.sysapi.api_file_management_allowed
         if apikey.check(k, sysfunc=True):
             result['debug'] = eva.core.debug
             result['setup_mode'] = eva.core.setup_mode

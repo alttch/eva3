@@ -1312,6 +1312,8 @@ class GenericCLI(object):
         if isinstance(api_func, str) and self.remote_api:
             code, result = api.call(api_func, params, timeout, _debug=debug)
         else:
+            params['_timeout'] = timeout
+            params['_debug'] = debug
             code, result = api_func(params)
         if return_result:
             return code, result

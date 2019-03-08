@@ -72,9 +72,10 @@ _api_func = {
             'create_unit', 'create_sensor', 'create_mu', 'create_device',
             'update_device', 'clone', 'clone_group', 'destroy',
             'destroy_device', 'login', 'logout', 'destroy_modbus_port',
-            'test_modbus_port', 'destroy_owfs_bus', 'test_owfs_bus',
-            'unload_phi', 'unlink_phi_mod', 'unload_driver', 'assign_driver',
-            'test_phi', 'exec_phi', 'set_phi_prop', 'set_driver_prop'
+            'test_modbus_port', 'destroy_owfs_bus', 'test_owfs_bus', 'load_phi',
+            'unload_phi', 'unlink_phi_mod', 'load_driver', 'unload_driver',
+            'assign_driver', 'test_phi', 'exec_phi', 'set_phi_prop',
+            'set_driver_prop'
         ],
         'ce': ['action', 'action_toggle']
     },
