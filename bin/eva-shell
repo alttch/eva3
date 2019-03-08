@@ -593,7 +593,7 @@ sys.argv = {argv}
             color='green',
             attrs=[]))
         cmd = ('tar', 'xpf', fname)
-        if json_only: cmd += ('--wildcards', '*.json')
+        if json_only: cmd += ('--wildcards', 'runtime/*.json')
         cmd += ('runtime',)
         return False if os.system(' '.join(cmd)) else True
 
