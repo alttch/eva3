@@ -1179,6 +1179,48 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     self.print_warn('PHI {} not found'.format(i))
                 elif code != apiclient.result_ok:
                     raise Exception('API call failed, code {}'.format(code))
+        # ===== CVARS =====
+        print('Deleting cvars...')
+        for c, v in cfg.get('controller', {}).items():
+            for i, vv in v.get('cvar', {}).items():
+                print(' -- {}: {}'.format(c, i))
+                code = macall({
+                    'i': c,
+                    'f': 'set_cvar',
+                    'p': {
+                        'i': i
+                    }
+                })[1].get('code')
+                if code == apiclient.result_not_found:
+                    self.print_warn('CVAR {} not found'.format(i))
+                elif code != apiclient.result_ok:
+                    raise Exception('API call failed, code {}'.format(code))
+        # ===== FILE DELETION =====
+        if del_files:
+            print('Deleting uploaded files...')
+            for c, v in cfg.get('controller', {}).items():
+                if 'upload-runtime' in v:
+                    for f in v['upload-runtime']:
+                        fname, remote_file = f.split(':')
+                        if not remote_file or remote_file.endswith('/'):
+                            remote_file += os.path.basename(fname)
+                        if remote_file.startswith('/'):
+                            remote_file = remote_file[1:]
+                        print(' -- {}: {}'.format(c, remote_file))
+                        code = macall({
+                            'i': c,
+                            'f': 'file_unlink',
+                            'p': {
+                                'i': remote_file,
+                            }
+                        })[1].get('code')
+                        if code == apiclient.result_not_found:
+                            self.print_warn(
+                                'File {} not found'.format(remote_file))
+                        elif code != apiclient.result_ok:
+                            raise Exception(
+                                'File deletion failed, API code {}'.format(
+                                    code))
 
 
 _me = 'EVA ICS SFA CLI version %s' % __version__
