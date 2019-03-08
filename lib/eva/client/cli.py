@@ -451,8 +451,10 @@ class GenericCLI(object):
     def print_err(self, s):
         print(self.colored(s, color='red', attrs=[]))
 
-    def print_warn(self, s):
-        print(self.colored(s, color='yellow', attrs=['bold']))
+    def print_warn(self, s, w=True):
+        print(
+            self.colored(
+                ('WARNING: ' if w else '') + s, color='yellow', attrs=['bold']))
 
     def print_debug(self, s):
         print(self.colored(s, color='grey', attrs=['bold']))
@@ -1373,7 +1375,7 @@ class GenericCLI(object):
         if '_log' in result:
             log = result['_log']
             for i in log.get('30', []):
-                self.print_warn(i)
+                self.print_warn(i, w=False)
             for i in log.get('40', []):
                 self.print_err(i)
             for i in log.get('50', []):
