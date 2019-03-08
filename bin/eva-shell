@@ -281,7 +281,7 @@ class ManagementCLI(GenericCLI):
                 result = p.readlines()
             return result
         else:
-            os.system(cmd + ' &')
+            os.system(cmd)
             time.sleep(1)
 
     def uc_shell(self, params):

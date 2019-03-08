@@ -1480,7 +1480,7 @@ class ControllerCLI(object):
                 result = p.readlines()
             return result
         else:
-            os.system(cmd + ' &')
+            os.system(cmd)
             time.sleep(1)
 
     def prepare_controller_status_dict(self, data):
