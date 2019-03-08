@@ -16,6 +16,7 @@ os.environ['EVA_DIR'] = os.path.normpath(
     os.path.dirname(os.path.realpath(__file__)) + '/..')
 
 import eva.core
+import eva.notify
 import eva.traphandler
 
 def usage(version_only=False):
