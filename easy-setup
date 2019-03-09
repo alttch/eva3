@@ -7,6 +7,7 @@ LM_ENABLED=
 SFA_ENABLED=
 FORCE=0
 CLEAR=0
+USE_SUPERVISOR=0
 APPEND=0
 INTERACTIVE=1
 DEFAULT_USER=root
@@ -45,16 +46,16 @@ function usage {
     echo
     echo " Options:"
     echo
+    echo " --clear                  clear runtime and supervisor configs (recommended"
+    echo "                          with --force. WARNING!!! destroys all data)"
+    echo
     echo " --force                  force install even if configs are already present"
-    echo
-    echo " --clear                  clear runtime (recommended with --force,"
-    echo "                          WARNING!!! destroys all data)"
-    echo
     echo " --auto                   perform automatic (unattended) setup"
     echo
     echo " Options for the automatic setup:"
     echo
     echo " --local-only             accept API keys (except operator) only from local host"
+    echo " --supervisor             Use supervisord (should be installed)"
     echo " -u USER                  set up all controllers to run under specified user"
     echo
     echo " --link                   link all controllers statically (requires --mqtt)"
@@ -87,7 +88,13 @@ function option_error {
 
 
 function start_controller() {
-    ./sbin/$1-control start
+    if [ $USE_SUPERVISOR -eq 1 ]; then
+      supervisorctl update || return 5
+      supervisorctl start eva-$1 > /dev/null 2>&1
+      supervisorctl start watchdog-eva-$1 > /dev/null 2>&1
+    else
+      ./sbin/$1-control start || return 5
+    fi
     I=0
     sleep 0.5
     ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
@@ -213,6 +220,22 @@ function check_required_exec {
     return 0
 }
 
+function setup_supervisor {
+  local p=$1
+  local u=$2
+  [ $USE_SUPERVISOR -eq 1 ] || return 0
+  cp -vf ./etc/supervisor/conf.d/eva-${p}.conf /etc/supervisor/conf.d/ || return 1
+  local d=`echo ${EVA_DIR}|sed 's/\\//\\\\\\//g'`
+  sed -i "s/\\/opt\\/eva/${d}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 2
+  if [ "x$u" != "xroot" ]; then
+    sed -i "s/^user=root.*//g" /etc/supervisor/conf.d/eva-${p}.conf || return 3
+  else
+    sed -i "s/^user=root.*/user=${u}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 4
+  fi
+  echo `echo ${p}|tr "a-z" "A-Z"`_SUPERVISOR_PROGRAM=eva-${p} >> ./etc/eva_servers
+  return 0
+}
+
 function askYN {
     if [ $INTERACTIVE -ne 1 ]; then
         VALUE=2
@@ -228,7 +251,7 @@ function askYN {
     fi
     while [ "x$v" == "x" ]; do
         local P="$1 (Y/N, default ${default})? "
-        read -p "${P}"
+        read -p "${P}" a
         if [ "x$a" = "x" ]; then
             v=${default_val}
             echo -en "\033[1A\033[2K"
@@ -447,7 +470,7 @@ do
             shift
         ;;
         --clear)
-            echo "WARNING: asked to clear runtime. Will remove all files in runtime folder"
+            echo "WARNING: asked to clear config. Will remove all files in runtime and supervisor"
             CLEAR=1
             shift
         ;;
@@ -462,6 +485,10 @@ do
         ;;
         --cloud-manager)
             CLOUDMANAGER=1
+            shift
+        ;;
+        --supervisor)
+            USE_SUPERVISOR=1
             shift
         ;;
       --deploy)
@@ -514,13 +541,24 @@ D=`realpath $0`
 EVA_DIR=`dirname ${D}`
 cd ${EVA_DIR}
 
+if [ $USE_SUPERVISOR -eq 1 ]; then
+  which supervisorctl > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Error: supervisorctl not found"
+    exit 12
+  fi
+  if [ ! -d /etc/supervisor/conf.d ]; then
+    echo "Error: directory /etc/supervisor/conf.d doesn't exist"
+    exit 13
+  fi
+fi
+
 if [ "x${DEPLOY_FILE}" != "x" ] && [ ! -f ${DEPLOY_FILE} ]; then
-    echo "${DEPLOY_FILE} not found"
+    echo "Error: ${DEPLOY_FILE} not found"
     exit 11
 fi
 
 echo
-
 
 if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
     echo "Installed system detected"
@@ -559,7 +597,14 @@ fi
 
 [ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && ./sbin/eva-control stop
 
-[ $CLEAR -eq 1 ] && (rm -rf runtime/*; rm -f etc/eva_servers)
+if [ $CLEAR -eq 1 ]; then
+  rm -rf runtime/*
+  rm -f etc/eva_servers
+  echo "WARNING: all files in runtime/ are deleted"
+  rm -f /etc/supervisor/conf.d/eva-uc.conf
+  rm -f /etc/supervisor/conf.d/eva-lm.conf
+  rm -f /etc/supervisor/conf.d/eva-sfa.conf
+fi
 
 # check mods
 
@@ -570,6 +615,12 @@ if [ ! $SKIP_CHECK ]; then
 fi
 
 # ASK SOME QUESTIONS
+
+which supervisorctl > /dev/null 2>&1
+if [ $? -eq 0 ] && [ -d /etc/supervisor/conf.d ]; then
+  askYN "Supervisor daemon detected. Use it instead of standard startup" N
+  [ $VALUE == "1" ] && USE_SUPERVISOR=1
+fi
 
 if [ $APPEND -ne 1 ]; then
     echo
@@ -636,7 +687,8 @@ EOF
         chmod 777 runtime/db
         ./install/set-run-under-user uc ${USER} || exit 1
     fi
-    start_controller uc
+    setup_supervisor uc ${USER} || exit 2
+    start_controller uc || exit 3
     if [ $? != 0 ]; then
         echo "Unable to test UC"
         ./sbin/eva-control stop
@@ -695,7 +747,8 @@ EOF
         chmod 777 runtime/db
         ./install/set-run-under-user lm ${USER} || exit 1
     fi
-    start_controller lm
+    setup_supervisor lm ${USER} || exit 2
+    start_controller lm || exit 3
     if [ $? != 0 ]; then
         echo "Unable to test LM"
         ./sbin/eva-control stop
@@ -767,7 +820,8 @@ EOF
         chmod 777 runtime/db
         ./install/set-run-under-user sfa ${USER} || exit 1
     fi
-    start_controller sfa
+    setup_supervisor sfa ${USER} || exit 2
+    start_controller sfa || exit 3
     if [ $? != 0 ]; then
         echo "Unable to test SFA"
         ./sbin/eva-control stop
