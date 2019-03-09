@@ -59,7 +59,7 @@ start)
         echo "already started"
         exit 2
     fi
-    exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${LM} ${LM_ARGS} > /dev/null &
+    exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${LM} ${LM_ARGS} > /dev/null 2>&1 &
     ${WATCHDOG} lm ${LM} > /dev/null &
     ;;
 launch)

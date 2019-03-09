@@ -59,7 +59,7 @@ start)
         echo "already started"
         exit 2
     fi
-    exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${UC} ${UC_ARGS} > /dev/null &
+    exec_cmd ${SAFE_RUN} ${SAFE_RUN_PIDFILE} ${PYTHON} ${UC} ${UC_ARGS} > /dev/null 2>&1 &
     ${WATCHDOG} uc ${UC} > /dev/null &
     ;;
 launch)

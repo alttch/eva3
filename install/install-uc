@@ -48,6 +48,7 @@ echo "Performing initial config"
 [ -f ./runtime/uc_cvars.json ] || echo "{}" > ./runtime/uc_cvars.json
 [ -f ./runtime/uc_drivers.json ] || echo "{}" > ./runtime/uc_drivers.json
 [ -f ./runtime/uc_modbus.json ] || echo "[]" > ./runtime/uc_modbus.json
+[ -f ./runtime/uc_owfs.json ] || echo "[]" > ./runtime/uc_owfs.json
 
 echo "Finished"
 
