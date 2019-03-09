@@ -26,7 +26,9 @@ MQTT_DISCOVERY_ENABLED=0
 LINK=0
 ALLOW_ROOT=0
 BENCHMARK=0
+CLOUDMANAGER=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
+DEPLOY_FILE=
 
 REMOTES='0.0.0.0/0'
 
@@ -39,6 +41,7 @@ MAX_START_WAIT=180
 function usage {
     echo "Usage: easy-setup [--force] [--clear] [--auto] [--local-only] [-u USER]"
     echo "          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]"
+    echo "          [--cloud-manager]"
     echo
     echo " Options:"
     echo
@@ -71,6 +74,10 @@ function usage {
     echo
     echo " -p {uc|lm|sfa|all}       specify which controller to set up or all, may be used"
     echo "                          several times"
+    echo
+    echo "--cloud-manager           set up SFA cloud manager"
+    echo "--deploy FILE             deploy config from YAML file (requires cloud manager"
+    echo
 }
 
 function option_error {
@@ -111,8 +118,8 @@ function save_controller_state {
 
 function create_operator_key {
     local P=$1
-    ./sbin/eva-tinyapi -S -C $P -F list_key_props i=operator | grep ERROR > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    ./sbin/eva-tinyapi -S -C $P -F list_key_props i=operator | grep '"key":' > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
         echo "Key 'operator' already exists, recreating"
         ( ./sbin/eva-tinyapi -S -C $P -F destroy_key i=operator | grep OK ) > /dev/null 2>&1 || return 1
     fi
@@ -134,8 +141,8 @@ function create_operator_key {
 function create_default_key {
     local P=$1
     local ALLOW=$2
-    ( ./sbin/eva-tinyapi -S -C $P -F list_key_props i=default | grep ERROR ) > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    ( ./sbin/eva-tinyapi -S -C $P -F list_key_props i=default | grep '"key":' ) > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
         echo "Key 'default' already exists, recreating"
         ( ./sbin/eva-tinyapi -S -C $P -F destroy_key i=default | grep OK ) > /dev/null 2>&1 || return 1
     fi
@@ -212,11 +219,20 @@ function askYN {
         return
     fi
     local v=
+    if [ "x$2" == "xN" ]; then
+      local default=N
+      local default_val=0
+    else
+      local default=Y
+      local default_val=1
+    fi
     while [ "x$v" == "x" ]; do
-        echo -n "$1 (Y/N, default Y)? "
-        read a
+        local P="$1 (Y/N, default ${default})? "
+        read -p "${P}"
         if [ "x$a" = "x" ]; then
-            v=1
+            v=${default_val}
+            echo -en "\033[1A\033[2K"
+            echo ${P}${default}
         else
             case $a in
                 y|Y)
@@ -253,7 +269,7 @@ function askMQTT {
             fi
             echo -n "MQTT space (empty for the root hive): "
             read MQTT_SPACE
-            askYN "Enable MQTT SSL"
+            askYN "Enable MQTT SSL" N
             MQTT_CAFILE=
             if [ $VALUE == "1" ]; then
                 while [ 1 ]; do
@@ -444,6 +460,15 @@ do
             echo "Will perform automatic install"
             shift
         ;;
+        --cloud-manager)
+            CLOUDMANAGER=1
+            shift
+        ;;
+      --deploy)
+            DEPLOY_FILE=$2
+            shift
+            shift
+        ;;
         --root)
             ALLOW_ROOT=1
             shift
@@ -486,7 +511,13 @@ fi
 
 
 D=`realpath $0`
-cd `dirname ${D}`
+EVA_DIR=`dirname ${D}`
+cd ${EVA_DIR}
+
+if [ "x${DEPLOY_FILE}" != "x" ] && [ ! -f ${DEPLOY_FILE} ]; then
+    echo "${DEPLOY_FILE} not found"
+    exit 11
+fi
 
 echo
 
@@ -542,8 +573,8 @@ fi
 
 if [ $APPEND -ne 1 ]; then
     echo
-    askYN "Should this node grant API access for the local instances only"
-    [ $VALUE == "1" ] && REMOTES="127.0.0.1"
+    askYN "Should this node grant API access for the remote instances"
+    [ $VALUE == "0" ] && REMOTES="127.0.0.1"
     askMQTT
 fi
 
@@ -702,6 +733,8 @@ echo
 if [ $INSTALL_SFA -eq 1 ]; then
     echo "Installing EVA SFA"
     bash install/install-sfa || exit 1
+    askYN "Enable SFA Cloud Manager"
+    [ $VALUE == "1" ] && CLOUDMANAGER=1
     echo "SFA_ENABLED=yes" >> etc/eva_servers
     echo
     askUser "Enter the user account to run under (root is not recommended!)" ${DEFAULT_USER}
@@ -716,6 +749,7 @@ if [ $INSTALL_SFA -eq 1 ]; then
         exit 2
     fi
     [ ! -f etc/sfa.ini ] && cp etc/sfa.ini-dist etc/sfa.ini
+    [ $CLOUDMANAGER -eq 1 ] && sed -i 's/.*\(cloud_manager\).*/\1 = yes/g' etc/sfa.ini
     chmod 644 etc/sfa.ini
     echo "Generating sfa_apikeys.ini"
     rm -f etc/sfa_apikeys.ini
@@ -752,6 +786,16 @@ EOF
             ./sbin/eva-control stop
             exit 5
         fi
+        if [ $CLOUDMANAGER -eq 1 ]; then
+          SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|tr "," "\n"|grep system|cut -d\" -f4`
+          (./sbin/eva-tinyapi -C sfa -F set_controller_prop \
+              i=${SNAME} p=masterkey v=\$masterkey save=1 | grep OK ) > /dev/null 2>&1
+          if [ $? != 0 ]; then
+              echo "Management API linking failed!"
+              ./sbin/eva-control stop
+              exit 5
+          fi
+        fi
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
         echo "Linking local LM PLC to SFA"
@@ -761,6 +805,16 @@ EOF
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
+        fi
+        if [ $CLOUDMANAGER -eq 1 ]; then
+          SNAME=lm/`./sbin/eva-tinyapi -C lm -F test|tr "," "\n"|grep system|cut -d\" -f4`
+          (./sbin/eva-tinyapi -C sfa -F set_controller_prop \
+              i=${SNAME} p=masterkey v=\$masterkey save=1 | grep OK ) > /dev/null 2>&1
+          if [ $? != 0 ]; then
+              echo "Management API linking failed!"
+              ./sbin/eva-control stop
+              exit 5
+          fi
         fi
     fi
     echo
@@ -810,6 +864,13 @@ chmod 700 backup
 
 echo "MQTT_DISCOVERY_ENABLED=$MQTT_DISCOVERY_ENABLED" > ./etc/easy_setup
 echo "LINK=$LINK" >> ./etc/easy_setup
+
+if [ "x${DEPLOY_FILE}" != "x" ]; then
+  P=`realpath ${DEPLOY_FILE}`
+  cd `dirname ${P}`
+  ${EVA_DIR}/bin/eva-shell sfa cloud deploy `basename ${DEPLOY_FILE}`
+  cd ${EVA_DIR}
+fi
 
 if [ $BENCHMARK -eq 1 ]; then
     echo "Starting CRT benchmark"
