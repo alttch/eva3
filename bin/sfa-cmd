@@ -889,6 +889,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     })[1].get('code')
                     if code != apiclient.result_ok:
                         raise Exception('API call failed, code {}'.format(code))
+            print('Reloading local SFA')
+            for c in controllers:
+                print(' -- {}'.format(c))
+                code = call('reload_controller', { 'i': c })[0]
+                if code != apiclient.result_ok:
+                    raise Exception('API call failed, code {}'.format(code))
         except Exception as e:
             self.print_err(e)
             return self.local_func_result_failed
