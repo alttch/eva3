@@ -229,9 +229,7 @@ function setup_supervisor {
   local d=`echo ${EVA_DIR}|sed 's/\\//\\\\\\//g'`
   sed -i "s/\\/opt\\/eva/${d}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 2
   if [ "x$u" != "xroot" ]; then
-    sed -i "s/^user=root.*//g" /etc/supervisor/conf.d/eva-${p}.conf || return 3
-  else
-    sed -i "s/^user=root.*/user=${u}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 4
+    sed -i "s/^;user=.*/user=${u}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 4
   fi
   echo `echo ${p}|tr "a-z" "A-Z"`_SUPERVISOR_PROGRAM=eva-${p} >> ./etc/eva_servers
   return 0
