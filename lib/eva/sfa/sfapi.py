@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -477,16 +478,24 @@ class SFA_API(GenericAPI):
 
     def reload_controller(self, k=None, i=None):
         if not apikey.check(k, master=True): return False
-        if not i or i.find('/') == -1: return False
-        try:
-            ct, ci = i.split('/')
-        except:
+        if i != 'all':
+            if not i or i.find('/') == -1: return False
+            try:
+                ct, ci = i.split('/')
+            except:
+                return False
+            if ct == 'uc':
+                return eva.sfa.controller.uc_pool.reload_controller(ci)
+            if ct == 'lm':
+                return eva.sfa.controller.lm_pool.reload_controller(ci)
             return False
-        if ct == 'uc':
-            return eva.sfa.controller.uc_pool.reload_controller(ci)
-        if ct == 'lm':
-            return eva.sfa.controller.lm_pool.reload_controller(ci)
-        return False
+        else:
+            success = True
+            if not eva.sfa.controller.uc_pool.reload_controller('all'):
+                success = False
+            if not eva.sfa.controller.lm_pool.reload_controller('all'):
+                success = False
+            return success
 
     def list_remote(self, k=None, i=None, group=None, tp=None):
         if not apikey.check(k, master=True): return None

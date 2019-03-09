@@ -155,10 +155,16 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
     class ComplController(ComplGeneric):
 
+        def __init__(self, cli, allow_all=False):
+            super().__init__(cli)
+            self.allow_all = allow_all
+
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('controller list')
             if code: return True
             result = set()
+            if self.allow_all:
+                result.add('all')
             for v in data:
                 result.add(v['id'])
                 result.add(v['full_id'])
@@ -867,8 +873,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_controller_reload = sp_controller.add_parser(
             'reload', help='Reload items from the connected UC')
         sp_controller_reload.add_argument(
-            'i', help='Controller ID',
-            metavar='ID').completer = self.ComplController(self)
+            'i', help='Controller ID (or "all")',
+            metavar='ID').completer = self.ComplController(
+                self, allow_all=True)
 
         sp_controller_append = sp_controller.add_parser(
             'append', help='Connect UC')

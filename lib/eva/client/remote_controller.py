@@ -134,7 +134,7 @@ class RemoteController(eva.item.Item):
         self.product_build = result['product_build']
         logging.info('controller %s loaded' % self.full_id)
         self.version = result['version']
-        msg = '%s time diff is %f sec' % (self.item_id, time_diff)
+        msg = '%s time diff is %f sec' % (self.full_id, time_diff)
         if time_diff > _warning_time_diff:
             logging.warning(msg)
         else:
@@ -576,6 +576,16 @@ class RemoteControllerPool(object):
         return
 
     def reload_controller(self, controller_id):
+        if controller_id == 'all':
+            success = True
+            for c in self.controllers.copy():
+                try:
+                    if not self.reload_controller(c):
+                        raise Exception('reload error')
+                except:
+                    eva.core.log_traceback()
+                    success = False
+            return success
         if not controller_id in self.controllers: return False
         controller = self.controllers[controller_id]
         return controller.load_remote()
@@ -838,6 +848,7 @@ class RemoteUCPool(RemoteControllerPool):
     def reload_controller(self, controller_id):
         if not super().reload_controller(controller_id):
             return False
+        if controller_id == 'all': return True
         uc = self.controllers[controller_id]
         if not self.item_management_lock.acquire(timeout=eva.core.timeout):
             logging.critical('RemoteUCPool::reload_controller locking broken')
@@ -1193,6 +1204,7 @@ class RemoteLMPool(RemoteControllerPool):
     def reload_controller(self, controller_id):
         if not super().reload_controller(controller_id):
             return False
+        if controller_id == 'all': return True
         lm = self.controllers[controller_id]
         if not self.item_management_lock.acquire(timeout=eva.core.timeout):
             logging.critical('RemoteLMPool::reload_controller locking broken')
