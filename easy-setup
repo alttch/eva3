@@ -641,7 +641,7 @@ fi
 
 [ $APPEND -ne 1 ] && echo -n > etc/eva_servers
 
-[ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
+[ $USE_SUPERVISOR -ne 1 ] && [ ! -f etc/watchdog ] && cp -vf etc/watchdog-dist etc/watchdog
 
 # INSTALL UC
 
