@@ -485,7 +485,7 @@ _me = 'EVA ICS Notification System Manager CLI for %s version %s' % (
 cli = NotifierCLI(
     '%s_notifier' % product,
     _me,
-    remote_api=False,
+    remote_api_enabled=False,
     prog='%s-notifier' % product)
 
 _api_functions = {

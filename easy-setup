@@ -911,7 +911,7 @@ if [ "x$X" != "x" ]; then
     chmod 700 runtime/db
 fi
 
-ln -sf eva-shell bin/eva
+ln -sf eva bin/eva-shell
 
 echo "Setup completed!"
 echo

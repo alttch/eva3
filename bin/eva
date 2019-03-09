@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # PYTHON_ARGCOMPLETE_OK
 
-
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -157,8 +156,10 @@ class ManagementCLI(GenericCLI):
         sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
 
     def add_manager_control_functions(self):
+        self.shells_available = []
         if not self.products_configured:
             return
+        eva.client.cli.shells_available = self.products_configured
         ap_controller = self.sp.add_parser(
             'server', help='Controllers server management functions')
         sp_controller = ap_controller.add_subparsers(
@@ -315,10 +316,13 @@ class ManagementCLI(GenericCLI):
 
     def do_start_shell(self, p, x='-cmd', xp=''):
         try:
-            if getattr(self, 'extra', None):
-                sysargs = ['{}/{}{}'.format(dir_bin, p, x)] + self.extra
+            if getattr(self, 'subshell_extra_args', None):
+                sysargs = ['{}/{}{}'.format(dir_bin, p, x)
+                          ] + self.subshell_extra_args
             else:
-                sysargs = ['{}/{}{}'.format(dir_bin, p, x), '-I']
+                sysargs = ['{}/{}{}'.format(dir_bin, p, x)]
+                if interactive_mode:
+                    sysargs.append('-I')
             c = open('{}/{}{}'.format(dir_bin, p, x)).read()
             if self.in_json:
                 sysargs.append('-J')
@@ -341,7 +345,7 @@ sys.argv = {argv}
             os.chdir(dir_cwd)
             try:
                 exec(c)
-                self.extra = None
+                self.subshell_extra_args = None
             except SystemExit:
                 self.full_reset_after_shell()
                 return True
@@ -713,10 +717,10 @@ def make_exec_cmd_func(cmd):
 
 _me = 'EVA ICS Management CLI version %s' % (__version__)
 
-if len(sys.argv) < 2:
+if os.path.basename(sys.argv[0]) == 'eva-shell' and len(sys.argv) < 2:
     sys.argv = [sys.argv[0]] + ['-I']
 
-cli = ManagementCLI('eva', _me, remote_api=False)
+cli = ManagementCLI('eva', _me, remote_api_enabled=False)
 
 _api_functions = {
     'server:start': cli.start_controller,
@@ -779,8 +783,7 @@ try:
 except:
     pass
 
-eva.core.set_product('eva-cmd', '-1')
-cli.ap.prog = 'eva-cmd'
+eva.core.set_product('eva-shell', '-1')
 cli.default_prompt = '# '
 cli.arg_sections += ['backup', 'server', 'edit', 'system']
 cli.set_api_functions(_api_functions)

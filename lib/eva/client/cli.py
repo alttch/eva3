@@ -119,11 +119,11 @@ class ComplUser(ComplGeneric):
 
 class GenericCLI(object):
 
-    def __init__(self, product, name, prog=None, remote_api=True):
+    def __init__(self, product, name, prog=None, remote_api_enabled=True):
         self.debug = False
         self.name = name
         self.product = product
-        self.remote_api = remote_api
+        self.remote_api_enabled = remote_api_enabled
         self.pd = None
         self.argcomplete = None
         self.prompt = None
@@ -144,7 +144,7 @@ class GenericCLI(object):
             'result': 'ERROR'
         })
         self.local_func_result_empty = (apiclient.result_ok, '')
-        if remote_api:
+        if remote_api_enabled:
             self.always_print = ['cmd']
             self.common_api_functions = {
                 'cvar:all': 'get_cvar',
@@ -262,7 +262,7 @@ class GenericCLI(object):
                 self.product, 'green', attrs=['bold'], rlsafe=True)
             host_str = ''
             nodename = self.nodename if self.nodename else platform.node()
-            if self.remote_api:
+            if self.remote_api_enabled:
                 try:
                     if not self.can_colorize():
                         raise Exception('no colors required')
@@ -335,7 +335,7 @@ class GenericCLI(object):
         print('j: toggle json mode')
         print('r: toggle raw mode (no colors)')
         print()
-        if self.remote_api:
+        if self.remote_api_enabled:
             print('a: show API params')
             print('c <host:port> [key] [timeout]: connect to remote API')
             print('k: key display/set (k. for key reset)')
@@ -354,7 +354,7 @@ class GenericCLI(object):
 
     def parse_primary_args(self):
         try:
-            if self.remote_api:
+            if self.remote_api_enabled:
                 o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T:JIRD', [
                     'client-ini-file=', 'exec-batch=', 'pass-batch-err',
                     'interactive', 'debug', 'raw-output', 'json', 'api-key=',
@@ -482,7 +482,7 @@ class GenericCLI(object):
         return s
 
     def add_primary_options(self):
-        if self.remote_api:
+        if self.remote_api_enabled:
             self.ap.add_argument(
                 '-K',
                 '--api-key',
@@ -706,7 +706,7 @@ class GenericCLI(object):
             self.pd.options.display.max_colwidth = 100
 
     def add_functions(self):
-        if self.remote_api:
+        if self.remote_api_enabled:
             self._add_primary_functions()
             self._add_cmd_functions()
             self._add_lock_functions()
@@ -1039,36 +1039,39 @@ class GenericCLI(object):
                             '/') and d[0][1:] in shells_available:
                         globals()['shell_switch_to'] = d[0][1:]
                         return 0
-                    if (d[0] == 'k.' or d[0] == 'c.') and self.remote_api:
+                    if (d[0] == 'k.' or
+                            d[0] == 'c.') and self.remote_api_enabled:
                         self.apikey = None
                         print('Key has been reset to default')
-                    if (d[0] == 'u.' or d[0] == 'c.') and self.remote_api:
+                    if (d[0] == 'u.' or
+                            d[0] == 'c.') and self.remote_api_enabled:
                         self.apiuri = None
                         print('API uri has been reset to default')
-                    if (d[0] == 't.' or d[0] == 'c.') and self.remote_api:
+                    if (d[0] == 't.' or
+                            d[0] == 'c.') and self.remote_api_enabled:
                         self.timeout = self.default_timeout
                         print('timeout: %.2f' % self.timeout)
-                    if (d[0] == 'k' or d[0] == 'c') and self.remote_api:
+                    if (d[0] == 'k' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.apikey = d[1 if d[0] == 'k' else 2]
                         except:
                             pass
                         print('key: %s' % self.apikey
                               if self.apikey is not None else '<default>')
-                    if (d[0] == 'u' or d[0] == 'c') and self.remote_api:
+                    if (d[0] == 'u' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.apiuri = d[1]
                         except:
                             pass
                         print('API uri: %s' % self.apiuri
                               if self.apiuri is not None else '<default>')
-                    if (d[0] == 't' or d[0] == 'c') and self.remote_api:
+                    if (d[0] == 't' or d[0] == 'c') and self.remote_api_enabled:
                         try:
                             self.timeout = float(d[1 if d[0] == 't' else 3])
                         except:
                             pass
                         print('timeout: %.2f' % self.timeout)
-                    elif d[0] == 'a' and self.remote_api:
+                    elif d[0] == 'a' and self.remote_api_enabled:
                         print('API uri: %s' % (self.apiuri
                                                if self.apiuri is not None else
                                                '<default>'))
@@ -1087,7 +1090,7 @@ class GenericCLI(object):
                                 not self.always_suppress_colors
                         print('Raw mode ' +
                               ('on' if self.always_suppress_colors else 'off'))
-                    elif d[0] == 'd' and self.remote_api:
+                    elif d[0] == 'd' and self.remote_api_enabled:
                         self.debug = not self.debug
                         print('Client debug mode ' +
                               ('on' if self.debug else 'off'))
@@ -1139,7 +1142,7 @@ class GenericCLI(object):
                     ]:
                         try:
                             opts = []
-                            if self.remote_api:
+                            if self.remote_api_enabled:
                                 if self.apikey is not None:
                                     opts += ['-K', self.apikey]
                                 if self.apiuri is not None:
@@ -1209,7 +1212,7 @@ class GenericCLI(object):
 
     def call(self, args=None):
         opts = []
-        if self.remote_api:
+        if self.remote_api_enabled:
             if self.apikey is not None:
                 opts += ['-K', self.apikey]
             if self.apiuri is not None:
@@ -1227,8 +1230,12 @@ class GenericCLI(object):
                 default_completer=self.argcomplete.completers.SuppressCompleter(
                 ))
         try:
-            a, extra = self.ap.parse_known_args(args)
-            self.extra = extra
+            p = args if args else (sys.argv[1:] if len(sys.argv)>1 else [])
+            if p and p[0] in shells_available:
+                self.subshell_extra_args = p[1:] if len(p) > 1 else []
+                a = self.ap.parse_args([p[0]])
+            else:
+                a, self.subshell_extra_args = self.ap.parse_known_args(args)
         except:
             return 99
         params = vars(a).copy()
@@ -1273,7 +1280,7 @@ class GenericCLI(object):
             apikey = None
         if getattr(a, '_api_key', None):
             apikey = a._api_key
-        if self.remote_api:
+        if self.remote_api_enabled:
             if not apiuri:
                 try:
                     api = apiclient.APIClientLocal(self.product)
@@ -1320,12 +1327,12 @@ class GenericCLI(object):
                 wait + 2 > self.default_timeout:
                 timeout = wait + 2
 
-        if debug and self.remote_api:
+        if debug and self.remote_api_enabled:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)
             self.print_debug('timeout: %.2f' % timeout)
             self.print_debug('params %s' % params)
-        if isinstance(api_func, str) and self.remote_api:
+        if isinstance(api_func, str) and self.remote_api_enabled:
             code, result = api.call(api_func, params, timeout, _debug=debug)
         else:
             params['_api'] = api
@@ -1357,7 +1364,7 @@ class GenericCLI(object):
                 self.print_err('Error: Bad data')
             elif code == apiclient.result_invalid_params:
                 self.print_err('Error: invalid params')
-            if debug and self.remote_api:
+            if debug and self.remote_api_enabled:
                 self.print_debug('API result code: %u' % code)
             return code
         else:
