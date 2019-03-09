@@ -19,25 +19,25 @@ WATCHDOG=${EVA_DIR}/sbin/watchdog.sh
 
 source ./etc/eva_servers
 
-if [ ${UC_SUPERVISORD} ]; then
+if [ ${UC_SUPERVISOR_PROGRAM} ]; then
     case $1 in
         start)
-            supervisorctl start ${UC_SUPERVISORD}
-            supervisorctl start watchdog-${UC_SUPERVISORD}
+            supervisorctl start ${UC_SUPERVISOR_PROGRAM}
+            supervisorctl start watchdog-${UC_SUPERVISOR_PROGRAM}
             exit $?
         ;;
         stop)
-            supervisorctl stop watchdog-${UC_SUPERVISORD}
-            supervisorctl stop ${UC_SUPERVISORD}
+            supervisorctl stop watchdog-${UC_SUPERVISOR_PROGRAM}
+            supervisorctl stop ${UC_SUPERVISOR_PROGRAM}
             exit $?
         ;;
         status)
-            supervisorctl status ${UC_SUPERVISORD}
+            supervisorctl status ${UC_SUPERVISOR_PROGRAM}
             exit $?
         ;;
         restart)
-            supervisorctl restart ${UC_SUPERVISORD}
-            supervisorctl restart watchdog-${UC_SUPERVISORD}
+            supervisorctl restart ${UC_SUPERVISOR_PROGRAM}
+            supervisorctl restart watchdog-${UC_SUPERVISOR_PROGRAM}
             exit $?
         ;;
     esac

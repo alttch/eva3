@@ -27,25 +27,25 @@ function exec_cmd {
     fi
 }
 
-if [ ${SFA_SUPERVISORD} ]; then
+if [ ${SFA_SUPERVISOR_PROGRAM} ]; then
     case $1 in
         start)
-            supervisorctl start ${SFA_SUPERVISORD}
-            supervisorctl start watchdog-${SFA_SUPERVISORD}
+            supervisorctl start ${SFA_SUPERVISOR_PROGRAM}
+            supervisorctl start watchdog-${SFA_SUPERVISOR_PROGRAM}
             exit $?
         ;;
         stop)
-            supervisorctl stop watchdog-${SFA_SUPERVISORD}
-            supervisorctl stop ${SFA_SUPERVISORD}
+            supervisorctl stop watchdog-${SFA_SUPERVISOR_PROGRAM}
+            supervisorctl stop ${SFA_SUPERVISOR_PROGRAM}
             exit $?
         ;;
         status)
-            supervisorctl status ${SFA_SUPERVISORD}
+            supervisorctl status ${SFA_SUPERVISOR_PROGRAM}
             exit $?
         ;;
         restart)
-            supervisorctl restart ${SFA_SUPERVISORD}
-            supervisorctl restart watchdog-${SFA_SUPERVISORD}
+            supervisorctl restart ${SFA_SUPERVISOR_PROGRAM}
+            supervisorctl restart watchdog-${SFA_SUPERVISOR_PROGRAM}
             exit $?
         ;;
     esac

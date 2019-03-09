@@ -30,6 +30,7 @@ Common
     * JSON notifiers will send JSON RPC 2.0 notifications to the target uri, if
       *method* param is set
     * Database support for MySQL and PostgreSQL
+    * supervisord support
 
 UC 
 --
