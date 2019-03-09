@@ -25,7 +25,7 @@ MQTT_KEY=
 MQTT_ANNOUNCE_ENABLED=0
 MQTT_DISCOVERY_ENABLED=0
 LINK=0
-ALLOW_ROOT=0
+SKIP_ROOT=0
 BENCHMARK=0
 CLOUDMANAGER=0
 DEFAULT_CA_FILE=/etc/ssl/certs/ca-certificates.crt
@@ -50,6 +50,7 @@ function usage {
     echo "                          with --force. WARNING!!! destroys all data)"
     echo
     echo " --force                  force install even if configs are already present"
+    echo " --skip-check             skip initial checking"
     echo " --auto                   perform automatic (unattended) setup"
     echo
     echo " Options for the automatic setup:"
@@ -474,6 +475,10 @@ do
             CLEAR=1
             shift
         ;;
+        --skip-check)
+            SKIP_CHECK=1
+            shift
+        ;;
         -h|--help)
             usage
             exit 99
@@ -497,7 +502,7 @@ do
             shift
         ;;
         --root)
-            ALLOW_ROOT=1
+            SKIP_ROOT=1
             shift
         ;;
         --benchmark)
@@ -518,7 +523,7 @@ do
     esac
 done
 
-if [ "x$ALLOW_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
+if [ "x$SKIP_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
     echo "Please run this script as root"
     exit 98
 fi
@@ -598,8 +603,8 @@ fi
 [ $FORCE -eq 1 ] || [ $CLEAR -eq 1 ] && ./sbin/eva-control stop
 
 if [ $CLEAR -eq 1 ]; then
-  rm -rf runtime/*
-  rm -f etc/eva_servers
+  rm -rf runtime/* || exit 1
+  rm -f etc/eva_servers || exit 2
   echo "WARNING: all files in runtime/ are deleted"
   rm -f /etc/supervisor/conf.d/eva-uc.conf
   rm -f /etc/supervisor/conf.d/eva-lm.conf
@@ -664,10 +669,12 @@ if [ $INSTALL_UC -eq 1 ]; then
         echo "Invalid user: ${USER}"
         exit 2
     fi
-    su - ${USER} -c "ls" > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo "User ${USER} has no valid shell set"
-        exit 2
+    if [ $SKIP_ROOT -ne 1 ]; then
+      su - ${USER} -c "ls" > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+          echo "User ${USER} has no valid shell set"
+          exit 2
+      fi
     fi
     [ ! -f etc/uc.ini ] && cp etc/uc.ini-dist etc/uc.ini
     chmod 644 etc/uc.ini
@@ -724,10 +731,12 @@ if [ $INSTALL_LM -eq 1 ]; then
         echo "Invalid user: ${USER}"
         exit 2
     fi
-    su - ${USER} -c "ls" > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo "User ${USER} has no valid shell set"
-        exit 2
+    if [ $SKIP_ROOT -ne 1 ]; then
+      su - ${USER} -c "ls" > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+          echo "User ${USER} has no valid shell set"
+          exit 2
+      fi
     fi
     [ ! -f etc/lm.ini ] && cp etc/lm.ini-dist etc/lm.ini
     chmod 644 etc/lm.ini
@@ -796,10 +805,12 @@ if [ $INSTALL_SFA -eq 1 ]; then
         echo "Invalid user: ${USER}"
         exit 2
     fi
-    su - ${USER} -c "ls" > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
-        echo "User ${USER} has no valid shell set"
-        exit 2
+    if [ $SKIP_ROOT -ne 1 ]; then
+      su - ${USER} -c "ls" > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+          echo "User ${USER} has no valid shell set"
+          exit 2
+      fi
     fi
     [ ! -f etc/sfa.ini ] && cp etc/sfa.ini-dist etc/sfa.ini
     [ $CLOUDMANAGER -eq 1 ] && sed -i 's/.*\(cloud_manager\).*/\1 = yes/g' etc/sfa.ini
