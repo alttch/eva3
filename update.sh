@@ -134,6 +134,10 @@ mkdir -p ./xc/extensions || exit 1
 (cd lib/eva/lm && ln -sf ../../../xc/extensions ) || exit 1
 (cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
 
+rm -f bin/eva-shell
+
+ln -sf eva bin/eva-shell
+
 echo "- Cleaning up"
 
 rm -rf _update
