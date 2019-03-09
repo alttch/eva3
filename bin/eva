@@ -156,7 +156,7 @@ class ManagementCLI(GenericCLI):
         sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
 
     def add_manager_control_functions(self):
-        self.shells_available = []
+        eva.client.cli.shells_available = []
         if not self.products_configured:
             return
         eva.client.cli.shells_available = self.products_configured
