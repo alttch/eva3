@@ -1038,7 +1038,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
             if kind == 'items':
                 return self.list_remote(
                     k=k, i=ii, g=props.get('g'), p=props.get('p'))
-            elif ii and ii.find('/') != -1:
+            elif kind == 'props' and ii and ii.find('/') != -1:
                 return self.list_controller_props(k=k, i=ii)
             else:
                 return self.list_controllers(k=k, g=ii)
