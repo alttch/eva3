@@ -39,24 +39,6 @@ api = None
 
 class UC_API(GenericAPI):
 
-    def dev_uc_a(self, k=None):
-        return eva.uc.controller.Q.actions_by_item_full_id
-
-    def dev_uc_i(self, k=None, i=None):
-        return eva.uc.controller.dump(i)
-
-    def dev_uc_u(self, k=None, i=None):
-        if i:
-            return eva.uc.controller.get_unit(i)
-        else:
-            return eva.uc.controller.units_by_full_id
-
-    def dev_uc_mu(self, k=None, i=None):
-        if i:
-            return eva.uc.controller.get_mu(i)
-        else:
-            return eva.uc.controller.mu_by_full_id
-
     def groups(self, k=None, tp=None):
         if apikey.check(k, master=True):
             if tp == 'U' or tp == 'unit':
@@ -878,11 +860,6 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
     def __init__(self):
         super().__init__()
-        if eva.core.development:
-            UC_API.dev_uc_a.exposed = True
-            UC_API.dev_uc_i.exposed = True
-            UC_API.dev_uc_u.exposed = True
-            UC_API.dev_uc_mu.exposed = True
         UC_HTTP_API.index.exposed = True
         UC_HTTP_API.groups.exposed = True
         UC_HTTP_API.state.exposed = True

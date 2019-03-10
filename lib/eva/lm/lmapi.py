@@ -40,9 +40,6 @@ def cp_need_dm_rule_props(k):
 
 class LM_API(GenericAPI):
 
-    def dev_lm_i(self, k=None, i=None):
-        return eva.lm.controller.dump(i)
-
     def groups(self, k=None, tp=None):
         if apikey.check(k, master=True):
             if tp == 'LV' or tp == 'lvar':
@@ -633,8 +630,6 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
     def __init__(self):
         super().__init__()
-        if eva.core.development:
-            LM_API.dev_lm_i.exposed = True
         LM_HTTP_API.index.exposed = True
         LM_HTTP_API.groups.exposed = True
         LM_HTTP_API.state.exposed = True
