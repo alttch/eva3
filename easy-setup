@@ -932,7 +932,7 @@ echo "LINK=$LINK" >> ./etc/easy_setup
 if [ "x${DEPLOY_FILE}" != "x" ]; then
   P=`realpath ${DEPLOY_FILE}`
   cd `dirname ${P}`
-  ${EVA_DIR}/bin/eva-shell sfa cloud deploy `basename ${DEPLOY_FILE}`
+  ${EVA_DIR}/bin/eva-shell sfa cloud deploy `basename ${DEPLOY_FILE}` -u
   cd ${EVA_DIR}
 fi
 
