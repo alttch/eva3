@@ -913,8 +913,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                         k=k, user=ii, password=props['p']):
                     return http_api_result_error()
             if 'a' in props:
-                if not super().set_user_key(
-                        k=k, user=ii, key=props['a']):
+                if not super().set_user_key(k=k, user=ii, key=props['a']):
                     return http_api_result_error()
             return http_api_result_ok()
         raise cp_api_404()
