@@ -39,24 +39,6 @@ api = None
 
 class UC_API(GenericAPI):
 
-    def dev_uc_a(self, k=None):
-        return eva.uc.controller.Q.actions_by_item_full_id
-
-    def dev_uc_i(self, k=None, i=None):
-        return eva.uc.controller.dump(i)
-
-    def dev_uc_u(self, k=None, i=None):
-        if i:
-            return eva.uc.controller.get_unit(i)
-        else:
-            return eva.uc.controller.units_by_full_id
-
-    def dev_uc_mu(self, k=None, i=None):
-        if i:
-            return eva.uc.controller.get_mu(i)
-        else:
-            return eva.uc.controller.mu_by_full_id
-
     def groups(self, k=None, tp=None):
         if apikey.check(k, master=True):
             if tp == 'U' or tp == 'unit':
@@ -869,6 +851,8 @@ class UC_API(GenericAPI):
 
 class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
+    exposed = True
+
     def cp_check_perm(self, api_key=None, k=None, path_info=None):
         if cherrypy.serving.request.path_info[:8] == '/put_phi':
             rlp = ['c']
@@ -878,11 +862,6 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
     def __init__(self):
         super().__init__()
-        if eva.core.development:
-            UC_API.dev_uc_a.exposed = True
-            UC_API.dev_uc_i.exposed = True
-            UC_API.dev_uc_u.exposed = True
-            UC_API.dev_uc_mu.exposed = True
         UC_HTTP_API.index.exposed = True
         UC_HTTP_API.groups.exposed = True
         UC_HTTP_API.state.exposed = True
@@ -1513,9 +1492,37 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
                 eva.udpapi.check_access(http_real_ip()) else None
         return result
 
+    def GET(self, r, rtp, *args, **kwargs):
+        k = kwargs.get('k')
+        full = kwargs.get('full')
+        item_id = '/'.join(args)
+        if rtp in ['unit', 'sensor']:
+            if cherrypy.request.path_info.endswith('/'):
+                return self.state(k=k, g=item_id, p=rtp, full=full)
+            else:
+                return self.state(k=k, i=item_id, p=rtp, full=full)
+        elif rtp == 'phi':
+            if item_id:
+                return self.get_phi(k=k, i=item_id)
+            else:
+                return self.list_phi(k=k)
+        elif rtp == 'phi-module':
+            if item_id:
+                return self.modinfo_phi(k=k, m=item_id)
+            else:
+                return self.list_phi_mods(k=k)
+        raise cp_api_error()
+
 
 def start():
     global api
     api = UC_API()
-    cherrypy.tree.mount(UC_HTTP_API(), '/uc-api')
+    cherrypy.tree.mount(
+        UC_HTTP_API(),
+        '/uc-api',
+        config={
+            '/r': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
+            }
+        })
     eva.ei.start()
