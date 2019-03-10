@@ -1493,25 +1493,7 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         return result
 
     def GET(self, r, rtp, *args, **kwargs):
-        k = kwargs.get('k')
-        full = kwargs.get('full')
-        item_id = '/'.join(args)
-        if rtp in ['unit', 'sensor']:
-            if cherrypy.request.path_info.endswith('/'):
-                return self.state(k=k, g=item_id, p=rtp, full=full)
-            else:
-                return self.state(k=k, i=item_id, p=rtp, full=full)
-        elif rtp == 'phi':
-            if item_id:
-                return self.get_phi(k=k, i=item_id)
-            else:
-                return self.list_phi(k=k)
-        elif rtp == 'phi-module':
-            if item_id:
-                return self.modinfo_phi(k=k, m=item_id)
-            else:
-                return self.list_phi_mods(k=k)
-        raise cp_api_error()
+        raise cp_api_404()
 
 
 def start():
