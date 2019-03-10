@@ -1135,6 +1135,49 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                 return self.reload_clients(k=k)
         raise cp_api_404()
 
+    def PATCH(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_params(
+            *args, **kwargs)
+        if rtp == 'action':
+            s = props.get('s')
+            if 'i' in props:
+                if s == 'kill':
+                    return self.kill(k=k, i=props.get('i'))
+                elif s == 'q_clean':
+                    return self.q_clean(k=k, i=props.get('i'))
+            elif s == 'term':
+                return self.terminate(k=k, i=props.get('i'), u=ii)
+        elif rtp == 'controller':
+            if not ii: raise cp_api_404()
+            for p, v in props.items():
+                if not self.set_controller_prop(k=k, i=ii, p=p, v=v, save=save):
+                    return http_api_result_error()
+            return http_api_result_ok()
+        elif rtp == 'dmatrix_rule':
+            if not ii: raise cp_api_404()
+            for p, v in props.items():
+                if not self.set_rule_prop(k=k, i=ii, p=p, v=v, save=save):
+                    return http_api_result_error()
+            return http_api_result_ok()
+        elif rtp == 'lvar':
+            s = props.get('s')
+            if s == 'clear':
+                return self.clear(k=k, i=ii)
+            elif s == 'reset':
+                return self.reset(k=k, i=ii)
+            elif s == 'toggle':
+                return self.toggle(k=k, i=ii)
+            else:
+                return self.set(k=k, i=ii, s=s, v=props.get('v'))
+        elif rtp == 'unit':
+            if 'action_enabled' in props:
+                v = eva.tools.val_to_boolean(props['action_enabled'])
+                if v:
+                    return self.enable_actions(k=k, i=ii)
+                else:
+                    return self.disable_actions(k=k, i=ii)
+        raise cp_api_404()
+
     def DELETE(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)
