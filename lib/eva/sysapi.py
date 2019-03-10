@@ -794,7 +794,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                 result else http_api_result_error()
 
     def __call__(self, *args, **kwargs):
-        raise cp_api_404()
+        return self.test(k=kwargs.get('k'))
 
     def GET(self, r, rtp, *args, **kwargs):
         k, ii, full, kind, save, for_dir, props = restful_params(

@@ -1024,7 +1024,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
             return http_api_result_error()
 
     def __call__(self, *args, **kwargs):
-        raise cp_api_404()
+        return self.test(k=kwargs.get('k'))
 
     def GET(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
