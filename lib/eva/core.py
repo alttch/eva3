@@ -617,12 +617,12 @@ def set_cvar(var, value=None):
     if not var: return False
     with _cvars_lock:
         if value is not None:
-            cvars[var] = str(value)
+            cvars[str(var)] = str(value)
         elif var not in cvars:
             return None
         else:
             try:
-                del cvars[var]
+                del cvars[str(var)]
             except:
                 return False
         if db_update == 1: save_cvars()

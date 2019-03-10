@@ -19,13 +19,14 @@ import eva.logs
 
 from pyaltt import background_job
 
+from functools import wraps
+
 from eva.api import cp_json_handler
 from eva.api import log_api_request
 from eva.api import http_remote_info
 from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
 from eva.api import cp_api_404
-from eva.api import cp_need_master
 from eva.api import cp_session_pre
 from eva.api import cp_json_pre
 from eva.api import cp_api_pre
@@ -35,6 +36,7 @@ from eva.api import session_timeout
 
 from eva.api import http_real_ip
 from eva.api import cp_client_key
+from eva.api import cp_need_master
 
 from eva.api import GenericAPI
 from eva.api import JSON_RPC_API
@@ -63,6 +65,47 @@ api_setup_mode_allowed = False
 
 cvars_public = False
 
+log_levels_by_name = {
+    'debug': 10,
+    'info': 20,
+    'warning': 30,
+    'error': 40,
+    'critical': 50
+}
+
+
+def cp_need_file_management(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not api_file_management_allowed:
+            raise cp_forbidden_key()
+        return f(*args, **kwargs)
+
+    return do
+
+
+def cp_need_cmd(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check(kwargs.get('k'), allow=['cmd']):
+            raise cp_forbidden_key()
+        return f(*args, **kwargs)
+
+    return do
+
+
+def cp_need_sysfunc(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check(kwargs.get('k'), sysfunc=True):
+            raise cp_forbidden_key()
+        return f(*args, **kwargs)
+
+    return do
+
 
 class LockAPI(object):
 
@@ -90,9 +133,6 @@ class LockAPI(object):
             return True
         except:
             return False
-
-    def dev_locks(self, k=None):
-        return {'locks': list(locks.keys()), 'expire': lock_expire_time}
 
 
 cmd_status_created = 0
@@ -313,6 +353,10 @@ class UserAPI(object):
         if not eva.apikey.check(k, master=True): return False
         return eva.users.list_users()
 
+    def get_user(self, k, u):
+        if not eva.apikey.check(k, master=True): return False
+        return eva.users.get_user(u)
+
     def create_key(self, k, i=None, save=False):
         if not eva.apikey.check(k, master=True): return False
         return eva.apikey.add_api_key(i, save)
@@ -337,6 +381,8 @@ class UserAPI(object):
 
 
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
+
+    exposed = True
 
     def save(self, k=None):
         return eva.core.do_save()
@@ -420,30 +466,17 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         if k is not None: cherrypy.serving.request.params['k'] = k
         if path in ['', '/']: return
         if path[:6] == '/login': return
-        if path[:4] == '/dev': dev = True
-        else: dev = False
-        if dev and not eva.core.development: raise cp_forbidden_key()
         p = cherrypy.serving.request.params.copy()
         if not eva.core.development:
             if 'k' in p: del p['k']
             if path[:12] == '/create_user' or \
               path[:18] == '/set_user_password':
                 if 'p' in p: del p['p']
-        if path[:6] == '/file_' and \
-                not api_file_management_allowed:
-            raise cp_forbidden_key()
         if path[:9] == '/file_put' and \
                 'm' in p:
             del p['m']
         log_api_request(path[1:], http_remote_info(k), p, False)
-        if path[:4] == '/cmd':
-            allow = ['cmd']
-            sysfunc = False
-        else:
-            allow = []
-            sysfunc = True
-        if not eva.apikey.check(
-                k, allow=allow, ip=http_real_ip(), sysfunc=sysfunc, master=dev):
+        if not eva.apikey.check(k, ip=http_real_ip()):
             raise cp_forbidden_key()
         return
 
@@ -470,15 +503,6 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         SysHTTP_API.setup_mode.exposed = True
         SysHTTP_API.shutdown_core.exposed = True
 
-        if eva.core.development:
-            GenericAPI.dev_env.exposed = True
-            GenericAPI.dev_cvars.exposed = True
-            GenericAPI.dev_k.exposed = True
-            GenericAPI.dev_n.exposed = True
-            GenericAPI.dev_t.exposed = True
-            GenericAPI.dev_test_critical.exposed = True
-            LockAPI.dev_locks.exposed = True
-
         GenericAPI.test.exposed = True
         SysHTTP_API.index.exposed = True
 
@@ -502,6 +526,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         SysHTTP_API.list_keys.exposed = True
         SysHTTP_API.list_users.exposed = True
 
+        SysHTTP_API.get_user.exposed = True
+
         SysHTTP_API.enable_notifier.exposed = True
         SysHTTP_API.disable_notifier.exposed = True
 
@@ -511,6 +537,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         SysHTTP_API.regenerate_key.exposed = True
         SysHTTP_API.destroy_key.exposed = True
 
+    @cp_need_sysfunc
     def lock(self, k=None, l=None, t=None, e=None):
         if not l:
             raise cp_api_error('No lock provided')
@@ -519,6 +546,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return http_api_result_ok() \
                 if result else http_api_result_error()
 
+    @cp_need_sysfunc
     def unlock(self, k=None, l=None):
         if not l:
             raise cp_api_error('No lock provided')
@@ -529,6 +557,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return http_api_result_ok() if result else \
                 http_api_result_ok({ 'remark': 'notlocked' })
 
+    @cp_need_cmd
     def cmd(self, k, c, a=None, w=None, t=None):
         if t:
             try:
@@ -548,56 +577,65 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         if result: return result.serialize()
         else: raise cp_api_404()
 
+    @cp_need_sysfunc
     def save(self, k=None):
         return http_api_result_ok() \
                 if super().save(k) else http_api_result_error()
 
+    @cp_need_master
     def dump(self, k=None):
-        cp_need_master(k)
         fname = super().dump(k)
         return http_api_result_ok( {'file': fname } ) if fname \
                 else http_api_result_error()
 
+    @cp_need_master
     def set_cvar(self, k=None, i=None, v=None):
-        cp_need_master(k)
         result = super().set_cvar(k, i, v)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_sysfunc
     def get_cvar(self, k=None, i=None):
         result = super().get_cvar(k, i)
         if result is False: raise cp_forbidden_key()
         if result is None: raise cp_api_404()
-        return {i: result} if i is not None else result
+        return {i: result} if i else result
 
+    @cp_need_master
     def notifiers(self, k=None):
-        cp_need_master(k)
         return super().notifiers(k)
 
+    @cp_need_sysfunc
     def log_rotate(self, k=None):
         return http_api_result_ok() if super().log_rotate(k) \
                 else http_api_result_error()
 
+    @cp_need_sysfunc
     def log_debug(self, k=None, m=None):
         super().log_debug(k, m)
         return http_api_result_ok()
 
+    @cp_need_sysfunc
     def log_info(self, k=None, m=None):
         super().log_info(k, m)
         return http_api_result_ok()
 
+    @cp_need_sysfunc
     def log_warning(self, k=None, m=None):
         super().log_warning(k, m)
         return http_api_result_ok()
 
+    @cp_need_sysfunc
     def log_error(self, k=None, m=None):
         super().log_error(k, m)
         return http_api_result_ok()
 
+    @cp_need_sysfunc
     def log_critical(self, k=None, m=None):
         super().log_critical(k, m)
         return http_api_result_ok()
 
+    @cp_need_sysfunc
     def log_get(self, k=None, l=0, t=0, n=None):
         try:
             _l = int(l)
@@ -613,54 +651,58 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
             _n = None
         return super().log_get(k, _l, _t, _n)
 
+    @cp_need_master
     def set_debug(self, k=None, debug=None):
-        cp_need_master(k)
         val = val_to_boolean(debug)
         if val is None: raise cp_api_error()
         return http_api_result_ok() if super().set_debug(k, val) \
                 else http_api_result_error()
 
+    @cp_need_master
     def shutdown_core(self, k):
-        cp_need_master(k)
         return http_api_result_ok() if super().shutdown_core(k) \
                 else http_api_result_error()
 
+    @cp_need_master
     def setup_mode(self, k=None, setup=None):
-        cp_need_master(k)
         val = val_to_boolean(setup)
         if val is None: raise cp_api_error()
         return http_api_result_ok() if super().setup_mode(k, val) \
                 else http_api_result_error()
 
+    @cp_need_master
     def enable_notifier(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().enable_notifier(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def disable_notifier(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().disable_notifier(k, i) \
                 else http_api_result_error()
 
+    @cp_need_file_management
+    @cp_need_master
     def file_unlink(self, k=None, i=None):
-        cp_need_master(k)
         result = super().file_unlink(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_file_management
+    @cp_need_master
     def file_get(self, k=None, i=None):
-        cp_need_master(k)
         data = super().file_get(k, i)
         if not data: raise cp_api_404()
         return http_api_result_ok({'file': i, 'data': data})
 
+    @cp_need_file_management
+    @cp_need_master
     def file_put(self, k=None, i=None, m=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().file_put(k, i, m) \
                 else http_api_result_error()
 
+    @cp_need_file_management
+    @cp_need_master
     def file_set_exec(self, k=None, i=None, e=None):
-        cp_need_master(k)
         try:
             _e = val_to_boolean(e)
         except:
@@ -669,66 +711,102 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def create_user(self, k=None, u=None, p=None, a=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().create_user(k, u, p, a) \
                 else http_api_result_error()
 
+    @cp_need_master
     def set_user_password(self, k=None, u=None, p=None):
-        cp_need_master(k)
         result = super().set_user_password(k, u, p)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def set_user_key(self, k=None, u=None, a=None):
-        cp_need_master(k)
         result = super().set_user_key(k, u, a)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def destroy_user(self, k=None, u=None, p=None):
-        cp_need_master(k)
         result = super().destroy_user(k, u)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def list_keys(self, k=None):
-        cp_need_master(k)
         return super().list_keys(k)
 
+    @cp_need_master
     def list_users(self, k=None):
-        cp_need_master(k)
         return super().list_users(k)
 
+    @cp_need_master
+    def get_user(self, k=None, u=None):
+        result = super().get_user(k=k, u=u)
+        if result is None: raise cp_api_404()
+        return result
+
+    @cp_need_master
     def create_key(self, k=None, i=None, save=None):
-        cp_need_master(k)
         result = super().create_key(k, i, save)
         return result if result else http_api_result_error()
 
+    @cp_need_master
     def list_key_props(self, k=None, i=None):
-        cp_need_master(k)
         result = super().list_key_props(k, i)
         if result is None: raise cp_api_404()
         return result if result else http_api_result_error()
 
+    @cp_need_master
     def set_key_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         result = super().set_key_prop(k, i, p, v, save)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def destroy_key(self, k=None, i=None):
-        cp_need_master(k)
         result = super().destroy_key(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def regenerate_key(self, k=None, i=None, save=None):
-        cp_need_master(k)
         result = super().regenerate_key(k, i, save)
         if result is None: raise cp_api_404()
         return http_api_result_ok({'key':result}) if \
                 result else http_api_result_error()
+
+    def GET(self, r, rtp, *args, **kwargs):
+        k = kwargs.get('k')
+        ii = '/'.join(args) if args else None
+        if rtp == 'core':
+            return self.test(k=k)
+        elif rtp == 'cvar':
+            return self.get_cvar(k=k, i=ii)
+        elif rtp == 'key':
+            if ii:
+                return self.list_key_props(k=k, i=ii)
+            else:
+                return self.list_keys(k=k)
+        elif rtp == 'log':
+            return self.log_get(
+                k=k,
+                l=log_levels_by_name.get(ii.lower()
+                                         if ii is not None else None, ''),
+                t=kwargs.get('t'),
+                n=kwargs.get('n'))
+        elif rtp == 'notifier':
+            return self.notifiers(k=k)
+        elif rtp == 'runtime':
+            return self.file_get(k=k, i=ii)
+        elif rtp == 'user':
+            if ii:
+                return self.get_user(k=k, u=ii)
+            else:
+                return self.list_users(k=k)
+        raise cp_api_404()
 
 
 def update_config(cfg):
@@ -754,7 +832,14 @@ def start():
     global _lock_processor_active
     global api
     api = SysAPI()
-    cherrypy.tree.mount(SysHTTP_API(), '/sys-api')
+    cherrypy.tree.mount(
+        SysHTTP_API(),
+        '/sys-api',
+        config={
+            '/r': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
+            }
+        })
     _lock_processor = threading.Thread(
         target=_t_lock_processor, name='_t_lock_processor')
     _lock_processor_active = True

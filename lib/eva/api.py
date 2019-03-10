@@ -25,6 +25,8 @@ import eva.benchmark
 
 from pyaltt import g
 
+from functools import wraps
+
 host = None
 ssl_host = None
 
@@ -68,9 +70,7 @@ def http_api_result_ok(env=None):
 
 def http_api_result_error(env=None):
     if hasattr(cherrypy.serving.request, 'json_rpc_payload'):
-        msg = ', '.join(
-            g.api_call_log.get(40, []) +
-            g.api_call_log.get(50, []))
+        msg = ', '.join(g.api_call_log.get(40, []) + g.api_call_log.get(50, []))
         raise cp_api_error(msg if msg else 'API error')
     else:
         return http_api_result('ERROR', env)
@@ -374,43 +374,6 @@ class GenericAPI(object):
             return None
         return result
 
-    def dev_cvars(self, k=None):
-        """ get only custom vars from ENV
-        """
-        return eva.core.cvars.copy()
-
-    def dev_env(self, k=None):
-        """ get ENV (env is used for external scripts)
-        """
-        return eva.core.env.copy()
-
-    def dev_k(self, k=None):
-        """ get all API keys
-        """
-        return apikey.keys.copy()
-
-    def dev_n(self, k=None, id=None):
-        """ get all notifiers
-        """
-        return eva.notify.dump(id)
-
-    def dev_t(self, k=None):
-        """ get list of all threads
-        """
-        result = {}
-        for t in threading.enumerate().copy():
-            if t.name[:10] != 'CP Server ':
-                result[t.name] = {}
-                result[t.name]['daemon'] = t.daemon
-                result[t.name]['alive'] = t.is_alive()
-        return result
-
-    def dev_test_critical(self, k=None):
-        """ test critical
-        """
-        eva.core.critical()
-        return 'called core critical'
-
 
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
@@ -437,8 +400,15 @@ def cp_api_404(msg=''):
                               if msg else 'Object Not Found')
 
 
-def cp_need_master(k):
-    if not eva.apikey.check(k, master=True): raise cp_forbidden_key()
+def cp_need_master(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check(kwargs.get('k'), master=True):
+            raise cp_forbidden_key()
+        return f(*args, **kwargs)
+
+    return do
 
 
 def cp_client_key(_k=None):
@@ -545,7 +515,6 @@ class GenericHTTP_API(GenericAPI):
         if path in ['', '/']: return
         if path[:6] == '/login': return
         if path[:5] == '/info': return
-        if path[:4] == '/dev': dev = True
         else: dev = False
         if dev and not eva.core.development: raise cp_forbidden_key()
         p = cherrypy.serving.request.params.copy()
@@ -579,12 +548,6 @@ class GenericHTTP_API(GenericAPI):
         GenericAPI.test.exposed = True
         GenericHTTP_API.login.exposed = True
         GenericHTTP_API.logout.exposed = True
-        if eva.core.development:
-            GenericAPI.dev_env.exposed = True
-            GenericAPI.dev_cvars.exposed = True
-            GenericAPI.dev_k.exposed = True
-            GenericAPI.dev_n.exposed = True
-            GenericAPI.dev_t.exposed = True
 
     def login(self, k=None, u=None, p=None):
         if not u and k:

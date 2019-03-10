@@ -1103,31 +1103,31 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def get_config(self, k=None, i=None):
-        cp_need_master(k)
         result = super().get_config(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def save_config(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().save_config(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def list(self, k=None, g=None, p=None):
-        cp_need_master(k)
         result = super().list(k, g, p)
         if result is None: raise cp_api_404()
         return result
 
+    @cp_need_master
     def list_props(self, k=None, i=None):
-        cp_need_master(k)
         result = super().list_props(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def set_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         if save:
             _save = True
         else:
@@ -1135,25 +1135,25 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
+    @cp_need_master
     def create(self, k=None, i=None, virtual=None, save=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().create(
             k, i, val_to_boolean(virtual), save) else http_api_result_error()
 
+    @cp_need_master
     def create_unit(self, k=None, i=None, g=None, virtual=None, save=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().create_unit(
             k, i, g, val_to_boolean(virtual),
             save) else http_api_result_error()
 
+    @cp_need_master
     def create_sensor(self, k=None, i=None, g=None, virtual=None, save=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().create_sensor(
             k, i, g, val_to_boolean(virtual),
             save) else http_api_result_error()
 
+    @cp_need_master
     def create_mu(self, k=None, i=None, g=None, virtual=None, save=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().create_mu(
             k, i, g, val_to_boolean(virtual),
             save) else http_api_result_error()
@@ -1212,23 +1212,24 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         return http_api_result_ok() if super().destroy_device(
             k=k, tpl_config=config, device_tpl=t) else http_api_result_error()
 
+    @cp_need_master
     def clone(self, k=None, i=None, n=None, g=None, save=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().clone(
             k, i, n, g, save) else http_api_result_error()
 
+    @cp_need_master
     def clone_group(self, k = None, g = None, n = None,\
             p = None, r = None, save = None):
-        cp_need_master(k)
         return http_api_result_ok() if super().clone_group(
             k, g, n, p, r, save) else http_api_result_error()
 
+    @cp_need_master
     def destroy(self, k=None, i=None, g=None):
-        cp_need_master(k)
         result = super().destroy(k, i, g)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def create_modbus_port(self,
                            k=None,
                            i=None,
@@ -1238,7 +1239,6 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
                            d=None,
                            r=None,
                            save=False):
-        cp_need_master(k)
         if t:
             try:
                 _t = float(t)
@@ -1264,20 +1264,21 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
             k, i, p, val_to_boolean(l), _t, _d, _r,
             save) else http_api_result_error()
 
+    @cp_need_master
     def destroy_modbus_port(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().destroy_modbus_port(
             k, i) else http_api_result_error()
 
+    @cp_need_master
     def list_modbus_ports(self, k=None):
-        cp_need_master(k)
         return super().list_modbus_ports(k)
 
+    @cp_need_master
     def test_modbus_port(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().test_modbus_port(
             k, i) else http_api_result_error()
 
+    @cp_need_master
     def create_owfs_bus(self,
                         k=None,
                         i=None,
@@ -1287,7 +1288,6 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
                         d=None,
                         r=None,
                         save=False):
-        cp_need_master(k)
         if t:
             try:
                 _t = float(t)
@@ -1313,20 +1313,21 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
             k, i, n, val_to_boolean(l), _t, _d, _r,
             save) else http_api_result_error()
 
+    @cp_need_master
     def destroy_owfs_bus(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().destroy_owfs_bus(
             k, i) else http_api_result_error()
 
+    @cp_need_master
     def list_owfs_buses(self, k=None):
-        cp_need_master(k)
         return super().list_owfs_buses(k)
 
+    @cp_need_master
     def test_owfs_bus(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().test_owfs_bus(
             k, i) else http_api_result_error()
 
+    @cp_need_master
     def scan_owfs_bus(self,
                       k=None,
                       i=None,
@@ -1335,7 +1336,6 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
                       n=None,
                       has_all=None,
                       full=None):
-        cp_need_master(k)
         if p:
             _p = p if isinstance(p, list) else p.split(',')
         else:
@@ -1347,141 +1347,141 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         result = super().scan_owfs_bus(k, i, _p, _a, n, has_all, full)
         return result if result is not None else http_api_result_error()
 
+    @cp_need_master
     def load_phi(self, k=None, i=None, m=None, c=None, save=False):
-        cp_need_master(k)
         result = super().load_phi(k, i, m, c, save)
         return result if result else http_api_result_error()
 
+    @cp_need_master
     def unload_phi(self, k=None, i=None):
-        cp_need_master(k)
         result = super().unload_phi(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def unlink_phi_mod(self, k=None, m=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().unlink_phi_mod(k, m) \
                 else http_api_result_error()
 
+    @cp_need_master
     def put_phi_mod(self, k=None, m=None, c=None, force=None):
-        cp_need_master(k)
         result = super().put_phi_mod(k, m, c, force)
         if not result: raise cp_api_error()
         return result
 
+    @cp_need_master
     def list_phi(self, k=None, full=None):
-        cp_need_master(k)
         result = super().list_phi(k, full)
         if result is None: raise cp_api_error()
         return result
 
+    @cp_need_master
     def get_phi_map(self, k=None, i=None, a=None):
-        cp_need_master(k)
         result = super().get_phi_map(k, i, a)
         if result is None: raise cp_api_error()
         return result
 
+    @cp_need_master
     def get_phi(self, k=None, i=None):
-        cp_need_master(k)
         result = super().get_phi(k, i)
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
         return result
 
+    @cp_need_master
     def set_phi_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         result = super().set_phi_prop(k, i, p, v, save)
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
         return http_api_result_ok()
 
+    @cp_need_master
     def load_driver(self, k=None, i=None, m=None, p=None, c=None, save=False):
-        cp_need_master(k)
         result = super().load_driver(k, i, m, p, c, save)
         return result if result else http_api_result_error()
 
+    @cp_need_master
     def list_drivers(self, k=None, full=None):
-        cp_need_master(k)
         result = super().list_drivers(k, full)
         if result is None: raise cp_api_error()
         return result
 
+    @cp_need_master
     def unload_driver(self, k=None, i=None):
-        cp_need_master(k)
         result = super().unload_driver(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def get_driver(self, k=None, i=None):
-        cp_need_master(k)
         result = super().get_driver(k, i)
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
         return result
 
+    @cp_need_master
     def set_driver_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         result = super().set_driver_prop(k, i, p, v, save)
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
         return http_api_result_ok()
 
+    @cp_need_master
     def test_phi(self, k=None, i=None, c=None):
-        cp_need_master(k)
         result = super().test_phi(k, i, c)
         if result is False: raise cp_api_404()
         if result is None: raise cp_api_error()
         return result
 
+    @cp_need_master
     def exec_phi(self, k=None, i=None, c=None, a=None):
-        cp_need_master(k)
         result = super().exec_phi(k, i, c, a)
         if result is False: raise cp_api_404()
         if result is None: raise cp_api_error()
         return result
 
+    @cp_need_master
     def list_phi_mods(self, k=None):
-        cp_need_master(k)
         return super().list_phi_mods(k)
 
+    @cp_need_master
     def list_lpi_mods(self, k=None):
-        cp_need_master(k)
         return super().list_lpi_mods(k)
 
+    @cp_need_master
     def modinfo_phi(self, k=None, m=None):
-        cp_need_master(k)
         result = super().modinfo_phi(k, m)
         if not result:
             raise cp_api_error()
         else:
             return result
 
+    @cp_need_master
     def modhelp_phi(self, k=None, m=None, c=None):
-        cp_need_master(k)
         result = super().modhelp_phi(k, m, c)
         if result is None:
             raise cp_api_error()
         else:
             return result
 
+    @cp_need_master
     def modinfo_lpi(self, k=None, m=None):
-        cp_need_master(k)
         result = super().modinfo_lpi(k, m)
         if not result:
             raise cp_api_error()
         else:
             return result
 
+    @cp_need_master
     def modhelp_lpi(self, k=None, m=None, c=None):
-        cp_need_master(k)
         result = super().modhelp_lpi(k, m, c)
         if result is None:
             raise cp_api_error()
         else:
             return result
 
+    @cp_need_master
     def assign_driver(self, k=None, i=None, d=None, c=None, save=False):
-        cp_need_master(k)
         result = super().assign_driver(k, i, d, c, save)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()

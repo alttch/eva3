@@ -655,8 +655,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
         if eva.sfa.controller.cloud_manager:
             SFA_HTTP_API.management_api_call.exposed = True
 
+    @cp_need_master
     def management_api_call(self, k=None, i=None, f=None, p=None):
-        cp_need_master(k)
         code, data = super().management_api_call(k, i=i, f=f, p=p)
         if code is None:
             if data is None:
@@ -749,8 +749,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
     def groups(self, k=None, p=None, g=None):
         return super().groups(k, p, g)
 
+    @cp_need_master
     def list_controllers(self, k=None, g=None):
-        cp_need_master(k)
         result = super().list_controllers(k, g)
         if result is None: raise cp_api_404()
         return result
@@ -917,6 +917,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
             raise cp_api_404()
         return a
 
+    @cp_need_master
     def append_controller(self,
                           k=None,
                           u=None,
@@ -926,51 +927,50 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                           s=None,
                           t=None,
                           save=None):
-        cp_need_master(k)
         sv = eva.tools.val_to_boolean(s)
         return http_api_result_ok() if super().append_controller(
             k, u, a, g, m, sv, t, save) else http_api_result_error()
 
+    @cp_need_master
     def enable_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().enable_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def disable_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().disable_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def remove_controller(self, k=None, i=None):
-        cp_need_master(k)
         result = super().remove_controller(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def list_controller_props(self, k=None, i=None):
-        cp_need_master(k)
         result = super().list_controller_props(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def test_controller(self, k=None, i=None):
-        cp_need_master(k)
         result = super().test_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if \
                 result else http_api_result_error()
 
+    @cp_need_master
     def matest_controller(self, k=None, i=None):
-        cp_need_master(k)
         result = super().matest_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if \
                 result else http_api_result_error()
 
+    @cp_need_master
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         if save:
             _save = True
         else:
@@ -979,18 +979,18 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                 super().set_controller_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
+    @cp_need_master
     def reload_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().reload_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def reload_clients(self, k=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().reload_clients(k) \
                 else http_api_result_error()
 
+    @cp_need_master
     def notify_restart(self, k=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().notify_restart(k) \
                 else http_api_result_error()
 
