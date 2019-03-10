@@ -201,7 +201,7 @@ function create_notifier {
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
             BATCH="${BATCH}set eva_1 collect_logs 1"
-            BATCH="${BATCH};create db_1 db:db/sfa_history.db -y;subscribe state db_1 -p '#' -g '#'"
+            BATCH="${BATCH};create db_1 db:runtime/db/sfa_history.db -y;subscribe state db_1 -p '#' -g '#'"
         fi
     fi
     [ "x${BATCH}" = "x" ] && return 0
