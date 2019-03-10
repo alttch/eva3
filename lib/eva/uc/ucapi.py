@@ -938,6 +938,19 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
         UC_HTTP_API.info.exposed = True
 
+    def groups(self, k=None, p=None):
+        return super().groups(k, p)
+
+    def state(self, k=None, i=None, full=None, g=None, p=None):
+        if full:
+            _full = True
+        else:
+            _full = False
+        result = super().state(k, i, _full, g, p)
+        if result is None:
+            raise cp_api_404()
+        return result
+
     def state_history(self,
                       k=None,
                       a=None,
