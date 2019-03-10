@@ -226,6 +226,7 @@ function setup_supervisor {
   local u=$2
   [ $USE_SUPERVISOR -eq 1 ] || return 0
   cp -vf ./etc/supervisor/conf.d/eva-${p}.conf /etc/supervisor/conf.d/ || return 1
+  [ $SUPERVISOR_SET_LOG_STDOUT ] && sed -i 's/^\(\[program:eva-.*\]\)/\1\nstdout_logfile=\/dev\/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/stderr\nstderr_logfile_maxbytes=0/g' /etc/supervisor/conf.d/eva-${p}.conf
   local d=`echo ${EVA_DIR}|sed 's/\\//\\\\\\//g'`
   sed -i "s/\\/opt\\/eva/${d}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 2
   if [ "x$u" != "xroot" ]; then
