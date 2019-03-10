@@ -183,10 +183,14 @@ def serialize(full=False, config=False):
 
 
 def set_ext_prop(ext_id, p, v):
+    if not p and not isinstance(v, dict): return
     ext = get_ext(ext_id)
     cfg = ext.cfg
     mod_id = ext.mod_id
-    cfg[p] = v
+    if p and not isinstance(v, dict):
+        cfg[p] = v
+    else:
+        cfg.update(v)
     if v is None: del cfg[p]
     ext = load_ext(ext_id, mod_id, cfg)
     if ext:
