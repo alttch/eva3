@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 [ -f /.installed  ] && exit 0
 while [ 1 ]; do
