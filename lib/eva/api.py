@@ -76,6 +76,17 @@ def http_api_result_error(env=None):
         return http_api_result('ERROR', env)
 
 
+def restful_params(*args, **kwargs):
+    k = kwargs.get('k')
+    ii = '/'.join(args) if args else None
+    full = kwargs.get('_full')
+    save = kwargs.get('_save')
+    if 'k' in kwargs: del kwargs['k']
+    if '_save' in kwargs: del kwargs['_save']
+    if '_full' in kwargs: del kwargs['_full']
+    return k, ii, full, save, kwargs
+
+
 def update_config(cfg):
     global host, port, ssl_host, ssl_port
     global ssl_module, ssl_cert, ssl_key, ssl_chain

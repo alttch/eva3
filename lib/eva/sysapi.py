@@ -33,6 +33,7 @@ from eva.api import cp_api_pre
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
 from eva.api import session_timeout
+from eva.api import restful_params
 
 from eva.api import http_real_ip
 from eva.api import cp_client_key
@@ -402,11 +403,17 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         if not eva.apikey.check(k, master=True): return None
         return eva.core.set_cvar(var, val)
 
-    def notifiers(self, k=None):
+    def list_notifiers(self, k=None):
         result = []
         for n in eva.notify.get_notifiers():
             result.append(n.serialize())
         return sorted(result, key=lambda k: k['id'])
+
+    def get_notifier(self, k=None, i=None):
+        try:
+            return eva.notify.get_notifier(i).serialize()
+        except:
+            return None
 
     def enable_notifier(self, k=None, i=None):
         n = eva.notify.get_notifier(i)
@@ -423,7 +430,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
     def set_debug(self, k=None, debug=False):
         if not eva.apikey.check(k, master=True):
             return False
-        if debug:
+        if val_to_boolean(debug):
             eva.core.debug_on()
         else:
             eva.core.debug_off()
@@ -432,7 +439,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
     def setup_mode(self, k=None, setup=False):
         if not eva.apikey.check(k, master=True) or not api_setup_mode_allowed:
             return False
-        if setup:
+        if val_to_boolean(setup):
             eva.core.setup_on()
         else:
             eva.core.setup_off()
@@ -497,7 +504,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         SysHTTP_API.dump.exposed = True
         SysHTTP_API.get_cvar.exposed = True
         SysHTTP_API.set_cvar.exposed = True
-        SysHTTP_API.notifiers.exposed = True
+        SysHTTP_API.get_notifier.exposed = True
+        SysHTTP_API.list_notifiers.exposed = True
         SysHTTP_API.log_rotate.exposed = True
         SysHTTP_API.set_debug.exposed = True
         SysHTTP_API.setup_mode.exposed = True
@@ -602,8 +610,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return {i: result} if i else result
 
     @cp_need_master
-    def notifiers(self, k=None):
-        return super().notifiers(k)
+    def list_notifiers(self, k=None):
+        return super().list_notifiers(k)
 
     @cp_need_sysfunc
     def log_rotate(self, k=None):
@@ -680,6 +688,12 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return http_api_result_ok() if super().disable_notifier(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
+    def get_notifier(self, k=None, i=None):
+        result = super().get_notifier(k=k, i=i)
+        if result is None: raise cp_api_404()
+        return result
+
     @cp_need_file_management
     @cp_need_master
     def file_unlink(self, k=None, i=None):
@@ -729,7 +743,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return http_api_result_ok() if result else http_api_result_error()
 
     @cp_need_master
-    def destroy_user(self, k=None, u=None, p=None):
+    def destroy_user(self, k=None, u=None):
         result = super().destroy_user(k, u)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
@@ -778,9 +792,11 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return http_api_result_ok({'key':result}) if \
                 result else http_api_result_error()
 
+    def __call__(self, *args, **kwargs):
+        raise cp_api_404()
+
     def GET(self, r, rtp, *args, **kwargs):
-        k = kwargs.get('k')
-        ii = '/'.join(args) if args else None
+        k, ii, full, save, props = restful_params(*args, **kwargs)
         if rtp == 'core':
             return self.test(k=k)
         elif rtp == 'cvar':
@@ -795,10 +811,13 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                 k=k,
                 l=log_levels_by_name.get(ii.lower()
                                          if ii is not None else None, ''),
-                t=kwargs.get('t'),
-                n=kwargs.get('n'))
+                t=props.get('t'),
+                n=props.get('n'))
         elif rtp == 'notifier':
-            return self.notifiers(k=k)
+            if ii:
+                return self.get_notifier(k=k, i=ii)
+            else:
+                return self.list_notifiers(k=k)
         elif rtp == 'runtime':
             return self.file_get(k=k, i=ii)
         elif rtp == 'user':
@@ -806,6 +825,110 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                 return self.get_user(k=k, u=ii)
             else:
                 return self.list_users(k=k)
+        raise cp_api_404()
+
+    def POST(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, props = restful_params(*args, **kwargs)
+        if rtp == 'core':
+            cmd = props.get('cmd')
+            if cmd == 'dump':
+                return self.dump(k=k)
+            elif cmd == 'save':
+                return self.save(k=k)
+            elif cmd == 'log_rotate':
+                return self.log_rotate(k=k)
+            elif cmd == 'shutdown':
+                return self.shutdown_core(k=k)
+        elif rtp == 'log':
+            if not ii: ii = 'info'
+            level = ii.lower()
+            f = getattr(self, 'log_' + level, None)
+            if not f: raise cp_api_404()
+            return f(k=k, m=props.get('m', ''))
+        elif rtp == 'cmd':
+            if not ii: raise cp_api_404()
+            return self.cmd(
+                k=k, c=ii, a=props.get('a'), w=props.get('w'), t=props.get('t'))
+        raise cp_api_404()
+
+    def PUT(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, props = restful_params(*args, **kwargs)
+        if rtp == 'cvar':
+            return self.set_cvar(k=k, i=ii, v=props.get('v'))
+        elif rtp == 'key':
+            if not super().create_key(k=k, i=ii, save=save):
+                return http_api_result_error()
+            for i, v in props.items():
+                if not super().set_key_prop(
+                        k=k, i=ii, prop=i, value=v, save=save):
+                    return http_api_result_error()
+            return http_api_result_ok()
+        elif rtp == 'lock':
+            return self.lock(k=k, l=ii, t=props.get('t'), e=props.get('e'))
+        elif rtp == 'runtime':
+            if not super().file_put(k, ii, props.get('m')):
+                return http_api_result_error()
+            if props.get('e'):
+                return self.file_set_exec(k=k, i=ii, e=1)
+            return http_api_result_ok()
+        elif rtp == 'user':
+            return self.create_user(
+                k=k, u=ii, p=props.get('p'), a=props.get('a'))
+        raise cp_api_404()
+
+    def PATCH(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, props = restful_params(*args, **kwargs)
+        if rtp == 'cvar':
+            return self.set_cvar(k=k, i=ii, v=props.get('v'))
+        elif rtp == 'core':
+            if 'debug' in props:
+                if not self.set_debug(k=k, debug=props['debug']):
+                    return http_api_result_error()
+            if 'setup' in props:
+                if not self.setup_mode(k=k, setup=props['setup']):
+                    return http_api_result_error()
+            return http_api_result_ok()
+        elif rtp == 'key':
+            for i, v in props.items():
+                if not super().set_key_prop(
+                        k=k, i=ii, prop=i, value=v, save=save):
+                    return http_api_result_error()
+            return http_api_result_ok()
+        elif rtp == 'notifier':
+            if not 'enabled' in props:
+                return http_api_result_error()
+            return self.enable_notifier(
+                k=k, i=ii) if val_to_boolean(
+                    props.get('enabled')) else self.disable_notifier(
+                        k=k, i=ii)
+        elif rtp == 'runtime':
+            if not super().file_put(k, ii, props.get('m')):
+                return http_api_result_error()
+            if props.get('e'):
+                return self.file_set_exec(k=k, i=ii, e=1)
+            return http_api_result_ok()
+        elif rtp == 'user':
+            if 'p' in props:
+                if not super().set_user_password(
+                        k=k, user=ii, password=props['p']):
+                    return http_api_result_error()
+            if 'a' in props:
+                if not super().set_user_key(
+                        k=k, user=ii, key=props['a']):
+                    return http_api_result_error()
+            return http_api_result_ok()
+        raise cp_api_404()
+
+    def DELETE(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, props = restful_params(*args, **kwargs)
+        if rtp == 'key':
+            return self.destroy_key(k=k, i=ii)
+        elif rtp == 'lock':
+            return self.unlock(k=k, l=ii)
+        elif rtp == 'runtime':
+            return self.file_unlink(k=k, i=ii)
+        elif rtp == 'user':
+            return self.destroy_user(k=k, u=ii)
         raise cp_api_404()
 
 
