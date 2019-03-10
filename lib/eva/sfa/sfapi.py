@@ -1043,7 +1043,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
             else:
                 return self.list_controllers(k=k, g=ii)
         elif rtp == 'dmatrix_rule':
-            return self.list_rule_props(k=k, i=ii)
+            if kind == 'props':
+                return self.list_rule_props(k=k, i=ii)
         elif rtp == 'lcycle':
             if kind == 'groups':
                 return self.groups_cycle(k=k)
