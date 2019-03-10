@@ -172,6 +172,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
 
 def append_uc(uri,
               key=None,
+              makey=None,
               mqtt_update=None,
               ssl_verify=True,
               timeout=None,
@@ -201,6 +202,7 @@ def append_uc(uri,
     u = eva.client.remote_controller.RemoteUC(
         None, api=api, mqtt_update=mqu, static=static)
     u._key = key
+    u.set_prop('masterkey', makey)
     if not uc_pool.append(u): return False
     remote_ucs[u.item_id] = u
     if save: u.save()
@@ -233,6 +235,7 @@ def remove_uc(controller_id):
 
 def append_lm(uri,
               key=None,
+              makey=None,
               mqtt_update=None,
               ssl_verify=True,
               timeout=None,
@@ -262,6 +265,7 @@ def append_lm(uri,
     u = eva.client.remote_controller.RemoteLM(
         None, api=api, mqtt_update=mqu, static=static)
     u._key = key
+    u.set_prop('masterkey', makey)
     if not lm_pool.append(u): return False
     remote_lms[u.item_id] = u
     if save: u.save()

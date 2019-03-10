@@ -33,6 +33,7 @@ from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva.api import session_timeout
+from eva.api import restful_params
 from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva import apikey
@@ -387,6 +388,7 @@ class SFA_API(GenericAPI):
                           k=None,
                           uri=None,
                           key=None,
+                          makey=None,
                           group=None,
                           mqtt_update=None,
                           ssl_verify=True,
@@ -397,6 +399,7 @@ class SFA_API(GenericAPI):
             result = eva.sfa.controller.append_uc(
                 uri=uri,
                 key=key,
+                makey=makey,
                 mqtt_update=mqtt_update,
                 ssl_verify=ssl_verify,
                 timeout=timeout,
@@ -406,9 +409,10 @@ class SFA_API(GenericAPI):
             elif result:
                 return result
         if group == 'lm' or group is None:
-            return eva.sfa.controller.append_lm(
+            result = eva.sfa.controller.append_lm(
                 uri=uri,
                 key=key,
+                makey=makey,
                 mqtt_update=mqtt_update,
                 ssl_verify=ssl_verify,
                 timeout=timeout,
@@ -604,6 +608,8 @@ class SFA_API(GenericAPI):
 
 class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
 
+    exposed = True
+
     def __init__(self):
         super().__init__()
         SFA_HTTP_API.index.exposed = True
@@ -655,8 +661,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
         if eva.sfa.controller.cloud_manager:
             SFA_HTTP_API.management_api_call.exposed = True
 
+    @cp_need_master
     def management_api_call(self, k=None, i=None, f=None, p=None):
-        cp_need_master(k)
         code, data = super().management_api_call(k, i=i, f=f, p=p)
         if code is None:
             if data is None:
@@ -749,8 +755,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
     def groups(self, k=None, p=None, g=None):
         return super().groups(k, p, g)
 
+    @cp_need_master
     def list_controllers(self, k=None, g=None):
-        cp_need_master(k)
         result = super().list_controllers(k, g)
         if result is None: raise cp_api_404()
         return result
@@ -917,60 +923,61 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
             raise cp_api_404()
         return a
 
+    @cp_need_master
     def append_controller(self,
                           k=None,
                           u=None,
                           a=None,
+                          x=None,
                           g=None,
                           m=None,
                           s=None,
                           t=None,
                           save=None):
-        cp_need_master(k)
         sv = eva.tools.val_to_boolean(s)
         return http_api_result_ok() if super().append_controller(
-            k, u, a, g, m, sv, t, save) else http_api_result_error()
+            k, u, a, x, g, m, sv, t, save) else http_api_result_error()
 
+    @cp_need_master
     def enable_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().enable_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def disable_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().disable_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def remove_controller(self, k=None, i=None):
-        cp_need_master(k)
         result = super().remove_controller(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def list_controller_props(self, k=None, i=None):
-        cp_need_master(k)
         result = super().list_controller_props(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def test_controller(self, k=None, i=None):
-        cp_need_master(k)
         result = super().test_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if \
                 result else http_api_result_error()
 
+    @cp_need_master
     def matest_controller(self, k=None, i=None):
-        cp_need_master(k)
         result = super().matest_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if \
                 result else http_api_result_error()
 
+    @cp_need_master
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         if save:
             _save = True
         else:
@@ -979,21 +986,22 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                 super().set_controller_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
+    @cp_need_master
     def reload_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().reload_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def reload_clients(self, k=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().reload_clients(k) \
                 else http_api_result_error()
 
+    @cp_need_master
     def notify_restart(self, k=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().notify_restart(k) \
                 else http_api_result_error()
 
+    @cp_need_master
     def list_remote(self, k=None, i=None, g=None, p=None):
         result = super().list_remote(k, i, g, p)
         if result is None: raise cp_api_404()
@@ -1014,6 +1022,169 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
             return result
         else:
             return http_api_result_error()
+
+    def __call__(self, *args, **kwargs):
+        raise cp_api_404()
+
+    def GET(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_params(
+            *args, **kwargs)
+        if rtp == 'core':
+            return self.test(k=k)
+        if rtp == 'action':
+            return self.result(
+                k=k, i=props.get('i'), u=ii, g=props.get('i'), s=props.get('s'))
+        elif rtp == 'controller':
+            if kind == 'items':
+                return self.list_remote(
+                    k=k, i=ii, g=props.get('g'), p=props.get('p'))
+            elif ii and ii.find('/') != -1:
+                return self.list_controller_props(k=k, i=ii)
+            else:
+                return self.list_controllers(k=k, g=ii)
+        elif rtp == 'dmatrix_rule':
+            return self.list_rule_props(k=k, i=ii)
+        elif rtp == 'lcycle':
+            if kind == 'groups':
+                return self.groups_cycle(k=k)
+            else:
+                return self.list_cycles(k=k, g=ii, i=props.get('controller_id'))
+        elif rtp == 'lmacro':
+            if kind == 'groups':
+                return self.groups_macro(k=k)
+            else:
+                return self.list_macros(k=k, g=ii, i=props.get('controller_id'))
+        elif rtp in ['unit', 'sensor', 'lvar']:
+            if kind == 'groups':
+                return self.groups(k=k, p=rtp, g=ii)
+            elif kind == 'history':
+                return self.state_history(
+                    k=k,
+                    a=props.get('a'),
+                    i=ii,
+                    p=rtp,
+                    s=props.get('s'),
+                    e=props.get('e'),
+                    l=props.get('l'),
+                    x=props.get('x'),
+                    t=props.get('t'),
+                    w=props.get('w'),
+                    g=props.get('g'))
+            elif for_dir:
+                return self.state(k=k, g=ii, p=rtp, full=full)
+            else:
+                return self.state(k=k, i=ii, p=rtp, full=full)
+        raise cp_api_404()
+
+    def POST(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_params(
+            *args, **kwargs)
+        if rtp == 'action':
+            if 'm' in props:
+                return self.run(
+                    k=k,
+                    i=props['m'],
+                    a=props.get('a'),
+                    kw=props.get('kw'),
+                    p=props.get('p'),
+                    w=props.get('w', 0))
+            s = props.get('s')
+            if s == 'toggle':
+                return self.action_toggle(
+                    k=k,
+                    i=props.get('i'),
+                    p=props.get('p'),
+                    q=props.get('q'),
+                    w=props.get('w', 0))
+            else:
+                return self.action(
+                    k=k,
+                    i=props.get('i'),
+                    s=props.get('s'),
+                    v=props.get('v'),
+                    p=props.get('p'),
+                    q=props.get('q'),
+                    w=props.get('w', 0))
+        elif rtp == 'controller':
+            if not ii or for_dir or ii.find('/') == -1:
+                return self.append_controller(
+                    k=k,
+                    u=props.get('u'),
+                    a=props.get('a'),
+                    x=props.get('x'),
+                    g=props.get('g', ii),
+                    m=props.get('m'),
+                    s=props.get('s'),
+                    t=props.get('t'),
+                    save=save)
+            elif ii and 'cmd' not in props and 'f' in props:
+                return self.management_api_call(
+                    k=k, i=ii, f=props['f'], p=props.get('p'))
+            cmd = props.get('cmd')
+            if cmd == 'test':
+                return self.test_controller(k=k, i=ii)
+            elif cmd == 'matest':
+                return self.matest_controller(k=k, i=ii)
+            elif cmd == 'reload':
+                return self.reload_controller(k=k, i=ii)
+        elif rtp == 'core':
+            cmd = props.get('cmd')
+            if cmd == 'notify_restart':
+                return self.notify_restart(k=k)
+            elif cmd == 'reload_clients':
+                return self.reload_clients(k=k)
+        raise cp_api_404()
+
+    def PATCH(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_params(
+            *args, **kwargs)
+        if rtp == 'action':
+            s = props.get('s')
+            if 'i' in props:
+                if s == 'kill':
+                    return self.kill(k=k, i=props.get('i'))
+                elif s == 'q_clean':
+                    return self.q_clean(k=k, i=props.get('i'))
+            elif s == 'term':
+                return self.terminate(k=k, i=props.get('i'), u=ii)
+        elif rtp == 'controller':
+            if not ii: raise cp_api_404()
+            for p, v in props.items():
+                if not self.set_controller_prop(k=k, i=ii, p=p, v=v, save=save):
+                    return http_api_result_error()
+            return http_api_result_ok()
+        elif rtp == 'dmatrix_rule':
+            if not ii: raise cp_api_404()
+            for p, v in props.items():
+                if not self.set_rule_prop(k=k, i=ii, p=p, v=v, save=save):
+                    return http_api_result_error()
+            return http_api_result_ok()
+        elif rtp == 'lvar':
+            s = props.get('s')
+            if s == 'clear':
+                return self.clear(k=k, i=ii)
+            elif s == 'reset':
+                return self.reset(k=k, i=ii)
+            elif s == 'toggle':
+                return self.toggle(k=k, i=ii)
+            else:
+                return self.set(k=k, i=ii, s=s, v=props.get('v'))
+        elif rtp == 'unit':
+            if 'action_enabled' in props:
+                v = eva.tools.val_to_boolean(props['action_enabled'])
+                if v:
+                    return self.enable_actions(k=k, i=ii)
+                else:
+                    return self.disable_actions(k=k, i=ii)
+        raise cp_api_404()
+
+    def DELETE(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_params(
+            *args, **kwargs)
+        if rtp == 'controller':
+            if ii:
+                return self.remove_controller(k=k, i=ii)
+        raise cp_api_404()
 
 
 # j2 template engine functions
@@ -1201,7 +1372,14 @@ class SFA_HTTP_Root:
 def start():
     global api
     api = SFA_API()
-    cherrypy.tree.mount(SFA_HTTP_API(), '/sfa-api')
+    cherrypy.tree.mount(
+        SFA_HTTP_API(),
+        '/sfa-api',
+        config={
+            '/r': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
+            }
+        })
     cherrypy.tree.mount(
         SFA_HTTP_Root(),
         '/',

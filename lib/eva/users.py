@@ -53,6 +53,20 @@ def list_users():
         return []
 
 
+def get_user(user=None):
+    if not user: return None
+    try:
+        dbconn = userdb()
+        result = []
+        row = dbconn.execute(
+            sql('select u, k from users where u=:u'), u=user).fetchone()
+        if not row: return None
+        return {'user': row.u, 'key': row.k}
+    except:
+        eva.core.log_traceback()
+        return {}
+
+
 def create_user(user=None, password=None, key=None):
     if user is None or password is None or key is None or \
             key not in apikey.keys_by_id:

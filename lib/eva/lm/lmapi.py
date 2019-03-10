@@ -853,8 +853,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                     self._set_rule_prop_batch(k, i, data, _save) \
                     else http_api_result_error()
 
+    @cp_need_master
     def create_rule(self, k=None, u=None, save=None, _j=None):
-        cp_need_master(k)
         if save:
             _save = True
         else:
@@ -881,8 +881,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                     self._set_rule_prop_batch(k, rule_id, data, _save) \
                     else http_api_result_error()
 
+    @cp_need_master
     def destroy_rule(self, k=None, i=None):
-        cp_need_master(k)
         result = super().destroy_rule(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
@@ -893,19 +893,19 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
     def groups_cycle(self, k=None):
         return super().groups_cycle(k)
 
+    @cp_need_master
     def get_config(self, k=None, i=None):
-        cp_need_master(k)
         result = super().get_config(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def save_config(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().save_config(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def list(self, k=None, g=None, p=None):
-        cp_need_master(k)
         result = super().list(k, g, p)
         if result is None: raise cp_api_404()
         return result
@@ -915,8 +915,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is None: raise cp_api_404()
         return result
 
+    @cp_need_master
     def list_controllers(self, k=None):
-        cp_need_master(k)
         result = super().list_controllers(k)
         if result is None: raise cp_api_error()
         return result
@@ -926,13 +926,13 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is None: raise cp_api_404()
         return result
 
+    @cp_need_master
     def create_macro(self, k=None, i=None, g=None, save=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().create_macro(k, i, g, save) \
                 else http_api_result_error()
 
+    @cp_need_master
     def destroy_macro(self, k=None, i=None):
-        cp_need_master(k)
         result = super().destroy_macro(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
@@ -942,17 +942,18 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is None: raise cp_api_404()
         return result
 
+    @cp_need_master
     def create_cycle(self, k=None, i=None, g=None, save=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().create_cycle(k, i, g, save) \
                 else http_api_result_error()
 
+    @cp_need_master
     def destroy_cycle(self, k=None, i=None):
-        cp_need_master(k)
         result = super().destroy_cycle(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def append_controller(self,
                           k=None,
                           u=None,
@@ -961,61 +962,60 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                           s=None,
                           t=None,
                           save=None):
-        cp_need_master(k)
         sv = eva.tools.val_to_boolean(s)
         return http_api_result_ok() if super().append_controller(
             k, u, a, m, sv, t, save) else http_api_result_error()
 
+    @cp_need_master
     def enable_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().enable_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def disable_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().disable_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def remove_controller(self, k=None, i=None):
-        cp_need_master(k)
         result = super().remove_controller(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def list_props(self, k=None, i=None):
-        cp_need_master(k)
         result = super().list_props(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def list_macro_props(self, k=None, i=None):
-        cp_need_master(k)
         result = super().list_macro_props(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def list_cycle_props(self, k=None, i=None):
-        cp_need_master(k)
         result = super().list_cycle_props(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def list_controller_props(self, k=None, i=None):
-        cp_need_master(k)
         result = super().list_controller_props(k, i)
         if not result: raise cp_api_404()
         return result
 
+    @cp_need_master
     def test_controller(self, k=None, i=None):
-        cp_need_master(k)
         result = super().test_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if \
                 result else http_api_result_error()
 
+    @cp_need_master
     def set_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         if save:
             _save = True
         else:
@@ -1023,8 +1023,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
+    @cp_need_master
     def set_macro_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         if save:
             _save = True
         else:
@@ -1032,8 +1032,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         return http_api_result_ok() if super().set_macro_prop(
             k, i, p, v, _save) else http_api_result_error()
 
+    @cp_need_master
     def set_cycle_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         if save:
             _save = True
         else:
@@ -1055,8 +1055,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
             i,
         ) else http_api_result_error()
 
+    @cp_need_master
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         if save:
             _save = True
         else:
@@ -1065,68 +1065,68 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                 super().set_controller_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
+    @cp_need_master
     def reload_controller(self, k=None, i=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().reload_controller(k, i) \
                 else http_api_result_error()
 
+    @cp_need_master
     def create_lvar(self, k=None, i=None, g=None, save=None):
-        cp_need_master(k)
         return http_api_result_ok() if super().create_lvar(
             k, i, g, save) else http_api_result_error()
 
+    @cp_need_master
     def destroy_lvar(self, k=None, i=None):
-        cp_need_master(k)
         result = super().destroy_lvar(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def load_ext(self, k=None, i=None, m=None, c=None, save=False):
-        cp_need_master(k)
         result = super().load_ext(k, i, m, c, save)
         return result if result else http_api_result_error()
 
+    @cp_need_master
     def unload_ext(self, k=None, i=None):
-        cp_need_master(k)
         result = super().unload_ext(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
+    @cp_need_master
     def list_ext(self, k=None, full=None):
-        cp_need_master(k)
         result = super().list_ext(k, full)
         if result is None: raise cp_api_error()
         return result
 
+    @cp_need_master
     def list_ext_mods(self, k=None):
-        cp_need_master(k)
         return super().list_ext_mods(k)
 
+    @cp_need_master
     def get_ext(self, k=None, i=None):
-        cp_need_master(k)
         result = super().get_ext(k, i)
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
         return result
 
+    @cp_need_master
     def modinfo_ext(self, k=None, m=None):
-        cp_need_master(k)
         result = super().modinfo_ext(k, m)
         if not result:
             raise cp_api_error()
         else:
             return result
 
+    @cp_need_master
     def modhelp_ext(self, k=None, m=None, c=None):
-        cp_need_master(k)
         result = super().modhelp_ext(k, m, c)
         if result is None:
             raise cp_api_error()
         else:
             return result
 
+    @cp_need_master
     def set_ext_prop(self, k=None, i=None, p=None, v=None, save=None):
-        cp_need_master(k)
         result = super().set_ext_prop(k, i, p, v, save)
         if result is None: raise cp_api_error()
         if result is False: raise cp_api_404()
