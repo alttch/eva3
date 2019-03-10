@@ -43,19 +43,21 @@ while [ 1 ]; do
   [ -d /backup ] && ln -sf /backup /opt/eva/backup
   # setup EVA ICS
   MQTT_OPTS=
+  MQTT_A_OPTS=
+  MQTT_D_OPTS=
   LINK_OPTS=
   CM_OPTS=
   DEPLOY_OPTS=
   [ "x${link}" = "x1" ] && LINK_OPTS="--link"
   [ "x${cloud_manager}" = "x1" ] && CM_OPTS="--cloud-manager"
   [ "x${deploy}" != "x" ] && DEPLOY_OPTS="--deploy"
-  [ ${mqtt} ] && MQTT_OPTS="--mqtt"
+  [ ${mqtt} ] && ( MQTT_OPTS="--mqtt" ; MQTT_A_OPTS=--mqtt-announce MQTT_D_OPTS=--mqtt-discovery )
   [ ${product} ] || product=all
   cd /opt/eva
   rm -rf runtime/*_notify.d runtime/*_remote_*.d
   bash ${bash_debug_opts} ./easy-setup --skip-check --auto --supervisor \
-    ${AUTO_OPTS} ${MQTT_OPTS} ${mqtt} ${LINK_OPTS} -p ${product} \
-    ${CM_OPTS} ${DEPLOY_OPTS} ${deploy}
+    ${AUTO_OPTS} ${MQTT_A_OPTS} ${MQTT_D_OPTS} ${MQTT_OPTS} ${mqtt} \
+    ${LINK_OPTS} -p ${product} ${CM_OPTS} ${DEPLOY_OPTS} ${deploy}
   result=$?
   if [ ${result} -eq 0 ]; then
       # create install flag

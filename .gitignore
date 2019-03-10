@@ -3,6 +3,7 @@ Makefile
 TODO*
 common.txt
 doc/_build
+bin/eva-shell
 etc/eva_servers
 etc/watchdog
 etc/*.ini
