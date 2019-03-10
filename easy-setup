@@ -221,6 +221,14 @@ function check_required_exec {
     return 0
 }
 
+function setup_supervisor_onboot {
+  [ $USE_SUPERVISOR -eq 1 ] || return 0
+  cp -vf ./etc/supervisor/conf.d/eva-onboot.conf /etc/supervisor/conf.d/ || return 1
+  local d=`echo ${EVA_DIR}|sed 's/\\//\\\\\\//g'`
+  sed -i "s/\\/opt\\/eva/${d}/g" /etc/supervisor/conf.d/eva-onboot.conf || return 2
+  return 0
+}
+
 function setup_supervisor {
   local p=$1
   local u=$2
@@ -883,6 +891,8 @@ EOF
     fi
     echo
 fi
+
+setup_supervisor_onboot || exit 11
 
 # COMPLETED
 
