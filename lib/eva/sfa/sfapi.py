@@ -1135,6 +1135,40 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                 return self.reload_clients(k=k)
         raise cp_api_404()
 
+    def PUT(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_params(
+            *args, **kwargs)
+        if rtp == 'action':
+            if 'm' in props:
+                return self.run(
+                    k=k,
+                    i=props['m'],
+                    u=ii,
+                    a=props.get('a'),
+                    kw=props.get('kw'),
+                    p=props.get('p'),
+                    w=props.get('w', 0))
+            s = props.get('s')
+            if s == 'toggle':
+                return self.action_toggle(
+                    k=k,
+                    i=props.get('i'),
+                    u=ii,
+                    p=props.get('p'),
+                    q=props.get('q'),
+                    w=props.get('w', 0))
+            else:
+                return self.action(
+                    k=k,
+                    i=props.get('i'),
+                    u=ii,
+                    s=props.get('s'),
+                    v=props.get('v'),
+                    p=props.get('p'),
+                    q=props.get('q'),
+                    w=props.get('w', 0))
+        raise cp_api_404()
+
     def PATCH(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)
