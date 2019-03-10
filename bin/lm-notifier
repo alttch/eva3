@@ -1,5 +1,4 @@
 #!/bin/bash
-# PYTHON_ARGCOMPLETE_OK
 
 PYTHON=python3
 
