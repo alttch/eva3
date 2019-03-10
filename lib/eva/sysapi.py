@@ -383,8 +383,6 @@ class UserAPI(object):
 
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
-    exposed = True
-
     def save(self, k=None):
         return eva.core.do_save()
 
@@ -454,6 +452,8 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
 class SysHTTP_API(SysAPI, JSON_RPC_API):
 
+    exposed = True
+
     _cp_config = {
         'tools.session_pre.on': True,
         'tools.json_pre.on': True,
@@ -488,6 +488,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return
 
     def __init__(self):
+
         cherrypy.tools.session_pre = cherrypy.Tool(
             'on_start_resource', cp_session_pre, priority=1)
         cherrypy.tools.json_pre = cherrypy.Tool(
@@ -796,7 +797,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         raise cp_api_404()
 
     def GET(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, props = restful_params(*args, **kwargs)
+        k, ii, full, kind, save, for_dir, props = restful_params(
+            *args, **kwargs)
         if rtp == 'core':
             return self.test(k=k)
         elif rtp == 'cvar':
@@ -828,7 +830,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         raise cp_api_404()
 
     def POST(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, props = restful_params(*args, **kwargs)
+        k, ii, full, kind, save, for_dir, props = restful_params(
+            *args, **kwargs)
         if rtp == 'core':
             cmd = props.get('cmd')
             if cmd == 'dump':
@@ -852,7 +855,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         raise cp_api_404()
 
     def PUT(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, props = restful_params(*args, **kwargs)
+        k, ii, full, kind, save, for_dir, props = restful_params(
+            *args, **kwargs)
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'key':
@@ -877,7 +881,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         raise cp_api_404()
 
     def PATCH(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, props = restful_params(*args, **kwargs)
+        k, ii, full, kind, save, for_dir, props = restful_params(
+            *args, **kwargs)
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'core':
@@ -919,7 +924,8 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         raise cp_api_404()
 
     def DELETE(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, props = restful_params(*args, **kwargs)
+        k, ii, full, kind, save, for_dir, props = restful_params(
+            *args, **kwargs)
         if rtp == 'key':
             return self.destroy_key(k=k, i=ii)
         elif rtp == 'lock':

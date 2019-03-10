@@ -81,10 +81,13 @@ def restful_params(*args, **kwargs):
     ii = '/'.join(args) if args else None
     full = kwargs.get('_full')
     save = kwargs.get('_save')
+    kind = kwargs.get('_kind')
+    for_dir = cherrypy.request.path_info.endswith('/')
     if 'k' in kwargs: del kwargs['k']
     if '_save' in kwargs: del kwargs['_save']
     if '_full' in kwargs: del kwargs['_full']
-    return k, ii, full, save, kwargs
+    if '_kind' in kwargs: del kwargs['_kind']
+    return k, ii, full, save, kind, for_dir, kwargs
 
 
 def update_config(cfg):
@@ -489,19 +492,6 @@ class JSON_RPC_API:
         if 'k' not in params: params['k'] = k
         self.cp_check_perm(api_key=params['k'], path_info='/' + method)
         return func(**params)
-
-    def groups(self, k=None, p=None):
-        return super().groups(k, p)
-
-    def state(self, k=None, i=None, full=None, g=None, p=None):
-        if full:
-            _full = True
-        else:
-            _full = False
-        result = super().state(k, i, _full, g, p)
-        if result is None:
-            raise cp_api_404()
-        return result
 
 
 class GenericHTTP_API(GenericAPI):

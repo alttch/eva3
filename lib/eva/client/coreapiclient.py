@@ -102,6 +102,7 @@ class CoreAPIClient(APIClient):
         if self._notifier_id == '': self._notifier_id = None
 
     def set_key(self, key, key_id='default'):
+        if key is None: return
         if key.find(':') != -1:
             (_key_id, _key) = key.split(':', 1)
         else:
