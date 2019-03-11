@@ -1977,7 +1977,7 @@ def load(test=True, connect=True):
                     fname=notifier_fname,
                     test=test,
                     connect=connect)
-                if not n: raise
+                if not n: raise Exception('Notifier load error')
                 _notifiers[n.notifier_id] = n
                 logging.debug('+ notifier %s' % n.notifier_id)
             except:
