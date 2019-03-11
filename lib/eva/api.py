@@ -87,7 +87,7 @@ def restful_params(*args, **kwargs):
         if ii: ii += '/'
         ii += l
     else:
-        args = None
+        ii = None
     full = kwargs.get('_full')
     save = kwargs.get('_save')
     kind = kwargs.get('_kind', kind)

@@ -35,7 +35,7 @@ note that default JSON RPC result is *{ "ok": true }* (instead of *{ "result":
 "OK" }*). There's no error result, as JSON RPC sends errors in "error" field.
 
 .. contents::
--
+
 Functions passed to the remote controllers
 ==========================================
 

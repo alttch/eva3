@@ -1,0 +1,4 @@
+DELETE /sys-api/r/lock/mylock1 HTTP/1.1
+Host: localhost:8812
+X-Auth-Key: mykey
+

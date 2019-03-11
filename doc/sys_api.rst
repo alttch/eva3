@@ -11,8 +11,8 @@ SYS API is called through URL request
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
-All functions can be called using GET and POST methods. When POST method is
-used, the parameters can be passed to functions either as www-form or as JSON.
+All API functions can be called using GET and POST. When POST is used, the
+parameters can be passed to functions either as www-form or as JSON.
 
 API key can be sent in request parameters, session (if user is logged in) or in
 HTTP **X-Auth-Key** header.
@@ -27,6 +27,26 @@ JSON RPC doesn't support sessions, so user authorization is not possible. Also
 note that default JSON RPC result is *{ "ok": true }* (instead of *{ "result":
 "OK" }*). There's no error result, as JSON RPC sends errors in "error" field.
 
+Also, majority EVA ICS API components and items support `REST
+<https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
+for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
+multipart/form-data. For JSON, *Content-Type: application/json* must be
+specified.
+
+Each API response (if result is a dict) contain additional *_log* property. In
+case of errors it is filled with server warning and error messages:
+
+.. code-block:: json
+
+    {
+        "_log": {
+            "40": [
+                "unable to load PHI mod nonexisting",
+            ]
+        },
+        "result": "ERROR"
+    }
+
 .. contents::
 
 .. _s_test:
@@ -37,6 +57,10 @@ test - test API/key and get system info
 Test can be executed with any valid API key of the controller the function is
 called to.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/test.req
+    :response: http-examples/sysapi/test.resp
+
 Parameters:
 
 * **k** valid API key
@@ -44,35 +68,15 @@ Parameters:
 Returns JSON dict with system info and current API key permissions (for
 masterkey only  'master':true is returned)
 
-.. code-block:: json
-
-    {
-        "acl": {
-            "allow": {
-                "cmd": true
-            },
-            "groups": [
-                "room1/#",
-                "windows",
-                "hall/+"
-            ],
-           "items": [],
-            "key_id": "key1",
-            "master": false,
-            "sysfunc": false
-        },
-        "product_build": 2017082101,
-        "product_code": "uc",
-        "product_name": "EVA Universal Controller",
-        "result": "OK",
-        "system": "eva3-test1",
-        "time": 1504489043.4566338,
-        "version": "3.0.0"
-    }
-
 Errors:
 
 * **403 Forbidden** the key has no access to the API.
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/test.rest
+    :response: http-examples/sysapi/test.resp
 
 .. _s_cmd:
 
@@ -82,33 +86,19 @@ cmd - execute a remote command
 Executes a :ref:`command script<cmd>` on the server where the controller is
 installed.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/cmd.req
+    :response: http-examples/sysapi/cmd.resp
+
 Parameters:
 
 * **k** API key with "allow=cmd" permission
 * **c** name of the command script
-* **a** command arguments (passed to the script)
+* **a** string of command arguments, separated by spaces (passed to the script)
 * **w** wait (in seconds) before API call sends a response. This allows to try
-        waiting until command finish
+  waiting until command finish
 * **t** maximum time of command execution. If the command fails to finish
-        within the specified time (in sec), it will be terminated
-
-Returns JSON dict
-
-.. code-block:: text
-
-    {
-       "args": [ "<specified>", "<command>", "<parameters>" ],
-       "cmd": "<command>",
-       "err": "<stderr output>",
-       "exitcode": <script exit code>,
-       "out": "<stdout output>",
-       "status": "<current_status>",
-       "time": {
-           "<status1>": <UNIX_TIMESTAMP>,
-           "<status2>": <UNIX_TIMESTAMP>
-       },
-       "timeout": "<specified_max_execution_time>"
-    }
+  within the specified time (in sec), it will be terminated
 
 If API failed to wait for the command execution results (t < w), the status
 will be returned as **"running"**. In case the command is complete, the status
@@ -117,11 +107,18 @@ will be one of the following:
 * **completed** command succeeded
 * **failed** command failed (exitcode > 0)
 * **terminated** command is terminated by timeout/by system or the requested
-                 script was not found
+  script was not found
 
 Errors:
 
 * **403 Forbidden** the API key has no access to this function
+* **404 Not Found** command script is not found
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/cmd.rest
+    :response: http-examples/sysapi/cmd.resp
 
 .. _s_lock:
 
@@ -142,20 +139,30 @@ Important: even if different EVA controllers are working on the same server,
 their lock tokens are stored in different bases. To work with the token of each
 subsystem, use SYS API on the respective address/port.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/lock.req
+    :response: http-examples/sysapi/lock.resp
+
 Parameters:
 
 * **k** API key with "allow=lock" permissions
 * **l** lock ID (arbitrary)
 * **t** maximum timeout (seconds) to get token (optionally)
 * **e** time after which token is automatically unlocked (if absent, token may
-        be unlocked only via unlock function)
+  be unlocked only via unlock function)
 
 returns JSON dict { "result": "OK" }, if lock has been received or {
-"result": "ERROR" }, if lock failed to be obtained
+"result": "ERROR" }, if lock failed to be obtained.
 
 Errors:
 
 * **403 Forbidden** the API key has no access to this function
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/lock.rest
+    :response: http-examples/sysapi/lock.resp
 
 .. _s_unlock:
 
@@ -163,6 +170,10 @@ unlock - release lock token
 ===========================
 
 Releases the previously requested lock token.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/unlock.req
+    :response: http-examples/sysapi/unlock.resp
 
 Parameters:
 
@@ -175,7 +186,13 @@ unlocked, *remark = "notlocked"* note will be present in the result.
 Errors:
 
 * **403 Forbidden** the API key has no access to this function
-* **404 Not Found** token not found
+* **404 Not Found** token not found (never locked)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/unlock.rest
+    :response: http-examples/sysapi/unlock.resp
 
 .. _s_log_rotate:
 

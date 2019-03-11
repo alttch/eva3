@@ -1,0 +1,18 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+    "_log": {},
+    "args": [],
+    "cmd": "test",
+    "err": "some text to stderr\n",
+    "exitcode": 0,
+    "out": "i am test script",
+    "status": "completed",
+    "time": {
+        "completed": 1552262643.3743565,
+        "created": 1552262640.3611023,
+        "running": 1552262640.3614247
+    },
+    "timeout": 5.0
+}
