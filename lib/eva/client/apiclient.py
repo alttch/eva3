@@ -247,7 +247,10 @@ class APIClient(object):
             elif r.status_code == 404:
                 return (result_not_found, {})
             elif r.status_code == 500:
-                return (result_api_error, {})
+                try:
+                    return (result_func_failed, r.json())
+                except:
+                    return (result_api_error, {})
             elif r.status_code == 400:
                 return (result_invalid_params, {})
             else:

@@ -7,19 +7,22 @@ parameters can be passed to functions either as multipart/form-data or as JSON.
 API key can be sent in request parameters, session (if user is logged in) or in
 HTTP **X-Auth-Key** header.
 
-RESTful
--------
+Standard API responses
+~~~~~~~~~~~~~~~~~~~~~~
 
-Majority EVA ICS API components and items support `REST
-<https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
-for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
-multipart/form-data. For JSON, *Content-Type: application/json* header must be
-specified.
+**Standard responses in headers/body:**
 
-API responses
--------------
+* **200 OK** *{ "result": "OK" }* API call completed successfully.
 
-Each API error response contain additional *_log* property. In case of errors
+**Standard error responses in headers:**
+
+* **403 Forbidden** the API key has no access to this function or resource
+* **404 Not Found** method or resource doesn't exist
+* **500 API Error** API function execution has been failed. Check
+  input parameters and server logs.
+
+In case API function failed to execute but server returned normal response, API
+error response will contain JSON data with *_log* property. In case of errors
 it is filled with server warning and error messages:
 
 .. code-block:: json
@@ -27,16 +30,30 @@ it is filled with server warning and error messages:
     {
         "_log": {
             "40": [
-                "unable to load PHI mod nonexisting",
+                "unable to add object, already present",
             ]
         },
         "result": "ERROR"
     }
 
+RESTful API
+-----------
+
+Majority EVA ICS API components and items support `REST
+<https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
+for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
+multipart/form-data. For JSON, *Content-Type: application/json* header must be
+specified.
+
+RESTful API responses
+~~~~~~~~~~~~~~~~~~~~~~
+
 **Standard responses in headers/body:**
 
-* **200 OK** *{ "result": "OK" }* API call completed successfully.
-* **200 OK** *{ "result": "ERROR" }* API call has been failed.
+* **200 OK** API call completed successfully
+* **201 Created** API call completed successfully, *Location* in headers
+  contains uri which points to the newly created object
+* **204 No Content** API call completed successfully, no content to return
 
 **Standard error responses in headers:**
 

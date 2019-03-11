@@ -7,8 +7,8 @@ used to manage controller itself.
 API basics
 ==========
 
-Direct function calling
------------------------
+Standard API (direct function calling)
+--------------------------------------
 
 SYS API is called through URL request
 

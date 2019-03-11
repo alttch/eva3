@@ -73,6 +73,7 @@ def http_api_result_error(env=None):
         msg = ', '.join(g.api_call_log.get(40, []) + g.api_call_log.get(50, []))
         raise cp_api_error(msg if msg else 'API error')
     else:
+        cherrypy.serving.response.status = '500 API Error'
         return http_api_result('ERROR', env)
 
 
@@ -105,9 +106,7 @@ def restful_response(f):
     def do(*args, **kwargs):
         result = f(*args, **kwargs)
         if isinstance(result, dict):
-            if result.get('result', 'OK') != 'OK':
-                cherrypy.serving.response.status = 500
-            else:
+            if result.get('result', 'OK') == 'OK':
                 n = f.__name__
                 if n == 'POST':
                     if 'Location' in cherrypy.serving.response.headers:
