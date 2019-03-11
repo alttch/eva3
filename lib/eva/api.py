@@ -303,11 +303,11 @@ class GenericAPI(object):
                           time_format=None,
                           fill=None,
                           fmt=None):
-        if oid is None: return False
+        if oid is None: return None
         n = eva.notify.get_db_notifier(a)
         if t_start and fill: tf = 'iso'
         else: tf = time_format
-        if not n: return False
+        if not n: return None
         try:
             result = n.get_state(
                 oid=oid,
@@ -320,7 +320,7 @@ class GenericAPI(object):
             logging.warning('state history call failed, arch: %s, oid: %s' %
                             (n.notifier_id, oid))
             eva.core.log_traceback()
-            return None
+            return False
         if t_start and fill and result:
             tz = pytz.timezone(time.tzname[0])
             try:
@@ -329,7 +329,7 @@ class GenericAPI(object):
                 try:
                     t_s = dateutil.parser.parse(t_start).timestamp()
                 except:
-                    return None
+                    return False
             if t_end:
                 try:
                     t_e = float(t_end)
@@ -337,7 +337,7 @@ class GenericAPI(object):
                     try:
                         t_e = dateutil.parser.parse(t_end).timestamp()
                     except:
-                        return None
+                        return False
             else:
                 t_e = time.time()
             if t_e > time.time(): t_e = time.time()
@@ -374,7 +374,7 @@ class GenericAPI(object):
             except:
                 logging.warning('state history dataframe error')
                 eva.core.log_traceback()
-                return None
+                return False
         if not fmt or fmt == 'list':
             res = {'t': []}
             for r in result:
@@ -393,7 +393,7 @@ class GenericAPI(object):
         elif fmt == 'dict':
             pass
         else:
-            return None
+            return False
         return result
 
 

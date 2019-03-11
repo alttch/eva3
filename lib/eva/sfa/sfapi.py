@@ -737,8 +737,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
             for i in items:
                 r = super().state_history(
                     k=k, tp=p, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                if r is None: raise cp_api_error('internal error')
-                if r is False: raise cp_api_404()
+                if r is False: raise cp_api_error('internal error')
+                if r is None: raise cp_api_404()
                 result['t'] = r['t']
                 if 'status' in r:
                     result[i + '/status'] = r['status']
@@ -748,8 +748,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
         else:
             result = super().state_history(
                 k=k, tp=p, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            if result is None: raise cp_api_error('internal error')
-            if result is False: raise cp_api_404()
+            if result is False: raise cp_api_error('internal error')
+            if result is None: raise cp_api_404()
             return result
 
     def groups(self, k=None, p=None, g=None):

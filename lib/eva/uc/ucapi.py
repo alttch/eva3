@@ -759,16 +759,16 @@ class UC_API(GenericAPI):
         if phi:
             return phi.serialize(full=True, config=True)
         else:
-            return False
+            return None
 
     def set_phi_prop(self, k=None, i=None, p=None, v=None, save=False):
         if not apikey.check(k, master=True): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
-        if phi:
-            if eva.uc.driverapi.set_phi_prop(i, p, v):
-                if save: eva.uc.driverapi.save()
-                return True
+        if not phi: return None
+        if eva.uc.driverapi.set_phi_prop(i, p, v):
+            if save: eva.uc.driverapi.save()
+            return True
         return False
 
     def get_driver(self, k=None, i=None):
@@ -778,35 +778,31 @@ class UC_API(GenericAPI):
         if lpi:
             return lpi.serialize(full=True, config=True)
         else:
-            return False
+            return None
 
     def set_driver_prop(self, k=None, i=None, p=None, v=None, save=False):
         if not apikey.check(k, master=True): return None
         if not i or i.split('.')[-1] == 'default': return None
         lpi = eva.uc.driverapi.get_driver(i)
-        if lpi:
-            if eva.uc.driverapi.set_driver_prop(i, p, v):
-                if save: eva.uc.driverapi.save()
-                return True
+        if not lp: return None
+        if eva.uc.driverapi.set_driver_prop(i, p, v):
+            if save: eva.uc.driverapi.save()
+            return True
         return False
 
     def test_phi(self, k=None, i=None, c=None):
         if not apikey.check(k, master=True): return None
-        if not i: return False
+        if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
-        if phi:
-            return phi.test(c)
-        else:
-            return False
+        if not phi: return None
+        return phi.test(c)
 
     def exec_phi(self, k=None, i=None, c=None, a=None):
         if not apikey.check(k, master=True): return None
-        if not i: return False
+        if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
-        if phi:
-            return phi.exec(c, a)
-        else:
-            return False
+        if not phi: return None
+        return phi.exec(c, a)
 
     def list_phi_mods(self, k=None):
         if not apikey.check(k, master=True): return None
@@ -980,8 +976,8 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
             for i in items:
                 r = super().state_history(
                     k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                if r is None: raise cp_api_error('internal error')
-                if r is False: raise cp_api_404()
+                if r is False: raise cp_api_error('internal error')
+                if r is None: raise cp_api_404()
                 result['t'] = r['t']
                 if 'status' in r:
                     result[i + '/status'] = r['status']
@@ -991,8 +987,8 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
         else:
             result = super().state_history(
                 k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            if result is None: raise cp_api_error('internal error')
-            if result is False: raise cp_api_404()
+            if result is False: raise cp_api_error('internal error')
+            if result is None: raise cp_api_404()
             return result
 
     def update(self, k=None, i=None, s=None, v=None, force_virtual=''):
@@ -1397,15 +1393,15 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
     @cp_need_master
     def get_phi(self, k=None, i=None):
         result = super().get_phi(k, i)
-        if result is None: raise cp_api_error()
-        if result is False: raise cp_api_404()
+        if result is False: raise cp_api_error()
+        if result is None: raise cp_api_404()
         return result
 
     @cp_need_master
     def set_phi_prop(self, k=None, i=None, p=None, v=None, save=None):
         result = super().set_phi_prop(k, i, p, v, save)
-        if result is None: raise cp_api_error()
-        if result is False: raise cp_api_404()
+        if result is False: raise cp_api_error()
+        if result is None: raise cp_api_404()
         return http_api_result_ok()
 
     @cp_need_master
@@ -1428,29 +1424,29 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
     @cp_need_master
     def get_driver(self, k=None, i=None):
         result = super().get_driver(k, i)
-        if result is None: raise cp_api_error()
-        if result is False: raise cp_api_404()
+        if result is False: raise cp_api_error()
+        if result is None: raise cp_api_404()
         return result
 
     @cp_need_master
     def set_driver_prop(self, k=None, i=None, p=None, v=None, save=None):
         result = super().set_driver_prop(k, i, p, v, save)
-        if result is None: raise cp_api_error()
-        if result is False: raise cp_api_404()
+        if result is False: raise cp_api_error()
+        if result is None: raise cp_api_404()
         return http_api_result_ok()
 
     @cp_need_master
     def test_phi(self, k=None, i=None, c=None):
         result = super().test_phi(k, i, c)
-        if result is False: raise cp_api_404()
-        if result is None: raise cp_api_error()
+        if result is None: raise cp_api_404()
+        if result is False: raise cp_api_error()
         return result
 
     @cp_need_master
     def exec_phi(self, k=None, i=None, c=None, a=None):
         result = super().exec_phi(k, i, c, a)
-        if result is False: raise cp_api_404()
-        if result is None: raise cp_api_error()
+        if result is None: raise cp_api_404()
+        if result is False: raise cp_api_error()
         return result
 
     @cp_need_master

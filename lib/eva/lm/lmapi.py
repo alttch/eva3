@@ -629,7 +629,7 @@ class LM_API(GenericAPI):
         if ext:
             return ext.serialize(full=True, config=True)
         else:
-            return False
+            return None
 
     def list_ext_mods(self, k=None):
         if not apikey.check(k, master=True): return None
@@ -646,10 +646,10 @@ class LM_API(GenericAPI):
     def set_ext_prop(self, k=None, i=None, p=None, v=None, save=False):
         if not apikey.check(k, master=True): return None
         ext = eva.lm.extapi.get_ext(i)
-        if ext:
-            if eva.lm.extapi.set_ext_prop(i, p, v):
-                if save: eva.lm.extapi.save()
-                return True
+        if not ext: return None
+        if eva.lm.extapi.set_ext_prop(i, p, v):
+            if save: eva.lm.extapi.save()
+            return True
         return False
 
 
@@ -764,8 +764,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
             for i in items:
                 r = super().state_history(
                     k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                if r is None: raise cp_api_error('internal error')
-                if r is False: raise cp_api_404()
+                if r is False: raise cp_api_error('internal error')
+                if r is None: raise cp_api_404()
                 result['t'] = r['t']
                 if 'status' in r:
                     result[i + '/status'] = r['status']
@@ -775,8 +775,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         else:
             result = super().state_history(
                 k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            if result is None: raise cp_api_error('internal error')
-            if result is False: raise cp_api_404()
+            if result is False: raise cp_api_error('internal error')
+            if result is None: raise cp_api_404()
             return result
 
     def set(self, k=None, i=None, s=None, v=None):
@@ -1147,8 +1147,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
     @cp_need_master
     def get_ext(self, k=None, i=None):
         result = super().get_ext(k, i)
-        if result is None: raise cp_api_error()
-        if result is False: raise cp_api_404()
+        if result is False: raise cp_api_error()
+        if result is None: raise cp_api_404()
         return result
 
     @cp_need_master
@@ -1170,8 +1170,8 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
     @cp_need_master
     def set_ext_prop(self, k=None, i=None, p=None, v=None, save=None):
         result = super().set_ext_prop(k, i, p, v, save)
-        if result is None: raise cp_api_error()
-        if result is False: raise cp_api_404()
+        if result is False: raise cp_api_error()
+        if result is None: raise cp_api_404()
         return http_api_result_ok()
 
     def __call__(self, *args, **kwargs):
