@@ -94,10 +94,10 @@ _api_func = {
             'enable_controller', 'disable_controller', 'list_props',
             'list_macro_props', 'list_controller_props', 'set_prop',
             'set_macro_prop', 'set_controller_prop', 'reload_controller',
-            'test_controller', 'create_lvar', 'destroy_lvar', 'list_rules',
-            'get_rule', 'list_rule_props', 'set_rule_prop', 'create_rule',
-            'destroy_rule', 'login', 'logout', 'load_ext', 'unload_ext',
-            'list_ext', 'get_ext', 'list_ext_mods', 'modinfo_ext',
+            'get_controller', 'test_controller', 'create_lvar', 'destroy_lvar',
+            'list_rules', 'get_rule', 'list_rule_props', 'set_rule_prop',
+            'create_rule', 'destroy_rule', 'login', 'logout', 'load_ext',
+            'unload_ext', 'list_ext', 'get_ext', 'list_ext_mods', 'modinfo_ext',
             'modhelp_ext', 'set_ext_prop'
         ],
         'cr': [
@@ -122,11 +122,12 @@ _api_func = {
             'disable_actions', 'enable_actions', 'set', 'reset', 'toggle',
             'clear', 'list_macros', 'groups_macro', 'run', 'list_cycles',
             'groups_cycle', 'list_controllers', 'append_controller',
-            'remove_controller', 'enable_controller', 'disable_controller',
-            'list_controller_props', 'set_controller_prop', 'reload_controller',
-            'test_controller', 'matest_controller', 'list_remote',
-            'list_rule_props', 'set_rule_prop', 'login', 'logout',
-            'reload_clients', 'notify_restart', 'management_api_call'
+            'get_controller', 'remove_controller', 'enable_controller',
+            'disable_controller', 'list_controller_props',
+            'set_controller_prop', 'reload_controller', 'test_controller',
+            'matest_controller', 'list_remote', 'list_rule_props',
+            'set_rule_prop', 'login', 'logout', 'reload_clients',
+            'notify_restart', 'management_api_call'
         ],
         'cr': [
             'terminate', 'kill', 'q_clean', 'disable_actions', 'enable_actions',

@@ -474,6 +474,12 @@ class LM_API(GenericAPI):
         item = eva.lm.controller.get_controller(i)
         return item.serialize(props=True) if item else None
 
+    def get_controller(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        item = eva.lm.controller.get_controller(i)
+        if item is None: return None
+        return item.serialize(info=True)
+
     def test_controller(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_controller(i)
@@ -702,6 +708,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         LM_HTTP_API.get_cycle.exposed = True
         LM_HTTP_API.list_controller_props.exposed = True
         LM_HTTP_API.test_controller.exposed = True
+        LM_HTTP_API.get_controller.exposed = True
         LM_HTTP_API.set_prop.exposed = True
         LM_HTTP_API.set_macro_prop.exposed = True
         LM_HTTP_API.set_cycle_prop.exposed = True
@@ -1050,6 +1057,13 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         return result
 
     @cp_need_master
+    def get_controller(self, k=None, i=None):
+        result = super().get_controller(k, i)
+        if result is None:
+            raise cp_api_404()
+        return result
+
+    @cp_need_master
     def test_controller(self, k=None, i=None):
         result = super().test_controller(k, i)
         if result is None:
@@ -1212,14 +1226,16 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
             return self.result(
                 k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
         elif rtp == 'controller':
-            if ii and ii.find('/') != -1:
-                if kind == 'items':
-                    return self.list_remote(
-                        k=k, i=ii, g=props.get('g'), p=props.get('p'))
-                elif kind == 'props':
-                    return self.list_controller_props(k=k, i=ii)
-            elif not ii:
-                return self.list_controllers(k=k)
+            if kind == 'items':
+                return self.list_remote(
+                    k=k, i=ii, g=props.get('g'), p=props.get('p'))
+            elif kind == 'props' and ii and ii.find('/') != -1:
+                return self.list_controller_props(k=k, i=ii)
+            else:
+                if ii and ii.find('/') != -1:
+                    return self.get_controller(k=k, i=ii)
+                else:
+                    return self.list_controllers(k=k)
         elif rtp == 'dmatrix_rule':
             if ii:
                 if kind == 'props':
@@ -1237,7 +1253,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                 else:
                     return self.get_cycle(k=k, i=ii)
             else:
-                    return self.list_cycles(k=k)
+                return self.list_cycles(k=k)
         elif rtp == 'lmacro':
             if not ii and kind == 'groups':
                 return self.groups_macro(k=k)
