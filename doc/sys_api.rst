@@ -4,6 +4,12 @@ SYS API
 SYS API is a common API present in all EVA controllers. SYS API functions are
 used to manage controller itself.
 
+API basics
+==========
+
+Direct function calling
+-----------------------
+
 SYS API is called through URL request
 
 **\http://<IP_address:Port>/sys-api/function**
@@ -17,17 +23,10 @@ parameters can be passed to functions either as www-form or as JSON.
 API key can be sent in request parameters, session (if user is logged in) or in
 HTTP **X-Auth-Key** header.
 
-Additionally, each EVA ICS API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC API URL for SYS
-API is:
+RESTful
+-------
 
-**\http://<IP_address:Port>/sys-api**
-
-JSON RPC doesn't support sessions, so user authorization is not possible. Also
-note that default JSON RPC result is *{ "ok": true }* (instead of *{ "result":
-"OK" }*). There's no error result, as JSON RPC sends errors in "error" field.
-
-Also, majority EVA ICS API components and items support `REST
+Majority EVA ICS API components and items support `REST
 <https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
 for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
 multipart/form-data. For JSON, *Content-Type: application/json* must be
@@ -47,12 +46,40 @@ case of errors it is filled with server warning and error messages:
         "result": "ERROR"
     }
 
+**Standard responses in headers/body:**
+
+* **200 OK** *{ "result": "OK" }* API call completed successfully.
+* **200 OK** *{ "result": "ERROR" }* API call has been failed.
+
+**Standard error responses in headers:**
+
+* **403 Forbidden** the API key has no access to this function or resource
+* **404 Not Found** method or resource doesn't exist
+* **500 Internal Server Error** API function execution has been failed. Check
+  input parameters and server logs.
+
+JSON RPC
+--------
+
+Additionally, each EVA ICS API supports `JSON RPC 2.0
+<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
+sessions, so user authorization is not possible. Also note that default JSON
+RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
+error result, as JSON RPC sends errors in "error" field.
+
+JSON RPC API URL for SYS API is:
+
+**\http://<IP_address:Port>/sys-api**
+
 .. contents::
+
+General functions
+=================
 
 .. _s_test:
 
 test - test API/key and get system info
-=======================================
+---------------------------------------
 
 Test can be executed with any valid API key of the controller the function is
 called to.
@@ -66,11 +93,7 @@ Parameters:
 * **k** valid API key
 
 Returns JSON dict with system info and current API key permissions (for
-masterkey only  'master':true is returned)
-
-Errors:
-
-* **403 Forbidden** the key has no access to the API.
+masterkey only *{ "master": true }* is returned)
 
 **RESTful:**
 
@@ -78,10 +101,24 @@ Errors:
     :request: http-examples/sysapi/test.rest
     :response: http-examples/sysapi/test.resp
 
+.. _s_save:
+
+save - save database and runtime configuration
+----------------------------------------------
+
+All modified items, their status, and configuration will be written to the
+disk. If **exec_before_save** command is defined in the controller's
+configuration file, it's called before saving and **exec_after_save** after
+(e.g. to switch the partition to write mode and back to read-only).
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+
 .. _s_cmd:
 
 cmd - execute a remote command
-==============================
+------------------------------
 
 Executes a :ref:`command script<cmd>` on the server where the controller is
 installed.
@@ -92,7 +129,7 @@ installed.
 
 Parameters:
 
-* **k** API key with "allow=cmd" permission
+* **k** API key with *allow=cmd* permission
 * **c** name of the command script
 * **a** string of command arguments, separated by spaces (passed to the script)
 * **w** wait (in seconds) before API call sends a response. This allows to try
@@ -109,21 +146,75 @@ will be one of the following:
 * **terminated** command is terminated by timeout/by system or the requested
   script was not found
 
-Errors:
-
-* **403 Forbidden** the API key has no access to this function
-* **404 Not Found** command script is not found
-
 **RESTful:**
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/cmd.rest
     :response: http-examples/sysapi/cmd.resp
 
+set_debug - switch debugging mode
+---------------------------------
+
+Enables and disables debugging mode while the controller is running. After the
+controller is restarted, this parameter is lost and controller switches back to
+the mode specified in the configuration file.
+
+Parameters:
+
+* **k** API key with "sysfunc=yes" permissions
+* **debug** 1 for enabling debug mode, 0 for disabling
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+CVARs
+=====
+
+.. _s_get_cvar:
+
+get_cvar - get variable
+-----------------------
+
+Returns one or all user-defined variables.
+
+.. note::
+
+    even if different EVA controllers are working on the same server, they have
+    different sets of variables To set the variables for each subsystem, use
+    SYS API on the respective address/port.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **i** variable name (if not specified, all variables will be returned)
+
+.. _s_set_cvar:
+
+set_cvar - set variable value
+-----------------------------
+
+Sets the value of user-defined variable.
+
+Parameters:
+
+* **k** API key with masterkey permissions
+* **i** variable name
+* **v** variable value (if omitted, variable is deleted)
+
+returns JSON dict { "result" : "OK" }
+
+Errors:
+
+* **403 Forbidden** the API key has no access to this function
+
+Locks
+=====
+
 .. _s_lock:
 
 lock - lock token request
-=========================
+-------------------------
 
 Lock tokens can be used similarly to file locking by the specific process. The
 difference is that SYS API tokens can be:
@@ -134,10 +225,13 @@ difference is that SYS API tokens can be:
   forgot to release the lock
 
 used to restrict parallel process starting or access to system files/resources.
+LM PLC :doc:`macro</lm/macros>` share locks with extrnal scripts.
 
-Important: even if different EVA controllers are working on the same server,
-their lock tokens are stored in different bases. To work with the token of each
-subsystem, use SYS API on the respective address/port.
+.. note::
+
+    even if different EVA controllers are working on the same server, their
+    lock tokens are stored in different bases. To work with the token of each
+    subsystem, use SYS API on the respective address/port.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/lock.req
@@ -151,13 +245,6 @@ Parameters:
 * **e** time after which token is automatically unlocked (if absent, token may
   be unlocked only via unlock function)
 
-returns JSON dict { "result": "OK" }, if lock has been received or {
-"result": "ERROR" }, if lock failed to be obtained.
-
-Errors:
-
-* **403 Forbidden** the API key has no access to this function
-
 **RESTful:**
 
 ..  http:example:: curl wget httpie python-requests
@@ -167,7 +254,7 @@ Errors:
 .. _s_unlock:
 
 unlock - release lock token
-===========================
+---------------------------
 
 Releases the previously requested lock token.
 
@@ -177,15 +264,14 @@ Releases the previously requested lock token.
 
 Parameters:
 
-* **k** API key with "allow=lock" permissions
+* **k** API key with *allow=lock* permissions
 * **l** lock token ID
 
-returns JSON dict { "result" : "OK" }. In case token is already
-unlocked, *remark = "notlocked"* note will be present in the result.
+In case token is already unlocked, *remark = "notlocked"* note will be present
+in the result.
 
 Errors:
 
-* **403 Forbidden** the API key has no access to this function
 * **404 Not Found** token not found (never locked)
 
 **RESTful:**
@@ -194,10 +280,13 @@ Errors:
     :request: http-examples/sysapi/unlock.rest
     :response: http-examples/sysapi/unlock.resp
 
+Logging functions
+=================
+
 .. _s_log_rotate:
 
 log_rotate - rotate controller's log file
-=========================================
+-----------------------------------------
 
 Rotates log file similarly to kill -HUP <controller_id>
 
@@ -215,7 +304,7 @@ Errors:
 .. _s_log:
 
 log_debug, log_info, log_warning, log_error, log_critical - write to the log
-============================================================================
+----------------------------------------------------------------------------
 
 An external application can put a message in the logs on behalf of the
 controller.
@@ -234,7 +323,7 @@ Errors:
 .. _s_log_get:
 
 log_get - get log records
-=========================
+-------------------------
 
 This command allows to read log records from the controller. Log records are
 stored in the controllers' memory until restart or the time (*keep_logmem*)
@@ -263,92 +352,6 @@ Errors:
 * **403 Forbidden** the API key has no access to this function
 
 .. _s_set_debug:
-
-set_debug - switch debugging mode
-=================================
-
-Enables and disables debugging mode while the controller is running. After the
-controller is restarted, this parameter is lost and controller switches back to
-the mode specified in the configuration file.
-
-Parameters:
-
-* **k** API key with "sysfunc=yes" permissions
-* **debug** 1 for enabling debug mode, 0 for disabling
-
-returns JSON dict { "result" : "OK" }
-
-Errors:
-
-* **403 Forbidden** the API key has no access to this function
-
-.. _s_get_cvar:
-
-get_cvar - get variable
-=======================
-
-Returns one or all user-defined variables.
-
-Important: even if different EVA controllers are working on the same server,
-they have different sets of variables To set the variables for each subsystem,
-use SYS API on the respective address/port.
-
-Parameters:
-
-* **k** API key with masterkey permissions
-* **i** variable name (if not specified, all variables will be returned)
-
-Returns JSON dict
-
-.. code-block:: json
-
-    {
-        "VARIABLE" : "VALUE"
-    }
-
-Errors:
-
-* **403 Forbidden** the API key has no access to this function
-* **404 Not Found** the specified variable is not defined
-
-.. _s_set_cvar:
-
-set_cvar - set variable value
-=============================
-
-Sets the value of user-defined variable.
-
-Parameters:
-
-* **k** API key with masterkey permissions
-* **i** variable name
-* **v** variable value (if omitted, variable is deleted)
-
-returns JSON dict { "result" : "OK" }
-
-Errors:
-
-* **403 Forbidden** the API key has no access to this function
-
-.. _s_save:
-
-save - save database and runtime configuration
-==============================================
-
-All modified items, their status, and configuration will be written to the
-disk. If **exec_before_save** command is defined in the controller's
-configuration file, it's called before saving and **exec_after_save** after
-(e.g. to switch the partition to write mode and back to read-only).
-
-Parameters:
-
-* **k** API key with "sysfunc=yes" permissions
-
-returns JSON dict { "result": "OK" }
-
-Errors:
-
-* **403 Forbidden** the API key has no access to this function
 
 Notifier management
 ===================
