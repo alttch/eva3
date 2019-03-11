@@ -17,6 +17,7 @@ from eva.api import http_api_result_error
 from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
+from eva.api import restful_params
 from eva import apikey
 from eva.tools import dict_from_str
 from eva.tools import is_oid
@@ -261,7 +262,7 @@ class LM_API(GenericAPI):
             if rmas or apikey.check(k, i):
                 d = i.serialize(info=True)
                 if not apikey.check(k, master=True):
-                    for x in d.copy():
+                    for x in d:
                         if x[:9] != 'in_range_' and \
                                 x not in [
                                         'id',
@@ -274,6 +275,19 @@ class LM_API(GenericAPI):
                             del d[x]
                 result.append(d)
         return result
+
+    def get_rule(self, k=None, i=None):
+        item = eva.lm.controller.get_dm_rule(i)
+        if not item or not apikey.check(k, item): return None
+        d = item.serialize(info=True)
+        if not apikey.check(k, master=True):
+            for x in d:
+                if x[:9] != 'in_range_' and x not in [
+                        'id', 'condition', 'description', 'chillout_ends_in',
+                        'enabled', 'chillout_time'
+                ]:
+                    del d[x]
+        return d
 
 
 # master functions for item configuration
@@ -395,6 +409,19 @@ class LM_API(GenericAPI):
                     (not group or eva.item.item_match(v, [], [ group ])):
                 result.append(v.serialize(full=True))
         return sorted(result, key=lambda k: k['full_id'])
+
+    def get_cycle(self, k=None, i=None):
+        if not apikey.check(k, i): return None
+        item = eva.lm.controller.get_cycle(i)
+        if not item: return None
+        result = item.serialize(full=True)
+        if not apikey.check(k, master=True):
+            try:
+                del result['macro']
+                del result['on_error']
+            except:
+                eva.core.log_traceback()
+        return result
 
     def create_cycle(self, k=None, i=None, g=None, save=False):
         if not apikey.check(k, master=True): return None
@@ -628,6 +655,8 @@ class LM_API(GenericAPI):
 
 class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
+    exposed = True
+
     def __init__(self):
         super().__init__()
         LM_HTTP_API.index.exposed = True
@@ -644,6 +673,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         LM_HTTP_API.list_rules.exposed = True
         LM_HTTP_API.list_rule_props.exposed = True
         LM_HTTP_API.set_rule_prop.exposed = True
+        LM_HTTP_API.get_rule.exposed = True
         LM_HTTP_API.create_rule.exposed = True
         LM_HTTP_API.destroy_rule.exposed = True
 
@@ -668,6 +698,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         LM_HTTP_API.list_props.exposed = True
         LM_HTTP_API.list_macro_props.exposed = True
         LM_HTTP_API.list_cycle_props.exposed = True
+        LM_HTTP_API.get_cycle.exposed = True
         LM_HTTP_API.list_controller_props.exposed = True
         LM_HTTP_API.test_controller.exposed = True
         LM_HTTP_API.set_prop.exposed = True
@@ -881,6 +912,11 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                     self._set_rule_prop_batch(k, rule_id, data, _save) \
                     else http_api_result_error()
 
+    def get_rule(self, k=None, i=None):
+        result = super().get_rule(k, i)
+        if result is None: raise cp_api_404()
+        return result
+
     @cp_need_master
     def destroy_rule(self, k=None, i=None):
         result = super().destroy_rule(k, i)
@@ -997,6 +1033,12 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
     @cp_need_master
     def list_cycle_props(self, k=None, i=None):
         result = super().list_cycle_props(k, i)
+        if not result: raise cp_api_404()
+        return result
+
+    @cp_need_master
+    def get_cycle(self, k=None, i=None):
+        result = super().get_cycle(k, i)
         if not result: raise cp_api_404()
         return result
 
@@ -1132,9 +1174,100 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is False: raise cp_api_404()
         return http_api_result_ok()
 
+    def __call__(self, *args, **kwargs):
+        raise cp_api_404()
+
+    def GET(self, r, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_params(
+            *args, **kwargs)
+        if rtp == 'core':
+            return self.test(k=k)
+        elif rtp == 'lvar':
+            if not ii and kind == 'groups':
+                return self.groups(k=k, p=rtp)
+            else:
+                if kind == 'props':
+                    return self.list_props(k=k, i=ii)
+                elif kind == 'history':
+                    return self.state_history(
+                        k=k,
+                        a=props.get('a'),
+                        i=ii,
+                        p=rtp,
+                        s=props.get('s'),
+                        e=props.get('e'),
+                        l=props.get('l'),
+                        x=props.get('x'),
+                        t=props.get('t'),
+                        w=props.get('w'),
+                        g=props.get('g'))
+                else:
+                    if for_dir:
+                        return self.state(k=k, full=full, g=ii, p=rtp)
+                    else:
+                        return self.state(k=k, full=full, i=ii, p=rtp)
+        elif rtp == 'action':
+            return self.result(
+                k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
+        elif rtp == 'controller':
+            if ii and ii.find('/') != -1:
+                if kind == 'items':
+                    return self.list_remote(
+                        k=k, i=ii, g=props.get('g'), p=props.get('p'))
+                elif kind == 'props':
+                    return self.list_controller_props(k=k, i=ii)
+            elif not ii:
+                return self.list_controllers(k=k)
+        elif rtp == 'dmatrix_rule':
+            if ii:
+                if kind == 'props':
+                    return self.list_rule_props(k=k, i=ii)
+                else:
+                    return self.get_rule(k=k, i=ii)
+            else:
+                return self.list_rules(k=k)
+        elif rtp == 'lcycle':
+            if not ii and kind == 'groups':
+                return self.groups_cycle(k=k)
+            elif ii:
+                if kind == 'props':
+                    return self.list_cycle_props(k=k, i=ii)
+                else:
+                    return self.get_cycle(k=k, i=ii)
+            else:
+                    return self.list_cycles(k=k)
+        elif rtp == 'lmacro':
+            if not ii and kind == 'groups':
+                return self.groups_macro(k=k)
+            if ii:
+                return self.list_macro_props(k=k, i=ii)
+            else:
+                return self.list_macros(k=k)
+        elif rtp == 'ext':
+            if ii:
+                return self.get_ext(k=k, i=ii)
+            else:
+                return self.list_ext(k=k)
+        elif rtp == 'ext-module':
+            if ii:
+                if 'help' in props:
+                    return self.modhelp_ext(k=k, m=ii, c=props['help'])
+                else:
+                    return self.modinfo_ext(k=k, m=ii)
+            else:
+                return self.list_ext_mods(k=k)
+        raise cp_api_404()
+
 
 def start():
     global api
     api = LM_API()
-    cherrypy.tree.mount(LM_HTTP_API(), '/lm-api')
+    cherrypy.tree.mount(
+        LM_HTTP_API(),
+        '/lm-api',
+        config={
+            '/r': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
+            }
+        })
     eva.ei.start()

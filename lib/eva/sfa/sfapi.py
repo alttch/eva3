@@ -1031,9 +1031,9 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
             *args, **kwargs)
         if rtp == 'core':
             return self.test(k=k)
-        if rtp == 'action':
+        elif rtp == 'action':
             return self.result(
-                k=k, i=props.get('i'), u=ii, g=props.get('i'), s=props.get('s'))
+                k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
         elif rtp == 'controller':
             if kind == 'items':
                 return self.list_remote(
