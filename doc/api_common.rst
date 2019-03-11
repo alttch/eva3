@@ -19,8 +19,8 @@ specified.
 API responses
 -------------
 
-Each API response (if result is a dict) contain additional *_log* property. In
-case of errors it is filled with server warning and error messages:
+Each API error response contain additional *_log* property. In case of errors
+it is filled with server warning and error messages:
 
 .. code-block:: json
 

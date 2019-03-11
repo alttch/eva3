@@ -404,7 +404,8 @@ def cp_json_handler(*args, **kwargs):
             cherrypy.serving.response.status = 202
             return
     else:
-        if isinstance(value, dict):
+        if isinstance(value,
+                      dict) and 'result' in value and value['result'] != 'OK':
             value['_log'] = g.api_call_log
     return format_json(value, minimal=not eva.core.development).encode('utf-8')
 
