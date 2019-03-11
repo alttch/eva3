@@ -34,6 +34,7 @@ from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva.api import session_timeout
 from eva.api import restful_params
+from eva.api import restful_response
 from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva import apikey
@@ -407,7 +408,7 @@ class SFA_API(GenericAPI):
             if group is not None and not result:
                 return result
             elif result:
-                return result
+                return result.serialize()
         if group == 'lm' or group is None:
             result = eva.sfa.controller.append_lm(
                 uri=uri,
@@ -420,7 +421,7 @@ class SFA_API(GenericAPI):
             if group is not None and not result:
                 return result
             elif result:
-                return result
+                return result.serialize()
         return False
 
     def remove_controller(self, k=None, controller_id=None):
@@ -935,8 +936,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                           t=None,
                           save=None):
         sv = eva.tools.val_to_boolean(s)
-        return http_api_result_ok() if super().append_controller(
-            k, u, a, x, g, m, sv, t, save) else http_api_result_error()
+        result = super().append_controller(k, u, a, x, g, m, sv, t, save)
+        return result if result else http_api_result_error()
 
     @cp_need_master
     def enable_controller(self, k=None, i=None):
@@ -1026,6 +1027,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
     def __call__(self, *args, **kwargs):
         raise cp_api_404()
 
+    @restful_response
     def GET(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)
@@ -1077,6 +1079,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                 return self.state(k=k, i=ii, p=rtp, full=full)
         raise cp_api_404()
 
+    @restful_response
     def POST(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)
@@ -1108,7 +1111,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                     w=props.get('w', 0))
         elif rtp == 'controller':
             if not ii or for_dir or ii.find('/') == -1:
-                return self.append_controller(
+                result = self.append_controller(
                     k=k,
                     u=props.get('u'),
                     a=props.get('a'),
@@ -1118,6 +1121,9 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                     s=props.get('s'),
                     t=props.get('t'),
                     save=save)
+                if 'full_id' in result:
+                    cherrypy.serving.response.headers['Location'] = '/sfa-api/r/{}/{}'.format(rtp, result['full_id'])
+                return result
             elif ii and 'cmd' not in props and 'f' in props:
                 return self.management_api_call(
                     k=k, i=ii, f=props['f'], p=props.get('p'))
@@ -1136,6 +1142,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                 return self.reload_clients(k=k)
         raise cp_api_404()
 
+    @restful_response
     def PUT(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)
@@ -1170,6 +1177,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                     w=props.get('w', 0))
         raise cp_api_404()
 
+    @restful_response
     def PATCH(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)
@@ -1213,6 +1221,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                     return self.disable_actions(k=k, i=ii)
         raise cp_api_404()
 
+    @restful_response
     def DELETE(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)

@@ -99,6 +99,27 @@ def restful_params(*args, **kwargs):
     return k, ii, full, save, kind, for_dir, kwargs
 
 
+def restful_response(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        result = f(*args, **kwargs)
+        if isinstance(result, dict):
+            if result.get('result', 'OK') != 'OK':
+                cherrypy.serving.response.status = 500
+            else:
+                n = f.__name__
+                if n == 'POST':
+                    cherrypy.serving.response.status = 201
+                elif n == 'PUT' or n == 'PATCH' or n == 'DELETE':
+                    if len(result.keys()) == 1:
+                        cherrypy.serving.response.status = 204
+                        return None
+        return result
+
+    return do
+
+
 def update_config(cfg):
     global host, port, ssl_host, ssl_port
     global ssl_module, ssl_cert, ssl_key, ssl_chain

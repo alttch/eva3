@@ -18,6 +18,7 @@ from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva.api import restful_params
+from eva.api import restful_response
 from eva import apikey
 from eva.tools import dict_from_str
 from eva.tools import is_oid
@@ -1177,6 +1178,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
     def __call__(self, *args, **kwargs):
         raise cp_api_404()
 
+    @restful_response
     def GET(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)

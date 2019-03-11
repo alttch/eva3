@@ -34,6 +34,7 @@ from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
 from eva.api import session_timeout
 from eva.api import restful_params
+from eva.api import restful_response
 
 from eva.api import http_real_ip
 from eva.api import cp_client_key
@@ -796,6 +797,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
     def __call__(self, *args, **kwargs):
         raise cp_api_404()
 
+    @restful_response
     def GET(self, r, rtp, *args, **kwargs):
         k, ii, full, kind, save, for_dir, props = restful_params(
             *args, **kwargs)
@@ -829,6 +831,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                 return self.list_users(k=k)
         raise cp_api_404()
 
+    @restful_response
     def POST(self, r, rtp, *args, **kwargs):
         k, ii, full, kind, save, for_dir, props = restful_params(
             *args, **kwargs)
@@ -854,6 +857,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                 k=k, c=ii, a=props.get('a'), w=props.get('w'), t=props.get('t'))
         raise cp_api_404()
 
+    @restful_response
     def PUT(self, r, rtp, *args, **kwargs):
         k, ii, full, kind, save, for_dir, props = restful_params(
             *args, **kwargs)
@@ -880,6 +884,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                 k=k, u=ii, p=props.get('p'), a=props.get('a'))
         raise cp_api_404()
 
+    @restful_response
     def PATCH(self, r, rtp, *args, **kwargs):
         k, ii, full, kind, save, for_dir, props = restful_params(
             *args, **kwargs)
@@ -923,6 +928,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
             return http_api_result_ok()
         raise cp_api_404()
 
+    @restful_response
     def DELETE(self, r, rtp, *args, **kwargs):
         k, ii, full, kind, save, for_dir, props = restful_params(
             *args, **kwargs)

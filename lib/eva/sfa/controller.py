@@ -207,7 +207,7 @@ def append_uc(uri,
     remote_ucs[u.item_id] = u
     if save: u.save()
     logging.info('controller %s added to pool' % u.full_id)
-    return True
+    return u
 
 
 def remove_uc(controller_id):
@@ -270,7 +270,7 @@ def append_lm(uri,
     remote_lms[u.item_id] = u
     if save: u.save()
     logging.info('controller %s added to pool' % u.full_id)
-    return True
+    return u
 
 
 def remove_lm(controller_id):
