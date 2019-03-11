@@ -262,7 +262,7 @@ class LM_API(GenericAPI):
             if rmas or apikey.check(k, i):
                 d = i.serialize(info=True)
                 if not apikey.check(k, master=True):
-                    for x in d:
+                    for x in d.copy():
                         if x[:9] != 'in_range_' and \
                                 x not in [
                                         'id',
@@ -281,7 +281,7 @@ class LM_API(GenericAPI):
         if not item or not apikey.check(k, item): return None
         d = item.serialize(info=True)
         if not apikey.check(k, master=True):
-            for x in d:
+            for x in d.copy():
                 if x[:9] != 'in_range_' and x not in [
                         'id', 'condition', 'description', 'chillout_ends_in',
                         'enabled', 'chillout_time'
