@@ -492,7 +492,7 @@ class JSON_RPC_API:
             try:
                 r = {
                     'jsonrpc': '2.0',
-                    'result': self._json_rpc(k, **p),
+                    'result': self._json_rpc(**p),
                     'id': req_id
                 }
             except cherrypy.HTTPError as e:
@@ -517,7 +517,7 @@ class JSON_RPC_API:
                     result = r
         return result if result else None
 
-    def _json_rpc(self, k, **kwargs):
+    def _json_rpc(self, **kwargs):
         try:
             method = kwargs.get('method')
             if not method: raise Exception
@@ -527,7 +527,7 @@ class JSON_RPC_API:
         except:
             raise cp_api_404('API method not found')
         params = kwargs.get('params', {})
-        if 'k' not in params: params['k'] = k
+        if 'k' not in params: params['k'] = kwargs.get('k')
         self.cp_check_perm(api_key=params['k'], path_info='/' + method)
         return func(**params)
 
