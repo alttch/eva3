@@ -484,6 +484,9 @@ class RemoteControllerPool(object):
                 return False
             if controller.item_id in self.controllers:
                 self.management_lock.release()
+                logging.error(
+                    'Unable to append controller {}, already exists'.format(
+                        controller.full_id))
                 return False
             self.controllers[controller.item_id] = controller
             controller.pool = self
@@ -576,7 +579,7 @@ class RemoteControllerPool(object):
         return
 
     def reload_controller(self, controller_id):
-        if controller_id == 'all':
+        if controller_id == 'ALL':
             success = True
             for c in self.controllers.copy():
                 try:
@@ -586,7 +589,7 @@ class RemoteControllerPool(object):
                     eva.core.log_traceback()
                     success = False
             return success
-        if not controller_id in self.controllers: return False
+        if not controller_id in self.controllers: return None
         controller = self.controllers[controller_id]
         return controller.load_remote()
 
@@ -846,9 +849,9 @@ class RemoteUCPool(RemoteControllerPool):
         return True
 
     def reload_controller(self, controller_id):
-        if not super().reload_controller(controller_id):
-            return False
-        if controller_id == 'all': return True
+        result = super().reload_controller(controller_id)
+        if not result: return result
+        if controller_id == 'ALL': return True
         uc = self.controllers[controller_id]
         if not self.item_management_lock.acquire(timeout=eva.core.timeout):
             logging.critical('RemoteUCPool::reload_controller locking broken')
@@ -1202,9 +1205,9 @@ class RemoteLMPool(RemoteControllerPool):
         return True
 
     def reload_controller(self, controller_id):
-        if not super().reload_controller(controller_id):
-            return False
-        if controller_id == 'all': return True
+        result = super().reload_controller(controller_id)
+        if not result: return result
+        if controller_id == 'ALL': return True
         lm = self.controllers[controller_id]
         if not self.item_management_lock.acquire(timeout=eva.core.timeout):
             logging.critical('RemoteLMPool::reload_controller locking broken')

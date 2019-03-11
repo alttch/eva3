@@ -892,10 +892,10 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'core':
             if 'debug' in props:
-                if not self.set_debug(k=k, debug=props['debug']):
+                if self.set_debug(k=k, debug=props['debug']).get('result') != 'OK':
                     return http_api_result_error()
             if 'setup' in props:
-                if not self.setup_mode(k=k, setup=props['setup']):
+                if self.setup_mode(k=k, setup=props['setup']).get('result') != 'OK':
                     return http_api_result_error()
             return http_api_result_ok()
         elif rtp == 'key':

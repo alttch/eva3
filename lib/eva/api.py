@@ -88,14 +88,14 @@ def restful_params(*args, **kwargs):
         ii += l
     else:
         ii = None
-    full = kwargs.get('_full')
-    save = kwargs.get('_save')
-    kind = kwargs.get('_kind', kind)
+    full = kwargs.get('full')
+    save = kwargs.get('save')
+    kind = kwargs.get('kind', kind)
     for_dir = cherrypy.request.path_info.endswith('/')
     if 'k' in kwargs: del kwargs['k']
-    if '_save' in kwargs: del kwargs['_save']
-    if '_full' in kwargs: del kwargs['_full']
-    if '_kind' in kwargs: del kwargs['_kind']
+    if 'save' in kwargs: del kwargs['save']
+    if 'full' in kwargs: del kwargs['full']
+    if 'kind' in kwargs: del kwargs['kind']
     return k, ii, full, save, kind, for_dir, kwargs
 
 
@@ -110,14 +110,23 @@ def restful_response(f):
             else:
                 n = f.__name__
                 if n == 'POST':
-                    cherrypy.serving.response.status = 201
+                    if 'Location' in cherrypy.serving.response.headers:
+                        cherrypy.serving.response.status = 201
+                    else:
+                        if 'result' in result and len(result.keys()) == 1:
+                            cherrypy.serving.response.status = 204
+                            return None
                 elif n == 'PUT' or n == 'PATCH' or n == 'DELETE':
-                    if len(result.keys()) == 1:
+                    if 'result' in result and len(result.keys()) == 1:
                         cherrypy.serving.response.status = 204
                         return None
         return result
 
     return do
+
+
+def set_response_location(location):
+    cherrypy.response.headers['Location'] = location
 
 
 def update_config(cfg):
@@ -432,7 +441,7 @@ def cp_json_handler(*args, **kwargs):
 
 
 def cp_forbidden_key():
-    return cherrypy.HTTPError('403 API Forbidden', 'API Key access error')
+    return cherrypy.HTTPError('403 API Forbidden', 'API Key Access Error')
 
 
 def cp_api_error(msg=''):
