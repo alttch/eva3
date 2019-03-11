@@ -229,7 +229,6 @@ def cp_json_pre():
             else:
                 cherrypy.serving.request.json_rpc_payload = data
     except:
-        raise
         raise cp_api_error('invalid JSON data')
     return
 
