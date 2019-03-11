@@ -16,6 +16,9 @@ for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
 multipart/form-data. For JSON, *Content-Type: application/json* must be
 specified.
 
+API responses
+-------------
+
 Each API response (if result is a dict) contain additional *_log* property. In
 case of errors it is filled with server warning and error messages:
 
