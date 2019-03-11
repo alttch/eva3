@@ -2,7 +2,7 @@ If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
 All API functions can be called using GET and POST. When POST is used, the
-parameters can be passed to functions either as www-form or as JSON.
+parameters can be passed to functions either as multipart/form-data or as JSON.
 
 API key can be sent in request parameters, session (if user is logged in) or in
 HTTP **X-Auth-Key** header.
@@ -13,7 +13,7 @@ RESTful
 Majority EVA ICS API components and items support `REST
 <https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
 for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
-multipart/form-data. For JSON, *Content-Type: application/json* must be
+multipart/form-data. For JSON, *Content-Type: application/json* header must be
 specified.
 
 API responses
