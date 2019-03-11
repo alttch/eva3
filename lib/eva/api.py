@@ -78,10 +78,19 @@ def http_api_result_error(env=None):
 
 def restful_params(*args, **kwargs):
     k = kwargs.get('k')
-    ii = '/'.join(args) if args else None
+    kind = None
+    if args:
+        ii = '/'.join(args[:-1])
+        l = args[-1]
+        if l.find('@') != -1:
+            l, kind = l.split('@', 1)
+        if ii: ii += '/'
+        ii += l
+    else:
+        args = None
     full = kwargs.get('_full')
     save = kwargs.get('_save')
-    kind = kwargs.get('_kind')
+    kind = kwargs.get('_kind', kind)
     for_dir = cherrypy.request.path_info.endswith('/')
     if 'k' in kwargs: del kwargs['k']
     if '_save' in kwargs: del kwargs['_save']
