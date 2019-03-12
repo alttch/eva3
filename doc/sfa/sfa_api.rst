@@ -22,7 +22,7 @@ HTTP **X-Auth-Key** header.
     of serious problems by killing the controller process.
 
     If you need to save any changes made without this parameter, restart the
-    controller gracefully or use :doc:`/sys_api` **save** function.
+    controller gracefully or use :doc:`/sysapi` **save** function.
 
 Additionally, each EVA ICS API supports `JSON RPC 2.0
 <https://www.jsonrpc.org/specification>`_ protocol. JSON RPC API URL for SFA

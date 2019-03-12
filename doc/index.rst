@@ -118,7 +118,7 @@ What you get with EVA
     :caption:  Extension development
     :maxdepth: 1
 
-    sys_api
+    sysapi
     uc/uc_api
     lm/lm_api
     sfa/sfa_api

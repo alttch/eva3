@@ -251,7 +251,7 @@ To stop the framework, call:
 eva_sfa_call
 ------------
 
-Calls any available API function (:doc:`/sfa/sfa_api` or :doc:`/sys_api`),
+Calls any available API function (:doc:`/sfa/sfa_api` or :doc:`/sysapi`),
 params - object, containing function parameters.
 
 .. code-block:: javascript

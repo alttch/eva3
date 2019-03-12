@@ -64,7 +64,7 @@ The file contains a JSON dict:
     }
 
 
-Variables can be changed while the server is running via :doc:`/sys_api` as
+Variables can be changed while the server is running via :doc:`/sysapi` as
 well as :doc:`lm-cmd</cli>` **cvar get** and **cvar set** commands.
 
 .. _lm_apikey:

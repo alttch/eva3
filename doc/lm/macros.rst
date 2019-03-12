@@ -1039,7 +1039,8 @@ params:
 * **wait** wait for the command result (in seconds)
 * **timeout** max command execution time
 
-Returns the result equal to the result of SYS API :ref:`cmd<s_cmd>` function.
+Returns the result equal to the result of SYS API :ref:`cmd<sysapi_cmd>`
+function.
 
 .. _m_run:
 

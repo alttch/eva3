@@ -22,7 +22,7 @@ HTTP **X-Auth-Key** header.
     of serious problems by killing the controller process.
 
     If you need to save any changes made without this parameter, restart the
-    controller gracefully or use :doc:`/sys_api` **save** function.
+    controller gracefully or use :doc:`/sysapi` **save** function.
 
 Additionally, each EVA ICS API supports `JSON RPC 2.0
 <https://www.jsonrpc.org/specification>`_ protocol. JSON RPC API URL for UC API
@@ -724,7 +724,7 @@ error occurred.
 Item configuration may be immediately deleted from the disk, if there is
 *db_update=instant* set in :ref:`controller configuration<uc_ini>`, at the
 moment of shutdown, if there is *db_update=on_exit*, or when calling
-:doc:`/sys_api` save (or save in :doc:`UC EI<uc_ei>`), if there is
+:doc:`/sysapi` save (or save in :doc:`UC EI<uc_ei>`), if there is
 *db_update=manual*.
 
 If configuration is not deleted by either of these, you should delete it

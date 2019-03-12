@@ -1,7 +1,7 @@
 User authorization using login/password
 =======================================
 
-Third-party apps may authorize :doc:`users</sys_api>` using login and password
+Third-party apps may authorize :doc:`users</sysapi>` using login and password
 as an alternative for authorization via API key.
 
 login - user authorization

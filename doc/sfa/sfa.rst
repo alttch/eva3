@@ -62,7 +62,7 @@ The file contains a JSON dict:
      "VAR2": "value2"
     }
 
-Variables can be changed while the server is running via :doc:`/sys_api` as
+Variables can be changed while the server is running via :doc:`/sysapi` as
 well as :doc:`sfa-cmd</cli>` **cvar get** and **cvar set** commands.
 
 .. _sfa_apikey:
