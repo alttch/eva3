@@ -1,4 +1,4 @@
-__author__ = "Altertech Group, https://www.altertech.com/"
+_author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.1.2"
@@ -454,6 +454,10 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     exposed = True
+    api_uri = '/sys-api'
+    api_restful_prefix = '/r'
+
+    api_restful_uri = api_uri + api_restful_prefix
 
     _cp_config = {
         'tools.session_pre.on': True,
@@ -569,6 +573,26 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     @cp_need_cmd
     def cmd(self, k, c, a=None, w=None, t=None):
+        """
+        execute a remote system command
+
+        Executes a :ref:`command script<cmd>` on the server where the
+        controller is installed.
+
+        Args:
+            k: .allow=cmd
+            .c: name of the command script
+
+        Optional:
+            a: string of command arguments, separated by spaces (passed to the
+                script)
+            w: wait (in seconds) before API call sends a response. This allows
+                to try waiting until command finish
+            t: maximum time of command execution. If the command fails to finish
+                within the specified time (in sec), it will be terminated
+
+        apidoc_category: general
+        """
         if t:
             try:
                 _t = float(t)
@@ -589,6 +613,21 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     @cp_need_sysfunc
     def save(self, k=None):
+        """
+        save database and runtime configuration
+
+        All modified items, their status, and configuration will be written to
+        the disk. If **exec_before_save** command is defined in the
+        controller's configuration file, it's called before saving and
+        **exec_after_save** after (e.g. to switch the partition to write mode
+        and back to read-only).
+
+        Args:
+            k: .sysfunc=yes
+
+        apidoc_priority: 2
+        apidoc_category: general
+        """
         return http_api_result_ok() \
                 if super().save(k) else http_api_result_error()
 
@@ -663,6 +702,20 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     @cp_need_master
     def set_debug(self, k=None, debug=None):
+        """
+        switch debugging mode
+
+        Enables and disables debugging mode while the controller is running.
+        After the controller is restarted, this parameter is lost and
+        controller switches back to the mode specified in the configuration
+        file.
+
+        Args:
+            k: .master
+            debug: 1 for enabling debug mode, 0 for disabling
+
+        apidoc_category: general
+        """
         val = val_to_boolean(debug)
         if val is None: raise cp_api_error()
         return http_api_result_ok() if super().set_debug(k, val) \
@@ -968,9 +1021,9 @@ def start():
     api = SysAPI()
     cherrypy.tree.mount(
         SysHTTP_API(),
-        '/sys-api',
+        SysHTTP_API.api_uri,
         config={
-            '/r': {
+            SysHTTP_API.api_restful_prefix: {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
             }
         })
