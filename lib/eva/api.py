@@ -266,7 +266,22 @@ class GenericAPI(object):
 
     def test(self, k=None):
         """
-        API test, key test and info request, k = any valid key
+        test API/key and get system info
+
+        Test can be executed with any valid API key of the controller the
+        function is called to.
+
+        Test function present in all APIs.
+
+        Args:
+            k: any valid API key
+
+        Returns:
+            JSON dict with system info and current API key permissions (for
+            masterkey only { "master": true } is returned)
+
+        apidoc_priority: 1
+        apidoc_category: general
         """
         result = http_api_result_ok({
             'acl':
