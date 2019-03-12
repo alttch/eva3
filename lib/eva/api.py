@@ -107,18 +107,21 @@ def restful_response(f):
         result = f(*args, **kwargs)
         if isinstance(result, dict):
             if result.get('result', 'OK') == 'OK':
+                if 'result' in result: del result['result']
                 n = f.__name__
                 if n == 'POST':
                     if 'Location' in cherrypy.serving.response.headers:
                         cherrypy.serving.response.status = 201
                     else:
-                        if 'result' in result and len(result.keys()) == 1:
+                        if not result:
                             cherrypy.serving.response.status = 204
                             return None
                 elif n == 'PUT' or n == 'PATCH' or n == 'DELETE':
-                    if 'result' in result and len(result.keys()) == 1:
+                    if not result:
                         cherrypy.serving.response.status = 204
                         return None
+            else:
+                if 'result' in result: del result['result']
         return result
 
     return do
@@ -270,8 +273,6 @@ class GenericAPI(object):
 
         Test can be executed with any valid API key of the controller the
         function is called to.
-
-        Test function present in all APIs.
 
         Args:
             k: any valid API key
@@ -448,10 +449,14 @@ def cp_json_handler(*args, **kwargs):
             cherrypy.serving.response.status = 202
             return
     else:
-        if isinstance(value,
-                      dict) and 'result' in value and value['result'] != 'OK':
+        if isinstance(value, dict) and (not value or ('result' in value and
+                                                      value['result'] != 'OK')):
             value['_log'] = g.api_call_log
-    return format_json(value, minimal=not eva.core.development).encode('utf-8')
+    if value:
+        return format_json(
+            value, minimal=not eva.core.development).encode('utf-8')
+    else:
+        return None
 
 
 def cp_forbidden_key():

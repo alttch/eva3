@@ -553,6 +553,42 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     @cp_need_sysfunc
     def lock(self, k=None, l=None, t=None, e=None):
+        """
+        lock token request
+
+        Lock tokens can be used similarly to file locking by the specific
+        process. The difference is that SYS API tokens can be:
+        
+        * centralized for several systems (any EVA server can act as lock
+            server)
+
+        * removed from outside
+
+        * automatically unlocked after the expiration time, if the initiator
+            failed or forgot to release the lock
+        
+        used to restrict parallel process starting or access to system
+        files/resources. LM PLC :doc:`macro</lm/macros>` share locks with
+        extrnal scripts.
+
+        .. note::
+
+            even if different EVA controllers are working on the same server,
+            their lock tokens are stored in different bases. To work with the
+            token of each subsystem, use SYS API on the respective
+            address/port.
+
+        Args:
+            k: .allow=lock
+            .l: lock id
+
+        Optional:
+            t: maximum time (seconds) to get token
+            e: time after which token is automatically unlocked (if absent,
+                token may be unlocked only via unlock function)
+
+        apidoc_category: lock
+        """
         if not l:
             raise cp_api_error('No lock provided')
         result = super().lock(k, l, t, e)
@@ -562,6 +598,21 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
     @cp_need_sysfunc
     def unlock(self, k=None, l=None):
+        """
+        release lock token
+
+        Releases the previously obtained lock token.
+
+        Args:
+            k: .allow=lock
+            .l: lock id
+
+        Returns:
+            In case token is already unlocked, *remark = "notlocked"* note will
+            be present in the result.
+        
+        apidoc_category: lock
+        """
         if not l:
             raise cp_api_error('No lock provided')
         if not l in locks:
@@ -945,10 +996,12 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'core':
             if 'debug' in props:
-                if self.set_debug(k=k, debug=props['debug']).get('result') != 'OK':
+                if self.set_debug(
+                        k=k, debug=props['debug']).get('result') != 'OK':
                     return http_api_result_error()
             if 'setup' in props:
-                if self.setup_mode(k=k, setup=props['setup']).get('result') != 'OK':
+                if self.setup_mode(
+                        k=k, setup=props['setup']).get('result') != 'OK':
                     return http_api_result_error()
             return http_api_result_ok()
         elif rtp == 'key':

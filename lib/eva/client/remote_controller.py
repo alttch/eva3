@@ -93,15 +93,25 @@ class RemoteController(eva.item.Item):
 
     def test(self):
         result = self.api_call('test')
-        if not isinstance(result, dict): return None
+        if not isinstance(result, dict):
+            logging.error('Remote controller {} test failed'.format(
+                self.full_id))
+            return False
         if result.get('result') != 'OK':
             logging.error('Remote controller access error %s' % self.api._uri)
-            return None
+            return False
         return result
 
     def matest(self):
+        if not self.masterkey:
+            logging.error(('Remote controller {} management test aborted: ' +
+                           'no masterkey set').format(self.full_id))
+            return False
         result = self.management_api_call('test')[1]
-        if not isinstance(result, dict): return False
+        if not isinstance(result, dict):
+            logging.error('Remote controller {} management test failed'.format(
+                self.full_id))
+            return False
         if result.get('result') != 'OK':
             logging.error('Remote controller access error %s' % self.api._uri)
             return False
