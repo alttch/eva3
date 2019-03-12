@@ -1018,9 +1018,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
             return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
         except NoAPIMethodException:
             pass
-        if rtp == 'd':
-            return self.api_uri
-        elif rtp == 'action':
+        if rtp == 'action':
             return self.result(
                 k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
         elif rtp == 'controller':
