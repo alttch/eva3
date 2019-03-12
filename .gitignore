@@ -25,3 +25,4 @@ etc/easy_setup
 xc/extensions/generic.py
 xc/drivers/lpi/generic_lpi.py
 xc/drivers/phi/generic_phi.py
+apidoc
