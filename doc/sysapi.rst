@@ -33,21 +33,17 @@ Standard API responses
 
 * **403 Forbidden** the API key has no access to this function or resource
 * **404 Not Found** method or resource doesn't exist
-* **500 API Error** API function execution has been failed. Check
-  input parameters and server logs.
+* **500 API Error** API function execution has been failed. Check input
+  parameters and server logs.
 
-In case API function failed to execute but server returned normal response, API
-error response will contain JSON data with *_log* property. In case of errors
-it is filled with server warning and error messages:
+In case API function has been failed, response body will contain JSON data with
+*_warning*, *_error* and/or *_critical* properties, which duplicate server
+warning and error messages:
 
 .. code-block:: json
 
     {
-        "_log": {
-            "40": [
-                "unable to add object, already present",
-            ]
-        },
+        "_error": "unable to add object, already present",
         "result": "ERROR"
     }
 
@@ -91,7 +87,7 @@ error result, as JSON RPC sends errors in "error" field.
 
 JSON RPC API URL for SYS API is:
 
-    **\http://<ip_address:port>/sys-api**
+    **\http://<ip_address:port>/jrpc**
 
 .. contents::
 

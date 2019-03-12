@@ -168,7 +168,7 @@ macros are executed progressively without waiting for the completion of the
 previous macro. The queue is used for reporting only and reserved for some
 internal functions. If a macro is required to block execution of the other
 ones, one should use :ref:`lock<m_lock>` and :ref:`unlock<m_unlock>` macro
-functions operating similarly to :ref:`SYS API locking<s_lock>`.
+functions operating similarly to :ref:`SYS API locking<sysapi_lock>`.
 
 The status of the macro in queue is similar to the status of the :ref:`Universal
 Controller actions<uc_queues>`.
