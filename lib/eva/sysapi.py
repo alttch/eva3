@@ -573,7 +573,7 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
 
         .. note::
 
-            even if different EVA controllers are working on the same server,
+            Even if different EVA controllers are working on the same server,
             their lock tokens are stored in different bases. To work with the
             token of each subsystem, use SYS API on the respective
             address/port.
