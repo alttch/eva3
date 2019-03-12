@@ -25,11 +25,11 @@ HTTP **X-Auth-Key** header.
 Standard API responses
 ~~~~~~~~~~~~~~~~~~~~~~
 
-**Standard responses in headers/body:**
+**Standard responses in status/body:**
 
 * **200 OK** *{ "result": "OK" }* API call completed successfully.
 
-**Standard error responses in headers:**
+**Standard error responses in status:**
 
 * **403 Forbidden** the API key has no access to this function or resource
 * **404 Not Found** method or resource doesn't exist
@@ -63,19 +63,21 @@ specified.
 RESTful API responses
 ~~~~~~~~~~~~~~~~~~~~~~
 
-**Standard responses in headers/body:**
+**Success responses:**
 
 * **200 OK** API call completed successfully
-* **201 Created** API call completed successfully, *Location* in headers
-  contains uri which points to the newly created object
+* **201 Created** API call completed successfully, Response header *Location*
+  contains uri to the newly created object
 * **204 No Content** API call completed successfully, no content to return
 
-**Standard error responses in headers:**
+**Error error responses:**
 
 * **403 Forbidden** the API key has no access to this function or resource
 * **404 Not Found** method or resource doesn't exist
 * **500 API Error** API function execution has been failed. Check
   input parameters and server logs.
+
+Response body may contain additional information encoded in JSON.
 
 JSON RPC
 --------
