@@ -663,6 +663,10 @@ class LM_API(GenericAPI):
 class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
     exposed = True
+    api_uri = '/lm-api'
+    api_restful_prefix = '/r'
+
+    api_restful_uri = api_uri + api_restful_prefix
 
     def __init__(self):
         super().__init__()
@@ -1282,9 +1286,9 @@ def start():
     api = LM_API()
     cherrypy.tree.mount(
         LM_HTTP_API(),
-        '/lm-api',
+        LM_HTTP_API().api_uri,
         config={
-            '/r': {
+            LM_HTTP_API.api_restful_prefix: {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
             }
         })

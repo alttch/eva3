@@ -848,6 +848,8 @@ class UC_API(GenericAPI):
 class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
 
     exposed = True
+    api_uri = '/uc-api'
+    api_restful_prefix = '/r'
 
     def cp_check_perm(self, api_key=None, k=None, path_info=None):
         if cherrypy.serving.request.path_info[:8] == '/put_phi':
@@ -1501,18 +1503,14 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
                 eva.udpapi.check_access(http_real_ip()) else None
         return result
 
-    def GET(self, r, rtp, *args, **kwargs):
-        raise cp_api_404()
-
-
 def start():
     global api
     api = UC_API()
     cherrypy.tree.mount(
         UC_HTTP_API(),
-        '/uc-api',
+        UC_HTTP_API.api_uri,
         config={
-            '/r': {
+            UC_HTTP_API.api_restful_prefix: {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
             }
         })
