@@ -57,7 +57,7 @@ listen = 0.0.0.0:8817
 ;ssl_cert = test.crt
 ;ssl_key = test.key
 ;ssl_chain = test.pam
-; session timeout
+; session timeout, set to non-zero to enable sessions
 ;session_timeout = 3600
 ; server thread pool
 ;thread_pool = 15

@@ -997,11 +997,8 @@ class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
 
 class SFA_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
                       eva.sysapi.SysHTTP_API_REST_abstract,
-                      eva.api.JSON_RPC_API_abstract,
-                      SFA_HTTP_API_abstract, GenericHTTP_API): pass
-
-    # def __init__(self):
-        # super().__init__()
+                      eva.api.JSON_RPC_API_abstract, SFA_HTTP_API):
+    pass
 
 
 class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,

@@ -47,7 +47,7 @@ default_ssl_port = 443
 
 thread_pool = 15
 
-session_timeout = 3600
+session_timeout = 0
 
 use_x_real_ip = False
 
@@ -239,25 +239,6 @@ def http_real_ip(get_gw=False):
 
 def http_remote_info(k=None):
     return '%s@%s' % (apikey.key_id(k), http_real_ip(get_gw=True))
-
-
-class DummySession:
-
-    @staticmethod
-    def acquire_lock(**kwargs):
-        pass
-
-    @staticmethod
-    def save(**kwargs):
-        pass
-
-
-def cp_session_pre():
-    # hack to prevent sessions for JSON RPC
-    if cherrypy.serving.request.path_info in ['', '/']:
-        cherrypy.serving.request._session_init_flag = True
-        cherrypy.session = DummySession()
-        cherrypy.serving.session = cherrypy.session
 
 
 def cp_api_pre():
@@ -545,6 +526,7 @@ class JSON_RPC_API_abstract:
     api_uri = '/jrpc'
 
     def __init__(self):
+        self._cp_config = api_cp_config.copy()
         JSON_RPC_API_abstract.index.exposed = True
 
     def index(self, k=None):
@@ -609,44 +591,33 @@ class GenericHTTP_API_REST_abstract:
 
 class GenericHTTP_API(GenericAPI):
 
-    _cp_config = {
-        'tools.session_pre.on': True,
-        'tools.json_pre.on': True,
-        'tools.api_pre.on': True,
-        'tools.json_out.on': True,
-        'tools.json_out.handler': cp_json_handler,
-        'tools.auth.on': True,
-        'tools.sessions.on': True,
-        'tools.sessions.timeout': session_timeout,
-        'tools.trailing_slash.on': False
-    }
-
     def __init__(self):
-        cherrypy.tools.session_pre = cherrypy.Tool(
-            'on_start_resource', cp_session_pre, priority=1)
+        self._cp_config = api_cp_config.copy()
+        self._cp_config['tools.auth.on'] = True
+
         cherrypy.tools.json_pre = cherrypy.Tool(
             'before_handler', cp_json_pre, priority=10)
         cherrypy.tools.api_pre = cherrypy.Tool(
             'before_handler', cp_api_pre, priority=20)
         cherrypy.tools.auth = cherrypy.Tool(
             'before_handler', self.cp_check_perm, priority=60)
-        GenericHTTP_API._cp_config['tools.sessions.timeout'] = session_timeout
+        self._cp_config['tools.sessions.timeout'] = session_timeout
 
-        if not session_timeout:
-            GenericHTTP_API._cp_config['tools.sessions.on'] = False
-            GenericHTTP_API._cp_config['tools.session_pre.on'] = False
+        if session_timeout:
+            self._cp_config.update({
+                'tools.sessions.on': True,
+                'tools.sessions.timeout': session_timeout
+            })
+            GenericHTTP_API.login.exposed = True
+            GenericHTTP_API.logout.exposed = True
 
         GenericHTTP_API.test.exposed = True
-        GenericHTTP_API.login.exposed = True
-        GenericHTTP_API.logout.exposed = True
 
     def cp_check_perm(self, api_key=None, path_info=None):
         k = api_key if api_key else cp_client_key()
         path = path_info if path_info is not None else \
                 cherrypy.serving.request.path_info
         if k is not None: cherrypy.serving.request.params['k'] = k
-        # pass json rpc
-        if path in ['', '/']: return
         # pass login and info
         if path[:6] == '/login': return
         if path[:5] == '/info': return
@@ -778,3 +749,13 @@ def start():
 @eva.core.stop
 def stop():
     cherrypy.engine.exit()
+
+
+api_cp_config = {
+    'tools.json_pre.on': True,
+    'tools.api_pre.on': True,
+    'tools.json_out.on': True,
+    'tools.json_out.handler': cp_json_handler,
+    'tools.sessions.on': False,
+    'tools.trailing_slash.on': False
+}
