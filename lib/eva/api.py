@@ -456,6 +456,8 @@ def cp_json_handler(*args, **kwargs):
         return format_json(
             value, minimal=not eva.core.development).encode('utf-8')
     else:
+        try: del cherrypy.serving.response.headers['Content-Type']
+        except: pass
         return None
 
 
