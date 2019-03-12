@@ -77,7 +77,8 @@ RESTful API responses
 * **500 API Error** API function execution has been failed. Check
   input parameters and server logs.
 
-Response body may contain additional information encoded in JSON.
+Response body may contain additional information encoded in JSON. *{
+"result": "OK" }* and *{ "result": "ERROR" }* in body are not returned.
 
 JSON RPC
 --------
@@ -122,7 +123,7 @@ JSON dict with system info and current API key permissions (for masterkey only {
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/test.rest
-    :response: http-examples/sysapi/test.resp
+    :response: http-examples/sysapi/test.resp-rest
 
 .. _sysapi_save:
 
@@ -264,5 +265,5 @@ In case token is already unlocked, *remark = "notlocked"* note will be present i
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/unlock.rest
-    :response: http-examples/sysapi/unlock.resp
+    :response: http-examples/sysapi/unlock.resp-rest
 
