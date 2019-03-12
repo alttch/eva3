@@ -10,7 +10,6 @@ import threading
 import time
 import os
 import sys
-import jsonpickle
 import shlex
 
 import eva.core
@@ -21,31 +20,30 @@ from pyaltt import background_job
 
 from functools import wraps
 
-from eva.api import cp_json_handler
-from eva.api import log_api_request
-from eva.api import http_remote_info
 from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
 from eva.api import cp_api_404
-from eva.api import cp_session_pre
-from eva.api import cp_json_pre
-from eva.api import cp_api_pre
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
-from eva.api import session_timeout
-from eva.api import restful_params
-from eva.api import restful_response
 
 from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva.api import cp_need_master
 
+from eva.api import expose_api_methods
+from eva.api import NoAPIMethodException
+
 from eva.api import GenericAPI
-from eva.api import JSON_RPC_API
 
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
 from eva.tools import val_to_boolean
+
+from eva.common import log_levels_by_name
+
+from pyaltt import background_worker
+
+from types import SimpleNamespace
 
 import eva.apikey
 
@@ -56,31 +54,14 @@ import eva.notify
 locks = {}
 lock_expire_time = {}
 
-_lock_processor_active = False
-
-_lock_processor = None
-
-api = None
-
-api_file_management_allowed = False
-api_setup_mode_allowed = False
-
 cvars_public = False
-
-log_levels_by_name = {
-    'debug': 10,
-    'info': 20,
-    'warning': 30,
-    'error': 40,
-    'critical': 50
-}
 
 
 def cp_need_file_management(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        if not api_file_management_allowed:
+        if not config.api_file_management_allowed:
             raise cp_forbidden_key()
         return f(*args, **kwargs)
 
@@ -436,7 +417,8 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         return True
 
     def setup_mode(self, k=None, setup=False):
-        if not eva.apikey.check(k, master=True) or not api_setup_mode_allowed:
+        if not eva.apikey.check(
+                k, master=True) or not config.api_setup_mode_allowed:
             return False
         if val_to_boolean(setup):
             eva.core.setup_on()
@@ -451,105 +433,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         return True
 
 
-class SysHTTP_API(SysAPI, JSON_RPC_API):
-
-    exposed = True
-    api_uri = '/sys-api'
-    api_restful_prefix = '/r'
-
-    api_restful_uri = api_uri + api_restful_prefix
-
-    _cp_config = {
-        'tools.session_pre.on': True,
-        'tools.json_pre.on': True,
-        'tools.log_pre.on': True,
-        'tools.json_out.on': True,
-        'tools.json_out.handler': cp_json_handler,
-        'tools.auth_sysfunc.on': True,
-        'tools.sessions.on': True,
-        'tools.sessions.timeout': session_timeout,
-        'tools.trailing_slash.on': False
-    }
-
-    def cp_check_perm(self, api_key=None, path_info=None):
-        k = api_key if api_key else cp_client_key()
-        path = path_info if path_info is not None else \
-                cherrypy.serving.request.path_info
-        if k is not None: cherrypy.serving.request.params['k'] = k
-        if path in ['', '/']: return
-        if path[:6] == '/login': return
-        p = cherrypy.serving.request.params.copy()
-        if not eva.core.development:
-            if 'k' in p: del p['k']
-            if path[:12] == '/create_user' or \
-              path[:18] == '/set_user_password':
-                if 'p' in p: del p['p']
-        if path[:9] == '/file_put' and \
-                'm' in p:
-            del p['m']
-        log_api_request(path[1:], http_remote_info(k), p, False)
-        if not eva.apikey.check(k, ip=http_real_ip()):
-            raise cp_forbidden_key()
-        return
-
-    def __init__(self):
-
-        cherrypy.tools.session_pre = cherrypy.Tool(
-            'on_start_resource', cp_session_pre, priority=1)
-        cherrypy.tools.json_pre = cherrypy.Tool(
-            'before_handler', cp_json_pre, priority=10)
-        cherrypy.tools.log_pre = cherrypy.Tool(
-            'before_handler', cp_api_pre, priority=20)
-        cherrypy.tools.auth_sysfunc = cherrypy.Tool(
-            'before_handler', self.cp_check_perm, priority=60)
-        super().__init__()
-        SysHTTP_API.lock.exposed = True
-        SysHTTP_API.unlock.exposed = True
-        SysHTTP_API.cmd.exposed = True
-        SysHTTP_API.save.exposed = True
-        SysHTTP_API.dump.exposed = True
-        SysHTTP_API.get_cvar.exposed = True
-        SysHTTP_API.set_cvar.exposed = True
-        SysHTTP_API.get_notifier.exposed = True
-        SysHTTP_API.list_notifiers.exposed = True
-        SysHTTP_API.log_rotate.exposed = True
-        SysHTTP_API.set_debug.exposed = True
-        SysHTTP_API.setup_mode.exposed = True
-        SysHTTP_API.shutdown_core.exposed = True
-
-        GenericAPI.test.exposed = True
-        SysHTTP_API.index.exposed = True
-
-        SysHTTP_API.log_debug.exposed = True
-        SysHTTP_API.log_info.exposed = True
-        SysHTTP_API.log_warning.exposed = True
-        SysHTTP_API.log_error.exposed = True
-        SysHTTP_API.log_critical.exposed = True
-        SysHTTP_API.log_get.exposed = True
-
-        SysHTTP_API.file_unlink.exposed = True
-        SysHTTP_API.file_get.exposed = True
-        SysHTTP_API.file_put.exposed = True
-        SysHTTP_API.file_set_exec.exposed = True
-
-        SysHTTP_API.create_user.exposed = True
-        SysHTTP_API.set_user_password.exposed = True
-        SysHTTP_API.set_user_key.exposed = True
-        SysHTTP_API.destroy_user.exposed = True
-
-        SysHTTP_API.list_keys.exposed = True
-        SysHTTP_API.list_users.exposed = True
-
-        SysHTTP_API.get_user.exposed = True
-
-        SysHTTP_API.enable_notifier.exposed = True
-        SysHTTP_API.disable_notifier.exposed = True
-
-        SysHTTP_API.create_key.exposed = True
-        SysHTTP_API.list_key_props.exposed = True
-        SysHTTP_API.set_key_prop.exposed = True
-        SysHTTP_API.regenerate_key.exposed = True
-        SysHTTP_API.destroy_key.exposed = True
+class SysHTTP_API_abstract(SysAPI):
 
     @cp_need_sysfunc
     def lock(self, k=None, l=None, t=None, e=None):
@@ -898,13 +782,17 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         return http_api_result_ok({'key':result}) if \
                 result else http_api_result_error()
 
-    def __call__(self, *args, **kwargs):
-        raise cp_api_404()
 
-    @restful_response
-    def GET(self, r, rtp, *args, **kwargs):
-        k, ii, full, kind, save, for_dir, props = restful_params(
-            *args, **kwargs)
+class SysHTTP_API(SysHTTP_API_abstract, eva.api.GenericHTTP_API):
+
+    def __init__(self):
+        super().__init__()
+        self.api_uri = expose_api_methods(self.__class__, 'sysapi')
+
+
+class SysHTTP_API_REST_abstract:
+
+    def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'core':
             return self.test(k=k)
         elif rtp == 'cvar':
@@ -933,12 +821,9 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                 return self.get_user(k=k, u=ii)
             else:
                 return self.list_users(k=k)
-        raise cp_api_404()
+        raise NoAPIMethodException
 
-    @restful_response
-    def POST(self, r, rtp, *args, **kwargs):
-        k, ii, full, kind, save, for_dir, props = restful_params(
-            *args, **kwargs)
+    def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'core':
             cmd = props.get('cmd')
             if cmd == 'dump':
@@ -959,12 +844,9 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
             if not ii: raise cp_api_404()
             return self.cmd(
                 k=k, c=ii, a=props.get('a'), w=props.get('w'), t=props.get('t'))
-        raise cp_api_404()
+        raise NoAPIMethodException
 
-    @restful_response
-    def PUT(self, r, rtp, *args, **kwargs):
-        k, ii, full, kind, save, for_dir, props = restful_params(
-            *args, **kwargs)
+    def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'key':
@@ -986,12 +868,9 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
         elif rtp == 'user':
             return self.create_user(
                 k=k, u=ii, p=props.get('p'), a=props.get('a'))
-        raise cp_api_404()
+        raise NoAPIMethodException
 
-    @restful_response
-    def PATCH(self, r, rtp, *args, **kwargs):
-        k, ii, full, kind, save, for_dir, props = restful_params(
-            *args, **kwargs)
+    def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'core':
@@ -1032,12 +911,9 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
                 if not super().set_user_key(k=k, user=ii, key=props['a']):
                     return http_api_result_error()
             return http_api_result_ok()
-        raise cp_api_404()
+        raise NoAPIMethodException
 
-    @restful_response
-    def DELETE(self, r, rtp, *args, **kwargs):
-        k, ii, full, kind, save, for_dir, props = restful_params(
-            *args, **kwargs)
+    def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'key':
             return self.destroy_key(k=k, i=ii)
         elif rtp == 'lock':
@@ -1046,67 +922,54 @@ class SysHTTP_API(SysAPI, JSON_RPC_API):
             return self.file_unlink(k=k, i=ii)
         elif rtp == 'user':
             return self.destroy_user(k=k, u=ii)
-        raise cp_api_404()
+        raise NoAPIMethodException
 
 
 def update_config(cfg):
-    global api_file_management_allowed, api_setup_mode_allowed
     try:
-        api_file_management_allowed = (cfg.get('sysapi',
-                                               'file_management') == 'yes')
+        config.api_file_management_allowed = (cfg.get(
+            'sysapi', 'file_management') == 'yes')
     except:
         pass
     logging.debug('sysapi.file_management = %s' % ('yes' \
-            if api_file_management_allowed else 'no'))
+            if config.api_file_management_allowed else 'no'))
     try:
-        api_setup_mode_allowed = (cfg.get('sysapi', 'setup_mode') == 'yes')
+        config.api_setup_mode_allowed = (cfg.get('sysapi',
+                                                 'setup_mode') == 'yes')
     except:
         pass
     logging.debug('sysapi.setup_mode = %s' % ('yes' \
-            if api_setup_mode_allowed else 'no'))
+            if config.api_setup_mode_allowed else 'no'))
     return True
 
 
 def start():
-    global _lock_processor
-    global _lock_processor_active
-    global api
-    api = SysAPI()
-    cherrypy.tree.mount(
-        SysHTTP_API(),
-        SysHTTP_API.api_uri,
-        config={
-            SysHTTP_API.api_restful_prefix: {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
-            }
-        })
-    _lock_processor = threading.Thread(
-        target=_t_lock_processor, name='_t_lock_processor')
-    _lock_processor_active = True
-    _lock_processor.start()
+    http_api = SysHTTP_API()
+    cherrypy.tree.mount(http_api, http_api.api_uri)
+    lock_processor.start(_interval=eva.core.polldelay)
 
 
 @eva.core.stop
 def stop():
-    global _lock_processor_active
-    if _lock_processor_active:
-        _lock_processor_active = False
-        _lock_processor.join()
+    lock_processor.stop()
 
 
-def _t_lock_processor():
-    logging.debug('LockAPI processor started')
-    while _lock_processor_active:
-        time.sleep(eva.core.polldelay)
-        for i, v in lock_expire_time.copy().items():
-            if time.time() > v:
-                logging.debug('lock %s expired, releasing' % i)
-                try:
-                    del lock_expire_time[i]
-                except:
-                    logging.critical('Lock API broken')
-                try:
-                    locks[i].release()
-                except:
-                    pass
-    logging.debug('LockAPI processor stopped')
+@background_worker
+def lock_processor(**kwargs):
+    for i, v in lock_expire_time.copy().items():
+        if time.time() > v:
+            logging.debug('lock %s expired, releasing' % i)
+            try:
+                del lock_expire_time[i]
+            except:
+                logging.critical('Lock API broken')
+            try:
+                locks[i].release()
+            except:
+                pass
+
+
+api = SysAPI()
+
+config = SimpleNamespace(
+    api_file_management_allowed=False, api_setup_mode_allowed=False)

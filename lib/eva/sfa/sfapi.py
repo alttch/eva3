@@ -22,23 +22,25 @@ from eva.tools import dict_from_str
 
 import eva.core
 import eva.notify
+import eva.api
+
 from eva.api import GenericHTTP_API
-from eva.api import JSON_RPC_API
 from eva.api import GenericAPI
-from eva.api import cp_json_handler
 from eva.api import cp_forbidden_key
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
 from eva.api import cp_api_error
 from eva.api import cp_api_404
 from eva.api import cp_need_master
-from eva.api import session_timeout
-from eva.api import restful_params
-from eva.api import restful_response
+from eva.api import restful_api_function
 from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva.api import set_response_location
+from eva.api import NoAPIMethodException
+from eva.api import expose_api_methods
+
 from eva import apikey
+
 import eva.sfa.controller
 import eva.sfa.cloudmanager
 import eva.sysapi
@@ -609,65 +611,7 @@ class SFA_API(GenericAPI):
         return True
 
 
-class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
-
-    exposed = True
-    api_uri = '/sfa-api'
-    api_restful_prefix = '/r'
-
-    api_restful_uri = api_uri + api_restful_prefix
-
-    def __init__(self):
-        super().__init__()
-        SFA_HTTP_API.index.exposed = True
-        SFA_HTTP_API.test.exposed = True
-        SFA_HTTP_API.state.exposed = True
-        SFA_HTTP_API.state_history.exposed = True
-        SFA_HTTP_API.state_all.exposed = True
-        SFA_HTTP_API.groups.exposed = True
-        SFA_HTTP_API.action.exposed = True
-        SFA_HTTP_API.action_toggle.exposed = True
-        SFA_HTTP_API.result.exposed = True
-        SFA_HTTP_API.terminate.exposed = True
-        SFA_HTTP_API.kill.exposed = True
-        SFA_HTTP_API.q_clean.exposed = True
-        SFA_HTTP_API.disable_actions.exposed = True
-        SFA_HTTP_API.enable_actions.exposed = True
-
-        SFA_HTTP_API.set.exposed = True
-        SFA_HTTP_API.reset.exposed = True
-        SFA_HTTP_API.toggle.exposed = True
-        SFA_HTTP_API.clear.exposed = True
-
-        SFA_HTTP_API.list_macros.exposed = True
-        SFA_HTTP_API.groups_macro.exposed = True
-        SFA_HTTP_API.run.exposed = True
-
-        SFA_HTTP_API.list_cycles.exposed = True
-        SFA_HTTP_API.groups_cycle.exposed = True
-
-        SFA_HTTP_API.list_controllers.exposed = True
-        SFA_HTTP_API.append_controller.exposed = True
-        SFA_HTTP_API.enable_controller.exposed = True
-        SFA_HTTP_API.disable_controller.exposed = True
-        SFA_HTTP_API.remove_controller.exposed = True
-        SFA_HTTP_API.list_controller_props.exposed = True
-        SFA_HTTP_API.get_controller.exposed = True
-        SFA_HTTP_API.test_controller.exposed = True
-        SFA_HTTP_API.matest_controller.exposed = True
-        SFA_HTTP_API.set_controller_prop.exposed = True
-        SFA_HTTP_API.reload_controller.exposed = True
-
-        SFA_HTTP_API.list_remote.exposed = True
-
-        SFA_HTTP_API.list_rule_props.exposed = True
-        SFA_HTTP_API.set_rule_prop.exposed = True
-
-        SFA_HTTP_API.reload_clients.exposed = True
-        SFA_HTTP_API.notify_restart.exposed = True
-
-        if eva.sfa.controller.cloud_manager:
-            SFA_HTTP_API.management_api_call.exposed = True
+class SFA_HTTP_API_abstract(SFA_API):
 
     @cp_need_master
     def management_api_call(self, k=None, i=None, f=None, p=None):
@@ -1041,13 +985,35 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
         else:
             return http_api_result_error()
 
-    def __call__(self, *args, **kwargs):
-        raise cp_api_404()
 
-    @restful_response
-    def GET(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, kind, for_dir, props = restful_params(
-            *args, **kwargs)
+class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
+
+    def __init__(self):
+        super().__init__()
+        self.api_uri = expose_api_methods(self.__class__, 'sfapi')
+        if eva.sfa.controller.cloud_manager:
+            SFA_HTTP_API.management_api_call.exposed = True
+
+
+class SFA_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
+                      eva.sysapi.SysHTTP_API_REST_abstract,
+                      eva.api.JSON_RPC_API_abstract,
+                      SFA_HTTP_API_abstract, GenericHTTP_API): pass
+
+    # def __init__(self):
+        # super().__init__()
+
+
+class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
+                   eva.sysapi.SysHTTP_API_REST_abstract,
+                   eva.api.GenericHTTP_API_REST_abstract, SFA_HTTP_API):
+
+    @restful_api_function
+    def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
+        try:
+            return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
+        except NoAPIMethodException:
+            pass
         if rtp == 'core':
             return self.test(k=k)
         elif rtp == 'action':
@@ -1099,10 +1065,12 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                 return self.state(k=k, i=ii, p=rtp, full=full)
         raise cp_api_404()
 
-    @restful_response
-    def POST(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, kind, for_dir, props = restful_params(
-            *args, **kwargs)
+    @restful_api_function
+    def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
+        try:
+            return super().POST(rtp, k, ii, full, save, kind, for_dir, props)
+        except NoAPIMethodException:
+            pass
         if rtp == 'action':
             result = None
             if 'm' in props:
@@ -1132,8 +1100,8 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                         q=props.get('q'),
                         w=props.get('w', 0))
             if result and 'uuid' in result:
-                set_response_location('{}/{}/{}'.format(self.api_restful_uri,
-                                                        rtp, result['uuid']))
+                set_response_location('{}/{}/{}'.format(self.api_uri, rtp,
+                                                        result['uuid']))
                 return result
         elif rtp == 'controller':
             if (not ii or for_dir or ii.find('/') == -1) and 'cmd' not in props:
@@ -1149,7 +1117,7 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                     save=save)
                 if 'full_id' in result:
                     set_response_location('{}/{}/{}'.format(
-                        self.api_restful_uri, rtp, result['full_id']))
+                        self.api_uri, rtp, result['full_id']))
                 return result
             elif ii and 'cmd' not in props and 'f' in props:
                 return self.management_api_call(
@@ -1169,10 +1137,12 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                 return self.reload_clients(k=k)
         raise cp_api_404()
 
-    @restful_response
-    def PUT(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, kind, for_dir, props = restful_params(
-            *args, **kwargs)
+    @restful_api_function
+    def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
+        try:
+            return super().PUT(rtp, k, ii, full, save, kind, for_dir, props)
+        except NoAPIMethodException:
+            pass
         if rtp == 'action':
             if 'm' in props:
                 return self.run(
@@ -1204,10 +1174,12 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                     w=props.get('w', 0))
         raise cp_api_404()
 
-    @restful_response
-    def PATCH(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, kind, for_dir, props = restful_params(
-            *args, **kwargs)
+    @restful_api_function
+    def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
+        try:
+            return super().PATCH(rtp, k, ii, full, save, kind, for_dir, props)
+        except NoAPIMethodException:
+            pass
         if rtp == 'action':
             s = props.get('s')
             if 'i' in props:
@@ -1250,10 +1222,12 @@ class SFA_HTTP_API(JSON_RPC_API, GenericHTTP_API, SFA_API):
                     return self.disable_actions(k=k, i=ii)
         raise cp_api_404()
 
-    @restful_response
-    def DELETE(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, kind, for_dir, props = restful_params(
-            *args, **kwargs)
+    @restful_api_function
+    def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
+        try:
+            return super().DELETE(rtp, k, ii, full, save, kind, for_dir, props)
+        except NoAPIMethodException:
+            pass
         if rtp == 'controller':
             if ii:
                 return self.remove_controller(k=k, i=ii)
@@ -1443,13 +1417,14 @@ class SFA_HTTP_Root:
 
 
 def start():
-    global api
-    api = SFA_API()
+    http_api = SFA_HTTP_API()
+    cherrypy.tree.mount(http_api, http_api.api_uri)
+    cherrypy.tree.mount(SFA_JSONRPC_API(), SFA_JSONRPC_API.api_uri)
     cherrypy.tree.mount(
-        SFA_HTTP_API(),
-        SFA_HTTP_API.api_uri,
+        SFA_REST_API(),
+        SFA_REST_API.api_uri,
         config={
-            SFA_HTTP_API.api_restful_prefix: {
+            '/': {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
             }
         })
@@ -1459,7 +1434,7 @@ def start():
         config={
             '/': {
                 'tools.sessions.on': True,
-                'tools.sessions.timeout': session_timeout
+                'tools.sessions.timeout': eva.api.session_timeout
             },
             '/favicon.ico': {
                 'tools.staticfile.on':
@@ -1475,9 +1450,12 @@ def start():
         config={
             '/': {
                 'tools.sessions.on': True,
-                'tools.sessions.timeout': session_timeout,
+                'tools.sessions.timeout': eva.api.session_timeout,
                 'tools.staticdir.dir': eva.core.dir_eva + '/ui',
                 'tools.staticdir.on': True
             }
         })
     eva.sfa.cloudmanager.start()
+
+
+api = SFA_API()

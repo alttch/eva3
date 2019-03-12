@@ -52,6 +52,23 @@ session_timeout = 3600
 use_x_real_ip = False
 
 
+class NoAPIMethodException(Exception):
+    pass
+
+
+def expose_api_methods(c, api_name):
+    try:
+        data = jsonpickle.decode(
+            open('{}/eva/apidata/{}_data.json'.format(eva.core.dir_lib,
+                                                      api_name)).read())
+        for f in data['functions']:
+            func = getattr(c, f)
+            setattr(func, 'exposed', True)
+        return data['uri']
+    except:
+        eva.core.critical()
+
+
 def http_api_result(result, env):
     result = {'result': result}
     if env:
@@ -77,7 +94,7 @@ def http_api_result_error(env=None):
         return http_api_result('ERROR', env)
 
 
-def restful_params(*args, **kwargs):
+def restful_parse_params(*args, **kwargs):
     k = kwargs.get('k')
     kind = None
     if args:
@@ -100,11 +117,13 @@ def restful_params(*args, **kwargs):
     return k, ii, full, save, kind, for_dir, kwargs
 
 
-def restful_response(f):
+def restful_api_function(f):
 
     @wraps(f)
-    def do(*args, **kwargs):
-        result = f(*args, **kwargs)
+    def do(c, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_parse_params(
+            *args, **kwargs)
+        result = f(c, rtp, k, ii, full, kind, save, for_dir, props)
         if isinstance(result, dict):
             if result.get('result', 'OK') == 'OK':
                 if 'result' in result: del result['result']
@@ -184,7 +203,7 @@ def update_config(cfg):
     return True
 
 
-def log_api_request(func, auth=None, info=None, dev=False, debug=False):
+def log_api_request(func, auth=None, info=None, debug=False):
     msg = 'API request '
     if auth:
         msg += auth + ':'
@@ -201,7 +220,7 @@ def log_api_request(func, auth=None, info=None, dev=False, debug=False):
     if debug:
         logging.debug(msg)
     else:
-        if not dev:
+        if not eva.core.development or func == 'test':
             logging.debug(msg)
         else:
             logging.info(msg)
@@ -306,7 +325,8 @@ class GenericAPI(object):
             result['layout'] = 'enterprise' if \
                     eva.core.enterprise_layout else 'simple'
         if apikey.check(k, master=True):
-            result['file_management'] = eva.sysapi.api_file_management_allowed
+            result['file_management'] = \
+                    eva.sysapi.config.api_file_management_allowed
         if apikey.check(k, sysfunc=True):
             result['debug'] = eva.core.debug
             result['setup_mode'] = eva.core.setup_mode
@@ -469,7 +489,7 @@ def cp_json_handler(*args, **kwargs):
             if warn: value['_warning'] = warn
             if err: value['_error'] = err
             if crit: value['_critical'] = crit
-    if value:
+    if value or isinstance(value, list):
         return format_json(
             value, minimal=not eva.core.development).encode('utf-8')
     else:
@@ -520,7 +540,12 @@ def cp_client_key(_k=None):
     return k
 
 
-class JSON_RPC_API:
+class JSON_RPC_API_abstract:
+
+    api_uri = '/jrpc'
+
+    def __init__(self):
+        JSON_RPC_API_abstract.index.exposed = True
 
     def index(self, k=None):
         payload = getattr(cherrypy.serving.request, 'json_rpc_payload', None)
@@ -573,6 +598,15 @@ class JSON_RPC_API:
         return func(**params)
 
 
+class GenericHTTP_API_REST_abstract:
+
+    exposed = True
+    api_uri = '/r'
+
+    def __call__(self, *args, **kwargs):
+        raise cp_api_404()
+
+
 class GenericHTTP_API(GenericAPI):
 
     _cp_config = {
@@ -587,35 +621,6 @@ class GenericHTTP_API(GenericAPI):
         'tools.trailing_slash.on': False
     }
 
-    def cp_check_perm(self, api_key=None, rlp=None, path_info=None):
-        k = api_key if api_key else cp_client_key()
-        path = path_info if path_info is not None else \
-                cherrypy.serving.request.path_info
-        if k is not None: cherrypy.serving.request.params['k'] = k
-        if path in ['', '/']: return
-        if path[:6] == '/login': return
-        if path[:5] == '/info': return
-        else: dev = False
-        if dev and not eva.core.development: raise cp_forbidden_key()
-        p = cherrypy.serving.request.params.copy()
-        if not eva.core.development:
-            if 'k' in p: del (p['k'])
-            if path.startswith('/set_'):
-                try:
-                    if p.get('p') in ['key', 'masterkey']: del p['v']
-                except:
-                    pass
-        if rlp:
-            for rp in rlp:
-                try:
-                    del p[rp]
-                except:
-                    pass
-        log_api_request(path[1:], http_remote_info(k), p, dev)
-        if apikey.check(k, master=dev, ip=http_real_ip()):
-            return
-        raise cp_forbidden_key()
-
     def __init__(self):
         cherrypy.tools.session_pre = cherrypy.Tool(
             'on_start_resource', cp_session_pre, priority=1)
@@ -625,9 +630,46 @@ class GenericHTTP_API(GenericAPI):
             'before_handler', cp_api_pre, priority=20)
         cherrypy.tools.auth = cherrypy.Tool(
             'before_handler', self.cp_check_perm, priority=60)
-        GenericAPI.test.exposed = True
+        GenericHTTP_API._cp_config['tools.sessions.timeout'] = session_timeout
+
+        if not session_timeout:
+            GenericHTTP_API._cp_config['tools.sessions.on'] = False
+            GenericHTTP_API._cp_config['tools.session_pre.on'] = False
+
+        GenericHTTP_API.test.exposed = True
         GenericHTTP_API.login.exposed = True
         GenericHTTP_API.logout.exposed = True
+
+    def cp_check_perm(self, api_key=None, path_info=None):
+        k = api_key if api_key else cp_client_key()
+        path = path_info if path_info is not None else \
+                cherrypy.serving.request.path_info
+        if k is not None: cherrypy.serving.request.params['k'] = k
+        # pass json rpc
+        if path in ['', '/']: return
+        # pass login and info
+        if path[:6] == '/login': return
+        if path[:5] == '/info': return
+        self.log_http_api_request(k, path[1:])
+        if apikey.check(k, ip=http_real_ip()):
+            return
+        raise cp_forbidden_key()
+
+    def prepare_request_logging_params(self):
+        p = cherrypy.serving.request.params.copy()
+        if not eva.core.development:
+            if 'k' in p: del (p['k'])
+            if path.startswith('/set_'):
+                try:
+                    if p.get('p') in ['key', 'masterkey']: del p['v']
+                except:
+                    pass
+        return p
+
+    def log_http_api_request(self, k, func):
+        p = self.prepare_request_logging_params()
+        log_api_request(
+            func=func, auth=http_remote_info(k), info=p, debug=False)
 
     def login(self, k=None, u=None, p=None):
         if not u and k:

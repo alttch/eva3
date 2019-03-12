@@ -1282,8 +1282,6 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
 
 def start():
-    global api
-    api = LM_API()
     cherrypy.tree.mount(
         LM_HTTP_API(),
         LM_HTTP_API().api_uri,
@@ -1293,3 +1291,5 @@ def start():
             }
         })
     eva.ei.start()
+
+api = LM_API()
