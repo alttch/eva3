@@ -104,8 +104,6 @@ test - test API/key and get system info
 
 Test can be executed with any valid API key of the controller the function is called to.
 
-Test function present in all APIs.
-
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/test.req
     :response: http-examples/sysapi/test.resp
@@ -194,4 +192,75 @@ Parameters:
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/set_debug.rest
     :response: http-examples/sysapi/set_debug.resp-rest
+
+
+.. _sysapi_cat_lock:
+
+Locking functions
+=================
+
+.. _sysapi_lock:
+
+lock - lock token request
+-------------------------
+
+Lock tokens can be used similarly to file locking by the specific process. The difference is that SYS API tokens can be:
+
+* centralized for several systems (any EVA server can act as lock     server)
+
+* removed from outside
+
+* automatically unlocked after the expiration time, if the initiator     failed or forgot to release the lock
+
+used to restrict parallel process starting or access to system files/resources. LM PLC :doc:`macro</lm/macros>` share locks with extrnal scripts.
+
+.. note::
+
+    even if different EVA controllers are working on the same server,     their lock tokens are stored in different bases. To work with the     token of each subsystem, use SYS API on the respective     address/port.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/lock.req
+    :response: http-examples/sysapi/lock.resp
+
+Parameters:
+
+* **k** API key with *allow=lock* permissions
+* **l** lock id
+
+Optionally:
+
+* **t** maximum time (seconds) to get token
+* **e** time after which token is automatically unlocked (if absent, token may be unlocked only via unlock function)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/lock.rest
+    :response: http-examples/sysapi/lock.resp-rest
+
+.. _sysapi_unlock:
+
+unlock - release lock token
+---------------------------
+
+Releases the previously obtained lock token.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/unlock.req
+    :response: http-examples/sysapi/unlock.resp
+
+Parameters:
+
+* **k** API key with *allow=lock* permissions
+* **l** lock id
+
+Returns:
+
+In case token is already unlocked, *remark = "notlocked"* note will be present in the result.
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/unlock.rest
+    :response: http-examples/sysapi/unlock.resp
 
