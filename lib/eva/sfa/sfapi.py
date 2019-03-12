@@ -988,9 +988,11 @@ class SFA_HTTP_API_abstract(SFA_API):
 
 class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
 
-    def __init__(self):
+    def __init__(self, from_parent=False):
         super().__init__()
-        self.api_uri = expose_api_methods(self.__class__, 'sfapi')
+        uri = expose_api_methods(self.__class__, 'sfapi')
+        if not from_parent:
+            self.api_uri = uri
         if eva.sfa.controller.cloud_manager:
             SFA_HTTP_API.management_api_call.exposed = True
 
@@ -998,12 +1000,17 @@ class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
 class SFA_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
                       eva.sysapi.SysHTTP_API_REST_abstract,
                       eva.api.JSON_RPC_API_abstract, SFA_HTTP_API):
-    pass
+
+    def __init__(self):
+        super().__init__(from_parent=True)
 
 
 class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                    eva.sysapi.SysHTTP_API_REST_abstract,
                    eva.api.GenericHTTP_API_REST_abstract, SFA_HTTP_API):
+
+    def __init__(self):
+        super().__init__(from_parent=True)
 
     @restful_api_function
     def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
@@ -1011,8 +1018,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
             return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
         except NoAPIMethodException:
             pass
-        if rtp == 'core':
-            return self.test(k=k)
+        if rtp == 'd':
+            return self.api_uri
         elif rtp == 'action':
             return self.result(
                 k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))

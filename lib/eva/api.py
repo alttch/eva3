@@ -525,7 +525,7 @@ class JSON_RPC_API_abstract:
 
     api_uri = '/jrpc'
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._cp_config = api_cp_config.copy()
         JSON_RPC_API_abstract.index.exposed = True
 
