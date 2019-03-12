@@ -451,13 +451,32 @@ def cp_json_handler(*args, **kwargs):
     else:
         if isinstance(value, dict) and (not value or ('result' in value and
                                                       value['result'] != 'OK')):
-            value['_log'] = g.api_call_log
+            warn = ''
+            for w in g.api_call_log.get(30, []):
+                if warn:
+                    warn += '\n'
+                warn += w
+            err = ''
+            for e in g.api_call_log.get(40, []):
+                if err:
+                    err += '\n'
+                err += e
+            crit = ''
+            for c in g.api_call_log.get(50, []):
+                if crit:
+                    crit += '\n'
+                crit += c
+            if warn: value['_warning'] = warn
+            if err: value['_error'] = err
+            if crit: value['_critical'] = crit
     if value:
         return format_json(
             value, minimal=not eva.core.development).encode('utf-8')
     else:
-        try: del cherrypy.serving.response.headers['Content-Type']
-        except: pass
+        try:
+            del cherrypy.serving.response.headers['Content-Type']
+        except:
+            pass
         return None
 
 

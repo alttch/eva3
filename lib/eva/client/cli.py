@@ -584,9 +584,20 @@ class GenericCLI(object):
             return data
 
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
-        if '_log' in data:
+        if '_warning' in data or '_error' in data or '_critical' in data:
             d = data.copy()
-            del d['_log']
+            try:
+                del d['_warning']
+            except:
+                pass
+            try:
+                del d['_error']
+            except:
+                pass
+            try:
+                del d['_critical']
+            except:
+                pass
             return d
         return data
 
@@ -1230,7 +1241,7 @@ class GenericCLI(object):
                 default_completer=self.argcomplete.completers.SuppressCompleter(
                 ))
         try:
-            p = args if args else (sys.argv[1:] if len(sys.argv)>1 else [])
+            p = args if args else (sys.argv[1:] if len(sys.argv) > 1 else [])
             if p and p[0] in shells_available:
                 self.subshell_extra_args = p[1:] if len(p) > 1 else []
                 a = self.ap.parse_args([p[0]])
@@ -1379,14 +1390,12 @@ class GenericCLI(object):
 
     def print_failed_result(self, result):
         self.print_err('FAILED')
-        if '_log' in result:
-            log = result['_log']
-            for i in log.get('30', []):
-                self.print_warn(i, w=False)
-            for i in log.get('40', []):
-                self.print_err(i)
-            for i in log.get('50', []):
-                self.print_err('CRITICAL: ' + i)
+        if '_warning' in result:
+            self.print_warn(result['_warning'])
+        if '_error' in result:
+            self.print_err(result['_error'])
+        if '_critical' in result:
+            self.print_err('CRITICAL: ' + result['_critical'])
 
     def process_result(self, result, code, api_func, api_func_full, itype, a):
         if api_func == 'file_get':
@@ -1416,8 +1425,18 @@ class GenericCLI(object):
     def print_tdf(self, result_in, time_field):
         self.import_pandas()
         result = result_in.copy()
-        if '_log' in result:
-            del result['_log']
+        try:
+            del result['_warning']
+        except:
+            pass
+        try:
+            del result['_error']
+        except:
+            pass
+        try:
+            del result['_critical']
+        except:
+            pass
         # convert list to dict
         res = []
         for i in range(len(result[time_field])):
