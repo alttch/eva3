@@ -2,4 +2,4 @@ POST /sys-api/lock HTTP/1.1
 Host: localhost:8812
 Content-Type: application/json
 
-{ "k": "mykey", "l": "mylock1", "e": 0.1, "t": 15 }
+{ "k": "mykey", "l": "mylock1", "e": 1, "t": 15 }

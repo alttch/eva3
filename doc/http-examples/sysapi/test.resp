@@ -2,23 +2,21 @@ HTTP/1.1 200 OK
 Content-Type: application/json
 
 {
-    "_log": {},
     "acl": {
         "key_id": "masterkey",
         "master": true
     },
     "db_update": 1,
-    "debug": false,
+    "debug": true,
     "file_management": true,
-    "layout": "enterprise",
     "polldelay": 0.01,
     "product_build": 2019031001,
-    "product_code": "uc",
-    "product_name": "EVA Universal Controller",
+    "product_code": "sfa",
+    "product_name": "EVA SCADA Final Aggregator",
     "result": "OK",
     "setup_mode": false,
-    "system": "mws1-v1",
-    "time": 1552261781.570358,
-    "uptime": 2299,
+    "system": "mws3-v1",
+    "time": 1552452458.277009,
+    "uptime": 1857,
     "version": "3.1.2"
 }

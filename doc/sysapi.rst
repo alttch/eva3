@@ -19,8 +19,8 @@ calls.
 All API functions can be called using GET and POST. When POST is used, the
 parameters can be passed to functions either as multipart/form-data or as JSON.
 
-API key can be sent in request parameters, session (if user is logged in) or in
-HTTP **X-Auth-Key** header.
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
 
 Standard API responses
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -31,6 +31,7 @@ Standard API responses
 
 **Standard error responses in status:**
 
+* **400 Bad Request** Invalid request params
 * **403 Forbidden** the API key has no access to this function or resource
 * **404 Not Found** method or resource doesn't exist
 * **500 API Error** API function execution has been failed. Check input
@@ -168,7 +169,7 @@ Optionally:
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/cmd.rest
-    :response: http-examples/sysapi/cmd.resp
+    :response: http-examples/sysapi/cmd.resp-rest
 
 .. _sysapi_set_debug:
 
