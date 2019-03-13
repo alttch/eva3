@@ -15,8 +15,8 @@ Content-Type: application/json
     "product_name": "EVA SCADA Final Aggregator",
     "result": "OK",
     "setup_mode": false,
-    "system": "mws3-v1",
-    "time": 1552452458.277009,
-    "uptime": 1857,
+    "system": "ws1-v1",
+    "time": 1552491451.6718457,
+    "uptime": 14,
     "version": "3.1.2"
 }

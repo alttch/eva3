@@ -15,8 +15,8 @@ Content-Type: application/json
     "product_code": "sfa",
     "product_name": "EVA SCADA Final Aggregator",
     "setup_mode": false,
-    "system": "mws3-v1",
-    "time": 1552452458.2823143,
-    "uptime": 1857,
+    "system": "ws1-v1",
+    "time": 1552491451.6762435,
+    "uptime": 14,
     "version": "3.1.2"
 }

@@ -1,0 +1,6 @@
+PUT /r/cvar/test HTTP/1.1
+Host: localhost:8812
+X-Auth-Key: mykey
+Content-Type: application/json
+
+{ "v": "OK" }
