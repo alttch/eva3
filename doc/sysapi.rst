@@ -85,7 +85,7 @@ sessions, so user authorization is not possible. Also note that default JSON
 RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
 error result, as JSON RPC sends errors in "error" field.
 
-JSON RPC API URL for SYS API is:
+JSON RPC API URL:
 
     **\http://<ip_address:port>/jrpc**
 

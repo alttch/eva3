@@ -1,6 +1,6 @@
-PUT /sys-api/r/lock/mylock1 HTTP/1.1
+PUT /rlock/mylock1 HTTP/1.1
 Host: localhost:8812
 X-Auth-Key: mykey
 Content-Type: application/json
 
-{ "e": 5, "t": 10 }
+{ "k": "mykey", "l": "mylock1", "e": 0.1, "t": 15 }

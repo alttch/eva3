@@ -280,9 +280,6 @@ class GenericAPI(object):
         Returns:
             JSON dict with system info and current API key permissions (for
             masterkey only { "master": true } is returned)
-
-        apidoc_priority: 1
-        apidoc_category: general
         """
         result = http_api_result_ok({
             'acl':
@@ -525,7 +522,7 @@ class JSON_RPC_API_abstract:
 
     api_uri = '/jrpc'
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self._cp_config = api_cp_config.copy()
         JSON_RPC_API_abstract.index.exposed = True
 

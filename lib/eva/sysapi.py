@@ -470,8 +470,6 @@ class SysHTTP_API_abstract(SysAPI):
             t: maximum time (seconds) to get token
             e: time after which token is automatically unlocked (if absent,
                 token may be unlocked only via unlock function)
-
-        apidoc_category: lock
         """
         if not l:
             raise cp_api_error('No lock provided')
@@ -525,8 +523,6 @@ class SysHTTP_API_abstract(SysAPI):
                 to try waiting until command finish
             t: maximum time of command execution. If the command fails to finish
                 within the specified time (in sec), it will be terminated
-
-        apidoc_category: general
         """
         if t:
             try:
@@ -559,9 +555,6 @@ class SysHTTP_API_abstract(SysAPI):
 
         Args:
             k: .sysfunc=yes
-
-        apidoc_priority: 2
-        apidoc_category: general
         """
         return http_api_result_ok() \
                 if super().save(k) else http_api_result_error()
@@ -648,8 +641,6 @@ class SysHTTP_API_abstract(SysAPI):
         Args:
             k: .master
             debug: 1 for enabling debug mode, 0 for disabling
-
-        apidoc_category: general
         """
         val = val_to_boolean(debug)
         if val is None: raise cp_api_error()
@@ -874,15 +865,19 @@ class SysHTTP_API_REST_abstract:
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'core':
+            success = False
             if 'debug' in props:
                 if self.set_debug(
                         k=k, debug=props['debug']).get('result') != 'OK':
                     return http_api_result_error()
+                success = True
             if 'setup' in props:
                 if self.setup_mode(
                         k=k, setup=props['setup']).get('result') != 'OK':
                     return http_api_result_error()
-            return http_api_result_ok()
+                success = True
+            if success: return http_api_result_ok()
+            else: raise cp_api_404()
         elif rtp == 'key':
             for i, v in props.items():
                 if not super().set_key_prop(

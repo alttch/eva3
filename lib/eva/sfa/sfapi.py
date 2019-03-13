@@ -988,11 +988,10 @@ class SFA_HTTP_API_abstract(SFA_API):
 
 class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
 
-    def __init__(self, from_parent=False):
+    def __init__(self):
         super().__init__()
         uri = expose_api_methods(self.__class__, 'sfapi')
-        if not from_parent:
-            self.api_uri = uri
+        self.api_uri = uri
         if eva.sfa.controller.cloud_manager:
             SFA_HTTP_API.management_api_call.exposed = True
 
@@ -1000,17 +999,13 @@ class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
 class SFA_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
                       eva.sysapi.SysHTTP_API_REST_abstract,
                       eva.api.JSON_RPC_API_abstract, SFA_HTTP_API):
-
-    def __init__(self):
-        super().__init__(from_parent=True)
+    pass
 
 
 class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                    eva.sysapi.SysHTTP_API_REST_abstract,
-                   eva.api.GenericHTTP_API_REST_abstract, SFA_HTTP_API):
-
-    def __init__(self):
-        super().__init__(from_parent=True)
+                   eva.api.GenericHTTP_API_REST_abstract, SFA_HTTP_API_abstract,
+                   GenericHTTP_API):
 
     @restful_api_function
     def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
@@ -1424,12 +1419,12 @@ def start():
     cherrypy.tree.mount(SFA_JSONRPC_API(), SFA_JSONRPC_API.api_uri)
     cherrypy.tree.mount(
         SFA_REST_API(),
-        SFA_REST_API.api_uri,
-        config={
-            '/': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
-            }
-        })
+        SFA_REST_API.api_uri)
+        # config={
+            # '/': {
+                # 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
+            # }
+        # })
     cherrypy.tree.mount(
         SFA_HTTP_Root(),
         '/',
