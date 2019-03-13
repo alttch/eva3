@@ -73,12 +73,24 @@ def http_api_result_ok(env=None):
 
 
 def http_api_result_error(env=None):
-    if hasattr(cherrypy.serving.request, 'json_rpc_payload'):
-        msg = ', '.join(g.api_call_log.get(40, []) + g.api_call_log.get(50, []))
-        raise cp_api_error(msg if msg else 'API error')
-    else:
-        cherrypy.serving.response.status = '500 API Error'
-        return http_api_result('ERROR', env)
+    cherrypy.serving.response.status = 500
+    return http_api_result('ERROR', env)
+
+
+def cp_forbidden_key():
+    return cherrypy.HTTPError(403)
+
+
+def cp_api_error(msg=None):
+    return cherrypy.HTTPError(500, msg)
+
+
+def cp_api_404(msg=None):
+    return cherrypy.HTTPError(404, msg)
+
+
+def cp_bad_request(msg=None):
+    return cherrypy.HTTPError(400, msg)
 
 
 def restful_parse_params(*args, **kwargs):
@@ -526,24 +538,6 @@ def cp_jsonrpc_handler(*args, **kwargs):
             value, minimal=not eva.core.development).encode('utf-8')
 
 
-def cp_forbidden_key():
-    return cherrypy.HTTPError('403 API Forbidden', 'API Key Access Error')
-
-
-def cp_api_error(msg=''):
-    return cherrypy.HTTPError('500 API Error', msg)
-
-
-def cp_api_404(msg=''):
-    return cherrypy.HTTPError('404 Object Not Found', msg
-                              if msg else 'Object Not Found')
-
-
-def cp_bad_request(msg=''):
-    return cherrypy.HTTPError('400 Bad Request', msg
-                              if msg else 'Invalid function params')
-
-
 def cp_need_master(f):
 
     @wraps(f)
@@ -829,10 +823,44 @@ def init():
         'before_finalize', cp_nocache, priority=10)
 
 
+def jsonify_error(value):
+    if not cherrypy.serving.response.body:
+        return format_json(
+            {
+                '_error': value
+            }, minimal=not eva.core.development).encode('utf-8')
+
+
+def error_page_400(*args, **kwargs):
+    return jsonify_error(kwargs.get('message', 'Invalid function params'))
+
+
+def error_page_403(*args, **kwargs):
+    if 'k' in cherrypy.serving.request.params:
+        return jsonify_error('API key has no access to this resource')
+    else:
+        return jsonify_error('No API key provided')
+
+
+def error_page_404(*args, **kwargs):
+    msg = kwargs.get('message')
+    if not msg or msg == 'Nothing matches the given URI':
+        msg = 'Resource or function not found'
+    return jsonify_error(msg)
+
+
+def error_page_500(*args, **kwargs):
+    return jsonify_error(kwargs.get('message', 'API function error'))
+
+
 api_cp_config = {
     'tools.api_pre.on': True,
     'tools.json_out.on': True,
     'tools.sessions.on': False,
     'tools.nocache.on': True,
-    'tools.trailing_slash.on': False
+    'tools.trailing_slash.on': False,
+    'error_page.400': error_page_400,
+    'error_page.403': error_page_403,
+    'error_page.404': error_page_404,
+    'error_page.500': error_page_500
 }
