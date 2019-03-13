@@ -33,7 +33,6 @@ from eva.api import cp_need_master
 from eva.api import NoAPIMethodException
 
 from eva.api import GenericAPI
-from eva.api import FunctionDispatcher
 
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
@@ -940,14 +939,7 @@ def update_config(cfg):
 
 def start():
     http_api = SysHTTP_API()
-    cherrypy.tree.mount(
-        http_api,
-        http_api.api_uri,
-        config={
-            '/': {
-                'request.dispatch': FunctionDispatcher()
-            }
-        })
+    cherrypy.tree.mount(http_api, http_api.api_uri)
     lock_processor.start(_interval=eva.core.polldelay)
 
 

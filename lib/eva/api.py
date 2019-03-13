@@ -505,25 +505,20 @@ def cp_client_key(_k=None):
     return k
 
 
-class FunctionDispatcher(cherrypy.dispatch.Dispatcher):
-
-    def __call__(self, path_info):
-        resource, vpath = self.find_handler(path_info)
-        request = cherrypy.serving.request
-        if resource:
-            func = resource.get_api_function(vpath)
-            if func:
-                request.handler = cherrypy.dispatch.LateParamPageHandler(func)
-            else:
-                request.handler = cherrypy.NotFound()
-        else:
-            request.handler = cherrypy.NotFound()
-
-
 class GenericHTTP_API_abstract:
 
     def __init__(self):
         self.__exposed = {}
+
+    def __call__(self, *args, **kwargs):
+        func = self.get_api_function(args)
+        if func:
+            try:
+                return func(**kwargs)
+            except TypeError:
+                raise cherrypy.HTTPError('400 Bad Request')
+        else:
+            raise cp_api_404()
 
     def _expose(self, f):
         if callable(f):
@@ -535,7 +530,7 @@ class GenericHTTP_API_abstract:
                 self._expose(func)
 
     def get_api_function(self, f):
-        if isinstance(f, list):
+        if isinstance(f, list) or isinstance(f, tuple):
             f = '.'.join(f)
         return self.__exposed.get(f)
 
@@ -790,5 +785,5 @@ api_cp_config = {
     'tools.json_out.on': True,
     'tools.json_out.handler': cp_json_handler,
     'tools.sessions.on': False,
-    'tools.trailing_slash.on': False,
+    'tools.trailing_slash.on': False
 }

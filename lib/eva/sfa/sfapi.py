@@ -26,7 +26,6 @@ import eva.api
 
 from eva.api import GenericHTTP_API
 from eva.api import GenericAPI
-from eva.api import FunctionDispatcher
 from eva.api import cp_forbidden_key
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
@@ -1421,10 +1420,7 @@ def start():
     http_api = SFA_HTTP_API()
     cherrypy.tree.mount(
         http_api,
-        http_api.api_uri,
-        config={'/': {
-            'request.dispatch': FunctionDispatcher()
-        }})
+        http_api.api_uri)
     cherrypy.tree.mount(SFA_JSONRPC_API(), SFA_JSONRPC_API.api_uri)
     cherrypy.tree.mount(
         SFA_REST_API(),
