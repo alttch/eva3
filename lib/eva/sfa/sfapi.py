@@ -30,6 +30,7 @@ from eva.api import cp_forbidden_key
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
 from eva.api import cp_api_error
+from eva.api import cp_bad_request
 from eva.api import cp_api_404
 from eva.api import cp_need_master
 from eva.api import restful_api_function
@@ -674,7 +675,7 @@ class SFA_HTTP_API_abstract(SFA_API):
                       g=None):
         if i and isinstance(i, list) or i.find(',') != -1:
             if not w:
-                raise cp_api_error(
+                raise cp_bad_request(
                     '"w" param required to process multiple items')
             if isinstance(i, list):
                 items = i
@@ -683,7 +684,7 @@ class SFA_HTTP_API_abstract(SFA_API):
             if not g or g == 'list':
                 result = {}
             else:
-                raise cp_api_error(
+                raise cp_bad_request(
                     'format should be list only to process multiple items')
             for i in items:
                 r = super().state_history(
@@ -717,21 +718,21 @@ class SFA_HTTP_API_abstract(SFA_API):
             try:
                 _w = float(w)
             except:
-                raise cp_api_error('wait is not a float')
+                raise cp_bad_request('w is not a number')
         else:
             _w = None
         if p:
             try:
                 _p = int(p)
             except:
-                raise cp_api_error('priority is not an integer')
+                raise cp_bad_request('p is not an integer')
         else:
             _p = None
         if q:
             try:
                 _q = float(q)
             except:
-                raise cp_api_error('q_timeout is not a float')
+                raise cp_bad_request('q is not a number')
         else:
             _q = None
         a = super().action(
@@ -752,21 +753,21 @@ class SFA_HTTP_API_abstract(SFA_API):
             try:
                 _w = float(w)
             except:
-                raise cp_api_error('wait is not a float')
+                raise cp_bad_request('w is not a number')
         else:
             _w = None
         if p:
             try:
                 _p = int(p)
             except:
-                raise cp_api_error('priority is not an integer')
+                raise cp_bad_request('p is not an integer')
         else:
             _p = None
         if q:
             try:
                 _q = float(q)
             except:
-                raise cp_api_error('q_timeout is not a float')
+                raise cp_bad_request('q is not a number')
         else:
             _q = None
         a = super().action_toggle(
@@ -813,7 +814,7 @@ class SFA_HTTP_API_abstract(SFA_API):
             try:
                 _s = int(s)
             except:
-                raise cp_api_error('status is not an integer')
+                raise cp_bad_request('s is not an integer')
         result = super().set(k, i, _s, v)
         if result is None:
             raise cp_api_404()
@@ -858,14 +859,14 @@ class SFA_HTTP_API_abstract(SFA_API):
             try:
                 _w = float(w)
             except:
-                raise cp_api_error('wait is not a float')
+                raise cp_bad_request('w is not a number')
         else:
             _w = None
         if p:
             try:
                 _p = int(p)
             except:
-                raise cp_api_error('priority is not an integer')
+                raise cp_bad_request('p is not an integer')
         else:
             _p = None
         a = super().run(
@@ -1326,7 +1327,7 @@ class SFA_HTTP_Root:
     def rpvt(self, k=None, f=None, nocache=None):
         _k = cp_client_key(k)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
-        if f is None: raise cp_api_error('uri not provided')
+        if f is None: raise cp_bad_request('uri not provided')
         if not apikey.check(_k, rpvt_uri=f, ip=http_real_ip()):
             logging.warning('rpvt %s uri %s access forbidden' % (_r, f))
             raise cp_forbidden_key()

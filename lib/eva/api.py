@@ -248,7 +248,7 @@ def cp_json_pre():
             else:
                 cherrypy.serving.request.json_rpc_payload = data
     except:
-        raise cp_api_error('invalid JSON data')
+        raise cp_bad_request('invalid JSON data')
     return
 
 
@@ -477,6 +477,9 @@ def cp_api_404(msg=''):
     return cherrypy.HTTPError('404 Object Not Found', msg
                               if msg else 'Object Not Found')
 
+def cp_bad_request(msg=''):
+    return cherrypy.HTTPError('400 Bad Request', msg
+                              if msg else 'Invalid function params')
 
 def cp_need_master(f):
 
@@ -516,7 +519,7 @@ class GenericHTTP_API_abstract:
             try:
                 return func(**kwargs)
             except TypeError:
-                raise cherrypy.HTTPError('400 Bad Request')
+                raise cp_bad_request()
         else:
             raise cp_api_404()
 
@@ -654,11 +657,11 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
             return
         raise cp_forbidden_key()
 
-    def prepare_request_logging_params(self):
+    def prepare_request_logging_params(self, func):
         p = cherrypy.serving.request.params.copy()
         if not eva.core.development:
             if 'k' in p: del (p['k'])
-            if path.startswith('/set_'):
+            if func.startswith('set_'):
                 try:
                     if p.get('p') in ['key', 'masterkey']: del p['v']
                 except:
@@ -666,7 +669,7 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         return p
 
     def log_http_api_request(self, k, func):
-        p = self.prepare_request_logging_params()
+        p = self.prepare_request_logging_params(func)
         log_api_request(
             func=func, auth=http_remote_info(k), info=p, debug=False)
 

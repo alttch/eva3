@@ -22,6 +22,7 @@ from functools import wraps
 
 from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
+from eva.api import cp_bad_request
 from eva.api import cp_api_404
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
@@ -471,7 +472,7 @@ class SysHTTP_API_abstract(SysAPI):
                 token may be unlocked only via unlock function)
         """
         if not l:
-            raise cp_api_error('No lock provided')
+            raise cp_bad_request('No lock provided')
         result = super().lock(k, l, t, e)
         if result is None: raise cp_forbidden_key()
         return http_api_result_ok() \
@@ -495,7 +496,7 @@ class SysHTTP_API_abstract(SysAPI):
         apidoc_category: lock
         """
         if not l:
-            raise cp_api_error('No lock provided')
+            raise cp_bad_request('No lock provided')
         if not l in locks:
             raise cp_api_404('Lock not found')
         result = super().unlock(k, l)
@@ -527,14 +528,14 @@ class SysHTTP_API_abstract(SysAPI):
             try:
                 _t = float(t)
             except:
-                raise cp_api_error()
+                raise cp_bad_request('t is it a number')
         else:
             _t = None
         if w:
             try:
                 _w = float(w)
             except:
-                raise cp_api_error()
+                raise cp_bad_request('w is not a number')
         else:
             _w = None
         result = super().cmd(k, cmd=c, args=a, wait=_w, timeout=_t)
@@ -642,7 +643,7 @@ class SysHTTP_API_abstract(SysAPI):
             debug: 1 for enabling debug mode, 0 for disabling
         """
         val = val_to_boolean(debug)
-        if val is None: raise cp_api_error()
+        if val is None: raise cp_bad_request('Invalid value of "debug"')
         return http_api_result_ok() if super().set_debug(k, val) \
                 else http_api_result_error()
 
@@ -654,7 +655,7 @@ class SysHTTP_API_abstract(SysAPI):
     @cp_need_master
     def setup_mode(self, k=None, setup=None):
         val = val_to_boolean(setup)
-        if val is None: raise cp_api_error()
+        if val is None: raise cp_bad_request('Invalid value of "setup"')
         return http_api_result_ok() if super().setup_mode(k, val) \
                 else http_api_result_error()
 
@@ -700,7 +701,7 @@ class SysHTTP_API_abstract(SysAPI):
         try:
             _e = val_to_boolean(e)
         except:
-            raise cp_api_error()
+            raise cp_bad_request('Invalid value of "e"')
         result = super().file_set_exec(k, i, _e)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
