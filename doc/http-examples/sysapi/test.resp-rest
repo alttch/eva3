@@ -1,5 +1,8 @@
 HTTP/1.1 200 OK
 Content-Type: application/json
+Cache-Control: no-cache, no-store, must-revalidate
+Expires: 0
+Pragma: no-cache
 
 {
     "acl": {
@@ -14,9 +17,9 @@ Content-Type: application/json
     "product_build": 2019031001,
     "product_code": "sfa",
     "product_name": "EVA SCADA Final Aggregator",
-    "setup_mode": false,
+    "setup_mode": true,
     "system": "ws1-v1",
-    "time": 1552491451.6762435,
-    "uptime": 14,
+    "time": 1552491834.8385139,
+    "uptime": 106,
     "version": "3.1.2"
 }
