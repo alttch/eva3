@@ -8,7 +8,6 @@ import eva.core
 from eva import apikey
 from eva.api import cp_forbidden_key
 from eva.api import cp_client_key
-from eva.api import session_timeout
 from eva.api import http_real_ip
 from eva.notify import NWebSocket
 from eva.notify import WSNotifier_Client
@@ -33,14 +32,15 @@ class WS_API(object):
 def start():
     WebSocketPlugin(cherrypy.engine).subscribe()
     cherrypy.tools.websocket = WebSocketTool()
-    cherrypy.tree.mount(
-        WS_API(),
-        '/ws',
-        config={
-            '/': {
-                'tools.websocket.on': True,
-                'tools.websocket.handler_cls': NWebSocket,
-                'tools.sessions.on': True,
-                'tools.sessions.timeout': session_timeout
-            }
+    config = {
+        '/': {
+            'tools.websocket.on': True,
+            'tools.websocket.handler_cls': NWebSocket,
+        }
+    }
+    if eva.api.config.session_timeout:
+        config['/'].update({
+            'tools.sessions.on': True,
+            'tools.sessions.timeout': eva.api.config.session_timeout
         })
+    cherrypy.tree.mount(WS_API(), '/ws', config=config)

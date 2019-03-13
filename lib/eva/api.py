@@ -27,29 +27,24 @@ from pyaltt import g
 
 from functools import wraps
 
-host = None
-ssl_host = None
-
-response = threading.local()
-
-port = None
-ssl_port = None
-
-# ssl_module = None
-ssl_cert = None
-ssl_key = None
-ssl_chain = None
-
-ei_enabled = True
+from types import SimpleNamespace
 
 default_port = 80
 default_ssl_port = 443
 
-thread_pool = 15
-
-session_timeout = 0
-
-use_x_real_ip = False
+config = SimpleNamespace(
+    host='127.0.0.1',
+    port=default_port,
+    ssl_host=None,
+    ssl_port=default_ssl_port,
+    ssl_module=None,
+    ssl_cert=None,
+    ssl_key=None,
+    ssl_chain=None,
+    session_timeout=0,
+    thread_pool=15,
+    ei_enabled=False,
+    use_x_real_ip=False)
 
 
 class NoAPIMethodException(Exception):
@@ -148,55 +143,56 @@ def set_response_location(location):
 
 
 def update_config(cfg):
-    global host, port, ssl_host, ssl_port
-    global ssl_module, ssl_cert, ssl_key, ssl_chain
-    global session_timeout, thread_pool, ei_enabled
-    global use_x_real_ip
     try:
-        host, port = parse_host_port(cfg.get('webapi', 'listen'), default_port)
-        logging.debug('webapi.listen = %s:%u' % (host, port))
+        config.host, config.port = parse_host_port(
+            cfg.get('webapi', 'listen'), default_port)
+        logging.debug('webapi.listen = %s:%u' % (config.host, config.port))
     except:
         eva.core.log_traceback()
         return False
     try:
-        ssl_host, ssl_port = parse_host_port(
+        config.ssl_host, config.ssl_port = parse_host_port(
             cfg.get('webapi', 'ssl_listen'), default_ssl_port)
         try:
-            ssl_module = cfg.get('webapi', 'ssl_module')
+            config.ssl_module = cfg.get('webapi', 'ssl_module')
         except:
-            ssl_module = 'builtin'
-        ssl_cert = cfg.get('webapi', 'ssl_cert')
-        if ssl_cert[0] != '/': ssl_cert = eva.core.dir_etc + '/' + ssl_cert
+            config.ssl_module = 'builtin'
+        config.ssl_cert = cfg.get('webapi', 'ssl_cert')
+        if ssl_cert[0] != '/':
+            config.ssl_cert = eva.core.dir_etc + '/' + config.ssl_cert
         ssl_key = cfg.get('webapi', 'ssl_key')
-        if ssl_key[0] != '/': ssl_key = eva.core.dir_etc + '/' + ssl_key
-        logging.debug('webapi.ssl_listen = %s:%u' % (ssl_host, ssl_port))
-        ssl_chain = cfg.get('webapi', 'ssl_chain')
-        if ssl_chain[0] != '/': ssl_chain = eva.core.dir_etc + '/' + ssl_chain
+        if ssl_key[0] != '/':
+            config.ssl_key = eva.core.dir_etc + '/' + config.ssl_key
+        logging.debug(
+            'webapi.ssl_listen = %s:%u' % (config.ssl_host, config.ssl_port))
+        config.ssl_chain = cfg.get('webapi', 'ssl_chain')
+        if config.ssl_chain[0] != '/':
+            config.ssl_chain = eva.core.dir_etc + '/' + config.ssl_chain
     except:
         pass
     try:
-        session_timeout = int(cfg.get('webapi', 'session_timeout'))
+        config.session_timeout = int(cfg.get('webapi', 'session_timeout'))
     except:
         pass
-    logging.debug('webapi.session_timeout = %u' % session_timeout)
+    logging.debug('webapi.session_timeout = %u' % config.session_timeout)
     try:
-        thread_pool = int(cfg.get('webapi', 'thread_pool'))
+        config.thread_pool = int(cfg.get('webapi', 'thread_pool'))
     except:
         pass
-    logging.debug('webapi.thread_pool = %u' % thread_pool)
-    eva.core.db_pool_size = thread_pool
+    logging.debug('webapi.thread_pool = %u' % config.thread_pool)
+    eva.core.db_pool_size = config.thread_pool
     try:
-        ei_enabled = (cfg.get('webapi', 'ei_enabled') == 'yes')
+        config.ei_enabled = (cfg.get('webapi', 'ei_enabled') == 'yes')
     except:
         pass
     logging.debug('webapi.ei_enabled = %s' % ('yes' \
-                                if ei_enabled else 'no'))
+                                if config.ei_enabled else 'no'))
     try:
-        use_x_real_ip = (cfg.get('webapi', 'x_real_ip') == 'yes')
+        config.use_x_real_ip = (cfg.get('webapi', 'x_real_ip') == 'yes')
     except:
         pass
     logging.debug('webapi.x_real_ip = %s' % ('yes' \
-                                if use_x_real_ip else 'no'))
+                                if config.use_x_real_ip else 'no'))
     return True
 
 
@@ -255,7 +251,7 @@ def cp_check_perm(api_key=None, path_info=None):
 def http_real_ip(get_gw=False):
     if get_gw and hasattr(cherrypy.serving.request, '_eva_ics_gw'):
         return 'gateway/' + cherrypy.serving.request._eva_ics_gw
-    if use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
+    if config.use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
         ip = cherrypy.request.headers['X-Real-IP']
     else:
@@ -692,10 +688,12 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         self._cp_config['tools.json_pre.on'] = True
         self._cp_config['tools.json_out.handler'] = cp_json_handler
 
-        if session_timeout:
+        if config.session_timeout:
             self._cp_config.update({
-                'tools.sessions.on': True,
-                'tools.sessions.timeout': session_timeout
+                'tools.sessions.on':
+                True,
+                'tools.sessions.timeout':
+                config.session_timeout
             })
             self._expose(['login', 'logout'])
 
@@ -773,28 +771,29 @@ def mqtt_api_handler(notifier_id, data, callback):
 
 
 def start():
-    if not host: return False
+    if not config.host: return False
     cherrypy.server.unsubscribe()
     logging.info('HTTP API listening at at %s:%s' % \
-            (host, port))
+            (config.host, config.port))
     server1 = cherrypy._cpserver.Server()
-    server1.socket_port = port
-    server1._socket_host = host
-    server1.thread_pool = thread_pool
+    server1.socket_port = config.port
+    server1._socket_host = config.host
+    server1.thread_pool = config.thread_pool
     server1.subscribe()
-    if ssl_host and ssl_module and ssl_cert and ssl_key:
+    if config.ssl_host and config.ssl_module and \
+            config.ssl_cert and config.ssl_key:
         logging.info('HTTP API SSL listening at %s:%s' % \
-                (ssl_host, ssl_port))
+                (config.ssl_host, config.ssl_port))
         server_ssl = cherrypy._cpserver.Server()
-        server_ssl.socket_port = ssl_port
-        server_ssl._socket_host = ssl_host
-        server_ssl.thread_pool = thread_pool
-        server_ssl.ssl_certificate = ssl_cert
-        server_ssl.ssl_private_key = ssl_key
-        if ssl_chain:
-            server_ssl.ssl_certificate_chain = ssl_chain
-        if ssl_module:
-            server_ssl.ssl_module = ssl_module
+        server_ssl.socket_port = config.ssl_port
+        server_ssl._socket_host = config.ssl_host
+        server_ssl.thread_pool = config.thread_pool
+        server_ssl.ssl_certificate = config.ssl_cert
+        server_ssl.ssl_private_key = config.ssl_key
+        if config.ssl_chain:
+            server_ssl.ssl_certificate_chain = config.ssl_chain
+        if config.ssl_module:
+            server_ssl.ssl_module = config.ssl_module
         server_ssl.subscribe()
     if not eva.core.development:
         cherrypy.config.update({'environment': 'production'})

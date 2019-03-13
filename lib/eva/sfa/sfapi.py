@@ -1437,7 +1437,7 @@ def start():
         config={
             '/': {
                 'tools.sessions.on': True,
-                'tools.sessions.timeout': eva.api.session_timeout
+                'tools.sessions.timeout': eva.api.config.session_timeout
             },
             '/favicon.ico': {
                 'tools.staticfile.on':
@@ -1453,7 +1453,7 @@ def start():
         config={
             '/': {
                 'tools.sessions.on': True,
-                'tools.sessions.timeout': eva.api.session_timeout,
+                'tools.sessions.timeout': eva.api.config.session_timeout,
                 'tools.staticdir.dir': eva.core.dir_eva + '/ui',
                 'tools.staticdir.on': True
             }
