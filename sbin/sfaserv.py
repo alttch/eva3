@@ -101,7 +101,7 @@ eva.sfa.controller.update_config(cfg)
 eva.sfa.controller.load_remote_ucs()
 eva.sfa.controller.load_remote_lms()
 
-eva.core.start()
+eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
 eva.sfa.sfapi.start()

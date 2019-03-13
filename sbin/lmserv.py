@@ -104,7 +104,7 @@ eva.lm.controller.load_macros()
 eva.lm.controller.load_dm_rules()
 eva.lm.controller.load_cycles()
 
-eva.core.start()
+eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
 eva.lm.lmapi.start()

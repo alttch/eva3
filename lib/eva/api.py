@@ -120,11 +120,9 @@ def restful_api_function(f):
                         cherrypy.serving.response.status = 201
                     else:
                         if not result:
-                            cherrypy.serving.response.status = 204
                             return None
                 elif n == 'PUT' or n == 'PATCH' or n == 'DELETE':
                     if not result:
-                        cherrypy.serving.response.status = 204
                         return None
             else:
                 if 'result' in result: del result['result']
@@ -213,6 +211,35 @@ def log_api_request(func, auth=None, info=None, debug=False):
             logging.info(msg)
 
 
+def log_http_api_request(k, func):
+    p = prepare_http_request_logging_params(func)
+    log_api_request(func=func, auth=http_remote_info(k), info=p, debug=False)
+
+
+def prepare_http_request_logging_params(func):
+    p = cherrypy.serving.request.params.copy()
+    if not eva.core.development:
+        if 'k' in p: del (p['k'])
+        if func.startswith('set_'):
+            try:
+                if p.get('p') in ['key', 'masterkey']: del p['v']
+            except:
+                pass
+    return p
+
+
+def cp_check_perm(api_key=None, path_info=None):
+    k = api_key if api_key else cp_client_key()
+    path = path_info if path_info is not None else \
+            cherrypy.serving.request.path_info
+    if k is not None: cherrypy.serving.request.params['k'] = k
+    # pass login and info
+    if path.endswith('/login') or path.endswith('/info'): return
+    log_http_api_request(k, path[1:])
+    if apikey.check(k, ip=http_real_ip()): return
+    raise cp_forbidden_key()
+
+
 def http_real_ip(get_gw=False):
     if get_gw and hasattr(cherrypy.serving.request, '_eva_ics_gw'):
         return 'gateway/' + cherrypy.serving.request._eva_ics_gw
@@ -250,6 +277,33 @@ def cp_json_pre():
     except:
         raise cp_bad_request('invalid JSON data')
     return
+
+
+def get_json_payload():
+    if cherrypy.request.headers.get('Content-Type') == 'application/json':
+        cl = int(cherrypy.request.headers.get('Content-Length'))
+        raw = cherrypy.request.body.read(cl).decode()
+    elif 'X-JSON' in cherrypy.request.headers:
+        raw = cherrypy.request.headers.get('X-JSON')
+    else:
+        return None
+    return jsonpickle.decode(raw) if raw else None
+
+
+def cp_jsonrpc_pre():
+    try:
+        data = get_json_payload()
+        if not data: raise Exception('no payload')
+        cherrypy.serving.request.json_rpc_payload = data
+    except:
+        raise cp_bad_request('invalid JSON data')
+
+
+def cp_nocache():
+    headers = cherrypy.serving.response.headers
+    headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    headers['Pragma'] = 'no-cache'
+    headers['Expires'] = '0'
 
 
 class GenericAPI(object):
@@ -429,31 +483,27 @@ class GenericAPI(object):
 
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
-    if getattr(cherrypy.serving.request, 'json_rpc_payload', None):
-        if value is None:
-            cherrypy.serving.response.status = 202
-            return
-    else:
-        if isinstance(value, dict) and (not value or ('result' in value and
-                                                      value['result'] != 'OK')):
-            warn = ''
-            for w in g.api_call_log.get(30, []):
-                if warn:
-                    warn += '\n'
-                warn += w
-            err = ''
-            for e in g.api_call_log.get(40, []):
-                if err:
-                    err += '\n'
-                err += e
-            crit = ''
-            for c in g.api_call_log.get(50, []):
-                if crit:
-                    crit += '\n'
-                crit += c
-            if warn: value['_warning'] = warn
-            if err: value['_error'] = err
-            if crit: value['_critical'] = crit
+    if isinstance(value,
+                  dict) and (not value or
+                             ('result' in value and value['result'] != 'OK')):
+        warn = ''
+        for w in g.api_call_log.get(30, []):
+            if warn:
+                warn += '\n'
+            warn += w
+        err = ''
+        for e in g.api_call_log.get(40, []):
+            if err:
+                err += '\n'
+            err += e
+        crit = ''
+        for c in g.api_call_log.get(50, []):
+            if crit:
+                crit += '\n'
+            crit += c
+        if warn: value['_warning'] = warn
+        if err: value['_error'] = err
+        if crit: value['_critical'] = crit
     if value or isinstance(value, list):
         return format_json(
             value, minimal=not eva.core.development).encode('utf-8')
@@ -462,7 +512,18 @@ def cp_json_handler(*args, **kwargs):
             del cherrypy.serving.response.headers['Content-Type']
         except:
             pass
+        cherrypy.serving.response.status = 204
         return None
+
+
+def cp_jsonrpc_handler(*args, **kwargs):
+    value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
+    if value is None:
+        cherrypy.serving.response.status = 202
+        return
+    else:
+        return format_json(
+            value, minimal=not eva.core.development).encode('utf-8')
 
 
 def cp_forbidden_key():
@@ -477,9 +538,11 @@ def cp_api_404(msg=''):
     return cherrypy.HTTPError('404 Object Not Found', msg
                               if msg else 'Object Not Found')
 
+
 def cp_bad_request(msg=''):
     return cherrypy.HTTPError('400 Bad Request', msg
                               if msg else 'Invalid function params')
+
 
 def cp_need_master(f):
 
@@ -553,17 +616,23 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
 
     api_uri = '/jrpc'
 
-    def __init__(self):
+    def __init__(self, api_uri=None):
         super().__init__()
         self._cp_config = api_cp_config.copy()
+        if api_uri:
+            self.api_uri = api_uri
+        self._cp_config['tools.jsonrpc_pre.on'] = True
+        self._cp_config['tools.json_out.handler'] = cp_jsonrpc_handler
         JSON_RPC_API_abstract.index.exposed = True
 
     def index(self, k=None):
-        payload = getattr(cherrypy.serving.request, 'json_rpc_payload', None)
+        payload = getattr(cherrypy.serving.request, 'json_rpc_payload')
         http_err_codes = {403: 2, 404: 6, 500: 10}
         result = []
         for p in payload if isinstance(payload, list) else [payload]:
-            if not p or p.get('jsonrpc') != '2.0':
+            if not isinstance(payload, dict) or not p:
+                raise cp_bad_request('Invalid JSON RPC payload')
+            if p.get('jsonrpc') != '2.0':
                 raise cp_api_error('unsupported RPC protocol')
             req_id = p.get('id')
             try:
@@ -605,7 +674,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             raise cp_api_404('API method not found')
         params = kwargs.get('params', {})
         if 'k' not in params: params['k'] = kwargs.get('k')
-        self.cp_check_perm(api_key=params['k'], path_info='/' + method)
+        cp_check_perm(api_key=params['k'], path_info='/' + method)
         return func(**params)
 
 
@@ -626,14 +695,8 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         super().__init__()
         self._cp_config = api_cp_config.copy()
         self._cp_config['tools.auth.on'] = True
-
-        cherrypy.tools.json_pre = cherrypy.Tool(
-            'before_handler', cp_json_pre, priority=10)
-        cherrypy.tools.api_pre = cherrypy.Tool(
-            'before_handler', cp_api_pre, priority=20)
-        cherrypy.tools.auth = cherrypy.Tool(
-            'before_handler', self.cp_check_perm, priority=60)
-        self._cp_config['tools.sessions.timeout'] = session_timeout
+        self._cp_config['tools.json_pre.on'] = True
+        self._cp_config['tools.json_out.handler'] = cp_json_handler
 
         if session_timeout:
             self._cp_config.update({
@@ -643,35 +706,6 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
             self._expose(['login', 'logout'])
 
         self._expose('test')
-
-    def cp_check_perm(self, api_key=None, path_info=None):
-        k = api_key if api_key else cp_client_key()
-        path = path_info if path_info is not None else \
-                cherrypy.serving.request.path_info
-        if k is not None: cherrypy.serving.request.params['k'] = k
-        # pass login and info
-        if path[:6] == '/login': return
-        if path[:5] == '/info': return
-        self.log_http_api_request(k, path[1:])
-        if apikey.check(k, ip=http_real_ip()):
-            return
-        raise cp_forbidden_key()
-
-    def prepare_request_logging_params(self, func):
-        p = cherrypy.serving.request.params.copy()
-        if not eva.core.development:
-            if 'k' in p: del (p['k'])
-            if func.startswith('set_'):
-                try:
-                    if p.get('p') in ['key', 'masterkey']: del p['v']
-                except:
-                    pass
-        return p
-
-    def log_http_api_request(self, k, func):
-        p = self.prepare_request_logging_params(func)
-        log_api_request(
-            func=func, auth=http_remote_info(k), info=p, debug=False)
 
     def login(self, k=None, u=None, p=None):
         if not u and k:
@@ -782,11 +816,23 @@ def stop():
     cherrypy.engine.exit()
 
 
+def init():
+    cherrypy.tools.json_pre = cherrypy.Tool(
+        'before_handler', cp_json_pre, priority=10)
+    cherrypy.tools.jsonrpc_pre = cherrypy.Tool(
+        'before_handler', cp_jsonrpc_pre, priority=10)
+    cherrypy.tools.api_pre = cherrypy.Tool(
+        'before_handler', cp_api_pre, priority=20)
+    cherrypy.tools.auth = cherrypy.Tool(
+        'before_handler', cp_check_perm, priority=60)
+    cherrypy.tools.nocache = cherrypy.Tool(
+        'before_finalize', cp_nocache, priority=10)
+
+
 api_cp_config = {
-    'tools.json_pre.on': True,
     'tools.api_pre.on': True,
     'tools.json_out.on': True,
-    'tools.json_out.handler': cp_json_handler,
     'tools.sessions.on': False,
+    'tools.nocache.on': True,
     'tools.trailing_slash.on': False
 }
