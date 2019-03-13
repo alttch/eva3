@@ -56,19 +56,6 @@ class NoAPIMethodException(Exception):
     pass
 
 
-def expose_api_methods(c, api_name):
-    try:
-        data = jsonpickle.decode(
-            open('{}/eva/apidata/{}_data.json'.format(eva.core.dir_lib,
-                                                      api_name)).read())
-        for f in data['functions']:
-            func = getattr(c, f)
-            setattr(func, 'exposed', True)
-        return data['uri']
-    except:
-        eva.core.critical()
-
-
 def http_api_result(result, env):
     result = {'result': result}
     if env:
@@ -518,11 +505,58 @@ def cp_client_key(_k=None):
     return k
 
 
-class JSON_RPC_API_abstract:
+class FunctionDispatcher(cherrypy.dispatch.Dispatcher):
+
+    def __call__(self, path_info):
+        resource, vpath = self.find_handler(path_info)
+        request = cherrypy.serving.request
+        if resource:
+            func = resource.get_api_function(vpath)
+            if func:
+                request.handler = cherrypy.dispatch.LateParamPageHandler(func)
+            else:
+                request.handler = cherrypy.NotFound()
+        else:
+            request.handler = cherrypy.NotFound()
+
+
+class GenericHTTP_API_abstract:
+
+    def __init__(self):
+        self.__exposed = {}
+
+    def _expose(self, f):
+        if callable(f):
+            self.__exposed[f.__name__] = f
+        elif isinstance(f, str):
+            self.__exposed[f] = getattr(self, f)
+        elif isinstance(f, list):
+            for func in f:
+                self._expose(func)
+
+    def get_api_function(self, f):
+        if isinstance(f, list):
+            f = '.'.join(f)
+        return self.__exposed.get(f)
+
+    def expose_api_methods(self, api_id, set_api_uri=True):
+        try:
+            data = jsonpickle.decode(
+                open('{}/eva/apidata/{}_data.json'.format(
+                    eva.core.dir_lib, api_id)).read())
+            self._expose(data['functions'])
+            if set_api_uri:
+                self.api_uri = data['uri']
+        except:
+            eva.core.critical()
+
+
+class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
 
     api_uri = '/jrpc'
 
     def __init__(self):
+        super().__init__()
         self._cp_config = api_cp_config.copy()
         JSON_RPC_API_abstract.index.exposed = True
 
@@ -565,10 +599,10 @@ class JSON_RPC_API_abstract:
     def _json_rpc(self, **kwargs):
         try:
             method = kwargs.get('method')
-            if not method: raise Exception
-            func = getattr(self, method)
-            if not func or not getattr(func, 'exposed', None):
-                raise Exception
+            if not method: raise NoAPIMethodException
+            func = self.get_api_function(method)
+            if not func:
+                raise NoAPIMethodException
         except:
             raise cp_api_404('API method not found')
         params = kwargs.get('params', {})
@@ -586,9 +620,12 @@ class GenericHTTP_API_REST_abstract:
         raise cp_api_404()
 
 
-class GenericHTTP_API(GenericAPI):
+class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
+
+    exposed = True
 
     def __init__(self):
+        super().__init__()
         self._cp_config = api_cp_config.copy()
         self._cp_config['tools.auth.on'] = True
 
@@ -605,10 +642,9 @@ class GenericHTTP_API(GenericAPI):
                 'tools.sessions.on': True,
                 'tools.sessions.timeout': session_timeout
             })
-            GenericHTTP_API.login.exposed = True
-            GenericHTTP_API.logout.exposed = True
+            self._expose(['login', 'logout'])
 
-        GenericHTTP_API.test.exposed = True
+        self._expose('test')
 
     def cp_check_perm(self, api_key=None, path_info=None):
         k = api_key if api_key else cp_client_key()
@@ -754,5 +790,5 @@ api_cp_config = {
     'tools.json_out.on': True,
     'tools.json_out.handler': cp_json_handler,
     'tools.sessions.on': False,
-    'tools.trailing_slash.on': False
+    'tools.trailing_slash.on': False,
 }

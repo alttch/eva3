@@ -30,10 +30,10 @@ from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva.api import cp_need_master
 
-from eva.api import expose_api_methods
 from eva.api import NoAPIMethodException
 
 from eva.api import GenericAPI
+from eva.api import FunctionDispatcher
 
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
@@ -778,7 +778,7 @@ class SysHTTP_API(SysHTTP_API_abstract, eva.api.GenericHTTP_API):
 
     def __init__(self):
         super().__init__()
-        self.api_uri = expose_api_methods(self.__class__, 'sysapi')
+        self.expose_api_methods('sysapi')
 
 
 class SysHTTP_API_REST_abstract:
@@ -940,7 +940,14 @@ def update_config(cfg):
 
 def start():
     http_api = SysHTTP_API()
-    cherrypy.tree.mount(http_api, http_api.api_uri)
+    cherrypy.tree.mount(
+        http_api,
+        http_api.api_uri,
+        config={
+            '/': {
+                'request.dispatch': FunctionDispatcher()
+            }
+        })
     lock_processor.start(_interval=eva.core.polldelay)
 
 

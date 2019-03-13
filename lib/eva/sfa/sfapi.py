@@ -26,6 +26,7 @@ import eva.api
 
 from eva.api import GenericHTTP_API
 from eva.api import GenericAPI
+from eva.api import FunctionDispatcher
 from eva.api import cp_forbidden_key
 from eva.api import http_api_result_ok
 from eva.api import http_api_result_error
@@ -37,7 +38,6 @@ from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva.api import set_response_location
 from eva.api import NoAPIMethodException
-from eva.api import expose_api_methods
 
 from eva import apikey
 
@@ -990,16 +990,20 @@ class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
 
     def __init__(self):
         super().__init__()
-        uri = expose_api_methods(self.__class__, 'sfapi')
-        self.api_uri = uri
+        self.expose_api_methods('sfapi')
         if eva.sfa.controller.cloud_manager:
-            SFA_HTTP_API.management_api_call.exposed = True
+            self._expose(self.management_api_call)
 
 
 class SFA_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
                       eva.sysapi.SysHTTP_API_REST_abstract,
                       eva.api.JSON_RPC_API_abstract, SFA_HTTP_API):
-    pass
+
+    def __init__(self):
+        super().__init__()
+        self.expose_api_methods('sfapi', set_api_uri=False)
+        if eva.sfa.controller.cloud_manager:
+            self._expose(self.management_api_call)
 
 
 class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
@@ -1415,16 +1419,21 @@ class SFA_HTTP_Root:
 
 def start():
     http_api = SFA_HTTP_API()
-    cherrypy.tree.mount(http_api, http_api.api_uri)
+    cherrypy.tree.mount(
+        http_api,
+        http_api.api_uri,
+        config={'/': {
+            'request.dispatch': FunctionDispatcher()
+        }})
     cherrypy.tree.mount(SFA_JSONRPC_API(), SFA_JSONRPC_API.api_uri)
     cherrypy.tree.mount(
         SFA_REST_API(),
-        SFA_REST_API.api_uri)
-        # config={
-            # '/': {
-                # 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
-            # }
-        # })
+        SFA_REST_API.api_uri,
+        config={
+            '/': {
+                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
+            }
+        })
     cherrypy.tree.mount(
         SFA_HTTP_Root(),
         '/',
