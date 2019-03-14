@@ -3,4 +3,4 @@ Host: localhost:8812
 X-Auth-Key: mykey
 Content-Type: application/json
 
-{ "enabled": "false" }
+{ "enabled": False }

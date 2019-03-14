@@ -11,8 +11,8 @@ Pragma: no-cache
         "mod": "sysapi",
         "msg": "test warning message",
         "p": "sfa",
-        "t": 1552518650.1697187,
-        "th": "CP Server Thread-18"
+        "t": 1552544782.7556026,
+        "th": "CP Server Thread-17"
     },
     {
         "h": "mws3-v1",
@@ -20,8 +20,8 @@ Pragma: no-cache
         "mod": "sysapi",
         "msg": "test error message",
         "p": "sfa",
-        "t": 1552518650.1815493,
-        "th": "CP Server Thread-19"
+        "t": 1552544782.7661908,
+        "th": "CP Server Thread-18"
     },
     {
         "h": "mws3-v1",
@@ -29,7 +29,7 @@ Pragma: no-cache
         "mod": "sysapi",
         "msg": "test critical message",
         "p": "sfa",
-        "t": 1552518650.1938505,
-        "th": "CP Server Thread-20"
+        "t": 1552544782.7797048,
+        "th": "CP Server Thread-19"
     }
 ]

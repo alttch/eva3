@@ -190,7 +190,7 @@ Enables and disables debugging mode while the controller is running. After the c
 Parameters:
 
 * **k** API key with *master* permissions
-* **debug** 1 for enabling debug mode, 0 for disabling
+* **debug** true for enabling debug mode, false for disabling
 
 **RESTful:**
 
@@ -273,7 +273,10 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** variable name
-* **v** variable value
+
+Optionally:
+
+* **v** variable value (if not specified, variable is deleted)
 
 **RESTful:**
 
@@ -343,10 +346,6 @@ Parameters:
 
 * **k** API key with *allow=lock* permissions
 * **l** lock id
-
-Returns:
-
-In case token is already unlocked, *remark = "notlocked"* note will be present in the result.
 
 **RESTful:**
 
@@ -486,6 +485,12 @@ Optionally:
 * **t** get log records not older than t seconds
 * **n** the maximum number of log records you want to obtain
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_get.rest
+    :response: http-examples/sysapi/log_get.resp-rest
+
 .. _sysapi_log_rotate:
 
 log_rotate - rotate log file
@@ -508,185 +513,6 @@ Parameters:
     :response: http-examples/sysapi/log_rotate.resp-rest
 
 
-.. _sysapi_cat_keys:
-
-API keys
-========
-
-
-
-.. _sysapi_create_key:
-
-create_key - create API key
----------------------------
-
-API keys are defined statically in etc/<controller>_apikeys.ini file as well as can be created with API and stored in user database.
-
-Keys with master permission can not be created.
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** API key ID
-* **save** save configuration immediately
-
-.. _sysapi_destroy_key:
-
-destroy_key - delete API key
-----------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** API key ID
-
-.. _sysapi_list_key_props:
-
-list_key_props - list API key permissions
------------------------------------------
-
-Lists API key permissons (including a key itself)
-
-.. note::
-
-    API keys, defined in etc/<controller>_apikeys.ini file can not be     managed with API.
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** API key ID
-* **save** save configuration immediately
-
-.. _sysapi_list_keys:
-
-list_keys - list API keys
--------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-
-.. _sysapi_regenerate_key:
-
-regenerate_key - regenerate API key
------------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** API key ID
-
-Returns:
-
-JSON dict with new key value in "key" field
-
-.. _sysapi_set_key_prop:
-
-set_key_prop - set API key permissions
---------------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** API key ID
-* **p** property
-* **v** value (if none, permission will be revoked)
-* **save** save configuration immediately
-
-
-.. _sysapi_cat_users:
-
-User accounts
-=============
-
-
-
-.. _sysapi_create_user:
-
-create_user - create user account
----------------------------------
-
-.. note::
-
-    All changes to user accounts are instant, if the system works in     read/only mode, set it to read/write before performing user     management.
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **u** user login
-* **p** user password
-* **a** API key to assign (key id, not a key itself)
-
-.. _sysapi_destroy_user:
-
-destroy_user - delete user account
-----------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **u** user login
-
-.. _sysapi_get_user:
-
-get_user - get user account info
---------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **u** user login
-
-.. _sysapi_list_users:
-
-list_users - list user accounts
--------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-
-.. _sysapi_set_user_key:
-
-set_user_key - assign API key to user
--------------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **u** user login
-* **a** API key to assign (key id, not a key itself)
-
-.. _sysapi_set_user_password:
-
-set_user_password - set user password
--------------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **u** user login
-* **p** new password
-
-
 .. _sysapi_cat_notifiers:
 
 Notifier management
@@ -701,7 +527,7 @@ disable_notifier - disable notifier
 
 .. note::
 
-    The notifier is disabled until controller restart. To enable     notifier permanently, use notifier management CLI.
+    The notifier is disabled until controller restart. To disable     notifier permanently, use notifier management CLI.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/disable_notifier.req
@@ -793,18 +619,6 @@ File management
 
 
 
-.. _sysapi_file_get:
-
-file_get - get file contents from runtime folder
-------------------------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** relative path (without first slash)
-
 .. _sysapi_file_put:
 
 file_put - put file to runtime folder
@@ -812,11 +626,21 @@ file_put - put file to runtime folder
 
 Puts a new file into runtime folder. If the file with such name exists, it will be overwritten. As all files in runtime are text, binary data can not be put.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/file_put.req
+    :response: http-examples/sysapi/file_put.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** relative path (without first slash)
 * **m** file content
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/file_put.rest
+    :response: http-examples/sysapi/file_put.resp-rest
 
 .. _sysapi_file_set_exec:
 
@@ -825,11 +649,43 @@ file_set_exec - set file exec permission
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/file_set_exec.req
+    :response: http-examples/sysapi/file_set_exec.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** relative path (without first slash)
 * **e** *false* for 0x644, *true* for 0x755 (executable)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/file_set_exec.rest
+    :response: http-examples/sysapi/file_set_exec.resp-rest
+
+.. _sysapi_file_get:
+
+file_get - get file contents from runtime folder
+------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/file_get.req
+    :response: http-examples/sysapi/file_get.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** relative path (without first slash)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/file_get.rest
+    :response: http-examples/sysapi/file_get.resp-rest
 
 .. _sysapi_file_unlink:
 
@@ -838,8 +694,18 @@ file_unlink - delete file from runtime folder
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/file_unlink.req
+    :response: http-examples/sysapi/file_unlink.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** relative path (without first slash)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/file_unlink.rest
+    :response: http-examples/sysapi/file_unlink.resp-rest
 

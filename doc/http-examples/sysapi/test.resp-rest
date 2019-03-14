@@ -17,9 +17,10 @@ Pragma: no-cache
     "product_build": 2019031001,
     "product_code": "sfa",
     "product_name": "EVA SCADA Final Aggregator",
-    "setup_mode": true,
-    "system": "ws1-v1",
-    "time": 1552491834.8385139,
-    "uptime": 106,
+    "result": "OK",
+    "setup_mode": false,
+    "system": "mws3-v1",
+    "time": 1552544778.3327549,
+    "uptime": 174,
     "version": "3.1.2"
 }
