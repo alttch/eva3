@@ -54,7 +54,10 @@ config = SimpleNamespace(
 
 
 class NoAPIMethodException(Exception):
-    pass
+
+    def __str__(self):
+        msg = super().__str__()
+        return msg if msg else 'API method not found'
 
 
 def http_api_result(result, env):
@@ -87,7 +90,7 @@ def cp_api_error(msg=None):
 
 
 def cp_api_404(msg=None):
-    return cherrypy.HTTPError(404, msg + ' not found' if msg else None)
+    return cherrypy.HTTPError(404, msg if msg else None)
 
 
 def cp_bad_request(msg=None):
@@ -149,7 +152,7 @@ def generic_web_api_method(f):
             # eva.core.log_traceback()
             raise cp_api_404(str(e))
         except NoAPIMethodException as e:
-            raise cp_api_404('API method')
+            raise cp_api_404(str(e))
         except FunctionFailed as e:
             eva.core.log_traceback()
             raise cp_api_error(str(e))
@@ -168,9 +171,9 @@ def restful_api_method(f):
             *args, **kwargs)
         result = f(c, rtp, k, ii, full, kind, save, for_dir, props)
         if result is False:
-            raise FunctionFailed()
+            raise FunctionFailed
         if result is None:
-            raise ResourceNotFound()
+            raise ResourceNotFound
         if f.__name__ == 'POST':
             if 'Location' in cherrypy.serving.response.headers:
                 cherrypy.serving.response.status = 201
@@ -191,9 +194,9 @@ def cp_api_function(f):
             if result is True:
                 return http_api_result_ok()
             elif result is False:
-                raise FunctionFailed()
+                raise FunctionFailed
             elif result is None:
-                raise ResourceNotFound()
+                raise ResourceNotFound
             else:
                 return result
         except FunctionFailed as e:
@@ -305,6 +308,12 @@ class HTTP_API_Logger(API_Logger):
 
 
 def cp_check_perm(api_key=None, path_info=None):
+    try:
+        api_check_perm(api_key=api_key, path_info=path_info)
+    except AccessDenied:
+        raise cp_forbidden_key()
+
+def api_check_perm(api_key=None, path_info=None):
     k = api_key if api_key else cp_client_key()
     path = path_info if path_info is not None else \
             cherrypy.serving.request.path_info
@@ -312,8 +321,7 @@ def cp_check_perm(api_key=None, path_info=None):
     # pass login and info
     if path.endswith('/login') or path.endswith('/info'): return
     if apikey.check(k, ip=http_real_ip()): return
-    raise cp_forbidden_key()
-
+    raise AccessDenied
 
 def http_real_ip(get_gw=False):
     if get_gw and hasattr(cherrypy.serving.request, '_eva_ics_gw'):
@@ -544,7 +552,7 @@ class GenericHTTP_API_abstract:
         if func:
             return func(**kwargs)
         else:
-            raise NoAPIMethodException()
+            raise NoAPIMethodException
 
     def wrap_exposed(self, decorator):
         for k, v in self.__exposed.items():
@@ -589,36 +597,44 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
         self._cp_config['tools.json_out.handler'] = cp_jsonrpc_handler
         JSON_RPC_API_abstract.index.exposed = True
 
-    def index(self, k=None):
+    def index(self, **kwargs):
+
+        def format_error(code, msg):
+            return {
+                'jsonrpc': '2.0',
+                'error': {
+                    'code': code,
+                    'message': str(msg)
+                }
+            }
+
         payload = getattr(cherrypy.serving.request, 'json_rpc_payload')
-        http_err_codes = {403: 2, 404: 6, 500: 10}
         result = []
-        for p in payload if isinstance(payload, list) else [payload]:
-            if not isinstance(payload, dict) or not p:
+        for pp in payload if isinstance(payload, list) else [payload]:
+            if not isinstance(payload, dict) or not pp:
                 raise cp_bad_request('Invalid JSON RPC payload')
-            if p.get('jsonrpc') != '2.0':
+            if pp.get('jsonrpc') != '2.0':
                 raise cp_api_error('unsupported RPC protocol')
-            req_id = p.get('id')
+            req_id = pp.get('id')
             try:
-                r = {
-                    'jsonrpc': '2.0',
-                    'result': self._json_rpc(**p),
-                    'id': req_id
-                }
-            except cherrypy.HTTPError as e:
-                code = http_err_codes.get(e.code, 4)
-                msg = e._message
-                if not msg and code == 404: msg = 'API object not found'
-                r = {
-                    'jsonrpc': '2.0',
-                    'error': {
-                        'code': code,
-                        'message': msg if msg else e.reason
-                    }
-                }
+                p = pp.get('params', {})
+                method = pp.get('method')
+                if not method: raise FunctionFailed('API method not defined')
+                # allow API key from anywhere
+                if 'k' not in p: p['k'] = kwargs.get('k')
+                f = self._get_api_function(method)
+                if not f:
+                    raise NoAPIMethodException
+                api_check_perm(api_key=p.get('k'), path_info='/' + method)
+                r = {'jsonrpc': '2.0', 'result': f(**p), 'id': req_id}
+            except NoAPIMethodException as e:
+                r = format_error(6, e)
+            except ResourceNotFound as e:
+                r = format_error(1, e)
+            except AccessDenied as e:
+                r = format_error(2, e)
             except Exception as e:
-                err = str(e)
-                r = {'jsonrpc': '2.0', 'error': {'code': 10, 'message': err}}
+                r = format_error(10, e)
             if req_id:
                 r['id'] = req_id
                 if isinstance(payload, list):
@@ -626,20 +642,6 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 else:
                     result = r
         return result if result else None
-
-    def _json_rpc(self, **kwargs):
-        try:
-            method = kwargs.get('method')
-            if not method: raise NoAPIMethodException
-            func = self.get_api_function(method)
-            if not func:
-                raise NoAPIMethodException
-        except:
-            raise cp_api_404('API method not found')
-        params = kwargs.get('params', {})
-        if 'k' not in params: params['k'] = kwargs.get('k')
-        cp_check_perm(api_key=params['k'], path_info='/' + method)
-        return func(**params)
 
 
 class GenericHTTP_API_REST_abstract:
@@ -684,13 +686,13 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
                 return http_api_result_ok({'key': apikey.key_id(k)})
             else:
                 cherrypy.session['k'] = ''
-                raise cp_forbidden_key()
+                raise AccessDenied
         key = eva.users.authenticate(u, p)
         if eva.apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
             cherrypy.session['k'] = apikey.key_by_id(key)
             return http_api_result_ok({'key': key})
         cherrypy.session['k'] = ''
-        raise cp_forbidden_key()
+        raise AccessDenied('Login or password incorrect')
 
     @log_d
     def logout(self):

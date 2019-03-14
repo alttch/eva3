@@ -178,9 +178,9 @@ class LockAPI(object):
         except RuntimeError:
             return True
         except KeyError:
-            raise ResourceNotFound()
+            raise ResourceNotFound
         except:
-            raise FunctionFailed()
+            raise FunctionFailed
 
 
 cmd_status_created = 0
@@ -300,7 +300,7 @@ class LogAPI(object):
             eva.core.reset_log()
         except:
             eva.core.log_traceback()
-            raise FunctionFailed()
+            raise FunctionFailed
         return True
 
     @log_d
@@ -468,7 +468,7 @@ class FileAPI(object):
                 eva.core.finish_save()
         except:
             eva.core.log_traceback()
-            raise FunctionFailed()
+            raise FunctionFailed
 
     @log_i
     @api_need_file_management
@@ -491,7 +491,7 @@ class FileAPI(object):
             return data, os.access(i, os.X_OK)
         except:
             eva.core.log_traceback()
-            raise FunctionFailed()
+            raise FunctionFailed
 
     @log_i
     @api_need_file_management
@@ -521,7 +521,7 @@ class FileAPI(object):
                 eva.core.finish_save()
         except:
             eva.core.log_traceback()
-            raise FunctionFailed()
+            raise FunctionFailed
 
     @log_i
     @api_need_file_management
@@ -550,7 +550,7 @@ class FileAPI(object):
             return True
         except:
             eva.core.log_traceback()
-            raise FunctionFailed()
+            raise FunctionFailed
 
 
 class UserAPI(object):
@@ -713,7 +713,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         try:
             return eva.notify.get_notifier(i).serialize()
         except:
-            raise ResourceNotFound()
+            raise ResourceNotFound
 
     @log_w
     @api_need_master
@@ -734,7 +734,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         try:
             eva.notify.get_notifier(i).enabled = True
         except:
-            raise ResourceNotFound()
+            raise ResourceNotFound
         return True
 
     @log_w
@@ -756,7 +756,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         try:
             eva.notify.get_notifier(i).enabled = False
         except:
-            raise ResourceNotFound()
+            raise ResourceNotFound
         return True
 
     @log_w
@@ -814,7 +814,7 @@ class SysHTTP_API_abstract(SysAPI):
 
     def dump(self, **kwargs):
         fname = super().dump(**kwargs)
-        if not fname: raise FunctionFailed()
+        if not fname: raise FunctionFailed
         return {'file': fname}
 
     def get_cvar(self, **kwargs):
@@ -1031,7 +1031,7 @@ class SysHTTP_API_REST_abstract:
                 return self.get_user(k=k, u=ii)
             else:
                 return self.list_users(k=k)
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
     def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'core':
@@ -1045,25 +1045,25 @@ class SysHTTP_API_REST_abstract:
             elif cmd == 'shutdown':
                 return self.shutdown_core(k=k)
             else:
-                raise NoAPIMethodException()
+                raise NoAPIMethodException
         elif rtp == 'log':
             return self.log(k=k, l=ii, m=props.get('m'))
         elif rtp == 'cmd':
-            if not ii: raise ResourceNotFound()
+            if not ii: raise ResourceNotFound
             return self.cmd(
                 k=k, c=ii, a=props.get('a'), w=props.get('w'), t=props.get('t'))
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
     def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'key':
             if not SysAPI.create_key(self, k=k, i=ii, save=save):
-                raise FunctionFailed()
+                raise FunctionFailed
             for i, v in props.items():
                 if not SysAPI.set_key_prop(
                         self, k=k, i=ii, prop=i, value=v, save=save):
-                    raise FunctionFailed()
+                    raise FunctionFailed
             return True
         elif rtp == 'lock':
             return self.lock(k=k, l=ii, t=props.get('t'), e=props.get('e'))
@@ -1076,7 +1076,7 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'user':
             return self.create_user(
                 k=k, u=ii, p=props.get('p'), a=props.get('a'))
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
     def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
@@ -1085,23 +1085,23 @@ class SysHTTP_API_REST_abstract:
             success = False
             if 'debug' in props:
                 if not self.set_debug(k=k, debug=props['debug']):
-                    raise FunctionFailed()
+                    raise FunctionFailed
                 success = True
             if 'setup' in props:
                 if not self.setup_mode(k=k, setup=props['setup']):
-                    raise FunctionFailed()
+                    raise FunctionFailed
                 success = True
             if success: return True
-            else: raise ResourceNotFound()
+            else: raise ResourceNotFound
         elif rtp == 'key':
             for i, v in props.items():
                 if not SysAPI.set_key_prop(
                         self, k=k, i=ii, prop=i, value=v, save=save):
-                    raise FunctionFailed()
+                    raise FunctionFailed
             return True
         elif rtp == 'notifier':
             if not 'enabled' in props:
-                raise FunctionFailed()
+                raise FunctionFailed
             return self.enable_notifier(
                 k=k, i=ii) if val_to_boolean(
                     props.get('enabled')) else self.disable_notifier(
@@ -1117,12 +1117,12 @@ class SysHTTP_API_REST_abstract:
             if 'p' in props:
                 if not SysAPI.set_user_password(
                         self, k=k, user=ii, password=props['p']):
-                    raise FunctionFailed()
+                    raise FunctionFailed
             if 'a' in props:
                 if not SysAPI.set_user_key(self, k=k, user=ii, key=props['a']):
-                    raise FunctionFailed()
+                    raise FunctionFailed
             return True
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
     def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'key':
@@ -1133,7 +1133,7 @@ class SysHTTP_API_REST_abstract:
             return self.file_unlink(k=k, i=ii)
         elif rtp == 'user':
             return self.destroy_user(k=k, u=ii)
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
 
 def update_config(cfg):

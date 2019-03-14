@@ -1066,7 +1066,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state(k=k, g=ii, p=rtp, full=full)
             else:
                 return self.state(k=k, i=ii, p=rtp, full=full)
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
     @generic_web_api_method
     @restful_api_method
@@ -1139,7 +1139,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.notify_restart(k=k)
             elif cmd == 'reload_clients':
                 return self.reload_clients(k=k)
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
     @generic_web_api_method
     @restful_api_method
@@ -1177,7 +1177,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     p=props.get('p'),
                     q=props.get('q'),
                     w=props.get('w', 0))
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
     @generic_web_api_method
     @restful_api_method
@@ -1226,7 +1226,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.enable_actions(k=k, i=ii)
                 else:
                     return self.disable_actions(k=k, i=ii)
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
     @generic_web_api_method
     @restful_api_method
@@ -1238,7 +1238,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
         if rtp == 'controller':
             if ii:
                 return self.remove_controller(k=k, i=ii)
-        raise NoAPIMethodException()
+        raise NoAPIMethodException
 
 
 # j2 template engine functions
