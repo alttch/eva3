@@ -26,7 +26,7 @@ from eva.api import cp_api_404
 from eva.api import api_need_master
 from eva.api import parse_api_params
 
-from eva.api import NoAPIMethodException
+from eva.api import MethodNotFound
 from eva.api import GenericAPI
 
 from eva.api import log_d
@@ -39,6 +39,7 @@ from eva.tools import val_to_boolean
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
+from eva.exceptions import AccessDenied
 
 from eva.tools import InvalidParameter
 from eva.tools import parse_function_params
@@ -65,7 +66,7 @@ def api_need_file_management(f):
     @wraps(f)
     def do(*args, **kwargs):
         if not config.api_file_management_allowed:
-            return None
+            raise AccessDenied
         return f(*args, **kwargs)
 
     return do
@@ -76,7 +77,7 @@ def api_need_cmd(f):
     @wraps(f)
     def do(*args, **kwargs):
         if not eva.apikey.check(kwargs.get('k'), allow=['cmd']):
-            return None
+            raise AccessDenied
         return f(*args, **kwargs)
 
     return do
@@ -87,7 +88,7 @@ def api_need_sysfunc(f):
     @wraps(f)
     def do(*args, **kwargs):
         if not eva.apikey.check(kwargs.get('k'), sysfunc=True):
-            return None
+            raise AccessDenied
         return f(*args, **kwargs)
 
     return do
@@ -98,7 +99,7 @@ def api_need_lock(f):
     @wraps(f)
     def do(*args, **kwargs):
         if not eva.apikey.check(kwargs.get('k'), allow=['lock']):
-            return None
+            raise AccessDenied
         return f(*args, **kwargs)
 
     return do
@@ -1031,7 +1032,7 @@ class SysHTTP_API_REST_abstract:
                 return self.get_user(k=k, u=ii)
             else:
                 return self.list_users(k=k)
-        raise NoAPIMethodException
+        raise MethodNotFound
 
     def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'core':
@@ -1045,14 +1046,14 @@ class SysHTTP_API_REST_abstract:
             elif cmd == 'shutdown':
                 return self.shutdown_core(k=k)
             else:
-                raise NoAPIMethodException
+                raise MethodNotFound
         elif rtp == 'log':
             return self.log(k=k, l=ii, m=props.get('m'))
         elif rtp == 'cmd':
             if not ii: raise ResourceNotFound
             return self.cmd(
                 k=k, c=ii, a=props.get('a'), w=props.get('w'), t=props.get('t'))
-        raise NoAPIMethodException
+        raise MethodNotFound
 
     def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
@@ -1076,7 +1077,7 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'user':
             return self.create_user(
                 k=k, u=ii, p=props.get('p'), a=props.get('a'))
-        raise NoAPIMethodException
+        raise MethodNotFound
 
     def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
@@ -1122,7 +1123,7 @@ class SysHTTP_API_REST_abstract:
                 if not SysAPI.set_user_key(self, k=k, user=ii, key=props['a']):
                     raise FunctionFailed
             return True
-        raise NoAPIMethodException
+        raise MethodNotFound
 
     def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'key':
@@ -1133,7 +1134,7 @@ class SysHTTP_API_REST_abstract:
             return self.file_unlink(k=k, i=ii)
         elif rtp == 'user':
             return self.destroy_user(k=k, u=ii)
-        raise NoAPIMethodException
+        raise MethodNotFound
 
 
 def update_config(cfg):

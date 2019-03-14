@@ -38,7 +38,7 @@ from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva.api import set_response_location
 from eva.api import generic_web_api_method
-from eva.api import NoAPIMethodException
+from eva.api import MethodNotFound
 
 from eva import apikey
 
@@ -1017,7 +1017,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
     def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
-        except NoAPIMethodException:
+        except MethodNotFound:
             pass
         if rtp == 'action':
             return self.result(
@@ -1066,14 +1066,14 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state(k=k, g=ii, p=rtp, full=full)
             else:
                 return self.state(k=k, i=ii, p=rtp, full=full)
-        raise NoAPIMethodException
+        raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
     def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().POST(rtp, k, ii, full, save, kind, for_dir, props)
-        except NoAPIMethodException:
+        except MethodNotFound:
             pass
         if rtp == 'action':
             result = None
@@ -1139,14 +1139,14 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.notify_restart(k=k)
             elif cmd == 'reload_clients':
                 return self.reload_clients(k=k)
-        raise NoAPIMethodException
+        raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
     def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().PUT(rtp, k, ii, full, save, kind, for_dir, props)
-        except NoAPIMethodException:
+        except MethodNotFound:
             pass
         if rtp == 'action':
             if 'm' in props:
@@ -1177,14 +1177,14 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     p=props.get('p'),
                     q=props.get('q'),
                     w=props.get('w', 0))
-        raise NoAPIMethodException
+        raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
     def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().PATCH(rtp, k, ii, full, save, kind, for_dir, props)
-        except NoAPIMethodException:
+        except MethodNotFound:
             pass
         if rtp == 'action':
             s = props.get('s')
@@ -1226,19 +1226,19 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.enable_actions(k=k, i=ii)
                 else:
                     return self.disable_actions(k=k, i=ii)
-        raise NoAPIMethodException
+        raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
     def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().DELETE(rtp, k, ii, full, save, kind, for_dir, props)
-        except NoAPIMethodException:
+        except MethodNotFound:
             pass
         if rtp == 'controller':
             if ii:
                 return self.remove_controller(k=k, i=ii)
-        raise NoAPIMethodException
+        raise MethodNotFound
 
 
 # j2 template engine functions

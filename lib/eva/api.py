@@ -53,7 +53,7 @@ config = SimpleNamespace(
     use_x_real_ip=False)
 
 
-class NoAPIMethodException(Exception):
+class MethodNotFound(Exception):
 
     def __str__(self):
         msg = super().__str__()
@@ -151,7 +151,7 @@ def generic_web_api_method(f):
         except ResourceNotFound as e:
             # eva.core.log_traceback()
             raise cp_api_404(str(e))
-        except NoAPIMethodException as e:
+        except MethodNotFound as e:
             raise cp_api_404(str(e))
         except FunctionFailed as e:
             eva.core.log_traceback()
@@ -518,7 +518,7 @@ def api_need_master(f):
     @wraps(f)
     def do(*args, **kwargs):
         if not eva.apikey.check(kwargs.get('k'), master=True):
-            raise AccessDenied()
+            raise AccessDenied
         return f(*args, **kwargs)
 
     return do
@@ -552,7 +552,7 @@ class GenericHTTP_API_abstract:
         if func:
             return func(**kwargs)
         else:
-            raise NoAPIMethodException
+            raise MethodNotFound
 
     def wrap_exposed(self, decorator):
         for k, v in self.__exposed.items():
@@ -624,10 +624,10 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 if 'k' not in p: p['k'] = kwargs.get('k')
                 f = self._get_api_function(method)
                 if not f:
-                    raise NoAPIMethodException
+                    raise MethodNotFound
                 api_check_perm(api_key=p.get('k'), path_info='/' + method)
                 r = {'jsonrpc': '2.0', 'result': f(**p), 'id': req_id}
-            except NoAPIMethodException as e:
+            except MethodNotFound as e:
                 r = format_error(6, e)
             except ResourceNotFound as e:
                 r = format_error(1, e)
