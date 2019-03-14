@@ -1,7 +1,7 @@
 EVA ICS CHANGELOG
 *****************
 
-3.1.2 (TBA)
+3.2.0 (TBA)
 ===========
 
 Common
