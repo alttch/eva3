@@ -1,13 +1,19 @@
 HTTP/1.1 200 OK
 Content-Type: application/json
+Allow: GET, HEAD, POST
 Cache-Control: no-cache, no-store, must-revalidate
 Expires: 0
 Pragma: no-cache
 
 {
     "collect_logs": true,
+    "discovery_enabled": true,
     "enabled": false,
     "events": [
+        {
+            "level": 20,
+            "subject": "log"
+        },
         {
             "groups": [
                 "#"
@@ -16,10 +22,6 @@ Pragma: no-cache
             "types": [
                 "#"
             ]
-        },
-        {
-            "level": 20,
-            "subject": "log"
         }
     ],
     "host": "localhost",

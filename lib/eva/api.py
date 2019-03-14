@@ -1,8 +1,7 @@
-import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.1.2"
+__version__ = "3.2.0"
 
 import cherrypy
 import logging
@@ -172,7 +171,7 @@ def standard_web_api_method(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        allow = ['GET', 'POST']
+        allow = ['GET', 'HEAD', 'POST']
         cherrypy.serving.response.headers['Allow'] = ', '.join(allow)
         if cherrypy.serving.request.method not in allow:
             raise MethodNotFound('HTTP method not allowed')

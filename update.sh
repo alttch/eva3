@@ -5,8 +5,8 @@
     #exit 98
 #fi
 
-VERSION=3.1.2
-BUILD=2019031001
+VERSION=3.2.0
+BUILD=2019031402
 
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 

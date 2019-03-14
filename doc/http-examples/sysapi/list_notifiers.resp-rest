@@ -1,12 +1,13 @@
 HTTP/1.1 200 OK
 Content-Type: application/json
+Allow: DELETE, GET, HEAD, PATCH, POST, PUT
 Cache-Control: no-cache, no-store, must-revalidate
 Expires: 0
 Pragma: no-cache
 
 [
     {
-        "db": "db/sfa_history.db",
+        "db": "sfa.db",
         "enabled": true,
         "events": [
             {
@@ -23,15 +24,14 @@ Pragma: no-cache
         "type": "db"
     },
     {
-        "db": "1.db",
-        "enabled": false,
-        "id": "db_my",
-        "type": "db"
-    },
-    {
         "collect_logs": true,
+        "discovery_enabled": true,
         "enabled": false,
         "events": [
+            {
+                "level": 20,
+                "subject": "log"
+            },
             {
                 "groups": [
                     "#"
@@ -40,10 +40,6 @@ Pragma: no-cache
                 "types": [
                     "#"
                 ]
-            },
-            {
-                "level": 20,
-                "subject": "log"
             }
         ],
         "host": "localhost",

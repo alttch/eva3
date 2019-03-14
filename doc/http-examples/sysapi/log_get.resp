@@ -1,35 +1,36 @@
 HTTP/1.1 200 OK
 Content-Type: application/json
+Allow: GET, HEAD, POST
 Cache-Control: no-cache, no-store, must-revalidate
 Expires: 0
 Pragma: no-cache
 
 [
     {
-        "h": "mws3-v1",
+        "h": "ws1-v1",
         "l": 30,
         "mod": "sysapi",
         "msg": "test warning message",
         "p": "sfa",
-        "t": 1552544782.7556026,
-        "th": "CP Server Thread-17"
+        "t": 1552601299.974849,
+        "th": "CP Server Thread-12"
     },
     {
-        "h": "mws3-v1",
+        "h": "ws1-v1",
         "l": 40,
         "mod": "sysapi",
         "msg": "test error message",
         "p": "sfa",
-        "t": 1552544782.7661908,
-        "th": "CP Server Thread-18"
+        "t": 1552601299.9836278,
+        "th": "CP Server Thread-13"
     },
     {
-        "h": "mws3-v1",
+        "h": "ws1-v1",
         "l": 50,
         "mod": "sysapi",
         "msg": "test critical message",
         "p": "sfa",
-        "t": 1552544782.7797048,
-        "th": "CP Server Thread-19"
+        "t": 1552601299.991459,
+        "th": "CP Server Thread-14"
     }
 ]

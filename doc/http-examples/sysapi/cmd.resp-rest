@@ -1,5 +1,6 @@
 HTTP/1.1 200 OK
 Content-Type: application/json
+Allow: DELETE, GET, HEAD, PATCH, POST, PUT
 Cache-Control: no-cache, no-store, must-revalidate
 Expires: 0
 Pragma: no-cache
@@ -16,9 +17,9 @@ Pragma: no-cache
     "out": "test script start\nparam 1: 0 ( > 0 will generate \"failed\" status)\nparam 2: 2\nparam 3: 3\ndelay 3 sec\nscript finish\n",
     "status": "completed",
     "time": {
-        "completed": 1552544782.4995904,
-        "created": 1552544782.4881544,
-        "running": 1552544782.4889631
+        "completed": 1552601299.7998111,
+        "created": 1552601299.7892535,
+        "running": 1552601299.7895474
     },
     "timeout": 10.0
 }

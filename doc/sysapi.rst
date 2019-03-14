@@ -34,12 +34,13 @@ Standard API responses
 * **400 Bad Request** Invalid request params
 * **403 Forbidden** the API key has no access to this function or resource
 * **404 Not Found** method or resource doesn't exist
+* **405 Method Not Allowed** API function/method not found or HTTP method is
+  not either GET or POST
 * **500 API Error** API function execution has been failed. Check input
   parameters and server logs.
 
 In case API function has been failed, response body will contain JSON data with
-*_warning*, *_error* and/or *_critical* properties, which duplicate server
-warning and error messages:
+*_error* field, which contains error message.
 
 .. code-block:: json
 
@@ -70,7 +71,8 @@ RESTful API responses
 **Error error responses:**
 
 * **403 Forbidden** the API key has no access to this function or resource
-* **404 Not Found** method or resource doesn't exist
+* **404 Not Found** resource doesn't exist
+* **405 Method Not Allowed** API function/method not found
 * **500 API Error** API function execution has been failed. Check
   input parameters and server logs.
 

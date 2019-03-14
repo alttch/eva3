@@ -1,5 +1,6 @@
 HTTP/1.1 200 OK
 Content-Type: application/json
+Allow: GET, HEAD, POST
 Cache-Control: no-cache, no-store, must-revalidate
 Expires: 0
 Pragma: no-cache
@@ -18,8 +19,8 @@ Pragma: no-cache
     "product_name": "EVA SCADA Final Aggregator",
     "result": "OK",
     "setup_mode": false,
-    "system": "mws3-v1",
-    "time": 1552544778.3265722,
-    "uptime": 174,
+    "system": "ws1-v1",
+    "time": 1552601295.6232026,
+    "uptime": 808,
     "version": "3.1.2"
 }

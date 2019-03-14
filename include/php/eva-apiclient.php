@@ -7,10 +7,10 @@
  * @author      Altertech Group, https://www.altertech.com/
  * @copyright   Copyright (C) 2012-2019 Altertech Group
  * @license     Apache License 2.0
- * @version     3.1.2
+ * @version     3.2.0
  */
 
-$eva_version = '3.1.2';
+$eva_version = '3.2.0';
 
 $eva_result_ok = 0;
 $eva_result_not_found = 1;
