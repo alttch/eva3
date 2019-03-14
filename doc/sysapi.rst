@@ -100,6 +100,8 @@ JSON RPC API URL:
 General functions
 =================
 
+
+
 .. _sysapi_test:
 
 test - test API/key and get system info
@@ -196,11 +198,96 @@ Parameters:
     :request: http-examples/sysapi/set_debug.rest
     :response: http-examples/sysapi/set_debug.resp-rest
 
+.. _sysapi_shutdown_core:
+
+shutdown_core - shutdown the controller
+---------------------------------------
+
+Controller process will be exited and then (should be) restarted by watchdog. This allows to restart controller remotely.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/shutdown_core.req
+    :response: http-examples/sysapi/shutdown_core.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/shutdown_core.rest
+    :response: http-examples/sysapi/shutdown_core.resp-rest
+
+
+.. _sysapi_cat_cvar:
+
+CVARs
+=====
+
+
+
+.. _sysapi_get_cvar:
+
+get_cvar - get the value of user-defined variable
+-------------------------------------------------
+
+.. note::
+
+    Even if different EVA controllers are working on the same     server, they have different sets of variables To set the variables     for each subsystem, use SYS API on the respective address/port.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/get_cvar.req
+    :response: http-examples/sysapi/get_cvar.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+Optionally:
+
+* **i** variable name
+
+Returns:
+
+Dict containing variable and its value. If no varible name was specified, all cvars are returned.
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/get_cvar.rest
+    :response: http-examples/sysapi/get_cvar.resp-rest
+
+.. _sysapi_set_cvar:
+
+set_cvar - set the value of user-defined variable
+-------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/set_cvar.req
+    :response: http-examples/sysapi/set_cvar.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** variable name
+* **v** variable value
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/set_cvar.rest
+    :response: http-examples/sysapi/set_cvar.resp-rest
+
 
 .. _sysapi_cat_lock:
 
 Locking functions
 =================
+
+
 
 .. _sysapi_lock:
 
@@ -266,4 +353,493 @@ In case token is already unlocked, *remark = "notlocked"* note will be present i
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/unlock.rest
     :response: http-examples/sysapi/unlock.resp-rest
+
+
+.. _sysapi_cat_logs:
+
+Logging
+=======
+
+
+
+.. _sysapi_log:
+
+log - put message to log file
+-----------------------------
+
+An external application can put a message in the logs on behalf of the controller.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log.req
+    :response: http-examples/sysapi/log.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+* **l** log level
+* **m** message text
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log.rest
+    :response: http-examples/sysapi/log.resp-rest
+
+.. _sysapi_log_debug:
+
+log_debug - put debug message to log file
+-----------------------------------------
+
+An external application can put a message in the logs on behalf of the controller.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_debug.req
+    :response: http-examples/sysapi/log_debug.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+* **m** message text
+
+.. _sysapi_log_info:
+
+log_info - put info message to log file
+---------------------------------------
+
+An external application can put a message in the logs on behalf of the controller.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_info.req
+    :response: http-examples/sysapi/log_info.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+* **m** message text
+
+.. _sysapi_log_warning:
+
+log_warning - put warning message to log file
+---------------------------------------------
+
+An external application can put a message in the logs on behalf of the controller.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_warning.req
+    :response: http-examples/sysapi/log_warning.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+* **m** message text
+
+.. _sysapi_log_error:
+
+log_error - put error message to log file
+-----------------------------------------
+
+An external application can put a message in the logs on behalf of the controller.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_error.req
+    :response: http-examples/sysapi/log_error.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+* **m** message text
+
+.. _sysapi_log_critical:
+
+log_critical - put critical message to log file
+-----------------------------------------------
+
+An external application can put a message in the logs on behalf of the controller.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_critical.req
+    :response: http-examples/sysapi/log_critical.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+* **m** message text
+
+.. _sysapi_log_get:
+
+log_get - get records from the controller log
+---------------------------------------------
+
+Log records are stored in the controllers’ memory until restart or the time (keep_logmem) specified in controller configuration passes.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_get.req
+    :response: http-examples/sysapi/log_get.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+
+Optionally:
+
+* **l** log level (10 - debug, 20 - info, 30 - warning, 40 - error, 50 - critical)
+* **t** get log records not older than t seconds
+* **n** the maximum number of log records you want to obtain
+
+.. _sysapi_log_rotate:
+
+log_rotate - rotate log file
+----------------------------
+
+Equal to kill -HUP <controller_process_pid>.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_rotate.req
+    :response: http-examples/sysapi/log_rotate.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_rotate.rest
+    :response: http-examples/sysapi/log_rotate.resp-rest
+
+
+.. _sysapi_cat_keys:
+
+API keys
+========
+
+
+
+.. _sysapi_create_key:
+
+create_key - create API key
+---------------------------
+
+API keys are defined statically in etc/<controller>_apikeys.ini file as well as can be created with API and stored in user database.
+
+Keys with master permission can not be created.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+* **save** save configuration immediately
+
+.. _sysapi_destroy_key:
+
+destroy_key - delete API key
+----------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+
+.. _sysapi_list_key_props:
+
+list_key_props - list API key permissions
+-----------------------------------------
+
+Lists API key permissons (including a key itself)
+
+.. note::
+
+    API keys, defined in etc/<controller>_apikeys.ini file can not be     managed with API.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+* **save** save configuration immediately
+
+.. _sysapi_list_keys:
+
+list_keys - list API keys
+-------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _sysapi_regenerate_key:
+
+regenerate_key - regenerate API key
+-----------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+
+Returns:
+
+JSON dict with new key value in "key" field
+
+.. _sysapi_set_key_prop:
+
+set_key_prop - set API key permissions
+--------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+* **p** property
+* **v** value (if none, permission will be revoked)
+* **save** save configuration immediately
+
+
+.. _sysapi_cat_users:
+
+User accounts
+=============
+
+
+
+.. _sysapi_create_user:
+
+create_user - create user account
+---------------------------------
+
+.. note::
+
+    All changes to user accounts are instant, if the system works in     read/only mode, set it to read/write before performing user     management.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+* **p** user password
+* **a** API key to assign (key id, not a key itself)
+
+.. _sysapi_destroy_user:
+
+destroy_user - delete user account
+----------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+
+.. _sysapi_get_user:
+
+get_user - get user account info
+--------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+
+.. _sysapi_list_users:
+
+list_users - list user accounts
+-------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _sysapi_set_user_key:
+
+set_user_key - assign API key to user
+-------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+* **a** API key to assign (key id, not a key itself)
+
+.. _sysapi_set_user_password:
+
+set_user_password - set user password
+-------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+* **p** new password
+
+
+.. _sysapi_cat_notifiers:
+
+Notifier management
+===================
+
+
+
+.. _sysapi_disable_notifier:
+
+disable_notifier - disable notifier
+-----------------------------------
+
+.. note::
+
+    The notifier is disabled until controller restart. To enable     notifier permanently, use notifier management CLI.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/disable_notifier.req
+    :response: http-examples/sysapi/disable_notifier.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** notifier ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/disable_notifier.rest
+    :response: http-examples/sysapi/disable_notifier.resp-rest
+
+.. _sysapi_enable_notifier:
+
+enable_notifier - enable notifier
+---------------------------------
+
+.. note::
+
+    The notifier is enabled until controller restart. To enable     notifier permanently, use notifier management CLI.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/enable_notifier.req
+    :response: http-examples/sysapi/enable_notifier.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** notifier ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/enable_notifier.rest
+    :response: http-examples/sysapi/enable_notifier.resp-rest
+
+.. _sysapi_get_notifier:
+
+get_notifier - get notifier configuration
+-----------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/get_notifier.req
+    :response: http-examples/sysapi/get_notifier.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** notifier ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/get_notifier.rest
+    :response: http-examples/sysapi/get_notifier.resp-rest
+
+.. _sysapi_list_notifiers:
+
+list_notifiers - list notifiers
+-------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_notifiers.req
+    :response: http-examples/sysapi/list_notifiers.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_notifiers.rest
+    :response: http-examples/sysapi/list_notifiers.resp-rest
+
+
+.. _sysapi_cat_files:
+
+File management
+===============
+
+
+
+.. _sysapi_file_get:
+
+file_get - get file contents from runtime folder
+------------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** relative path (without first slash)
+
+.. _sysapi_file_put:
+
+file_put - put file to runtime folder
+-------------------------------------
+
+Puts a new file into runtime folder. If the file with such name exists, it will be overwritten. As all files in runtime are text, binary data can not be put.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** relative path (without first slash)
+* **m** file content
+
+.. _sysapi_file_set_exec:
+
+file_set_exec - set file exec permission
+----------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** relative path (without first slash)
+* **e** *false* for 0x644, *true* for 0x755 (executable)
+
+.. _sysapi_file_unlink:
+
+file_unlink - delete file from runtime folder
+---------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** relative path (without first slash)
 

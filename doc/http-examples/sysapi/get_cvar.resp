@@ -5,5 +5,5 @@ Expires: 0
 Pragma: no-cache
 
 {
-    "test": "OK"
+    "test": "some_value"
 }

@@ -2,4 +2,4 @@ POST /sys-api/set_cvar HTTP/1.1
 Host: localhost:8812
 Content-Type: application/json
 
-{ "k": "mykey", "i": "test", "v": "OK" }
+{ "k": "mykey", "i": "test", "v": "some_value" }
