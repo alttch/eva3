@@ -1,10 +1,12 @@
 import logging
 
+
 class GenericException(Exception):
 
     def __init__(self, msg=''):
-        logging.debug('Exception {}: {}'.format(self.__class__.__name__, msg))
         super().__init__(msg)
+        logging.debug('Exception {}: {}'.format(self.__class__.__name__,
+                                                str(self)))
 
 
 class FunctionFailed(GenericException):

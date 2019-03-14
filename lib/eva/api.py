@@ -418,7 +418,7 @@ def log_w(f):
 class GenericAPI(object):
 
     @log_d
-    def test(self, k):
+    def test(self, **kwargs):
         """
         test API/key and get system info
 
@@ -432,6 +432,7 @@ class GenericAPI(object):
             JSON dict with system info and current API key permissions (for
             masterkey only { "master": true } is returned)
         """
+        k = parse_function_params(kwargs, 'k', 'S')
         result = http_api_result_ok({
             'acl':
             apikey.serialized_acl(k),
