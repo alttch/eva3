@@ -263,12 +263,13 @@ def update_config(cfg):
 
 class API_Logger(object):
 
-    def log_api_request(self, func, info, logger):
+    def log_api_request(self, func, params, logger):
         msg = 'API request '
-        auth = self.get_auth(func, info)
+        auth = self.get_auth(func, params)
+        info = self.prepare_info(func, params)
         if auth:
             msg += auth + ':'
-        msg += func.__name__
+        msg += func
         if info:
             msg += ', '
             if isinstance(info, list):
@@ -281,10 +282,9 @@ class API_Logger(object):
         logger(msg)
 
     def __call__(self, func, params, logger):
-        p = self.prepare_params(func, params.copy())
-        self.log_api_request(func, p, logger)
+        self.log_api_request(func.__name__, params.copy(), logger)
 
-    def prepare_params(self, func, p):
+    def prepare_info(self, func, p):
         if not eva.core.development:
             if 'k' in p: del (p['k'])
             if func.startswith('set_'):
