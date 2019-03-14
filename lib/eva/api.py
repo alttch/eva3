@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -93,6 +94,10 @@ def cp_api_404(msg=None):
     return cherrypy.HTTPError(404, msg if msg else None)
 
 
+def cp_api_405(msg=None):
+    return cherrypy.HTTPError(405, msg if msg else None)
+
+
 def cp_bad_request(msg=None):
     return cherrypy.HTTPError(400, msg if msg else None)
 
@@ -152,10 +157,26 @@ def generic_web_api_method(f):
             # eva.core.log_traceback()
             raise cp_api_404(str(e))
         except MethodNotFound as e:
-            raise cp_api_404(str(e))
+            raise cp_api_405(str(e))
         except FunctionFailed as e:
             eva.core.log_traceback()
             raise cp_api_error(str(e))
+
+    return do
+
+
+def standard_web_api_method(f):
+    """
+    Updates Allow and checks for method
+    """
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        allow = ['GET', 'POST']
+        cherrypy.serving.response.headers['Allow'] = ', '.join(allow)
+        if cherrypy.serving.request.method not in allow:
+            raise MethodNotFound('HTTP method not allowed')
+        return f(*args, **kwargs)
 
     return do
 
@@ -313,6 +334,7 @@ def cp_check_perm(api_key=None, path_info=None):
     except AccessDenied:
         raise cp_forbidden_key()
 
+
 def api_check_perm(api_key=None, path_info=None):
     k = api_key if api_key else cp_client_key()
     path = path_info if path_info is not None else \
@@ -322,6 +344,7 @@ def api_check_perm(api_key=None, path_info=None):
     if path.endswith('/login') or path.endswith('/info'): return
     if apikey.check(k, ip=http_real_ip()): return
     raise AccessDenied
+
 
 def http_real_ip(get_gw=False):
     if get_gw and hasattr(cherrypy.serving.request, '_eva_ics_gw'):
@@ -548,6 +571,7 @@ class GenericHTTP_API_abstract:
         self.log_api_call = HTTP_API_Logger()
 
     @generic_web_api_method
+    @standard_web_api_method
     def __call__(self, *args, **kwargs):
         func = self._get_api_function(args)
         if func:
@@ -821,6 +845,10 @@ def error_page_403(*args, **kwargs):
         return jsonify_error('No API key provided')
 
 
+def error_page_405(*args, **kwargs):
+    return jsonify_error(kwargs.get('message', 'Method not allowed'))
+
+
 def error_page_404(*args, **kwargs):
     msg = kwargs.get('message')
     if not msg or msg == 'Nothing matches the given URI':
@@ -840,5 +868,6 @@ api_cp_config = {
     'error_page.400': error_page_400,
     'error_page.403': error_page_403,
     'error_page.404': error_page_404,
+    'error_page.405': error_page_405,
     'error_page.500': error_page_500
 }
