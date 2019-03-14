@@ -82,7 +82,7 @@ keep_exceptions = 100
 
 _exceptions = []
 
-_exception_log_lock = threading.Lock()
+_exception_log_lock = threading.RLock()
 
 _cvars_lock = threading.RLock()
 
@@ -239,6 +239,7 @@ def do_save():
     finally:
         finish_save()
     return success
+
 
 def block():
     global started

@@ -146,7 +146,7 @@ def generic_web_api_method(f):
             eva.core.log_traceback()
             raise cp_bad_request()
         except ResourceNotFound as e:
-            eva.core.log_traceback()
+            # eva.core.log_traceback()
             raise cp_api_404(str(e))
         except NoAPIMethodException as e:
             raise cp_api_404('API method')
