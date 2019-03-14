@@ -1,0 +1,3 @@
+GET /r/log/warning?t=3600&n=3 HTTP/1.1
+Host: localhost:8812
+X-Auth-Key: mykey

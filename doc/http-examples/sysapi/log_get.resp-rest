@@ -1,0 +1,36 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Allow: DELETE, GET, HEAD, PATCH, POST, PUT
+Cache-Control: no-cache, no-store, must-revalidate
+Expires: 0
+Pragma: no-cache
+
+[
+    {
+        "h": "ws1-v1",
+        "l": 30,
+        "mod": "sysapi",
+        "msg": "test warning message",
+        "p": "sfa",
+        "t": 1552601299.974849,
+        "th": "CP Server Thread-12"
+    },
+    {
+        "h": "ws1-v1",
+        "l": 40,
+        "mod": "sysapi",
+        "msg": "test error message",
+        "p": "sfa",
+        "t": 1552601299.9836278,
+        "th": "CP Server Thread-13"
+    },
+    {
+        "h": "ws1-v1",
+        "l": 50,
+        "mod": "sysapi",
+        "msg": "test critical message",
+        "p": "sfa",
+        "t": 1552601299.991459,
+        "th": "CP Server Thread-14"
+    }
+]
