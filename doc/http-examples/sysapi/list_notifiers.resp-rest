@@ -1,0 +1,56 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-cache, no-store, must-revalidate
+Expires: 0
+Pragma: no-cache
+
+[
+    {
+        "db": "db/sfa_history.db",
+        "enabled": true,
+        "events": [
+            {
+                "groups": [
+                    "#"
+                ],
+                "subject": "state",
+                "types": [
+                    "#"
+                ]
+            }
+        ],
+        "id": "db_1",
+        "type": "db"
+    },
+    {
+        "db": "1.db",
+        "enabled": false,
+        "id": "db_my",
+        "type": "db"
+    },
+    {
+        "collect_logs": true,
+        "enabled": false,
+        "events": [
+            {
+                "groups": [
+                    "#"
+                ],
+                "subject": "state",
+                "types": [
+                    "#"
+                ]
+            },
+            {
+                "level": 20,
+                "subject": "log"
+            }
+        ],
+        "host": "localhost",
+        "id": "eva_1",
+        "password": "test",
+        "port": 1883,
+        "type": "mqtt",
+        "username": "eva"
+    }
+]

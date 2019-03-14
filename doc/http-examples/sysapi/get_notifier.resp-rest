@@ -1,0 +1,31 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-cache, no-store, must-revalidate
+Expires: 0
+Pragma: no-cache
+
+{
+    "collect_logs": true,
+    "enabled": false,
+    "events": [
+        {
+            "groups": [
+                "#"
+            ],
+            "subject": "state",
+            "types": [
+                "#"
+            ]
+        },
+        {
+            "level": 20,
+            "subject": "log"
+        }
+    ],
+    "host": "localhost",
+    "id": "eva_1",
+    "password": "test",
+    "port": 1883,
+    "type": "mqtt",
+    "username": "eva"
+}

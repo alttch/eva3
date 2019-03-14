@@ -1,0 +1,35 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Cache-Control: no-cache, no-store, must-revalidate
+Expires: 0
+Pragma: no-cache
+
+[
+    {
+        "h": "mws3-v1",
+        "l": 30,
+        "mod": "sysapi",
+        "msg": "test warning message",
+        "p": "sfa",
+        "t": 1552518650.1697187,
+        "th": "CP Server Thread-18"
+    },
+    {
+        "h": "mws3-v1",
+        "l": 40,
+        "mod": "sysapi",
+        "msg": "test error message",
+        "p": "sfa",
+        "t": 1552518650.1815493,
+        "th": "CP Server Thread-19"
+    },
+    {
+        "h": "mws3-v1",
+        "l": 50,
+        "mod": "sysapi",
+        "msg": "test critical message",
+        "p": "sfa",
+        "t": 1552518650.1938505,
+        "th": "CP Server Thread-20"
+    }
+]
