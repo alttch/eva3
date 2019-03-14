@@ -29,6 +29,10 @@ from eva.api import parse_api_params
 from eva.api import NoAPIMethodException
 from eva.api import GenericAPI
 
+from eva.api import log_d
+from eva.api import log_i
+from eva.api import log_w
+
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
 from eva.tools import val_to_boolean
@@ -102,6 +106,7 @@ def api_need_lock(f):
 
 class LockAPI(object):
 
+    @log_i
     @api_need_lock
     def lock(self, **kwargs):
         """
@@ -151,6 +156,7 @@ class LockAPI(object):
             lock_expire_time[l] = time.time() + e
         return True
 
+    @log_i
     @api_need_lock
     def unlock(self, **kwargs):
         """
@@ -234,6 +240,7 @@ class CMD(object):
 
 class CMDAPI(object):
 
+    @log_i
     @api_need_cmd
     def cmd(self, **kwargs):
         """
@@ -277,6 +284,7 @@ class CMDAPI(object):
 
 class LogAPI(object):
 
+    @log_i
     @api_need_sysfunc
     def log_rotate(self, **kwargs):
         """
@@ -295,6 +303,7 @@ class LogAPI(object):
             raise FunctionFailed()
         return True
 
+    @log_d
     @api_need_sysfunc
     def log_debug(self, **kwargs):
         """
@@ -311,6 +320,7 @@ class LogAPI(object):
         if m: logging.debug(m)
         return True
 
+    @log_d
     @api_need_sysfunc
     def log_info(self, **kwargs):
         """
@@ -327,6 +337,7 @@ class LogAPI(object):
         if m: logging.info(m)
         return True
 
+    @log_d
     @api_need_sysfunc
     def log_warning(self, **kwargs):
         """
@@ -343,6 +354,7 @@ class LogAPI(object):
         if m: logging.warning(m)
         return True
 
+    @log_d
     @api_need_sysfunc
     def log_error(self, **kwargs):
         """
@@ -359,6 +371,7 @@ class LogAPI(object):
         if m: logging.error(m)
         return True
 
+    @log_d
     @api_need_sysfunc
     def log_critical(self, **kwargs):
         """
@@ -375,6 +388,7 @@ class LogAPI(object):
         if m: logging.critical(m)
         return True
 
+    @log_d
     @api_need_sysfunc
     def log_get(self, **kwargs):
         """
@@ -396,6 +410,7 @@ class LogAPI(object):
         if not l: l = 'i'
         return eva.logs.log_get(logLevel=get_log_level_by_name(l), t=t, n=n)
 
+    # don't wrap - calls other self functions
     def log(self, **kwargs):
         """
         put message to log file
@@ -427,8 +442,9 @@ class FileAPI(object):
 
     @staticmethod
     def _file_not_found(fname):
-        return ResourceNotFound('File not found {}'.format(fname))
+        return ResourceNotFound('file:runtime/{}'.format(fname))
 
+    @log_i
     @api_need_file_management
     @api_need_master
     def file_unlink(self, **kwargs):
@@ -454,6 +470,7 @@ class FileAPI(object):
             eva.core.log_traceback()
             raise FunctionFailed()
 
+    @log_i
     @api_need_file_management
     @api_need_master
     def file_get(self, **kwargs):
@@ -476,6 +493,7 @@ class FileAPI(object):
             eva.core.log_traceback()
             raise FunctionFailed()
 
+    @log_i
     @api_need_file_management
     @api_need_master
     def file_put(self, **kwargs):
@@ -505,6 +523,7 @@ class FileAPI(object):
             eva.core.log_traceback()
             raise FunctionFailed()
 
+    @log_i
     @api_need_file_management
     @api_need_master
     def file_set_exec(self, **kwargs):
@@ -531,7 +550,7 @@ class FileAPI(object):
             return True
         except:
             eva.core.log_traceback()
-            return False
+            raise FunctionFailed()
 
 
 class UserAPI(object):
@@ -597,6 +616,7 @@ class UserAPI(object):
 
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
+    @log_i
     @api_need_sysfunc
     def save(self, **kwargs):
         """
@@ -614,11 +634,13 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         parse_api_params(kwargs)
         return eva.core.do_save()
 
+    @log_w
     @api_need_master
     def dump(self, **kwargs):
         parse_api_params(kwargs)
         return eva.core.create_dump()
 
+    @log_d
     @api_need_master
     def get_cvar(self, **kwargs):
         """
@@ -646,6 +668,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         else:
             return eva.core.cvars.copy()
 
+    @log_i
     @api_need_master
     def set_cvar(self, **kwargs):
         """
@@ -661,6 +684,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         i, v = parse_api_params(kwargs, 'iv', 'S.')
         return eva.core.set_cvar(i, v)
 
+    @log_d
     @api_need_master
     def list_notifiers(self, **kwargs):
         """
@@ -675,6 +699,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             result.append(n.serialize())
         return sorted(result, key=lambda k: k['id'])
 
+    @log_d
     @api_need_master
     def get_notifier(self, **kwargs):
         """
@@ -690,6 +715,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         except:
             raise ResourceNotFound()
 
+    @log_w
     @api_need_master
     def enable_notifier(self, **kwargs):
         """
@@ -711,6 +737,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             raise ResourceNotFound()
         return True
 
+    @log_w
     @api_need_master
     def disable_notifier(self, **kwargs):
         """
@@ -732,6 +759,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             raise ResourceNotFound()
         return True
 
+    @log_w
     @api_need_master
     def set_debug(self, **kwargs):
         """
@@ -753,6 +781,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             eva.core.debug_off()
         return True
 
+    @log_w
     @api_need_master
     def setup_mode(self, **kwargs):
         setup = parse_api_params(kwargs, ('setup',), 'B')
@@ -764,6 +793,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             eva.core.setup_off()
         return True
 
+    @log_w
     @api_need_master
     def shutdown_core(self, **kwargs):
         """
@@ -1038,10 +1068,10 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'lock':
             return self.lock(k=k, l=ii, t=props.get('t'), e=props.get('e'))
         elif rtp == 'runtime':
-            if not SysAPI.file_put(self, k=k, i=ii, m=props.get('m')):
-                raise FunctionFailed()
-            if 'e' in props:
-                return self.file_set_exec(k=k, i=ii, e=props['e'])
+            m, e = parse_api_params(props, 'me', 'rb')
+            SysAPI.file_put(self, k=k, i=ii, m=m)
+            if e is not None:
+                self.file_set_exec(k=k, i=ii, e=props['e'])
             return True
         elif rtp == 'user':
             return self.create_user(
@@ -1077,11 +1107,11 @@ class SysHTTP_API_REST_abstract:
                     props.get('enabled')) else self.disable_notifier(
                         k=k, i=ii)
         elif rtp == 'runtime':
-            if not config.api_file_management_allowed:
-                if not SysAPI.file_put(self, k=k, i=ii, m=props['m']):
-                    raise FunctionFailed()
-            if 'e' in props:
-                return self.file_set_exec(k=k, i=ii, e=props['e'])
+            m, e = parse_api_params(props, 'me', '.b')
+            if m is not None:
+                SysAPI.file_put(self, k=k, i=ii, m=m)
+            if e is not None:
+                self.file_set_exec(k=k, i=ii, e=e)
             return True
         elif rtp == 'user':
             if 'p' in props:

@@ -33,10 +33,11 @@ from eva.api import cp_api_error
 from eva.api import cp_bad_request
 from eva.api import cp_api_404
 from eva.api import api_need_master as cp_need_master
-from eva.api import restful_api_function
+from eva.api import restful_api_method
 from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva.api import set_response_location
+from eva.api import generic_web_api_method
 from eva.api import NoAPIMethodException
 
 from eva import apikey
@@ -1011,7 +1012,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                    eva.api.GenericHTTP_API_REST_abstract, SFA_HTTP_API_abstract,
                    GenericHTTP_API):
 
-    @restful_api_function
+    @generic_web_api_method
+    @restful_api_method
     def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
@@ -1066,7 +1068,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state(k=k, i=ii, p=rtp, full=full)
         raise NoAPIMethodException()
 
-    @restful_api_function
+    @generic_web_api_method
+    @restful_api_method
     def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().POST(rtp, k, ii, full, save, kind, for_dir, props)
@@ -1138,7 +1141,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.reload_clients(k=k)
         raise NoAPIMethodException()
 
-    @restful_api_function
+    @generic_web_api_method
+    @restful_api_method
     def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().PUT(rtp, k, ii, full, save, kind, for_dir, props)
@@ -1175,7 +1179,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     w=props.get('w', 0))
         raise NoAPIMethodException()
 
-    @restful_api_function
+    @generic_web_api_method
+    @restful_api_method
     def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().PATCH(rtp, k, ii, full, save, kind, for_dir, props)
@@ -1223,7 +1228,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.disable_actions(k=k, i=ii)
         raise NoAPIMethodException()
 
-    @restful_api_function
+    @generic_web_api_method
+    @restful_api_method
     def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
         try:
             return super().DELETE(rtp, k, ii, full, save, kind, for_dir, props)

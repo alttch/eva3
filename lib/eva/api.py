@@ -87,7 +87,7 @@ def cp_api_error(msg=None):
 
 
 def cp_api_404(msg=None):
-    return cherrypy.HTTPError(404, msg if msg else None)
+    return cherrypy.HTTPError(404, msg + ' not found' if msg else None)
 
 
 def cp_bad_request(msg=None):
@@ -98,13 +98,12 @@ def parse_api_params(params, names='', types='', defaults=None):
     if isinstance(names, str):
         n = 'k' + names
     elif isinstance(names, list):
-        n = [ 'k' ] + names
+        n = ['k'] + names
     elif isinstance(names, tuple):
-        n = ('k', ) + names
+        n = ('k',) + names
     else:
         raise InvalidParameter('API params parser error')
-    result = parse_function_params(params, n, '.' + types,
-                                   defaults)[1:]
+    result = parse_function_params(params, n, '.' + types, defaults)[1:]
     return result if len(result) > 1 else result[0]
 
 
@@ -131,23 +130,17 @@ def restful_parse_params(*args, **kwargs):
     return k, ii, full, save, kind, for_dir, kwargs
 
 
-def restful_api_function(f):
+def generic_web_api_method(f):
+    """
+    convert function exceptions to web exceptions
+    """
 
     @wraps(f)
-    def do(c, rtp, *args, **kwargs):
-        k, ii, full, save, kind, for_dir, props = restful_parse_params(
-            *args, **kwargs)
+    def do(*args, **kwargs):
         try:
-            result = f(c, rtp, k, ii, full, kind, save, for_dir, props)
-            if result is False:
-                raise FunctionFailed()
-            if result is None:
-                raise ResourceNotFound()
-            if f.__name__ == 'POST':
-                if 'Location' in cherrypy.serving.response.headers:
-                    cherrypy.serving.response.status = 201
-            return None if result is True else result
+            return f(*args, **kwargs)
         except InvalidParameter as e:
+            eva.core.log_traceback()
             raise cp_bad_request(str(e))
         except TypeError as e:
             eva.core.log_traceback()
@@ -156,10 +149,56 @@ def restful_api_function(f):
             eva.core.log_traceback()
             raise cp_api_404(str(e))
         except NoAPIMethodException as e:
-            raise cp_api_404('API method not found')
+            raise cp_api_404('API method')
         except FunctionFailed as e:
             eva.core.log_traceback()
             raise cp_api_error(str(e))
+
+    return do
+
+
+def restful_api_method(f):
+    """
+    wrapper for restful API methods
+    """
+
+    @wraps(f)
+    def do(c, rtp, *args, **kwargs):
+        k, ii, full, save, kind, for_dir, props = restful_parse_params(
+            *args, **kwargs)
+        result = f(c, rtp, k, ii, full, kind, save, for_dir, props)
+        if result is False:
+            raise FunctionFailed()
+        if result is None:
+            raise ResourceNotFound()
+        if f.__name__ == 'POST':
+            if 'Location' in cherrypy.serving.response.headers:
+                cherrypy.serving.response.status = 201
+        return None if result is True else result
+
+    return do
+
+
+def cp_api_function(f):
+    """
+    wrapper for direct calling API
+    """
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        try:
+            result = f(*args, **kwargs)
+            if result is True:
+                return http_api_result_ok()
+            elif result is False:
+                raise FunctionFailed()
+            elif result is None:
+                raise ResourceNotFound()
+            else:
+                return result
+        except FunctionFailed as e:
+            err = str(e)
+            return http_api_result_error({'_error': err} if e else None)
 
     return do
 
@@ -222,44 +261,47 @@ def update_config(cfg):
     return True
 
 
-def log_api_request(func, auth=None, info=None, debug=False):
-    msg = 'API request '
-    if auth:
-        msg += auth + ':'
-    msg += func
-    if info:
-        msg += ', '
-        if isinstance(info, list):
-            msg += ' '.join(info)
-        elif isinstance(info, dict):
-            for i, v in info.items():
-                msg += '%s="%s" ' % (i, v)
-        else:
-            msg += info
-    if debug:
-        logging.debug(msg)
-    else:
-        if not eva.core.development or func == 'test':
-            logging.debug(msg)
-        else:
-            logging.info(msg)
+class API_Logger(object):
+
+    def log_api_request(self, func, info, logger):
+        msg = 'API request '
+        auth = self.get_auth(func, info)
+        if auth:
+            msg += auth + ':'
+        msg += func.__name__
+        if info:
+            msg += ', '
+            if isinstance(info, list):
+                msg += ' '.join(info)
+            elif isinstance(info, dict):
+                for i, v in info.items():
+                    msg += '%s="%s" ' % (i, v)
+            else:
+                msg += info
+        logger(msg)
+
+    def __call__(self, func, params, logger):
+        p = self.prepare_params(func, params.copy())
+        self.log_api_request(func, p, logger)
+
+    def prepare_params(self, func, p):
+        if not eva.core.development:
+            if 'k' in p: del (p['k'])
+            if func.startswith('set_'):
+                try:
+                    if p.get('p') in ['key', 'masterkey']: del p['v']
+                except:
+                    pass
+        return p
+
+    def get_auth(self, func, params):
+        return apikey.key_id(k)
 
 
-def log_http_api_request(k, func):
-    p = prepare_http_request_logging_params(func)
-    log_api_request(func=func, auth=http_remote_info(k), info=p, debug=False)
+class HTTP_API_Logger(API_Logger):
 
-
-def prepare_http_request_logging_params(func):
-    p = cherrypy.serving.request.params.copy()
-    if not eva.core.development:
-        if 'k' in p: del (p['k'])
-        if func.startswith('set_'):
-            try:
-                if p.get('p') in ['key', 'masterkey']: del p['v']
-            except:
-                pass
-    return p
+    def get_auth(self, func, params):
+        return http_remote_info(params.get('k'))
 
 
 def cp_check_perm(api_key=None, path_info=None):
@@ -269,7 +311,6 @@ def cp_check_perm(api_key=None, path_info=None):
     if k is not None: cherrypy.serving.request.params['k'] = k
     # pass login and info
     if path.endswith('/login') or path.endswith('/info'): return
-    log_http_api_request(k, path[1:])
     if apikey.check(k, ip=http_real_ip()): return
     raise cp_forbidden_key()
 
@@ -287,10 +328,6 @@ def http_real_ip(get_gw=False):
 
 def http_remote_info(k=None):
     return '%s@%s' % (apikey.key_id(k), http_real_ip(get_gw=True))
-
-
-def cp_api_pre():
-    g.api_call_log = {}
 
 
 def cp_json_pre():
@@ -340,8 +377,39 @@ def cp_nocache():
     headers['Expires'] = '0'
 
 
+def log_d(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        args[0].log_api_call(f, kwargs, logging.debug)
+        return f(*args, **kwargs)
+
+    return do
+
+
+def log_i(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        args[0].log_api_call(f, kwargs, logging.info)
+        return f(*args, **kwargs)
+
+    return do
+
+
+def log_w(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        args[0].log_api_call(f, kwargs, logging.warning)
+        return f(*args, **kwargs)
+
+    return do
+
+
 class GenericAPI(object):
 
+    @log_d
     def test(self, k):
         """
         test API/key and get system info
@@ -402,6 +470,7 @@ class GenericAPI(object):
         return result
 
     # return version for embedded hardware
+    @log_d
     def info(self):
         parse_api_params(params=kwargs)
         return {
@@ -411,134 +480,9 @@ class GenericAPI(object):
             'system': eva.core.system_name,
         }
 
-    def get_state_history(self,
-                          k=None,
-                          a=None,
-                          oid=None,
-                          t_start=None,
-                          t_end=None,
-                          limit=None,
-                          prop=None,
-                          time_format=None,
-                          fill=None,
-                          fmt=None):
-        if oid is None: return None
-        n = eva.notify.get_db_notifier(a)
-        if t_start and fill: tf = 'iso'
-        else: tf = time_format
-        if not n: return None
-        try:
-            result = n.get_state(
-                oid=oid,
-                t_start=t_start,
-                t_end=t_end,
-                limit=limit,
-                prop=prop,
-                time_format=tf)
-        except:
-            logging.warning('state history call failed, arch: %s, oid: %s' %
-                            (n.notifier_id, oid))
-            eva.core.log_traceback()
-            return False
-        if t_start and fill and result:
-            tz = pytz.timezone(time.tzname[0])
-            try:
-                t_s = float(t_start)
-            except:
-                try:
-                    t_s = dateutil.parser.parse(t_start).timestamp()
-                except:
-                    return False
-            if t_end:
-                try:
-                    t_e = float(t_end)
-                except:
-                    try:
-                        t_e = dateutil.parser.parse(t_end).timestamp()
-                    except:
-                        return False
-            else:
-                t_e = time.time()
-            if t_e > time.time(): t_e = time.time()
-            try:
-                df = pd.DataFrame(result)
-                df = df.set_index('t')
-                df.index = pd.to_datetime(df.index, utc=True)
-                sp1 = df.resample(fill).mean()
-                sp2 = df.resample(fill).pad()
-                sp = sp1.fillna(sp2).to_dict(orient='split')
-                result = []
-                for i in range(0, len(sp['index'])):
-                    t = sp['index'][i].timestamp()
-                    if time_format == 'iso':
-                        t = datetime.fromtimestamp(t, tz).isoformat()
-                    r = {'t': t}
-                    if 'status' in sp['columns'] and 'value' in sp['columns']:
-                        try:
-                            r['status'] = int(sp['data'][i][0])
-                        except:
-                            r['status'] = None
-                        r['value'] = sp['data'][i][1]
-                    elif 'status' in sp['columns']:
-                        try:
-                            r['status'] = int(sp['data'][i][0])
-                        except:
-                            r['status'] = None
-                    elif 'value' in sp['columns']:
-                        r['value'] = sp['data'][i][0]
-                    if 'value' in r and isinstance(
-                            r['value'], float) and math.isnan(r['value']):
-                        r['value'] = None
-                    result.append(r)
-            except:
-                logging.warning('state history dataframe error')
-                eva.core.log_traceback()
-                return False
-        if not fmt or fmt == 'list':
-            res = {'t': []}
-            for r in result:
-                res['t'].append(r['t'])
-                if 'status' in r:
-                    if 'status' in res:
-                        res['status'].append(r['status'])
-                    else:
-                        res['status'] = [r['status']]
-                if 'value' in r:
-                    if 'value' in res:
-                        res['value'].append(r['value'])
-                    else:
-                        res['value'] = [r['value']]
-            result = res
-        elif fmt == 'dict':
-            pass
-        else:
-            return False
-        return result
-
 
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
-    if isinstance(value,
-                  dict) and (not value or
-                             ('result' in value and value['result'] != 'OK')):
-        warn = ''
-        for w in g.api_call_log.get(30, []):
-            if warn:
-                warn += '\n'
-            warn += w
-        err = ''
-        for e in g.api_call_log.get(40, []):
-            if err:
-                err += '\n'
-            err += e
-        crit = ''
-        for c in g.api_call_log.get(50, []):
-            if crit:
-                crit += '\n'
-            crit += c
-        if warn: value['_warning'] = warn
-        if err: value['_error'] = err
-        if crit: value['_critical'] = crit
     if value or isinstance(value, list):
         return format_json(
             value, minimal=not eva.core.development).encode('utf-8')
@@ -588,51 +532,19 @@ def cp_client_key(_k=None):
     return k
 
 
-def cp_api_function(f):
-
-    @wraps(f)
-    def do(*args, **kwargs):
-        try:
-            result = f(*args, **kwargs)
-            if result is True:
-                return http_api_result_ok()
-            elif result is False:
-                raise FunctionFailed()
-            elif result is None:
-                raise ResourceNotFound()
-            else:
-                return result
-        except InvalidParameter as e:
-            raise cp_bad_request(str(e))
-        except TypeError as e:
-            eva.core.log_traceback()
-            raise cp_bad_request()
-        except ResourceNotFound as e:
-            eva.core.log_traceback()
-            raise cp_api_404(str(e))
-        except NoAPIMethodException as e:
-            raise cp_api_404('API method not found')
-        except FunctionFailed as e:
-            eva.core.log_traceback()
-            return http_api_result_error(str(e))
-
-    return do
-
-
 class GenericHTTP_API_abstract:
 
     def __init__(self):
         self.__exposed = {}
+        self.log_api_call = HTTP_API_Logger()
 
+    @generic_web_api_method
     def __call__(self, *args, **kwargs):
-        func = self.get_api_function(args)
+        func = self._get_api_function(args)
         if func:
-            try:
-                return func(**kwargs)
-            except TypeError:
-                raise cp_bad_request()
+            return func(**kwargs)
         else:
-            raise cp_api_404()
+            raise NoAPIMethodException()
 
     def wrap_exposed(self, decorator):
         for k, v in self.__exposed.items():
@@ -647,7 +559,7 @@ class GenericHTTP_API_abstract:
             for func in f:
                 self._expose(func)
 
-    def get_api_function(self, f):
+    def _get_api_function(self, f):
         if isinstance(f, list) or isinstance(f, tuple):
             f = '.'.join(f)
         return self.__exposed.get(f)
@@ -764,6 +676,7 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
     def wrap_exposed(self):
         super().wrap_exposed(cp_api_function)
 
+    @log_i
     def login(self, k, u=None, p=None):
         if not u and k:
             if k in apikey.keys:
@@ -779,6 +692,7 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         cherrypy.session['k'] = ''
         raise cp_forbidden_key()
 
+    @log_d
     def logout(self):
         cherrypy.session['k'] = ''
         return http_api_result_ok()
@@ -879,8 +793,6 @@ def init():
         'before_handler', cp_json_pre, priority=10)
     cherrypy.tools.jsonrpc_pre = cherrypy.Tool(
         'before_handler', cp_jsonrpc_pre, priority=10)
-    cherrypy.tools.api_pre = cherrypy.Tool(
-        'before_handler', cp_api_pre, priority=20)
     cherrypy.tools.auth = cherrypy.Tool(
         'before_handler', cp_check_perm, priority=60)
     cherrypy.tools.nocache = cherrypy.Tool(
@@ -918,7 +830,6 @@ def error_page_500(*args, **kwargs):
 
 
 api_cp_config = {
-    'tools.api_pre.on': True,
     'tools.json_out.on': True,
     'tools.sessions.on': False,
     'tools.nocache.on': True,
