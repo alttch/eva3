@@ -32,7 +32,7 @@ from eva.api import http_api_result_error
 from eva.api import cp_api_error
 from eva.api import cp_bad_request
 from eva.api import cp_api_404
-from eva.api import cp_need_master
+from eva.api import api_need_master as cp_need_master
 from eva.api import restful_api_function
 from eva.api import http_real_ip
 from eva.api import cp_client_key
@@ -1064,7 +1064,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state(k=k, g=ii, p=rtp, full=full)
             else:
                 return self.state(k=k, i=ii, p=rtp, full=full)
-        raise cp_api_404()
+        raise NoAPIMethodException()
 
     @restful_api_function
     def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
@@ -1136,7 +1136,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.notify_restart(k=k)
             elif cmd == 'reload_clients':
                 return self.reload_clients(k=k)
-        raise cp_api_404()
+        raise NoAPIMethodException()
 
     @restful_api_function
     def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
@@ -1173,7 +1173,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     p=props.get('p'),
                     q=props.get('q'),
                     w=props.get('w', 0))
-        raise cp_api_404()
+        raise NoAPIMethodException()
 
     @restful_api_function
     def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
@@ -1221,7 +1221,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.enable_actions(k=k, i=ii)
                 else:
                     return self.disable_actions(k=k, i=ii)
-        raise cp_api_404()
+        raise NoAPIMethodException()
 
     @restful_api_function
     def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
@@ -1232,7 +1232,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
         if rtp == 'controller':
             if ii:
                 return self.remove_controller(k=k, i=ii)
-        raise cp_api_404()
+        raise NoAPIMethodException()
 
 
 # j2 template engine functions

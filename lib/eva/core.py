@@ -23,6 +23,8 @@ import sqlite3
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
 
+from eva.exceptions import FunctionFailed
+
 from eva.logs import MemoryLogHandler
 
 from pyaltt import g
@@ -122,11 +124,6 @@ exec_after_save = None
 
 mqtt_update_default = None
 
-_save_func = set()
-_dump_func = {}
-_stop_func = set()
-_shutdown_func = set()
-
 _sigterm_sent = False
 
 start_time = time.time()
@@ -196,7 +193,10 @@ def sighandler_term(signum=None, frame=None):
     global _sigterm_sent
     logging.info('got TERM signal, exiting')
     if db_update == 2:
-        save()
+        try:
+            do_save()
+        except:
+            eva.core.log_traceback()
     core_shutdown()
     unlink_pid_file()
     _sigterm_sent = True
@@ -216,7 +216,7 @@ def prepare_save():
     if code:
         logging.error('before save command exited with code %u' % \
             code)
-        return False
+        raise FunctionFailed('exec_before_save failed')
     return True
 
 
@@ -228,18 +228,17 @@ def finish_save():
     if code:
         logging.error('after save command exited with code %u' % \
             code)
-        return False
+        raise FunctionFailed('exec_before_save failed')
     return True
 
 
-def do_save(func=None):
-    if not prepare_save(): return False
-    if func and func in _save_func:
-        if not func(): result = False
-    success = save.execute()[1]
-    if not finish_save(): return False
+def do_save():
+    prepare_save()
+    try:
+        success = save.execute()[1]
+    finally:
+        finish_save()
     return success
-
 
 def block():
     global started

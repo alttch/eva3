@@ -95,7 +95,15 @@ def cp_bad_request(msg=None):
 
 
 def parse_api_params(params, names='', types='', defaults=None):
-    result = parse_function_params(params, 'k' + names, '.' + types,
+    if isinstance(names, str):
+        n = 'k' + names
+    elif isinstance(names, list):
+        n = [ 'k' ] + names
+    elif isinstance(names, tuple):
+        n = ('k', ) + names
+    else:
+        raise InvalidParameter('API params parser error')
+    result = parse_function_params(params, n, '.' + types,
                                    defaults)[1:]
     return result if len(result) > 1 else result[0]
 
@@ -129,23 +137,29 @@ def restful_api_function(f):
     def do(c, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_parse_params(
             *args, **kwargs)
-        result = f(c, rtp, k, ii, full, kind, save, for_dir, props)
-        if isinstance(result, dict):
-            if result.get('result', 'OK') == 'OK':
-                if 'result' in result: del result['result']
-                n = f.__name__
-                if n == 'POST':
-                    if 'Location' in cherrypy.serving.response.headers:
-                        cherrypy.serving.response.status = 201
-                    else:
-                        if not result:
-                            return None
-                elif n == 'PUT' or n == 'PATCH' or n == 'DELETE':
-                    if not result:
-                        return None
-            else:
-                if 'result' in result: del result['result']
-        return result
+        try:
+            result = f(c, rtp, k, ii, full, kind, save, for_dir, props)
+            if result is False:
+                raise FunctionFailed()
+            if result is None:
+                raise ResourceNotFound()
+            if f.__name__ == 'POST':
+                if 'Location' in cherrypy.serving.response.headers:
+                    cherrypy.serving.response.status = 201
+            return None if result is True else result
+        except InvalidParameter as e:
+            raise cp_bad_request(str(e))
+        except TypeError as e:
+            eva.core.log_traceback()
+            raise cp_bad_request()
+        except ResourceNotFound as e:
+            eva.core.log_traceback()
+            raise cp_api_404(str(e))
+        except NoAPIMethodException as e:
+            raise cp_api_404('API method not found')
+        except FunctionFailed as e:
+            eva.core.log_traceback()
+            raise cp_api_error(str(e))
 
     return do
 
@@ -585,21 +599,22 @@ def cp_api_function(f):
             elif result is False:
                 raise FunctionFailed()
             elif result is None:
-                raise cp_api_404()
+                raise ResourceNotFound()
             else:
-                if isinstance(result, str) or isinstance(
-                        result, dict) or isinstance(result, list):
-                    return result
-                else:
-                    return result.serialize()
+                return result
         except InvalidParameter as e:
             raise cp_bad_request(str(e))
         except TypeError as e:
+            eva.core.log_traceback()
             raise cp_bad_request()
         except ResourceNotFound as e:
+            eva.core.log_traceback()
             raise cp_api_404(str(e))
+        except NoAPIMethodException as e:
+            raise cp_api_404('API method not found')
         except FunctionFailed as e:
-            return http_api_result_error()
+            eva.core.log_traceback()
+            return http_api_result_error(str(e))
 
     return do
 
@@ -620,8 +635,8 @@ class GenericHTTP_API_abstract:
             raise cp_api_404()
 
     def wrap_exposed(self, decorator):
-        for k, v in self.__exposed:
-            v = decorator(v)
+        for k, v in self.__exposed.items():
+            self.__exposed[k] = decorator(v)
 
     def _expose(self, f):
         if callable(f):

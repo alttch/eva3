@@ -20,7 +20,6 @@ from pyaltt import background_job
 
 from functools import wraps
 
-from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
 from eva.api import cp_bad_request
 from eva.api import cp_api_404
@@ -38,9 +37,10 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 
 from eva.tools import InvalidParameter
+from eva.tools import parse_function_params
 
-from eva.common import get_log_level_by_name
-from eva.common import get_log_level_by_id
+from eva.logs import get_log_level_by_name
+from eva.logs import get_log_level_by_id
 
 from pyaltt import background_worker
 
@@ -138,16 +138,16 @@ class LockAPI(object):
             e: time after which token is automatically unlocked (if absent,
                 token may be unlocked only via unlock function)
         """
-        l, t, e = parse_api_params('lte', 'S.n', kwargs,
-                                  {'t': eva.core.timeout})
+        l, t, e = parse_api_params(kwargs, 'lte', 'S.n',
+                                   {'t': eva.core.timeout})
         if not l in locks:
             locks[l] = threading.Lock()
         logging.debug(
                 'acquiring lock %s, timeout = %u, expires = %s' % \
-                            (l, float(t), expires))
+                            (l, t, e))
         if not locks[l].acquire(timeout=t):
             raise FunctionFailed('Unable to acquire lock')
-        if result and e:
+        if e:
             lock_expire_time[l] = time.time() + e
         return True
 
@@ -164,13 +164,17 @@ class LockAPI(object):
 
         apidoc_category: lock
         """
-        l = parse_api_params('l', 'S')
+        l = parse_api_params(kwargs, 'l', 'S')
         logging.debug('releasing lock %s' % l)
         try:
             locks[l].release()
             return True
-        except:
+        except RuntimeError:
+            return True
+        except KeyError:
             raise ResourceNotFound()
+        except:
+            raise FunctionFailed()
 
 
 cmd_status_created = 0
@@ -250,7 +254,7 @@ class CMDAPI(object):
             t: maximum time of command execution. If the command fails to finish
                 within the specified time (in sec), it will be terminated
         """
-        cmd, args, wait, timeout = parse_api_params('cawt', 'S.nn', kwargs)
+        cmd, args, wait, timeout = parse_api_params(kwargs, 'cawt', 'S.nn')
         if cmd[0] == '/' or cmd.find('..') != -1:
             return None
         if args is not None:
@@ -268,13 +272,13 @@ class CMDAPI(object):
         t.start()
         if wait:
             eva.core.wait_for(_c.xc.is_finished, wait)
-        return _c
+        return _c.serialize()
 
 
 class LogAPI(object):
 
     @api_need_sysfunc
-    def log_rotate(self, k=None):
+    def log_rotate(self, **kwargs):
         """
         rotate log file
         
@@ -283,6 +287,7 @@ class LogAPI(object):
         Args:
             k: .sysfunc=yes
         """
+        parse_api_params(kwargs)
         try:
             eva.core.reset_log()
         except:
@@ -291,7 +296,7 @@ class LogAPI(object):
         return True
 
     @api_need_sysfunc
-    def log_debug(self, k=None, m=None):
+    def log_debug(self, **kwargs):
         """
         put debug message to log file
         
@@ -302,11 +307,12 @@ class LogAPI(object):
             k: .sysfunc=yes
             m: message text
         """
+        m = parse_api_params(kwargs, 'm', '.')
         if m: logging.debug(m)
         return True
 
     @api_need_sysfunc
-    def log_info(self, k=None, m=None):
+    def log_info(self, **kwargs):
         """
         put info message to log file
         
@@ -317,11 +323,12 @@ class LogAPI(object):
             k: .sysfunc=yes
             m: message text
         """
+        m = parse_api_params(kwargs, 'm', '.')
         if m: logging.info(m)
         return True
 
     @api_need_sysfunc
-    def log_warning(self, k=None, m=None):
+    def log_warning(self, **kwargs):
         """
         put warning message to log file
         
@@ -332,11 +339,12 @@ class LogAPI(object):
             k: .sysfunc=yes
             m: message text
         """
+        m = parse_api_params(kwargs, 'm', '.')
         if m: logging.warning(m)
         return True
 
     @api_need_sysfunc
-    def log_error(self, k=None, m=None):
+    def log_error(self, **kwargs):
         """
         put error message to log file
         
@@ -347,11 +355,12 @@ class LogAPI(object):
             k: .sysfunc=yes
             m: message text
         """
+        m = parse_api_params(kwargs, 'm', '.')
         if m: logging.error(m)
         return True
 
     @api_need_sysfunc
-    def log_critical(self, k=None, m=None):
+    def log_critical(self, **kwargs):
         """
         put critical message to log file
         
@@ -362,11 +371,12 @@ class LogAPI(object):
             k: .sysfunc=yes
             m: message text
         """
+        m = parse_api_params(kwargs, 'm', '.')
         if m: logging.critical(m)
         return True
 
     @api_need_sysfunc
-    def log_get(self, *kwargs):
+    def log_get(self, **kwargs):
         """
         get records from the controller log
 
@@ -382,10 +392,11 @@ class LogAPI(object):
             t: get log records not older than t seconds
             n: the maximum number of log records you want to obtain
         """
-        l, t, n = parse_api_params('ltn', '.ii')
-        return eva.logs.log_get(logLevel=log_level_by_name(l), t=t, n=n)
+        l, t, n = parse_api_params(kwargs, 'ltn', '.ii')
+        if not l: l = 'i'
+        return eva.logs.log_get(logLevel=get_log_level_by_name(l), t=t, n=n)
 
-    def log(self, *kwargs):
+    def log(self, **kwargs):
         """
         put message to log file
         
@@ -397,78 +408,126 @@ class LogAPI(object):
             l: log level
             m: message text
         """
-        l, m = parse_api_params(kwargs, 'lm', 'R.', {'l': 'info'})
+        k, l, m = parse_function_params(kwargs, 'klm', '.R.', {'l': 'info'})
         log_level = get_log_level_by_id(l)
         f = getattr(self, 'log_' + log_level)
         f(k=k, m=m)
         return True
 
+
 class FileAPI(object):
 
     @staticmethod
-    def _file_name_correct(fname):
+    def _check_file_name(fname):
         if fname is None or \
                 fname[0] == '/' or \
                 fname.find('..') != -1:
-            return False
+            raise InvalidParameter('File name contains invalid characters')
         return True
 
-    @api_need_file_management
-    @api_need_master
-    def file_unlink(self, k, fname=None):
-        if not self._file_name_correct(fname): return None
-        try:
-            if not eva.core.prepare_save(): return False
-            if not os.path.isfile(eva.core.dir_runtime + '/' + fname):
-                return None
-            os.unlink(eva.core.dir_runtime + '/' + fname)
-            if not eva.core.finish_save(): return False
-            return True
-        except:
-            eva.core.log_traceback()
-            return False
+    @staticmethod
+    def _file_not_found(fname):
+        return ResourceNotFound('File not found {}'.format(fname))
 
     @api_need_file_management
     @api_need_master
-    def file_get(self, k, fname=None):
-        if not self._file_name_correct(fname): return None, 0
+    def file_unlink(self, **kwargs):
+        """
+        delete file from runtime folder
+
+        Args:
+            k: .master
+            .i: relative path (without first slash)
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        self._check_file_name(i)
+        if not os.path.isfile(eva.core.dir_runtime + '/' + i):
+            raise self._file_not_found(i)
         try:
-            if not os.path.isfile(eva.core.dir_runtime + '/' + fname):
-                return None, 0
-            fname = eva.core.dir_runtime + '/' + fname
-            data = ''.join(open(fname).readlines())
-            return data, os.access(fname, os.X_OK)
+            eva.core.prepare_save()
+            try:
+                os.unlink(eva.core.dir_runtime + '/' + i)
+                return True
+            finally:
+                eva.core.finish_save()
         except:
             eva.core.log_traceback()
-            return False, 0
+            raise FunctionFailed()
 
     @api_need_file_management
     @api_need_master
-    def file_put(self, k, fname=None, data=None):
-        if not self._file_name_correct(fname): return None
+    def file_get(self, **kwargs):
+        """
+        get file contents from runtime folder
+
+        Args:
+            k: .master
+            .i: relative path (without first slash)
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        self._check_file_name(i)
+        if not os.path.isfile(eva.core.dir_runtime + '/' + i):
+            raise self._file_not_found(i)
         try:
-            if not data: raw = ''
-            else: raw = data
-            if not eva.core.prepare_save(): return False
-            open(eva.core.dir_runtime + '/' + fname, 'w').write(raw)
-            if not eva.core.finish_save(): return False
-            return True
+            i = eva.core.dir_runtime + '/' + i
+            data = ''.join(open(i).readlines())
+            return data, os.access(i, os.X_OK)
         except:
             eva.core.log_traceback()
-            return False
+            raise FunctionFailed()
 
     @api_need_file_management
     @api_need_master
-    def file_set_exec(self, k, fname=None, e=False):
-        if not self._file_name_correct(fname): return None
+    def file_put(self, **kwargs):
+        """
+        put file to runtime folder
+
+        Puts a new file into runtime folder. If the file with such name exists,
+        it will be overwritten. As all files in runtime are text, binary data
+        can not be put.
+
+        Args:
+            k: .master
+            .i: relative path (without first slash)
+            m: file content
+        """
+        i, m = parse_api_params(kwargs, 'im', 'Ss')
+        self._check_file_name(i)
         try:
-            if val_to_boolean(e): perm = 0o755
+            raw = '' if m is None else m
+            eva.core.prepare_save()
+            try:
+                open(eva.core.dir_runtime + '/' + i, 'w').write(raw)
+                return True
+            finally:
+                eva.core.finish_save()
+        except:
+            eva.core.log_traceback()
+            raise FunctionFailed()
+
+    @api_need_file_management
+    @api_need_master
+    def file_set_exec(self, **kwargs):
+        """
+        set file exec permission
+
+        Args:
+            k: .master
+            .i: relative path (without first slash)
+            e: *false* for 0x644, *true* for 0x755 (executable)
+        """
+        i, e = parse_api_params(kwargs, 'ie', 'SB')
+        self._check_file_name(i)
+        if not os.path.isfile(eva.core.dir_runtime + '/' + i):
+            raise self._file_not_found(i)
+        try:
+            if e: perm = 0o755
             else: perm = 0o644
-            if not eva.core.prepare_save(): return False
-            if not os.path.isfile(eva.core.dir_runtime + '/' + fname):
-                return None
-            os.chmod(eva.core.dir_runtime + '/' + fname, perm)
-            if not eva.core.finish_save(): return False
+            eva.core.prepare_save()
+            try:
+                os.chmod(eva.core.dir_runtime + '/' + i, perm)
+            finally:
+                eva.core.finish_save()
             return True
         except:
             eva.core.log_traceback()
@@ -539,7 +598,7 @@ class UserAPI(object):
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     @api_need_sysfunc
-    def save(self, k=None):
+    def save(self, **kwargs):
         """
         save database and runtime configuration
 
@@ -552,14 +611,16 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         Args:
             k: .sysfunc=yes
         """
+        parse_api_params(kwargs)
         return eva.core.do_save()
 
     @api_need_master
-    def dump(self, k=None):
+    def dump(self, **kwargs):
+        parse_api_params(kwargs)
         return eva.core.create_dump()
 
     @api_need_master
-    def get_cvar(self, k=None, var=None):
+    def get_cvar(self, **kwargs):
         """
         get the value of user-defined variable
 
@@ -579,55 +640,96 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             Dict containing variable and its value. If no varible name was
             specified, all cvars are returned.
         """
-        if var:
-            return eva.core.get_cvar(var)
+        i = parse_api_params(kwargs, 'i', '.')
+        if i:
+            return eva.core.get_cvar(i)
         else:
             return eva.core.cvars.copy()
 
     @api_need_master
-    def set_cvar(self, k=None, var=None, val=None):
+    def set_cvar(self, **kwargs):
         """
         set the value of user-defined variable
 
         Args:
             k: .master
             .i: variable name
-            v: variable value
+
+        Optional:
+            v: variable value (if not specified, variable is deleted)
         """
-        return eva.core.set_cvar(var, val)
+        i, v = parse_api_params(kwargs, 'iv', 'S.')
+        return eva.core.set_cvar(i, v)
 
     @api_need_master
-    def list_notifiers(self, k=None):
+    def list_notifiers(self, **kwargs):
         """
         list notifiers
 
         Args:
             k: .master
         """
+        parse_api_params(kwargs)
         result = []
         for n in eva.notify.get_notifiers():
             result.append(n.serialize())
         return sorted(result, key=lambda k: k['id'])
 
     @api_need_master
-    def get_notifier(self, k=None, i=None):
+    def get_notifier(self, **kwargs):
+        """
+        get notifier configuration
+
+        Args:
+            k: .master
+            .i: notifier ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         try:
             return eva.notify.get_notifier(i).serialize()
         except:
             raise ResourceNotFound()
 
     @api_need_master
-    def enable_notifier(self, k=None, i=None):
-        n = eva.notify.get_notifier(i)
-        if not n: return None
-        n.enabled = True
+    def enable_notifier(self, **kwargs):
+        """
+        enable notifier
+
+        .. note::
+
+            The notifier is enabled until controller restart. To enable
+            notifier permanently, use notifier management CLI.
+
+        Args:
+            k: .master
+            .i: notifier ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            eva.notify.get_notifier(i).enabled = True
+        except:
+            raise ResourceNotFound()
         return True
 
     @api_need_master
-    def disable_notifier(self, k=None, i=None):
-        n = eva.notify.get_notifier(i)
-        if not n: return None
-        n.enabled = False
+    def disable_notifier(self, **kwargs):
+        """
+        disable notifier
+
+        .. note::
+
+            The notifier is disabled until controller restart. To disable
+            notifier permanently, use notifier management CLI.
+
+        Args:
+            k: .master
+            .i: notifier ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        try:
+            eva.notify.get_notifier(i).enabled = False
+        except:
+            raise ResourceNotFound()
         return True
 
     @api_need_master
@@ -652,68 +754,18 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         return True
 
     @api_need_master
-    def setup_mode(self, k=None, setup=False):
+    def setup_mode(self, **kwargs):
+        setup = parse_api_params(kwargs, ('setup',), 'B')
         if not config.api_setup_mode_allowed:
             return False
-        if val_to_boolean(setup):
+        if setup:
             eva.core.setup_on()
         else:
             eva.core.setup_off()
         return True
 
     @api_need_master
-    def shutdown_core(self, k=None):
-        background_job(eva.core.sighandler_term)()
-        return True
-
-
-class SysHTTP_API_abstract(SysAPI):
-
-    def dump(self, k=None):
-        fname = super().dump(k=k)
-        return http_api_result_ok( {'file': fname } ) if fname \
-                else False
-
-    def get_cvar(self, k=None, i=None):
-        result = super().get_cvar(k=k, i=i)
-        return {i: result} if i else result
-
-    @cp_need_sysfunc
-
-    @cp_need_sysfunc
-    def log_debug(self, k=None, m=None):
-        super().log_debug(k=k, m=m)
-        return http_api_result_ok()
-
-    @cp_need_sysfunc
-    def log_info(self, k=None, m=None):
-        super().log_info(k=k, m=m)
-        return http_api_result_ok()
-
-    @cp_need_sysfunc
-    def log_warning(self, k=None, m=None):
-        super().log_warning(k=k, m=m)
-        return http_api_result_ok()
-
-    @cp_need_sysfunc
-    def log_error(self, k=None, m=None):
-        super().log_error(k=k, m=m)
-        return http_api_result_ok()
-
-    @cp_need_sysfunc
-    def log_critical(self, k=None, m=None):
-        super().log_critical(k=k, m=m)
-        return http_api_result_ok()
-
-    @cp_need_master
-    def set_debug(self, k=None, debug=None):
-        val = val_to_boolean(debug)
-        if val is None: raise cp_bad_request('Invalid value of "debug"')
-        return http_api_result_ok() if super().set_debug(k=k, debug=val) \
-                else http_api_result_error()
-
-    @cp_need_master
-    def shutdown_core(self, k):
+    def shutdown_core(self, **kwargs):
         """
         shutdown the controller
 
@@ -723,131 +775,26 @@ class SysHTTP_API_abstract(SysAPI):
         Args:
             k: .master
         """
-        return http_api_result_ok() if super().shutdown_core(k) \
-                else http_api_result_error()
+        parse_api_params(kwargs)
+        background_job(eva.core.sighandler_term)()
+        return True
 
-    @cp_need_master
-    def setup_mode(self, k=None, setup=None):
-        val = val_to_boolean(setup)
-        if val is None: raise cp_bad_request('Invalid value of "setup"')
-        return http_api_result_ok() if super().setup_mode(k, val) \
-                else http_api_result_error()
 
-    @cp_need_master
-    def enable_notifier(self, k=None, i=None):
-        """
-        enable notifier
+class SysHTTP_API_abstract(SysAPI):
 
-        .. note::
+    def dump(self, **kwargs):
+        fname = super().dump(**kwargs)
+        if not fname: raise FunctionFailed()
+        return {'file': fname}
 
-            The notifier is enabled until controller restart. To enable
-            notifier permanently, use notifier management CLI.
+    def get_cvar(self, **kwargs):
+        result = super().get_cvar(**kwargs)
+        return {kwargs['i']: result} if 'i' in kwargs else result
 
-        Args:
-            k: .master
-            .i: notifier ID
-        """
-        result = super().enable_notifier(k, i)
-        if not result: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
+    def file_get(self, **kwargs):
+        data, e = super().file_get(**kwargs)
+        return { 'file': kwargs.get('i'), 'data': data, 'e': e }
 
-    @cp_need_master
-    def disable_notifier(self, k=None, i=None):
-        """
-        disable notifier
-
-        .. note::
-
-            The notifier is disabled until controller restart. To disable
-            notifier permanently, use notifier management CLI.
-
-        Args:
-            k: .master
-            .i: notifier ID
-        """
-        result = super().disable_notifier(k, i)
-        if not result: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @cp_need_master
-    def get_notifier(self, k=None, i=None):
-        """
-        get notifier configuration
-
-        Args:
-            k: .master
-            .i: notifier ID
-        """
-        result = super().get_notifier(k=k, i=i)
-        if result is None: raise cp_api_404()
-        return result
-
-    @cp_need_file_management
-    @cp_need_master
-    def file_unlink(self, k=None, i=None):
-        """
-        delete file from runtime folder
-
-        Args:
-            k: .master
-            .i: relative path (without first slash)
-        """
-        result = super().file_unlink(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @cp_need_file_management
-    @cp_need_master
-    def file_get(self, k=None, i=None):
-        """
-        get file contents from runtime folder
-
-        Args:
-            k: .master
-            .i: relative path (without first slash)
-        """
-        d = super().file_get(k, i)
-        if d is None: raise cp_api_404()
-        return http_api_result_ok({'file': i, 'data': d[0], 'e': d[1]})
-
-    @cp_need_file_management
-    @cp_need_master
-    def file_put(self, k=None, i=None, m=None):
-        """
-        put file to runtime folder
-
-        Puts a new file into runtime folder. If the file with such name exists,
-        it will be overwritten. As all files in runtime are text, binary data
-        can not be put.
-
-        Args:
-            k: .master
-            .i: relative path (without first slash)
-            m: file content
-        """
-        return http_api_result_ok() if super().file_put(k, i, m) \
-                else http_api_result_error()
-
-    @cp_need_file_management
-    @cp_need_master
-    def file_set_exec(self, k=None, i=None, e=None):
-        """
-        set file exec permission
-
-        Args:
-            k: .master
-            .i: relative path (without first slash)
-            e: *false* for 0x644, *true* for 0x755 (executable)
-        """
-        try:
-            _e = val_to_boolean(e)
-        except:
-            raise cp_bad_request('Invalid value of "e"')
-        result = super().file_set_exec(k, i, _e)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @cp_need_master
     def create_user(self, k=None, u=None, p=None, a=None):
         """
         create user account
@@ -867,7 +814,6 @@ class SysHTTP_API_abstract(SysAPI):
         return http_api_result_ok() if super().create_user(k, u, p, a) \
                 else http_api_result_error()
 
-    @cp_need_master
     def set_user_password(self, k=None, u=None, p=None):
         """
         set user password
@@ -881,7 +827,6 @@ class SysHTTP_API_abstract(SysAPI):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
     def set_user_key(self, k=None, u=None, a=None):
         """
         assign API key to user
@@ -895,7 +840,6 @@ class SysHTTP_API_abstract(SysAPI):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
     def destroy_user(self, k=None, u=None):
         """
         delete user account
@@ -908,7 +852,6 @@ class SysHTTP_API_abstract(SysAPI):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
     def list_keys(self, k=None):
         """
         list API keys
@@ -918,7 +861,6 @@ class SysHTTP_API_abstract(SysAPI):
         """
         return super().list_keys(k)
 
-    @cp_need_master
     def list_users(self, k=None):
         """
         list user accounts
@@ -928,7 +870,6 @@ class SysHTTP_API_abstract(SysAPI):
         """
         return super().list_users(k)
 
-    @cp_need_master
     def get_user(self, k=None, u=None):
         """
         get user account info
@@ -941,7 +882,6 @@ class SysHTTP_API_abstract(SysAPI):
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
     def create_key(self, k=None, i=None, save=None):
         """
         create API key
@@ -959,7 +899,6 @@ class SysHTTP_API_abstract(SysAPI):
         result = super().create_key(k, i, save)
         return result if result else http_api_result_error()
 
-    @cp_need_master
     def list_key_props(self, k=None, i=None):
         """
         list API key permissions
@@ -980,7 +919,6 @@ class SysHTTP_API_abstract(SysAPI):
         if result is None: raise cp_api_404()
         return result if result else http_api_result_error()
 
-    @cp_need_master
     def set_key_prop(self, k=None, i=None, p=None, v=None, save=None):
         """
         set API key permissions
@@ -996,7 +934,6 @@ class SysHTTP_API_abstract(SysAPI):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
     def destroy_key(self, k=None, i=None):
         """
         delete API key
@@ -1009,7 +946,6 @@ class SysHTTP_API_abstract(SysAPI):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
     def regenerate_key(self, k=None, i=None, save=None):
         """
         regenerate API key
@@ -1032,6 +968,7 @@ class SysHTTP_API(SysHTTP_API_abstract, eva.api.GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self.expose_api_methods('sysapi')
+        self.wrap_exposed()
 
 
 class SysHTTP_API_REST_abstract:
@@ -1049,8 +986,7 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'log':
             return self.log_get(
                 k=k,
-                l=log_levels_by_name.get(ii.lower()
-                                         if ii is not None else None, ''),
+                l=ii,
                 t=props.get('t'),
                 n=props.get('n'))
         elif rtp == 'notifier':
@@ -1065,7 +1001,7 @@ class SysHTTP_API_REST_abstract:
                 return self.get_user(k=k, u=ii)
             else:
                 return self.list_users(k=k)
-        raise NoAPIMethodException
+        raise NoAPIMethodException()
 
     def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'core':
@@ -1078,39 +1014,39 @@ class SysHTTP_API_REST_abstract:
                 return self.log_rotate(k=k)
             elif cmd == 'shutdown':
                 return self.shutdown_core(k=k)
+            else:
+                raise NoAPIMethodException()
         elif rtp == 'log':
             return self.log(k=k, l=ii, m=props.get('m'))
         elif rtp == 'cmd':
-            if not ii: raise cp_api_404()
+            if not ii: raise ResourceNotFound()
             return self.cmd(
                 k=k, c=ii, a=props.get('a'), w=props.get('w'), t=props.get('t'))
-        raise NoAPIMethodException
+        raise NoAPIMethodException()
 
     def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, v=props.get('v'))
         elif rtp == 'key':
             if not SysAPI.create_key(self, k=k, i=ii, save=save):
-                return http_api_result_error()
+                raise FunctionFailed()
             for i, v in props.items():
                 if not SysAPI.set_key_prop(
                         self, k=k, i=ii, prop=i, value=v, save=save):
-                    return http_api_result_error()
-            return http_api_result_ok()
+                    raise FunctionFailed()
+            return True
         elif rtp == 'lock':
             return self.lock(k=k, l=ii, t=props.get('t'), e=props.get('e'))
         elif rtp == 'runtime':
-            if not config.api_file_management_allowed:
-                raise cp_forbidden_key('File management is disabled')
-            if not SysAPI.file_put(self, k=k, fname=ii, data=props.get('m')):
-                return http_api_result_error()
+            if not SysAPI.file_put(self, k=k, i=ii, m=props.get('m')):
+                raise FunctionFailed()
             if 'e' in props:
                 return self.file_set_exec(k=k, i=ii, e=props['e'])
-            return http_api_result_ok()
+            return True
         elif rtp == 'user':
             return self.create_user(
                 k=k, u=ii, p=props.get('p'), a=props.get('a'))
-        raise NoAPIMethodException
+        raise NoAPIMethodException()
 
     def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
@@ -1118,49 +1054,45 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'core':
             success = False
             if 'debug' in props:
-                if self.set_debug(
-                        k=k, debug=props['debug']).get('result') != 'OK':
-                    return http_api_result_error()
+                if not self.set_debug(k=k, debug=props['debug']):
+                    raise FunctionFailed()
                 success = True
             if 'setup' in props:
-                if self.setup_mode(
-                        k=k, setup=props['setup']).get('result') != 'OK':
-                    return http_api_result_error()
+                if not self.setup_mode(k=k, setup=props['setup']):
+                    raise FunctionFailed()
                 success = True
-            if success: return http_api_result_ok()
-            else: raise cp_api_404()
+            if success: return True
+            else: raise ResourceNotFound()
         elif rtp == 'key':
             for i, v in props.items():
                 if not SysAPI.set_key_prop(
                         self, k=k, i=ii, prop=i, value=v, save=save):
-                    return http_api_result_error()
-            return http_api_result_ok()
+                    raise FunctionFailed()
+            return True
         elif rtp == 'notifier':
             if not 'enabled' in props:
-                return http_api_result_error()
+                raise FunctionFailed()
             return self.enable_notifier(
                 k=k, i=ii) if val_to_boolean(
                     props.get('enabled')) else self.disable_notifier(
                         k=k, i=ii)
         elif rtp == 'runtime':
             if not config.api_file_management_allowed:
-                raise cp_forbidden_key('File management is disabled')
-            if 'm' in props:
-                if not SysAPI.file_put(self, k=k, fname=ii, data=props['m']):
-                    return http_api_result_error()
+                if not SysAPI.file_put(self, k=k, i=ii, m=props['m']):
+                    raise FunctionFailed()
             if 'e' in props:
                 return self.file_set_exec(k=k, i=ii, e=props['e'])
-            return http_api_result_ok()
+            return True
         elif rtp == 'user':
             if 'p' in props:
                 if not SysAPI.set_user_password(
                         self, k=k, user=ii, password=props['p']):
-                    return http_api_result_error()
+                    raise FunctionFailed()
             if 'a' in props:
                 if not SysAPI.set_user_key(self, k=k, user=ii, key=props['a']):
-                    return http_api_result_error()
-            return http_api_result_ok()
-        raise NoAPIMethodException
+                    raise FunctionFailed()
+            return True
+        raise NoAPIMethodException()
 
     def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'key':
@@ -1171,7 +1103,7 @@ class SysHTTP_API_REST_abstract:
             return self.file_unlink(k=k, i=ii)
         elif rtp == 'user':
             return self.destroy_user(k=k, u=ii)
-        raise NoAPIMethodException
+        raise NoAPIMethodException()
 
 
 def update_config(cfg):
@@ -1222,4 +1154,3 @@ api = SysAPI()
 
 config = SimpleNamespace(
     api_file_management_allowed=False, api_setup_mode_allowed=False)
-
