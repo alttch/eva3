@@ -18,6 +18,12 @@ import eva.core
 from eva import apikey
 from eva.tools import format_json
 from eva.tools import parse_host_port
+from eva.tools import parse_function_params
+from eva.tools import InvalidParameter
+
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import AccessDenied
 
 import eva.users
 import eva.notify
@@ -77,15 +83,21 @@ def cp_forbidden_key():
 
 
 def cp_api_error(msg=None):
-    return cherrypy.HTTPError(500, msg)
+    return cherrypy.HTTPError(500, msg if msg else None)
 
 
 def cp_api_404(msg=None):
-    return cherrypy.HTTPError(404, msg)
+    return cherrypy.HTTPError(404, msg if msg else None)
 
 
 def cp_bad_request(msg=None):
-    return cherrypy.HTTPError(400, msg)
+    return cherrypy.HTTPError(400, msg if msg else None)
+
+
+def parse_api_params(params, names='', types='', defaults=None):
+    result = parse_function_params(params, 'k' + names, '.' + types,
+                                   defaults)[1:]
+    return result if len(result) > 1 else result[0]
 
 
 def restful_parse_params(*args, **kwargs):
@@ -316,7 +328,7 @@ def cp_nocache():
 
 class GenericAPI(object):
 
-    def test(self, k=None):
+    def test(self, k):
         """
         test API/key and get system info
 
@@ -377,6 +389,7 @@ class GenericAPI(object):
 
     # return version for embedded hardware
     def info(self):
+        parse_api_params(params=kwargs)
         return {
             'platfrom': 'eva',
             'product': eva.core.product_code,
@@ -534,12 +547,12 @@ def cp_jsonrpc_handler(*args, **kwargs):
             value, minimal=not eva.core.development).encode('utf-8')
 
 
-def cp_need_master(f):
+def api_need_master(f):
 
     @wraps(f)
     def do(*args, **kwargs):
         if not eva.apikey.check(kwargs.get('k'), master=True):
-            raise cp_forbidden_key()
+            raise AccessDenied()
         return f(*args, **kwargs)
 
     return do
@@ -561,6 +574,36 @@ def cp_client_key(_k=None):
     return k
 
 
+def cp_api_function(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        try:
+            result = f(*args, **kwargs)
+            if result is True:
+                return http_api_result_ok()
+            elif result is False:
+                raise FunctionFailed()
+            elif result is None:
+                raise cp_api_404()
+            else:
+                if isinstance(result, str) or isinstance(
+                        result, dict) or isinstance(result, list):
+                    return result
+                else:
+                    return result.serialize()
+        except InvalidParameter as e:
+            raise cp_bad_request(str(e))
+        except TypeError as e:
+            raise cp_bad_request()
+        except ResourceNotFound as e:
+            raise cp_api_404(str(e))
+        except FunctionFailed as e:
+            return http_api_result_error()
+
+    return do
+
+
 class GenericHTTP_API_abstract:
 
     def __init__(self):
@@ -575,6 +618,10 @@ class GenericHTTP_API_abstract:
                 raise cp_bad_request()
         else:
             raise cp_api_404()
+
+    def wrap_exposed(self, decorator):
+        for k, v in self.__exposed:
+            v = decorator(v)
 
     def _expose(self, f):
         if callable(f):
@@ -699,7 +746,10 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
 
         self._expose('test')
 
-    def login(self, k=None, u=None, p=None):
+    def wrap_exposed(self):
+        super().wrap_exposed(cp_api_function)
+
+    def login(self, k, u=None, p=None):
         if not u and k:
             if k in apikey.keys:
                 cherrypy.session['k'] = k
@@ -714,7 +764,7 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         cherrypy.session['k'] = ''
         raise cp_forbidden_key()
 
-    def logout(self, k=None):
+    def logout(self):
         cherrypy.session['k'] = ''
         return http_api_result_ok()
 

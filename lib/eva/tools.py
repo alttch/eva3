@@ -22,6 +22,10 @@ class MultiOrderedDict(OrderedDict):
             super().__setitem__(key, value)
 
 
+class InvalidParameter(Exception):
+    pass
+
+
 def config_error(fname, section, key, value):
     logging.error('%s error, unknown value %s = "%s" in section %s' % \
             (fname, key, value, section))
@@ -122,6 +126,120 @@ def val_to_boolean(s):
     if val.lower() in ['1', 'true', 'yes', 'on', 'y']: return True
     if val.lower() in ['0', 'false', 'no', 'off', 'n']: return False
     return None
+
+
+def parse_function_params(params,
+                          names,
+                          types='',
+                          defaults=None,
+                          e=InvalidParameter):
+    """
+    Args:
+        names: parameter names (list or string if short)
+        values: parameter values
+            R: required, any not null and non-empty string
+            r: required, but empty strings are possible
+            s: required, should be string
+            S: required, should be non-empty string
+            b: boolean (or 0/1 or boolean-like strings)
+            B: boolean (or 0/1 or boolean-like strings), required
+            i: integer, can be None
+            f or n: float(number), can be None
+            I: integer, required
+            F or N: float(number), required
+            D: dict, required
+            T: tuple, required
+            X: set, required
+            L: list, required
+            o or dot: optional
+        params: dict
+        defaults: dict (name/value)
+        e: exception to raise
+    """
+    result = ()
+    err = 'Invalid parameter value: {} = "{}", {} required'
+    if len(params) != len(names):
+        for p in params.keys():
+            if p not in names:
+                raise e('Invalid function parameter: {}'.format(p))
+    if not names:
+        return result
+    for i in range(len(names)):
+        n = names[i]
+        required = types[i]
+        value = params.get(n, defaults.get(n) if defaults else None)
+        if required == 'o' or required == '.':
+            result += (value,)
+        elif required == 'R':
+            if value is None or value == '':
+                raise e(err.format(n, value, 'non-empty'))
+            result += (value,)
+        elif required == 'r':
+            if value is None or value == '':
+                raise e(err.format(n, value, 'non-null'))
+            result += (value,)
+        elif required == 'i':
+            if value is not None:
+                try:
+                    result += (int(value),)
+                except:
+                    raise e(err.format(n, value, 'integer'))
+            else:
+                result += (None,)
+        elif required == 'f' or required == 'n':
+            if value is not None:
+                try:
+                    result += (float(value),)
+                except:
+                    raise e(err.format(n, value, 'number'))
+            else:
+                result += (None,)
+        elif required == 'I':
+            try:
+                result += (int(value),)
+            except:
+                raise e(err.format(n, value, 'integer'))
+        elif required == 'F' or required == 'N':
+            try:
+                result += (float(value),)
+            except:
+                raise e(err.format(n, value, 'number'))
+        elif required == 's':
+            if not isinstance(value, str):
+                raise e(err.format(n, value, 'string'))
+            result += (value,)
+        elif required == 'S':
+            if not isinstance(value, str) or s == '':
+                raise e(err.format(n, value, 'non-empty string'))
+            result += (value,)
+        elif required == 'b':
+            if value is not None:
+                val = val_to_boolean(value)
+                if val is None: raise e(err.format(n, value, 'boolean'))
+            result += (value,)
+        elif required == 'B':
+            val = val_to_boolean(value)
+            if val is None: raise e(err.format(n, value, 'boolean'))
+            result += (value,)
+        elif required == 'D':
+            if not isinstance(value, dict):
+                raise e(err.format(n, value, 'dict'))
+            result += (value,)
+        elif required == 'T':
+            if not isinstance(value, tuple):
+                raise e(err.format(n, value, 'tuple'))
+            result += (value,)
+        elif required == 'X':
+            if not isinstance(value, set):
+                raise e(err.format(n, value, 'set'))
+            result += (value,)
+        elif required == 'L':
+            if not isinstance(value, list):
+                raise e(err.format(n, value, 'list'))
+            result += (value,)
+        else:
+            raise e('Parameter parser internal error')
+    return result if len(result) > 1 else result[0]
 
 
 def is_oid(oid):

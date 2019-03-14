@@ -329,7 +329,7 @@ class SFA_API(GenericAPI):
             wait=0,
             uuid=None):
         macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
-        if not macro or not apikey.check(k, macro): return False
+        if not macro or not apikey.check(k, macro): return None
         return eva.sfa.controller.lm_pool.run(
             macro=oid_to_id(i, 'lmacro'),
             args=args,
@@ -429,8 +429,8 @@ class SFA_API(GenericAPI):
 
     def remove_controller(self, k=None, controller_id=None):
         if not apikey.check(k, master=True) or not controller_id:
-            return False
-        if not controller_id or controller_id.find('/') == -1: return False
+            return None
+        if not controller_id or controller_id.find('/') == -1: return None
         return eva.sfa.controller.remove_controller(controller_id)
 
     def list_controller_props(self, k=None, i=None):

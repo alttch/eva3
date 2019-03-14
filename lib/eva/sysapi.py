@@ -1,4 +1,4 @@
-_author__ = "Altertech Group, https://www.altertech.com/"
+__author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.1.2"
@@ -24,23 +24,23 @@ from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
 from eva.api import cp_bad_request
 from eva.api import cp_api_404
-from eva.api import http_api_result_ok
-from eva.api import http_api_result_error
-
-from eva.api import http_real_ip
-from eva.api import cp_client_key
-from eva.api import cp_need_master
+from eva.api import api_need_master
+from eva.api import parse_api_params
 
 from eva.api import NoAPIMethodException
-
 from eva.api import GenericAPI
 
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
 from eva.tools import val_to_boolean
 
-from eva.common import log_levels_by_name
-from eva.common import log_levels_by_id
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+
+from eva.tools import InvalidParameter
+
+from eva.common import get_log_level_by_name
+from eva.common import get_log_level_by_id
 
 from pyaltt import background_worker
 
@@ -55,37 +55,46 @@ import eva.notify
 locks = {}
 lock_expire_time = {}
 
-cvars_public = False
 
-
-def cp_need_file_management(f):
+def api_need_file_management(f):
 
     @wraps(f)
     def do(*args, **kwargs):
         if not config.api_file_management_allowed:
-            raise cp_forbidden_key('File management is disabled')
+            return None
         return f(*args, **kwargs)
 
     return do
 
 
-def cp_need_cmd(f):
+def api_need_cmd(f):
 
     @wraps(f)
     def do(*args, **kwargs):
         if not eva.apikey.check(kwargs.get('k'), allow=['cmd']):
-            raise cp_forbidden_key()
+            return None
         return f(*args, **kwargs)
 
     return do
 
 
-def cp_need_sysfunc(f):
+def api_need_sysfunc(f):
 
     @wraps(f)
     def do(*args, **kwargs):
         if not eva.apikey.check(kwargs.get('k'), sysfunc=True):
-            raise cp_forbidden_key()
+            return None
+        return f(*args, **kwargs)
+
+    return do
+
+
+def api_need_lock(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check(kwargs.get('k'), allow=['lock']):
+            return None
         return f(*args, **kwargs)
 
     return do
@@ -93,30 +102,75 @@ def cp_need_sysfunc(f):
 
 class LockAPI(object):
 
-    def lock(self, k=None, l=None, timeout=None, expires=None):
-        if not eva.apikey.check(k, allow=['lock']):
-            return None
-        if timeout: t = timeout
-        else: t = eva.core.timeout
+    @api_need_lock
+    def lock(self, **kwargs):
+        """
+        lock token request
+
+        Lock tokens can be used similarly to file locking by the specific
+        process. The difference is that SYS API tokens can be:
+        
+        * centralized for several systems (any EVA server can act as lock
+            server)
+
+        * removed from outside
+
+        * automatically unlocked after the expiration time, if the initiator
+            failed or forgot to release the lock
+        
+        used to restrict parallel process starting or access to system
+        files/resources. LM PLC :doc:`macro</lm/macros>` share locks with
+        extrnal scripts.
+
+        .. note::
+
+            Even if different EVA controllers are working on the same server,
+            their lock tokens are stored in different bases. To work with the
+            token of each subsystem, use SYS API on the respective
+            address/port.
+
+        Args:
+            k: .allow=lock
+            .l: lock id
+
+        Optional:
+            t: maximum time (seconds) to get token
+            e: time after which token is automatically unlocked (if absent,
+                token may be unlocked only via unlock function)
+        """
+        l, t, e = parse_api_params('lte', 'S.n', kwargs,
+                                  {'t': eva.core.timeout})
         if not l in locks:
             locks[l] = threading.Lock()
         logging.debug(
                 'acquiring lock %s, timeout = %u, expires = %s' % \
                             (l, float(t), expires))
-        result = locks[l].acquire(timeout=float(t))
-        if result and expires:
-            lock_expire_time[l] = time.time() + float(expires)
-        return result
+        if not locks[l].acquire(timeout=t):
+            raise FunctionFailed('Unable to acquire lock')
+        if result and e:
+            lock_expire_time[l] = time.time() + e
+        return True
 
-    def unlock(self, k=None, l=None):
-        if not eva.apikey.check(k, allow=['lock']):
-            return None
+    @api_need_lock
+    def unlock(self, **kwargs):
+        """
+        release lock token
+
+        Releases the previously obtained lock token.
+
+        Args:
+            k: .allow=lock
+            .l: lock id
+
+        apidoc_category: lock
+        """
+        l = parse_api_params('l', 'S')
         logging.debug('releasing lock %s' % l)
         try:
             locks[l].release()
             return True
         except:
-            return False
+            raise ResourceNotFound()
 
 
 cmd_status_created = 0
@@ -176,10 +230,28 @@ class CMD(object):
 
 class CMDAPI(object):
 
-    def cmd(self, k, cmd, args=None, wait=None, timeout=None):
-        if not eva.apikey.check(k, allow = [ 'cmd' ]) or \
-            cmd[0] == '/' or \
-            cmd.find('..') != -1:
+    @api_need_cmd
+    def cmd(self, **kwargs):
+        """
+        execute a remote system command
+
+        Executes a :ref:`command script<cmd>` on the server where the
+        controller is installed.
+
+        Args:
+            k: .allow=cmd
+            .c: name of the command script
+
+        Optional:
+            a: string of command arguments, separated by spaces (passed to the
+                script)
+            w: wait (in seconds) before API call sends a response. This allows
+                to try waiting until command finish
+            t: maximum time of command execution. If the command fails to finish
+                within the specified time (in sec), it will be terminated
+        """
+        cmd, args, wait, timeout = parse_api_params('cawt', 'S.nn', kwargs)
+        if cmd[0] == '/' or cmd.find('..') != -1:
             return None
         if args is not None:
             try:
@@ -201,32 +273,135 @@ class CMDAPI(object):
 
 class LogAPI(object):
 
+    @api_need_sysfunc
     def log_rotate(self, k=None):
+        """
+        rotate log file
+        
+        Equal to kill -HUP <controller_process_pid>.
+
+        Args:
+            k: .sysfunc=yes
+        """
         try:
             eva.core.reset_log()
         except:
             eva.core.log_traceback()
-            return False
+            raise FunctionFailed()
         return True
 
+    @api_need_sysfunc
     def log_debug(self, k=None, m=None):
+        """
+        put debug message to log file
+        
+        An external application can put a message in the logs on behalf of the
+        controller.
+
+        Args:
+            k: .sysfunc=yes
+            m: message text
+        """
         if m: logging.debug(m)
+        return True
 
+    @api_need_sysfunc
     def log_info(self, k=None, m=None):
+        """
+        put info message to log file
+        
+        An external application can put a message in the logs on behalf of the
+        controller.
+
+        Args:
+            k: .sysfunc=yes
+            m: message text
+        """
         if m: logging.info(m)
+        return True
 
+    @api_need_sysfunc
     def log_warning(self, k=None, m=None):
+        """
+        put warning message to log file
+        
+        An external application can put a message in the logs on behalf of the
+        controller.
+
+        Args:
+            k: .sysfunc=yes
+            m: message text
+        """
         if m: logging.warning(m)
+        return True
 
+    @api_need_sysfunc
     def log_error(self, k=None, m=None):
+        """
+        put error message to log file
+        
+        An external application can put a message in the logs on behalf of the
+        controller.
+
+        Args:
+            k: .sysfunc=yes
+            m: message text
+        """
         if m: logging.error(m)
+        return True
 
+    @api_need_sysfunc
     def log_critical(self, k=None, m=None):
+        """
+        put critical message to log file
+        
+        An external application can put a message in the logs on behalf of the
+        controller.
+
+        Args:
+            k: .sysfunc=yes
+            m: message text
+        """
         if m: logging.critical(m)
+        return True
 
-    def log_get(self, k=None, l=0, t=0, n=None):
-        return eva.logs.log_get(logLevel=l, t=t, n=n)
+    @api_need_sysfunc
+    def log_get(self, *kwargs):
+        """
+        get records from the controller log
 
+        Log records are stored in the controllers’ memory until restart or the
+        time (keep_logmem) specified in controller configuration passes.
+
+        Args:
+            k: .sysfunc=yes
+
+        Optional:
+            .l: log level (10 - debug, 20 - info, 30 - warning, 40 - error, 50
+                - critical)
+            t: get log records not older than t seconds
+            n: the maximum number of log records you want to obtain
+        """
+        l, t, n = parse_api_params('ltn', '.ii')
+        return eva.logs.log_get(logLevel=log_level_by_name(l), t=t, n=n)
+
+    def log(self, *kwargs):
+        """
+        put message to log file
+        
+        An external application can put a message in the logs on behalf of the
+        controller.
+
+        Args:
+            k: .sysfunc=yes
+            l: log level
+            m: message text
+        """
+        l, m = parse_api_params(kwargs, 'lm', 'R.', {'l': 'info'})
+        log_level = get_log_level_by_id(l)
+        f = getattr(self, 'log_' + log_level)
+        f(k=k, m=m)
+        return True
 
 class FileAPI(object):
 
@@ -238,8 +413,9 @@ class FileAPI(object):
             return False
         return True
 
+    @api_need_file_management
+    @api_need_master
     def file_unlink(self, k, fname=None):
-        if not eva.apikey.check(k, master=True): return None
         if not self._file_name_correct(fname): return None
         try:
             if not eva.core.prepare_save(): return False
@@ -252,8 +428,9 @@ class FileAPI(object):
             eva.core.log_traceback()
             return False
 
+    @api_need_file_management
+    @api_need_master
     def file_get(self, k, fname=None):
-        if not eva.apikey.check(k, master=True): return None, 0
         if not self._file_name_correct(fname): return None, 0
         try:
             if not os.path.isfile(eva.core.dir_runtime + '/' + fname):
@@ -265,8 +442,9 @@ class FileAPI(object):
             eva.core.log_traceback()
             return False, 0
 
+    @api_need_file_management
+    @api_need_master
     def file_put(self, k, fname=None, data=None):
-        if not eva.apikey.check(k, master=True): return None
         if not self._file_name_correct(fname): return None
         try:
             if not data: raw = ''
@@ -279,8 +457,9 @@ class FileAPI(object):
             eva.core.log_traceback()
             return False
 
+    @api_need_file_management
+    @api_need_master
     def file_set_exec(self, k, fname=None, e=False):
-        if not eva.apikey.check(k, master=True): return None
         if not self._file_name_correct(fname): return None
         try:
             if val_to_boolean(e): perm = 0o755
@@ -298,24 +477,24 @@ class FileAPI(object):
 
 class UserAPI(object):
 
+    @api_need_master
     def create_user(self, k, user=None, password=None, key=None):
-        if not eva.apikey.check(k, master=True): return False
         return eva.users.create_user(user, password, key)
 
+    @api_need_master
     def set_user_password(self, k, user=None, password=None):
-        if not eva.apikey.check(k, master=True): return False
         return eva.users.set_user_password(user, password)
 
+    @api_need_master
     def set_user_key(self, k, user=None, key=None):
-        if not eva.apikey.check(k, master=True): return False
         return eva.users.set_user_key(user, key)
 
+    @api_need_master
     def destroy_user(self, k, user=None):
-        if not eva.apikey.check(k, master=True): return False
         return eva.users.destroy_user(user)
 
+    @api_need_master
     def list_keys(self, k):
-        if not eva.apikey.check(k, master=True): return False
         result = []
         for _k in eva.apikey.keys:
             r = eva.apikey.serialized_acl(_k)
@@ -326,217 +505,40 @@ class UserAPI(object):
             key=lambda k: k['master'],
             reverse=True)
 
+    @api_need_master
     def list_users(self, k):
-        if not eva.apikey.check(k, master=True): return False
         return eva.users.list_users()
 
+    @api_need_master
     def get_user(self, k, u):
-        if not eva.apikey.check(k, master=True): return False
         return eva.users.get_user(u)
 
+    @api_need_master
     def create_key(self, k, i=None, save=False):
-        if not eva.apikey.check(k, master=True): return False
         return eva.apikey.add_api_key(i, save)
 
+    @api_need_master
     def list_key_props(self, k=None, i=None):
-        if not eva.apikey.check(k, master=True): return False
         key = eva.apikey.keys_by_id.get(i)
         return None if not key or not key.dynamic else key.serialize()
 
+    @api_need_master
     def set_key_prop(self, k=None, i=None, prop=None, value=None, save=False):
-        if not eva.apikey.check(k, master=True): return False
         key = eva.apikey.keys_by_id.get(i)
         return None if not key else key.set_prop(prop, value, save)
 
+    @api_need_master
     def regenerate_key(self, key=None, i=None, save=False):
-        if not eva.apikey.check(key, master=True): return False
         return eva.apikey.regenerate_key(i, save)
 
+    @api_need_master
     def destroy_key(self, k=None, i=None):
-        if not eva.apikey.check(k, master=True): return False
         return eva.apikey.delete_api_key(i)
 
 
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
-    def save(self, k=None):
-        return eva.core.do_save()
-
-    def dump(self, k=None):
-        return eva.core.create_dump()
-
-    def get_cvar(self, k=None, var=None):
-        if not eva.apikey.check(k, master=not cvars_public):
-            return False
-        if var:
-            return eva.core.get_cvar(var)
-        else:
-            return eva.core.cvars.copy()
-
-    def set_cvar(self, k=None, var=None, val=None):
-        if not eva.apikey.check(k, master=True): return None
-        return eva.core.set_cvar(var, val)
-
-    def list_notifiers(self, k=None):
-        result = []
-        for n in eva.notify.get_notifiers():
-            result.append(n.serialize())
-        return sorted(result, key=lambda k: k['id'])
-
-    def get_notifier(self, k=None, i=None):
-        try:
-            return eva.notify.get_notifier(i).serialize()
-        except:
-            return None
-
-    def enable_notifier(self, k=None, i=None):
-        n = eva.notify.get_notifier(i)
-        if not n: return False
-        n.enabled = True
-        return True
-
-    def disable_notifier(self, k=None, i=None):
-        n = eva.notify.get_notifier(i)
-        if not n: return False
-        n.enabled = False
-        return True
-
-    def set_debug(self, k=None, debug=False):
-        if not eva.apikey.check(k, master=True):
-            return False
-        if val_to_boolean(debug):
-            eva.core.debug_on()
-        else:
-            eva.core.debug_off()
-        return True
-
-    def setup_mode(self, k=None, setup=False):
-        if not eva.apikey.check(
-                k, master=True) or not config.api_setup_mode_allowed:
-            return False
-        if val_to_boolean(setup):
-            eva.core.setup_on()
-        else:
-            eva.core.setup_off()
-        return True
-
-    def shutdown_core(self, k=None):
-        if not eva.apikey.check(k, master=True):
-            return False
-        background_job(eva.core.sighandler_term)()
-        return True
-
-
-class SysHTTP_API_abstract(SysAPI):
-
-    @cp_need_sysfunc
-    def lock(self, k=None, l=None, t=None, e=None):
-        """
-        lock token request
-
-        Lock tokens can be used similarly to file locking by the specific
-        process. The difference is that SYS API tokens can be:
-        
-        * centralized for several systems (any EVA server can act as lock
-            server)
-
-        * removed from outside
-
-        * automatically unlocked after the expiration time, if the initiator
-            failed or forgot to release the lock
-        
-        used to restrict parallel process starting or access to system
-        files/resources. LM PLC :doc:`macro</lm/macros>` share locks with
-        extrnal scripts.
-
-        .. note::
-
-            Even if different EVA controllers are working on the same server,
-            their lock tokens are stored in different bases. To work with the
-            token of each subsystem, use SYS API on the respective
-            address/port.
-
-        Args:
-            k: .allow=lock
-            .l: lock id
-
-        Optional:
-            t: maximum time (seconds) to get token
-            e: time after which token is automatically unlocked (if absent,
-                token may be unlocked only via unlock function)
-        """
-        if not l:
-            raise cp_bad_request('No lock provided')
-        result = super().lock(k, l, t, e)
-        if result is None: raise cp_forbidden_key()
-        return http_api_result_ok() \
-                if result else http_api_result_error()
-
-    @cp_need_sysfunc
-    def unlock(self, k=None, l=None):
-        """
-        release lock token
-
-        Releases the previously obtained lock token.
-
-        Args:
-            k: .allow=lock
-            .l: lock id
-
-        Returns:
-            In case token is already unlocked, *remark = "notlocked"* note will
-            be present in the result.
-        
-        apidoc_category: lock
-        """
-        if not l:
-            raise cp_bad_request('No lock provided')
-        if not l in locks:
-            raise cp_api_404('Lock not found')
-        result = super().unlock(k, l)
-        if result is None: raise cp_forbidden_key()
-        return http_api_result_ok() if result else \
-                http_api_result_ok({ 'remark': 'notlocked' })
-
-    @cp_need_cmd
-    def cmd(self, k=None, c=None, a=None, w=None, t=None):
-        """
-        execute a remote system command
-
-        Executes a :ref:`command script<cmd>` on the server where the
-        controller is installed.
-
-        Args:
-            k: .allow=cmd
-            .c: name of the command script
-
-        Optional:
-            a: string of command arguments, separated by spaces (passed to the
-                script)
-            w: wait (in seconds) before API call sends a response. This allows
-                to try waiting until command finish
-            t: maximum time of command execution. If the command fails to finish
-                within the specified time (in sec), it will be terminated
-        """
-        if t:
-            try:
-                _t = float(t)
-            except:
-                raise cp_bad_request('t is it a number')
-        else:
-            _t = None
-        if w:
-            try:
-                _w = float(w)
-            except:
-                raise cp_bad_request('w is not a number')
-        else:
-            _w = None
-        result = super().cmd(k, cmd=c, args=a, wait=_w, timeout=_t)
-        if result: return result.serialize()
-        else: raise cp_api_404()
-
-    @cp_need_sysfunc
+    @api_need_sysfunc
     def save(self, k=None):
         """
         save database and runtime configuration
@@ -550,31 +552,14 @@ class SysHTTP_API_abstract(SysAPI):
         Args:
             k: .sysfunc=yes
         """
-        return http_api_result_ok() \
-                if super().save(k) else http_api_result_error()
+        return eva.core.do_save()
 
-    @cp_need_master
+    @api_need_master
     def dump(self, k=None):
-        fname = super().dump(k)
-        return http_api_result_ok( {'file': fname } ) if fname \
-                else http_api_result_error()
+        return eva.core.create_dump()
 
-    @cp_need_master
-    def set_cvar(self, k=None, i=None, v=None):
-        """
-        set the value of user-defined variable
-
-        Args:
-            k: .master
-            .i: variable name
-            v: variable value
-        """
-        result = super().set_cvar(k, i, v)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @cp_need_sysfunc
-    def get_cvar(self, k=None, i=None):
+    @api_need_master
+    def get_cvar(self, k=None, var=None):
         """
         get the value of user-defined variable
 
@@ -594,12 +579,24 @@ class SysHTTP_API_abstract(SysAPI):
             Dict containing variable and its value. If no varible name was
             specified, all cvars are returned.
         """
-        result = super().get_cvar(k, i)
-        if result is False: raise cp_forbidden_key()
-        if result is None: raise cp_api_404()
-        return {i: result} if i else result
+        if var:
+            return eva.core.get_cvar(var)
+        else:
+            return eva.core.cvars.copy()
 
-    @cp_need_master
+    @api_need_master
+    def set_cvar(self, k=None, var=None, val=None):
+        """
+        set the value of user-defined variable
+
+        Args:
+            k: .master
+            .i: variable name
+            v: variable value
+        """
+        return eva.core.set_cvar(var, val)
+
+    @api_need_master
     def list_notifiers(self, k=None):
         """
         list notifiers
@@ -607,155 +604,34 @@ class SysHTTP_API_abstract(SysAPI):
         Args:
             k: .master
         """
-        return super().list_notifiers(k)
+        result = []
+        for n in eva.notify.get_notifiers():
+            result.append(n.serialize())
+        return sorted(result, key=lambda k: k['id'])
 
-    @cp_need_sysfunc
-    def log_rotate(self, k=None):
-        """
-        rotate log file
-        
-        Equal to kill -HUP <controller_process_pid>.
-
-        Args:
-            k: .sysfunc=yes
-        """
-        return http_api_result_ok() if super().log_rotate(k) \
-                else http_api_result_error()
-
-    @cp_need_sysfunc
-    def log(self, k=None, l=None, m=None):
-        """
-        put message to log file
-        
-        An external application can put a message in the logs on behalf of the
-        controller.
-
-        Args:
-            k: .sysfunc=yes
-            l: log level
-            m: message text
-        """
+    @api_need_master
+    def get_notifier(self, k=None, i=None):
         try:
-            log_level = log_levels_by_id(int(l))
+            return eva.notify.get_notifier(i).serialize()
         except:
-            try:
-                log_level = l.lower()
-            except:
-                log_level = 'info'
-        if log_level not in log_levels_by_name:
-            raise cp_bad_request('Invalid log level specified')
-        f = getattr(self, 'log_' + log_level)
-        f(k=k, m=m)
-        return http_api_result_ok()
+            raise ResourceNotFound()
 
-    @cp_need_sysfunc
-    def log_debug(self, k=None, m=None):
-        """
-        put debug message to log file
-        
-        An external application can put a message in the logs on behalf of the
-        controller.
+    @api_need_master
+    def enable_notifier(self, k=None, i=None):
+        n = eva.notify.get_notifier(i)
+        if not n: return None
+        n.enabled = True
+        return True
 
-        Args:
-            k: .sysfunc=yes
-            m: message text
-        """
-        super().log_debug(k, m)
-        return http_api_result_ok()
+    @api_need_master
+    def disable_notifier(self, k=None, i=None):
+        n = eva.notify.get_notifier(i)
+        if not n: return None
+        n.enabled = False
+        return True
 
-    @cp_need_sysfunc
-    def log_info(self, k=None, m=None):
-        """
-        put info message to log file
-        
-        An external application can put a message in the logs on behalf of the
-        controller.
-
-        Args:
-            k: .sysfunc=yes
-            m: message text
-        """
-        super().log_info(k, m)
-        return http_api_result_ok()
-
-    @cp_need_sysfunc
-    def log_warning(self, k=None, m=None):
-        """
-        put warning message to log file
-        
-        An external application can put a message in the logs on behalf of the
-        controller.
-
-        Args:
-            k: .sysfunc=yes
-            m: message text
-        """
-        super().log_warning(k, m)
-        return http_api_result_ok()
-
-    @cp_need_sysfunc
-    def log_error(self, k=None, m=None):
-        """
-        put error message to log file
-        
-        An external application can put a message in the logs on behalf of the
-        controller.
-
-        Args:
-            k: .sysfunc=yes
-            m: message text
-        """
-        super().log_error(k, m)
-        return http_api_result_ok()
-
-    @cp_need_sysfunc
-    def log_critical(self, k=None, m=None):
-        """
-        put critical message to log file
-        
-        An external application can put a message in the logs on behalf of the
-        controller.
-
-        Args:
-            k: .sysfunc=yes
-            m: message text
-        """
-        super().log_critical(k, m)
-        return http_api_result_ok()
-
-    @cp_need_sysfunc
-    def log_get(self, k=None, l=0, t=0, n=None):
-        """
-        get records from the controller log
-
-        Log records are stored in the controllers’ memory until restart or the
-        time (keep_logmem) specified in controller configuration passes.
-
-        Args:
-            k: .sysfunc=yes
-
-        Optional:
-            .l: log level (10 - debug, 20 - info, 30 - warning, 40 - error, 50
-                - critical)
-            t: get log records not older than t seconds
-            n: the maximum number of log records you want to obtain
-        """
-        try:
-            _l = int(l)
-        except:
-            _l = log_levels_by_name.get(l)
-        try:
-            _t = int(t)
-        except:
-            _t = None
-        try:
-            _n = int(n)
-        except:
-            _n = None
-        return super().log_get(k, _l, _t, _n)
-
-    @cp_need_master
-    def set_debug(self, k=None, debug=None):
+    @api_need_master
+    def set_debug(self, **kwargs):
         """
         switch debugging mode
 
@@ -766,11 +642,74 @@ class SysHTTP_API_abstract(SysAPI):
 
         Args:
             k: .master
-            debug: 1 for enabling debug mode, 0 for disabling
+            debug: true for enabling debug mode, false for disabling
         """
+        debug = parse_api_params(kwargs, ('debug',), 'B')
+        if debug:
+            eva.core.debug_on()
+        else:
+            eva.core.debug_off()
+        return True
+
+    @api_need_master
+    def setup_mode(self, k=None, setup=False):
+        if not config.api_setup_mode_allowed:
+            return False
+        if val_to_boolean(setup):
+            eva.core.setup_on()
+        else:
+            eva.core.setup_off()
+        return True
+
+    @api_need_master
+    def shutdown_core(self, k=None):
+        background_job(eva.core.sighandler_term)()
+        return True
+
+
+class SysHTTP_API_abstract(SysAPI):
+
+    def dump(self, k=None):
+        fname = super().dump(k=k)
+        return http_api_result_ok( {'file': fname } ) if fname \
+                else False
+
+    def get_cvar(self, k=None, i=None):
+        result = super().get_cvar(k=k, i=i)
+        return {i: result} if i else result
+
+    @cp_need_sysfunc
+
+    @cp_need_sysfunc
+    def log_debug(self, k=None, m=None):
+        super().log_debug(k=k, m=m)
+        return http_api_result_ok()
+
+    @cp_need_sysfunc
+    def log_info(self, k=None, m=None):
+        super().log_info(k=k, m=m)
+        return http_api_result_ok()
+
+    @cp_need_sysfunc
+    def log_warning(self, k=None, m=None):
+        super().log_warning(k=k, m=m)
+        return http_api_result_ok()
+
+    @cp_need_sysfunc
+    def log_error(self, k=None, m=None):
+        super().log_error(k=k, m=m)
+        return http_api_result_ok()
+
+    @cp_need_sysfunc
+    def log_critical(self, k=None, m=None):
+        super().log_critical(k=k, m=m)
+        return http_api_result_ok()
+
+    @cp_need_master
+    def set_debug(self, k=None, debug=None):
         val = val_to_boolean(debug)
         if val is None: raise cp_bad_request('Invalid value of "debug"')
-        return http_api_result_ok() if super().set_debug(k, val) \
+        return http_api_result_ok() if super().set_debug(k=k, debug=val) \
                 else http_api_result_error()
 
     @cp_need_master
@@ -808,8 +747,9 @@ class SysHTTP_API_abstract(SysAPI):
             k: .master
             .i: notifier ID
         """
-        return http_api_result_ok() if super().enable_notifier(k, i) \
-                else http_api_result_error()
+        result = super().enable_notifier(k, i)
+        if not result: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     @cp_need_master
     def disable_notifier(self, k=None, i=None):
@@ -825,8 +765,9 @@ class SysHTTP_API_abstract(SysAPI):
             k: .master
             .i: notifier ID
         """
-        return http_api_result_ok() if super().disable_notifier(k, i) \
-                else http_api_result_error()
+        result = super().disable_notifier(k, i)
+        if not result: raise cp_api_404()
+        return http_api_result_ok() if result else http_api_result_error()
 
     @cp_need_master
     def get_notifier(self, k=None, i=None):
@@ -1216,8 +1157,7 @@ class SysHTTP_API_REST_abstract:
                         self, k=k, user=ii, password=props['p']):
                     return http_api_result_error()
             if 'a' in props:
-                if not SysAPI.set_user_key(
-                        self, k=k, user=ii, key=props['a']):
+                if not SysAPI.set_user_key(self, k=k, user=ii, key=props['a']):
                     return http_api_result_error()
             return http_api_result_ok()
         raise NoAPIMethodException
@@ -1282,3 +1222,4 @@ api = SysAPI()
 
 config = SimpleNamespace(
     api_file_management_allowed=False, api_setup_mode_allowed=False)
+

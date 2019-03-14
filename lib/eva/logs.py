@@ -10,6 +10,8 @@ import threading
 
 from pyaltt import g
 
+from eva.tools import InvalidParameter
+
 _log_records = []
 _mute = False
 
@@ -18,6 +20,42 @@ log_cleaner_delay = 5
 _log_cleaner_active = False
 
 _log_cleaner = None
+
+log_levels_by_name = {
+    'debug': 10,
+    'info': 20,
+    'warning': 30,
+    'error': 40,
+    'critical': 50
+}
+
+log_levels_by_id = {
+    10: 'debug',
+    20: 'info',
+    30: 'warning',
+    40: 'error',
+    50: 'critical'
+}
+
+
+def get_log_level_by_name(l):
+    for k, v in log_levels_by_name.items():
+        if l == k[:len(l)]:
+            return v
+    raise InvalidParameter('Invalid log level specified: {}'.format(l))
+
+
+def get_log_level_by_id(l):
+    level = None
+    if isinstance(l, str):
+        lv = l.lower()
+        if lv in log_levels_by_name:
+            return lv
+    else:
+        level = log_levels_by_id(l)
+    if not level:
+        raise InvalidParameter('Invalid log level specified: {}'.format(l))
+    return level
 
 
 class MemoryLogHandler(logging.Handler):
@@ -44,8 +82,7 @@ def log_append(record=None, rd=None, skip_mqtt=False):
             _r['mod'] != '_cplogging':
         if _r['l'] >= 20 or eva.core.debug:
             if g.get('api_call_log') is not None:
-                g.api_call_log.setdefault(_r['l'],
-                                                   []).append(_r['msg'])
+                g.api_call_log.setdefault(_r['l'], []).append(_r['msg'])
         _log_records.append(_r)
         t = threading.local()
         eva.notify.notify('log', [_r], skip_mqtt=skip_mqtt)
