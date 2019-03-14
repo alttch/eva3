@@ -198,7 +198,7 @@ def cp_api_function(f):
                 return result
         except FunctionFailed as e:
             err = str(e)
-            return http_api_result_error({'_error': err} if e else None)
+            return http_api_result_error({'_error': err} if err else None)
 
     return do
 
