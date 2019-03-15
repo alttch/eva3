@@ -34,6 +34,8 @@ from eva.api import log_d
 from eva.api import log_i
 from eva.api import log_w
 
+from eva.api import api_result_accepted
+
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
 from eva.tools import val_to_boolean
@@ -955,7 +957,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         """
         parse_api_params(kwargs)
         background_job(eva.core.sighandler_term)()
-        return True, 1
+        return True, api_result_accepted
 
 
 class SysHTTP_API_abstract(SysAPI):
@@ -976,6 +978,7 @@ class SysHTTP_API_abstract(SysAPI):
     def regenerate_key(self, **kwargs):
         return {'key': super().regenerate_key(**kwargs)}
 
+
 class SysHTTP_API(SysHTTP_API_abstract, GenericHTTP_API):
 
     def __init__(self):
@@ -987,7 +990,7 @@ class SysHTTP_API(SysHTTP_API_abstract, GenericHTTP_API):
 
 class SysHTTP_API_REST_abstract:
 
-    def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def GET(self, rtp, k, ii, full, save, kind, for_dir, props):
         if rtp == 'core':
             return self.test(k=k)
         elif rtp == 'cvar':
@@ -1013,7 +1016,7 @@ class SysHTTP_API_REST_abstract:
                 return self.list_users(k=k)
         raise MethodNotFound
 
-    def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def POST(self, rtp, k, ii, full, save, kind, for_dir, props):
         if rtp == 'core':
             cmd = props.get('cmd')
             if cmd == 'dump':
@@ -1039,9 +1042,10 @@ class SysHTTP_API_REST_abstract:
             return self.cmd(k=k, c=ii, **props)
         raise MethodNotFound
 
-    def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def PUT(self, rtp, k, ii, full, save, kind, for_dir, props):
         if rtp == 'cvar':
-            return self.set_cvar(k=k, i=ii, **props)
+            self.set_cvar(k=k, i=ii, **props)
+            return self.get_cvar(k=k, i=ii)
         elif rtp == 'key':
             if not SysAPI.create_key(self, k=k, i=ii, save=save):
                 raise FunctionFailed
@@ -1051,18 +1055,19 @@ class SysHTTP_API_REST_abstract:
                     raise FunctionFailed
             return self.list_key_props(k=k, i=ii)
         elif rtp == 'lock':
-            return self.lock(k=k, l=ii, **props)
+            self.lock(k=k, l=ii, **props)
+            return {'lock_id': ii }
         elif rtp == 'runtime':
             m, e = parse_api_params(props, 'me', 'rb')
             SysAPI.file_put(self, k=k, i=ii, m=m)
             if e is not None:
                 self.file_set_exec(k=k, i=ii, e=props['e'])
-            return True
+            return {'file': ii}
         elif rtp == 'user':
             return self.create_user(k=k, u=ii, **props)
         raise MethodNotFound
 
-    def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def PATCH(self, rtp, k, ii, full, save, kind, for_dir, props):
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, **props)
         elif rtp == 'core':
@@ -1107,7 +1112,7 @@ class SysHTTP_API_REST_abstract:
             return True
         raise MethodNotFound
 
-    def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def DELETE(self, rtp, k, ii, full, save, kind, for_dir, props):
         if rtp == 'key':
             return self.destroy_key(k=k, i=ii)
         elif rtp == 'lock':

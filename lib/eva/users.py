@@ -88,7 +88,7 @@ def create_user(user=None, password=None, key=None):
             p=crypt_password(password),
             k=key)
         logging.info('User {} created, key: {}'.format(user, key))
-        return True
+        return {'user': user, 'key': key}
     except:
         eva.core.report_userdb_error()
 

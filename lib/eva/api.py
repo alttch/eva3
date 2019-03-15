@@ -16,10 +16,12 @@ import pandas as pd
 
 import eva.core
 from eva import apikey
+
 from eva.tools import format_json
 from eva.tools import parse_host_port
 from eva.tools import parse_function_params
 from eva.tools import InvalidParameter
+from eva.tools import val_to_boolean
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -134,7 +136,7 @@ def restful_parse_params(*args, **kwargs):
     else:
         ii = None
     full = kwargs.get('full')
-    save = kwargs.get('save')
+    save = val_to_boolean(kwargs.get('save'))
     kind = kwargs.get('kind', kind)
     for_dir = cherrypy.request.path_info.endswith('/')
     if 'k' in kwargs: del kwargs['k']
@@ -200,7 +202,7 @@ def restful_api_method(f):
     def do(c, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_parse_params(
             *args, **kwargs)
-        result = f(c, rtp, k, ii, full, kind, save, for_dir, props)
+        result = f(c, rtp, k, ii, full, save, kind, for_dir, props)
         if isinstance(result, tuple):
             result, data = result
         else:
@@ -216,6 +218,7 @@ def restful_api_method(f):
         if result is True:
             if data == api_result_accepted:
                 cherrypy.serving.response.status = 202
+                return None
             return data
         else:
             return result
@@ -537,15 +540,17 @@ class GenericAPI(object):
 
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
+    response = cherrypy.serving.response
     if value or isinstance(value, list):
         return format_json(
             value, minimal=not eva.core.development).encode('utf-8')
     else:
         try:
-            del cherrypy.serving.response.headers['Content-Type']
+            del response.headers['Content-Type']
         except:
             pass
-        cherrypy.serving.response.status = 204
+        if not response.status or response.status == 200:
+            response.status = 204
         return None
 
 

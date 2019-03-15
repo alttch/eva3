@@ -121,6 +121,7 @@ def wait_for(func, wait_timeout, delay, wait_for_false=False):
 
 
 def val_to_boolean(s):
+    if isinstance(s, bool): return s
     if s is None: return None
     val = str(s)
     if val.lower() in ['1', 'true', 'yes', 'on', 'y']: return True

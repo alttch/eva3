@@ -9,13 +9,18 @@ import glob
 import eva.core
 
 from eva.api import GenericHTTP_API
-from eva.api import JSON_RPC_API
+from eva.api import JSON_RPC_API_abstract
 from eva.api import GenericAPI
 from eva.api import parse_api_params
 from eva.api import http_real_ip
 from eva.api import api_need_master
 
 from eva.api import api_result_accepted
+
+from eva.api import generic_web_api_method
+from eva.api import restful_api_method
+
+from eva.api import MethodNotFound
 
 from eva.api import log_d
 from eva.api import log_i
@@ -329,14 +334,36 @@ class UC_API(GenericAPI):
                 wait=w,
                 action_uuid=u))
 
-    def disable_actions(self, k=None, i=None):
+    @log_i
+    def disable_actions(self, **kwargs):
+        """
+        disable unit actions
+
+        Disables unit to run and queue new actions.
+
+        Args:
+            k:
+            i: unit id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): return None
+        if not item or not apikey.check(k, item): raise ResourceNotFound
         return item.disable_actions()
 
-    def enable_actions(self, k=None, i=None):
+    @log_i
+    def enable_actions(self, **kwargs):
+        """
+        enable unit actions
+
+        Enables unit to run and queue new actions.
+
+        Args:
+            k:
+            i: unit id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): return None
+        if not item or not apikey.check(k, item): return ResourceNotFound
         return item.enable_actions()
 
     def result(self, k=None, uuid=None, item_id=None, group=None, state=None):
@@ -1005,7 +1032,7 @@ class UC_API(GenericAPI):
         return True
 
 
-class UC_HTTP_API_abstract(UC_API):
+class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
 
     def __init__(self):
         super().__init__()
@@ -1038,40 +1065,30 @@ class UC_HTTP_API_abstract(UC_API):
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    def disable_actions(self, k=None, i=None):
-        result = super().disable_actions(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def enable_actions(self, k=None, i=None):
-        result = super().enable_actions(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @cp_need_master
+    @api_need_master
     def get_config(self, k=None, i=None):
         result = super().get_config(k, i)
         if not result: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def save_config(self, k=None, i=None):
         return http_api_result_ok() if super().save_config(k, i) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list(self, k=None, g=None, p=None):
         result = super().list(k, g, p)
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def list_props(self, k=None, i=None):
         result = super().list_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def set_prop(self, k=None, i=None, p=None, v=None, save=None):
         if save:
             _save = True
@@ -1080,24 +1097,24 @@ class UC_HTTP_API_abstract(UC_API):
         return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def create(self, k=None, i=None, virtual=None, save=None):
         return http_api_result_ok() if super().create(
             k, i, val_to_boolean(virtual), save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def create_unit(self, k=None, i=None, g=None, virtual=None, save=None):
         return http_api_result_ok() if super().create_unit(
             k, i, g, val_to_boolean(virtual),
             save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def create_sensor(self, k=None, i=None, g=None, virtual=None, save=None):
         return http_api_result_ok() if super().create_sensor(
             k, i, g, val_to_boolean(virtual),
             save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def create_mu(self, k=None, i=None, g=None, virtual=None, save=None):
         return http_api_result_ok() if super().create_mu(
             k, i, g, val_to_boolean(virtual),
@@ -1157,24 +1174,24 @@ class UC_HTTP_API_abstract(UC_API):
         return http_api_result_ok() if super().destroy_device(
             k=k, tpl_config=config, device_tpl=t) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def clone(self, k=None, i=None, n=None, g=None, save=None):
         return http_api_result_ok() if super().clone(
             k, i, n, g, save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def clone_group(self, k = None, g = None, n = None,\
             p = None, r = None, save = None):
         return http_api_result_ok() if super().clone_group(
             k, g, n, p, r, save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def destroy(self, k=None, i=None, g=None):
         result = super().destroy(k, i, g)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def create_modbus_port(self,
                            k=None,
                            i=None,
@@ -1209,21 +1226,21 @@ class UC_HTTP_API_abstract(UC_API):
             k, i, p, val_to_boolean(l), _t, _d, _r,
             save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def destroy_modbus_port(self, k=None, i=None):
         return http_api_result_ok() if super().destroy_modbus_port(
             k, i) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list_modbus_ports(self, k=None):
         return super().list_modbus_ports(k)
 
-    @cp_need_master
+    @api_need_master
     def test_modbus_port(self, k=None, i=None):
         return http_api_result_ok() if super().test_modbus_port(
             k, i) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def create_owfs_bus(self,
                         k=None,
                         i=None,
@@ -1258,21 +1275,21 @@ class UC_HTTP_API_abstract(UC_API):
             k, i, n, val_to_boolean(l), _t, _d, _r,
             save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def destroy_owfs_bus(self, k=None, i=None):
         return http_api_result_ok() if super().destroy_owfs_bus(
             k, i) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list_owfs_buses(self, k=None):
         return super().list_owfs_buses(k)
 
-    @cp_need_master
+    @api_need_master
     def test_owfs_bus(self, k=None, i=None):
         return http_api_result_ok() if super().test_owfs_bus(
             k, i) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def scan_owfs_bus(self,
                       k=None,
                       i=None,
@@ -1292,108 +1309,108 @@ class UC_HTTP_API_abstract(UC_API):
         result = super().scan_owfs_bus(k, i, _p, _a, n, has_all, full)
         return result if result is not None else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def load_phi(self, k=None, i=None, m=None, c=None, save=False):
         result = super().load_phi(k, i, m, c, save)
         return result if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def unload_phi(self, k=None, i=None):
         result = super().unload_phi(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def unlink_phi_mod(self, k=None, m=None):
         return http_api_result_ok() if super().unlink_phi_mod(k, m) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def put_phi_mod(self, k=None, m=None, c=None, force=None):
         result = super().put_phi_mod(k, m, c, force)
         if not result: raise cp_api_error()
         return result
 
-    @cp_need_master
+    @api_need_master
     def list_phi(self, k=None, full=None):
         result = super().list_phi(k, full)
         if result is None: raise cp_api_error()
         return result
 
-    @cp_need_master
+    @api_need_master
     def get_phi_map(self, k=None, i=None, a=None):
         result = super().get_phi_map(k, i, a)
         if result is None: raise cp_api_error()
         return result
 
-    @cp_need_master
+    @api_need_master
     def get_phi(self, k=None, i=None):
         result = super().get_phi(k, i)
         if result is False: raise cp_api_error()
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def set_phi_prop(self, k=None, i=None, p=None, v=None, save=None):
         result = super().set_phi_prop(k, i, p, v, save)
         if result is False: raise cp_api_error()
         if result is None: raise cp_api_404()
         return http_api_result_ok()
 
-    @cp_need_master
+    @api_need_master
     def load_driver(self, k=None, i=None, m=None, p=None, c=None, save=False):
         result = super().load_driver(k, i, m, p, c, save)
         return result if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list_drivers(self, k=None, full=None):
         result = super().list_drivers(k, full)
         if result is None: raise cp_api_error()
         return result
 
-    @cp_need_master
+    @api_need_master
     def unload_driver(self, k=None, i=None):
         result = super().unload_driver(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def get_driver(self, k=None, i=None):
         result = super().get_driver(k, i)
         if result is False: raise cp_api_error()
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def set_driver_prop(self, k=None, i=None, p=None, v=None, save=None):
         result = super().set_driver_prop(k, i, p, v, save)
         if result is False: raise cp_api_error()
         if result is None: raise cp_api_404()
         return http_api_result_ok()
 
-    @cp_need_master
+    @api_need_master
     def test_phi(self, k=None, i=None, c=None):
         result = super().test_phi(k, i, c)
         if result is None: raise cp_api_404()
         if result is False: raise cp_api_error()
         return result
 
-    @cp_need_master
+    @api_need_master
     def exec_phi(self, k=None, i=None, c=None, a=None):
         result = super().exec_phi(k, i, c, a)
         if result is None: raise cp_api_404()
         if result is False: raise cp_api_error()
         return result
 
-    @cp_need_master
+    @api_need_master
     def list_phi_mods(self, k=None):
         return super().list_phi_mods(k)
 
-    @cp_need_master
+    @api_need_master
     def list_lpi_mods(self, k=None):
         return super().list_lpi_mods(k)
 
-    @cp_need_master
+    @api_need_master
     def modinfo_phi(self, k=None, m=None):
         result = super().modinfo_phi(k, m)
         if not result:
@@ -1401,7 +1418,7 @@ class UC_HTTP_API_abstract(UC_API):
         else:
             return result
 
-    @cp_need_master
+    @api_need_master
     def modhelp_phi(self, k=None, m=None, c=None):
         result = super().modhelp_phi(k, m, c)
         if result is None:
@@ -1409,7 +1426,7 @@ class UC_HTTP_API_abstract(UC_API):
         else:
             return result
 
-    @cp_need_master
+    @api_need_master
     def modinfo_lpi(self, k=None, m=None):
         result = super().modinfo_lpi(k, m)
         if not result:
@@ -1417,7 +1434,7 @@ class UC_HTTP_API_abstract(UC_API):
         else:
             return result
 
-    @cp_need_master
+    @api_need_master
     def modhelp_lpi(self, k=None, m=None, c=None):
         result = super().modhelp_lpi(k, m, c)
         if result is None:
@@ -1425,7 +1442,7 @@ class UC_HTTP_API_abstract(UC_API):
         else:
             return result
 
-    @cp_need_master
+    @api_need_master
     def assign_driver(self, k=None, i=None, d=None, c=None, save=False):
         result = super().assign_driver(k, i, d, c, save)
         if result is None: raise cp_api_404()
@@ -1443,11 +1460,12 @@ class UC_HTTP_API(UC_HTTP_API_abstract, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self.expose_api_methods('ucapi')
+        self.wrap_exposed()
 
 
 class UC_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
                      eva.sysapi.SysHTTP_API_REST_abstract,
-                     eva.api.JSON_RPC_API_abstract, UC_HTTP_API):
+                     eva.api.JSON_RPC_API_abstract, UC_HTTP_API_abstract):
 
     def __init__(self):
         super().__init__()
@@ -1462,9 +1480,45 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def GET(self, rtp, k, ii, full, save, kind, for_dir, props):
         try:
             return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
+        except MethodNotFound:
+            pass
+        raise MethodNotFound
+
+    @generic_web_api_method
+    @restful_api_method
+    def POST(self, rtp, k, ii, full, save, kind, for_dir, props):
+        try:
+            return super().POST(rtp, k, ii, full, save, kind, for_dir, props)
+        except MethodNotFound:
+            pass
+        raise MethodNotFound
+
+    @generic_web_api_method
+    @restful_api_method
+    def PUT(self, rtp, k, ii, full, save, kind, for_dir, props):
+        try:
+            return super().PUT(rtp, k, ii, full, save, kind, for_dir, props)
+        except MethodNotFound:
+            pass
+        raise MethodNotFound
+
+    @generic_web_api_method
+    @restful_api_method
+    def PATCH(self, rtp, k, ii, full, save, kind, for_dir, props):
+        try:
+            return super().PATCH(rtp, k, ii, full, save, kind, for_dir, props)
+        except MethodNotFound:
+            pass
+        raise MethodNotFound
+
+    @generic_web_api_method
+    @restful_api_method
+    def DELETE(self, rtp, k, ii, full, save, kind, for_dir, props):
+        try:
+            return super().DELETE(rtp, k, ii, full, save, kind, for_dir, props)
         except MethodNotFound:
             pass
         raise MethodNotFound

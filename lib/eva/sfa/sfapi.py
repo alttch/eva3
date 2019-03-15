@@ -1015,7 +1015,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def GET(self, rtp, k, ii, full, save, kind, for_dir, props):
         try:
             return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
         except MethodNotFound:
@@ -1071,7 +1071,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def POST(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def POST(self, rtp, k, ii, full, save, kind, for_dir, props):
         try:
             return super().POST(rtp, k, ii, full, save, kind, for_dir, props)
         except MethodNotFound:
@@ -1144,7 +1144,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def PUT(self, rtp, k, ii, full, save, kind, for_dir, props):
         try:
             return super().PUT(rtp, k, ii, full, save, kind, for_dir, props)
         except MethodNotFound:
@@ -1182,7 +1182,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def PATCH(self, rtp, k, ii, full, save, kind, for_dir, props):
         try:
             return super().PATCH(rtp, k, ii, full, save, kind, for_dir, props)
         except MethodNotFound:
@@ -1231,7 +1231,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def DELETE(self, rtp, k, ii, full, kind, save, for_dir, props):
+    def DELETE(self, rtp, k, ii, full, save, kind, for_dir, props):
         try:
             return super().DELETE(rtp, k, ii, full, save, kind, for_dir, props)
         except MethodNotFound:
