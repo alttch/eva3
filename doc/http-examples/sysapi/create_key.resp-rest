@@ -1,0 +1,25 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Allow: DELETE, GET, HEAD, PATCH, POST, PUT
+Cache-Control: no-cache, no-store, must-revalidate
+Expires: 0
+Pragma: no-cache
+
+{
+    "allow": [
+        "cmd"
+    ],
+    "dynamic": true,
+    "groups": [],
+    "hosts_allow": [
+        "0.0.0.0/0"
+    ],
+    "hosts_assign": [],
+    "id": "testkey2",
+    "items": [],
+    "key": "3f274bc786bb90d449844c7cc00516a738eb50f2c23c4d09e2615afe360d6d8f",
+    "master": false,
+    "pvt": [],
+    "rpvt": [],
+    "sysfunc": true
+}
