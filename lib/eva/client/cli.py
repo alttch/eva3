@@ -34,6 +34,19 @@ shell_switch_to = None
 history_length = 300
 history_file = os.path.expanduser('~') + '/.eva_history'
 
+default_errors = {
+    apiclient.result_not_found: 'Object not found',
+    apiclient.result_forbidden: 'Forbidden',
+    apiclient.result_api_error: 'API error',
+    apiclient.result_unknown_error: 'Unknown error',
+    apiclient.result_not_ready: 'API not ready',
+    apiclient.result_server_error: 'Server error',
+    apiclient.result_server_timeout: 'Server timeout',
+    apiclient.result_bad_data: 'Bad data',
+    apiclient.result_invalid_params: 'Invalid function params',
+    apiclient.result_already_exists: 'resource already exists'
+}
+
 
 def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
     if os.getenv('ANSI_COLORS_DISABLED') is None:
@@ -603,7 +616,13 @@ class GenericCLI(object):
             return d
         return data
 
-    def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
+    def fancy_print_result(self,
+                           result,
+                           api_func,
+                           api_func_full,
+                           itype,
+                           tab=0,
+                           print_ok=True):
         if result and isinstance(result, dict):
             _result = self.prepare_result_dict(result, api_func, api_func_full,
                                                itype)
@@ -614,6 +633,7 @@ class GenericCLI(object):
             tabsp = self.fancy_tabsp.get(api_func)
             if not tabsp: tabsp = 10
             for v in sorted(_result.keys()):
+                if v == 'result' and api_func not in ['test']: continue
                 if v == 'help':
                     if not tab:
                         h = _result[v]
@@ -674,7 +694,7 @@ class GenericCLI(object):
                 else:
                     print(str(err).strip())
                 rprinted = True
-            if not rprinted and not tab:
+            if not rprinted and not tab and print_ok:
                 print('OK')
         elif result and isinstance(result, list):
             self.import_pandas()
@@ -1355,39 +1375,11 @@ class GenericCLI(object):
         if return_result:
             return code, result
         if not isinstance(api_func, str): api_func = api_func.__name__
-        if code != apiclient.result_ok and \
-            code != apiclient.result_func_failed:
-            if code == apiclient.result_not_found:
-                self.print_err('Error: Object not found',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_forbidden:
-                self.print_err('Error: Forbidden',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_api_error:
-                self.print_err('Error: API error',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_unknown_error:
-                self.print_err('Error: Unknown error',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_not_ready:
-                self.print_err('Error: API not ready',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_server_error:
-                self.print_err('Error: Server error',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_server_timeout:
-                self.print_err('Error: Server timeout',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_bad_data:
-                self.print_err('Error: Bad data',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_invalid_params:
-                self.print_err('Error: invalid params',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_already_exists:
-                self.print_err('Error: already exists',
-                               result.get('_error') if result else None)
-            elif code == apiclient.result_func_unknown:
+        if code != apiclient.result_ok and '_error' not in result:
+            if code != apiclient.result_func_unknown:
+                print_err('Error: ' + default_errors.get(code),
+                          default_errors[apiclient.result_unknown_error])
+            else:
                 self.ap.print_help()
             if debug and self.remote_api_enabled:
                 self.print_debug('API result code: %u' % code)
@@ -1403,7 +1395,7 @@ class GenericCLI(object):
         return 0
 
     def print_failed_result(self, result):
-        self.print_err('FAILED')
+        self.print_err(result.get('result', 'ERROR'))
         if '_warning' in result:
             self.print_warn(result['_warning'])
         if '_error' in result:
@@ -1412,29 +1404,23 @@ class GenericCLI(object):
             self.print_err('CRITICAL: ' + result['_critical'])
 
     def process_result(self, result, code, api_func, api_func_full, itype, a):
-        if api_func == 'file_get':
+        if api_func == 'file_get' and result == apiclient.result_ok:
             try:
                 open(a._fname, 'w').write(result['data'])
                 print('OK')
             except:
                 self.print_err('FAILED')
+                self.print_err('Unable to write to local file')
                 return 95
-        elif code == apiclient.result_func_failed and \
-                api_func not in self.always_print:
+        if code != apiclient.result_ok:
             self.print_failed_result(result)
-            return code
-        elif result and 'result' in result and api_func not in [
-                'test', 'dump', 'regenerate_key'
-        ]:
-            if result['result'] != 'ERROR':
-                print(result['result'])
-            else:
-                self.print_failed_result(result)
-            if result['result'] == 'ERROR':
-                return apiclient.result_func_failed
-        else:
-            self.fancy_print_result(result, api_func, api_func_full, itype)
-        return 0
+        self.fancy_print_result(
+            result,
+            api_func,
+            api_func_full,
+            itype,
+            print_ok=code == apiclient.result_ok)
+        return code
 
     def print_tdf(self, result_in, time_field):
         self.import_pandas()
