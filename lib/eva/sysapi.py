@@ -20,9 +20,6 @@ from pyaltt import background_job
 
 from functools import wraps
 
-from eva.api import cp_api_error
-from eva.api import cp_bad_request
-from eva.api import cp_api_404
 from eva.api import api_need_master
 from eva.api import parse_api_params
 

@@ -8,6 +8,8 @@ import os
 import glob
 import eva.core
 
+import eva.api
+
 from eva.api import GenericHTTP_API
 from eva.api import JSON_RPC_API_abstract
 from eva.api import GenericAPI
@@ -43,6 +45,8 @@ from eva.item import get_state_history
 
 from eva import apikey
 
+from functools import wraps
+
 import eva.sysapi
 import eva.uc.controller
 import eva.uc.driverapi
@@ -56,6 +60,17 @@ import logging
 api = None
 
 
+def api_need_device(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check(kwargs.get('k'), allow=['device']):
+            raise AccessDenied
+        return f(*args, **kwargs)
+
+    return do
+
+
 class UC_API(GenericAPI):
 
     @log_d
@@ -67,7 +82,7 @@ class UC_API(GenericAPI):
 
         Args:
             k:
-            p: item type (unit [U] or sensor [S])
+            .p: item type (unit [U] or sensor [S])
         """
         k, tp = parse_function_params(kwargs, 'kp', '.S')
         if apikey.check_master(k):
@@ -103,7 +118,12 @@ class UC_API(GenericAPI):
 
         Args:
             k:
-            p: item type (unit [U] or sensor [S])
+            .p: item type (unit [U] or sensor [S])
+
+        Optional:
+            .i: item id
+            .g: item group
+            .full: return full state
         """
         k, i, group, tp, full = parse_api_params(kwargs, 'kiYgp', '.sssb')
         if i:
@@ -173,7 +193,7 @@ class UC_API(GenericAPI):
         Args:
             k:
             a: history notifier id (default: db_1)
-            i: item oids or full ids, list or comma separated
+            .i: item oids or full ids, list or comma separated
 
         Optional:
             s: start time (timestamp or ISO)
@@ -220,10 +240,10 @@ class UC_API(GenericAPI):
         """
         update the status and value of the item
 
-        Updates the status and value of the :doc:`item</items>`. This is one of the
-        ways of passive state update, for example with the use of an external
-        controller. Calling without **s** and **v** params will force item to
-        perform passive update requesting its status from update script
+        Updates the status and value of the :doc:`item</items>`. This is one of
+        the ways of passive state update, for example with the use of an
+        external controller. Calling without **s** and **v** params will force
+        item to perform passive update requesting its status from update script
         or driver.
 
         Args:
@@ -236,7 +256,7 @@ class UC_API(GenericAPI):
             v: item value
         """
         k, i, s, v, force_virtual = parse_function_params(
-            kwargs, 'kisvV', '.si.b')
+            kwargs, 'kisvO', '.si.b')
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if s or v:
@@ -271,7 +291,7 @@ class UC_API(GenericAPI):
 
         Args:
             k:
-            i: unit id
+            .i: unit id
             s: desired unit status
 
         Optional:
@@ -309,7 +329,7 @@ class UC_API(GenericAPI):
 
         Args:
             k:
-            i: unit id
+            .i: unit id
 
         Optional:
             w: wait for the completion for the specified number of seconds
@@ -343,7 +363,7 @@ class UC_API(GenericAPI):
 
         Args:
             k:
-            i: unit id
+            .i: unit id
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
@@ -359,97 +379,206 @@ class UC_API(GenericAPI):
 
         Args:
             k:
-            i: unit id
+            .i: unit id
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): return ResourceNotFound
+        if not item or not apikey.check(k, item): raise ResourceNotFound
         return item.enable_actions()
 
-    def result(self, k=None, uuid=None, item_id=None, group=None, state=None):
-        if uuid:
-            a = eva.uc.controller.Q.history_get(uuid)
-            if not a or not apikey.check(k, a.item): return None
-            return a
+    @log_i
+    def result(self, **kwargs):
+        """
+        get action status
+
+        Checks the result of the action by its UUID or returns the actions for
+        the specified unit.
+
+        Args:
+            k:
+            .u: action uuid or
+            .i: unit id
+
+        Optional:
+            g: filter by unit group
+            s: filter by action status: Q for queued, R for running, F for
+            finished
+
+        Returns:
+            list or single serialized action object
+        """
+        k, u, i, g, s = parse_function_params(kwargs, 'kuigs', '.ssss')
+        if u:
+            a = eva.uc.controller.Q.history_get(u)
+            if not a or not apikey.check(k, a.item): raise ResourceNotFound
+            return a.serialize()
         else:
             result = []
-            if item_id:
-                _item_id = oid_to_id(item_id, 'unit')
-                if _item_id is None: return None
+            if i:
+                item_id = oid_to_id(i, 'unit')
+                if item_id is None: raise ResourceNotFound
                 ar = None
-                item = eva.uc.controller.get_unit(_item_id)
-                if not apikey.check(k, item): return None
-                if _item_id.find('/') > -1:
-                    if _item_id in eva.uc.controller.Q.actions_by_item_full_id:
+                item = eva.uc.controller.get_unit(item_id)
+                if not apikey.check(k, item): raise ResourceNotFound
+                if item_id.find('/') > -1:
+                    if item_id in eva.uc.controller.Q.actions_by_item_full_id:
                         ar = eva.uc.controller.Q.actions_by_item_full_id[
-                            _item_id]
+                            item_id]
                 else:
-                    if _item_id in eva.uc.controller.Q.actions_by_item_id:
-                        ar = eva.uc.controller.Q.actions_by_item_id[_item_id]
+                    if item_id in eva.uc.controller.Q.actions_byitem_id:
+                        ar = eva.uc.controller.Q.actions_byitem_id[item_id]
                 if ar is None: return []
             else:
                 ar = eva.uc.controller.Q.actions
             for a in ar:
                 if not apikey.check(k, a.item): continue
-                if group and \
-                        not eva.item.item_match(a.item, [], [ group ]):
+                if g and \
+                        not eva.item.item_match(a.item, [], [ g ]):
                     continue
-                if (state == 'Q' or state =='queued') and \
+                if (s == 'Q' or s =='queued') and \
                         not a.is_status_queued():
                     continue
-                elif (state == 'R' or state == 'running') and \
+                elif (s == 'R' or s == 'running') and \
                         not a.is_status_running():
                     continue
-                elif (state == 'F' or state == 'finished') and \
+                elif (s == 'F' or s == 'finished') and \
                         not a.is_finished():
                     continue
-                result.append(a)
+                result.append(a.seriaize())
             return result
 
-    def terminate(self, k=None, uuid=None, i=None):
-        if uuid:
-            a = eva.uc.controller.Q.history_get(uuid)
-            if not a or not apikey.check(k, a.item): return None
+    @log_w
+    def terminate(self, **kwargs):
+        """
+        terminate action execution
+        
+        Terminates or cancel the action if it is still queued
+        
+        Args:
+            k:
+            .u: action uuid or
+            .i: unit id
+            
+        Returns:
+       
+            An error result will be returned eitner if action is terminated
+            (Resource not found) or if termination process is failed or denied
+            by unit configuration (Function failed)
+        """
+        k, u, i = parse_function_params(kwargs, 'kui', '.ss')
+        if u:
+            a = eva.uc.controller.Q.history_get(u)
+            if not a or not apikey.check(k, a.item): raise ResourceNotFound
             return a.kill()
         elif i:
             item = eva.uc.controller.get_unit(i)
-            if not item or not apikey.check(k, item): return None
+            if not item or not apikey.check(k, item): raise ResourceNotFound
             return item.terminate()
+        raise InvalidParameter('Either "u" or "i" must be specified')
 
-    def kill(self, k=None, i=None):
+    @log_w
+    def kill(self, **kwargs):
+        """
+        kill unit actions
+
+        Apart from canceling all queued commands, this function also terminates
+        the current running action.
+        
+        Args:
+            k:
+            .i: unit id
+        
+        Returns:
+            If the current action of the unit cannot be terminated by
+            configuration, the notice "pt" = "denied" will be returned
+            additionally (even if there's no action running)
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): return None
+        if not item or not apikey.check(k, item): raise ResourceNotFound
         result = item.kill()
-        if not result: return 0
-        if not item.action_allow_termination: return 2
-        return 1
+        if not result: raise FunctionFailed
+        return True if item.action_allow_termination else True, {'pt': 'denied'}
 
-    def q_clean(self, k=None, i=None):
+    @log_w
+    def q_clean(self, **kwargs):
+        """
+        clean action queue of unit
+
+        Cancels all queued actions, keeps the current action running.
+
+        Args:
+            k:
+            .i: unit id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): return None
+        if not item or not apikey.check(k, item): raise ResourceNotFound
         return item.q_clean()
 
 
 # master functions for item configuration
 
-    def get_config(self, k=None, i=None):
-        if not apikey.check_master(k): return None
-        item = eva.uc.controller.get_item(i)
-        if is_oid(i):
-            t, iid = parse_oid(i)
-            if not item or item.item_type != t: return None
-        return item.serialize(config=True) if item else None
+    @log_i
+    @api_need_master
+    def get_config(self, **kwargs):
+        """
+        get item configuration
 
-    def save_config(self, k=None, i=None):
-        if not apikey.check_master(k): return None
-        item = eva.uc.controller.get_item(i)
-        if is_oid(i):
-            t, iid = parse_oid(i)
-            if not item or item.item_type != t: return None
-        return item.save() if item else None
+        Args:
+            k: .master
+            .i: item id
 
-    def list(self, k=None, group=None, tp=None):
-        if not apikey.check_master(k): return None
+        Returns:
+            complete :doc:`item</items>` configuration
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        if is_oid(i):
+            t, i = parse_oid(i)
+        item = eva.uc.controller.get_item(i)
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        return item.serialize(config=True)
+
+    @log_i
+    @api_need_master
+    def save_config(self, **kwargs):
+        """
+        save item configuration
+
+        Saves :doc:`item</items>`. configuration on disk (even if it hasn't
+        been changed)
+
+        Args:
+            k: .master
+            .i: item id
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        if is_oid(i):
+            t, i = parse_oid(i)
+        item = eva.uc.controller.get_item(i)
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        item = eva.uc.controller.get_item(i)
+        return item.save()
+
+    @log_i
+    @api_need_master
+    def list(self, **kwargs):
+        """
+        list items
+
+        Args:
+            k: .master
+
+        Optional:
+            .p: filter by item type
+            .g: filter by item group
+
+        Returns:
+            the list of all :doc:`item</items>` available
+        """
+        tp, group = parse_api_params(kwargs, 'pg', 'ss')
         result = []
         if tp == 'U' or tp == 'unit':
             items = eva.uc.controller.units_by_full_id
@@ -464,10 +593,25 @@ class UC_API(GenericAPI):
                 result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['oid'])
 
-    def list_props(self, k=None, i=None):
-        if not apikey.check_master(k): return None
+    @log_i
+    @api_need_master
+    def list_props(self, **kwargs):
+        """
+        list item properties
+
+        Get all editable parameters of the :doc:`item</items>` confiugration.
+
+        Args:
+            k: .master
+            .i: item id
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        if is_oid(i):
+            t, i = parse_oid(i)
         item = eva.uc.controller.get_item(i)
-        return item.serialize(props=True) if item else None
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        return item.serialize(props=True)
 
     def _set_props(self,
                    k=None,
@@ -476,109 +620,211 @@ class UC_API(GenericAPI):
                    save=None,
                    clean_snmp=False):
         if clean_snmp:
-            if not api.set_prop(k, i=i, p='snmp_trap'):
-                return False
+            self.set_prop(k=k, i=i, p='snmp_trap')
         if props:
             for p, v in props.items():
-                try:
-                    if not api.set_prop(k, i=i, p=p, v=v, save=None):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
+                self.set_prop(k=k, i=i, p=p, v=v, save=None)
         if save:
-            api.save_config(k, i=i)
+            self.save_config(k=k, i=i)
         return True
 
-    def set_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check_master(k): return None
+    @log_i
+    @api_need_master
+    def set_prop(self, **kwargs):
+        """
+        set item property
+
+        Set configuration parameters of the :doc:`item</items>`.
+
+        Args:
+        
+            k: .master
+            .i: item id
+            .p: property name
+        
+        Optional:
+            .v: property value
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'ss.b')
+        if is_oid(i):
+            t, i = parse_oid(i)
         item = eva.uc.controller.get_item(i)
-        if item:
-            result = item.set_prop(p, v, save)
-            if result and item.config_changed and save:
-                item.save()
-            return result
-        else:
-            return None
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        if not item.set_prop(p, v, save): raise FunctionFailed
+        return True
 
-    def create_unit(self,
-                    k=None,
-                    unit_id=None,
-                    group=None,
-                    virtual=False,
-                    save=False):
-        if not apikey.check_master(k): return None
+    @log_i
+    @api_need_master
+    def create_unit(self, **kwargs):
+        """
+        create new unit
+
+        Creates new :ref:`unit<unit>`.
+
+        Args:
+        
+            k: .master
+            .i: unit id
+
+        Optional:
+
+            .g: unit group
+            .v: virtual unit (deprecated)
+            save: save unit configuration immediately
+        """
+        i, g, v, save = parse_api_params(kwargs, 'igvS', 'Ssbb')
         return eva.uc.controller.create_unit(
-            unit_id=oid_to_id(unit_id, 'unit'),
-            group=group,
-            virtual=virtual,
-            save=save)
+            unit_id=oid_to_id(i, 'unit'), group=g, virtual=v, save=save)
 
-    def create_sensor(self,
-                      k=None,
-                      sensor_id=None,
-                      group=None,
-                      virtual=False,
-                      save=False):
-        if not apikey.check_master(k): return None
+    @log_i
+    @api_need_master
+    def create_sensor(self, **kwargs):
+        """
+        create new sensor
+
+        Creates new :ref:`sensor<sensor>`.
+
+        Args:
+        
+            k: .master
+            .i: sensor id
+
+        Optional:
+
+            .g: sensor group
+            .v: virtual sensor (deprecated)
+            save: save sensor configuration immediately
+        """
+        i, g, v, save = parse_api_params(kwargs, 'igvS', 'Ssbb')
         return eva.uc.controller.create_sensor(
-            sensor_id=oid_to_id(sensor_id, 'sensor'),
-            group=group,
-            virtual=virtual,
-            save=save)
+            sensor_id=oid_to_id(i, 'sensor'), group=g, virtual=v, save=save)
 
-    def create_mu(self,
-                  k=None,
-                  mu_id=None,
-                  group=None,
-                  virtual=False,
-                  save=False):
-        if not apikey.check_master(k): return None
+    @log_i
+    @api_need_master
+    def create_mu(self, **kwargs):
+        """
+        create multi-update
+
+        Creates new :ref:`multi-update<multiupdate>`.
+
+        Args:
+            k: .master
+            .i: multi-update id
+
+        Optional:
+            .g: multi-update group
+            .v: virtual multi-update (deprecated)
+            save: save multi-update configuration immediately
+        """
+        i, g, v, save = parse_api_params(kwargs, 'igvS', 'Ssbb')
         return eva.uc.controller.create_mu(
-            mu_id=oid_to_id(mu_id, 'mu'),
-            group=group,
-            virtual=virtual,
-            save=save)
+            mu_id=oid_to_id(i, 'mu'), group=g, virtual=v, save=save)
 
-    def create(self, k=None, oid=None, virtual=False, save=False):
-        if not apikey.check_master(k):
-            return None
+    @log_i
+    @api_need_master
+    def create(self, **kwargs):
+        """
+        create new item
+
+        Creates new :doc:`item</items>`.
+
+        Args:
+            k: .master
+            .i: item oid (**type:group/id**)
+
+        Optional:
+            .g: multi-update group
+            .v: virtual item (deprecated)
+            save: save multi-update configuration immediately
+        """
+        i, g, v, save = parse_api_params(kwargs, 'OgvS', 'Ssbb')
         t, i = parse_oid(oid)
-        if t is None or i is None: return None
+        if t is None or i is None:
+            raise InvalidParameter('item oid required (type:group/id)')
         if t == 'unit':
-            return api.create_unit(k, i, virtual=virtual, save=save)
-        if t == 'sensor':
-            return api.create_sensor(k, i, virtual=virtual, save=save)
-        if t == 'mu':
-            return api.create_mu(k, i, virtual=virtual, save=save)
-        return None
+            return self.create_unit(k, i, virtual=virtual, save=save)
+        elif t == 'sensor':
+            return self.create_sensor(k, i, virtual=virtual, save=save)
+        elif t == 'mu':
+            return self.create_mu(k, i, virtual=virtual, save=save)
+        raise InvalidParameter('oid type unknown')
 
+    @log_i
+    @api_need_master
+    def clone(self, **kwargs):
+        """
+        clone item
+
+        Creates a copy of the :doc:`item</items>`.
+
+        Args:
+            k: .master
+            .i: item id
+            n: new item id
+
+
+        Optional:
+            .g: multi-update group
+            save: save multi-update configuration immediately
+        """
+        i, n, g, save = parse_api_params(kwargs, 'ingS', 'SSsb')
+        return eva.uc.controller.clone_item(
+            item_id=i, new_item_id=n, group=g, save=save)
+
+    @log_i
+    @api_need_master
+    def clone_group(self, **kwargs):
+        """
+        clone group
+
+        Creates a copy of all :doc:`items</items>` from the group.
+
+        Args:
+            k: .master
+            .g: group to clone
+            n: new group to clone to
+            p: item ID prefix, e.g. device1. for device1.temp1, device1.fan1 
+            r: iem ID prefix in the new group, e.g. device2
+
+        Optional:
+            save: save configuration immediately
+        """
+        g, n, p, r, save = parse_api_params(kwargs, 'gnprS', 'SSSSb')
+        return eva.uc.controller.clone_group(
+            group=g, new_group=n, prefix=p, new_prefix=r, save=save)
+
+    @log_w
+    @api_need_master
+    def destroy(self, **kwargs):
+        return eva.uc.controller.destroy_item(i) if i \
+                else eva.uc.controller.destroy_group(g)
+
+    # device functions
+
+    @log_d
+    @api_need_device
     def load_device_config(self, tpl_config={}, device_tpl=None):
         try:
             tpl = jinja2.Template(
                 open(eva.core.dir_runtime + '/tpl/' + device_tpl +
                      '.json').read())
-        except:
-            logging.error('device template file error: %s' % device_tpl)
-            eva.core.log_traceback()
-            return None
-        try:
             cfg = jsonpickle.decode(tpl.render(tpl_config))
+            return cfg
         except:
-            logging.error('device template decode error')
-            eva.core.log_traceback()
-            return None
-        return cfg
+            raise FunctionFailed('device template error')
 
-    def list_device_tpl(self, k=None):
-        if not apikey.check(k, allow=['device']): return None
+    @log_d
+    @api_need_device
+    def list_device_tpl(self, **kwargs):
         result = []
         for i in glob.glob(eva.core.dir_runtime + '/tpl/*.json'):
             result.append(os.path.basename(i)[:-5])
         return sorted(result)
 
+    @log_i
+    @api_need_device
     def create_device(self, k=None, tpl_config={}, device_tpl=None, save=False):
-        if not apikey.check(k, allow=['device']): return None
         _k = eva.apikey.masterkey
         cfg = self.load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
@@ -590,13 +836,8 @@ class UC_API(GenericAPI):
                     i = u['id']
                     g = u.get('group')
                 except:
-                    return False
-                try:
-                    if not api.create_unit(_k, unit_id=i, group=g, save=save):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
+                    raise InvalidParameter('no id field for unit')
+                self.create_unit(_k, unit_id=i, group=g, save=save)
         sensors = cfg.get('sensors')
         if sensors:
             for u in sensors:
@@ -604,14 +845,8 @@ class UC_API(GenericAPI):
                     i = u['id']
                     g = u.get('group')
                 except:
-                    return False
-                try:
-                    if not api.create_sensor(
-                            _k, sensor_id=i, group=g, save=save):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
+                    raise InvalidParameter('no id field for sensor')
+                self.create_sensor(_k, sensor_id=i, group=g, save=save)
         mu = cfg.get('mu')
         if mu:
             for u in mu:
@@ -619,36 +854,27 @@ class UC_API(GenericAPI):
                     i = u['id']
                     g = u.get('group')
                 except:
-                    return False
-                try:
-                    if not api.create_mu(_k, mu_id=i, group=g, save=save):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
-        return api.update_device(k, cfg=cfg, save=save)
+                    raise InvalidParameter('no id field for mu')
+                self.create_mu(_k, mu_id=i, group=g, save=save)
+        return self.update_device(k=k, cfg=cfg, save=save)
 
+    @log_i
+    @api_need_device
     def update_device(self,
                       k=None,
                       tpl_config={},
                       device_tpl=None,
                       cfg=None,
                       save=False):
-        if not apikey.check(k, allow=['device']): return None
         _k = eva.apikey.masterkey
-        if cfg is None:
-            cfg = self.load_device_config(
-                tpl_config=tpl_config, device_tpl=device_tpl)
         if cfg is None: return False
+        cfg = self.load_device_config(
+            tpl_config=tpl_config, device_tpl=device_tpl)
         cvars = cfg.get('cvars')
         if cvars:
             for i, v in cvars.items():
-                try:
-                    if not eva.sysapi.api.set_cvar(_k, i, v):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
+                if not eva.sysapi.api.set_cvar(_k, i, v):
+                    raise FunctionFailed
         units = cfg.get('units')
         if units:
             for u in units:
@@ -656,14 +882,9 @@ class UC_API(GenericAPI):
                     i = u['id']
                     g = u['group']
                 except:
-                    return False
-                try:
-                    if not api._set_props(_k, 'unit:{}/{}'.format(g, i),
-                                          u.get('props'), save, True):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
+                    raise InvalidParameter('no id field for unit')
+                    self._set_props(_k, 'unit:{}/{}'.format(g, i),
+                                    u.get('props'), save, True)
         sensors = cfg.get('sensors')
         if sensors:
             for u in sensors:
@@ -671,14 +892,9 @@ class UC_API(GenericAPI):
                     i = u['id']
                     g = u['group']
                 except:
-                    return False
-                try:
-                    if not api._set_props(_k, 'sensor:{}/{}'.format(g, i),
-                                          u.get('props'), save, True):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
+                    raise InvalidParameter('no id field for sensor')
+                    self._set_props(_k, 'sensor:{}/{}'.format(g, i),
+                                    u.get('props'), save, True)
         mu = cfg.get('mu')
         if mu:
             for u in mu:
@@ -686,18 +902,14 @@ class UC_API(GenericAPI):
                     i = u['id']
                     g = u['group']
                 except:
-                    return False
-                try:
-                    if not api._set_props(_k, 'mu:{}/{}'.format(g, i),
-                                          u.get('props'), save):
-                        return False
-                except:
-                    eva.core.log_traceback()
-                    return False
+                    raise InvalidParameter('no id field for mu')
+                    self._set_props(_k, 'mu:{}/{}'.format(g, i), u.get('props'),
+                                    save)
         return True
 
+    @log_i
+    @api_need_device
     def destroy_device(self, k=None, tpl_config={}, device_tpl=None):
-        if not apikey.check(k, allow=['device']): return None
         _k = eva.apikey.masterkey
         cfg = self.load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
@@ -709,9 +921,9 @@ class UC_API(GenericAPI):
                     i = m['id']
                     g = u['group']
                 except:
-                    return False
+                    raise InvalidParameter('no id field for unit')
                 try:
-                    api.destroy(_k, 'mu:{}/{}'.format(g, i))
+                    self.destroy(_k, 'mu:{}/{}'.format(g, i))
                 except:
                     pass
         units = cfg.get('units')
@@ -721,9 +933,9 @@ class UC_API(GenericAPI):
                     i = u['id']
                     g = u['group']
                 except:
-                    return False
+                    raise InvalidParameter('no id field for sensor')
                 try:
-                    api.destroy(_k, 'unit:{}/{}'.format(g, i))
+                    self.destroy(_k, 'unit:{}/{}'.format(g, i))
                 except:
                     pass
         sensors = cfg.get('sensors')
@@ -733,9 +945,9 @@ class UC_API(GenericAPI):
                     i = u['id']
                     g = u['group']
                 except:
-                    return False
+                    raise InvalidParameter('no id field for mu')
                 try:
-                    api.destroy(_k, 'sensor:{}/{}'.format(g, i))
+                    self.destroy(_k, 'sensor:{}/{}'.format(g, i))
                 except:
                     pass
         cvars = cfg.get('cvars')
@@ -747,23 +959,10 @@ class UC_API(GenericAPI):
                     pass
         return True
 
-    def clone(self, k=None, i=None, n=None, g=None, save=False):
-        if not apikey.check_master(k): return None
-        return eva.uc.controller.clone_item(
-            item_id=i, new_item_id=n, group=g, save=save)
-
-    def clone_group(self, k=None, g=None, n=None, p=None, r=None, save=False):
-        if not apikey.check_master(k): return None
-        return eva.uc.controller.clone_group(
-            group=g, new_group=n, prefix=p, new_prefix=r, save=save)
-
-    def destroy(self, k=None, i=None, g=None):
-        if not apikey.check_master(k): return None
-        return eva.uc.controller.destroy_item(i) if i \
-                else eva.uc.controller.destroy_group(g)
-
     # master functions for modbus port management
 
+    @log_i
+    @api_need_master
     def create_modbus_port(self,
                            k=None,
                            i=None,
@@ -773,25 +972,27 @@ class UC_API(GenericAPI):
                            delay=None,
                            retries=None,
                            save=False):
-        if not apikey.check_master(k): return None
         if not i or not params: return False
         result = eva.uc.modbus.create_modbus_port(
             i, params, lock=lock, timeout=timeout, delay=delay, retries=retries)
         if result and save: eva.uc.modbus.save()
         return result
 
+    @log_i
+    @api_need_master
     def destroy_modbus_port(self, k=None, i=None):
-        if not apikey.check_master(k): return None
         result = eva.uc.modbus.destroy_modbus_port(i)
         if result and eva.core.db_update == 1: eva.uc.modbus.save()
         return result
 
+    @log_i
+    @api_need_master
     def list_modbus_ports(self, k=None):
-        if not apikey.check_master(k): return None
         return sorted(eva.uc.modbus.serialize(), key=lambda k: k['id'])
 
+    @log_i
+    @api_need_master
     def test_modbus_port(self, k=None, i=None):
-        if not apikey.check_master(k): return None
         port = eva.uc.modbus.get_port(i)
         result = True if port else False
         if result: port.release()
@@ -799,6 +1000,8 @@ class UC_API(GenericAPI):
 
     # master functions for owfs bus management
 
+    @log_i
+    @api_need_master
     def create_owfs_bus(self,
                         k=None,
                         i=None,
@@ -808,7 +1011,6 @@ class UC_API(GenericAPI):
                         delay=None,
                         retries=None,
                         save=False):
-        if not apikey.check_master(k): return None
         if not i or not location: return False
         result = eva.uc.owfs.create_owfs_bus(
             i,
@@ -820,23 +1022,28 @@ class UC_API(GenericAPI):
         if result and save: eva.uc.owfs.save()
         return result
 
+    @log_i
+    @api_need_master
     def destroy_owfs_bus(self, k=None, i=None):
-        if not apikey.check_master(k): return None
         result = eva.uc.owfs.destroy_owfs_bus(i)
         if result and eva.core.db_update == 1: eva.uc.owfs.save()
         return result
 
+    @log_i
+    @api_need_master
     def list_owfs_buses(self, k=None):
-        if not apikey.check_master(k): return None
         return sorted(eva.uc.owfs.serialize(), key=lambda k: k['id'])
 
+    @log_i
+    @api_need_master
     def test_owfs_bus(self, k=None, i=None):
-        if not apikey.check_master(k): return None
         bus = eva.uc.owfs.get_bus(i)
         result = True if bus else False
         if result: bus.release()
         return result
 
+    @log_i
+    @api_need_master
     def scan_owfs_bus(self,
                       k=None,
                       i=None,
@@ -845,7 +1052,6 @@ class UC_API(GenericAPI):
                       n=None,
                       has_all=None,
                       full=None):
-        if not apikey.check_master(k): return None
         bus = eva.uc.owfs.get_bus(i)
         if not bus: return None
         bus.release()
@@ -872,8 +1078,9 @@ class UC_API(GenericAPI):
 
     # master functions for driver configuration
 
+    @log_i
+    @api_need_master
     def load_phi(self, k=None, i=None, m=None, cfg=None, save=False):
-        if not apikey.check_master(k): return None
         if not i or not m: return None
         try:
             _cfg = dict_from_str(cfg)
@@ -884,8 +1091,9 @@ class UC_API(GenericAPI):
             if save: eva.uc.driverapi.save()
             return eva.uc.driverapi.get_phi(i).serialize(full=True, config=True)
 
+    @log_i
+    @api_need_master
     def load_driver(self, k=None, i=None, m=None, p=None, cfg=None, save=False):
-        if not apikey.check_master(k): return None
         if not i or not m or not p: return None
         try:
             _cfg = dict_from_str(cfg)
@@ -897,50 +1105,58 @@ class UC_API(GenericAPI):
             return eva.uc.driverapi.get_driver(p + '.' + i).serialize(
                 full=True, config=True)
 
+    @log_i
+    @api_need_master
     def unload_phi(self, k=None, i=None):
-        if not apikey.check_master(k): return None
         if not i: return None
         result = eva.uc.driverapi.unload_phi(i)
         if result and eva.core.db_update == 1: eva.uc.driverapi.save()
         return result
 
+    @log_i
+    @api_need_master
     def unlink_phi_mod(self, k=None, m=None):
-        if not apikey.check_master(k): return None
         if not m: return None
         result = eva.uc.driverapi.unlink_phi_mod(m)
         return result
 
+    @log_i
+    @api_need_master
     def put_phi_mod(self, k=None, m=None, c=None, force=None):
-        if not apikey.check_master(k): return None
         if not m: return None
         result = eva.uc.driverapi.put_phi_mod(m, c, force)
-        return result if not result else api.modinfo_phi(k, m)
+        return result if not result else self.modinfo_phi(k, m)
 
+    @log_i
+    @api_need_master
     def unload_driver(self, k=None, i=None):
-        if not apikey.check_master(k): return None
         if not i: return None
         result = eva.uc.driverapi.unload_driver(i)
         if result and eva.core.db_update == 1: eva.uc.driverapi.save()
         return result
 
+    @log_d
+    @api_need_master
     def get_phi_map(self, k=None, phi_id=None, action_map=None):
-        if not apikey.check_master(k): return None
         return eva.uc.driverapi.get_map(phi_id, action_map)
 
+    @log_d
+    @api_need_master
     def list_phi(self, k=None, full=False):
-        if not apikey.check_master(k): return None
         return sorted(
             eva.uc.driverapi.serialize_phi(full=full, config=full),
             key=lambda k: k['id'])
 
+    @log_d
+    @api_need_master
     def list_drivers(self, k=None, full=False):
-        if not apikey.check_master(k): return None
         return sorted(
             eva.uc.driverapi.serialize_lpi(full=full, config=full),
             key=lambda k: k['id'])
 
+    @log_d
+    @api_need_master
     def get_phi(self, k=None, i=None):
-        if not apikey.check_master(k): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
         if phi:
@@ -948,8 +1164,9 @@ class UC_API(GenericAPI):
         else:
             return None
 
+    @log_i
+    @api_need_master
     def set_phi_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check_master(k): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: return None
@@ -958,8 +1175,9 @@ class UC_API(GenericAPI):
             return True
         return False
 
+    @log_d
+    @api_need_master
     def get_driver(self, k=None, i=None):
-        if not apikey.check_master(k): return None
         if not i: return None
         lpi = eva.uc.driverapi.get_driver(i)
         if lpi:
@@ -967,8 +1185,9 @@ class UC_API(GenericAPI):
         else:
             return None
 
+    @log_i
+    @api_need_master
     def set_driver_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check_master(k): return None
         if not i or i.split('.')[-1] == 'default': return None
         lpi = eva.uc.driverapi.get_driver(i)
         if not lp: return None
@@ -977,56 +1196,65 @@ class UC_API(GenericAPI):
             return True
         return False
 
+    @log_d
+    @api_need_master
     def test_phi(self, k=None, i=None, c=None):
-        if not apikey.check_master(k): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: return None
         return phi.test(c)
 
+    @log_i
+    @api_need_master
     def exec_phi(self, k=None, i=None, c=None, a=None):
-        if not apikey.check_master(k): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: return None
         return phi.exec(c, a)
 
+    @log_d
+    @api_need_master
     def list_phi_mods(self, k=None):
-        if not apikey.check_master(k): return None
         return eva.uc.driverapi.list_phi_mods()
 
+    @log_d
+    @api_need_master
     def list_lpi_mods(self, k=None):
-        if not apikey.check_master(k): return None
         return eva.uc.driverapi.list_lpi_mods()
 
+    @log_d
+    @api_need_master
     def modinfo_phi(self, k=None, m=None):
-        if not apikey.check_master(k): return None
         return eva.uc.driverapi.modinfo_phi(m)
 
+    @log_d
+    @api_need_master
     def modinfo_lpi(self, k=None, m=None):
-        if not apikey.check_master(k): return None
         return eva.uc.driverapi.modinfo_lpi(m)
 
+    @log_d
+    @api_need_master
     def modhelp_phi(self, k=None, m=None, c=None):
-        if not apikey.check_master(k) or not c: return None
         return eva.uc.driverapi.modhelp_phi(m, c)
 
+    @log_d
+    @api_need_master
     def modhelp_lpi(self, k=None, m=None, c=None):
-        if not apikey.check_master(k) or not c: return None
         return eva.uc.driverapi.modhelp_lpi(m, c)
 
+    @log_i
+    @api_need_master
     def assign_driver(self, k=None, i=None, d=None, c=None, save=False):
-        if not apikey.check_master(k): return None
         item = eva.uc.controller.get_item(i)
         if not item: return None
-        if not api.set_prop(k, i, 'update_driver_config', c): return False
+        if not self.set_prop(k, i, 'update_driver_config', c): return False
         if item.item_type == 'unit' and \
-                not api.set_prop(k, i, 'action_driver_config', c):
+                not self.set_prop(k, i, 'action_driver_config', c):
             return False
         drv_p = '|' + d if d else None
-        if not api.set_prop(k, i, 'update_exec', drv_p): return False
+        if not self.set_prop(k, i, 'update_exec', drv_p): return False
         if item.item_type == 'unit' and \
-                not api.set_prop(k, i, 'action_exec', drv_p):
+                not self.set_prop(k, i, 'action_exec', drv_p):
             return False
         if save: item.save()
         return True
@@ -1038,87 +1266,6 @@ class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
         super().__init__()
         self._nofp_log('put_phi', 'c')
 
-    def result(self, k=None, u=None, i=None, g=None, s=None):
-        a = super().result(k, u, i, g, s)
-        if a is None:
-            raise cp_api_404()
-        if isinstance(a, list):
-            return [x.serialize() for x in a]
-        else:
-            return a.serialize()
-
-    def terminate(self, k=None, u=None, i=None):
-        result = super().terminate(k, u, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def kill(self, k=None, i=None):
-        result = super().kill(k, i)
-        if result is None: raise cp_api_404()
-        remark = {}
-        if result == 2: remark['pt'] = 'denied'
-        return http_api_result_ok(remark) if result else \
-                http_api_result_error()
-
-    def q_clean(self, k=None, i=None):
-        result = super().q_clean(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def get_config(self, k=None, i=None):
-        result = super().get_config(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def save_config(self, k=None, i=None):
-        return http_api_result_ok() if super().save_config(k, i) \
-                else http_api_result_error()
-
-    @api_need_master
-    def list(self, k=None, g=None, p=None):
-        result = super().list(k, g, p)
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def list_props(self, k=None, i=None):
-        result = super().list_props(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def set_prop(self, k=None, i=None, p=None, v=None, save=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
-                else http_api_result_error()
-
-    @api_need_master
-    def create(self, k=None, i=None, virtual=None, save=None):
-        return http_api_result_ok() if super().create(
-            k, i, val_to_boolean(virtual), save) else http_api_result_error()
-
-    @api_need_master
-    def create_unit(self, k=None, i=None, g=None, virtual=None, save=None):
-        return http_api_result_ok() if super().create_unit(
-            k, i, g, val_to_boolean(virtual),
-            save) else http_api_result_error()
-
-    @api_need_master
-    def create_sensor(self, k=None, i=None, g=None, virtual=None, save=None):
-        return http_api_result_ok() if super().create_sensor(
-            k, i, g, val_to_boolean(virtual),
-            save) else http_api_result_error()
-
-    @api_need_master
-    def create_mu(self, k=None, i=None, g=None, virtual=None, save=None):
-        return http_api_result_ok() if super().create_mu(
-            k, i, g, val_to_boolean(virtual),
-            save) else http_api_result_error()
 
     def list_device_tpl(self, k):
         result = super().list_device_tpl(k)
@@ -1185,11 +1332,6 @@ class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
         return http_api_result_ok() if super().clone_group(
             k, g, n, p, r, save) else http_api_result_error()
 
-    @api_need_master
-    def destroy(self, k=None, i=None, g=None):
-        result = super().destroy(k, i, g)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
 
     @api_need_master
     def create_modbus_port(self,

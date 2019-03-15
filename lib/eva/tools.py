@@ -128,20 +128,27 @@ def val_to_boolean(s):
     if val.lower() in ['0', 'false', 'no', 'off', 'n']: return False
     return None
 
+
+__special_param_names = {
+    'S': 'save',
+    'Y': 'full',
+    'J': '_j',
+    'F': 'force',
+    'V': 'virtual',
+    'O': 'force_virtual'
+}
+
+
 def __get_special_param_name(p):
-    if p == 'S': return 'save'
-    elif p == 'Y': return 'full'
-    elif p == 'J': return '_j'
-    elif p == 'F': return 'force'
-    elif p == 'V': return 'force_virtual'
-    return p
+    return __special_param_names.get(p, p)
 
 
 def parse_function_params(params,
                           names,
                           types='',
                           defaults=None,
-                          e=InvalidParameter, ignore_extra=False):
+                          e=InvalidParameter,
+                          ignore_extra=False):
     """
     Args:
         names: parameter names (list or string if short)
@@ -165,7 +172,9 @@ def parse_function_params(params,
             T: tuple, required
             X: set, required
             L: list, required
-            o or dot: optional
+            . (dot): optional
+            o: oid, can be null
+            O: OID required
         params: dict
         defaults: dict (name/value)
         e: exception to raise
@@ -183,7 +192,7 @@ def parse_function_params(params,
         n = __get_special_param_name(names[i])
         required = types[i]
         value = params.get(n, defaults.get(n) if defaults else None)
-        if required == 'o' or required == '.':
+        if required == '.':
             result += (value,)
         elif required == 'R':
             if value is None or value == '':
@@ -252,18 +261,25 @@ def parse_function_params(params,
             if not isinstance(value, list):
                 raise e(err.format(n, value, 'list'))
             result += (value,)
+        elif required == 'o':
+            if value is not None:
+                if not is_oid(value): raise e(err.format(n, value, 'oid'))
+            result += (value,)
+        elif required == 'O':
+            if not is_oid(value): raise e(err.format(n, value, 'oid'))
+            result += (value,)
         else:
             raise e('Parameter parser internal error')
     return result if len(result) > 1 else result[0]
 
 
 def is_oid(oid):
-    if oid is None: return False
+    if oid is None or not isinstance(oid, str): return False
     return oid.find(':') != -1
 
 
 def parse_oid(oid):
-    if oid is None: return None, None
+    if oid is None or not isinstance(oid, str): return None, None
     try:
         tp, i = oid.split(':')
     except:
@@ -272,7 +288,7 @@ def parse_oid(oid):
 
 
 def oid_type(oid):
-    if oid is None: return None
+    if oid is None or not isinstance(oid, str): return None
     tp, i = parse_oid(oid)
     return tp
 

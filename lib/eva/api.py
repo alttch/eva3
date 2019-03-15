@@ -548,7 +548,7 @@ class GenericAPI(object):
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     response = cherrypy.serving.response
-    if value or isinstance(value, list):
+    if value or value == 0 or isinstance(value, list):
         return format_json(
             value, minimal=not eva.core.development).encode('utf-8')
     else:

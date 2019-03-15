@@ -22,6 +22,12 @@ import eva.uc.driverapi
 import eva.uc.modbus
 import eva.uc.owfs
 
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceAlreadyExists
+
+from eva.tools import InvalidParameter
+
 from eva.tools import is_oid
 from eva.tools import parse_oid
 from eva.tools import oid_type
@@ -383,11 +389,10 @@ def create_item(item_id,
                 virtual=False,
                 start=True,
                 save=False):
-    if not item_id: return False
+    if not item_id: raise InvalidParameter('item id not specified')
     if group and item_id.find('/') != -1:
-        logging.error(
+        raise InvalidParameter(
             'Unable to create item: invalid symbols in ID {}'.format(item_id))
-        return False
     if item_id.find('/') == -1:
         i = item_id
         grp = group
@@ -398,14 +403,12 @@ def create_item(item_id,
         grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
-        logging.error(
+        raise InvalidParameter(
             'Unable to create item: invalid symbols in ID {}'.format(item_id))
-        return False
     i_full = grp + '/' + i
     if (not eva.core.enterprise_layout and i in items_by_id) or \
             i_full in items_by_full_id:
-        logging.error('Unable to create item {}: already exists'.format(i_full))
-        return False
+        raise ResourceAlreadyExists('item {}'.format(i_full))
     item = None
     if item_type == 'U' or item_type == 'unit':
         item = eva.uc.unit.Unit(i)
@@ -414,8 +417,7 @@ def create_item(item_id,
     elif item_type == 'MU' or item_type == 'mu':
         item = eva.uc.ucmu.UCMultiUpdate(i)
     if not item:
-        logging.error('Unable to create item {}: internal error'.format(i_full))
-        return False
+        raise FunctionFailed
     if virtual: virt = True
     else: virt = False
     cfg = {'group': grp, 'virtual': virt}
@@ -463,10 +465,12 @@ def clone_item(item_id, new_item_id=None, group=None, save=False):
     ni = get_item(new_item_id)
     if not i or not new_item_id or ni or i.is_destroyed() or \
             i.item_type not in ['unit', 'sensor']:
-        return False
-    if group and new_item_id.find('/') != -1: return False
+        raise ResourceNotFound
+    if group and new_item_id.find('/') != -1:
+        raise InvalidParameter('Group specified but item id contains /')
     if is_oid(new_item_id):
-        if oid_type(new_item_id) != i.item_type: return False
+        if oid_type(new_item_id) != i.item_type:
+            return InvalidParameter('oids should be equal')
         _ni = oid_to_id(new_item_id)
     else:
         _ni = new_item_id
@@ -477,7 +481,6 @@ def clone_item(item_id, new_item_id=None, group=None, save=False):
         ni_id = _ni.split('/')[-1]
         _g = '/'.join(_ni.split('/')[:-1])
     ni = create_item(ni_id, i.item_type, _g, start=False, save=False)
-    if not ni: return False
     cfg = i.serialize(props=True)
     if 'description' in cfg: del cfg['description']
     ni.update_config(cfg)
@@ -488,27 +491,27 @@ def clone_item(item_id, new_item_id=None, group=None, save=False):
 
 def clone_group(group = None, new_group = None,\
         prefix = None, new_prefix = None, save = False):
-    if not group or not group in items_by_group \
-            or not prefix or not new_prefix:
-        return False
+    if not group or not group in items_by_group: raise ResourceNotFound
+    if not prefix or not new_prefix:
+        raise InvalidParameter('prefix not specified')
     to_clone = []
     for i in items_by_group[group].copy():
         io = get_item(i)
         if io.item_type not in ['unit', 'sensor']: continue
         if i[:len(prefix)] == prefix:
             new_id = i.replace(prefix, new_prefix, 1)
-            if get_item(new_id): return False
+            if get_item(new_id):
+                raise ResourceAlreadyExists('item {}'.format(new_id))
             to_clone.append([i, new_id])
     for i in to_clone:
-        if not clone_item(i[0], i[1], new_group, save): return False
+        clone_item(i[0], i[1], new_group, save)
     return True
 
 
 def destroy_group(group=None):
-    if group is None: return False
-    if group not in items_by_group: return None
+    if group is None or group not in items_by_group: raise ResourceNotFound
     for i in items_by_group[group].copy():
-        if not destroy_item(i): return False
+        destroy_item(i)
     return True
 
 
@@ -516,7 +519,7 @@ def destroy_item(item):
     try:
         if isinstance(item, str):
             i = get_item(item)
-            if not i: return None
+            if not i: raise ResourceNotFound
         else:
             i = item
         if not eva.core.enterprise_layout:
@@ -557,7 +560,7 @@ def destroy_item(item):
         return True
     except:
         eva.core.log_traceback()
-        return False
+        raise FunctionFailed
 
 
 def load_mu(start=False):
