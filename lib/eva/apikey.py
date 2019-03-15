@@ -28,6 +28,8 @@ from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 
+from functools import partial
+
 masterkey = None
 keys = {}
 keys_by_id = {}
@@ -442,6 +444,8 @@ def check(k,
         return False
     return True
 
+def check_master(k):
+    return check(k, master=True)
 
 def serialized_acl(k):
     if not k or not k in keys: return None
@@ -585,3 +589,4 @@ def gen_random_hash():
     s.update(str(uuid.uuid4()).encode())
     s.update(os.urandom(1024))
     return s.hexdigest()
+

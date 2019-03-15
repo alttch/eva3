@@ -23,6 +23,9 @@ from eva.tools import parse_oid
 # from evacpp.evacpp import GenericAction
 from eva.generic import GenericAction
 
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import FunctionFailed
+
 from eva.generic import ia_status_created
 from eva.generic import ia_status_pending
 from eva.generic import ia_status_queued
@@ -1934,11 +1937,11 @@ def get_state_history(a=None,
                       time_format=None,
                       fill=None,
                       fmt=None):
-    if oid is None: return None
+    if oid is None: raise ResourceNotFound
     n = eva.notify.get_db_notifier(a)
     if t_start and fill: tf = 'iso'
     else: tf = time_format
-    if not n: return None
+    if not n: raise ResourceNotFound('notifier')
     try:
         result = n.get_state(
             oid=oid,
@@ -1951,7 +1954,7 @@ def get_state_history(a=None,
         logging.warning('state history call failed, arch: %s, oid: %s' %
                         (n.notifier_id, oid))
         eva.core.log_traceback()
-        return False
+        raise FunctionFailed
     if t_start and fill and result:
         tz = pytz.timezone(time.tzname[0])
         try:
@@ -1960,7 +1963,7 @@ def get_state_history(a=None,
             try:
                 t_s = dateutil.parser.parse(t_start).timestamp()
             except:
-                return False
+                raise InvalidParameter('time format is unknown')
         if t_end:
             try:
                 t_e = float(t_end)
@@ -1968,7 +1971,7 @@ def get_state_history(a=None,
                 try:
                     t_e = dateutil.parser.parse(t_end).timestamp()
                 except:
-                    return False
+                    raise InvalidParameter('time format is unknown')
         else:
             t_e = time.time()
         if t_e > time.time(): t_e = time.time()
@@ -2005,7 +2008,7 @@ def get_state_history(a=None,
         except:
             logging.warning('state history dataframe error')
             eva.core.log_traceback()
-            return False
+            raise FunctionFailed
     if not fmt or fmt == 'list':
         res = {'t': []}
         for r in result:
@@ -2024,5 +2027,5 @@ def get_state_history(a=None,
     elif fmt == 'dict':
         pass
     else:
-        return False
+        return InvalidParameter('Invalid result format {}'.format(fmt))
     return result

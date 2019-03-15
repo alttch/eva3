@@ -127,18 +127,28 @@ def val_to_boolean(s):
     if val.lower() in ['0', 'false', 'no', 'off', 'n']: return False
     return None
 
+def __get_special_param_name(p):
+    if p == 'S': return 'save'
+    elif p == 'Y': return 'full'
+    elif p == 'J': return '_j'
+    elif p == 'F': return 'force'
+    elif p == 'V': return 'force_virtual'
+    return p
+
 
 def parse_function_params(params,
                           names,
                           types='',
                           defaults=None,
-                          e=InvalidParameter):
+                          e=InvalidParameter, ignore_extra=False):
     """
     Args:
         names: parameter names (list or string if short)
             S: equal to 'save'
             Y: equal to 'full'
             J: equal to '_j'
+            F: equal to 'force'
+            V: equal to 'force_virtual'
         values: parameter values
             R: required, any not null and non-empty string
             r: required, but empty strings are possible
@@ -161,17 +171,15 @@ def parse_function_params(params,
     """
     result = ()
     err = 'Invalid parameter value: {} = "{}", {} required'
-    if len(params) != len(names):
+    if len(params) != len(names) and not ignore_extra:
         for p in params.keys():
-            if p == 'S': p = 'save'
-            elif p == 'Y': p = 'full'
-            elif p == 'J': p = '_j'
+            p = __get_special_param_name(p)
             if p not in names:
                 raise e('Invalid function parameter: {}'.format(p))
     if not names:
         return result
     for i in range(len(names)):
-        n = names[i]
+        n = __get_special_param_name(names[i])
         required = types[i]
         value = params.get(n, defaults.get(n) if defaults else None)
         if required == 'o' or required == '.':

@@ -762,6 +762,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         super().__init__()
         self._nofp_log('create_user', 'p')
         self._nofp_log('set_user_password', 'p')
+        self._nofp_log('file_put', 'm')
 
     @log_i
     @api_need_sysfunc
@@ -954,7 +955,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         """
         parse_api_params(kwargs)
         background_job(eva.core.sighandler_term)()
-        return True
+        return True, 1
 
 
 class SysHTTP_API_abstract(SysAPI):

@@ -7,23 +7,37 @@ import cherrypy
 import os
 import glob
 import eva.core
+
 from eva.api import GenericHTTP_API
 from eva.api import JSON_RPC_API
 from eva.api import GenericAPI
-from eva.api import cp_json_handler
-from eva.api import cp_forbidden_key
-from eva.api import http_api_result_ok
-from eva.api import http_api_result_error
-from eva.api import cp_api_error
-from eva.api import cp_api_404
-from eva.api import cp_need_master
+from eva.api import parse_api_params
 from eva.api import http_real_ip
+from eva.api import api_need_master
+
+from eva.api import api_result_accepted
+
+from eva.api import log_d
+from eva.api import log_i
+from eva.api import log_w
+
 from eva.tools import dict_from_str
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
 from eva.tools import is_oid
 from eva.tools import val_to_boolean
+
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import AccessDenied
+
+from eva.tools import InvalidParameter
+from eva.tools import parse_function_params
+
+from eva.item import get_state_history
+
 from eva import apikey
+
 import eva.sysapi
 import eva.uc.controller
 import eva.uc.driverapi
@@ -39,8 +53,19 @@ api = None
 
 class UC_API(GenericAPI):
 
-    def groups(self, k=None, tp=None):
-        if apikey.check(k, master=True):
+    @log_d
+    def groups(self, **kwargs):
+        """
+        get item group list
+
+        Get the list of item groups. Useful e.g. for custom interfaces.
+
+        Args:
+            k:
+            p: item type (unit [U] or sensor [S])
+        """
+        k, tp = parse_function_params(kwargs, 'kp', '.S')
+        if apikey.check_master(k):
             if tp == 'U' or tp == 'unit':
                 return sorted(eva.uc.controller.units_by_group.keys())
             elif tp == 'S' or tp == 'sensor':
@@ -64,13 +89,24 @@ class UC_API(GenericAPI):
             else:
                 return []
 
-    def state(self, k=None, i=None, full=False, group=None, tp=None):
+    @log_d
+    def state(self, **kwargs):
+        """
+        get item group list
+
+        Get the list of item groups. Useful e.g. for custom interfaces.
+
+        Args:
+            k:
+            p: item type (unit [U] or sensor [S])
+        """
+        k, i, group, tp, full = parse_api_params(kwargs, 'kiYgp', '.sssb')
         if i:
             item = eva.uc.controller.get_item(i)
-            if not item or not apikey.check(k, item): return None
+            if not item or not apikey.check(k, item): raise ResourceNotFound
             if is_oid(i):
                 t, iid = parse_oid(i)
-                if not item or item.item_type != t: return None
+                if not item or item.item_type != t: raise ResourceNotFound
             return item.serialize(full=full)
         elif tp or is_oid(group):
             if not tp:
@@ -83,7 +119,7 @@ class UC_API(GenericAPI):
             elif tp == 'S' or _tp == 'sensor':
                 gi = eva.uc.controller.sensors_by_full_id
             else:
-                return None
+                raise ResourceNotFound
             result = []
             for i, v in gi.copy().items():
                 if apikey.check(k, v) and \
@@ -93,23 +129,23 @@ class UC_API(GenericAPI):
                     result.append(r)
             return sorted(result, key=lambda k: k['oid'])
 
-    def state_history(self,
-                      k=None,
-                      a=None,
-                      i=None,
-                      s=None,
-                      e=None,
-                      l=None,
-                      x=None,
-                      t=None,
-                      w=None,
-                      g=None):
+    @staticmethod
+    def _get_state_history(k=None,
+                           a=None,
+                           i=None,
+                           s=None,
+                           e=None,
+                           l=None,
+                           x=None,
+                           t=None,
+                           w=None,
+                           g=None):
         item = eva.uc.controller.get_item(i)
-        if not item or not apikey.check(k, item): return False
+        if not item or not apikey.check(k, item): raise ResourceNotFound
         if is_oid(i):
             _t, iid = parse_oid(i)
-            if not item or item.item_type != _t: return False
-        return self.get_state_history(
+            if not item or item.item_type != _t: raise ResourceNotFound
+        return get_state_history(
             k=k,
             a=a,
             oid=item.oid,
@@ -121,16 +157,98 @@ class UC_API(GenericAPI):
             fill=w,
             fmt=g)
 
-    def update(self, k=None, i=None, status=None, value=None, force_virtual=0):
+    @log_d
+    def state_history(self, **kwargs):
+        """
+        get item state history
+
+        State history of one :doc:`item</items>` or several items of the
+        specified type can be obtained using **state_history** command.
+
+        Args:
+            k:
+            a: history notifier id (default: db_1)
+            i: item oids or full ids, list or comma separated
+
+        Optional:
+            s: start time (timestamp or ISO)
+            e: end time (timestamp or ISO)
+            l: records limit (doesn't work with "w")
+            x: prop ("status" or "value", default: "value")
+            t: time format("iso" or "raw" for unix timestamp, default is "raw")
+            w: fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours
+                etc.)
+            g: output format ("list" or "dict", default is "list")
+        """
+        k, a, i, s, e, l, x, t, w, g = parse_function_params(
+            kwargs, 'kaiselxtwg', '.sr..issss')
+        if (isinstance(i, str) and i and i.find(',') != -1) or \
+                isinstance(i, list):
+            if not w:
+                raise InvalidParameter(
+                    '"w" is required to process multiple items')
+            if isinstance(i, str):
+                items = i.split(',')
+            else:
+                items = i
+            if not g or g == 'list':
+                result = {}
+            else:
+                raise InvalidParameter(
+                    'format should be list only to process multiple items')
+            for i in items:
+                r = self._get_state_history.state_history(
+                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
+                result['t'] = r['t']
+                if 'status' in r:
+                    result[i + '/status'] = r['status']
+                if 'value' in r:
+                    result[i + '/value'] = r['value']
+            return result
+        else:
+            result = self._get_state_history(
+                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
+            return result
+
+    @log_i
+    def update(self, **kwargs):
+        """
+        update the status and value of the item
+
+        Updates the status and value of the :doc:`item</items>`. This is one of the
+        ways of passive state update, for example with the use of an external
+        controller. Calling without **s** and **v** params will force item to
+        perform passive update requesting its status from update script
+        or driver.
+
+        Args:
+            k:
+            .i: item id
+        
+        Optional:
+
+            s: item status
+            v: item value
+        """
+        k, i, s, v, force_virtual = parse_function_params(
+            kwargs, 'kisvV', '.si.b')
         item = eva.uc.controller.get_item(i)
-        if not item or not apikey.check(k, item): return False
-        if status or value:
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if s or v:
             return item.update_set_state(
-                status=status, value=value, force_virtual=force_virtual)
+                status=s, value=v, force_virtual=force_virtual)
         else:
             item.need_update.set()
-            return True
+            return True, api_result_accepted
 
+    @staticmethod
+    def _process_action_result(a):
+        if not a: raise ResourceNotFound('unit found, but something not')
+        if a.is_status_dead():
+            raise FunctionFailed('{} is dead '.format(a.uiid))
+        return a.serialize()
+
+    @log_i
     def action(self,
                k=None,
                i=None,
@@ -140,34 +258,76 @@ class UC_API(GenericAPI):
                priority=None,
                q_timeout=None,
                wait=0):
-        item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): return None
-        return eva.uc.controller.exec_unit_action(
-            unit=item,
-            nstatus=nstatus,
-            nvalue=nvalue,
-            priority=priority,
-            q_timeout=q_timeout,
-            wait=wait,
-            action_uuid=action_uuid)
+        """
+        create unit control action
+        
+        The call is considered successful when action is put into the action
+        queue of selected unit.
 
-    def action_toggle(self,
-                      k=None,
-                      i=None,
-                      action_uuid=None,
-                      priority=None,
-                      q_timeout=None,
-                      wait=0):
+        Args:
+            k:
+            i: unit id
+            s: desired unit status
+
+        Optional:
+            v: desired unit value
+            w: wait for the completion for the specified number of seconds
+            .u: action UUID (will be auto generated if none specified)
+            p: queue priority (default is 100, lower is better)
+            q: global queue timeout, if expires, action is marked as "dead"
+
+        Returns:
+            Serialized action object. If action is marked as dead, an error is
+            returned (exception raised)
+        """
+        k, i, s, v, w, u, p, q = parse_function_params(kwargs, 'kisvwupq',
+                                                       '.sR.nsin')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): return None
-        nstatus = 0 if item.status else 1
-        return eva.uc.controller.exec_unit_action(
-            unit=item,
-            nstatus=nstatus,
-            priority=priority,
-            q_timeout=q_timeout,
-            wait=wait,
-            action_uuid=action_uuid)
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        return self._process_action_result(
+            eva.uc.controller.exec_unit_action(
+                unit=item,
+                nstatus=s,
+                nvalue=v,
+                priority=p,
+                q_timeout=q,
+                wait=w,
+                action_uuid=u))
+
+    @log_i
+    def action_toggle(self, **kwargs):
+        """
+        create unit control action
+        
+        The call is considered successful when action is put into the action
+        queue of selected unit.
+
+        Args:
+            k:
+            i: unit id
+
+        Optional:
+            w: wait for the completion for the specified number of seconds
+            .u: action UUID (will be auto generated if none specified)
+            p: queue priority (default is 100, lower is better)
+            q: global queue timeout, if expires, action is marked as "dead"
+
+        Returns:
+            Serialized action object. If action is marked as dead, an error is
+            returned (exception raised)
+        """
+        k, i, w, u, p, q = parse_function_params(kwargs, 'kiwupq', '.snsin')
+        item = eva.uc.controller.get_unit(i)
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        s = 0 if item.status else 1
+        return self._process_action_result(
+            eva.uc.controller.exec_unit_action(
+                unit=item,
+                nstatus=s,
+                priority=p,
+                q_timeout=q,
+                wait=w,
+                action_uuid=u))
 
     def disable_actions(self, k=None, i=None):
         item = eva.uc.controller.get_unit(i)
@@ -246,7 +406,7 @@ class UC_API(GenericAPI):
 # master functions for item configuration
 
     def get_config(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         item = eva.uc.controller.get_item(i)
         if is_oid(i):
             t, iid = parse_oid(i)
@@ -254,7 +414,7 @@ class UC_API(GenericAPI):
         return item.serialize(config=True) if item else None
 
     def save_config(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         item = eva.uc.controller.get_item(i)
         if is_oid(i):
             t, iid = parse_oid(i)
@@ -262,7 +422,7 @@ class UC_API(GenericAPI):
         return item.save() if item else None
 
     def list(self, k=None, group=None, tp=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         result = []
         if tp == 'U' or tp == 'unit':
             items = eva.uc.controller.units_by_full_id
@@ -278,7 +438,7 @@ class UC_API(GenericAPI):
         return sorted(result, key=lambda k: k['oid'])
 
     def list_props(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         item = eva.uc.controller.get_item(i)
         return item.serialize(props=True) if item else None
 
@@ -304,7 +464,7 @@ class UC_API(GenericAPI):
         return True
 
     def set_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         item = eva.uc.controller.get_item(i)
         if item:
             result = item.set_prop(p, v, save)
@@ -320,7 +480,7 @@ class UC_API(GenericAPI):
                     group=None,
                     virtual=False,
                     save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.controller.create_unit(
             unit_id=oid_to_id(unit_id, 'unit'),
             group=group,
@@ -333,7 +493,7 @@ class UC_API(GenericAPI):
                       group=None,
                       virtual=False,
                       save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.controller.create_sensor(
             sensor_id=oid_to_id(sensor_id, 'sensor'),
             group=group,
@@ -346,7 +506,7 @@ class UC_API(GenericAPI):
                   group=None,
                   virtual=False,
                   save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.controller.create_mu(
             mu_id=oid_to_id(mu_id, 'mu'),
             group=group,
@@ -354,7 +514,7 @@ class UC_API(GenericAPI):
             save=save)
 
     def create(self, k=None, oid=None, virtual=False, save=False):
-        if not apikey.check(k, master=True):
+        if not apikey.check_master(k):
             return None
         t, i = parse_oid(oid)
         if t is None or i is None: return None
@@ -561,17 +721,17 @@ class UC_API(GenericAPI):
         return True
 
     def clone(self, k=None, i=None, n=None, g=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.controller.clone_item(
             item_id=i, new_item_id=n, group=g, save=save)
 
     def clone_group(self, k=None, g=None, n=None, p=None, r=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.controller.clone_group(
             group=g, new_group=n, prefix=p, new_prefix=r, save=save)
 
     def destroy(self, k=None, i=None, g=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.controller.destroy_item(i) if i \
                 else eva.uc.controller.destroy_group(g)
 
@@ -586,7 +746,7 @@ class UC_API(GenericAPI):
                            delay=None,
                            retries=None,
                            save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i or not params: return False
         result = eva.uc.modbus.create_modbus_port(
             i, params, lock=lock, timeout=timeout, delay=delay, retries=retries)
@@ -594,17 +754,17 @@ class UC_API(GenericAPI):
         return result
 
     def destroy_modbus_port(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         result = eva.uc.modbus.destroy_modbus_port(i)
         if result and eva.core.db_update == 1: eva.uc.modbus.save()
         return result
 
     def list_modbus_ports(self, k=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return sorted(eva.uc.modbus.serialize(), key=lambda k: k['id'])
 
     def test_modbus_port(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         port = eva.uc.modbus.get_port(i)
         result = True if port else False
         if result: port.release()
@@ -621,7 +781,7 @@ class UC_API(GenericAPI):
                         delay=None,
                         retries=None,
                         save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i or not location: return False
         result = eva.uc.owfs.create_owfs_bus(
             i,
@@ -634,17 +794,17 @@ class UC_API(GenericAPI):
         return result
 
     def destroy_owfs_bus(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         result = eva.uc.owfs.destroy_owfs_bus(i)
         if result and eva.core.db_update == 1: eva.uc.owfs.save()
         return result
 
     def list_owfs_buses(self, k=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return sorted(eva.uc.owfs.serialize(), key=lambda k: k['id'])
 
     def test_owfs_bus(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         bus = eva.uc.owfs.get_bus(i)
         result = True if bus else False
         if result: bus.release()
@@ -658,7 +818,7 @@ class UC_API(GenericAPI):
                       n=None,
                       has_all=None,
                       full=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         bus = eva.uc.owfs.get_bus(i)
         if not bus: return None
         bus.release()
@@ -686,7 +846,7 @@ class UC_API(GenericAPI):
     # master functions for driver configuration
 
     def load_phi(self, k=None, i=None, m=None, cfg=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i or not m: return None
         try:
             _cfg = dict_from_str(cfg)
@@ -698,7 +858,7 @@ class UC_API(GenericAPI):
             return eva.uc.driverapi.get_phi(i).serialize(full=True, config=True)
 
     def load_driver(self, k=None, i=None, m=None, p=None, cfg=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i or not m or not p: return None
         try:
             _cfg = dict_from_str(cfg)
@@ -711,49 +871,49 @@ class UC_API(GenericAPI):
                 full=True, config=True)
 
     def unload_phi(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i: return None
         result = eva.uc.driverapi.unload_phi(i)
         if result and eva.core.db_update == 1: eva.uc.driverapi.save()
         return result
 
     def unlink_phi_mod(self, k=None, m=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not m: return None
         result = eva.uc.driverapi.unlink_phi_mod(m)
         return result
 
     def put_phi_mod(self, k=None, m=None, c=None, force=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not m: return None
         result = eva.uc.driverapi.put_phi_mod(m, c, force)
         return result if not result else api.modinfo_phi(k, m)
 
     def unload_driver(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i: return None
         result = eva.uc.driverapi.unload_driver(i)
         if result and eva.core.db_update == 1: eva.uc.driverapi.save()
         return result
 
     def get_phi_map(self, k=None, phi_id=None, action_map=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.driverapi.get_map(phi_id, action_map)
 
     def list_phi(self, k=None, full=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return sorted(
             eva.uc.driverapi.serialize_phi(full=full, config=full),
             key=lambda k: k['id'])
 
     def list_drivers(self, k=None, full=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return sorted(
             eva.uc.driverapi.serialize_lpi(full=full, config=full),
             key=lambda k: k['id'])
 
     def get_phi(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
         if phi:
@@ -762,7 +922,7 @@ class UC_API(GenericAPI):
             return None
 
     def set_phi_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: return None
@@ -772,7 +932,7 @@ class UC_API(GenericAPI):
         return False
 
     def get_driver(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i: return None
         lpi = eva.uc.driverapi.get_driver(i)
         if lpi:
@@ -781,7 +941,7 @@ class UC_API(GenericAPI):
             return None
 
     def set_driver_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i or i.split('.')[-1] == 'default': return None
         lpi = eva.uc.driverapi.get_driver(i)
         if not lp: return None
@@ -791,45 +951,45 @@ class UC_API(GenericAPI):
         return False
 
     def test_phi(self, k=None, i=None, c=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: return None
         return phi.test(c)
 
     def exec_phi(self, k=None, i=None, c=None, a=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         if not i: return None
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: return None
         return phi.exec(c, a)
 
     def list_phi_mods(self, k=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.driverapi.list_phi_mods()
 
     def list_lpi_mods(self, k=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.driverapi.list_lpi_mods()
 
     def modinfo_phi(self, k=None, m=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.driverapi.modinfo_phi(m)
 
     def modinfo_lpi(self, k=None, m=None):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         return eva.uc.driverapi.modinfo_lpi(m)
 
     def modhelp_phi(self, k=None, m=None, c=None):
-        if not apikey.check(k, master=True) or not c: return None
+        if not apikey.check_master(k) or not c: return None
         return eva.uc.driverapi.modhelp_phi(m, c)
 
     def modhelp_lpi(self, k=None, m=None, c=None):
-        if not apikey.check(k, master=True) or not c: return None
+        if not apikey.check_master(k) or not c: return None
         return eva.uc.driverapi.modhelp_lpi(m, c)
 
     def assign_driver(self, k=None, i=None, d=None, c=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not apikey.check_master(k): return None
         item = eva.uc.controller.get_item(i)
         if not item: return None
         if not api.set_prop(k, i, 'update_driver_config', c): return False
@@ -845,237 +1005,11 @@ class UC_API(GenericAPI):
         return True
 
 
-class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
-
-    exposed = True
-    api_uri = '/uc-api'
-    api_restful_prefix = '/r'
-
-    def cp_check_perm(self, api_key=None, k=None, path_info=None):
-        if cherrypy.serving.request.path_info[:8] == '/put_phi':
-            rlp = ['c']
-        else:
-            rlp = None
-        super().cp_check_perm(api_key=api_key, rlp=rlp, path_info=path_info)
+class UC_HTTP_API_abstract(UC_API):
 
     def __init__(self):
         super().__init__()
-        UC_HTTP_API.index.exposed = True
-        UC_HTTP_API.groups.exposed = True
-        UC_HTTP_API.state.exposed = True
-        UC_HTTP_API.state_history.exposed = True
-        UC_HTTP_API.update.exposed = True
-        UC_HTTP_API.action.exposed = True
-        UC_HTTP_API.action_toggle.exposed = True
-        UC_HTTP_API.result.exposed = True
-        UC_HTTP_API.terminate.exposed = True
-        UC_HTTP_API.kill.exposed = True
-        UC_HTTP_API.q_clean.exposed = True
-        UC_HTTP_API.disable_actions.exposed = True
-        UC_HTTP_API.enable_actions.exposed = True
-
-        UC_HTTP_API.get_config.exposed = True
-        UC_HTTP_API.save_config.exposed = True
-        UC_HTTP_API.list.exposed = True
-        UC_HTTP_API.list_props.exposed = True
-        UC_HTTP_API.set_prop.exposed = True
-
-        UC_HTTP_API.create.exposed = True
-        UC_HTTP_API.create_unit.exposed = True
-        UC_HTTP_API.create_sensor.exposed = True
-        UC_HTTP_API.create_mu.exposed = True
-        UC_HTTP_API.list_device_tpl.exposed = True
-        UC_HTTP_API.create_device.exposed = True
-        UC_HTTP_API.update_device.exposed = True
-
-        UC_HTTP_API.clone.exposed = True
-        UC_HTTP_API.clone_group.exposed = True
-
-        UC_HTTP_API.destroy.exposed = True
-        UC_HTTP_API.destroy_device.exposed = True
-
-        UC_HTTP_API.create_modbus_port.exposed = True
-        UC_HTTP_API.destroy_modbus_port.exposed = True
-        UC_HTTP_API.list_modbus_ports.exposed = True
-        UC_HTTP_API.test_modbus_port.exposed = True
-
-        UC_HTTP_API.create_owfs_bus.exposed = True
-        UC_HTTP_API.destroy_owfs_bus.exposed = True
-        UC_HTTP_API.list_owfs_buses.exposed = True
-        UC_HTTP_API.test_owfs_bus.exposed = True
-        UC_HTTP_API.scan_owfs_bus.exposed = True
-
-        UC_HTTP_API.load_phi.exposed = True
-        UC_HTTP_API.unload_phi.exposed = True
-        UC_HTTP_API.unlink_phi_mod.exposed = True
-        UC_HTTP_API.put_phi_mod.exposed = True
-        UC_HTTP_API.list_phi.exposed = True
-        UC_HTTP_API.get_phi_map.exposed = True
-        UC_HTTP_API.get_phi.exposed = True
-
-        UC_HTTP_API.load_driver.exposed = True
-        UC_HTTP_API.list_drivers.exposed = True
-        UC_HTTP_API.unload_driver.exposed = True
-        UC_HTTP_API.get_driver.exposed = True
-
-        UC_HTTP_API.test_phi.exposed = True
-        UC_HTTP_API.exec_phi.exposed = True
-
-        UC_HTTP_API.list_phi_mods.exposed = True
-        UC_HTTP_API.list_lpi_mods.exposed = True
-
-        UC_HTTP_API.modinfo_phi.exposed = True
-        UC_HTTP_API.modinfo_lpi.exposed = True
-
-        UC_HTTP_API.modhelp_phi.exposed = True
-        UC_HTTP_API.modhelp_lpi.exposed = True
-
-        UC_HTTP_API.set_phi_prop.exposed = True
-        UC_HTTP_API.set_driver_prop.exposed = True
-        UC_HTTP_API.assign_driver.exposed = True
-
-        UC_HTTP_API.info.exposed = True
-
-    def groups(self, k=None, p=None):
-        return super().groups(k, p)
-
-    def state(self, k=None, i=None, full=None, g=None, p=None):
-        if full:
-            _full = True
-        else:
-            _full = False
-        result = super().state(k, i, _full, g, p)
-        if result is None:
-            raise cp_api_404()
-        return result
-
-    def state_history(self,
-                      k=None,
-                      a=None,
-                      i=None,
-                      p=None,
-                      s=None,
-                      e=None,
-                      l=None,
-                      x=None,
-                      t=None,
-                      w=None,
-                      g=None):
-        if (isinstance(i, str) and i and i.find(',') != -1) or \
-                isinstance(i, list):
-            if not w:
-                raise cp_api_error(
-                    '"w" param required to process multiple items')
-            if isinstance(i, str):
-                items = i.split(',')
-            else:
-                items = i
-            if not g or g == 'list':
-                result = {}
-            else:
-                raise cp_api_error(
-                    'format should be list only to process multiple items')
-            for i in items:
-                r = super().state_history(
-                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                if r is False: raise cp_api_error('internal error')
-                if r is None: raise cp_api_404()
-                result['t'] = r['t']
-                if 'status' in r:
-                    result[i + '/status'] = r['status']
-                if 'value' in r:
-                    result[i + '/value'] = r['value']
-            return result
-        else:
-            result = super().state_history(
-                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            if result is False: raise cp_api_error('internal error')
-            if result is None: raise cp_api_404()
-            return result
-
-    def update(self, k=None, i=None, s=None, v=None, force_virtual=''):
-        if force_virtual:
-            _fv = True
-        else:
-            _fv = False
-        if s is None:
-            _s = None
-        else:
-            try:
-                _s = int(s)
-            except:
-                raise cp_api_error('status is not an integer')
-        if super().update(k, i, _s, v, _fv):
-            return http_api_result_ok()
-        else:
-            raise cp_api_404()
-
-    def action(self, k=None, i=None, u=None, s=None, v='', p=None, q=None, w=0):
-        if w:
-            try:
-                _w = float(w)
-            except:
-                raise cp_api_error('wait is not a float')
-        else:
-            _w = None
-        if p:
-            try:
-                _p = int(p)
-            except:
-                raise cp_api_error('priority is not an integer')
-        else:
-            _p = None
-        if q:
-            try:
-                _q = float(q)
-            except:
-                raise cp_api_error('q_timeout is not a float')
-        else:
-            _q = None
-        a = super().action(
-            k=k,
-            i=i,
-            action_uuid=u,
-            nstatus=s,
-            nvalue=v,
-            priority=_p,
-            q_timeout=_q,
-            wait=_w)
-        if not a:
-            raise cp_api_404()
-        if a.is_status_dead():
-            raise cp_api_error('queue error, action is dead')
-        return a.serialize()
-
-    def action_toggle(self, k=None, i=None, u=None, p=None, q=None, w=0):
-        if w:
-            try:
-                _w = float(w)
-            except:
-                raise cp_api_error('wait is not a float')
-        else:
-            _w = None
-        if p:
-            try:
-                _p = int(p)
-            except:
-                raise cp_api_error('priority is not an integer')
-        else:
-            _p = None
-        if q:
-            try:
-                _q = float(q)
-            except:
-                raise cp_api_error('q_timeout is not a float')
-        else:
-            _q = None
-        a = super().action_toggle(
-            k=k, i=i, action_uuid=u, priority=_p, q_timeout=_q, wait=_w)
-        if not a:
-            raise cp_api_404()
-        if a.is_status_dead():
-            raise cp_api_error('queue error, action is dead')
-        return a.serialize()
+        self._nofp_log('put_phi', 'c')
 
     def result(self, k=None, u=None, i=None, g=None, s=None):
         a = super().result(k, u, i, g, s)
@@ -1503,15 +1437,52 @@ class UC_HTTP_API(JSON_RPC_API, GenericHTTP_API, UC_API):
                 eva.udpapi.check_access(http_real_ip()) else None
         return result
 
+
+class UC_HTTP_API(UC_HTTP_API_abstract, GenericHTTP_API):
+
+    def __init__(self):
+        super().__init__()
+        self.expose_api_methods('ucapi')
+
+
+class UC_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
+                     eva.sysapi.SysHTTP_API_REST_abstract,
+                     eva.api.JSON_RPC_API_abstract, UC_HTTP_API):
+
+    def __init__(self):
+        super().__init__()
+        self.expose_api_methods('ucapi', set_api_uri=False)
+        self.expose_api_methods('sysapi', set_api_uri=False)
+
+
+class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
+                  eva.sysapi.SysHTTP_API_REST_abstract,
+                  eva.api.GenericHTTP_API_REST_abstract, UC_HTTP_API_abstract,
+                  GenericHTTP_API):
+
+    @generic_web_api_method
+    @restful_api_method
+    def GET(self, rtp, k, ii, full, kind, save, for_dir, props):
+        try:
+            return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
+        except MethodNotFound:
+            pass
+        raise MethodNotFound
+
+
 def start():
-    global api
-    api = UC_API()
+    http_api = UC_HTTP_API()
+    cherrypy.tree.mount(http_api, http_api.api_uri)
+    cherrypy.tree.mount(UC_JSONRPC_API(), UC_JSONRPC_API.api_uri)
     cherrypy.tree.mount(
-        UC_HTTP_API(),
-        UC_HTTP_API.api_uri,
+        UC_REST_API(),
+        UC_REST_API.api_uri,
         config={
-            UC_HTTP_API.api_restful_prefix: {
+            '/': {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
             }
         })
     eva.ei.start()
+
+
+api = UC_API()

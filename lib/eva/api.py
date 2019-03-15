@@ -53,6 +53,7 @@ config = SimpleNamespace(
     ei_enabled=False,
     use_x_real_ip=False)
 
+api_result_accepted = 2
 
 class MethodNotFound(Exception):
 
@@ -200,6 +201,10 @@ def restful_api_method(f):
         k, ii, full, save, kind, for_dir, props = restful_parse_params(
             *args, **kwargs)
         result = f(c, rtp, k, ii, full, kind, save, for_dir, props)
+        if isinstance(result, tuple):
+            result, data = result
+        else:
+            data = None
         if result is False:
             raise FunctionFailed
         if result is None:
@@ -208,7 +213,12 @@ def restful_api_method(f):
                 'Location' in cherrypy.serving.response.headers
            ) or f.__name__ == 'PUT':
             cherrypy.serving.response.status = 201
-        return None if result is True else result
+        if result is True:
+            if data == api_result_accepted:
+                cherrypy.serving.response.status = 202
+            return data
+        else:
+            return result
 
     return do
 
@@ -227,7 +237,10 @@ def cp_api_function(f):
             else:
                 data = None
             if result is True:
-                return http_api_result_ok(data)
+                if data == api_result_accepted:
+                    return http_api_result_ok()
+                else:
+                    return http_api_result_ok(data)
             elif result is False:
                 raise FunctionFailed
             elif result is None:
@@ -486,7 +499,7 @@ class GenericAPI(object):
         if eva.core.enterprise_layout is not None:
             result['layout'] = 'enterprise' if \
                     eva.core.enterprise_layout else 'simple'
-        if apikey.check(k, master=True):
+        if apikey.check_master(k):
             result['file_management'] = \
                     eva.sysapi.config.api_file_management_allowed
         if apikey.check(k, sysfunc=True):
@@ -550,7 +563,7 @@ def api_need_master(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        if not eva.apikey.check(kwargs.get('k'), master=True):
+        if not eva.apikey.check_master(kwargs.get('k')):
             raise AccessDenied
         return f(*args, **kwargs)
 
@@ -667,7 +680,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                     data = None
                 if result is True:
                     result = {'ok': True}
-                    if data:
+                    if isinstance(data, dict):
                         result.update(data)
                 elif result is False:
                     raise FunctionFailed
