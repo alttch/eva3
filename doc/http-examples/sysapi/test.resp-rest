@@ -1,7 +1,7 @@
 HTTP/1.1 200 OK
-Content-Type: application/json
 Allow: DELETE, GET, HEAD, PATCH, POST, PUT
 Cache-Control: no-cache, no-store, must-revalidate
+Content-Type: application/json
 Expires: 0
 Pragma: no-cache
 
@@ -21,7 +21,7 @@ Pragma: no-cache
     "result": "OK",
     "setup_mode": false,
     "system": "mws1-v1",
-    "time": 1552616343.0360723,
-    "uptime": 341,
+    "time": 1552616872.3136358,
+    "uptime": 871,
     "version": "3.2.0"
 }

@@ -1,7 +1,7 @@
 HTTP/1.1 200 OK
-Content-Type: application/json
 Allow: DELETE, GET, HEAD, PATCH, POST, PUT
 Cache-Control: no-cache, no-store, must-revalidate
+Content-Type: application/json
 Expires: 0
 Pragma: no-cache
 
@@ -17,7 +17,7 @@ Pragma: no-cache
     "hosts_assign": [],
     "id": "testkey2",
     "items": [],
-    "key": "3f274bc786bb90d449844c7cc00516a738eb50f2c23c4d09e2615afe360d6d8f",
+    "key": "294fb2355b9fc72c2ddc41651709d60f880936fd339e0dd6dfa112fd4c542b01",
     "master": false,
     "pvt": [],
     "rpvt": [],

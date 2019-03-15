@@ -1,10 +1,10 @@
 HTTP/1.1 200 OK
-Content-Type: application/json
 Allow: DELETE, GET, HEAD, PATCH, POST, PUT
 Cache-Control: no-cache, no-store, must-revalidate
+Content-Type: application/json
 Expires: 0
 Pragma: no-cache
 
 {
-    "key": "ebec45f35768dcf666971bcfa4a3f44c9943b7c666bd7df7e9f31f8e7eaf4331"
+    "key": "5f6e8a02503e122db4b952272a7388db3a4ec13800cc079f3f28fef23962c517"
 }
