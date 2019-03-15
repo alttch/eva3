@@ -13,6 +13,11 @@ from eva.core import userdb
 
 from sqlalchemy import text as sql
 
+from eva.exceptions import AccessDenied
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceAlreadyExists
+
 
 def crypt_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -20,19 +25,18 @@ def crypt_password(password):
 
 def authenticate(user=None, password=None):
     if user is None or password is None:
-        return None
+        raise AccessDenied('No login/password provided')
     dbconn = userdb()
     try:
         r = dbconn.execute(
             sql('select k from users where u = :u and p = :p'),
             u=user,
             p=crypt_password(password)).fetchone()
-        return None if not r else r.k
+        if not r:
+            raise AccessDenied('Authentication failure')
+        return r.k
     except:
-        logging.critical('db error')
-        eva.core.log_traceback()
-        return None
-    return None
+        eva.core.report_userdb_error()
 
 
 def list_users():
@@ -49,8 +53,7 @@ def list_users():
             result.append(u)
         return sorted(result, key=lambda k: k['user'])
     except:
-        eva.core.log_traceback()
-        return []
+        eva.core.report_userdb_error()
 
 
 def get_user(user=None):
@@ -60,28 +63,25 @@ def get_user(user=None):
         result = []
         row = dbconn.execute(
             sql('select u, k from users where u=:u'), u=user).fetchone()
-        if not row: return None
+        if not row: raise ResourceNotFound
         return {'user': row.u, 'key': row.k}
     except:
-        eva.core.log_traceback()
-        return {}
+        eva.core.report_userdb_error()
 
 
 def create_user(user=None, password=None, key=None):
-    if user is None or password is None or key is None or \
-            key not in apikey.keys_by_id:
-        return False
+    if user is None or password is None or key is None: return False
+    if key not in apikey.keys_by_id:
+        raise ResourceNotFound('API key')
     try:
         dbconn = userdb()
         row = dbconn.execute(
             sql('select k from users where u = :u'), u=user).fetchone()
-        if row:
-            logging.error('Can not create user {} - already exist'.format(user))
-            return False
     except:
         logging.critical('db error')
-        eva.core.log_traceback()
-        return False
+        raise FunctionFailed
+    if row:
+        raise ResourceAlreadyExists
     try:
         dbconn.execute(
             sql('insert into users(u, p, k) values (:u, :p, :k)'),
@@ -91,8 +91,7 @@ def create_user(user=None, password=None, key=None):
         logging.info('User {} created, key: {}'.format(user, key))
         return True
     except:
-        logging.critical('db error')
-        eva.core.log_traceback()
+        eva.core.report_userdb_error()
 
 
 def set_user_password(user=None, password=None):
@@ -107,13 +106,11 @@ def set_user_password(user=None, password=None):
             logging.info('user {} new password is set'.format(user))
             return True
         else:
-            logging.error(
-                'can not change password for {} - no such user'.format(user))
-            return False
+            raise ResourceNotFound
+    except ResourceNotFound:
+        raise
     except:
-        logging.critical('db error')
-        eva.core.log_traceback()
-        return False
+        eva.core.report_userdb_error()
 
 
 def set_user_key(user=None, key=None):
@@ -127,17 +124,16 @@ def set_user_key(user=None, key=None):
             logging.info('user {} key {} is set'.format(user, key))
             return True
         else:
-            logging.error('can not set key for {} - no such user'.format(user))
-            return False
+            raise ResourceNotFound
+    except ResourceNotFound:
+        raise
     except:
-        logging.critical('db error')
-        eva.core.log_traceback()
-        return False
+        eva.core.report_userdb_error()
 
 
 def destroy_user(user=None):
     if user is None:
-        return None
+        raise FunctionFailed
     try:
         dbconn = userdb()
         if dbconn.execute(
@@ -145,12 +141,11 @@ def destroy_user(user=None):
             logging.info('User {} deleted'.format(user))
             return True
         else:
-            logging.error('Can not delete {} - no such user'.format(user))
-            return False
+            raise ResourceNotFound
+    except ResourceNotFound:
+        raise
     except:
-        logging.critical('db error')
-        eva.core.log_traceback()
-        return False
+        eva.core.report_userdb_error()
 
 
 def init():

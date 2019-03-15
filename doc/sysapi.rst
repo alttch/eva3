@@ -33,9 +33,10 @@ Standard API responses
 
 * **400 Bad Request** Invalid request params
 * **403 Forbidden** the API key has no access to this function or resource
-* **404 Not Found** method or resource doesn't exist
+* **404 Not Found** method or resource/object doesn't exist
 * **405 Method Not Allowed** API function/method not found or HTTP method is
   not either GET or POST
+* **409 Conflict** resource/object already exists or is locked
 * **500 API Error** API function execution has been failed. Check input
   parameters and server logs.
 
@@ -73,6 +74,7 @@ RESTful API responses
 * **403 Forbidden** the API key has no access to this function or resource
 * **404 Not Found** resource doesn't exist
 * **405 Method Not Allowed** API function/method not found
+* **409 Conflict** resource/object already exists or is locked
 * **500 API Error** API function execution has been failed. Check
   input parameters and server logs.
 
@@ -513,6 +515,309 @@ Parameters:
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/log_rotate.rest
     :response: http-examples/sysapi/log_rotate.resp-rest
+
+
+.. _sysapi_cat_keys:
+
+API keys
+========
+
+
+
+.. _sysapi_create_key:
+
+create_key - create API key
+---------------------------
+
+API keys are defined statically in etc/<controller>_apikeys.ini file as well as can be created with API and stored in user database.
+
+Keys with master permission can not be created.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/create_key.req
+    :response: http-examples/sysapi/create_key.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+* **save** save configuration immediately
+
+Returns:
+
+JSON with serialized key object
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/create_key.rest
+    :response: http-examples/sysapi/create_key.resp-rest
+
+.. _sysapi_destroy_key:
+
+destroy_key - delete API key
+----------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/destroy_key.req
+    :response: http-examples/sysapi/destroy_key.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/destroy_key.rest
+    :response: http-examples/sysapi/destroy_key.resp-rest
+
+.. _sysapi_list_key_props:
+
+list_key_props - list API key permissions
+-----------------------------------------
+
+Lists API key permissons (including a key itself)
+
+.. note::
+
+    API keys, defined in etc/<controller>_apikeys.ini file can not be     managed with API.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_key_props.req
+    :response: http-examples/sysapi/list_key_props.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+* **save** save configuration immediately
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_key_props.rest
+    :response: http-examples/sysapi/list_key_props.resp-rest
+
+.. _sysapi_list_keys:
+
+list_keys - list API keys
+-------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_keys.req
+    :response: http-examples/sysapi/list_keys.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_keys.rest
+    :response: http-examples/sysapi/list_keys.resp-rest
+
+.. _sysapi_regenerate_key:
+
+regenerate_key - regenerate API key
+-----------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/regenerate_key.req
+    :response: http-examples/sysapi/regenerate_key.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+
+Returns:
+
+JSON dict with new key value in "key" field
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/regenerate_key.rest
+    :response: http-examples/sysapi/regenerate_key.resp-rest
+
+.. _sysapi_set_key_prop:
+
+set_key_prop - set API key permissions
+--------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/set_key_prop.req
+    :response: http-examples/sysapi/set_key_prop.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** API key ID
+* **p** property
+* **v** value (if none, permission will be revoked)
+* **save** save configuration immediately
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/set_key_prop.rest
+    :response: http-examples/sysapi/set_key_prop.resp-rest
+
+
+.. _sysapi_cat_users:
+
+User accounts
+=============
+
+
+
+.. _sysapi_create_user:
+
+create_user - create user account
+---------------------------------
+
+.. note::
+
+    All changes to user accounts are instant, if the system works in     read/only mode, set it to read/write before performing user     management.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/create_user.req
+    :response: http-examples/sysapi/create_user.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+* **p** user password
+* **a** API key to assign (key id, not a key itself)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/create_user.rest
+    :response: http-examples/sysapi/create_user.resp-rest
+
+.. _sysapi_destroy_user:
+
+destroy_user - delete user account
+----------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/destroy_user.req
+    :response: http-examples/sysapi/destroy_user.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/destroy_user.rest
+    :response: http-examples/sysapi/destroy_user.resp-rest
+
+.. _sysapi_get_user:
+
+get_user - get user account info
+--------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/get_user.req
+    :response: http-examples/sysapi/get_user.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/get_user.rest
+    :response: http-examples/sysapi/get_user.resp-rest
+
+.. _sysapi_list_users:
+
+list_users - list user accounts
+-------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_users.req
+    :response: http-examples/sysapi/list_users.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_users.rest
+    :response: http-examples/sysapi/list_users.resp-rest
+
+.. _sysapi_set_user_key:
+
+set_user_key - assign API key to user
+-------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/set_user_key.req
+    :response: http-examples/sysapi/set_user_key.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+* **a** API key to assign (key id, not a key itself)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/set_user_key.rest
+    :response: http-examples/sysapi/set_user_key.resp-rest
+
+.. _sysapi_set_user_password:
+
+set_user_password - set user password
+-------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/set_user_password.req
+    :response: http-examples/sysapi/set_user_password.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **u** user login
+* **p** new password
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/set_user_password.rest
+    :response: http-examples/sysapi/set_user_password.resp-rest
 
 
 .. _sysapi_cat_notifiers:

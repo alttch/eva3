@@ -9,7 +9,7 @@ import logging
 class GenericException(Exception):
 
     def __init__(self, msg=''):
-        super().__init__(msg)
+        super().__init__(str(msg))
         logging.debug('Exception {}: {}'.format(self.__class__.__name__,
                                                 str(self)))
 
@@ -26,6 +26,13 @@ class ResourceNotFound(GenericException):
     def __str__(self):
         msg = super().__str__()
         return msg + ' not found' if msg else 'Resource not found'
+
+
+class ResourceAlreadyExists(GenericException):
+
+    def __str__(self):
+        msg = super().__str__()
+        return msg + ' already exists' if msg else 'Resource already exists'
 
 
 class AccessDenied(GenericException):

@@ -24,6 +24,10 @@ from eva.core import userdb
 from eva.tools import netacl_match
 from eva.tools import val_to_boolean
 
+from eva.exceptions import ResourceAlreadyExists
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import FunctionFailed
+
 masterkey = None
 keys = {}
 keys_by_id = {}
@@ -75,7 +79,8 @@ class APIKey(object):
         self.ce = Fernet(_k)
 
     def set_prop(self, prop, value=None, save=False):
-        if not self.dynamic: return False
+        if not self.dynamic or self.master:
+            raise FunctionFailed('Master and static keys can not be changed')
         if prop == 'key':
             if value is None or value == '' or value.find(
                     ':') != -1 or value.find('|') != -1:
@@ -179,7 +184,7 @@ class APIKey(object):
                 self.rpvt_uris = val
                 self.set_modified(save)
             return True
-        return False
+        raise ResourceNotFound('property ' + prop)
 
     def set_modified(self, save):
         if save:
@@ -231,9 +236,7 @@ class APIKey(object):
                     rpvt=data['rpvt'],
                     k_id=data['id'])
         except:
-            logging.critical('apikeys db error')
-            eva.core.log_traceback()
-            return False
+            eva.core.report_userdb_error()
         self.in_db = True
         return True
 
@@ -344,8 +347,8 @@ def load(fname=None):
         if not _masterkey:
             logging.warning('no masterkey in this configuration')
         return True
-    except Exception as e:
-        logging.error('Failed to read API keys from %s' % (fname))
+    except:
+        logging.error('Unable to load users')
         eva.core.log_traceback()
         return False
 
@@ -457,8 +460,8 @@ def serialized_acl(k):
 
 
 def add_api_key(key_id=None, save=False):
-    if key_id is None or key_id in keys_by_id:
-        return False
+    if key_id is None: raise FunctionFailed
+    if key_id in keys_by_id: raise ResourceAlreadyExists
     key_hash = gen_random_hash()
     key = APIKey(key_hash, key_id)
     key.master = False
@@ -474,9 +477,9 @@ def add_api_key(key_id=None, save=False):
 
 def delete_api_key(key_id):
     if key_id is None or key_id not in keys_by_id:
-        return None
+        raise ResourceNotFound
     if keys_by_id[key_id].master or not keys_by_id[key_id].dynamic:
-        return False
+        raise FunctionFailed('Master and static keys can not be deleted')
     del keys[keys_by_id[key_id].key]
     del keys_by_id[key_id]
     if eva.core.db_update == 1:
@@ -485,9 +488,7 @@ def delete_api_key(key_id):
             dbconn.execute(
                 sql('delete from apikeys where k_id=:key_id'), key_id=key_id)
         except:
-            logging.critical('apikeys db error')
-            eva.core.log_traceback()
-            return False
+            eva.core.report_userdb_error()
     else:
         keys_to_delete.add(key_id)
     return True
@@ -495,9 +496,9 @@ def delete_api_key(key_id):
 
 def regenerate_key(key_id, k=None, save=False):
     if key_id is None or key_id not in keys_by_id:
-        return None
+        raise ResourceNotFound
     if keys_by_id[key_id].master or not keys_by_id[key_id].dynamic:
-        return False
+        raise FunctionFailed('Master and static keys can not be changed')
     key = keys_by_id[key_id]
     old_key = key.key
     key.set_key(gen_random_hash() if k is None else k)
@@ -556,8 +557,7 @@ def load_keys_from_db():
             _keys[key.key] = key
             _keys_by_id[key.key_id] = key
     except:
-        logging.warning('unable to load API keys from db')
-        eva.core.log_traceback()
+        eva.core.report_userdb_error(raise_exeption=False)
     return _keys, _keys_by_id
 
 
@@ -572,9 +572,7 @@ def save():
             dbconn.execute(sql('delete from apikeys where k_id=:k_id'), k_id=k)
         return True
     except:
-        logging.critical('apikeys db error')
-        eva.core.log_traceback()
-        return False
+        eva.core.report_db_error(raise_exeption=False)
 
 
 def init():

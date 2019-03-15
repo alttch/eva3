@@ -136,6 +136,9 @@ def parse_function_params(params,
     """
     Args:
         names: parameter names (list or string if short)
+            S: equal to 'save'
+            Y: equal to 'full'
+            J: equal to '_j'
         values: parameter values
             R: required, any not null and non-empty string
             r: required, but empty strings are possible
@@ -160,6 +163,9 @@ def parse_function_params(params,
     err = 'Invalid parameter value: {} = "{}", {} required'
     if len(params) != len(names):
         for p in params.keys():
+            if p == 'S': p = 'save'
+            elif p == 'Y': p = 'full'
+            elif p == 'J': p = '_j'
             if p not in names:
                 raise e('Invalid function parameter: {}'.format(p))
     if not names:

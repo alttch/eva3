@@ -368,6 +368,7 @@ class GenericCLI(object):
             for i, v in o:
                 if i == '--exec-batch':
                     self.batch_file = v
+                    self.prompt = '# '
                 elif i == '--pass-batch-err':
                     self.batch_stop_on_err = False
                 elif i == '--interactive' or i == '-I':
@@ -448,8 +449,9 @@ class GenericCLI(object):
             readline.set_completer(completer.rl_complete)
             readline.parse_and_bind("tab: complete")
 
-    def print_err(self, s):
-        print(self.colored(s, color='red', attrs=[]))
+    def print_err(self, *args):
+        for s in args:
+            print(self.colored(s, color='red', attrs=[]))
 
     def print_warn(self, s, w=True):
         print(
@@ -1356,25 +1358,37 @@ class GenericCLI(object):
         if code != apiclient.result_ok and \
             code != apiclient.result_func_failed:
             if code == apiclient.result_not_found:
-                self.print_err('Error: Object not found')
+                self.print_err('Error: Object not found',
+                               result.get('_error') if result else None)
             elif code == apiclient.result_forbidden:
-                self.print_err('Error: Forbidden')
+                self.print_err('Error: Forbidden',
+                               result.get('_error') if result else None)
             elif code == apiclient.result_api_error:
-                self.print_err('Error: API error')
+                self.print_err('Error: API error',
+                               result.get('_error') if result else None)
             elif code == apiclient.result_unknown_error:
-                self.print_err('Error: Unknown error')
+                self.print_err('Error: Unknown error',
+                               result.get('_error') if result else None)
             elif code == apiclient.result_not_ready:
-                self.print_err('Error: API not ready')
+                self.print_err('Error: API not ready',
+                               result.get('_error') if result else None)
+            elif code == apiclient.result_server_error:
+                self.print_err('Error: Server error',
+                               result.get('_error') if result else None)
+            elif code == apiclient.result_server_timeout:
+                self.print_err('Error: Server timeout',
+                               result.get('_error') if result else None)
+            elif code == apiclient.result_bad_data:
+                self.print_err('Error: Bad data',
+                               result.get('_error') if result else None)
+            elif code == apiclient.result_invalid_params:
+                self.print_err('Error: invalid params',
+                               result.get('_error') if result else None)
+            elif code == apiclient.result_already_exists:
+                self.print_err('Error: already exists',
+                               result.get('_error') if result else None)
             elif code == apiclient.result_func_unknown:
                 self.ap.print_help()
-            elif code == apiclient.result_server_error:
-                self.print_err('Error: Server error')
-            elif code == apiclient.result_server_timeout:
-                self.print_err('Error: Server timeout')
-            elif code == apiclient.result_bad_data:
-                self.print_err('Error: Bad data')
-            elif code == apiclient.result_invalid_params:
-                self.print_err('Error: invalid params')
             if debug and self.remote_api_enabled:
                 self.print_debug('API result code: %u' % code)
             return code

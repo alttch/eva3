@@ -7,30 +7,30 @@ Pragma: no-cache
 
 [
     {
-        "h": "ws1-v1",
+        "h": "mws1-v1",
         "l": 30,
         "mod": "sysapi",
         "msg": "test warning message",
         "p": "sfa",
-        "t": 1552601299.974849,
-        "th": "CP Server Thread-12"
+        "t": 1552616347.5886426,
+        "th": "CP Server Thread-15"
     },
     {
-        "h": "ws1-v1",
+        "h": "mws1-v1",
         "l": 40,
         "mod": "sysapi",
         "msg": "test error message",
         "p": "sfa",
-        "t": 1552601299.9836278,
-        "th": "CP Server Thread-13"
+        "t": 1552616347.5999627,
+        "th": "CP Server Thread-16"
     },
     {
-        "h": "ws1-v1",
+        "h": "mws1-v1",
         "l": 50,
         "mod": "sysapi",
         "msg": "test critical message",
         "p": "sfa",
-        "t": 1552601299.991459,
-        "th": "CP Server Thread-14"
+        "t": 1552616347.6089106,
+        "th": "CP Server Thread-17"
     }
 ]

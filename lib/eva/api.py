@@ -24,6 +24,7 @@ from eva.tools import InvalidParameter
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import AccessDenied
+from eva.exceptions import ResourceAlreadyExists
 
 import eva.users
 import eva.notify
@@ -81,23 +82,33 @@ def http_api_result_error(env=None):
     return http_api_result('ERROR', env)
 
 
-def cp_forbidden_key():
-    return cherrypy.HTTPError(403)
+def cp_forbidden_key(message=None):
+    msg = str(message)
+    return cherrypy.HTTPError(403, msg if msg else None)
 
 
-def cp_api_error(msg=None):
+def cp_api_error(message=None):
+    msg = str(message)
     return cherrypy.HTTPError(500, msg if msg else None)
 
 
-def cp_api_404(msg=None):
+def cp_api_404(message=None):
+    msg = str(message)
     return cherrypy.HTTPError(404, msg if msg else None)
 
 
-def cp_api_405(msg=None):
+def cp_api_405(message=None):
+    msg = str(message)
     return cherrypy.HTTPError(405, msg if msg else None)
 
 
-def cp_bad_request(msg=None):
+def cp_api_409(message=None):
+    msg = str(message)
+    return cherrypy.HTTPError(409, msg if msg else None)
+
+
+def cp_bad_request(message=None):
+    msg = str(message)
     return cherrypy.HTTPError(400, msg if msg else None)
 
 
@@ -148,18 +159,22 @@ def generic_web_api_method(f):
             return f(*args, **kwargs)
         except InvalidParameter as e:
             eva.core.log_traceback()
-            raise cp_bad_request(str(e))
+            raise cp_bad_request(e)
         except TypeError as e:
             eva.core.log_traceback()
             raise cp_bad_request()
         except ResourceNotFound as e:
-            # eva.core.log_traceback()
-            raise cp_api_404(str(e))
+            eva.core.log_traceback()
+            raise cp_api_404(e)
         except MethodNotFound as e:
-            raise cp_api_405(str(e))
+            raise cp_api_405(e)
+        except ResourceAlreadyExists as e:
+            raise cp_api_409(e)
+        except AccessDenied as e:
+            raise cp_forbidden_key(e)
         except FunctionFailed as e:
             eva.core.log_traceback()
-            raise cp_api_error(str(e))
+            raise cp_api_error(e)
 
     return do
 
@@ -286,10 +301,10 @@ def update_config(cfg):
 
 class API_Logger(object):
 
-    def log_api_request(self, func, params, logger):
+    def log_api_request(self, func, params, logger, fp_hide):
         msg = 'API request '
         auth = self.get_auth(func, params)
-        info = self.prepare_info(func, params)
+        info = self.prepare_info(func, params, fp_hide)
         if auth:
             msg += auth + ':'
         msg += func
@@ -304,17 +319,22 @@ class API_Logger(object):
                 msg += info
         logger(msg)
 
-    def __call__(self, func, params, logger):
-        self.log_api_request(func.__name__, params.copy(), logger)
+    def __call__(self, func, params, logger, fp_hide):
+        self.log_api_request(func.__name__, params.copy(), logger, fp_hide)
 
-    def prepare_info(self, func, p):
-        if not eva.core.development:
-            if 'k' in p: del (p['k'])
+    def prepare_info(self, func, p, fp_hide):
+        if not eva.core.development or 1:
+            if 'k' in p: del p['k']
             if func.startswith('set_'):
-                try:
-                    if p.get('p') in ['key', 'masterkey']: del p['v']
-                except:
-                    pass
+                fp = p.get('p')
+                if fp in ['key', 'masterkey', 'password']: p[fp] = '<hidden>'
+        fplist = fp_hide.get(func)
+        if fplist:
+            for fp in fplist:
+                if callable(fp):
+                    fp(func, p)
+                elif fp in p:
+                    p[fp] = '<hidden>'
         return p
 
     def get_auth(self, func, params):
@@ -410,9 +430,9 @@ def cp_nocache():
 def log_d(f):
 
     @wraps(f)
-    def do(*args, **kwargs):
-        args[0].log_api_call(f, kwargs, logging.debug)
-        return f(*args, **kwargs)
+    def do(self, *args, **kwargs):
+        self.log_api_call(f, kwargs, logging.debug, self._fp_hide_in_log)
+        return f(self, *args, **kwargs)
 
     return do
 
@@ -420,9 +440,9 @@ def log_d(f):
 def log_i(f):
 
     @wraps(f)
-    def do(*args, **kwargs):
-        args[0].log_api_call(f, kwargs, logging.info)
-        return f(*args, **kwargs)
+    def do(self, *args, **kwargs):
+        self.log_api_call(f, kwargs, logging.info, self._fp_hide_in_log)
+        return f(self, *args, **kwargs)
 
     return do
 
@@ -430,14 +450,21 @@ def log_i(f):
 def log_w(f):
 
     @wraps(f)
-    def do(*args, **kwargs):
-        args[0].log_api_call(f, kwargs, logging.warning)
-        return f(*args, **kwargs)
+    def do(self, *args, **kwargs):
+        self.log_api_call(f, kwargs, logging.warning, self._fp_hide_in_log)
+        return f(self, *args, **kwargs)
 
     return do
 
 
 class GenericAPI(object):
+
+    def __init__(self):
+        self._fp_hide_in_log = {}
+
+    def _nofp_log(self, func, params):
+        fp = self._fp_hide_in_log.setdefault(func, [])
+        fp += params if isinstance(params, list) else [params]
 
     @log_d
     def test(self, **kwargs):
@@ -655,6 +682,8 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 r = format_error(6, e)
             except ResourceNotFound as e:
                 r = format_error(1, e)
+            except ResourceAlreadyExists as e:
+                r = format_error(12, e)
             except AccessDenied as e:
                 r = format_error(2, e)
             except Exception as e:
@@ -682,7 +711,8 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
     exposed = True
 
     def __init__(self):
-        super().__init__()
+        GenericAPI.__init__(self)
+        GenericHTTP_API_abstract.__init__(self)
         self._cp_config = api_cp_config.copy()
         self._cp_config['tools.auth.on'] = True
         self._cp_config['tools.json_pre.on'] = True
@@ -703,7 +733,8 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         super().wrap_exposed(cp_api_function)
 
     @log_i
-    def login(self, k, u=None, p=None):
+    def login(self, **kwargs):
+        k, u, p = parse_function_params(kwargs, 'kup', '.ss')
         if not u and k:
             if k in apikey.keys:
                 cherrypy.session['k'] = k
@@ -716,10 +747,11 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
             cherrypy.session['k'] = apikey.key_by_id(key)
             return http_api_result_ok({'key': key})
         cherrypy.session['k'] = ''
-        raise AccessDenied('Login or password incorrect')
+        raise AccessDenied('Assigned API key is invalid')
 
     @log_d
-    def logout(self):
+    def logout(self, **kwargs):
+        parse_api_params(kwargs)
         cherrypy.session['k'] = ''
         return http_api_result_ok()
 
@@ -855,6 +887,10 @@ def error_page_404(*args, **kwargs):
     return jsonify_error(msg)
 
 
+def error_page_409(*args, **kwargs):
+    return jsonify_error(kwargs.get('message', 'Resource conflict'))
+
+
 def error_page_500(*args, **kwargs):
     return jsonify_error(kwargs.get('message', 'API function error'))
 
@@ -868,5 +904,6 @@ api_cp_config = {
     'error_page.403': error_page_403,
     'error_page.404': error_page_404,
     'error_page.405': error_page_405,
+    'error_page.409': error_page_409,
     'error_page.500': error_page_500
 }

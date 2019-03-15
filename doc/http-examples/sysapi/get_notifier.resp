@@ -7,7 +7,6 @@ Pragma: no-cache
 
 {
     "collect_logs": true,
-    "discovery_enabled": true,
     "enabled": false,
     "events": [
         {
@@ -24,10 +23,9 @@ Pragma: no-cache
             ]
         }
     ],
-    "host": "localhost",
+    "host": "mws1-v1",
     "id": "eva_1",
     "password": "test",
-    "port": 1883,
     "type": "mqtt",
     "username": "eva"
 }

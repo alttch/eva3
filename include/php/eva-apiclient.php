@@ -24,6 +24,7 @@ $eva_result_server_timeout = 8;
 $eva_result_bad_data = 9;
 $eva_result_func_failed = 10;
 $eva_result_invalid_params = 11;
+$eva_result_already_exists = 12;
 
 $_eva_sysapi_uri = '/sys-api/';
 
@@ -485,6 +486,8 @@ class EVA_APIClient {
                 return array($GLOBALS['eva_result_forbidden'], array());
             if ($c == 404)
                 return array($GLOBALS['eva_result_not_found'], array());
+            if ($c == 409)
+                return array($GLOBALS['eva_result_already_exists'], array());
             if ($c == 400)
                 return array($GLOBALS['eva_result_invalid_params'], array());
             if ($c == 500)

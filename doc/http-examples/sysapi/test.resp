@@ -14,13 +14,13 @@ Pragma: no-cache
     "debug": true,
     "file_management": true,
     "polldelay": 0.01,
-    "product_build": 2019031001,
+    "product_build": 2019031405,
     "product_code": "sfa",
     "product_name": "EVA SCADA Final Aggregator",
     "result": "OK",
     "setup_mode": false,
-    "system": "ws1-v1",
-    "time": 1552601295.6232026,
-    "uptime": 808,
-    "version": "3.1.2"
+    "system": "mws1-v1",
+    "time": 1552616343.0288076,
+    "uptime": 341,
+    "version": "3.2.0"
 }

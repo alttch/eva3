@@ -738,6 +738,17 @@ def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
     else:
         return fname
 
+def report_db_error(raise_exeption=True):
+    logging.critical('DB ERROR')
+    log_traceback()
+    if raise_exeption:
+        raise FunctionFailed
+
+def report_userdb_error(raise_exeption=True):
+    logging.critical('USERDB ERROR')
+    log_traceback()
+    if raise_exeption:
+        raise FunctionFailed
 
 def dummy_true():
     return True

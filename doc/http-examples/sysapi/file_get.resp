@@ -7,6 +7,6 @@ Pragma: no-cache
 
 {
     "data": "/bin/sh\n\nexit 0",
-    "e": true,
+    "e": false,
     "file": "xc/uc/test_action_script"
 }

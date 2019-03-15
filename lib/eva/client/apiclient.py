@@ -22,6 +22,7 @@ result_server_timeout = 8
 result_bad_data = 9
 result_func_failed = 10
 result_invalid_params = 11
+result_already_exists = 12
 
 _sysapi_uri = '/sys-api/'
 
@@ -242,22 +243,28 @@ class APIClient(object):
                     not _return_raw else (-2, {})
         if _return_raw:
             return (r.status_code, r.text)
-        if r.status_code != 200:
-            if r.status_code == 403:
-                return (result_forbidden, {})
+        if r.status_code < 200 or r.status_code > 299:
+            try:
+                result = r.json()
+            except:
+                result = {}
+            if r.status_code == 400:
+                return (result_invalid_params, result)
+            elif r.status_code == 403:
+                return (result_forbidden, result)
             elif r.status_code == 404:
-                return (result_not_found, {})
+                return (result_not_found, result)
+            elif r.status_code == 409:
+                return (result_already_exists, result)
             elif r.status_code == 500:
-                try:
-                    return (result_func_failed, r.json())
-                except:
+                if result:
+                    return (result_func_failed, result)
+                else:
                     return (result_api_error, {})
-            elif r.status_code == 400:
-                return (result_invalid_params, {})
             else:
                 return (result_unknown_error, {})
         try:
-            result = jsonpickle.decode(r.text)
+            result = r.json()
         except:
             if _debug:
                 import traceback

@@ -28,6 +28,7 @@ from eva.api import parse_api_params
 
 from eva.api import MethodNotFound
 from eva.api import GenericAPI
+from eva.api import GenericHTTP_API
 
 from eva.api import log_d
 from eva.api import log_i
@@ -556,24 +557,103 @@ class FileAPI(object):
 
 class UserAPI(object):
 
+    @log_w
     @api_need_master
-    def create_user(self, k, user=None, password=None, key=None):
-        return eva.users.create_user(user, password, key)
+    def create_user(self, **kwargs):
+        """
+        create user account
 
-    @api_need_master
-    def set_user_password(self, k, user=None, password=None):
-        return eva.users.set_user_password(user, password)
+        .. note::
+        
+            All changes to user accounts are instant, if the system works in
+            read/only mode, set it to read/write before performing user
+            management.
 
-    @api_need_master
-    def set_user_key(self, k, user=None, key=None):
-        return eva.users.set_user_key(user, key)
+        Args:
+            k: .master
+            .u: user login
+            p: user password
+            a: API key to assign (key id, not a key itself)
+        """
+        u, p, a = parse_api_params(kwargs, 'upa', 'SSS')
+        return eva.users.create_user(u, p, a)
 
+    @log_w
     @api_need_master
-    def destroy_user(self, k, user=None):
-        return eva.users.destroy_user(user)
+    def set_user_password(self, **kwargs):
+        """
+        set user password
 
+        Args:
+            k: .master
+            .u: user login
+            p: new password
+        """
+        u, p = parse_api_params(kwargs, 'up', 'SS')
+        return eva.users.set_user_password(u, p)
+
+    @log_w
     @api_need_master
-    def list_keys(self, k):
+    def set_user_key(self, **kwargs):
+        """
+        assign API key to user
+
+        Args:
+            k: .master
+            .u: user login
+            a: API key to assign (key id, not a key itself)
+        """
+        u, a = parse_api_params(kwargs, 'ua', 'SS')
+        return eva.users.set_user_key(u, a)
+
+    @log_w
+    @api_need_master
+    def destroy_user(self, **kwargs):
+        """
+        delete user account
+
+        Args:
+            k: .master
+            .u: user login
+        """
+        u = parse_api_params(kwargs, 'u', 'S')
+        return eva.users.destroy_user(u)
+
+    @log_i
+    @api_need_master
+    def list_users(self, **kwargs):
+        """
+        list user accounts
+
+        Args:
+            k: .master
+        """
+        parse_api_params(kwargs)
+        return eva.users.list_users()
+
+    @log_i
+    @api_need_master
+    def get_user(self, **kwargs):
+        """
+        get user account info
+
+        Args:
+            k: .master
+            .u: user login
+        """
+        u = parse_api_params(kwargs, 'u', 'S')
+        return eva.users.get_user(u)
+
+    @log_w
+    @api_need_master
+    def list_keys(self, **kwargs):
+        """
+        list API keys
+
+        Args:
+            k: .master
+        """
+        parse_api_params(kwargs)
         result = []
         for _k in eva.apikey.keys:
             r = eva.apikey.serialized_acl(_k)
@@ -584,38 +664,104 @@ class UserAPI(object):
             key=lambda k: k['master'],
             reverse=True)
 
+    @log_w
     @api_need_master
-    def list_users(self, k):
-        return eva.users.list_users()
+    def create_key(self, **kwargs):
+        """
+        create API key
 
-    @api_need_master
-    def get_user(self, k, u):
-        return eva.users.get_user(u)
+        API keys are defined statically in etc/<controller>_apikeys.ini file as
+        well as can be created with API and stored in user database.
 
-    @api_need_master
-    def create_key(self, k, i=None, save=False):
+        Keys with master permission can not be created.
+
+        Args:
+            k: .master
+            .i: API key ID
+            save: save configuration immediately
+        
+        Returns:
+            JSON with serialized key object
+        """
+        i, save = parse_api_params(kwargs, 'iS', 'Sb')
         return eva.apikey.add_api_key(i, save)
 
+    @log_w
     @api_need_master
-    def list_key_props(self, k=None, i=None):
+    def list_key_props(self, **kwargs):
+        """
+        list API key permissions
+
+        Lists API key permissons (including a key itself)
+
+        .. note::
+
+            API keys, defined in etc/<controller>_apikeys.ini file can not be
+            managed with API.
+
+        Args:
+            k: .master
+            .i: API key ID
+            save: save configuration immediately
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         key = eva.apikey.keys_by_id.get(i)
         return None if not key or not key.dynamic else key.serialize()
 
+    @log_w
     @api_need_master
-    def set_key_prop(self, k=None, i=None, prop=None, value=None, save=False):
-        key = eva.apikey.keys_by_id.get(i)
-        return None if not key else key.set_prop(prop, value, save)
+    def set_key_prop(self, **kwargs):
+        """
+        set API key permissions
 
+        Args:
+            k: .master
+            .i: API key ID
+            p: property
+            v: value (if none, permission will be revoked)
+            save: save configuration immediately
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'SS.b')
+        key = eva.apikey.keys_by_id.get(i)
+        if not key: raise ResourceNotFound
+        return key.set_prop(p, v, save)
+
+    @log_w
     @api_need_master
-    def regenerate_key(self, key=None, i=None, save=False):
+    def regenerate_key(self, **kwargs):
+        """
+        regenerate API key
+
+        Args:
+            k: .master
+            .i: API key ID
+
+        Returns:
+            JSON dict with new key value in "key" field
+        """
+        i, save = parse_api_params(kwargs, 'iS', 'Sb')
         return eva.apikey.regenerate_key(i, save)
 
+    @log_w
     @api_need_master
-    def destroy_key(self, k=None, i=None):
+    def destroy_key(self, **kwargs):
+        """
+        delete API key
+
+        Args:
+            k: .master
+            .i: API key ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         return eva.apikey.delete_api_key(i)
 
 
 class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
+
+    def __init__(self):
+        super().__init__()
+        self._nofp_log('create_user', 'p')
+        self._nofp_log('set_user_password', 'p')
 
     @log_i
     @api_need_sysfunc
@@ -824,180 +970,16 @@ class SysHTTP_API_abstract(SysAPI):
 
     def file_get(self, **kwargs):
         data, e = super().file_get(**kwargs)
-        return { 'file': kwargs.get('i'), 'data': data, 'e': e }
+        return {'file': kwargs.get('i'), 'data': data, 'e': e}
 
-    def create_user(self, k=None, u=None, p=None, a=None):
-        """
-        create user account
+    def regenerate_key(self, **kwargs):
+        return {'key': super().regenerate_key(**kwargs)}
 
-        .. note::
-        
-            All changes to user accounts are instant, if the system works in
-            read/only mode, set it to read/write before performing user
-            management.
-
-        Args:
-            k: .master
-            .u: user login
-            p: user password
-            a: API key to assign (key id, not a key itself)
-        """
-        return http_api_result_ok() if super().create_user(k, u, p, a) \
-                else http_api_result_error()
-
-    def set_user_password(self, k=None, u=None, p=None):
-        """
-        set user password
-
-        Args:
-            k: .master
-            .u: user login
-            p: new password
-        """
-        result = super().set_user_password(k, u, p)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def set_user_key(self, k=None, u=None, a=None):
-        """
-        assign API key to user
-
-        Args:
-            k: .master
-            .u: user login
-            a: API key to assign (key id, not a key itself)
-        """
-        result = super().set_user_key(k, u, a)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def destroy_user(self, k=None, u=None):
-        """
-        delete user account
-
-        Args:
-            k: .master
-            .u: user login
-        """
-        result = super().destroy_user(k, u)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def list_keys(self, k=None):
-        """
-        list API keys
-
-        Args:
-            k: .master
-        """
-        return super().list_keys(k)
-
-    def list_users(self, k=None):
-        """
-        list user accounts
-
-        Args:
-            k: .master
-        """
-        return super().list_users(k)
-
-    def get_user(self, k=None, u=None):
-        """
-        get user account info
-
-        Args:
-            k: .master
-            .u: user login
-        """
-        result = super().get_user(k=k, u=u)
-        if result is None: raise cp_api_404()
-        return result
-
-    def create_key(self, k=None, i=None, save=None):
-        """
-        create API key
-
-        API keys are defined statically in etc/<controller>_apikeys.ini file as
-        well as can be created with API and stored in user database.
-
-        Keys with master permission can not be created.
-
-        Args:
-            k: .master
-            .i: API key ID
-            save: save configuration immediately
-        """
-        result = super().create_key(k, i, save)
-        return result if result else http_api_result_error()
-
-    def list_key_props(self, k=None, i=None):
-        """
-        list API key permissions
-
-        Lists API key permissons (including a key itself)
-
-        .. note::
-
-            API keys, defined in etc/<controller>_apikeys.ini file can not be
-            managed with API.
-
-        Args:
-            k: .master
-            .i: API key ID
-            save: save configuration immediately
-        """
-        result = super().list_key_props(k, i)
-        if result is None: raise cp_api_404()
-        return result if result else http_api_result_error()
-
-    def set_key_prop(self, k=None, i=None, p=None, v=None, save=None):
-        """
-        set API key permissions
-
-        Args:
-            k: .master
-            .i: API key ID
-            p: property
-            v: value (if none, permission will be revoked)
-            save: save configuration immediately
-        """
-        result = super().set_key_prop(k, i, p, v, save)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def destroy_key(self, k=None, i=None):
-        """
-        delete API key
-
-        Args:
-            k: .master
-            .i: API key ID
-        """
-        result = super().destroy_key(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def regenerate_key(self, k=None, i=None, save=None):
-        """
-        regenerate API key
-
-        Args:
-            k: .master
-            .i: API key ID
-
-        Returns:
-            JSON dict with new key value in "key" field
-        """
-        result = super().regenerate_key(k, i, save)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok({'key':result}) if \
-                result else http_api_result_error()
-
-
-class SysHTTP_API(SysHTTP_API_abstract, eva.api.GenericHTTP_API):
+class SysHTTP_API(SysHTTP_API_abstract, GenericHTTP_API):
 
     def __init__(self):
-        super().__init__()
+        GenericHTTP_API.__init__(self)
+        SysHTTP_API_abstract.__init__(self)
         self.expose_api_methods('sysapi')
         self.wrap_exposed()
 
@@ -1015,11 +997,7 @@ class SysHTTP_API_REST_abstract:
             else:
                 return self.list_keys(k=k)
         elif rtp == 'log':
-            return self.log_get(
-                k=k,
-                l=ii,
-                t=props.get('t'),
-                n=props.get('n'))
+            return self.log_get(k=k, l=ii, **props)
         elif rtp == 'notifier':
             if ii:
                 return self.get_notifier(k=k, i=ii)
@@ -1047,27 +1025,32 @@ class SysHTTP_API_REST_abstract:
                 return self.shutdown_core(k=k)
             else:
                 raise MethodNotFound
+        elif rtp == 'key':
+            cmd = props.get('cmd')
+            if cmd == 'regenerate' and ii:
+                return self.regenerate_key(k=k, i=ii)
+            else:
+                raise MethodNotFound
         elif rtp == 'log':
-            return self.log(k=k, l=ii, m=props.get('m'))
+            return self.log(k=k, l=ii, **props)
         elif rtp == 'cmd':
             if not ii: raise ResourceNotFound
-            return self.cmd(
-                k=k, c=ii, a=props.get('a'), w=props.get('w'), t=props.get('t'))
+            return self.cmd(k=k, c=ii, **props)
         raise MethodNotFound
 
     def PUT(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
-            return self.set_cvar(k=k, i=ii, v=props.get('v'))
+            return self.set_cvar(k=k, i=ii, **props)
         elif rtp == 'key':
             if not SysAPI.create_key(self, k=k, i=ii, save=save):
                 raise FunctionFailed
             for i, v in props.items():
                 if not SysAPI.set_key_prop(
-                        self, k=k, i=ii, prop=i, value=v, save=save):
+                        self, k=k, i=ii, p=i, v=v, save=save):
                     raise FunctionFailed
-            return True
+            return self.list_key_props(k=k, i=ii)
         elif rtp == 'lock':
-            return self.lock(k=k, l=ii, t=props.get('t'), e=props.get('e'))
+            return self.lock(k=k, l=ii, **props)
         elif rtp == 'runtime':
             m, e = parse_api_params(props, 'me', 'rb')
             SysAPI.file_put(self, k=k, i=ii, m=m)
@@ -1075,13 +1058,12 @@ class SysHTTP_API_REST_abstract:
                 self.file_set_exec(k=k, i=ii, e=props['e'])
             return True
         elif rtp == 'user':
-            return self.create_user(
-                k=k, u=ii, p=props.get('p'), a=props.get('a'))
+            return self.create_user(k=k, u=ii, **props)
         raise MethodNotFound
 
     def PATCH(self, rtp, k, ii, full, kind, save, for_dir, props):
         if rtp == 'cvar':
-            return self.set_cvar(k=k, i=ii, v=props.get('v'))
+            return self.set_cvar(k=k, i=ii, **props)
         elif rtp == 'core':
             success = False
             if 'debug' in props:
@@ -1097,7 +1079,7 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'key':
             for i, v in props.items():
                 if not SysAPI.set_key_prop(
-                        self, k=k, i=ii, prop=i, value=v, save=save):
+                        self, k=k, i=ii, p=i, v=v, save=save):
                     raise FunctionFailed
             return True
         elif rtp == 'notifier':
@@ -1116,11 +1098,10 @@ class SysHTTP_API_REST_abstract:
             return True
         elif rtp == 'user':
             if 'p' in props:
-                if not SysAPI.set_user_password(
-                        self, k=k, user=ii, password=props['p']):
+                if not SysAPI.set_user_password(self, k=k, u=ii, p=props['p']):
                     raise FunctionFailed
             if 'a' in props:
-                if not SysAPI.set_user_key(self, k=k, user=ii, key=props['a']):
+                if not SysAPI.set_user_key(self, k=k, u=ii, a=props['a']):
                     raise FunctionFailed
             return True
         raise MethodNotFound
