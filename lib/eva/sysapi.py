@@ -26,6 +26,8 @@ from eva.api import cp_api_404
 from eva.api import api_need_master
 from eva.api import parse_api_params
 
+from eva.api import restful_resource_id
+
 from eva.api import MethodNotFound
 from eva.api import GenericAPI
 from eva.api import GenericHTTP_API
@@ -1056,13 +1058,13 @@ class SysHTTP_API_REST_abstract:
             return self.list_key_props(k=k, i=ii)
         elif rtp == 'lock':
             self.lock(k=k, l=ii, **props)
-            return {'lock_id': ii }
+            return restful_resource_id(rtp, ii)
         elif rtp == 'runtime':
             m, e = parse_api_params(props, 'me', 'rb')
             SysAPI.file_put(self, k=k, i=ii, m=m)
             if e is not None:
                 self.file_set_exec(k=k, i=ii, e=props['e'])
-            return {'file': ii}
+            return restful_resource_id(rtp, ii)
         elif rtp == 'user':
             return self.create_user(k=k, u=ii, **props)
         raise MethodNotFound

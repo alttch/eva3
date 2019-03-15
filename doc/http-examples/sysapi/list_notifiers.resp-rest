@@ -7,7 +7,7 @@ Pragma: no-cache
 
 [
     {
-        "db": "sfa.db",
+        "db": "db1.db",
         "enabled": true,
         "events": [
             {
@@ -21,16 +21,15 @@ Pragma: no-cache
             }
         ],
         "id": "db_1",
+        "keep": 60,
+        "space": "lab",
         "type": "db"
     },
     {
-        "collect_logs": true,
+        "announce_interval": 10.0,
+        "api_enabled": true,
         "enabled": false,
         "events": [
-            {
-                "level": 20,
-                "subject": "log"
-            },
             {
                 "groups": [
                     "#"
@@ -39,11 +38,17 @@ Pragma: no-cache
                 "types": [
                     "#"
                 ]
+            },
+            {
+                "level": 20,
+                "subject": "log"
             }
         ],
-        "host": "mws1-v1",
+        "host": "localhost",
         "id": "eva_1",
         "password": "test",
+        "port": 1883,
+        "space": "test",
         "type": "mqtt",
         "username": "eva"
     }

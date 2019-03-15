@@ -123,6 +123,13 @@ def parse_api_params(params, names='', types='', defaults=None):
     return result if len(result) > 1 else result[0]
 
 
+def restful_resource_id(rtp, i):
+    return {
+            'type': rtp,
+            'id': i
+            }
+
+
 def restful_parse_params(*args, **kwargs):
     k = kwargs.get('k')
     kind = None

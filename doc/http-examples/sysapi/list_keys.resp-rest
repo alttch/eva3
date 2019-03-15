@@ -13,24 +13,24 @@ Pragma: no-cache
     },
     {
         "allow": {
-            "cmd": false,
-            "dm_rule_props": false,
-            "dm_rules_list": false,
+            "cmd": true,
+            "device": true,
             "lock": false
         },
-        "dynamic": true,
-        "groups": [],
+        "dynamic": false,
+        "groups": [
+            "#"
+        ],
         "items": [],
-        "key_id": "default",
+        "key_id": "lm",
         "master": false,
         "sysfunc": false
     },
     {
         "allow": {
             "cmd": false,
-            "dm_rule_props": true,
-            "dm_rules_list": true,
-            "lock": true
+            "device": false,
+            "lock": false
         },
         "dynamic": false,
         "groups": [
@@ -39,32 +39,40 @@ Pragma: no-cache
         "items": [],
         "key_id": "operator",
         "master": false,
-        "pvt": [
-            "#"
-        ],
-        "sysfunc": false
+        "sysfunc": true
     },
     {
         "allow": {
             "cmd": false,
-            "dm_rule_props": false,
-            "dm_rules_list": false,
+            "device": false,
             "lock": false
         },
-        "dynamic": true,
+        "dynamic": false,
         "groups": [
             "#"
         ],
         "items": [],
-        "key_id": "operator1",
+        "key_id": "sfa",
         "master": false,
         "sysfunc": false
     },
     {
         "allow": {
             "cmd": false,
-            "dm_rule_props": false,
-            "dm_rules_list": false,
+            "device": false,
+            "lock": false
+        },
+        "dynamic": true,
+        "groups": [],
+        "items": [],
+        "key_id": "test",
+        "master": false,
+        "sysfunc": true
+    },
+    {
+        "allow": {
+            "cmd": false,
+            "device": false,
             "lock": false
         },
         "dynamic": true,
@@ -77,8 +85,7 @@ Pragma: no-cache
     {
         "allow": {
             "cmd": true,
-            "dm_rule_props": false,
-            "dm_rules_list": false,
+            "device": false,
             "lock": false
         },
         "dynamic": true,
