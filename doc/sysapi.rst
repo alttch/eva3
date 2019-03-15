@@ -65,8 +65,11 @@ RESTful API responses
 **Success responses:**
 
 * **200 OK** API call completed successfully
-* **201 Created** API call completed successfully, Response header *Location*
-  contains uri to the newly created object
+* **201 Created** API call completed successfully, Response header
+  *Location* contains either uri to the newly created object or resource is
+  accessible by the effective request uri. For resources created with *PUT*,
+  body contains either serialized resource object or resource type and id.
+* **202 Accepted** The server accepted command and will process it later.
 * **204 No Content** API call completed successfully, no content to return
 
 **Error error responses:**
