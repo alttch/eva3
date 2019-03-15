@@ -32,11 +32,11 @@ def authenticate(user=None, password=None):
             sql('select k from users where u = :u and p = :p'),
             u=user,
             p=crypt_password(password)).fetchone()
-        if not r:
-            raise AccessDenied('Authentication failure')
-        return r.k
     except:
         eva.core.report_userdb_error()
+    if not r:
+        raise AccessDenied('Authentication failure')
+    return r.k
 
 
 def list_users():
@@ -78,8 +78,7 @@ def create_user(user=None, password=None, key=None):
         row = dbconn.execute(
             sql('select k from users where u = :u'), u=user).fetchone()
     except:
-        logging.critical('db error')
-        raise FunctionFailed
+        eva.core.report_userdb_error()
     if row:
         raise ResourceAlreadyExists
     try:
@@ -105,12 +104,9 @@ def set_user_password(user=None, password=None):
                 u=user).rowcount:
             logging.info('user {} new password is set'.format(user))
             return True
-        else:
-            raise ResourceNotFound
-    except ResourceNotFound:
-        raise
     except:
         eva.core.report_userdb_error()
+    raise ResourceNotFound
 
 
 def set_user_key(user=None, key=None):
@@ -123,12 +119,9 @@ def set_user_key(user=None, key=None):
                 u=user).rowcount:
             logging.info('user {} key {} is set'.format(user, key))
             return True
-        else:
-            raise ResourceNotFound
-    except ResourceNotFound:
-        raise
     except:
         eva.core.report_userdb_error()
+    raise ResourceNotFound
 
 
 def destroy_user(user=None):
@@ -140,12 +133,9 @@ def destroy_user(user=None):
                 sql('delete from users where u = :u'), u=user).rowcount:
             logging.info('User {} deleted'.format(user))
             return True
-        else:
-            raise ResourceNotFound
-    except ResourceNotFound:
-        raise
     except:
         eva.core.report_userdb_error()
+    raise ResourceNotFound
 
 
 def init():
@@ -158,4 +148,5 @@ def init():
     try:
         meta.create_all(dbconn)
     except:
+        eva.core.log_traceback()
         logging.critical('unable to create apikeys table in db')
