@@ -204,9 +204,10 @@ def restful_api_method(f):
             raise FunctionFailed
         if result is None:
             raise ResourceNotFound
-        if f.__name__ == 'POST':
-            if 'Location' in cherrypy.serving.response.headers:
-                cherrypy.serving.response.status = 201
+        if (f.__name__ == 'POST' and
+                'Location' in cherrypy.serving.response.headers
+           ) or f.__name__ == 'PUT':
+            cherrypy.serving.response.status = 201
         return None if result is True else result
 
     return do
