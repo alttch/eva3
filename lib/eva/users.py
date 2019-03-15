@@ -63,10 +63,10 @@ def get_user(user=None):
         result = []
         row = dbconn.execute(
             sql('select u, k from users where u=:u'), u=user).fetchone()
-        if not row: raise ResourceNotFound
-        return {'user': row.u, 'key': row.k}
     except:
         eva.core.report_userdb_error()
+    if not row: raise ResourceNotFound
+    return {'user': row.u, 'key': row.k}
 
 
 def create_user(user=None, password=None, key=None):
