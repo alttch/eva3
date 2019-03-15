@@ -69,12 +69,7 @@ def http_api_result(result, env):
 
 
 def http_api_result_ok(env=None):
-    if hasattr(cherrypy.serving.request, 'json_rpc_payload'):
-        result = {'ok': True}
-        if env: result.update(env)
-        return result
-    else:
-        return http_api_result('OK', env)
+    return http_api_result('OK', env)
 
 
 def http_api_result_error(env=None):
@@ -226,8 +221,12 @@ def cp_api_function(f):
     def do(*args, **kwargs):
         try:
             result = f(*args, **kwargs)
+            if isinstance(result, tuple):
+                result, data = result
+            else:
+                data = None
             if result is True:
-                return http_api_result_ok()
+                return http_api_result_ok(data)
             elif result is False:
                 raise FunctionFailed
             elif result is None:
@@ -348,13 +347,6 @@ class HTTP_API_Logger(API_Logger):
 
 
 def cp_check_perm(api_key=None, path_info=None):
-    try:
-        api_check_perm(api_key=api_key, path_info=path_info)
-    except AccessDenied:
-        raise cp_forbidden_key()
-
-
-def api_check_perm(api_key=None, path_info=None):
     k = api_key if api_key else cp_client_key()
     path = path_info if path_info is not None else \
             cherrypy.serving.request.path_info
@@ -362,7 +354,7 @@ def api_check_perm(api_key=None, path_info=None):
     # pass login and info
     if path.endswith('/login') or path.endswith('/info'): return
     if apikey.check(k, ip=http_real_ip()): return
-    raise AccessDenied
+    raise cp_forbidden_key()
 
 
 def http_real_ip(get_gw=False):
@@ -391,10 +383,7 @@ def cp_json_pre():
             return
         if raw:
             data = jsonpickle.decode(raw)
-            if isinstance(data, dict) and not data.get('jsonrpc'):
-                cherrypy.serving.request.params.update(jsonpickle.decode(raw))
-            else:
-                cherrypy.serving.request.json_rpc_payload = data
+            cherrypy.serving.request.params.update(jsonpickle.decode(raw))
     except:
         raise cp_bad_request('invalid JSON data')
     return
@@ -414,10 +403,11 @@ def get_json_payload():
 def cp_jsonrpc_pre():
     try:
         data = get_json_payload()
-        if not data: raise Exception('no payload')
-        cherrypy.serving.request.json_rpc_payload = data
     except:
         raise cp_bad_request('invalid JSON data')
+    if not data:
+        raise cp_bad_request('no JSON data provided')
+    cherrypy.serving.request.params['p'] = data
 
 
 def cp_nocache():
@@ -482,24 +472,16 @@ class GenericAPI(object):
             masterkey only { "master": true } is returned)
         """
         k = parse_function_params(kwargs, 'k', 'S')
-        result = http_api_result_ok({
-            'acl':
-            apikey.serialized_acl(k),
-            'system':
-            eva.core.system_name,
-            'time':
-            time.time(),
-            'version':
-            eva.core.version,
-            'product_name':
-            eva.core.product_name,
-            'product_code':
-            eva.core.product_code,
-            'product_build':
-            eva.core.product_build,
-            'uptime':
-            int(time.time() - eva.core.start_time)
-        })
+        result = {
+            'acl': apikey.serialized_acl(k),
+            'system': eva.core.system_name,
+            'time': time.time(),
+            'version': eva.core.version,
+            'product_name': eva.core.product_name,
+            'product_code': eva.core.product_code,
+            'product_build': eva.core.product_build,
+            'uptime': int(time.time() - eva.core.start_time)
+        }
         if eva.core.enterprise_layout is not None:
             result['layout'] = 'enterprise' if \
                     eva.core.enterprise_layout else 'simple'
@@ -525,7 +507,7 @@ class GenericAPI(object):
                         len(intervals))
                 except:
                     result['benchmark_crt'] = -1
-        return result
+        return True, result
 
     # return version for embedded hardware
     @log_d
@@ -639,6 +621,8 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
 
     api_uri = '/jrpc'
 
+    exposed = True
+
     def __init__(self, api_uri=None):
         super().__init__()
         self._cp_config = api_cp_config.copy()
@@ -646,9 +630,8 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             self.api_uri = api_uri
         self._cp_config['tools.jsonrpc_pre.on'] = True
         self._cp_config['tools.json_out.handler'] = cp_jsonrpc_handler
-        JSON_RPC_API_abstract.index.exposed = True
 
-    def index(self, **kwargs):
+    def __call__(self, **kwargs):
 
         def format_error(code, msg):
             return {
@@ -659,7 +642,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 }
             }
 
-        payload = getattr(cherrypy.serving.request, 'json_rpc_payload')
+        payload = kwargs.get('p')
         result = []
         for pp in payload if isinstance(payload, list) else [payload]:
             if not isinstance(payload, dict) or not pp:
@@ -671,22 +654,40 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 p = pp.get('params', {})
                 method = pp.get('method')
                 if not method: raise FunctionFailed('API method not defined')
-                # allow API key from anywhere
-                if 'k' not in p: p['k'] = kwargs.get('k')
                 f = self._get_api_function(method)
                 if not f:
                     raise MethodNotFound
-                api_check_perm(api_key=p.get('k'), path_info='/' + method)
-                r = {'jsonrpc': '2.0', 'result': f(**p), 'id': req_id}
-            except MethodNotFound as e:
-                r = format_error(6, e)
+                if not apikey.check(k=p.get('k')):
+                    raise AccessDenied
+                result = f(**p)
+                if isinstance(result, tuple):
+                    result, data = result
+                else:
+                    data = None
+                if result is True:
+                    result = {'ok': True}
+                    if data:
+                        result.update(data)
+                elif result is False:
+                    raise FunctionFailed
+                elif result is None:
+                    raise ResourceNotFound
+                r = {'jsonrpc': '2.0', 'result': result, 'id': req_id}
             except ResourceNotFound as e:
+                eva.core.log_traceback()
                 r = format_error(1, e)
-            except ResourceAlreadyExists as e:
-                r = format_error(12, e)
             except AccessDenied as e:
                 r = format_error(2, e)
+            except MethodNotFound as e:
+                r = format_error(6, e)
+            except InvalidParameter as e:
+                eva.core.log_traceback()
+                r = format_error(11, e)
+            except ResourceAlreadyExists as e:
+                eva.core.log_traceback()
+                r = format_error(12, e)
             except Exception as e:
+                eva.core.log_traceback()
                 r = format_error(10, e)
             if req_id:
                 r['id'] = req_id
@@ -871,7 +872,8 @@ def error_page_400(*args, **kwargs):
 
 def error_page_403(*args, **kwargs):
     if 'k' in cherrypy.serving.request.params:
-        return jsonify_error('API key has no access to this resource')
+        return jsonify_error(
+            'API key has no access to selected resource or function')
     else:
         return jsonify_error('No API key provided')
 

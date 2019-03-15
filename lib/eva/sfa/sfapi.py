@@ -625,17 +625,17 @@ class SFA_HTTP_API_abstract(SFA_API):
         result = {'code': code, 'data': data}
         return result
 
-    def test(self, k=None, icvars=None):
-        result = super().test(k=k)
-        result['cloud_manager'] = eva.sfa.controller.cloud_manager
-        if (icvars):
-            cvars = eva.sysapi.api.get_cvar(k=k)
-            if cvars is False:
-                raise cp_forbidden_key()
-            if not cvars:
-                cvars = []
-            result['cvars'] = cvars
-        return result
+    # def test(self, k=None, icvars=None):
+        # result = super().test(k=k)
+        # result['cloud_manager'] = eva.sfa.controller.cloud_manager
+        # if (icvars):
+            # cvars = eva.sysapi.api.get_cvar(k=k)
+            # if cvars is False:
+                # raise cp_forbidden_key()
+            # if not cvars:
+                # cvars = []
+            # result['cvars'] = cvars
+        # return result
 
     def state_all(self, k=None, p=None, g=None):
         result = []
@@ -1003,6 +1003,7 @@ class SFA_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
     def __init__(self):
         super().__init__()
         self.expose_api_methods('sfapi', set_api_uri=False)
+        self.expose_api_methods('sysapi', set_api_uri=False)
         if eva.sfa.controller.cloud_manager:
             self._expose(self.management_api_call)
 
