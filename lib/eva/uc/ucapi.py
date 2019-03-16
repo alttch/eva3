@@ -5,6 +5,7 @@ __version__ = "3.2.0"
 
 import cherrypy
 import os
+import yaml
 import glob
 import eva.core
 
@@ -106,6 +107,43 @@ class UC_API(GenericAPI):
             time_format=t,
             fill=w,
             fmt=g)
+
+    @staticmethod
+    def _load_device_config(tpl_config=None, device_tpl=None):
+        tpl_decoder = {
+            'json': jsonpickle.decode,
+            'yml': yaml.load,
+            'yaml': yaml.load
+        }
+        if tpl_config is None:
+            tpl_config = {}
+        elif isinstance(tpl_config, dict):
+            pass
+        elif isinstance(tpl_config, str):
+            tpl_config = {}
+            try:
+                for i in c.split(','):
+                    name, value = i.split('=')
+                    tpl_config[name] = value
+            except:
+                raise InvalidParameter('invalid tpl_configuration specified')
+        else:
+            raise InvalidParameter
+        try:
+            for ext in ['yml', 'yaml', 'json']:
+                fname = '{}/tpl/{}.{}'.format(eva.core.dir_runtime, device_tpl,
+                                              ext)
+                if os.path.isfile(fname):
+                    break
+                fname = None
+            if not fname: raise ResourceNotFound
+            tpl = jinja2.Template(open(fname).read())
+            cfg = tpl_decoder.get(ext)(tpl.render(tpl_config))
+            return cfg
+        except ResourceNotFound:
+            raise
+        except:
+            raise FunctionFailed('device template parse error')
 
     @log_d
     def groups(self, **kwargs):
@@ -673,7 +711,8 @@ class UC_API(GenericAPI):
         """
         i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
         return eva.uc.controller.create_unit(
-            unit_id=oid_to_id(i, 'unit'), group=g, virtual=v, save=save).serialize()
+            unit_id=oid_to_id(i, 'unit'), group=g, virtual=v,
+            save=save).serialize()
 
     @log_i
     @api_need_master
@@ -696,7 +735,8 @@ class UC_API(GenericAPI):
         """
         i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
         return eva.uc.controller.create_sensor(
-            sensor_id=oid_to_id(i, 'sensor'), group=g, virtual=v, save=save).serialize()
+            sensor_id=oid_to_id(i, 'sensor'), group=g, virtual=v,
+            save=save).serialize()
 
     @log_i
     @api_need_master
@@ -717,7 +757,8 @@ class UC_API(GenericAPI):
         """
         i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
         return eva.uc.controller.create_mu(
-            mu_id=oid_to_id(i, 'mu'), group=g, virtual=v, save=save).serialize()
+            mu_id=oid_to_id(i, 'mu'), group=g, virtual=v,
+            save=save).serialize()
 
     @log_i
     @api_need_master
@@ -812,31 +853,25 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_device
-    def load_device_config(self, tpl_config={}, device_tpl=None):
-        try:
-            tpl = jinja2.Template(
-                open(eva.core.dir_runtime + '/tpl/' + device_tpl +
-                     '.json').read())
-            cfg = jsonpickle.decode(tpl.render(tpl_config))
-            return cfg
-        except:
-            raise FunctionFailed('device template error')
-
-    @log_d
-    @api_need_device
     def list_device_tpl(self, **kwargs):
         result = []
-        for i in glob.glob(eva.core.dir_runtime + '/tpl/*.json'):
-            result.append(os.path.basename(i)[:-5])
+        for ext in ['yml', 'yaml', 'json']:
+            for i in glob.glob(eva.core.dir_runtime + '/tpl/*.' + ext):
+                result.append({
+                    'name': os.path.basename(i)[:-1 * len(ext) - 1],
+                    'type': 'JSON' if ext == 'json' else 'YAML'
+                })
         return sorted(result)
 
     @log_i
     @api_need_device
-    def create_device(self, k=None, tpl_config={}, device_tpl=None, save=False):
-        _k = eva.apikey.masterkey
-        cfg = self.load_device_config(
+    def create_device(self, **kwargs):
+        k, tpl_config, device_tpl, save = parse_function_params(
+            kwargs, 'kctS', '..Sb')
+        cfg = self._load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
-        if cfg is None: return False
+        _k = eva.apikey.masterkey
+        if cfg is None: raise ResourceNotFound
         units = cfg.get('units')
         if units:
             for u in units:
@@ -845,7 +880,7 @@ class UC_API(GenericAPI):
                     g = u.get('group')
                 except:
                     raise InvalidParameter('no id field for unit')
-                self.create_unit(k=_k, u=i, g=g, save=save)
+                self.create_unit(k=_k, i=i, g=g, save=save)
         sensors = cfg.get('sensors')
         if sensors:
             for u in sensors:
@@ -864,20 +899,26 @@ class UC_API(GenericAPI):
                 except:
                     raise InvalidParameter('no id field for mu')
                 self.create_mu(k=_k, i=i, g=g, save=save)
-        return self.update_device(k=k, cfg=cfg, save=save)
+        return self._do_update_device(cfg=cfg, save=save)
 
     @log_i
     @api_need_device
-    def update_device(self,
-                      k=None,
-                      tpl_config={},
-                      device_tpl=None,
-                      cfg=None,
-                      save=False):
-        _k = eva.apikey.masterkey
-        if cfg is None: return False
-        cfg = self.load_device_config(
+    def update_device(self, **kwargs):
+        k, tpl_config, device_tpl, save = parse_function_params(
+            kwargs, 'kctS', '..Sb')
+        cfg = self._load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
+        return self._do_update_device(cfg=cfg, save=save)
+
+    def _do_update_device(self,
+                          tpl_config={},
+                          device_tpl=None,
+                          cfg=None,
+                          save=False):
+        _k = eva.apikey.masterkey
+        if cfg is None:
+            cfg = self._load_device_config(
+                tpl_config=tpl_config, device_tpl=device_tpl)
         cvars = cfg.get('cvars')
         if cvars:
             for i, v in cvars.items():
@@ -917,11 +958,13 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_device
-    def destroy_device(self, k=None, tpl_config={}, device_tpl=None):
-        _k = eva.apikey.masterkey
-        cfg = self.load_device_config(
+    def destroy_device(self, **kwargs):
+        k, tpl_config, device_tpl, save = parse_function_params(
+            kwargs, 'kctS', '..Sb')
+        cfg = self._load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
-        if cfg is None: return False
+        _k = eva.apikey.masterkey
+        if cfg is None: raise ResourceNotFound
         mu = cfg.get('mu')
         if mu:
             for m in mu:
@@ -1275,60 +1318,6 @@ class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self._nofp_log('put_phi', 'c')
-
-    def list_device_tpl(self, k):
-        result = super().list_device_tpl(k)
-        return result if result is not None else http_api_result_error()
-
-    def create_device(self, k=None, c=None, t=None, save=None):
-        config = {}
-        if not c:
-            return http_api_result_error()
-        if isinstance(c, dict):
-            config = c
-        else:
-            try:
-                for i in c.split(','):
-                    name, value = i.split('=')
-                    config[name] = value
-            except:
-                raise cp_api_error()
-        return http_api_result_ok() if super().create_device(
-            k=k, tpl_config=config, device_tpl=t,
-            save=save) else http_api_result_error()
-
-    def update_device(self, k=None, c=None, t=None, save=None):
-        config = {}
-        if not c:
-            return http_api_result_error()
-        if isinstance(c, dict):
-            config = c
-        else:
-            try:
-                for i in c.split(','):
-                    name, value = i.split('=')
-                    config[name] = value
-            except:
-                raise cp_api_error()
-        return http_api_result_ok() if super().update_device(
-            k=k, tpl_config=config, device_tpl=t,
-            save=save) else http_api_result_error()
-
-    def destroy_device(self, k=None, c=None, t=None):
-        config = {}
-        if not c:
-            return http_api_result_error()
-        if isinstance(c, dict):
-            config = c
-        else:
-            try:
-                for i in c.split(','):
-                    name, value = i.split('=')
-                    config[name] = value
-            except:
-                raise cp_api_error()
-        return http_api_result_ok() if super().destroy_device(
-            k=k, tpl_config=config, device_tpl=t) else http_api_result_error()
 
     @api_need_master
     def create_modbus_port(self,

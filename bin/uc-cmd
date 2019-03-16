@@ -10,6 +10,7 @@ import os
 import re
 import requests
 import jsonpickle
+import yaml
 from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
@@ -110,7 +111,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('device templates')
             if code: return True
-            return data
+            for v in data:
+                yield v['name']
 
     class ComplItemProp(ComplGeneric):
 
@@ -232,9 +234,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def prepare_result_data(self, data, api_func, api_func_full, itype):
         if api_func == 'list_device_tpl':
-            result = []
             for d in data:
-                result.append({'name': d, 'type': 'JSON device template'})
+                d['type'] = d['type'] + ' device template'
+                return data
             return result
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, api_func_full,
@@ -654,7 +656,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'create', help='Create device with a template')
         sp_device_create.add_argument(
             't',
-            help='Template name (file=runtime/tpl/<TPL>.json)',
+            help='Template name (file=runtime/tpl/<TPL>.yml|json)',
             metavar='TPL')
         sp_device_create.add_argument(
             '-c',
@@ -672,7 +674,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_device_update = sp_device.add_parser(
             'update', help='Update device item props with a template')
         sp_device_update.add_argument(
-            't', help='Template file (in runtime/tpl folder)', metavar='TPL')
+            't',
+            help='Template name (file=runtime/tpl/<TPL>.yml|json)',
+            metavar='TPL')
         sp_device_update.add_argument(
             '-c',
             '--config',
@@ -689,7 +693,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_device_destroy = sp_device.add_parser(
             'destroy', help='Destroy device with a template')
         sp_device_destroy.add_argument(
-            't', help='Template file (in runtime/tpl folder)', metavar='TPL')
+            't',
+            help='Template name (file=runtime/tpl/<TPL>.yml|json)',
+            metavar='TPL')
         sp_device_destroy.add_argument(
             '-c',
             '--config',
@@ -1129,18 +1135,30 @@ class UC_CLI(GenericCLI, ControllerCLI):
         return self.local_func_result_ok
 
     def edit_tpl(self, props):
+        tpl_decoder = {
+            'json': jsonpickle.decode,
+            'yml': yaml.load,
+            'yaml': yaml.load
+        }
         if self.apiuri:
             self.print_local_only()
             return self.local_func_result_failed
         tpl = props.get('i')
         if not tpl:
             return self.local_func_result_failed
-        fname = '{}/tpl/{}.json'.format(dir_runtime, tpl)
+        for ext in ['yml', 'yaml', 'json']:
+            fname = '{}/tpl/{}.{}'.format(dir_runtime, tpl, ext)
+            if os.path.isfile(fname):
+                break
+            fname = None
+        if not fname:
+            self.print_err('Template file not found')
+            return self.local_func_result_failed
         editor = os.environ.get('EDITOR', 'vi')
         if os.system(editor + ' ' + fname):
             return self.local_func_result_failed
         try:
-            jsonpickle.decode(open(fname).read())
+            tpl_decoder.get(ext)(open(fname).read())
         except Exception as e:
             self.print_err('Unable to validate template. ' + str(e))
             return self.local_func_result_failed

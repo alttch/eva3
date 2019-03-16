@@ -82,8 +82,7 @@ class ComplCVAR(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('cvar all')
-        result = []
-        if code: return result
+        if code: return True
         return data.keys()
 
 
@@ -91,23 +90,19 @@ class ComplKey(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('key list')
-        result = []
-        if code: return result
+        if code: return True
         for v in data:
-            result.append(v['key_id'])
-        return result
+            yield v['key_id']
 
 
 class ComplKeyDynamic(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('key list')
-        result = []
-        if code: return result
+        if code: return True
         for v in data:
             if v.get('dynamic'):
-                result.append(v['key_id'])
-        return result
+                yield v['key_id']
 
 
 class ComplKeyProp(ComplGeneric):
@@ -124,11 +119,9 @@ class ComplUser(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('user list')
-        result = []
-        if code: return result
+        if code: return True
         for v in data:
-            result.append(v['user'])
-        return result
+            yield v['user']
 
 
 class GenericCLI(object):
@@ -1379,8 +1372,9 @@ class GenericCLI(object):
         if code != apiclient.result_ok and code != apiclient.result_func_failed:
             if '_error' not in result:
                 if code != apiclient.result_func_unknown:
-                    self.print_err('Error: ' + default_errors.get(code),
-                              default_errors[apiclient.result_unknown_error])
+                    self.print_err(
+                        'Error: ' + default_errors.get(code),
+                        default_errors[apiclient.result_unknown_error])
                 else:
                     self.ap.print_help()
                 if debug and self.remote_api_enabled:

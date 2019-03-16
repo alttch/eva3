@@ -9,6 +9,7 @@ import os
 import sys
 import getopt
 import jsonpickle
+import yaml
 import jinja2
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
@@ -24,7 +25,7 @@ def usage():
     print()
     print('EVA UC device template tool version %s' % (apiclient.version))
     print("""
-Usage: uc-tpl <command> [args] [-U API uri] [-K key] [-T sec] [-D]
+Usage: uc-tpl <command> [args] [-U API uri] [-K key] [-T sec] [-D] [-J]
 
     -U   specify API uri (http://host:port), if no uri specified, API will be
          called in local mode (with data from ../etc/uc.ini and uc_apikeys.ini)
@@ -32,6 +33,7 @@ Usage: uc-tpl <command> [args] [-U API uri] [-K key] [-T sec] [-D]
          local API)
     -T   API request timeout
     -D   Enable debug messages
+    -J   JSON output (default: YML)
 
 Template commands:
 
@@ -95,6 +97,8 @@ def print_debug(o1=None, o2=None, end='\n'):
     if o2: print('', o2, end='')
     print(end=end)
 
+def print_yaml(s):
+    print(yaml.dump(s))
 
 timeout = None
 apikey = None
@@ -103,6 +107,10 @@ apiuri = None
 tpl_file = None
 
 debug = False
+
+encoder = yaml.dump
+formatter = yaml.dump
+printer = print_yaml
 
 items = []
 groups = []
@@ -129,6 +137,10 @@ for i, v in o:
         groups = v.split(',')
     elif i == '-v':
         cvars = v.split(',')
+    elif i == '-J':
+        encoder = jsonpickle.encode
+        formatter = format_json
+        printer = print_json
     elif i == '-T':
         try:
             timeout = float(v)
@@ -161,10 +173,10 @@ if func == 'validate':
         sys.exit(99)
     raw = template.render(config)
     try:
-        result = jsonpickle.decode(raw)
-        print_json(result)
+        result = encoder(raw)
+        printer(result)
     except:
-        print('Invalid json data')
+        print('Invalid data')
         print_debug('-----------------------')
         print_debug(raw)
         sys.exit(2)
@@ -236,14 +248,14 @@ elif func == 'generate':
         print_debug(' - OK')
     if (tpl_file):
         try:
-            open(tpl_file, 'w').write(format_json(tpl))
+            open(tpl_file, 'w').write(formatter(tpl))
             print('Template saved to %s' % tpl_file)
         except:
             print('Error: can not save template to %s' % tpl_file)
     else:
         print_debug('Template output:')
         print_debug('----------------')
-        print_json(tpl)
+        printer(tpl)
 else:
     usage()
     sys.exit(99)

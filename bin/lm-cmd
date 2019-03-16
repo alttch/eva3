@@ -241,11 +241,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 else:
                     code, data = self.cli.call('remote')
                 if code: return True
-                result = []
                 for d in data:
-                    result.append(d['oid'] + '/status')
-                    result.append(d['oid'] + '/value')
-                return result
+                    yield d['oid'] + '/status'
+                    yield d['oid'] + '/value'
             return True
 
     class ComplCyclePropVal(ComplGeneric):
