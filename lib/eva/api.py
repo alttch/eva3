@@ -361,7 +361,7 @@ class API_Logger(object):
         return p
 
     def get_auth(self, func, params):
-        return apikey.key_id(k)
+        return apikey.key_id(params.get('k'))
 
 
 class HTTP_API_Logger(API_Logger):
@@ -475,6 +475,7 @@ class GenericAPI(object):
 
     def __init__(self):
         self._fp_hide_in_log = {}
+        self.log_api_call = API_Logger()
 
     def _nofp_log(self, func, params):
         fp = self._fp_hide_in_log.setdefault(func, [])

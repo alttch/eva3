@@ -688,7 +688,9 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         if not item or (is_oid(i) and item and item.item_type != t):
             raise ResourceNotFound
-        if not item.set_prop(p, v, save): raise FunctionFailed('{}.{} = {} unable to set'.format(item.oid, p, v))
+        if not item.set_prop(p, v, save):
+            raise FunctionFailed('{}.{} = {} unable to set'.format(
+                item.oid, p, v))
         return True
 
     @log_i
@@ -933,8 +935,8 @@ class UC_API(GenericAPI):
                     g = u['group']
                 except:
                     raise InvalidParameter('no fields for unit')
-                self._set_props(_k, 'unit:{}/{}'.format(g, i),
-                                u.get('props'), save, True)
+                self._set_props(_k, 'unit:{}/{}'.format(g, i), u.get('props'),
+                                save, True)
         sensors = cfg.get('sensors')
         if sensors:
             for u in sensors:
@@ -943,8 +945,8 @@ class UC_API(GenericAPI):
                     g = u['group']
                 except:
                     raise InvalidParameter('no fields for sensor')
-                self._set_props(_k, 'sensor:{}/{}'.format(g, i),
-                                u.get('props'), save, True)
+                self._set_props(_k, 'sensor:{}/{}'.format(g, i), u.get('props'),
+                                save, True)
         mu = cfg.get('mu')
         if mu:
             for u in mu:
