@@ -349,171 +349,6 @@ Optionally:
 * **v** item value
 
 
-.. _ucapi_cat_owfs:
-
-1-Wire bus via OWFS
-===================
-
-
-
-.. _ucapi_create_owfs_bus:
-
-create_owfs_bus - create OWFS bus
----------------------------------
-
-Creates (defines) :doc:`OWFS bus</owfs>` with the specified configuration.
-
-"location" should contain the connection configuration, e.g. "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1" for local 1-wire bus via I2C, depending on type
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** bus ID which will be used later in :doc:`PHI</drivers>` configurations, required
-* **l** OWFS location
-* **l** lock port on operations, which means to wait while OWFS bus is used by other controller thread (driver command)
-* **t** OWFS operations timeout (in seconds, default: default timeout)
-* **r** retry attempts for each operation (default: no retries)
-* **d** delay between bus operations (default: 50ms)
-* **Optionally** save: save OWFS bus config after creation
-
-Returns:
-
-If bus with the selected ID is already defined, error is not returned and bus is recreated.
-
-.. _ucapi_destroy_owfs_bus:
-
-destroy_owfs_bus - delete OWFS bus
-----------------------------------
-
-Deletes (undefines) :doc:`OWFS bus</owfs>`.
-
-.. note::
-
-    In some cases deleted OWFS bus located on I2C may lock *libow*     library calls, which require controller restart until you can use     (create) the same I2C bus again.
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** bus ID
-
-.. _ucapi_list_owfs_buses:
-
-list_owfs_buses - list OWFS buses
----------------------------------
-
-
-
-Parameters:
-
-* **k** API key with *master* permissions
-
-.. _ucapi_scan_owfs_bus:
-
-scan_owfs_bus - scan OWFS bus
------------------------------
-
-Scan :doc:`OWFS bus</owfs>` for connected 1-wire devices.
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** bus ID
-
-Optionally:
-
-* **p** specified equipment type (e.g. DS18S20,DS2405), list or comma separated
-* **a** Equipment attributes (e.g. temperature, PIO), list comma separated
-* **n** Equipment path
-* **has_all** Equipment should have all specified attributes
-* **full** obtain all attributes plus values
-
-Returns:
-
-if both "a" and "full" are specified. the function will examine and values of attributes specified in "a" param. (This will poll "released" bus, even if locking is set up, so be careful with this feature in production environment).
-
-.. _ucapi_test_owfs_bus:
-
-test_owfs_bus - test OWFS bus
------------------------------
-
-Verifies :doc:`OWFS bus</owfs>` checking library initialization status.
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** bus ID
-
-
-.. _ucapi_cat_device:
-
-Devices
-=======
-
-
-
-.. _ucapi_create_device:
-
-create_device - create device items
------------------------------------
-
-Creates the :ref:`device<device>` from the specified template.
-
-Parameters:
-
-* **k** API key with *allow=device* permissions
-* **c** device config (*var=value*, comma separated or dict)
-* **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
-
-Optionally:
-
-* **save** save items configuration on disk immediately after operation
-
-.. _ucapi_destroy_device:
-
-destroy_device - delete device items
-------------------------------------
-
-Works in an opposite way to :ref:`ucapi_create_device` function, destroying all items specified in the template.
-
-Parameters:
-
-* **k** API key with *allow=device* permissions
-* **c** device config (*var=value*, comma separated or dict)
-* **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
-
-Returns:
-
-The function ignores missing items, so no errors are returned unless device configuration file is invalid.
-
-.. _ucapi_list_device_tpl:
-
-list_device_tpl - list device templates
----------------------------------------
-
-List available device templates from runtime/tpl
-
-Parameters:
-
-* **k** API key with *masterkey* permissions
-
-.. _ucapi_update_device:
-
-update_device - update device items
------------------------------------
-
-Works similarly to :ref:`ucapi_create_device` function but doesn't create new items, updating the item configuration of the existing ones.
-
-Parameters:
-
-* **k** API key with *allow=device* permissions
-* **c** device config (*var=value*, comma separated or dict)
-* **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
-
-Optionally:
-
-* **save** save items configuration on disk immediately after operation
-
-
 .. _ucapi_cat_item-management:
 
 Item management
@@ -729,6 +564,101 @@ Optionally:
 * **save** save configuration immediately
 
 
+.. _ucapi_cat_owfs:
+
+1-Wire bus via OWFS
+===================
+
+
+
+.. _ucapi_create_owfs_bus:
+
+create_owfs_bus - create OWFS bus
+---------------------------------
+
+Creates (defines) :doc:`OWFS bus</owfs>` with the specified configuration.
+
+"location" should contain the connection configuration, e.g. "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1" for local 1-wire bus via I2C, depending on type
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** bus ID which will be used later in :doc:`PHI</drivers>` configurations, required
+* **l** OWFS location
+* **l** lock port on operations, which means to wait while OWFS bus is used by other controller thread (driver command)
+* **t** OWFS operations timeout (in seconds, default: default timeout)
+* **r** retry attempts for each operation (default: no retries)
+* **d** delay between bus operations (default: 50ms)
+* **Optionally** save: save OWFS bus config after creation
+
+Returns:
+
+If bus with the selected ID is already defined, error is not returned and bus is recreated.
+
+.. _ucapi_destroy_owfs_bus:
+
+destroy_owfs_bus - delete OWFS bus
+----------------------------------
+
+Deletes (undefines) :doc:`OWFS bus</owfs>`.
+
+.. note::
+
+    In some cases deleted OWFS bus located on I2C may lock *libow*     library calls, which require controller restart until you can use     (create) the same I2C bus again.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** bus ID
+
+.. _ucapi_list_owfs_buses:
+
+list_owfs_buses - list OWFS buses
+---------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _ucapi_scan_owfs_bus:
+
+scan_owfs_bus - scan OWFS bus
+-----------------------------
+
+Scan :doc:`OWFS bus</owfs>` for connected 1-wire devices.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** bus ID
+
+Optionally:
+
+* **p** specified equipment type (e.g. DS18S20,DS2405), list or comma separated
+* **a** Equipment attributes (e.g. temperature, PIO), list comma separated
+* **n** Equipment path
+* **has_all** Equipment should have all specified attributes
+* **full** obtain all attributes plus values
+
+Returns:
+
+if both "a" and "full" are specified. the function will examine and values of attributes specified in "a" param. (This will poll "released" bus, even if locking is set up, so be careful with this feature in production environment).
+
+.. _ucapi_test_owfs_bus:
+
+test_owfs_bus - test OWFS bus
+-----------------------------
+
+Verifies :doc:`OWFS bus</owfs>` checking library initialization status.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** bus ID
+
+
 .. _ucapi_cat_modbus:
 
 ModBus ports
@@ -803,4 +733,74 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** virtual port ID
+
+
+.. _ucapi_cat_device:
+
+Devices
+=======
+
+
+
+.. _ucapi_create_device:
+
+create_device - create device items
+-----------------------------------
+
+Creates the :ref:`device<device>` from the specified template.
+
+Parameters:
+
+* **k** API key with *allow=device* permissions
+* **c** device config (*var=value*, comma separated or dict)
+* **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
+
+Optionally:
+
+* **save** save items configuration on disk immediately after operation
+
+.. _ucapi_destroy_device:
+
+destroy_device - delete device items
+------------------------------------
+
+Works in an opposite way to :ref:`ucapi_create_device` function, destroying all items specified in the template.
+
+Parameters:
+
+* **k** API key with *allow=device* permissions
+* **c** device config (*var=value*, comma separated or dict)
+* **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
+
+Returns:
+
+The function ignores missing items, so no errors are returned unless device configuration file is invalid.
+
+.. _ucapi_list_device_tpl:
+
+list_device_tpl - list device templates
+---------------------------------------
+
+List available device templates from runtime/tpl
+
+Parameters:
+
+* **k** API key with *masterkey* permissions
+
+.. _ucapi_update_device:
+
+update_device - update device items
+-----------------------------------
+
+Works similarly to :ref:`ucapi_create_device` function but doesn't create new items, updating the item configuration of the existing ones.
+
+Parameters:
+
+* **k** API key with *allow=device* permissions
+* **c** device config (*var=value*, comma separated or dict)
+* **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
+
+Optionally:
+
+* **save** save items configuration on disk immediately after operation
 

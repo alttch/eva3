@@ -492,7 +492,8 @@ Multiple cvars, units, sensors and multiupdates can be merged in logical groups
 called **devices**. It's completely up to you how to merge items into device,
 but it's recommended to keep them in one or several separate item groups.
 
-Device templates are stored in *runtime/tpl* folder in JSON format.
+Device templates are stored in *runtime/tpl* folder in YAML (default) or JSON
+format.
 
 You can use **uc-tpl** :doc:`command line</cli>` tool to create device
 templates using the existing items and **uc-cmd** or :ref:`device
