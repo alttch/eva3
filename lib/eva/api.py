@@ -168,10 +168,13 @@ def generic_web_api_method(f):
             eva.core.log_traceback()
             raise cp_api_404(e)
         except MethodNotFound as e:
+            eva.core.log_traceback()
             raise cp_api_405(e)
         except ResourceAlreadyExists as e:
+            eva.core.log_traceback()
             raise cp_api_409(e)
         except AccessDenied as e:
+            eva.core.log_traceback()
             raise cp_forbidden_key(e)
         except FunctionFailed as e:
             eva.core.log_traceback()
@@ -254,6 +257,7 @@ def cp_api_function(f):
             else:
                 return result
         except FunctionFailed as e:
+            eva.core.log_traceback()
             err = str(e)
             return http_api_result_error({'_error': err} if err else None)
 
@@ -699,8 +703,10 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 eva.core.log_traceback()
                 r = format_error(1, e)
             except AccessDenied as e:
+                eva.core.log_traceback()
                 r = format_error(2, e)
             except MethodNotFound as e:
+                eva.core.log_traceback()
                 r = format_error(6, e)
             except InvalidParameter as e:
                 eva.core.log_traceback()
