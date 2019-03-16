@@ -135,7 +135,7 @@ started = False
 shutdown_requested = False
 
 
-def log_traceback(display=False, notifier=False, force=False, e=None):
+def log_traceback(display=False, notifier=False, force=False):
     e_msg = traceback.format_exc()
     if (show_traceback or force) and not display:
         pfx = '.' if notifier else ''
@@ -146,11 +146,13 @@ def log_traceback(display=False, notifier=False, force=False, e=None):
         logging.critical('log_traceback locking broken')
         critical(log=False)
         return
-    e = {'t': time.strftime('%Y/%m/%d %H:%M:%S %z'), 'e': e_msg}
-    _exceptions.append(e)
-    if len(_exceptions) > keep_exceptions:
-        del _exceptions[0]
-    _exception_log_lock.release()
+    try:
+        e = {'t': time.strftime('%Y/%m/%d %H:%M:%S %z'), 'e': e_msg}
+        _exceptions.append(e)
+        if len(_exceptions) > keep_exceptions:
+            del _exceptions[0]
+    finally:
+        _exception_log_lock.release()
 
 
 dump = FunctionCollecton(on_error=log_traceback, include_exceptions=True)
