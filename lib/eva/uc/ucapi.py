@@ -1289,10 +1289,10 @@ class UC_API(GenericAPI):
             full: obtain all attributes plus values
             
         Returns:
-            If both "a" and "full" are specified. the function will examine and
-            values of attributes specified in "a" param. (This will poll
-            "released" bus, even if locking is set up, so be careful with this
-            feature in production environment).
+            If both "a" and "full" args are specified. the function will
+            examine and values of attributes specified in "a" param. (This will
+            poll "released" bus, even if locking is set up, so be careful with
+            this feature in production environment).
         """
         i, p, a, n, has_all, full = parse_api_params(kwargs, 'ipanHY', 'S..sbb')
         try:
