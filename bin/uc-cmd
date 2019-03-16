@@ -523,7 +523,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'template', help='Edit device template')
         sp_edit_tpl.add_argument(
             'i', help='Template name',
-            metavar='NAME').completer = self.ComplDeviceTPL(self)
+            metavar='TPL').completer = self.ComplDeviceTPL(self)
 
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')
@@ -657,7 +657,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_device_create.add_argument(
             't',
             help='Template name (file=runtime/tpl/<TPL>.yml|json)',
-            metavar='TPL')
+            metavar='TPL').completer = self.ComplDeviceTPL(self)
         sp_device_create.add_argument(
             '-c',
             '--config',
@@ -676,7 +676,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_device_update.add_argument(
             't',
             help='Template name (file=runtime/tpl/<TPL>.yml|json)',
-            metavar='TPL')
+            metavar='TPL').completer = self.ComplDeviceTPL(self)
         sp_device_update.add_argument(
             '-c',
             '--config',
@@ -695,7 +695,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_device_destroy.add_argument(
             't',
             help='Template name (file=runtime/tpl/<TPL>.yml|json)',
-            metavar='TPL')
+            metavar='TPL').completer = self.ComplDeviceTPL(self)
         sp_device_destroy.add_argument(
             '-c',
             '--config',

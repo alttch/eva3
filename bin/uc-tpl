@@ -97,8 +97,12 @@ def print_debug(o1=None, o2=None, end='\n'):
     if o2: print('', o2, end='')
     print(end=end)
 
+def dump_yaml(s):
+    return yaml.dump(s, default_flow_style=False)
+
 def print_yaml(s):
-    print(yaml.dump(s))
+    print(dump_yaml(s))
+
 
 timeout = None
 apikey = None
@@ -108,7 +112,8 @@ tpl_file = None
 
 debug = False
 
-encoder = yaml.dump
+encoder = dump_yaml
+decoder = yaml.load
 formatter = yaml.dump
 printer = print_yaml
 
@@ -139,6 +144,7 @@ for i, v in o:
         cvars = v.split(',')
     elif i == '-J':
         encoder = jsonpickle.encode
+        decoder = jsonpickle.decode
         formatter = format_json
         printer = print_json
     elif i == '-T':
@@ -173,13 +179,13 @@ if func == 'validate':
         sys.exit(99)
     raw = template.render(config)
     try:
-        result = encoder(raw)
+        result = decoder(raw)
         printer(result)
     except:
         print('Invalid data')
         print_debug('-----------------------')
         print_debug(raw)
-        sys.exit(2)
+        raise
     sys.exit(0)
 
 elif func == 'generate':
