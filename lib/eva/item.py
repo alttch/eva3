@@ -15,6 +15,11 @@ import eva.core
 import eva.runner
 import eva.uc.driverapi
 
+from datetime import datetime
+import dateutil
+import pytz
+import pandas as pd
+
 from eva.tools import format_json
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
@@ -25,6 +30,7 @@ from eva.generic import GenericAction
 
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
+from eva.exceptions import InvalidParameter
 
 from eva.generic import ia_status_created
 from eva.generic import ia_status_pending
@@ -1936,6 +1942,8 @@ def get_state_history(a=None,
                       fmt=None):
     if oid is None: raise ResourceNotFound
     n = eva.notify.get_db_notifier(a)
+    if not t_start and fill:
+        raise InvalidParameter('start time is required when fill is used')
     if t_start and fill: tf = 'iso'
     else: tf = time_format
     if not n: raise ResourceNotFound('notifier')
@@ -1948,9 +1956,6 @@ def get_state_history(a=None,
             prop=prop,
             time_format=tf)
     except:
-        logging.warning('state history call failed, arch: %s, oid: %s' %
-                        (n.notifier_id, oid))
-        eva.core.log_traceback()
         raise FunctionFailed
     if t_start and fill and result:
         tz = pytz.timezone(time.tzname[0])

@@ -229,8 +229,9 @@ def parse_function_params(params,
             except:
                 raise e(err.format(n, value, 'number'))
         elif required == 's':
-            if not isinstance(value, str):
-                raise e(err.format(n, value, 'string'))
+            if value is not None:
+                if not isinstance(value, str):
+                    raise e(err.format(n, value, 'string'))
             result += (value,)
         elif required == 'S':
             if not isinstance(value, str) or value == '':

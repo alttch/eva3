@@ -1375,14 +1375,17 @@ class GenericCLI(object):
         if return_result:
             return code, result
         if not isinstance(api_func, str): api_func = api_func.__name__
-        if code != apiclient.result_ok and '_error' not in result:
-            if code != apiclient.result_func_unknown:
-                print_err('Error: ' + default_errors.get(code),
-                          default_errors[apiclient.result_unknown_error])
+        if code != apiclient.result_ok:
+            if '_error' not in result:
+                if code != apiclient.result_func_unknown:
+                    print_err('Error: ' + default_errors.get(code),
+                              default_errors[apiclient.result_unknown_error])
+                else:
+                    self.ap.print_help()
+                if debug and self.remote_api_enabled:
+                    self.print_debug('API result code: %u' % code)
             else:
-                self.ap.print_help()
-            if debug and self.remote_api_enabled:
-                self.print_debug('API result code: %u' % code)
+                self.print_failed_result(result)
             return code
         else:
             if c.get('json') or a._json or api_func in self.always_json:

@@ -5,6 +5,8 @@ __version__ = "3.2.0"
 
 import logging
 
+from eva.tools import InvalidParameter
+
 
 class GenericException(Exception):
 

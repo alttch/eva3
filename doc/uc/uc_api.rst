@@ -102,6 +102,29 @@ JSON RPC API URL:
 
 .. contents::
 
+.. _ucapi_cat_general:
+
+General functions
+=================
+
+
+
+.. _ucapi_test:
+
+test - test API/key and get system info
+---------------------------------------
+
+Test can be executed with any valid API key of the controller the function is called to.
+
+Parameters:
+
+* **k** any valid API key
+
+Returns:
+
+JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
+
+
 .. _ucapi_cat_item:
 
 Item functions

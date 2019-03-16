@@ -43,7 +43,7 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import AccessDenied
 
-from eva.tools import InvalidParameter
+from eva.exceptions import InvalidParameter
 from eva.tools import parse_function_params
 
 from eva.logs import get_log_level_by_name

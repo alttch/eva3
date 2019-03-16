@@ -8,7 +8,7 @@ import eva.core
 import time
 import threading
 
-from eva.tools import InvalidParameter
+from eva.exceptions import InvalidParameter
 
 _log_records = []
 _mute = False

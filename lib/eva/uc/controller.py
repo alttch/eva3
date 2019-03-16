@@ -26,7 +26,7 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import ResourceAlreadyExists
 
-from eva.tools import InvalidParameter
+from eva.exceptions import InvalidParameter
 
 from eva.tools import is_oid
 from eva.tools import parse_oid
