@@ -578,18 +578,21 @@ create_owfs_bus - create OWFS bus
 
 Creates (defines) :doc:`OWFS bus</owfs>` with the specified configuration.
 
-"location" should contain the connection configuration, e.g. "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1" for local 1-wire bus via I2C, depending on type
+Parameter "location" ("n") should contain the connection configuration, e.g.  "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1" for local 1-wire bus via I2C, depending on type.
 
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** bus ID which will be used later in :doc:`PHI</drivers>` configurations, required
-* **l** OWFS location
+* **n** OWFS location
 * **l** lock port on operations, which means to wait while OWFS bus is used by other controller thread (driver command)
 * **t** OWFS operations timeout (in seconds, default: default timeout)
 * **r** retry attempts for each operation (default: no retries)
 * **d** delay between bus operations (default: 50ms)
-* **Optionally** save: save OWFS bus config after creation
+
+Optionally:
+
+* **save** save OWFS bus config after creation
 
 Returns:
 
@@ -644,7 +647,7 @@ Optionally:
 
 Returns:
 
-if both "a" and "full" are specified. the function will examine and values of attributes specified in "a" param. (This will poll "released" bus, even if locking is set up, so be careful with this feature in production environment).
+If both "a" and "full" are specified. the function will examine and values of attributes specified in "a" param. (This will poll "released" bus, even if locking is set up, so be careful with this feature in production environment).
 
 .. _ucapi_test_owfs_bus:
 
@@ -688,7 +691,10 @@ Parameters:
 * **t** ModBus operations timeout (in seconds, default: default timeout)
 * **r** retry attempts for each operation (default: no retries)
 * **d** delay between virtual port operations (default: 20ms)
-* **Optionally** save: save ModBus port config after creation
+
+Optionally:
+
+* **save** save ModBus port config after creation
 
 Returns:
 
