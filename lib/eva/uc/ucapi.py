@@ -9,6 +9,7 @@ import glob
 import eva.core
 
 import eva.api
+import eva.sysapi
 
 from eva.api import GenericHTTP_API
 from eva.api import JSON_RPC_API_abstract
@@ -47,7 +48,6 @@ from eva import apikey
 
 from functools import wraps
 
-import eva.sysapi
 import eva.uc.controller
 import eva.uc.driverapi
 import eva.uc.modbus
@@ -402,9 +402,9 @@ class UC_API(GenericAPI):
         Optional:
             g: filter by unit group
             s: filter by action status: Q for queued, R for running, F for
-            finished
+               finished
 
-        Returns:
+        Return:
             list or single serialized action object
         """
         k, u, i, g, s = parse_function_params(kwargs, 'kuigs', '.ssss')
@@ -517,7 +517,7 @@ class UC_API(GenericAPI):
         return item.q_clean()
 
 
-# master functions for item configuration
+    # master functions for item configuration
 
     @log_i
     @api_need_master
