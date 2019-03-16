@@ -138,10 +138,21 @@ __special_param_names = {
     'O': 'force_virtual'
 }
 
+__special_param_codes = {
+    'save': 'S',
+    'full': 'Y',
+    '_j': 'J',
+    'force': 'F',
+    'virtual': 'V',
+    'O': 'force_virtual'
+}
+
 
 def __get_special_param_name(p):
     return __special_param_names.get(p, p)
 
+def __get_special_param_code(p):
+    return __special_param_codes.get(p, p)
 
 def parse_function_params(params,
                           names,
@@ -183,7 +194,7 @@ def parse_function_params(params,
     err = 'Invalid parameter value: {} = "{}", {} required'
     if len(params) != len(names) and not ignore_extra:
         for p in params.keys():
-            p = __get_special_param_name(p)
+            p = __get_special_param_code(p)
             if p not in names:
                 raise e('Invalid function parameter: {}'.format(p))
     if not names:

@@ -408,7 +408,7 @@ def create_item(item_id,
     i_full = grp + '/' + i
     if (not eva.core.enterprise_layout and i in items_by_id) or \
             i_full in items_by_full_id:
-        raise ResourceAlreadyExists('item {}'.format(i_full))
+        raise ResourceAlreadyExists(get_item(i_full).oid)
     item = None
     if item_type == 'U' or item_type == 'unit':
         item = eva.uc.unit.Unit(i)
@@ -462,10 +462,12 @@ def create_mu(mu_id, group=None, virtual=False, save=False):
 
 def clone_item(item_id, new_item_id=None, group=None, save=False):
     i = get_item(item_id)
-    ni = get_item(new_item_id)
-    if not i or not new_item_id or ni or i.is_destroyed() or \
+    ni = get_item(group + '/' + new_item_id)
+    if not i or not new_item_id or i.is_destroyed() or \
             i.item_type not in ['unit', 'sensor']:
         raise ResourceNotFound
+    if ni:
+        raise ResourceAlreadyExists(ni.oid)
     if group and new_item_id.find('/') != -1:
         raise InvalidParameter('Group specified but item id contains /')
     if is_oid(new_item_id):
@@ -492,17 +494,18 @@ def clone_item(item_id, new_item_id=None, group=None, save=False):
 def clone_group(group = None, new_group = None,\
         prefix = None, new_prefix = None, save = False):
     if not group or not group in items_by_group: raise ResourceNotFound
-    if not prefix or not new_prefix:
-        raise InvalidParameter('prefix not specified')
     to_clone = []
     for i in items_by_group[group].copy():
-        io = get_item(i)
-        if io.item_type not in ['unit', 'sensor']: continue
-        if i[:len(prefix)] == prefix:
-            new_id = i.replace(prefix, new_prefix, 1)
-            if get_item(new_id):
-                raise ResourceAlreadyExists('item {}'.format(new_id))
-            to_clone.append([i, new_id])
+        io = get_item(group + '/' + i)
+        new_id = io.item_id
+        if prefix and new_prefix:
+            if io.item_type not in ['unit', 'sensor']: continue
+            if i[:len(prefix)] == prefix:
+                new_id = i.replace(prefix, new_prefix, 1)
+        ni = get_item(new_group + '/' + new_id)
+        if ni:
+            raise ResourceAlreadyExists(ni.oid)
+        to_clone.append((io.full_id, new_id))
     for i in to_clone:
         clone_item(i[0], i[1], new_group, save)
     return True
@@ -511,7 +514,7 @@ def clone_group(group = None, new_group = None,\
 def destroy_group(group=None):
     if group is None or group not in items_by_group: raise ResourceNotFound
     for i in items_by_group[group].copy():
-        destroy_item(i)
+        destroy_item('{}/{}'.format(group, i))
     return True
 
 

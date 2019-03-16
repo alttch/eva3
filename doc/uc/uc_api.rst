@@ -116,6 +116,10 @@ test - test API/key and get system info
 
 Test can be executed with any valid API key of the controller the function is called to.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/test.req
+    :response: http-examples/ucapi/test.resp
+
 Parameters:
 
 * **k** any valid API key
@@ -123,6 +127,12 @@ Parameters:
 Returns:
 
 JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/test.rest
+    :response: http-examples/ucapi/test.resp-rest
 
 
 .. _ucapi_cat_item:
@@ -427,6 +437,10 @@ create_unit - create new unit
 
 Creates new :ref:`unit<unit>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_unit.req
+    :response: http-examples/ucapi/create_unit.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -437,6 +451,17 @@ Optionally:
 * **g** unit group
 * **v** virtual unit (deprecated)
 * **save** save unit configuration immediately
+
+.. _ucapi_destroy:
+
+destroy - delete item or group
+------------------------------
+
+Deletes the :doc:`item</items>` or the group (and all the items in it) from the system.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/destroy.req
+    :response: http-examples/ucapi/destroy.resp
 
 .. _ucapi_get_config:
 
@@ -525,10 +550,10 @@ Parameters:
 * **k** API key with *master* permissions
 * **g** group to clone
 * **n** new group to clone to
-* **p** item ID prefix, e.g. device1. for device1.temp1, device1.fan1
-* **r** iem ID prefix in the new group, e.g. device2
 
 Optionally:
 
+* **p** item ID prefix, e.g. device1. for device1.temp1, device1.fan1
+* **r** iem ID prefix in the new group, e.g. device2 (both prefixes must be specified)
 * **save** save configuration immediately
 

@@ -613,9 +613,17 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_clone_group.add_argument(
             'n', help='Target group', metavar='TGT_GROUP')
         sp_clone_group.add_argument(
-            'p', help='Source items prefix', metavar='SRC_PFX')
+            '-p',
+            '--source-prefix',
+            help='Source items prefix',
+            dest='p',
+            metavar='SRC_PFX')
         sp_clone_group.add_argument(
-            'r', help='Target items prefix', metavar='TGT_PFX')
+            '-r',
+            '--target-prefix',
+            help='Target items prefix',
+            dest='r',
+            metavar='TGT_PFX')
         sp_clone_group.add_argument(
             '-y',
             '--save',
@@ -828,10 +836,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             dest='_full')
         sp_owfs_destroy = sp_owfs.add_parser(
             'destroy',
-            help=
-            'Destroy (undefine) bus. Warning: if I2C bus is destroyed, ' +
-            'controller must be restarted before it can be created again'
-        )
+            help='Destroy (undefine) bus. Warning: if I2C bus is destroyed, ' +
+            'controller must be restarted before it can be created again')
         sp_owfs_destroy.add_argument(
             'i', help='Bus ID', metavar='ID').completer = self.ComplOWFS(self)
 

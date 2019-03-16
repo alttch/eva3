@@ -77,7 +77,7 @@ class UC_API(GenericAPI):
     def _process_action_result(a):
         if not a: raise ResourceNotFound('unit found, but something not')
         if a.is_status_dead():
-            raise FunctionFailed('{} is dead '.format(a.uiid))
+            raise FunctionFailed('{} is dead'.format(a.uiid))
         return a.serialize()
 
     @staticmethod
@@ -671,9 +671,9 @@ class UC_API(GenericAPI):
             .v: virtual unit (deprecated)
             save: save unit configuration immediately
         """
-        i, g, v, save = parse_api_params(kwargs, 'igvS', 'Ssbb')
+        i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
         return eva.uc.controller.create_unit(
-            unit_id=oid_to_id(i, 'unit'), group=g, virtual=v, save=save)
+            unit_id=oid_to_id(i, 'unit'), group=g, virtual=v, save=save).serialize()
 
     @log_i
     @api_need_master
@@ -694,9 +694,9 @@ class UC_API(GenericAPI):
             .v: virtual sensor (deprecated)
             save: save sensor configuration immediately
         """
-        i, g, v, save = parse_api_params(kwargs, 'igvS', 'Ssbb')
+        i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
         return eva.uc.controller.create_sensor(
-            sensor_id=oid_to_id(i, 'sensor'), group=g, virtual=v, save=save)
+            sensor_id=oid_to_id(i, 'sensor'), group=g, virtual=v, save=save).serialize()
 
     @log_i
     @api_need_master
@@ -715,9 +715,9 @@ class UC_API(GenericAPI):
             .v: virtual multi-update (deprecated)
             save: save multi-update configuration immediately
         """
-        i, g, v, save = parse_api_params(kwargs, 'igvS', 'Ssbb')
+        i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
         return eva.uc.controller.create_mu(
-            mu_id=oid_to_id(i, 'mu'), group=g, virtual=v, save=save)
+            mu_id=oid_to_id(i, 'mu'), group=g, virtual=v, save=save).serialize()
 
     @log_i
     @api_need_master
@@ -736,16 +736,14 @@ class UC_API(GenericAPI):
             .v: virtual item (deprecated)
             save: save multi-update configuration immediately
         """
-        i, g, v, save = parse_api_params(kwargs, 'OgvS', 'Ssbb')
-        t, i = parse_oid(oid)
-        if t is None or i is None:
-            raise InvalidParameter('item oid required (type:group/id)')
+        k, i, g, v, save = parse_function_params(kwargs, 'kigvS', '.Osbb')
+        t, i = parse_oid(i)
         if t == 'unit':
-            return self.create_unit(k, i, virtual=virtual, save=save)
+            return self.create_unit(k=k, i=i, virtual=v, save=save)
         elif t == 'sensor':
-            return self.create_sensor(k, i, virtual=virtual, save=save)
+            return self.create_sensor(k=k, i=i, virtual=v, save=save)
         elif t == 'mu':
-            return self.create_mu(k, i, virtual=virtual, save=save)
+            return self.create_mu(k=k, i=i, virtual=v, save=save)
         raise InvalidParameter('oid type unknown')
 
     @log_i
@@ -768,7 +766,7 @@ class UC_API(GenericAPI):
         """
         i, n, g, save = parse_api_params(kwargs, 'ingS', 'SSsb')
         return eva.uc.controller.clone_item(
-            item_id=i, new_item_id=n, group=g, save=save)
+            item_id=i, new_item_id=n, group=g, save=save).serialize()
 
     @log_i
     @api_need_master
@@ -782,19 +780,31 @@ class UC_API(GenericAPI):
             k: .master
             .g: group to clone
             n: new group to clone to
-            p: item ID prefix, e.g. device1. for device1.temp1, device1.fan1 
-            r: iem ID prefix in the new group, e.g. device2
 
         Optional:
+            p: item ID prefix, e.g. device1. for device1.temp1, device1.fan1 
+            r: iem ID prefix in the new group, e.g. device2 (both prefixes must
+                be specified)
             save: save configuration immediately
         """
-        g, n, p, r, save = parse_api_params(kwargs, 'gnprS', 'SSSSb')
+        g, n, p, r, save = parse_api_params(kwargs, 'gnprS', 'SSssb')
+        if (p and not r) or (r and not p):
+            raise InvalidParameter('both prefixes must be specified')
         return eva.uc.controller.clone_group(
             group=g, new_group=n, prefix=p, new_prefix=r, save=save)
 
     @log_w
     @api_need_master
     def destroy(self, **kwargs):
+        """
+        delete item or group
+
+        Deletes the :doc:`item</items>` or the group (and all the items in it)
+        from the system.
+        """
+        i, g = parse_api_params(kwargs, 'ig', 'ss')
+        if not i and not g:
+            raise InvalidParameter('either item id or group must be specified')
         return eva.uc.controller.destroy_item(i) if i \
                 else eva.uc.controller.destroy_group(g)
 
@@ -835,7 +845,7 @@ class UC_API(GenericAPI):
                     g = u.get('group')
                 except:
                     raise InvalidParameter('no id field for unit')
-                self.create_unit(_k, unit_id=i, group=g, save=save)
+                self.create_unit(k=_k, u=i, g=g, save=save)
         sensors = cfg.get('sensors')
         if sensors:
             for u in sensors:
@@ -844,7 +854,7 @@ class UC_API(GenericAPI):
                     g = u.get('group')
                 except:
                     raise InvalidParameter('no id field for sensor')
-                self.create_sensor(_k, sensor_id=i, group=g, save=save)
+                self.create_sensor(k=_k, i=i, g=g, save=save)
         mu = cfg.get('mu')
         if mu:
             for u in mu:
@@ -853,7 +863,7 @@ class UC_API(GenericAPI):
                     g = u.get('group')
                 except:
                     raise InvalidParameter('no id field for mu')
-                self.create_mu(_k, mu_id=i, group=g, save=save)
+                self.create_mu(k=_k, i=i, g=g, save=save)
         return self.update_device(k=k, cfg=cfg, save=save)
 
     @log_i
@@ -871,7 +881,7 @@ class UC_API(GenericAPI):
         cvars = cfg.get('cvars')
         if cvars:
             for i, v in cvars.items():
-                if not eva.sysapi.api.set_cvar(_k, i, v):
+                if not eva.sysapi.api.set_cvar(k=_k, i=i, v=v):
                     raise FunctionFailed
         units = cfg.get('units')
         if units:
@@ -921,7 +931,7 @@ class UC_API(GenericAPI):
                 except:
                     raise InvalidParameter('no id field for unit')
                 try:
-                    self.destroy(_k, 'mu:{}/{}'.format(g, i))
+                    self.destroy(k=_k, i='mu:{}/{}'.format(g, i))
                 except:
                     pass
         units = cfg.get('units')
@@ -933,7 +943,7 @@ class UC_API(GenericAPI):
                 except:
                     raise InvalidParameter('no id field for sensor')
                 try:
-                    self.destroy(_k, 'unit:{}/{}'.format(g, i))
+                    self.destroy(k=_k, i='unit:{}/{}'.format(g, i))
                 except:
                     pass
         sensors = cfg.get('sensors')
@@ -945,14 +955,14 @@ class UC_API(GenericAPI):
                 except:
                     raise InvalidParameter('no id field for mu')
                 try:
-                    self.destroy(_k, 'sensor:{}/{}'.format(g, i))
+                    self.destroy(k=_k, i='sensor:{}/{}'.format(g, i))
                 except:
                     pass
         cvars = cfg.get('cvars')
         if cvars:
             for cvar in cvars.keys():
                 try:
-                    eva.sysapi.api.set_cvar(_k, cvar)
+                    eva.sysapi.api.set_cvar(k=_k, i=cvar)
                 except:
                     pass
         return True
@@ -1319,17 +1329,6 @@ class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
                 raise cp_api_error()
         return http_api_result_ok() if super().destroy_device(
             k=k, tpl_config=config, device_tpl=t) else http_api_result_error()
-
-    @api_need_master
-    def clone(self, k=None, i=None, n=None, g=None, save=None):
-        return http_api_result_ok() if super().clone(
-            k, i, n, g, save) else http_api_result_error()
-
-    @api_need_master
-    def clone_group(self, k = None, g = None, n = None,\
-            p = None, r = None, save = None):
-        return http_api_result_ok() if super().clone_group(
-            k, g, n, p, r, save) else http_api_result_error()
 
     @api_need_master
     def create_modbus_port(self,
