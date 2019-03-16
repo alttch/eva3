@@ -412,7 +412,7 @@ class UC_API(GenericAPI):
                 elif (s == 'F' or s == 'finished') and \
                         not a.is_finished():
                     continue
-                result.append(a.seriaize())
+                result.append(a.serialize())
             return result
 
     @log_i

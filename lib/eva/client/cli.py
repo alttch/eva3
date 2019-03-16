@@ -40,11 +40,12 @@ default_errors = {
     apiclient.result_api_error: 'API error',
     apiclient.result_unknown_error: 'Unknown error',
     apiclient.result_not_ready: 'API not ready',
+    apiclient.result_func_unknown: 'API function is not supported by server',
     apiclient.result_server_error: 'Server error',
     apiclient.result_server_timeout: 'Server timeout',
     apiclient.result_bad_data: 'Bad data',
     apiclient.result_invalid_params: 'Invalid function params',
-    apiclient.result_already_exists: 'resource already exists'
+    apiclient.result_already_exists: 'resource already exists',
 }
 
 
@@ -1375,10 +1376,10 @@ class GenericCLI(object):
         if return_result:
             return code, result
         if not isinstance(api_func, str): api_func = api_func.__name__
-        if code != apiclient.result_ok:
+        if code != apiclient.result_ok and code != apiclient.result_func_failed:
             if '_error' not in result:
                 if code != apiclient.result_func_unknown:
-                    print_err('Error: ' + default_errors.get(code),
+                    self.print_err('Error: ' + default_errors.get(code),
                               default_errors[apiclient.result_unknown_error])
                 else:
                     self.ap.print_help()
@@ -1398,7 +1399,7 @@ class GenericCLI(object):
         return 0
 
     def print_failed_result(self, result):
-        self.print_err(result.get('result', 'ERROR'))
+        self.print_err(result.get('result', 'FAILED'))
         if '_warning' in result:
             self.print_warn(result['_warning'])
         if '_error' in result:
