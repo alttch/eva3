@@ -14,6 +14,10 @@ import time
 
 from eva.tools import format_json
 
+from eva.exceptions import FunctionFailed
+from eva.exceptions import InvalidParameter
+from eva.exceptions import ResourceNotFound
+
 owbus = {}
 
 # public functions
@@ -75,15 +79,17 @@ def create_owfs_bus(bus_id, location, **kwargs):
         timeout: bus timeout (default: EVA timeout)
         delay: delay between operations (default: 0.02 sec)
         retries: retry attempts for bus read/write operations (default: 0)
-
-    Returns:
-        True if success, False if failed
     """
-    bus = OWFSBus(bus_id, location, **kwargs)
-    if not bus._ow:
-        logging.error('Failed to create owfs bus {}, location: {}'.format(
-            bus_id, location))
-        return False
+    try:
+        bus = OWFSBus(bus_id, location, **kwargs)
+        if not bus._ow:
+            raise FunctionFailed
+    except InvalidParameter:
+        raise
+    except:
+        raise FunctionFailed(
+            'Failed to create owfs bus {}, location: {}'.format(
+                bus_id, location))
     else:
         if bus_id in owbus:
             owbus[bus_id].stop()
@@ -101,7 +107,7 @@ def destroy_owfs_bus(bus_id):
             pass
         return True
     else:
-        return False
+        raise ResourceNotFound
 
 
 def load():
@@ -112,7 +118,10 @@ def load():
             d = p.copy()
             del d['id']
             del d['location']
-            create_owfs_bus(p['id'], p['location'], **d)
+            try:
+                create_owfs_bus(p['id'], p['location'], **d)
+            except Exception as e:
+                logging.error(e)
     except:
         logging.error('unable to load uc_owfs.json')
         eva.core.log_traceback()
@@ -167,13 +176,9 @@ class OWFSBus(object):
         self.location = location
         self.locker = threading.Lock()
         self.last_action = 0
-        try:
-            self._ow = onewire.Onewire(('--' if location.find('=') != -1 and
-                                        not location.startswith('--') else '') +
-                                       location)
-        except:
-            eva.core.log_traceback()
-            self._ow = None
+        self._ow = onewire.Onewire(('--' if location.find('=') != -1 and
+                                    not location.startswith('--') else '') +
+                                   location)
 
     def acquire(self):
         if not self._ow or not self._ow.initialized: return False

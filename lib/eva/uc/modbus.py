@@ -15,6 +15,10 @@ import time
 import logging
 import jsonpickle
 
+from eva.exceptions import InvalidParameter
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+
 from eva.tools import format_json
 
 ports = {}
@@ -79,20 +83,22 @@ def create_modbus_port(port_id, params, **kwargs):
         timeout: port timeout (default: EVA timeout)
         delay: delay between operations (default: 0.02 sec)
         retries: retry attempts for port read/write operations (default: 0)
-
-    Returns:
-        True if success, False if failed
     """
-    p = ModbusPort(port_id, params, **kwargs)
-    if not p.client:
-        logging.error('Failed to create modbus port {}, params: {}'.format(
-            port_id, params))
-        return False
+    try:
+        p = ModbusPort(port_id, params, **kwargs)
+        if not p.client:
+            raise FunctionFailed
+    except InvalidParameter:
+        raise
+    except:
+        raise FunctionFailed(
+            'Failed to create modbus port {}, params: {}'.format(
+                port_id, params))
     else:
         if port_id in ports:
             ports[port_id].stop()
         ports[port_id] = p
-        logging.info('modbus port {} : {}'.format(port_id, params))
+        logging.info('created modbus port {} : {}'.format(port_id, params))
         return True
 
 
@@ -105,7 +111,7 @@ def destroy_modbus_port(port_id):
             pass
         return True
     else:
-        return False
+        raise ResourceNotFound
 
 
 def load():
@@ -116,7 +122,10 @@ def load():
             d = p.copy()
             del d['id']
             del d['params']
-            create_modbus_port(p['id'], p['params'], **d)
+            try:
+                create_modbus_port(p['id'], p['params'], **d)
+            except Exception as e:
+                logging.error(e)
     except:
         logging.error('unable to load uc_modbus.json')
         eva.core.log_traceback()
@@ -190,26 +199,23 @@ class ModbusPort(object):
                 except:
                     eva.core.log_traceback()
             elif p[0] in ['rtu', 'ascii', 'binary']:
-                try:
-                    port = p[1]
-                    speed = int(p[2])
-                    bits = int(p[3])
-                    parity = p[4]
-                    stopbits = int(p[5])
-                    if bits < 5 or bits > 9:
-                        raise Exception('bits not in range 5..9')
-                    if parity not in ['N', 'E', 'O', 'M', 'S']:
-                        raise Exception('parity should be: N, E, O, M or S')
-                    if stopbits < 1 or stopbits > 2:
-                        raise Exception('stopbits not in range 1..2')
-                    self.client = ModbusSerialClient(
-                        method=p[0],
-                        port=port,
-                        stopbits=stopbits,
-                        parity=parity,
-                        baudrate=speed)
-                except:
-                    eva.core.log_traceback()
+                port = p[1]
+                speed = int(p[2])
+                bits = int(p[3])
+                parity = p[4]
+                stopbits = int(p[5])
+                if bits < 5 or bits > 9:
+                    raise InvalidParameter('bits not in range 5..9')
+                if parity not in ['N', 'E', 'O', 'M', 'S']:
+                    raise InvalidParameter('parity should be: N, E, O, M or S')
+                if stopbits < 1 or stopbits > 2:
+                    raise InvalidParameter('stopbits not in range 1..2')
+                self.client = ModbusSerialClient(
+                    method=p[0],
+                    port=port,
+                    stopbits=stopbits,
+                    parity=parity,
+                    baudrate=speed)
             if self.client:
                 self.client_type = p[0]
 

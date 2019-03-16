@@ -845,6 +845,11 @@ class UC_API(GenericAPI):
 
         Deletes the :doc:`item</items>` or the group (and all the items in it)
         from the system.
+
+        Args:
+            k: .master
+            .i: item id
+            .g: group (either item or group must be specified)
         """
         i, g = parse_api_params(kwargs, 'ig', 'ss')
         if not i and not g:
@@ -857,6 +862,14 @@ class UC_API(GenericAPI):
     @log_d
     @api_need_device
     def list_device_tpl(self, **kwargs):
+        """
+        list device templates
+
+        List available device templates from runtime/tpl
+
+        Args:
+            k: .masterkey
+        """
         result = []
         for ext in ['yml', 'yaml', 'json']:
             for i in glob.glob(eva.core.dir_runtime + '/tpl/*.' + ext):
@@ -869,6 +882,21 @@ class UC_API(GenericAPI):
     @log_i
     @api_need_device
     def create_device(self, **kwargs):
+        """
+        create device items
+
+        Creates the :ref:`device<device>` from the specified template.
+
+        Args:
+            k: .allow=device
+            c: device config (*var=value*, comma separated or dict)
+            t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
+                extension)
+
+        Optional:
+            save: save items configuration on disk immediately after
+                operation
+        """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
         cfg = self._load_device_config(
@@ -907,6 +935,22 @@ class UC_API(GenericAPI):
     @log_i
     @api_need_device
     def update_device(self, **kwargs):
+        """
+        update device items
+
+        Works similarly to :ref:`ucapi_create_device` function but doesn't
+        create new items, updating the item configuration of the existing ones.
+
+        Args:
+            k: .allow=device
+            c: device config (*var=value*, comma separated or dict)
+            t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
+                extension)
+
+        Optional:
+            save: save items configuration on disk immediately after
+                operation
+        """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
         cfg = self._load_device_config(
@@ -962,6 +1006,22 @@ class UC_API(GenericAPI):
     @log_i
     @api_need_device
     def destroy_device(self, **kwargs):
+        """
+        delete device items
+
+        Works in an opposite way to :ref:`ucapi_create_device` function,
+        destroying all items specified in the template.
+
+        Args:
+            k: .allow=device
+            c: device config (*var=value*, comma separated or dict)
+            t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
+                extension)
+
+        Returns:
+            The function ignores missing items, so no errors are returned
+            unless device configuration file is invalid.
+        """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
         cfg = self._load_device_config(
@@ -1017,98 +1077,238 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
-    def create_modbus_port(self,
-                           k=None,
-                           i=None,
-                           params=None,
-                           lock=False,
-                           timeout=None,
-                           delay=None,
-                           retries=None,
-                           save=False):
-        if not i or not params: return False
+    def create_modbus_port(self, **kwargs):
+        """
+        create virtual ModBus port
+
+        Creates virtual :doc:`ModBus port</modbus>` with the specified
+        configuration.
+
+        ModBus params should contain the configuration of hardware ModBus port.
+        The following hardware port types are supported:
+
+        * **tcp** , **udp** ModBus protocol implementations for TCP/IP
+            networks. The params should be specified as:
+            *<protocol>:<host>[:port]*, e.g.  *tcp:192.168.11.11:502*
+
+        * **rtu**, **ascii**, **binary** ModBus protocol implementations for
+            the local bus connected with USB or serial port. The params should
+            be specified as:
+            *<protocol>:<device>:<speed>:<data>:<parity>:<stop>* e.g.
+            *rtu:/dev/ttyS0:9600:8:E:1*
+
+        Args:
+            k: .master
+            .i: virtual port ID which will be used later in
+                :doc:`PHI</drivers>` configurations, required
+            p: ModBus params, required
+            l: lock port on operations, which means to wait while ModBus port
+                is used by other controller thread (driver command)
+            t: ModBus operations timeout (in seconds, default: default timeout)
+            r: retry attempts for each operation (default: no retries)
+            d: delay between virtual port operations (default: 20ms)
+
+        Optionally:
+            save: save ModBus port config after creation
+
+        Returns:
+            If port with the selected ID is already created, error is not
+            returned and port is recreated.
+        """
+        i, p, l, t, d, r, save = parse_api_params(kwargs, 'ipltdrS', 'SSbnnib')
         result = eva.uc.modbus.create_modbus_port(
-            i, params, lock=lock, timeout=timeout, delay=delay, retries=retries)
+            i, p, lock=l, timeout=t, delay=d, retries=r)
         if result and save: eva.uc.modbus.save()
         return result
 
     @log_i
     @api_need_master
-    def destroy_modbus_port(self, k=None, i=None):
+    def destroy_modbus_port(self, **kwargs):
+        """
+        delete virtual ModBus port
+
+        Deletes virtual :doc:`ModBus port</modbus>`.
+
+        Args:
+            k: .master
+            .i: virtual port ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.modbus.destroy_modbus_port(i)
         if result and eva.core.db_update == 1: eva.uc.modbus.save()
         return result
 
     @log_i
     @api_need_master
-    def list_modbus_ports(self, k=None):
+    def list_modbus_ports(self, **kwargs):
+        """
+        list virtual ModBus ports
+
+        Args:
+            k: .master
+            .i: virtual port ID
+        """
         return sorted(eva.uc.modbus.serialize(), key=lambda k: k['id'])
 
     @log_i
     @api_need_master
-    def test_modbus_port(self, k=None, i=None):
+    def test_modbus_port(self, **kwargs):
+        """
+        list virtual ModBus ports
+
+        Verifies virtual :doc:`ModBus port</modbus>` by calling connect()
+        ModBus client method.
+
+        .. note::
+
+            As ModBus UDP doesn't require a port to be connected, API call
+            always returns success unless the port is locked.
+
+        Args:
+            k: .master
+            .i: virtual port ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         port = eva.uc.modbus.get_port(i)
         result = True if port else False
         if result: port.release()
+        elif port is None: raise ResourceNotFound
         return result
 
     # master functions for owfs bus management
 
     @log_i
     @api_need_master
-    def create_owfs_bus(self,
-                        k=None,
-                        i=None,
-                        location=None,
-                        lock=False,
-                        timeout=None,
-                        delay=None,
-                        retries=None,
-                        save=False):
-        if not i or not location: return False
+    def create_owfs_bus(self, **kwargs):
+        """
+        create OWFS bus
+
+        Creates (defines) :doc:`OWFS bus</owfs>` with the specified
+        configuration.
+
+        "location" should contain the connection configuration, e.g.
+        "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1"
+        for local 1-wire bus via I2C, depending on type
+
+        Args:
+            k: .master
+            .i: bus ID which will be used later in
+                :doc:`PHI</drivers>` configurations, required
+            l: OWFS location
+            l: lock port on operations, which means to wait while OWFS bus is
+                used by other controller thread (driver command)
+            t: OWFS operations timeout (in seconds, default: default timeout)
+            r: retry attempts for each operation (default: no retries)
+            d: delay between bus operations (default: 50ms)
+
+        Optionally:
+            save: save OWFS bus config after creation
+
+        Returns:
+            If bus with the selected ID is already defined, error is not
+            returned and bus is recreated.
+        """
+        i, n, l, t, d, r, save = parse_api_params(kwargs, 'inltdrS', 'SSbnnib')
         result = eva.uc.owfs.create_owfs_bus(
-            i,
-            location,
-            lock=lock,
-            timeout=timeout,
-            delay=delay,
-            retries=retries)
+            i, n, lock=l, timeout=t, delay=d, retries=r)
         if result and save: eva.uc.owfs.save()
         return result
 
     @log_i
     @api_need_master
-    def destroy_owfs_bus(self, k=None, i=None):
+    def destroy_owfs_bus(self, **kwargs):
+        """
+        delete OWFS bus
+
+        Deletes (undefines) :doc:`OWFS bus</owfs>`.
+
+        .. note::
+
+            In some cases deleted OWFS bus located on I2C may lock *libow*
+            library calls, which require controller restart until you can use
+            (create) the same I2C bus again.
+
+        Args:
+            k: .master
+            .i: bus ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.owfs.destroy_owfs_bus(i)
         if result and eva.core.db_update == 1: eva.uc.owfs.save()
         return result
 
     @log_i
     @api_need_master
-    def list_owfs_buses(self, k=None):
+    def list_owfs_buses(self, **kwargs):
+        """
+        list OWFS buses
+
+        Args:
+            k: .master
+        """
         return sorted(eva.uc.owfs.serialize(), key=lambda k: k['id'])
 
     @log_i
     @api_need_master
-    def test_owfs_bus(self, k=None, i=None):
+    def test_owfs_bus(self, **kwargs):
+        """
+        test OWFS bus
+
+        Verifies :doc:`OWFS bus</owfs>` checking library initialization status.
+
+        Args:
+            k: .master
+            .i: bus ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         bus = eva.uc.owfs.get_bus(i)
         result = True if bus else False
         if result: bus.release()
+        elif bus is None: raise ResourceNotFound
         return result
 
     @log_i
     @api_need_master
-    def scan_owfs_bus(self,
-                      k=None,
-                      i=None,
-                      p=None,
-                      a=None,
-                      n=None,
-                      has_all=None,
-                      full=None):
+    def scan_owfs_bus(self, **kwargs):
+        """
+        scan OWFS bus
+
+        Scan :doc:`OWFS bus</owfs>` for connected 1-wire devices.
+
+        Args:
+            k: .master
+            .i: bus ID
+
+        Optional:
+            p: specified equipment type (e.g. DS18S20,DS2405), list or comma
+                separated
+            a: Equipment attributes (e.g. temperature, PIO), list comma
+                separated
+            n: Equipment path
+            has_all: Equipment should have all specified attributes
+            full: obtain all attributes plus values
+            
+        Returns:
+            if both "a" and "full" are specified. the function will examine and
+            values of attributes specified in "a" param. (This will poll
+            "released" bus, even if locking is set up, so be careful with this
+            feature in production environment).
+        """
+        i, p, a, n, has_all, full = parse_api_params(kwargs, 'ipanHY', 'S..sbb')
+        try:
+            if p and not isinstance(p, list):
+                p = p.split(',')
+        except:
+            raise InvalidParameter('Unable to parse type')
+        try:
+            if a and not isinstance(a, list):
+                a = a.split(',')
+        except:
+            raise InvalidParameter('Unable to parse attributes')
         bus = eva.uc.owfs.get_bus(i)
-        if not bus: return None
-        bus.release()
+        if bus: bus.release()
+        elif bus is None: raise ResourceNotFound
+        else: raise FunctionFailed('Unable to acquire bus')
         kwargs = {}
         if p: kwargs['sensor_type'] = p
         if a:
@@ -1321,124 +1521,6 @@ class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self._nofp_log('put_phi', 'c')
-
-    @api_need_master
-    def create_modbus_port(self,
-                           k=None,
-                           i=None,
-                           p=None,
-                           l=None,
-                           t=None,
-                           d=None,
-                           r=None,
-                           save=False):
-        if t:
-            try:
-                _t = float(t)
-            except:
-                raise cp_api_error()
-        else:
-            _t = None
-        if d:
-            try:
-                _d = float(d)
-            except:
-                raise cp_api_error()
-        else:
-            _d = None
-        if r:
-            try:
-                _r = int(r)
-            except:
-                raise cp_api_error()
-        else:
-            _r = None
-        return http_api_result_ok() if super().create_modbus_port(
-            k, i, p, val_to_boolean(l), _t, _d, _r,
-            save) else http_api_result_error()
-
-    @api_need_master
-    def destroy_modbus_port(self, k=None, i=None):
-        return http_api_result_ok() if super().destroy_modbus_port(
-            k, i) else http_api_result_error()
-
-    @api_need_master
-    def list_modbus_ports(self, k=None):
-        return super().list_modbus_ports(k)
-
-    @api_need_master
-    def test_modbus_port(self, k=None, i=None):
-        return http_api_result_ok() if super().test_modbus_port(
-            k, i) else http_api_result_error()
-
-    @api_need_master
-    def create_owfs_bus(self,
-                        k=None,
-                        i=None,
-                        n=None,
-                        l=None,
-                        t=None,
-                        d=None,
-                        r=None,
-                        save=False):
-        if t:
-            try:
-                _t = float(t)
-            except:
-                raise cp_api_error()
-        else:
-            _t = None
-        if d:
-            try:
-                _d = float(d)
-            except:
-                raise cp_api_error()
-        else:
-            _d = None
-        if r:
-            try:
-                _r = int(r)
-            except:
-                raise cp_api_error()
-        else:
-            _r = None
-        return http_api_result_ok() if super().create_owfs_bus(
-            k, i, n, val_to_boolean(l), _t, _d, _r,
-            save) else http_api_result_error()
-
-    @api_need_master
-    def destroy_owfs_bus(self, k=None, i=None):
-        return http_api_result_ok() if super().destroy_owfs_bus(
-            k, i) else http_api_result_error()
-
-    @api_need_master
-    def list_owfs_buses(self, k=None):
-        return super().list_owfs_buses(k)
-
-    @api_need_master
-    def test_owfs_bus(self, k=None, i=None):
-        return http_api_result_ok() if super().test_owfs_bus(
-            k, i) else http_api_result_error()
-
-    @api_need_master
-    def scan_owfs_bus(self,
-                      k=None,
-                      i=None,
-                      p=None,
-                      a=None,
-                      n=None,
-                      has_all=None,
-                      full=None):
-        if p:
-            _p = p if isinstance(p, list) else p.split(',')
-        else:
-            _p = None
-        if a:
-            _a = a if isinstance(a, list) else a.split(',')
-        else:
-            _a = None
-        result = super().scan_owfs_bus(k, i, _p, _a, n, has_all, full)
-        return result if result is not None else http_api_result_error()
 
     @api_need_master
     def load_phi(self, k=None, i=None, m=None, c=None, save=False):

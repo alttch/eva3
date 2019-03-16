@@ -135,7 +135,8 @@ __special_param_names = {
     'J': '_j',
     'F': 'force',
     'V': 'virtual',
-    'O': 'force_virtual'
+    'O': 'force_virtual',
+    'H': 'has_all'
 }
 
 __special_param_codes = {
@@ -144,7 +145,8 @@ __special_param_codes = {
     '_j': 'J',
     'force': 'F',
     'virtual': 'V',
-    'O': 'force_virtual'
+    'force_virtual': 'O',
+    'has_all': 'H'
 }
 
 
