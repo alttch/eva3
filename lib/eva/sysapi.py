@@ -581,6 +581,26 @@ class UserAPI(object):
 
     @log_w
     @api_need_master
+    def user_set(self, **kwargs):
+        """
+        set user property
+
+        Args:
+            k: .master
+            .u: user login
+            p: property (password or key)
+            v: value
+        """
+        u, p, v = parse_api_params(kwargs, 'upv', 'SSS')
+        if p == 'password':
+            return eva.users.set_user_password(u, v)
+        elif p == 'key':
+            return eva.users.set_user_key(u, v)
+        else:
+            raise InvalidParameter('Property unknown: {}'.format(p))
+
+    @log_w
+    @api_need_master
     def set_user_password(self, **kwargs):
         """
         set user password
@@ -1102,12 +1122,9 @@ class SysHTTP_API_REST_abstract:
                 self.file_set_exec(k=k, i=ii, e=e)
             return True
         elif rtp == 'user':
-            if 'p' in props:
-                if not SysAPI.set_user_password(self, k=k, u=ii, p=props['p']):
-                    raise FunctionFailed
-            if 'a' in props:
-                if not SysAPI.set_user_key(self, k=k, u=ii, a=props['a']):
-                    raise FunctionFailed
+            for p, v in props.items():
+                if not self.user_set(k=k, u=ii, p=p, v=v):
+                    return False
             return True
         raise MethodNotFound
 

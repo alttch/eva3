@@ -53,6 +53,7 @@ config = SimpleNamespace(
 
 api_result_accepted = 2
 
+
 class MethodNotFound(Exception):
 
     def __str__(self):
@@ -120,10 +121,7 @@ def parse_api_params(params, names='', types='', defaults=None):
 
 
 def restful_resource_id(rtp, i):
-    return {
-            'type': rtp,
-            'id': i
-            }
+    return {'type': rtp, 'id': i}
 
 
 def restful_parse_params(*args, **kwargs):
@@ -346,11 +344,11 @@ class API_Logger(object):
         self.log_api_request(func.__name__, params.copy(), logger, fp_hide)
 
     def prepare_info(self, func, p, fp_hide):
-        if not eva.core.development or 1:
-            if 'k' in p: del p['k']
-            if func.startswith('set_'):
-                fp = p.get('p')
-                if fp in ['key', 'masterkey', 'password']: p[fp] = '<hidden>'
+        # if not eva.core.development:
+        if 'k' in p: del p['k']
+        if func.startswith('set_') or func.endswith('_set'):
+            fp = p.get('p')
+            if fp in ['key', 'masterkey', 'password']: p[fp] = '<hidden>'
         fplist = fp_hide.get(func)
         if fplist:
             for fp in fplist:
@@ -618,11 +616,12 @@ class GenericHTTP_API_abstract:
         for k, v in self.__exposed.items():
             self.__exposed[k] = decorator(v)
 
-    def _expose(self, f):
+    def _expose(self, f, alias=None):
         if callable(f):
-            self.__exposed[f.__name__] = f
+            self.__exposed[f.__name__ if not alias else alias] = f
         elif isinstance(f, str):
-            self.__exposed[f] = getattr(self, f)
+            self.__exposed[f if not alias else alias] = getattr(
+                self, f.replace('.', '_'))
         elif isinstance(f, list):
             for func in f:
                 self._expose(func)
@@ -638,6 +637,8 @@ class GenericHTTP_API_abstract:
                 open('{}/eva/apidata/{}_data.json'.format(
                     eva.core.dir_lib, api_id)).read())
             self._expose(data['functions'])
+            for f, a in data['aliases'].items():
+                self._expose(f, a)
             if set_api_uri:
                 self.api_uri = data['uri']
         except:

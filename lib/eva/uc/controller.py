@@ -561,6 +561,8 @@ def destroy_item(item):
             configs_to_remove.add(i.get_fname())
         logging.info('%s destroyed' % i.full_id)
         return True
+    except ResourceNotFound:
+        raise
     except:
         eva.core.log_traceback()
         raise FunctionFailed
