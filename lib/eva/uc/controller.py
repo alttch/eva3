@@ -35,6 +35,10 @@ from eva.tools import oid_to_id
 
 from eva.core import db
 
+from functools import wraps
+
+from pyaltt import background_job
+
 units_by_id = {}
 units_by_group = {}
 units_by_full_id = {}
@@ -57,18 +61,50 @@ configs_to_remove = set()
 
 custom_event_handlers = {}
 
-benchmark_lock = threading.Lock()
+_event_handler_lock = threading.RLock()
+_item_lock = threading.RLock()
+_benchmark_lock = threading.Lock()
 
 
+def with_event_handler_lock(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not _event_handler_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('uc/controller/{} locking broken'.format(
+                f.__name__))
+            eva.core.critical()
+            return None
+        try:
+            return f(*args, **kwargs)
+        finally:
+            _event_handler_lock.release()
+
+    return do
+
+def with_item_lock(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not _event_handler_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('uc/controller/{} locking broken'.format(
+                f.__name__))
+            eva.core.critical()
+            return None
+        try:
+            return f(*args, **kwargs)
+        finally:
+            _event_handler_lock.release()
+
+    return do
+
+
+@with_event_handler_lock
 def handle_event(item):
     oid = item.oid
     if oid in custom_event_handlers:
         for f in custom_event_handlers.get(oid):
-            try:
-                t = threading.Thread(target=exec_event_handler, args=(f, item))
-                t.start()
-            except:
-                eva.core.log_traceback()
+            background_job(exec_event_handler)(f, item)
     return True
 
 
@@ -80,6 +116,7 @@ def exec_event_handler(func, item):
         eva.core.log_traceback()
 
 
+@with_event_handler_lock
 def register_event_handler(item_id, func):
     item = get_item(item_id)
     if not item: return False
@@ -89,6 +126,7 @@ def register_event_handler(item_id, func):
     return True
 
 
+@with_event_handler_lock
 def unregister_event_handler(item_id, func):
     item = get_item(item_id)
     if not item: return False
@@ -120,16 +158,19 @@ def benchmark_handler(item):
     if not benchmark_lock.acquire(timeout=600):
         logging.critical('Core benchmark failed to obtain action lock')
         return False
-    status = item.status
-    value = item.value
-    if status == 1:
-        value = float(value)
-        if value > 100:
-            exec_unit_action('unit:eva_benchmarks/eva_benchmark_unit',
-                             int(value))
-    benchmark_lock.release()
+    try:
+        status = item.status
+        value = item.value
+        if status == 1:
+            value = float(value)
+            if value > 100:
+                exec_unit_action('unit:eva_benchmarks/eva_benchmark_unit',
+                                 int(value))
+    finally:
+        benchmark_lock.release()
 
 
+@with_item_lock
 def get_item(item_id):
     if not item_id: return None
     if is_oid(item_id):
@@ -144,6 +185,7 @@ def get_item(item_id):
     return None if item and is_oid(item_id) and item.item_type != tp else item
 
 
+@with_item_lock
 def get_unit(unit_id):
     if not unit_id: return None
     if is_oid(unit_id) and oid_type(unit_id) != 'unit': return None
@@ -155,6 +197,7 @@ def get_unit(unit_id):
     return None
 
 
+@with_item_lock
 def get_sensor(sensor_id):
     if not sensor_id: return None
     if is_oid(sensor_id) and oid_type(sensor_id) != 'sensor': return None
@@ -167,6 +210,7 @@ def get_sensor(sensor_id):
     return None
 
 
+@with_item_lock
 def get_mu(mu_id):
     if not mu_id: return None
     if is_oid(mu_id) and oid_type(mu_id) != 'mu': return None
@@ -178,6 +222,7 @@ def get_mu(mu_id):
     return None
 
 
+@with_item_lock
 def append_item(item, start=False, load=True):
     try:
         if load and not item.load(): return False
@@ -209,6 +254,7 @@ def append_item(item, start=False, load=True):
 
 
 @eva.core.save
+@with_item_lock
 def save():
     for i, v in items_by_full_id.items():
         if isinstance(v, eva.uc.unit.Unit) or \
@@ -232,6 +278,7 @@ def save():
     return True
 
 
+@with_item_lock
 def save_item_state(item):
     dbconn = eva.core.db()
     try:
@@ -269,6 +316,7 @@ def load_drivers():
     eva.uc.driverapi.load()
 
 
+@with_item_lock
 def load_db_state(items, item_type, clean=False):
     _db_loaded_ids = []
     _db_to_clean_ids = []
@@ -325,6 +373,7 @@ def load_db_state(items, item_type, clean=False):
         eva.core.critical()
 
 
+@with_item_lock
 def load_units(start=False):
     _loaded = {}
     logging.info('Loading units')
@@ -354,6 +403,7 @@ def load_units(start=False):
         return False
 
 
+@with_item_lock
 def load_sensors(start=False):
     _loaded = {}
     logging.info('Loading sensors')
@@ -383,6 +433,7 @@ def load_sensors(start=False):
         return False
 
 
+@with_item_lock
 def create_item(item_id,
                 item_type,
                 group=None,
@@ -430,6 +481,7 @@ def create_item(item_id,
     return item
 
 
+@with_item_lock
 def create_unit(unit_id, group=None, virtual=False, save=False):
     return create_item(
         item_id=unit_id,
@@ -440,6 +492,7 @@ def create_unit(unit_id, group=None, virtual=False, save=False):
         save=save)
 
 
+@with_item_lock
 def create_sensor(sensor_id, group=None, virtual=False, save=False):
     return create_item(
         item_id=sensor_id,
@@ -450,6 +503,7 @@ def create_sensor(sensor_id, group=None, virtual=False, save=False):
         save=save)
 
 
+@with_item_lock
 def create_mu(mu_id, group=None, virtual=False, save=False):
     return create_item(
         item_id=mu_id,
@@ -460,6 +514,7 @@ def create_mu(mu_id, group=None, virtual=False, save=False):
         save=save)
 
 
+@with_item_lock
 def clone_item(item_id, new_item_id=None, group=None, save=False):
     i = get_item(item_id)
     ni = get_item(group + '/' + new_item_id)
@@ -491,6 +546,7 @@ def clone_item(item_id, new_item_id=None, group=None, save=False):
     return ni
 
 
+@with_item_lock
 def clone_group(group = None, new_group = None,\
         prefix = None, new_prefix = None, save = False):
     if not group or not group in items_by_group: raise ResourceNotFound
@@ -511,6 +567,7 @@ def clone_group(group = None, new_group = None,\
     return True
 
 
+@with_item_lock
 def destroy_group(group=None):
     if group is None or group not in items_by_group: raise ResourceNotFound
     for i in items_by_group[group].copy():
@@ -518,6 +575,7 @@ def destroy_group(group=None):
     return True
 
 
+@with_item_lock
 def destroy_item(item):
     try:
         if isinstance(item, str):
@@ -568,6 +626,7 @@ def destroy_item(item):
         raise FunctionFailed
 
 
+@with_item_lock
 def load_mu(start=False):
     logging.info('Loading multi updates')
     try:
@@ -594,18 +653,21 @@ def load_mu(start=False):
         return False
 
 
+@with_item_lock
 def save_units():
     logging.info('Saving units')
     for i, u in units_by_full_id.items():
         u.save()
 
 
+@with_item_lock
 def save_sensors():
     logging.info('Saving sensors')
     for i, u in sensors_by_full_id.items():
         u.save()
 
 
+@with_item_lock
 def save_mu():
     logging.info('Saving multi updates')
     for i, u in mu_by_full_id.items():
@@ -617,11 +679,13 @@ def notify_all():
     notify_all_sensors()
 
 
+@with_item_lock
 def notify_all_units():
     for i, u in units_by_full_id.items():
         u.notify()
 
 
+@with_item_lock
 def notify_all_sensors():
     for i, u in sensors_by_full_id.items():
         u.notify()
@@ -637,6 +701,7 @@ def serialize():
     return d
 
 
+@with_item_lock
 def serialize_units(full=False, config=False):
     d = {}
     for i, u in units_by_full_id.items():
@@ -644,6 +709,7 @@ def serialize_units(full=False, config=False):
     return d
 
 
+@with_item_lock
 def serialize_sensors(full=False, config=False):
     d = {}
     for i, u in sensors_by_full_id.items():
@@ -651,6 +717,7 @@ def serialize_sensors(full=False, config=False):
     return d
 
 
+@with_item_lock
 def serialize_mu(full=False, config=False):
     d = {}
     for i, u in mu_by_full_id.items():

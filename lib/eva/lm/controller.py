@@ -34,6 +34,9 @@ from eva.tools import parse_oid
 
 from eva.core import db
 
+from functools import wraps
+from pyaltt import background_job
+
 lvars_by_id = {}
 lvars_by_group = {}
 lvars_by_full_id = {}
@@ -62,7 +65,25 @@ Q = None
 
 DM = None
 
+_item_lock = threading.RLock()
 
+def with_item_lock(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not _event_handler_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('uc/controller/{} locking broken'.format(
+                f.__name__))
+            eva.core.critical()
+            return None
+        try:
+            return f(*args, **kwargs)
+        finally:
+            _event_handler_lock.release()
+
+    return do
+
+@with_item_lock
 def get_item(item_id):
     if not item_id: return None
     if is_oid(item_id):
@@ -89,6 +110,7 @@ def get_controller(controller_id):
     return None
 
 
+@with_item_lock
 def get_macro(macro_id):
     _macro_id = oid_to_id(macro_id, 'lmacro')
     if not _macro_id: return None
@@ -99,6 +121,7 @@ def get_macro(macro_id):
     return None
 
 
+@with_item_lock
 def get_cycle(cycle_id):
     _cycle_id = oid_to_id(cycle_id, 'lcycle')
     if not _cycle_id: return None
@@ -109,12 +132,14 @@ def get_cycle(cycle_id):
     return None
 
 
+@with_item_lock
 def get_dm_rule(r_id):
     if not r_id: return None
     if r_id in dm_rules: return dm_rules[r_id]
     return None
 
 
+@with_item_lock
 def get_lvar(lvar_id):
     if not lvar_id: return None
     if is_oid(lvar_id) and oid_type(lvar_id) != 'lvar': return None
@@ -126,6 +151,7 @@ def get_lvar(lvar_id):
     return None
 
 
+@with_item_lock
 def append_item(item, start=False, load=True):
     try:
         if load and not item.load(): return False
@@ -147,6 +173,7 @@ def append_item(item, start=False, load=True):
 
 
 @eva.core.save
+@with_item_lock
 def save():
     for i, v in lvars_by_full_id.items():
         if not save_lvar_state(v):
@@ -201,6 +228,7 @@ def save():
     return True
 
 
+@with_item_lock
 def save_lvar_state(item):
     dbconn = eva.core.db()
     try:
@@ -233,6 +261,7 @@ def load_extensions():
     eva.lm.extapi.load()
 
 
+@with_item_lock
 def load_lvar_db_state(items, clean=False):
     _db_loaded_ids = []
     _db_to_clean_ids = []
@@ -288,6 +317,7 @@ def load_lvar_db_state(items, clean=False):
         eva.core.critical()
 
 
+@with_item_lock
 def load_lvars(start=False):
     _loaded = {}
     logging.info('Loading lvars')
@@ -334,6 +364,7 @@ def load_remote_ucs():
         return False
 
 
+@with_item_lock
 def load_macros():
     logging.info('Loading macro configs')
     try:
@@ -353,6 +384,7 @@ def load_macros():
         return False
 
 
+@with_item_lock
 def load_cycles():
     logging.info('Loading cycle configs')
     try:
@@ -372,6 +404,7 @@ def load_cycles():
         return False
 
 
+@with_item_lock
 def load_dm_rules():
     logging.info('Loading DM rules')
     try:
@@ -394,6 +427,7 @@ def load_dm_rules():
         return False
 
 
+@with_item_lock
 def create_macro(m_id, group=None, save=False):
     _m_id = oid_to_id(m_id, 'lmacro')
     if not _m_id: return False
@@ -420,6 +454,7 @@ def create_macro(m_id, group=None, save=False):
     return True
 
 
+@with_item_lock
 def destroy_macro(m_id):
     i = get_macro(m_id)
     if not i: return None
@@ -443,6 +478,7 @@ def destroy_macro(m_id):
         return False
 
 
+@with_item_lock
 def create_cycle(m_id, group=None, save=False):
     _m_id = oid_to_id(m_id, 'lcycle')
     if not _m_id: return False
@@ -468,6 +504,7 @@ def create_cycle(m_id, group=None, save=False):
     return True
 
 
+@with_item_lock
 def destroy_cycle(m_id):
     i = get_cycle(m_id)
     if not i: return None
@@ -491,6 +528,7 @@ def destroy_cycle(m_id):
         return False
 
 
+@with_item_lock
 def create_dm_rule(save=False, rule_uuid=None):
     if rule_uuid in dm_rules:
         return None
@@ -502,6 +540,7 @@ def create_dm_rule(save=False, rule_uuid=None):
     return r.item_id
 
 
+@with_item_lock
 def destroy_dm_rule(r_id):
     if r_id not in dm_rules:
         return None
@@ -621,6 +660,7 @@ def remove_controller(controller_id):
         return False
 
 
+@with_item_lock
 def create_item(item_id, item_type, group=None, virtual=False, save=False):
     if not item_id: return False
     if group and item_id.find('/') != -1: return False
@@ -657,11 +697,13 @@ def create_item(item_id, item_type, group=None, virtual=False, save=False):
     return True
 
 
+@with_item_lock
 def create_lvar(lvar_id, group=None, save=False):
     return create_item(
         item_id=lvar_id, item_type='LV', group=group, virtual=False, save=save)
 
 
+@with_item_lock
 def destroy_item(item):
     try:
         if isinstance(item, str):
@@ -696,6 +738,7 @@ def destroy_item(item):
         return False
 
 
+@with_item_lock
 def save_lvars():
     logging.info('Saving lvars')
     for i, u in lvars_by_full_id.items():
@@ -706,6 +749,7 @@ def notify_all(skip_subscribed_mqtt=False):
     notify_all_lvars(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 
+@with_item_lock
 def notify_all_lvars(skip_subscribed_mqtt=False):
     for i, u in lvars_by_full_id.items():
         u.notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
@@ -718,6 +762,7 @@ def serialize():
     return d
 
 
+@with_item_lock
 def serialize_lvars(full=False, config=False):
     d = {}
     for i, u in lvars_by_full_id.items():
@@ -747,8 +792,7 @@ def start():
     uc_pool = eva.client.remote_controller.RemoteUCPool()
     uc_pool.start()
     for i, v in remote_ucs.items():
-        t = threading.Thread(target=connect_remote_controller, args=(v,))
-        t.start()
+        background_job(connect_remote_controller, daemon=True)(v)
     for i, v in lvars_by_full_id.items():
         v.start_processors()
     for i, v in cycles_by_id.copy().items():
