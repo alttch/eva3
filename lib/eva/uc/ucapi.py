@@ -1956,7 +1956,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             return super().PATCH(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
-        if rtp in ['unit', 'sensor', 'mu' ]:
+        if rtp in ['unit', 'sensor', 'mu']:
             if ii:
                 if rtp == 'unit':
                     if 'action_enabled' in props:
@@ -1966,9 +1966,10 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         elif v is False:
                             self.disable_actions(k=k, i=ii)
                         else:
-                            raise InvalidParameter('"action_enabled" has invalid value')
+                            raise InvalidParameter(
+                                '"action_enabled" has invalid value')
                 if props:
-                    return super().set_prop(k=k, i=ii,save=save, v=props)
+                    return super().set_prop(k=k, i=ii, save=save, v=props)
                 else:
                     return True
         elif rtp == 'phi':
