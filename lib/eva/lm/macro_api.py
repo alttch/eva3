@@ -118,9 +118,9 @@ class MacroAPI(object):
             'ls': self.ls,
             'open_oldest': self.open_oldest,
             'open_newest': self.open_newest,
-            'create_device': self.create_device,
+            'deploy_device': self.deploy_device,
             'update_device': self.update_device,
-            'destroy_device': self.destroy_device,
+            'undeploy_device': self.undeploy_device,
             'set_rule_prop': self.set_rule_prop,
             'start_cycle': self.start_cycle,
             'stop_cycle': self.stop_cycle,
@@ -588,8 +588,8 @@ class MacroAPI(object):
                 raise Exception('file open error')
             return None
 
-    def create_device(self, controller_id, device_tpl, cfg=None, save=None):
-        result = eva.lm.controller.uc_pool.create_device(
+    def deploy_device(self, controller_id, device_tpl, cfg=None, save=None):
+        result = eva.lm.controller.uc_pool.deploy_device(
             controller_id=controller_id,
             device_tpl=device_tpl,
             cfg=cfg,
@@ -604,8 +604,8 @@ class MacroAPI(object):
             save=save)
         return result.get('result') == 'OK'
 
-    def destroy_device(self, controller_id, device_tpl, cfg=None):
-        result = eva.lm.controller.uc_pool.destroy_device(
+    def undeploy_device(self, controller_id, device_tpl, cfg=None):
+        result = eva.lm.controller.uc_pool.undeploy_device(
             controller_id=controller_id, device_tpl=device_tpl, cfg=cfg)
         return result.get('result') == 'OK'
 

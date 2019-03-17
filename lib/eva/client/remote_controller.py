@@ -1005,10 +1005,10 @@ class RemoteUCPool(RemoteControllerPool):
                 p['c'] = cfg
         return c.api_call(device_func, p)
 
-    def create_device(self, controller_id, device_tpl, cfg=None, save=None):
+    def deploy_device(self, controller_id, device_tpl, cfg=None, save=None):
         return self.manage_device(
             controller_id=controller_id,
-            device_func='create_device',
+            device_func='deploy_device',
             device_tpl=device_tpl,
             cfg=cfg,
             save=save)
@@ -1021,10 +1021,10 @@ class RemoteUCPool(RemoteControllerPool):
             cfg=cfg,
             save=save)
 
-    def destroy_device(self, controller_id, device_tpl, cfg=None):
+    def undeploy_device(self, controller_id, device_tpl, cfg=None):
         return self.manage_device(
             controller_id=controller_id,
-            device_func='destroy_device',
+            device_func='undeploy_device',
             device_tpl=device_tpl,
             cfg=cfg)
 

@@ -653,7 +653,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'templates', help='List device templates')
 
         sp_device_create = sp_device.add_parser(
-            'create', help='Create device with a template')
+            'deploy', help='Deploy device with a template')
         sp_device_create.add_argument(
             't',
             help='Template name (file=runtime/tpl/<TPL>.yml|json)',
@@ -691,7 +691,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             action='store_true')
 
         sp_device_destroy = sp_device.add_parser(
-            'destroy', help='Destroy device with a template')
+            'undeploy', help='Undeploy device with a template')
         sp_device_destroy.add_argument(
             't',
             help='Template name (file=runtime/tpl/<TPL>.yml|json)',
@@ -1184,9 +1184,9 @@ _api_functions = {
     'config:set': 'set_prop',
     'clone:item': 'clone',
     'device:templates': 'list_device_tpl',
-    'device:create': 'create_device',
+    'device:deploy': 'deploy_device',
     'device:update': 'update_device',
-    'device:destroy': 'destroy_device',
+    'device:undeploy': 'undeploy_device',
     'modbus:list': 'list_modbus_ports',
     'modbus:create': 'create_modbus_port',
     'modbus:destroy': 'destroy_modbus_port',

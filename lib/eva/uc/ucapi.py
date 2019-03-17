@@ -882,11 +882,11 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_device
-    def create_device(self, **kwargs):
+    def deploy_device(self, **kwargs):
         """
-        create device items
+        deploy device items from template
 
-        Creates the :ref:`device<device>` from the specified template.
+        Deploys the :ref:`device<device>` from the specified template.
 
         Args:
             k: .allow=device
@@ -939,7 +939,7 @@ class UC_API(GenericAPI):
         """
         update device items
 
-        Works similarly to :ref:`ucapi_create_device` function but doesn't
+        Works similarly to :ref:`ucapi_deploy_device` function but doesn't
         create new items, updating the item configuration of the existing ones.
 
         Args:
@@ -1006,11 +1006,11 @@ class UC_API(GenericAPI):
 
     @log_w
     @api_need_device
-    def destroy_device(self, **kwargs):
+    def undeploy_device(self, **kwargs):
         """
         delete device items
 
-        Works in an opposite way to :ref:`ucapi_create_device` function,
+        Works in an opposite way to :ref:`ucapi_deploy_device` function,
         destroying all items specified in the template.
 
         Args:
@@ -1912,11 +1912,11 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
         elif rtp == 'device-tpl':
             if ii:
                 if method == 'deploy':
-                    return self.create_device(k=k, t=ii, save=save, **props)
+                    return self.deploy_device(k=k, t=ii, save=save, **props)
                 elif method == 'update':
                     return self.update_device(k=k, t=ii, save=save, **props)
                 elif method == 'undeploy':
-                    return self.destroy_device(k=k, t=ii, save=save, **props)
+                    return self.undeploy_device(k=k, t=ii, save=save, **props)
         raise MethodNotFound
 
     @generic_web_api_method

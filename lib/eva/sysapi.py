@@ -1048,7 +1048,6 @@ class SysHTTP_API_REST_abstract:
             else:
                 raise MethodNotFound
         elif rtp == 'key':
-            method = props.get('method')
             if method == 'regenerate' and ii:
                 return self.regenerate_key(k=k, i=ii)
             else:
