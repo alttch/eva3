@@ -22,6 +22,7 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import AccessDenied
 from eva.exceptions import ResourceAlreadyExists
+from eva.exceptions import ResourceBusy
 from eva.exceptions import InvalidParameter
 
 import eva.users
@@ -136,15 +137,16 @@ def restful_parse_params(*args, **kwargs):
         ii += l
     else:
         ii = None
-    full = kwargs.get('full')
+    full = val_to_boolean(kwargs.get('full'))
     save = val_to_boolean(kwargs.get('save'))
     kind = kwargs.get('kind', kind)
+    method = kwargs.get('method', kind)
     for_dir = cherrypy.request.path_info.endswith('/')
     if 'k' in kwargs: del kwargs['k']
     if 'save' in kwargs: del kwargs['save']
     if 'full' in kwargs: del kwargs['full']
     if 'kind' in kwargs: del kwargs['kind']
-    return k, ii, full, save, kind, for_dir, kwargs
+    return k, ii, full, save, kind, method, for_dir, kwargs
 
 
 def generic_web_api_method(f):
@@ -168,7 +170,7 @@ def generic_web_api_method(f):
         except MethodNotFound as e:
             eva.core.log_traceback()
             raise cp_api_405(e)
-        except ResourceAlreadyExists as e:
+        except (ResourceAlreadyExists, ResourceBusy) as e:
             eva.core.log_traceback()
             raise cp_api_409(e)
         except AccessDenied as e:
@@ -204,9 +206,9 @@ def restful_api_method(f):
 
     @wraps(f)
     def do(c, rtp, *args, **kwargs):
-        k, ii, full, save, kind, for_dir, props = restful_parse_params(
+        k, ii, full, save, kind, method, for_dir, props = restful_parse_params(
             *args, **kwargs)
-        result = f(c, rtp, k, ii, full, save, kind, for_dir, props)
+        result = f(c, rtp, k, ii, full, save, kind, method, for_dir, props)
         if isinstance(result, tuple):
             result, data = result
         else:
@@ -716,6 +718,9 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             except ResourceAlreadyExists as e:
                 eva.core.log_traceback()
                 r = format_error(12, e)
+            except ResourceBusy as e:
+                eva.core.log_traceback()
+                r = format_error(13, e)
             except Exception as e:
                 eva.core.log_traceback()
                 r = format_error(10, e)

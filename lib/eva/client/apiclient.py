@@ -22,7 +22,8 @@ result_server_timeout = 8
 result_bad_data = 9
 result_func_failed = 10
 result_invalid_params = 11
-result_already_exists = 12
+result_already_exists = 12  # returned by JSON RPC only, 409
+result_busy = 13  # 409
 
 _sysapi_uri = '/sys-api/'
 
@@ -255,7 +256,7 @@ class APIClient(object):
             elif r.status_code == 404:
                 return (result_not_found, result)
             elif r.status_code == 409:
-                return (result_already_exists, result)
+                return (result_busy, result)
             elif r.status_code == 500:
                 if result:
                     return (result_func_failed, result)

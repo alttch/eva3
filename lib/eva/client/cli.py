@@ -46,6 +46,7 @@ default_errors = {
     apiclient.result_bad_data: 'Bad data',
     apiclient.result_invalid_params: 'Invalid function params',
     apiclient.result_already_exists: 'resource already exists',
+    apiclient.result_busy: 'resource is in use'
 }
 
 

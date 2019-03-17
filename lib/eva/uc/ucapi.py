@@ -198,7 +198,7 @@ class UC_API(GenericAPI):
             .g: item group
             .full: return full state
         """
-        k, i, group, tp, full = parse_api_params(kwargs, 'kigpY', '.sssb')
+        k, i, group, tp, full = parse_function_params(kwargs, 'kigpY', '.sssb')
         if i:
             item = eva.uc.controller.get_item(i)
             if not item or not apikey.check(k, item): raise ResourceNotFound
@@ -281,15 +281,7 @@ class UC_API(GenericAPI):
             return result
 
     @log_i
-    def action(self,
-               k=None,
-               i=None,
-               action_uuid=None,
-               nstatus=None,
-               nvalue='',
-               priority=None,
-               q_timeout=None,
-               wait=0):
+    def action(self, **kwargs):
         """
         create unit control action
         
@@ -659,8 +651,7 @@ class UC_API(GenericAPI):
         if clean_snmp:
             self.set_prop(k=k, i=i, p='snmp_trap')
         if props:
-            for p, v in props.items():
-                self.set_prop(k=k, i=i, p=p, v=v, save=None)
+            self.set_prop(k=k, i=i, v=v, save=False)
         if save:
             self.save_config(k=k, i=i)
         return True
@@ -682,15 +673,19 @@ class UC_API(GenericAPI):
         Optional:
             .v: property value
         """
-        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'ss.b')
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        if not p and not isinstance(v, dict):
+            raise InvalidParameter('property not specified')
         if is_oid(i):
             t, i = parse_oid(i)
         item = eva.uc.controller.get_item(i)
         if not item or (is_oid(i) and item and item.item_type != t):
             raise ResourceNotFound
-        if not item.set_prop(p, v, save):
-            raise FunctionFailed('{}.{} = {} unable to set'.format(
-                item.oid, p, v))
+        for prop, value in v.items() if isinstance(v, dict) else {p: v}.items():
+            if not item.set_prop(prop, value, False):
+                raise FunctionFailed('{}.{} = {} unable to set'.format(
+                    item.oid, prop, value))
+        if save: item.save()
         return True
 
     @log_i
@@ -1334,185 +1329,396 @@ class UC_API(GenericAPI):
 
     @log_i
     @api_need_master
-    def load_phi(self, k=None, i=None, m=None, cfg=None, save=False):
-        if not i or not m: return None
+    def load_phi(self, **kwargs):
+        """
+        load PHI module
+
+        Loads :doc:`Physical Interface</drivers>`.
+
+        Args:
+            k: .master
+            .i: PHI ID
+            m: PHI module
+
+        Optional:
+            c: PHI configuration
+            save: save driver configuration after successful call
+        """
+        i, m, cfg, save = parse_api_params(kwargs, 'imcS', 'SS.b')
         try:
             _cfg = dict_from_str(cfg)
         except:
-            eva.core.log_traceback()
-            return None
+            raise InvalidParameter('Unable to parse config')
         if eva.uc.driverapi.load_phi(i, m, _cfg):
             if save: eva.uc.driverapi.save()
             return eva.uc.driverapi.get_phi(i).serialize(full=True, config=True)
 
     @log_d
     @api_need_master
-    def get_phi(self, k=None, i=None):
-        if not i: return None
+    def get_phi(self, **kwargs):
+        """
+        get loaded PHI information
+
+        Args:
+            k: .master
+            .i: PHI ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         phi = eva.uc.driverapi.get_phi(i)
         if phi:
             return phi.serialize(full=True, config=True)
         else:
-            return None
+            raise ResourceNotFound
 
     @log_i
     @api_need_master
-    def set_phi_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not i: return None
-        phi = eva.uc.driverapi.get_phi(i)
-        if not phi: return None
-        if eva.uc.driverapi.set_phi_prop(i, p, v):
-            if save: eva.uc.driverapi.save()
-            return True
-        return False
+    def set_phi_prop(self, **kwargs):
+        """
+        set PHI configuration property
+
+        appends property to PHI configuration and reloads module
+
+        Args:
+            k: .master
+            .i: PHI ID
+            .p: property name (or empty for batch set)
+            .v: propery value (or dict for batch set)
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
+        eva.uc.driverapi.set_phi_prop(i, p, v)
+        if save: eva.uc.driverapi.save()
+        return True
 
     @log_d
     @api_need_master
-    def list_phi(self, k=None, full=False):
+    def list_phi(self, **kwargs):
+        """
+        list loaded PHIs
+
+        Args:
+            k: .master
+            full: get exntended information
+        """
+        full = parse_api_params(kwargs, 'Y', 'b')
         return sorted(
             eva.uc.driverapi.serialize_phi(full=full, config=full),
             key=lambda k: k['id'])
 
-    @log_i
+    @log_d
     @api_need_master
-    def unload_phi(self, k=None, i=None):
-        if not i: return None
-        result = eva.uc.driverapi.unload_phi(i)
-        if result and eva.core.db_update == 1: eva.uc.driverapi.save()
-        return result
+    def test_phi(self, **kwargs):
+        """
+        test PHI
+
+        Get PHI test result (as-is). All PHIs respond to **self** command,
+        **help** command returns all available test commands.
+
+        Args:
+            k: .master
+            .m: PHI module name (without *.py* extension)
+            .c: test command
+        """
+        m, c = parse_api_params(kwargs, 'mc', 'SS')
+        phi = eva.uc.driverapi.get_phi(i)
+        if not phi: raise ResourceNotFound
+        return phi.test(c)
 
     @log_i
     @api_need_master
-    def unlink_phi_mod(self, k=None, m=None):
-        if not m: return None
-        result = eva.uc.driverapi.unlink_phi_mod(m)
-        return result
+    def exec_phi(self, **kwargs):
+        """
+        execute additional PHI commands
+
+        Execute PHI command and return execution result (as-is). **help**
+        command returns all available commands.
+
+        Args:
+            k: .master
+            .m: PHI module name (without *.py* extension)
+            .c: command to exec
+        """
+        m, c = parse_api_params(kwargs, 'mc', 'SS')
+        phi = eva.uc.driverapi.get_phi(i)
+        if not phi: raise ResourceNotFound
+        return phi.exec(c, a)
 
     @log_i
     @api_need_master
-    def put_phi_mod(self, k=None, m=None, c=None, force=None):
-        if not m: return None
-        result = eva.uc.driverapi.put_phi_mod(m, c, force)
-        return result if not result else self.modinfo_phi(k, m)
+    def unload_phi(self, **kwargs):
+        """
+        unload PHI
+
+        Unloads PHI. PHI should not be used by any :doc:`driver</drivers>`
+        (except *default*, but the driver should not be in use by any
+        :doc:`item</items>`).
+
+        If driver <phi_id.default> (which's loaded automatically with PHI) is
+        present, it will be unloaded as well.
+
+        Args:
+            k: .master
+            .i: PHI ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        eva.uc.driverapi.unload_phi(i)
+        if eva.core.db_update == 1: eva.uc.driverapi.save()
+        return True
+
+    @log_i
+    @api_need_master
+    def unlink_phi_mod(self, **kwargs):
+        """
+        delete PHI module file
+
+        Deletes PHI module file, if the module is loaded, all its instances
+        should be unloaded first.
+
+        Args:
+            k: .master
+            .m: PHI module name (without *.py* extension)
+        """
+        m = parse_api_params(kwargs, 'm', 'S')
+        eva.uc.driverapi.unlink_phi_mod(m)
+        return True
+
+    @log_i
+    @api_need_master
+    def put_phi_mod(self, **kwargs):
+        """
+        upload PHI module
+
+        Allows to upload new PHI module to *xc/drivers/phi* folder.
+
+        Args:
+            k: .master
+            .m: PHI module name (without *.py* extension)
+            c: module content
+
+        Optional:
+            force: overwrite PHI module file if exists
+        """
+        m, c, force = parse_api_params(kwargs, 'mcF', 'SSb')
+        eva.uc.driverapi.put_phi_mod(m, c, force)
+        return eva.uc.driverapi.modinfo_phi(m)
 
     @log_d
     @api_need_master
-    def get_phi_map(self, k=None, phi_id=None, action_map=None):
+    def modinfo_phi(self, **kwargs):
+        """
+        get PHI module info
+
+        Args:
+            k: .master
+            .m: PHI module name (without *.py* extension)
+        """
+        m = parse_api_params(kwargs, 'm', 'S')
+        return eva.uc.driverapi.modinfo_phi(m)
+
+    @log_d
+    @api_need_master
+    def modhelp_phi(self, **kwargs):
+        """
+        get PHI usage help
+
+        Args:
+            k: .master
+            .m: PHI module name (without *.py* extension)
+            .c: help context (*cfg*, *get* or *set*)
+        """
+        m, c = parse_api_params(kwargs, 'mc', 'SS')
+        return eva.uc.driverapi.modhelp_phi(m, c)
+
+    @log_d
+    @api_need_master
+    def list_phi_mods(self, **kwargs):
+        """
+        get list of available PHI modules
+
+        Args:
+            k: .master
+        """
+        return eva.uc.driverapi.list_phi_mods()
+
+    @log_d
+    @api_need_master
+    def get_phi_map(self, **kwargs):
+        phi_id, action_map = parse_api_params(kwargs, 'ia', 'S.')
         return eva.uc.driverapi.get_map(phi_id, action_map)
 
     # master functions for LPI/driver management
 
     @log_i
     @api_need_master
-    def unload_driver(self, k=None, i=None):
-        if not i: return None
-        result = eva.uc.driverapi.unload_driver(i)
-        if result and eva.core.db_update == 1: eva.uc.driverapi.save()
-        return result
+    def load_driver(self, **kwargs):
+        """
+        Loads a :doc:`driver</drivers>`, combining previously loaded PHI and
+        chosen LPI module.
 
-    @log_i
-    @api_need_master
-    def load_driver(self, k=None, i=None, m=None, p=None, cfg=None, save=False):
-        if not i or not m or not p: return None
+        Args:
+            k: .master
+            i: LPI ID
+            m: LPI module
+            p: PHI ID
+
+        Optional:
+            c: Driver (LPI) configuration, optional
+        """
+        i, m, p, c, save = parse_api_params(kwargs, 'impcS', 'SSS.b')
         try:
             _cfg = dict_from_str(cfg)
         except:
-            eva.core.log_traceback()
-            return None
+            raise InvalidParameter('Unable to parse config')
         if eva.uc.driverapi.load_driver(i, m, p, _cfg):
             if save: eva.uc.driverapi.save()
             return eva.uc.driverapi.get_driver(p + '.' + i).serialize(
                 full=True, config=True)
 
+    @log_i
+    @api_need_master
+    def unload_driver(self, **kwargs):
+        """
+        unload driver
+
+        Unloads driver. Driver should not be used by any :doc:`item</items>`.
+
+        Args:
+            k: .master
+            i: driver ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        eva.uc.driverapi.unload_driver(i)
+        if eva.core.db_update == 1: eva.uc.driverapi.save()
+        return True
+
     @log_d
     @api_need_master
-    def list_drivers(self, k=None, full=False):
+    def list_drivers(self, **kwargs):
+        """
+        list loaded drivers
+
+        Args:
+            k: .master
+            full: get exntended information
+        """
+        full = parse_api_params(kwargs, 'Y', 'b')
         return sorted(
             eva.uc.driverapi.serialize_lpi(full=full, config=full),
             key=lambda k: k['id'])
 
     @log_d
     @api_need_master
-    def get_driver(self, k=None, i=None):
+    def get_driver(self, **kwargs):
+        """
+        get loaded PHI information
+
+        Args:
+            k: .master
+            .i: PHI ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         if not i: return None
         lpi = eva.uc.driverapi.get_driver(i)
         if lpi:
             return lpi.serialize(full=True, config=True)
         else:
-            return None
+            raise ResourceNotFound
 
     @log_i
     @api_need_master
-    def set_driver_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not i or i.split('.')[-1] == 'default': return None
-        lpi = eva.uc.driverapi.get_driver(i)
-        if not lp: return None
-        if eva.uc.driverapi.set_driver_prop(i, p, v):
-            if save: eva.uc.driverapi.save()
-            return True
-        return False
+    def set_driver_prop(self, **kwargs):
+        """
+        set driver (LPI) configuration property
+
+        appends property to LPI configuration and reloads module
+
+        Args:
+            k: .master
+            .i: driver ID
+            .p: property name (or empty for batch set)
+            .v: propery value (or dict for batch set)
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
+        if i.split('.')[-1] == 'default':
+            raise ResourceBusy('Properties for default drivers can not be set')
+        eva.uc.driverapi.set_driver_prop(i, p, v)
+        if save: eva.uc.driverapi.save()
+        return True
 
     @log_d
     @api_need_master
-    def test_phi(self, k=None, i=None, c=None):
-        if not i: return None
-        phi = eva.uc.driverapi.get_phi(i)
-        if not phi: return None
-        return phi.test(c)
+    def list_lpi_mods(self, **kwargs):
+        """
+        get list of available LPI modules
 
-    @log_i
-    @api_need_master
-    def exec_phi(self, k=None, i=None, c=None, a=None):
-        if not i: return None
-        phi = eva.uc.driverapi.get_phi(i)
-        if not phi: return None
-        return phi.exec(c, a)
-
-    @log_d
-    @api_need_master
-    def list_phi_mods(self, k=None):
-        return eva.uc.driverapi.list_phi_mods()
-
-    @log_d
-    @api_need_master
-    def list_lpi_mods(self, k=None):
+        Args:
+            k: .master
+        """
         return eva.uc.driverapi.list_lpi_mods()
 
     @log_d
     @api_need_master
-    def modinfo_phi(self, k=None, m=None):
-        return eva.uc.driverapi.modinfo_phi(m)
+    def modinfo_lpi(self, **kwargs):
+        """
+        get LPI module info
 
-    @log_d
-    @api_need_master
-    def modinfo_lpi(self, k=None, m=None):
+        Args:
+            k: .master
+            .m: LPI module name (without *.py* extension)
+        """
+        m = parse_api_params(kwargs, 'm', 'S')
         return eva.uc.driverapi.modinfo_lpi(m)
 
     @log_d
     @api_need_master
-    def modhelp_phi(self, k=None, m=None, c=None):
-        return eva.uc.driverapi.modhelp_phi(m, c)
+    def modhelp_lpi(self, **kwargs):
+        """
+        get LPI usage help
 
-    @log_d
-    @api_need_master
-    def modhelp_lpi(self, k=None, m=None, c=None):
+        Args:
+            k: .master
+            .m: LPI module name (without *.py* extension)
+            .c: help context (*cfg*, *action* or *update*)
+        """
+        m, c = parse_api_params(kwargs, 'mc', 'SS')
         return eva.uc.driverapi.modhelp_lpi(m, c)
 
     @log_i
     @api_need_master
-    def assign_driver(self, k=None, i=None, d=None, c=None, save=False):
+    def assign_driver(self, **kwargs):
+        """
+        assign driver to item
+
+        Sets the specified driver to :doc:`item</items>`, automatically
+        updating item props:
+
+        * **action_driver_config**,**update_driver_config** to the specified
+            configuration
+        * **action_exec**, **update_exec** to do all operations via driver
+            function calls (sets both to *|<driver_id>*)
+
+        To unassign driver, set driver ID to empty/null.
+
+        Args:
+            k: masterkey
+            i: item ID
+            d: driver ID (if none - all above item props are set to *null*)
+            c: configuration (e.g. port number)
+
+        Optional:
+            save: save item configuration after successful call
+        """
+        k, i, d, c, save = parse_function_params(kwargs, 'kidcS', '.S..b')
+        if is_oid(i):
+            t, i = parse_oid(i)
         item = eva.uc.controller.get_item(i)
-        if not item: return None
-        if not self.set_prop(k, i, 'update_driver_config', c): return False
-        if item.item_type == 'unit' and \
-                not self.set_prop(k, i, 'action_driver_config', c):
-            return False
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
         drv_p = '|' + d if d else None
-        if not self.set_prop(k, i, 'update_exec', drv_p): return False
-        if item.item_type == 'unit' and \
-                not self.set_prop(k, i, 'action_exec', drv_p):
-            return False
-        if save: item.save()
+        props = {'update_driver_config': c, 'update_exec': drv_p}
+        if item.item_type == 'unit':
+            props['action_driver_config'] = c
+            props['action_exec'] = drv_p
+        self.set_prop(k=k, i=i, v=props)
         return True
 
 
@@ -1521,145 +1727,6 @@ class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self._nofp_log('put_phi', 'c')
-
-    @api_need_master
-    def load_phi(self, k=None, i=None, m=None, c=None, save=False):
-        result = super().load_phi(k, i, m, c, save)
-        return result if result else http_api_result_error()
-
-    @api_need_master
-    def unload_phi(self, k=None, i=None):
-        result = super().unload_phi(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def unlink_phi_mod(self, k=None, m=None):
-        return http_api_result_ok() if super().unlink_phi_mod(k, m) \
-                else http_api_result_error()
-
-    @api_need_master
-    def put_phi_mod(self, k=None, m=None, c=None, force=None):
-        result = super().put_phi_mod(k, m, c, force)
-        if not result: raise cp_api_error()
-        return result
-
-    @api_need_master
-    def list_phi(self, k=None, full=None):
-        result = super().list_phi(k, full)
-        if result is None: raise cp_api_error()
-        return result
-
-    @api_need_master
-    def get_phi_map(self, k=None, i=None, a=None):
-        result = super().get_phi_map(k, i, a)
-        if result is None: raise cp_api_error()
-        return result
-
-    @api_need_master
-    def get_phi(self, k=None, i=None):
-        result = super().get_phi(k, i)
-        if result is False: raise cp_api_error()
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def set_phi_prop(self, k=None, i=None, p=None, v=None, save=None):
-        result = super().set_phi_prop(k, i, p, v, save)
-        if result is False: raise cp_api_error()
-        if result is None: raise cp_api_404()
-        return http_api_result_ok()
-
-    @api_need_master
-    def load_driver(self, k=None, i=None, m=None, p=None, c=None, save=False):
-        result = super().load_driver(k, i, m, p, c, save)
-        return result if result else http_api_result_error()
-
-    @api_need_master
-    def list_drivers(self, k=None, full=None):
-        result = super().list_drivers(k, full)
-        if result is None: raise cp_api_error()
-        return result
-
-    @api_need_master
-    def unload_driver(self, k=None, i=None):
-        result = super().unload_driver(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def get_driver(self, k=None, i=None):
-        result = super().get_driver(k, i)
-        if result is False: raise cp_api_error()
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def set_driver_prop(self, k=None, i=None, p=None, v=None, save=None):
-        result = super().set_driver_prop(k, i, p, v, save)
-        if result is False: raise cp_api_error()
-        if result is None: raise cp_api_404()
-        return http_api_result_ok()
-
-    @api_need_master
-    def test_phi(self, k=None, i=None, c=None):
-        result = super().test_phi(k, i, c)
-        if result is None: raise cp_api_404()
-        if result is False: raise cp_api_error()
-        return result
-
-    @api_need_master
-    def exec_phi(self, k=None, i=None, c=None, a=None):
-        result = super().exec_phi(k, i, c, a)
-        if result is None: raise cp_api_404()
-        if result is False: raise cp_api_error()
-        return result
-
-    @api_need_master
-    def list_phi_mods(self, k=None):
-        return super().list_phi_mods(k)
-
-    @api_need_master
-    def list_lpi_mods(self, k=None):
-        return super().list_lpi_mods(k)
-
-    @api_need_master
-    def modinfo_phi(self, k=None, m=None):
-        result = super().modinfo_phi(k, m)
-        if not result:
-            raise cp_api_error()
-        else:
-            return result
-
-    @api_need_master
-    def modhelp_phi(self, k=None, m=None, c=None):
-        result = super().modhelp_phi(k, m, c)
-        if result is None:
-            raise cp_api_error()
-        else:
-            return result
-
-    @api_need_master
-    def modinfo_lpi(self, k=None, m=None):
-        result = super().modinfo_lpi(k, m)
-        if not result:
-            raise cp_api_error()
-        else:
-            return result
-
-    @api_need_master
-    def modhelp_lpi(self, k=None, m=None, c=None):
-        result = super().modhelp_lpi(k, m, c)
-        if result is None:
-            raise cp_api_error()
-        else:
-            return result
-
-    @api_need_master
-    def assign_driver(self, k=None, i=None, d=None, c=None, save=False):
-        result = super().assign_driver(k, i, d, c, save)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
 
     def info(self):
         result = super().info()
@@ -1693,47 +1760,114 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def GET(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def GET(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         try:
-            return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().GET(rtp, k, ii, full, save, kind, method, for_dir,
+                               props)
+        except MethodNotFound:
+            pass
+        if rtp == 'action':
+            return self.result(
+                k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
+        elif rtp == 'driver':
+            if ii:
+                return self.get_driver(k=k, i=ii)
+            else:
+                return self.list_drivers(k=k, full=full)
+        elif rtp == 'lpi-module':
+            if ii:
+                if 'help' in props:
+                    return self.modhelp_lpi(k=k, m=ii, c=props['help'])
+                else:
+                    return self.modinfo_lpi(k=k, m=ii)
+            else:
+                return self.list_lpi_mods(k=k)
+        elif rtp == 'phi':
+            if ii:
+                return self.get_phi(k=k, i=ii)
+            else:
+                return self.list_phi(k=k, full=full)
+        elif rtp == 'phi-module':
+            if ii:
+                if 'help' in props:
+                    return self.modhelp_phi(k=k, m=ii, c=props['help'])
+                else:
+                    return self.modinfo_phi(k=k, m=ii)
+            else:
+                return self.list_phi_mods(k=k)
+        elif rtp == 'modbus':
+            return self.list_modbus_ports(k=k)
+        elif rtp == 'owfs':
+            return self.list_owfs_buses(k=k)
+        elif rtp in ['unit', 'sensor', 'mu']:
+            if kind == 'groups':
+                return self.groups(k=k, p=rtp)
+            elif kind == 'history':
+                return self.state_history(k=k, i=ii, **props)
+            elif kind == 'props':
+                return self.list_props(k=k, i=ii)
+            elif for_dir:
+                return self.state(k=k, p=rtp, g=ii, full=full, **props)
+            else:
+                return self.state(k=k, p=rtp, i=ii, full=full, **props)
+        raise MethodNotFound
+
+    @generic_web_api_method
+    @restful_api_method
+    def POST(self, rtp, k, ii, full, save, kind, method, for_dir, props):
+        try:
+            return super().POST(rtp, k, ii, full, save, kind, method, for_dir,
+                                props)
         except MethodNotFound:
             pass
         raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
-    def POST(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def PUT(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         try:
-            return super().POST(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().PUT(rtp, k, ii, full, save, kind, method, for_dir,
+                               props)
         except MethodNotFound:
             pass
         raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
-    def PUT(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def PATCH(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         try:
-            return super().PUT(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().PATCH(rtp, k, ii, full, save, kind, method, for_dir,
+                                 props)
         except MethodNotFound:
             pass
         raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
-    def PATCH(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def DELETE(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         try:
-            return super().PATCH(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().DELETE(rtp, k, ii, full, save, kind, method, for_dir,
+                                  props)
         except MethodNotFound:
             pass
-        raise MethodNotFound
-
-    @generic_web_api_method
-    @restful_api_method
-    def DELETE(self, rtp, k, ii, full, save, kind, for_dir, props):
-        try:
-            return super().DELETE(rtp, k, ii, full, save, kind, for_dir, props)
-        except MethodNotFound:
-            pass
+        if rtp == 'driver':
+            if ii:
+                return self.unload_driver(k=k, i=ii)
+        if rtp == 'phi':
+            if ii:
+                return self.unload_phi(k=k, i=ii)
+        if rtp == 'phi-module':
+            if ii:
+                return self.unlink_phi_mod(k=k, m=ii)
+        elif rtp == 'modbus':
+            if ii:
+                return self.destroy_modbus_port(k=k, i=ii)
+        elif rtp == 'owfs':
+            if ii:
+                return self.destroy_owfs_bus(k=k, i=ii)
+        elif rtp in ['unit', 'sensor', 'mu']:
+            if ii:
+                return self.destroy(k=k, i=rtp + ':' + ii)
         raise MethodNotFound
 
 

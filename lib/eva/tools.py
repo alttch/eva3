@@ -254,11 +254,13 @@ def parse_function_params(params,
             if value is not None:
                 val = val_to_boolean(value)
                 if val is None: raise e(err.format(n, value, 'boolean'))
-            result += (value,)
+                result += (val,)
+            else:
+                result += (None,)
         elif required == 'B':
             val = val_to_boolean(value)
             if val is None: raise e(err.format(n, value, 'boolean'))
-            result += (value,)
+            result += (val,)
         elif required == 'D':
             if not isinstance(value, dict):
                 raise e(err.format(n, value, 'dict'))

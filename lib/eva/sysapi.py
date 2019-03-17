@@ -583,7 +583,7 @@ class UserAPI(object):
     @api_need_master
     def user_set(self, **kwargs):
         """
-        set user property
+        .set user property
 
         Args:
             k: .master
@@ -1009,7 +1009,7 @@ class SysHTTP_API(SysHTTP_API_abstract, GenericHTTP_API):
 
 class SysHTTP_API_REST_abstract:
 
-    def GET(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def GET(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         if rtp == 'core':
             return self.test(k=k)
         elif rtp == 'cvar':
@@ -1035,22 +1035,21 @@ class SysHTTP_API_REST_abstract:
                 return self.list_users(k=k)
         raise MethodNotFound
 
-    def POST(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def POST(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         if rtp == 'core':
-            cmd = props.get('cmd')
-            if cmd == 'dump':
+            if method == 'dump':
                 return self.dump(k=k)
-            elif cmd == 'save':
+            elif method == 'save':
                 return self.save(k=k)
-            elif cmd == 'log_rotate':
+            elif method == 'log_rotate':
                 return self.log_rotate(k=k)
-            elif cmd == 'shutdown':
+            elif method == 'shutdown':
                 return self.shutdown_core(k=k)
             else:
                 raise MethodNotFound
         elif rtp == 'key':
-            cmd = props.get('cmd')
-            if cmd == 'regenerate' and ii:
+            method = props.get('method')
+            if method == 'regenerate' and ii:
                 return self.regenerate_key(k=k, i=ii)
             else:
                 raise MethodNotFound
@@ -1061,7 +1060,7 @@ class SysHTTP_API_REST_abstract:
             return self.cmd(k=k, c=ii, **props)
         raise MethodNotFound
 
-    def PUT(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def PUT(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         if rtp == 'cvar':
             self.set_cvar(k=k, i=ii, **props)
             return self.get_cvar(k=k, i=ii)
@@ -1086,7 +1085,7 @@ class SysHTTP_API_REST_abstract:
             return self.create_user(k=k, u=ii, **props)
         raise MethodNotFound
 
-    def PATCH(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def PATCH(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         if rtp == 'cvar':
             return self.set_cvar(k=k, i=ii, **props)
         elif rtp == 'core':
@@ -1128,7 +1127,7 @@ class SysHTTP_API_REST_abstract:
             return True
         raise MethodNotFound
 
-    def DELETE(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def DELETE(self, rtp, k, ii, full, save, kind, method, for_dir, props):
         if rtp == 'key':
             return self.destroy_key(k=k, i=ii)
         elif rtp == 'lock':

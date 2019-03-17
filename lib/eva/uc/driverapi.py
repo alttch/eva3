@@ -17,6 +17,12 @@ import eva.sysapi
 import eva.apikey
 from eva.tools import format_json
 
+from eva.exceptions import InvalidParameter
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceBusy
+from eva.exceptions import ResourceAlreadyExists
+
 phis = {}
 drivers = {}
 items_by_phi = {}
@@ -141,45 +147,41 @@ def unlink_phi_mod(mod):
     if mod.find('/') != -1 or mod == 'generic_phi': return False
     for k, p in phis.copy().items():
         if p.phi_mod_id == mod:
-            logging.error('PHI module %s is in use, unable to unlink' % mod)
-            return False
+            raise ResourceBusy(
+                'PHI module %s is in use, unable to unlink' % mod)
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
     try:
-        if not eva.core.prepare_save(): return False
-        os.unlink(fname)
-        if not eva.core.finish_save(): return False
-    except:
-        logging.error('Unable to unlink PHI module %s' % fname)
-        eva.core.log_traceback()
-        return False
+        eva.core.prepare_save()
+        unlink(fname)
+        eva.core.finish_save()
+    except Exception as e:
+        logging.error('Unable to unlink PHI module {}: {}'.format(fname, e))
     return True
 
 
 def put_phi_mod(mod, content, force=False):
-    if mod.find('/') != -1 or mod == 'generic_phi': return False
+    if mod.find('/') != -1: raise InvalidParameter('Invalid module file name')
+    if mod == 'generic_phi':
+        raise ResourceAlreadyExists('generic PHI can not be overriden')
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
     code = '{}\n\ns=PHI(info_only=True).serialize(full=True)'.format(content)
     try:
         d = {}
         exec(code, d)
         if 's' not in d or 'mod' not in d['s']:
-            raise Exception('Invalid module code')
+            raise FunctionFailed
     except:
-        logging.error(
-            'Unable to check PHI module %s, invalid module code' % mod)
-        eva.core.log_traceback()
-        return False
+        raise FunctionFailed(
+            'Unable to check PHI module {}, invalid module code'.format(mod))
     if os.path.isfile(fname) and not force:
-        logging.error('Unable to overwrite PHI module %s' % fname)
-        return False
+        raise ResourceAlreadyExists(
+            'PHI module {} already exists'.format(fname))
     try:
-        if not eva.core.prepare_save(): return False
+        eva.core.prepare_save()
         open(fname, 'w').write(content)
-        if not eva.core.finish_save(): return False
-    except:
-        logging.error('Unable to put PHI module %s' % fname)
-        eva.core.log_traceback()
-        return False
+        eva.core.finish_save()
+    except Exception as e:
+        raise FunctionFailed('Unable to put PHI module {}: {}'.format(fname, e))
     return True
 
 
@@ -190,10 +192,11 @@ def modhelp_phi(mod, context):
         d = {}
         exec(code, d)
         result = d.get('s')
-        return result
-    except:
-        eva.core.log_traceback()
-        return None
+    except Exception as e:
+        raise FunctionFailed(e)
+    if result is None:
+        raise ResourceNotFound('Help context not found')
+    return result
 
 
 def modinfo_phi(mod):
@@ -209,9 +212,8 @@ def modinfo_phi(mod):
             except:
                 pass
         return result
-    except:
-        eva.core.log_traceback()
-        return None
+    except Exception as e:
+        raise FunctionFailed(e)
 
 
 def modhelp_lpi(mod, context):
@@ -221,9 +223,11 @@ def modhelp_lpi(mod, context):
         d = {}
         exec(code, d)
         result = d.get('s')
-        return result
-    except:
-        return None
+    except Exception as e:
+        raise FunctionFailed(e)
+    if result is None:
+        raise ResourceNotFound('Help context not found')
+    return result
 
 
 def modinfo_lpi(mod):
@@ -241,8 +245,8 @@ def modinfo_lpi(mod):
             except:
                 pass
         return result
-    except:
-        return None
+    except Exception as e:
+        raise FunctionFailed(e)
 
 
 def list_phi_mods():
@@ -331,10 +335,9 @@ def update_item(i, data):
 
 
 def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
-    if not phi_id: return False
+    if not phi_id: raise InvalidParameter('PHI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", phi_id):
-        logging.debug('PHI %s id contains forbidden symbols' % phi_id)
-        return False
+        raise InvalidParameter('PHI %s id contains forbidden symbols' % phi_id)
     try:
         phi_mod = importlib.import_module('eva.uc.drivers.phi.' + phi_mod_id)
         importlib.reload(phi_mod)
@@ -352,21 +355,19 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
                 'Unable to activate PHI %s: ' % phi_mod_id + \
                 'abstract module'
                 )
-            return False
+            raise FunctionFailed('PHI module is abstract')
         if _api > __api__:
             logging.error(
                 'Unable to activate PHI %s: ' % phi_mod_id + \
                 'controller driver API version is %s, ' % __api__ + \
                 'PHI driver API version is %s' % _api)
-            return False
-    except:
-        logging.error('unable to load PHI mod %s' % phi_mod_id)
-        eva.core.log_traceback()
-        return False
+            raise FunctionFailed('unsupported driver API version')
+    except Exception as e:
+        raise FunctionFailed('unable to load PHI mod {}: {}'.format(
+            phi_mod_id, e))
     phi = phi_mod.PHI(phi_cfg=phi_cfg)
     if not phi.ready:
-        logging.error('unable to init PHI mod %s' % phi_mod_id)
-        return False
+        raise FunctionFailed('unable to init PHI mod %s' % phi_mod_id)
     phi.phi_id = phi_id
     phi.oid = 'phi:uc/%s/%s' % (eva.core.system_name, phi_id)
     if phi_id in phis:
@@ -390,12 +391,12 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
 
 def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     if get_phi(phi_id) is None:
-        logging.error('Unable to load LPI, unknown PHI: %s' % phi_id)
-        return False
-    if not lpi_id: return False
+        raise ResourceNotFound(
+            'Unable to load LPI, unknown PHI: {}'.format(phi_id))
+    if not lpi_id: raise InvalidParameter('LPI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", lpi_id):
-        logging.debug('LPI %s id contains forbidden symbols' % lpi_id)
-        return False
+        raise InvalidParameter(
+            'LPI {} id contains forbidden symbols'.format(lpi_id))
     try:
         lpi_mod = importlib.import_module('eva.uc.drivers.lpi.' + lpi_mod_id)
         importlib.reload(lpi_mod)
@@ -420,14 +421,12 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
                 'controller driver API version is %s, ' % __api__ + \
                 'LPI driver API version is %s' % _api)
             return False
-    except:
-        logging.error('unable to load LPI mod %s' % lpi_mod_id)
-        eva.core.log_traceback()
-        return False
+    except Exception as e:
+        raise FunctionFailed('unable to load LPI mod {}: {}'.format(
+            lpi_mod_id, e))
     lpi = lpi_mod.LPI(lpi_cfg=lpi_cfg, phi_id=phi_id)
     if not lpi.ready:
-        logging.error('unable to init LPI mod %s' % lpi_mod_id)
-        return False
+        raise FunctionFailed('unable to init LPI mod %s' % lpi_mod_id)
     lpi.lpi_id = lpi_id
     lpi.driver_id = phi_id + '.' + lpi_id
     lpi.oid = 'driver:uc/%s/%s' % (eva.core.system_name, lpi.driver_id)
@@ -446,8 +445,10 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
 
 
 def set_phi_prop(phi_id, p, v):
-    if not p and not isinstance(v, dict): return
+    if not p and not isinstance(v, dict):
+        raise InvalidParameter('property not specified')
     phi = get_phi(phi_id)
+    if not phi: raise ResourceNotFound
     cfg = phi.phi_cfg
     phi_mod_id = phi.phi_mod_id
     if p and not isinstance(v, dict):
@@ -463,23 +464,13 @@ def set_phi_prop(phi_id, p, v):
 
 def unload_phi(phi_id):
     phi = get_phi(phi_id)
-    if phi is None: return None
-    err = False
+    if phi is None: raise ResourceNotFound
     for k, l in drivers.copy().items():
         if l.phi_id == phi_id:
             if l.lpi_id == 'default':
-                ru = unload_driver(l.driver_id)
-            else:
-                ru = False
-            if not ru:
-                logging.error(
-                    'Unable to unload PHI %s, it is in use by driver %s' %
-                    (phi_id, k))
-                err = True
+                unload_driver(l.driver_id)
     if items_by_phi[phi_id]:
-        logging.error('Unable to unload PHI %s, it is in use' % (phi_id))
-        err = True
-    if err: return False
+        raise ResourceBusy('Unable to unload PHI %s, it is in use' % (phi_id))
     try:
         phi._stop()
     except:
@@ -489,8 +480,10 @@ def unload_phi(phi_id):
 
 
 def set_driver_prop(driver_id, p, v):
-    if not p and not isinstance(v, dict): return
+    if not p and not isinstance(v, dict):
+        raise InvalidParameter('property not specified')
     lpi = get_driver(driver_id)
+    if not lpi: raise ResourceNotFound
     cfg = lpi.lpi_cfg
     if p and not isinstance(v, dict):
         cfg[p] = v
@@ -505,14 +498,16 @@ def set_driver_prop(driver_id, p, v):
 
 def unload_driver(driver_id):
     lpi = get_driver(driver_id)
-    if lpi is None: return None
-    err = False
+    if lpi is None: raise ResourceNotFound
+    err = None
     for i in items_by_phi[lpi.phi_id]:
         if i.update_exec and i.update_exec[1:] == driver_id:
             logging.error('Unable to unload driver %s, it is in use by %s' %
                           (driver_id, i.oid))
-            err = True
-    if err: return False
+            err = i.oid
+    if err:
+        raise ResourceBusy(
+            'Unable to unload driver, it is in use by {}'.format(err))
     try:
         lpi._stop()
     except:
@@ -565,18 +560,26 @@ def load():
         _phi = data.get('phi')
         if _phi:
             for p in _phi:
-                load_phi(p['id'], p['mod'], phi_cfg=p['cfg'], start=False)
+                try:
+                    load_phi(p['id'], p['mod'], phi_cfg=p['cfg'], start=False)
+                except Exception as e:
+                    logging.error(e)
+                    eva.core.log_traceback()
         _lpi = data.get('lpi')
         if _lpi:
             for l in _lpi:
-                load_driver(
-                    l['lpi_id'],
-                    l['mod'],
-                    l['phi_id'],
-                    lpi_cfg=l['cfg'],
-                    start=False)
-    except:
-        logging.error('unable to load uc_drivers.json')
+                try:
+                    load_driver(
+                        l['lpi_id'],
+                        l['mod'],
+                        l['phi_id'],
+                        lpi_cfg=l['cfg'],
+                        start=False)
+                except Exception as e:
+                    logging.error(e)
+                    eva.core.log_traceback()
+    except Exception as e:
+        logging.error('unable to load uc_drivers.json: {}'.format(e))
         eva.core.log_traceback()
         return False
     return True
@@ -587,8 +590,8 @@ def save():
     try:
         open(eva.core.dir_runtime + '/uc_drivers.json', 'w').write(
             format_json(serialize(config=True), minimal=False))
-    except:
-        logging.error('unable to save drivers config')
+    except Exception as e:
+        logging.error('unable to save drivers config: {}'.format(e))
         eva.core.log_traceback()
         return False
     return True
@@ -598,12 +601,14 @@ def start():
     for k, p in drivers.items():
         try:
             p._start()
-        except:
+        except Exception as e:
+            logging.error('unable to start {}: {}'.format(k, e))
             eva.core.log_traceback()
     for k, p in phis.items():
         try:
             p._start()
-        except:
+        except Exception as e:
+            logging.error('unable to start {}: {}'.format(k, e))
             eva.core.log_traceback()
 
 
@@ -611,10 +616,12 @@ def stop():
     for k, p in drivers.items():
         try:
             p._stop()
-        except:
+        except Exception as e:
+            logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()
     for k, p in phis.items():
         try:
             p._stop()
-        except:
+        except Exception as e:
+            logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()

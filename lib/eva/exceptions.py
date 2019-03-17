@@ -29,6 +29,12 @@ class ResourceNotFound(GenericException):
         msg = super().__str__()
         return msg + ' not found' if msg else 'Resource not found'
 
+class ResourceBusy(GenericException):
+
+    def __str__(self):
+        msg = super().__str__()
+        return msg if msg else 'Resource is in use'
+
 
 class ResourceAlreadyExists(GenericException):
 
