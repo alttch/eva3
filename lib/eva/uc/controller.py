@@ -608,6 +608,8 @@ def destroy_item(item):
             del mu_by_group[i.group][i.item_id]
             if not mu_by_group[i.group]:
                 del mu_by_group[i.group]
+        if not items_by_group[i.group]:
+            del items_by_group[i.group]
         i.destroy()
         if eva.core.db_update == 1 and i.config_file_exists:
             try:
