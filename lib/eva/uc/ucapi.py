@@ -1461,7 +1461,13 @@ class UC_API(GenericAPI):
         i, c = parse_api_params(kwargs, 'ic', 'SS')
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: raise ResourceNotFound
-        return phi.test(c)
+        result = phi.test(c)
+        if result is None or result is False:
+            raise FunctionFailed('test failed')
+        if isinstance(result, dict):
+            return result
+        else:
+            return { 'output': result }
 
     @log_i
     @api_need_master
@@ -1475,12 +1481,19 @@ class UC_API(GenericAPI):
         Args:
             k: .master
             .i: PHI id
-            .c: command to exec
+            c: command to exec
+            a: command argument
         """
-        i, c = parse_api_params(kwargs, 'ic', 'SS')
+        i, c, a = parse_api_params(kwargs, 'ica', 'SSS')
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: raise ResourceNotFound
-        return phi.exec(c, c)
+        result = phi.exec(c, a)
+        if result is None or result is False:
+            raise FunctionFailed('exec failed')
+        if isinstance(result, dict):
+            return result
+        else:
+            return { 'output': result }
 
     @log_w
     @api_need_master

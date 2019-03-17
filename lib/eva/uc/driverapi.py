@@ -152,11 +152,12 @@ def unlink_phi_mod(mod):
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
     try:
         eva.core.prepare_save()
-        unlink(fname)
+        os.unlink(fname)
         eva.core.finish_save()
+        return True
     except Exception as e:
-        logging.error('Unable to unlink PHI module {}: {}'.format(fname, e))
-    return True
+        raise FunctionFailed('Unable to unlink PHI module {}: {}'.format(
+            fname, e))
 
 
 def put_phi_mod(mod, content, force=False):
