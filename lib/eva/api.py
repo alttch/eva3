@@ -137,17 +137,15 @@ def restful_parse_params(*args, **kwargs):
         ii += l
     else:
         ii = None
-    full = val_to_boolean(kwargs.get('full'))
     save = val_to_boolean(kwargs.get('save'))
     kind = kwargs.get('kind', kind)
     method = kwargs.get('method')
     for_dir = cherrypy.request.path_info.endswith('/')
     if 'k' in kwargs: del kwargs['k']
     if 'save' in kwargs: del kwargs['save']
-    if 'full' in kwargs: del kwargs['full']
     if 'kind' in kwargs: del kwargs['kind']
     if 'method' in kwargs: del kwargs['method']
-    return k, ii, full, save, kind, method, for_dir, kwargs
+    return k, ii, save, kind, method, for_dir, kwargs
 
 
 def generic_web_api_method(f):
@@ -206,10 +204,10 @@ def restful_api_method(f):
     """
 
     @wraps(f)
-    def do(_api_class_name, rtp, *args, **kwargs):
-        k, ii, full, save, kind, method, for_dir, props = restful_parse_params(
+    def do(_api_class_name, _api_resource_type, *args, **kwargs):
+        k, ii, save, kind, method, for_dir, props = restful_parse_params(
             *args, **kwargs)
-        result = f(_api_class_name, rtp, k, ii, full, save, kind, method,
+        result = f(_api_class_name, _api_resource_type, k, ii, save, kind, method,
                    for_dir, props)
         if isinstance(result, tuple):
             result, data = result

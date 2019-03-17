@@ -1801,9 +1801,9 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def GET(self, rtp, k, ii, full, save, kind, method, for_dir, props):
+    def GET(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().GET(rtp, k, ii, full, save, kind, method, for_dir,
+            return super().GET(rtp, k, ii, save, kind, method, for_dir,
                                props)
         except MethodNotFound:
             pass
@@ -1815,9 +1815,9 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             elif kind == 'props':
                 return self.list_props(k=k, i=ii)
             elif for_dir:
-                return self.state(k=k, p=rtp, g=ii, full=full, **props)
+                return self.state(k=k, p=rtp, g=ii, **props)
             else:
-                return self.state(k=k, p=rtp, i=ii, full=full, **props)
+                return self.state(k=k, p=rtp, i=ii, **props)
         elif rtp == 'action':
             return self.result(
                 k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
@@ -1825,7 +1825,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             if ii:
                 return self.get_driver(k=k, i=ii)
             else:
-                return self.list_drivers(k=k, full=full)
+                return self.list_drivers(k=k)
         elif rtp == 'lpi-module':
             if ii:
                 if 'help' in props:
@@ -1838,7 +1838,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             if ii:
                 return self.get_phi(k=k, i=ii)
             else:
-                return self.list_phi(k=k, full=full)
+                return self.list_phi(k=k)
         elif rtp == 'phi-module':
             if ii:
                 if 'help' in props:
@@ -1864,9 +1864,9 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def POST(self, rtp, k, ii, full, save, kind, method, for_dir, props):
+    def POST(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().POST(rtp, k, ii, full, save, kind, method, for_dir,
+            return super().POST(rtp, k, ii, save, kind, method, for_dir,
                                 props)
         except MethodNotFound:
             pass
@@ -1890,7 +1890,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 if method == 'test':
                     return self.test_owfs_bus(k=k, i=ii)
                 elif method == 'scan':
-                    return self.scan_owfs_bus(k=k, i=ii, full=full, **props)
+                    return self.scan_owfs_bus(k=k, i=ii, **props)
         elif rtp == 'device-tpl':
             if ii:
                 if method == 'create':
@@ -1903,9 +1903,9 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def PUT(self, rtp, k, ii, full, save, kind, method, for_dir, props):
+    def PUT(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().PUT(rtp, k, ii, full, save, kind, method, for_dir,
+            return super().PUT(rtp, k, ii, save, kind, method, for_dir,
                                props)
         except MethodNotFound:
             pass
@@ -1934,9 +1934,9 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def PATCH(self, rtp, k, ii, full, save, kind, method, for_dir, props):
+    def PATCH(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().PATCH(rtp, k, ii, full, save, kind, method, for_dir,
+            return super().PATCH(rtp, k, ii, save, kind, method, for_dir,
                                  props)
         except MethodNotFound:
             pass
@@ -1944,9 +1944,9 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def DELETE(self, rtp, k, ii, full, save, kind, method, for_dir, props):
+    def DELETE(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().DELETE(rtp, k, ii, full, save, kind, method, for_dir,
+            return super().DELETE(rtp, k, ii, save, kind, method, for_dir,
                                   props)
         except MethodNotFound:
             pass
