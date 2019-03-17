@@ -23,6 +23,7 @@ from eva.api import api_result_accepted
 
 from eva.api import generic_web_api_method
 from eva.api import restful_api_method
+from eva.api import set_restful_response_location
 
 from eva.api import MethodNotFound
 
@@ -322,6 +323,8 @@ class UC_API(GenericAPI):
                                                        '.sR.nsin')
         item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
+        if s == 'toggle':
+            s = 0 if item.status else 1
         return self._process_action_result(
             eva.uc.controller.exec_unit_action(
                 unit=item,
@@ -771,7 +774,7 @@ class UC_API(GenericAPI):
             .i: item oid (**type:group/id**)
 
         Optional:
-            .g: multi-update group
+            .g: item group
             .v: virtual item (deprecated)
             save: save multi-update configuration immediately
         """
@@ -998,7 +1001,7 @@ class UC_API(GenericAPI):
                                        u.get('props'), save)
         return True
 
-    @log_i
+    @log_w
     @api_need_device
     def destroy_device(self, **kwargs):
         """
@@ -1116,7 +1119,7 @@ class UC_API(GenericAPI):
         if result and save: eva.uc.modbus.save()
         return result
 
-    @log_i
+    @log_w
     @api_need_master
     def destroy_modbus_port(self, **kwargs):
         """
@@ -1133,7 +1136,7 @@ class UC_API(GenericAPI):
         if result and eva.core.db_update == 1: eva.uc.modbus.save()
         return result
 
-    @log_i
+    @log_d
     @api_need_master
     def list_modbus_ports(self, **kwargs):
         """
@@ -1143,9 +1146,23 @@ class UC_API(GenericAPI):
             k: .master
             .i: virtual port ID
         """
+        parse_api_params(kwargs)
         return sorted(eva.uc.modbus.serialize(), key=lambda k: k['id'])
 
-    @log_i
+    @log_d
+    @api_need_master
+    def get_modbus_port(self, **kwargs):
+        """
+        get virtual ModBus port configuration
+
+        Args:
+            k: .master
+            .i: port ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.uc.modbus.serialize(i)
+
+    @log_d
     @api_need_master
     def test_modbus_port(self, **kwargs):
         """
@@ -1209,7 +1226,7 @@ class UC_API(GenericAPI):
         if result and save: eva.uc.owfs.save()
         return result
 
-    @log_i
+    @log_w
     @api_need_master
     def destroy_owfs_bus(self, **kwargs):
         """
@@ -1232,7 +1249,7 @@ class UC_API(GenericAPI):
         if result and eva.core.db_update == 1: eva.uc.owfs.save()
         return result
 
-    @log_i
+    @log_d
     @api_need_master
     def list_owfs_buses(self, **kwargs):
         """
@@ -1241,9 +1258,23 @@ class UC_API(GenericAPI):
         Args:
             k: .master
         """
+        parse_api_params(kwargs)
         return sorted(eva.uc.owfs.serialize(), key=lambda k: k['id'])
 
-    @log_i
+    @log_d
+    @api_need_master
+    def get_owfs_bus(self, **kwargs):
+        """
+        get OWFS bus configuration
+
+        Args:
+            k: .master
+            .i: bus ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.uc.owfs.serialize(i)
+
+    @log_d
     @api_need_master
     def test_owfs_bus(self, **kwargs):
         """
@@ -1383,6 +1414,9 @@ class UC_API(GenericAPI):
             .i: PHI ID
             .p: property name (or empty for batch set)
             .v: propery value (or dict for batch set)
+
+        Optional:
+            save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
         eva.uc.driverapi.set_phi_prop(i, p, v)
@@ -1404,7 +1438,7 @@ class UC_API(GenericAPI):
             eva.uc.driverapi.serialize_phi(full=full, config=full),
             key=lambda k: k['id'])
 
-    @log_d
+    @log_i
     @api_need_master
     def test_phi(self, **kwargs):
         """
@@ -1415,10 +1449,10 @@ class UC_API(GenericAPI):
 
         Args:
             k: .master
-            .m: PHI module name (without *.py* extension)
+            .m: PHI id
             .c: test command
         """
-        m, c = parse_api_params(kwargs, 'mc', 'SS')
+        i, c = parse_api_params(kwargs, 'ic', 'SS')
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: raise ResourceNotFound
         return phi.test(c)
@@ -1434,15 +1468,15 @@ class UC_API(GenericAPI):
 
         Args:
             k: .master
-            .m: PHI module name (without *.py* extension)
+            .i: PHI id
             .c: command to exec
         """
-        m, c = parse_api_params(kwargs, 'mc', 'SS')
+        i, c = parse_api_params(kwargs, 'ic', 'SS')
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: raise ResourceNotFound
-        return phi.exec(c, a)
+        return phi.exec(c, c)
 
-    @log_i
+    @log_w
     @api_need_master
     def unload_phi(self, **kwargs):
         """
@@ -1464,7 +1498,7 @@ class UC_API(GenericAPI):
         if eva.core.db_update == 1: eva.uc.driverapi.save()
         return True
 
-    @log_i
+    @log_w
     @api_need_master
     def unlink_phi_mod(self, **kwargs):
         """
@@ -1481,7 +1515,7 @@ class UC_API(GenericAPI):
         eva.uc.driverapi.unlink_phi_mod(m)
         return True
 
-    @log_i
+    @log_w
     @api_need_master
     def put_phi_mod(self, **kwargs):
         """
@@ -1556,12 +1590,13 @@ class UC_API(GenericAPI):
 
         Args:
             k: .master
-            i: LPI ID
+            .i: LPI ID
             m: LPI module
-            p: PHI ID
+            .p: PHI ID
 
         Optional:
             c: Driver (LPI) configuration, optional
+            save: save configuration after successful call
         """
         i, m, p, c, save = parse_api_params(kwargs, 'impcS', 'SSS.b')
         try:
@@ -1573,7 +1608,7 @@ class UC_API(GenericAPI):
             return eva.uc.driverapi.get_driver(p + '.' + i).serialize(
                 full=True, config=True)
 
-    @log_i
+    @log_w
     @api_need_master
     def unload_driver(self, **kwargs):
         """
@@ -1636,6 +1671,9 @@ class UC_API(GenericAPI):
             .i: driver ID
             .p: property name (or empty for batch set)
             .v: propery value (or dict for batch set)
+
+        Optional:
+            save: save driver configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
         if i.split('.')[-1] == 'default':
@@ -1726,7 +1764,7 @@ class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
 
     def __init__(self):
         super().__init__()
-        self._nofp_log('put_phi', 'c')
+        self._nofp_log('put_phi_mod', 'c')
 
     def info(self):
         result = super().info()
@@ -1807,11 +1845,18 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             else:
                 return self.list_phi_mods(k=k)
         elif rtp == 'modbus':
-            return self.list_modbus_ports(k=k)
+            if ii:
+                return self.get_modbus_port(k=k, i=ii)
+            else:
+                return self.list_modbus_ports(k=k)
         elif rtp == 'owfs':
-            return self.list_owfs_buses(k=k)
+            if ii:
+                return self.get_owfs_bus(k=k, i=ii)
+            else:
+                return self.list_owfs_buses(k=k)
         elif rtp == 'device-tpl':
-            return self.list_device_tpl(k=k)
+            if not ii:
+                return self.list_device_tpl(k=k)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1822,6 +1867,35 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                                 props)
         except MethodNotFound:
             pass
+        if rtp == 'action':
+            if not ii:
+                a = self.action(k=k, **props)
+                set_restful_response_location(a['uuid'], 'action')
+                return a
+        elif rtp == 'phi':
+            if ii:
+                if method == 'test':
+                    return self.test_phi(k=k, i=ii, **props)
+                elif method == 'exec':
+                    return self.exec_phi(k=k, i=ii, **props)
+        elif rtp == 'modbus':
+            if ii:
+                if method == 'test':
+                    return self.test_modbus_port(k=k, i=ii)
+        elif rtp == 'owfs':
+            if ii:
+                if method == 'test':
+                    return self.test_owfs_bus(k=k, i=ii)
+                elif method == 'scan':
+                    return self.scan_owfs_bus(k=k, i=ii, full=full, **props)
+        elif rtp == 'device-tpl':
+            if ii:
+                if method == 'create':
+                    return self.create_device(k=k, t=ii, **props)
+                elif method == 'update':
+                    return self.update_device(k=k, t=ii, **props)
+                elif method == 'delete':
+                    return self.destroy_device(k=k, t=ii, **props)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1832,6 +1906,27 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                                props)
         except MethodNotFound:
             pass
+        if rtp == 'action':
+            if ii:
+                return self.action(k=k, u=ii, **props)
+        elif rtp in ['unit', 'sensor', 'mu']:
+            self.create(k=k, i=rtp + ':' + ii, save=save)
+            self.set_prop(k=k, i=ii, v=props, save=save)
+            return self.state(k=k, i=ii, p=rtp, full=True)
+        elif rtp == 'driver':
+            try:
+                phi_id, lpi_id = ii.split('.')
+            except:
+                raise InvalidParameter('Invalid driver ID')
+            return self.load_driver(k=k, i=lpi_id, p=phi_id, save=save**props)
+        elif rtp == 'modbus':
+            return self.create_modbus_port(k=k, i=ii, save=save, **props)
+        elif rtp == 'owfs':
+            return self.create_owfs_bus(k=k, i=ii, save=save, **props)
+        elif rtp == 'phi':
+            return self.load_phi(k=k, i=ii, save=save, **props)
+        elif rtp == 'phi-module':
+            return self.put_phi_mod(k=k, m=ii, **props)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1855,10 +1950,10 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
         if rtp == 'driver':
             if ii:
                 return self.unload_driver(k=k, i=ii)
-        if rtp == 'phi':
+        elif rtp == 'phi':
             if ii:
                 return self.unload_phi(k=k, i=ii)
-        if rtp == 'phi-module':
+        elif rtp == 'phi-module':
             if ii:
                 return self.unlink_phi_mod(k=k, m=ii)
         elif rtp == 'modbus':

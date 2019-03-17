@@ -56,7 +56,12 @@ def get_bus(bus_id, timeout=None):
 # private functions
 
 
-def serialize(config=False):
+def serialize(bus_id=None, config=False):
+    if bus_id:
+        if bus_id in owbus:
+            return owbus[bus_id].serialize(config=config)
+        else:
+            raise ResourceNotFound
     result = []
     for k, p in owbus.copy().items():
         result.append(p.serialize(config=config))

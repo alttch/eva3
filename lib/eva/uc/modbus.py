@@ -61,7 +61,12 @@ def get_port(port_id, timeout=None):
 # private functions
 
 
-def serialize(config=False):
+def serialize(port_id=None, config=False):
+    if port_id:
+        if port_id in ports:
+            return ports[port_id].serialize(config=config)
+        else:
+            raise ResourceNotFound
     result = []
     for k, p in ports.copy().items():
         result.append(p.serialize(config=config))
