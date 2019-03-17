@@ -454,7 +454,14 @@ def set_phi_prop(phi_id, p, v):
     if p and not isinstance(v, dict):
         cfg[p] = v
     else:
-        cfg.update(v)
+        for prop, value in v.items():
+            if value is not None and value != '':
+                cfg[prop] = value
+            else:
+                try:
+                    del cfg[prop]
+                except:
+                    pass
     if v is None: del cfg[p]
     phi = load_phi(phi_id, phi_mod_id, cfg, start=True)
     if phi:
@@ -488,7 +495,14 @@ def set_driver_prop(driver_id, p, v):
     if p and not isinstance(v, dict):
         cfg[p] = v
     else:
-        cfg.update(v)
+        for prop, value in v.items():
+            if value is not None and value != '':
+                cfg[prop] = value
+            else:
+                try:
+                    del cfg[prop]
+                except:
+                    pass
     if v is None: del cfg[p]
     lpi = load_driver(lpi.lpi_id, lpi.lpi_mod_id, lpi.phi_id, cfg, start=True)
     if lpi:

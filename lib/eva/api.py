@@ -207,8 +207,8 @@ def restful_api_method(f):
     def do(_api_class_name, _api_resource_type, *args, **kwargs):
         k, ii, save, kind, method, for_dir, props = restful_parse_params(
             *args, **kwargs)
-        result = f(_api_class_name, _api_resource_type, k, ii, save, kind, method,
-                   for_dir, props)
+        result = f(_api_class_name, _api_resource_type, k, ii, save, kind,
+                   method, for_dir, props)
         if isinstance(result, tuple):
             result, data = result
         else:

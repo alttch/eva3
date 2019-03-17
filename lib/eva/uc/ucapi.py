@@ -517,7 +517,9 @@ class UC_API(GenericAPI):
         if not item or not apikey.check(k, item): raise ResourceNotFound
         result = item.kill()
         if not result: raise FunctionFailed
-        return True if item.action_allow_termination else True, {'pt': 'denied'}
+        return True, api_result_accepted if item.action_allow_termination else {
+            'pt': 'denied'
+        }
 
     @log_w
     def q_clean(self, **kwargs):
@@ -1378,12 +1380,13 @@ class UC_API(GenericAPI):
             c: PHI configuration
             save: save driver configuration after successful call
         """
-        i, m, cfg, save = parse_api_params(kwargs, 'imcS', 'SS.b')
-        try:
-            _cfg = dict_from_str(cfg)
-        except:
-            raise InvalidParameter('Unable to parse config')
-        if eva.uc.driverapi.load_phi(i, m, _cfg):
+        i, m, c, save = parse_api_params(kwargs, 'imcS', 'SS.b')
+        if isinstance(c, str):
+            try:
+                c = dict_from_str(c)
+            except:
+                raise InvalidParameter('Unable to parse config')
+        if eva.uc.driverapi.load_phi(i, m, c):
             if save: eva.uc.driverapi.save()
             return eva.uc.driverapi.get_phi(i).serialize(full=True, config=True)
 
@@ -1602,11 +1605,12 @@ class UC_API(GenericAPI):
             save: save configuration after successful call
         """
         i, m, p, c, save = parse_api_params(kwargs, 'impcS', 'SSS.b')
-        try:
-            _cfg = dict_from_str(cfg)
-        except:
-            raise InvalidParameter('Unable to parse config')
-        if eva.uc.driverapi.load_driver(i, m, p, _cfg):
+        if isinstance(c, str):
+            try:
+                c = dict_from_str(c)
+            except:
+                raise InvalidParameter('Unable to parse config')
+        if eva.uc.driverapi.load_driver(i, m, p, c):
             if save: eva.uc.driverapi.save()
             return eva.uc.driverapi.get_driver(p + '.' + i).serialize(
                 full=True, config=True)
@@ -1741,7 +1745,7 @@ class UC_API(GenericAPI):
 
         Args:
             k: masterkey
-            i: item ID
+            .i: item ID
             d: driver ID (if none - all above item props are set to *null*)
             c: configuration (e.g. port number)
 
@@ -1803,8 +1807,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
     @restful_api_method
     def GET(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().GET(rtp, k, ii, save, kind, method, for_dir,
-                               props)
+            return super().GET(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
         if rtp in ['unit', 'sensor', 'mu']:
@@ -1866,8 +1869,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
     @restful_api_method
     def POST(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().POST(rtp, k, ii, save, kind, method, for_dir,
-                                props)
+            return super().POST(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
         if rtp == 'action':
@@ -1875,6 +1877,22 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 a = self.action(k=k, **props)
                 set_restful_response_location(a['uuid'], 'action')
                 return a
+            else:
+                if method == 'terminate':
+                    return self.terminate(k=k, u=ii)
+        elif rtp in ['unit', 'sensor', 'mu']:
+            if ii:
+                if rtp == 'unit':
+                    if method == 'kill':
+                        return self.kill(k=k, i=ii)
+                    elif method == 'q_clean':
+                        return self.q_clean(k=k, i=ii)
+                    elif method == 'terminate':
+                        return self.terminate(k=k, i=ii)
+                if method == 'update':
+                    return self.update(k=k, i=ii, **props)
+                elif method == 'assign_driver':
+                    return self.assign_driver(k=k, i=ii, **props)
         elif rtp == 'phi':
             if ii:
                 if method == 'test':
@@ -1893,20 +1911,19 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.scan_owfs_bus(k=k, i=ii, **props)
         elif rtp == 'device-tpl':
             if ii:
-                if method == 'create':
-                    return self.create_device(k=k, t=ii, **props)
+                if method == 'deploy':
+                    return self.create_device(k=k, t=ii, save=save, **props)
                 elif method == 'update':
-                    return self.update_device(k=k, t=ii, **props)
-                elif method == 'delete':
-                    return self.destroy_device(k=k, t=ii, **props)
+                    return self.update_device(k=k, t=ii, save=save, **props)
+                elif method == 'undeploy':
+                    return self.destroy_device(k=k, t=ii, save=save, **props)
         raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
     def PUT(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().PUT(rtp, k, ii, save, kind, method, for_dir,
-                               props)
+            return super().PUT(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
         if rtp == 'action':
@@ -1921,7 +1938,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 phi_id, lpi_id = ii.split('.')
             except:
                 raise InvalidParameter('Invalid driver ID')
-            return self.load_driver(k=k, i=lpi_id, p=phi_id, save=save**props)
+            return self.load_driver(k=k, i=lpi_id, p=phi_id, save=save, **props)
         elif rtp == 'modbus':
             return self.create_modbus_port(k=k, i=ii, save=save, **props)
         elif rtp == 'owfs':
@@ -1936,10 +1953,30 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
     @restful_api_method
     def PATCH(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().PATCH(rtp, k, ii, save, kind, method, for_dir,
-                                 props)
+            return super().PATCH(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
+        if rtp in ['unit', 'sensor', 'mu' ]:
+            if ii:
+                if rtp == 'unit':
+                    if 'action_enabled' in props:
+                        v = val_to_boolean(props['action_enabled'])
+                        if v is True:
+                            self.enable_actions(k=k, i=ii)
+                        elif v is False:
+                            self.disable_actions(k=k, i=ii)
+                        else:
+                            raise InvalidParameter('"action_enabled" has invalid value')
+                if props:
+                    return super().set_prop(k=k, i=ii,save=save, v=props)
+                else:
+                    return True
+        elif rtp == 'phi':
+            if ii:
+                return self.set_phi_prop(k=k, i=ii, save=save, v=props)
+        elif rtp == 'driver':
+            if ii:
+                return self.set_driver_prop(k=k, i=ii, save=save, v=props)
         raise MethodNotFound
 
     @generic_web_api_method
