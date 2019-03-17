@@ -146,6 +146,20 @@ class UC_API(GenericAPI):
         except:
             raise FunctionFailed('device template parse error')
 
+    def _device_set_props(self,
+                          k=None,
+                          i=None,
+                          props=None,
+                          save=None,
+                          clean_snmp=False):
+        if clean_snmp:
+            self.set_prop(k=k, i=i, p='snmp_trap')
+        if props:
+            self.set_prop(k=k, i=i, v=props, save=False)
+        if save:
+            self.save_config(k=k, i=i)
+        return True
+
     @log_d
     def groups(self, **kwargs):
         """
@@ -642,20 +656,6 @@ class UC_API(GenericAPI):
             raise ResourceNotFound
         return item.serialize(props=True)
 
-    def _set_props(self,
-                   k=None,
-                   i=None,
-                   props=None,
-                   save=None,
-                   clean_snmp=False):
-        if clean_snmp:
-            self.set_prop(k=k, i=i, p='snmp_trap')
-        if props:
-            self.set_prop(k=k, i=i, v=v, save=False)
-        if save:
-            self.save_config(k=k, i=i)
-        return True
-
     @log_i
     @api_need_master
     def set_prop(self, **kwargs):
@@ -872,7 +872,7 @@ class UC_API(GenericAPI):
                     'name': os.path.basename(i)[:-1 * len(ext) - 1],
                     'type': 'JSON' if ext == 'json' else 'YAML'
                 })
-        return sorted(result)
+        return sorted(result, key=lambda k: k['name'])
 
     @log_i
     @api_need_device
@@ -974,8 +974,8 @@ class UC_API(GenericAPI):
                     g = u['group']
                 except:
                     raise InvalidParameter('no fields for unit')
-                self._set_props(_k, 'unit:{}/{}'.format(g, i), u.get('props'),
-                                save, True)
+                self._device_set_props(_k, 'unit:{}/{}'.format(g, i),
+                                       u.get('props'), save, True)
         sensors = cfg.get('sensors')
         if sensors:
             for u in sensors:
@@ -984,8 +984,8 @@ class UC_API(GenericAPI):
                     g = u['group']
                 except:
                     raise InvalidParameter('no fields for sensor')
-                self._set_props(_k, 'sensor:{}/{}'.format(g, i), u.get('props'),
-                                save, True)
+                self._device_set_props(_k, 'sensor:{}/{}'.format(g, i),
+                                       u.get('props'), save, True)
         mu = cfg.get('mu')
         if mu:
             for u in mu:
@@ -994,8 +994,8 @@ class UC_API(GenericAPI):
                     g = u['group']
                 except:
                     raise InvalidParameter('no fields for mu')
-                self._set_props(_k, 'mu:{}/{}'.format(g, i), u.get('props'),
-                                save)
+                self._device_set_props(_k, 'mu:{}/{}'.format(g, i),
+                                       u.get('props'), save)
         return True
 
     @log_i
@@ -1766,7 +1766,18 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                                props)
         except MethodNotFound:
             pass
-        if rtp == 'action':
+        if rtp in ['unit', 'sensor', 'mu']:
+            if kind == 'groups':
+                return self.groups(k=k, p=rtp)
+            elif kind == 'history':
+                return self.state_history(k=k, i=ii, **props)
+            elif kind == 'props':
+                return self.list_props(k=k, i=ii)
+            elif for_dir:
+                return self.state(k=k, p=rtp, g=ii, full=full, **props)
+            else:
+                return self.state(k=k, p=rtp, i=ii, full=full, **props)
+        elif rtp == 'action':
             return self.result(
                 k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
         elif rtp == 'driver':
@@ -1799,17 +1810,8 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             return self.list_modbus_ports(k=k)
         elif rtp == 'owfs':
             return self.list_owfs_buses(k=k)
-        elif rtp in ['unit', 'sensor', 'mu']:
-            if kind == 'groups':
-                return self.groups(k=k, p=rtp)
-            elif kind == 'history':
-                return self.state_history(k=k, i=ii, **props)
-            elif kind == 'props':
-                return self.list_props(k=k, i=ii)
-            elif for_dir:
-                return self.state(k=k, p=rtp, g=ii, full=full, **props)
-            else:
-                return self.state(k=k, p=rtp, i=ii, full=full, **props)
+        elif rtp == 'device-tpl':
+            return self.list_device_tpl(k=k)
         raise MethodNotFound
 
     @generic_web_api_method

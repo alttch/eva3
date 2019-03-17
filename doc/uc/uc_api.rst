@@ -741,6 +741,309 @@ Parameters:
 * **i** virtual port ID
 
 
+.. _ucapi_cat_phi:
+
+Physical interfaces (PHIs)
+==========================
+
+
+
+.. _ucapi_exec_phi:
+
+exec_phi - execute additional PHI commands
+------------------------------------------
+
+Execute PHI command and return execution result (as-is). **help** command returns all available commands.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** PHI module name (without *.py* extension)
+* **c** command to exec
+
+.. _ucapi_get_phi:
+
+get_phi - get loaded PHI information
+------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** PHI ID
+
+.. _ucapi_list_phi:
+
+list_phi - list loaded PHIs
+---------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **full** get exntended information
+
+.. _ucapi_list_phi_mods:
+
+list_phi_mods - get list of available PHI modules
+-------------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _ucapi_load_phi:
+
+load_phi - load PHI module
+--------------------------
+
+Loads :doc:`Physical Interface</drivers>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** PHI ID
+* **m** PHI module
+
+Optionally:
+
+* **c** PHI configuration
+* **save** save driver configuration after successful call
+
+.. _ucapi_modhelp_phi:
+
+modhelp_phi - get PHI usage help
+--------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** PHI module name (without *.py* extension)
+* **c** help context (*cfg*, *get* or *set*)
+
+.. _ucapi_modinfo_phi:
+
+modinfo_phi - get PHI module info
+---------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** PHI module name (without *.py* extension)
+
+.. _ucapi_put_phi_mod:
+
+put_phi_mod - upload PHI module
+-------------------------------
+
+Allows to upload new PHI module to *xc/drivers/phi* folder.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** PHI module name (without *.py* extension)
+* **c** module content
+
+Optionally:
+
+* **force** overwrite PHI module file if exists
+
+.. _ucapi_set_phi_prop:
+
+set_phi_prop - set PHI configuration property
+---------------------------------------------
+
+appends property to PHI configuration and reloads module
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** PHI ID
+* **p** property name (or empty for batch set)
+* **v** propery value (or dict for batch set)
+
+.. _ucapi_test_phi:
+
+test_phi - test PHI
+-------------------
+
+Get PHI test result (as-is). All PHIs respond to **self** command, **help** command returns all available test commands.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** PHI module name (without *.py* extension)
+* **c** test command
+
+.. _ucapi_unlink_phi_mod:
+
+unlink_phi_mod - delete PHI module file
+---------------------------------------
+
+Deletes PHI module file, if the module is loaded, all its instances should be unloaded first.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** PHI module name (without *.py* extension)
+
+.. _ucapi_unload_phi:
+
+unload_phi - unload PHI
+-----------------------
+
+Unloads PHI. PHI should not be used by any :doc:`driver</drivers>` (except *default*, but the driver should not be in use by any :doc:`item</items>`).
+
+If driver <phi_id.default> (which's loaded automatically with PHI) is present, it will be unloaded as well.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** PHI ID
+
+
+.. _ucapi_cat_driver:
+
+LPI and drivers
+===============
+
+
+
+.. _ucapi_assign_driver:
+
+assign_driver - assign driver to item
+-------------------------------------
+
+Sets the specified driver to :doc:`item</items>`, automatically updating item props:
+
+* **action_driver_config**,**update_driver_config** to the specified     configuration * **action_exec**, **update_exec** to do all operations via driver     function calls (sets both to *|<driver_id>*)
+
+To unassign driver, set driver ID to empty/null.
+
+Parameters:
+
+* **k** masterkey
+* **i** item ID
+* **d** driver ID (if none - all above item props are set to *null*)
+* **c** configuration (e.g. port number)
+
+Optionally:
+
+* **save** save item configuration after successful call
+
+.. _ucapi_get_driver:
+
+get_driver - get loaded PHI information
+---------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** PHI ID
+
+.. _ucapi_list_drivers:
+
+list_drivers - list loaded drivers
+----------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **full** get exntended information
+
+.. _ucapi_list_lpi_mods:
+
+list_lpi_mods - get list of available LPI modules
+-------------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _ucapi_load_driver:
+
+load_driver - Loads a :doc:`driver</drivers>`, combining previously loaded PHI and
+----------------------------------------------------------------------------------
+
+chosen LPI module.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** LPI ID
+* **m** LPI module
+* **p** PHI ID
+
+Optionally:
+
+* **c** Driver (LPI) configuration, optional
+
+.. _ucapi_modhelp_lpi:
+
+modhelp_lpi - get LPI usage help
+--------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** LPI module name (without *.py* extension)
+* **c** help context (*cfg*, *action* or *update*)
+
+.. _ucapi_modinfo_lpi:
+
+modinfo_lpi - get LPI module info
+---------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** LPI module name (without *.py* extension)
+
+.. _ucapi_set_driver_prop:
+
+set_driver_prop - set driver (LPI) configuration property
+---------------------------------------------------------
+
+appends property to LPI configuration and reloads module
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** driver ID
+* **p** property name (or empty for batch set)
+* **v** propery value (or dict for batch set)
+
+.. _ucapi_unload_driver:
+
+unload_driver - unload driver
+-----------------------------
+
+Unloads driver. Driver should not be used by any :doc:`item</items>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** driver ID
+
+
 .. _ucapi_cat_device:
 
 Devices
