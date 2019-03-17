@@ -39,6 +39,7 @@ from eva.tools import val_to_boolean
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceBusy
 from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
 
@@ -1182,10 +1183,11 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         port = eva.uc.modbus.get_port(i)
-        result = True if port else False
-        if result: port.release()
-        elif port is None: raise ResourceNotFound
-        return result
+        if port: port.release()
+        if port is None: raise ResourceNotFound
+        elif port is False: raise FunctionFailed('Test failed')
+        elif port == 0: raise ResourceBusy
+        return True
 
     # master functions for owfs bus management
 
@@ -1288,10 +1290,11 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         bus = eva.uc.owfs.get_bus(i)
-        result = True if bus else False
-        if result: bus.release()
-        elif bus is None: raise ResourceNotFound
-        return result
+        if bus: bus.release()
+        if bus is None: raise ResourceNotFound
+        elif bus is False: raise FunctionFailed('Test failed')
+        elif bus == 0: raise ResourceBusy
+        return True
 
     @log_i
     @api_need_master
