@@ -1374,8 +1374,7 @@ class GenericCLI(object):
             if '_error' not in result:
                 if code != apiclient.result_func_unknown:
                     self.print_err(
-                        'Error: ' + default_errors.get(code),
-                        default_errors[apiclient.result_unknown_error])
+                        'Error: ' + default_errors.get(code))
                 else:
                     self.ap.print_help()
                 if debug and self.remote_api_enabled:

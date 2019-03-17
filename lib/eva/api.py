@@ -682,7 +682,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             if not isinstance(payload, dict) or not pp:
                 raise cp_bad_request('Invalid JSON RPC payload')
             if pp.get('jsonrpc') != '2.0':
-                raise cp_api_error('unsupported RPC protocol')
+                raise cp_api_error('Unsupported RPC protocol')
             req_id = pp.get('id')
             try:
                 p = pp.get('params', {})

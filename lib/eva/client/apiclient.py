@@ -255,6 +255,8 @@ class APIClient(object):
                 return (result_forbidden, result)
             elif r.status_code == 404:
                 return (result_not_found, result)
+            elif r.status_code == 405:
+                return (result_func_unknown, result)
             elif r.status_code == 409:
                 return (result_busy, result)
             elif r.status_code == 500:
