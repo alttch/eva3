@@ -393,8 +393,8 @@ def cp_check_perm(api_key=None, path_info=None):
 
 
 def http_real_ip(get_gw=False):
-    if get_gw and hasattr(cherrypy.serving.request, '_eva_ics_gw'):
-        return 'gateway/' + cherrypy.serving.request._eva_ics_gw
+    if get_gw and g.has('eva_ics_gw'):
+        return 'gateway/' + g.get('eva_ics.gw')
     if config.use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
         ip = cherrypy.request.headers['X-Real-IP']
@@ -947,34 +947,20 @@ def mqtt_api_handler(notifier_id, data, callback):
             if ce is None:
                 raise Exception('invalid key')
             d = ce.decrypt(d.encode()).decode()
-            call_id, api_type, api_func, api_data = d.split('|', 3)
+            call_id, payload = d.split('|', 1)
         except:
             logging.warning(
                 'MQTT API: invalid api key in encrypted packet from ' +
                 notifier_id)
             raise
-            return
-        app = cherrypy.serving.request.app = cherrypy.tree.apps.get(
-            '/%s-api' % api_type)
-        if not app: raise Exception("Invalid app")
-        cherrypy.serving.request._eva_ics_gw = 'mqtt'
+        g.set('eva_ics_gw', 'mqtt')
         try:
-            cherrypy.serving.session = cherrypy.lib.sessions.RamSession()
-            cherrypy.serving.response.status = None
-            cherrypy.serving.request.run(
-                'GET', '/{}-api/{}'.format(api_type, api_func), '', 'HTTP/1.0',
-                [('X-JSON', api_data)], None)
+            response = jrpc(p=payload)
         except:
             callback(call_id, '500|')
             raise Exception('API error')
-        response = ce.encrypt(cherrypy.serving.response.body[0]).decode()
-        for ww in range(10):
-            if cherrypy.serving.response.status: break
-            time.sleep(eva.core.sleep_step)
-        if not cherrypy.serving.response.status:
-            raise Exception('No response from API')
-        callback(call_id,
-                 cherrypy.serving.response.status.split()[0] + '|' + response)
+        response = ce.encrypt(response)
+        callback(call_id, '200|' + response)
     except:
         logging.warning('MQTT API: API call failed from ' + notifier_id)
         eva.core.log_traceback()

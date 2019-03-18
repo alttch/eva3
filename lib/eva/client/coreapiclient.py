@@ -112,13 +112,15 @@ class CoreAPIClient(APIClient):
         self.ce = Fernet(_k)
         self._key_id = _key_id
 
-    def do_call_mqtt(self, api_uri, api_type, func, p, t):
+    def do_call_mqtt(self, payload, t):
         n = eva.notify.get_notifier(self._notifier_id)
         r = self.Response()
         if not n: return r
-        request_id = str(uuid.uuid4())
-        data = '{}|{}|{}|{}'.format(request_id, api_type, func,
-                                    jsonpickle.encode(p))
+        if isinstance(payload, dict) and 'id' in payload:
+            request_id = payload['id']
+        else:
+            request_id = str(uuid.uuid4())
+        data = '{}|{}'.format(request_id, jsonpickle.encode(p))
         cb = self.MQTTCallback()
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(
