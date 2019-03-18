@@ -1925,7 +1925,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
 def start():
     http_api = UC_HTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
-    cherrypy.tree.mount(UC_JSONRPC_API(), UC_JSONRPC_API.api_uri)
+    cherrypy.tree.mount(jrpc, jrpc.api_uri)
     cherrypy.tree.mount(
         UC_REST_API(),
         UC_REST_API.api_uri,
@@ -1934,7 +1934,9 @@ def start():
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
             }
         })
+    eva.api.jrpc = jrpc
     eva.ei.start()
 
 
 api = UC_API()
+jrpc = UC_JSONRPC_API()

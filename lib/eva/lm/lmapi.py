@@ -1206,7 +1206,7 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
 def start():
     http_api = LM_HTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
-    cherrypy.tree.mount(LM_JSONRPC_API(), LM_JSONRPC_API.api_uri)
+    cherrypy.tree.mount(jrpc, jrpc.api_uri)
     cherrypy.tree.mount(
         LM_REST_API(),
         LM_REST_API.api_uri,
@@ -1215,7 +1215,9 @@ def start():
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
             }
         })
+    eva.api.jrpc = jrpc
     eva.ei.start()
 
 
 api = LM_API()
+jrpc = LM_JSONRPC_API()

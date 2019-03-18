@@ -1082,3 +1082,5 @@ api_cp_config = {
     'error_page.409': error_page_409,
     'error_page.500': error_page_500
 }
+
+jrpc = None
