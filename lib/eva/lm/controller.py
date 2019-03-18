@@ -289,8 +289,16 @@ def load_lvar_db_state(items, clean=False):
             d = r.fetchone()
             if not d: break
             if d.id in items.keys():
-                items[d.id].set_time = float(d.set_time)
-                items[d.id].status = int(d.status)
+                try:
+                    items[d.id].set_time = float(d.set_time)
+                except:
+                    eva.core.log_traceback()
+                    items[d.id].set_time = None
+                try:
+                    items[d.id].status = int(d.status)
+                except:
+                    eva.core.log_traceback()
+                    items[d.id].status = 0
                 items[d.id].value = d.value
                 _db_loaded_ids.append(d.id)
                 logging.debug(

@@ -311,6 +311,28 @@ Locking functions
 
 
 
+.. _sysapi_get_lock:
+
+get_lock - get lock token status
+--------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/get_lock.req
+    :response: http-examples/sysapi/get_lock.resp
+
+Parameters:
+
+* **k** API key with *allow=lock* permissions
+* **l** lock id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/get_lock.rest
+    :response: http-examples/sysapi/get_lock.resp-rest
+
 .. _sysapi_lock:
 
 lock - lock token request

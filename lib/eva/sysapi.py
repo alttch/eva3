@@ -161,6 +161,27 @@ class LockAPI(object):
 
     @log_i
     @api_need_lock
+    def get_lock(self, **kwargs):
+        """
+        get lock token status
+
+        Args:
+            k: .allow=lock
+            .l: lock id
+        """
+        l = parse_api_params(kwargs, 'l', 'S')
+        try:
+            result = restful_resource_id('lock', l)
+            result['locked'] = locks[l].locked()
+            return result
+        except KeyError:
+            raise ResourceNotFound
+        except Exception as e:
+            raise
+            raise FunctionFailed(e)
+
+    @log_i
+    @api_need_lock
     def unlock(self, **kwargs):
         """
         release lock token
@@ -170,8 +191,6 @@ class LockAPI(object):
         Args:
             k: .allow=lock
             .l: lock id
-
-        apidoc_category: lock
         """
         l = parse_api_params(kwargs, 'l', 'S')
         logging.debug('releasing lock %s' % l)
@@ -182,8 +201,8 @@ class LockAPI(object):
             return True
         except KeyError:
             raise ResourceNotFound
-        except:
-            raise FunctionFailed
+        except Exception as e:
+            raise FunctionFailed(e)
 
 
 cmd_status_created = 0
@@ -1018,6 +1037,9 @@ class SysHTTP_API_REST_abstract:
             return self.test(k=k)
         elif rtp == 'cvar':
             return self.get_cvar(k=k, i=ii)
+        elif rtp == 'lock':
+            if ii:
+                return self.get_lock(k=k, l=ii)
         elif rtp == 'key':
             if ii:
                 return self.list_key_props(k=k, i=ii)
@@ -1077,7 +1099,7 @@ class SysHTTP_API_REST_abstract:
             return self.list_key_props(k=k, i=ii)
         elif rtp == 'lock':
             self.lock(k=k, l=ii, **props)
-            return restful_resource_id(rtp, ii)
+            return self.get_lock(k=k, l=ii)
         elif rtp == 'runtime':
             m, e = parse_api_params(props, 'me', 'rb')
             SysAPI.file_put(self, k=k, i=ii, m=m)

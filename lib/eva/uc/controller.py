@@ -345,10 +345,14 @@ def load_db_state(items, item_type, clean=False):
             d = r.fetchone()
             if not d: break
             if d.id in items.keys():
-                items[d.id].status = int(d.status)
+                try:
+                    items[d.id].status = int(d.status)
+                except:
+                    eva.core.log_traceback()
+                    items[d.id].status = 0
                 items[d.id].value = d.value
                 if item_type == 'U':
-                    items[d.id].nstatus = int(d.status)
+                    items[d.id].nstatus = items[d.id].status
                     items[d.id].nvalue = d.value
                 _db_loaded_ids.append(d.id)
                 logging.debug('{} state loaded, status={}, value="{}"'.format(
