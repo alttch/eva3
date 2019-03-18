@@ -70,6 +70,8 @@ cvars = {}
 
 cvars_modified = False
 
+ignore_critical = False
+
 polldelay = 0.01
 
 db_update = 0
@@ -696,6 +698,8 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
 
 
 def critical(log=True, from_driver=False):
+    global ignore_critical
+    if ignore_critical: return
     try:
         caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
         caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
@@ -709,6 +713,7 @@ def critical(log=True, from_driver=False):
     if stop_on_critical in ['always', 'yes'] or (not from_driver and
                                                  stop_on_critical == 'core'):
         logging.critical('critical exception, shutting down')
+        ignore_critical = True
         sighandler_term(None, None)
 
 
