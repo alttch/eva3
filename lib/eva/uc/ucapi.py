@@ -471,9 +471,12 @@ class UC_API(GenericAPI):
 
         Updates the status and value of the :doc:`item</items>`. This is one of
         the ways of passive state update, for example with the use of an
-        external controller. Calling without **s** and **v** params will force
-        item to perform passive update requesting its status from update script
-        or driver.
+        external controller.
+        
+        .. note::
+        
+            Calling without **s** and **v** params will force item to perform
+            passive update requesting its status from update script or driver.
 
         Args:
             k:
@@ -559,11 +562,11 @@ class UC_API(GenericAPI):
         if u:
             a = eva.uc.controller.Q.history_get(u)
             if not a or not apikey.check(k, a.item): raise ResourceNotFound
-            return a.kill()
+            return a.kill(), api_result_accepted
         elif i:
             item = eva.uc.controller.get_unit(i)
             if not item or not apikey.check(k, item): raise ResourceNotFound
-            return item.terminate()
+            return item.terminate(), api_result_accepted
         raise InvalidParameter('Either "u" or "i" must be specified')
 
     # master functions for item configuration
@@ -806,7 +809,7 @@ class UC_API(GenericAPI):
 
 
         Optional:
-            .g: multi-update group
+            .g: group for new item
             save: save multi-update configuration immediately
         """
         i, n, g, save = parse_api_params(kwargs, 'ingS', 'SSsb')
@@ -1119,8 +1122,8 @@ class UC_API(GenericAPI):
         i, p, l, t, d, r, save = parse_api_params(kwargs, 'ipltdrS', 'SSbnnib')
         result = eva.uc.modbus.create_modbus_port(
             i, p, lock=l, timeout=t, delay=d, retries=r)
-        if result and save: eva.uc.modbus.save()
-        return result
+        if save: eva.uc.modbus.save()
+        return True
 
     @log_w
     @api_need_master
@@ -1225,10 +1228,9 @@ class UC_API(GenericAPI):
             returned and bus is recreated.
         """
         i, n, l, t, d, r, save = parse_api_params(kwargs, 'inltdrS', 'SSbnnib')
-        result = eva.uc.owfs.create_owfs_bus(
-            i, n, lock=l, timeout=t, delay=d, retries=r)
-        if result and save: eva.uc.owfs.save()
-        return result
+        eva.uc.owfs.create_owfs_bus(i, n, lock=l, timeout=t, delay=d, retries=r)
+        if save: eva.uc.owfs.save()
+        return True
 
     @log_w
     @api_need_master
@@ -1324,6 +1326,11 @@ class UC_API(GenericAPI):
             examine and values of attributes specified in "a" param. (This will
             poll "released" bus, even if locking is set up, so be careful with
             this feature in production environment).
+
+            Bus acquire error can be caused in 2 cases:
+
+            * bus is locked
+            * owfs resource not initialized (libow or location problem)
         """
         i, p, a, n, has_all, full = parse_api_params(kwargs, 'ipanHY', 'S..sbb')
         try:
@@ -1467,7 +1474,7 @@ class UC_API(GenericAPI):
         if isinstance(result, dict):
             return result
         else:
-            return { 'output': result }
+            return {'output': result}
 
     @log_i
     @api_need_master
@@ -1493,7 +1500,7 @@ class UC_API(GenericAPI):
         if isinstance(result, dict):
             return result
         else:
-            return { 'output': result }
+            return {'output': result}
 
     @log_w
     @api_need_master
@@ -1770,7 +1777,7 @@ class UC_API(GenericAPI):
             t, i = parse_oid(i)
         item = eva.uc.controller.get_item(i)
         if not item or (is_oid(i) and item and item.item_type != t):
-            raise ResourceNotFound
+            raise ResourceNotFound('item')
         drv_p = '|' + d if d else None
         props = {'update_driver_config': c, 'update_exec': drv_p}
         if item.item_type == 'unit':
@@ -1830,13 +1837,14 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state_history(k=k, i=ii, **props)
             elif kind == 'props':
                 return self.list_props(k=k, i=ii)
+            elif kind == 'config':
+                return self.get_config(k=k, i=ii)
             elif for_dir:
                 return self.state(k=k, p=rtp, g=ii, **props)
             else:
                 return self.state(k=k, p=rtp, i=ii, **props)
         elif rtp == 'action':
-            return self.result(
-                k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
+            return self.result(k=k, u=ii, **props)
         elif rtp == 'driver':
             if ii:
                 return self.get_driver(k=k, i=ii)
@@ -1902,10 +1910,20 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         return self.q_clean(k=k, i=ii)
                     elif method == 'terminate':
                         return self.terminate(k=k, i=ii)
-                if method == 'update':
-                    return self.update(k=k, i=ii, **props)
-                elif method == 'assign_driver':
+                    elif method == 'save':
+                        return self.save_config(k=k, i=ii)
+                if method == 'assign_driver':
                     return self.assign_driver(k=k, i=ii, **props)
+                elif method == 'clone':
+                    if for_dir:
+                        return self.clone_group(k=k, g=ii, **props)
+                    else:
+                        result = self.clone(k=k, i=ii, **props)
+                        set_restful_response_location(result['full_id'],
+                                                      result['type'])
+                        return result
+                elif method == 'update' or not method:
+                    return self.update(k=k, i=ii, **props)
         elif rtp == 'phi':
             if ii:
                 if method == 'test':
@@ -1953,13 +1971,16 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 raise InvalidParameter('Invalid driver ID')
             return self.load_driver(k=k, i=lpi_id, p=phi_id, save=save, **props)
         elif rtp == 'modbus':
-            return self.create_modbus_port(k=k, i=ii, save=save, **props)
+            self.create_modbus_port(k=k, i=ii, save=save, **props)
+            return self.get_modbus_port(k=k, i=ii)
         elif rtp == 'owfs':
-            return self.create_owfs_bus(k=k, i=ii, save=save, **props)
+            self.create_owfs_bus(k=k, i=ii, save=save, **props)
+            return self.get_owfs_bus(k=k, i=ii)
         elif rtp == 'phi':
             return self.load_phi(k=k, i=ii, save=save, **props)
         elif rtp == 'phi-module':
-            return self.put_phi_mod(k=k, m=ii, **props)
+            self.put_phi_mod(k=k, m=ii, **props)
+            return self.modinfo_phi(k=k, m=ii)
         raise MethodNotFound
 
     @generic_web_api_method

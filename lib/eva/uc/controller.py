@@ -82,6 +82,7 @@ def with_event_handler_lock(f):
 
     return do
 
+
 def with_item_lock(f):
 
     @wraps(f)
@@ -517,7 +518,8 @@ def create_mu(mu_id, group=None, virtual=False, save=False):
 @with_item_lock
 def clone_item(item_id, new_item_id=None, group=None, save=False):
     i = get_item(item_id)
-    ni = get_item(group + '/' + new_item_id)
+    ni = get_item((
+        group + '/') if group else '' + new_item_id)
     if not i or not new_item_id or i.is_destroyed() or \
             i.item_type not in ['unit', 'sensor']:
         raise ResourceNotFound
@@ -553,9 +555,9 @@ def clone_group(group = None, new_group = None,\
     to_clone = []
     for i in items_by_group[group].copy():
         io = get_item(group + '/' + i)
+        if io.item_type not in ['unit', 'sensor']: continue
         new_id = io.item_id
         if prefix and new_prefix:
-            if io.item_type not in ['unit', 'sensor']: continue
             if i[:len(prefix)] == prefix:
                 new_id = i.replace(prefix, new_prefix, 1)
         ni = get_item(new_group + '/' + new_id)
