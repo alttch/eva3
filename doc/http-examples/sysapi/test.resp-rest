@@ -14,13 +14,13 @@ Pragma: no-cache
     "debug": true,
     "file_management": true,
     "layout": "enterprise",
-    "polldelay": 0.01,
+    "polldelay": 0.001,
     "product_build": 2019031405,
     "product_code": "uc",
     "product_name": "EVA Universal Controller",
     "setup_mode": false,
-    "system": "ws1-v1",
-    "time": 1552675731.389532,
-    "uptime": 157,
+    "system": "mws1-v1",
+    "time": 1552863476.4590263,
+    "uptime": 521,
     "version": "3.2.0"
 }

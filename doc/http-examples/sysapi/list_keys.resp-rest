@@ -17,6 +17,21 @@ Pragma: no-cache
             "device": true,
             "lock": false
         },
+        "dynamic": true,
+        "groups": [
+            "#"
+        ],
+        "items": [],
+        "key_id": "default",
+        "master": false,
+        "sysfunc": false
+    },
+    {
+        "allow": {
+            "cmd": true,
+            "device": true,
+            "lock": false
+        },
         "dynamic": false,
         "groups": [
             "#"
@@ -29,8 +44,8 @@ Pragma: no-cache
     {
         "allow": {
             "cmd": false,
-            "device": false,
-            "lock": false
+            "device": true,
+            "lock": true
         },
         "dynamic": false,
         "groups": [
@@ -64,10 +79,27 @@ Pragma: no-cache
         },
         "dynamic": true,
         "groups": [],
-        "items": [],
-        "key_id": "test",
+        "items": [
+            "item1"
+        ],
+        "key_id": "t4",
         "master": false,
         "sysfunc": true
+    },
+    {
+        "allow": {
+            "cmd": false,
+            "device": false,
+            "lock": false
+        },
+        "dynamic": false,
+        "groups": [],
+        "items": [
+            "sensor:sensors/sensor1"
+        ],
+        "key_id": "test",
+        "master": false,
+        "sysfunc": false
     },
     {
         "allow": {

@@ -16,14 +16,18 @@ SYS API functions are called through URL request
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
-All API functions can be called using GET and POST. When POST is used, the
-parameters can be passed to functions either as multipart/form-data or as JSON.
+Standard API responses
+~~~~~~~~~~~~~~~~~~~~~~
+
+Good for backward compatibility with any devices, as all API functions can be
+called using GET and POST. When POST is used, the parameters can be passed to
+functions either as multipart/form-data or as JSON.
+
+Also, standard direct method calling is the only way to use built-in user
+sessions.
 
 API key can be sent in request parameters, session (if enabled and user is
 logged in) or in HTTP **X-Auth-Key** header.
-
-Standard API responses
-~~~~~~~~~~~~~~~~~~~~~~
 
 **Standard responses in status/body:**
 
@@ -50,6 +54,27 @@ In case API function has been failed, response body will contain JSON data with
         "result": "ERROR"
     }
 
+JSON RPC
+--------
+
+Additionally, API supports `JSON RPC 2.0
+<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
+sessions, so user authorization is not possible. Also note that default JSON
+RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
+error result, as JSON RPC sends errors in "error" field.
+
+If JSON RPC request is called without ID and server should not return a result,
+it will return http response with a code *202 Accepted*.
+
+.. note::
+
+    JSON RPC is recommended way to use EVA ICS API, unless RESTful is really
+    required.
+
+JSON RPC API URL:
+
+    **\http://<ip_address:port>/jrpc**
+
 RESTful API
 -----------
 
@@ -58,6 +83,9 @@ Majority EVA ICS API components and items support `REST
 for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
 multipart/form-data. For JSON, *Content-Type: application/json* header must be
 specified.
+
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
 
 RESTful API responses
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -83,22 +111,6 @@ RESTful API responses
 
 Response body may contain additional information encoded in JSON. *{
 "result": "OK" }* and *{ "result": "ERROR" }* in body are not returned.
-
-JSON RPC
---------
-
-Additionally, API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
-sessions, so user authorization is not possible. Also note that default JSON
-RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
-error result, as JSON RPC sends errors in "error" field.
-
-If JSON RPC request is called without ID and server should not return a result,
-it will return http response with a code *202 Accepted*.
-
-JSON RPC API URL:
-
-    **\http://<ip_address:port>/jrpc**
 
 .. contents::
 

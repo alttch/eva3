@@ -16,14 +16,18 @@ UC API functions are called through URL request
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
-All API functions can be called using GET and POST. When POST is used, the
-parameters can be passed to functions either as multipart/form-data or as JSON.
+Standard API responses
+~~~~~~~~~~~~~~~~~~~~~~
+
+Good for backward compatibility with any devices, as all API functions can be
+called using GET and POST. When POST is used, the parameters can be passed to
+functions either as multipart/form-data or as JSON.
+
+Also, standard direct method calling is the only way to use built-in user
+sessions.
 
 API key can be sent in request parameters, session (if enabled and user is
 logged in) or in HTTP **X-Auth-Key** header.
-
-Standard API responses
-~~~~~~~~~~~~~~~~~~~~~~
 
 **Standard responses in status/body:**
 
@@ -50,6 +54,27 @@ In case API function has been failed, response body will contain JSON data with
         "result": "ERROR"
     }
 
+JSON RPC
+--------
+
+Additionally, API supports `JSON RPC 2.0
+<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
+sessions, so user authorization is not possible. Also note that default JSON
+RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
+error result, as JSON RPC sends errors in "error" field.
+
+If JSON RPC request is called without ID and server should not return a result,
+it will return http response with a code *202 Accepted*.
+
+.. note::
+
+    JSON RPC is recommended way to use EVA ICS API, unless RESTful is really
+    required.
+
+JSON RPC API URL:
+
+    **\http://<ip_address:8812>/jrpc**
+
 RESTful API
 -----------
 
@@ -58,6 +83,9 @@ Majority EVA ICS API components and items support `REST
 for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
 multipart/form-data. For JSON, *Content-Type: application/json* header must be
 specified.
+
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
 
 RESTful API responses
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -83,22 +111,6 @@ RESTful API responses
 
 Response body may contain additional information encoded in JSON. *{
 "result": "OK" }* and *{ "result": "ERROR" }* in body are not returned.
-
-JSON RPC
---------
-
-Additionally, API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
-sessions, so user authorization is not possible. Also note that default JSON
-RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
-error result, as JSON RPC sends errors in "error" field.
-
-If JSON RPC request is called without ID and server should not return a result,
-it will return http response with a code *202 Accepted*.
-
-JSON RPC API URL:
-
-    **\http://<ip_address:8812>/jrpc**
 
 .. contents::
 
@@ -149,6 +161,10 @@ action - create unit control action
 
 The call is considered successful when action is put into the action queue of selected unit.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/action.req
+    :response: http-examples/ucapi/action.resp
+
 Parameters:
 
 * **k** 
@@ -167,12 +183,22 @@ Returns:
 
 Serialized action object. If action is marked as dead, an error is returned (exception raised)
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/action.rest
+    :response: http-examples/ucapi/action.resp-rest
+
 .. _ucapi_action_toggle:
 
 action_toggle - create unit control action
 ------------------------------------------
 
 The call is considered successful when action is put into the action queue of selected unit.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/action_toggle.req
+    :response: http-examples/ucapi/action_toggle.resp
 
 Parameters:
 
@@ -190,6 +216,12 @@ Returns:
 
 Serialized action object. If action is marked as dead, an error is returned (exception raised)
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/action_toggle.rest
+    :response: http-examples/ucapi/action_toggle.resp-rest
+
 .. _ucapi_disable_actions:
 
 disable_actions - disable unit actions
@@ -197,10 +229,20 @@ disable_actions - disable unit actions
 
 Disables unit to run and queue new actions.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/disable_actions.req
+    :response: http-examples/ucapi/disable_actions.resp
+
 Parameters:
 
 * **k** 
 * **i** unit id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/disable_actions.rest
+    :response: http-examples/ucapi/disable_actions.resp-rest
 
 .. _ucapi_enable_actions:
 
@@ -209,10 +251,20 @@ enable_actions - enable unit actions
 
 Enables unit to run and queue new actions.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/enable_actions.req
+    :response: http-examples/ucapi/enable_actions.resp
+
 Parameters:
 
 * **k** 
 * **i** unit id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/enable_actions.rest
+    :response: http-examples/ucapi/enable_actions.resp-rest
 
 .. _ucapi_groups:
 
@@ -221,10 +273,20 @@ groups - get item group list
 
 Get the list of item groups. Useful e.g. for custom interfaces.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/groups.req
+    :response: http-examples/ucapi/groups.resp
+
 Parameters:
 
 * **k** 
 * **p** item type (unit [U] or sensor [S])
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/groups.rest
+    :response: http-examples/ucapi/groups.resp-rest
 
 .. _ucapi_kill:
 
@@ -232,6 +294,10 @@ kill - kill unit actions
 ------------------------
 
 Apart from canceling all queued commands, this function also terminates the current running action.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/kill.req
+    :response: http-examples/ucapi/kill.resp
 
 Parameters:
 
@@ -242,6 +308,12 @@ Returns:
 
 If the current action of the unit cannot be terminated by configuration, the notice "pt" = "denied" will be returned additionally (even if there's no action running)
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/kill.rest
+    :response: http-examples/ucapi/kill.resp-rest
+
 .. _ucapi_q_clean:
 
 q_clean - clean action queue of unit
@@ -249,10 +321,20 @@ q_clean - clean action queue of unit
 
 Cancels all queued actions, keeps the current action running.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/q_clean.req
+    :response: http-examples/ucapi/q_clean.resp
+
 Parameters:
 
 * **k** 
 * **i** unit id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/q_clean.rest
+    :response: http-examples/ucapi/q_clean.resp-rest
 
 .. _ucapi_result:
 
@@ -260,6 +342,10 @@ result - get action status
 --------------------------
 
 Checks the result of the action by its UUID or returns the actions for the specified unit.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/result.req
+    :response: http-examples/ucapi/result.resp
 
 Parameters:
 
@@ -273,12 +359,22 @@ Optionally:
 * **s** filter by action status: Q for queued, R for running, F for finished
 * **Return** list or single serialized action object
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/result.rest
+    :response: http-examples/ucapi/result.resp-rest
+
 .. _ucapi_state:
 
 state - get item group list
 ---------------------------
 
 Get the list of item groups. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/state.req
+    :response: http-examples/ucapi/state.resp
 
 Parameters:
 
@@ -291,12 +387,22 @@ Optionally:
 * **g** item group
 * **full** return full state
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/state.rest
+    :response: http-examples/ucapi/state.resp-rest
+
 .. _ucapi_state_history:
 
 state_history - get item state history
 --------------------------------------
 
 State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/state_history.req
+    :response: http-examples/ucapi/state_history.resp
 
 Parameters:
 
@@ -314,12 +420,22 @@ Optionally:
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
 * **g** output format ("list" or "dict", default is "list")
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/state_history.rest
+    :response: http-examples/ucapi/state_history.resp-rest
+
 .. _ucapi_terminate:
 
 terminate - terminate action execution
 --------------------------------------
 
 Terminates or cancel the action if it is still queued
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/terminate.req
+    :response: http-examples/ucapi/terminate.resp
 
 Parameters:
 
@@ -331,12 +447,26 @@ Returns:
 
 An error result will be returned eitner if action is terminated (Resource not found) or if termination process is failed or denied by unit configuration (Function failed)
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/terminate.rest
+    :response: http-examples/ucapi/terminate.resp-rest
+
 .. _ucapi_update:
 
 update - update the status and value of the item
 ------------------------------------------------
 
-Updates the status and value of the :doc:`item</items>`. This is one of the ways of passive state update, for example with the use of an external controller. Calling without **s** and **v** params will force item to perform passive update requesting its status from update script or driver.
+Updates the status and value of the :doc:`item</items>`. This is one of the ways of passive state update, for example with the use of an external controller.
+
+.. note::
+
+    Calling without **s** and **v** params will force item to perform     passive update requesting its status from update script or driver.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/update.req
+    :response: http-examples/ucapi/update.resp
 
 Parameters:
 
@@ -347,6 +477,12 @@ Optionally:
 
 * **s** item status
 * **v** item value
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/update.rest
+    :response: http-examples/ucapi/update.resp-rest
 
 
 .. _ucapi_cat_item-management:
@@ -362,6 +498,10 @@ list - list items
 -----------------
 
 
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list.req
+    :response: http-examples/ucapi/list.resp
 
 Parameters:
 
@@ -383,6 +523,10 @@ create - create new item
 
 Creates new :doc:`item</items>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create.req
+    :response: http-examples/ucapi/create.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -390,9 +534,15 @@ Parameters:
 
 Optionally:
 
-* **g** multi-update group
+* **g** item group
 * **v** virtual item (deprecated)
 * **save** save multi-update configuration immediately
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create.rest
+    :response: http-examples/ucapi/create.resp-rest
 
 .. _ucapi_create_mu:
 
@@ -400,6 +550,10 @@ create_mu - create multi-update
 -------------------------------
 
 Creates new :ref:`multi-update<multiupdate>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_mu.req
+    :response: http-examples/ucapi/create_mu.resp
 
 Parameters:
 
@@ -412,12 +566,22 @@ Optionally:
 * **v** virtual multi-update (deprecated)
 * **save** save multi-update configuration immediately
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_mu.rest
+    :response: http-examples/ucapi/create_mu.resp-rest
+
 .. _ucapi_create_sensor:
 
 create_sensor - create new sensor
 ---------------------------------
 
 Creates new :ref:`sensor<sensor>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_sensor.req
+    :response: http-examples/ucapi/create_sensor.resp
 
 Parameters:
 
@@ -429,6 +593,12 @@ Optionally:
 * **g** sensor group
 * **v** virtual sensor (deprecated)
 * **save** save sensor configuration immediately
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_sensor.rest
+    :response: http-examples/ucapi/create_sensor.resp-rest
 
 .. _ucapi_create_unit:
 
@@ -452,6 +622,12 @@ Optionally:
 * **v** virtual unit (deprecated)
 * **save** save unit configuration immediately
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_unit.rest
+    :response: http-examples/ucapi/create_unit.resp-rest
+
 .. _ucapi_destroy:
 
 destroy - delete item or group
@@ -469,12 +645,22 @@ Parameters:
 * **i** item id
 * **g** group (either item or group must be specified)
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/destroy.rest
+    :response: http-examples/ucapi/destroy.resp-rest
+
 .. _ucapi_get_config:
 
 get_config - get item configuration
 -----------------------------------
 
 
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_config.req
+    :response: http-examples/ucapi/get_config.resp
 
 Parameters:
 
@@ -485,6 +671,12 @@ Returns:
 
 complete :doc:`item</items>` configuration
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_config.rest
+    :response: http-examples/ucapi/get_config.resp-rest
+
 .. _ucapi_list_props:
 
 list_props - list item properties
@@ -492,10 +684,20 @@ list_props - list item properties
 
 Get all editable parameters of the :doc:`item</items>` confiugration.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_props.req
+    :response: http-examples/ucapi/list_props.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** item id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_props.rest
+    :response: http-examples/ucapi/list_props.resp-rest
 
 .. _ucapi_save_config:
 
@@ -504,10 +706,20 @@ save_config - save item configuration
 
 Saves :doc:`item</items>`. configuration on disk (even if it hasn't been changed)
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/save_config.req
+    :response: http-examples/ucapi/save_config.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** item id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/save_config.rest
+    :response: http-examples/ucapi/save_config.resp-rest
 
 .. _ucapi_set_prop:
 
@@ -515,6 +727,10 @@ set_prop - set item property
 ----------------------------
 
 Set configuration parameters of the :doc:`item</items>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/set_prop.req
+    :response: http-examples/ucapi/set_prop.resp
 
 Parameters:
 
@@ -526,12 +742,22 @@ Optionally:
 
 * **v** property value
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/set_prop.rest
+    :response: http-examples/ucapi/set_prop.resp-rest
+
 .. _ucapi_clone:
 
 clone - clone item
 ------------------
 
 Creates a copy of the :doc:`item</items>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/clone.req
+    :response: http-examples/ucapi/clone.resp
 
 Parameters:
 
@@ -541,8 +767,14 @@ Parameters:
 
 Optionally:
 
-* **g** multi-update group
+* **g** group for new item
 * **save** save multi-update configuration immediately
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/clone.rest
+    :response: http-examples/ucapi/clone.resp-rest
 
 .. _ucapi_clone_group:
 
@@ -550,6 +782,10 @@ clone_group - clone group
 -------------------------
 
 Creates a copy of all :doc:`items</items>` from the group.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/clone_group.req
+    :response: http-examples/ucapi/clone_group.resp
 
 Parameters:
 
@@ -562,6 +798,12 @@ Optionally:
 * **p** item ID prefix, e.g. device1. for device1.temp1, device1.fan1
 * **r** iem ID prefix in the new group, e.g. device2 (both prefixes must be specified)
 * **save** save configuration immediately
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/clone_group.rest
+    :response: http-examples/ucapi/clone_group.resp-rest
 
 
 .. _ucapi_cat_owfs:
@@ -579,6 +821,10 @@ create_owfs_bus - create OWFS bus
 Creates (defines) :doc:`OWFS bus</owfs>` with the specified configuration.
 
 Parameter "location" ("n") should contain the connection configuration, e.g.  "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1" for local 1-wire bus via I2C, depending on type.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_owfs_bus.req
+    :response: http-examples/ucapi/create_owfs_bus.resp
 
 Parameters:
 
@@ -598,6 +844,12 @@ Returns:
 
 If bus with the selected ID is already defined, error is not returned and bus is recreated.
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_owfs_bus.rest
+    :response: http-examples/ucapi/create_owfs_bus.resp-rest
+
 .. _ucapi_destroy_owfs_bus:
 
 destroy_owfs_bus - delete OWFS bus
@@ -609,10 +861,42 @@ Deletes (undefines) :doc:`OWFS bus</owfs>`.
 
     In some cases deleted OWFS bus located on I2C may lock *libow*     library calls, which require controller restart until you can use     (create) the same I2C bus again.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/destroy_owfs_bus.req
+    :response: http-examples/ucapi/destroy_owfs_bus.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** bus ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/destroy_owfs_bus.rest
+    :response: http-examples/ucapi/destroy_owfs_bus.resp-rest
+
+.. _ucapi_get_owfs_bus:
+
+get_owfs_bus - get OWFS bus configuration
+-----------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_owfs_bus.req
+    :response: http-examples/ucapi/get_owfs_bus.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** bus ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_owfs_bus.rest
+    :response: http-examples/ucapi/get_owfs_bus.resp-rest
 
 .. _ucapi_list_owfs_buses:
 
@@ -621,9 +905,19 @@ list_owfs_buses - list OWFS buses
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_owfs_buses.req
+    :response: http-examples/ucapi/list_owfs_buses.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_owfs_buses.rest
+    :response: http-examples/ucapi/list_owfs_buses.resp-rest
 
 .. _ucapi_scan_owfs_bus:
 
@@ -631,6 +925,10 @@ scan_owfs_bus - scan OWFS bus
 -----------------------------
 
 Scan :doc:`OWFS bus</owfs>` for connected 1-wire devices.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/scan_owfs_bus.req
+    :response: http-examples/ucapi/scan_owfs_bus.resp
 
 Parameters:
 
@@ -649,6 +947,16 @@ Returns:
 
 If both "a" and "full" args are specified. the function will examine and values of attributes specified in "a" param. (This will poll "released" bus, even if locking is set up, so be careful with this feature in production environment).
 
+Bus acquire error can be caused in 2 cases:
+
+* bus is locked * owfs resource not initialized (libow or location problem)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/scan_owfs_bus.rest
+    :response: http-examples/ucapi/scan_owfs_bus.resp-rest
+
 .. _ucapi_test_owfs_bus:
 
 test_owfs_bus - test OWFS bus
@@ -656,10 +964,20 @@ test_owfs_bus - test OWFS bus
 
 Verifies :doc:`OWFS bus</owfs>` checking library initialization status.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/test_owfs_bus.req
+    :response: http-examples/ucapi/test_owfs_bus.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** bus ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/test_owfs_bus.rest
+    :response: http-examples/ucapi/test_owfs_bus.resp-rest
 
 
 .. _ucapi_cat_modbus:
@@ -682,6 +1000,10 @@ ModBus params should contain the configuration of hardware ModBus port. The foll
 
 * **rtu**, **ascii**, **binary** ModBus protocol implementations for     the local bus connected with USB or serial port. The params should     be specified as:     *<protocol>:<device>:<speed>:<data>:<parity>:<stop>* e.g.     *rtu:/dev/ttyS0:9600:8:E:1*
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_modbus_port.req
+    :response: http-examples/ucapi/create_modbus_port.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -700,6 +1022,12 @@ Returns:
 
 If port with the selected ID is already created, error is not returned and port is recreated.
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/create_modbus_port.rest
+    :response: http-examples/ucapi/create_modbus_port.resp-rest
+
 .. _ucapi_destroy_modbus_port:
 
 destroy_modbus_port - delete virtual ModBus port
@@ -707,10 +1035,42 @@ destroy_modbus_port - delete virtual ModBus port
 
 Deletes virtual :doc:`ModBus port</modbus>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/destroy_modbus_port.req
+    :response: http-examples/ucapi/destroy_modbus_port.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** virtual port ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/destroy_modbus_port.rest
+    :response: http-examples/ucapi/destroy_modbus_port.resp-rest
+
+.. _ucapi_get_modbus_port:
+
+get_modbus_port - get virtual ModBus port configuration
+-------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_modbus_port.req
+    :response: http-examples/ucapi/get_modbus_port.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** port ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_modbus_port.rest
+    :response: http-examples/ucapi/get_modbus_port.resp-rest
 
 .. _ucapi_list_modbus_ports:
 
@@ -719,10 +1079,20 @@ list_modbus_ports - list virtual ModBus ports
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_modbus_ports.req
+    :response: http-examples/ucapi/list_modbus_ports.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** virtual port ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_modbus_ports.rest
+    :response: http-examples/ucapi/list_modbus_ports.resp-rest
 
 .. _ucapi_test_modbus_port:
 
@@ -735,10 +1105,20 @@ Verifies virtual :doc:`ModBus port</modbus>` by calling connect() ModBus client 
 
     As ModBus UDP doesn't require a port to be connected, API call     always returns success unless the port is locked.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/test_modbus_port.req
+    :response: http-examples/ucapi/test_modbus_port.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** virtual port ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/test_modbus_port.rest
+    :response: http-examples/ucapi/test_modbus_port.resp-rest
 
 
 .. _ucapi_cat_phi:
@@ -755,11 +1135,22 @@ exec_phi - execute additional PHI commands
 
 Execute PHI command and return execution result (as-is). **help** command returns all available commands.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/exec_phi.req
+    :response: http-examples/ucapi/exec_phi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
-* **m** PHI module name (without *.py* extension)
+* **i** PHI id
 * **c** command to exec
+* **a** command argument
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/exec_phi.rest
+    :response: http-examples/ucapi/exec_phi.resp-rest
 
 .. _ucapi_get_phi:
 
@@ -768,10 +1159,20 @@ get_phi - get loaded PHI information
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi.req
+    :response: http-examples/ucapi/get_phi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** PHI ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi.rest
+    :response: http-examples/ucapi/get_phi.resp-rest
 
 .. _ucapi_list_phi:
 
@@ -780,10 +1181,20 @@ list_phi - list loaded PHIs
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_phi.req
+    :response: http-examples/ucapi/list_phi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **full** get exntended information
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_phi.rest
+    :response: http-examples/ucapi/list_phi.resp-rest
 
 .. _ucapi_list_phi_mods:
 
@@ -792,9 +1203,19 @@ list_phi_mods - get list of available PHI modules
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_phi_mods.req
+    :response: http-examples/ucapi/list_phi_mods.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_phi_mods.rest
+    :response: http-examples/ucapi/list_phi_mods.resp-rest
 
 .. _ucapi_load_phi:
 
@@ -802,6 +1223,10 @@ load_phi - load PHI module
 --------------------------
 
 Loads :doc:`Physical Interface</drivers>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/load_phi.req
+    :response: http-examples/ucapi/load_phi.resp
 
 Parameters:
 
@@ -814,6 +1239,12 @@ Optionally:
 * **c** PHI configuration
 * **save** save driver configuration after successful call
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/load_phi.rest
+    :response: http-examples/ucapi/load_phi.resp-rest
+
 .. _ucapi_modhelp_phi:
 
 modhelp_phi - get PHI usage help
@@ -821,11 +1252,21 @@ modhelp_phi - get PHI usage help
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/modhelp_phi.req
+    :response: http-examples/ucapi/modhelp_phi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **m** PHI module name (without *.py* extension)
 * **c** help context (*cfg*, *get* or *set*)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/modhelp_phi.rest
+    :response: http-examples/ucapi/modhelp_phi.resp-rest
 
 .. _ucapi_modinfo_phi:
 
@@ -834,10 +1275,20 @@ modinfo_phi - get PHI module info
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/modinfo_phi.req
+    :response: http-examples/ucapi/modinfo_phi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **m** PHI module name (without *.py* extension)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/modinfo_phi.rest
+    :response: http-examples/ucapi/modinfo_phi.resp-rest
 
 .. _ucapi_put_phi_mod:
 
@@ -845,6 +1296,10 @@ put_phi_mod - upload PHI module
 -------------------------------
 
 Allows to upload new PHI module to *xc/drivers/phi* folder.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/put_phi_mod.req
+    :response: http-examples/ucapi/put_phi_mod.resp
 
 Parameters:
 
@@ -856,12 +1311,22 @@ Optionally:
 
 * **force** overwrite PHI module file if exists
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/put_phi_mod.rest
+    :response: http-examples/ucapi/put_phi_mod.resp-rest
+
 .. _ucapi_set_phi_prop:
 
 set_phi_prop - set PHI configuration property
 ---------------------------------------------
 
 appends property to PHI configuration and reloads module
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/set_phi_prop.req
+    :response: http-examples/ucapi/set_phi_prop.resp
 
 Parameters:
 
@@ -870,6 +1335,16 @@ Parameters:
 * **p** property name (or empty for batch set)
 * **v** propery value (or dict for batch set)
 
+Optionally:
+
+* **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/set_phi_prop.rest
+    :response: http-examples/ucapi/set_phi_prop.resp-rest
+
 .. _ucapi_test_phi:
 
 test_phi - test PHI
@@ -877,11 +1352,21 @@ test_phi - test PHI
 
 Get PHI test result (as-is). All PHIs respond to **self** command, **help** command returns all available test commands.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/test_phi.req
+    :response: http-examples/ucapi/test_phi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
-* **m** PHI module name (without *.py* extension)
+* **m** PHI id
 * **c** test command
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/test_phi.rest
+    :response: http-examples/ucapi/test_phi.resp-rest
 
 .. _ucapi_unlink_phi_mod:
 
@@ -890,10 +1375,20 @@ unlink_phi_mod - delete PHI module file
 
 Deletes PHI module file, if the module is loaded, all its instances should be unloaded first.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/unlink_phi_mod.req
+    :response: http-examples/ucapi/unlink_phi_mod.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **m** PHI module name (without *.py* extension)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/unlink_phi_mod.rest
+    :response: http-examples/ucapi/unlink_phi_mod.resp-rest
 
 .. _ucapi_unload_phi:
 
@@ -904,10 +1399,20 @@ Unloads PHI. PHI should not be used by any :doc:`driver</drivers>` (except *defa
 
 If driver <phi_id.default> (which's loaded automatically with PHI) is present, it will be unloaded as well.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/unload_phi.req
+    :response: http-examples/ucapi/unload_phi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** PHI ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/unload_phi.rest
+    :response: http-examples/ucapi/unload_phi.resp-rest
 
 
 .. _ucapi_cat_driver:
@@ -928,6 +1433,10 @@ Sets the specified driver to :doc:`item</items>`, automatically updating item pr
 
 To unassign driver, set driver ID to empty/null.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/assign_driver.req
+    :response: http-examples/ucapi/assign_driver.resp
+
 Parameters:
 
 * **k** masterkey
@@ -939,6 +1448,12 @@ Optionally:
 
 * **save** save item configuration after successful call
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/assign_driver.rest
+    :response: http-examples/ucapi/assign_driver.resp-rest
+
 .. _ucapi_get_driver:
 
 get_driver - get loaded PHI information
@@ -946,10 +1461,20 @@ get_driver - get loaded PHI information
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_driver.req
+    :response: http-examples/ucapi/get_driver.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** PHI ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_driver.rest
+    :response: http-examples/ucapi/get_driver.resp-rest
 
 .. _ucapi_list_drivers:
 
@@ -958,10 +1483,20 @@ list_drivers - list loaded drivers
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_drivers.req
+    :response: http-examples/ucapi/list_drivers.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **full** get exntended information
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_drivers.rest
+    :response: http-examples/ucapi/list_drivers.resp-rest
 
 .. _ucapi_list_lpi_mods:
 
@@ -970,9 +1505,19 @@ list_lpi_mods - get list of available LPI modules
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_lpi_mods.req
+    :response: http-examples/ucapi/list_lpi_mods.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_lpi_mods.rest
+    :response: http-examples/ucapi/list_lpi_mods.resp-rest
 
 .. _ucapi_load_driver:
 
@@ -980,6 +1525,10 @@ load_driver - Loads a :doc:`driver</drivers>`, combining previously loaded PHI a
 ----------------------------------------------------------------------------------
 
 chosen LPI module.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/load_driver.req
+    :response: http-examples/ucapi/load_driver.resp
 
 Parameters:
 
@@ -991,6 +1540,13 @@ Parameters:
 Optionally:
 
 * **c** Driver (LPI) configuration, optional
+* **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/load_driver.rest
+    :response: http-examples/ucapi/load_driver.resp-rest
 
 .. _ucapi_modhelp_lpi:
 
@@ -999,11 +1555,21 @@ modhelp_lpi - get LPI usage help
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/modhelp_lpi.req
+    :response: http-examples/ucapi/modhelp_lpi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **m** LPI module name (without *.py* extension)
 * **c** help context (*cfg*, *action* or *update*)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/modhelp_lpi.rest
+    :response: http-examples/ucapi/modhelp_lpi.resp-rest
 
 .. _ucapi_modinfo_lpi:
 
@@ -1012,10 +1578,20 @@ modinfo_lpi - get LPI module info
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/modinfo_lpi.req
+    :response: http-examples/ucapi/modinfo_lpi.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **m** LPI module name (without *.py* extension)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/modinfo_lpi.rest
+    :response: http-examples/ucapi/modinfo_lpi.resp-rest
 
 .. _ucapi_set_driver_prop:
 
@@ -1024,12 +1600,26 @@ set_driver_prop - set driver (LPI) configuration property
 
 appends property to LPI configuration and reloads module
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/set_driver_prop.req
+    :response: http-examples/ucapi/set_driver_prop.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** driver ID
 * **p** property name (or empty for batch set)
 * **v** propery value (or dict for batch set)
+
+Optionally:
+
+* **save** save driver configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/set_driver_prop.rest
+    :response: http-examples/ucapi/set_driver_prop.resp-rest
 
 .. _ucapi_unload_driver:
 
@@ -1038,10 +1628,20 @@ unload_driver - unload driver
 
 Unloads driver. Driver should not be used by any :doc:`item</items>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/unload_driver.req
+    :response: http-examples/ucapi/unload_driver.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** driver ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/unload_driver.rest
+    :response: http-examples/ucapi/unload_driver.resp-rest
 
 
 .. _ucapi_cat_device:
@@ -1051,12 +1651,16 @@ Devices
 
 
 
-.. _ucapi_create_device:
+.. _ucapi_deploy_device:
 
-create_device - create device items
------------------------------------
+deploy_device - deploy device items from template
+-------------------------------------------------
 
-Creates the :ref:`device<device>` from the specified template.
+Deploys the :ref:`device<device>` from the specified template.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/deploy_device.req
+    :response: http-examples/ucapi/deploy_device.resp
 
 Parameters:
 
@@ -1068,12 +1672,43 @@ Optionally:
 
 * **save** save items configuration on disk immediately after operation
 
-.. _ucapi_destroy_device:
+**RESTful:**
 
-destroy_device - delete device items
-------------------------------------
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/deploy_device.rest
+    :response: http-examples/ucapi/deploy_device.resp-rest
 
-Works in an opposite way to :ref:`ucapi_create_device` function, destroying all items specified in the template.
+.. _ucapi_list_device_tpl:
+
+list_device_tpl - list device templates
+---------------------------------------
+
+List available device templates from runtime/tpl
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_device_tpl.req
+    :response: http-examples/ucapi/list_device_tpl.resp
+
+Parameters:
+
+* **k** API key with *masterkey* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/list_device_tpl.rest
+    :response: http-examples/ucapi/list_device_tpl.resp-rest
+
+.. _ucapi_undeploy_device:
+
+undeploy_device - delete device items
+-------------------------------------
+
+Works in an opposite way to :ref:`ucapi_deploy_device` function, destroying all items specified in the template.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/undeploy_device.req
+    :response: http-examples/ucapi/undeploy_device.resp
 
 Parameters:
 
@@ -1085,23 +1720,22 @@ Returns:
 
 The function ignores missing items, so no errors are returned unless device configuration file is invalid.
 
-.. _ucapi_list_device_tpl:
+**RESTful:**
 
-list_device_tpl - list device templates
----------------------------------------
-
-List available device templates from runtime/tpl
-
-Parameters:
-
-* **k** API key with *masterkey* permissions
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/undeploy_device.rest
+    :response: http-examples/ucapi/undeploy_device.resp-rest
 
 .. _ucapi_update_device:
 
 update_device - update device items
 -----------------------------------
 
-Works similarly to :ref:`ucapi_create_device` function but doesn't create new items, updating the item configuration of the existing ones.
+Works similarly to :ref:`ucapi_deploy_device` function but doesn't create new items, updating the item configuration of the existing ones.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/update_device.req
+    :response: http-examples/ucapi/update_device.resp
 
 Parameters:
 
@@ -1112,4 +1746,10 @@ Parameters:
 Optionally:
 
 * **save** save items configuration on disk immediately after operation
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/update_device.rest
+    :response: http-examples/ucapi/update_device.resp-rest
 

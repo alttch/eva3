@@ -1,0 +1,26 @@
+HTTP/1.1 201 OK
+Allow: DELETE, GET, HEAD, PATCH, POST, PUT
+Cache-Control: no-cache, no-store, must-revalidate
+Content-Type: application/json
+Expires: 0
+Pragma: no-cache
+
+{
+    "err": "",
+    "exitcode": null,
+    "item_group": "tests",
+    "item_id": "unit3",
+    "item_oid": "unit:tests/unit3",
+    "item_type": "unit",
+    "nstatus": 1,
+    "nvalue": null,
+    "out": "",
+    "priority": 100,
+    "status": "refused",
+    "time": {
+        "created": 1552867567.1958072,
+        "pending": 1552867567.1959717,
+        "refused": 1552867567.1961622
+    },
+    "uuid": "4244da37-79db-4f52-8217-477ce39403de"
+}

@@ -6,7 +6,7 @@ Expires: 0
 Pragma: no-cache
 
 {
-    "announce_interval": 10.0,
+    "announce_interval": 5.0,
     "api_enabled": true,
     "enabled": false,
     "events": [
@@ -20,15 +20,19 @@ Pragma: no-cache
             ]
         },
         {
-            "level": 20,
+            "level": 30,
             "subject": "log"
         }
     ],
-    "host": "localhost",
+    "host": "mws1-v1",
     "id": "eva_1",
     "password": "test",
-    "port": 1883,
-    "space": "test",
+    "qos": {
+        "action": 2,
+        "log": 2,
+        "state": 2,
+        "system": 2
+    },
     "type": "mqtt",
     "username": "eva"
 }
