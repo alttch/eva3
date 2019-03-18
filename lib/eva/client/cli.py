@@ -612,7 +612,7 @@ class GenericCLI(object):
             tabsp = self.fancy_tabsp.get(api_func)
             if not tabsp: tabsp = 10
             for v in sorted(_result.keys()):
-                if v == 'result' and api_func not in ['test']: continue
+                if v == 'ok' and api_func not in ['test']: continue
                 if v == 'help':
                     if not tab:
                         h = _result[v]
