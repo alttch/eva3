@@ -1368,7 +1368,7 @@ class UC_API(GenericAPI):
             c: command to exec
             a: command argument
         """
-        i, c, a = parse_api_params(kwargs, 'ica', 'SSS')
+        i, c, a = parse_api_params(kwargs, 'ica', 'SS.')
         phi = eva.uc.driverapi.get_phi(i)
         if not phi: raise ResourceNotFound
         result = phi.exec(c, a)
