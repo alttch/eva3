@@ -25,12 +25,6 @@ code, result = api.call('state', {'i': 'this_item_doesnt_exist'})
 print('CODE %u' % code)
 print(json.dumps(result, indent=4, sort_keys=True))
 
-# failed call
-print('Failed call:')
-code, result = api.call('cmd', {'c': 'test', 'a': '1 2 3', 'w': 10})
-print('CODE %u' % code)
-print(json.dumps(result, indent=4, sort_keys=True))
-
 # timeout
 print('Timeout:')
 api.set_timeout(2)

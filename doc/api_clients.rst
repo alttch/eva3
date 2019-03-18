@@ -129,164 +129,28 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
 
     # the call succeeded
     result_ok = 0
-    # the item is not found or the function requires a different set of
-    # parameters
+    # the item or resource is not found
     result_not_found = 1
-    # access is denied with the set key
+    # access is denied with the set API key
     result_forbidden = 2
-    # - API error, e.g. the string param was used instead of a number
+    # server responded with error http status (e.g. API function crashed)
     result_api_error = 3
     # unknown error: all errors not listed here fall within this category
     result_unknown_error = 4
     # API is not initialized - URI is not set
     result_not_ready = 5
-    # Attempt to call API function unknown to the client
+    # Attempt to call undefined API function
     result_func_unknown = 6
     # server connection failed
     result_server_error = 7
     # the server request exceeded the time set in timeout
     result_server_timeout = 8
-    # API returned data not in JSON or it cannot be parsed
+    # API response cannot be parsed or is invalid
     result_bad_data = 9
-    # action failed (e.g., when calling  SYS API cmd or UC API action functions)
+    # API function failed
     result_func_failed = 10
-    # the function is called with invalid params
+    # API function is called with invalid params
     result_invalid_params = 11
-
-API client for PHP
-==================
-
-API client for PHP has already been installed on all EVA servers. If you want
-to use the client library on another system, just copy
-**include/php/eva-apiclient.php** file.
-
-Example of working with API from PHP is located in **include/php/**
-folder of EVA.
-
-API classes for PHP
-----------------------
-
-API has two classes:
-
-.. code-block:: php
-
-    <?php EVA_APIClient(); ?>
-
-and
-
-.. code-block:: php
-
-    <?php EVA_APIClientLocal($product, $dir_eva); ?>
-
-**EVA_APIClientLocal** class may be used on the servers where EVA is installed.
-When specifying **product='<subsystem code>'** parameter (i.e. *'uc'*) API is
-automatically initialized by loading parameters and keys specifically from
-configuration files of the controller. If you load the **eva-apiclient.php**
-library from **include/php/** folder, it is not necessary to set **dir_eva**
-parameter. Otherwise, it should point to EVA root folder.
-
-**EVA_APIClient** class should always be initialized manually.
-
-API requires PHP extensions `JSON <http://php.net/manual/en/book.json.php>`_
-and `cURL <http://php.net/manual/en/book.curl.php>`_.
-
-API initialization
-------------------
-
-API is initialized with the use of the following functions:
-
-* **set_key($key)** set API key.
-* **set_uri($uri)** set the root API URI (i.e., \http://localhost:8812). You
-  don't need to specify the full path to API.
-* **set_timeout($timeout)** set maximum request timeout (seconds), 5 seconds by
-  default.
-* **set_product($product)** set controller type: *uc* for :doc:`/uc/uc`, *lm*
-  for :doc:`/lm/lm`, *sfa* for :doc:`/sfa/sfa`. The client automatically
-  identifies which API is to be called - either :doc:`/sysapi` one or the one
-  of the certain controller  - that is why this parameter is required.
-* **ssl_verify($v)** to verify or not SSL certificate validity while working
-  through https://. Can be *true* (check) or *false* (don't check). The
-  certificate is verified by default.
-
-Example:
-
-.. code-block:: php
-
-    <?php
-    include "eva-apiclient.php";
-    $api = new EVA_APIClient();
-    $api->set_key($APIKEY);
-    $api->set_uri('http://192.168.0.77:812');
-    $api->set_product('uc');
-    ?>
-
-API function call
------------------
-
-API functions are invoked by calling the **call** function:
-
-.. code-block:: php
-
-    <?php
-    EVA_APIClient->call($func, $params=null, $timeout=null);
-    ?>
-
-where:
-
-* **$params** the dict of the request parameters (if required)
-* **$timeout** - maximum time (in seconds) to wait for the API response (if not
-  set - the default timeout is used or the one set during API client
-  initialization).
-
-Example:
-
-.. code-block:: php
-
-    <?php
-    include "eva-apiclient.php";
-    $api = new EVA_APIClientLocal('uc');
-    list($code, $result) = $api->call('state', array('i' => 'unit1'));
-    ?>
-
-The function returns an array of two variables:
-
-* *0* API call result
-* *1* the result itself (JSON response converted to Python dict or array).
-
-API result codes
-----------------
-
-Result codes are stored in module variables:
-
-.. code-block:: php
-
-    <?php
-    # the call succeeded
-    $result_ok = 0;
-    # the item is not found or the function requires a different set of
-    # parameters
-    $result_not_found = 1;
-    # access is denied with the set key
-    $result_forbidden = 2;
-    # - API error, e.g. the string param was used instead of a number
-    $result_api_error = 3;
-    # unknown error: all errors not listed here fall within this category
-    $result_unknown_error = 4;
-    # API is not initialized - URI is not set
-    $result_not_ready = 5;
-    # Attempt to call API function unknown to the client
-    $result_func_unknown = 6;
-    # server connection failed
-    $result_server_error = 7;
-    # the server request exceeded the time set in timeout
-    $result_server_timeout = 8;
-    # API returned data not in JSON or it cannot be parsed
-    $result_bad_data = 9;
-    # action failed (e.g., when calling  SYS API cmd or UC API action functions)
-    $result_func_failed = 10;
-    # the function is called with invalid params
-    $result_invalid_params = 11;
-    ?>
 
 .. json_rpc_client_:
 
@@ -294,8 +158,8 @@ JSON RPC API client
 ===================
 
 As EVA ICS uses standard `JSON RPC 2.0 protocol
-<https://www.jsonrpc.org/specification>`_, any JSON RPC client may be used. In
-the example below, we'll use simple `JSON RPC client for Python 3
+<https://www.jsonrpc.org/specification>`_, any 3rd party JSON RPC client may be
+used. In the example below, we'll use simple `JSON RPC client for Python 3
 <https://github.com/bcb/jsonrpcclient>`_.
 
 Installing
@@ -316,7 +180,7 @@ Let's call :doc:`/uc/uc_api` method **state** and obtain state of sensors:
 
     from jsonrpcclient import request as rpc
 
-    r = rpc('http://localhost:8812/uc-api', 'state', k='YOUR_API_KEY', p='sensor')
+    r = rpc('http://localhost:8812/jrpc', 'state', k='YOUR_API_KEY', p='sensor')
     for s in r.data.result:
         print(s['oid'])
 
@@ -334,9 +198,4 @@ case JSON RPC request has no **id**, no body is returned and HTTP response code
 will be *202 (Accepted)*.
 
 In case of API method errors, HTTP code is still *200 (OK)*. Error codes can
-be found in the response body:
-
-* **2** Access is forbiden
-* **6** Object or method is not found
-* **10** Function failed
-
+be found in the response body.

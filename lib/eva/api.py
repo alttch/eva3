@@ -21,6 +21,8 @@ from eva.tools import is_oid
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
 
+from eva.client import apiclient
+
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import AccessDenied
@@ -841,25 +843,25 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 r = {'jsonrpc': '2.0', 'result': result, 'id': req_id}
             except ResourceNotFound as e:
                 eva.core.log_traceback()
-                r = format_error(1, e)
+                r = format_error(apiclient.result_not_found, e)
             except AccessDenied as e:
                 eva.core.log_traceback()
-                r = format_error(2, e)
+                r = format_error(apiclient.result_forbidden, e)
             except MethodNotFound as e:
                 eva.core.log_traceback()
-                r = format_error(6, e)
+                r = format_error(apiclient.result_func_unknown, e)
             except InvalidParameter as e:
                 eva.core.log_traceback()
-                r = format_error(11, e)
+                r = format_error(apiclient.result_invalid_params, e)
             except ResourceAlreadyExists as e:
                 eva.core.log_traceback()
-                r = format_error(12, e)
+                r = format_error(apiclient.result_already_exists, e)
             except ResourceBusy as e:
                 eva.core.log_traceback()
-                r = format_error(13, e)
+                r = format_error(apiclient.result_busy, e)
             except Exception as e:
                 eva.core.log_traceback()
-                r = format_error(10, e)
+                r = format_error(apiclient.result_func_failed, e)
             if req_id:
                 r['id'] = req_id
                 if isinstance(payload, list):

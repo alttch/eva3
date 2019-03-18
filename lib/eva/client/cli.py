@@ -147,9 +147,9 @@ class GenericCLI(object):
         self.timeout = self.default_timeout
         self.ssl_verify = False
         self.always_json = []
-        self.local_func_result_ok = (apiclient.result_ok, {'result': 'OK'})
+        self.local_func_result_ok = (apiclient.result_ok, {'ok': True})
         self.local_func_result_failed = (apiclient.result_func_failed, {
-            'result': 'ERROR'
+            'ok': False
         })
         self.local_func_result_empty = (apiclient.result_ok, '')
         if remote_api_enabled:
@@ -287,7 +287,6 @@ class GenericCLI(object):
                     cmd.append('test')
                     code, result = self.do_run(cmd, return_result=True)
                     if code != apiclient.result_ok or \
-                            result['result'] != 'OK' or \
                             not 'key_id' in result['acl']:
                         raise Exception('test failed')
                     h = result['acl']['key_id'] + '@' + result['system']
@@ -594,21 +593,6 @@ class GenericCLI(object):
             return data
 
     def prepare_result_dict(self, data, api_func, api_func_full, itype):
-        if '_warning' in data or '_error' in data or '_critical' in data:
-            d = data.copy()
-            try:
-                del d['_warning']
-            except:
-                pass
-            try:
-                del d['_error']
-            except:
-                pass
-            try:
-                del d['_critical']
-            except:
-                pass
-            return d
         return data
 
     def fancy_print_result(self,
@@ -1370,36 +1354,28 @@ class GenericCLI(object):
         if return_result:
             return code, result
         if not isinstance(api_func, str): api_func = api_func.__name__
-        if code != apiclient.result_ok and code != apiclient.result_func_failed:
-            if '_error' not in result:
-                if code != apiclient.result_func_unknown:
-                    self.print_err(
-                        'Error: ' + default_errors.get(code))
-                else:
-                    self.ap.print_help()
-                if debug and self.remote_api_enabled:
-                    self.print_debug('API result code: %u' % code)
+        if code != apiclient.result_ok:
+            if debug and self.remote_api_enabled:
+                self.print_debug('API result code: %u' % code)
+            if 'error' not in result:
+                self.print_err('Error: ' + default_errors.get(code))
             else:
                 self.print_failed_result(result)
+            if code == apiclient.result_func_unknown and not debug:
+                self.ap.print_help()
             return code
         else:
             if c.get('json') or a._json or api_func in self.always_json:
                 self.print_json(result)
-                if 'result' in result and result['result'] == 'ERROR':
-                    return apiclient.result_func_failed
             else:
                 return self.process_result(result, code, api_func,
                                            api_func_full, itype, a)
         return 0
 
     def print_failed_result(self, result):
-        self.print_err(result.get('result', 'FAILED'))
-        if '_warning' in result:
-            self.print_warn(result['_warning'])
-        if '_error' in result:
-            self.print_err(result['_error'])
-        if '_critical' in result:
-            self.print_err('CRITICAL: ' + result['_critical'])
+        self.print_err('FAILED')
+        if 'error' in result:
+            self.print_err(result['error'])
 
     def process_result(self, result, code, api_func, api_func_full, itype, a):
         if api_func == 'file_get' and result == apiclient.result_ok:
@@ -1423,18 +1399,6 @@ class GenericCLI(object):
     def print_tdf(self, result_in, time_field):
         self.import_pandas()
         result = result_in.copy()
-        try:
-            del result['_warning']
-        except:
-            pass
-        try:
-            del result['_error']
-        except:
-            pass
-        try:
-            del result['_critical']
-        except:
-            pass
         # convert list to dict
         res = []
         for i in range(len(result[time_field])):
