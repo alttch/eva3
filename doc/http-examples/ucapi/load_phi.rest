@@ -3,4 +3,4 @@ Host: localhost:8812
 X-Auth-Key: mykey
 Content-Type: application/json
 
-{ "m": "vrtrelay", "c": "default_status=0", "save": true, "m": "vrtrelay", "c": "default_status=0" }
+{ "m": "vrtrelay", "c": "default_status=0", "save": true }

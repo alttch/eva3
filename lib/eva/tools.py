@@ -8,9 +8,12 @@ import jsonpickle
 import time
 import socket
 import struct
+import threading
 
 from collections import OrderedDict
 from netaddr import IPNetwork, IPAddress
+
+from functools import wraps
 
 
 class MultiOrderedDict(OrderedDict):
@@ -351,3 +354,31 @@ tiny_httpe = {
     'error_page.409': error_page_409,
     'error_page.500': error_page_500
 }
+
+
+class Locker:
+
+    def __init__(self, mod='', timeout=5, relative=True):
+        self.lock = threading.RLock() if relative else threading.Lock()
+        self.mod = '' if not mod else mod + '/'
+        self.relative = relative
+        self.timeout = timeout
+
+    def __call__(self, f):
+
+        @wraps(f)
+        def do(*args, **kwargs):
+            if not self.lock.acquire(timeout=self.timeout):
+                logging.critical('{}{} locking broken'.format(
+                    self.mod, f.__name__))
+                self.critical()
+                return None
+            try:
+                return f(*args, **kwargs)
+            finally:
+                self.lock.release()
+
+        return do
+
+    def critical(self):
+        pass

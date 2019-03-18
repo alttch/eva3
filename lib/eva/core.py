@@ -23,6 +23,8 @@ import sqlite3
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
 
+from eva.tools import Locker as GenericLocker
+
 from eva.exceptions import FunctionFailed
 
 from eva.logs import MemoryLogHandler
@@ -135,6 +137,22 @@ enterprise_layout = True
 started = False
 
 shutdown_requested = False
+
+
+class Locker(GenericLocker):
+
+    def __init__(self, mod=''):
+
+        super().__init__(mod=mod, relative=False)
+        self.critical = critical
+
+
+class RLocker(GenericLocker):
+
+    def __init__(self, mod=''):
+
+        super().__init__(mod=mod, relative=True)
+        self.critical = critical
 
 
 def log_traceback(display=False, notifier=False, force=False, e=None):
@@ -745,17 +763,20 @@ def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
     else:
         return fname
 
+
 def report_db_error(raise_exeption=True):
     logging.critical('DB ERROR')
     log_traceback()
     if raise_exeption:
         raise FunctionFailed
 
+
 def report_userdb_error(raise_exeption=True):
     logging.critical('USERDB ERROR')
     log_traceback()
     if raise_exeption:
         raise FunctionFailed
+
 
 def dummy_true():
     return True
@@ -768,6 +789,8 @@ def dummy_false():
 def init():
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
+    Locker.timeout = timeout
+    RLocker.timeout = timeout
     if not os.environ.get('EVA_CORE_ENABLE_CC'):
         signal.signal(signal.SIGINT, sighandler_int)
 

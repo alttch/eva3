@@ -831,13 +831,13 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** bus ID which will be used later in :doc:`PHI</drivers>` configurations, required
 * **n** OWFS location
+
+Optionally:
+
 * **l** lock port on operations, which means to wait while OWFS bus is used by other controller thread (driver command)
 * **t** OWFS operations timeout (in seconds, default: default timeout)
 * **r** retry attempts for each operation (default: no retries)
 * **d** delay between bus operations (default: 50ms)
-
-Optionally:
-
 * **save** save OWFS bus config after creation
 
 Returns:
@@ -1008,14 +1008,14 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** virtual port ID which will be used later in :doc:`PHI</drivers>` configurations, required
-* **p** ModBus params, required
+* **p** ModBus params
+
+Optionally:
+
 * **l** lock port on operations, which means to wait while ModBus port is used by other controller thread (driver command)
 * **t** ModBus operations timeout (in seconds, default: default timeout)
 * **r** retry attempts for each operation (default: no retries)
 * **d** delay between virtual port operations (default: 20ms)
-
-Optionally:
-
 * **save** save ModBus port config after creation
 
 Returns:
@@ -1456,8 +1456,8 @@ Optionally:
 
 .. _ucapi_get_driver:
 
-get_driver - get loaded PHI information
----------------------------------------
+get_driver - get loaded driver information
+------------------------------------------
 
 
 
@@ -1521,10 +1521,10 @@ Parameters:
 
 .. _ucapi_load_driver:
 
-load_driver - Loads a :doc:`driver</drivers>`, combining previously loaded PHI and
-----------------------------------------------------------------------------------
+load_driver - load a driver
+---------------------------
 
-chosen LPI module.
+Loads a :doc:`driver</drivers>`, combining previously loaded PHI and chosen LPI module.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/load_driver.req

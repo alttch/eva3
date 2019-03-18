@@ -65,23 +65,7 @@ Q = None
 
 DM = None
 
-_item_lock = threading.RLock()
-
-def with_item_lock(f):
-
-    @wraps(f)
-    def do(*args, **kwargs):
-        if not _event_handler_lock.acquire(timeout=eva.core.timeout):
-            logging.critical('uc/controller/{} locking broken'.format(
-                f.__name__))
-            eva.core.critical()
-            return None
-        try:
-            return f(*args, **kwargs)
-        finally:
-            _event_handler_lock.release()
-
-    return do
+with_item_lock = eva.core.RLocker('lm/controller')
 
 @with_item_lock
 def get_item(item_id):

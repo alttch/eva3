@@ -61,43 +61,10 @@ configs_to_remove = set()
 
 custom_event_handlers = {}
 
-_event_handler_lock = threading.RLock()
-_item_lock = threading.RLock()
 _benchmark_lock = threading.Lock()
 
-
-def with_event_handler_lock(f):
-
-    @wraps(f)
-    def do(*args, **kwargs):
-        if not _event_handler_lock.acquire(timeout=eva.core.timeout):
-            logging.critical('uc/controller/{} locking broken'.format(
-                f.__name__))
-            eva.core.critical()
-            return None
-        try:
-            return f(*args, **kwargs)
-        finally:
-            _event_handler_lock.release()
-
-    return do
-
-
-def with_item_lock(f):
-
-    @wraps(f)
-    def do(*args, **kwargs):
-        if not _event_handler_lock.acquire(timeout=eva.core.timeout):
-            logging.critical('uc/controller/{} locking broken'.format(
-                f.__name__))
-            eva.core.critical()
-            return None
-        try:
-            return f(*args, **kwargs)
-        finally:
-            _event_handler_lock.release()
-
-    return do
+with_event_handler_lock = eva.core.RLocker('uc/controller')
+with_item_lock = eva.core.RLocker('uc/controller')
 
 
 @with_event_handler_lock
@@ -522,8 +489,7 @@ def create_mu(mu_id, group=None, virtual=False, save=False):
 @with_item_lock
 def clone_item(item_id, new_item_id=None, group=None, save=False):
     i = get_item(item_id)
-    ni = get_item((
-        group + '/') if group else '' + new_item_id)
+    ni = get_item((group + '/') if group else '' + new_item_id)
     if not i or not new_item_id or i.is_destroyed() or \
             i.item_type not in ['unit', 'sensor']:
         raise ResourceNotFound

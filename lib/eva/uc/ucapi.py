@@ -1105,14 +1105,14 @@ class UC_API(GenericAPI):
             k: .master
             .i: virtual port ID which will be used later in
                 :doc:`PHI</drivers>` configurations, required
-            p: ModBus params, required
+            p: ModBus params
+
+        Optional:
             l: lock port on operations, which means to wait while ModBus port
                 is used by other controller thread (driver command)
             t: ModBus operations timeout (in seconds, default: default timeout)
             r: retry attempts for each operation (default: no retries)
             d: delay between virtual port operations (default: 20ms)
-
-        Optional:
             save: save ModBus port config after creation
 
         Returns:
@@ -1214,13 +1214,13 @@ class UC_API(GenericAPI):
             .i: bus ID which will be used later in
                 :doc:`PHI</drivers>` configurations, required
             n: OWFS location
+
+        Optional:
             l: lock port on operations, which means to wait while OWFS bus is
                 used by other controller thread (driver command)
             t: OWFS operations timeout (in seconds, default: default timeout)
             r: retry attempts for each operation (default: no retries)
             d: delay between bus operations (default: 50ms)
-
-        Optional:
             save: save OWFS bus config after creation
 
         Returns:
@@ -1611,6 +1611,8 @@ class UC_API(GenericAPI):
     @api_need_master
     def load_driver(self, **kwargs):
         """
+        load a driver
+
         Loads a :doc:`driver</drivers>`, combining previously loaded PHI and
         chosen LPI module.
 
@@ -1671,7 +1673,7 @@ class UC_API(GenericAPI):
     @api_need_master
     def get_driver(self, **kwargs):
         """
-        get loaded PHI information
+        get loaded driver information
 
         Args:
             k: .master
