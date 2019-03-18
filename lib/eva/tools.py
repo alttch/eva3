@@ -134,6 +134,7 @@ def val_to_boolean(s):
 
 __special_param_names = {
     'S': 'save',
+    'K': 'kw',
     'Y': 'full',
     'J': '_j',
     'F': 'force',
@@ -144,6 +145,7 @@ __special_param_names = {
 
 __special_param_codes = {
     'save': 'S',
+    'kw': 'K',
     'full': 'Y',
     '_j': 'J',
     'force': 'F',

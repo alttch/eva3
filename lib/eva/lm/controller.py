@@ -74,6 +74,12 @@ def get_item(item_id):
         tp, i = parse_oid(item_id)
     else:
         i = item_id
+    if tp == 'lmacro':
+        return self.get_macro(i)
+    elif tp == 'lcycle':
+        return self.get_cycle(i)
+    elif tp == 'dmatrix_rule':
+        return self.get_dm_rule(i)
     item = None
     if i.find('/') > -1:
         if i in items_by_full_id: item = items_by_full_id[i]

@@ -17,6 +17,9 @@ from eva.tools import format_json
 from eva.tools import parse_host_port
 from eva.tools import parse_function_params
 from eva.tools import val_to_boolean
+from eva.tools import is_oid
+from eva.tools import oid_to_id
+from eva.tools import parse_oid
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -28,6 +31,8 @@ from eva.exceptions import InvalidParameter
 import eva.users
 import eva.notify
 import eva.benchmark
+
+from eva.item import get_state_history
 
 from pyaltt import g
 
@@ -477,6 +482,80 @@ def log_w(f):
 
 class GenericAPI(object):
 
+    @staticmethod
+    def _process_action_result(a):
+        if not a: raise ResourceNotFound('item found, but something not')
+        if a.is_status_dead():
+            raise FunctionFailed('{} is dead'.format(a.uiid))
+        return a.serialize()
+
+    def _get_state_history(self,
+                           k=None,
+                           a=None,
+                           i=None,
+                           s=None,
+                           e=None,
+                           l=None,
+                           x=None,
+                           t=None,
+                           w=None,
+                           g=None):
+        item = self.controller.get_item(i)
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if is_oid(i):
+            _t, iid = parse_oid(i)
+            if not item or item.item_type != _t: raise ResourceNotFound
+        return get_state_history(
+            a=a,
+            oid=item.oid,
+            t_start=s,
+            t_end=e,
+            limit=l,
+            prop=x,
+            time_format=t,
+            fill=w,
+            fmt=g)
+
+    def _result(self, k, u, i, g, s, rtp):
+        if u:
+            a = self.controller.Q.history_get(u)
+            if not a or not apikey.check(k, a.item): raise ResourceNotFound
+            return a.serialize()
+        else:
+            result = []
+            if i:
+                item_id = oid_to_id(i, rtp)
+                if item_id is None: raise ResourceNotFound
+                ar = None
+                item = self.controller.get_item(rtp + ':' + item_id)
+                if not apikey.check(k, item): raise ResourceNotFound
+                if item_id.find('/') > -1:
+                    if item_id in self.controller.Q.actions_by_item_full_id:
+                        ar = self.controller.Q.actions_by_item_full_id[
+                            item_id]
+                else:
+                    if item_id in self.controller.Q.actions_byitem_id:
+                        ar = self.controller.Q.actions_byitem_id[item_id]
+                if ar is None: return []
+            else:
+                ar = self.controller.Q.actions
+            for a in ar:
+                if not apikey.check(k, a.item): continue
+                if g and \
+                        not eva.item.item_match(a.item, [], [ g ]):
+                    continue
+                if (s == 'Q' or s =='queued') and \
+                        not a.is_status_queued():
+                    continue
+                elif (s == 'R' or s == 'running') and \
+                        not a.is_status_running():
+                    continue
+                elif (s == 'F' or s == 'finished') and \
+                        not a.is_finished():
+                    continue
+                result.append(a.serialize())
+            return result
+
     def __init__(self):
         self._fp_hide_in_log = {}
         self.log_api_call = API_Logger()
@@ -537,6 +616,59 @@ class GenericAPI(object):
                 except:
                     result['benchmark_crt'] = -1
         return True, result
+
+    @log_d
+    def state_history(self, **kwargs):
+        """
+        get item state history
+
+        State history of one :doc:`item</items>` or several items of the
+        specified type can be obtained using **state_history** command.
+
+        Args:
+            k:
+            a: history notifier id (default: db_1)
+            .i: item oids or full ids, list or comma separated
+
+        Optional:
+            s: start time (timestamp or ISO)
+            e: end time (timestamp or ISO)
+            l: records limit (doesn't work with "w")
+            x: state prop ("status" or "value")
+            t: time format("iso" or "raw" for unix timestamp, default is "raw")
+            w: fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours
+                etc.), start time is required
+            g: output format ("list" or "dict", default is "list")
+        """
+        k, a, i, s, e, l, x, t, w, g = parse_function_params(
+            kwargs, 'kaiselxtwg', '.sr..issss')
+        if (isinstance(i, str) and i and i.find(',') != -1) or \
+                isinstance(i, list):
+            if not w:
+                raise InvalidParameter(
+                    '"w" is required to process multiple items')
+            if isinstance(i, str):
+                items = i.split(',')
+            else:
+                items = i
+            if not g or g == 'list':
+                result = {}
+            else:
+                raise InvalidParameter(
+                    'format should be list only to process multiple items')
+            for i in items:
+                r = self._get_state_history(
+                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
+                result['t'] = r['t']
+                if 'status' in r:
+                    result[i + '/status'] = r['status']
+                if 'value' in r:
+                    result[i + '/value'] = r['value']
+            return result
+        else:
+            result = self._get_state_history(
+                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
+            return result
 
     # return version for embedded hardware
     @log_d

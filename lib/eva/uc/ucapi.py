@@ -45,8 +45,6 @@ from eva.exceptions import InvalidParameter
 
 from eva.tools import parse_function_params
 
-from eva.item import get_state_history
-
 from eva import apikey
 
 from functools import wraps
@@ -59,9 +57,6 @@ import eva.ei
 import jinja2
 import jsonpickle
 import logging
-
-api = None
-
 
 def api_need_device(f):
 
@@ -76,39 +71,9 @@ def api_need_device(f):
 
 class UC_API(GenericAPI):
 
-    @staticmethod
-    def _process_action_result(a):
-        if not a: raise ResourceNotFound('unit found, but something not')
-        if a.is_status_dead():
-            raise FunctionFailed('{} is dead'.format(a.uiid))
-        return a.serialize()
-
-    @staticmethod
-    def _get_state_history(k=None,
-                           a=None,
-                           i=None,
-                           s=None,
-                           e=None,
-                           l=None,
-                           x=None,
-                           t=None,
-                           w=None,
-                           g=None):
-        item = eva.uc.controller.get_item(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
-        if is_oid(i):
-            _t, iid = parse_oid(i)
-            if not item or item.item_type != _t: raise ResourceNotFound
-        return get_state_history(
-            a=a,
-            oid=item.oid,
-            t_start=s,
-            t_end=e,
-            limit=l,
-            prop=x,
-            time_format=t,
-            fill=w,
-            fmt=g)
+    def __init__(self):
+        self.controller = eva.uc.controller
+        super().__init__()
 
     @staticmethod
     def _load_device_config(tpl_config=None, device_tpl=None):
@@ -201,9 +166,10 @@ class UC_API(GenericAPI):
     @log_d
     def state(self, **kwargs):
         """
-        get item group list
+        get item state
 
-        Get the list of item groups. Useful e.g. for custom interfaces.
+        State of the item or all items of the specified type can be obtained
+        using state command.
 
         Args:
             k:
@@ -243,58 +209,6 @@ class UC_API(GenericAPI):
                     result.append(r)
             return sorted(result, key=lambda k: k['oid'])
 
-    @log_d
-    def state_history(self, **kwargs):
-        """
-        get item state history
-
-        State history of one :doc:`item</items>` or several items of the
-        specified type can be obtained using **state_history** command.
-
-        Args:
-            k:
-            a: history notifier id (default: db_1)
-            .i: item oids or full ids, list or comma separated
-
-        Optional:
-            s: start time (timestamp or ISO)
-            e: end time (timestamp or ISO)
-            l: records limit (doesn't work with "w")
-            x: state prop ("status" or "value")
-            t: time format("iso" or "raw" for unix timestamp, default is "raw")
-            w: fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours
-                etc.), start time is required
-            g: output format ("list" or "dict", default is "list")
-        """
-        k, a, i, s, e, l, x, t, w, g = parse_function_params(
-            kwargs, 'kaiselxtwg', '.sr..issss')
-        if (isinstance(i, str) and i and i.find(',') != -1) or \
-                isinstance(i, list):
-            if not w:
-                raise InvalidParameter(
-                    '"w" is required to process multiple items')
-            if isinstance(i, str):
-                items = i.split(',')
-            else:
-                items = i
-            if not g or g == 'list':
-                result = {}
-            else:
-                raise InvalidParameter(
-                    'format should be list only to process multiple items')
-            for i in items:
-                r = self._get_state_history(
-                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                result['t'] = r['t']
-                if 'status' in r:
-                    result[i + '/status'] = r['status']
-                if 'value' in r:
-                    result[i + '/value'] = r['value']
-            return result
-        else:
-            result = self._get_state_history(
-                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            return result
 
     @log_i
     def action(self, **kwargs):
@@ -413,10 +327,10 @@ class UC_API(GenericAPI):
 
         Args:
             k:
-            .u: action uuid or
-            .i: unit id
 
         Optional:
+            .u: action uuid or
+            .i: unit id
             g: filter by unit group
             s: filter by action status: Q for queued, R for running, F for
                finished
@@ -425,44 +339,7 @@ class UC_API(GenericAPI):
             list or single serialized action object
         """
         k, u, i, g, s = parse_function_params(kwargs, 'kuigs', '.ssss')
-        if u:
-            a = eva.uc.controller.Q.history_get(u)
-            if not a or not apikey.check(k, a.item): raise ResourceNotFound
-            return a.serialize()
-        else:
-            result = []
-            if i:
-                item_id = oid_to_id(i, 'unit')
-                if item_id is None: raise ResourceNotFound
-                ar = None
-                item = eva.uc.controller.get_unit(item_id)
-                if not apikey.check(k, item): raise ResourceNotFound
-                if item_id.find('/') > -1:
-                    if item_id in eva.uc.controller.Q.actions_by_item_full_id:
-                        ar = eva.uc.controller.Q.actions_by_item_full_id[
-                            item_id]
-                else:
-                    if item_id in eva.uc.controller.Q.actions_byitem_id:
-                        ar = eva.uc.controller.Q.actions_byitem_id[item_id]
-                if ar is None: return []
-            else:
-                ar = eva.uc.controller.Q.actions
-            for a in ar:
-                if not apikey.check(k, a.item): continue
-                if g and \
-                        not eva.item.item_match(a.item, [], [ g ]):
-                    continue
-                if (s == 'Q' or s =='queued') and \
-                        not a.is_status_queued():
-                    continue
-                elif (s == 'R' or s == 'running') and \
-                        not a.is_status_running():
-                    continue
-                elif (s == 'F' or s == 'finished') and \
-                        not a.is_finished():
-                    continue
-                result.append(a.serialize())
-            return result
+        return self._result(k, u, i, g, s, rtp='unit')
 
     @log_i
     def update(self, **kwargs):

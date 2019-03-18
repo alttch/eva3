@@ -86,7 +86,7 @@ eva.mailer.update_config(cfg)
 eva.core.start()
 eva.core.load_cvars()
 
-eva.apikey.allows = ['cmd', 'lock', 'dm_rules_props', 'dm_rules_list']
+eva.apikey.allows = ['cmd', 'lock', 'dm_rule_props', 'dm_rules_list']
 eva.apikey.init()
 eva.apikey.load()
 

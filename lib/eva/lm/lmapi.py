@@ -7,43 +7,99 @@ import cherrypy
 import jsonpickle
 import shlex
 import eva.core
+
+import eva.api
+import eva.sysapi
+
 from eva.api import GenericHTTP_API
-from eva.api import JSON_RPC_API
+from eva.api import JSON_RPC_API_abstract
 from eva.api import GenericAPI
-from eva.api import cp_json_handler
-from eva.api import cp_forbidden_key
-from eva.api import http_api_result_ok
-from eva.api import http_api_result_error
-from eva.api import cp_api_error
-from eva.api import cp_api_404
-from eva.api import cp_need_master
-from eva.api import restful_params
-from eva.api import restful_response
-from eva import apikey
+from eva.api import parse_api_params
+from eva.api import http_real_ip
+from eva.api import api_need_master
+
+from eva.api import api_result_accepted
+
+from eva.api import generic_web_api_method
+from eva.api import restful_api_method
+from eva.api import set_restful_response_location
+
+from eva.api import MethodNotFound
+
+from eva.api import log_d
+from eva.api import log_i
+from eva.api import log_w
+
 from eva.tools import dict_from_str
-from eva.tools import is_oid
+from eva.tools import oid_to_id
 from eva.tools import parse_oid
+from eva.tools import is_oid
+from eva.tools import val_to_boolean
+
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceBusy
+from eva.exceptions import AccessDenied
+from eva.exceptions import InvalidParameter
+
+from eva.tools import parse_function_params
+
+from eva import apikey
+
+from functools import wraps
+
 import eva.lm.controller
-import eva.lm.extapi
+import eva.lm.driverapi
+import eva.lm.modbus
+import eva.lm.owfs
 import eva.ei
-
-api = None
-
-
-def cp_need_dm_rules_list(k):
-    if not eva.apikey.check(k, allow=['dm_rules_list']):
-        raise cp_forbidden_key()
+import jinja2
+import jsonpickle
+import logging
 
 
-def cp_need_dm_rule_props(k):
-    if not eva.apikey.check(k, allow=['dm_rule_props']):
-        raise cp_forbidden_key()
+def api_need_dm_rules_list(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check(kwargs.get('k'), allow=['dm_rules_list']):
+            raise AccessDenied
+        return f(*args, **kwargs)
+
+    return do
+
+
+def api_need_dm_rule_props(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check(kwargs.get('k'), allow=['dm_rule_props']):
+            raise AccessDenied
+        return f(*args, **kwargs)
+
+    return do
 
 
 class LM_API(GenericAPI):
 
-    def groups(self, k=None, tp=None):
-        if apikey.check(k, master=True):
+    def __init__(self):
+        self.controller = eva.lm.controller
+        super().__init__()
+
+    @log_d
+    def groups(self, **kwargs):
+        """
+        get item group list
+
+        Get the list of item groups. Useful e.g. for custom interfaces.
+
+        Args:
+            k:
+            .p: item type (must be set to lvar [LV])
+        """
+        k, tp = parse_function_params(
+            kwargs, 'kp', '.S', defaults={'p': 'lvar'})
+        if apikey.check_master(k):
             if tp == 'LV' or tp == 'lvar':
                 return sorted(eva.lm.controller.lvars_by_group.keys())
             else:
@@ -61,11 +117,32 @@ class LM_API(GenericAPI):
             else:
                 return []
 
-    def state(self, k=None, i=None, full=False, group=None, tp='LV'):
+    @log_d
+    def state(self, **kwargs):
+        """
+        get item state
+
+        State of the item or all items of the specified type can be obtained
+        using state command.
+
+        Args:
+            k:
+
+        Optional:
+            .p: item type (none or lvar [LV])
+            .i: item id
+            .g: item group
+            .full: return full state
+        """
+        k, i, group, tp, full = parse_function_params(
+            kwargs, 'kigpY', '.sssb', defaults={'p': 'lvar'})
         if tp not in ['LV', 'lvar']: return None
         if i:
             item = eva.lm.controller.get_lvar(i)
-            if not item or not apikey.check(k, item): return None
+            if not item or not apikey.check(k, item): raise ResourceNotFound
+            if is_oid(i):
+                t, iid = parse_oid(i)
+                if not item or item.item_type != t: raise ResourceNotFound
             return item.serialize(full=full)
         else:
             gi = eva.lm.controller.lvars_by_full_id
@@ -78,136 +155,162 @@ class LM_API(GenericAPI):
                     result.append(r)
             return sorted(result, key=lambda k: k['oid'])
 
-    def state_history(self,
-                      k=None,
-                      a=None,
-                      i=None,
-                      s=None,
-                      e=None,
-                      l=None,
-                      x=None,
-                      t=None,
-                      w=None,
-                      g=None):
-        item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): return False
-        return self.get_state_history(
-            k=k,
-            a=a,
-            oid=item.oid,
-            t_start=s,
-            t_end=e,
-            limit=l,
-            prop=x,
-            time_format=t,
-            fill=w,
-            fmt=g)
+    @log_i
+    def set(self, **kwargs):
+        """
+        set lvar state
 
-    def set(self, k=None, i=None, status=None, value=None):
+        Set status and value of a :ref:`logic variable<lvar>`.
+
+        Args:
+            k:
+            .i: lvar id
+        
+        Optional:
+            s: lvar status
+            v: lvar value
+        """
+        k, i, s, v, = parse_function_params(kwargs, 'kisv', '.si.')
         item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): return None
-        if status and not -1 <= status <= 1: return False
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if status and not -1 <= status <= 1:
+            raise InvalidParameter('status should be -1, 0 or 1')
         if value is None: v = 'null'
         else: v = value
         return item.update_set_state(status=status, value=v)
 
-    def reset(self, k=None, i=None):
-        return self.set(k, i, 1, '1')
+    @log_i
+    def reset(self, **kwargs):
+        """
+        reset lvar state
 
-    def clear(self, k=None, i=None):
-        item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): return None
-        return self.set(k, i, 0 if item.expires > 0 else 1, '0')
+        Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful
+        when lvar is being used as a timer to reset it, or as a flag to set it
+        *True*.
 
-    def toggle(self, k=None, i=None):
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
+        return self.set(k=k, i=i, s=1, v='1')
+
+    @log_i
+    def clear(self, **kwargs):
+        """
+        clear lvar state
+
+        set status (if **expires** lvar param > 0) or value (if **expires**
+        isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is
+        used as a timer to stop it, or as a flag to set it *False*.
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): return None
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        return self.set(k=k, i=i, s=0 if item.expires > 0 else 1, v='0')
+
+    @log_i
+    def toggle(self, **kwargs):
+        """
+        toggle lvar state
+
+        switch value of a :ref:`logic variable<lvar>` between *0* and *1*.
+        Useful when lvar is being used as a flag to switch it between
+        *True*/*False*.
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        item = eva.lm.controller.get_lvar(i)
+        if not item or not apikey.check(k, item): raise ResourceNotFound
         v = item.value
         if v != '0':
-            return self.clear(k, i)
+            return self.clear(k=k, i=i)
         else:
-            return self.reset(k, i)
+            return self.reset(k=k, i=i)
 
-    def run(self,
-            k=None,
-            i=None,
-            args=None,
-            kwargs=None,
-            priority=None,
-            q_timeout=None,
-            wait=0,
-            uuid=None):
+    @log_i
+    def run(self, **kwargs):
+        """
+        execute macro
+
+        Execute a :doc:`macro<macros>` with the specified arguments.
+
+        Args:
+            k:
+            .i: macro id
+
+        Optional:
+        a: macro arguments, array or space separated
+        kw: macro keyword arguments, name=value, comma separated or dict
+        w: wait for the completion for the specified number of seconds
+        .u: action UUID (will be auto generated if none specified)
+        p: queue priority (default is 100, lower is better)
+        q: global queue timeout, if expires, action is marked as "dead"
+        """
+        k, i, a, kw, w, u, p, q = parse_function_params(kwargs, 'kiaKwupq',
+                                                        '.s..nsin')
         macro = eva.lm.controller.get_macro(i)
-        if not macro or not eva.apikey.check(k, macro): return False
-        if args is None:
-            ar = []
+        if not macro or not eva.apikey.check(k, macro): raise ResourceNotFound
+        if a is None:
+            a = []
         else:
-            if isinstance(args, list):
-                ar = args
-            elif isinstance(args, str):
+            if isinstance(a, list):
+                pass
+            elif isinstance(a, str):
                 try:
-                    ar = shlex.split(args)
+                    a = shlex.split(a)
                 except:
-                    ar = args.split(' ')
+                    a = a.split(' ')
             else:
-                ar = [args]
-        if isinstance(kwargs, str):
+                a = [a]
+        if isinstance(kw, str):
             try:
-                kw = dict_from_str(kwargs)
+                kw = dict_from_str(kw)
             except:
-                logging.error('LM API: unable to parse kwargs for macro ' + i)
-                eva.core.log_traceback()
-                return False
+                raise InvalidParameter('Unable to parse kw args')
         elif isinstance(kwargs, dict):
-            kw = kwargs
+            pass
         else:
             kw = {}
-        return eva.lm.controller.exec_macro(
-            macro=macro,
-            argv=ar,
-            kwargs=kw,
-            priority=priority,
-            q_timeout=q_timeout,
-            wait=wait,
-            action_uuid=uuid)
+        return self._process_action_result(
+            eva.lm.controller.exec_macro(
+                macro=macro,
+                argv=a,
+                kwargs=kw,
+                priority=p,
+                q_timeout=q,
+                wait=w,
+                action_uuid=u))
 
-    def result(self, k=None, uuid=None, item_id=None, group=None, state=None):
-        if uuid:
-            a = eva.lm.controller.Q.history_get(uuid)
-            if not a or not apikey.check(k, a.item): return None
-            return a
-        else:
-            result = []
-            if item_id:
-                ar = None
-                item = eva.lm.controller.get_item(item_id)
-                if not apikey.check(k, item): return None
-                if item_id.find('/') > -1:
-                    if item_id in eva.lm.controller.Q.actions_by_item_full_id:
-                        ar = eva.lm.controller.Q.actions_by_item_full_id[
-                            item_id]
-                else:
-                    if item_id in eva.lm.controller.Q.actions_by_item_id:
-                        ar = eva.lm.controller.Q.actions_by_item_id[item_id]
-                if ar is None: return []
-            else:
-                ar = eva.lm.controller.Q.actions
-            for a in ar:
-                if not apikey.check(k, a.item): continue
-                if group and \
-                        not eva.item.item_match(a.item, [], [ group ]):
-                    continue
-                if (state == 'Q' or state =='queued') and \
-                        not a.is_status_queued():
-                    continue
-                elif (state == 'R' or state == 'running') and \
-                        not a.is_status_running():
-                    continue
-                elif (state == 'F' or state == 'finished') and \
-                        not a.is_finished():
-                    continue
-                result.append(a)
-            return result
+    @log_i
+    def result(self, **kwargs):
+        """
+        macro execution result
+
+        Get :doc:`macro<macros>` execution results either by action uuid or by
+        macro id.
+
+        Args:
+            k:
+
+        Optional:
+            .u: action uuid or
+            .i: macro id
+            g: filter by unit group
+            s: filter by action status: Q for queued, R for running, F for
+               finished
+
+        Return:
+            list or single serialized action object
+        """
+        k, u, i, g, s = parse_function_params(kwargs, 'kuigs', '.ssss')
+        return self._result(k, u, i, g, s, rtp='lmacro')
 
 # dm rules functions
 
@@ -660,213 +763,10 @@ class LM_API(GenericAPI):
         return False
 
 
-class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
-
-    exposed = True
-    api_uri = '/lm-api'
-    api_restful_prefix = '/r'
-
-    api_restful_uri = api_uri + api_restful_prefix
+class LM_HTTP_API_abstract(LM_API, GenericHTTP_API):
 
     def __init__(self):
         super().__init__()
-        LM_HTTP_API.index.exposed = True
-        LM_HTTP_API.groups.exposed = True
-        LM_HTTP_API.state.exposed = True
-        LM_HTTP_API.state_history.exposed = True
-        LM_HTTP_API.set.exposed = True
-        LM_HTTP_API.reset.exposed = True
-        LM_HTTP_API.clear.exposed = True
-        LM_HTTP_API.toggle.exposed = True
-        LM_HTTP_API.run.exposed = True
-        LM_HTTP_API.result.exposed = True
-
-        LM_HTTP_API.list_rules.exposed = True
-        LM_HTTP_API.list_rule_props.exposed = True
-        LM_HTTP_API.set_rule_prop.exposed = True
-        LM_HTTP_API.get_rule.exposed = True
-        LM_HTTP_API.create_rule.exposed = True
-        LM_HTTP_API.destroy_rule.exposed = True
-
-        LM_HTTP_API.groups_macro.exposed = True
-        LM_HTTP_API.groups_cycle.exposed = True
-        LM_HTTP_API.get_config.exposed = True
-        LM_HTTP_API.save_config.exposed = True
-        LM_HTTP_API.list.exposed = True
-        LM_HTTP_API.list_remote.exposed = True
-        LM_HTTP_API.list_controllers.exposed = True
-        LM_HTTP_API.list_macros.exposed = True
-        LM_HTTP_API.create_macro.exposed = True
-        LM_HTTP_API.destroy_macro.exposed = True
-        LM_HTTP_API.list_cycles.exposed = True
-        LM_HTTP_API.create_cycle.exposed = True
-        LM_HTTP_API.destroy_cycle.exposed = True
-        LM_HTTP_API.append_controller.exposed = True
-        LM_HTTP_API.enable_controller.exposed = True
-        LM_HTTP_API.disable_controller.exposed = True
-        LM_HTTP_API.remove_controller.exposed = True
-
-        LM_HTTP_API.list_props.exposed = True
-        LM_HTTP_API.list_macro_props.exposed = True
-        LM_HTTP_API.list_cycle_props.exposed = True
-        LM_HTTP_API.get_cycle.exposed = True
-        LM_HTTP_API.list_controller_props.exposed = True
-        LM_HTTP_API.test_controller.exposed = True
-        LM_HTTP_API.get_controller.exposed = True
-        LM_HTTP_API.set_prop.exposed = True
-        LM_HTTP_API.set_macro_prop.exposed = True
-        LM_HTTP_API.set_cycle_prop.exposed = True
-        LM_HTTP_API.start_cycle.exposed = True
-        LM_HTTP_API.stop_cycle.exposed = True
-        LM_HTTP_API.reset_cycle_stats.exposed = True
-        LM_HTTP_API.set_controller_prop.exposed = True
-
-        LM_HTTP_API.reload_controller.exposed = True
-
-        LM_HTTP_API.create_lvar.exposed = True
-        LM_HTTP_API.destroy_lvar.exposed = True
-
-        LM_HTTP_API.load_ext.exposed = True
-        LM_HTTP_API.unload_ext.exposed = True
-        LM_HTTP_API.list_ext.exposed = True
-        LM_HTTP_API.list_ext_mods.exposed = True
-        LM_HTTP_API.get_ext.exposed = True
-        LM_HTTP_API.modinfo_ext.exposed = True
-        LM_HTTP_API.modhelp_ext.exposed = True
-        LM_HTTP_API.info.exposed = True
-        LM_HTTP_API.set_ext_prop.exposed = True
-
-    def groups(self, k=None, p=None):
-        return super().groups(k, p)
-
-    def state(self, k=None, i=None, full=None, g=None, p=None):
-        if p is None: _p = 'LV'
-        else: _p = p
-        if full:
-            _full = True
-        else:
-            _full = False
-        result = super().state(k, i, _full, g, _p)
-        if result is None:
-            raise cp_api_404()
-        return result
-
-    def state_history(self,
-                      k=None,
-                      a=None,
-                      i=None,
-                      p=None,
-                      s=None,
-                      e=None,
-                      l=None,
-                      x=None,
-                      t=None,
-                      w=None,
-                      g=None):
-        if i and i.find(',') != -1:
-            if not w:
-                raise cp_api_error(
-                    '"w" param required to process multiple items')
-            items = i.split(',')
-            if not g or g == 'list':
-                result = {}
-            else:
-                raise cp_api_error(
-                    'format should be list only to process multiple items')
-            for i in items:
-                r = super().state_history(
-                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                if r is False: raise cp_api_error('internal error')
-                if r is None: raise cp_api_404()
-                result['t'] = r['t']
-                if 'status' in r:
-                    result[i + '/status'] = r['status']
-                if 'value' in r:
-                    result[i + '/value'] = r['value']
-            return result
-        else:
-            result = super().state_history(
-                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            if result is False: raise cp_api_error('internal error')
-            if result is None: raise cp_api_404()
-            return result
-
-    def set(self, k=None, i=None, s=None, v=None):
-        if s is None:
-            _s = None
-        else:
-            try:
-                _s = int(s)
-            except:
-                raise cp_api_error('status is not an integer')
-        result = super().set(k, i, _s, v)
-        if result is None:
-            raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def reset(self, k=None, i=None):
-        if super().reset(k, i):
-            return http_api_result_ok()
-        else:
-            raise cp_api_404()
-
-    def clear(self, k=None, i=None):
-        if super().clear(k, i):
-            return http_api_result_ok()
-        else:
-            raise cp_api_404()
-
-    def toggle(self, k=None, i=None):
-        if super().toggle(k, i):
-            return http_api_result_ok()
-        else:
-            raise cp_api_404()
-
-    def run(self, k=None, i=None, u=None, a=None, kw=None, p=None, q=None, w=0):
-        if w:
-            try:
-                _w = float(w)
-            except:
-                raise cp_api_error('wait is not a float')
-        else:
-            _w = None
-        if p:
-            try:
-                _p = int(p)
-            except:
-                raise cp_api_error('priority is not an integer')
-        else:
-            _p = None
-        if q:
-            try:
-                _q = float(q)
-            except:
-                raise cp_api_error('q_timeout is not an integer')
-        else:
-            _q = None
-        a = super().run(
-            k=k,
-            i=i,
-            args=a,
-            kwargs=kw,
-            priority=_p,
-            q_timeout=_q,
-            wait=_w,
-            uuid=u)
-        if not a:
-            raise cp_api_404()
-        if a.is_status_dead():
-            raise cp_api_error('queue error, action is dead')
-        return a.serialize()
-
-    def result(self, k=None, u=None, i=None, g=None, s=None):
-        a = super().result(k, u, i, g, s)
-        if a is None:
-            raise cp_api_404()
-        if isinstance(a, list):
-            return [x.serialize() for x in a]
-        else:
-            return a.serialize()
 
     def list_rules(self, k=None):
         return super().list_rules(k)
@@ -896,7 +796,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                     self._set_rule_prop_batch(k, i, data, _save) \
                     else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def create_rule(self, k=None, u=None, save=None, _j=None):
         if save:
             _save = True
@@ -929,7 +829,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def destroy_rule(self, k=None, i=None):
         result = super().destroy_rule(k, i)
         if result is None: raise cp_api_404()
@@ -941,18 +841,18 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
     def groups_cycle(self, k=None):
         return super().groups_cycle(k)
 
-    @cp_need_master
+    @api_need_master
     def get_config(self, k=None, i=None):
         result = super().get_config(k, i)
         if not result: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def save_config(self, k=None, i=None):
         return http_api_result_ok() if super().save_config(k, i) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list(self, k=None, g=None, p=None):
         result = super().list(k, g, p)
         if result is None: raise cp_api_404()
@@ -963,7 +863,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def list_controllers(self, k=None):
         result = super().list_controllers(k)
         if result is None: raise cp_api_error()
@@ -974,12 +874,12 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def create_macro(self, k=None, i=None, g=None, save=None):
         return http_api_result_ok() if super().create_macro(k, i, g, save) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def destroy_macro(self, k=None, i=None):
         result = super().destroy_macro(k, i)
         if result is None: raise cp_api_404()
@@ -990,18 +890,18 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def create_cycle(self, k=None, i=None, g=None, save=None):
         return http_api_result_ok() if super().create_cycle(k, i, g, save) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def destroy_cycle(self, k=None, i=None):
         result = super().destroy_cycle(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def append_controller(self,
                           k=None,
                           u=None,
@@ -1014,60 +914,60 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         return http_api_result_ok() if super().append_controller(
             k, u, a, m, sv, t, save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def enable_controller(self, k=None, i=None):
         return http_api_result_ok() if super().enable_controller(k, i) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def disable_controller(self, k=None, i=None):
         return http_api_result_ok() if super().disable_controller(k, i) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def remove_controller(self, k=None, i=None):
         result = super().remove_controller(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list_props(self, k=None, i=None):
         result = super().list_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def list_macro_props(self, k=None, i=None):
         result = super().list_macro_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def list_cycle_props(self, k=None, i=None):
         result = super().list_cycle_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def get_cycle(self, k=None, i=None):
         result = super().get_cycle(k, i)
         if not result: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def list_controller_props(self, k=None, i=None):
         result = super().list_controller_props(k, i)
         if not result: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def get_controller(self, k=None, i=None):
         result = super().get_controller(k, i)
         if result is None:
             raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def test_controller(self, k=None, i=None):
         result = super().test_controller(k, i)
         if result is None:
@@ -1075,7 +975,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         return http_api_result_ok() if \
                 result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def set_prop(self, k=None, i=None, p=None, v=None, save=None):
         if save:
             _save = True
@@ -1084,7 +984,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def set_macro_prop(self, k=None, i=None, p=None, v=None, save=None):
         if save:
             _save = True
@@ -1093,7 +993,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         return http_api_result_ok() if super().set_macro_prop(
             k, i, p, v, _save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def set_cycle_prop(self, k=None, i=None, p=None, v=None, save=None):
         if save:
             _save = True
@@ -1116,7 +1016,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
             i,
         ) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
         if save:
             _save = True
@@ -1126,51 +1026,51 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
                 super().set_controller_prop(k, i, p, v, _save) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def reload_controller(self, k=None, i=None):
         return http_api_result_ok() if super().reload_controller(k, i) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def create_lvar(self, k=None, i=None, g=None, save=None):
         return http_api_result_ok() if super().create_lvar(
             k, i, g, save) else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def destroy_lvar(self, k=None, i=None):
         result = super().destroy_lvar(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def load_ext(self, k=None, i=None, m=None, c=None, save=False):
         result = super().load_ext(k, i, m, c, save)
         return result if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def unload_ext(self, k=None, i=None):
         result = super().unload_ext(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list_ext(self, k=None, full=None):
         result = super().list_ext(k, full)
         if result is None: raise cp_api_error()
         return result
 
-    @cp_need_master
+    @api_need_master
     def list_ext_mods(self, k=None):
         return super().list_ext_mods(k)
 
-    @cp_need_master
+    @api_need_master
     def get_ext(self, k=None, i=None):
         result = super().get_ext(k, i)
         if result is False: raise cp_api_error()
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def modinfo_ext(self, k=None, m=None):
         result = super().modinfo_ext(k, m)
         if not result:
@@ -1178,7 +1078,7 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         else:
             return result
 
-    @cp_need_master
+    @api_need_master
     def modhelp_ext(self, k=None, m=None, c=None):
         result = super().modhelp_ext(k, m, c)
         if result is None:
@@ -1186,17 +1086,39 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
         else:
             return result
 
-    @cp_need_master
+    @api_need_master
     def set_ext_prop(self, k=None, i=None, p=None, v=None, save=None):
         result = super().set_ext_prop(k, i, p, v, save)
         if result is False: raise cp_api_error()
         if result is None: raise cp_api_404()
         return http_api_result_ok()
 
-    def __call__(self, *args, **kwargs):
-        raise cp_api_404()
 
-    @restful_response
+class LM_HTTP_API(LM_HTTP_API_abstract, GenericHTTP_API):
+
+    def __init__(self):
+        super().__init__()
+        self.expose_api_methods('lmapi')
+        self.wrap_exposed()
+
+
+class LM_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
+                     eva.sysapi.SysHTTP_API_REST_abstract,
+                     eva.api.JSON_RPC_API_abstract, LM_HTTP_API_abstract):
+
+    def __init__(self):
+        super().__init__()
+        self.expose_api_methods('lmapi', set_api_uri=False)
+        self.expose_api_methods('sysapi', set_api_uri=False)
+
+
+class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
+                  eva.sysapi.SysHTTP_API_REST_abstract,
+                  eva.api.GenericHTTP_API_REST_abstract, LM_HTTP_API_abstract,
+                  GenericHTTP_API):
+
+    @generic_web_api_method
+    @restful_api_method
     def GET(self, r, rtp, *args, **kwargs):
         k, ii, full, save, kind, for_dir, props = restful_params(
             *args, **kwargs)
@@ -1282,14 +1204,18 @@ class LM_HTTP_API(JSON_RPC_API, GenericHTTP_API, LM_API):
 
 
 def start():
+    http_api = LM_HTTP_API()
+    cherrypy.tree.mount(http_api, http_api.api_uri)
+    cherrypy.tree.mount(LM_JSONRPC_API(), LM_JSONRPC_API.api_uri)
     cherrypy.tree.mount(
-        LM_HTTP_API(),
-        LM_HTTP_API().api_uri,
+        LM_REST_API(),
+        LM_REST_API.api_uri,
         config={
-            LM_HTTP_API.api_restful_prefix: {
+            '/': {
                 'request.dispatch': cherrypy.dispatch.MethodDispatcher()
             }
         })
     eva.ei.start()
+
 
 api = LM_API()
