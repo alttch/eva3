@@ -244,7 +244,7 @@ class APIClient(object):
                     not _return_raw else (-2, {})
         if _return_raw:
             return (r.status_code, r.text)
-        if r.status_code < 200 or r.status_code > 299:
+        if not r.ok:
             try:
                 result = r.json()
             except:
