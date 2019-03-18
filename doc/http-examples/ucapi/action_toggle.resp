@@ -7,7 +7,7 @@ Pragma: no-cache
 
 {
     "err": "",
-    "exitcode": null,
+    "exitcode": 0,
     "item_group": "tests",
     "item_id": "unit1",
     "item_oid": "unit:tests/unit1",
@@ -16,7 +16,7 @@ Pragma: no-cache
     "nvalue": "",
     "out": "",
     "priority": 100,
-    "status": "refused",
+    "status": "completed",
     "time": {
         "created": 1552867567.1825714,
         "pending": 1552867567.1827168,

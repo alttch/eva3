@@ -4,7 +4,6 @@ Allow: DELETE, GET, HEAD, PATCH, POST, PUT
 Cache-Control: no-cache, no-store, must-revalidate
 Pragma: no-cache
 Expires: 0
-Content-Length: 684
 
 {
     "api": 1,

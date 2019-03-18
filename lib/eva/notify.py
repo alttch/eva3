@@ -880,11 +880,17 @@ class HTTPNotifier(GenericHTTPNotifier):
                     params=params,
                     timeout=self.get_timeout(),
                     verify=self.ssl_verify)
-                if r.status_code == 200: result = jsonpickle.decode(r.text)
-                if r.status_code != 200:
-                    self.log_error(code=r.status_code)
-                elif result['result'] != 'OK':
-                    self.log_error(result=result)
+                try:
+                    if r.ok:
+                        if r.status_code != 202:
+                            result = jsonpickle.decode(r.text)
+                            if result.get('result') != 'OK':
+                                self.log_error(result=result.get('result'))
+                                raise Exception
+                    else:
+                        self.log_error(code=r.status_code)
+                        raise Exception
+                except:
                     if self.stop_on_error:
                         self.log_datastop()
                         return False
@@ -929,13 +935,20 @@ class HTTPNotifier(GenericHTTPNotifier):
                 params=params,
                 timeout=self.get_timeout(),
                 verify=self.ssl_verify)
-            if r.status_code != 200: return False
-            result = jsonpickle.decode(r.text)
-            if result['result'] != 'OK': return False
+            try:
+                if r.ok:
+                    if r.status_code != 202:
+                        result = jsonpickle.decode(r.text)
+                        if result.get('result') != 'OK':
+                            raise Exception
+                    return True
+                else:
+                    raise Exception
+            except:
+                return False
         except:
             eva.core.log_traceback(notifier=True)
             return False
-        return True
 
 
 class HTTP_POSTNotifier(GenericHTTPNotifier):
@@ -969,17 +982,21 @@ class HTTP_POSTNotifier(GenericHTTPNotifier):
             data=params,
             timeout=self.get_timeout(),
             verify=self.ssl_verify)
-        if r.status_code == 202: return True
-        if r.status_code == 200:
-            result = r.json()
-            if result['result'] == 'OK':
+        try:
+            if r.ok:
+                if r.status_code != 202:
+                    result = jsonpickle.decode(r.text)
+                    if result.get('result') != 'OK':
+                        self.log_error(result=result.get('result'))
+                        raise Exception
                 return True
             else:
-                self.log_error(result=result)
+                self.log_error(code=r.status_code)
+                raise Exception
+        except:
+            if self.stop_on_error:
+                self.log_datastop()
                 return False
-        else:
-            self.log_error(code=r.status_code)
-            return False
 
     def test(self):
         self.connect()
@@ -1045,17 +1062,18 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             timeout=self.get_timeout(),
             verify=self.ssl_verify)
         if self.method:
-            if r.status_code in [200, 202]:
+            if r.ok:
                 return True
             else:
                 self.log_error(code=r.status_code)
                 return False
-        if r.status_code == 200:
-            result = r.json()
-            if result['result'] == 'OK': return True
-            else:
-                self.log_error(result=result)
-                return False
+        if r.ok:
+            if r.status_code != 202:
+                result = r.json()
+                if result.get('result') != 'OK':
+                    self.log_error(result=result.get('result'))
+                    return False
+            return True
         self.log_error(code=r.status_code)
         return False
 
@@ -1080,18 +1098,18 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                 json=data_ts,
                 timeout=self.get_timeout(),
                 verify=self.ssl_verify)
-            if r.status_code != 200: return False
+            if not r.ok: return False
             result = r.json()
             if self.method:
                 if result.get('jsonrpc') != '2.0' or \
                         result.get('id') != req_id or 'error' in result:
                     return False
-            elif result['result'] != 'OK':
+            elif result.get('result') != 'OK':
                 return False
+            return True
         except:
             eva.core.log_traceback(notifier=True)
             return False
-        return True
 
     def serialize(self, props=False):
         d = {}
