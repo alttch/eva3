@@ -153,8 +153,10 @@ __special_param_codes = {
 def __get_special_param_name(p):
     return __special_param_names.get(p, p)
 
+
 def __get_special_param_code(p):
     return __special_param_codes.get(p, p)
+
 
 def parse_function_params(params,
                           names,
@@ -315,3 +317,37 @@ def oid_to_id(oid, required=None):
     if tp is None or i is None: return None
     if required and tp != required: return None
     return i
+
+
+def error_page_400(*args, **kwargs):
+    return '400 Bad Request'
+
+
+def error_page_403(*args, **kwargs):
+    return '403 Forbidden'
+
+
+def error_page_404(*args, **kwargs):
+    return '404 Not Found'
+
+
+def error_page_405(*args, **kwargs):
+    return '405 Method Not Allowed'
+
+
+def error_page_409(*args, **kwargs):
+    return '409 Conflict'
+
+
+def error_page_500(*args, **kwargs):
+    return 'Internal Server Error'
+
+
+tiny_httpe = {
+    'error_page.400': error_page_400,
+    'error_page.403': error_page_403,
+    'error_page.404': error_page_404,
+    'error_page.405': error_page_405,
+    'error_page.409': error_page_409,
+    'error_page.500': error_page_500
+}

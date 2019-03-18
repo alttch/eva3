@@ -19,6 +19,7 @@ from eva.tools import is_oid
 from eva.tools import parse_oid
 from eva.tools import oid_to_id
 from eva.tools import dict_from_str
+from eva.tools import tiny_httpe
 
 import eva.core
 import eva.notify
@@ -1445,7 +1446,7 @@ def start():
             '/': {
                 'tools.sessions.on': True,
                 'tools.sessions.timeout': eva.api.config.session_timeout
-            },
+            }.update(tiny_httpe),
             '/favicon.ico': {
                 'tools.staticfile.on':
                 True,
@@ -1463,7 +1464,7 @@ def start():
                 'tools.sessions.timeout': eva.api.config.session_timeout,
                 'tools.staticdir.dir': eva.core.dir_eva + '/ui',
                 'tools.staticdir.on': True
-            }
+            }.update(tiny_httpe)
         })
     eva.sfa.cloudmanager.start()
 

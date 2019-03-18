@@ -49,7 +49,7 @@ config = SimpleNamespace(
     ssl_chain=None,
     session_timeout=0,
     thread_pool=15,
-    ei_enabled=False,
+    ei_enabled=True,
     use_x_real_ip=False)
 
 api_result_accepted = 2

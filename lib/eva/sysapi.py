@@ -411,7 +411,11 @@ class LogAPI(object):
         """
         l, t, n = parse_api_params(kwargs, 'ltn', '.ii')
         if not l: l = 'i'
-        return eva.logs.log_get(logLevel=get_log_level_by_name(l), t=t, n=n)
+        try:
+            l = int(l)
+        except:
+            l = get_log_level_by_name(l)
+        return eva.logs.log_get(logLevel=l, t=t, n=n)
 
     # don't wrap - calls other self functions
     def log(self, **kwargs):

@@ -6,6 +6,8 @@ from eva.api import cp_api_404
 import cherrypy
 import jinja2
 
+from eva.tools import tiny_httpe
+
 
 class EI_HTTP_Root:
 
@@ -40,10 +42,13 @@ cp_ei_root_config = {
     '/favicon.ico': {
         'tools.staticfile.on': True,
         'tools.staticfile.filename': eva.core.dir_eva + '/lib/eva/i/favicon.ico'
-    }
+    },
+    '/': tiny_httpe
 }
 
-cp_ei_config = {}
+cp_ei_config = {
+    '/': tiny_httpe
+    }
 
 for u in ['css', 'fonts', 'i', 'js', 'lib']:
     cp_ei_config['/' + u] = {
