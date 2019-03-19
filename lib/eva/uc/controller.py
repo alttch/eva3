@@ -595,9 +595,9 @@ def destroy_item(item):
         return True
     except ResourceNotFound:
         raise
-    except:
+    except Exception as e:
         eva.core.log_traceback()
-        raise FunctionFailed
+        raise FunctionFailed(e)
 
 
 @with_item_lock
