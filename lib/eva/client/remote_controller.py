@@ -97,7 +97,7 @@ class RemoteController(eva.item.Item):
             logging.error('Remote controller {} test failed'.format(
                 self.full_id))
             return False
-        if result.get('result') != 'OK':
+        if not result.get('ok'):
             logging.error('Remote controller access error %s' % self.api._uri)
             return False
         return result
@@ -112,7 +112,7 @@ class RemoteController(eva.item.Item):
             logging.error('Remote controller {} management test failed'.format(
                 self.full_id))
             return False
-        if result.get('result') != 'OK':
+        if not result.get('ok'):
             logging.error('Remote controller access error %s' % self.api._uri)
             return False
         if result.get('acl', {}).get('master') != True:
@@ -130,7 +130,7 @@ class RemoteController(eva.item.Item):
                     target=eva.api.remove_controller, args=(self.full_id,))
                 t.start()
             return False
-        if result['result'] != 'OK':
+        if not result.get('ok'):
             logging.error('Remote controller unknown access error %s' % \
                     api._uri)
             return False
