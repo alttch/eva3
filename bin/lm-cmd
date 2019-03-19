@@ -254,12 +254,18 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 return self.cli.ComplMacro(self.cli)(prefix, **kwargs)
             return True
 
-    def fancy_print_result(self, result, api_func, api_func_full, itype, tab=0):
+    def fancy_print_result(self,
+                           result,
+                           api_func,
+                           api_func_full,
+                           itype,
+                           tab=0,
+                           print_ok=True):
         if api_func == 'list_rules':
             self.print_list_rules(result)
         else:
             super().fancy_print_result(result, api_func, api_func_full, itype,
-                                       tab)
+                                       tab, print_ok)
 
     def print_list_rules(self, result):
         if not result:
