@@ -367,7 +367,7 @@ class RemoteUC(RemoteController):
 
     def load_units(self):
         if not self.item_id: return None
-        states = self.api_call('state', {'p': 'U', 'full': '1'})
+        states = self.api_call('state', {'p': 'U', 'full': True})
         result = []
         if states is not None:
             for s in states:
@@ -379,7 +379,7 @@ class RemoteUC(RemoteController):
 
     def load_sensors(self):
         if not self.item_id: return None
-        states = self.api_call('state', {'p': 'S', 'full': '1'})
+        states = self.api_call('state', {'p': 'S', 'full': True})
         result = []
         if states is not None:
             for s in states:
@@ -411,7 +411,7 @@ class RemoteLM(RemoteController):
 
     def load_lvars(self):
         if not self.item_id: return None
-        states = self.api_call('state', {'full': '1'})
+        states = self.api_call('state', {'full': True})
         result = []
         if states is not None:
             for s in states:
