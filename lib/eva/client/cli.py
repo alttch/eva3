@@ -326,7 +326,8 @@ class GenericCLI(object):
         if readline_processing:
             readline.set_history_length(history_length)
             try:
-                readline.read_history_file(history_file)
+                if history_file:
+                    readline.read_history_file(history_file)
             except:
                 pass
 
@@ -334,7 +335,8 @@ class GenericCLI(object):
         if say_bye: print('Bye')
         if readline_processing:
             try:
-                readline.write_history_file(history_file)
+                if history_file:
+                    readline.write_history_file(history_file)
             except:
                 pass
 
