@@ -23,7 +23,7 @@ from functools import wraps
 from eva.api import api_need_master
 from eva.api import parse_api_params
 
-from eva.api import restful_resource_id
+from eva.api import format_resource_id
 
 from eva.api import MethodNotFound
 from eva.api import GenericAPI
@@ -171,7 +171,7 @@ class LockAPI(object):
         """
         l = parse_api_params(kwargs, 'l', 'S')
         try:
-            result = restful_resource_id('lock', l)
+            result = format_resource_id('lock', l)
             result['locked'] = locks[l].locked()
             return result
         except KeyError:
@@ -1105,7 +1105,7 @@ class SysHTTP_API_REST_abstract:
             SysAPI.file_put(self, k=k, i=ii, m=m)
             if e is not None:
                 self.file_set_exec(k=k, i=ii, e=props['e'])
-            return restful_resource_id(rtp, ii)
+            return format_resource_id(rtp, ii)
         elif rtp == 'user':
             return self.create_user(k=k, u=ii, **props)
         raise MethodNotFound

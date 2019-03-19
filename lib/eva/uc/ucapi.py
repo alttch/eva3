@@ -58,6 +58,7 @@ import jinja2
 import jsonpickle
 import logging
 
+
 def api_need_device(f):
 
     @wraps(f)
@@ -208,7 +209,6 @@ class UC_API(GenericAPI):
                     r = v.serialize(full=full)
                     result.append(r)
             return sorted(result, key=lambda k: k['oid'])
-
 
     @log_i
     def action(self, **kwargs):
@@ -551,13 +551,14 @@ class UC_API(GenericAPI):
         Set configuration parameters of the :doc:`item</items>`.
 
         Args:
-        
             k: .master
             .i: item id
             .p: property name
+            .p: property name (or empty for batch set)
         
         Optional:
-            .v: property value
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
         if not p and not isinstance(v, dict):
@@ -567,12 +568,7 @@ class UC_API(GenericAPI):
         item = eva.uc.controller.get_item(i)
         if not item or (is_oid(i) and item and item.item_type != t):
             raise ResourceNotFound
-        for prop, value in v.items() if isinstance(v, dict) else {p: v}.items():
-            if not item.set_prop(prop, value, False):
-                raise FunctionFailed('{}.{} = {} unable to set'.format(
-                    item.oid, prop, value))
-        if save: item.save()
-        return True
+        return self._set_prop(item, p, v, save)
 
     @log_i
     @api_need_master
@@ -583,12 +579,10 @@ class UC_API(GenericAPI):
         Creates new :ref:`unit<unit>`.
 
         Args:
-        
             k: .master
             .i: unit id
 
         Optional:
-
             .g: unit group
             .v: virtual unit (deprecated)
             save: save unit configuration immediately
@@ -607,12 +601,10 @@ class UC_API(GenericAPI):
         Creates new :ref:`sensor<sensor>`.
 
         Args:
-        
             k: .master
             .i: sensor id
 
         Optional:
-
             .g: sensor group
             .v: virtual sensor (deprecated)
             save: save sensor configuration immediately
@@ -1303,9 +1295,9 @@ class UC_API(GenericAPI):
             k: .master
             .i: PHI ID
             .p: property name (or empty for batch set)
-            .v: propery value (or dict for batch set)
 
         Optional:
+            .v: propery value (or dict for batch set)
             save: save configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
@@ -1576,9 +1568,9 @@ class UC_API(GenericAPI):
             k: .master
             .i: driver ID
             .p: property name (or empty for batch set)
-            .v: propery value (or dict for batch set)
 
         Optional:
+            .v: propery value (or dict for batch set)
             save: save driver configuration after successful call
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')

@@ -128,7 +128,7 @@ def parse_api_params(params, names='', types='', defaults=None):
     return result if len(result) > 1 else result[0]
 
 
-def restful_resource_id(rtp, i):
+def format_resource_id(rtp, i):
     return {'type': rtp, 'id': i}
 
 
@@ -557,6 +557,15 @@ class GenericAPI(object):
                     continue
                 result.append(a.serialize())
             return result
+
+    @staticmethod
+    def _set_prop(item, p=None, v=None, save=False):
+        for prop, value in v.items() if isinstance(v, dict) else {p: v}.items():
+            if not item.set_prop(prop, value, False):
+                raise FunctionFailed('{}.{} = {} unable to set'.format(
+                    item.oid, prop, value))
+        if save: item.save()
+        return True
 
     def __init__(self):
         self._fp_hide_in_log = {}
