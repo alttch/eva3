@@ -13,6 +13,7 @@ dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
 import eva.core
+import eva.sysapi
 import eva.notify
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI

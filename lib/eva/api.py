@@ -394,7 +394,7 @@ def cp_check_perm(api_key=None, path_info=None):
 
 def http_real_ip(get_gw=False):
     if get_gw and g.has('eva_ics_gw'):
-        return 'gateway/' + g.get('eva_ics.gw')
+        return 'gateway/' + g.get('eva_ics_gw')
     if config.use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
         ip = cherrypy.request.headers['X-Real-IP']
@@ -533,8 +533,7 @@ class GenericAPI(object):
                 if not apikey.check(k, item): raise ResourceNotFound
                 if item_id.find('/') > -1:
                     if item_id in self.controller.Q.actions_by_item_full_id:
-                        ar = self.controller.Q.actions_by_item_full_id[
-                            item_id]
+                        ar = self.controller.Q.actions_by_item_full_id[item_id]
                 else:
                     if item_id in self.controller.Q.actions_byitem_id:
                         ar = self.controller.Q.actions_byitem_id[item_id]
@@ -822,7 +821,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
         payload = kwargs.get('p')
         result = []
         for pp in payload if isinstance(payload, list) else [payload]:
-            if not isinstance(payload, dict) or not pp:
+            if not isinstance(pp, dict) or not pp:
                 raise cp_bad_request('Invalid JSON RPC payload')
             if pp.get('jsonrpc') != '2.0':
                 raise cp_api_error('Unsupported RPC protocol')
@@ -949,12 +948,12 @@ def mqtt_discovery_handler(notifier_id, d):
 def mqtt_api_handler(notifier_id, data, callback):
     try:
         if not data or data[0] != '|':
-            raise Exception('invalid data')
+            raise FunctionFailed('invalid packet data')
         pfx, api_key_id, d = data.split('|', 2)
         try:
             ce = apikey.key_ce(api_key_id)
             if ce is None:
-                raise Exception('invalid key')
+                raise FunctionFailed('invalid key')
             d = ce.decrypt(d.encode()).decode()
             call_id, payload = d.split('|', 1)
         except:
@@ -962,16 +961,23 @@ def mqtt_api_handler(notifier_id, data, callback):
                 'MQTT API: invalid api key in encrypted packet from ' +
                 notifier_id)
             raise
-        g.set('eva_ics_gw', 'mqtt')
+        try:
+            payload = jsonpickle.decode(payload)
+        except:
+            eva.core.log_traceback()
+            raise FunctionFailed('Invalid JSON data')
+        g.set('eva_ics_gw', 'mqtt:' + notifier_id)
         try:
             response = jrpc(p=payload)
         except:
+            eva.core.log_traceback()
             callback(call_id, '500|')
-            raise Exception('API error')
-        response = ce.encrypt(response)
-        callback(call_id, '200|' + response)
-    except:
-        logging.warning('MQTT API: API call failed from ' + notifier_id)
+            raise FunctionFailed('API error')
+        response = ce.encrypt(jsonpickle.encode(response).encode())
+        callback(call_id, '200|' + response.decode())
+    except Exception as e:
+        logging.warning('MQTT API: API call failed from {}: {}'.format(
+            notifier_id, e))
         eva.core.log_traceback()
         return
 

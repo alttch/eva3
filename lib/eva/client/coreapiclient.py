@@ -42,6 +42,10 @@ class CoreAPIClient(APIClient):
     class Response(object):
         status_code = 500
         text = ''
+        ok = False
+
+        def json(self):
+            return jsonpickle.decode(self.text)
 
     def __init__(self):
         super().__init__()
@@ -120,7 +124,7 @@ class CoreAPIClient(APIClient):
             request_id = payload['id']
         else:
             request_id = str(uuid.uuid4())
-        data = '{}|{}'.format(request_id, jsonpickle.encode(p))
+        data = '{}|{}'.format(request_id, jsonpickle.encode(payload))
         cb = self.MQTTCallback()
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(
@@ -132,6 +136,8 @@ class CoreAPIClient(APIClient):
         if cb.code:
             try:
                 r.text = self.ce.decrypt(cb.body.encode()).decode()
+                if cb.code == 200:
+                    r.ok = True
                 r.status_code = cb.code
             except:
                 eva.core.log_traceback()
