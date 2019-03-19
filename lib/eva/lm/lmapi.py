@@ -319,7 +319,7 @@ class LM_API(GenericAPI):
                     del result[i]
         return result
 
-    @log_w
+    @log_i
     def set_rule_prop(self, **kwargs):
         """
         set rule parameters
@@ -354,7 +354,7 @@ class LM_API(GenericAPI):
             eva.lm.controller.DM.sort()
         return True
 
-    @log_d
+    @log_i
     def list_rules(self, **kwargs):
         """
         get rules list
@@ -385,6 +385,7 @@ class LM_API(GenericAPI):
                 result.append(d)
         return result
 
+    @log_i
     def get_rule(self, **kwargs):
         """
         get rule information
@@ -409,6 +410,7 @@ class LM_API(GenericAPI):
 
 # master functions for item configuration
 
+    @log_i
     @api_need_master
     def create_rule(self, **kwargs):
         """
@@ -432,6 +434,7 @@ class LM_API(GenericAPI):
         return rule.serialize(info=True)
 
 
+    @log_w
     @api_need_master
     def destroy_rule(self, k=None, i=None):
         """
