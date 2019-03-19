@@ -27,6 +27,12 @@ import eva.lm.dmatrix
 import eva.lm.extapi
 import eva.lm.macro_api
 
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceAlreadyExists
+
+from eva.exceptions import InvalidParameter
+
 from eva.tools import is_oid
 from eva.tools import oid_to_id
 from eva.tools import oid_type
@@ -66,6 +72,17 @@ Q = None
 DM = None
 
 with_item_lock = eva.core.RLocker('lm/controller')
+
+
+def format_rule_id(r_id):
+    if is_oid(r_id):
+        r_id = oid_to_id(r_id, required='dmatrix_rule')
+    if not isinstance(r_id, str): return None
+    if r_id.find('/') != -1:
+        g, r_id = r_id.split('/')
+        if g != 'dm_rules': return None
+    return r_id
+
 
 @with_item_lock
 def get_item(item_id):
@@ -124,6 +141,7 @@ def get_cycle(cycle_id):
 
 @with_item_lock
 def get_dm_rule(r_id):
+    r_id = format_rule_id(r_id)
     if not r_id: return None
     if r_id in dm_rules: return dm_rules[r_id]
     return None
@@ -529,19 +547,20 @@ def destroy_cycle(m_id):
 @with_item_lock
 def create_dm_rule(save=False, rule_uuid=None):
     if rule_uuid in dm_rules:
-        return None
+        raise ResourceAlreadyExists
     r = eva.lm.dmatrix.DecisionRule(rule_uuid=rule_uuid)
     dm_rules[r.item_id] = r
     if save: r.save()
     DM.append_rule(r)
     logging.info('new rule created: %s' % r.item_id)
-    return r.item_id
+    return r
 
 
 @with_item_lock
 def destroy_dm_rule(r_id):
+    r_id = format_rule_id(r_id)
     if r_id not in dm_rules:
-        return None
+        raise ResourceNotFound
     try:
         i = dm_rules[r_id]
         i.destroy()
@@ -558,9 +577,9 @@ def destroy_dm_rule(r_id):
         del (dm_rules[r_id])
         logging.info('DM rule %s removed' % r_id)
         return True
-    except:
+    except Exception as e:
         eva.core.log_traceback()
-        return False
+        return FunctionFailed(e)
 
 
 def handle_discovered_controller(notifier_id, controller_id, **kwargs):

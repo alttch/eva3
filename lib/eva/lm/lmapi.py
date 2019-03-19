@@ -14,8 +14,10 @@ import eva.sysapi
 from eva.api import GenericHTTP_API
 from eva.api import JSON_RPC_API_abstract
 from eva.api import GenericAPI
+
 from eva.api import parse_api_params
-from eva.api import http_real_ip
+from eva.api import format_resource_id
+
 from eva.api import api_need_master
 
 from eva.api import api_result_accepted
@@ -49,35 +51,11 @@ from eva import apikey
 from functools import wraps
 
 import eva.lm.controller
-import eva.lm.driverapi
-import eva.lm.modbus
-import eva.lm.owfs
+import eva.lm.extapi
 import eva.ei
 import jinja2
 import jsonpickle
 import logging
-
-
-def api_need_dm_rules_list(f):
-
-    @wraps(f)
-    def do(*args, **kwargs):
-        if not eva.apikey.check(kwargs.get('k'), allow=['dm_rules_list']):
-            raise AccessDenied
-        return f(*args, **kwargs)
-
-    return do
-
-
-def api_need_dm_rule_props(f):
-
-    @wraps(f)
-    def do(*args, **kwargs):
-        if not eva.apikey.check(kwargs.get('k'), allow=['dm_rule_props']):
-            raise AccessDenied
-        return f(*args, **kwargs)
-
-    return do
 
 
 class LM_API(GenericAPI):
@@ -314,58 +292,85 @@ class LM_API(GenericAPI):
 
 # dm rules functions
 
-    def _set_rule_prop_batch(self, k, i, data, save):
-        rule = eva.lm.controller.get_dm_rule(i)
-        if not rule: return False
-        enable_after = rule.enabled
-        if not self.set_rule_prop(k, i, 'enabled', False):
-            return False
-        for x, y in data.items():
-            if not self.set_rule_prop(k, i, x, y):
-                return False
-        if not self.set_rule_prop(k, i, 'enabled', enable_after):
-            return False
-        if save: rule.save()
-        return True
+    @log_d
+    def list_rule_props(self, **kwargs):
+        """
+        list rule properties
 
-    def list_rule_props(self, k=None, i=None):
+        Get all editable parameters of the :doc:`decision
+        rule</lm/decision_matrix>`.
+
+        Args:
+            k:
+            .i: rule id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
+        if is_oid(i):
+            t, i = parse_oid(i)
         item = eva.lm.controller.get_dm_rule(i)
-        if not item:
-            return None
-        if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
-                not apikey.check(k, item):
-            return None
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        if not apikey.check(k, item): raise ResourceNotFound
         result = item.serialize(props=True)
-        if not apikey.check(k, master=True):
-            for i in result.copy():
+        if not apikey.check_master(k):
+            for i in result:
                 if i[:9] != 'in_range_' and \
                         i not in [ 'enabled', 'chillout_time', 'condition' ]:
                     del result[i]
         return result
 
-    def set_rule_prop(self, k=None, i=None, p=None, v=None, save=False):
+    @log_w
+    def set_rule_prop(self, **kwargs):
+        """
+        set rule parameters
+
+        Set configuration parameters of the :doc:`decision
+        rule</lm/decision_matrix>`.
+
+        Args:
+        
+            k:
+            .i: rule id
+            .p: property name (or empty for batch set)
+        
+        Optional:
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
+        """
+        k, i, p, v, save = parse_api_params(kwargs, 'kipvS', '.s..b')
         item = eva.lm.controller.get_dm_rule(i)
-        if not item or not p or not isinstance(p, str): return None
+        if not item or not p or not isinstance(p, str): raise ResourceNotFound
         if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
             if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
                     not apikey.check(k, item):
-                return None
+                        raise ResourceNotFound
         else:
-            if not apikey.check(k, master=True): return None
-        result = item.set_prop(p, v, save)
-        if result and item.config_changed and save:
-            item.save()
-        if p in ['priority', 'description']:
+            if not apikey.check_master(k): raise ResourceNotFound
+        if not self._set_prop(item, p, v, save):
+            raise FunctionFailed
+        if (p and p in ['priority', 'description']) or \
+                (isinstance(v, dict) and \
+                    ('property' in v or 'description' in v)):
             eva.lm.controller.DM.sort()
-        return result
+        return True
 
-    def list_rules(self, k=None):
+    @log_d
+    def list_rules(self, **kwargs):
+        """
+        get rules list
+
+        Get the list of all available :doc:`decision rules<decision_matrix>`.
+
+        Args:
+            k:
+        """
+        k = parse_function_params(kwargs, 'k', '.')
         rmas = apikey.check(k, allow=['dm_rules_list'])
         result = []
         for i in eva.lm.controller.DM.rules.copy():
             if rmas or apikey.check(k, i):
                 d = i.serialize(info=True)
-                if not apikey.check(k, master=True):
+                if not apikey.check_master(k):
                     for x in d.copy():
                         if x[:9] != 'in_range_' and \
                                 x not in [
@@ -380,11 +385,19 @@ class LM_API(GenericAPI):
                 result.append(d)
         return result
 
-    def get_rule(self, k=None, i=None):
+    def get_rule(self, **kwargs):
+        """
+        get rule information
+
+        Args:
+            k:
+            .i: rule id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.lm.controller.get_dm_rule(i)
-        if not item or not apikey.check(k, item): return None
+        if not item or not apikey.check(k, item): raise ResourceNotFound
         d = item.serialize(info=True)
-        if not apikey.check(k, master=True):
+        if not apikey.check_master(k):
             for x in d.copy():
                 if x[:9] != 'in_range_' and x not in [
                         'id', 'condition', 'description', 'chillout_ends_in',
@@ -396,14 +409,43 @@ class LM_API(GenericAPI):
 
 # master functions for item configuration
 
-    def create_rule(self, k=None, u=None, save=False):
-        if not apikey.check(k, master=True): return None
-        return eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
+    @api_need_master
+    def create_rule(self, **kwargs):
+        """
+        create new rule
 
+        Creates new :doc:`decision rule<decision_matrix>`. Rule id (UUID) is
+        generated automatically unless specified.
+
+        Args:
+            k: .master
+
+        Optional:
+            .u: rule UUID to set
+            .v: rule properties (dict)
+            save: save unit configuration immediately
+        """
+        u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
+        rule = eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
+        if v and isinstance(v, dict):
+            self._set_prop(rule, v=v, save=save)
+        return rule.serialize(info=True)
+
+
+    @api_need_master
     def destroy_rule(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        """
+        delete rule
+
+        Deletes :doc:`decision rule<decision_matrix>`.
+
+        Args:
+            k: .master
+            .i: rule id
+        """
         return eva.lm.controller.destroy_dm_rule(i)
 
+    # TODO
     def groups_macro(self, k=None):
         result = []
         for i, v in eva.lm.controller.macros_by_id.copy().items():
@@ -768,72 +810,6 @@ class LM_HTTP_API_abstract(LM_API, GenericHTTP_API):
     def __init__(self):
         super().__init__()
 
-    def list_rules(self, k=None):
-        return super().list_rules(k)
-
-    def list_rule_props(self, k=None, i=None):
-        result = super().list_rule_props(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    def set_rule_prop(self, k=None, i=None, p=None, v=None, save=None, _j=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        if _j is None:
-            return http_api_result_ok() if super().set_rule_prop(
-                k, i, p, v, _save) else http_api_result_error()
-        else:
-            if isinstance(_j, dict):
-                data = _j
-            else:
-                try:
-                    data = jsonpickle.decode(_j)
-                except:
-                    raise cp_api_error('_j is no JSON')
-            return http_api_result_ok() if \
-                    self._set_rule_prop_batch(k, i, data, _save) \
-                    else http_api_result_error()
-
-    @api_need_master
-    def create_rule(self, k=None, u=None, save=None, _j=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        if not _j:
-            _save_ac = _save
-        else:
-            _save_ac = False
-        rule_id = super().create_rule(k, u, _save_ac)
-        if not rule_id: return http_api_result_error()
-        if _j is None:
-            return http_api_result_ok({'rule_id': rule_id})
-        else:
-            if isinstance(_j, str):
-                try:
-                    data = jsonpickle.decode(_j)
-                except:
-                    raise cp_api_error('Invalid JSON in _j')
-            elif isinstance(_j, dict):
-                data = _j
-            else:
-                raise cp_api_error('_j must be either string or dict')
-            return http_api_result_ok() if \
-                    self._set_rule_prop_batch(k, rule_id, data, _save) \
-                    else http_api_result_error()
-
-    def get_rule(self, k=None, i=None):
-        result = super().get_rule(k, i)
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def destroy_rule(self, k=None, i=None):
-        result = super().destroy_rule(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
 
     def groups_macro(self, k=None):
         return super().groups_macro(k)

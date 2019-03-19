@@ -11,6 +11,7 @@ dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
 import eva.core
+import eva.sysapi
 import eva.notify
 import eva.api
 import eva.apikey
@@ -20,7 +21,6 @@ import eva.lm.lmapi
 import eva.logs
 
 import eva.runner
-import eva.sysapi
 import eva.wsapi
 import eva.mailer
 
