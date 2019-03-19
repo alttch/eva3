@@ -285,7 +285,8 @@ class GenericCLI(object):
                         cmd.append('-K')
                         cmd.append(self.apikey)
                     cmd.append('test')
-                    code, result = self.do_run(cmd, return_result=True)
+                    code, result = self.execute_function(
+                        cmd, return_result=True)
                     if code != apiclient.result_ok or \
                             not 'key_id' in result['acl']:
                         raise Exception('test failed')
@@ -992,7 +993,7 @@ class GenericCLI(object):
                 for c in cmds:
                     print(self.get_prompt() + c)
                     try:
-                        code = self.do_run(shlex.split(c))
+                        code = self.execute_function(shlex.split(c))
                         self.suppress_colors = False
                     except:
                         code = 90
@@ -1001,7 +1002,10 @@ class GenericCLI(object):
                 print('Unable to open %s' % self.batch_file)
                 return 90
         elif not self.interactive:
-            return self.do_run()
+            try:
+                return self.execute_function()
+            except Exception as e:
+                self.print_err(e)
         else:
             # interactive mode
             globals()['shell_switch_to'] = None
@@ -1037,6 +1041,7 @@ class GenericCLI(object):
                             cix += 1
                         else:
                             cmds[cix].append(p)
+                clear_screen = False
                 for i in range(0, len(cmds)):
                     d = cmds[i]
                     if i and i < len(cmds): print()
@@ -1145,7 +1150,7 @@ class GenericCLI(object):
                     elif d[0] in ['?', 'h', 'help']:
                         self.print_interactive_help()
                         try:
-                            self.do_run(['-h'])
+                            self.execute_function(['-h'])
                         except:
                             pass
                         self.setup_parser()
@@ -1203,7 +1208,7 @@ class GenericCLI(object):
                                     '  (interval {} sec)'.format(
                                         repeat_delay))
                         for i in range(len(full_cmds)):
-                            code = self.do_run(full_cmds[i])
+                            code = self.execute_function(full_cmds[i])
                             if i < len(full_cmds) - 1:
                                 print()
                         if self.debug:
@@ -1217,8 +1222,10 @@ class GenericCLI(object):
                             time.sleep(time_to_sleep)
                         if not clear_screen:
                             print()
-                except:
-                    pass
+                except (KeyboardInterrupt, SystemExit):
+                    continue
+                except Exception as e:
+                    self.print_err(e)
                 self.suppress_colors = False
         return 0
 
@@ -1232,9 +1239,9 @@ class GenericCLI(object):
             if self.timeout is not None:
                 opts += ['-T', str(self.timeout)]
         _args = args if isinstance(args, list) else shlex.split(args)
-        return self.do_run(args=opts + _args, return_result=True)
+        return self.execute_function(args=opts + _args, return_result=True)
 
-    def do_run(self, args=None, return_result=False):
+    def execute_function(self, args=None, return_result=False):
         self.suppress_colors = False
         if self.argcomplete:
             self.argcomplete.autocomplete(
@@ -1358,7 +1365,8 @@ class GenericCLI(object):
             if debug and self.remote_api_enabled:
                 self.print_debug('API result code: %u' % code)
             if 'error' not in result:
-                self.print_err('Error: ' + default_errors.get(code))
+                self.print_err('Error: ' +
+                               default_errors.get(code, 'Operation failed'))
             else:
                 self.print_failed_result(result)
             if code == apiclient.result_func_unknown and not debug:

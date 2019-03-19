@@ -802,7 +802,7 @@ banner = """     _______    _____       _______________
 if '-I' in sys.argv or '--interactive' in sys.argv:
     interactive_mode = True
     print(cli.colored(banner, color='blue'))
-    cli.do_run(['version'])
+    cli.execute_function(['version'])
     print()
 code = cli.run()
 sys.exit(code)
