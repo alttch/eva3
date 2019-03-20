@@ -292,6 +292,43 @@ class LM_API(GenericAPI):
 
 # dm rules functions
 
+    @log_i
+    @api_need_master
+    def create_rule(self, **kwargs):
+        """
+        create new rule
+
+        Creates new :doc:`decision rule<decision_matrix>`. Rule id (UUID) is
+        generated automatically unless specified.
+
+        Args:
+            k: .master
+
+        Optional:
+            .u: rule UUID to set
+            .v: rule properties (dict)
+            save: save unit configuration immediately
+        """
+        u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
+        rule = eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
+        if v and isinstance(v, dict):
+            self._set_prop(rule, v=v, save=save)
+        return rule.serialize(info=True)
+
+    @log_w
+    @api_need_master
+    def destroy_rule(self, k=None, i=None):
+        """
+        delete rule
+
+        Deletes :doc:`decision rule<decision_matrix>`.
+
+        Args:
+            k: .master
+            .i: rule id
+        """
+        return eva.lm.controller.destroy_dm_rule(i)
+
     @log_d
     def list_rule_props(self, **kwargs):
         """
@@ -406,47 +443,6 @@ class LM_API(GenericAPI):
                 ]:
                     del d[x]
         return d
-
-# master functions for item configuration
-
-# rule functions
-
-    @log_i
-    @api_need_master
-    def create_rule(self, **kwargs):
-        """
-        create new rule
-
-        Creates new :doc:`decision rule<decision_matrix>`. Rule id (UUID) is
-        generated automatically unless specified.
-
-        Args:
-            k: .master
-
-        Optional:
-            .u: rule UUID to set
-            .v: rule properties (dict)
-            save: save unit configuration immediately
-        """
-        u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
-        rule = eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
-        if v and isinstance(v, dict):
-            self._set_prop(rule, v=v, save=save)
-        return rule.serialize(info=True)
-
-    @log_w
-    @api_need_master
-    def destroy_rule(self, k=None, i=None):
-        """
-        delete rule
-
-        Deletes :doc:`decision rule<decision_matrix>`.
-
-        Args:
-            k: .master
-            .i: rule id
-        """
-        return eva.lm.controller.destroy_dm_rule(i)
 
 # macro functions
 
@@ -715,6 +711,7 @@ class LM_API(GenericAPI):
         if not item or not apikey.check(k, item): raise ResourceNotFound
         return item.serialize(info=True)
 
+    @log_i
     def start_cycle(self, **kwargs):
         """
         start cycle
@@ -728,6 +725,7 @@ class LM_API(GenericAPI):
         if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
         return cycle.start()
 
+    @log_i
     def stop_cycle(self, **kwargs):
         """
         stop cycle
@@ -745,6 +743,7 @@ class LM_API(GenericAPI):
         cycle.stop(wait=wait)
         return True, api_result_accepted if wait else True
 
+    @log_i
     def reset_cycle_stats(self, **kwargs):
         """
         reset cycle statistic
@@ -761,20 +760,65 @@ class LM_API(GenericAPI):
 
 # lvars
 
-# TODO
+    @log_i
+    @api_need_master
+    def get_config(self, **kwargs):
+        """
+        get lvar configuration
 
-    def get_config(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        Args:
+            k: .master
+            .i: lvaar id
+
+        Returns:
+            complete :ref:`lvar<lvar>` configuration.
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        if is_oid(i):
+            t, i = parse_oid(i)
         item = eva.lm.controller.get_item(i)
-        return item.serialize(config=True) if item else None
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        return item.serialize(config=True)
 
-    def save_config(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def save_config(self, **kwargs):
+        """
+        save lvar configuration
+
+        Saves :ref:`lvar<lvar>`. configuration on disk (even if it hasn't been
+        changed)
+
+        Args:
+            k: .master
+            .i: lvar id
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        if is_oid(i):
+            t, i = parse_oid(i)
+        item = eva.uc.controller.get_item(i)
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
         item = eva.lm.controller.get_item(i)
-        return item.save() if item else None
+        return item.save()
 
-    def list(self, k=None, group=None, tp=None):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def list(self, **kwargs):
+        """
+        list lvars
+
+        Args:
+            k: .master
+
+        Optional:
+            .g: filter by item group
+
+        Returns:
+            the list of all :ref:`lvars<lvar>` available
+        """
+        tp, group = parse_api_params(kwargs, 'pg', 'ss', {'p': 'lvar'})
         result = []
         if tp == 'LV' or tp == 'lvar':
             items = eva.lm.controller.lvars_by_full_id
@@ -785,36 +829,82 @@ class LM_API(GenericAPI):
                 result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['oid'])
 
-    def list_props(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def list_props(self, **kwargs):
+        """
+        list lvar properties
+
+        Get all editable parameters of the :ref:`lvar</var>` confiugration.
+
+        Args:
+            k: .master
+            .i: item id
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        if is_oid(i):
+            t, i = parse_oid(i)
         item = eva.lm.controller.get_item(i)
-        return item.serialize(props=True) if item else None
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        return item.serialize(props=True)
 
-    def set_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def set_prop(self, **kwargs):
+        """
+        set lvar property
+
+        Set configuration parameters of the :ref:`lvar<lvar>`.
+
+        Args:
+            k: .master
+            .i: item id
+            .p: property name (or empty for batch set)
+        
+        Optional:
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        if not p and not isinstance(v, dict):
+            raise InvalidParameter('property not specified')
+        if is_oid(i):
+            t, i = parse_oid(i)
         item = eva.lm.controller.get_item(i)
-        if item:
-            result = item.set_prop(p, v, save)
-            if result and item.config_changed and save:
-                item.save()
-            return result
-        else:
-            return None
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        return self._set_prop(item, p, v, save)
 
-    def create_lvar(self, k = None, lvar_id = None, \
-            group = None, save = False):
-        if not apikey.check(k, master=True): return None
-        if is_oid(lvar_id):
-            tp, i = parse_oid(lvar_id)
-            if tp != 'lvar': return False
-        else:
-            i = lvar_id
-        return eva.lm.controller.create_lvar(lvar_id=i, group=group, save=save)
+    @log_i
+    @api_need_master
+    def create_lvar(self, **kwargs):
+        """
+        delete lvar
 
-    def destroy_lvar(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        Deletes :ref:`lvar<lvar>`
+
+        Args:
+            k: .master
+            .i: lvar id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.uc.controller.destroy_item(i)
+
+    @log_w
+    @api_need_master
+    def destroy_lvar(self, **kwargs):
+        """
+        delete lvar
+
+        Deletes :doc:`lvar<lvar>`
+
+        Args:
+            k: .master
+            .i: lvar id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         return eva.lm.controller.destroy_item(i)
-
 
 # controller management
 
@@ -949,7 +1039,8 @@ class LM_API(GenericAPI):
             _i = i
         return eva.lm.controller.uc_pool.reload_controller(_i)
 
-    # master functions for lmacro extension management
+
+# master functions for lmacro extension management
 
     def load_ext(self, k=None, i=None, m=None, cfg=None, save=False):
         if not apikey.check(k, master=True): return None

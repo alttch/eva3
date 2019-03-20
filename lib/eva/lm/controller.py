@@ -681,8 +681,10 @@ def remove_controller(controller_id):
 
 @with_item_lock
 def create_item(item_id, item_type, group=None, virtual=False, save=False):
-    if not item_id: return False
-    if group and item_id.find('/') != -1: return False
+    if not item_id: raise InvalidParameter('item id not specified')
+    if group and item_id.find('/') != -1:
+        raise InvalidParameter(
+            'Unable to create item: invalid symbols in ID {}'.format(item_id))
     if item_id.find('/') == -1:
         i = item_id
         grp = group
@@ -693,11 +695,12 @@ def create_item(item_id, item_type, group=None, virtual=False, save=False):
         grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
-        return False
+        raise InvalidParameter(
+            'Unable to create item: invalid symbols in ID {}'.format(item_id))
     i_full = grp + '/' + i
     if (not eva.core.enterprise_layout and i in items_by_id) or \
             i_full in items_by_full_id:
-        return False
+        raise ResourceAlreadyExists(get_item(i_full).oid)
     item = None
     if item_type == 'LV' or item_type == 'lvar':
         item = eva.lm.lvar.LVar(i)
@@ -727,7 +730,7 @@ def destroy_item(item):
     try:
         if isinstance(item, str):
             i = get_item(item)
-            if not i: return None
+            if not i: raise ResourceNotFound
         else:
             i = item
         if not eva.core.enterprise_layout:
@@ -754,9 +757,9 @@ def destroy_item(item):
             configs_to_remove.add(i.get_fname())
         logging.info('%s destroyed' % i.full_id)
         return True
-    except:
+    except exception as e:
         eva.core.log_traceback()
-        return False
+        raise functionfailed(e)
 
 
 @with_item_lock
