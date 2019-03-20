@@ -176,13 +176,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 result.add(v['group'])
             return list(result)
 
-    def prepare_result_data(self, data, api_func, api_func_full, itype):
+    def prepare_result_data(self, data, api_func, itype):
         if api_func not in [
                 'state', 'list_macros', 'list_cycles', 'list_controllers',
                 'result'
         ] and itype not in ['action']:
-            return super().prepare_result_data(data, api_func, api_func_full,
-                                               itype)
+            return super().prepare_result_data(data, api_func, itype)
         result = []
         for d in data.copy():
             if itype == 'action' or api_func == 'result':
@@ -220,19 +219,17 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             result.append(d)
         return result
 
-    def process_result(self, result, code, api_func, api_func_full, itype, a):
+    def process_result(self, result, code, api_func, itype, a):
         if api_func == 'state_history' and \
                 isinstance(result, dict):
             self.print_tdf(result, 't')
             return 0
         else:
-            return super().process_result(result, code, api_func, api_func_full,
-                                          itype, a)
+            return super().process_result(result, code, api_func, itype, a)
 
-    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+    def prepare_result_dict(self, data, api_func, itype):
         if api_func != 'status_controller':
-            return super().prepare_result_dict(data, api_func, api_func_full,
-                                               itype)
+            return super().prepare_result_dict(data, api_func, itype)
         return self.prepare_controller_status_dict(data)
 
     def setup_parser(self):
@@ -1344,7 +1341,7 @@ _pd_cols = {
 
 _pd_idx = {'state': 'oid', 'result': 'time'}
 
-_fancy_tabsp = {}
+_fancy_indentsp = {}
 
 _always_json = []
 
@@ -1357,6 +1354,6 @@ cli.api_cmds_timeout_correction = ['cmd', 'action', 'run']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
-cli.set_fancy_tabsp(_fancy_tabsp)
+cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
 sys.exit(code)

@@ -51,10 +51,9 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         super().setup_parser()
         self.enable_controller_management_functions(eva.core.product_code)
 
-    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+    def prepare_result_dict(self, data, api_func, itype):
         if api_func != 'status_controller':
-            return super().prepare_result_dict(data, api_func, api_func_full,
-                                               itype)
+            return super().prepare_result_dict(data, api_func, itype)
         return self.prepare_controller_status_dict(data)
 
     def add_functions(self):
@@ -506,17 +505,9 @@ _api_functions = {
 
 _pd_cols = {'list_notifiers': ['id', 'type', 'enabled', 'params']}
 
-_pd_idx = {
-    'list_keys': 'key_id',
-    'list_users': 'user',
-    'state': 'oid',
-    'list': 'oid',
-    'result': 'time',
-    'list_phi_mods': 'mod',
-    'list_lpi_mods': 'mod'
-}
+_pd_idx = {}
 
-_fancy_tabsp = {'list_props': 26, 'get_phi': 14, 'get_driver': 12}
+_fancy_indentsp = {}
 
 _always_json = ['get_notifier_config']
 
@@ -526,6 +517,6 @@ cli.arg_sections += ['subscribe']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
-cli.set_fancy_tabsp(_fancy_tabsp)
+cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
 sys.exit(code)

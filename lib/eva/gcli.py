@@ -52,14 +52,14 @@ class GCLI(object):
         self.common_pd_cols = {}
         self.common_pd_idx = {}
         self.arg_sections = []
-        self.common_fancy_tabsp = {}
-        say_bye = True
+        self.say_bye = True
         self.readline_processing = True
         self.history_length = 300
         self.history_file = os.path.expanduser('~') + '/.eva_history'
         self.pd_cols = self.common_pd_cols
         self.api_functions = {}
-        self.fancy_tabsp = {}
+        self.fancy_indentsp = {}
+        self.common_fancy_indentsp = {}
         self.batch_file = None
         self.batch_stop_on_err = True
         self.prog_name = prog
@@ -155,7 +155,6 @@ class GCLI(object):
     def print_debug(self, s):
         print(self.colored(s, color='grey', attrs=['bold']))
 
-
     def can_colorize(self):
         return not self.suppress_colors and \
                 not self.always_suppress_colors and \
@@ -165,17 +164,13 @@ class GCLI(object):
         return self.prompt if self.prompt else self.default_prompt
 
     def print_interactive_help(self):
+        print('type command to execute. Append |N' + \
+                    ' to repeat every |N sec (|cN to clear screen)')
+        print()
+        print('Special commands:')
         print('q: quit')
         print('j: toggle json mode')
         print('r: toggle raw mode (no colors)')
-        print()
-        print('sh: start system shell')
-        print('top: display system processes')
-        print('w: display uptime and who is online')
-        print('date: display system date and time')
-        print()
-        print('or command to exec. Append |N' + \
-                    ' to repeat every |N sec (|cN to clear screen)')
         print()
 
     def add_primary_options(self):
@@ -230,51 +225,47 @@ class GCLI(object):
         self.sp = self.ap.add_subparsers(
             dest='_type', metavar='command', help='command or type')
 
-    def prepare_result_data(self, data, func):
+    def prepare_result_data(self, data, func, itype):
         return data
 
-    def prepare_result_dict(self, data, func):
+    def prepare_result_dict(self, data, func, itype):
         return data
 
-    def fancy_print_result(self,
-                           result,
-                           func,
-                           tab=0,
-                           print_ok=True):
+    def fancy_print_result(self, result, func, itype, indent=0, print_ok=True):
         if result and isinstance(result, dict):
-            self.fancy_print_dict(result, func, print_ok=print_ok)
+            self.fancy_print_dict(
+                result, func, itype, indent=indent, print_ok=print_ok)
         elif result and isinstance(result, list):
-            self.fancy_print_list(result, func)
+            self.fancy_print_list(result, func, itype)
         elif result:
-            self.fancy_print_other(result, func)
+            self.fancy_print_other(result, func, itype)
 
-    def fancy_print_other(self, result, func):
-            print(result)
+    def fancy_print_other(self, result, func, itype):
+        print(result)
 
-    def fancy_print_dict(result, func, tab=0, print_ok=True):
-        _result = self.prepare_result_dict(result, func)
+    def fancy_print_dict(result, func, itype, indent=0, print_ok=True):
+        _result = self.prepare_result_dict(result, func, itype)
         rprinted = False
         out = None
         err = None
-        tabsp = self.fancy_tabsp.get(api_func)
-        if not tabsp: tabsp = 10
+        indentsp = self.fancy_indentsp.get(api_func, itype)
+        if not indentsp: indentsp = 10
         for v in sorted(_result.keys()):
             if isinstance(_result[v], dict):
-                if tab:
+                if indent:
                     print(
-                        ' ' * (tab * tabsp),
-                        end=self.colored('>' * tab) + ' ')
-                print(((self.colored(
-                    '{:>%u} ', color='blue', attrs=['bold']) +
-                        self.colored(':') + self.colored(
-                            '  {}', color='yellow')) % max(
-                                map(len, _result))).format(v, ''))
-                self.fancy_print_result(_result[v], func, tab + 1)
+                        ' ' * (indent * indentsp),
+                        end=self.colored('>' * indent) + ' ')
+                print(
+                    ((self.colored('{:>%u} ', color='blue', attrs=['bold']) +
+                      self.colored(':') + self.colored('  {}', color='yellow'))
+                     % max(map(len, _result))).format(v, ''))
+                self.fancy_print_result(_result[v], func, itype, indent + 1)
             else:
-                if tab:
+                if indent:
                     print(
-                        ' ' * (tab * tabsp),
-                        end=self.colored('>' * tab) + ' ')
+                        ' ' * (indent * indentsp),
+                        end=self.colored('>' * indent) + ' ')
                 if isinstance(_result[v], list):
                     _r = []
                     for vv in _result[v]:
@@ -282,26 +273,24 @@ class GCLI(object):
                     _v = ', '.join(_r)
                 else:
                     _v = _result[v]
-                print(((self.colored(
-                    '{:>%u} ', color='blue', attrs=['bold']) +
-                        self.colored(':') + self.colored(
-                            ' {}', color='yellow')) % max(
-                                map(len, _result))).format(v, _v))
+                print(((self.colored('{:>%u} ', color='blue', attrs=['bold']) +
+                        self.colored(':') + self.colored(' {}', color='yellow'))
+                       % max(map(len, _result))).format(v, _v))
             rprinted = True
-        if not rprinted and not tab and print_ok:
+        if not rprinted and not indent and print_ok:
             print('OK')
 
-    def fancy_print_list(self, result, func):
+    def fancy_print_list(self, result, func, itype):
         self.import_pandas()
         df = self.pd.DataFrame(
-            data=self.prepare_result_data(result, func))
+            data=self.prepare_result_data(result, func, itype))
         if func in self.pd_cols:
             cols = self.pd_cols[func]
         else:
             cols = list(df)
         df = df.ix[:, cols]
         try:
-            idxcol = self.pd_idx.get(api_func)
+            idxcol = self.pd_idx.get(func)
             if idxcol is None: idxcol = 'id'
             if idxcol in list(df):
                 df.set_index(idxcol, inplace=True)
@@ -320,31 +309,67 @@ class GCLI(object):
                 print(s)
         except:
             raise
-    
+
     def import_pandas(self):
         if not self.pd:
             self.pd = importlib.import_module('pandas')
             self.pd.set_option('display.expand_frame_repr', False)
             self.pd.options.display.max_colwidth = 100
 
-
     def call(self, args=[]):
         _args = args if isinstance(args, list) else shlex.split(args)
         return self.execute_function(args=_args, return_result=True)
 
+    def run(self):
+        # primary run or lopp
+        # TODO
+        pass
+
     def execute_function(self, args=None, return_result=False):
-        self.suppress_colors = False
-        if self.argcomplete:
-            self.argcomplete.autocomplete(
-                self.ap,
-                default_completer=self.argcomplete.completers.SuppressCompleter(
-                ))
-        try:
-            p = args if args else (sys.argv[1:] if len(sys.argv) > 1 else [])
-            if p and p[0] in shells_available:
-                self.subshell_extra_args = p[1:] if len(p) > 1 else []
-                a = self.ap.parse_args([p[0]])
-            else:
-                a, self.subshell_extra_args = self.ap.parse_known_args(args)
-        except:
-            return 99
+        # TODO
+        pass
+
+    def prepare_run(self, func, params, a):
+        """
+        final step: execute tasks before function execution (e.g. read local
+        file), modify execution params if necessary (e.g. put file contents
+        into param value)
+
+        in case of any error or invalid params - return non-zero code, this
+        will prevent function execution and specified code will be returned
+        back to shell
+        """
+        return 0
+
+    def print_failed_result(self, result):
+        self.print_err('FAILED')
+        if 'error' in result:
+            self.print_err(result['error'])
+
+    def result_failed(self, message):
+        code, result = self.local_func_result_failed
+        result['error'] = message
+        return code, result
+
+    def result_ok(self, data=None):
+        if data:
+            return 0, data
+        else:
+            return self.local_func_result_failed
+
+    def result_empty():
+        return self.local_func_result_empty
+
+    def process_result(self, result, code, func, itype, a):
+        if code:
+            self.print_failed_result(result)
+        self.fancy_print_result(result, func, itype, print_ok=code == 0)
+        return code
+
+    def get_api_func(self, itype, func):
+        if func is None:
+            f = self.api_functions.get(itype)
+            return f if f else itype
+        else:
+            f = self.api_functions.get(itype + ':' + func)
+            return f if f else itype + '_' + func

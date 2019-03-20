@@ -232,15 +232,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
             result.add('help')
             return result
 
-    def prepare_result_data(self, data, api_func, api_func_full, itype):
+    def prepare_result_data(self, data, api_func, itype):
         if api_func == 'list_device_tpl':
             for d in data:
                 d['type'] = d['type'] + ' device template'
                 return data
             return result
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
-            return super().prepare_result_data(data, api_func, api_func_full,
-                                               itype)
+            return super().prepare_result_data(data, api_func, itype)
         result = []
         for d in data.copy():
             if api_func == 'scan_owfs_bus':
@@ -265,14 +264,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
             result.append(d)
         return result
 
-    def process_result(self, result, code, api_func, api_func_full, itype, a):
+    def process_result(self, result, code, api_func, itype, a):
         if api_func == 'state_history' and \
                 isinstance(result, dict):
             self.print_tdf(result, 't')
             return 0
         else:
-            return super().process_result(result, code, api_func, api_func_full,
-                                          itype, a)
+            return super().process_result(result, code, api_func, itype, a)
 
     def prepare_run(self, api_func, params, a):
         if api_func == 'load_driver':
@@ -295,10 +293,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 return 97
         return super().prepare_run(api_func, params, a)
 
-    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+    def prepare_result_dict(self, data, api_func, itype):
         if api_func != 'status_controller':
-            return super().prepare_result_dict(data, api_func, api_func_full,
-                                               itype)
+            return super().prepare_result_dict(data, api_func, itype)
         return self.prepare_controller_status_dict(data)
 
     def setup_parser(self):
@@ -1257,7 +1254,13 @@ _pd_idx = {
     'list_lpi_mods': 'mod'
 }
 
-_fancy_tabsp = {'list_props': 26, 'get_phi': 14, 'get_driver': 12}
+_fancy_indentsp = {
+    'list_props': 26,
+    'get_phi': 14,
+    'get_driver': 12,
+    'load_phi': 14,
+    'load_driver': 12
+}
 
 _always_json = ['get_config']
 
@@ -1271,6 +1274,6 @@ cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
-cli.set_fancy_tabsp(_fancy_tabsp)
+cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
 sys.exit(code)

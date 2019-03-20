@@ -155,7 +155,8 @@ class GenericCLI(GCLI):
                 'list_lpi_mods': 'mod'
             }
             self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
-            self.common_fancy_tabsp = {'test': 14}
+            self.common_fancy_indentsp = {'test': 14}
+            self.fancy_indentsp = self.common_fancy_indentsp
         self.log_levels = {
             10: 'DEBUG',
             20: 'INFO',
@@ -165,10 +166,8 @@ class GenericCLI(GCLI):
         }
         self.api_functions = self.common_api_functions
         self.pd_idx = self.common_pd_idx
-        self.fancy_tabsp = self.common_fancy_tabsp
         self.api_cmds_timeout_correction = []
         self.setup_parser()
-
 
     def get_prompt(self):
         if self.prompt: return self.prompt
@@ -226,6 +225,7 @@ class GenericCLI(GCLI):
         return prompt
 
     def print_interactive_help(self):
+        super().print_interactive_help()
         if self.remote_api_enabled:
             print('a: show API params')
             print('c <host:port> [key] [timeout]: connect to remote API')
@@ -234,7 +234,11 @@ class GenericCLI(GCLI):
             print('t: timeout display/set (t. for timeout reset)')
             print('d: toggle client debug mode')
             print()
-        super().print_interactive_help()
+            print('sh: start system shell')
+            print('top: display system processes')
+            print('w: display uptime and who is online')
+            print('date: display system date and time')
+            print()
 
     def parse_primary_args(self):
         super().parse_primary_args()
@@ -263,7 +267,8 @@ class GenericCLI(GCLI):
                         if 'timeout' in c: self.timeout = c.get('timeout')
                         if 'debug' in c: self.debug = c.get('debug')
                         if 'json' in c: self.in_json = c.get('json')
-                        if 'raw' in c: self.always_suppress_colors = c.get('raw')
+                        if 'raw' in c:
+                            self.always_suppress_colors = c.get('raw')
         except:
             pass
 
@@ -374,19 +379,11 @@ class GenericCLI(GCLI):
         self.pd_idx = self.common_pd_idx.copy()
         self.pd_idx.update(pd_idx)
 
-    def set_fancy_tabsp(self, fancy_tabsp={}):
-        self.fancy_tabsp = self.common_fancy_tabsp.copy()
-        self.fancy_tabsp.update(fancy_tabsp)
+    def set_fancy_indentsp(self, fancy_indentsp={}):
+        self.fancy_indentsp = self.common_fancy_indentsp.copy()
+        self.fancy_indentsp.update(fancy_indentsp)
 
-    def get_api_func(self, itype, func):
-        if func is None:
-            f = self.api_functions.get(itype)
-            return f if f else itype
-        else:
-            f = self.api_functions.get(itype + ':' + func)
-            return f if f else itype + '_' + func
-
-    def prepare_result_data(self, data, api_func, api_func_full, itype):
+    def prepare_result_data(self, data, api_func, itype):
         if api_func == 'log_get':
             result = []
             for d in data:
@@ -400,54 +397,52 @@ class GenericCLI(GCLI):
         else:
             return data
 
-    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+    def prepare_result_dict(self, data, api_func, itype):
         return data
 
     def fancy_print_result(self,
                            result,
                            api_func,
-                           api_func_full,
                            itype,
-                           tab=0,
+                           indent=0,
                            print_ok=True):
         if result and isinstance(result, dict):
-            _result = self.prepare_result_dict(result, api_func, api_func_full,
-                                               itype)
+            _result = self.prepare_result_dict(result, api_func, itype)
             rprinted = False
             h = None
             out = None
             err = None
-            tabsp = self.fancy_tabsp.get(api_func)
-            if not tabsp: tabsp = 10
+            indentsp = self.fancy_indentsp.get(api_func)
+            if not indentsp: indentsp = 10
             for v in sorted(_result.keys()):
                 if v == 'ok' and api_func not in ['test']: continue
                 if v == 'help':
-                    if not tab:
+                    if not indent:
                         h = _result[v]
                     else:
                         pass
-                elif v == 'out' and not tab:
+                elif v == 'out' and not indent:
                     out = _result[v]
-                elif v == 'err' and not tab:
+                elif v == 'err' and not indent:
                     err = _result[v]
                 elif v != '_result':
                     if isinstance(_result[v], dict):
-                        if tab:
+                        if indent:
                             print(
-                                ' ' * (tab * tabsp),
-                                end=self.colored('>' * tab) + ' ')
+                                ' ' * (indent * indentsp),
+                                end=self.colored('>' * indent) + ' ')
                         print(((self.colored(
                             '{:>%u} ', color='blue', attrs=['bold']) +
                                 self.colored(':') + self.colored(
                                     '  {}', color='yellow')) % max(
                                         map(len, _result))).format(v, ''))
-                        self.fancy_print_result(_result[v], api_func,
-                                                api_func_full, itype, tab + 1)
+                        self.fancy_print_result(_result[v], api_func, itype,
+                                                indent + 1)
                     else:
-                        if tab:
+                        if indent:
                             print(
-                                ' ' * (tab * tabsp),
-                                end=self.colored('>' * tab) + ' ')
+                                ' ' * (indent * indentsp),
+                                end=self.colored('>' * indent) + ' ')
                         if isinstance(_result[v], list):
                             _r = []
                             for vv in _result[v]:
@@ -481,15 +476,14 @@ class GenericCLI(GCLI):
                 else:
                     print(str(err).strip())
                 rprinted = True
-            if not rprinted and not tab and print_ok:
+            if not rprinted and not indent and print_ok:
                 print('OK')
         elif result and isinstance(result, list):
             self.import_pandas()
             df = self.pd.DataFrame(
-                data=self.prepare_result_data(result, api_func, api_func_full,
-                                              itype))
-            if api_func + api_func_full in self.pd_cols:
-                cols = self.pd_cols[api_func + api_func_full]
+                data=self.prepare_result_data(result, api_func, itype))
+            if api_func + self.cur_api_func_is_full in self.pd_cols:
+                cols = self.pd_cols[api_func + self.cur_api_func_is_full]
             else:
                 cols = list(df)
             df = df.ix[:, cols]
@@ -769,6 +763,10 @@ class GenericCLI(GCLI):
         sp_user_destroy.add_argument(
             'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
 
+    def start_interactive(self, reset_sst=True):
+        if reset_sst: globals()['shell_switch_to'] = None
+        super().start_interactive()
+
     def prepare_run(self, api_func, params, a):
         if api_func == 'file_put' and a._func == 'upload':
             try:
@@ -809,7 +807,6 @@ class GenericCLI(GCLI):
                 self.print_err(e)
         else:
             # interactive mode
-            globals()['shell_switch_to'] = None
             self.start_interactive()
             while True:
                 parsed = None
@@ -851,6 +848,7 @@ class GenericCLI(GCLI):
                             (d[0] in ['..', '/'] and parent_shell_name):
                         self.finish_interactive()
                         return 0
+
                     if parent_shell_name and d[0] in shells_available:
                         globals()['shell_switch_to'] = d[0]
                         return 0
@@ -901,6 +899,7 @@ class GenericCLI(GCLI):
                         print('Client debug mode ' +
                               ('on' if self.debug else 'off'))
                         print('timeout: %.2f' % self.timeout)
+
                     elif d[0] == 'j':
                         self.in_json = not self.in_json
                         print('JSON mode ' + ('on' if self.in_json else 'off'))
@@ -1118,14 +1117,14 @@ class GenericCLI(GCLI):
             api.ssl_verify(self.ssl_verify)
         else:
             api = None
-        api_func_full = ''
+        self.cur_api_func_is_full = ''
         if getattr(a, '_full', False):
             params['full'] = 1
-            api_func_full = '_'
+            self.cur_api_func_is_full = '_'
         if getattr(a, '_has_all', False):
             params['has_all'] = 1
         elif getattr(a, '_full_display', False):
-            api_func_full = '_'
+            self.cur_api_func_is_full = '_'
         if getattr(a, '_virtual', False):
             params['virtual'] = 1
         if getattr(a, '_save', False):
@@ -1178,16 +1177,10 @@ class GenericCLI(GCLI):
             if c.get('json') or a._json or api_func in self.always_json:
                 self.print_json(result)
             else:
-                return self.process_result(result, code, api_func,
-                                           api_func_full, itype, a)
+                return self.process_result(result, code, api_func, itype, a)
         return 0
 
-    def print_failed_result(self, result):
-        self.print_err('FAILED')
-        if 'error' in result:
-            self.print_err(result['error'])
-
-    def process_result(self, result, code, api_func, api_func_full, itype, a):
+    def process_result(self, result, code, api_func, itype, a):
         if api_func == 'file_get' and result == apiclient.result_ok:
             try:
                 open(a._fname, 'w').write(result['data'])
@@ -1199,11 +1192,7 @@ class GenericCLI(GCLI):
         if code != apiclient.result_ok:
             self.print_failed_result(result)
         self.fancy_print_result(
-            result,
-            api_func,
-            api_func_full,
-            itype,
-            print_ok=code == apiclient.result_ok)
+            result, api_func, itype, print_ok=code == apiclient.result_ok)
         return code
 
     def print_tdf(self, result_in, time_field):

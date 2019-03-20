@@ -65,20 +65,18 @@ class ComplBackupList(ComplGeneric):
 
 class ManagementCLI(GenericCLI):
 
-    def prepare_result_data(self, data, api_func, api_func_full, itype):
+    def prepare_result_data(self, data, api_func, itype):
         if itype not in ['backup']:
-            return super().prepare_result_data(data, api_func, api_func_full,
-                                               itype)
+            return super().prepare_result_data(data, api_func, itype)
         result = []
         for d in data.copy():
             d['time'] = time.ctime(d['time'])
             result.append(d)
         return result
 
-    def prepare_result_dict(self, data, api_func, api_func_full, itype):
+    def prepare_result_dict(self, data, api_func, itype):
         if api_func not in ['status_controller']:
-            return super().prepare_result_dict(data, api_func, api_func_full,
-                                               itype)
+            return super().prepare_result_dict(data, api_func, itype)
         result = {}
         for k, v in data.copy().items():
             result[k] = 'running' if v else 'stopped'
@@ -356,7 +354,7 @@ sys.argv = {argv}
 
     def full_reset_after_shell(self):
         self.setup_parser()
-        self.start_interactive()
+        self.start_interactive(reset_sst=False)
         eva.client.cli.say_bye = True
         eva.client.cli.readline_processing = True if \
                 not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
@@ -790,7 +788,7 @@ cli.add_user_defined_functions()
 cli.nodename = nodename
 # cli.set_pd_cols(_pd_cols)
 # cli.set_pd_idx(_pd_idx)
-# cli.set_fancy_tabsp(_fancy_tabsp)
+# cli.set_fancy_indentsp(_fancy_indentsp)
 banner = """     _______    _____       _______________
     / ____/ |  / /   |     /  _/ ____/ ___/
    / __/  | | / / /| |     / // /    \__ \\
