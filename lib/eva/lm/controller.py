@@ -72,6 +72,7 @@ Q = None
 DM = None
 
 with_item_lock = eva.core.RLocker('lm/controller')
+with_controller_lock = eva.core.RLocker('lm/controller')
 
 
 def format_rule_id(r_id):
@@ -105,16 +106,18 @@ def get_item(item_id):
     return None if item and is_oid(item_id) and item.item_type != tp else item
 
 
+@with_controller_lock
 def get_controller(controller_id):
     _controller_id = oid_to_id(controller_id, 'remote_uc')
-    if not _controller_id: return None
+    if not _controller_id: raise InvalidParameter('controller id not specified')
     if _controller_id.find('/') > -1:
         i = _controller_id.split('/')
-        if len(i) > 2 or i[0] != 'uc': return None
+        if len(i) > 2 or i[0] != 'uc':
+            raise InvalidParameter('controller type unknown')
         if i[1] in remote_ucs: return remote_ucs[i[1]]
     else:
         if _controller_id in remote_ucs: return remote_ucs[_controller_id]
-    return None
+    raise ResourceNotFound
 
 
 @with_item_lock
@@ -182,6 +185,7 @@ def append_item(item, start=False, load=True):
 
 @eva.core.save
 @with_item_lock
+@with_controller_lock
 def save():
     for i, v in lvars_by_full_id.items():
         if not save_lvar_state(v):
@@ -363,6 +367,7 @@ def load_lvars(start=False):
         return False
 
 
+@with_controller_lock
 def load_remote_ucs():
     logging.info('Loading remote UCs')
     try:
@@ -584,6 +589,7 @@ def destroy_dm_rule(r_id):
         return FunctionFailed(e)
 
 
+@with_controller_lock
 def handle_discovered_controller(notifier_id, controller_id, **kwargs):
     try:
         ct, c_id = controller_id.split('/')
@@ -615,6 +621,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
         return False
 
 
+@with_controller_lock
 def append_controller(uri,
                       key=None,
                       mqtt_update=None,
@@ -649,16 +656,17 @@ def append_controller(uri,
     remote_ucs[u.item_id] = u
     if save: u.save()
     logging.info('controller %s added to pool' % u.item_id)
-    return True
+    return u
 
 
+@with_controller_lock
 def remove_controller(controller_id):
     _controller_id = oid_to_id(controller_id, 'remote_uc')
-    if not _controller_id: return False
+    if not _controller_id: raise InvalidParameter('controller id not specified')
     if _controller_id.find('/') != -1:
         _controller_id = _controller_id.split('/')[-1]
     if _controller_id not in remote_ucs:
-        return None
+        raise ResourceNotFound
     try:
         i = remote_ucs[_controller_id]
         i.destroy()
@@ -674,9 +682,9 @@ def remove_controller(controller_id):
         del (remote_ucs[_controller_id])
         logging.info('controller %s removed' % _controller_id)
         return True
-    except:
+    except Exception as e:
         eva.core.log_traceback()
-        return False
+        raise FunctionFailed(e)
 
 
 @with_item_lock
@@ -799,6 +807,8 @@ def pdme(item, ns=False):
     return DM.process(item, ns=ns)
 
 
+@with_item_lock
+@with_controller_lock
 def start():
     global uc_pool
     global plc
@@ -832,6 +842,8 @@ def connect_remote_controller(v):
                 v.full_id)
 
 
+@with_item_lock
+@with_controller_lock
 @eva.core.stop
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
@@ -889,6 +901,7 @@ def exec_macro(macro,
     return a
 
 
+@with_controller_lock
 @eva.core.dump
 def dump(item_id=None):
     if item_id: return items_by_full_id[item_id]

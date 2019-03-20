@@ -141,7 +141,8 @@ __special_param_names = {
     'V': 'virtual',
     'O': 'force_virtual',
     'H': 'has_all',
-    'W': 'wait'
+    'W': 'wait',
+    'U': 'uri'
 }
 
 __special_param_codes = {
@@ -153,7 +154,8 @@ __special_param_codes = {
     'virtual': 'V',
     'force_virtual': 'O',
     'has_all': 'H',
-    'wait': 'W'
+    'wait': 'W',
+    'uri': 'U'
 }
 
 

@@ -703,6 +703,7 @@ def serialize_actions():
     return Q.serialize()
 
 
+@with_item_lock
 def start():
     global Q
     eva.uc.owfs.start()
@@ -715,6 +716,7 @@ def start():
         v.start_processors()
 
 
+@with_item_lock
 @eva.core.stop
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
@@ -780,6 +782,7 @@ def exec_unit_action(unit,
     return a
 
 
+@with_item_lock
 @eva.core.dump
 def dump(item_id=None):
     if item_id: return items_by_full_id[item_id]

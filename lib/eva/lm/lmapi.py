@@ -496,7 +496,7 @@ class LM_API(GenericAPI):
         manually.
 
         Args:
-            k:
+            k: .master
             .i: macro id
 
         Optional:
@@ -514,7 +514,7 @@ class LM_API(GenericAPI):
         Deletes :doc:`macro<macros>`.
 
         Args:
-            k:
+            k: .master
             .i: macro id
         """
         i = parse_api_params(kwargs, 'i', 'S')
@@ -527,7 +527,7 @@ class LM_API(GenericAPI):
         get macro configuration properties
 
         Args:
-            k:
+            k: .master
             .i: macro id
         """
         i = parse_api_params(kwargs, 'i', 'S')
@@ -628,7 +628,7 @@ class LM_API(GenericAPI):
         manually.
 
         Args:
-            k:
+            k: .master
             .i: cycle id
 
         Optional:
@@ -646,7 +646,7 @@ class LM_API(GenericAPI):
         Deletes :doc:`cycle<cycles>`.
 
         Args:
-            k:
+            k: .master
             .i: cycle id
         """
         i = parse_api_params(kwargs, 'i', 'S')
@@ -659,7 +659,7 @@ class LM_API(GenericAPI):
         get cycle configuration properties
 
         Args:
-            k:
+            k: .master
             .i: cycle id
         """
         i = parse_api_params(kwargs, 'i', 'S')
@@ -908,18 +908,35 @@ class LM_API(GenericAPI):
 
 # controller management
 
-    def list_remote(self, k=None, i=None, group=None, tp=None):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def list_remote(self, **kwargs):
+        """
+        get a list of items from connected UCs
+
+        Get a list of the items loaded from the connected :ref:`UC
+        controllers<lm_remote_uc>`. Useful to debug the controller
+        connections.
+
+        Args:
+            k: .master
+
+        Optional:
+            .i: controller id
+            g: filter by item group
+            p: filter by item type
+        """
+        i, group, tp = parse_api_params(kwargs, 'igp', 'sss')
         result = []
         items = []
         if i:
             controller = eva.lm.controller.get_controller(i)
-            if not controller: return None
+            if not controller: raise ResourceNotFound('controller {}'.format(i))
             c_id = controller.item_id
         if tp is None or tp in ['U', 'unit', '#']:
             if i:
                 if not c_id in eva.lm.controller.uc_pool.units_by_controller:
-                    return None
+                    return []
                 items.append(
                     eva.lm.controller.uc_pool.units_by_controller[c_id])
             else:
@@ -927,13 +944,13 @@ class LM_API(GenericAPI):
         if tp is None or tp in ['S', 'sensor', '#']:
             if i:
                 if not c_id in eva.lm.controller.uc_pool.sensors_by_controller:
-                    return None
+                    return []
                 items.append(
                     eva.lm.controller.uc_pool.sensors_by_controller[c_id])
             else:
                 items.append(eva.lm.controller.uc_pool.sensors_by_controller)
         if not items:
-            return None
+            return []
         if i:
             for x in items:
                 for a, v in x.copy().items():
@@ -949,95 +966,198 @@ class LM_API(GenericAPI):
             sorted(result, key=lambda k: k['oid']),
             key=lambda k: ['controller_id'])
 
-    def list_controllers(self, k=None):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def list_controllers(self, **kwargs):
+        """
+        get controllers list
+
+        Get the list of all connected :ref:`UC controllers<lm_remote_uc>`.
+
+        Args:
+            k: .master
+        """
         result = []
         for i, v in eva.lm.controller.remote_ucs.copy().items():
             result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['full_id'])
 
-    def append_controller(self,
-                          k=None,
-                          uri=None,
-                          key=None,
-                          mqtt_update=None,
-                          ssl_verify=True,
-                          timeout=None,
-                          save=False):
-        if not apikey.check(k, master=True) or not uri: return None
-        return eva.lm.controller.append_controller(
+    @log_i
+    @api_need_master
+    def append_controller(self, **kwargs):
+        """
+        connect remote UC via HTTP
+
+        Connects remote :ref:`UC controller<lm_remote_uc>` to the local.
+
+        Args:
+            k: .master
+            uri: :doc:`/uc/uc_api` uri (*proto://host:port*, port not required
+                if default)
+            a: remote controller API key (\$key to use local key)
+
+        Optional:
+            m: ref:`MQTT notifier<mqtt_>` to exchange item states in real time
+                (default: *eva_1*)
+            s: verify remote SSL certificate or pass invalid
+            t: timeout (seconds) for the remote controller API calls
+            save: save connected controller configuration on the disk
+                immediately after creation
+        """
+        uri, key, mqtt_update, ssl_verify, timeout, save = parse_api_params(
+            kwargs, 'UamstS', 'Sssbnb')
+        c = eva.lm.controller.append_controller(
             uri=uri,
             key=key,
             mqtt_update=mqtt_update,
             ssl_verify=ssl_verify,
             timeout=timeout,
             save=save)
+        if not c: raise FunctionFailed
+        return c.serialize(info=True)
 
-    def remove_controller(self, k=None, controller_id=None):
-        if not apikey.check(k, master=True) or not controller_id:
-            return False
-        return eva.lm.controller.remove_controller(controller_id)
+    @log_w
+    @api_need_master
+    def remove_controller(self, **kwargs):
+        """
+        disconnect UC
 
-    def list_controller_props(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.lm.controller.get_controller(i)
-        return item.serialize(props=True) if item else None
+        Disconnects the remote :ref:`UC controller<lm_remote_uc>`.
 
-    def get_controller(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.lm.controller.get_controller(i)
-        if item is None: return None
-        return item.serialize(info=True)
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.lm.controller.remove_controller(i)
 
-    def test_controller(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.lm.controller.get_controller(i)
-        if item is None: return None
-        return True if item.test() else False
+    @log_i
+    @api_need_master
+    def list_controller_props(self, **kwargs):
+        """
+        get editable controller parameters
 
-    def set_controller_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
+        Get all editable parameters of the connected :ref:`UC
+        controller<lm_remote_uc>`.
+
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.lm.controller.get_controller(i).serialize(props=True)
+
+    @log_i
+    @api_need_master
+    def get_controller(self, **kwargs):
+        """
+        get controller information
+
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.lm.controller.get_controller(i).serialize(info=True)
+
+    @log_i
+    @api_need_master
+    def test_controller(self, **kwargs):
+        """
+        test connection to remote controller
+
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        c = eva.lm.controller.get_controller(i)
+        result = c.test()
+        if result: return True
+        else: raise FunctionFailed('{}: test failed'.format(c.full_id))
+
+    @log_i
+    @api_need_master
+    def set_controller_prop(self, **kwargs):
+        """
+        set controller parameters
+
+        Set configuration parameters of the connected UC.
+
+        Args:
+            k: .master
+            .i: controller id
+            .p: property name (or empty for batch set)
+        
+        Optional:
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
         controller = eva.lm.controller.get_controller(i)
-        if controller:
-            result = controller.set_prop(p, v, save)
-            if result and controller.config_changed and save:
-                controller.save()
-            return result
-        else:
-            return None
-
-    def enable_controller(self, k=None, i=None, save=False):
-        if not apikey.check(k, master=True): return None
+        if not p and not isinstance(v, dict):
+            raise InvalidParameter('property not specified')
+        if is_oid(i):
+            t, i = parse_oid(i)
         controller = eva.lm.controller.get_controller(i)
-        if controller:
-            result = controller.set_prop('enabled', 1, save)
-            if result and controller.config_changed and save:
-                controller.save()
-            return result
-        else:
-            return None
+        if not controller or (is_oid(i) and controller and
+                              controller.item_type != t):
+            raise ResourceNotFound
+        return self._set_prop(controller, p, v, save)
 
-    def disable_controller(self, k=None, i=None, save=False):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def enable_controller(self, **kwargs):
+        """
+        enable controller
+
+        Enables connected UC
+
+        Args:
+            k: .master
+            .i: controller id
+
+        Optional:
+            save: save configuration after successful call
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         controller = eva.lm.controller.get_controller(i)
-        if controller:
-            result = controller.set_prop('enabled', 0, save)
-            if result and controller.config_changed and save:
-                controller.save()
-            return result
-        else:
-            return None
+        return controller.set_prop('enabled', True, save)
 
-    def reload_controller(self, k=None, i=None):
-        if not apikey.check(k, master=True): return False
-        if not i: return False
-        if i.find('/') > -1:
-            c = i.split('/')
-            if len(c) > 2 or c[0] != 'uc': return None
-            _i = c[1]
-        else:
-            _i = i
-        return eva.lm.controller.uc_pool.reload_controller(_i)
+    @log_i
+    @api_need_master
+    def disable_controller(self, **kwargs):
+        """
+        disable controller
+
+        Disables connected UC
+
+        Args:
+            k: .master
+            .i: controller id
+
+        Optional:
+            save: save configuration after successful call
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        controller = eva.lm.controller.get_controller(i)
+        return controller.set_prop('enabled', False, save)
+
+    @log_i
+    @api_need_master
+    def reload_controller(self, **kwargs):
+        """
+        reload controller
+
+        Reloads items from connected UC
+
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        controller = eva.lm.controller.get_controller(i)
+        return eva.lm.controller.uc_pool.reload_controller(controller.item_id)
 
 
 # master functions for lmacro extension management
