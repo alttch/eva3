@@ -21,7 +21,7 @@ import termcolor
 import time
 from datetime import datetime
 from eva.client import apiclient
-from pygments import highlight, lexers, formatters
+from eva.gcli import GCLI
 
 say_bye = True
 readline_processing = True if \
@@ -30,9 +30,6 @@ parent_shell_name = None
 shells_available = []
 
 shell_switch_to = None
-
-history_length = 300
-history_file = os.path.expanduser('~') + '/.eva_history'
 
 default_errors = {
     apiclient.result_not_found: 'Object not found',
@@ -48,29 +45,6 @@ default_errors = {
     apiclient.result_already_exists: 'resource already exists',
     apiclient.result_busy: 'resource is in use'
 }
-
-
-def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
-    if os.getenv('ANSI_COLORS_DISABLED') is None:
-        fmt_str = '\033[%dm'
-        if rlsafe:
-            fmt_str = '\001' + fmt_str + '\002'
-        fmt_str += '%s'
-        if color is not None:
-            text = fmt_str % (termcolor.COLORS[color], text)
-
-        if on_color is not None:
-            text = fmt_str % (termcolor.HIGHLIGHTS[on_color], text)
-
-        if attrs is not None:
-            for attr in attrs:
-                text = fmt_str % (termcolor.ATTRIBUTES[attr], text)
-
-        if rlsafe:
-            text += '\001' + termcolor.RESET + '\002'
-        else:
-            text += termcolor.RESET
-    return text
 
 
 class ComplGeneric(object):
@@ -125,33 +99,21 @@ class ComplUser(ComplGeneric):
             yield v['user']
 
 
-class GenericCLI(object):
+class GenericCLI(GCLI):
 
     def __init__(self, product, name, prog=None, remote_api_enabled=True):
-        self.debug = False
-        self.name = name
         self.product = product
         self.remote_api_enabled = remote_api_enabled
-        self.pd = None
-        self.argcomplete = None
-        self.prompt = None
+        super().__init__(name, prog)
         self.apikey = None
         self.apiuri = None
-        self.api_func = None
         self.in_json = False
         self.nodename = None
-        self.suppress_colors = False
-        self.always_suppress_colors = False
         self.default_timeout = 20
-        self.default_prompt = '> '
         self.timeout = self.default_timeout
         self.ssl_verify = False
-        self.always_json = []
-        self.local_func_result_ok = (apiclient.result_ok, {'ok': True})
-        self.local_func_result_failed = (apiclient.result_func_failed, {
-            'ok': False
-        })
-        self.local_func_result_empty = (apiclient.result_ok, '')
+        self.say_bye = say_bye
+        self.readline_processing = readline_processing
         if remote_api_enabled:
             self.always_print = ['cmd']
             self.common_api_functions = {
@@ -194,13 +156,6 @@ class GenericCLI(object):
             }
             self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
             self.common_fancy_tabsp = {'test': 14}
-        else:
-            self.always_print = []
-            self.common_api_functions = {}
-            self.common_pd_cols = {}
-            self.common_pd_idx = {}
-            self.arg_sections = []
-            self.common_fancy_tabsp = {}
         self.log_levels = {
             10: 'DEBUG',
             20: 'INFO',
@@ -208,56 +163,12 @@ class GenericCLI(object):
             40: 'ERROR',
             50: 'CRITICAL'
         }
-        self.pd_cols = self.common_pd_cols
         self.api_functions = self.common_api_functions
-        self.fancy_tabsp = self.common_fancy_tabsp
         self.pd_idx = self.common_pd_idx
-        self.batch_file = None
-        self.batch_stop_on_err = True
-        self.prog_name = prog
-        self.interactive = False
+        self.fancy_tabsp = self.common_fancy_tabsp
         self.api_cmds_timeout_correction = []
-        self.parse_primary_args()
         self.setup_parser()
 
-    class ComplGlob(object):
-
-        def __init__(self, mask=None):
-            self.mask = mask if mask else '*'
-
-        def __call__(self, prefix, **kwargs):
-            result = []
-            for m in self.mask:
-                result += glob.glob(prefix + m)
-            return result
-
-    def setup_parser(self):
-        if not self.interactive and not self.batch_file:
-            self.ap = argparse.ArgumentParser(
-                description=self.name, prog=self.prog_name)
-        else:
-            self.ap = argparse.ArgumentParser(usage=argparse.SUPPRESS, prog='')
-        self.add_primary_options()
-        self.add_main_subparser()
-        self.add_functions()
-        self.load_argcomplete()
-
-    def print_json(self, obj):
-        j = self.format_json(obj)
-        if self.can_colorize():
-            j = highlight(j, lexers.JsonLexer(), formatters.TerminalFormatter())
-        print(j)
-
-    def format_json(self, obj, minimal=False, unpicklable=False):
-        return json.dumps(json.loads(jsonpickle.encode(obj,
-                unpicklable = unpicklable)), indent=4, sort_keys=True) \
-                    if not minimal else \
-                    jsonpickle.encode(obj, unpicklable = False)
-
-    def can_colorize(self):
-        return not self.suppress_colors and \
-                not self.always_suppress_colors and \
-                sys.stdout.isatty()
 
     def get_prompt(self):
         if self.prompt: return self.prompt
@@ -314,37 +225,7 @@ class GenericCLI(object):
             prompt = '[%s%s]%s' % (ppeva + product_str, host_str, prompt)
         return prompt
 
-    def colored(self, text, color=None, on_color=None, attrs=None,
-                rlsafe=False):
-        if not self.can_colorize():
-            return str(text)
-        return safe_colored(
-            text, color=color, on_color=on_color, attrs=attrs, rlsafe=rlsafe)
-
-    def start_interactive(self):
-        self.reset_argcomplete()
-        if readline_processing:
-            readline.set_history_length(history_length)
-            try:
-                if history_file:
-                    readline.read_history_file(history_file)
-            except:
-                pass
-
-    def finish_interactive(self):
-        if say_bye: print('Bye')
-        if readline_processing:
-            try:
-                if history_file:
-                    readline.write_history_file(history_file)
-            except:
-                pass
-
     def print_interactive_help(self):
-        print('q: quit')
-        print('j: toggle json mode')
-        print('r: toggle raw mode (no colors)')
-        print()
         if self.remote_api_enabled:
             print('a: show API params')
             print('c <host:port> [key] [timeout]: connect to remote API')
@@ -353,59 +234,36 @@ class GenericCLI(object):
             print('t: timeout display/set (t. for timeout reset)')
             print('d: toggle client debug mode')
             print()
-        print('sh: start system shell')
-        print('top: display system processes')
-        print('w: display uptime and who is online')
-        print('date: display system date and time')
-        print()
-        print('or command to exec. Append |N' + \
-                    ' to repeat every |N sec (|cN to clear screen)')
-        print()
+        super().print_interactive_help()
 
     def parse_primary_args(self):
+        super().parse_primary_args()
         try:
             if self.remote_api_enabled:
-                o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T:JIRD', [
+                o, a = getopt.getopt(sys.argv[1:], 'F:U:K:T', [
                     'client-ini-file=', 'exec-batch=', 'pass-batch-err',
-                    'interactive', 'debug', 'raw-output', 'json', 'api-key=',
-                    'api-url=', 'api-timeout='
+                    'api-key=', 'api-url=', 'api-timeout='
                 ])
-            else:
-                o, a = getopt.getopt(sys.argv[1:], 'JIR', [
-                    'exec-batch=', 'pass-batch-err', 'interactive', 'debug',
-                    'raw-output', 'json'
-                ])
-            for i, v in o:
-                if i == '--exec-batch':
-                    self.batch_file = v
-                    self.prompt = '# '
-                elif i == '--pass-batch-err':
-                    self.batch_stop_on_err = False
-                elif i == '--interactive' or i == '-I':
-                    self.interactive = True
-                elif i == '-U' or i == '--api-url':
-                    self.apiuri = v
-                elif i == '-K' or i == '--api-key':
-                    self.apikey = v
-                elif i == '-J' or i == '--json':
-                    self.in_json = True
-                elif i == '-D' or i == '--debug':
-                    self.debug = True
-                elif i == '-R' or i == '--raw-output':
-                    self.always_suppress_colors = True
-                elif i == '-T' or i == '--api-timeout':
-                    try:
-                        self.timeout = float(v)
-                    except:
-                        pass
-                elif i == '-F' or i == '--client-ini-file':
-                    c = self.parse_ini(v)
-                    if 'uri' in c: self.apiuri = c.get('uri')
-                    if 'key' in c: self.apikey = c.get('key')
-                    if 'timeout' in c: self.timeout = c.get('timeout')
-                    if 'debug' in c: self.debug = c.get('debug')
-                    if 'json' in c: self.in_json = c.get('json')
-                    if 'raw' in c: self.always_suppress_colors = c.get('raw')
+                for i, v in o:
+                    if i == '-U' or i == '--api-url':
+                        self.apiuri = v
+                    elif i == '-K' or i == '--api-key':
+                        self.apikey = v
+                    elif i == '-J' or i == '--json':
+                        self.in_json = True
+                    elif i == '-T' or i == '--api-timeout':
+                        try:
+                            self.timeout = float(v)
+                        except:
+                            pass
+                    elif i == '-F' or i == '--client-ini-file':
+                        c = self.parse_ini(v)
+                        if 'uri' in c: self.apiuri = c.get('uri')
+                        if 'key' in c: self.apikey = c.get('key')
+                        if 'timeout' in c: self.timeout = c.get('timeout')
+                        if 'debug' in c: self.debug = c.get('debug')
+                        if 'json' in c: self.in_json = c.get('json')
+                        if 'raw' in c: self.always_suppress_colors = c.get('raw')
         except:
             pass
 
@@ -442,34 +300,6 @@ class GenericCLI(object):
         except:
             pass
         return result
-
-    def load_argcomplete(self):
-        try:
-            self.argcomplete = importlib.import_module('argcomplete')
-        except:
-            pass
-
-    def reset_argcomplete(self):
-        if self.argcomplete:
-            completer = self.argcomplete.CompletionFinder(
-                self.ap,
-                default_completer=self.argcomplete.completers.SuppressCompleter(
-                ))
-            readline.set_completer_delims("")
-            readline.set_completer(completer.rl_complete)
-            readline.parse_and_bind("tab: complete")
-
-    def print_err(self, *args):
-        for s in args:
-            print(self.colored(s, color='red', attrs=[]))
-
-    def print_warn(self, s, w=True):
-        print(
-            self.colored(
-                ('WARNING: ' if w else '') + s, color='yellow', attrs=['bold']))
-
-    def print_debug(self, s):
-        print(self.colored(s, color='grey', attrs=['bold']))
 
     def get_log_level_name(self, level):
         l = self.log_levels.get(level)
@@ -527,32 +357,7 @@ class GenericCLI(object):
                 help='Read API client options from config file',
                 dest='_ini_file',
                 metavar='FILE')
-        self.ap.add_argument(
-            '-J',
-            '--json',
-            help='Print result as JSON',
-            action='store_true',
-            dest='_json',
-            default=False)
-        self.ap.add_argument(
-            '-R',
-            '--raw-output',
-            help='Print raw results (no colors) and suppress prompt updates',
-            action='store_true',
-            dest='_raw',
-            default=False)
-        if not self.interactive:
-            self.ap.add_argument(
-                '-I',
-                '--interactive',
-                help='Enter interactive (command prompt) mode',
-                action='store_true',
-                dest='__interactive',
-                default=False)
-
-    def add_main_subparser(self):
-        self.sp = self.ap.add_subparsers(
-            dest='_type', metavar='command', help='command or type')
+        super().add_primary_options()
 
     def set_api_functions(self, fn_table={}):
         self.api_functions = self.common_api_functions.copy()
@@ -713,12 +518,6 @@ class GenericCLI(object):
                 raise
         elif result:
             print(result)
-
-    def import_pandas(self):
-        if not self.pd:
-            self.pd = importlib.import_module('pandas')
-            self.pd.set_option('display.expand_frame_repr', False)
-            self.pd.options.display.max_colwidth = 100
 
     def add_functions(self):
         if self.remote_api_enabled:
@@ -1044,6 +843,7 @@ class GenericCLI(object):
                         else:
                             cmds[cix].append(p)
                 clear_screen = False
+                repeat_delay = 0
                 for i in range(0, len(cmds)):
                     d = cmds[i]
                     if i and i < len(cmds): print()
