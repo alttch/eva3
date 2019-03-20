@@ -446,8 +446,9 @@ def load_dm_rules():
 @with_item_lock
 def create_macro(m_id, group=None, save=False):
     _m_id = oid_to_id(m_id, 'lmacro')
-    if not _m_id: return False
-    if group and _m_id.find('/') != -1: return False
+    if not _m_id: raise InvalidParameter('macro id not specified')
+    if group and _m_id.find('/') != -1:
+        raise InvalidParameter('group specified but macro id contains /')
     if _m_id.find('/') == -1:
         i = _m_id
         grp = group
@@ -457,9 +458,10 @@ def create_macro(m_id, group=None, save=False):
     if not grp: grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
-        return False
+            raise InvalidParameter('Invalid symbols in macro id')
     i_full = grp + '/' + i
-    if i in macros_by_id or i_full in macros_by_full_id: return False
+    if i in macros_by_id or i_full in macros_by_full_id:
+        raise ResourceAlreadyExists
     m = eva.lm.plc.Macro(i)
     m.set_prop('action_enabled', 'true', False)
     if grp: m.update_config({'group': grp})
@@ -467,13 +469,13 @@ def create_macro(m_id, group=None, save=False):
     macros_by_full_id[m.full_id] = m
     if save: m.save()
     logging.info('macro "%s" created' % m.full_id)
-    return True
+    return m
 
 
 @with_item_lock
 def destroy_macro(m_id):
     i = get_macro(m_id)
-    if not i: return None
+    if not i: raise ResourceNotFound
     try:
         i.destroy()
         if eva.core.db_update == 1 and i.config_file_exists:
@@ -491,7 +493,7 @@ def destroy_macro(m_id):
         return True
     except:
         eva.core.log_traceback()
-        return False
+        raise FunctionFailed
 
 
 @with_item_lock

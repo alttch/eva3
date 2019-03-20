@@ -343,7 +343,7 @@ class LM_API(GenericAPI):
         if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
             if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
                     not apikey.check(k, item):
-                        raise ResourceNotFound
+                raise ResourceNotFound
         else:
             if not apikey.check_master(k): raise ResourceNotFound
         if not self._set_prop(item, p, v, save):
@@ -407,8 +407,9 @@ class LM_API(GenericAPI):
                     del d[x]
         return d
 
-
 # master functions for item configuration
+
+# rule functions
 
     @log_i
     @api_need_master
@@ -433,7 +434,6 @@ class LM_API(GenericAPI):
             self._set_prop(rule, v=v, save=save)
         return rule.serialize(info=True)
 
-
     @log_w
     @api_need_master
     def destroy_rule(self, k=None, i=None):
@@ -448,8 +448,20 @@ class LM_API(GenericAPI):
         """
         return eva.lm.controller.destroy_dm_rule(i)
 
-    # TODO
-    def groups_macro(self, k=None):
+# macro functions
+
+    @log_i
+    def groups_macro(self, **kwargs):
+        """
+        get macro groups list
+
+
+        Get the list of macros. Useful e.g. for custom interfaces.
+
+        Args:
+            k:
+        """
+        k = parse_function_params(kwargs, 'k', '.')
         result = []
         for i, v in eva.lm.controller.macros_by_id.copy().items():
             if apikey.check(k, v) and \
@@ -457,13 +469,299 @@ class LM_API(GenericAPI):
                 result.append(v.group)
         return sorted(result)
 
-    def groups_cycle(self, k=None):
+    @log_i
+    def list_macros(self, **kwargs):
+        """
+        get macro list
+
+        Get the list of all available :doc:`macros<macros>`.
+
+        Args:
+            k:
+
+        Optional:
+            .g: filter by group
+        """
+        k, group = parse_function_params(kwargs, 'kg', '.s')
+        result = []
+        for i, v in eva.lm.controller.macros_by_id.copy().items():
+            if apikey.check(k, v) and \
+                    (not group or eva.item.item_match(v, [], [ group ])):
+                result.append(v.serialize(info=True))
+        return sorted(result, key=lambda k: k['full_id'])
+
+    @log_i
+    @api_need_master
+    def create_macro(self, **kwargs):
+        """
+        create new macro
+
+        Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm**
+        manually.
+
+        Args:
+            k:
+            .i: macro id
+
+        Optional:
+            .g: macro group
+        """
+        k, i, g, save = parse_function_params(kwargs, 'kigS', '.Ssb')
+        return eva.lm.controller.create_macro(i, g, save).serialize()
+
+    @log_w
+    @api_need_master
+    def destroy_macro(self, **kwargs):
+        """
+        delete macro
+
+        Deletes :doc:`macro<macros>`.
+
+        Args:
+            k:
+            .i: macro id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.lm.controller.destroy_macro(i)
+
+    @log_i
+    @api_need_master
+    def list_macro_props(self, **kwargs):
+        """
+        get macro configuration properties
+
+        Args:
+            k:
+            .i: macro id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        item = eva.lm.controller.get_macro(i)
+        if not item: raise ResourceNotFound
+        return item.serialize(props=True)
+
+    @log_i
+    @api_need_master
+    def set_macro_prop(self, **kwargs):
+        """
+        set macro configuration property
+
+        Set configuration parameters of the :doc:`macro<macros>`.
+
+        Args:
+            k: .master
+            .i: item id
+            .p: property name (or empty for batch set)
+        
+        Optional:
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        if not p and not isinstance(v, dict):
+            raise InvalidParameter('property not specified')
+        if is_oid(i):
+            t, i = parse_oid(i)
+        macro = eva.lm.controller.get_macro(i)
+        if not macro or (is_oid(i) and macro and macro.macro_type != t):
+            raise ResourceNotFound
+        return self._set_prop(macro, p, v, save)
+
+    @log_d
+    def get_macro(self, **kwargs):
+        """
+        get macro information
+
+        Args:
+            k:
+            .i: macro id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.S')
+        item = eva.lm.controller.get_macro(i)
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        return item.serialize(info=True)
+
+# cycle functions
+
+    @log_i
+    def groups_cycle(self, **kwargs):
+        """
+        get cycle groups list
+
+
+        Get the list of cycles. Useful e.g. for custom interfaces.
+
+        Args:
+            k:
+        """
+        k = parse_function_params(kwargs, 'k', '.')
         result = []
         for i, v in eva.lm.controller.cycles_by_id.copy().items():
             if apikey.check(k, v) and \
                     v.group not in result:
                 result.append(v.group)
         return sorted(result)
+
+    @log_i
+    def list_cycles(self, **kwargs):
+        """
+        get cycle list
+
+        Get the list of all available :doc:`cycles<cycles>`.
+
+        Args:
+            k:
+
+        Optional:
+            .g: filter by group
+        """
+        k, group = parse_function_params(kwargs, 'kg', '.s')
+        result = []
+        for i, v in eva.lm.controller.cycles_by_id.copy().items():
+            if apikey.check(k, v) and \
+                    (not group or eva.item.item_match(v, [], [ group ])):
+                result.append(v.serialize(info=True))
+        return sorted(result, key=lambda k: k['full_id'])
+
+    @log_i
+    @api_need_master
+    def create_cycle(self, **kwargs):
+        """
+        create new cycle
+
+        Creates new :doc:`cycle<cycles>`. Macro code should be put in **xc/lm**
+        manually.
+
+        Args:
+            k:
+            .i: cycle id
+
+        Optional:
+            .g: cycle group
+        """
+        k, i, g, save = parse_function_params(kwargs, 'kigS', '.Ssb')
+        return eva.lm.controller.create_cycle(i, g, save).serialize()
+
+    @log_w
+    @api_need_master
+    def destroy_cycle(self, **kwargs):
+        """
+        delete cycle
+
+        Deletes :doc:`cycle<cycles>`.
+
+        Args:
+            k:
+            .i: cycle id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.lm.controller.destroy_cycle(i)
+
+    @log_i
+    @api_need_master
+    def list_cycle_props(self, **kwargs):
+        """
+        get cycle configuration properties
+
+        Args:
+            k:
+            .i: cycle id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        item = eva.lm.controller.get_cycle(i)
+        if not item: raise ResourceNotFound
+        return item.serialize(props=True)
+
+    @log_i
+    @api_need_master
+    def set_cycle_prop(self, **kwargs):
+        """
+        set cycle property
+
+        Set configuration parameters of the :doc:`cycle<cycles>`.
+
+        Args:
+            k: .master
+            .i: item id
+            .p: property name (or empty for batch set)
+        
+        Optional:
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        if not p and not isinstance(v, dict):
+            raise InvalidParameter('property not specified')
+        if is_oid(i):
+            t, i = parse_oid(i)
+        cycle = eva.lm.controller.get_cycle(i)
+        if not cycle or (is_oid(i) and cycle and cycle.cycle_type != t):
+            raise ResourceNotFound
+        return self._set_prop(cycle, p, v, save)
+
+    @log_d
+    def get_cycle(self, **kwargs):
+        """
+        get cycle information
+
+        Args:
+            k:
+            .i: cycle id
+
+        Returns:
+            field "value" contains real average cycle interval
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.S')
+        item = eva.lm.controller.get_cycle(i)
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        return item.serialize(info=True)
+
+    def start_cycle(self, **kwargs):
+        """
+        start cycle
+
+        Args:
+            k:
+            .i: cycle id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.S')
+        cycle = eva.lm.controller.get_cycle(i)
+        if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
+        return cycle.start()
+
+    def stop_cycle(self, **kwargs):
+        """
+        stop cycle
+
+        Args:
+            k:
+            .i: cycle id
+
+        Optional:
+            wait: wait until cycle is stopped
+        """
+        k, i, wait = parse_function_params(kwargs, 'kiW', '.Sb')
+        cycle = eva.lm.controller.get_cycle(i)
+        if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
+        cycle.stop(wait=wait)
+        return True, api_result_accepted if wait else True
+
+    def reset_cycle_stats(self, **kwargs):
+        """
+        reset cycle statistic
+
+        Args:
+            k:
+            .i: cycle id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.S')
+        cycle = eva.lm.controller.get_cycle(i)
+        if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
+        cycle.reset_stats()
+        return True
+
+# lvars
+
+# TODO
 
     def get_config(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
@@ -486,6 +784,39 @@ class LM_API(GenericAPI):
             if not group or eva.item.item_match(v, [], [group]):
                 result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['oid'])
+
+    def list_props(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        item = eva.lm.controller.get_item(i)
+        return item.serialize(props=True) if item else None
+
+    def set_prop(self, k=None, i=None, p=None, v=None, save=False):
+        if not apikey.check(k, master=True): return None
+        item = eva.lm.controller.get_item(i)
+        if item:
+            result = item.set_prop(p, v, save)
+            if result and item.config_changed and save:
+                item.save()
+            return result
+        else:
+            return None
+
+    def create_lvar(self, k = None, lvar_id = None, \
+            group = None, save = False):
+        if not apikey.check(k, master=True): return None
+        if is_oid(lvar_id):
+            tp, i = parse_oid(lvar_id)
+            if tp != 'lvar': return False
+        else:
+            i = lvar_id
+        return eva.lm.controller.create_lvar(lvar_id=i, group=group, save=save)
+
+    def destroy_lvar(self, k=None, i=None):
+        if not apikey.check(k, master=True): return None
+        return eva.lm.controller.destroy_item(i)
+
+
+# controller management
 
     def list_remote(self, k=None, i=None, group=None, tp=None):
         if not apikey.check(k, master=True): return None
@@ -535,51 +866,6 @@ class LM_API(GenericAPI):
             result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['full_id'])
 
-    def list_macros(self, k=None, group=None):
-        result = []
-        for i, v in eva.lm.controller.macros_by_id.copy().items():
-            if apikey.check(k, v) and \
-                    (not group or eva.item.item_match(v, [], [ group ])):
-                result.append(v.serialize(info=True))
-        return sorted(result, key=lambda k: k['full_id'])
-
-    def create_macro(self, k=None, i=None, g=None, save=False):
-        if not apikey.check(k, master=True): return None
-        return eva.lm.controller.create_macro(i, g, save)
-
-    def destroy_macro(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        return eva.lm.controller.destroy_macro(i)
-
-    def list_cycles(self, k=None, group=None):
-        result = []
-        for i, v in eva.lm.controller.cycles_by_id.copy().items():
-            if apikey.check(k, v) and \
-                    (not group or eva.item.item_match(v, [], [ group ])):
-                result.append(v.serialize(full=True))
-        return sorted(result, key=lambda k: k['full_id'])
-
-    def get_cycle(self, k=None, i=None):
-        if not apikey.check(k, i): return None
-        item = eva.lm.controller.get_cycle(i)
-        if not item: return None
-        result = item.serialize(full=True)
-        if not apikey.check(k, master=True):
-            try:
-                del result['macro']
-                del result['on_error']
-            except:
-                eva.core.log_traceback()
-        return result
-
-    def create_cycle(self, k=None, i=None, g=None, save=False):
-        if not apikey.check(k, master=True): return None
-        return eva.lm.controller.create_cycle(i, g, save)
-
-    def destroy_cycle(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        return eva.lm.controller.destroy_cycle(i)
-
     def append_controller(self,
                           k=None,
                           uri=None,
@@ -602,21 +888,6 @@ class LM_API(GenericAPI):
             return False
         return eva.lm.controller.remove_controller(controller_id)
 
-    def list_props(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.lm.controller.get_item(i)
-        return item.serialize(props=True) if item else None
-
-    def list_macro_props(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.lm.controller.get_macro(i)
-        return item.serialize(props=True) if item else None
-
-    def list_cycle_props(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.lm.controller.get_cycle(i)
-        return item.serialize(props=True) if item else None
-
     def list_controller_props(self, k=None, i=None):
         if not apikey.check(k, master=True): return None
         item = eva.lm.controller.get_controller(i)
@@ -633,17 +904,6 @@ class LM_API(GenericAPI):
         item = eva.lm.controller.get_controller(i)
         if item is None: return None
         return True if item.test() else False
-
-    def set_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
-        item = eva.lm.controller.get_item(i)
-        if item:
-            result = item.set_prop(p, v, save)
-            if result and item.config_changed and save:
-                item.save()
-            return result
-        else:
-            return None
 
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=False):
         if not apikey.check(k, master=True): return None
@@ -678,54 +938,6 @@ class LM_API(GenericAPI):
         else:
             return None
 
-    def set_macro_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
-        macro = eva.lm.controller.get_macro(i)
-        if macro:
-            result = macro.set_prop(p, v, save)
-            if result and macro.config_changed and save:
-                macro.save()
-            return result
-        else:
-            return None
-
-    def set_cycle_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
-        cycle = eva.lm.controller.get_cycle(i)
-        if cycle:
-            result = cycle.set_prop(p, v, save)
-            if result and cycle.config_changed and save:
-                cycle.save()
-            return result
-        else:
-            return None
-
-    def start_cycle(self, k=None, i=None):
-        if not apikey.check(k, i): return None
-        cycle = eva.lm.controller.get_cycle(i)
-        if cycle:
-            return cycle.start()
-        else:
-            return None
-
-    def stop_cycle(self, k=None, i=None, wait=False):
-        if not apikey.check(k, i): return None
-        cycle = eva.lm.controller.get_cycle(i)
-        if cycle:
-            cycle.stop(wait=wait)
-            return True
-        else:
-            return None
-
-    def reset_cycle_stats(self, k=None, i=None):
-        if not apikey.check(k, i): return None
-        cycle = eva.lm.controller.get_cycle(i)
-        if cycle:
-            cycle.reset_stats()
-            return True
-        else:
-            return None
-
     def reload_controller(self, k=None, i=None):
         if not apikey.check(k, master=True): return False
         if not i: return False
@@ -736,21 +948,6 @@ class LM_API(GenericAPI):
         else:
             _i = i
         return eva.lm.controller.uc_pool.reload_controller(_i)
-
-
-    def create_lvar(self, k = None, lvar_id = None, \
-            group = None, save = False):
-        if not apikey.check(k, master=True): return None
-        if is_oid(lvar_id):
-            tp, i = parse_oid(lvar_id)
-            if tp != 'lvar': return False
-        else:
-            i = lvar_id
-        return eva.lm.controller.create_lvar(lvar_id=i, group=group, save=save)
-
-    def destroy_lvar(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        return eva.lm.controller.destroy_item(i)
 
     # master functions for lmacro extension management
 
@@ -812,265 +1009,6 @@ class LM_HTTP_API_abstract(LM_API, GenericHTTP_API):
 
     def __init__(self):
         super().__init__()
-
-
-    def groups_macro(self, k=None):
-        return super().groups_macro(k)
-
-    def groups_cycle(self, k=None):
-        return super().groups_cycle(k)
-
-    @api_need_master
-    def get_config(self, k=None, i=None):
-        result = super().get_config(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def save_config(self, k=None, i=None):
-        return http_api_result_ok() if super().save_config(k, i) \
-                else http_api_result_error()
-
-    @api_need_master
-    def list(self, k=None, g=None, p=None):
-        result = super().list(k, g, p)
-        if result is None: raise cp_api_404()
-        return result
-
-    def list_remote(self, k=None, i=None, g=None, p=None):
-        result = super().list_remote(k, i, g, p)
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def list_controllers(self, k=None):
-        result = super().list_controllers(k)
-        if result is None: raise cp_api_error()
-        return result
-
-    def list_macros(self, k=None, g=None):
-        result = super().list_macros(k, g)
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def create_macro(self, k=None, i=None, g=None, save=None):
-        return http_api_result_ok() if super().create_macro(k, i, g, save) \
-                else http_api_result_error()
-
-    @api_need_master
-    def destroy_macro(self, k=None, i=None):
-        result = super().destroy_macro(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def list_cycles(self, k=None, g=None):
-        result = super().list_cycles(k, g)
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def create_cycle(self, k=None, i=None, g=None, save=None):
-        return http_api_result_ok() if super().create_cycle(k, i, g, save) \
-                else http_api_result_error()
-
-    @api_need_master
-    def destroy_cycle(self, k=None, i=None):
-        result = super().destroy_cycle(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def append_controller(self,
-                          k=None,
-                          u=None,
-                          a=None,
-                          m=None,
-                          s=None,
-                          t=None,
-                          save=None):
-        sv = eva.tools.val_to_boolean(s)
-        return http_api_result_ok() if super().append_controller(
-            k, u, a, m, sv, t, save) else http_api_result_error()
-
-    @api_need_master
-    def enable_controller(self, k=None, i=None):
-        return http_api_result_ok() if super().enable_controller(k, i) \
-                else http_api_result_error()
-
-    @api_need_master
-    def disable_controller(self, k=None, i=None):
-        return http_api_result_ok() if super().disable_controller(k, i) \
-                else http_api_result_error()
-
-    @api_need_master
-    def remove_controller(self, k=None, i=None):
-        result = super().remove_controller(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def list_props(self, k=None, i=None):
-        result = super().list_props(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def list_macro_props(self, k=None, i=None):
-        result = super().list_macro_props(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def list_cycle_props(self, k=None, i=None):
-        result = super().list_cycle_props(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def get_cycle(self, k=None, i=None):
-        result = super().get_cycle(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def list_controller_props(self, k=None, i=None):
-        result = super().list_controller_props(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def get_controller(self, k=None, i=None):
-        result = super().get_controller(k, i)
-        if result is None:
-            raise cp_api_404()
-        return result
-
-    @api_need_master
-    def test_controller(self, k=None, i=None):
-        result = super().test_controller(k, i)
-        if result is None:
-            raise cp_api_404()
-        return http_api_result_ok() if \
-                result else http_api_result_error()
-
-    @api_need_master
-    def set_prop(self, k=None, i=None, p=None, v=None, save=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        return http_api_result_ok() if super().set_prop(k, i, p, v, _save) \
-                else http_api_result_error()
-
-    @api_need_master
-    def set_macro_prop(self, k=None, i=None, p=None, v=None, save=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        return http_api_result_ok() if super().set_macro_prop(
-            k, i, p, v, _save) else http_api_result_error()
-
-    @api_need_master
-    def set_cycle_prop(self, k=None, i=None, p=None, v=None, save=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        return http_api_result_ok() if super().set_cycle_prop(
-            k, i, p, v, _save) else http_api_result_error()
-
-    def start_cycle(self, k=None, i=None):
-        return http_api_result_ok() if super().start_cycle(
-            k, i) else http_api_result_error()
-
-    def stop_cycle(self, k=None, i=None, wait=None):
-        return http_api_result_ok() if super().stop_cycle(
-            k, i, wait) else http_api_result_error()
-
-    def reset_cycle_stats(self, k=None, i=None):
-        return http_api_result_ok() if super().reset_cycle_stats(
-            k,
-            i,
-        ) else http_api_result_error()
-
-    @api_need_master
-    def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        return http_api_result_ok() if \
-                super().set_controller_prop(k, i, p, v, _save) \
-                else http_api_result_error()
-
-    @api_need_master
-    def reload_controller(self, k=None, i=None):
-        return http_api_result_ok() if super().reload_controller(k, i) \
-                else http_api_result_error()
-
-    @api_need_master
-    def create_lvar(self, k=None, i=None, g=None, save=None):
-        return http_api_result_ok() if super().create_lvar(
-            k, i, g, save) else http_api_result_error()
-
-    @api_need_master
-    def destroy_lvar(self, k=None, i=None):
-        result = super().destroy_lvar(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def load_ext(self, k=None, i=None, m=None, c=None, save=False):
-        result = super().load_ext(k, i, m, c, save)
-        return result if result else http_api_result_error()
-
-    @api_need_master
-    def unload_ext(self, k=None, i=None):
-        result = super().unload_ext(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def list_ext(self, k=None, full=None):
-        result = super().list_ext(k, full)
-        if result is None: raise cp_api_error()
-        return result
-
-    @api_need_master
-    def list_ext_mods(self, k=None):
-        return super().list_ext_mods(k)
-
-    @api_need_master
-    def get_ext(self, k=None, i=None):
-        result = super().get_ext(k, i)
-        if result is False: raise cp_api_error()
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def modinfo_ext(self, k=None, m=None):
-        result = super().modinfo_ext(k, m)
-        if not result:
-            raise cp_api_error()
-        else:
-            return result
-
-    @api_need_master
-    def modhelp_ext(self, k=None, m=None, c=None):
-        result = super().modhelp_ext(k, m, c)
-        if result is None:
-            raise cp_api_error()
-        else:
-            return result
-
-    @api_need_master
-    def set_ext_prop(self, k=None, i=None, p=None, v=None, save=None):
-        result = super().set_ext_prop(k, i, p, v, save)
-        if result is False: raise cp_api_error()
-        if result is None: raise cp_api_404()
-        return http_api_result_ok()
 
 
 class LM_HTTP_API(LM_HTTP_API_abstract, GenericHTTP_API):

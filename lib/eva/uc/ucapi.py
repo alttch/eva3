@@ -553,7 +553,6 @@ class UC_API(GenericAPI):
         Args:
             k: .master
             .i: item id
-            .p: property name
             .p: property name (or empty for batch set)
         
         Optional:
