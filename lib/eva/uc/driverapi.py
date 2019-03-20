@@ -593,11 +593,11 @@ def load():
                 except Exception as e:
                     logging.error(e)
                     eva.core.log_traceback()
+        return True
     except Exception as e:
         logging.error('unable to load uc_drivers.json: {}'.format(e))
         eva.core.log_traceback()
         return False
-    return True
 
 
 @eva.core.save
@@ -605,11 +605,11 @@ def save():
     try:
         open(eva.core.dir_runtime + '/uc_drivers.json', 'w').write(
             format_json(serialize(config=True), minimal=False))
+        return True
     except Exception as e:
         logging.error('unable to save drivers config: {}'.format(e))
         eva.core.log_traceback()
         return False
-    return True
 
 
 def start():

@@ -797,7 +797,7 @@ class LM_API(GenericAPI):
         i = parse_api_params(kwargs, 'i', 's')
         if is_oid(i):
             t, i = parse_oid(i)
-        item = eva.uc.controller.get_item(i)
+        item = eva.lm.controller.get_item(i)
         if not item or (is_oid(i) and item and item.item_type != t):
             raise ResourceNotFound
         item = eva.lm.controller.get_item(i)
@@ -889,7 +889,7 @@ class LM_API(GenericAPI):
             .i: lvar id
         """
         i = parse_api_params(kwargs, 'i', 'S')
-        return eva.uc.controller.destroy_item(i)
+        return eva.lm.controller.destroy_item(i)
 
     @log_w
     @api_need_master
@@ -1042,58 +1042,141 @@ class LM_API(GenericAPI):
 
 # master functions for lmacro extension management
 
-    def load_ext(self, k=None, i=None, m=None, cfg=None, save=False):
-        if not apikey.check(k, master=True): return None
-        if not i or not m: return None
-        try:
-            _cfg = dict_from_str(cfg)
-        except:
-            eva.core.log_traceback()
-            return None
+    @log_i
+    @api_need_master
+    def load_ext(self, **kwargs):
+        """
+        load extension module
+
+        Loads:doc:`macro extension</lm/ext>`.
+
+        Args:
+            k: .master
+            .i: extension ID
+            m: extension module
+
+        Optional:
+            c: extension configuration
+            save: save extension configuration after successful call
+        """
+        i, m, c, save = parse_api_params(kwargs, 'imcS', 'SS.b')
+        if isinstance(c, str):
+            try:
+                c = dict_from_str(c)
+            except:
+                raise InvalidParameter('Unable to parse config')
         if eva.lm.extapi.load_ext(i, m, _cfg):
             if save: eva.lm.extapi.save()
             return eva.lm.extapi.get_ext(i).serialize(full=True, config=True)
 
-    def unload_ext(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        if not i: return None
-        result = eva.lm.extapi.unload_ext(i)
-        if result and eva.core.db_update == 1: eva.lm.extapi.save()
-        return result
+    @log_w
+    @api_need_master
+    def unload_ext(self, **kwargs):
+        """
+        unload macro extension
 
-    def list_ext(self, k=None, full=False):
-        if not apikey.check(k, master=True): return None
-        return eva.lm.extapi.serialize(full=full, config=full)
+        Args:
+            k: .master
+            .i: extension ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        eva.lm.extapi.unload_ext(i)
+        if eva.core.db_update == 1: eva.lm.extapi.save()
+        return True
 
-    def get_ext(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        if not i: return None
+    @log_d
+    @api_need_master
+    def list_ext(self, **kwargs):
+        """
+        get list of available macro extensions
+
+        Args:
+            k: .master
+
+        Optional:
+            .full: get full information
+        """
+        full = parse_api_params(kwargs, 'Y', 'b')
+        return sorted(
+            eva.lm.extapi.serialize(full=full, config=full),
+            key=lambda k: k['id'])
+
+    @log_d
+    @api_need_master
+    def get_ext(self, **kwargs):
+        """
+        get loaded extension information
+
+        Args:
+            k: .master
+            .i: extension ID
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         ext = eva.lm.extapi.get_ext(i)
         if ext:
             return ext.serialize(full=True, config=True)
         else:
-            return None
+            raise ResourceNotFound
 
-    def list_ext_mods(self, k=None):
-        if not apikey.check(k, master=True): return None
+    @log_d
+    @api_need_master
+    def list_ext_mods(self, **kwargs):
+        """
+        get list of available extension modules
+
+        Args:
+            k: .master
+        """
         return eva.lm.extapi.list_mods()
 
-    def modinfo_ext(self, k=None, m=None):
-        if not apikey.check(k, master=True): return None
+    @log_d
+    @api_need_master
+    def modinfo_ext(self, **kwargs):
+        """
+        get extension module info
+
+        Args:
+            k: .master
+            .m: extension module name (without *.py* extension)
+        """
+        m = parse_api_params(kwargs, 'm', 'S')
         return eva.lm.extapi.modinfo(m)
 
-    def modhelp_ext(self, k=None, m=None, c=None):
-        if not apikey.check(k, master=True): return None
+    @log_d
+    @api_need_master
+    def modhelp_ext(self, **kwargs):
+        """
+        get extension usage help
+
+        Args:
+            k: .master
+            .m: extension name (without *.py* extension)
+            .c: help context (*cfg* or *functions*)
+        """
+        m, c = parse_api_params(kwargs, 'mc', 'SS')
         return eva.lm.extapi.modhelp(m, c)
 
-    def set_ext_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
-        ext = eva.lm.extapi.get_ext(i)
-        if not ext: return None
-        if eva.lm.extapi.set_ext_prop(i, p, v):
-            if save: eva.lm.extapi.save()
-            return True
-        return False
+    @log_i
+    @api_need_master
+    def set_ext_prop(self, **kwargs):
+        """
+        set extension configuration property
+
+        appends property to extension configuration and reloads module
+
+        Args:
+            k: .master
+            .i: extension id
+            .p: property name (or empty for batch set)
+
+        Optional:
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
+        eva.lm.extapi.set_ext_prop(i, p, v)
+        if save: eva.lm.extapi.save()
+        return True
 
 
 class LM_HTTP_API_abstract(LM_API, GenericHTTP_API):

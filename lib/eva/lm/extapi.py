@@ -14,6 +14,12 @@ import os
 import eva.core
 from eva.tools import format_json
 
+from eva.exceptions import InvalidParameter
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceBusy
+from eva.exceptions import ResourceAlreadyExists
+
 exts = {}
 env = {}
 
@@ -74,9 +80,8 @@ def modinfo(mod):
             except:
                 pass
         return result
-    except:
-        eva.core.log_traceback()
-        return None
+    except Exception as e:
+        raise FunctionFailed(e)
 
 
 def modhelp(mod, context):
@@ -86,10 +91,11 @@ def modhelp(mod, context):
         d = {}
         exec(code, d)
         result = d.get('s')
-        return result
-    except:
-        eva.core.log_traceback()
-        return None
+    except Exception as e:
+        raise FunctionFailed(e)
+    if result is None:
+        raise ResourceNotFound('Help context not found')
+    return result
 
 
 def list_mods():
@@ -112,10 +118,9 @@ def list_mods():
 
 
 def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
-    if not ext_id: return False
+    if not ext_id: raise InvalidParameter('ext id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", ext_id):
-        logging.debug('Extension %s id contains forbidden symbols' % ext_id)
-        return False
+        raise InvalidParameter('ext %s id contains forbidden symbols' % ext_id)
     try:
         ext_mod = importlib.import_module('eva.lm.extensions.' + ext_mod_id)
         importlib.reload(ext_mod)
@@ -133,21 +138,19 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
                 'Unable to activate extension %s: ' % ext_mod_id + \
                 'does not provide any functions'
                 )
-            return False
+            raise FunctionFailed('ext module does not provide any functions')
         if _api > __api__:
             logging.error(
                 'Unable to activate extension %s: ' % ext_mod_id + \
                 'controller extension API version is %s, ' % __api__ + \
                 'extension API version is %s' % _api)
-            return False
-    except:
-        logging.error('unable to load extension %s' % ext_mod_id)
-        eva.core.log_traceback()
-        return False
+            raise FunctionFailed('unsupported ext API version')
+    except Exception as e:
+        raise FunctionFailed('unable to load ext mod {}: {}'.format(
+            ext_mod_id, e))
     ext = ext_mod.LMExt(cfg=cfg)
     if not ext.ready:
-        logging.error('unable to init extension mod %s' % ext_mod_id)
-        return False
+        raise FunctionFailed('unable to init ext mod %s' % ext_mod_id)
     ext.ext_id = ext_id
     if ext_id in exts:
         exts[ext_id].stop()
@@ -159,7 +162,7 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
 
 def unload_ext(ext_id):
     ext = get_ext(ext_id)
-    if not ext: return None
+    if ext is None: raise ResourceNotFound
     try:
         ext.stop()
         del exts[ext_id]
@@ -183,8 +186,10 @@ def serialize(full=False, config=False):
 
 
 def set_ext_prop(ext_id, p, v):
-    if not p and not isinstance(v, dict): return
+    if not p and not isinstance(v, dict):
+        raise InvalidParameter('property not specified')
     ext = get_ext(ext_id)
+    if not ext: raise ResourceNotFound
     cfg = ext.cfg
     mod_id = ext.mod_id
     if p and not isinstance(v, dict):
@@ -208,14 +213,18 @@ def load():
         data = jsonpickle.decode(
             open(eva.core.dir_runtime + '/lm_extensions.json').read())
         for p in data:
-            load_ext(
-                p['id'], p['mod'], cfg=p['cfg'], start=False, rebuild=False)
+            try:
+                load_ext(
+                    p['id'], p['mod'], cfg=p['cfg'], start=False, rebuild=False)
+            except Exception as e:
+                logging.error(e)
+                eva.core.log_traceback()
         rebuild_env()
-    except:
-        logging.error('unable to load lm_extensions.json')
+        return True
+    except Exception as e:
+        logging.error('unable to load uc_drivers.json: {}'.format(e))
         eva.core.log_traceback()
         return False
-    return True
 
 
 @eva.core.save
@@ -223,19 +232,27 @@ def save():
     try:
         open(eva.core.dir_runtime + '/lm_extensions.json', 'w').write(
             format_json(serialize(config=True), minimal=False))
-    except:
-        logging.error('unable to save extensions config')
+        return True
+    except Exception as e:
+        logging.error('unable to save ext config: {}'.format(e))
         eva.core.log_traceback()
         return False
-    return True
 
 
 def start():
     for k, p in exts.items():
-        p.start()
+        try:
+            p.start()
+        except Exception as e:
+            logging.error('unable to start {}: {}'.format(k, e))
+            eva.core.log_traceback()
 
 
 @eva.core.stop
 def stop():
     for k, p in exts.items():
-        p.stop()
+        try:
+            p.stop()
+        except Exception as e:
+            logging.error('unable to stop {}: {}'.format(k, e))
+            eva.core.log_traceback()
