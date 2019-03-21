@@ -624,7 +624,6 @@ class LM_API(GenericAPI):
         create new cycle
 
         Creates new :doc:`cycle<cycles>`.
-        manually.
 
         Args:
             k: .master
