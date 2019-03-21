@@ -21,6 +21,7 @@ import eva.users
 import eva.uc.controller
 import eva.uc.ucapi
 import eva.logs
+import eva.uc.modbus
 
 import eva.runner
 import eva.wsapi
@@ -84,6 +85,7 @@ eva.traphandler.update_config(cfg)
 eva.udpapi.update_config(cfg)
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
+eva.uc.modbus.update_config(cfg)
 
 eva.core.start()
 eva.core.load_cvars()

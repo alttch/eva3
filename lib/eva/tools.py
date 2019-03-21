@@ -28,7 +28,6 @@ class MultiOrderedDict(OrderedDict):
 class InvalidParameter(Exception):
     pass
 
-
 def config_error(fname, section, key, value):
     logging.error('%s error, unknown value %s = "%s" in section %s' % \
             (fname, key, value, section))
@@ -388,3 +387,11 @@ class Locker:
 
     def critical(self):
         pass
+
+def safe_int(i):
+    if isinstance(i, int):
+        return i
+    elif i.find('x') != -1:
+        return int(i, 16)
+    else:
+        return int(i)

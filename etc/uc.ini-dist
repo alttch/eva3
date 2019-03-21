@@ -83,3 +83,12 @@ listen = 127.0.0.1:8881
 hosts_allow = 127.0.0.0/8
 hosts_allow_encrypted = 0.0.0.0/0
 
+[modbus]
+; modbus slave configuration
+; first number indicates modbus address (hex or decimal)
+; multiple values can be specified
+;tcp0 = 0x01,0.0.0.0:502
+;udp0 = 0x01,0.0.0.0:502
+; framer for serial: rtu, ascii or binary
+;serial0 = 0x01,/dev/ttyS0:rtu
+;serial1 = 0x05,/dev/ttyS1:rtu

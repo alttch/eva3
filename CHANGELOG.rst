@@ -40,6 +40,8 @@ UC
     * new API functions: list_device_tpl, set_driver_prop, set_phi_prop
     * 1-Wire OWFS support (virtual buses, PHIs), OWFS API functions
 
+    * ModBus slave support
+
 LM
 --
 

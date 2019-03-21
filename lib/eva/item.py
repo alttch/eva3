@@ -14,6 +14,7 @@ import jsonpickle
 import eva.core
 import eva.runner
 import eva.uc.driverapi
+import eva.uc.modbus
 
 from datetime import datetime
 import dateutil
@@ -25,6 +26,7 @@ from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.tools import is_oid
 from eva.tools import parse_oid
+from eva.tools import safe_int
 # from evacpp.evacpp import GenericAction
 from eva.generic import GenericAction
 
@@ -305,14 +307,23 @@ class UpdatableItem(Item):
         self.mqtt_update_notifier = None
         self.mqtt_update_qos = 1
         self.mqtt_update_topics = ['status', 'value']
+        self.modbus_status = None
+        self.modbus_value = None
         self.virtual = False
         self._virtual_allowed = True
         self._mqtt_updates_allowed = True
         self._snmp_traps_allowed = True
         self._drivers_allowed = True
+        self._modbus_allowed = True
+        self._modbus_status_allowed = True
         self._expire_on_any = False
 
     def update_config(self, data):
+        if 'modbus_status' in data and \
+                self._modbus_allowed and self._modbus_status_allowed:
+            self.modbus_status = data['modbus_status']
+        if 'modbus_value' in data and self._modbus_allowed:
+            self.modbus_value = data['modbus_value']
         if 'virtual' in data and self._virtual_allowed:
             self.virtual = data['virtual']
         if 'snmp_trap' in data:
@@ -482,6 +493,49 @@ class UpdatableItem(Item):
                 self.log_set(prop, 'dict')
                 self.set_modified(save)
                 return True
+        elif prop == 'modbus_status' and self._modbus_allowed and \
+                self._modbus_status_allowed:
+            if self.modbus_status == val: return True
+            if val is None:
+                self.unregister_modbus_status_updates()
+                self.modbus_status = None
+            else:
+                if val[0] not in ['h', 'c']: return False
+                try:
+                    addr = safe_int(val[1:])
+                    if addr > eva.uc.modbus.slave_reg_max or addr < 0:
+                        return False
+                except:
+                    return False
+                self.unregister_modbus_status_updates()
+                self.modbus_status = val
+                self.modbus_update_status(addr,
+                                          eva.uc.modbus.get_data(addr, val[0]))
+                self.register_modbus_status_updates()
+            self.log_set('modbus_status', val)
+            self.set_modified(save)
+            return True
+        elif prop == 'modbus_value' and self._modbus_allowed:
+            if self.modbus_value == val: return True
+            if val is None:
+                self.unregister_modbus_value_updates()
+                self.modbus_value = None
+            else:
+                if val[0] not in ['h', 'c']: return False
+                try:
+                    addr = safe_int(val[1:])
+                    if addr > eva.uc.modbus.slave_reg_max or addr < 0:
+                        return False
+                except:
+                    return False
+                self.unregister_modbus_value_updates()
+                self.modbus_value = val
+                self.modbus_update_value(addr,
+                                         eva.uc.modbus.get_data(addr, val[0]))
+                self.register_modbus_value_updates()
+            self.log_set('modbus_value', val)
+            self.set_modified(save)
+            return True
         elif prop == 'snmp_trap.ident_vars' and self._snmp_traps_allowed:
             if val is None:
                 if self.snmp_trap and 'ident_vars' in self.snmp_trap:
@@ -621,9 +675,39 @@ class UpdatableItem(Item):
         else:
             return super().set_prop(prop, val, save)
 
+    def register_modbus_status_updates(self):
+        if self.modbus_status:
+            eva.uc.modbus.register_handler(
+                self.modbus_status[1:],
+                self.modbus_update_status,
+                register=self.modbus_status[0])
+
+    def register_modbus_value_updates(self):
+        if self.modbus_value:
+            eva.uc.modbus.register_handler(
+                self.modbus_value[1:],
+                self.modbus_update_value,
+                register=self.modbus_value[0])
+
+    def unregister_modbus_status_updates(self):
+        if self.modbus_status:
+            eva.uc.modbus.unregister_handler(
+                self.modbus_status[1:],
+                self.modbus_update_status,
+                register=self.modbus_status[0])
+
+    def unregister_modbus_value_updates(self):
+        if self.modbus_value:
+            eva.uc.modbus.unregister_handler(
+                self.modbus_value[1:],
+                self.modbus_update_value,
+                register=self.modbus_value[0])
+
     def start_processors(self):
         self.subscribe_mqtt_update()
         self.subscribe_snmp_traps()
+        self.register_modbus_status_updates()
+        self.register_modbus_value_updates()
         self.register_driver_updates()
         self.start_update_processor()
         self.start_update_scheduler()
@@ -633,6 +717,8 @@ class UpdatableItem(Item):
     def stop_processors(self):
         self.unsubscribe_mqtt_update()
         self.unregister_driver_updates()
+        self.unregister_modbus_value_updates()
+        self.unregister_modbus_status_updates()
         self.unsubscribe_snmp_traps()
         self.stop_update_processor()
         self.stop_update_scheduler()
@@ -945,6 +1031,18 @@ class UpdatableItem(Item):
         except:
             eva.core.log_traceback()
 
+    def modbus_update_status(self, addr, values):
+        v = values[0]
+        if v is True: v = 1
+        if v is False: v = 0
+        self.update_set_state(status=v)
+
+    def modbus_update_value(self, addr, values):
+        v = values[0]
+        if v is True: v = 1
+        if v is False: v = 0
+        self.update_set_state(value=v)
+
     def update_set_state(self,
                          status=None,
                          value=None,
@@ -1015,6 +1113,12 @@ class UpdatableItem(Item):
                 d['update_timeout'] = self._update_timeout
             elif props:
                 d['update_timeout'] = None
+            if self._modbus_allowed:
+                if self._modbus_status_allowed:
+                    if not config or self.modbus_status:
+                        d['modbus_status'] = self.modbus_status
+                if not config or self.modbus_value:
+                    d['modbus_value'] = self.modbus_value
         elif not info:
             d['status'] = self.status
             d['value'] = self.value
@@ -1726,6 +1830,10 @@ class MultiUpdate(UpdatableItem):
         self._update_run_args = ()
         self.update_allow_check = True
         self.get_item_func = None
+        self._drivers_allowed = False
+        self._snmp_traps_allowed = False
+        self._modbus_allowed = False
+        self._mqtt_updates_allowed = False
 
     def updates_allowed(self):
         if not self.update_allow_check: return True

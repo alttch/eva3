@@ -5,6 +5,7 @@ import os
 import importlib
 
 mods = [
+    'PIL',
     'argcomplete',
     'cherrypy',
     'collections',
@@ -17,34 +18,35 @@ mods = [
     'jinja2',
     'json',
     'jsonpickle',
-    'onewire',
     'logging',
     'netaddr',
+    'onewire',
     'paho.mqtt.client',
     'pandas',
-    'PIL',
     'platform',
     'psutil',
     'pyaltt',
     'pygments',
-    'pytz',
-    'pysnmp',
     'pymodbus',
+    'pysnmp',
+    'pytz',
     'queue',
     're',
     'readline',
     'requests',
+    'service_identity',
     'shlex',
     'signal',
     'socket',
-    'sqlite3',
     'sqlalchemy',
+    'sqlite3',
     'struct',
     'subprocess',
     'termcolor',
     'threading',
     'time',
     'traceback',
+    'twisted',
     'uuid',
     'ws4py',
     'yaml'
@@ -67,6 +69,7 @@ for m in mods:
             if m == 'paho.mqtt.client': mod = 'paho-mqtt'
             elif m == 'yaml': mod = 'pyyaml'
             elif m == 'PIL': mod = 'pillow'
+            elif m == 'service_identity': mod = 'service-identity'
             else: mod = m
             os.system('pip3 install %s' % mod)
             try:

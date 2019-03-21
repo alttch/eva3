@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -20,10 +21,184 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
 
 from eva.tools import format_json
+from eva.tools import parse_host_port
+from eva.tools import safe_int
+
+from types import SimpleNamespace
+
+import threading
+
+from pyaltt import background_job
+
+from pymodbus.server.async import StartTcpServer
+from pymodbus.server.async import StartUdpServer
+from pymodbus.server.async import StartSerialServer
+
+from pymodbus.device import ModbusDeviceIdentification
+from pymodbus.datastore import ModbusSequentialDataBlock
+from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
+from pymodbus.transaction import (ModbusRtuFramer, ModbusAsciiFramer,
+                                  ModbusBinaryFramer)
+
+from twisted.internet import reactor
+
+config = SimpleNamespace(slave={
+    'addr': set(),
+    'tcp': [],
+    'udp': [],
+    'serial': []
+})
+
+slave_framer = {
+    'rtu': ModbusRtuFramer,
+    'ascii': ModbusAsciiFramer,
+    'binary': ModbusBinaryFramer
+}
+
+slave_regsz = 10000
+slave_reg_max = slave_regsz - 1
+
+
+class WatchBlock(ModbusSequentialDataBlock):
+
+    event_handlers = {}
+
+    event_handlers_lock = threading.RLock()
+
+    def setValues(self, addr, values):
+        super().setValues(addr, values)
+        if not self.event_handlers_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('WatchBlock::setValues locking broken')
+            eva.core.critical()
+            return False
+        try:
+            if addr not in self.event_handlers:
+                return
+            for f in self.event_handlers[addr]:
+                background_job(f)(addr, values)
+        finally:
+            self.event_handlers_lock.release()
+
+    def registerEventHandler(self, addr, f):
+        if not self.event_handlers_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('WatchBlock::registerEventHandler locking broken')
+            eva.core.critical()
+            return False
+        try:
+            self.event_handlers.setdefault(safe_int(addr), set()).add(f)
+        except:
+            logging.error(
+                'Unable to register modbus handler for address {}'.format(addr))
+            eva.core.log_traceback()
+        finally:
+            self.event_handlers_lock.release()
+
+    def unregisterEventHandler(self, addr, f):
+        if not self.event_handlers_lock.acquire(timeout=eva.core.timeout):
+            logging.critical(
+                'WatchBlock::unregisterEventHandler locking broken')
+            eva.core.critical()
+            return False
+        try:
+            a = safe_int(addr)
+            if a in self.event_handlers:
+                try:
+                    self.event_handlers[a].remove(f)
+                except KeyError:
+                    pass
+                except:
+                    logging.error(
+                        'Unable to register modbus handler for address {}'.
+                        format(addr))
+                    eva.core.log_traceback()
+        finally:
+            self.event_handlers_lock.release()
+
+
+slave_di = WatchBlock(0, [0] * slave_regsz)
+slave_co = WatchBlock(0, [0] * slave_regsz)
+slave_hr = WatchBlock(0, [0] * slave_regsz)
+slave_ir = WatchBlock(0, [0] * slave_regsz)
+
+slave_registers = {'h': slave_hr, 'i': slave_ir, 'c': slave_co, 'd': slave_di}
+
+slave_store = ModbusSlaveContext(
+    di=slave_di, co=slave_co, hr=slave_hr, ir=slave_ir, zero_mode=True)
+
+slave_identity = ModbusDeviceIdentification()
+slave_identity.VendorName = 'Altertech'
+slave_identity.ProductCode = 'EVA'
+slave_identity.VendorUrl = 'https://www.eva-ics.com/'
+slave_identity.ProductName = 'EVA ICS'
+slave_identity.ModelName = eva.core.product_name
+slave_identity.MajorMinorRevision = '.'.join(eva.core.version.split('.')[:2])
 
 ports = {}
 
 # public functions
+
+
+def set_data(addr, values, register='h'):
+    """
+    set data to modbus slave context
+
+    Args:
+        addr: addr to set to
+        values: values to set
+
+    Optional:
+        register: h (default, 16 bit) - holding, i (16 bit) - input,
+                  c (1 bit) - coil, d (1 bit) - discrete input)
+    """
+    slave_registers[register].setValues(addr, values)
+
+
+def get_data(addr, register='h', count=1):
+    """
+    get data from modbus slave context
+
+    Args:
+        addr: addr to get from
+
+    Optional:
+        register: h (default, 16 bit) - holding, i (16 bit) - input,
+                  c (1 bit) - coil, d (1 bit) - discrete input)
+        count: amount of data to get (default: 1 value)
+    """
+    return slave_registers[register].getValues(addr, count)
+
+
+def register_handler(addr, f, register='h'):
+    """
+    register modbus slave event handler
+
+    the handler will be called in format f(addr, values) when slave context is
+    changed
+
+    Args:
+        addr: addr to watch
+        f: handler function
+
+    Optional:
+        register: h (default, 16 bit) - holding, i (16 bit) - input,
+                  c (1 bit) - coil, d (1 bit) - discrete input)
+    """
+    slave_registers[register].registerEventHandler(addr, f)
+
+
+def unregister_handler(addr, f, register='h'):
+    """
+    unregister modbus slave event handler
+
+    Args:
+        addr: addr to watch
+        f: handler function
+
+    Optional:
+        register: h (default, 16 bit) - holding, i (16 bit) - input,
+                  c (1 bit) - coil, d (1 bit) - discrete input)
+    """
+    slave_registers[register].unregisterEventHandler(addr, f)
 
 
 # is modbus port with the given ID exist
@@ -75,7 +250,8 @@ def serialize(port_id=None, config=False):
 
 @eva.core.dump
 def dump():
-    return serialize()
+    result = { 'ports': serialize(), 'slave': config.slave }
+    return result
 
 
 def create_modbus_port(port_id, params, **kwargs):
@@ -151,12 +327,63 @@ def save():
 
 
 def start():
-    pass
+    store = {}
+    for a in config.slave['addr']:
+        store[a] = slave_store
+    context = ModbusServerContext(slaves=store, single=False)
+    for v in config.slave['tcp']:
+        try:
+            StartTcpServer(
+                context,
+                identity=slave_identity,
+                address=(v['h'], v['p']),
+                defer_reactor_run=True)
+        except:
+            logging.error('Unable to start ModBus slave tcp:{}:{}'.format(
+                v['h'], v['p']))
+            eva.core.log_traceback()
+    for v in config.slave['udp']:
+        try:
+            StartUdpServer(
+                context,
+                identity=slave_identity,
+                address=(v['h'], v['p']),
+                defer_reactor_run=True)
+        except:
+            logging.error('Unable to start ModBus slave udp:{}:{}'.format(
+                v['h'], v['p']))
+            eva.core.log_traceback()
+    for v in config.slave['serial']:
+        try:
+            StartSerialServer(
+                context,
+                identity=slave_identity,
+                port=v['p'],
+                framer=slave_framer[v['f']],
+                defer_reactor_run=True)
+        except:
+            logging.error('Unable to start ModBus slave, port {}'.format(
+                v['p']))
+            eva.core.log_traceback()
+    start_slaves()
 
 
+@background_job
+def start_slaves():
+    if config.slave['addr']:
+        try:
+            reactor.run(installSignalHandlers=False)
+        except:
+            logging.error('Unable to start ModBus slaves')
+            eva.core.log_traceback()
+
+
+# started by uc controller
 def stop():
     for k, p in ports.copy().items():
         p.stop()
+    if config.slave['addr']:
+        reactor.stop()
 
 
 class ModbusPort(object):
@@ -332,3 +559,48 @@ class ModbusPort(object):
             if self.client: self.client.close()
         except:
             eva.core.log_traceback()
+
+
+def append_ip_slave(c, proto):
+    try:
+        a, h = c.split(',')
+        host, port = parse_host_port(h, 502)
+        a = safe_int(a)
+        if not host: raise Exception
+        config.slave['addr'].add(a)
+        config.slave[proto].append({'a': a, 'h': host, 'p': port})
+        logging.debug('modbus.slave.{} = {}.{}:{}'.format(
+            proto, hex(a), host, port))
+    except:
+        eva.core.log_traceback()
+
+
+def append_serial_slave(c):
+    try:
+        a, port = c.split(',')
+        if port.find(':') == -1:
+            framer = 'rtu'
+        else:
+            port, framer = port.split(':')
+        a = safe_int(a)
+        if framer not in slave_framer:
+            raise Exception('Invalid ModBus slave framer: {}'.format(framer))
+        config.slave['addr'].add(a)
+        config.slave['serial'].append({'a': a, 'p': port, 'f': framer})
+        logging.debug('modbus.slave.serial = {}.{}:{}'.format(
+            hex(a), port, framer))
+    except:
+        eva.core.log_traceback()
+
+
+def update_config(cfg):
+    try:
+        for c in cfg.options('modbus'):
+            for p in ['tcp', 'udp']:
+                if c.startswith(p):
+                    append_ip_slave(cfg.get('modbus', c), p)
+            if c.startswith('serial'):
+                append_serial_slave(cfg.get('modbus', c))
+    except:
+        pass
+    print(config.slave)
