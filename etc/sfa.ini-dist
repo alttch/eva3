@@ -29,6 +29,9 @@ stop_on_critical = yes
 ; default timeout
 timeout = 5
 
+; reactor thread pool size
+;reactor_thread_pool = 15
+
 ; exec commands before/after config/db save,
 ; e.g. mount -o remount,rw / (then back to ro)
 

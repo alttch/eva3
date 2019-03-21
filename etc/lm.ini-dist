@@ -33,6 +33,9 @@ timeout = 5
 ; layout (simple or enterprise)
 layout = enterprise
 
+; reactor thread pool size
+;reactor_thread_pool = 15
+
 ; exec commands before/after config/db save,
 ; e.g. mount -o remount,rw / (then back to ro)
 

@@ -76,6 +76,8 @@ cvars_modified = False
 
 ignore_critical = False
 
+_sigterm_sent = False
+
 polldelay = 0.01
 
 db_update = 0
@@ -85,6 +87,8 @@ db_pool_size = 15
 sleep_step = 0.1
 
 keep_exceptions = 100
+
+reactor_thread_pool = 15
 
 _exceptions = []
 
@@ -212,6 +216,9 @@ def sighandler_hup(signum, frame):
 
 
 def sighandler_term(signum=None, frame=None):
+    global _sigterm_sent
+    if _sigterm_sent: return
+    _sigterm_sent = True
     logging.info('got TERM signal, exiting')
     if db_update == 2:
         try:
@@ -413,6 +420,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
     global exec_after_save
     global mqtt_update_default
     global enterprise_layout
+    global reactor_thread_pool
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
     try:
@@ -542,6 +550,11 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         logging.debug('server.timeout = %s' % timeout)
         logging.debug('server.polldelay = %s  ( %s msec )' % \
                                             (polldelay, int(polldelay * 1000)))
+        try:
+            reactor_thread_pool = int(cfg.get('server', 'reactor_thread_pool'))
+        except:
+            pass
+        logging.debug('server.reactor_thread_pool = %s' % reactor_thread_pool)
         try:
             db_update = db_update_codes.index(cfg.get('server', 'db_update'))
         except:
@@ -790,9 +803,12 @@ def init():
     RLocker.timeout = timeout
     if not os.environ.get('EVA_CORE_ENABLE_CC'):
         signal.signal(signal.SIGINT, sighandler_int)
+    else:
+        signal.signal(signal.SIGINT, sighandler_term)
 
 
 def start():
+    reactor.suggestThreadPoolSize(reactor_thread_pool)
     set_db(db_uri, userdb_uri)
 
 
