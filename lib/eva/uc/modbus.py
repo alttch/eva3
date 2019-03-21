@@ -40,8 +40,6 @@ from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
 from pymodbus.transaction import (ModbusRtuFramer, ModbusAsciiFramer,
                                   ModbusBinaryFramer)
 
-from twisted.internet import reactor
-
 config = SimpleNamespace(slave={'tcp': [], 'udp': [], 'serial': []})
 
 slave_framer = {
@@ -356,25 +354,12 @@ def start():
             logging.error('Unable to start ModBus slave, port {}'.format(
                 v['p']))
             eva.core.log_traceback()
-    start_slaves()
-
-
-@background_job
-def start_slaves():
-    if config.slave['tcp'] or config.slave['udp'] or config.slave['serial']:
-        try:
-            reactor.run(installSignalHandlers=False)
-        except:
-            logging.error('Unable to start ModBus slaves')
-            eva.core.log_traceback()
 
 
 # started by uc controller
 def stop():
     for k, p in ports.copy().items():
         p.stop()
-    if config.slave['tcp'] or config.slave['udp'] or config.slave['serial']:
-        reactor.stop()
 
 
 class ModbusPort(object):

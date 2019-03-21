@@ -32,6 +32,8 @@ from eva.logs import MemoryLogHandler
 from pyaltt import g
 from pyaltt import FunctionCollecton
 
+from twisted.internet import reactor
+
 version = __version__
 
 timeout = 5
@@ -266,8 +268,7 @@ def do_save():
 def block():
     global started
     started = True
-    while not _sigterm_sent:
-        time.sleep(sleep_step)
+    reactor.run(installSignalHandlers=False)
 
 
 def is_shutdown_requested():
@@ -279,6 +280,7 @@ def core_shutdown():
     shutdown_requested = True
     shutdown()
     stop()
+    reactor.callFromThread(reactor.stop)
 
 
 def create_dump(e='request', msg=''):
