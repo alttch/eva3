@@ -42,12 +42,7 @@ from pymodbus.transaction import (ModbusRtuFramer, ModbusAsciiFramer,
 
 from twisted.internet import reactor
 
-config = SimpleNamespace(slave={
-    'addr': set(),
-    'tcp': [],
-    'udp': [],
-    'serial': []
-})
+config = SimpleNamespace(slave={'tcp': [], 'udp': [], 'serial': []})
 
 slave_framer = {
     'rtu': ModbusRtuFramer,
@@ -250,7 +245,7 @@ def serialize(port_id=None, config=False):
 
 @eva.core.dump
 def dump():
-    result = { 'ports': serialize(), 'slave': config.slave }
+    result = {'ports': serialize(), 'slave': config.slave}
     return result
 
 
@@ -327,14 +322,10 @@ def save():
 
 
 def start():
-    store = {}
-    for a in config.slave['addr']:
-        store[a] = slave_store
-    context = ModbusServerContext(slaves=store, single=False)
     for v in config.slave['tcp']:
         try:
             StartTcpServer(
-                context,
+                ModbusServerContext(slaves={v['a']: slave_store}, single=False),
                 identity=slave_identity,
                 address=(v['h'], v['p']),
                 defer_reactor_run=True)
@@ -345,7 +336,7 @@ def start():
     for v in config.slave['udp']:
         try:
             StartUdpServer(
-                context,
+                ModbusServerContext(slaves={v['a']: slave_store}, single=False),
                 identity=slave_identity,
                 address=(v['h'], v['p']),
                 defer_reactor_run=True)
@@ -356,7 +347,7 @@ def start():
     for v in config.slave['serial']:
         try:
             StartSerialServer(
-                context,
+                ModbusServerContext(slaves={v['a']: slave_store}, single=False),
                 identity=slave_identity,
                 port=v['p'],
                 framer=slave_framer[v['f']],
@@ -370,7 +361,7 @@ def start():
 
 @background_job
 def start_slaves():
-    if config.slave['addr']:
+    if config.slave['tcp'] or config.slave['udp'] or config.slave['serial']:
         try:
             reactor.run(installSignalHandlers=False)
         except:
@@ -382,7 +373,7 @@ def start_slaves():
 def stop():
     for k, p in ports.copy().items():
         p.stop()
-    if config.slave['addr']:
+    if config.slave['tcp'] or config.slave['udp'] or config.slave['serial']:
         reactor.stop()
 
 
@@ -567,7 +558,6 @@ def append_ip_slave(c, proto):
         host, port = parse_host_port(h, 502)
         a = safe_int(a)
         if not host: raise Exception
-        config.slave['addr'].add(a)
         config.slave[proto].append({'a': a, 'h': host, 'p': port})
         logging.debug('modbus.slave.{} = {}.{}:{}'.format(
             proto, hex(a), host, port))
@@ -585,7 +575,6 @@ def append_serial_slave(c):
         a = safe_int(a)
         if framer not in slave_framer:
             raise Exception('Invalid ModBus slave framer: {}'.format(framer))
-        config.slave['addr'].add(a)
         config.slave['serial'].append({'a': a, 'p': port, 'f': framer})
         logging.debug('modbus.slave.serial = {}.{}:{}'.format(
             hex(a), port, framer))
