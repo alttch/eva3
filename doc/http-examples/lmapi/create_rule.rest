@@ -1,0 +1,3 @@
+POST /r/dmatrix_rule HTTP/1.1
+Host: localhost:8817
+X-Auth-Key: mykey

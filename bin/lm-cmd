@@ -576,6 +576,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_macro = ap_macro.add_subparsers(
             dest='_func', metavar='func', help='Macro commands')
 
+        sp_macro_get = sp_macro.add_parser('get', help='Get macro info')
+        sp_macro_get.add_argument(
+            'i', help='Macro ID',
+            metavar='ID').completer = self.ComplMacro(self)
+
         sp_macro_list = sp_macro.add_parser('list', help='List macros')
         sp_macro_list.add_argument(
             '-g', '--group', help='Filter by group', metavar='GROUP',
@@ -685,6 +690,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_cycle = ap_cycle.add_subparsers(
             dest='_func', metavar='func', help='Cycle commands')
 
+        sp_cycle_get = sp_cycle.add_parser('get', help='Get cycle info')
+        sp_cycle_get.add_argument(
+            'i', help='Cycle ID',
+            metavar='ID').completer = self.ComplCycle(self)
+
         sp_cycle_list = sp_cycle.add_parser('list', help='List cycles')
         sp_cycle_list.add_argument(
             '-g', '--group', help='Filter by group', metavar='GROUP',
@@ -731,13 +741,14 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
 
-        ap_stop = sp_cycle.add_parser('stop', help='Stop cycle')
-        ap_stop.add_argument(
+        sp_cycle_stop = sp_cycle.add_parser('stop', help='Stop cycle')
+        sp_cycle_stop.add_argument(
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
 
-        ap_stop = sp_cycle.add_parser('reset', help='Reset cycle stats (avg)')
-        ap_stop.add_argument(
+        sp_cycle_stop = sp_cycle.add_parser(
+            'reset', help='Reset cycle stats (avg)')
+        sp_cycle_stop.add_argument(
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
 
@@ -764,6 +775,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='_func', metavar='func', help='Rules commands')
 
         sp_rule_list = sp_rule.add_parser('list', help='List defined rules')
+
+        sp_rule_get = sp_rule.add_parser('get', help='Get rule info')
+        sp_rule_get.add_argument(
+            'i', help='Rule ID', metavar='ID').completer = self.ComplRule(self)
 
         sp_rule_create = sp_rule.add_parser('create', help='Create new rule')
         sp_rule_create.add_argument(
@@ -830,6 +845,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'controller', help='Connected UC controllers functions')
         sp_controller = ap_controller.add_subparsers(
             dest='_func', metavar='func', help='Controller commands')
+
+        sp_controller_get = sp_controller.add_parser(
+            'get', help='Get connected UC info')
+        sp_controller_get.add_argument(
+            'i', help='Controller ID',
+            metavar='ID').completer = self.ComplController(self)
 
         sp_controller_list = sp_controller.add_parser(
             'list', help='List connected UCs')
@@ -1062,6 +1083,7 @@ _api_functions = {
     'cycle:start': 'start_cycle',
     'cycle:stop': 'stop_cycle',
     'cycle:reset': 'reset_cycle_stats',
+    'cycle:get': 'get_cycle',
     'macro:list': 'list_macros',
     'macro:props': 'list_macro_props',
     'macro:set': 'set_macro_prop',
@@ -1069,6 +1091,7 @@ _api_functions = {
     'macro:destroy': 'destroy_macro',
     'macro:run': 'run',
     'macro:result': 'result',
+    'macro:get': 'get_macro',
     'rule:list': 'list_rules',
     'rule:create': 'create_rule',
     'rule:enable': 'set_rule_prop',
@@ -1076,6 +1099,7 @@ _api_functions = {
     'rule:props': 'list_rule_props',
     'rule:set': 'set_rule_prop',
     'rule:destroy': 'destroy_rule',
+    'rule:get': 'get_rule',
     'controller:list': 'list_controllers',
     'controller:test': 'test_controller',
     'controller:props': 'list_controller_props',
@@ -1085,6 +1109,7 @@ _api_functions = {
     'controller:enable': 'enable_controller',
     'controller:disable': 'disable_controller',
     'controller:remove': 'remove_controller',
+    'controller:get': 'get_controller',
     'ext:list': 'list_ext',
     'ext:get': 'get_ext',
     'ext:mods': 'list_ext_mods',

@@ -251,7 +251,7 @@ class LM_API(GenericAPI):
                 kw = dict_from_str(kw)
             except:
                 raise InvalidParameter('Unable to parse kw args')
-        elif isinstance(kwargs, dict):
+        elif isinstance(kw, dict):
             pass
         else:
             kw = {}
@@ -363,6 +363,10 @@ class LM_API(GenericAPI):
         Set configuration parameters of the :doc:`decision
         rule</lm/decision_matrix>`.
 
+        .. note::
+
+            Master key is required for batch set.
+
         Args:
         
             k:
@@ -373,13 +377,17 @@ class LM_API(GenericAPI):
             .v: propery value (or dict for batch set)
             save: save configuration after successful call
         """
-        k, i, p, v, save = parse_api_params(kwargs, 'kipvS', '.s..b')
+        k, i, p, v, save = parse_function_params(kwargs, 'kipvS', '.s..b')
         item = eva.lm.controller.get_dm_rule(i)
-        if not item or not p or not isinstance(p, str): raise ResourceNotFound
-        if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
-            if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
-                    not apikey.check(k, item):
-                raise ResourceNotFound
+        if not p and (not isinstance(v, dict) or not apikey.check_master(k)):
+            raise InvalidParameter('property not specified')
+        if not item:
+            raise ResourceNotFound
+        if p:
+            if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
+                if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
+                        not apikey.check(k, item):
+                    raise ResourceNotFound
         else:
             if not apikey.check_master(k): raise ResourceNotFound
         if not self._set_prop(item, p, v, save):
@@ -641,7 +649,8 @@ class LM_API(GenericAPI):
         """
         delete cycle
 
-        Deletes :doc:`cycle<cycles>`.
+        Deletes :doc:`cycle<cycles>`. If cycle is running, it is stopped before
+        deletion.
 
         Args:
             k: .master
@@ -739,7 +748,7 @@ class LM_API(GenericAPI):
         cycle = eva.lm.controller.get_cycle(i)
         if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
         cycle.stop(wait=wait)
-        return True, api_result_accepted if wait else True
+        return (True, api_result_accepted) if not wait else True
 
     @log_i
     def reset_cycle_stats(self, **kwargs):
@@ -1186,7 +1195,7 @@ class LM_API(GenericAPI):
                 c = dict_from_str(c)
             except:
                 raise InvalidParameter('Unable to parse config')
-        if eva.lm.extapi.load_ext(i, m, _cfg):
+        if eva.lm.extapi.load_ext(i, m, c):
             if save: eva.lm.extapi.save()
             return eva.lm.extapi.get_ext(i).serialize(full=True, config=True)
 
@@ -1359,6 +1368,57 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.get_controller(k=k, i=ii)
                 else:
                     return self.list_controllers(k=k, g=ii)
+        elif rtp == 'action':
+            return self.result(k=k, u=ii, **props)
+        elif rtp == 'dmatrix_rule':
+            if ii:
+                if kind == 'props':
+                    return self.list_rule_props(k=k, i=ii)
+                else:
+                    return self.get_rule(k=k, i=ii)
+            else:
+                return self.list_rules(k=k)
+        elif rtp == 'lmacro':
+            if ii:
+                if kind == 'props':
+                    return self.list_macro_props(k=k, i=ii)
+                else:
+                    if for_dir:
+                        return self.list_macros(k=k, g=ii)
+                    else:
+                        return self.get_macro(k=k, i=ii)
+            else:
+                if kind == 'groups':
+                    return self.groups_macro(k=k)
+                else:
+                    return self.list_macros(k=k)
+        elif rtp == 'lcycle':
+            if ii:
+                if kind == 'props':
+                    return self.list_cycle_props(k=k, i=ii)
+                else:
+                    if for_dir:
+                        return self.list_cycles(k=k, g=ii)
+                    else:
+                        return self.get_cycle(k=k, i=ii)
+            else:
+                if kind == 'groups':
+                    return self.groups_cycle(k=k)
+                else:
+                    return self.list_cycles(k=k)
+        elif rtp == 'ext':
+            if ii:
+                return self.get_ext(k=k, i=ii)
+            else:
+                return self.list_ext(k=k)
+        elif rtp == 'ext-module':
+            if ii:
+                if 'help' in props:
+                    return self.modhelp_ext(k=k, m=ii, c=props['help'])
+                else:
+                    return self.modinfo_ext(k=k, m=ii)
+            else:
+                return self.list_ext_mods(k=k)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1379,6 +1439,12 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.toggle(k=k, i=ii)
                 else:
                     return self.set(k=k, i=ii, **props)
+        elif rtp == 'lmacro':
+            if method == "run":
+                a = self.run(k=k, i=ii, **props)
+                if not a: raise FunctionFailed
+                set_restful_response_location(a['uuid'], 'action')
+                return a
         elif rtp == 'controller':
             if (not ii or for_dir or ii.find('/') == -1) and not method:
                 result = self.append_controller(k=k, save=save, **props)
@@ -1389,6 +1455,20 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.test_controller(k=k, i=ii)
             elif method == 'reload':
                 return self.reload_controller(k=k, i=ii)
+        elif rtp == 'lcycle':
+            if ii:
+                if method == 'start':
+                    return self.start_cycle(k=k, i=ii)
+                elif method == 'stop':
+                    return self.stop_cycle(k=k, i=ii, **props)
+                elif method == 'reset':
+                    return self.reset_cycle_stats(k=k, i=ii)
+        elif rtp == 'dmatrix_rule':
+            if not ii:
+                r = self.create_rule(k=k, v=props)
+                if not r: raise FunctionFailed
+                set_restful_response_location(r['id'], rtp)
+                return r
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1402,6 +1482,17 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
             self.create_lvar(k=k, i=ii, save=save)
             self.set_prop(k=k, i=ii, v=props, save=save)
             return self.state(k=k, i=ii, p=rtp, full=True)
+        elif rtp == 'dmatrix_rule':
+            if ii:
+                return self.create_rule(k=k, u=ii, v=props)
+        elif rtp == 'lmacro':
+            if ii:
+                return self.create_macro(k=k, i=ii)
+        elif rtp == 'lcycle':
+            if ii:
+                return self.create_cycle(k=k, i=ii)
+        elif rtp == 'ext':
+            return self.load_ext(k=k, i=ii, save=save, **props)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1424,6 +1515,18 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         k=k, i=ii, save=save, v=props)
                 else:
                     return True
+        elif rtp == 'dmatrix_rule':
+            if ii:
+                return self.set_rule_prop(k=k, i=ii, v=props, save=save)
+        elif rtp == 'lmacro':
+            if ii:
+                return self.set_macro_prop(k=k, i=ii, v=props, save=save)
+        elif rtp == 'lcycle':
+            if ii:
+                return self.set_cycle_prop(k=k, i=ii, v=props, save=save)
+        elif rtp == 'ext':
+            if ii:
+                return self.set_ext_prop(k=k, i=ii, save=save, v=props)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1440,6 +1543,18 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
         elif rtp == 'controller':
             if ii:
                 return self.remove_controller(k=k, i=ii)
+        elif rtp == 'dmatrix_rule':
+            if ii:
+                return self.destroy_rule(k=k, i=ii)
+        elif rtp == 'lmacro':
+            if ii:
+                return self.destroy_macro(k=k, i=ii)
+        elif rtp == 'lcycle':
+            if ii:
+                return self.destroy_cycle(k=k, i=ii)
+        elif rtp == 'ext':
+            if ii:
+                return self.unload_ext(k=k, i=ii)
         raise MethodNotFound
 
 

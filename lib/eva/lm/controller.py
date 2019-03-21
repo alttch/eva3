@@ -94,11 +94,11 @@ def get_item(item_id):
         i = item_id
         tp = None
     if tp == 'lmacro':
-        return self.get_macro(i)
+        return get_macro(i)
     elif tp == 'lcycle':
-        return self.get_cycle(i)
+        return get_cycle(i)
     elif tp == 'dmatrix_rule':
-        return self.get_dm_rule(i)
+        return get_dm_rule(i)
     item = None
     if i.find('/') > -1:
         if i in items_by_full_id: item = items_by_full_id[i]
@@ -505,8 +505,9 @@ def destroy_macro(m_id):
 @with_item_lock
 def create_cycle(m_id, group=None, save=False):
     _m_id = oid_to_id(m_id, 'lcycle')
-    if not _m_id: return False
-    if group and _m_id.find('/') != -1: return False
+    if not _m_id: raise InvalidParameter('macro id not specified')
+    if group and _m_id.find('/') != -1:
+        raise InvalidParameter('group specified but cycle id contains /')
     if _m_id.find('/') == -1:
         i = _m_id
         grp = group
@@ -516,16 +517,17 @@ def create_cycle(m_id, group=None, save=False):
     if not grp: grp = 'nogroup'
     if not re.match("^[A-Za-z0-9_\.-]*$", i) or \
         not re.match("^[A-Za-z0-9_\./-]*$", grp):
-        return False
+            raise InvalidParameter('Invalid symbols in cycle id')
     i_full = grp + '/' + i
-    if i in cycles_by_id or i_full in cycles_by_full_id: return False
+    if i in cycles_by_id or i_full in cycles_by_full_id:
+        raise ResourceAlreadyExists
     m = eva.lm.plc.Cycle(i)
     if grp: m.update_config({'group': grp})
     cycles_by_id[i] = m
     cycles_by_full_id[m.full_id] = m
     if save: m.save()
     logging.info('cycle "%s" created' % m.full_id)
-    return True
+    return m
 
 
 @with_item_lock
@@ -533,6 +535,7 @@ def destroy_cycle(m_id):
     i = get_cycle(m_id)
     if not i: return None
     try:
+        i.stop(wait=True)
         i.destroy()
         if eva.core.db_update == 1 and i.config_file_exists:
             try:

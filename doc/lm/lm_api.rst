@@ -523,6 +523,10 @@ create_rule - create new rule
 
 Creates new :doc:`decision rule<decision_matrix>`. Rule id (UUID) is generated automatically unless specified.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_rule.req
+    :response: http-examples/lmapi/create_rule.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -533,6 +537,12 @@ Optionally:
 * **v** rule properties (dict)
 * **save** save unit configuration immediately
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_rule.rest
+    :response: http-examples/lmapi/create_rule.resp-rest
+
 .. _lmapi_destroy_rule:
 
 destroy_rule - delete rule
@@ -540,10 +550,20 @@ destroy_rule - delete rule
 
 Deletes :doc:`decision rule<decision_matrix>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_rule.req
+    :response: http-examples/lmapi/destroy_rule.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** rule id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_rule.rest
+    :response: http-examples/lmapi/destroy_rule.resp-rest
 
 .. _lmapi_get_rule:
 
@@ -552,10 +572,20 @@ get_rule - get rule information
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_rule.req
+    :response: http-examples/lmapi/get_rule.resp
+
 Parameters:
 
 * **k** 
 * **i** rule id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_rule.rest
+    :response: http-examples/lmapi/get_rule.resp-rest
 
 .. _lmapi_list_rule_props:
 
@@ -564,10 +594,20 @@ list_rule_props - list rule properties
 
 Get all editable parameters of the :doc:`decision rule</lm/decision_matrix>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_rule_props.req
+    :response: http-examples/lmapi/list_rule_props.resp
+
 Parameters:
 
 * **k** 
 * **i** rule id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_rule_props.rest
+    :response: http-examples/lmapi/list_rule_props.resp-rest
 
 .. _lmapi_list_rules:
 
@@ -576,9 +616,19 @@ list_rules - get rules list
 
 Get the list of all available :doc:`decision rules<decision_matrix>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_rules.req
+    :response: http-examples/lmapi/list_rules.resp
+
 Parameters:
 
 * **k** 
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_rules.rest
+    :response: http-examples/lmapi/list_rules.resp-rest
 
 .. _lmapi_set_rule_prop:
 
@@ -586,6 +636,14 @@ set_rule_prop - set rule parameters
 -----------------------------------
 
 Set configuration parameters of the :doc:`decision rule</lm/decision_matrix>`.
+
+.. note::
+
+    Master key is required for batch set.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_rule_prop.req
+    :response: http-examples/lmapi/set_rule_prop.resp
 
 Parameters:
 
@@ -597,6 +655,12 @@ Optionally:
 
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_rule_prop.rest
+    :response: http-examples/lmapi/set_rule_prop.resp-rest
 
 
 .. _lmapi_cat_macro:
@@ -613,6 +677,10 @@ create_macro - create new macro
 
 Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm** manually.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_macro.req
+    :response: http-examples/lmapi/create_macro.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -622,6 +690,12 @@ Optionally:
 
 * **g** macro group
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_macro.rest
+    :response: http-examples/lmapi/create_macro.resp-rest
+
 .. _lmapi_destroy_macro:
 
 destroy_macro - delete macro
@@ -629,10 +703,20 @@ destroy_macro - delete macro
 
 Deletes :doc:`macro<macros>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_macro.req
+    :response: http-examples/lmapi/destroy_macro.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** macro id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_macro.rest
+    :response: http-examples/lmapi/destroy_macro.resp-rest
 
 .. _lmapi_get_macro:
 
@@ -641,10 +725,20 @@ get_macro - get macro information
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_macro.req
+    :response: http-examples/lmapi/get_macro.resp
+
 Parameters:
 
 * **k** 
 * **i** macro id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_macro.rest
+    :response: http-examples/lmapi/get_macro.resp-rest
 
 .. _lmapi_groups_macro:
 
@@ -653,9 +747,19 @@ groups_macro - get macro groups list
 
 Get the list of macros. Useful e.g. for custom interfaces.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/groups_macro.req
+    :response: http-examples/lmapi/groups_macro.resp
+
 Parameters:
 
 * **k** 
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/groups_macro.rest
+    :response: http-examples/lmapi/groups_macro.resp-rest
 
 .. _lmapi_list_macro_props:
 
@@ -664,10 +768,20 @@ list_macro_props - get macro configuration properties
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_macro_props.req
+    :response: http-examples/lmapi/list_macro_props.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** macro id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_macro_props.rest
+    :response: http-examples/lmapi/list_macro_props.resp-rest
 
 .. _lmapi_list_macros:
 
@@ -675,6 +789,10 @@ list_macros - get macro list
 ----------------------------
 
 Get the list of all available :doc:`macros<macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_macros.req
+    :response: http-examples/lmapi/list_macros.resp
 
 Parameters:
 
@@ -684,12 +802,22 @@ Optionally:
 
 * **g** filter by group
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_macros.rest
+    :response: http-examples/lmapi/list_macros.resp-rest
+
 .. _lmapi_result:
 
 result - macro execution result
 -------------------------------
 
 Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/result.req
+    :response: http-examples/lmapi/result.resp
 
 Parameters:
 
@@ -703,12 +831,22 @@ Optionally:
 * **s** filter by action status: Q for queued, R for running, F for finished
 * **Return** list or single serialized action object
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/result.rest
+    :response: http-examples/lmapi/result.resp-rest
+
 .. _lmapi_run:
 
 run - execute macro
 -------------------
 
 Execute a :doc:`macro<macros>` with the specified arguments.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/run.req
+    :response: http-examples/lmapi/run.resp
 
 Parameters:
 
@@ -724,12 +862,22 @@ Optionally:
 * **p** queue priority (default is 100, lower is better)
 * **q** global queue timeout, if expires, action is marked as "dead"
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/run.rest
+    :response: http-examples/lmapi/run.resp-rest
+
 .. _lmapi_set_macro_prop:
 
 set_macro_prop - set macro configuration property
 -------------------------------------------------
 
 Set configuration parameters of the :doc:`macro<macros>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_macro_prop.req
+    :response: http-examples/lmapi/set_macro_prop.resp
 
 Parameters:
 
@@ -741,6 +889,12 @@ Optionally:
 
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_macro_prop.rest
+    :response: http-examples/lmapi/set_macro_prop.resp-rest
 
 
 .. _lmapi_cat_cycle:
@@ -757,6 +911,10 @@ create_cycle - create new cycle
 
 Creates new :doc:`cycle<cycles>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_cycle.req
+    :response: http-examples/lmapi/create_cycle.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -766,17 +924,33 @@ Optionally:
 
 * **g** cycle group
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_cycle.rest
+    :response: http-examples/lmapi/create_cycle.resp-rest
+
 .. _lmapi_destroy_cycle:
 
 destroy_cycle - delete cycle
 ----------------------------
 
-Deletes :doc:`cycle<cycles>`.
+Deletes :doc:`cycle<cycles>`. If cycle is running, it is stopped before deletion.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_cycle.req
+    :response: http-examples/lmapi/destroy_cycle.resp
 
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** cycle id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_cycle.rest
+    :response: http-examples/lmapi/destroy_cycle.resp-rest
 
 .. _lmapi_get_cycle:
 
@@ -784,6 +958,10 @@ get_cycle - get cycle information
 ---------------------------------
 
 
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_cycle.req
+    :response: http-examples/lmapi/get_cycle.resp
 
 Parameters:
 
@@ -794,6 +972,12 @@ Returns:
 
 field "value" contains real average cycle interval
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_cycle.rest
+    :response: http-examples/lmapi/get_cycle.resp-rest
+
 .. _lmapi_groups_cycle:
 
 groups_cycle - get cycle groups list
@@ -801,9 +985,19 @@ groups_cycle - get cycle groups list
 
 Get the list of cycles. Useful e.g. for custom interfaces.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/groups_cycle.req
+    :response: http-examples/lmapi/groups_cycle.resp
+
 Parameters:
 
 * **k** 
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/groups_cycle.rest
+    :response: http-examples/lmapi/groups_cycle.resp-rest
 
 .. _lmapi_list_cycle_props:
 
@@ -812,10 +1006,20 @@ list_cycle_props - get cycle configuration properties
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_cycle_props.req
+    :response: http-examples/lmapi/list_cycle_props.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** cycle id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_cycle_props.rest
+    :response: http-examples/lmapi/list_cycle_props.resp-rest
 
 .. _lmapi_list_cycles:
 
@@ -823,6 +1027,10 @@ list_cycles - get cycle list
 ----------------------------
 
 Get the list of all available :doc:`cycles<cycles>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_cycles.req
+    :response: http-examples/lmapi/list_cycles.resp
 
 Parameters:
 
@@ -832,6 +1040,12 @@ Optionally:
 
 * **g** filter by group
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_cycles.rest
+    :response: http-examples/lmapi/list_cycles.resp-rest
+
 .. _lmapi_reset_cycle_stats:
 
 reset_cycle_stats - reset cycle statistic
@@ -839,10 +1053,20 @@ reset_cycle_stats - reset cycle statistic
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/reset_cycle_stats.req
+    :response: http-examples/lmapi/reset_cycle_stats.resp
+
 Parameters:
 
 * **k** 
 * **i** cycle id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/reset_cycle_stats.rest
+    :response: http-examples/lmapi/reset_cycle_stats.resp-rest
 
 .. _lmapi_set_cycle_prop:
 
@@ -850,6 +1074,10 @@ set_cycle_prop - set cycle property
 -----------------------------------
 
 Set configuration parameters of the :doc:`cycle<cycles>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_cycle_prop.req
+    :response: http-examples/lmapi/set_cycle_prop.resp
 
 Parameters:
 
@@ -862,6 +1090,12 @@ Optionally:
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_cycle_prop.rest
+    :response: http-examples/lmapi/set_cycle_prop.resp-rest
+
 .. _lmapi_start_cycle:
 
 start_cycle - start cycle
@@ -869,10 +1103,20 @@ start_cycle - start cycle
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/start_cycle.req
+    :response: http-examples/lmapi/start_cycle.resp
+
 Parameters:
 
 * **k** 
 * **i** cycle id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/start_cycle.rest
+    :response: http-examples/lmapi/start_cycle.resp-rest
 
 .. _lmapi_stop_cycle:
 
@@ -880,6 +1124,10 @@ stop_cycle - stop cycle
 -----------------------
 
 
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/stop_cycle.req
+    :response: http-examples/lmapi/stop_cycle.resp
 
 Parameters:
 
@@ -889,6 +1137,12 @@ Parameters:
 Optionally:
 
 * **wait** wait until cycle is stopped
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/stop_cycle.rest
+    :response: http-examples/lmapi/stop_cycle.resp-rest
 
 
 .. _lmapi_cat_ext:
@@ -905,10 +1159,20 @@ get_ext - get loaded extension information
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_ext.req
+    :response: http-examples/lmapi/get_ext.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** extension ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_ext.rest
+    :response: http-examples/lmapi/get_ext.resp-rest
 
 .. _lmapi_list_ext:
 
@@ -916,6 +1180,10 @@ list_ext - get list of available macro extensions
 -------------------------------------------------
 
 
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_ext.req
+    :response: http-examples/lmapi/list_ext.resp
 
 Parameters:
 
@@ -925,6 +1193,12 @@ Optionally:
 
 * **full** get full information
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_ext.rest
+    :response: http-examples/lmapi/list_ext.resp-rest
+
 .. _lmapi_list_ext_mods:
 
 list_ext_mods - get list of available extension modules
@@ -932,9 +1206,19 @@ list_ext_mods - get list of available extension modules
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_ext_mods.req
+    :response: http-examples/lmapi/list_ext_mods.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_ext_mods.rest
+    :response: http-examples/lmapi/list_ext_mods.resp-rest
 
 .. _lmapi_load_ext:
 
@@ -942,6 +1226,10 @@ load_ext - load extension module
 --------------------------------
 
 Loads:doc:`macro extension</lm/ext>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/load_ext.req
+    :response: http-examples/lmapi/load_ext.resp
 
 Parameters:
 
@@ -954,6 +1242,12 @@ Optionally:
 * **c** extension configuration
 * **save** save extension configuration after successful call
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/load_ext.rest
+    :response: http-examples/lmapi/load_ext.resp-rest
+
 .. _lmapi_modhelp_ext:
 
 modhelp_ext - get extension usage help
@@ -961,11 +1255,21 @@ modhelp_ext - get extension usage help
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/modhelp_ext.req
+    :response: http-examples/lmapi/modhelp_ext.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **m** extension name (without *.py* extension)
 * **c** help context (*cfg* or *functions*)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/modhelp_ext.rest
+    :response: http-examples/lmapi/modhelp_ext.resp-rest
 
 .. _lmapi_modinfo_ext:
 
@@ -974,10 +1278,20 @@ modinfo_ext - get extension module info
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/modinfo_ext.req
+    :response: http-examples/lmapi/modinfo_ext.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **m** extension module name (without *.py* extension)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/modinfo_ext.rest
+    :response: http-examples/lmapi/modinfo_ext.resp-rest
 
 .. _lmapi_set_ext_prop:
 
@@ -985,6 +1299,10 @@ set_ext_prop - set extension configuration property
 ---------------------------------------------------
 
 appends property to extension configuration and reloads module
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_ext_prop.req
+    :response: http-examples/lmapi/set_ext_prop.resp
 
 Parameters:
 
@@ -997,6 +1315,12 @@ Optionally:
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
 
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_ext_prop.rest
+    :response: http-examples/lmapi/set_ext_prop.resp-rest
+
 .. _lmapi_unload_ext:
 
 unload_ext - unload macro extension
@@ -1004,10 +1328,20 @@ unload_ext - unload macro extension
 
 
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/unload_ext.req
+    :response: http-examples/lmapi/unload_ext.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
 * **i** extension ID
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/unload_ext.rest
+    :response: http-examples/lmapi/unload_ext.resp-rest
 
 
 .. _lmapi_cat_remotes:

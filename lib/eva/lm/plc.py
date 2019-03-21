@@ -451,9 +451,10 @@ class Cycle(eva.item.Item):
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         d['interval'] = self.interval
-        if not info and not config and not props:
+        if not config and not props:
             d['status'] = self.cycle_status
-            d['value'] = str(self.tc / self.c if self.c else self.interval)
+            d['value'] = '{0:.4f}'.format(self.tc /
+                                        self.c if self.c else self.interval)
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
