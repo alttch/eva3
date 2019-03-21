@@ -225,7 +225,6 @@ def sighandler_term(signum=None, frame=None):
     unlink_pid_file()
     _sigterm_sent = True
     logging.info('EVA core shut down')
-    sys.exit(0)
 
 
 def sighandler_int(signum, frame):
