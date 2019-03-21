@@ -243,6 +243,7 @@ class Cycle(eva.item.Item):
         self.cycle_thread = None
         self.cycle_enabled = False
         self.cycle_status = 0
+        self.iterations = 0
         self.stats_lock = threading.Lock()
 
     def update_config(self, data):
@@ -346,6 +347,7 @@ class Cycle(eva.item.Item):
             cycle_start = time.time()
             cycle_end = cycle_start + self.interval
             if self.macro:
+                self.iterations += 1
                 try:
                     result = eva.lm.controller.exec_macro(
                         self.macro,
@@ -390,9 +392,7 @@ class Cycle(eva.item.Item):
                     corr = tc / c - self.interval
                     c = 0
                     tc = 0
-                    th = threading.Thread(target=self.notify)
-                    th.setDaemon(True)
-                    th.start()
+                    threading.Thread(target=self.notify).start()
             else:
                 corr = 0
             prev = t
@@ -402,7 +402,7 @@ class Cycle(eva.item.Item):
         logging.debug('%s cycle thread stopped' % self.full_id)
         self.cycle_status = 0
         # dirty - wait for prev. state to be sent
-        time.sleep(eva.core.sleep_step)
+        # time.sleep(eva.core.sleep_step)
         self.notify()
 
     def start(self, autostart=False):
@@ -431,6 +431,7 @@ class Cycle(eva.item.Item):
         self.stats_lock.acquire()
         self.c = 0
         self.tc = 0
+        self.iterations = 0
         self.stats_lock.release()
         self.notify()
         return True
@@ -453,8 +454,9 @@ class Cycle(eva.item.Item):
         d['interval'] = self.interval
         if not config and not props:
             d['status'] = self.cycle_status
-            d['value'] = '{0:.4f}'.format(self.tc /
-                                        self.c if self.c else self.interval)
+            d['value'] = '{},{:.4f},'.format(self.iterations,
+                                             (self.tc / self.c
+                                              if self.c else self.interval))
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None

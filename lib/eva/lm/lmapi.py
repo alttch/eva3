@@ -730,6 +730,8 @@ class LM_API(GenericAPI):
         k, i = parse_function_params(kwargs, 'ki', '.S')
         cycle = eva.lm.controller.get_cycle(i)
         if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
+        if cycle.cycle_status:
+            raise ResourceBusy('cycle is already started')
         return cycle.start()
 
     @log_i

@@ -193,7 +193,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 d['id'] = d['full_id']
             if api_func == 'list_cycles':
                 d['int'] = d['interval']
-                d['avg'] = '{:.4f}'.format(float(d['value']))
+                v = d['value'].split(',')
+                d['iter'] = v[0]
+                d['avg'] = '{:.4f}'.format(float(v[1]))
                 d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             elif itype == 'state':
                 try:
@@ -1332,7 +1334,7 @@ _pd_cols = {
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
     'list_cycles':
-    ['id', 'description', 'controller_id', 'status', 'int', 'avg'],
+    ['id', 'description', 'controller_id', 'status', 'int', 'iter', 'avg'],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'managed', 'proto', 'version',
         'build', 'description'
