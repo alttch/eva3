@@ -755,7 +755,7 @@ Logic cycles
 create_cycle - create new cycle
 -------------------------------
 
-Creates new :doc:`cycle<cycles>`. manually.
+Creates new :doc:`cycle<cycles>`.
 
 Parameters:
 
