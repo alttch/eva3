@@ -680,8 +680,7 @@ class GenericAPI(object):
 
     # return version for embedded hardware
     @log_d
-    def info(self):
-        parse_api_params(params=kwargs)
+    def info(self, **kwargs):
         return {
             'platfrom': 'eva',
             'product': eva.core.product_code,

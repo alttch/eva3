@@ -1675,6 +1675,7 @@ class UC_HTTP_API(UC_HTTP_API_abstract, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self.expose_api_methods('ucapi')
+        self._expose(self.info)
         self.wrap_exposed()
 
 

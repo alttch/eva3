@@ -1,1028 +1,1287 @@
 LM API
-******
+**************
 
-:doc:`Logic Manager<lm>` LM API is called through URL request
+:doc:`Logic Manager<lm>` API is used to manage lvars, rules and other logic elements
 
-**\http://<IP_address_LM:Port>/lm-api/function**
+API basics
+==========
+
+Standard API (direct function calling)
+--------------------------------------
+
+LM API functions are called through URL request
+
+    **\http://<ip_address:8817>/lm-api/function**
 
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
-All functions can be called using GET and POST methods. When POST method is
-used, the parameters can be passed to functions either as www-form or as JSON.
+Standard API responses
+~~~~~~~~~~~~~~~~~~~~~~
 
-API key can be sent in request parameters, session (if user is logged in) or in
-HTTP **X-Auth-Key** header.
+Good for backward compatibility with any devices, as all API functions can be
+called using GET and POST. When POST is used, the parameters can be passed to
+functions either as multipart/form-data or as JSON.
+
+Also, standard direct method calling is the only way to use built-in user
+sessions.
+
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
+
+**Standard responses in status/body:**
+
+* **200 OK** *{ "result": "OK" }* API call completed successfully.
+
+**Standard error responses in status:**
+
+* **400 Bad Request** Invalid request params
+* **403 Forbidden** the API key has no access to this function or resource
+* **404 Not Found** method or resource/object doesn't exist
+* **405 Method Not Allowed** API function/method not found or HTTP method is
+  not either GET or POST
+* **409 Conflict** resource/object already exists or is locked
+* **500 API Error** API function execution has been failed. Check input
+  parameters and server logs.
+
+In case API function has been failed, response body will contain JSON data with
+*_error* field, which contains error message.
+
+.. code-block:: json
+
+    {
+        "_error": "unable to add object, already present",
+        "result": "ERROR"
+    }
+
+JSON RPC
+--------
+
+Additionally, API supports `JSON RPC 2.0
+<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
+sessions, so user authorization is not possible. Also note that default JSON
+RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
+error result, as JSON RPC sends errors in "error" field.
+
+If JSON RPC request is called without ID and server should not return a result,
+it will return http response with a code *202 Accepted*.
 
 .. note::
 
-    Object creation and modification functions don't save configurations
-    automatically unless you specify **save** parameter in API request. The
-    system is designed to work this way to let you discard the changes in case
-    of serious problems by killing the controller process.
+    JSON RPC is recommended way to use EVA ICS API, unless RESTful is really
+    required.
 
-    If you need to save any changes made without this parameter, restart the
-    controller gracefully or use :doc:`/sysapi` **save** function.
+JSON RPC API URL:
 
-Additionally, each EVA ICS API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC API URL for LM API
-is:
+    **\http://<ip_address:8817>/jrpc**
 
-**\http://<IP_address:Port>/lm-api**
+RESTful API
+-----------
 
-JSON RPC doesn't support sessions, so user authorization is not possible. Also
-note that default JSON RPC result is *{ "ok": true }* (instead of *{ "result":
-"OK" }*). There's no error result, as JSON RPC sends errors in "error" field.
+Majority EVA ICS API components and items support `REST
+<https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
+for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
+multipart/form-data. For JSON, *Content-Type: application/json* header must be
+specified.
+
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
+
+RESTful API responses
+~~~~~~~~~~~~~~~~~~~~~~
+
+**Success responses:**
+
+* **200 OK** API call completed successfully
+* **201 Created** API call completed successfully, Response header
+  *Location* contains either uri to the newly created object or resource is
+  accessible by the effective request uri. For resources created with *PUT*,
+  body contains either serialized resource object or resource type and id
+* **202 Accepted** The server accepted command and will process it later.
+* **204 No Content** API call completed successfully, no content to return
+
+**Error error responses:**
+
+* **403 Forbidden** the API key has no access to this function or resource
+* **404 Not Found** resource doesn't exist
+* **405 Method Not Allowed** API function/method not found
+* **409 Conflict** resource/object already exists or is locked
+* **500 API Error** API function execution has been failed. Check
+  input parameters and server logs.
+
+Response body may contain additional information encoded in JSON. *{
+"result": "OK" }* and *{ "result": "ERROR" }* in body are not returned.
 
 .. contents::
 
-.. _lm_test:
+.. _lmapi_cat_general:
+
+General functions
+=================
+
+
+
+.. _lmapi_test:
 
 test - test API/key and get system info
-=======================================
+---------------------------------------
 
-Test can be executed with any valid :ref:`API KEY<lm_apikey>`
+Test can be executed with any valid API key of the controller the function is called to.
 
-Parameters:
-
-* **k** valid API key
-
-Returns JSON dict with system info and current API key permissions (for
-masterkey only  'master':true is returned)
-
-.. code-block:: json
-
-    {
-        "acl": {
-            "allow": {
-                "cmd": true
-            },
-            "groups": [
-                "system/#",
-                "service",
-                "security/+"
-            ],
-            "items": [],
-            "key_id": "key1",
-            "master": false,
-            "sysfunc": false
-        },
-        "product_build": 2017082101,
-        "product_code": "lm",
-        "product_name": "EVA Logic Manager",
-        "result": "OK",
-        "system": "eva3-test1",
-        "time": 1504489043.4566338,
-        "version": "3.0.0"
-    }
-
-Errors:
-
-* **403 Forbidden** the key has no access to the API
-
-.. _lm_state:
-
-state - get logic variable state
-================================
-
-State of the :ref:`lvar<lvar>` or all logic variables can be obtained using
-**state** command.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/test.req
+    :response: http-examples/lmapi/test.resp
 
 Parameters:
 
-* **k** valid API key
-* **i** lvar ID
-* **g** group filter, optional :ref:`mqtt<mqtt_>` masks can be used, for
-  example group1/#, group1/+/lamps)
-* **full=1** display extended item info, optional (config_changed, description,
-  virtual, status_labels and action_enabled for unit)
+* **k** any valid API key
 
-Returns lvar status in JSON dict or array of dicts:
+Returns:
 
-.. code-block:: json
+JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
 
-    [
-        {
-            "expires": 0,
-            "full_id": "service/test",
-            "group": "service",
-            "id": "test",
-            "set_time": 1506345719.8540998,
-            "status": 1,
-            "type": "lvar",
-            "value": "33"
-        }
-    ]
+**RESTful:**
 
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
-
-.. _lm_state_history:
-
-state_history - get item state history
-======================================
-
-State history of one :doc:`item</items>` or several items of the specified type
-can be obtained using **state_history** command.
-
-Parameters:
-
-* **k** valid API key
-* **i** item ID, or multiple IDs, comma separated
-* **a** :doc:`notifier</notifiers>` ID which keeps history for the specified
-  item(s) (default: **db_1**)
-* **s** time frame start, ISO or Unix timestamp
-* **e** time frame end, optional (default: current time), ISO or Unix timestamp
-* **l** limit history records (optional)
-* **x** item property (**status** or **value**)
-* **t** time format (**iso** or **raw** for Unix timestamp)
-* **w** fill frame with the specified interval (e.g. *1T* - 1 minute, *2H* - 2
-  hours etc.), optional
-* **g** output format, **list** (default) or **dict**
-
-Returns state history for the chosen item(s) in the specified format.
-
-To get state history for multiple items:
-
-* **w** param is required
-* **g** should be specified as **list**
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** item doesn't exist, the key has no access to the item, or
-  the history database is not found
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/test.rest
+    :response: http-examples/lmapi/test.resp-rest
 
 
-.. _lm_set:
+.. _lmapi_cat_lvar:
 
-set - set lvar state
-====================
+LVar functions
+==============
 
-Allows to set status and value of a :ref:`logic variable<lvar>`.
 
-Parameters:
 
-* **k** valid API key
-* **i** lvar id
-* **s** lvar status, optional
-* **v** lvar value, optional
-
-Returns JSON dict result="OK", if the state is set successfully.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
-
-.. _lm_reset:
-
-reset - reset lvar state
-========================
-
-Allows to set status and value of a :ref:`logic variable<lvar>` to *1*. Useful
-when lvar is being used as a timer to reset it, or as a flag to set it *True*.
-
-Parameters:
-
-* **k** valid API key
-* **i** lvar id
-
-Returns JSON dict result="OK", if the state is reset successfully.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
-
-.. _lm_clear:
+.. _lmapi_clear:
 
 clear - clear lvar state
-========================
+------------------------
 
-Allows to set status (if **expires** lvar param > 0) or value (if **expires**
-isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as
-a timer to stop it, or as a flag to set it *False*.
+set status (if **expires** lvar param > 0) or value (if **expires** isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as a timer to stop it, or as a flag to set it *False*.
 
-Returns JSON dict result="OK", if the state is cleared successfully.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/clear.req
+    :response: http-examples/lmapi/clear.resp
 
 Parameters:
 
-* **k** valid API key
+* **k** 
 * **i** lvar id
 
-Errors:
+**RESTful:**
 
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/clear.rest
+    :response: http-examples/lmapi/clear.resp-rest
 
-.. _lm_toggle:
+.. _lmapi_groups:
 
-toggle - toggle lvar value
-==========================
+groups - get item group list
+----------------------------
 
-Allows to switch value of a :ref:`logic variable<lvar>` between *0* and *1*.
-Useful when lvar is being used as a flag to switch it between *True*/*False*.
+Get the list of item groups. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/groups.req
+    :response: http-examples/lmapi/groups.resp
 
 Parameters:
 
-* **k** valid API key
+* **k** 
+* **p** item type (must be set to lvar [LV])
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/groups.rest
+    :response: http-examples/lmapi/groups.resp-rest
+
+.. _lmapi_reset:
+
+reset - reset lvar state
+------------------------
+
+Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful when lvar is being used as a timer to reset it, or as a flag to set it *True*.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/reset.req
+    :response: http-examples/lmapi/reset.resp
+
+Parameters:
+
+* **k** 
 * **i** lvar id
 
-Returns JSON dict result="OK", if the state is toggled successfully.
+**RESTful:**
 
-Errors:
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/reset.rest
+    :response: http-examples/lmapi/reset.resp-rest
 
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist, or the key has no access to the lvar
+.. _lmapi_set:
 
-groups - get lvar groups list
-=============================
-Get the list of the lvar groups. Useful i.e. for custom interfaces.
+set - set lvar state
+--------------------
 
-Parameters:
+Set status and value of a :ref:`logic variable<lvar>`.
 
-* **k** valid API key
-
-Returns JSON array:
-
-.. code-block:: json
-
-    [
-        "parent_group1/group1",
-        "parent_group1/group2"
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-groups_macro - get macro groups list
-====================================
-Get the list of macro groups.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set.req
+    :response: http-examples/lmapi/set.resp
 
 Parameters:
 
-* **k** valid API key
-
-Returns JSON array:
-
-.. code-block:: json
-
-    [
-        "parent_group1/group1",
-        "parent_group1/group2"
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-list_macros - get macro list
-============================
-
-Get the list of all available :doc:`macros<macros>`.
-
-Parameters:
-
-* **k** valid API key
-* **g** filter by group, optional (:ref:`MQTT<mqtt_>` masks may be used, i.e.
-  group1/#, group1/+/service)
-
-Returns JSON array:
-
-.. code-block:: json
-
-    [
-        {
-           "action_enabled": true,
-           "description": "description",
-           "full_id": "group/macro_id",
-           "group": "group",
-           "id": "macro_id",
-           "oid": "lmacro:group/macro_id",
-           "type": "lmacro"
-        }
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-.. _lm_run:
-
-run - execute macro
-===================
-
-Executes a :doc:`macro<macros>` with the specified arguments.
-
-Parameters:
-
-* **k** valid API key
-* **i** macro id
-
-optionally:
-
-* **a** macro arguments, array or space separated
-* **kw** macro keyword arguments, name=value, comma separated or dict
-* **p** queue priority (less value - higher priority, default 100)
-* **u** unique action id (use this option only if you know what you do, the
-  system assigns the unique ID by default)
-* **w** the API request will wait for the completion of the action for the
-  specified number of seconds
-* **q** timeout (sec) for action processing in the public queue
-
-Returns JSON dict with the following data (time** UNIX_TIMESTAMP):
-
-.. code-block:: text
-
-    {
-       "err": "<compilation and exec errors>",
-       "exitcode": <exit_code>,
-       "item_group": "<group>",
-       "item_id": "<macro_id>",
-       "item_type": "lmacro",
-       "out": "[macro out variable]",
-       "priority": <priority>,
-       "status": "<action status>",
-       "time": {
-           "created": <creation_time>,
-           "pending": <public_queue_pending_time>,
-           "queued": <controller_queue_pending_time>,
-           "running": <running_time>
-       },
-       "uuid": "unique_action_id"
-    }
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** macro doesn't exist, or the key has no access to the macro
-
-In case the parameter **w** is not indicated or action is not finished in the
-specified time, it should continue running, and its status may be checked in
-accordance with assigned uuid. If action is terminated, exit code will stand
-for the exit code of the macro. Additionally, **time** will be supplemented by
-*completed*, *failed* or *terminated*. **out** field contains the output of
-*out* variable (if it was associated with a value in the macro), **err** field
-(in case of macro compilation/execution errors)contains the error details.
-
-.. _lm_result:
-
-result - macro execution result
-===============================
-
-Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
-
-Parameters:
-
-* **k** valid API key
-
-optionally:
-
-* **i** macro_id
-* **u** action uuid (either action uuid or macro_id must be specified)
-* **g** filter by macro group
-* **s** filter by action status (Q - queued, R - running, F - finished)
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** macro or action doesn't exist, or the key has no access to
-  the macro
-
-Actions remain in the system until they receive the status *completed*,
-*failed* or *terminated* and until **keep_action_status** time indicated in
-:ref:`controller configuration<lm_ini>` passes.
-
-.. note::
-
-    This function doesn't return results of the unit actions executed by macros
-
-list - get list of all logic variables
-======================================
-
-Parameters:
-
-* **k** masterkey API key
-* **g** filter by group (optional)
-
-Returns JSON array which contains :ref:`lvars<lvar>`:
-
-
-.. code-block:: json
-
-    [
-        {
-           "description": "description",
-           "expires": 0,
-           "full_id": "group/id",
-           "group": "group",
-           "id": "lvare_id",
-           "oid": "lvar:group/id",
-           "set_time": 9999999,
-           "type": "lvar"
-        }
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-get_config - get logic variable configuration
-=============================================
-
-Parameters:
-
-* **k** masterkey
+* **k** 
 * **i** lvar id
 
-Returns complete :ref:`lvar<lvar>` configuration.
+Optionally:
 
-Errors:
+* **s** lvar status
+* **v** lvar value
 
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist
+**RESTful:**
 
-save_config - save lvar configuration on disk
-=============================================
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set.rest
+    :response: http-examples/lmapi/set.resp-rest
 
-Saves lvar configuration on disk (even if it wasn't changed)
+.. _lmapi_state:
 
-Parameters:
+state - get lvar state
+----------------------
 
-* **k** masterkey
-* **i** lvar id
+State of lvar or all lvars can be obtained using state command.
 
-Returns JSON dict result="OK", if the configuration is saved successfully.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-.. _lm_list_props:
-
-list_props - get editable lvar parameters
-=========================================
-
-Allows to get all editable parameters of the :ref:`lvar configuration<lvar>`.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/state.req
+    :response: http-examples/lmapi/state.resp
 
 Parameters:
 
-* **k** masterkey
-* **i** lvar id
+* **k** 
 
-Errors:
+Optionally:
 
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** lvar doesn't exist
+* **p** item type (none or lvar [LV])
+* **i** item id
+* **g** item group
+* **full** return full state
 
-.. _lm_set_prop:
+**RESTful:**
 
-set_prop - set item parameters
-==============================
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/state.rest
+    :response: http-examples/lmapi/state.resp-rest
 
-Allows to set configuration parameters of the lvar.
+.. _lmapi_state_history:
 
-Parameters:
+state_history - get item state history
+--------------------------------------
 
-* **k** masterkey
-* **i** lvar id
-* **p** lvar configuration param
-* **v** param value
+State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
 
-Returns result="OK" if the parameter is set, or result="ERROR", if an error
-occurs.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-create_lvar - create new lvar
-=============================
-
-Creates new :ref:`lvar<lvar>`.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/state_history.req
+    :response: http-examples/lmapi/state_history.resp
 
 Parameters:
 
-* **k** masterkey
+* **k** 
+* **a** history notifier id (default: db_1)
+* **i** item oids or full ids, list or comma separated
+
+Optionally:
+
+* **s** start time (timestamp or ISO)
+* **e** end time (timestamp or ISO)
+* **l** records limit (doesn't work with "w")
+* **x** state prop ("status" or "value")
+* **t** time format("iso" or "raw" for unix timestamp, default is "raw")
+* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
+* **g** output format ("list" or "dict", default is "list")
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/state_history.rest
+    :response: http-examples/lmapi/state_history.resp-rest
+
+.. _lmapi_toggle:
+
+toggle - toggle lvar state
+--------------------------
+
+switch value of a :ref:`logic variable<lvar>` between *0* and *1*. Useful when lvar is being used as a flag to switch it between *True*/*False*.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/toggle.req
+    :response: http-examples/lmapi/toggle.resp
+
+Parameters:
+
+* **k** 
 * **i** lvar id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/toggle.rest
+    :response: http-examples/lmapi/toggle.resp-rest
+
+
+.. _lmapi_cat_lvar-management:
+
+LVar management
+===============
+
+
+
+.. _lmapi_list:
+
+list - list lvars
+-----------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list.req
+    :response: http-examples/lmapi/list.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+Optionally:
+
+* **g** filter by item group
+
+Returns:
+
+the list of all :ref:`lvars<lvar>` available
+
+.. _lmapi_create_lvar:
+
+create_lvar - create lvar
+-------------------------
+
+Create new :ref:`lvar<lvar>`
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_lvar.req
+    :response: http-examples/lmapi/create_lvar.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** lvar id
+
+Optionally:
+
 * **g** lvar group
+* **save** save lvar configuration immediately
 
-optionally:
+**RESTful:**
 
-* **save=1** save lvar configuration on the disk immediately after creation
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_lvar.rest
+    :response: http-examples/lmapi/create_lvar.resp-rest
 
-Returns result="OK" if the lvar is created, or result="ERROR", if an error
-occurred.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
+.. _lmapi_destroy_lvar:
 
 destroy_lvar - delete lvar
-==========================
+--------------------------
 
-Deletes :ref:`lvar<lvar>`.
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_lvar.req
+    :response: http-examples/lmapi/destroy_lvar.resp
 
 Parameters:
 
-* **k** masterkey
+* **k** API key with *master* permissions
 * **i** lvar id
 
-Returns result="OK" if the lvar is deleted, or result="ERROR", if an error
-occurred.
+**RESTful:**
 
-LVar configuration can be immediately deleted from the disk, if there is
-*db_update=instant* set in :ref:`controller configuration<lm_ini>`, at the
-moment of shutdown, if there is *db_update=on_exit*, or when calling
-:doc:`/sysapi` save (or save in :doc:`LM EI<lm_ei>`), if there is
-*db_update=manual*.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_lvar.rest
+    :response: http-examples/lmapi/destroy_lvar.resp-rest
 
-If configuration is not deleted by either of these, you should delete it
-manually by removing the file runtime/lm_lvar.d/ID.json, otherwise the
-lvar(s) will remain in the system after restarting the controller.
+.. _lmapi_get_config:
 
-Errors:
+get_config - get lvar configuration
+-----------------------------------
 
-* **403 Forbidden** invalid API KEY
 
-.. _lm_list_macro_props:
 
-list_macro_props - get editable macro parameters
-================================================
-
-Allows to get all editable parameters of the :doc:`macro
-configuration<macros>`.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_config.req
+    :response: http-examples/lmapi/get_config.resp
 
 Parameters:
 
-* **k** masterkey
-* **i** macro id
+* **k** API key with *master* permissions
+* **i** lvaar id
 
-Errors:
+Returns:
 
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** macro doesn't exist
+complete :ref:`lvar<lvar>` configuration.
 
-.. _lm_set_macro_prop:
+**RESTful:**
 
-set_macro_prop - set macro parameters
-=====================================
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_config.rest
+    :response: http-examples/lmapi/get_config.resp-rest
 
-Allows to set configuration parameters of the macro.
+.. _lmapi_list_props:
 
-Parameters:
+list_props - list lvar properties
+---------------------------------
 
-* **k** masterkey
-* **i** macro id
-* **p** macro configuration param
-* **v** param value
+Get all editable parameters of the :ref:`lvar</var>` confiugration.
 
-Returns result="OK" if the parameter is set, or result="ERROR", if an error
-occurs.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-.. _lm_create_macro:
-
-create_macro - create new macro
-===============================
-
-Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm**
-manually.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_props.req
+    :response: http-examples/lmapi/list_props.resp
 
 Parameters:
 
-* **k** masterkey
-* **i** macro id
-* **g** macro group
+* **k** API key with *master* permissions
+* **i** item id
 
-optionally:
+**RESTful:**
 
-* **save=1** save macro configuration on the disk immediately after creation
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_props.rest
+    :response: http-examples/lmapi/list_props.resp-rest
 
-Returns result="OK" if a macro is created, or result="ERROR", if an error
-occurred.
+.. _lmapi_save_config:
 
-Errors:
+save_config - save lvar configuration
+-------------------------------------
 
-* **403 Forbidden** invalid API KEY
+Saves :ref:`lvar<lvar>`. configuration on disk (even if it hasn't been changed)
 
-destroy_macro - delete macro
-============================
-
-Deletes :doc:`macro<macros>`.
-
-Parameters:
-
-* **k** masterkey
-* **i** macro id
-
-Returns result="OK" if the macro is deleted, or result="ERROR", if an error
-occurred.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-list_rules - get rules list
-===========================
-
-Get the list of all available :doc:`decision rules<decision_matrix>`.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/save_config.req
+    :response: http-examples/lmapi/save_config.resp
 
 Parameters:
 
-* **k** valid API key
+* **k** API key with *master* permissions
+* **i** lvar id
 
-Returns JSON array of rules and their properties.
+**RESTful:**
 
-Errors:
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/save_config.rest
+    :response: http-examples/lmapi/save_config.resp-rest
 
-* **403 Forbidden** invalid API KEY
+.. _lmapi_set_prop:
 
-.. _lm_list_rule_props:
+set_prop - set lvar property
+----------------------------
 
-list_rule_props - get editable rule parameters
-===============================================
+Set configuration parameters of the :ref:`lvar<lvar>`.
 
-Allows to get all editable parameters of the :doc:`decision
-rule<decision_matrix>`.
-
-Parameters:
-
-* **k** masterkey or a key with *allow=dm_rule_props* to access
-  **in_range_\***,_**enabled** and **chillout_time** rule props, or with an
-  access to a certain rule by ID
-
-* **i** rule id
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** rule doesn't exist
-
-.. _lm_set_rule_prop:
-
-set_rule_prop - set rule parameters
-===================================
-
-Allows to set configuration parameters of the rule.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_prop.req
+    :response: http-examples/lmapi/set_prop.resp
 
 Parameters:
 
-* **k** masterkey or a key with *allow=dm_rule_props* to access
-  in_range,_\*enabled and **chillout_time** rule settings, or with an access to
-  a certain rule
-* **i** rule id
-* **p** rule configuration param
-* **v** param value
+* **k** API key with *master* permissions
+* **i** item id
+* **p** property name (or empty for batch set)
 
-Returns result="OK" if the parameter is set, or result="ERROR", if an error
-occurs.
+Optionally:
 
-Errors:
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
 
-* **403 Forbidden** invalid API KEY
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_prop.rest
+    :response: http-examples/lmapi/set_prop.resp-rest
+
+
+.. _lmapi_cat_rule:
+
+Decision matrix rules
+=====================
+
+
+
+.. _lmapi_create_rule:
 
 create_rule - create new rule
-==============================
+-----------------------------
 
-Creates new :doc:`decision rule<decision_matrix>`. Rule id is always generated
-automatically.
+Creates new :doc:`decision rule<decision_matrix>`. Rule id (UUID) is generated automatically unless specified.
 
 Parameters:
 
-* **k** masterkey
+* **k** API key with *master* permissions
 
-optionally:
+Optionally:
 
-* **save=1** save rule configuration on the disk immediately after creation
+* **u** rule UUID to set
+* **v** rule properties (dict)
+* **save** save unit configuration immediately
 
-Returns result="OK" if a rule is created, or result="ERROR", if an error
-occurred.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
+.. _lmapi_destroy_rule:
 
 destroy_rule - delete rule
-============================
+--------------------------
 
 Deletes :doc:`decision rule<decision_matrix>`.
 
 Parameters:
 
-* **k** masterkey
+* **k** API key with *master* permissions
 * **i** rule id
 
-Returns result="OK" if the rule is deleted, or result="ERROR", if an error
-occurred.
+.. _lmapi_get_rule:
 
-Errors:
+get_rule - get rule information
+-------------------------------
 
-* **403 Forbidden** invalid API KEY
 
-.. _lm_list_remote:
-
-list_remote - get a list of items from connected UCs
-====================================================
-
-Get a list of the items loaded from the connected :ref:`UC
-controllers<lm_remote_uc>`.  Useful to debug the controller connections.
 
 Parameters:
 
-* **k** masterkey
+* **k** 
+* **i** rule id
 
-optionally:
+.. _lmapi_list_rule_props:
 
-* **g** item group
-* **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`)
+list_rule_props - list rule properties
+--------------------------------------
 
-Returns the JSON array of :ref:`units<unit>` and :ref:`sensors<sensor>` loaded
-from the remote controllers. Additional field **controller_id** is present in
-any item indicating the controller it's loaded from.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-.. _lm_list_controllers:
-
-list_controllers - get controllers list
-=======================================
-
-Get the list of all connected :ref:`UC controllers<lm_remote_uc>`.
+Get all editable parameters of the :doc:`decision rule</lm/decision_matrix>`.
 
 Parameters:
 
-* **k** valid API key
+* **k** 
+* **i** rule id
 
-Returns JSON array:
+.. _lmapi_list_rules:
 
-.. code-block:: json
+list_rules - get rules list
+---------------------------
 
-    [
-        {
-        "build": "BUILD",
-        "connected": true,
-        "description": "<controller_description>",
-        "full_id": "<uc/controller_id>",
-        "group": "uc",
-        "id": "<controller_id>",
-        "oid": "<remote_uc:uc/controller_id>",
-        "type": "remote_uc",
-        "version": "VERSION"
-        }
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-.. _lm_test_controller:
-
-test_controller - test connection to remote controller
-======================================================
-
-Allows to test connection to the :ref:`UC controller<lm_remote_uc>`.
-
-* **k** masterkey
-* **i** controller id
-
-Returns result="OK" if the test is passed, or result="ERROR", if failed.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** controller doesn't exist
-
-.. _lm_list_controller_props:
-
-list_controller_props - get editable controller parameters
-==========================================================
-
-Allows to get all editable parameters of the connected :ref:`UC
-controller<lm_remote_uc>`.
-
-* **k** masterkey
-* **i** controller id
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** controller doesn't exist
-
-.. _lm_set_controller_prop:
-
-set_controller_prop - set controller parameters
-===============================================
-
-Allows to set configuration parameters of the connected UC.
+Get the list of all available :doc:`decision rules<decision_matrix>`.
 
 Parameters:
 
-* **k** masterkey
-* **i** controller id
-* **p** controller configuration param
-* **v** param value
+* **k** 
 
-Returns result="OK" if the parameter is set, or result="ERROR", if an error
-occurs.
+.. _lmapi_set_rule_prop:
 
-Errors:
+set_rule_prop - set rule parameters
+-----------------------------------
 
-* **403 Forbidden** invalid API KEY
-
-.. _lm_append_controller:
-
-append_controller - connect remote UC
-=====================================
-
-Connects remote :ref:`UC controller<lm_remote_uc>` to the local.
+Set configuration parameters of the :doc:`decision rule</lm/decision_matrix>`.
 
 Parameters:
 
-* **k** masterkey
-* **uri** :doc:`/uc/uc_api` uri (*proto://host:port*)
-* **a** remote controller API key (\$key to use local key)
+* **k** 
+* **i** rule id
+* **p** property name (or empty for batch set)
 
-optionally:
+Optionally:
 
-* **m** :ref:`MQTT notifier<mqtt_>` to exchange item states in real time
-* **s** *True*/*False* (*1*/*0*) verify remote SSL certificate or pass invalid
-* **t** timeout (seconds) for the remote controller API calls
-* **save=1** save connected controller configuration on the disk immediately
-  after creation
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
 
-Returns result="OK" if the controller is connected, or result="ERROR", if an
-error occurred.
 
-The remote controller id is obtained and set automatically according to its
-hostname or **name** field in the controller configuration. The remote
-controller id can't be changed.
+.. _lmapi_cat_macro:
 
-Errors:
+Logic control macros
+====================
 
-* **403 Forbidden** invalid API KEY
 
-.. _lm_remove_controller:
 
-remove_controller - disconnect UC
-=================================
+.. _lmapi_create_macro:
 
-Disconnects the remote :ref:`UC controller<lm_remote_uc>`.
+create_macro - create new macro
+-------------------------------
+
+Creates new :doc:`macro<macros>`. Macro code should be put in **xc/lm** manually.
 
 Parameters:
 
-* **k** masterkey
-* **i** controller id
+* **k** API key with *master* permissions
+* **i** macro id
 
-Returns result="OK" if the controller is disconnected, or result="ERROR", if an
-error occurred.
+Optionally:
 
-Errors:
+* **g** macro group
 
-* **403 Forbidden** invalid API KEY
+.. _lmapi_destroy_macro:
 
-.. _lm_reload_controller:
+destroy_macro - delete macro
+----------------------------
 
-reload_controller - reload items from UC
-========================================
-
-Allows to immediately reload all the :doc:`items</items>` and their status from
-the remote :ref:`UC controller<lm_remote_uc>`.
+Deletes :doc:`macro<macros>`.
 
 Parameters:
 
-* **k** masterkey
-* **i** controller id
+* **k** API key with *master* permissions
+* **i** macro id
 
-Returns result="OK" if the controller is deleted, or result="ERROR", if an
-error occurred.
+.. _lmapi_get_macro:
 
-Errors:
+get_macro - get macro information
+---------------------------------
 
-* **403 Forbidden** invalid API KEY
 
-list_ext - list loaded macro extensions
-=======================================
-
-Returns a list which contains all loaded :doc:`macro extensions</lm/ext>`.
 
 Parameters:
 
-* **k** masterkey
+* **k** 
+* **i** macro id
 
-Errors:
+.. _lmapi_groups_macro:
 
-* **403 Forbidden** invalid API KEY
+groups_macro - get macro groups list
+------------------------------------
 
-load_ext - load macro extension
-===============================
+Get the list of macros. Useful e.g. for custom interfaces.
+
+Parameters:
+
+* **k** 
+
+.. _lmapi_list_macro_props:
+
+list_macro_props - get macro configuration properties
+-----------------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** macro id
+
+.. _lmapi_list_macros:
+
+list_macros - get macro list
+----------------------------
+
+Get the list of all available :doc:`macros<macros>`.
+
+Parameters:
+
+* **k** 
+
+Optionally:
+
+* **g** filter by group
+
+.. _lmapi_result:
+
+result - macro execution result
+-------------------------------
+
+Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
+
+Parameters:
+
+* **k** 
+
+Optionally:
+
+* **u** action uuid or
+* **i** macro id
+* **g** filter by unit group
+* **s** filter by action status: Q for queued, R for running, F for finished
+* **Return** list or single serialized action object
+
+.. _lmapi_run:
+
+run - execute macro
+-------------------
+
+Execute a :doc:`macro<macros>` with the specified arguments.
+
+Parameters:
+
+* **k** 
+* **i** macro id
+
+Optionally:
+
+* **a** macro arguments, array or space separated
+* **kw** macro keyword arguments, name=value, comma separated or dict
+* **w** wait for the completion for the specified number of seconds
+* **u** action UUID (will be auto generated if none specified)
+* **p** queue priority (default is 100, lower is better)
+* **q** global queue timeout, if expires, action is marked as "dead"
+
+.. _lmapi_set_macro_prop:
+
+set_macro_prop - set macro configuration property
+-------------------------------------------------
+
+Set configuration parameters of the :doc:`macro<macros>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** item id
+* **p** property name (or empty for batch set)
+
+Optionally:
+
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
+
+
+.. _lmapi_cat_cycle:
+
+Logic cycles
+============
+
+
+
+.. _lmapi_create_cycle:
+
+create_cycle - create new cycle
+-------------------------------
+
+Creates new :doc:`cycle<cycles>`. manually.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** cycle id
+
+Optionally:
+
+* **g** cycle group
+
+.. _lmapi_destroy_cycle:
+
+destroy_cycle - delete cycle
+----------------------------
+
+Deletes :doc:`cycle<cycles>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** cycle id
+
+.. _lmapi_get_cycle:
+
+get_cycle - get cycle information
+---------------------------------
+
+
+
+Parameters:
+
+* **k** 
+* **i** cycle id
+
+Returns:
+
+field "value" contains real average cycle interval
+
+.. _lmapi_groups_cycle:
+
+groups_cycle - get cycle groups list
+------------------------------------
+
+Get the list of cycles. Useful e.g. for custom interfaces.
+
+Parameters:
+
+* **k** 
+
+.. _lmapi_list_cycle_props:
+
+list_cycle_props - get cycle configuration properties
+-----------------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** cycle id
+
+.. _lmapi_list_cycles:
+
+list_cycles - get cycle list
+----------------------------
+
+Get the list of all available :doc:`cycles<cycles>`.
+
+Parameters:
+
+* **k** 
+
+Optionally:
+
+* **g** filter by group
+
+.. _lmapi_reset_cycle_stats:
+
+reset_cycle_stats - reset cycle statistic
+-----------------------------------------
+
+
+
+Parameters:
+
+* **k** 
+* **i** cycle id
+
+.. _lmapi_set_cycle_prop:
+
+set_cycle_prop - set cycle property
+-----------------------------------
+
+Set configuration parameters of the :doc:`cycle<cycles>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** item id
+* **p** property name (or empty for batch set)
+
+Optionally:
+
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
+
+.. _lmapi_start_cycle:
+
+start_cycle - start cycle
+-------------------------
+
+
+
+Parameters:
+
+* **k** 
+* **i** cycle id
+
+.. _lmapi_stop_cycle:
+
+stop_cycle - stop cycle
+-----------------------
+
+
+
+Parameters:
+
+* **k** 
+* **i** cycle id
+
+Optionally:
+
+* **wait** wait until cycle is stopped
+
+
+.. _lmapi_cat_ext:
+
+Macro extensions
+================
+
+
+
+.. _lmapi_get_ext:
+
+get_ext - get loaded extension information
+------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** extension ID
+
+.. _lmapi_list_ext:
+
+list_ext - get list of available macro extensions
+-------------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+Optionally:
+
+* **full** get full information
+
+.. _lmapi_list_ext_mods:
+
+list_ext_mods - get list of available extension modules
+-------------------------------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _lmapi_load_ext:
+
+load_ext - load extension module
+--------------------------------
 
 Loads:doc:`macro extension</lm/ext>`.
 
 Parameters:
 
-* **k** masterkey
-* **i** macro extension ID, required
-* **m** macro extension module, required
-* **c** macro extension configuration
+* **k** API key with *master* permissions
+* **i** extension ID
+* **m** extension module
 
 Optionally:
 
-* **save=1** save extension configuration after successful call
+* **c** extension configuration
+* **save** save extension configuration after successful call
 
-Returns a dict with information about extension if module is loaded, or
-result="ERROR", if an error occurred.
+.. _lmapi_modhelp_ext:
 
-Errors:
+modhelp_ext - get extension usage help
+--------------------------------------
 
-* **403 Forbidden** invalid API KEY
 
-unload_ext - unload macro extension
-===================================
-
-Unloads macro extension.
 
 Parameters:
 
-* **k** masterkey
-* **i** macro extension ID
-
-Returns result="OK" if module is unloaded, or result="ERROR", if an error
-occurred.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-get_ext - get loaded macro extension information
-================================================
-
-Returns a dict with information about macro extension
-
-Parameters:
-
-* **k** masterkey
-* **i** macro extension ID
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Forbidden** macro extension not found
-* **500 Internal Error** inaccessible macro extension
-
-list_ext_mods - get list of available macro extension modules
-=============================================================
-
-Returns a list of all available macro extension modules.
-
-Parameters:
-
-* **k** masterkey
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-modinfo_ext - get macro extension module info
-=============================================
-
-Returns a dict with information about macro extension module.
-
-Parameters:
-
-* **k** masterkey
-* **m** macro extension module
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **500 Internal Error** inaccessible macro extension module
-
-modhelp_ext - get extension module usage help
-=============================================
-
-Returns a dict with macro extension usage help.
-
-Parameters:
-
-* **k** masterkey
-* **m** macro extension module
+* **k** API key with *master* permissions
+* **m** extension name (without *.py* extension)
 * **c** help context (*cfg* or *functions*)
 
-Errors:
+.. _lmapi_modinfo_ext:
 
-* **403 Forbidden** invalid API KEY
-* **500 Internal Error** inaccessible macro extension module
+modinfo_ext - get extension module info
+---------------------------------------
 
-.. include:: ../userauth.rst
-.. include:: ../common_reserved_funcs.rst
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** extension module name (without *.py* extension)
+
+.. _lmapi_set_ext_prop:
+
+set_ext_prop - set extension configuration property
+---------------------------------------------------
+
+appends property to extension configuration and reloads module
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** extension id
+* **p** property name (or empty for batch set)
+
+Optionally:
+
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
+
+.. _lmapi_unload_ext:
+
+unload_ext - unload macro extension
+-----------------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** extension ID
+
+
+.. _lmapi_cat_remotes:
+
+Remote controllers
+==================
+
+
+
+.. _lmapi_append_controller:
+
+append_controller - connect remote UC via HTTP
+----------------------------------------------
+
+Connects remote :ref:`UC controller<lm_remote_uc>` to the local.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/append_controller.req
+    :response: http-examples/lmapi/append_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **uri** :doc:`/uc/uc_api` uri (*proto://host:port*, port not required if default)
+* **a** remote controller API key (\$key to use local key)
+
+Optionally:
+
+* **m** ref:`MQTT notifier<mqtt_>` to exchange item states in real time (default: *eva_1*)
+* **s** verify remote SSL certificate or pass invalid
+* **t** timeout (seconds) for the remote controller API calls
+* **save** save connected controller configuration on the disk immediately after creation
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/append_controller.rest
+    :response: http-examples/lmapi/append_controller.resp-rest
+
+.. _lmapi_disable_controller:
+
+disable_controller - disable controller
+---------------------------------------
+
+Disables connected UC
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/disable_controller.req
+    :response: http-examples/lmapi/disable_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+Optionally:
+
+* **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/disable_controller.rest
+    :response: http-examples/lmapi/disable_controller.resp-rest
+
+.. _lmapi_enable_controller:
+
+enable_controller - enable controller
+-------------------------------------
+
+Enables connected UC
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/enable_controller.req
+    :response: http-examples/lmapi/enable_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+Optionally:
+
+* **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/enable_controller.rest
+    :response: http-examples/lmapi/enable_controller.resp-rest
+
+.. _lmapi_get_controller:
+
+get_controller - get controller information
+-------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_controller.req
+    :response: http-examples/lmapi/get_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_controller.rest
+    :response: http-examples/lmapi/get_controller.resp-rest
+
+.. _lmapi_list_controller_props:
+
+list_controller_props - get editable controller parameters
+----------------------------------------------------------
+
+Get all editable parameters of the connected :ref:`UC controller<lm_remote_uc>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_controller_props.req
+    :response: http-examples/lmapi/list_controller_props.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_controller_props.rest
+    :response: http-examples/lmapi/list_controller_props.resp-rest
+
+.. _lmapi_list_controllers:
+
+list_controllers - get controllers list
+---------------------------------------
+
+Get the list of all connected :ref:`UC controllers<lm_remote_uc>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_controllers.req
+    :response: http-examples/lmapi/list_controllers.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_controllers.rest
+    :response: http-examples/lmapi/list_controllers.resp-rest
+
+.. _lmapi_list_remote:
+
+list_remote - get a list of items from connected UCs
+----------------------------------------------------
+
+Get a list of the items loaded from the connected :ref:`UC controllers<lm_remote_uc>`. Useful to debug the controller connections.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_remote.req
+    :response: http-examples/lmapi/list_remote.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+Optionally:
+
+* **i** controller id
+* **g** filter by item group
+* **p** filter by item type
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_remote.rest
+    :response: http-examples/lmapi/list_remote.resp-rest
+
+.. _lmapi_reload_controller:
+
+reload_controller - reload controller
+-------------------------------------
+
+Reloads items from connected UC
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/reload_controller.req
+    :response: http-examples/lmapi/reload_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/reload_controller.rest
+    :response: http-examples/lmapi/reload_controller.resp-rest
+
+.. _lmapi_remove_controller:
+
+remove_controller - disconnect UC
+---------------------------------
+
+Disconnects the remote :ref:`UC controller<lm_remote_uc>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/remove_controller.req
+    :response: http-examples/lmapi/remove_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/remove_controller.rest
+    :response: http-examples/lmapi/remove_controller.resp-rest
+
+.. _lmapi_set_controller_prop:
+
+set_controller_prop - set controller parameters
+-----------------------------------------------
+
+Set configuration parameters of the connected UC.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_controller_prop.req
+    :response: http-examples/lmapi/set_controller_prop.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+* **p** property name (or empty for batch set)
+
+Optionally:
+
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_controller_prop.rest
+    :response: http-examples/lmapi/set_controller_prop.resp-rest
+
+.. _lmapi_test_controller:
+
+test_controller - test connection to remote controller
+------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/test_controller.req
+    :response: http-examples/lmapi/test_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/test_controller.rest
+    :response: http-examples/lmapi/test_controller.resp-rest
 

@@ -623,7 +623,7 @@ class LM_API(GenericAPI):
         """
         create new cycle
 
-        Creates new :doc:`cycle<cycles>`. Macro code should be put in **xc/lm**
+        Creates new :doc:`cycle<cycles>`.
         manually.
 
         Args:
