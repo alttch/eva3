@@ -98,10 +98,9 @@ class LM_API(GenericAPI):
     @log_d
     def state(self, **kwargs):
         """
-        get item state
+        get lvar state
 
-        State of the item or all items of the specified type can be obtained
-        using state command.
+        State of lvar or all lvars can be obtained using state command.
 
         Args:
             k:
@@ -151,11 +150,10 @@ class LM_API(GenericAPI):
         k, i, s, v, = parse_function_params(kwargs, 'kisv', '.si.')
         item = eva.lm.controller.get_lvar(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
-        if status and not -1 <= status <= 1:
+        if s and not -1 <= s <= 1:
             raise InvalidParameter('status should be -1, 0 or 1')
-        if value is None: v = 'null'
-        else: v = value
-        return item.update_set_state(status=status, value=v)
+        if v is None: v = 'null'
+        return item.update_set_state(status=s, value=v)
 
     @log_i
     def reset(self, **kwargs):
@@ -204,6 +202,7 @@ class LM_API(GenericAPI):
             k:
             .i: lvar id
         """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.lm.controller.get_lvar(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         v = item.value
@@ -880,24 +879,26 @@ class LM_API(GenericAPI):
     @api_need_master
     def create_lvar(self, **kwargs):
         """
-        delete lvar
+        create lvar
 
-        Deletes :ref:`lvar<lvar>`
+        Create new :ref:`lvar<lvar>`
 
         Args:
             k: .master
             .i: lvar id
+
+        Optional:
+            .g: lvar group
+            save: save lvar configuration immediately
         """
-        i = parse_api_params(kwargs, 'i', 'S')
-        return eva.lm.controller.destroy_item(i)
+        i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
+        return eva.lm.controller.create_lvar(lvar_id=i, group=g, save=save).serialize()
 
     @log_w
     @api_need_master
     def destroy_lvar(self, **kwargs):
         """
         delete lvar
-
-        Deletes :doc:`lvar<lvar>`
 
         Args:
             k: .master
@@ -1330,89 +1331,82 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def GET(self, r, rtp, *args, **kwargs):
-        k, ii, full, save, kind, for_dir, props = restful_params(
-            *args, **kwargs)
-        if rtp == 'core':
-            return self.test(k=k)
-        elif rtp == 'lvar':
-            if not ii and kind == 'groups':
+    def GET(self, rtp, k, ii, save, kind, method, for_dir, props):
+        try:
+            return super().GET(rtp, k, ii, save, kind, method, for_dir, props)
+        except MethodNotFound:
+            pass
+        if rtp == 'lvar':
+            if kind == 'groups':
                 return self.groups(k=k, p=rtp)
+            elif kind == 'history':
+                return self.state_history(k=k, i=ii, **props)
+            elif kind == 'props':
+                return self.list_props(k=k, i=ii)
+            elif kind == 'config':
+                return self.get_config(k=k, i=ii)
+            elif for_dir:
+                return self.state(k=k, p=rtp, g=ii, **props)
             else:
-                if kind == 'props':
-                    return self.list_props(k=k, i=ii)
-                elif kind == 'history':
-                    return self.state_history(
-                        k=k,
-                        a=props.get('a'),
-                        i=ii,
-                        p=rtp,
-                        s=props.get('s'),
-                        e=props.get('e'),
-                        l=props.get('l'),
-                        x=props.get('x'),
-                        t=props.get('t'),
-                        w=props.get('w'),
-                        g=props.get('g'))
-                else:
-                    if for_dir:
-                        return self.state(k=k, full=full, g=ii, p=rtp)
-                    else:
-                        return self.state(k=k, full=full, i=ii, p=rtp)
-        elif rtp == 'action':
-            return self.result(
-                k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
-        elif rtp == 'controller':
-            if kind == 'items':
-                return self.list_remote(
-                    k=k, i=ii, g=props.get('g'), p=props.get('p'))
-            elif kind == 'props' and ii and ii.find('/') != -1:
-                return self.list_controller_props(k=k, i=ii)
-            else:
-                if ii and ii.find('/') != -1:
-                    return self.get_controller(k=k, i=ii)
-                else:
-                    return self.list_controllers(k=k)
-        elif rtp == 'dmatrix_rule':
-            if ii:
-                if kind == 'props':
-                    return self.list_rule_props(k=k, i=ii)
-                else:
-                    return self.get_rule(k=k, i=ii)
-            else:
-                return self.list_rules(k=k)
-        elif rtp == 'lcycle':
-            if not ii and kind == 'groups':
-                return self.groups_cycle(k=k)
-            elif ii:
-                if kind == 'props':
-                    return self.list_cycle_props(k=k, i=ii)
-                else:
-                    return self.get_cycle(k=k, i=ii)
-            else:
-                return self.list_cycles(k=k)
-        elif rtp == 'lmacro':
-            if not ii and kind == 'groups':
-                return self.groups_macro(k=k)
-            if ii:
-                return self.list_macro_props(k=k, i=ii)
-            else:
-                return self.list_macros(k=k)
-        elif rtp == 'ext':
-            if ii:
-                return self.get_ext(k=k, i=ii)
-            else:
-                return self.list_ext(k=k)
-        elif rtp == 'ext-module':
-            if ii:
-                if 'help' in props:
-                    return self.modhelp_ext(k=k, m=ii, c=props['help'])
-                else:
-                    return self.modinfo_ext(k=k, m=ii)
-            else:
-                return self.list_ext_mods(k=k)
+                return self.state(k=k, p=rtp, i=ii, **props)
         raise cp_api_404()
 
+    @generic_web_api_method
+    @restful_api_method
+    def POST(self, rtp, k, ii, save, kind, method, for_dir, props):
+        try:
+            return super().POST(rtp, k, ii, save, kind, method, for_dir, props)
+        except MethodNotFound:
+            pass
+        if rtp == 'lvar':
+            if ii:
+                s = props.get('s')
+                if s == 'reset':
+                    return self.reset(k=k, i=ii)
+                elif s == 'clear':
+                    return self.clear(k=k, i=ii)
+                elif s == 'toggle':
+                    return self.toggle(k=k, i=ii)
+                else:
+                    return self.set(k=k, i=ii, **props)
+
+    @generic_web_api_method
+    @restful_api_method
+    def PUT(self, rtp, k, ii, save, kind, method, for_dir, props):
+        try:
+            return super().PUT(rtp, k, ii, save, kind, method, for_dir, props)
+        except MethodNotFound:
+            pass
+        if rtp == 'lvar':
+            self.create_lvar(k=k, i=ii, save=save)
+            self.set_prop(k=k, i=ii, v=props, save=save)
+            return self.state(k=k, i=ii, p=rtp, full=True)
+
+    @generic_web_api_method
+    @restful_api_method
+    def PATCH(self, rtp, k, ii, save, kind, method, for_dir, props):
+        try:
+            return super().PATCH(rtp, k, ii, save, kind, method, for_dir, props)
+        except MethodNotFound:
+            pass
+        if rtp == 'lvar':
+            if ii:
+                if props:
+                    return super().set_prop(k=k, i=ii, save=save, v=props)
+                else:
+                    return True
+
+    @generic_web_api_method
+    @restful_api_method
+    def DELETE(self, rtp, k, ii, save, kind, method, for_dir, props):
+        try:
+            return super().DELETE(rtp, k, ii, save, kind, method, for_dir,
+                                  props)
+        except MethodNotFound:
+            pass
+        if rtp == 'lvar':
+            if ii:
+                return self.destroy_lvar(k=k, i=ii)
 
 def start():
     http_api = LM_HTTP_API()

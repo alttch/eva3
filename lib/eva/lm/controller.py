@@ -92,6 +92,7 @@ def get_item(item_id):
         tp, i = parse_oid(item_id)
     else:
         i = item_id
+        tp = None
     if tp == 'lmacro':
         return self.get_macro(i)
     elif tp == 'lcycle':
@@ -724,7 +725,7 @@ def create_item(item_id, item_type, group=None, virtual=False, save=False):
     if item_type == 'LV' or item_type == 'lvar':
         item.notify()
     logging.info('created new %s %s' % (item.item_type, item.full_id))
-    return True
+    return item
 
 
 @with_item_lock
@@ -765,9 +766,9 @@ def destroy_item(item):
             configs_to_remove.add(i.get_fname())
         logging.info('%s destroyed' % i.full_id)
         return True
-    except exception as e:
+    except Exception as e:
         eva.core.log_traceback()
-        raise functionfailed(e)
+        raise FunctionFailed(e)
 
 
 @with_item_lock
