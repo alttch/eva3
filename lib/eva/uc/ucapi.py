@@ -1766,7 +1766,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
         if rtp == 'action':
             if not ii:
                 a = self.action(k=k, **props)
-                set_restful_response_location(a['uuid'], 'action')
+                set_restful_response_location(a['uuid'], rtp)
                 return a
             else:
                 if method == 'terminate':

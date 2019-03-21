@@ -1,0 +1,6 @@
+POST /r/controller/uc HTTP/1.1
+Host: localhost:8817
+X-Auth-Key: mykey
+Content-Type: application/json
+
+{ "uri": "localhost", "a": "secretkey", "save": true }

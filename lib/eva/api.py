@@ -34,8 +34,6 @@ import eva.users
 import eva.notify
 import eva.benchmark
 
-from eva.item import get_state_history
-
 from pyaltt import g
 
 from functools import wraps
@@ -507,7 +505,7 @@ class GenericAPI(object):
         if is_oid(i):
             _t, iid = parse_oid(i)
             if not item or item.item_type != _t: raise ResourceNotFound
-        return get_state_history(
+        return eva.item.get_state_history(
             a=a,
             oid=item.oid,
             t_start=s,

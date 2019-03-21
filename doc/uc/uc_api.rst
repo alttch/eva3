@@ -350,11 +350,11 @@ Checks the result of the action by its UUID or returns the actions for the speci
 Parameters:
 
 * **k** 
-* **u** action uuid or
-* **i** unit id
 
 Optionally:
 
+* **u** action uuid or
+* **i** unit id
 * **g** filter by unit group
 * **s** filter by action status: Q for queued, R for running, F for finished
 * **Return** list or single serialized action object
@@ -367,10 +367,10 @@ Optionally:
 
 .. _ucapi_state:
 
-state - get item group list
----------------------------
+state - get item state
+----------------------
 
-Get the list of item groups. Useful e.g. for custom interfaces.
+State of the item or all items of the specified type can be obtained using state command.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/state.req
@@ -736,11 +736,12 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** item id
-* **p** property name
+* **p** property name (or empty for batch set)
 
 Optionally:
 
-* **v** property value
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
 
 **RESTful:**
 
@@ -1152,28 +1153,6 @@ Parameters:
     :request: http-examples/ucapi/exec_phi.rest
     :response: http-examples/ucapi/exec_phi.resp-rest
 
-.. _ucapi_get_phi:
-
-get_phi - get loaded PHI information
-------------------------------------
-
-
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_phi.req
-    :response: http-examples/ucapi/get_phi.resp
-
-Parameters:
-
-* **k** API key with *master* permissions
-* **i** PHI ID
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_phi.rest
-    :response: http-examples/ucapi/get_phi.resp-rest
-
 .. _ucapi_list_phi:
 
 list_phi - list loaded PHIs
@@ -1333,10 +1312,10 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** PHI ID
 * **p** property name (or empty for batch set)
-* **v** propery value (or dict for batch set)
 
 Optionally:
 
+* **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
 
 **RESTful:**
@@ -1609,10 +1588,10 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** driver ID
 * **p** property name (or empty for batch set)
-* **v** propery value (or dict for batch set)
 
 Optionally:
 
+* **v** propery value (or dict for batch set)
 * **save** save driver configuration after successful call
 
 **RESTful:**

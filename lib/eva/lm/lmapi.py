@@ -1121,7 +1121,7 @@ class LM_API(GenericAPI):
         Optional:
             save: save configuration after successful call
         """
-        i = parse_api_params(kwargs, 'i', 'S')
+        i, save = parse_api_params(kwargs, 'iS', 'Sb')
         controller = eva.lm.controller.get_controller(i)
         return controller.set_prop('enabled', True, save)
 
@@ -1140,7 +1140,7 @@ class LM_API(GenericAPI):
         Optional:
             save: save configuration after successful call
         """
-        i = parse_api_params(kwargs, 'i', 'S')
+        i, save = parse_api_params(kwargs, 'iS', 'Sb')
         controller = eva.lm.controller.get_controller(i)
         return controller.set_prop('enabled', False, save)
 
@@ -1349,7 +1349,17 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.state(k=k, p=rtp, g=ii, **props)
             else:
                 return self.state(k=k, p=rtp, i=ii, **props)
-        raise cp_api_404()
+        elif rtp == 'controller':
+            if kind == 'items':
+                return self.list_remote(k=k, i=ii, **props)
+            elif kind == 'props' and ii and ii.find('/') != -1:
+                return self.list_controller_props(k=k, i=ii)
+            else:
+                if ii and ii.find('/') != -1:
+                    return self.get_controller(k=k, i=ii)
+                else:
+                    return self.list_controllers(k=k, g=ii)
+        raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
@@ -1369,6 +1379,18 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.toggle(k=k, i=ii)
                 else:
                     return self.set(k=k, i=ii, **props)
+        elif rtp == 'controller':
+            if (not ii or for_dir or ii.find('/') == -1) and not method:
+                result = self.append_controller(
+                    k=k, save=save, **props)
+                if 'full_id' in result:
+                    set_restful_response_location(result['full_id'], rtp)
+                return result
+            elif method == 'test':
+                return self.test_controller(k=k, i=ii)
+            elif method == 'reload':
+                return self.reload_controller(k=k, i=ii)
+        raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
@@ -1381,6 +1403,7 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
             self.create_lvar(k=k, i=ii, save=save)
             self.set_prop(k=k, i=ii, v=props, save=save)
             return self.state(k=k, i=ii, p=rtp, full=True)
+        raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
@@ -1395,6 +1418,13 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return super().set_prop(k=k, i=ii, save=save, v=props)
                 else:
                     return True
+        elif rtp == 'controller':
+            if ii:
+                if props:
+                    return super().set_controller_prop(k=k, i=ii, save=save, v=props)
+                else:
+                    return True
+        raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
@@ -1407,6 +1437,10 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
         if rtp == 'lvar':
             if ii:
                 return self.destroy_lvar(k=k, i=ii)
+        elif rtp == 'controller':
+            if ii:
+                return self.remove_controller(k=k, i=ii)
+        raise MethodNotFound
 
 def start():
     http_api = LM_HTTP_API()
