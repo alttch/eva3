@@ -130,8 +130,6 @@ exec_after_save = None
 
 mqtt_update_default = None
 
-_sigterm_sent = False
-
 start_time = time.time()
 
 enterprise_layout = True
@@ -214,7 +212,6 @@ def sighandler_hup(signum, frame):
 
 
 def sighandler_term(signum=None, frame=None):
-    global _sigterm_sent
     logging.info('got TERM signal, exiting')
     if db_update == 2:
         try:
@@ -223,7 +220,6 @@ def sighandler_term(signum=None, frame=None):
             eva.core.log_traceback()
     core_shutdown()
     unlink_pid_file()
-    _sigterm_sent = True
     logging.info('EVA core shut down')
 
 
