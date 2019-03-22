@@ -7,6 +7,8 @@ EVA ICS CHANGELOG
 Common
 ------
 
+    * Core, API and CLI perfomance improvements
+
     * fixes: correct backup/restore if configuration folders are symlinks
     * fixes: correct restore if --runtime flag is specified
     * fixes: LM PLC locking problems
