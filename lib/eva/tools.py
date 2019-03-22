@@ -11,7 +11,6 @@ import struct
 import threading
 
 from collections import OrderedDict
-from netaddr import IPNetwork, IPAddress
 
 from functools import wraps
 
@@ -101,6 +100,7 @@ def parse_host_port(hp, default_port=None):
 
 
 def netacl_match(host, acl):
+    from netaddr import IPAddress
     try:
         for a in acl:
             if IPAddress(host) in a: return True
