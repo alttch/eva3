@@ -9,6 +9,7 @@ import argparse
 import json
 import shlex
 from pygments import highlight, lexers, formatters
+from pyaltt import background_job
 
 
 def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
@@ -315,6 +316,16 @@ class GCLI(object):
             self.pd = importlib.import_module('pandas')
             self.pd.set_option('display.expand_frame_repr', False)
             self.pd.options.display.max_colwidth = 100
+
+    def precache(self):
+        background_job(self.precache_modules)()
+
+    @staticmethod
+    def precache_modules():
+        import time
+        import pandas
+        import datetime
+        import re
 
     def call(self, args=[]):
         _args = args if isinstance(args, list) else shlex.split(args)
