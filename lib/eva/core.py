@@ -15,10 +15,8 @@ import jsonpickle
 import signal
 import psutil
 import threading
-import gzip
 import inspect
 import sqlalchemy as sa
-import sqlite3
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -26,8 +24,6 @@ from eva.tools import wait_for as _wait_for
 from eva.tools import Locker as GenericLocker
 
 from eva.exceptions import FunctionFailed
-
-from eva.logs import MemoryLogHandler
 
 from pyaltt import g
 from pyaltt import FunctionCollecton
@@ -286,6 +282,7 @@ def core_shutdown():
 
 
 def create_dump(e='request', msg=''):
+    import gzip
     try:
         result = dump.run()
         result.update({'reason': {'event': e, 'info': str(msg)}})
@@ -406,6 +403,7 @@ def reset_log(initial=False):
     log_file_handler.setFormatter(formatter)
     logger.addHandler(log_file_handler)
     if initial:
+        from eva.logs import MemoryLogHandler
         logger.addHandler(MemoryLogHandler())
 
 

@@ -12,15 +12,6 @@ import queue
 import logging
 import jsonpickle
 import eva.core
-import eva.runner
-import eva.uc.driverapi
-import eva.uc.modbus
-import math
-
-from datetime import datetime
-import dateutil
-import pytz
-import pandas as pd
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
@@ -393,6 +384,7 @@ class UpdatableItem(Item):
             if self.update_exec != val:
                 if val and val[0] == '|':
                     if self._drivers_allowed:
+                        import eva.uc.driverapi
                         d = eva.uc.driverapi.get_driver(val[1:])
                         if not d:
                             logging.error(
@@ -496,6 +488,7 @@ class UpdatableItem(Item):
                 return True
         elif prop == 'modbus_status' and self._modbus_allowed and \
                 self._modbus_status_allowed:
+            import eva.uc.modbus
             if self.modbus_status == val: return True
             if val is None:
                 self.unregister_modbus_status_updates()
@@ -517,6 +510,7 @@ class UpdatableItem(Item):
             self.set_modified(save)
             return True
         elif prop == 'modbus_value' and self._modbus_allowed:
+            import eva.uc.modbus
             if self.modbus_value == val: return True
             if val is None:
                 self.unregister_modbus_value_updates()
@@ -678,6 +672,7 @@ class UpdatableItem(Item):
 
     def register_modbus_status_updates(self):
         if self.modbus_status:
+            import eva.uc.modbus
             eva.uc.modbus.register_handler(
                 self.modbus_status[1:],
                 self.modbus_update_status,
@@ -685,6 +680,7 @@ class UpdatableItem(Item):
 
     def register_modbus_value_updates(self):
         if self.modbus_value:
+            import eva.uc.modbus
             eva.uc.modbus.register_handler(
                 self.modbus_value[1:],
                 self.modbus_update_value,
@@ -692,6 +688,7 @@ class UpdatableItem(Item):
 
     def unregister_modbus_status_updates(self):
         if self.modbus_status:
+            import eva.uc.modbus
             eva.uc.modbus.unregister_handler(
                 self.modbus_status[1:],
                 self.modbus_update_status,
@@ -699,6 +696,7 @@ class UpdatableItem(Item):
 
     def unregister_modbus_value_updates(self):
         if self.modbus_value:
+            import eva.uc.modbus
             eva.uc.modbus.unregister_handler(
                 self.modbus_value[1:],
                 self.modbus_update_value,
@@ -733,6 +731,7 @@ class UpdatableItem(Item):
     def register_driver_updates(self):
         if self._drivers_allowed and \
                 self.update_exec and self.update_exec[0] == '|':
+            import eva.uc.driverapi
             eva.uc.driverapi.register_item_update(self)
 
     def unsubscribe_snmp_traps(self):
@@ -742,6 +741,7 @@ class UpdatableItem(Item):
     def unregister_driver_updates(self):
         if self._drivers_allowed and \
                 self.update_exec and self.update_exec[0] == '|':
+            import eva.uc.driverapi
             eva.uc.driverapi.unregister_item_update(self)
 
     def subscribe_mqtt_update(self):
@@ -919,6 +919,7 @@ class UpdatableItem(Item):
             eva.core.log_traceback()
 
     def get_update_xc(self, driver_state_in=None):
+        import eva.runner
         if self._drivers_allowed and not self.virtual and \
                 self.update_exec and self.update_exec[0] == '|':
             return eva.runner.DriverCommand(
@@ -1410,6 +1411,7 @@ class ActiveItem(Item):
         logging.debug('%s action processor stopped' % self.oid)
 
     def get_action_xc(self, a):
+        import eva.runner
         if self._drivers_allowed and not self.virtual and \
                 self.action_exec and self.action_exec[0] == '|':
             return eva.runner.DriverCommand(
@@ -1473,6 +1475,7 @@ class ActiveItem(Item):
             if self.action_exec != val:
                 if val and val[0] == '|':
                     if self._drivers_allowed:
+                        import eva.uc.driverapi
                         d = eva.uc.driverapi.get_driver(val[1:])
                         if not d:
                             logging.error(
@@ -2049,6 +2052,12 @@ def get_state_history(a=None,
                       time_format=None,
                       fill=None,
                       fmt=None):
+    import dateutil
+    import pytz
+    import pandas as pd
+    import math
+    from datetime import datetime
+
     if oid is None: raise ResourceNotFound
     n = eva.notify.get_db_notifier(a)
     if not t_start and fill:

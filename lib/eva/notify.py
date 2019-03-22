@@ -5,15 +5,11 @@ __version__ = "3.2.0"
 
 import logging
 import eva.core
-import eva.item
 import jsonpickle
 import requests
 import paho.mqtt.client as mqtt
 import time
-from datetime import datetime
 from queue import Queue
-import dateutil.parser
-import pytz
 import glob
 import os
 import sys
@@ -29,7 +25,6 @@ from pyaltt import background_worker
 from pyaltt import background_job
 from pyaltt import g
 
-from eva import apikey
 from eva.tools import format_json
 from eva.tools import val_to_boolean
 
@@ -285,6 +280,7 @@ class GenericNotifier(object):
 
     def format_data(self, subject, data):
         if not subject or not data: return None
+        import eva.item
         try:
             if isinstance(data, list): data_in = data
             else: data_in = [data]
@@ -502,6 +498,7 @@ class GenericNotifier_Client(GenericNotifier):
 
     def format_data(self, subject, data):
         if not subject or not data: return None
+        from eva import apikey
         if apikey.check(self.apikey, master=True):
             return super().format_data(subject, data)
         if subject == 'log':
@@ -611,6 +608,9 @@ class SQLANotifier(GenericNotifier):
                   limit=None,
                   prop=None,
                   time_format=None):
+        import pytz
+        import dateutil.parser
+        from datetime import datetime
         l = int(limit) if limit else None
         if t_start:
             try:
@@ -868,6 +868,7 @@ class HTTPNotifier(GenericHTTPNotifier):
         self.get_subject = 's'
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
+        from eva import apikey
         for d in data:
             try:
                 params = {self.get_subject: subject}
@@ -970,6 +971,7 @@ class HTTP_POSTNotifier(GenericHTTPNotifier):
             timeout=timeout)
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
+        from eva import apikey
         params = {
             'subject': subject,
             'data': jsonpickle.encode(data, unpicklable=unpicklable)
@@ -1038,6 +1040,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             timeout=timeout)
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
+        from eva import apikey
         d = {'subject': subject}
         key = apikey.format_key(self.notify_key)
         if key: d['k'] = key

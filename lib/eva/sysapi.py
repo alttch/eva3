@@ -13,8 +13,6 @@ import sys
 import shlex
 
 import eva.core
-import eva.runner
-import eva.logs
 
 from pyaltt import background_job
 
@@ -45,9 +43,6 @@ from eva.exceptions import AccessDenied
 
 from eva.exceptions import InvalidParameter
 from eva.tools import parse_function_params
-
-from eva.logs import get_log_level_by_name
-from eva.logs import get_log_level_by_id
 
 from pyaltt import background_worker
 
@@ -225,6 +220,7 @@ class CMD(object):
         self.time = {'created': time.time()}
 
     def run(self):
+        import eva.runner
         self.xc = eva.runner.ExternalProcess(
             eva.core.dir_xc + '/cmd/' + self.cmd,
             args=self.args,
@@ -428,12 +424,13 @@ class LogAPI(object):
             t: get log records not older than t seconds
             n: the maximum number of log records you want to obtain
         """
+        import eva.logs
         l, t, n = parse_api_params(kwargs, 'ltn', '.ii')
         if not l: l = 'i'
         try:
             l = int(l)
         except:
-            l = get_log_level_by_name(l)
+            l = eva.logs.get_log_level_by_name(l)
         return eva.logs.log_get(logLevel=l, t=t, n=n)
 
     # don't wrap - calls other self functions
@@ -449,8 +446,9 @@ class LogAPI(object):
             l: log level
             m: message text
         """
+        import eva.logs
         k, l, m = parse_function_params(kwargs, 'klm', '.R.', {'l': 'info'})
-        log_level = get_log_level_by_id(l)
+        log_level = eva.logs.get_log_level_by_id(l)
         f = getattr(self, 'log_' + log_level)
         f(k=k, m=m)
         return True
