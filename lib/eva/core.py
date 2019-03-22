@@ -90,8 +90,6 @@ _exceptions = []
 
 _exception_log_lock = threading.RLock()
 
-_cvars_lock = threading.RLock()
-
 _db_lock = threading.RLock()
 _userdb_lock = threading.RLock()
 
@@ -138,6 +136,26 @@ started = False
 
 shutdown_requested = False
 
+def critical(log=True, from_driver=False):
+    global ignore_critical
+    if ignore_critical: return
+    try:
+        caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
+        caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
+                                    caller.function)
+    except:
+        caller_info = ''
+    if log: log_traceback(force=True)
+    if dump_on_critical:
+        logging.critical('critical exception. dump file: %s' % create_dump(
+            'critical', caller_info))
+    if stop_on_critical in ['always', 'yes'] or (not from_driver and
+                                                 stop_on_critical == 'core'):
+        logging.critical('critical exception, shutting down')
+        ignore_critical = True
+        sighandler_term(None, None)
+
+
 
 class Locker(GenericLocker):
 
@@ -174,6 +192,7 @@ def log_traceback(display=False, notifier=False, force=False, e=None):
     finally:
         _exception_log_lock.release()
 
+cvars_lock = RLocker('core')
 
 dump = FunctionCollecton(on_error=log_traceback, include_exceptions=True)
 save = FunctionCollecton(on_error=log_traceback)
@@ -301,6 +320,7 @@ def create_dump(e='request', msg=''):
     return filename
 
 
+@cvars_lock
 @dump
 def serialize():
     d = {}
@@ -599,6 +619,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
     return False
 
 
+@cvars_lock
 def load_cvars(fname=None):
     global env, cvars
     fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
@@ -627,6 +648,7 @@ def load_cvars(fname=None):
     return True
 
 
+@cvars_lock
 def save_cvars(fname=None):
     fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
     logging.info('Saving custom vars to %s' % fname_full)
@@ -639,25 +661,29 @@ def save_cvars(fname=None):
     return True
 
 
-def get_cvar(var):
-    return cvars[var] if var in cvars else None
+@cvars_lock
+def get_cvar(var=None):
+    if var:
+        return cvars[var] if var in cvars else None
+    else:
+        return cvars.copy()
 
 
+@cvars_lock
 def set_cvar(var, value=None):
     if not var: return False
-    with _cvars_lock:
-        if value is not None:
-            cvars[str(var)] = str(value)
-        elif var not in cvars:
-            return None
-        else:
-            try:
-                del cvars[str(var)]
-            except:
-                return False
-        if db_update == 1: save_cvars()
-        else: cvars_modified = True
-        return True
+    if value is not None:
+        cvars[str(var)] = str(value)
+    elif var not in cvars:
+        return None
+    else:
+        try:
+            del cvars[str(var)]
+        except:
+            return False
+    if db_update == 1: save_cvars()
+    else: cvars_modified = True
+    return True
 
 
 @save
@@ -721,26 +747,6 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     if delay: p = delay
     else: p = polldelay
     return _wait_for(func, t, p, wait_for_false)
-
-
-def critical(log=True, from_driver=False):
-    global ignore_critical
-    if ignore_critical: return
-    try:
-        caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
-        caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
-                                    caller.function)
-    except:
-        caller_info = ''
-    if log: log_traceback(force=True)
-    if dump_on_critical:
-        logging.critical('critical exception. dump file: %s' % create_dump(
-            'critical', caller_info))
-    if stop_on_critical in ['always', 'yes'] or (not from_driver and
-                                                 stop_on_critical == 'core'):
-        logging.critical('critical exception, shutting down')
-        ignore_critical = True
-        sighandler_term(None, None)
 
 
 def format_xc_fname(item=None, xc_type='', fname=None, update=False):

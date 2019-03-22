@@ -1326,7 +1326,6 @@ class LM_HTTP_API(LM_HTTP_API_abstract, GenericHTTP_API):
 
 
 class LM_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
-                     eva.sysapi.SysHTTP_API_REST_abstract,
                      eva.api.JSON_RPC_API_abstract, LM_HTTP_API_abstract):
 
     def __init__(self):

@@ -395,3 +395,12 @@ def safe_int(i):
         return int(i, 16)
     else:
         return int(i)
+
+def dict_merge(*args):
+    """
+    merge dicts for compat < 3.5
+    """
+    result = {}
+    for a in args:
+        result.update(a)
+    return result

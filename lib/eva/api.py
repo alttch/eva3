@@ -500,6 +500,7 @@ class GenericAPI(object):
                            t=None,
                            w=None,
                            g=None):
+        import eva.item
         item = self.controller.get_item(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if is_oid(i):
@@ -517,6 +518,7 @@ class GenericAPI(object):
             fmt=g)
 
     def _result(self, k, u, i, g, s, rtp):
+        import eva.item
         if u:
             a = self.controller.Q.history_get(u)
             if not a or not apikey.check(k, a.item): raise ResourceNotFound

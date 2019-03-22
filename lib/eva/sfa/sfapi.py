@@ -14,6 +14,7 @@ from io import BytesIO
 
 from cherrypy.lib.static import serve_file
 from eva.tools import format_json
+from eva.tools import dict_merge
 
 from eva.tools import is_oid
 from eva.tools import parse_oid
@@ -26,20 +27,34 @@ import eva.notify
 import eva.api
 
 from eva.api import GenericHTTP_API
+from eva.api import JSON_RPC_API_abstract
 from eva.api import GenericAPI
+from eva.api import parse_api_params
+from eva.api import api_need_master
+
 from eva.api import cp_forbidden_key
-from eva.api import http_api_result_ok
-from eva.api import http_api_result_error
 from eva.api import cp_api_error
-from eva.api import cp_bad_request
 from eva.api import cp_api_404
-from eva.api import api_need_master as cp_need_master
+
+from eva.api import api_need_master
 from eva.api import restful_api_method
 from eva.api import http_real_ip
 from eva.api import cp_client_key
 from eva.api import set_response_location
 from eva.api import generic_web_api_method
 from eva.api import MethodNotFound
+
+from eva.api import log_d
+from eva.api import log_i
+from eva.api import log_w
+
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceBusy
+from eva.exceptions import AccessDenied
+from eva.exceptions import InvalidParameter
+
+from eva.tools import parse_function_params
 
 from eva import apikey
 
@@ -52,24 +67,16 @@ from PIL import Image
 api = None
 
 
-def cp_need_dm_rules_list(k):
-    if not apikey.check(k, allow=['dm_rules_list']):
-        raise cp_forbidden_key()
-
-
-def cp_need_dm_rule_props(k):
-    if not apikey.check(k, allow=['dm_rule_props']):
-        raise cp_forbidden_key()
-
-
 class SFA_API(GenericAPI):
 
-    def management_api_call(self, k=None, i=None, f=None, p=None):
-        if not eva.sfa.controller.cloud_manager or \
-                not apikey.check(k, master=True):
-            return None, None
+    @log_i
+    @api_need_master
+    def management_api_call(self, **kwargs):
+        i, f, p = parse_api_params('SS.')
+        if not eva.sfa.controller.cloud_manager:
+            raise AccessDenied
         controller = eva.sfa.controller.get_controller(i)
-        if not controller: return None, -1
+        if not controller: raise ResourceNotFound('controller')
         if isinstance(p, dict):
             params = p
         elif isinstance(p, str):
@@ -78,13 +85,39 @@ class SFA_API(GenericAPI):
             params = None
         return controller.management_api_call(f, params)
 
-    def state(self, k=None, i=None, group=None, tp=None, full=None):
+    @log_d
+    def test(self, **kwargs):
+        k, icvars = parse_function_params(kwargs, ['k', 'icvars'], '.b')
+        result = super().test(k=k)[1]
+        result['cloud_manager'] = eva.sfa.controller.cloud_manager
+        if (icvars):
+            result['cvars'] = eva.core.get_cvar()
+        return result
+
+    @log_d
+    def state(self, **kwargs):
+        """
+        get item state
+
+        State of the item or all items of the specified type can be obtained
+        using state command.
+
+        Args:
+            k:
+            .p: item type (unit [U], sensor [S] or lvar [LV])
+
+        Optional:
+            .i: item id
+            .g: item group
+            .full: return full state
+        """
+        k, i, group, tp, full = parse_function_params(kwargs, 'kigpY', '.sssb')
         if is_oid(i):
             _tp, _i = parse_oid(i)
         else:
             _tp = tp
             _i = i
-        if not _tp: return None
+        if not _tp: raise ResourceNotFound
         if _tp == 'U' or _tp == 'unit':
             gi = eva.sfa.controller.uc_pool.units
         elif _tp == 'S' or _tp == 'sensor':
@@ -97,7 +130,7 @@ class SFA_API(GenericAPI):
             if _i in gi and apikey.check(k, gi[_i]):
                 return gi[_i].serialize(full=full)
             else:
-                return None
+                raise ResourceNotFound
         result = []
         if isinstance(group, list): _group = group
         else: _group = str(group).split(',')
@@ -109,18 +142,32 @@ class SFA_API(GenericAPI):
                 result.append(r)
         return sorted(result, key=lambda k: k['oid'])
 
-    def state_history(self,
-                      k=None,
-                      tp=None,
-                      a=None,
-                      i=None,
-                      s=None,
-                      e=None,
-                      l=None,
-                      x=None,
-                      t=None,
-                      w=None,
-                      g=None):
+    def state_history(self, **kwargs):
+        """
+        get item state history
+
+        State history of one :doc:`item</items>` or several items of the
+        specified type can be obtained using **state_history** command.
+
+        Args:
+            k:
+            a: history notifier id (default: db_1)
+            .i: item oids or full ids, list or comma separated
+
+        Optional:
+            s: start time (timestamp or ISO)
+            e: end time (timestamp or ISO)
+            l: records limit (doesn't work with "w")
+            x: state prop ("status" or "value")
+            t: time format("iso" or "raw" for unix timestamp, default is "raw")
+            w: fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours
+                etc.), start time is required
+            g: output format ("list" or "dict", default is "list")
+        """
+        k, a, i, s, e, l, x, t, w, g = parse_function_params(
+            kwargs, 'kaiselxtwg', '.sr..issss')
+        import eva.item
+        # TODO - if multiple items specified
         if is_oid(i):
             _tp, _i = parse_oid(i)
         else:
@@ -138,8 +185,7 @@ class SFA_API(GenericAPI):
         if not _i in gi: return False
         if not apikey.check(k, gi[_i]):
             return False
-        return self.get_state_history(
-            k=k,
+        return eva.item.get_state_history(
             a=a,
             oid=gi[_i].oid,
             t_start=s,
@@ -613,32 +659,14 @@ class SFA_API(GenericAPI):
         return True
 
 
-class SFA_HTTP_API_abstract(SFA_API):
+class SFA_HTTP_API_abstract(SFA_API, GenericHTTP_API):
 
-    @cp_need_master
-    def management_api_call(self, k=None, i=None, f=None, p=None):
-        code, data = super().management_api_call(k, i=i, f=f, p=p)
-        if code is None:
-            if data is None:
-                raise cp_forbidden_key()
-            elif data == -1:
-                raise cp_api_404()
-        result = {'code': code, 'data': data}
-        return result
+    def management_api_call(self, **kwargs):
+        code, data = super().management_api_call(**kwargs)
+        return {'code': code, 'data': data}
 
-    # def test(self, k=None, icvars=None):
-        # result = super().test(k=k)
-        # result['cloud_manager'] = eva.sfa.controller.cloud_manager
-        # if (icvars):
-            # cvars = eva.sysapi.api.get_cvar(k=k)
-            # if cvars is False:
-                # raise cp_forbidden_key()
-            # if not cvars:
-                # cvars = []
-            # result['cvars'] = cvars
-        # return result
-
-    def state_all(self, k=None, p=None, g=None):
+    def state_all(self, **kwargs):
+        k, p, g = parse_function_params(kwargs, 'kpg', '...')
         result = []
         if p is None: _p = ['U', 'S', 'LV']
         else:
@@ -646,7 +674,7 @@ class SFA_HTTP_API_abstract(SFA_API):
             if not _p: return []
         for tp in _p:
             try:
-                result += self.state(k, p=tp, g=g, full=True)
+                result += self.state(k=k, p=tp, g=g, full=True)
             except:
                 pass
         if p is None or 'lcycle' in _p:
@@ -657,59 +685,10 @@ class SFA_HTTP_API_abstract(SFA_API):
         return sorted(
             sorted(result, key=lambda k: k['oid']), key=lambda k: k['type'])
 
-    def state(self, k=None, i=None, g=None, p=None, full=None):
-        result = super().state(k, i, g, p, full)
-        if not result:
-            raise cp_api_404()
-        return result
-
-    def state_history(self,
-                      k=None,
-                      a=None,
-                      i=None,
-                      p=None,
-                      s=None,
-                      e=None,
-                      l=None,
-                      x=None,
-                      t=None,
-                      w=None,
-                      g=None):
-        if i and isinstance(i, list) or i.find(',') != -1:
-            if not w:
-                raise cp_bad_request(
-                    '"w" param required to process multiple items')
-            if isinstance(i, list):
-                items = i
-            else:
-                items = i.split(',')
-            if not g or g == 'list':
-                result = {}
-            else:
-                raise cp_bad_request(
-                    'format should be list only to process multiple items')
-            for i in items:
-                r = super().state_history(
-                    k=k, tp=p, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                if r is False: raise cp_api_error('internal error')
-                if r is None: raise cp_api_404()
-                result['t'] = r['t']
-                if 'status' in r:
-                    result[i + '/status'] = r['status']
-                if 'value' in r:
-                    result[i + '/value'] = r['value']
-            return result
-        else:
-            result = super().state_history(
-                k=k, tp=p, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            if result is False: raise cp_api_error('internal error')
-            if result is None: raise cp_api_404()
-            return result
-
     def groups(self, k=None, p=None, g=None):
         return super().groups(k, p, g)
 
-    @cp_need_master
+    @api_need_master
     def list_controllers(self, k=None, g=None):
         result = super().list_controllers(k, g)
         if result is None: raise cp_api_404()
@@ -877,7 +856,7 @@ class SFA_HTTP_API_abstract(SFA_API):
             raise cp_api_404()
         return a
 
-    @cp_need_master
+    @api_need_master
     def append_controller(self,
                           k=None,
                           u=None,
@@ -892,52 +871,52 @@ class SFA_HTTP_API_abstract(SFA_API):
         result = super().append_controller(k, u, a, x, g, m, sv, t, save)
         return result if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def enable_controller(self, k=None, i=None):
         result = super().enable_controller(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def disable_controller(self, k=None, i=None):
         result = super().disable_controller(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def remove_controller(self, k=None, i=None):
         result = super().remove_controller(k, i)
         if result is None: raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list_controller_props(self, k=None, i=None):
         result = super().list_controller_props(k, i)
         if result is None: raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def get_controller(self, k=None, i=None):
         result = super().get_controller(k, i)
         if result is None:
             raise cp_api_404()
         return result
 
-    @cp_need_master
+    @api_need_master
     def test_controller(self, k=None, i=None):
         result = super().test_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def matest_controller(self, k=None, i=None):
         result = super().matest_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
         if save:
             _save = True
@@ -948,24 +927,24 @@ class SFA_HTTP_API_abstract(SFA_API):
             raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def reload_controller(self, k=None, i=None):
         result = super().reload_controller(k, i)
         if result is None:
             raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def reload_clients(self, k=None):
         return http_api_result_ok() if super().reload_clients(k) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def notify_restart(self, k=None):
         return http_api_result_ok() if super().notify_restart(k) \
                 else http_api_result_error()
 
-    @cp_need_master
+    @api_need_master
     def list_remote(self, k=None, i=None, g=None, p=None):
         result = super().list_remote(k, i, g, p)
         if result is None: raise cp_api_404()
@@ -995,11 +974,11 @@ class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
         self.expose_api_methods('sfapi')
         if eva.sfa.controller.cloud_manager:
             self._expose(self.management_api_call)
+        self.wrap_exposed()
 
 
 class SFA_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
-                      eva.sysapi.SysHTTP_API_REST_abstract,
-                      eva.api.JSON_RPC_API_abstract, SFA_HTTP_API):
+                      eva.api.JSON_RPC_API_abstract, SFA_HTTP_API_abstract):
 
     def __init__(self):
         super().__init__()
@@ -1251,7 +1230,7 @@ def j2_state(i=None, g=None, p=None, k=None):
         _k = apikey.key_by_id(k)
     else:
         _k = cp_client_key()
-    result = api.state(k=_k, i=i, group=g, tp=p)
+    result = api.state(k=_k, i=i, g=g, p=p)
     return result
 
 
@@ -1260,7 +1239,7 @@ def j2_groups(g=None, p=None, k=None):
         _k = apikey.key_by_id(k)
     else:
         _k = cp_client_key()
-    result = api.groups(k=_k, group=g, tp=p)
+    result = api.groups(k=_k, g=g, p=p)
     return result
 
 
@@ -1274,7 +1253,10 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     env = {}
     env['request'] = cherrypy.serving.request.params
     k = cp_client_key()
-    server_info = api.test(k)
+    if k:
+        server_info = api.test(k=k)
+    else:
+        server_info = {}
     server_info['remote_ip'] = http_real_ip()
     env['server'] = server_info
     env.update(eva.core.cvars)
@@ -1427,10 +1409,8 @@ class SFA_HTTP_Root:
 
 def start():
     http_api = SFA_HTTP_API()
-    cherrypy.tree.mount(
-        http_api,
-        http_api.api_uri)
-    cherrypy.tree.mount(SFA_JSONRPC_API(), SFA_JSONRPC_API.api_uri)
+    cherrypy.tree.mount(http_api, http_api.api_uri)
+    cherrypy.tree.mount(jrpc, jrpc.api_uri)
     cherrypy.tree.mount(
         SFA_REST_API(),
         SFA_REST_API.api_uri,
@@ -1443,10 +1423,11 @@ def start():
         SFA_HTTP_Root(),
         '/',
         config={
-            '/': {
+            '/':
+            dict_merge({
                 'tools.sessions.on': True,
                 'tools.sessions.timeout': eva.api.config.session_timeout
-            }.update(tiny_httpe),
+            }, tiny_httpe),
             '/favicon.ico': {
                 'tools.staticfile.on':
                 True,
@@ -1459,14 +1440,17 @@ def start():
         UI_ROOT(),
         '/ui',
         config={
-            '/': {
-                'tools.sessions.on': True,
-                'tools.sessions.timeout': eva.api.config.session_timeout,
-                'tools.staticdir.dir': eva.core.dir_eva + '/ui',
-                'tools.staticdir.on': True
-            }.update(tiny_httpe)
+            '/':
+            dict_merge(
+                {
+                    'tools.sessions.on': True,
+                    'tools.sessions.timeout': eva.api.config.session_timeout,
+                    'tools.staticdir.dir': eva.core.dir_eva + '/ui',
+                    'tools.staticdir.on': True
+                }, tiny_httpe)
         })
     eva.sfa.cloudmanager.start()
 
 
 api = SFA_API()
+jrpc = SFA_JSONRPC_API()

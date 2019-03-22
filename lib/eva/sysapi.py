@@ -852,11 +852,17 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             Dict containing variable and its value. If no varible name was
             specified, all cvars are returned.
         """
-        i = parse_api_params(kwargs, 'i', '.')
+        k, i = parse_function_params(kwargs, 'ki', '..')
         if i:
-            return eva.core.get_cvar(i)
+            val = eva.core.get_cvar(i)
+            if val is None:
+                raise ResourceNotFound
+            return val
         else:
-            return eva.core.cvars.copy()
+            if eva.apikey.check_master(k):
+                return eva.core.get_cvar()
+            else:
+                raise AccessDenied
 
     @log_i
     @api_need_master
