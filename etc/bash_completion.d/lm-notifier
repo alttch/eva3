@@ -1,0 +1,23 @@
+_lm-notifier_server() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  fi
+}
+
+_lm-notifier() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 1 ]]; then
+    COMPREPLY=( $( compgen -W 'config create destroy disable enable list props server set subscribe test unsubscribe' -- "$cur" ))
+  else
+    case "${words[1]}" in
+      server)
+        _lm-notifier_${words[1]}
+        ;;
+    esac
+  fi
+}
+
+complete -F _lm-notifier lm-notifier

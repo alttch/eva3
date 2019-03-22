@@ -1,0 +1,111 @@
+_sfa-cmd_server() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_cloud() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'deploy undeploy' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_controller() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'append disable enable list ma-test props reload remove set test' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_notify() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'reload restart' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_cycle() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_macro() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'list result run' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_action() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'clear disable enable exec kill result terminate toggle' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_user() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_key() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy list props regenerate set' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_file() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'create get mod unlink upload' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_cvar() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd_log() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+  fi
+}
+
+_sfa-cmd() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 1 ]]; then
+    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller cvar cycle debug dump file history key lock log macro notify remote reset save server set state test toggle unlock user' -- "$cur" ))
+  else
+    case "${words[1]}" in
+      action|cloud|controller|cvar|cycle|file|key|log|macro|notify|server|user)
+        _sfa-cmd_${words[1]}
+        ;;
+    esac
+  fi
+}
+
+complete -F _sfa-cmd sfa-cmd

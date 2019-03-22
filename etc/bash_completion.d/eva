@@ -1,0 +1,417 @@
+_eva_system() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'poweroff reboot' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_server() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_cloud() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'deploy undeploy' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_controller() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'append disable enable list ma-test props reload remove set test' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_notify() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'reload restart' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_cycle() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_macro() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'list result run' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_action() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'clear disable enable exec kill result terminate toggle' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_user() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_key() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy list props regenerate set' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_file() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create get mod unlink upload' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_cvar() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+  fi
+}
+
+_eva_sfa_log() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+  fi
+}
+
+_eva_sfa() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'action clear cloud cmd controller cvar cycle debug dump file history key lock log macro notify remote reset save server set state test toggle unlock user' -- "$cur" ))
+  else
+    case "${words[2]}" in
+      action|cloud|controller|cvar|cycle|file|key|log|macro|notify|server|user)
+        _eva_sfa_${words[2]}
+        ;;
+    esac
+  fi
+}
+
+_eva_lm_server() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  fi
+}
+
+_eva_lm_controller() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'append disable enable get list props reload remove set test' -- "$cur" ))
+  fi
+}
+
+_eva_lm_ext() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'get list load modhelp modinfo mods set unload' -- "$cur" ))
+  fi
+}
+
+_eva_lm_rule() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy disable enable get list props set' -- "$cur" ))
+  fi
+}
+
+_eva_lm_edit() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'macro' -- "$cur" ))
+  fi
+}
+
+_eva_lm_cycle() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy get list props reset set start stop' -- "$cur" ))
+  fi
+}
+
+_eva_lm_macro() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy edit get list props result run set' -- "$cur" ))
+  fi
+}
+
+_eva_lm_config() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'get props save set' -- "$cur" ))
+  fi
+}
+
+_eva_lm_user() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+  fi
+}
+
+_eva_lm_key() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy list props regenerate set' -- "$cur" ))
+  fi
+}
+
+_eva_lm_file() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create get mod unlink upload' -- "$cur" ))
+  fi
+}
+
+_eva_lm_cvar() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+  fi
+}
+
+_eva_lm_log() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+  fi
+}
+
+_eva_lm() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'clear cmd config controller create cvar cycle debug destroy dump edit ext file history key list lock log macro remote reset rule save server set state test toggle unlock user' -- "$cur" ))
+  else
+    case "${words[2]}" in
+      config|controller|cvar|cycle|edit|ext|file|key|log|macro|rule|server|user)
+        _eva_lm_${words[2]}
+        ;;
+    esac
+  fi
+}
+
+_eva_uc_server() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  fi
+}
+
+_eva_uc_driver() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'assign get list load set unassign unload' -- "$cur" ))
+  fi
+}
+
+_eva_uc_lpi() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'modhelp modinfo mods' -- "$cur" ))
+  fi
+}
+
+_eva_uc_phi() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'download exec get list load modhelp modinfo mods set test unlink unload' -- "$cur" ))
+  fi
+}
+
+_eva_uc_owfs() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy list scan test' -- "$cur" ))
+  fi
+}
+
+_eva_uc_modbus() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy list test' -- "$cur" ))
+  fi
+}
+
+_eva_uc_device() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'deploy templates undeploy update' -- "$cur" ))
+  fi
+}
+
+_eva_uc_clone() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'group item' -- "$cur" ))
+  fi
+}
+
+_eva_uc_config() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'get props save set' -- "$cur" ))
+  fi
+}
+
+_eva_uc_edit() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'action template update' -- "$cur" ))
+  fi
+}
+
+_eva_uc_action() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'clear disable enable exec kill result terminate toggle' -- "$cur" ))
+  fi
+}
+
+_eva_uc_user() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+  fi
+}
+
+_eva_uc_key() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy list props regenerate set' -- "$cur" ))
+  fi
+}
+
+_eva_uc_file() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'create get mod unlink upload' -- "$cur" ))
+  fi
+}
+
+_eva_uc_cvar() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+  fi
+}
+
+_eva_uc_log() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+  fi
+}
+
+_eva_uc() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi modbus owfs phi save server state test unlock update user' -- "$cur" ))
+  else
+    case "${words[2]}" in
+      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|modbus|owfs|phi|server|user)
+        _eva_uc_${words[2]}
+        ;;
+    esac
+  fi
+}
+
+_eva_edit() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'crontab' -- "$cur" ))
+  fi
+}
+
+_eva_backup() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'list restore save unlink' -- "$cur" ))
+  fi
+}
+
+_eva_server() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'disable enable restart start status stop' -- "$cur" ))
+  fi
+}
+
+_eva() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 1 ]]; then
+    COMPREPLY=( $( compgen -W 'backup edit lm ns server sfa system uc update version' -- "$cur" ))
+  else
+    case "${words[1]}" in
+      backup|edit|lm|server|sfa|system|uc)
+        _eva_${words[1]}
+        ;;
+    esac
+  fi
+}
+
+complete -F _eva eva
