@@ -7,18 +7,9 @@ __version__ = "3.2.0"
 
 import sys
 import os
-import re
-import subprocess
 import time
-import glob
-import requests
-import jsonpickle
 import configparser
 import platform
-import yaml
-
-from functools import partial
-from datetime import datetime
 
 nodename = platform.node()
 
@@ -47,9 +38,10 @@ cmds = []
 update_repo = 'https://get.eva-ics.com'
 interactive_mode = False
 
-import eva.core
-from eva.client import apiclient
+import eva.client.cli
+
 from eva.client.cli import GenericCLI
+from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
 
 
@@ -506,6 +498,7 @@ sys.argv = {argv}
         return 0, {'backup': fname}
 
     def backup_list(self, params):
+        import glob
         files = glob.glob('backup/*.tgz')
         files.sort(key=os.path.getmtime, reverse=True)
         result = []
@@ -619,6 +612,8 @@ sys.argv = {argv}
         except:
             return self.local_func_result_failed
         try:
+            import requests
+            import jsonpickle
             r = requests.get(_update_repo + '/update_info.json', timeout=5)
             if r.status_code != 200:
                 raise Exception('HTTP ERROR')
@@ -781,7 +776,6 @@ try:
 except:
     pass
 
-eva.core.set_product('eva-shell', '-1')
 cli.default_prompt = '# '
 cli.arg_sections += ['backup', 'server', 'edit', 'system']
 cli.set_api_functions(_api_functions)

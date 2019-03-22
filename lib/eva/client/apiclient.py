@@ -4,10 +4,6 @@ __license__ = "Apache License 2.0"
 __version__ = "3.2.0"
 
 import os
-import configparser
-import requests
-import jsonpickle
-import uuid
 
 version = __version__
 
@@ -69,6 +65,7 @@ class APIClient(object):
         self._ssl_verify = v
 
     def do_call_http(self, payload, t):
+        import requests
         return requests.post(
             self._uri + '/jrpc',
             json=payload,
@@ -82,6 +79,8 @@ class APIClient(object):
              call_id=None,
              _return_raw=False,
              _debug=False):
+        import requests
+        import uuid
         if not self._uri or not self._product_code:
             return result_not_ready, {}
         if timeout: t = timeout
@@ -141,6 +140,7 @@ class APIClient(object):
 class APIClientLocal(APIClient):
 
     def __init__(self, product, dir_eva=None):
+        import configparser
         super().__init__()
         if dir_eva is not None: _etc = dir_eva + '/etc'
         else:

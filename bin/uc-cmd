@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
@@ -7,11 +8,6 @@ __version__ = "3.2.0"
 
 import sys
 import os
-import re
-import requests
-import jsonpickle
-import yaml
-from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 dir_runtime = os.path.realpath(
@@ -21,7 +17,6 @@ sys.path.append(dir_lib)
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
-from eva.client import apiclient
 
 
 class UC_CLI(GenericCLI, ControllerCLI):
@@ -245,6 +240,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             if api_func == 'scan_owfs_bus':
                 if 'attrs' in d: del d['attrs']
             elif itype == 'action':
+                from datetime import datetime
                 d['time'] = datetime.fromtimestamp(
                     d['time']['created']).isoformat()
             elif itype == 'driver':
@@ -275,12 +271,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
     def prepare_run(self, api_func, params, a):
         if api_func == 'load_driver':
             try:
+                import re
                 params['p'], params['i'] = re.split('[.:]', params['i'])
             except:
                 self.print_err("Invalid driver ID")
                 return 98
         elif api_func == 'put_phi_mod':
             try:
+                import requests
                 # if a._uri[-3:] != '.py':
                 # raise Exception('Not a PHI mod')
                 params['m'] = '.'.join(a._uri.split('/')[-1].split('.')[:-1])
@@ -1133,6 +1131,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def edit_tpl(self, props):
         import jinja2
+        import jsonpickle
+        import yaml
 
         tpl_decoder = {
             'json': jsonpickle.decode,

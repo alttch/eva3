@@ -533,8 +533,8 @@ class GenericAPI(object):
                     if item_id in self.controller.Q.actions_by_item_full_id:
                         ar = self.controller.Q.actions_by_item_full_id[item_id]
                 else:
-                    if item_id in self.controller.Q.actions_byitem_id:
-                        ar = self.controller.Q.actions_byitem_id[item_id]
+                    if item_id in self.controller.Q.actions_by_item_id:
+                        ar = self.controller.Q.actions_by_item_id[item_id]
                 if ar is None: return []
             else:
                 ar = self.controller.Q.actions

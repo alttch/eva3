@@ -6,20 +6,8 @@ __version__ = "3.2.0"
 import argparse
 # to be compatible with argcomplete
 import getopt
-import importlib
-import configparser
-import re
 import sys
 import os
-import shlex
-import readline
-import json
-import glob
-import jsonpickle
-import platform
-import termcolor
-import time
-from datetime import datetime
 from eva.client import apiclient
 from eva.gcli import GCLI
 
@@ -179,7 +167,11 @@ class GenericCLI(GCLI):
             product_str = self.colored(
                 self.product, 'green', attrs=['bold'], rlsafe=True)
             host_str = ''
-            nodename = self.nodename if self.nodename else platform.node()
+            if self.nodename:
+                nodename = self.nodename
+            else:
+                import platform
+                nodename = platform.node()
             if self.remote_api_enabled:
                 try:
                     if not self.can_colorize():
@@ -273,6 +265,7 @@ class GenericCLI(GCLI):
             pass
 
     def parse_ini(self, fname):
+        import configparser
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
         result = {}
         try:
@@ -387,6 +380,7 @@ class GenericCLI(GCLI):
         if api_func == 'log_get':
             result = []
             for d in data:
+                from datetime import datetime
                 d['host'] = d.pop('h')
                 d['thread'] = d.pop('th')
                 d['message'] = d.pop('msg')
@@ -505,6 +499,7 @@ class GenericCLI(GCLI):
                 # dirty hack for old pandas ver
                 x = 2 if out[1].startswith(idxcol + ' ') else 1
                 for o in out[x:]:
+                    import re
                     s = re.sub('^NaN', '   ', o)
                     if api_func == 'log_get': s = self.format_log_str(s)
                     print(s)
@@ -792,6 +787,7 @@ class GenericCLI(GCLI):
                 for c in cmds:
                     print(self.get_prompt() + c)
                     try:
+                        import shlex
                         code = self.execute_function(shlex.split(c))
                         self.suppress_colors = False
                     except:
@@ -804,11 +800,11 @@ class GenericCLI(GCLI):
             try:
                 return self.execute_function()
             except Exception as e:
-                raise
                 self.print_err(e)
         else:
             # interactive mode
             self.start_interactive()
+            import shlex
             while True:
                 parsed = None
                 while True:
@@ -999,6 +995,7 @@ class GenericCLI(GCLI):
                         cmd_title += ' '.join(d)
                 try:
                     while True:
+                        import time
                         start_time = time.time()
                         if clear_screen:
                             os.system('clear')
@@ -1040,7 +1037,11 @@ class GenericCLI(GCLI):
                 opts += ['-U', self.apiuri]
             if self.timeout is not None:
                 opts += ['-T', str(self.timeout)]
-        _args = args if isinstance(args, list) else shlex.split(args)
+        if isinstance(args, list):
+            _args = args
+        else:
+            import shlex
+            _args = shlex.split(args)
         return self.execute_function(args=opts + _args, return_result=True)
 
     def execute_function(self, args=None, return_result=False):
@@ -1207,6 +1208,7 @@ class GenericCLI(GCLI):
                 if k != time_field:
                     r[k] = result[k][i]
                 else:
+                    from datetime import datetime
                     r[k] = datetime.fromtimestamp(result[k][i]).isoformat()
             res.append(r)
         df = self.pd.DataFrame(res)
@@ -1269,6 +1271,7 @@ class ControllerCLI(object):
             return result
         else:
             os.system(cmd)
+            import time
             time.sleep(1)
 
     def prepare_controller_status_dict(self, data):

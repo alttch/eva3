@@ -7,9 +7,6 @@ __version__ = "3.2.0"
 
 import sys
 import os
-import time
-import yaml
-from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -17,9 +14,6 @@ sys.path.append(dir_lib)
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
-from eva.client import apiclient
-
-from functools import partial
 
 
 class SFA_CLI(GenericCLI, ControllerCLI):
@@ -185,6 +179,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         result = []
         for d in data.copy():
             if itype == 'action' or api_func == 'result':
+                from datetime import datetime
                 d['time'] = datetime.fromtimestamp(
                     d['time']['created']).isoformat()
             if api_func == 'list_controllers':
@@ -199,6 +194,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             elif itype == 'state':
                 try:
+                    from datetime import datetime
                     d['set'] = datetime.fromtimestamp(d['set_time']).isoformat()
                     if d['expires']:
                         if d['status'] == 0:
@@ -207,6 +203,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             try:
                                 if d['status'] == -1:
                                     raise Exception('expired')
+                                import time
                                 exp_in = d['set_time'] + \
                                         d['expires'] - time.time()
                                 if exp_in <= 0:
@@ -727,6 +724,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
     # cloud management
 
     def deploy(self, props):
+        from eva.client import apiclient
         if props.get('und'):
             code, result = self.undeploy(props)
             if code != apiclient.result_ok:
@@ -734,16 +732,20 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         return self._deploy_undeploy(props, und=False)
 
     def undeploy(self, props):
+        from eva.client import apiclient
         return self._deploy_undeploy(
             props, und=True, del_files=props.get('del_files', False))
 
     def _deploy_undeploy(self, props, und=False, del_files=False):
+        import yaml
+        from eva.client import apiclient
         try:
             try:
                 cfg = yaml.load(open(props.get('f')).read())
             except:
                 raise Exception('Unable to parse {}'.format(props.get('f')))
             api = props['_api']
+            from functools import partial
             call = partial(
                 api.call,
                 timeout=props.get('_timeout', self.default_timeout),
