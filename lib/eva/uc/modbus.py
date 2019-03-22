@@ -31,7 +31,6 @@ from pyaltt import background_job
 
 from pymodbus.server.async import StartTcpServer
 from pymodbus.server.async import StartUdpServer
-from pymodbus.server.async import StartSerialServer
 
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock
@@ -347,12 +346,68 @@ def start():
                 ModbusServerContext(slaves={v['a']: slave_store}, single=False),
                 identity=slave_identity,
                 port=v['p'],
+                baudrate=v['b'],
+                bytesize=v['bs'],
+                parity=v['pt'],
+                stopbits=v['s'],
                 framer=slave_framer[v['f']],
                 defer_reactor_run=True)
         except:
             logging.error('Unable to start ModBus slave, port {}'.format(
                 v['p']))
             eva.core.log_traceback()
+
+
+def StartSerialServer(context,
+                      identity=None,
+                      framer=ModbusAsciiFramer,
+                      defer_reactor_run=False,
+                      **kwargs):
+    """ Helper method to start the Modbus Async Serial server
+
+    Modified to set serial baudrate / stopbits
+
+    :param context: The server data context
+    :param identify: The server identity to use (default empty)
+    :param framer: The framer to use (default ModbusAsciiFramer)
+    :param port: The serial port to attach to
+    :param baudrate: The baud rate to use for the serial device
+    :param console: A flag indicating if you want the debug console
+    :param ignore_missing_slaves: True to not send errors on a request to a
+    missing slave
+    :param defer_reactor_run: True/False defer running reactor.run() as part
+    of starting server, to be explictly started by the user
+    """
+    from twisted.internet import reactor
+    from twisted.internet.serialport import SerialPort
+
+    from pymodbus.server.async import ModbusServerFactory
+    from pymodbus.internal.ptwisted import InstallManagementConsole
+
+    port = kwargs.get('port', '/dev/ttyS0')
+    baudrate = kwargs.get('baudrate', 9600)
+    bytesize = kwargs.get('bytesize')
+    parity = kwargs.get('parity')
+    stopbits = kwargs.get('stopbits')
+    console = kwargs.get('console', False)
+
+    logging.info("Starting Modbus Serial Server on %s" % port)
+    factory = ModbusServerFactory(context, framer, identity, **kwargs)
+    if console:
+        InstallManagementConsole({'factory': factory})
+
+    protocol = factory.buildProtocol(None)
+    SerialPort.getHost = lambda self: port  # hack for logging
+    SerialPort(
+        protocol,
+        port,
+        reactor,
+        baudrate=baudrate,
+        bytesize=bytesize,
+        parity=parity,
+        stopbits=stopbits)
+    if not defer_reactor_run:
+        reactor.run(installSignalHandlers=_is_main_thread())
 
 
 # started by uc controller
@@ -552,16 +607,28 @@ def append_ip_slave(c, proto):
 def append_serial_slave(c):
     try:
         a, port = c.split(',')
-        if port.find(':') == -1:
-            framer = 'rtu'
-        else:
-            port, framer = port.split(':')
+        framer, port, baudrate, bytesize, parity, stopbits = port.split(':')
         a = safe_int(a)
+        baudrate = int(baudrate)
+        bytesize = int(bytesize)
+        stopbits = int(stopbits)
+        try:
+            port = int(port)
+        except:
+            pass
         if framer not in slave_framer:
             raise Exception('Invalid ModBus slave framer: {}'.format(framer))
-        config.slave['serial'].append({'a': a, 'p': port, 'f': framer})
-        logging.debug('modbus.slave.serial = {}.{}:{}'.format(
-            hex(a), port, framer))
+        config.slave['serial'].append({
+            'a': a,
+            'p': port,
+            'f': framer,
+            'b': baudrate,
+            'bs': bytesize,
+            'pt': parity,
+            's': stopbits
+        })
+        logging.debug('modbus.slave.serial = {}.{}:{}:{}:{}:{}:{}'.format(
+            hex(a), framer, port, baudrate, bytesize, parity, stopbits))
     except:
         eva.core.log_traceback()
 
@@ -576,4 +643,3 @@ def update_config(cfg):
                 append_serial_slave(cfg.get('modbus', c))
     except:
         pass
-    print(config.slave)

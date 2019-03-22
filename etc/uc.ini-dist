@@ -93,5 +93,5 @@ hosts_allow_encrypted = 0.0.0.0/0
 ;tcp0 = 0x01,0.0.0.0:502
 ;udp0 = 0x01,0.0.0.0:502
 ; framer for serial: rtu, ascii or binary
-;serial0 = 0x01,/dev/ttyS0:rtu
-;serial1 = 0x05,/dev/ttyS1:rtu
+;serial0 = 0x01,rtu:/dev/ttyS0:9600:8:N:1
+;serial1 = 0x05,rtu:/dev/ttyS1:9600:8:N:1
