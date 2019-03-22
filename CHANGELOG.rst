@@ -14,7 +14,7 @@ Common
     * notifier perfomance improvements
     * CLI improvements
 
-    * license is changed to Apache License 2.0
+    * license changed to Apache License 2.0
     * perfomance improvements
     * new SYS API function: shutdown_core
     * controller/node autodiscovery
