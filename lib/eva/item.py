@@ -15,6 +15,7 @@ import eva.core
 import eva.runner
 import eva.uc.driverapi
 import eva.uc.modbus
+import math
 
 from datetime import datetime
 import dateutil
