@@ -1132,6 +1132,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
         return self.local_func_result_ok
 
     def edit_tpl(self, props):
+        import jinja2
+
         tpl_decoder = {
             'json': jsonpickle.decode,
             'yml': yaml.load,
@@ -1155,7 +1157,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if os.system(editor + ' ' + fname):
             return self.local_func_result_failed
         try:
-            tpl_decoder.get(ext)(open(fname).read())
+            t = jinja2.Environment(loader=jinja2.BaseLoader).from_string(
+                open(fname).read())
+            tpl_decoder.get(ext)(t.render())
         except Exception as e:
             self.print_err('Unable to validate template. ' + str(e))
             return self.local_func_result_failed
