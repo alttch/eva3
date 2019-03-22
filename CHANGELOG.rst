@@ -14,21 +14,20 @@ Common
     * notifier perfomance improvements
     * CLI improvements
 
+    * personal Cloud support (nodes run API calls via MQTT)
+    * automatic node discovery
     * license changed to Apache License 2.0
     * perfomance improvements
     * new SYS API function: shutdown_core
     * controller/node autodiscovery
-    * JSON API via MQTT
     * enterprise layout is now default item layout
     * using item ids in API key properties is not allowed any longer in
       enterprise layout, item oid (type:group/id) must always be specified
     * X-Auth-Key header authorization support
-    * API results (except lists) now contain "_log" field which contains
-      warning and error messages logged during API request (all messages in
-      debug mode)
     * JSON RPC 2.0 API
     * JSON notifiers will send JSON RPC 2.0 notifications to the target uri, if
       *method* param is set
+    * RESTful API
     * Database support for MySQL and PostgreSQL
     * supervisord support
 
