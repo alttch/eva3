@@ -19,8 +19,6 @@ import eva.users
 import eva.lm.controller
 import eva.lm.lmapi
 import eva.logs
-
-import eva.runner
 import eva.wsapi
 import eva.mailer
 

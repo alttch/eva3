@@ -18,8 +18,6 @@ import eva.users
 import eva.sfa.controller
 import eva.sfa.sfapi
 import eva.logs
-
-import eva.runner
 import eva.sysapi
 import eva.wsapi
 

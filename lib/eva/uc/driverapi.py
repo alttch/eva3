@@ -13,8 +13,6 @@ import os
 import threading
 
 import eva.core
-import eva.sysapi
-import eva.apikey
 from eva.tools import format_json
 
 from eva.exceptions import InvalidParameter
@@ -55,6 +53,8 @@ def log_traceback():
 
 
 def lock(l, timeout=None, expires=None):
+    import eva.apikey
+    import eva.sysapi
     if expires is None:
         e = eva.core.timeout
     else:
@@ -70,6 +70,8 @@ def lock(l, timeout=None, expires=None):
 
 
 def unlock(l):
+    import eva.apikey
+    import eva.sysapi
     return eva.sysapi.api.unlock(eva.apikey.masterkey, l='eva:phi:' + l)
 
 
