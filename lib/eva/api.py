@@ -67,6 +67,17 @@ class MethodNotFound(Exception):
         return msg if msg else 'API method not found'
 
 
+def api_need_master(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check_master(kwargs.get('k')):
+            raise AccessDenied
+        return f(*args, **kwargs)
+
+    return do
+
+
 def http_api_result(result, env):
     result = {'result': result}
     if env:
@@ -691,6 +702,125 @@ class GenericAPI(object):
         }
 
 
+class GenericCloudAPI(object):
+
+    @log_w
+    @api_need_master
+    def remove_controller(self, **kwargs):
+        """
+        disconnect controller
+
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return self.controller.remove_controller(i)
+
+    @log_i
+    @api_need_master
+    def list_controller_props(self, **kwargs):
+        """
+        get controller connection parameters
+
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return self.controller.get_controller(i).serialize(props=True)
+
+    @log_i
+    @api_need_master
+    def get_controller(self, **kwargs):
+        """
+        get connected controller information
+
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        return self.controller.get_controller(i).serialize(info=True)
+
+    @log_i
+    @api_need_master
+    def test_controller(self, **kwargs):
+        """
+        test connection to remote controller
+
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        c = self.controller.get_controller(i)
+        result = c.test()
+        if result: return True
+        else: raise FunctionFailed('{}: test failed'.format(c.full_id))
+
+    @log_i
+    @api_need_master
+    def set_controller_prop(self, **kwargs):
+        """
+        set controller connection parameters
+
+        Args:
+            k: .master
+            .i: controller id
+            .p: property name (or empty for batch set)
+        
+        Optional:
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
+        """
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
+        controller = self.controller.get_controller(i)
+        if not p and not isinstance(v, dict):
+            raise InvalidParameter('property not specified')
+        if is_oid(i):
+            t, i = parse_oid(i)
+        controller = self.controller.get_controller(i)
+        if not controller or (is_oid(i) and controller and
+                              controller.item_type != t):
+            raise ResourceNotFound
+        return self._set_prop(controller, p, v, save)
+
+    @log_i
+    @api_need_master
+    def enable_controller(self, **kwargs):
+        """
+        enable connected controller
+
+        Args:
+            k: .master
+            .i: controller id
+
+        Optional:
+            save: save configuration after successful call
+        """
+        i, save = parse_api_params(kwargs, 'iS', 'Sb')
+        controller = self.controller.get_controller(i)
+        return controller.set_prop('enabled', True, save)
+
+    @log_i
+    @api_need_master
+    def disable_controller(self, **kwargs):
+        """
+        disable connected controller
+
+        Args:
+            k: .master
+            .i: controller id
+
+        Optional:
+            save: save configuration after successful call
+        """
+        i, save = parse_api_params(kwargs, 'iS', 'Sb')
+        controller = self.controller.get_controller(i)
+        return controller.set_prop('enabled', False, save)
+
+
 def cp_json_handler(*args, **kwargs):
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     response = cherrypy.serving.response
@@ -715,17 +845,6 @@ def cp_jsonrpc_handler(*args, **kwargs):
     else:
         return format_json(
             value, minimal=not eva.core.development).encode('utf-8')
-
-
-def api_need_master(f):
-
-    @wraps(f)
-    def do(*args, **kwargs):
-        if not eva.apikey.check_master(kwargs.get('k')):
-            raise AccessDenied
-        return f(*args, **kwargs)
-
-    return do
 
 
 def cp_client_key(_k=None):

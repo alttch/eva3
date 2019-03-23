@@ -29,6 +29,7 @@ import eva.api
 from eva.api import GenericHTTP_API
 from eva.api import JSON_RPC_API_abstract
 from eva.api import GenericAPI
+from eva.api import GenericCloudAPI
 from eva.api import parse_api_params
 from eva.api import api_need_master
 
@@ -69,7 +70,7 @@ from PIL import Image
 api = None
 
 
-class SFA_API(GenericAPI):
+class SFA_API(GenericAPI, GenericCloudAPI):
 
     def __init__(self):
         self.controller = eva.sfa.controller
@@ -526,7 +527,7 @@ class SFA_API(GenericAPI):
         return sorted(result, key=lambda k: k['id'])
 
     @log_d
-    def groups_macro(self, k=None):
+    def groups_macro(self, **kwargs):
         """
         get macro groups list
 
@@ -637,12 +638,21 @@ class SFA_API(GenericAPI):
                 result.append(v.group)
         return sorted(result)
 
-    # TODO
-    def list_controllers(self, k=None, g=None):
-        if not apikey.check(k, master = True) or \
-                (g is not None and \
-                    g not in [ 'uc', 'lm' ]):
-            return None
+    @log_i
+    @api_need_master
+    def list_controllers(self, **kwargs):
+        """
+        get controllers list
+
+        Get the list of all connected :ref:`controllers<sfa_remote_c>`.
+
+        Args:
+            k: .master
+            .g: filter by group ("uc" or "lm")
+        """
+        g = parse_api_params(kwargs, 'g', 's')
+        if g is not None and g not in ['uc', 'lm']:
+            raise InvalidParameter('group should be "uc" or "lm"')
         result = []
         if g is None or g == 'uc':
             for i, v in eva.sfa.controller.remote_ucs.copy().items():
@@ -652,19 +662,33 @@ class SFA_API(GenericAPI):
                 result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['full_id'])
 
-    def append_controller(self,
-                          k=None,
-                          uri=None,
-                          key=None,
-                          makey=None,
-                          group=None,
-                          mqtt_update=None,
-                          ssl_verify=True,
-                          timeout=None,
-                          save=False):
-        if not apikey.check(k, master=True) or not uri: return None
+    @log_i
+    @api_need_master
+    def append_controller(self, **kwargs):
+        """
+        connect remote controller via HTTP
+
+        Connects remote :ref:`controller<sfa_remote_c>` to the local.
+
+        Args:
+            k: .master
+            uri: Controller API uri (*proto://host:port*, port not required
+                if default)
+            a: remote controller API key (\$key to use local key)
+
+        Optional:
+            m: ref:`MQTT notifier<mqtt_>` to exchange item states in real time
+                (default: *eva_1*)
+            s: verify remote SSL certificate or pass invalid
+            t: timeout (seconds) for the remote controller API calls
+            g: controller type ("uc" or "lm"), autodetected if none
+            save: save connected controller configuration on the disk
+                immediately after creation
+        """
+        uri, group, key, mqtt_update, ssl_verify, timeout, \
+                save = parse_api_params(kwargs, 'UgamstS', 'Ssssbnb')
         if group == 'uc' or group is None:
-            result = eva.sfa.controller.append_uc(
+            c = eva.sfa.controller.append_uc(
                 uri=uri,
                 key=key,
                 makey=makey,
@@ -672,12 +696,9 @@ class SFA_API(GenericAPI):
                 ssl_verify=ssl_verify,
                 timeout=timeout,
                 save=save)
-            if group is not None and not result:
-                return result
-            elif result:
-                return result.serialize()
+            if c: return c.serialize(info=True)
         if group == 'lm' or group is None:
-            result = eva.sfa.controller.append_lm(
+            c = eva.sfa.controller.append_lm(
                 uri=uri,
                 key=key,
                 makey=makey,
@@ -685,98 +706,60 @@ class SFA_API(GenericAPI):
                 ssl_verify=ssl_verify,
                 timeout=timeout,
                 save=save)
-            if group is not None and not result:
-                return result
-            elif result:
-                return result.serialize()
-        return False
+            if c: return c.serialize(info=True)
+        raise FunctionFailed
 
-    def remove_controller(self, k=None, controller_id=None):
-        if not apikey.check(k, master=True) or not controller_id:
-            return None
-        if not controller_id or controller_id.find('/') == -1: return None
-        return eva.sfa.controller.remove_controller(controller_id)
-
-    def list_controller_props(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.sfa.controller.get_controller(i)
-        return item.serialize(props=True) if item else None
-
-    def get_controller(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.sfa.controller.get_controller(i)
-        if item is None: return None
-        return item.serialize(info=True)
-
-    def test_controller(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
-        item = eva.sfa.controller.get_controller(i)
-        if item is None: return None
-        return True if item.test() else False
-
-    def matest_controller(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def matest_controller(self, **kwargs):
+        i = parse_api_params(kwargs, 'i', 'S')
         item = eva.sfa.controller.get_controller(i)
         if item is None: return None
         return True if item.matest() else False
 
-    def set_controller_prop(self, k=None, i=None, p=None, v=None, save=False):
-        if not apikey.check(k, master=True): return None
-        controller = eva.sfa.controller.get_controller(i)
-        if not controller: return None
-        result = controller.set_prop(p, v, save)
-        if result and controller.config_changed and save:
-            controller.save()
-        return result
+    @log_i
+    @api_need_master
+    def reload_controller(self, **kwargs):
+        """
+        reload controller
 
-    def enable_controller(self, k=None, i=None, save=False):
-        if not apikey.check(k, master=True): return None
-        controller = eva.sfa.controller.get_controller(i)
-        if not controller: return None
-        result = controller.set_prop('enabled', 1, save)
-        if result and controller.config_changed and save:
-            controller.save()
-        return result
+        Reloads items from connected UC
 
-    def disable_controller(self, k=None, i=None, save=False):
-        if not apikey.check(k, master=True): return None
-        controller = eva.sfa.controller.get_controller(i)
-        if not controller: return None
-        result = controller.set_prop('enabled', 0, save)
-        if result and controller.config_changed and save:
-            controller.save()
-        return result
-
-    def reload_controller(self, k=None, i=None):
-        if not apikey.check(k, master=True): return None
+        Args:
+            k: .master
+            .i: controller id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
         if i != 'ALL':
-            if not i or i.find('/') == -1: return None
+            if not i or i.find('/') == -1:
+                raise InvalidParameter('controller type not specified')
             try:
                 ct, ci = i.split('/')
             except:
-                return False
+                raise InvalidParameter('controller type not specified')
             if ct == 'uc':
                 return eva.sfa.controller.uc_pool.reload_controller(ci)
-            if ct == 'lm':
+            elif ct == 'lm':
                 return eva.sfa.controller.lm_pool.reload_controller(ci)
-            return False
+            raise InvalidParameter('controller type unknown')
         else:
             success = True
             if not eva.sfa.controller.uc_pool.reload_controller('ALL'):
                 success = False
             if not eva.sfa.controller.lm_pool.reload_controller('ALL'):
                 success = False
-            return success
+            if not success:
+                raise FunctionFailed
+            return True
 
     @log_i
     @api_need_master
     def list_remote(self, **kwargs):
         """
-        get a list of items from connected UCs
+        get a list of items from connected controllers
 
-        Get a list of the items loaded from the connected :ref:`UC
-        controllers<lm_remote_uc>`. Useful to debug the controller
-        connections.
+        Get a list of the items loaded from the connected controllers. Useful
+        to debug the controller connections.
 
         Args:
             k: .master
@@ -923,86 +906,6 @@ class SFA_HTTP_API_abstract(SFA_API, GenericHTTP_API):
                 pass
         return sorted(
             sorted(result, key=lambda k: k['oid']), key=lambda k: k['type'])
-
-    # TODO
-    # CUT FROM THIS
-
-    @api_need_master
-    def list_controllers(self, k=None, g=None):
-        result = super().list_controllers(k, g)
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def append_controller(self,
-                          k=None,
-                          u=None,
-                          a=None,
-                          x=None,
-                          g=None,
-                          m=None,
-                          s=None,
-                          t=None,
-                          save=None):
-        sv = eva.tools.val_to_boolean(s)
-        result = super().append_controller(k, u, a, x, g, m, sv, t, save)
-        return result if result else http_api_result_error()
-
-    @api_need_master
-    def enable_controller(self, k=None, i=None):
-        result = super().enable_controller(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def disable_controller(self, k=None, i=None):
-        result = super().disable_controller(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def remove_controller(self, k=None, i=None):
-        result = super().remove_controller(k, i)
-        if result is None: raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def list_controller_props(self, k=None, i=None):
-        result = super().list_controller_props(k, i)
-        if result is None: raise cp_api_404()
-        return result
-
-    @api_need_master
-    def get_controller(self, k=None, i=None):
-        result = super().get_controller(k, i)
-        if result is None:
-            raise cp_api_404()
-        return result
-
-    @api_need_master
-    def test_controller(self, k=None, i=None):
-        result = super().test_controller(k, i)
-        if result is None:
-            raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def matest_controller(self, k=None, i=None):
-        result = super().matest_controller(k, i)
-        if result is None:
-            raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def set_controller_prop(self, k=None, i=None, p=None, v=None, save=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        result = super().set_controller_prop(k, i, p, v, _save)
-        if result is None:
-            raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
 
 
 class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):

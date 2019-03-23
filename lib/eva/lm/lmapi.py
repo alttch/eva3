@@ -14,6 +14,7 @@ import eva.sysapi
 from eva.api import GenericHTTP_API
 from eva.api import JSON_RPC_API_abstract
 from eva.api import GenericAPI
+from eva.api import GenericCloudAPI
 
 from eva.api import parse_api_params
 from eva.api import format_resource_id
@@ -58,7 +59,7 @@ import jsonpickle
 import logging
 
 
-class LM_API(GenericAPI):
+class LM_API(GenericAPI, GenericCloudAPI):
 
     def __init__(self):
         self.controller = eva.lm.controller
@@ -1026,132 +1027,6 @@ class LM_API(GenericAPI):
         if not c: raise FunctionFailed
         return c.serialize(info=True)
 
-    @log_w
-    @api_need_master
-    def remove_controller(self, **kwargs):
-        """
-        disconnect UC
-
-        Disconnects the remote :ref:`UC controller<lm_remote_uc>`.
-
-        Args:
-            k: .master
-            .i: controller id
-        """
-        i = parse_api_params(kwargs, 'i', 'S')
-        return eva.lm.controller.remove_controller(i)
-
-    @log_i
-    @api_need_master
-    def list_controller_props(self, **kwargs):
-        """
-        get editable controller parameters
-
-        Get all editable parameters of the connected :ref:`UC
-        controller<lm_remote_uc>`.
-
-        Args:
-            k: .master
-            .i: controller id
-        """
-        i = parse_api_params(kwargs, 'i', 'S')
-        return eva.lm.controller.get_controller(i).serialize(props=True)
-
-    @log_i
-    @api_need_master
-    def get_controller(self, **kwargs):
-        """
-        get controller information
-
-        Args:
-            k: .master
-            .i: controller id
-        """
-        i = parse_api_params(kwargs, 'i', 'S')
-        return eva.lm.controller.get_controller(i).serialize(info=True)
-
-    @log_i
-    @api_need_master
-    def test_controller(self, **kwargs):
-        """
-        test connection to remote controller
-
-        Args:
-            k: .master
-            .i: controller id
-        """
-        i = parse_api_params(kwargs, 'i', 'S')
-        c = eva.lm.controller.get_controller(i)
-        result = c.test()
-        if result: return True
-        else: raise FunctionFailed('{}: test failed'.format(c.full_id))
-
-    @log_i
-    @api_need_master
-    def set_controller_prop(self, **kwargs):
-        """
-        set controller parameters
-
-        Set configuration parameters of the connected UC.
-
-        Args:
-            k: .master
-            .i: controller id
-            .p: property name (or empty for batch set)
-        
-        Optional:
-            .v: propery value (or dict for batch set)
-            save: save configuration after successful call
-        """
-        i, p, v, save = parse_api_params(kwargs, 'ipvS', 's..b')
-        controller = eva.lm.controller.get_controller(i)
-        if not p and not isinstance(v, dict):
-            raise InvalidParameter('property not specified')
-        if is_oid(i):
-            t, i = parse_oid(i)
-        controller = eva.lm.controller.get_controller(i)
-        if not controller or (is_oid(i) and controller and
-                              controller.item_type != t):
-            raise ResourceNotFound
-        return self._set_prop(controller, p, v, save)
-
-    @log_i
-    @api_need_master
-    def enable_controller(self, **kwargs):
-        """
-        enable controller
-
-        Enables connected UC
-
-        Args:
-            k: .master
-            .i: controller id
-
-        Optional:
-            save: save configuration after successful call
-        """
-        i, save = parse_api_params(kwargs, 'iS', 'Sb')
-        controller = eva.lm.controller.get_controller(i)
-        return controller.set_prop('enabled', True, save)
-
-    @log_i
-    @api_need_master
-    def disable_controller(self, **kwargs):
-        """
-        disable controller
-
-        Disables connected UC
-
-        Args:
-            k: .master
-            .i: controller id
-
-        Optional:
-            save: save configuration after successful call
-        """
-        i, save = parse_api_params(kwargs, 'iS', 'Sb')
-        controller = eva.lm.controller.get_controller(i)
-        return controller.set_prop('enabled', False, save)
 
     @log_i
     @api_need_master

@@ -21,6 +21,12 @@ from eva.tools import is_oid
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
 
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceAlreadyExists
+
+from eva.exceptions import InvalidParameter
+
 remote_ucs = {}
 remote_lms = {}
 
@@ -30,6 +36,8 @@ uc_pool = None
 lm_pool = None
 
 cloud_manager = False
+
+controller_lock = threading.RLock()
 
 
 def get_item(i):
@@ -50,40 +58,54 @@ def get_item(i):
 
 
 def get_controller(controller_id):
-    if not controller_id: return None
-    if is_oid(controller_id):
-        tp, i = parse_oid(controller_id)
-    else:
-        tp, i = None, controller_id
-    if i.find('/') > -1:
-        i = i.split('/')
-        if len(i) > 2: return None
-        if i[0] == 'uc' and i[1] in remote_ucs and (tp is None or
-                                                    tp == 'remote_uc'):
-            return remote_ucs[i[1]]
-        if i[0] == 'lm' and i[1] in remote_lms and (tp is None or
-                                                    tp == 'remote_lm'):
-            return remote_lms[i[1]]
-    else:
-        return None
+    controller_lock.acquire()
+    try:
+        if not controller_id:
+            raise InvalidParameter('controller id not specified')
+        if is_oid(controller_id):
+            tp, i = parse_oid(controller_id)
+        else:
+            tp, i = None, controller_id
+        if i.find('/') > -1:
+            i = i.split('/')
+            if len(i) > 2:
+                raise InvalidParameter('controller type unknown')
+            if i[0] == 'uc' and i[1] in remote_ucs and (tp is None or
+                                                        tp == 'remote_uc'):
+                return remote_ucs[i[1]]
+            if i[0] == 'lm' and i[1] in remote_lms and (tp is None or
+                                                        tp == 'remote_lm'):
+                return remote_lms[i[1]]
+        else:
+            raise ResourceNotFound
+    finally:
+        controller_lock.release()
 
 
 def get_uc(controller_id):
-    if not controller_id: return None
-    if controller_id.find('/') > -1:
-        return get_controller(controller_id)
-    else:
-        if controller_id in remote_ucs:
-            return remote_ucs[controller_id]
+    controller_lock.acquire()
+    try:
+        if not controller_id: return None
+        if controller_id.find('/') > -1:
+            return get_controller(controller_id)
+        else:
+            if controller_id in remote_ucs:
+                return remote_ucs[controller_id]
+    finally:
+        controller_lock.release()
 
 
 def get_lm(controller_id):
-    if not controller_id: return None
-    if controller_id.find('/') > -1:
-        return get_controller(controller_id)
-    else:
-        if controller_id in remote_lms:
-            return remote_lms[controller_id]
+    controller_lock.acquire()
+    try:
+        if not controller_id: return None
+        if controller_id.find('/') > -1:
+            return get_controller(controller_id)
+        else:
+            if controller_id in remote_lms:
+                return remote_lms[controller_id]
+    finally:
+        controller_lock.release()
 
 
 @eva.core.save
@@ -125,7 +147,10 @@ def load_remote_ucs():
             uc_id = os.path.splitext(os.path.basename(ucfg))[0]
             u = eva.client.remote_controller.RemoteUC(uc_id)
             if u.load():
-                remote_ucs[uc_id] = u
+                try:
+                    remote_ucs[uc_id] = u
+                finally:
+                    controller_lock.release()
         return True
     except:
         logging.error('UCs load error')
@@ -142,7 +167,10 @@ def load_remote_lms():
             lm_id = os.path.splitext(os.path.basename(lmfg))[0]
             u = eva.client.remote_controller.RemoteLM(lm_id)
             if u.load():
-                remote_lms[lm_id] = u
+                try:
+                    remote_lms[lm_id] = u
+                finally:
+                    controller_lock.release()
         return True
     except:
         logging.error('LMs load error')
@@ -155,12 +183,16 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
         ct, c_id = controller_id.split('/')
         if ct not in ['uc', 'lm']:
             return True
-        if (ct == 'uc' and c_id in uc_pool.controllers) or \
-                (ct == 'lm' and c_id in lm_pool.controllers):
-            logging.debug(
-                'Controller {} already exists, skipped (discovered from {})'.
-                format(controller_id, notifier_id))
-            return True
+        controller_lock.acquire()
+        try:
+            if (ct == 'uc' and c_id in uc_pool.controllers) or \
+                    (ct == 'lm' and c_id in lm_pool.controllers):
+                logging.debug('Controller ' +
+                              '{} already exists, skipped (discovered from {})'.
+                              format(controller_id, notifier_id))
+                return True
+        finally:
+            controller_lock.release()
         key = eva.apikey.key_by_id('default')
         if not key:
             logging.debug('Controller {} discovered, (discovered from {}), '.
@@ -222,7 +254,11 @@ def append_uc(uri,
     u._key = key
     u.set_prop('masterkey', makey)
     if not uc_pool.append(u): return False
-    remote_ucs[u.item_id] = u
+    controller_lock.acquire()
+    try:
+        remote_ucs[u.item_id] = u
+    finally:
+        controller_lock.release()
     if save: u.save()
     logging.info('controller %s added to pool' % u.full_id)
     return u
@@ -230,7 +266,8 @@ def append_uc(uri,
 
 def remove_uc(controller_id):
     if controller_id not in remote_ucs:
-        return False
+        raise ResourceNotFound
+    controller_lock.acquire()
     try:
         i = remote_ucs[controller_id]
         i.destroy()
@@ -246,9 +283,11 @@ def remove_uc(controller_id):
         del (remote_ucs[controller_id])
         logging.info('controller uc/%s removed' % controller_id)
         return True
-    except:
+    except Exception as e:
         eva.core.log_traceback()
-        return False
+        raise FunctionFailed(e)
+    finally:
+        controller_lock.release()
 
 
 def append_lm(uri,
@@ -285,7 +324,11 @@ def append_lm(uri,
     u._key = key
     u.set_prop('masterkey', makey)
     if not lm_pool.append(u): return False
-    remote_lms[u.item_id] = u
+    controller_lock.acquire()
+    try:
+        remote_lms[u.item_id] = u
+    finally:
+        controller_lock.release()
     if save: u.save()
     logging.info('controller %s added to pool' % u.full_id)
     return u
@@ -293,7 +336,8 @@ def append_lm(uri,
 
 def remove_lm(controller_id):
     if controller_id not in remote_lms:
-        return False
+        raise ResourceNotFound
+    controller_lock.acquire()
     try:
         i = remote_lms[controller_id]
         i.destroy()
@@ -309,20 +353,22 @@ def remove_lm(controller_id):
         del (remote_lms[controller_id])
         logging.info('controller lm/%s removed' % controller_id)
         return True
-    except:
+    except Exception as e:
         eva.core.log_traceback()
-        return False
+        raise FunctionFailed(e)
+    finally:
+        controller_lock.release()
 
 
 def remove_controller(controller_id):
     c = get_controller(controller_id)
-    if not c: return None
+    if not c: raise InvalidParameter('controller id not specified')
     if c.item_type == 'remote_uc':
         return remove_uc(c.item_id)
     elif c.item_type == 'remote_lm':
         return remove_lm(c.item_id)
     else:
-        return False
+        raise FunctionFailed('controller type unknown')
 
 
 def serialize():
