@@ -1131,7 +1131,8 @@ class RemoteLMPool(RemoteControllerPool):
             kwargs=None,
             wait=0,
             uuid=None,
-            priority=None):
+            priority=None,
+            q_timeout=None):
         if not macro in self.controllers_by_macro:
             return apiclient.result_not_found, None
         lm = self.controllers_by_macro[macro]
@@ -1141,7 +1142,8 @@ class RemoteLMPool(RemoteControllerPool):
         if wait: p['w'] = wait
         if uuid: p['u'] = uuid
         if priority: p['p'] = priority
-        result = lm.api_call('run', p)
+        if q_timeout: p['q'] = q_timeout
+        code, result = lm.api_call('run', p)
         if result and \
                 'item_id' in result and \
                 'item_group' in result and \
@@ -1152,7 +1154,7 @@ class RemoteLMPool(RemoteControllerPool):
                 't': time.time()
             }
             self.action_history_append(a)
-        return result
+        return code, result
 
     def result(self, macro_id=None, uuid=None, group=None, status=None):
         if macro_id:
