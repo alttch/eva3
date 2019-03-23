@@ -78,7 +78,7 @@ class SFA_API(GenericAPI):
     @log_i
     @api_need_master
     def management_api_call(self, **kwargs):
-        i, f, p = parse_api_params('SS.')
+        i, f, p = parse_api_params(kwargs, 'ifp', 'SS.')
         if not eva.sfa.controller.cloud_manager:
             raise AccessDenied
         controller = eva.sfa.controller.get_controller(i)
