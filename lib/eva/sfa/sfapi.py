@@ -79,6 +79,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     @log_i
     @api_need_master
     def management_api_call(self, **kwargs):
+        if not eva.sfa.controller.cloud_manager:
+            raise MethodNotFound
         i, f, p = parse_api_params(kwargs, 'ifp', 'SS.')
         if not eva.sfa.controller.cloud_manager:
             raise AccessDenied
@@ -99,7 +101,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         result['cloud_manager'] = eva.sfa.controller.cloud_manager
         if (icvars):
             result['cvars'] = eva.core.get_cvar()
-        return result
+        return True, result
 
     @log_d
     def state(self, **kwargs):
@@ -913,8 +915,6 @@ class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self.expose_api_methods('sfapi')
-        if eva.sfa.controller.cloud_manager:
-            self._expose(self.management_api_call)
         self.wrap_exposed()
 
 
@@ -925,8 +925,6 @@ class SFA_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
         super().__init__()
         self.expose_api_methods('sfapi', set_api_uri=False)
         self.expose_api_methods('sysapi', set_api_uri=False)
-        if eva.sfa.controller.cloud_manager:
-            self._expose(self.management_api_call)
 
 
 class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,

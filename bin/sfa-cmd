@@ -751,7 +751,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 timeout=props.get('_timeout', self.default_timeout),
                 _debug=props.get('_debug'))
             code, test = call('test')
-            if code != apiclient.result_ok or test.get('result') != 'OK':
+            if code != apiclient.result_ok or not test.get('ok'):
                 raise Exception(
                     'SFA API is inaccessible, code: {}'.format(code))
             if not test.get('acl', {}).get('master'):
@@ -918,6 +918,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         return self.local_func_result_ok
 
     def _perform_deploy(self, props, cfg, macall):
+        from eva.client import apiclient
         # ===== FILE UPLOAD =====
         print('Uploading files...')
         for c, v in cfg.get('controller', {}).items():
@@ -1125,13 +1126,14 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 'f': 'create_rule',
                 'p': {
                     'u': i,
-                    '_j': rule_props
+                    'v': rule_props
                 }
             })[1].get('code')
             if code != apiclient.result_ok:
                 raise Exception('API call failed, code {}'.format(code))
 
     def _perform_undeploy(self, props, cfg, macall, del_files=False):
+        from eva.client import apiclient
         # ===== RULE DELETION =====
         print(f'Deleting decision rules...')
         for i, v in cfg.get('dmatrix_rule', {}).items():
