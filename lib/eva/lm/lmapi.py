@@ -223,12 +223,12 @@ class LM_API(GenericAPI):
             .i: macro id
 
         Optional:
-        a: macro arguments, array or space separated
-        kw: macro keyword arguments, name=value, comma separated or dict
-        w: wait for the completion for the specified number of seconds
-        .u: action UUID (will be auto generated if none specified)
-        p: queue priority (default is 100, lower is better)
-        q: global queue timeout, if expires, action is marked as "dead"
+            a: macro arguments, array or space separated
+            kw: macro keyword arguments, name=value, comma separated or dict
+            w: wait for the completion for the specified number of seconds
+            .u: action UUID (will be auto generated if none specified)
+            p: queue priority (default is 100, lower is better)
+            q: global queue timeout, if expires, action is marked as "dead"
         """
         k, i, a, kw, w, u, p, q = parse_function_params(kwargs, 'kiaKwupq',
                                                         '.s..nsin')
@@ -451,7 +451,7 @@ class LM_API(GenericAPI):
 
 # macro functions
 
-    @log_i
+    @log_d
     def groups_macro(self, **kwargs):
         """
         get macro groups list
@@ -470,7 +470,7 @@ class LM_API(GenericAPI):
                 result.append(v.group)
         return sorted(result)
 
-    @log_i
+    @log_d
     def list_macros(self, **kwargs):
         """
         get macro list
@@ -583,7 +583,7 @@ class LM_API(GenericAPI):
 
 # cycle functions
 
-    @log_i
+    @log_d
     def groups_cycle(self, **kwargs):
         """
         get cycle groups list
@@ -602,7 +602,7 @@ class LM_API(GenericAPI):
                 result.append(v.group)
         return sorted(result)
 
-    @log_i
+    @log_d
     def list_cycles(self, **kwargs):
         """
         get cycle list
