@@ -317,16 +317,6 @@ class GCLI(object):
             self.pd.set_option('display.expand_frame_repr', False)
             self.pd.options.display.max_colwidth = 100
 
-    def precache(self):
-        background_job(self.precache_modules)()
-
-    @staticmethod
-    def precache_modules():
-        import time
-        import pandas
-        import datetime
-        import re
-
     def call(self, args=[]):
         _args = args if isinstance(args, list) else shlex.split(args)
         return self.execute_function(args=_args, return_result=True)

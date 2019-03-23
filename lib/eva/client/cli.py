@@ -759,7 +759,6 @@ class GenericCLI(GCLI):
             'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
 
     def start_interactive(self, reset_sst=True):
-        self.precache()
         if reset_sst: globals()['shell_switch_to'] = None
         super().start_interactive()
 
