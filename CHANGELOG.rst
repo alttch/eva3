@@ -53,6 +53,7 @@ LM
     * set_rule_prop now accepts "condition" and "for_oid"
     * cycles, cycle control API and macro functions
     * removed deprecated dm_rule* acl
+    * macro "argv" variable is now deprecated (replaced with "args")
 
 SFA
 ---

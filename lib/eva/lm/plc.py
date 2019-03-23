@@ -91,7 +91,9 @@ class PLC(eva.item.ActiveItem):
         env_globals.update(eva.lm.extapi.env)
         env_globals.update(a.item.api.get_globals())
         env_globals['_source'] = a.source
-        env_globals['argv'] = a.argv.copy()
+        env_globals['args'] = a.argv.copy()
+        # deprecated
+        env_globals['argv'] = env_globals['args']
         env_globals['kwargs'] = a.kwargs.copy()
         env_globals['is_shutdown'] = a.is_shutdown_func
         env_globals['_polldelay'] = eva.core.polldelay
