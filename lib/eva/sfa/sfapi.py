@@ -1188,6 +1188,11 @@ def start():
                 'tools.sessions.on': True,
                 'tools.sessions.timeout': eva.api.config.session_timeout
             }, tiny_httpe),
+            '/.evahi': {
+                'tools.sessions.on': False,
+                'tools.staticdir.dir': eva.core.dir_eva + '/ui/.evahi',
+                'tools.staticdir.on': True
+            },
             '/favicon.ico': {
                 'tools.staticfile.on':
                 True,
