@@ -9,6 +9,7 @@ import eva.item
 import eva.tools
 import eva.apikey
 import eva.client.coreapiclient
+import eva.client.apiclient
 import eva.client.remote_item
 import logging
 import time
@@ -53,7 +54,8 @@ class RemoteController(eva.item.Item):
         self.wait_for_autoremove = False
 
     def api_call(self, func, params=None, timeout=None):
-        if not self.api or not self.enabled: return None
+        if not self.api or not self.enabled:
+            return eva.client.apiclient.result_not_ready, None
         for tries in range(self.retries + 1):
             (code, result) = self.api.call(
                 func, params, timeout, _debug=eva.core.debug)
@@ -67,14 +69,14 @@ class RemoteController(eva.item.Item):
         if code == eva.client.apiclient.result_forbidden:
             logging.error('Remote controller access forbidden %s' % \
                     self.api._uri)
-            return None
+            return code, None
         elif code != eva.client.apiclient.result_ok and \
                 code != eva.client.apiclient.result_func_failed \
                 and code != eva.client.apiclient.result_not_found:
             logging.error('Remote controller access error %s, code %u' % \
                     (self.api._uri, code))
-            return None
-        return result
+            return code, None
+        return code, result
 
     def management_api_call(self, func, params=None, timeout=None):
         if not self.api or not cloud_manager or not self.masterkey:
@@ -92,8 +94,8 @@ class RemoteController(eva.item.Item):
         return code, result
 
     def test(self):
-        result = self.api_call('test')
-        if not isinstance(result, dict):
+        code, result = self.api_call('test')
+        if code or not isinstance(result, dict):
             logging.error('Remote controller {} test failed'.format(
                 self.full_id))
             return False
@@ -367,7 +369,7 @@ class RemoteUC(RemoteController):
 
     def load_units(self):
         if not self.item_id: return None
-        states = self.api_call('state', {'p': 'U', 'full': True})
+        code, states = self.api_call('state', {'p': 'U', 'full': True})
         result = []
         if states is not None:
             for s in states:
@@ -379,7 +381,7 @@ class RemoteUC(RemoteController):
 
     def load_sensors(self):
         if not self.item_id: return None
-        states = self.api_call('state', {'p': 'S', 'full': True})
+        code, states = self.api_call('state', {'p': 'S', 'full': True})
         result = []
         if states is not None:
             for s in states:
@@ -411,7 +413,7 @@ class RemoteLM(RemoteController):
 
     def load_lvars(self):
         if not self.item_id: return None
-        states = self.api_call('state', {'full': True})
+        code, states = self.api_call('state', {'full': True})
         result = []
         if states is not None:
             for s in states:
@@ -423,7 +425,7 @@ class RemoteLM(RemoteController):
 
     def load_macros(self, skip_system=False):
         if not self.item_id: return None
-        macros = self.api_call('list_macros')
+        code, macros = self.api_call('list_macros')
         result = []
         if macros is not None:
             for m in macros:
@@ -439,7 +441,7 @@ class RemoteLM(RemoteController):
 
     def load_cycles(self, skip_system=False):
         if not self.item_id: return None
-        cycles = self.api_call('list_cycles')
+        code, cycles = self.api_call('list_cycles')
         result = []
         if cycles is not None:
             for m in cycles:
@@ -452,7 +454,7 @@ class RemoteLM(RemoteController):
 
     def load_rules(self):
         if not self.item_id: return None
-        rules = self.api_call('list_rules')
+        code, rules = self.api_call('list_rules')
         result = []
         if rules is not None:
             for r in rules:
@@ -478,7 +480,8 @@ class RemoteControllerPool(object):
         self.action_cleaner_interval = eva.core.action_cleaner_interval
 
     def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
-        if controller_id not in self.controllers: return None
+        if controller_id not in self.controllers:
+            return apiclient.result_not_found, None
         c = self.controllers[controller_id]
         p = {'c': command}
         if args is not None: p['a'] = args
@@ -720,7 +723,8 @@ class RemoteUCPool(RemoteControllerPool):
                uuid=None,
                q=None,
                priority=None):
-        if not unit_id in self.controllers_by_unit: return None
+        if not unit_id in self.controllers_by_unit:
+            return apiclient.result_not_found, None
         uc = self.controllers_by_unit[unit_id]
         p = {'i': unit_id, 's': status}
         if value is not None: p['v'] = value
@@ -728,8 +732,8 @@ class RemoteUCPool(RemoteControllerPool):
         if uuid: p['u'] = uuid
         if priority: p['p'] = priority
         if q: p['q'] = q
-        result = uc.api_call('action', p)
-        if result and \
+        code, result = uc.api_call('action', p)
+        if not code and result and \
                 'item_id' in result and \
                 'item_group' in result and \
                 'uuid' in result:
@@ -739,18 +743,19 @@ class RemoteUCPool(RemoteControllerPool):
                 't': time.time()
             }
             self.action_history_append(a)
-        return result
+        return code, result
 
     def action_toggle(self, unit_id, wait=0, uuid=None, q=None, priority=None):
-        if not unit_id in self.controllers_by_unit: return None
+        if not unit_id in self.controllers_by_unit:
+            return apiclient.result_not_found, None
         uc = self.controllers_by_unit[unit_id]
         p = {'i': unit_id}
         if wait: p['w'] = wait
         if uuid: p['u'] = uuid
         if priority: p['p'] = priority
         if q: p['q'] = q
-        result = uc.api_call('action_toggle', p)
-        if result and \
+        code, result = uc.api_call('action_toggle', p)
+        if not code and result and \
                 'item_id' in result and \
                 'item_group' in result and \
                 'uuid' in result:
@@ -760,7 +765,7 @@ class RemoteUCPool(RemoteControllerPool):
                 't': time.time()
             }
             self.action_history_append(a)
-        return result
+        return code, result
 
     def result(self, unit_id=None, uuid=None, group=None, status=None):
         if unit_id:
@@ -777,7 +782,8 @@ class RemoteUCPool(RemoteControllerPool):
             i = None
         if group: p['g'] = group
         if status: p['s'] = status
-        if not i or not i in self.controllers_by_unit: return None
+        if not i or not i in self.controllers_by_unit:
+            return apiclient.result_not_found, None
         uc = self.controllers_by_unit[i]
         return uc.api_call('result', p)
 
@@ -794,30 +800,35 @@ class RemoteUCPool(RemoteControllerPool):
                 i = None
         else:
             i = None
-        if not i or not i in self.controllers_by_unit: return None
+        if not i or not i in self.controllers_by_unit:
+            return apiclient.result_not_found, None
         uc = self.controllers_by_unit[i]
         return uc.api_call('terminate', p)
 
     def q_clean(self, unit_id):
-        if not unit_id in self.controllers_by_unit: return None
+        if not unit_id in self.controllers_by_unit:
+            return apiclient.result_not_found, None
         uc = self.controllers_by_unit[unit_id]
         p = {'i': unit_id}
         return uc.api_call('q_clean', p)
 
     def kill(self, unit_id):
-        if not unit_id in self.controllers_by_unit: return None
+        if not unit_id in self.controllers_by_unit:
+            return apiclient.result_not_found, None
         uc = self.controllers_by_unit[unit_id]
         p = {'i': unit_id}
         return uc.api_call('kill', p)
 
     def disable_actions(self, unit_id):
-        if not unit_id in self.controllers_by_unit: return None
+        if not unit_id in self.controllers_by_unit:
+            return apiclient.result_not_found, None
         uc = self.controllers_by_unit[unit_id]
         p = {'i': unit_id}
         return uc.api_call('disable_actions', p)
 
     def enable_actions(self, unit_id):
-        if not unit_id in self.controllers_by_unit: return None
+        if not unit_id in self.controllers_by_unit:
+            return apiclient.result_not_found, None
         uc = self.controllers_by_unit[unit_id]
         p = {'i': unit_id}
         return uc.api_call('enable_actions', p)
@@ -990,7 +1001,8 @@ class RemoteUCPool(RemoteControllerPool):
                 if t != 'uc': return None
             except:
                 return None
-        if _controller_id not in self.controllers: return None
+        if _controller_id not in self.controllers:
+            return apiclient.result_not_found, None
         c = self.controllers[_controller_id]
         p = {'t': device_tpl}
         if save:
@@ -1066,7 +1078,8 @@ class RemoteLMPool(RemoteControllerPool):
                 else None
 
     def set(self, lvar_id, status=None, value=None):
-        if not lvar_id in self.controllers_by_lvar: return None
+        if not lvar_id in self.controllers_by_lvar:
+            return apiclient.result_not_found, None
         lm = self.controllers_by_lvar[lvar_id]
         p = {'i': lvar_id}
         if status is not None: p['s'] = status
@@ -1074,31 +1087,36 @@ class RemoteLMPool(RemoteControllerPool):
         return lm.api_call('set', p)
 
     def reset(self, lvar_id):
-        if not lvar_id in self.controllers_by_lvar: return None
+        if not lvar_id in self.controllers_by_lvar:
+            return apiclient.result_not_found, None
         lm = self.controllers_by_lvar[lvar_id]
         p = {'i': lvar_id}
         return lm.api_call('reset', p)
 
     def toggle(self, lvar_id):
-        if not lvar_id in self.controllers_by_lvar: return None
+        if not lvar_id in self.controllers_by_lvar:
+            return apiclient.result_not_found, None
         lm = self.controllers_by_lvar[lvar_id]
         p = {'i': lvar_id}
         return lm.api_call('toggle', p)
 
     def clear(self, lvar_id):
-        if not lvar_id in self.controllers_by_lvar: return None
+        if not lvar_id in self.controllers_by_lvar:
+            return apiclient.result_not_found, None
         lm = self.controllers_by_lvar[lvar_id]
         p = {'i': lvar_id}
         return lm.api_call('clear', p)
 
     def list_rule_props(self, rule_id):
-        if not rule_id in self.controllers_by_rule: return None
+        if not rule_id in self.controllers_by_rule:
+            return apiclient.result_not_found, None
         lm = self.controllers_by_rule[rule_id]
         p = {'i': rule_id}
         return lm.api_call('list_rule_props', p)
 
     def set_rule_prop(self, rule_id, prop, val, save):
-        if not rule_id in self.controllers_by_rule: return None
+        if not rule_id in self.controllers_by_rule:
+            return apiclient.result_not_found, None
         lm = self.controllers_by_rule[rule_id]
         p = {'i': rule_id}
         p['p'] = prop
@@ -1114,7 +1132,8 @@ class RemoteLMPool(RemoteControllerPool):
             wait=0,
             uuid=None,
             priority=None):
-        if not macro in self.controllers_by_macro: return None
+        if not macro in self.controllers_by_macro:
+            return apiclient.result_not_found, None
         lm = self.controllers_by_macro[macro]
         p = {'i': macro}
         if args: p['a'] = args
@@ -1150,7 +1169,8 @@ class RemoteLMPool(RemoteControllerPool):
             i = None
         if group: p['g'] = group
         if status: p['s'] = status
-        if not i or not i in self.controllers_by_macro: return None
+        if not i or not i in self.controllers_by_macro:
+            return apiclient.result_not_found, None
         lm = self.controllers_by_macro[i]
         return lm.api_call('result', p)
 

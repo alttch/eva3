@@ -84,6 +84,7 @@ class PLC(eva.item.ActiveItem):
         logging.debug('%s action processor stopped' % self.full_id)
 
     def _t_action(self, a):
+        import eva.runner
         self.action_log_run(a)
         self.action_before_run(a)
         env_globals = {}

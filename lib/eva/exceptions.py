@@ -29,6 +29,7 @@ class ResourceNotFound(GenericException):
         msg = super().__str__()
         return msg + ' not found' if msg else 'Resource not found'
 
+
 class ResourceBusy(GenericException):
 
     def __str__(self):
@@ -48,3 +49,30 @@ class AccessDenied(GenericException):
     def __str__(self):
         msg = super().__str__()
         return msg if msg else 'Access to resource is denied'
+
+
+def ecall(eresult):
+    code, result = eresult
+    import eva.client.apiclient as a
+    if code == a.result_ok:
+        if isinstance(result, dict) and len(
+                result.keys()) == 1 and result.get('ok'):
+            return True
+        else:
+            return result
+    if result:
+        err = result.get('error')
+    else:
+        err = ''
+    if code == a.result_already_exists:
+        raise ResourceAlreadyExists(err)
+    elif code == a.result_not_found:
+        raise ResourceNotFound(err)
+    elif code == a.result_busy:
+        raise ResourceBusy(err)
+    elif code == a.result_invalid_params:
+        raise InvalidParameter(err)
+    elif code == a.result_forbidden:
+        raise AccessDenied(err)
+    else:
+        raise FunctionFailed(err)

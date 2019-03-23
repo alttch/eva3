@@ -54,6 +54,8 @@ from eva.exceptions import ResourceBusy
 from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
 
+from eva.exceptions import ecall
+
 from eva.tools import parse_function_params
 
 from eva import apikey
@@ -68,6 +70,10 @@ api = None
 
 
 class SFA_API(GenericAPI):
+
+    def __init__(self):
+        self.controller = eva.sfa.controller
+        super().__init__()
 
     @log_i
     @api_need_master
@@ -142,61 +148,18 @@ class SFA_API(GenericAPI):
                 result.append(r)
         return sorted(result, key=lambda k: k['oid'])
 
-    def state_history(self, **kwargs):
+    @log_d
+    def groups(self, **kwargs):
         """
-        get item state history
+        get item group list
 
-        State history of one :doc:`item</items>` or several items of the
-        specified type can be obtained using **state_history** command.
+        Get the list of item groups. Useful e.g. for custom interfaces.
 
         Args:
             k:
-            a: history notifier id (default: db_1)
-            .i: item oids or full ids, list or comma separated
-
-        Optional:
-            s: start time (timestamp or ISO)
-            e: end time (timestamp or ISO)
-            l: records limit (doesn't work with "w")
-            x: state prop ("status" or "value")
-            t: time format("iso" or "raw" for unix timestamp, default is "raw")
-            w: fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours
-                etc.), start time is required
-            g: output format ("list" or "dict", default is "list")
+            .p: item type (unit [U], sensor [S] or lvar [LV])
         """
-        k, a, i, s, e, l, x, t, w, g = parse_function_params(
-            kwargs, 'kaiselxtwg', '.sr..issss')
-        import eva.item
-        # TODO - if multiple items specified
-        if is_oid(i):
-            _tp, _i = parse_oid(i)
-        else:
-            _tp = tp
-            _i = i
-        if not _tp: return False
-        if _tp == 'U' or _tp == 'unit':
-            gi = eva.sfa.controller.uc_pool.units
-        elif _tp == 'S' or _tp == 'sensor':
-            gi = eva.sfa.controller.uc_pool.sensors
-        elif _tp == 'LV' or _tp == 'lvar':
-            gi = eva.sfa.controller.lm_pool.lvars
-        else:
-            return False
-        if not _i in gi: return False
-        if not apikey.check(k, gi[_i]):
-            return False
-        return eva.item.get_state_history(
-            a=a,
-            oid=gi[_i].oid,
-            t_start=s,
-            t_end=e,
-            limit=l,
-            prop=x,
-            time_format=t,
-            fill=w,
-            fmt=g)
-
-    def groups(self, k=None, tp=None, group=None):
+        k, tp, group = parse_api_params(kwargs, 'kpg', '.Ss')
         if not tp: return []
         if tp == 'U' or tp == 'unit':
             gi = eva.sfa.controller.uc_pool.units
@@ -214,43 +177,94 @@ class SFA_API(GenericAPI):
                 result.append(v.group)
         return sorted(result)
 
-    def action(self,
-               k=None,
-               i=None,
-               action_uuid=None,
-               nstatus=None,
-               nvalue='',
-               priority=None,
-               q=None,
-               wait=0):
-        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.action(
-            unit_id=oid_to_id(i, 'unit'),
-            status=nstatus,
-            value=nvalue,
-            wait=wait,
-            uuid=action_uuid,
-            priority=priority,
-            q=q)
+    @log_i
+    def action(self, **kwargs):
+        """
+        create unit control action
+        
+        The call is considered successful when action is put into the action
+        queue of selected unit.
 
-    def action_toggle(self,
-                      k=None,
-                      i=None,
-                      action_uuid=None,
-                      priority=None,
-                      q=None,
-                      wait=0):
-        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.action_toggle(
-            unit_id=oid_to_id(i, 'unit'),
-            wait=wait,
-            uuid=action_uuid,
-            priority=priority,
-            q=q)
+        Args:
+            k:
+            .i: unit id
+            s: desired unit status
 
-    def result(self, k=None, i=None, u=None, g=None, s=None):
+        Optional:
+            v: desired unit value
+            w: wait for the completion for the specified number of seconds
+            .u: action UUID (will be auto generated if none specified)
+            p: queue priority (default is 100, lower is better)
+            q: global queue timeout, if expires, action is marked as "dead"
+
+        Returns:
+            Serialized action object. If action is marked as dead, an error is
+            returned (exception raised)
+        """
+        k, i, s, v, w, u, p, q = parse_function_params(kwargs, 'kisvwupq',
+                                                       '.sR.nsin')
+        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
+        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.uc_pool.action(
+                unit_id=oid_to_id(i, 'unit'),
+                status=s,
+                value=v,
+                wait=w,
+                uuid=u,
+                priority=p,
+                q=q))
+
+    @log_i
+    def action_toggle(self, **kwargs):
+        """
+        toggle unit status
+
+        Create unit control action to toggle its status (1->0, 0->1)
+
+        Args:
+            k:
+            .i: unit id
+
+        Optional:
+            w: wait for the completion for the specified number of seconds
+            .u: action UUID (will be auto generated if none specified)
+            p: queue priority (default is 100, lower is better)
+            q: global queue timeout, if expires, action is marked as "dead"
+
+        Returns:
+            Serialized action object. If action is marked as dead, an error is
+            returned (exception raised)
+        """
+        k, i, w, u, p, q = parse_function_params(kwargs, 'kiwupq', '.snsin')
+        unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
+        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.uc_pool.action_toggle(
+                unit_id=oid_to_id(i, 'unit'), wait=w, uuid=u, priority=p, q=q))
+
+    @log_i
+    def result(self, **kwargs):
+        """
+        get action status or macro run result
+
+        Checks the result of the action by its UUID or returns the actions for
+        the specified unit or execution result of the specified macro.
+
+        Args:
+            k:
+
+        Optional:
+            .u: action uuid or
+            .i: unit/macro oid (either uuid or oid must be specified)
+            g: filter by unit group
+            s: filter by action status: Q for queued, R for running, F for
+               finished
+
+        Return:
+            list or single serialized action object
+        """
+        k, u, i, g, s = parse_function_params(kwargs, 'kuigs', '.ssss')
         item = None
         if u:
             a = eva.sfa.controller.uc_pool.action_history_get(u)
@@ -258,7 +272,7 @@ class SFA_API(GenericAPI):
                 item = eva.sfa.controller.uc_pool.get_unit(a['i'])
             else:
                 a = eva.sfa.controller.lm_pool.action_history_get(u)
-                if not a: return None
+                if not a: raise ResourceNotFound
                 item = eva.sfa.controller.lm_pool.get_macro(a['i'])
         elif i:
             if is_oid(i):
@@ -269,71 +283,198 @@ class SFA_API(GenericAPI):
                     item = eva.sfa.controller.lm_pool.get_macro(_i)
             else:
                 item = eva.sfa.controller.uc_pool.get_unit(i)
-        if not item or not apikey.check(k, item): return None
+        if not item or not apikey.check(k, item): raise ResourceNotFound
         if item.item_type == 'unit':
-            return eva.sfa.controller.uc_pool.result(
-                unit_id=oid_to_id(i, 'unit'), uuid=u, group=g, status=s)
+            return ecall(
+                eva.sfa.controller.uc_pool.result(
+                    unit_id=oid_to_id(i, 'unit'), uuid=u, group=g, status=s))
         elif item.item_type == 'lmacro':
-            return eva.sfa.controller.lm_pool.result(
-                macro_id=oid_to_id(i, 'lmacro'), uuid=u, group=g, status=s)
+            return ecall(
+                eva.sfa.controller.lm_pool.result(
+                    macro_id=oid_to_id(i, 'lmacro'), uuid=u, group=g, status=s))
         else:
-            return None
+            raise ResourceNotFound
 
-    def disable_actions(self, k=None, i=None):
+    def disable_actions(self, **kwargs):
+        """
+        disable unit actions
+
+        Disables unit to run and queue new actions.
+
+        Args:
+            k:
+            .i: unit id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.disable_actions(
-            unit_id=oid_to_id(i, 'unit'))
+        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.uc_pool.disable_actions(
+                unit_id=oid_to_id(i, 'unit')))
 
-    def enable_actions(self, k=None, i=None):
+    def enable_actions(self, **kwargs):
+        """
+        enable unit actions
+
+        Enables unit to run and queue new actions.
+
+        Args:
+            k:
+            .i: unit id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.enable_actions(
-            unit_id=oid_to_id(i, 'unit'))
+        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.uc_pool.enable_actions(
+                unit_id=oid_to_id(i, 'unit')))
 
-    def terminate(self, k=None, i=None, u=None):
+    def terminate(self, **kwargs):
+        """
+        terminate action execution
+        
+        Terminates or cancel the action if it is still queued
+        
+        Args:
+            k:
+            .u: action uuid or
+            .i: unit id
+            
+        Returns:
+       
+            An error result will be returned eitner if action is terminated
+            (Resource not found) or if termination process is failed or denied
+            by unit configuration (Function failed)
+        """
+        k, u, i = parse_function_params(kwargs, 'kui', '.ss')
         if i:
             unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         elif u:
             a = eva.sfa.controller.uc_pool.action_history_get(u)
+            if not a:
+                raise ResourceNotFound
             unit = eva.sfa.controller.uc_pool.get_unit(a['i'])
         else:
-            return None
-        if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.terminate(
-            unit_id=oid_to_id(i, 'unit'), uuid=u)
+            raise ResourceNotFound
+        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.uc_pool.terminate(
+                unit_id=oid_to_id(i, 'unit'), uuid=u))
 
-    def kill(self, k=None, i=None):
+    def kill(self, **kwargs):
+        """
+        kill unit actions
+
+        Apart from canceling all queued commands, this function also terminates
+        the current running action.
+        
+        Args:
+            k:
+            .i: unit id
+        
+        Returns:
+            If the current action of the unit cannot be terminated by
+            configuration, the notice "pt" = "denied" will be returned
+            additionally (even if there's no action running)
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.kill(unit_id=oid_to_id(i, 'unit'))
+        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.uc_pool.kill(unit_id=oid_to_id(i, 'unit')))
 
-    def q_clean(self, k=None, i=None):
+    def q_clean(self, **kwargs):
+        """
+        clean action queue of unit
+
+        Cancels all queued actions, keeps the current action running.
+
+        Args:
+            k:
+            .i: unit id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): return None
-        return eva.sfa.controller.uc_pool.q_clean(unit_id=oid_to_id(i, 'unit'))
+        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.uc_pool.q_clean(unit_id=oid_to_id(i, 'unit')))
 
-    def set(self, k=None, i=None, status=None, value=None):
+    def set(self, **kwargs):
+        """
+        set lvar state
+
+        Set status and value of a :ref:`logic variable<lvar>`.
+
+        Args:
+            k:
+            .i: lvar id
+        
+        Optional:
+            s: lvar status
+            v: lvar value
+        """
+        k, i, s, v, = parse_function_params(kwargs, 'kisv', '.si.')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): return None
-        return eva.sfa.controller.lm_pool.set(
-            lvar_id=oid_to_id(i, 'lvar'), status=status, value=value)
+        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.lm_pool.set(
+                lvar_id=oid_to_id(i, 'lvar'), status=s, value=v))
 
-    def reset(self, k=None, i=None):
+    def reset(self, **kwargs):
+        """
+        reset lvar state
+
+        Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful
+        when lvar is being used as a timer to reset it, or as a flag to set it
+        *True*.
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): return None
-        return eva.sfa.controller.lm_pool.reset(lvar_id=oid_to_id(i, 'lvar'))
+        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.lm_pool.reset(lvar_id=oid_to_id(i, 'lvar')))
 
-    def toggle(self, k=None, i=None):
+    def toggle(self, **kwargs):
+        """
+        clear lvar state
+
+        set status (if **expires** lvar param > 0) or value (if **expires**
+        isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is
+        used as a timer to stop it, or as a flag to set it *False*.
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): return None
-        return eva.sfa.controller.lm_pool.toggle(lvar_id=oid_to_id(i, 'lvar'))
+        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.lm_pool.toggle(lvar_id=oid_to_id(i, 'lvar')))
 
-    def clear(self, k=None, i=None):
+    def clear(self, **kwargs):
+        """
+        clear lvar state
+
+        set status (if **expires** lvar param > 0) or value (if **expires**
+        isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is
+        used as a timer to stop it, or as a flag to set it *False*.
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): return None
-        return eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar'))
+        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar')))
 
+    # TODO
     def list_macros(self, k=None, controller_id=None, group=None):
         result = []
         if not controller_id:
@@ -685,139 +826,11 @@ class SFA_HTTP_API_abstract(SFA_API, GenericHTTP_API):
         return sorted(
             sorted(result, key=lambda k: k['oid']), key=lambda k: k['type'])
 
-    def groups(self, k=None, p=None, g=None):
-        return super().groups(k, p, g)
-
     @api_need_master
     def list_controllers(self, k=None, g=None):
         result = super().list_controllers(k, g)
         if result is None: raise cp_api_404()
         return result
-
-    def action(self, k=None, i=None, u=None, s=None, v='', p=None, q=None, w=0):
-        if w:
-            try:
-                _w = float(w)
-            except:
-                raise cp_bad_request('w is not a number')
-        else:
-            _w = None
-        if p:
-            try:
-                _p = int(p)
-            except:
-                raise cp_bad_request('p is not an integer')
-        else:
-            _p = None
-        if q:
-            try:
-                _q = float(q)
-            except:
-                raise cp_bad_request('q is not a number')
-        else:
-            _q = None
-        a = super().action(
-            k=k,
-            i=i,
-            action_uuid=u,
-            nstatus=s,
-            nvalue=v,
-            priority=p,
-            q=q,
-            wait=_w)
-        if not a:
-            raise cp_api_404()
-        return a
-
-    def action_toggle(self, k=None, i=None, u=None, p=None, q=None, w=0):
-        if w:
-            try:
-                _w = float(w)
-            except:
-                raise cp_bad_request('w is not a number')
-        else:
-            _w = None
-        if p:
-            try:
-                _p = int(p)
-            except:
-                raise cp_bad_request('p is not an integer')
-        else:
-            _p = None
-        if q:
-            try:
-                _q = float(q)
-            except:
-                raise cp_bad_request('q is not a number')
-        else:
-            _q = None
-        a = super().action_toggle(
-            k=k, i=i, action_uuid=u, priority=p, q=q, wait=_w)
-        if not a:
-            raise cp_api_404()
-        return a
-
-    def result(self, k=None, i=None, u=None, g=None, s=None):
-        result = super().result(k, i, u, g, s)
-        if result is None: raise cp_api_404()
-        return result if result is not None else http_api_result_error()
-
-    def terminate(self, k=None, i=None, u=None):
-        result = super().terminate(k, i, u)
-        if result is None: raise cp_api_404()
-        return result if result else http_api_result_error()
-
-    def kill(self, k=None, i=None):
-        result = super().kill(k, i)
-        if result is None: raise cp_api_404()
-        return result if result else \
-                http_api_result_error()
-
-    def q_clean(self, k=None, i=None):
-        result = super().q_clean(k, i)
-        if result is None: raise cp_api_404()
-        return result if result else http_api_result_error()
-
-    def disable_actions(self, k=None, i=None):
-        result = super().disable_actions(k, i)
-        if result is None: raise cp_api_404()
-        return result if result else http_api_result_error()
-
-    def enable_actions(self, k=None, i=None):
-        result = super().enable_actions(k, i)
-        if result is None: raise cp_api_404()
-        return result if result else http_api_result_error()
-
-    def set(self, k=None, i=None, s=None, v=None):
-        if s is None:
-            _s = None
-        else:
-            try:
-                _s = int(s)
-            except:
-                raise cp_bad_request('s is not an integer')
-        result = super().set(k, i, _s, v)
-        if result is None:
-            raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    def reset(self, k=None, i=None):
-        if super().reset(k, i):
-            return http_api_result_ok()
-        else:
-            raise cp_api_404()
-
-    def toggle(self, k=None, i=None):
-        if super().toggle(k, i):
-            return http_api_result_ok()
-        else:
-            raise cp_api_404()
-
-    def clear(self, k=None, i=None):
-        if super().clear(k, i):
-            return http_api_result_ok()
-        else:
-            raise cp_api_404()
 
     def list_macros(self, k=None, i=None, g=None):
         result = super().list_macros(k, i, g)

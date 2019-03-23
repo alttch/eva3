@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -22,10 +23,21 @@ from eva.tools import oid_to_id
 from eva.tools import parse_oid
 from eva.tools import oid_type
 
+from eva.exceptions import FunctionFailed
+from eva.exceptions import ResourceAlreadyExists
+from eva.exceptions import ResourceNotFound
+from eva.exceptions import ResourceBusy
+from eva.exceptions import AccessDenied
+from eva.exceptions import InvalidParameter
+
+from eva.exceptions import ecall
+
 from eva.tools import dict_from_str
 
+from functools import wraps
+
 _shared = {}
-_shared_lock = threading.Lock()
+_shared_lock = threading.RLock()
 
 mbi_code = ''
 
@@ -35,9 +47,11 @@ def shared(name, default=None):
         logging.critical('macro_api shared locking broken')
         eva.core.critical()
         return None
-    value = _shared.get(name, default)
-    _shared_lock.release()
-    return value
+    try:
+        value = _shared.get(name, default)
+        return value
+    finally:
+        _shared_lock.release()
 
 
 def set_shared(name, value=None):
@@ -45,11 +59,14 @@ def set_shared(name, value=None):
         logging.critical('macro_api set_shared locking broken')
         eva.core.critical()
         return None
-    if value is None:
-        if name in _shared: del _shared[name]
-    else:
-        _shared[name] = value
-    _shared_lock.release()
+    try:
+        if value is None:
+            if name in _shared: del _shared[name]
+        else:
+            _shared[name] = value
+        return True
+    finally:
+        _shared_lock.release()
 
 
 class MacroAPI(object):
@@ -62,73 +79,93 @@ class MacroAPI(object):
         self.yes = True
         self.no = False
 
+    def macro_function(self, f):
+
+        @wraps(f)
+        def do(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except:
+                if self.pass_errors:
+                    return None
+                else:
+                    raise
+
+        return do
+
     def get_globals(self):
         return {
+            'FunctionFailed': FunctionFailed,
+            'ResourceAlreadyExists': ResourceAlreadyExists,
+            'ResourceNotFound': ResourceNotFound,
+            'ResourceAlreadyExists': ResourceBusy,
+            'AccessDenied': AccessDenied,
+            'InvalidParameter': InvalidParameter,
             'on': self.on,
             'off': self.off,
             'yes': self.yes,
             'no': self.no,
-            'shared': shared,
-            'set_shared': set_shared,
-            'print': self.info,
-            'mail': eva.mailer.send,
-            'get': requests.get,
-            'post': requests.post,
-            'debug': self.debug,
-            'info': self.info,
-            'warning': self.warning,
-            'error': self.error,
-            'critical': self.critical,
-            'exit': self.exit,
-            '_sleep': time.sleep,
-            'lock': self.lock,
-            'unlock': self.unlock,
-            'lvar_status': self.lvar_status,
-            'lvar_value': self.lvar_value,
-            'is_expired': self.is_expired,
-            'unit_status': self.unit_status,
-            'unit_value': self.unit_value,
-            'unit_nstatus': self.unit_nstatus,
-            'unit_nvalue': self.unit_nvalue,
-            'nstatus': self.unit_nstatus,
-            'nvalue': self.unit_nvalue,
-            'is_busy': self.is_busy,
-            'sensor_status': self.sensor_status,
-            'sensor_value': self.sensor_value,
-            'set': self.set,
-            'status': self.status,
-            'value': self.value,
-            'reset': self.reset,
-            'clear': self.clear,
-            'toggle': self.toggle,
-            'expires': self.expires,
-            'action': self.action,
-            'action_toggle': self.action_toggle,
-            'result': self.result,
-            'start': self.action_start,
-            'stop': self.action_stop,
-            'terminate': self.terminate,
-            'q_clean': self.q_clean,
-            'kill': self.kill,
-            'run': self.run,
-            'cmd': self.cmd,
-            'history': self.history,
-            'system': os.system,
-            'time': time.time,
-            'ls': self.ls,
-            'open_oldest': self.open_oldest,
-            'open_newest': self.open_newest,
-            'deploy_device': self.deploy_device,
-            'update_device': self.update_device,
-            'undeploy_device': self.undeploy_device,
-            'set_rule_prop': self.set_rule_prop,
-            'start_cycle': self.start_cycle,
-            'stop_cycle': self.stop_cycle,
-            'reset_cycle_stats': self.reset_cycle_stats,
-            'list_cycle_props': self.list_cycle_props,
-            'set_cycle_prop': self.set_cycle_prop,
-            'get_cycle_info': self.get_cycle_info,
-            'is_cycle_running': self.is_cycle_running
+            'shared': self.macro_function(shared),
+            'set_shared': self.macro_function(set_shared),
+            'print': self.macro_function(self.info),
+            'mail': self.macro_function(eva.mailer.send),
+            'get': self.macro_function(requests.get),
+            'post': self.macro_function(requests.post),
+            'debug': self.macro_function(self.debug),
+            'info': self.macro_function(self.info),
+            'warning': self.macro_function(self.warning),
+            'error': self.macro_function(self.error),
+            'critical': self.macro_function(self.critical),
+            'exit': self.macro_function(self.exit),
+            '_sleep': self.macro_function(time.sleep),
+            'lock': self.macro_function(self.lock),
+            'unlock': self.macro_function(self.unlock),
+            'lvar_status': self.macro_function(self.lvar_status),
+            'lvar_value': self.macro_function(self.lvar_value),
+            'is_expired': self.macro_function(self.is_expired),
+            'unit_status': self.macro_function(self.unit_status),
+            'unit_value': self.macro_function(self.unit_value),
+            'unit_nstatus': self.macro_function(self.unit_nstatus),
+            'unit_nvalue': self.macro_function(self.unit_nvalue),
+            'nstatus': self.macro_function(self.unit_nstatus),
+            'nvalue': self.macro_function(self.unit_nvalue),
+            'is_busy': self.macro_function(self.is_busy),
+            'sensor_status': self.macro_function(self.sensor_status),
+            'sensor_value': self.macro_function(self.sensor_value),
+            'set': self.macro_function(self.set),
+            'status': self.macro_function(self.status),
+            'value': self.macro_function(self.value),
+            'reset': self.macro_function(self.reset),
+            'clear': self.macro_function(self.clear),
+            'toggle': self.macro_function(self.toggle),
+            'expires': self.macro_function(self.expires),
+            'action': self.macro_function(self.action),
+            'action_toggle': self.macro_function(self.action_toggle),
+            'result': self.macro_function(self.result),
+            'start': self.macro_function(self.action_start),
+            'stop': self.macro_function(self.action_stop),
+            'terminate': self.macro_function(self.terminate),
+            'q_clean': self.macro_function(self.q_clean),
+            'kill': self.macro_function(self.kill),
+            'run': self.macro_function(self.run),
+            'cmd': self.macro_function(self.cmd),
+            'history': self.macro_function(self.history),
+            'system': self.macro_function(os.system),
+            'time': self.macro_function(time.time),
+            'ls': self.macro_function(self.ls),
+            'open_oldest': self.macro_function(self.open_oldest),
+            'open_newest': self.macro_function(self.open_newest),
+            'deploy_device': self.macro_function(self.deploy_device),
+            'update_device': self.macro_function(self.update_device),
+            'undeploy_device': self.macro_function(self.undeploy_device),
+            'set_rule_prop': self.macro_function(self.set_rule_prop),
+            'start_cycle': self.macro_function(self.start_cycle),
+            'stop_cycle': self.macro_function(self.stop_cycle),
+            'reset_cycle_stats': self.macro_function(self.reset_cycle_stats),
+            'list_cycle_props': self.macro_function(self.list_cycle_props),
+            'set_cycle_prop': self.macro_function(self.set_cycle_prop),
+            'get_cycle_info': self.macro_function(self.get_cycle_info),
+            'is_cycle_running': self.macro_function(self.is_cycle_running)
         }
 
     def history(self,
@@ -141,7 +178,7 @@ class MacroAPI(object):
                 fill=None,
                 fmt=None,
                 db=None):
-        result = eva.lm.lmapi.api.state_history(
+        return eva.lm.lmapi.api.state_history(
             k=eva.apikey.masterkey,
             a=db,
             i=oid_to_id(lvar_id, 'lvar'),
@@ -152,11 +189,6 @@ class MacroAPI(object):
             t=time_format,
             w=fill,
             g=fmt)
-        if result is False:
-            if not self.pass_errors:
-                raise Exception('lvar unknown: ' + lvar_id)
-            return None
-        return result
 
     def debug(self, msg):
         logging.debug(msg)
@@ -180,17 +212,11 @@ class MacroAPI(object):
         sys.exit(code)
 
     def lock(self, lock_id, timeout=None, expires=None):
-        result = eva.sysapi.api.lock(
+        return eva.sysapi.api.lock(
             k=eva.apikey.masterkey, l=lock_id, timeout=timeout, expires=expires)
-        if not result and not self.pass_errors:
-            raise Exception('Error obtaining lock')
-        return result
 
     def unlock(self, lock_id):
-        result = eva.sysapi.api.unlock(k=eva.apikey.masterkey, l=lock_id)
-        if result is None and not self.pass_errors:
-            raise Exception('Error releasing lock')
-        return result
+        return eva.sysapi.api.unlock(k=eva.apikey.masterkey, l=lock_id)
 
     def status(self, item_id):
         if is_oid(item_id):
@@ -204,14 +230,12 @@ class MacroAPI(object):
             return self.sensor_status(i)
         if tp == 'lvar':
             return self.lvar_status(i)
-        raise Exception('Unknown item type: %s' % tp)
+        raise ResourceNotFound
 
     def lvar_status(self, lvar_id):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
-            if not self.pass_errors:
-                raise Exception('lvar unknown: ' + lvar_id)
-            return None
+            raise ResourceNotFound
         return lvar.status
 
     def value(self, item_id, default=''):
@@ -226,14 +250,12 @@ class MacroAPI(object):
             return self.sensor_value(i, default)
         if tp == 'lvar':
             return self.lvar_value(i, default)
-        raise Exception('Unknown item type: %s' % tp)
+        raise ResourceNotFound
 
     def lvar_value(self, lvar_id, default=''):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
-            if not self.pass_errors:
-                raise Exception('lvar unknown: ' + lvar_id)
-            return None
+            raise ResourceNotFound
         if lvar.value == 'null': return default
         try:
             v = float(lvar.value)
@@ -248,25 +270,19 @@ class MacroAPI(object):
     def unit_status(self, unit_id):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
+            raise ResourceNotFound
         return unit.status
 
     def unit_nstatus(self, unit_id):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
+            raise ResourceNotFound
         return unit.nstatus
 
     def unit_value(self, unit_id, default=''):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
+            raise ResourceNotFound
         if unit.value == 'null': return default
         try:
             v = float(unit.value)
@@ -277,9 +293,7 @@ class MacroAPI(object):
     def unit_nvalue(self, unit_id, default=''):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
+            raise ResourceNotFound
         if unit.nvalue == 'null': return default
         try:
             v = float(unit.nvalue)
@@ -290,27 +304,21 @@ class MacroAPI(object):
     def is_busy(self, unit_id):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
+            raise ResourceNotFound
         return unit.status != unit.nstatus or unit.value != unit.nvalue
 
     def sensor_status(self, sensor_id):
         sensor = eva.lm.controller.uc_pool.get_sensor(
             oid_to_id(sensor_id, 'sensor'))
         if not sensor:
-            if not self.pass_errors:
-                raise Exception('sensor unknown: ' + sensor_id)
-            return None
+            raise ResourceNotFound
         return sensor.status
 
     def sensor_value(self, sensor_id, default=''):
         sensor = eva.lm.controller.uc_pool.get_sensor(
             oid_to_id(sensor_id, 'sensor'))
         if not sensor:
-            if not self.pass_errors:
-                raise Exception('sensor unknown: ' + sensor_id)
-            return None
+            raise ResourceNotFound
         if sensor.value == 'null': return default
         try:
             v = float(sensor.value)
@@ -321,39 +329,30 @@ class MacroAPI(object):
     def set(self, lvar_id, value=None):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
-            if not self.pass_errors:
-                raise Exception('lvar unknown: ' + lvar_id)
-            return False
+            raise ResourceNotFound
         if value is None: v = 'null'
         else: v = value
         result = lvar.update_set_state(value=v)
         if not result:
-            if not self.pass_errors:
-                raise Exception('lvar set error: %s, value = "%s"' % \
-                        (lvar_id, v))
-            return False
+            raise FunctionFailed('lvar set error: %s, value = "%s"' % \
+                    (lvar_id, v))
         return True
 
     def reset(self, lvar_id):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
-            if not self.pass_errors:
-                raise Exception('lvar unknown: ' + lvar_id)
-            return False
+            raise ResourceNotFound
         lvar.update_set_state(status=1)
         return self.set(lvar_id=lvar_id, value=1)
 
     def clear(self, lvar_id):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
-            if not self.pass_errors:
-                raise Exception('lvar unknown: ' + lvar_id)
-            return False
+            raise ResourceNotFound
         if lvar.expires > 0:
             lvar.update_set_state(status=0)
             if lvar.status != 0:
-                raise Exception('lvar clear error: %s' % lvar_id)
-                return False
+                raise FunctionFailed('lvar clear error: %s' % lvar_id)
             return True
         else:
             return self.set(lvar_id=lvar_id, value=0)
@@ -363,7 +362,8 @@ class MacroAPI(object):
             return self.action_toggle(
                 unit_id=item_id, wait=wait, uuid=uuid, priority=priority)
         v = self.lvar_value(item_id)
-        if v is None: return False
+        if v is None:
+            raise FunctionFailed('lvar value is null')
         if v:
             return self.clear(item_id)
         else:
@@ -372,17 +372,14 @@ class MacroAPI(object):
     def expires(self, lvar_id, etime=0):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
-            if not self.pass_errors:
-                raise Exception('lvar unknown: ' + lvar_id)
-            return False
+            raise ResourceNotFound
         try:
             result = lvar.set_prop('expires', etime, save=False)
-            if not self.pass_errors and not result:
-                raise Exception('lvar expire set error')
+            if not result:
+                raise FunctionFailed('lvar expire set error')
             return result
         except:
-            if self.pass_errors: return False
-            raise Exception('lvar expire set error')
+            raise FunctionFailed('lvar expire set error')
         return True
 
     def action(self,
@@ -394,36 +391,36 @@ class MacroAPI(object):
                priority=None):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
-        return eva.lm.controller.uc_pool.action(
-            unit_id=oid_to_id(unit_id, 'unit'),
-            status=status,
-            value=value,
-            wait=wait,
-            uuid=uuid,
-            priority=priority)
+            raise ResourceNotFound
+        return ecall(
+            eva.lm.controller.uc_pool.action(
+                unit_id=oid_to_id(unit_id, 'unit'),
+                status=status,
+                value=value,
+                wait=wait,
+                uuid=uuid,
+                priority=priority))
 
     def action_toggle(self, unit_id, wait=0, uuid=None, priority=None):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
-        return eva.lm.controller.uc_pool.action_toggle(
-            unit_id=oid_to_id(unit_id), wait=wait, uuid=uuid, priority=priority)
+            raise ResourceNotFound
+        return ecall(
+            eva.lm.controller.uc_pool.action_toggle(
+                unit_id=oid_to_id(unit_id),
+                wait=wait,
+                uuid=uuid,
+                priority=priority))
 
     def result(self, unit_id=None, uuid=None, group=None, status=None):
         if unit_id:
             unit = eva.lm.controller.uc_pool.get_unit(
                 oid_to_id(unit_id, 'unit'))
             if not unit:
-                if not self.pass_errors:
-                    raise Exception('unit unknown: ' + unit_id)
-                return None
-        return eva.lm.controller.uc_pool.result(
-            oid_to_id(unit_id, 'unit'), uuid, group, status)
+                raise ResourceNotFound
+        return ecall(
+            eva.lm.controller.uc_pool.result(
+                oid_to_id(unit_id, 'unit'), uuid, group, status))
 
     def action_start(self,
                      unit_id,
@@ -454,44 +451,25 @@ class MacroAPI(object):
             unit = eva.lm.controller.uc_pool.get_unit(
                 oid_to_id(unit_id, 'unit'))
             if not unit:
-                if not self.pass_errors:
-                    raise Exception('unit unknown: ' + unit_id)
-                return None
-        result = eva.lm.controller.uc_pool.terminate(
-            oid_to_id(unit_id, 'unit'), uuid)
-        if not result or 'result' not in result or result['result'] != 'OK':
-            if not self.pass_errors:
-                raise Exception('terminate error')
-            return False
-        return True
+                raise ResourceNotFound
+        return ecall(
+            eva.lm.controller.uc_pool.terminate(
+                oid_to_id(unit_id, 'unit'), uuid))
 
     def q_clean(self, unit_id):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
-        result = eva.lm.controller.uc_pool.q_clean(
-            unit_id=oid_to_id(unit_id, 'unit'))
-        if 'result' not in result or result['result'] != 'OK':
-            if not self.pass_errors:
-                raise Exception('q_clean error, unit ' + unit_id)
-            return False
-        return True
+            raise ResourceNotFound
+        return ecall(
+            eva.lm.controller.uc_pool.q_clean(
+                unit_id=oid_to_id(unit_id, 'unit')))
 
     def kill(self, unit_id):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
-            if not self.pass_errors:
-                raise Exception('unit unknown: ' + unit_id)
-            return None
-        result = eva.lm.controller.uc_pool.kill(
-            unit_id=oid_to_id(unit_id, 'unit'))
-        if 'result' not in result or result['result'] != 'OK':
-            if not self.pass_errors:
-                raise Exception('kill error, unit ' + unit_id)
-            return False
-        return True
+            raise ResourceNotFound
+        return ecall(
+            eva.lm.controller.uc_pool.kill(unit_id=oid_to_id(unit_id, 'unit')))
 
     def run(self,
             macro,
@@ -527,23 +505,20 @@ class MacroAPI(object):
             action_uuid=uuid,
             wait=wait)
         if not a:
-            if not self.pass_errors:
-                raise Exception('no such macro')
-            return None
+            raise ResourceNotFound
         elif a.is_status_dead():
-            if not self.pass_errors:
-                raise Exception('queue error')
-            return None
+            raise FunctionFailed('queue error')
         else:
             return a.serialize()
 
     def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
-        return eva.lm.controller.uc_pool.cmd(
-            controller_id=controller_id,
-            command=command,
-            args=args,
-            wait=wait,
-            timeout=timeout)
+        return ecall(
+            eva.lm.controller.uc_pool.cmd(
+                controller_id=controller_id,
+                command=command,
+                args=args,
+                wait=wait,
+                timeout=timeout))
 
     def ls(self, mask):
         fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
@@ -565,9 +540,7 @@ class MacroAPI(object):
             if not fls: return None
             return open(min(fls, key=os.path.getmtime), mode)
         except:
-            if not self.pass_errors:
-                raise Exception('file open error')
-            return None
+            raise FunctionFailed('file open error')
 
     def open_newest(self, mask, mode='r', alt=True):
         try:
@@ -584,30 +557,28 @@ class MacroAPI(object):
                 o = open(_f_alt, mode)
             return o
         except:
-            if not self.pass_errors:
-                raise Exception('file open error')
-            return None
+            raise FunctionFailed('file open error')
 
     def deploy_device(self, controller_id, device_tpl, cfg=None, save=None):
-        result = eva.lm.controller.uc_pool.deploy_device(
-            controller_id=controller_id,
-            device_tpl=device_tpl,
-            cfg=cfg,
-            save=save)
-        return result.get('result') == 'OK'
+        return ecall(
+            eva.lm.controller.uc_pool.deploy_device(
+                controller_id=controller_id,
+                device_tpl=device_tpl,
+                cfg=cfg,
+                save=save))
 
     def update_device(self, controller_id, device_tpl, cfg=None, save=None):
-        result = eva.lm.controller.uc_pool.update_device(
-            controller_id=controller_id,
-            device_tpl=device_tpl,
-            cfg=cfg,
-            save=save)
-        return result.get('result') == 'OK'
+        return ecall(
+            eva.lm.controller.uc_pool.update_device(
+                controller_id=controller_id,
+                device_tpl=device_tpl,
+                cfg=cfg,
+                save=save))
 
     def undeploy_device(self, controller_id, device_tpl, cfg=None):
-        result = eva.lm.controller.uc_pool.undeploy_device(
-            controller_id=controller_id, device_tpl=device_tpl, cfg=cfg)
-        return result.get('result') == 'OK'
+        return ecall(
+            eva.lm.controller.uc_pool.undeploy_device(
+                controller_id=controller_id, device_tpl=device_tpl, cfg=cfg))
 
     def set_rule_prop(self, rule_id, prop, value=None, save=False):
         result = eva.lm.lmapi.api.set_rule_prop(
@@ -617,57 +588,43 @@ class MacroAPI(object):
     def start_cycle(self, cycle_id):
         cycle = eva.lm.controller.get_cycle(cycle_id)
         if not cycle:
-            if not self.pass_errors:
-                raise Exception('cycle unknown: ' + cycle_id)
-            return None
+            raise ResourceNotFound
         return cycle.start()
 
     def stop_cycle(self, cycle_id):
         cycle = eva.lm.controller.get_cycle(cycle_id)
         if not cycle:
-            if not self.pass_errors:
-                raise Exception('cycle unknown: ' + cycle_id)
-            return None
+            raise ResourceNotFound
         return cycle.stop()
 
     def reset_cycle_stats(self, cycle_id):
         cycle = eva.lm.controller.get_cycle(cycle_id)
         if not cycle:
-            if not self.pass_errors:
-                raise Exception('cycle unknown: ' + cycle_id)
-            return None
+            raise ResourceNotFound
         return cycle.reset_stats()
 
     def list_cycle_props(self, cycle_id):
         cycle = eva.lm.controller.get_cycle(cycle_id)
         if not cycle:
-            if not self.pass_errors:
-                raise Exception('cycle unknown: ' + cycle_id)
-            return None
+            raise ResourceNotFound
         return cycle.serialize(props=True)
 
     def set_cycle_prop(self, cycle_id, prop=None, value=None, save=False):
         cycle = eva.lm.controller.get_cycle(cycle_id)
         if not cycle:
-            if not self.pass_errors:
-                raise Exception('cycle unknown: ' + cycle_id)
-            return None
+            raise ResourceNotFound
         return cycle.set_prop(prop, value, save)
 
     def get_cycle_info(self, cycle_id):
         cycle = eva.lm.controller.get_cycle(cycle_id)
         if not cycle:
-            if not self.pass_errors:
-                raise Exception('cycle unknown: ' + cycle_id)
-            return None
+            raise ResourceNotFound
         return cycle.serialize(info=True)
 
     def is_cycle_running(self, cycle_id):
         cycle = eva.lm.controller.get_cycle(cycle_id)
         if not cycle:
-            if not self.pass_errors:
-                raise Exception('cycle unknown: ' + cycle_id)
-            return None
+            raise ResourceNotFound
         return cycle.is_running()
 
 

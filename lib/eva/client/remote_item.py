@@ -245,17 +245,9 @@ class RemoteCycle(RemoteUpdatableItem):
 
     def mqtt_set_state(self, topic, data):
         super().mqtt_set_state(topic, data)
-        try:
-            if topic.endswith('/interval'):
-                try:
-                    self.interval = float(data)
-                    self.notify()
-                except:
-                    eva.core.log_traceback()
-            if topic.endswith('/value'):
-                try:
-                    self.value = float(self.value)
-                except:
-                    eva.core.log_traceback()
-        except:
-            eva.core.log_traceback()
+        if topic.endswith('/interval'):
+            try:
+                self.interval = float(data)
+                self.notify()
+            except:
+                eva.core.log_traceback()

@@ -502,10 +502,10 @@ class GenericAPI(object):
                            g=None):
         import eva.item
         item = self.controller.get_item(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item or not apikey.check(k, item): raise ResourceNotFound(i)
         if is_oid(i):
             _t, iid = parse_oid(i)
-            if not item or item.item_type != _t: raise ResourceNotFound
+            if not item or item.item_type != _t: raise ResourceNotFound(i)
         return eva.item.get_state_history(
             a=a,
             oid=item.oid,

@@ -147,7 +147,7 @@ class LM_API(GenericAPI):
             s: lvar status
             v: lvar value
         """
-        k, i, s, v, = parse_function_params(kwargs, 'kisv', '.si.')
+        k, i, s, v = parse_function_params(kwargs, 'kisv', '.si.')
         item = eva.lm.controller.get_lvar(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if s and not -1 <= s <= 1:
@@ -903,7 +903,7 @@ class LM_API(GenericAPI):
         """
         i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
         return eva.lm.controller.create_lvar(
-            lvar_id=i, group=g, save=save).serialize()
+            lvar_id=oid_to_id(i, 'lvar'), group=g, save=save).serialize()
 
     @log_w
     @api_need_master

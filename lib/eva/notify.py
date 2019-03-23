@@ -1265,8 +1265,13 @@ class GenericMQTTNotifier(GenericNotifier):
         self.connected = True
         if self.announce_interval and not self.test_only_mode:
             self.announcer.start(_name=self.notifier_id + '_announcer')
+        if not self.api_callback_lock.acquire(timeout=eva.core.timeout):
+            logging.critical(
+                '.GenericMQTTNotifier::api_callback locking broken')
+            eva.core.critical()
+            return False
         try:
-            for i, v in self.api_callback.copy():
+            for i, v in self.api_callback.items():
                 client.subscribe(v[0], qos=self.qos['system'])
                 logging.debug('%s resubscribed to %s q%u API response' % \
                         (self.notifier_id, i, self.qos['system']))
@@ -1296,7 +1301,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 logging.debug('%s subscribed to %s' % \
                         (self.notifier_id, self.announce_topic))
         except:
+            print(self.api_callback)
             eva.core.log_traceback(notifier=True)
+        finally:
+            self.api_callback_lock.release()
 
     def handler_append(self, topic, func, qos=1):
         _topic = self.space + '/' + topic if \

@@ -18,6 +18,7 @@ import eva.client.remote_controller
 import eva.client.coreapiclient
 
 from eva.tools import is_oid
+from eva.tools import oid_to_id
 from eva.tools import parse_oid
 
 remote_ucs = {}
@@ -29,6 +30,23 @@ uc_pool = None
 lm_pool = None
 
 cloud_manager = False
+
+
+def get_item(i):
+    if is_oid(i):
+        _tp, _i = parse_oid(i)
+    else:
+        return None
+    if _tp == 'unit':
+        gi = eva.sfa.controller.uc_pool.units
+    elif _tp == 'sensor':
+        gi = eva.sfa.controller.uc_pool.sensors
+    elif _tp == 'lvar':
+        gi = eva.sfa.controller.lm_pool.lvars
+    else:
+        return None
+    if not _i in gi: return None
+    return gi[_i]
 
 
 def get_controller(controller_id):

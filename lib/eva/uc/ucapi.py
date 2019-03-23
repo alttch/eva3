@@ -253,10 +253,9 @@ class UC_API(GenericAPI):
     @log_i
     def action_toggle(self, **kwargs):
         """
-        create unit control action
-        
-        The call is considered successful when action is put into the action
-        queue of selected unit.
+        toggle unit status
+
+        Create unit control action to toggle its status (1->0, 0->1)
 
         Args:
             k:
