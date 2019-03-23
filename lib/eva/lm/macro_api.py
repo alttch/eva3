@@ -1,4 +1,3 @@
-import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -582,7 +581,7 @@ class MacroAPI(object):
 
     def set_rule_prop(self, rule_id, prop, value=None, save=False):
         result = eva.lm.lmapi.api.set_rule_prop(
-            eva.apikey.masterkey, i=rule_id, p=prop, v=value, save=save)
+            k=eva.apikey.masterkey, i=rule_id, p=prop, v=value, save=save)
         return result
 
     def start_cycle(self, cycle_id):

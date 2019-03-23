@@ -385,8 +385,7 @@ class LM_API(GenericAPI):
             raise ResourceNotFound
         if p:
             if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
-                if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
-                        not apikey.check(k, item):
+                if not apikey.check(k, item):
                     raise ResourceNotFound
         else:
             if not apikey.check_master(k): raise ResourceNotFound
@@ -409,10 +408,9 @@ class LM_API(GenericAPI):
             k:
         """
         k = parse_function_params(kwargs, 'k', '.')
-        rmas = apikey.check(k, allow=['dm_rules_list'])
         result = []
         for i in eva.lm.controller.DM.rules.copy():
-            if rmas or apikey.check(k, i):
+            if apikey.check(k, i):
                 d = i.serialize(info=True)
                 if not apikey.check_master(k):
                     for x in d.copy():

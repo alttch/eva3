@@ -64,7 +64,6 @@ Add :ref:`API key<lm_apikey>` for :doc:`/sfa/sfa` in **etc/lm_apikeys.ini**:
     [sfa]
     key = secret_for_sfa2
     groups = #
-    allow = dm_rule_props, dm_rules_list
     hosts_allow = 127.0.0.1
 
 Restart LM PLC:

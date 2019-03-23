@@ -763,32 +763,6 @@ class SFA_API(GenericAPI):
             sorted(result, key=lambda k: k['oid']),
             key=lambda k: ['controller_id'])
 
-    def list_rule_props(self, k=None, i=None):
-        rule = eva.sfa.controller.lm_pool.get_dm_rule(i)
-        if not rule: return None
-        if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
-                not apikey.check(k, rule):
-            return None
-        result = eva.sfa.controller.lm_pool.list_rule_props(i)
-        if not result: return None
-        if not apikey.check(k, master=True):
-            for i in result.copy():
-                if i[:9] != 'in_range_' and \
-                        i not in [ 'enabled', 'chillout_time', 'condition' ]:
-                    del result[i]
-        return result
-
-    def set_rule_prop(self, k=None, i=None, p=None, v=None, save=False):
-        rule = eva.sfa.controller.lm_pool.get_dm_rule(i)
-        if not rule or not p: return None
-        if p[:9] == 'in_range_' or p in ['enabled', 'chillout_time']:
-            if not apikey.check(k, allow = [ 'dm_rule_props' ]) and \
-                    not apikey.check(k, rule):
-                return None
-        else:
-            if not apikey.check(k, master=True): return None
-        return eva.sfa.controller.lm_pool.set_rule_prop(i, p, v, save)
-
     def reload_clients(self, k=None):
         if not apikey.check(k, master=True): return None
         eva.notify.reload_clients()

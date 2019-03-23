@@ -84,7 +84,7 @@ eva.sysapi.cvars_public = True
 eva.core.start()
 eva.core.load_cvars()
 
-eva.apikey.allows = ['cmd', 'lock', 'dm_rule_props', 'dm_rules_list']
+eva.apikey.allows = ['cmd', 'lock']
 eva.apikey.init()
 eva.apikey.load()
 

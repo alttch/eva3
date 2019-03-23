@@ -52,6 +52,7 @@ LM
       as variables)
     * set_rule_prop now accepts "condition" and "for_oid"
     * cycles, cycle control API and macro functions
+    * removed deprecated dm_rule* acl
 
 SFA
 ---
@@ -62,6 +63,7 @@ SFA
       call the functions in new format only, look UPDATE-HOWTO for more info)
     * SFA framework: data exchange optimization with eva_sfa_state_updates
       variable
+    * removed deprecated dm_rule* acl and rule control functions
 
 
 3.1.1 (2018-10-22)

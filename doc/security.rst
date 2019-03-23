@@ -138,14 +138,6 @@ Logic Manager API keys
   external applications only via keys with certain rights. Master key should
   not be used.
 
-* Sometimes third-party applications need to read/modify the rules of
-  decision-making matrix. Instead of using master key, we recommend creating a
-  key with *allow = dm_rule_props* permissions, which allows you to change
-  parameters **in_range_\***, **enabled** and **chillout_time**, plus
-  **dm_rules_list** (for all rules). In case you need to be able to read/change
-  these parameters for a certain rule, specify its ID in **items** API key
-  parameter.
-
 SCADA Final Aggregator interfaces
 ---------------------------------
 
