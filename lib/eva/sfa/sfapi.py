@@ -295,6 +295,7 @@ class SFA_API(GenericAPI):
         else:
             raise ResourceNotFound
 
+    @log_i
     def disable_actions(self, **kwargs):
         """
         disable unit actions
@@ -312,6 +313,7 @@ class SFA_API(GenericAPI):
             eva.sfa.controller.uc_pool.disable_actions(
                 unit_id=oid_to_id(i, 'unit')))
 
+    @log_i
     def enable_actions(self, **kwargs):
         """
         enable unit actions
@@ -329,6 +331,7 @@ class SFA_API(GenericAPI):
             eva.sfa.controller.uc_pool.enable_actions(
                 unit_id=oid_to_id(i, 'unit')))
 
+    @log_w
     def terminate(self, **kwargs):
         """
         terminate action execution
@@ -361,6 +364,7 @@ class SFA_API(GenericAPI):
             eva.sfa.controller.uc_pool.terminate(
                 unit_id=oid_to_id(i, 'unit'), uuid=u))
 
+    @log_w
     def kill(self, **kwargs):
         """
         kill unit actions
@@ -383,6 +387,7 @@ class SFA_API(GenericAPI):
         return ecall(
             eva.sfa.controller.uc_pool.kill(unit_id=oid_to_id(i, 'unit')))
 
+    @log_w
     def q_clean(self, **kwargs):
         """
         clean action queue of unit
@@ -399,6 +404,7 @@ class SFA_API(GenericAPI):
         return ecall(
             eva.sfa.controller.uc_pool.q_clean(unit_id=oid_to_id(i, 'unit')))
 
+    @log_i
     def set(self, **kwargs):
         """
         set lvar state
@@ -420,6 +426,7 @@ class SFA_API(GenericAPI):
             eva.sfa.controller.lm_pool.set(
                 lvar_id=oid_to_id(i, 'lvar'), status=s, value=v))
 
+    @log_i
     def reset(self, **kwargs):
         """
         reset lvar state
@@ -438,6 +445,7 @@ class SFA_API(GenericAPI):
         return ecall(
             eva.sfa.controller.lm_pool.reset(lvar_id=oid_to_id(i, 'lvar')))
 
+    @log_i
     def toggle(self, **kwargs):
         """
         clear lvar state
@@ -456,6 +464,7 @@ class SFA_API(GenericAPI):
         return ecall(
             eva.sfa.controller.lm_pool.toggle(lvar_id=oid_to_id(i, 'lvar')))
 
+    @log_i
     def clear(self, **kwargs):
         """
         clear lvar state
@@ -474,8 +483,21 @@ class SFA_API(GenericAPI):
         return ecall(
             eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar')))
 
-    # TODO
-    def list_macros(self, k=None, controller_id=None, group=None):
+    @log_d
+    def list_macros(self, **kwargs):
+        """
+        get macro list
+
+        Get the list of all available :doc:`macros<macros>`.
+
+        Args:
+            k:
+
+        Optional:
+            .g: filter by group
+            i: filter by controller
+        """
+        k, controller_id, group = parse_function_params(kwargs, 'kig', '.ss')
         result = []
         if not controller_id:
             for c, d in \
@@ -488,12 +510,13 @@ class SFA_API(GenericAPI):
         else:
             if controller_id.find('/') != -1:
                 c = controller_id.split('/')
-                if len(c) > 2 or c[0] != 'lm': return None
+                if len(c) > 2 or c[0] != 'lm':
+                    raise InvalidParameter('controller must be LM PLC')
                 c_id = c[1]
             else:
                 c_id = controller_id
             if c_id not in eva.sfa.controller.lm_pool.macros_by_controller:
-                return None
+                raise ResourceNotFound('controller not found')
             for a, v in \
                 eva.sfa.controller.lm_pool.macros_by_controller[\
                                                         c_id].copy().items():
@@ -502,32 +525,72 @@ class SFA_API(GenericAPI):
                     result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['id'])
 
+    @log_d
     def groups_macro(self, k=None):
+        """
+        get macro groups list
+
+
+        Get the list of macros. Useful e.g. for custom interfaces.
+
+        Args:
+            k:
+        """
+        k = parse_function_params(kwargs, 'k', '.')
         result = []
         for a, v in eva.sfa.controller.lm_pool.macros.copy().items():
             if apikey.check(k, v) and not v.group in result:
                 result.append(v.group)
         return sorted(result)
 
-    def run(self,
-            k=None,
-            i=None,
-            args=None,
-            kwargs=None,
-            priority=None,
-            wait=0,
-            uuid=None):
-        macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
-        if not macro or not apikey.check(k, macro): return None
-        return eva.sfa.controller.lm_pool.run(
-            macro=oid_to_id(i, 'lmacro'),
-            args=args,
-            kwargs=kwargs,
-            priority=priority,
-            wait=wait,
-            uuid=uuid)
+    @log_i
+    def run(self, **kwargs):
+        """
+        execute macro
 
-    def list_cycles(self, k=None, controller_id=None, group=None):
+        Execute a :doc:`macro<macros>` with the specified arguments.
+
+        Args:
+            k:
+            .i: macro id
+
+        Optional:
+            a: macro arguments, array or space separated
+            kw: macro keyword arguments, name=value, comma separated or dict
+            w: wait for the completion for the specified number of seconds
+            .u: action UUID (will be auto generated if none specified)
+            p: queue priority (default is 100, lower is better)
+            q: global queue timeout, if expires, action is marked as "dead"
+        """
+        k, i, a, kw, w, u, p, q = parse_function_params(kwargs, 'kiaKwupq',
+                                                        '.s..nsin')
+        macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
+        if not macro or not apikey.check(k, macro): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.lm_pool.run(
+                macro=oid_to_id(i, 'lmacro'),
+                args=a,
+                kwargs=kw,
+                priority=p,
+                q_timeout=q,
+                wait=w,
+                uuid=u))
+
+    @log_d
+    def list_cycles(self, **kwargs):
+        """
+        get cycle list
+
+        Get the list of all available :doc:`cycles<cycles>`.
+
+        Args:
+            k:
+
+        Optional:
+            .g: filter by group
+            i: filter by controller
+        """
+        k, controller_id, group = parse_function_params(kwargs, 'kig', '.ss')
         result = []
         if isinstance(group, list): _group = group
         else: _group = str(group).split(',')
@@ -556,13 +619,25 @@ class SFA_API(GenericAPI):
                     result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['id'])
 
-    def groups_cycle(self, k=None):
+    @log_d
+    def groups_cycle(self, **kwargs):
+        """
+        get cycle groups list
+
+
+        Get the list of cycles. Useful e.g. for custom interfaces.
+
+        Args:
+            k:
+        """
+        k = parse_function_params(kwargs, 'k', '.')
         result = []
         for a, v in eva.sfa.controller.lm_pool.cycles.copy().items():
             if apikey.check(k, v) and not v.group in result:
                 result.append(v.group)
         return sorted(result)
 
+    # TODO
     def list_controllers(self, k=None, g=None):
         if not apikey.check(k, master = True) or \
                 (g is not None and \
@@ -693,8 +768,25 @@ class SFA_API(GenericAPI):
                 success = False
             return success
 
-    def list_remote(self, k=None, i=None, group=None, tp=None):
-        if not apikey.check(k, master=True): return None
+    @log_i
+    @api_need_master
+    def list_remote(self, **kwargs):
+        """
+        get a list of items from connected UCs
+
+        Get a list of the items loaded from the connected :ref:`UC
+        controllers<lm_remote_uc>`. Useful to debug the controller
+        connections.
+
+        Args:
+            k: .master
+
+        Optional:
+            .i: controller id
+            g: filter by item group
+            p: filter by item type
+        """
+        i, group, tp = parse_api_params(kwargs, 'igp', 'sss')
         result = []
         items_uc = []
         items_lm = []
@@ -763,13 +855,45 @@ class SFA_API(GenericAPI):
             sorted(result, key=lambda k: k['oid']),
             key=lambda k: ['controller_id'])
 
-    def reload_clients(self, k=None):
-        if not apikey.check(k, master=True): return None
+    @api_need_master
+    def reload_clients(self, **kwargs):
+        """
+        ask connected clients to reload
+
+        Sends **reload** event to all connected clients asking them to reload
+        the interface.
+
+        All the connected clients receive the event with *subject="reload"* and
+        *data="asap"*. If the clients use :doc:`sfa_framework`, they can
+        define :ref:`eva_sfa_reload_handler<sfw_reload>` function.
+
+        Args:
+            k: .master
+        """
         eva.notify.reload_clients()
         return True
 
-    def notify_restart(self, k=None):
-        if not apikey.check(k, master=True): return None
+    @api_need_master
+    def notify_restart(self, **kwargs):
+        """
+        notify connected clients about server restart
+
+        Sends a **server restart** event to all connected clients asking them
+        to prepare for server restart.
+
+        All the connected clients receive the event with *subject="server"* and
+        *data="restart"*. If the clients use :doc:`sfa_framework`, they can
+        define :ref:`eva_sfa_server_restart_handler<sfw_server_restart>`
+        function.
+
+        Server restart notification is sent automatically to all connected
+        clients when the server is restarting. This API function allows to send
+        server restart notification without actual server restart, which may be
+        useful e.g. for testing, handling frontend restart etc.
+
+        Args:
+            k: .master
+        """
         eva.notify.notify_restart()
         return True
 
@@ -800,48 +924,14 @@ class SFA_HTTP_API_abstract(SFA_API, GenericHTTP_API):
         return sorted(
             sorted(result, key=lambda k: k['oid']), key=lambda k: k['type'])
 
+    # TODO
+    # CUT FROM THIS
+
     @api_need_master
     def list_controllers(self, k=None, g=None):
         result = super().list_controllers(k, g)
         if result is None: raise cp_api_404()
         return result
-
-    def list_macros(self, k=None, i=None, g=None):
-        result = super().list_macros(k, i, g)
-        if result is None: raise cp_api_404()
-        return result
-
-    def groups_macro(self, k=None):
-        return super().groups_macro(k)
-
-    def list_cycles(self, k=None, i=None, g=None):
-        result = super().list_cycles(k, i, g)
-        if result is None: raise cp_api_404()
-        return result
-
-    def groups_cycle(self, k=None):
-        return super().groups_cycle(k)
-
-    def run(self, k=None, i=None, u=None, a=None, kw=None, p=None, w=0):
-        if w:
-            try:
-                _w = float(w)
-            except:
-                raise cp_bad_request('w is not a number')
-        else:
-            _w = None
-        if p:
-            try:
-                _p = int(p)
-            except:
-                raise cp_bad_request('p is not an integer')
-        else:
-            _p = None
-        a = super().run(
-            k=k, i=i, args=a, kwargs=kw, priority=_p, wait=_w, uuid=u)
-        if not a:
-            raise cp_api_404()
-        return a
 
     @api_need_master
     def append_controller(self,
@@ -914,45 +1004,6 @@ class SFA_HTTP_API_abstract(SFA_API, GenericHTTP_API):
             raise cp_api_404()
         return http_api_result_ok() if result else http_api_result_error()
 
-    @api_need_master
-    def reload_controller(self, k=None, i=None):
-        result = super().reload_controller(k, i)
-        if result is None:
-            raise cp_api_404()
-        return http_api_result_ok() if result else http_api_result_error()
-
-    @api_need_master
-    def reload_clients(self, k=None):
-        return http_api_result_ok() if super().reload_clients(k) \
-                else http_api_result_error()
-
-    @api_need_master
-    def notify_restart(self, k=None):
-        return http_api_result_ok() if super().notify_restart(k) \
-                else http_api_result_error()
-
-    @api_need_master
-    def list_remote(self, k=None, i=None, g=None, p=None):
-        result = super().list_remote(k, i, g, p)
-        if result is None: raise cp_api_404()
-        return result
-
-    def list_rule_props(self, k=None, i=None):
-        result = super().list_rule_props(k, i)
-        if not result: raise cp_api_404()
-        return result
-
-    def set_rule_prop(self, k=None, i=None, p=None, v=None, save=None):
-        if save:
-            _save = True
-        else:
-            _save = False
-        result = super().set_rule_prop(k, i, p, v, _save)
-        if result:
-            return result
-        else:
-            return http_api_result_error()
-
 
 class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
 
@@ -982,225 +1033,46 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
 
     @generic_web_api_method
     @restful_api_method
-    def GET(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def GET(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().GET(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().GET(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
-        if rtp == 'action':
-            return self.result(
-                k=k, i=props.get('i'), u=ii, g=props.get('g'), s=props.get('s'))
-        elif rtp == 'controller':
-            if kind == 'items':
-                return self.list_remote(
-                    k=k, i=ii, g=props.get('g'), p=props.get('p'))
-            elif kind == 'props' and ii and ii.find('/') != -1:
-                return self.list_controller_props(k=k, i=ii)
-            else:
-                if ii and ii.find('/') != -1:
-                    return self.get_controller(k=k, i=ii)
-                else:
-                    return self.list_controllers(k=k, g=ii)
-        elif rtp == 'dmatrix_rule':
-            if kind == 'props':
-                return self.list_rule_props(k=k, i=ii)
-        elif rtp == 'lcycle':
-            if kind == 'groups':
-                return self.groups_cycle(k=k)
-            else:
-                return self.list_cycles(k=k, g=ii, i=props.get('controller_id'))
-        elif rtp == 'lmacro':
-            if kind == 'groups':
-                return self.groups_macro(k=k)
-            else:
-                return self.list_macros(k=k, g=ii, i=props.get('controller_id'))
-        elif rtp in ['unit', 'sensor', 'lvar']:
-            if kind == 'groups':
-                return self.groups(k=k, p=rtp, g=ii)
-            elif kind == 'history':
-                return self.state_history(
-                    k=k,
-                    a=props.get('a'),
-                    i=ii,
-                    p=rtp,
-                    s=props.get('s'),
-                    e=props.get('e'),
-                    l=props.get('l'),
-                    x=props.get('x'),
-                    t=props.get('t'),
-                    w=props.get('w'),
-                    g=props.get('g'))
-            elif for_dir:
-                return self.state(k=k, g=ii, p=rtp, full=full)
-            else:
-                return self.state(k=k, i=ii, p=rtp, full=full)
         raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
-    def POST(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def POST(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().POST(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().POST(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
-        if rtp == 'action':
-            result = None
-            if 'm' in props:
-                result = self.run(
-                    k=k,
-                    i=props['m'],
-                    a=props.get('a'),
-                    kw=props.get('kw'),
-                    p=props.get('p'),
-                    w=props.get('w', 0))
-            else:
-                s = props.get('s')
-                if s == 'toggle':
-                    result = self.action_toggle(
-                        k=k,
-                        i=props.get('i'),
-                        p=props.get('p'),
-                        q=props.get('q'),
-                        w=props.get('w', 0))
-                else:
-                    result = self.action(
-                        k=k,
-                        i=props.get('i'),
-                        s=props.get('s'),
-                        v=props.get('v'),
-                        p=props.get('p'),
-                        q=props.get('q'),
-                        w=props.get('w', 0))
-            if result and 'uuid' in result:
-                set_response_location('{}/{}/{}'.format(self.api_uri, rtp,
-                                                        result['uuid']))
-                return result
-        elif rtp == 'controller':
-            if (not ii or for_dir or ii.find('/') == -1) and 'cmd' not in props:
-                result = self.append_controller(
-                    k=k,
-                    u=props.get('u'),
-                    a=props.get('a'),
-                    x=props.get('x'),
-                    g=props.get('g', ii),
-                    m=props.get('m'),
-                    s=props.get('s'),
-                    t=props.get('t'),
-                    save=save)
-                if 'full_id' in result:
-                    set_response_location('{}/{}/{}'.format(
-                        self.api_uri, rtp, result['full_id']))
-                return result
-            elif ii and 'cmd' not in props and 'f' in props:
-                return self.management_api_call(
-                    k=k, i=ii, f=props['f'], p=props.get('p'))
-            cmd = props.get('cmd')
-            if cmd == 'test':
-                return self.test_controller(k=k, i=ii)
-            elif cmd == 'matest':
-                return self.matest_controller(k=k, i=ii)
-            elif cmd == 'reload':
-                return self.reload_controller(k=k, i=ii if ii else 'ALL')
-        elif rtp == 'core':
-            cmd = props.get('cmd')
-            if cmd == 'notify_restart':
-                return self.notify_restart(k=k)
-            elif cmd == 'reload_clients':
-                return self.reload_clients(k=k)
         raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
-    def PUT(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def PUT(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().PUT(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().PUT(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
-        if rtp == 'action':
-            if 'm' in props:
-                return self.run(
-                    k=k,
-                    i=props['m'],
-                    u=ii,
-                    a=props.get('a'),
-                    kw=props.get('kw'),
-                    p=props.get('p'),
-                    w=props.get('w', 0))
-            s = props.get('s')
-            if s == 'toggle':
-                return self.action_toggle(
-                    k=k,
-                    i=props.get('i'),
-                    u=ii,
-                    p=props.get('p'),
-                    q=props.get('q'),
-                    w=props.get('w', 0))
-            else:
-                return self.action(
-                    k=k,
-                    i=props.get('i'),
-                    u=ii,
-                    s=props.get('s'),
-                    v=props.get('v'),
-                    p=props.get('p'),
-                    q=props.get('q'),
-                    w=props.get('w', 0))
         raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
-    def PATCH(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def PATCH(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().PATCH(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().PATCH(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
-        if rtp == 'action':
-            s = props.get('s')
-            if 'i' in props:
-                if s == 'kill':
-                    return self.kill(k=k, i=props.get('i'))
-                elif s == 'q_clean':
-                    return self.q_clean(k=k, i=props.get('i'))
-            elif s == 'term':
-                return self.terminate(k=k, i=props.get('i'), u=ii)
-        elif rtp == 'controller':
-            if not ii: raise cp_api_404()
-            for p, v in props.items():
-                if self.set_controller_prop(
-                        k=k, i=ii, p=p, v=v, save=save).get('result') != 'OK':
-                    return http_api_result_error()
-            return http_api_result_ok()
-        elif rtp == 'dmatrix_rule':
-            if not ii: raise cp_api_404()
-            for p, v in props.items():
-                if self.set_rule_prop(
-                        k=k, i=ii, p=p, v=v, save=save).get('result') != 'OK':
-                    return http_api_result_error()
-            return http_api_result_ok()
-        elif rtp == 'lvar':
-            s = props.get('s')
-            if s == 'clear':
-                return self.clear(k=k, i=ii)
-            elif s == 'reset':
-                return self.reset(k=k, i=ii)
-            elif s == 'toggle':
-                return self.toggle(k=k, i=ii)
-            else:
-                return self.set(k=k, i=ii, s=s, v=props.get('v'))
-        elif rtp == 'unit':
-            if 'action_enabled' in props:
-                v = eva.tools.val_to_boolean(props['action_enabled'])
-                if v:
-                    return self.enable_actions(k=k, i=ii)
-                else:
-                    return self.disable_actions(k=k, i=ii)
         raise MethodNotFound
 
     @generic_web_api_method
     @restful_api_method
-    def DELETE(self, rtp, k, ii, full, save, kind, for_dir, props):
+    def DELETE(self, rtp, k, ii, save, kind, method, for_dir, props):
         try:
-            return super().DELETE(rtp, k, ii, full, save, kind, for_dir, props)
+            return super().DELETE(rtp, k, ii, save, kind, method, for_dir,
+                                  props)
         except MethodNotFound:
             pass
         if rtp == 'controller':
