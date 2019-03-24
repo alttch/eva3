@@ -1005,7 +1005,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Args:
             k: .master
-            uri: :doc:`/uc/uc_api` uri (*proto://host:port*, port not required
+            u: :doc:`/uc/uc_api` uri (*proto://host:port*, port not required
                 if default)
             a: remote controller API key (\$key to use local key)
 
@@ -1018,7 +1018,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
                 immediately after creation
         """
         uri, key, mqtt_update, ssl_verify, timeout, save = parse_api_params(
-            kwargs, 'UamstS', 'Sssbnb')
+            kwargs, 'uamstS', 'Sssbnb')
         c = eva.lm.controller.append_controller(
             uri=uri,
             key=key,

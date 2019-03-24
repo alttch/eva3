@@ -364,7 +364,7 @@ def remove_lm(controller_id):
 
 def remove_controller(controller_id):
     c = get_controller(controller_id)
-    if not c: raise InvalidParameter('controller id not specified')
+    if not c: raise ResourceNotFound
     if c.item_type == 'remote_uc':
         return remove_uc(c.item_id)
     elif c.item_type == 'remote_lm':
