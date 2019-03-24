@@ -24,6 +24,12 @@ fi
 
 source etc/eva_servers
 
+which jq > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "Please install jq"
+  exit 1
+fi
+
 if [ -f ./sbin/eva-tinyapi ]; then
     CURRENT_BUILD=`./sbin/eva-tinyapi -B`
     

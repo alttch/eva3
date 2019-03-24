@@ -19,7 +19,7 @@ _EX=1
 
 PRODUCT=
 FUNCTION=
-SYSAPI=
+#SYSAPI=
 VERBOSE=0
 
 function echoV() {
@@ -88,14 +88,13 @@ function showHelp() {
 cat <<EOF
 EVA API direct call CLI
 
-Usage: eva-tinyapi <-T timeout> <-C type> <-F function> [-S] [params]
+Usage: eva-tinyapi <-T timeout> <-C type> <-F function> [params]
 
     -T      API call timeout (default: ${DEFAULT_TIMEOUT})
     -C      uc, lm or sfa
     -F      API function
-    -S      SYSAPI call
     -v      verbose mode
-    params  API function params (i.e. i=test full=1), space separated
+    params  API function params (e.g. i=test full=1), space separated
 
     -V      print EVA version and exit
     -B      print EVA build and exit
@@ -126,9 +125,6 @@ do
         ;;
         -F) FUNCTION="$2"
             shift
-            shift
-        ;;
-        -S) SYSAPI=1
             shift
         ;;
         -v) VERBOSE=1
@@ -197,13 +193,13 @@ fi
 
 U="$U`echo $_PROP | sed 's/0.0.0.0/127.0.0.1/'`"
 
-if [ "x$SYSAPI" = "x" ]; then
-    U="$U/${PRODUCT}-api/"
-    else
-    U="$U/sys-api/"
-fi
+#if [ "x$SYSAPI" = "x" ]; then
+    #U="$U/${PRODUCT}-api/"
+    #else
+    #U="$U/sys-api/"
+#fi
 
-U="${U}${FUNCTION}"
+U="${U}/jrpc"
 
 parseIniFile < ./etc/${PRODUCT}_apikeys.ini
 
@@ -218,7 +214,8 @@ fi
 
 DATA="$DATA \"k\" : \"$_PROP\""
 
-DATA="{ ${DATA} }"
+ID=`date "+%N"`
+DATA="{ \"jsonrpc\": \"2.0\", \"method\": \"${FUNCTION}\", \"params\": { ${DATA} }, \"id\": \"${ID}\"}"
 
 echoV "API call to $U"
 echoV "Timeout: ${TIMEOUT}"
@@ -229,9 +226,37 @@ else
     VERB=
 fi
 
-echo $DATA | curl --header "Content-Type: application/json" --data @- -X POST -m ${TIMEOUT} -s ${VERB} $U
+if [ $VERB ]; then
+  echo $DATA | curl --header "Content-Type: application/json" --data @- -X POST -m ${TIMEOUT} -s ${VERB} $U
+else
+  RESULT=`echo $DATA | curl --header "Content-Type: application/json" --data @- -X POST -m ${TIMEOUT} -s ${VERB} $U`
+fi
 _EX=$?
-echo
-echoV "Exit code: $_EX"
+echoV
+echoV "Curl exit code: $_EX"
+if [ ${VERB} ]; then
+  exit $_EX
+fi
+if [ $_EX -ne 0 ]; then
+  echo "Server error"
+  exit 7
+fi
 
-exit $_EX
+R=`echo $RESULT|jq .result 2>&1`
+
+if [ $? -ne 0 ] || [ "x$R" == "xnull" ]; then
+  ERROR_CODE=`echo $RESULT|jq -Mr .error.code 2>&1`
+  if [ $? -ne 0 ]; then
+    exit 9
+  fi
+  ERROR_MESSAGE=`echo $RESULT|jq -Mr .error.message 2>&1`
+  if [ $? -ne 0 ] || [ "x$ERROR_CODE" == "xnull" ]; then
+    exit 9
+  fi
+  echo ${ERROR_MESSAGE}
+  exit ${ERROR_CODE}
+fi
+
+echo $R
+
+exit 0

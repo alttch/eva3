@@ -20,7 +20,8 @@ Before applying this update
 * test your key items and macros/scripts in a test sandbox
 * make full backup of EVA ICS folder
 
-* install libow and libow-dev system packages
+* install **libow** and **libow-dev** system packages
+* install **jq** console JSON parser tool
 * set notifier DBs (if used) to absolute path
 * set SFA ui to use js/eva_sfa.3.1.js until ported. The following SFA FW
   function calls are INCOMPATIBLE with previous version:

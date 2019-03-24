@@ -26,7 +26,7 @@ while [ 1 ]; do
     if [ $? != 0 ]; then
         echo "${PROCESS} not responding, sending restart"
         if [ "x${WATCHDOG_DUMP}" = "xyes" ]; then
-            ./sbin/eva-tinyapi -C ${CONTROLLER} -F dump -S -T ${WATCHDOG_MAX_TIMEOUT} > /dev/null 2>&1
+            ./sbin/eva-tinyapi -C ${CONTROLLER} -F dump -T ${WATCHDOG_MAX_TIMEOUT} > /dev/null 2>&1
         fi
         rm -f ${PIDFILE}
         ./sbin/${CONTROLLER}-control restart
