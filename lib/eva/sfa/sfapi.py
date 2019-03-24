@@ -33,6 +33,8 @@ from eva.api import GenericCloudAPI
 from eva.api import parse_api_params
 from eva.api import api_need_master
 
+from eva.api import api_result_accepted
+
 from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
 from eva.api import cp_api_404
@@ -41,7 +43,7 @@ from eva.api import api_need_master
 from eva.api import restful_api_method
 from eva.api import http_real_ip
 from eva.api import cp_client_key
-from eva.api import set_response_location
+from eva.api import set_restful_response_location
 from eva.api import generic_web_api_method
 from eva.api import MethodNotFound
 
@@ -58,6 +60,7 @@ from eva.exceptions import InvalidParameter
 from eva.exceptions import ecall
 
 from eva.tools import parse_function_params
+from eva.tools import val_to_boolean
 
 from eva import apikey
 
@@ -96,6 +99,19 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_d
     def test(self, **kwargs):
+        """
+        test API/key and get system info
+
+        Test can be executed with any valid API key of the controller the
+        function is called to.
+
+        Args:
+            k: any valid API key
+
+        Returns:
+            JSON dict with system info and current API key permissions (for
+            masterkey only { "master": true } is returned)
+        """
         k, icvars = parse_function_params(kwargs, ['k', 'icvars'], '.b')
         result = super().test(k=k)[1]
         result['cloud_manager'] = eva.sfa.controller.cloud_manager
@@ -363,9 +379,13 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         else:
             raise ResourceNotFound
         if not unit or not apikey.check(k, unit): raise ResourceNotFound
-        return ecall(
+        result = ecall(
             eva.sfa.controller.uc_pool.terminate(
                 unit_id=oid_to_id(i, 'unit'), uuid=u))
+        if result is True and i:
+            return True, api_result_accepted
+        else:
+            return result
 
     @log_w
     def kill(self, **kwargs):
@@ -387,8 +407,13 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): raise ResourceNotFound
-        return ecall(
+        result = ecall(
             eva.sfa.controller.uc_pool.kill(unit_id=oid_to_id(i, 'unit')))
+        if result is True:
+            return result, api_result_accepted
+        if 'ok' in result:
+            del result['ok']
+        return True, result
 
     @log_w
     def q_clean(self, **kwargs):
@@ -674,7 +699,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
         Args:
             k: .master
-            uri: Controller API uri (*proto://host:port*, port not required
+            u: Controller API uri (*proto://host:port*, port not required
                 if default)
             a: remote controller API key (\$key to use local key)
 
@@ -687,8 +712,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             save: save connected controller configuration on the disk
                 immediately after creation
         """
-        uri, group, key, mqtt_update, ssl_verify, timeout, \
-                save = parse_api_params(kwargs, 'UgamstS', 'Ssssbnb')
+        uri, group, key, makey, mqtt_update, ssl_verify, timeout, \
+                save = parse_api_params(kwargs, 'ugaxmstS', 'Sssssbnb')
         if group == 'uc' or group is None:
             c = eva.sfa.controller.append_uc(
                 uri=uri,
@@ -714,6 +739,13 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     @log_i
     @api_need_master
     def matest_controller(self, **kwargs):
+        """
+        test management API connection to remote controller
+
+        Args:
+            k: .master
+            .i: controller id
+        """
         i = parse_api_params(kwargs, 'i', 'S')
         item = eva.sfa.controller.get_controller(i)
         if item is None: return None
@@ -939,6 +971,46 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
             return super().GET(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
+        if rtp in ['unit', 'sensor', 'lvar']:
+            if kind == 'groups':
+                return self.groups(k=k, p=rtp)
+            elif kind == 'history':
+                return self.state_history(
+                    k=k, i='{}:{}'.format(rtp, ii), **props)
+            elif for_dir:
+                return self.state(k=k, p=rtp, g=ii, **props)
+            else:
+                return self.state(k=k, p=rtp, i=ii, **props)
+        elif rtp == 'action':
+            return self.result(k=k, u=ii, **props)
+        elif rtp == 'lmacro':
+            if ii:
+                if kind == 'props':
+                    return self.list_macro_props(k=k, i=ii)
+                else:
+                    if for_dir:
+                        return self.list_macros(k=k, g=ii)
+                    else:
+                        return self.get_macro(k=k, i=ii)
+            else:
+                if kind == 'groups':
+                    return self.groups_macro(k=k)
+                else:
+                    return self.list_macros(k=k)
+        elif rtp == 'lcycle':
+            if ii:
+                if kind == 'props':
+                    return self.list_cycle_props(k=k, i=ii)
+                else:
+                    if for_dir:
+                        return self.list_cycles(k=k, g=ii)
+                    else:
+                        return self.get_cycle(k=k, i=ii)
+            else:
+                if kind == 'groups':
+                    return self.groups_cycle(k=k)
+                else:
+                    return self.list_cycles(k=k)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -948,6 +1020,44 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
             return super().POST(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
+        if rtp == 'action':
+            if not ii:
+                a = self.action(k=k, **props)
+                set_restful_response_location(a['uuid'], rtp)
+                return a
+            else:
+                if method == 'terminate':
+                    return self.terminate(k=k, u=ii)
+        elif rtp == 'unit':
+            if ii:
+                if method == 'kill':
+                    return self.kill(k=k, i=ii)
+                elif method == 'q_clean':
+                    return self.q_clean(k=k, i=ii)
+                elif method == 'terminate':
+                    return self.terminate(k=k, i=ii)
+        elif rtp == 'lmacro':
+            if method == "run":
+                a = self.run(k=k, i=ii, **props)
+                if not a: raise FunctionFailed
+                set_restful_response_location(a['uuid'], 'action')
+                return a
+        elif rtp == 'lvar':
+            if ii:
+                s = props.get('s')
+                if s == 'reset':
+                    return self.reset(k=k, i=ii)
+                elif s == 'clear':
+                    return self.clear(k=k, i=ii)
+                elif s == 'toggle':
+                    return self.toggle(k=k, i=ii)
+                else:
+                    return self.set(k=k, i=ii, **props)
+        elif rtp == 'core':
+            if method == 'reload_clients':
+                return self.reload_clients(k=k)
+            elif method == 'notify_restart':
+                return self.notify_restart(k=k)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -957,6 +1067,9 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
             return super().PUT(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
+        if rtp == 'action':
+            if ii:
+                return self.action(k=k, u=ii, **props)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -966,6 +1079,17 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
             return super().PATCH(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
             pass
+        if rtp == 'unit':
+            if ii:
+                if 'action_enabled' in props:
+                    v = val_to_boolean(props['action_enabled'])
+                    if v is True:
+                        return self.enable_actions(k=k, i=ii)
+                    elif v is False:
+                        return self.disable_actions(k=k, i=ii)
+                    else:
+                        raise InvalidParameter(
+                            '"action_enabled" has invalid value')
         raise MethodNotFound
 
     @generic_web_api_method
