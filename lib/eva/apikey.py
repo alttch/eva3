@@ -93,6 +93,7 @@ class APIKey(object):
             return True
         elif prop == 'sysfunc':
             val = val_to_boolean(value)
+            if val is None: return False
             if self.sysfunc != val:
                 self.sysfunc = val
                 self.set_modified(save)
