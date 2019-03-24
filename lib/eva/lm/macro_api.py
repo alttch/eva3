@@ -124,7 +124,7 @@ class MacroAPI(object):
             'error': self.macro_function(self.error),
             'critical': self.macro_function(self.critical),
             'exit': self.macro_function(self.exit),
-            'sleep': self.macro_function(time.sleep),
+            '_sleep': self.macro_function(time.sleep),
             'lock': self.macro_function(self.lock),
             'unlock': self.macro_function(self.unlock),
             'lvar_status': self.macro_function(self.lvar_status),
@@ -214,7 +214,7 @@ class MacroAPI(object):
                     Unix timestamp
             limit: limit history records
             prop: item property ('status' or 'value'
-            time_format: time format, 'iso' or 'raw' (default) for Unix timestamp
+            time_format: time format, 'iso' or 'raw' (default) for timestamp
             fill: fill frame with the specified interval (e.g. *1T* - 1 minute,
                     *2H* - 2 hours etc.), optional. If specified, t_start is
                     required
@@ -245,15 +245,19 @@ class MacroAPI(object):
             m: message text
         """
         logging.debug(msg)
+        return True
 
     def info(self, msg):
         """
         put info message to log file
+
+        Additionally, print() function is alias to info()
         
         Args:
             m: message text
         """
         logging.info(msg)
+        return True
 
     def warning(self, msg):
         """
@@ -263,6 +267,7 @@ class MacroAPI(object):
             m: message text
         """
         logging.warning(msg)
+        return True
 
     def error(self, msg):
         """
@@ -272,6 +277,7 @@ class MacroAPI(object):
             m: message text
         """
         logging.error(msg)
+        return True
 
     def critical(self, msg, send_event=False):
         """
@@ -288,6 +294,7 @@ class MacroAPI(object):
         if send_event and self.send_critical:
             t = threading.Thread(target=eva.core.critical, args=(True, True))
             t.start()
+        return True
 
     def exit(self, code=0):
         """
@@ -477,6 +484,8 @@ class MacroAPI(object):
         nstatus is the status which is set to unit after the current running
         action is completed.
 
+        the function may be called with an alias "nstatus(...)"
+
         Args:
             unit_id: unit id
 
@@ -523,6 +532,8 @@ class MacroAPI(object):
 
         nvalue is the value which is set to unit after the current running
         action is completed.
+
+        the function may be called with an alias "nvalue(...)"
 
         Args:
             unit_id: unit id

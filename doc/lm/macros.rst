@@ -157,7 +157,8 @@ Macros have the following built-in variables:
   *_source.oid* etc.
 * **_polldelay** controller poll delay
 * **_timeout** controller default timeout
-* **argv** array list of arguments the macro is being executed with
+* **args** array list of arguments the macro is being executed with
+* **kwargs** dict of keyword arguments the macro is being executed with
 * **_0** current macro id (i.e. *'test'*)
 * **_00** current macro full id (i.e. *'group1/test'*)
 * **_1, _2, ... _9** first 9 arguments the macro is being executed with
@@ -192,6 +193,141 @@ pre-imported:
 General functions
 =================
 
+
+
+.. _macro_api_exit:
+
+exit - finish macro execution
+-----------------------------
+
+
+
+.. code-block:: python
+
+    exit(1)
+
+Parameters:
+
+* **code** macro exit code (default: 0, no errors)
+
+
+.. _macro_api_ls:
+
+ls - list files in directory
+----------------------------
+
+
+
+.. code-block:: python
+
+    result = ls('/opt/i/*.jpg')
+
+Parameters:
+
+* **mask** path and mask (e.g. /opt/data/*.jpg)
+
+Returns:
+
+dict with fields 'name', 'size' and 'time' { 'c': created, 'm': modified }
+
+.. code-block:: json
+
+    [
+        {
+            "name": "20170926_004347.jpg",
+            "size": 6464873,
+            "time": {
+                "c": 1553460493.280853,
+                "m": 1506379536.0
+            }
+        },
+        {
+            "name": "20171017_095941.jpg",
+            "size": 1650389,
+            "time": {
+                "c": 1553460493.2968528,
+                "m": 1510695841.0
+            }
+        },
+        {
+            "name": "20171029_194029.jpg",
+            "size": 3440296,
+            "time": {
+                "c": 1553460493.324853,
+                "m": 1510695762.0
+            }
+        },
+        {
+            "name": "20170926_004334.jpg",
+            "size": 6523001,
+            "time": {
+                "c": 1553460493.1648533,
+                "m": 1506379526.0
+            }
+        }
+    ]
+
+
+.. _macro_api_open_newest:
+
+open_newest - open newest file by mask
+--------------------------------------
+
+
+
+.. code-block:: python
+
+    i = open_newest('/opt/i/*.jpg', 'rb').read()
+    print(result)
+
+    None
+
+Parameters:
+
+* **mask** path and mask (e.g. /opt/data/*.jpg)
+
+Optionally:
+
+* **mode** file open mode (default: 'r')
+
+Returns:
+
+file descriptor
+
+Raises:
+
+* **Exception** exceptions equal to Python "open" function
+
+
+.. _macro_api_open_oldest:
+
+open_oldest - open oldest file by mask
+--------------------------------------
+
+
+
+.. code-block:: python
+
+    i = open_oldest('/opt/i/*.jpg', 'rb').read()
+    print(result)
+
+    None
+
+Parameters:
+
+* **mask** path and mask (e.g. /opt/data/*.jpg)
+
+Optionally:
+
+* **mode** file open mode (default: 'r')
+
+Returns:
+
+file descriptor
+
+Raises:
+
+* **Exception** exceptions equal to Python "open" function
 
 
 .. _macro_api_set_shared:
@@ -239,6 +375,507 @@ Optionally:
 Returns:
 
 variable value, None (or default) if variable doesn't exist
+
+
+.. _macro_api_system:
+
+system - execute the command in a subshell
+------------------------------------------
+
+
+
+.. code-block:: python
+
+    result = system('touch /tmp/1.dat')
+    print(result)
+
+    0
+
+Returns:
+
+shell exit code (0 - no error)
+
+
+.. _macro_api_time:
+
+time - current time in seconds since Epoch
+------------------------------------------
+
+Return the current time in seconds since the Epoch. Fractions of a second may be present if the system clock provides them.
+
+.. code-block:: python
+
+    result = time()
+    print(result)
+
+    1553461581.549374
+
+
+
+.. _macro_api_cat_item:
+
+Item functions
+==============
+
+
+
+.. _macro_api_history:
+
+history - get lvar state history
+--------------------------------
+
+
+
+.. code-block:: python
+
+    result = history('lvar:tests/test1', t_start='2019-03-24')
+
+Parameters:
+
+* **lvar_id** lvar ID, or multiple IDs (list or comma separated)
+
+Optionally:
+
+* **t_start** time frame start, ISO or Unix timestamp
+* **t_end** time frame end, optional (default: current time), ISO or Unix timestamp
+* **limit** limit history records
+* **prop** item property ('status' or 'value'
+* **time_format** time format, 'iso' or 'raw' (default) for timestamp
+* **fill** fill frame with the specified interval (e.g. *1T* - 1 minute, *2H* - 2 hours etc.), optional. If specified, t_start is required
+* **fmt** output format, 'list' (default) or 'dict'
+* **db** :doc:`notifier</notifiers>` ID which keeps history for the specified item(s) (default: **db_1**)
+
+Returns:
+
+list of dicts or dict of lists
+
+.. code-block:: json
+
+    {
+        "status": [
+            1,
+            1,
+            1,
+            1
+        ],
+        "t": [
+            1553461864.9564857,
+            1553461878.8139935,
+            1553461883.1168087,
+            1553461887.6495461
+        ],
+        "value": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+        ]
+    }
+
+
+.. _macro_api_lvar_status:
+
+lvar_status - get lvar status
+-----------------------------
+
+
+
+.. code-block:: python
+
+    result = lvar_status('tests/test1')
+    print(result)
+
+    1
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Returns:
+
+lvar status (integer)
+
+Raises:
+
+* **ResourceNotFound** lvar is not found
+
+
+.. _macro_api_lvar_value:
+
+lvar_value - get lvar value
+---------------------------
+
+
+
+.. code-block:: python
+
+    result = lvar_value('tests/test1')
+    print(result)
+
+    1.0
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Returns:
+
+lvar value
+
+
+.. _macro_api_sensor_status:
+
+sensor_status - get sensor status
+---------------------------------
+
+
+
+.. code-block:: python
+
+    result = sensor_status('env/temp_test')
+    print(result)
+
+    1
+
+Parameters:
+
+* **sensor_id** sensor id
+
+Returns:
+
+sensor status (integer)
+
+Raises:
+
+* **ResourceNotFound** sensor is not found
+
+
+.. _macro_api_sensor_value:
+
+sensor_value - get sensor value
+-------------------------------
+
+
+
+.. code-block:: python
+
+    result = sensor_value('env/temp_test')
+    print(result)
+
+    191.0
+
+Parameters:
+
+* **sensor_id** sensor id
+
+Optionally:
+
+* **default** value if null (default is empty string)
+
+Returns:
+
+sensor value
+
+Raises:
+
+* **ResourceNotFound** sensor is not found
+
+
+.. _macro_api_status:
+
+status - get item status
+------------------------
+
+
+
+.. code-block:: python
+
+    result = status('unit:tests/unit1')
+    print(result)
+
+    0
+
+Parameters:
+
+* **item_id** item id (oid required)
+
+Returns:
+
+item status (integer)
+
+Raises:
+
+* **ResourceNotFound** item is not found
+
+
+.. _macro_api_unit_nstatus:
+
+unit_nstatus - get unit nstatus
+-------------------------------
+
+nstatus is the status which is set to unit after the current running action is completed.
+
+the function may be called with an alias "nstatus(...)"
+
+.. code-block:: python
+
+    result = unit_nstatus('tests/unit1')
+    print(result)
+
+    0
+
+Parameters:
+
+* **unit_id** unit id
+
+Returns:
+
+unit nstatus (integer)
+
+Raises:
+
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_unit_nvalue:
+
+unit_nvalue - get unit nvalue
+-----------------------------
+
+nvalue is the value which is set to unit after the current running action is completed.
+
+the function may be called with an alias "nvalue(...)"
+
+.. code-block:: python
+
+    result = unit_nvalue('tests/unit1')
+    print(result)
+
+
+
+Parameters:
+
+* **unit_id** unit id
+
+Returns:
+
+unit nvalue
+
+Raises:
+
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_unit_status:
+
+unit_status - get unit status
+-----------------------------
+
+
+
+.. code-block:: python
+
+    result = unit_status('tests/unit1')
+    print(result)
+
+    0
+
+Parameters:
+
+* **unit_id** unit id
+
+Returns:
+
+unit status (integer)
+
+Raises:
+
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_unit_value:
+
+unit_value - get unit value
+---------------------------
+
+
+
+.. code-block:: python
+
+    result = unit_value('tests/unit1')
+    print(result)
+
+
+
+Parameters:
+
+* **unit_id** unit id
+
+Optionally:
+
+* **default** value if null (default is empty string)
+
+Returns:
+
+unit value
+
+Raises:
+
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_value:
+
+value - get item value
+----------------------
+
+
+
+.. code-block:: python
+
+    result = value('sensor:env/temp_test')
+    print(result)
+
+    191.0
+
+Parameters:
+
+* **item_id** item id (oid required)
+
+Optionally:
+
+* **default** value if null (default is empty string)
+
+Returns:
+
+item value
+
+Raises:
+
+* **ResourceNotFound** item is not found
+
+
+
+.. _macro_api_cat_lvar:
+
+LVar functions
+==============
+
+
+
+.. _macro_api_clear:
+
+clear - reset lvar value
+------------------------
+
+Set lvar value to 0 or stop timer lvar (set timer status to 0)
+
+.. code-block:: python
+
+    clear('tests/test1')
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Raises:
+
+* **FunctionFailed** lvar value set error
+* **ResourceNotFound** lvar is not found
+
+
+.. _macro_api_is_expired:
+
+is_expired - is lvar (timer) expired
+------------------------------------
+
+
+
+.. code-block:: python
+
+    result = is_expired('nogroup/timer1')
+    print(result)
+
+    True
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Returns:
+
+True, if timer is expired
+
+Raises:
+
+* **ResourceNotFound** lvar is not found
+
+
+.. _macro_api_reset:
+
+reset - reset lvar value
+------------------------
+
+Set lvar value to 1 or start lvar timer
+
+.. code-block:: python
+
+    reset('tests/test1')
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Raises:
+
+* **FunctionFailed** lvar value set error
+* **ResourceNotFound** lvar is not found
+
+
+.. _macro_api_set:
+
+set - set lvar value
+--------------------
+
+
+
+.. code-block:: python
+
+    set('tests/test1', value=1)
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Optionally:
+
+* **value** lvar value (if npt specified, lvar is set to null)
+
+Raises:
+
+* **FunctionFailed** lvar value set error
+* **ResourceNotFound** lvar is not found
+
+
+.. _macro_api_toggle:
+
+toggle - toggle lvar value
+--------------------------
+
+Change lvar value to opposite boolean (0->1, 1->0)
+
+.. code-block:: python
+
+    toggle('tests/test1')
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Raises:
+
+* **FunctionFailed** lvar value set error
+* **ResourceNotFound** lvar is not found
 
 
 
@@ -379,13 +1016,13 @@ Serialized action object (dict)
         "priority": 100,
         "status": "completed",
         "time": {
-            "completed": 1553444253.1421173,
-            "created": 1553444253.1185853,
-            "pending": 1553444253.1187418,
-            "queued": 1553444253.1192524,
-            "running": 1553444253.1196089
+            "completed": 1553460599.3041146,
+            "created": 1553460599.2887182,
+            "pending": 1553460599.2889755,
+            "queued": 1553460599.289449,
+            "running": 1553460599.2897608
         },
-        "uuid": "ee9b149d-5591-4d9c-aa97-b46146d31332"
+        "uuid": "50e1d476-dd3e-4d8f-8316-2f2248e82676"
     }
 
 Raises:
@@ -435,18 +1072,110 @@ Serialized action object (dict)
         "priority": 100,
         "status": "completed",
         "time": {
-            "completed": 1553444253.185795,
-            "created": 1553444253.1679392,
-            "pending": 1553444253.168088,
-            "queued": 1553444253.1684065,
-            "running": 1553444253.1688204
+            "completed": 1553460599.346349,
+            "created": 1553460599.3321738,
+            "pending": 1553460599.3323255,
+            "queued": 1553460599.332741,
+            "running": 1553460599.3330808
         },
-        "uuid": "10f717e6-cfe6-4a19-97c0-483c7399ad68"
+        "uuid": "aff93ac7-78d6-497f-aa31-4eb45823c1f7"
     }
 
 Raises:
 
 * **FunctionFailed** action is "dead"
 * **ResourceNotFound** unit is not found
+
+
+
+.. _macro_api_cat_log:
+
+Logging
+=======
+
+
+
+.. _macro_api_debug:
+
+debug - put debug message to log file
+-------------------------------------
+
+
+
+.. code-block:: python
+
+    debug('this is a test debug message')
+
+Parameters:
+
+* **m** message text
+
+
+.. _macro_api_info:
+
+info - put info message to log file
+-----------------------------------
+
+Additionally, print() function is alias to info()
+
+.. code-block:: python
+
+    info('this is a test debug message')
+
+Parameters:
+
+* **m** message text
+
+
+.. _macro_api_warning:
+
+warning - put warning message to log file
+-----------------------------------------
+
+
+
+.. code-block:: python
+
+    info('this is a test debug message')
+
+Parameters:
+
+* **m** message text
+
+
+.. _macro_api_error:
+
+error - put error message to log file
+-------------------------------------
+
+
+
+.. code-block:: python
+
+    error('this is a test debug message')
+
+Parameters:
+
+* **m** message text
+
+
+.. _macro_api_critical:
+
+critical - put critical message to log file
+-------------------------------------------
+
+
+
+.. code-block:: python
+
+    critical('this is a test debug message')
+
+Parameters:
+
+* **m** message text
+
+Optionally:
+
+* **send_event** if True, critical event to core is sent (requires send_critical=true in macro props)
 
 

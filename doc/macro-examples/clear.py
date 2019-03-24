@@ -1,0 +1,1 @@
+clear('tests/test1')
