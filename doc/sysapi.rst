@@ -313,8 +313,8 @@ Locking functions
 
 .. _sysapi_get_lock:
 
-get_lock - get lock token status
---------------------------------
+get_lock - get lock status
+--------------------------
 
 
 
@@ -335,10 +335,10 @@ Parameters:
 
 .. _sysapi_lock:
 
-lock - lock token request
--------------------------
+lock - acquire lock
+-------------------
 
-Lock tokens can be used similarly to file locking by the specific process. The difference is that SYS API tokens can be:
+Locks can be used similarly to file locking by the specific process. The difference is that SYS API tokens can be:
 
 * centralized for several systems (any EVA server can act as lock     server)
 
@@ -363,8 +363,8 @@ Parameters:
 
 Optionally:
 
-* **t** maximum time (seconds) to get token
-* **e** time after which token is automatically unlocked (if absent, token may be unlocked only via unlock function)
+* **t** maximum time (seconds) to acquire lock
+* **e** time after which lock is automatically released (if absent, lock may be released only via unlock function)
 
 **RESTful:**
 
@@ -374,10 +374,10 @@ Optionally:
 
 .. _sysapi_unlock:
 
-unlock - release lock token
----------------------------
+unlock - release lock
+---------------------
 
-Releases the previously obtained lock token.
+Releases the previously acquired lock.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/unlock.req

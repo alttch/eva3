@@ -1365,7 +1365,7 @@ Connects remote :ref:`UC controller<lm_remote_uc>` to the local.
 Parameters:
 
 * **k** API key with *master* permissions
-* **uri** :doc:`/uc/uc_api` uri (*proto://host:port*, port not required if default)
+* **u** :doc:`/uc/uc_api` uri (*proto://host:port*, port not required if default)
 * **a** remote controller API key (\$key to use local key)
 
 Optionally:
@@ -1383,10 +1383,10 @@ Optionally:
 
 .. _lmapi_disable_controller:
 
-disable_controller - disable controller
----------------------------------------
+disable_controller - disable connected controller
+-------------------------------------------------
 
-Disables connected UC
+
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/disable_controller.req
@@ -1409,10 +1409,10 @@ Optionally:
 
 .. _lmapi_enable_controller:
 
-enable_controller - enable controller
--------------------------------------
+enable_controller - enable connected controller
+-----------------------------------------------
 
-Enables connected UC
+
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/enable_controller.req
@@ -1435,8 +1435,8 @@ Optionally:
 
 .. _lmapi_get_controller:
 
-get_controller - get controller information
--------------------------------------------
+get_controller - get connected controller information
+-----------------------------------------------------
 
 
 
@@ -1457,10 +1457,10 @@ Parameters:
 
 .. _lmapi_list_controller_props:
 
-list_controller_props - get editable controller parameters
-----------------------------------------------------------
+list_controller_props - get controller connection parameters
+------------------------------------------------------------
 
-Get all editable parameters of the connected :ref:`UC controller<lm_remote_uc>`.
+
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/list_controller_props.req
@@ -1549,10 +1549,10 @@ Parameters:
 
 .. _lmapi_remove_controller:
 
-remove_controller - disconnect UC
----------------------------------
+remove_controller - disconnect controller
+-----------------------------------------
 
-Disconnects the remote :ref:`UC controller<lm_remote_uc>`.
+
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/remove_controller.req
@@ -1571,10 +1571,10 @@ Parameters:
 
 .. _lmapi_set_controller_prop:
 
-set_controller_prop - set controller parameters
------------------------------------------------
+set_controller_prop - set controller connection parameters
+----------------------------------------------------------
 
-Set configuration parameters of the connected UC.
+
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/set_controller_prop.req

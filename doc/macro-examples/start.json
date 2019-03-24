@@ -1,0 +1,21 @@
+{
+    "err": "",
+    "exitcode": 0,
+    "item_group": "tests",
+    "item_id": "unit1",
+    "item_oid": "unit:tests/unit1",
+    "item_type": "unit",
+    "nstatus": 1,
+    "nvalue": null,
+    "out": "",
+    "priority": 100,
+    "status": "completed",
+    "time": {
+        "completed": 1553444253.1421173,
+        "created": 1553444253.1185853,
+        "pending": 1553444253.1187418,
+        "queued": 1553444253.1192524,
+        "running": 1553444253.1196089
+    },
+    "uuid": "ee9b149d-5591-4d9c-aa97-b46146d31332"
+}

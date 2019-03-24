@@ -156,8 +156,8 @@ Item functions
 
 .. _ucapi_action:
 
-action - create unit control action
------------------------------------
+action - unit control action
+----------------------------
 
 The call is considered successful when action is put into the action queue of selected unit.
 
@@ -191,10 +191,10 @@ Serialized action object. If action is marked as dead, an error is returned (exc
 
 .. _ucapi_action_toggle:
 
-action_toggle - create unit control action
-------------------------------------------
+action_toggle - toggle unit status
+----------------------------------
 
-The call is considered successful when action is put into the action queue of selected unit.
+Create unit control action to toggle its status (1->0, 0->1)
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/action_toggle.req
@@ -1644,11 +1644,11 @@ Deploys the :ref:`device<device>` from the specified template.
 Parameters:
 
 * **k** API key with *allow=device* permissions
-* **c** device config (*var=value*, comma separated or dict)
 * **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
 
 Optionally:
 
+* **c** device config (*var=value*, comma separated or dict)
 * **save** save items configuration on disk immediately after operation
 
 **RESTful:**
@@ -1692,8 +1692,11 @@ Works in an opposite way to :ref:`ucapi_deploy_device` function, destroying all 
 Parameters:
 
 * **k** API key with *allow=device* permissions
-* **c** device config (*var=value*, comma separated or dict)
 * **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
+
+Optionally:
+
+* **c** device config (*var=value*, comma separated or dict)
 
 Returns:
 
@@ -1719,11 +1722,11 @@ Works similarly to :ref:`ucapi_deploy_device` function but doesn't create new it
 Parameters:
 
 * **k** API key with *allow=device* permissions
-* **c** device config (*var=value*, comma separated or dict)
 * **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
 
 Optionally:
 
+* **c** device config (*var=value*, comma separated or dict)
 * **save** save items configuration on disk immediately after operation
 
 **RESTful:**
