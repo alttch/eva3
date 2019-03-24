@@ -1765,6 +1765,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
         if rtp == 'action':
             if not ii:
                 a = self.action(k=k, **props)
+                if not a: raise FunctionFailed
                 set_restful_response_location(a['uuid'], rtp)
                 return a
             else:
@@ -1779,10 +1780,10 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         return self.q_clean(k=k, i=ii)
                     elif method == 'terminate':
                         return self.terminate(k=k, i=ii)
-                    elif method == 'save':
-                        return self.save_config(k=k, i=ii)
                 if method == 'assign_driver':
                     return self.assign_driver(k=k, i=ii, **props)
+                elif method == 'save':
+                    return self.save_config(k=k, i=ii)
                 elif method == 'clone':
                     if for_dir:
                         return self.clone_group(k=k, g=ii, **props)
