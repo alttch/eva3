@@ -213,7 +213,7 @@ class UC_API(GenericAPI):
     @log_i
     def action(self, **kwargs):
         """
-        create unit control action
+        unit control action
         
         The call is considered successful when action is put into the action
         queue of selected unit.
@@ -760,11 +760,11 @@ class UC_API(GenericAPI):
 
         Args:
             k: .allow=device
-            c: device config (*var=value*, comma separated or dict)
             t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
                 extension)
 
         Optional:
+            c: device config (*var=value*, comma separated or dict)
             save: save items configuration on disk immediately after
                 operation
         """
@@ -814,11 +814,11 @@ class UC_API(GenericAPI):
 
         Args:
             k: .allow=device
-            c: device config (*var=value*, comma separated or dict)
             t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
                 extension)
 
         Optional:
+            c: device config (*var=value*, comma separated or dict)
             save: save items configuration on disk immediately after
                 operation
         """
@@ -885,9 +885,11 @@ class UC_API(GenericAPI):
 
         Args:
             k: .allow=device
-            c: device config (*var=value*, comma separated or dict)
             t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
                 extension)
+
+        Optional:
+            c: device config (*var=value*, comma separated or dict)
 
         Returns:
             The function ignores missing items, so no errors are returned
