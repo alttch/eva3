@@ -53,7 +53,6 @@ LM
     * set_rule_prop now accepts "condition" and "for_oid"
     * cycles, cycle control API and macro functions
     * removed deprecated dm_rule* acl
-    * macro "argv" variable is now deprecated (replaced with "args")
     * removed deprecated get/post functions (use requests.get/post instead)
 
 SFA
@@ -66,6 +65,13 @@ SFA
     * SFA framework: data exchange optimization with eva_sfa_state_updates
       variable
     * removed deprecated dm_rule* acl and rule control functions
+
+Deprecated (will be removed in 3.3.0)
+-------------------------------------
+
+    * macro "argv" variable (replaced with "args")
+    * HTTP direct method calling (switch to JSON RPC or RESTful)
+    * PHP API client no longer supported (use JSON RPC)
 
 
 3.1.1 (2018-10-22)
