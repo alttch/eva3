@@ -782,7 +782,8 @@ class MacroAPI(object):
         """
         toggle unit status
         
-        Create unit control action to toggle its status (1->0, 0->1)
+        Create unit control action to toggle its status (1->0, 0->1). if using
+        OID, you can also call "toggle(..)" with the same effect.
 
         Args:
             unit_id: unit id
@@ -822,11 +823,11 @@ class MacroAPI(object):
             uuid: action uuid
 
         Optional:
-            g: filter by unit group
-            s: filter by action status: Q for queued, R for running, F for
-               finished
+            group: filter by unit group
+            status: filter by action status: Q for queued, R for running, F for
+                finished
 
-        Return:
+        Returns:
             list or single serialized action object
 
         Raises:
@@ -914,8 +915,8 @@ class MacroAPI(object):
         Terminates or cancel the action if it is still queued
         
         Args:
-            u: action uuid or
-            i: unit id
+            unit_id: action uuid or
+            uuid: unit id
             
         Returns:
 
@@ -939,7 +940,7 @@ class MacroAPI(object):
         Cancels all queued actions, keeps the current action running.
 
         Args:
-            i: unit id
+            unit_id: unit id
 
         Raises:
             ResourceNotFound: unit is not found
@@ -959,7 +960,7 @@ class MacroAPI(object):
         the current running action.
 
         Args:
-            i: unit id
+            unit_id: unit id
 
         Raises:
             ResourceNotFound: unit is not found
@@ -1215,6 +1216,20 @@ class MacroAPI(object):
                 controller_id=controller_id, device_tpl=device_tpl, cfg=cfg))
 
     def set_rule_prop(self, rule_id, prop, value=None, save=False):
+        """
+        set rule prop
+
+        Args:
+            rule_id: rule id (uuid)
+            prop: property to set
+            value: value to set
+
+        Optional:
+            save: save rule config after the operation
+
+        Raises:
+            ResourceNotFound: rule is not found
+        """
         result = eva.lm.lmapi.api.set_rule_prop(
             k=eva.apikey.masterkey, i=rule_id, p=prop, v=value, save=save)
         return result
@@ -1234,12 +1249,15 @@ class MacroAPI(object):
             raise ResourceNotFound
         return cycle.start()
 
-    def stop_cycle(self, cycle_id):
+    def stop_cycle(self, cycle_id, wait=False):
         """
         stop cycle
 
         Args:
             cycle_id: cycle id
+
+        Optional:
+            wait: wait for cycle stop (default is False)
 
         Raises:
             ResourceNotFound: cycle is not found
@@ -1247,7 +1265,7 @@ class MacroAPI(object):
         cycle = eva.lm.controller.get_cycle(cycle_id)
         if not cycle:
             raise ResourceNotFound
-        return cycle.stop()
+        return cycle.stop(wait=wait)
 
     def reset_cycle_stats(self, cycle_id):
         """
