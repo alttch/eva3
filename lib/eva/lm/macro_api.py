@@ -210,7 +210,7 @@ class MacroAPI(object):
 
     def lock(self, lock_id, timeout=None, expires=None):
         return eva.sysapi.api.lock(
-            k=eva.apikey.masterkey, l=lock_id, timeout=timeout, expires=expires)
+            k=eva.apikey.masterkey, l=lock_id, t=timeout, e=expires)
 
     def unlock(self, lock_id):
         return eva.sysapi.api.unlock(k=eva.apikey.masterkey, l=lock_id)
