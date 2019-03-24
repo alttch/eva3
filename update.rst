@@ -10,7 +10,7 @@ What's new
 * OWFS support
 * ModBus slave
 
-Full change log: https://get.eva-ics.com/3.2.0/stable/CHANGELOG.html
+Complete change log: https://get.eva-ics.com/3.2.0/stable/CHANGELOG.html
 
 Preparing
 ---------
