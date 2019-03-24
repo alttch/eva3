@@ -70,7 +70,6 @@ Deprecated (will be removed in 3.3.0)
 -------------------------------------
 
     * macro "argv" variable (replaced with "args")
-    * HTTP direct method calling (switch to JSON RPC or RESTful)
     * PHP API client no longer supported (use JSON RPC)
 
 
