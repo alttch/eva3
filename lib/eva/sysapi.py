@@ -146,7 +146,7 @@ class LockAPI(object):
         if not l in locks:
             locks[l] = threading.Lock()
         logging.debug(
-                'acquiring lock %s, timeout = %u, expires = %s' % \
+                'acquiring lock %s, timeout = %s, expires = %s' % \
                             (l, t, e))
         if not locks[l].acquire(timeout=t):
             raise FunctionFailed('Unable to acquire lock')

@@ -215,7 +215,9 @@ def parse_function_params(params,
     for i in range(len(names)):
         n = __get_special_param_name(names[i])
         required = types[i]
-        value = params.get(n, defaults.get(n) if defaults else None)
+        value = params.get(n)
+        if value is None and defaults:
+            value = defaults.get(n)
         if required == '.':
             result += (value,)
         elif required == 'R':

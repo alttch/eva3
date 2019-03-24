@@ -52,6 +52,9 @@ def shared(name, default=None):
 
     Optional:
         default: value if variable doesn't exist
+
+    Returns:
+        variable value, None (or default) if variable doesn't exist
     """
     if not _shared_lock.acquire(timeout=eva.core.timeout):
         logging.critical('macro_api shared locking broken')
