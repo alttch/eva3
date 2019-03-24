@@ -18,6 +18,6 @@ Preparing
 Before applying this update
 
 * test your key items and macros/scripts in a test sandbox
-* install libow and libow-dev system packages
 * make full backup of EVA ICS folder
 
+* install libow and libow-dev system packages
