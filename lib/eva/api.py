@@ -95,7 +95,13 @@ def http_api_result_error(env=None):
 
 
 def cp_forbidden_key(message=None):
-    msg = str(message) if message else ' '
+    if message:
+        msg = str(message)
+    else:
+        if 'k' in cherrypy.serving.request.params:
+            msg = 'API key has no access to selected resource or function'
+        else:
+            msg = 'No API key provided'
     return cherrypy.HTTPError(403, msg if msg else None)
 
 
@@ -105,7 +111,7 @@ def cp_api_error(message=None):
 
 
 def cp_api_404(message=None):
-    msg = str(message) if message else ''
+    msg = str(message) if message else 'Resource or function not found'
     return cherrypy.HTTPError(404, msg if msg else None)
 
 
@@ -1167,13 +1173,7 @@ def error_page_400(*args, **kwargs):
 
 
 def error_page_403(*args, **kwargs):
-    msg = kwargs.get('message')
-    if not msg or msg == ' ':
-        if 'k' in cherrypy.serving.request.params:
-            msg = 'API key has no access to selected resource or function'
-        else:
-            msg = 'No API key provided'
-    return jsonify_error(msg)
+    return jsonify_error(kwargs.get('message', 'Forbidden'))
 
 
 def error_page_405(*args, **kwargs):
@@ -1181,11 +1181,7 @@ def error_page_405(*args, **kwargs):
 
 
 def error_page_404(*args, **kwargs):
-    msg = kwargs.get('message')
-    if not msg or msg == 'Nothing matches the given URI':
-        msg = 'Resource or function not found'
-    return jsonify_error(msg)
-
+    return jsonify_error(kwargs.get('message', 'Not found'))
 
 def error_page_409(*args, **kwargs):
     return jsonify_error(kwargs.get('message', 'Resource conflict'))
