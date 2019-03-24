@@ -1198,6 +1198,8 @@ class GenericCLI(GCLI):
         return code
 
     def print_tdf(self, result_in, time_field):
+        if not result_in.get(time_field):
+            return
         self.import_pandas()
         result = result_in.copy()
         # convert list to dict
