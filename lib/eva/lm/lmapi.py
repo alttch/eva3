@@ -114,7 +114,9 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i, group, tp, full = parse_function_params(
             kwargs, 'kigpY', '.sssb', defaults={'p': 'lvar'})
-        if tp not in ['LV', 'lvar']: return None
+        if tp is None:
+            tp = 'lvar'
+        elif tp not in ['LV', 'lvar']: raise ResourceNotFound
         if i:
             item = eva.lm.controller.get_lvar(i)
             if not item or not apikey.check(k, item): raise ResourceNotFound
