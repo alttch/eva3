@@ -54,6 +54,7 @@ LM
     * cycles, cycle control API and macro functions
     * removed deprecated dm_rule* acl
     * macro "argv" variable is now deprecated (replaced with "args")
+    * removed deprecated get/post functions (use requests.get/post instead)
 
 SFA
 ---
