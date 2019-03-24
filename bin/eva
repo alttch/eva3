@@ -652,13 +652,15 @@ sys.argv = {argv}
         if not params.get('y'):
             if version != new_version:
                 try:
-                    r = requests.get('{}/{}/stable/update.rst'.format(
+                    r = requests.get('{}/{}/stable/UPDATE.rst'.format(
                         _update_repo, new_version))
+                    if not r.ok:
+                        raise Exception('server response code {}'.format(
+                            r.status_code))
                 except Exception as e:
-                    print('Unable to download update manifest')
+                    print('Unable to download update manifest: {}'.format(e))
                     return self.local_func_result_failed
-                if r.ok:
-                    print(r.text)
+                print(r.text)
             try:
                 u = input('Type ' +
                           self.colored('YES', color='red', attrs=['bold']) +
