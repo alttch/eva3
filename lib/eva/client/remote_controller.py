@@ -123,7 +123,7 @@ class RemoteController(eva.item.Item):
             return False
         return True
 
-    def load_remote(self):
+    def load_remote(self, need_type=None):
         result = self.test()
         if not result:
             if not self.static and self.pool and not self.wait_for_autoremove:
@@ -134,7 +134,10 @@ class RemoteController(eva.item.Item):
             return False
         if not result.get('ok'):
             logging.error('Remote controller unknown access error %s' % \
-                    api._uri)
+                    self.api._uri)
+            return False
+        if need_type and result.get('product_code') != need_type:
+            logging.error('Invalid remote controller type %s' % self.api._uri)
             return False
         time_diff = abs(time.time() - float(result['time']))
         if eva.core.version != result['version']:
@@ -489,8 +492,9 @@ class RemoteControllerPool(object):
         if timeout is not None: p['t'] = timeout
         return c.api_call('cmd', p)
 
-    def append(self, controller):
-        if controller.load_remote() or controller.item_id != '':
+    def append(self, controller, need_type=None):
+        if controller.load_remote(need_type=need_type) or \
+                controller.item_id != '':
             if not self.management_lock.acquire(timeout=eva.core.timeout):
                 logging.critical('RemoteControllerPool::append locking broken')
                 eva.core.critical()
@@ -706,6 +710,9 @@ class RemoteUCPool(RemoteControllerPool):
         self.controllers_by_unit = {}
         self.sensors = {}
         self.sensors_by_controller = {}
+
+    def append(self, controller):
+        return super().append(controller, need_type='uc')
 
     def get_unit(self, unit_id):
         return self.units[unit_id] if unit_id in self.units \
@@ -1060,6 +1067,9 @@ class RemoteLMPool(RemoteControllerPool):
         self.rules = {}
         self.rules_by_controller = {}
         self.controllers_by_rule = {}
+
+    def append(self, controller):
+        return super().append(controller, need_type='lm')
 
     def get_lvar(self, lvar_id):
         return self.lvars[lvar_id] if lvar_id in self.lvars \
