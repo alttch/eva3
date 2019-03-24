@@ -21,3 +21,15 @@ Before applying this update
 * make full backup of EVA ICS folder
 
 * install libow and libow-dev system packages
+* set notifier DBs (if used) to absolute path
+* set SFA ui to use js/eva_sfa.3.1.js until ported. The following SFA FW
+  function calls are INCOMPATIBLE with previous version:
+
+    * eva_sfa_action
+    * eva_sfa_action_toggle
+    * eva_sfa_chart
+    * eva_sfa_groups
+    * eva_sfa_popup
+    * eva_sfa_result
+    * eva_sfa_run
+    * eva_sfa_state_history

@@ -61,7 +61,7 @@ SFA
     * new API functions: enable_controller, disable_controller, list_cycles
     * SFA framework: code optimization, cycle states (warning: some functions
       are incompatible with previous version, use eva_sfa.3.1.js library or
-      call the functions in new format only, look UPDATE-HOWTO for more info)
+      call the functions in new format only, look UPDATE.rst for more info)
     * SFA framework: data exchange optimization with eva_sfa_state_updates
       variable
     * removed deprecated dm_rule* acl and rule control functions
