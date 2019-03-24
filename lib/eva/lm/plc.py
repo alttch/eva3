@@ -457,9 +457,11 @@ class Cycle(eva.item.Item):
         d['interval'] = self.interval
         if not config and not props:
             d['status'] = self.cycle_status
-            d['value'] = '{},{:.4f},'.format(self.iterations,
-                                             (self.tc / self.c
-                                              if self.c else self.interval))
+            avg = (self.tc / self.c if self.c else self.interval)
+            itr = self.iterations
+            d['avg'] = int(avg*10000)/10000.0
+            d['iterations'] = itr
+            d['value'] = '{},{:.4f},'.format(itr, avg)
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
