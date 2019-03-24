@@ -108,10 +108,10 @@ class LockAPI(object):
     @api_need_lock
     def lock(self, **kwargs):
         """
-        lock token request
+        acquire lock
 
-        Lock tokens can be used similarly to file locking by the specific
-        process. The difference is that SYS API tokens can be:
+        Locks can be used similarly to file locking by the specific process.
+        The difference is that SYS API tokens can be:
         
         * centralized for several systems (any EVA server can act as lock
             server)
@@ -137,9 +137,9 @@ class LockAPI(object):
             .l: lock id
 
         Optional:
-            t: maximum time (seconds) to get token
-            e: time after which token is automatically unlocked (if absent,
-                token may be unlocked only via unlock function)
+            t: maximum time (seconds) to acquire lock
+            e: time after which lock is automatically released (if absent,
+                lock may be released only via unlock function)
         """
         l, t, e = parse_api_params(kwargs, 'lte', 'S.n',
                                    {'t': eva.core.timeout})
@@ -158,7 +158,7 @@ class LockAPI(object):
     @api_need_lock
     def get_lock(self, **kwargs):
         """
-        get lock token status
+        get lock status
 
         Args:
             k: .allow=lock
@@ -179,9 +179,9 @@ class LockAPI(object):
     @api_need_lock
     def unlock(self, **kwargs):
         """
-        release lock token
+        release lock
 
-        Releases the previously obtained lock token.
+        Releases the previously acquired lock.
 
         Args:
             k: .allow=lock
