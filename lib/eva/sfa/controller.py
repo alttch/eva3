@@ -147,6 +147,7 @@ def load_remote_ucs():
             uc_id = os.path.splitext(os.path.basename(ucfg))[0]
             u = eva.client.remote_controller.RemoteUC(uc_id)
             if u.load():
+                controller_lock.acquire()
                 try:
                     remote_ucs[uc_id] = u
                 finally:
@@ -167,6 +168,7 @@ def load_remote_lms():
             lm_id = os.path.splitext(os.path.basename(lmfg))[0]
             u = eva.client.remote_controller.RemoteLM(lm_id)
             if u.load():
+                controller_lock.acquire()
                 try:
                     remote_lms[lm_id] = u
                 finally:
