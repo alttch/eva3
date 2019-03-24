@@ -7,17 +7,16 @@ import logging
 import eva.core
 import time
 import threading
+from pyaltt import background_worker
 
 from eva.exceptions import InvalidParameter
 
 _log_records = []
 _mute = False
 
-log_cleaner_delay = 5
+log_cleaner_delay = 60
 
-_log_cleaner_active = False
-
-_log_cleaner = None
+_log_record_lock = threading.RLock()
 
 log_levels_by_name = {
     'debug': 10,
@@ -78,7 +77,16 @@ def log_append(record=None, rd=None, skip_mqtt=False):
         return
     if not _mute and _r['msg'] and _r['msg'][0] != '.' and \
             _r['mod'] != '_cplogging':
-        _log_records.append(_r)
+        if not _log_record_lock.acquire(timeout=eva.core.timeout):
+            logging.critical('log_append locking broken')
+            eva.core.critical()
+            return
+        try:
+            _log_records.append(_r)
+        except:
+            eva.core.log_traceback()
+        finally:
+            _log_record_lock.release()
         eva.notify.notify('log', [_r], skip_mqtt=skip_mqtt)
 
 
@@ -93,20 +101,12 @@ def unmute():
 
 
 def start():
-    global _log_cleaner
-    global _log_cleaner_active
-    _log_cleaner = threading.Thread(
-        target=_t_log_cleaner, name='_t_log_cleaner')
-    _log_cleaner_active = True
-    _log_cleaner.start()
-    eva.core.stop.append(stop)
+    log_cleaner.start()
 
 
+@eva.core.stop
 def stop():
-    global _log_cleaner_active
-    if _log_cleaner_active:
-        _log_cleaner_active = False
-        _log_cleaner.join()
+    log_cleaner.stop()
 
 
 def log_get(logLevel=0, t=0, n=None):
@@ -130,17 +130,27 @@ def log_get(logLevel=0, t=0, n=None):
     return _lr
 
 
-def _t_log_cleaner():
-    logging.debug('memlog cleaner started')
-    while _log_cleaner_active:
-        try:
-            for l in _log_records.copy():
-                if time.time() - l['t'] > eva.core.keep_logmem:
-                    _log_records.remove(l)
-        except:
-            eva.core.log_traceback()
-        i = 0
-        while i < log_cleaner_delay and _log_cleaner_active:
-            time.sleep(eva.core.sleep_step)
-            i += eva.core.sleep_step
-    logging.debug('memlog cleaner stopped')
+@background_worker(delay=log_cleaner_delay, on_error=eva.core.log_traceback)
+def log_cleaner(**kwargs):
+    if not _log_record_lock.acquire(timeout=eva.core.timeout):
+        logging.critical('_t_log_cleaner locking(1) broken')
+        eva.core.critical()
+        return
+    try:
+        _l = _log_records.copy()
+    except:
+        eva.core.log_traceback()
+    finally:
+        _log_record_lock.release()
+    for l in _l:
+        if time.time() - l['t'] > eva.core.keep_logmem:
+            if not _log_record_lock.acquire(timeout=eva.core.timeout):
+                logging.critical('_t_log_cleaner locking(1) broken')
+                eva.core.critical()
+                break
+            try:
+                _log_records.remove(l)
+            except:
+                eva.core.log_traceback()
+            finally:
+                _log_record_lock.release()
