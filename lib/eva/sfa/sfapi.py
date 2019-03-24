@@ -757,7 +757,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         reload controller
 
-        Reloads items from connected UC
+        Reloads items from connected controller. If controller ID "ALL" is
+        specified, all connected controllers are reloaded.
 
         Args:
             k: .master
@@ -1011,6 +1012,16 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.groups_cycle(k=k)
                 else:
                     return self.list_cycles(k=k)
+        elif rtp == 'controller':
+            if kind == 'items':
+                return self.list_remote(k=k, i=ii, **props)
+            elif kind == 'props' and ii and ii.find('/') != -1:
+                return self.list_controller_props(k=k, i=ii)
+            else:
+                if ii and ii.find('/') != -1:
+                    return self.get_controller(k=k, i=ii)
+                else:
+                    return self.list_controllers(k=k, g=ii)
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1053,6 +1064,18 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.toggle(k=k, i=ii)
                 else:
                     return self.set(k=k, i=ii, **props)
+        elif rtp == 'controller':
+            if (not ii or for_dir or ii.find('/') == -1) and not method:
+                result = self.append_controller(k=k, save=save, g=ii, **props)
+                if 'full_id' in result:
+                    set_restful_response_location(result['full_id'], rtp)
+                return result
+            elif method == 'test':
+                return self.test_controller(k=k, i=ii)
+            elif method == 'matest':
+                return self.matest_controller(k=k, i=ii)
+            elif method == 'reload':
+                return self.reload_controller(k=k, i=ii)
         elif rtp == 'core':
             if method == 'reload_clients':
                 return self.reload_clients(k=k)
@@ -1090,6 +1113,13 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     else:
                         raise InvalidParameter(
                             '"action_enabled" has invalid value')
+        elif rtp == 'controller':
+            if ii:
+                if props:
+                    return super().set_controller_prop(
+                        k=k, i=ii, save=save, v=props)
+                else:
+                    return True
         raise MethodNotFound
 
     @generic_web_api_method

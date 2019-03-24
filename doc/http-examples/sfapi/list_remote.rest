@@ -1,0 +1,3 @@
+GET /r/controller/uc/ws1-v1@items HTTP/1.1
+Host: localhost:8828
+X-Auth-Key: mykey

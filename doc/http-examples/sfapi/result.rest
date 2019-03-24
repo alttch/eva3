@@ -1,0 +1,3 @@
+GET /r/action?i=unit%3Atests%2Funit1 HTTP/1.1
+Host: localhost:8828
+X-Auth-Key: mykey

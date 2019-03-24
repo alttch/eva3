@@ -1,0 +1,28 @@
+HTTP/1.1 201 Created
+Allow: DELETE, GET, HEAD, PATCH, POST, PUT
+Cache-Control: no-cache, no-store, must-revalidate
+Content-Type: application/json
+Expires: 0
+Location: /r/action/e6828395-9444-4d3c-9230-5f4a6897d722
+Pragma: no-cache
+
+{
+    "err": "",
+    "exitcode": null,
+    "item_group": "tests",
+    "item_id": "unit3",
+    "item_oid": "unit:tests/unit3",
+    "item_type": "unit",
+    "nstatus": 0,
+    "nvalue": null,
+    "out": "",
+    "priority": 100,
+    "status": "running",
+    "time": {
+        "created": 1553393178.8462703,
+        "pending": 1553393178.846687,
+        "queued": 1553393178.8491642,
+        "running": 1553393178.849842
+    },
+    "uuid": "e6828395-9444-4d3c-9230-5f4a6897d722"
+}

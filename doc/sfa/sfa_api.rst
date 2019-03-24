@@ -1,540 +1,1045 @@
 SFA API
-*******
+**************
 
-:doc:`SCADA Final Aggregator<sfa>` SFA API is called through URL request
+:doc:`SCADA Final Aggregator<sfa>` API is used to manage EVA ICS cloud and aggregated resources.
 
-**\http://<IP_address_SFA:Port>/sfa-api/function**
+API basics
+==========
+
+Standard API (direct function calling)
+--------------------------------------
+
+SFA API functions are called through URL request
+
+    **\http://<ip_address:8828>/sfa-api/function**
 
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
-All functions can be called using GET and POST methods. When POST method is
-used, the parameters can be passed to functions either as www-form or as JSON.
+Standard API responses
+~~~~~~~~~~~~~~~~~~~~~~
 
-API key can be sent in request parameters, session (if user is logged in) or in
-HTTP **X-Auth-Key** header.
+Good for backward compatibility with any devices, as all API functions can be
+called using GET and POST. When POST is used, the parameters can be passed to
+functions either as multipart/form-data or as JSON.
 
-.. note::
+Also, standard direct method calling is the only way to use built-in user
+sessions.
 
-    Object creation and modification functions don't save configurations
-    automatically unless you specify **save** parameter in API request. The
-    system is designed to work this way to let you discard the changes in case
-    of serious problems by killing the controller process.
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
 
-    If you need to save any changes made without this parameter, restart the
-    controller gracefully or use :doc:`/sysapi` **save** function.
+**Standard responses in status/body:**
 
-Additionally, each EVA ICS API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC API URL for SFA
-API is:
+* **200 OK** *{ "result": "OK" }* API call completed successfully.
 
-**\http://<IP_address:Port>/sfa-api**
+**Standard error responses in status:**
 
-JSON RPC doesn't support sessions, so user authorization is not possible. Also
-note that default JSON RPC result is *{ "ok": true }* (instead of *{ "result":
-"OK" }*). There's no error result, as JSON RPC sends errors in "error" field.
+* **400 Bad Request** Invalid request params
+* **403 Forbidden** the API key has no access to this function or resource
+* **404 Not Found** method or resource/object doesn't exist
+* **405 Method Not Allowed** API function/method not found or HTTP method is
+  not either GET or POST
+* **409 Conflict** resource/object already exists or is locked
+* **500 API Error** API function execution has been failed. Check input
+  parameters and server logs.
 
-.. contents::
-
-Functions passed to the remote controllers
-==========================================
-
-The following functions are passed to the :ref:`connected remote
-controllers<sfa_remote_c>` and return the result as-is.
-
-.. note::
-
-    Function **result** is used to return both unit action results and macro
-    execution results.
-
-Units control
--------------
-
-* :ref:`action<uc_action>` - UC API call for :ref:`unit<unit>` control actions
-* :ref:`action_toggle<uc_action_toggle>` - UC API call for :ref:`unit<unit>`
-  control actions to toggle status
-* :ref:`result<uc_result>` - UC API call to get action result by unit id or
-  uuid.
-* :ref:`terminate<uc_terminate>` - UC API call to terminate current
-  :ref:`unit<unit>` action
-* :ref:`q_clean<uc_q_clean>` - UC API call to clean :ref:`unit<unit>` action
-  queue
-* :ref:`kill<uc_kill>` - UC API call to :ref:`unit<unit>` action queue and
-  terminate the current action
-* :ref:`disable_actions<uc_disable_actions>` - UC API call to disable
-  :ref:`unit<unit>` actions
-* :ref:`enable_actions<uc_enable_actions>` - UC API call to enable
-  :ref:`unit<unit>` actions
-
-Logic variables control
------------------------
-
-* :ref:`set<lm_set>` - LM API call to set :ref:`logic variable<lvar>` state
-* :ref:`reset<lm_reset>` - LM API call to reset :ref:`logic variable<lvar>`
-  state
-* :ref:`clear<lm_clear>` - LM API call to clear :ref:`logic variable<lvar>`
-  state
-* :ref:`toggle<lm_toggle>` - LM API call to toggle :ref:`logic variable<lvar>`
-  state
-
-Macros control
---------------
-
-* :ref:`run<lm_run>` - LM API call to execute :doc:`logic control
-  macro</lm/macros>`
-* :ref:`result<lm_result>` - LM API call to get macro execution result by macro
-  oid (**lmacro/group/id**) or uuid
-
-Decision rules control
-----------------------
-
-* :ref:`list_rule_props<lm_list_rule_props>` - LM API call to list
-  :doc:`decision rule</lm/decision_matrix>` props
-* :ref:`set_rule_prop<lm_set_rule_prop>` - LM API call to set :doc:`decision
-  rule</lm/decision_matrix>` prop
-
-.. _sfa_test:
-
-test - test API/key and get system info
-=======================================
-
-Test can be executed with any valid :ref:`API KEY<sfa_apikey>`
-
-Parameters:
-
-* **k** valid API key
-
-Returns JSON dict with system info and current API key permissions (for
-masterkey only  'master':true is returned)
+In case API function has been failed, response body will contain JSON data with
+*_error* field, which contains error message.
 
 .. code-block:: json
 
     {
-        "acl": {
-            "allow": {
-                "cmd": true
-            },
-            "groups": [
-                "system/#",
-                "service",
-                "security/+"
-            ],
-            "items": [],
-            "key_id": "key1",
-            "master": false,
-            "sysfunc": false
-        },
-        "product_build": 2017082101,
-        "product_code": "sfa",
-        "product_name": "EVA SCADA Final Aggregator"
-        "result": "OK",
-        "system": "eva3-test1",
-        "time": 1504489043.4566338,
-        "version": "3.0.0"
+        "_error": "unable to add object, already present",
+        "result": "ERROR"
     }
 
-Errors:
+JSON RPC
+--------
 
-* **403 Forbidden** the key has no access to the API
+Additionally, API supports `JSON RPC 2.0
+<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
+sessions, so user authorization is not possible. Also note that default JSON
+RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
+error result, as JSON RPC sends errors in "error" field.
 
-.. _sfa_reload_clients:
+If JSON RPC request is called without ID and server should not return a result,
+it will return http response with a code *202 Accepted*.
 
-reload_clients - ask connected clients to reload
-================================================
+.. note::
 
-This function sends **reload** event to all connected clients asking them to
-reload the interface.
+    JSON RPC is recommended way to use EVA ICS API, unless RESTful is really
+    required.
 
-All the connected clients receive the event with *subject="reload"* and
-*data="asap"*. If the clients use :doc:`sfa_framework`, they must define
-:ref:`eva_sfa_reload_handler<sfw_reload>` function.
+JSON RPC API URL:
 
-Parameters:
+    **\http://<ip_address:8828>/jrpc**
 
-* **k** masterkey
+RESTful API
+-----------
 
-Returns result="OK" if the reload event is sent, or result="ERROR", if an error
-occurs.
+Majority EVA ICS API components and items support `REST
+<https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
+for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
+multipart/form-data. For JSON, *Content-Type: application/json* header must be
+specified.
 
-Errors:
+API key can be sent in request parameters, session (if enabled and user is
+logged in) or in HTTP **X-Auth-Key** header.
 
-* **403 Forbidden** invalid API KEY
+RESTful API responses
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. _sfa_notify_restart:
+**Success responses:**
 
-notify_restart - notify about server restart
-============================================
+* **200 OK** API call completed successfully
+* **201 Created** API call completed successfully, Response header
+  *Location* contains either uri to the newly created object or resource is
+  accessible by the effective request uri. For resources created with *PUT*,
+  body contains either serialized resource object or resource type and id
+* **202 Accepted** The server accepted command and will process it later.
+* **204 No Content** API call completed successfully, no content to return
 
-This function sends a **server restart** event to all connected clients asking
-them to prepare for server restart.
+**Error error responses:**
 
-All the connected clients receive the event with *subject="server"* and
-*data="restart"*. If the clients use :doc:`sfa_framework`, they must define
-:ref:`eva_sfa_server_restart_handler<sfw_server_restart>` function.
+* **403 Forbidden** the API key has no access to this function or resource
+* **404 Not Found** resource doesn't exist
+* **405 Method Not Allowed** API function/method not found
+* **409 Conflict** resource/object already exists or is locked
+* **500 API Error** API function execution has been failed. Check
+  input parameters and server logs.
 
-Server restart notification is sent automatically to all connected clients when
-the server is restarting. This API function allows to send server restart
-notification without actual server restart, which may be useful e.g. for
-testing, handling frontend restart etc.
+Response body may contain additional information encoded in JSON. *{
+"result": "OK" }* and *{ "result": "ERROR" }* in body are not returned.
 
-Parameters:
+.. contents::
 
-* **k** masterkey
+.. _sfapi_cat_general:
 
-Returns result="OK" if the reload event is sent, or result="ERROR", if an error
-occurs.
+General functions
+=================
 
-Errors:
 
-* **403 Forbidden** invalid API KEY
 
-.. _sfa_state:
+.. _sfapi_test:
 
-state - get item state
-======================
+test - test API/key and get system info
+---------------------------------------
 
-State of the known :doc:`item</items>` or all the items of the specified type
-can be obtained using **state** command.
+Test can be executed with any valid API key of the controller the function is called to.
 
-Parameters:
-
-* **k** valid API key
-* **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
-  *LV* for :ref:`lvar<lvar>`, required
-* **i** full item id (*group/id*), optional
-* **g** group filter, optional :ref:`mqtt<mqtt_>` masks can be used, for
-  example group1/#, group1/+/lamps)
-  virtual, status_labels and action_enabled for unit)
-
-optionally:
-
-* **full=1** get full item state info (description, action labels and etc.)
-
-Returns item status in JSON dict or array of dicts:
-
-.. code-block:: json
-
-    [
-        {
-            "expires": 0,
-            "full_id": "service/test",
-            "group": "service",
-            "id": "test",
-            "set_time": 1506345719.8540998,
-            "status": 1,
-            "type": "lvar",
-            "value": "33"
-        }
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** item doesn't exist, or the key has no access to the item
-
-.. _sfa_state_history:
-
-state_history - get item state history
-======================================
-
-State history of one :doc:`item</items>` or several items of the specified type
-can be obtained using **state_history** command.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/test.req
+    :response: http-examples/sfapi/test.resp
 
 Parameters:
 
-* **k** valid API key
-* **i** item ID, or multiple IDs, comma separated
-* **a** :doc:`notifier</notifiers>` ID which keeps history for the specified
-  item(s) (default: **db_1**)
-* **s** time frame start, ISO or Unix timestamp
-* **e** time frame end, optional (default: current time), ISO or Unix timestamp
-* **l** limit history records (optional)
-* **x** item property (**status** or **value**)
-* **t** time format (**iso** or **raw** for Unix timestamp)
-* **w** fill frame with the specified interval (e.g. *1T* - 1 minute, *2H* - 2
-  hours etc.), optional
-* **g** output format, **list** (default) or **dict**
+* **k** any valid API key
 
-Returns state history for the chosen item(s) in the specified format.
+Returns:
 
-To get state history for multiple items:
+JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
 
-* **w** param is required
-* **g** should be specified as **list**
+**RESTful:**
 
-Errors:
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/test.rest
+    :response: http-examples/sfapi/test.resp-rest
 
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** item doesn't exist, the key has no access to the item, or
-  the history database is not found
 
-.. _sfa_groups:
+.. _sfapi_cat_item:
+
+Item functions
+==============
+
+
+
+.. _sfapi_action:
+
+action - create unit control action
+-----------------------------------
+
+The call is considered successful when action is put into the action queue of selected unit.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/action.req
+    :response: http-examples/sfapi/action.resp
+
+Parameters:
+
+* **k** 
+* **i** unit id
+* **s** desired unit status
+
+Optionally:
+
+* **v** desired unit value
+* **w** wait for the completion for the specified number of seconds
+* **u** action UUID (will be auto generated if none specified)
+* **p** queue priority (default is 100, lower is better)
+* **q** global queue timeout, if expires, action is marked as "dead"
+
+Returns:
+
+Serialized action object. If action is marked as dead, an error is returned (exception raised)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/action.rest
+    :response: http-examples/sfapi/action.resp-rest
+
+.. _sfapi_action_toggle:
+
+action_toggle - toggle unit status
+----------------------------------
+
+Create unit control action to toggle its status (1->0, 0->1)
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/action_toggle.req
+    :response: http-examples/sfapi/action_toggle.resp
+
+Parameters:
+
+* **k** 
+* **i** unit id
+
+Optionally:
+
+* **w** wait for the completion for the specified number of seconds
+* **u** action UUID (will be auto generated if none specified)
+* **p** queue priority (default is 100, lower is better)
+* **q** global queue timeout, if expires, action is marked as "dead"
+
+Returns:
+
+Serialized action object. If action is marked as dead, an error is returned (exception raised)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/action_toggle.rest
+    :response: http-examples/sfapi/action_toggle.resp-rest
+
+.. _sfapi_disable_actions:
+
+disable_actions - disable unit actions
+--------------------------------------
+
+Disables unit to run and queue new actions.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/disable_actions.req
+    :response: http-examples/sfapi/disable_actions.resp
+
+Parameters:
+
+* **k** 
+* **i** unit id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/disable_actions.rest
+    :response: http-examples/sfapi/disable_actions.resp-rest
+
+.. _sfapi_enable_actions:
+
+enable_actions - enable unit actions
+------------------------------------
+
+Enables unit to run and queue new actions.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/enable_actions.req
+    :response: http-examples/sfapi/enable_actions.resp
+
+Parameters:
+
+* **k** 
+* **i** unit id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/enable_actions.rest
+    :response: http-examples/sfapi/enable_actions.resp-rest
+
+.. _sfapi_groups:
 
 groups - get item group list
-============================
+----------------------------
 
-Get the list of the item groups. Useful e.g. for custom interfaces.
+Get the list of item groups. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/groups.req
+    :response: http-examples/sfapi/groups.resp
 
 Parameters:
 
-* **k** valid API key
-* **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
-  *LV* for :ref:`lvar<lvar>`), required
+* **k** 
+* **p** item type (unit [U], sensor [S] or lvar [LV])
 
-optionally:
+**RESTful:**
 
-* **g** filter group list with :ref:`MQTT-style<mqtt_>` wildcards.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/groups.rest
+    :response: http-examples/sfapi/groups.resp-rest
 
-Returns JSON array:
+.. _sfapi_kill:
 
-.. code-block:: json
+kill - kill unit actions
+------------------------
 
-    [
-        "parent_group1/group1",
-        "parent_group1/group2"
-    ]
+Apart from canceling all queued commands, this function also terminates the current running action.
 
-Errors:
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/kill.req
+    :response: http-examples/sfapi/kill.resp
 
-* **403 Forbidden** invalid API KEY
+Parameters:
+
+* **k** 
+* **i** unit id
+
+Returns:
+
+If the current action of the unit cannot be terminated by configuration, the notice "pt" = "denied" will be returned additionally (even if there's no action running)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/kill.rest
+    :response: http-examples/sfapi/kill.resp-rest
+
+.. _sfapi_q_clean:
+
+q_clean - clean action queue of unit
+------------------------------------
+
+Cancels all queued actions, keeps the current action running.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/q_clean.req
+    :response: http-examples/sfapi/q_clean.resp
+
+Parameters:
+
+* **k** 
+* **i** unit id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/q_clean.rest
+    :response: http-examples/sfapi/q_clean.resp-rest
+
+.. _sfapi_result:
+
+result - get action status or macro run result
+----------------------------------------------
+
+Checks the result of the action by its UUID or returns the actions for the specified unit or execution result of the specified macro.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/result.req
+    :response: http-examples/sfapi/result.resp
+
+Parameters:
+
+* **k** 
+
+Optionally:
+
+* **u** action uuid or
+* **i** unit/macro oid (either uuid or oid must be specified)
+* **g** filter by unit group
+* **s** filter by action status: Q for queued, R for running, F for finished
+* **Return** list or single serialized action object
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/result.rest
+    :response: http-examples/sfapi/result.resp-rest
+
+.. _sfapi_state:
+
+state - get item state
+----------------------
+
+State of the item or all items of the specified type can be obtained using state command.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/state.req
+    :response: http-examples/sfapi/state.resp
+
+Parameters:
+
+* **k** 
+* **p** item type (unit [U], sensor [S] or lvar [LV])
+
+Optionally:
+
+* **i** item id
+* **g** item group
+* **full** return full state
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/state.rest
+    :response: http-examples/sfapi/state.resp-rest
+
+.. _sfapi_state_history:
+
+state_history - get item state history
+--------------------------------------
+
+State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/state_history.req
+    :response: http-examples/sfapi/state_history.resp
+
+Parameters:
+
+* **k** 
+* **a** history notifier id (default: db_1)
+* **i** item oids or full ids, list or comma separated
+
+Optionally:
+
+* **s** start time (timestamp or ISO)
+* **e** end time (timestamp or ISO)
+* **l** records limit (doesn't work with "w")
+* **x** state prop ("status" or "value")
+* **t** time format("iso" or "raw" for unix timestamp, default is "raw")
+* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
+* **g** output format ("list" or "dict", default is "list")
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/state_history.rest
+    :response: http-examples/sfapi/state_history.resp-rest
+
+.. _sfapi_terminate:
+
+terminate - terminate action execution
+--------------------------------------
+
+Terminates or cancel the action if it is still queued
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/terminate.req
+    :response: http-examples/sfapi/terminate.resp
+
+Parameters:
+
+* **k** 
+* **u** action uuid or
+* **i** unit id
+
+Returns:
+
+An error result will be returned eitner if action is terminated (Resource not found) or if termination process is failed or denied by unit configuration (Function failed)
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/terminate.rest
+    :response: http-examples/sfapi/terminate.resp-rest
+
+.. _sfapi_clear:
+
+clear - clear lvar state
+------------------------
+
+set status (if **expires** lvar param > 0) or value (if **expires** isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as a timer to stop it, or as a flag to set it *False*.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/clear.req
+    :response: http-examples/sfapi/clear.resp
+
+Parameters:
+
+* **k** 
+* **i** lvar id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/clear.rest
+    :response: http-examples/sfapi/clear.resp-rest
+
+.. _sfapi_reset:
+
+reset - reset lvar state
+------------------------
+
+Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful when lvar is being used as a timer to reset it, or as a flag to set it *True*.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/reset.req
+    :response: http-examples/sfapi/reset.resp
+
+Parameters:
+
+* **k** 
+* **i** lvar id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/reset.rest
+    :response: http-examples/sfapi/reset.resp-rest
+
+.. _sfapi_set:
+
+set - set lvar state
+--------------------
+
+Set status and value of a :ref:`logic variable<lvar>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/set.req
+    :response: http-examples/sfapi/set.resp
+
+Parameters:
+
+* **k** 
+* **i** lvar id
+
+Optionally:
+
+* **s** lvar status
+* **v** lvar value
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/set.rest
+    :response: http-examples/sfapi/set.resp-rest
+
+.. _sfapi_toggle:
+
+toggle - clear lvar state
+-------------------------
+
+set status (if **expires** lvar param > 0) or value (if **expires** isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is used as a timer to stop it, or as a flag to set it *False*.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/toggle.req
+    :response: http-examples/sfapi/toggle.resp
+
+Parameters:
+
+* **k** 
+* **i** lvar id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/toggle.rest
+    :response: http-examples/sfapi/toggle.resp-rest
+
+
+.. _sfapi_cat_macro:
+
+Logic control macros
+====================
+
+
+
+.. _sfapi_groups_macro:
 
 groups_macro - get macro groups list
-====================================
-Get the list of the macro groups.
+------------------------------------
+
+Get the list of macros. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/groups_macro.req
+    :response: http-examples/sfapi/groups_macro.resp
 
 Parameters:
 
-* **k** valid API key
+* **k** 
 
-Returns JSON array:
+**RESTful:**
 
-.. code-block:: json
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/groups_macro.rest
+    :response: http-examples/sfapi/groups_macro.resp-rest
 
-    [
-        "parent_group1/group1",
-        "parent_group1/group2"
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
+.. _sfapi_list_macros:
 
 list_macros - get macro list
-============================
+----------------------------
 
-Get the list of all available :doc:`macros</lm/macros>`.
+Get the list of all available :doc:`macros<macros>`.
 
-Parameters:
-
-* **k** valid API key
-* **g** filter by group, optional (:ref:`MQTT<mqtt_>` masks may be used, i.e.
-  group1/#, group1/+/service)
-
-Returns JSON array:
-
-.. code-block:: json
-
-    [
-        {
-           "action_enabled": true,
-           "description": "description",
-           "full_id": "group/macro_id",
-           "group": "group",
-           "id": "macro_id",
-           "oid": "lmacro:group/macro_id",
-           "type": "lmacro"
-        }
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-.. _sfa_list_remote:
-
-list_remote - get a list of items from connected controllers
-============================================================
-
-Get a list of the items loaded from the connected
-:ref:`controllers<sfa_remote_c>`.  Useful to debug the controller connections.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_macros.req
+    :response: http-examples/sfapi/list_macros.resp
 
 Parameters:
 
-* **k** masterkey
+* **k** 
 
-optionally:
+Optionally:
 
-* **g** item group
-* **p** item type (*U* for :ref:`unit<unit>`, *S* for :ref:`sensor<sensor>`,
-  *LV* for :ref:`lvar<lvar>`)
+* **g** filter by group
+* **i** filter by controller
 
-Returns the JSON array of :ref:`units<unit>`, :ref:`sensors<sensor>` loaded
-from the remote controllers. Additional field **controller_id** is present in
-any item indicating the controller it's loaded from.
+**RESTful:**
 
-Errors:
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_macros.rest
+    :response: http-examples/sfapi/list_macros.resp-rest
 
-* **403 Forbidden** invalid API KEY
+.. _sfapi_run:
 
-.. _sfa_list_controllers:
+run - execute macro
+-------------------
 
-list_controllers - get controllers list
-=======================================
+Execute a :doc:`macro<macros>` with the specified arguments.
 
-Get the list of all connected :ref:`controllers<sfa_remote_c>`.
-
-Parameters:
-
-* **k** valid API key
-* **g** controller type (*uc* or *lm*, optional)
-
-Returns JSON array:
-
-.. code-block:: json
-
-    [
-        {
-        "build": "BUILD",
-        "connected": true,
-        "description": "<controller_description>",
-        "full_id": "<type/controller_id>",
-        "group": "<type>",
-        "id": "<controller_id>",
-        "oid": "remote_<type>:<type>/<controller_id>",
-        "type": "remote_<type>",
-        "version": "VERSION"
-        }
-    ]
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-.. _sfa_test_controller:
-
-test_controller - test connection to remote controller
-======================================================
-
-Allows to test connection to the :ref:`controller<sfa_remote_c>`.
-
-* **k** masterkey
-* **i** controller id
-
-Returns result="OK" if the test is passed, or result="ERROR", if failed.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** controller doesn't exist
-
-.. _sfa_list_controller_props:
-
-list_controller_props - get editable controller parameters
-==========================================================
-
-Allows to get all editable parameters of the connected
-:ref:`controller<sfa_remote_c>`.
-
-* **k** masterkey
-* **i** controller id
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-* **404 Not Found** controller doesn't exist
-
-.. _sfa_set_controller_prop:
-
-set_controller_prop - set controller parameters
-===============================================
-
-Allows to set configuration parameters of the connected controller.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/run.req
+    :response: http-examples/sfapi/run.resp
 
 Parameters:
 
-* **k** masterkey
-* **i** controller id
-* **p** controller configuration param
-* **v** param value
+* **k** 
+* **i** macro id
 
-Returns result="OK" if the parameter is set, or result="ERROR", if an error
-occurs.
+Optionally:
 
-Errors:
+* **a** macro arguments, array or space separated
+* **kw** macro keyword arguments, name=value, comma separated or dict
+* **w** wait for the completion for the specified number of seconds
+* **u** action UUID (will be auto generated if none specified)
+* **p** queue priority (default is 100, lower is better)
+* **q** global queue timeout, if expires, action is marked as "dead"
 
-* **403 Forbidden** invalid API KEY
+**RESTful:**
 
-.. _sfa_append_controller:
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/run.rest
+    :response: http-examples/sfapi/run.resp-rest
 
-append_controller - connect remote controller
-=============================================
+
+.. _sfapi_cat_cycle:
+
+Logic cycles
+============
+
+
+
+.. _sfapi_groups_cycle:
+
+groups_cycle - get cycle groups list
+------------------------------------
+
+Get the list of cycles. Useful e.g. for custom interfaces.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/groups_cycle.req
+    :response: http-examples/sfapi/groups_cycle.resp
+
+Parameters:
+
+* **k** 
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/groups_cycle.rest
+    :response: http-examples/sfapi/groups_cycle.resp-rest
+
+.. _sfapi_list_cycles:
+
+list_cycles - get cycle list
+----------------------------
+
+Get the list of all available :doc:`cycles<cycles>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_cycles.req
+    :response: http-examples/sfapi/list_cycles.resp
+
+Parameters:
+
+* **k** 
+
+Optionally:
+
+* **g** filter by group
+* **i** filter by controller
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_cycles.rest
+    :response: http-examples/sfapi/list_cycles.resp-rest
+
+
+.. _sfapi_cat_remotes:
+
+Remote controllers
+==================
+
+
+
+.. _sfapi_append_controller:
+
+append_controller - connect remote controller via HTTP
+------------------------------------------------------
 
 Connects remote :ref:`controller<sfa_remote_c>` to the local.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/append_controller.req
+    :response: http-examples/sfapi/append_controller.resp
+
 Parameters:
 
-* **k** masterkey
-* **uri** API uri (*proto://host:port*)
+* **k** API key with *master* permissions
+* **u** Controller API uri (*proto://host:port*, port not required if default)
 * **a** remote controller API key (\$key to use local key)
 
-optionally:
+Optionally:
 
-* **m** :ref:`MQTT notifier<mqtt_>` to exchange item states in real time
-* **s** *True*/*False* (*1*/*0*) verify remote SSL certificate or pass invalid
+* **m** ref:`MQTT notifier<mqtt_>` to exchange item states in real time (default: *eva_1*)
+* **s** verify remote SSL certificate or pass invalid
 * **t** timeout (seconds) for the remote controller API calls
-* **save=1** save connected controller configuration on the disk immediately
-  after creation
+* **g** controller type ("uc" or "lm"), autodetected if none
+* **save** save connected controller configuration on the disk immediately after creation
 
-Returns result="OK" if the controller is connected, or result="ERROR", if an
-error occurred.
+**RESTful:**
 
-The remote controller id is obtained and set automatically according to its
-hostname or **name** field in the controller configuration. The remote
-controller id can't be changed.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/append_controller.rest
+    :response: http-examples/sfapi/append_controller.resp-rest
 
-Errors:
+.. _sfapi_disable_controller:
 
-* **403 Forbidden** invalid API KEY
+disable_controller - disable connected controller
+-------------------------------------------------
 
-.. _sfa_remove_controller:
 
-remove_controller - disconnect remote controller
-================================================
 
-Disconnects the remote :ref:`controller<sfa_remote_c>`.
-
-Parameters:
-
-* **k** masterkey
-* **i** controller id
-
-Returns result="OK" if the controller is disconnected, or result="ERROR", if an
-error occurred.
-
-Errors:
-
-* **403 Forbidden** invalid API KEY
-
-.. _sfa_reload_controller:
-
-reload_controller - reload items from UC
-========================================
-
-Allows to immediately reload all the :doc:`items</items>`,
-:doc:`macros</lm/macros>` and their status from the remote
-:ref:`controller<sfa_remote_c>`.
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/disable_controller.req
+    :response: http-examples/sfapi/disable_controller.resp
 
 Parameters:
 
-* **k** masterkey
+* **k** API key with *master* permissions
 * **i** controller id
 
-Returns result="OK" if the controller is deleted, or result="ERROR", if an
-error occurred.
+Optionally:
 
-Errors:
+* **save** save configuration after successful call
 
-* **403 Forbidden** invalid API KEY
+**RESTful:**
 
-.. include:: ../userauth.rst
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/disable_controller.rest
+    :response: http-examples/sfapi/disable_controller.resp-rest
+
+.. _sfapi_enable_controller:
+
+enable_controller - enable connected controller
+-----------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/enable_controller.req
+    :response: http-examples/sfapi/enable_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+Optionally:
+
+* **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/enable_controller.rest
+    :response: http-examples/sfapi/enable_controller.resp-rest
+
+.. _sfapi_get_controller:
+
+get_controller - get connected controller information
+-----------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/get_controller.req
+    :response: http-examples/sfapi/get_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/get_controller.rest
+    :response: http-examples/sfapi/get_controller.resp-rest
+
+.. _sfapi_list_controller_props:
+
+list_controller_props - get controller connection parameters
+------------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_controller_props.req
+    :response: http-examples/sfapi/list_controller_props.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_controller_props.rest
+    :response: http-examples/sfapi/list_controller_props.resp-rest
+
+.. _sfapi_list_controllers:
+
+list_controllers - get controllers list
+---------------------------------------
+
+Get the list of all connected :ref:`controllers<sfa_remote_c>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_controllers.req
+    :response: http-examples/sfapi/list_controllers.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **g** filter by group ("uc" or "lm")
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_controllers.rest
+    :response: http-examples/sfapi/list_controllers.resp-rest
+
+.. _sfapi_list_remote:
+
+list_remote - get a list of items from connected controllers
+------------------------------------------------------------
+
+Get a list of the items loaded from the connected controllers. Useful to debug the controller connections.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_remote.req
+    :response: http-examples/sfapi/list_remote.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+Optionally:
+
+* **i** controller id
+* **g** filter by item group
+* **p** filter by item type
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/list_remote.rest
+    :response: http-examples/sfapi/list_remote.resp-rest
+
+.. _sfapi_matest_controller:
+
+matest_controller - test management API connection to remote controller
+-----------------------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/matest_controller.req
+    :response: http-examples/sfapi/matest_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/matest_controller.rest
+    :response: http-examples/sfapi/matest_controller.resp-rest
+
+.. _sfapi_reload_controller:
+
+reload_controller - reload controller
+-------------------------------------
+
+Reloads items from connected controller. If controller ID "ALL" is specified, all connected controllers are reloaded.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/reload_controller.req
+    :response: http-examples/sfapi/reload_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/reload_controller.rest
+    :response: http-examples/sfapi/reload_controller.resp-rest
+
+.. _sfapi_remove_controller:
+
+remove_controller - disconnect controller
+-----------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/remove_controller.req
+    :response: http-examples/sfapi/remove_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/remove_controller.rest
+    :response: http-examples/sfapi/remove_controller.resp-rest
+
+.. _sfapi_set_controller_prop:
+
+set_controller_prop - set controller connection parameters
+----------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/set_controller_prop.req
+    :response: http-examples/sfapi/set_controller_prop.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+* **p** property name (or empty for batch set)
+
+Optionally:
+
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/set_controller_prop.rest
+    :response: http-examples/sfapi/set_controller_prop.resp-rest
+
+.. _sfapi_test_controller:
+
+test_controller - test connection to remote controller
+------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/test_controller.req
+    :response: http-examples/sfapi/test_controller.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** controller id
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/test_controller.rest
+    :response: http-examples/sfapi/test_controller.resp-rest
+
+
+.. _sfapi_cat_clients:
+
+Connected clients
+=================
+
+
+
+.. _sfapi_notify_restart:
+
+notify_restart - notify connected clients about server restart
+--------------------------------------------------------------
+
+Sends a **server restart** event to all connected clients asking them to prepare for server restart.
+
+All the connected clients receive the event with *subject="server"* and *data="restart"*. If the clients use :doc:`sfa_framework`, they can define :ref:`eva_sfa_server_restart_handler<sfw_server_restart>` function.
+
+Server restart notification is sent automatically to all connected clients when the server is restarting. This API function allows to send server restart notification without actual server restart, which may be useful e.g. for testing, handling frontend restart etc.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/notify_restart.req
+    :response: http-examples/sfapi/notify_restart.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/notify_restart.rest
+    :response: http-examples/sfapi/notify_restart.resp-rest
+
+.. _sfapi_reload_clients:
+
+reload_clients - ask connected clients to reload
+------------------------------------------------
+
+Sends **reload** event to all connected clients asking them to reload the interface.
+
+All the connected clients receive the event with *subject="reload"* and *data="asap"*. If the clients use :doc:`sfa_framework`, they can define :ref:`eva_sfa_reload_handler<sfw_reload>` function.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/reload_clients.req
+    :response: http-examples/sfapi/reload_clients.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/reload_clients.rest
+    :response: http-examples/sfapi/reload_clients.resp-rest
 
