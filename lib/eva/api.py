@@ -95,32 +95,32 @@ def http_api_result_error(env=None):
 
 
 def cp_forbidden_key(message=None):
-    msg = str(message)
+    msg = str(message) if message else ' '
     return cherrypy.HTTPError(403, msg if msg else None)
 
 
 def cp_api_error(message=None):
-    msg = str(message)
+    msg = str(message) if message else ''
     return cherrypy.HTTPError(500, msg if msg else None)
 
 
 def cp_api_404(message=None):
-    msg = str(message)
+    msg = str(message) if message else ''
     return cherrypy.HTTPError(404, msg if msg else None)
 
 
 def cp_api_405(message=None):
-    msg = str(message)
+    msg = str(message) if message else ''
     return cherrypy.HTTPError(405, msg if msg else None)
 
 
 def cp_api_409(message=None):
-    msg = str(message)
+    msg = str(message) if message else ''
     return cherrypy.HTTPError(409, msg if msg else None)
 
 
 def cp_bad_request(message=None):
-    msg = str(message)
+    msg = str(message) if message else ''
     return cherrypy.HTTPError(400, msg if msg else None)
 
 
@@ -1034,26 +1034,30 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
 
     @log_i
     def login(self, **kwargs):
+        if not hasattr(cherrypy, 'session'):
+            raise FunctionFailed('Sessions are disabled')
         k, u, p = parse_function_params(kwargs, 'kup', '.ss')
         if not u and k:
             if k in apikey.keys:
                 cherrypy.session['k'] = k
-                return http_api_result_ok({'key': apikey.key_id(k)})
+                return True, {'key': apikey.key_id(k)}
             else:
                 cherrypy.session['k'] = ''
                 raise AccessDenied
         key = eva.users.authenticate(u, p)
         if eva.apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
             cherrypy.session['k'] = apikey.key_by_id(key)
-            return http_api_result_ok({'key': key})
+            return True, {'key': key}
         cherrypy.session['k'] = ''
         raise AccessDenied('Assigned API key is invalid')
 
     @log_d
     def logout(self, **kwargs):
+        if not hasattr(cherrypy, 'session'):
+            raise FunctionFailed('Sessions are disabled')
         parse_api_params(kwargs)
         cherrypy.session['k'] = ''
-        return http_api_result_ok()
+        return True
 
 
 def mqtt_discovery_handler(notifier_id, d):
@@ -1163,11 +1167,13 @@ def error_page_400(*args, **kwargs):
 
 
 def error_page_403(*args, **kwargs):
-    if 'k' in cherrypy.serving.request.params:
-        return jsonify_error(
-            'API key has no access to selected resource or function')
-    else:
-        return jsonify_error('No API key provided')
+    msg = kwargs.get('message')
+    if not msg or msg == ' ':
+        if 'k' in cherrypy.serving.request.params:
+            msg = 'API key has no access to selected resource or function'
+        else:
+            msg = 'No API key provided'
+    return jsonify_error(msg)
 
 
 def error_page_405(*args, **kwargs):

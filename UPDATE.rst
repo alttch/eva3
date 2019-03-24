@@ -23,6 +23,10 @@ Before applying this update
 * install **libow** and **libow-dev** system packages
 * install **jq** console JSON parser tool
 * set notifier DBs (if used) to absolute path
+* default item layout is not enterprise, if using simple - specify this in
+  configs
+* sessions are off now by default, if user logins are used - turn them by
+  setting session_timeout > 0 in configs
 * set SFA ui to use js/eva_sfa.3.1.js until ported. The following SFA FW
   function calls are INCOMPATIBLE with previous version:
 

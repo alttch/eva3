@@ -948,6 +948,8 @@ class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self.expose_api_methods('sfapi')
+        self._expose(self.login)
+        self._expose(self.logout)
         self.wrap_exposed()
 
 
