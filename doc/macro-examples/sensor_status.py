@@ -1,1 +1,1 @@
-result = sensor_status('env/temp_test')
+r = sensor_status('env/temp_test')

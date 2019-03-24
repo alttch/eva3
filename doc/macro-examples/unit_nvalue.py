@@ -1,1 +1,1 @@
-result = unit_nvalue('tests/unit1')
+r = unit_nvalue('tests/unit1')

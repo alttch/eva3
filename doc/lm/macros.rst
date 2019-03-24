@@ -182,10 +182,10 @@ available in all macros without a need to restart :doc:`LM PLC</lm/lm>`.
 Also, macro can import any local Python module. The following modules are
 pre-imported:
 
- * **json** JSON processing
- * **os** standard Python OS functions
- * **requests** HTTP functions
- * **sys** standard Python system functions
+ * **json** `JSON processing <https://docs.python.org/3/library/json.html>`_
+ * **os** standard `Python OS functions <https://docs.python.org/3/library/os.html>`_
+ * **requests** `HTTP functions <http://docs.python-requests.org/en/master/>`_
+ * **sys** `standard Python system functions <https://docs.python.org/3/library/sys.html>`_
 
 
 .. _macro_api_cat_general:
@@ -193,6 +193,54 @@ pre-imported:
 General functions
 =================
 
+
+
+.. _macro_api_cmd:
+
+cmd - execute a remote system command
+-------------------------------------
+
+Executes a :ref:`command script<cmd>` on the server where the controller is installed.
+
+.. code-block:: python
+
+    r = cmd('uc/mws1-v1', 'test', wait=5)
+
+Parameters:
+
+* **controller_id** controller id to execute command on
+* **command** name of the command script
+
+Optionally:
+
+* **args** string of command arguments, separated by spaces (passed to the script)
+* **wait** wait (in seconds) before API call sends a response. This allows to try waiting until command finish
+* **timeout** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
+
+Returns:
+
+Serialized command action object (dict)
+
+.. code-block:: json
+
+    {
+        "args": [],
+        "cmd": "test",
+        "err": "some text to stderr\n",
+        "exitcode": 0,
+        "out": "test script start\nparam 1:  ( > 0 will generate \"failed\" status)\nparam 2: \nparam 3: \ndelay 3 sec\nscript finish\n",
+        "status": "completed",
+        "time": {
+            "completed": 1553466937.5606368,
+            "created": 1553466934.5421243,
+            "running": 1553466934.5424464
+        },
+        "timeout": 5.0
+    }
+
+Raises:
+
+* **ResourceNotFound** command script or controller is not found
 
 
 .. _macro_api_exit:
@@ -220,7 +268,7 @@ ls - list files in directory
 
 .. code-block:: python
 
-    result = ls('/opt/i/*.jpg')
+    r = ls('/opt/i/*.jpg')
 
 Parameters:
 
@@ -278,7 +326,7 @@ open_newest - open newest file by mask
 .. code-block:: python
 
     i = open_newest('/opt/i/*.jpg', 'rb').read()
-    print(result)
+    print(r)
 
     None
 
@@ -309,7 +357,7 @@ open_oldest - open oldest file by mask
 .. code-block:: python
 
     i = open_oldest('/opt/i/*.jpg', 'rb').read()
-    print(result)
+    print(r)
 
     None
 
@@ -328,6 +376,65 @@ file descriptor
 Raises:
 
 * **Exception** exceptions equal to Python "open" function
+
+
+.. _macro_api_run:
+
+run - execute another macro
+---------------------------
+
+Execute a macro with the specified arguments.
+
+.. code-block:: python
+
+    r = run('tests/test1', kwargs={'v1': 'test', 'v2': 999}, wait=2)
+
+Parameters:
+
+* **macro** macro id
+
+Optionally:
+
+* **args** macro arguments, array or space separated
+* **kwargs** macro keyword arguments, name=value, comma separated or dict
+* **wait** wait for the completion for the specified number of seconds
+* **uuid** action UUID (will be auto generated if none specified)
+* **priority** queue priority (default is 100, lower is better)
+
+Returns:
+
+Serialized macro action object (dict)
+
+.. code-block:: json
+
+    {
+        "argv": [],
+        "err": "",
+        "exitcode": 0,
+        "item_group": "tests",
+        "item_id": "test1",
+        "item_oid": "lmacro:tests/test1",
+        "item_type": "lmacro",
+        "kwargs": {
+            "v1": "test",
+            "v2": 999
+        },
+        "out": "i am macro 1",
+        "priority": 100,
+        "status": "completed",
+        "time": {
+            "completed": 1553466277.50619,
+            "created": 1553466277.5015311,
+            "pending": 1553466277.502084,
+            "queued": 1553466277.5031419,
+            "running": 1553466277.5042534
+        },
+        "uuid": "f8dc24bf-bd50-4c2e-9728-9939807329f6"
+    }
+
+Raises:
+
+* **ResourceNotFound** macro is not found
 
 
 .. _macro_api_set_shared:
@@ -359,8 +466,8 @@ Get value of the variable, shared between node macros
 
 .. code-block:: python
 
-    result = shared('var1')
-    print(result)
+    r = shared('var1')
+    print(r)
 
     777
 
@@ -386,8 +493,8 @@ system - execute the command in a subshell
 
 .. code-block:: python
 
-    result = system('touch /tmp/1.dat')
-    print(result)
+    r = system('touch /tmp/1.dat')
+    print(r)
 
     0
 
@@ -405,8 +512,8 @@ Return the current time in seconds since the Epoch. Fractions of a second may be
 
 .. code-block:: python
 
-    result = time()
-    print(result)
+    r = time()
+    print(r)
 
     1553461581.549374
 
@@ -428,7 +535,7 @@ history - get lvar state history
 
 .. code-block:: python
 
-    result = history('lvar:tests/test1', t_start='2019-03-24')
+    r = history('lvar:tests/test1', t_start='2019-03-24')
 
 Parameters:
 
@@ -482,8 +589,8 @@ lvar_status - get lvar status
 
 .. code-block:: python
 
-    result = lvar_status('tests/test1')
-    print(result)
+    r = lvar_status('tests/test1')
+    print(r)
 
     1
 
@@ -509,8 +616,8 @@ lvar_value - get lvar value
 
 .. code-block:: python
 
-    result = lvar_value('tests/test1')
-    print(result)
+    r = lvar_value('tests/test1')
+    print(r)
 
     1.0
 
@@ -532,8 +639,8 @@ sensor_status - get sensor status
 
 .. code-block:: python
 
-    result = sensor_status('env/temp_test')
-    print(result)
+    r = sensor_status('env/temp_test')
+    print(r)
 
     1
 
@@ -559,8 +666,8 @@ sensor_value - get sensor value
 
 .. code-block:: python
 
-    result = sensor_value('env/temp_test')
-    print(result)
+    r = sensor_value('env/temp_test')
+    print(r)
 
     191.0
 
@@ -590,8 +697,8 @@ status - get item status
 
 .. code-block:: python
 
-    result = status('unit:tests/unit1')
-    print(result)
+    r = status('unit:tests/unit1')
+    print(r)
 
     0
 
@@ -619,8 +726,8 @@ the function may be called with an alias "nstatus(...)"
 
 .. code-block:: python
 
-    result = unit_nstatus('tests/unit1')
-    print(result)
+    r = unit_nstatus('tests/unit1')
+    print(r)
 
     0
 
@@ -648,8 +755,8 @@ the function may be called with an alias "nvalue(...)"
 
 .. code-block:: python
 
-    result = unit_nvalue('tests/unit1')
-    print(result)
+    r = unit_nvalue('tests/unit1')
+    print(r)
 
 
 
@@ -675,8 +782,8 @@ unit_status - get unit status
 
 .. code-block:: python
 
-    result = unit_status('tests/unit1')
-    print(result)
+    r = unit_status('tests/unit1')
+    print(r)
 
     0
 
@@ -702,8 +809,8 @@ unit_value - get unit value
 
 .. code-block:: python
 
-    result = unit_value('tests/unit1')
-    print(result)
+    r = unit_value('tests/unit1')
+    print(r)
 
 
 
@@ -733,8 +840,8 @@ value - get item value
 
 .. code-block:: python
 
-    result = value('sensor:env/temp_test')
-    print(result)
+    r = value('sensor:env/temp_test')
+    print(r)
 
     191.0
 
@@ -784,6 +891,31 @@ Raises:
 * **ResourceNotFound** lvar is not found
 
 
+.. _macro_api_expires:
+
+expires - set lvar expiration time
+----------------------------------
+
+
+
+.. code-block:: python
+
+    expires('timers/timer1', 30)
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Optionally:
+
+* **etime** time (in seconds), default is 0 (never expires)
+
+Raises:
+
+* **FunctionFailed** lvar expiration set error
+* **ResourceNotFound** lvar is not found
+
+
 .. _macro_api_is_expired:
 
 is_expired - is lvar (timer) expired
@@ -793,8 +925,8 @@ is_expired - is lvar (timer) expired
 
 .. code-block:: python
 
-    result = is_expired('nogroup/timer1')
-    print(result)
+    r = is_expired('nogroup/timer1')
+    print(r)
 
     True
 
@@ -879,6 +1011,728 @@ Raises:
 
 
 
+.. _macro_api_cat_unit:
+
+Unit control
+============
+
+
+
+.. _macro_api_action:
+
+action - unit control action
+----------------------------
+
+The call is considered successful when action is put into the action queue of selected unit.
+
+.. code-block:: python
+
+    r = action('tests/unit1', status=1, wait=5)
+
+Parameters:
+
+* **unit_id** unit id
+* **status** desired unit status
+
+Optionally:
+
+* **value** desired unit value
+* **wait** wait for the completion for the specified number of seconds
+* **uuid** action UUID (will be auto generated if none specified)
+* **priority** queue priority (default is 100, lower is better)
+
+Returns:
+
+Serialized action object (dict)
+
+.. code-block:: json
+
+    {
+        "err": "",
+        "exitcode": 0,
+        "item_group": "tests",
+        "item_id": "unit1",
+        "item_oid": "unit:tests/unit1",
+        "item_type": "unit",
+        "nstatus": 1,
+        "nvalue": null,
+        "out": "",
+        "priority": 100,
+        "status": "completed",
+        "time": {
+            "completed": 1553465690.0686338,
+            "created": 1553465690.0547004,
+            "pending": 1553465690.0549927,
+            "queued": 1553465690.0553339,
+            "running": 1553465690.0556705
+        },
+        "uuid": "17fc6650-4434-4605-974e-53591176b6ac"
+    }
+
+Raises:
+
+* **FunctionFailed** action is "dead"
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_action_toggle:
+
+action_toggle - toggle unit status
+----------------------------------
+
+Create unit control action to toggle its status (1->0, 0->1). if using OID, you can also call "toggle(..)" with the same effect.
+
+.. code-block:: python
+
+    r = action_toggle('tests/unit1', wait=5)
+
+Parameters:
+
+* **unit_id** unit id
+
+Optionally:
+
+* **value** desired unit value
+* **wait** wait for the completion for the specified number of seconds
+* **uuid** action UUID (will be auto generated if none specified)
+* **priority** queue priority (default is 100, lower is better)
+
+Returns:
+
+Serialized action object (dict)
+
+.. code-block:: json
+
+    {
+        "err": "",
+        "exitcode": 0,
+        "item_group": "tests",
+        "item_id": "unit1",
+        "item_oid": "unit:tests/unit1",
+        "item_type": "unit",
+        "nstatus": 0,
+        "nvalue": "",
+        "out": "",
+        "priority": 100,
+        "status": "completed",
+        "time": {
+            "completed": 1553465690.1327171,
+            "created": 1553465690.1081843,
+            "pending": 1553465690.1084123,
+            "queued": 1553465690.1089923,
+            "running": 1553465690.1094682
+        },
+        "uuid": "0982213a-6c8f-4df3-8581-d1281d0f41dc"
+    }
+
+Raises:
+
+* **FunctionFailed** action is "dead"
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_is_busy:
+
+is_busy - is unit busy
+----------------------
+
+
+
+.. code-block:: python
+
+    r = is_busy('tests/unit1')
+    print(r)
+
+    False
+
+Parameters:
+
+* **unit_id** unit id
+
+Returns:
+
+True, if unit is busy (action is executed)
+
+Raises:
+
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_kill:
+
+kill - kill unit actions
+------------------------
+
+Apart from canceling all queued commands, this function also terminates the current running action.
+
+.. code-block:: python
+
+    kill('tests/unit1')
+
+Parameters:
+
+* **unit_id** unit id
+
+Raises:
+
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_q_clean:
+
+q_clean - clean action queue of unit
+------------------------------------
+
+Cancels all queued actions, keeps the current action running.
+
+.. code-block:: python
+
+    q_clean('tests/unit1')
+
+Parameters:
+
+* **unit_id** unit id
+
+Raises:
+
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_result:
+
+result - get action status
+--------------------------
+
+Checks the result of the action by its UUID or returns the actions for the specified unit.
+
+.. code-block:: python
+
+    r = result(unit_id='tests/unit1')
+
+Parameters:
+
+* **unit_id** unit id or
+* **uuid** action uuid
+
+Optionally:
+
+* **group** filter by unit group
+* **status** filter by action status: Q for queued, R for running, F for finished
+
+Returns:
+
+list or single serialized action object
+
+.. code-block:: json
+
+    [
+        {
+            "err": "",
+            "exitcode": 0,
+            "item_group": "tests",
+            "item_id": "unit1",
+            "item_oid": "unit:tests/unit1",
+            "item_type": "unit",
+            "nstatus": 1,
+            "nvalue": null,
+            "out": "",
+            "priority": 100,
+            "status": "completed",
+            "time": {
+                "completed": 1553441469.549005,
+                "created": 1553441469.5324786,
+                "pending": 1553441469.5328996,
+                "queued": 1553441469.5334597,
+                "running": 1553441469.533866
+            },
+            "uuid": "fbfd9426-911e-4c40-9d59-4fd835723c98"
+        },
+        {
+            "err": "",
+            "exitcode": null,
+            "item_group": "tests",
+            "item_id": "unit1",
+            "item_oid": "unit:tests/unit1",
+            "item_type": "unit",
+            "nstatus": 1,
+            "nvalue": null,
+            "out": "",
+            "priority": 100,
+            "status": "ignored",
+            "time": {
+                "created": 1553441793.621345,
+                "ignored": 1553441793.623007,
+                "pending": 1553441793.6215,
+                "queued": 1553441793.622087
+            },
+            "uuid": "d62241b7-0c28-4f7a-80c4-07d40a876213"
+        }
+    ]
+
+Raises:
+
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_start:
+
+start - start unit
+------------------
+
+Create unit control action to set its status to 1
+
+.. code-block:: python
+
+    r = start('tests/unit1', wait=5)
+
+Parameters:
+
+* **unit_id** unit id
+
+Optionally:
+
+* **value** desired unit value
+* **wait** wait for the completion for the specified number of seconds
+* **uuid** action UUID (will be auto generated if none specified)
+* **priority** queue priority (default is 100, lower is better)
+
+Returns:
+
+Serialized action object (dict)
+
+.. code-block:: json
+
+    {
+        "err": "",
+        "exitcode": 0,
+        "item_group": "tests",
+        "item_id": "unit1",
+        "item_oid": "unit:tests/unit1",
+        "item_type": "unit",
+        "nstatus": 1,
+        "nvalue": null,
+        "out": "",
+        "priority": 100,
+        "status": "completed",
+        "time": {
+            "completed": 1553460599.3041146,
+            "created": 1553460599.2887182,
+            "pending": 1553460599.2889755,
+            "queued": 1553460599.289449,
+            "running": 1553460599.2897608
+        },
+        "uuid": "50e1d476-dd3e-4d8f-8316-2f2248e82676"
+    }
+
+Raises:
+
+* **FunctionFailed** action is "dead"
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_stop:
+
+stop - stop unit
+----------------
+
+Create unit control action to set its status to 0
+
+.. code-block:: python
+
+    r = stop('tests/unit1', wait=5)
+
+Parameters:
+
+* **unit_id** unit id
+
+Optionally:
+
+* **value** desired unit value
+* **wait** wait for the completion for the specified number of seconds
+* **uuid** action UUID (will be auto generated if none specified)
+* **priority** queue priority (default is 100, lower is better)
+
+Returns:
+
+Serialized action object (dict)
+
+.. code-block:: json
+
+    {
+        "err": "",
+        "exitcode": 0,
+        "item_group": "tests",
+        "item_id": "unit1",
+        "item_oid": "unit:tests/unit1",
+        "item_type": "unit",
+        "nstatus": 0,
+        "nvalue": null,
+        "out": "",
+        "priority": 100,
+        "status": "completed",
+        "time": {
+            "completed": 1553460599.346349,
+            "created": 1553460599.3321738,
+            "pending": 1553460599.3323255,
+            "queued": 1553460599.332741,
+            "running": 1553460599.3330808
+        },
+        "uuid": "aff93ac7-78d6-497f-aa31-4eb45823c1f7"
+    }
+
+Raises:
+
+* **FunctionFailed** action is "dead"
+* **ResourceNotFound** unit is not found
+
+
+.. _macro_api_terminate:
+
+terminate - terminate action execution
+--------------------------------------
+
+Terminates or cancel the action if it is still queued
+
+.. code-block:: python
+
+    try:
+    terminate(unit_id='tests/unit1')
+    except ResourceNotFound:
+    print('no action running')
+
+Parameters:
+
+* **unit_id** action uuid or
+* **uuid** unit id
+
+Raises:
+
+* **ResourceNotFound** if unit/action is not found or action is already finished
+
+
+
+.. _macro_api_cat_rule:
+
+Rule management
+===============
+
+
+
+.. _macro_api_set_rule_prop:
+
+set_rule_prop - set rule prop
+-----------------------------
+
+
+
+.. code-block:: python
+
+    set_rule_prop('28af95b2-e087-47b3-a6cd-15fe21d06c4a', 'condition', 'x < 5')
+
+Parameters:
+
+* **rule_id** rule id (uuid)
+* **prop** property to set
+* **value** value to set
+
+Optionally:
+
+* **save** save rule config after the operation
+
+Raises:
+
+* **ResourceNotFound** rule is not found
+
+
+
+.. _macro_api_cat_device:
+
+Devices
+=======
+
+
+
+.. _macro_api_deploy_device:
+
+deploy_device - deploy device items from template
+-------------------------------------------------
+
+Deploys the :ref:`device<device>` from the specified template.
+
+.. code-block:: python
+
+    deploy_device('uc/mws1-v1', 'device1', cfg={ 'ID': 5 })
+
+Parameters:
+
+* **controller_id** controller id to deploy device on
+* **device_tpl** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
+
+Optionally:
+
+* **cfg** device config (*var=value*, comma separated or dict)
+* **save** save items configuration on disk immediately after operation
+
+Raises:
+
+* **ResourceNotFound** device template or controller is not found
+* **FunctionFailed** device deploy error
+
+
+.. _macro_api_undeploy_device:
+
+undeploy_device - undeploy device items config from template
+------------------------------------------------------------
+
+
+
+.. code-block:: python
+
+    undeploy_device('uc/mws1-v1', 'device1', cfg={ 'ID': 5 })
+
+Parameters:
+
+* **controller_id** controller id to deploy device on
+* **device_tpl** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
+
+Optionally:
+
+* **cfg** device config (*var=value*, comma separated or dict)
+
+Raises:
+
+* **ResourceNotFound** device template or controller is not found
+
+
+.. _macro_api_update_device:
+
+update_device - update device items config from template
+--------------------------------------------------------
+
+
+
+.. code-block:: python
+
+    update_device('uc/mws1-v1', 'device1', cfg={ 'ID': 5 })
+
+Parameters:
+
+* **controller_id** controller id to deploy device on
+* **device_tpl** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
+
+Optionally:
+
+* **cfg** device config (*var=value*, comma separated or dict)
+* **save** save items configuration on disk immediately after operation
+
+Raises:
+
+* **ResourceNotFound** device template or controller is not found
+* **FunctionFailed** device update error
+
+
+
+.. _macro_api_cat_cycle:
+
+Logic cycles
+============
+
+
+
+.. _macro_api_get_cycle_info:
+
+get_cycle_info - get cycle information
+--------------------------------------
+
+
+
+.. code-block:: python
+
+    r = get_cycle_info('tests/cycle1')
+
+Parameters:
+
+* **cycle_id** cycle id
+
+Returns:
+
+dict with cycle information
+
+.. code-block:: json
+
+    {
+        "description": "",
+        "full_id": "tests/cycle1",
+        "group": "tests",
+        "ict": 20,
+        "id": "cycle1",
+        "interval": 0.01,
+        "macro": "tests/test",
+        "oid": "lcycle:tests/cycle1",
+        "on_error": null,
+        "status": 0,
+        "type": "lcycle",
+        "value": "0,0.0100,"
+    }
+
+Raises:
+
+* **ResourceNotFound** cycle is not found
+
+
+.. _macro_api_is_cycle_running:
+
+is_cycle_running - get cycle running status
+-------------------------------------------
+
+
+
+.. code-block:: python
+
+    r = is_cycle_running('tests/cycle1')
+    print(r)
+
+    True
+
+Parameters:
+
+* **cycle_id** cycle id
+
+Returns:
+
+True if cycle is runing
+
+Raises:
+
+* **ResourceNotFound** cycle is not found
+
+
+.. _macro_api_list_cycle_props:
+
+list_cycle_props - list cycle props
+-----------------------------------
+
+
+
+.. code-block:: python
+
+    r = list_cycle_props('tests/cycle1')
+
+Parameters:
+
+* **cycle_id** cycle id
+
+Returns:
+
+dict with cycle props
+
+.. code-block:: json
+
+    {
+        "autostart": false,
+        "description": "",
+        "ict": 20,
+        "interval": 0.01,
+        "macro": "tests/test",
+        "on_error": null
+    }
+
+Raises:
+
+* **ResourceNotFound** cycle is not found
+
+
+.. _macro_api_reset_cycle_stats:
+
+reset_cycle_stats - reset cycle stats
+-------------------------------------
+
+
+
+.. code-block:: python
+
+    reset_cycle_stats('tests/cycle1')
+
+Parameters:
+
+* **cycle_id** cycle id
+
+Raises:
+
+* **ResourceNotFound** cycle is not found
+
+
+.. _macro_api_set_cycle_prop:
+
+set_cycle_prop - set cycle prop
+-------------------------------
+
+
+
+.. code-block:: python
+
+    set_cycle_prop('tests/cycle1', 'ict', 20)
+
+Parameters:
+
+* **cycle_id** cycle id
+* **prop** property to set
+* **value** value to set
+
+Optionally:
+
+* **save** save cycle config after the operation
+
+Raises:
+
+* **ResourceNotFound** cycle is not found
+
+
+.. _macro_api_start_cycle:
+
+start_cycle - start cycle
+-------------------------
+
+
+
+.. code-block:: python
+
+    start_cycle('tests/cycle1')
+
+Parameters:
+
+* **cycle_id** cycle id
+
+Raises:
+
+* **ResourceNotFound** cycle is not found
+
+
+.. _macro_api_stop_cycle:
+
+stop_cycle - stop cycle
+-----------------------
+
+
+
+.. code-block:: python
+
+    stop_cycle('tests/cycle1', wait=True)
+
+Parameters:
+
+* **cycle_id** cycle id
+
+Optionally:
+
+* **wait** wait for cycle stop (default is False)
+
+Raises:
+
+* **ResourceNotFound** cycle is not found
+
+
+
 .. _macro_api_cat_lock:
 
 Locking functions
@@ -938,153 +1792,6 @@ Raises:
 
 * **ResourceNotFound** lock is not found
 * **FunctionFailed** function failed to release lock
-
-
-
-.. _macro_api_cat_unit:
-
-Unit control
-============
-
-
-
-.. _macro_api_is_busy:
-
-is_busy - is unit busy
-----------------------
-
-
-
-.. code-block:: python
-
-    result = is_busy('tests/unit1')
-    print(result)
-
-    False
-
-Parameters:
-
-* **unit_id** unit id
-
-Returns:
-
-True, if unit is busy (action is executed)
-
-Raises:
-
-* **ResourceNotFound** unit is not found
-
-
-.. _macro_api_start:
-
-start - start unit
-------------------
-
-Create unit control action to set its status to 1
-
-.. code-block:: python
-
-    result = start('tests/unit1', wait=5)
-
-Parameters:
-
-* **unit_id** unit id
-
-Optionally:
-
-* **value** desired unit value
-* **wait** wait for the completion for the specified number of seconds
-* **uuid** action UUID (will be auto generated if none specified)
-* **priority** queue priority (default is 100, lower is better)
-
-Returns:
-
-Serialized action object (dict)
-
-.. code-block:: json
-
-    {
-        "err": "",
-        "exitcode": 0,
-        "item_group": "tests",
-        "item_id": "unit1",
-        "item_oid": "unit:tests/unit1",
-        "item_type": "unit",
-        "nstatus": 1,
-        "nvalue": null,
-        "out": "",
-        "priority": 100,
-        "status": "completed",
-        "time": {
-            "completed": 1553460599.3041146,
-            "created": 1553460599.2887182,
-            "pending": 1553460599.2889755,
-            "queued": 1553460599.289449,
-            "running": 1553460599.2897608
-        },
-        "uuid": "50e1d476-dd3e-4d8f-8316-2f2248e82676"
-    }
-
-Raises:
-
-* **FunctionFailed** action is "dead"
-* **ResourceNotFound** unit is not found
-
-
-.. _macro_api_stop:
-
-stop - stop unit
-----------------
-
-Create unit control action to set its status to 0
-
-.. code-block:: python
-
-    result = stop('tests/unit1', wait=5)
-
-Parameters:
-
-* **unit_id** unit id
-
-Optionally:
-
-* **value** desired unit value
-* **wait** wait for the completion for the specified number of seconds
-* **uuid** action UUID (will be auto generated if none specified)
-* **priority** queue priority (default is 100, lower is better)
-
-Returns:
-
-Serialized action object (dict)
-
-.. code-block:: json
-
-    {
-        "err": "",
-        "exitcode": 0,
-        "item_group": "tests",
-        "item_id": "unit1",
-        "item_oid": "unit:tests/unit1",
-        "item_type": "unit",
-        "nstatus": 0,
-        "nvalue": null,
-        "out": "",
-        "priority": 100,
-        "status": "completed",
-        "time": {
-            "completed": 1553460599.346349,
-            "created": 1553460599.3321738,
-            "pending": 1553460599.3323255,
-            "queued": 1553460599.332741,
-            "running": 1553460599.3330808
-        },
-        "uuid": "aff93ac7-78d6-497f-aa31-4eb45823c1f7"
-    }
-
-Raises:
-
-* **FunctionFailed** action is "dead"
-* **ResourceNotFound** unit is not found
 
 
 

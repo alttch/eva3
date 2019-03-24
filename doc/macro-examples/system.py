@@ -1,1 +1,1 @@
-result = system('touch /tmp/1.dat')
+r = system('touch /tmp/1.dat')

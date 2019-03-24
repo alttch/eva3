@@ -1,1 +1,1 @@
-result = status('unit:tests/unit1')
+r = status('unit:tests/unit1')

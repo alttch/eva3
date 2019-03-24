@@ -1,1 +1,1 @@
-result = lvar_status('tests/test1')
+r = lvar_status('tests/test1')

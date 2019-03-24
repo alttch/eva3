@@ -1,1 +1,1 @@
-result = ls('/opt/i/*.jpg')
+r = ls('/opt/i/*.jpg')

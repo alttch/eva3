@@ -1,1 +1,1 @@
-result = stop('tests/unit1', wait=5)
+r = stop('tests/unit1', wait=5)

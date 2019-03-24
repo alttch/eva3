@@ -1,1 +1,1 @@
-result = time()
+r = time()

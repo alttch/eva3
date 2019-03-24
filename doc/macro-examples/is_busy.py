@@ -1,1 +1,1 @@
-result = is_busy('tests/unit1')
+r = is_busy('tests/unit1')

@@ -1,1 +1,1 @@
-result = is_expired('nogroup/timer1')
+r = is_expired('nogroup/timer1')

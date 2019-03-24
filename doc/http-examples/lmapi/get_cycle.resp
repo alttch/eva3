@@ -6,12 +6,14 @@ Expires: 0
 Pragma: no-cache
 
 {
+    "avg": 1,
     "description": "",
     "full_id": "tests/test_cycle",
     "group": "tests",
     "ict": 20,
     "id": "test_cycle",
     "interval": 1,
+    "iterations": 0,
     "macro": "tests/test_macro",
     "oid": "lcycle:tests/test_cycle",
     "on_error": null,
