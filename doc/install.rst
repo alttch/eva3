@@ -26,7 +26,7 @@ System Requirements
 * EVA ICS can run on any Linux or UNIX-compatible system, but for the smooth
   install we recommend Ubuntu or Debian.
 * To sync :doc:`item</items>` status between the components in real time -
-  :ref:`MQTT<mqtt_>`-server (i.e. `mosquitto <http://mosquitto.org/>`_)
+  :ref:`MQTT<mqtt_>`-server (e.g. `mosquitto <http://mosquitto.org/>`_)
 
 .. warning::
 
