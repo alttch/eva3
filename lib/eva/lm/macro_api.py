@@ -14,6 +14,7 @@ import eva.mailer
 import eva.lm.controller
 import time
 import requests
+import json
 import threading
 import shlex
 
@@ -105,6 +106,10 @@ class MacroAPI(object):
             'ResourceAlreadyExists': ResourceBusy,
             'AccessDenied': AccessDenied,
             'InvalidParameter': InvalidParameter,
+            'requests': requests,
+            'json': json,
+            'os': os,
+            'sys': sys,
             'on': 1,
             'off': 0,
             'yes': True,
