@@ -6,7 +6,7 @@
 #fi
 
 VERSION=3.2.0
-BUILD=2019032301
+BUILD=2019032401
 
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 
@@ -69,6 +69,7 @@ echo "- Stopping everything"
 
 echo "- Installing missing modules"
 
+pip3 install -U pyaltt || exit 2
 ./_update/eva-${VERSION}/install/check-mods install || exit 2
 
 echo "- Removing obsolete files and folders"
