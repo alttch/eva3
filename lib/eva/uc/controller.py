@@ -61,7 +61,7 @@ configs_to_remove = set()
 
 custom_event_handlers = {}
 
-_benchmark_lock = threading.Lock()
+benchmark_lock = threading.Lock()
 
 with_event_handler_lock = eva.core.RLocker('uc/controller')
 with_item_lock = eva.core.RLocker('uc/controller')

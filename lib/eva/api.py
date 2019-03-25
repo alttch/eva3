@@ -640,7 +640,9 @@ class GenericAPI(object):
                 try:
                     result['benchmark_crt'] = sum(intervals) / float(
                         len(intervals))
-                except:
+                except Exception as e:
+                    logging.error('Unable to calculate CRT: {}'.format(e))
+                    eva.core.log_traceback()
                     result['benchmark_crt'] = -1
         return True, result
 
@@ -1182,6 +1184,7 @@ def error_page_405(*args, **kwargs):
 
 def error_page_404(*args, **kwargs):
     return jsonify_error(kwargs.get('message', 'Not found'))
+
 
 def error_page_409(*args, **kwargs):
     return jsonify_error(kwargs.get('message', 'Resource conflict'))
