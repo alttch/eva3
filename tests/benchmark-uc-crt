@@ -70,13 +70,13 @@ api_call('load_phi', {
 })
 
 api_call(
-    'set_driver', {
+    'assign_driver', {
         'i': 'unit:eva_benchmarks/eva_benchmark_unit',
         'd': 'eva_benchmark_vr.default',
         'c': 'port=1'
     })
 api_call(
-    'set_driver', {
+    'assign_driver', {
         'i': 'sensor:eva_benchmarks/eva_benchmark_sensor',
         'd': 'eva_benchmark_vs.default',
         'c': 'port=1000'
@@ -91,7 +91,7 @@ code, result = api_call('test_phi', {
     'c': 'start_benchmark'
 })
 
-if result != 'OK':
+if result.get('output') != 'OK':
     print('Unable to register benchmark core handlers')
     sys.exit(2)
 
