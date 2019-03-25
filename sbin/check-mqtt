@@ -8,6 +8,9 @@ __version__ = "3.2.0"
 import sys
 import os
 import argparse
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
@@ -15,6 +18,7 @@ sys.path.append(dir_lib)
 import eva.core
 import eva.tools
 import eva.notify
+import eva.api
 
 _me = 'EVA ICS MQTT test version %s' % __version__
 
@@ -37,12 +41,15 @@ if not a._mqtt:
     ap.print_usage()
     sys.exit(99)
 
-try:
-    mqa, mq = a._mqtt.split('@')
-    user, password = mqa.split(':')
-except:
-    ap.print_usage()
-    sys.exit(99)
+if a._mqtt.find('@') != -1:
+    try:
+        mqa, mq = a._mqtt.split('@')
+        user, password = mqa.split(':')
+    except:
+        ap.print_usage()
+        sys.exit(99)
+else:
+    mq, user, password = a._mqtt, None, None
 
 if mq.find('/') != -1:
     try:
@@ -55,7 +62,7 @@ if mq.find('/') != -1:
 else:
     space = None
 
-mqtt_host, mqtt_port = eva.tools.parse_host_port(mq, 1183)
+mqtt_host, mqtt_port = eva.tools.parse_host_port(mq, 1883)
 
 n = eva.notify.MQTTNotifier(
     notifier_id='test',
