@@ -363,7 +363,8 @@ below:
     # import i2c locker module
     import eva.uc.i2cbus
 
-    def __init__(self, phi_cfg=None, info_only=False):
+    @phi_constructor
+    def __init__(self, **kwargs):
         # code
         try:
             self.smbus2 = importlib.import_module('smbus2')
@@ -396,7 +397,8 @@ module.
     # everything you need is just import module
     import eva.uc.modbus as modbus
 
-    def __init__(self, phi_cfg=None, info_only=False):
+    @phi_constructor
+    def __init__(self, **kwargs):
         # ....
         # it's recommended to force aao_get in ModBus PHI to let it read states
         # with one modbus request
@@ -472,7 +474,8 @@ value*).
     # everything you need is just import module
     import eva.uc.owfs as owfs
 
-    def __init__(self, phi_cfg=None, info_only=False):
+    @phi_constructor
+    def __init__(self, **kwargs):
         # ....
         # it's recommended to force aao_get in ModBus PHI to let it read states
         # with one modbus request
@@ -537,7 +540,8 @@ Let's deal with an equipment which has MQTT topic *topic/POWER* with values
     # and a function to handle events
     from eva.uc.driverapi import handle_phi_event
 
-    def __init__(self, phi_cfg=None, info_only=False):
+    @phi_constructor
+    def __init__(self, **kwargs):
     # ....
     self.topic = self.phi_cfg.get('t')
     self.mqtt = MQTT(self.phi_cfg.get('n'))
@@ -599,7 +603,8 @@ managed by handler).
 
     import eva.udpapi as udp
 
-    def __init__(self, phi_cfg=None, info_only=False):
+    @phi_constructor
+    def __init__(self, **kwargs):
     # ....
 
     def start(self):
