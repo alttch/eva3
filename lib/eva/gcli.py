@@ -8,6 +8,7 @@ import readline
 import argparse
 import json
 import shlex
+import threading
 from pygments import highlight, lexers, formatters
 from pyaltt import background_job
 
@@ -66,6 +67,7 @@ class GCLI(object):
         self.prog_name = prog
         self.interactive = False
         self.pd = None
+        self.pd_lock = threading.Lock()
         self.argcomplete = None
         self.parse_primary_args()
 
@@ -313,9 +315,11 @@ class GCLI(object):
 
     def import_pandas(self):
         if not self.pd:
+            self.pd_lock.acquire()
             self.pd = importlib.import_module('pandas')
             self.pd.set_option('display.expand_frame_repr', False)
             self.pd.options.display.max_colwidth = 100
+            self.pd_lock.release()
 
     def call(self, args=[]):
         _args = args if isinstance(args, list) else shlex.split(args)

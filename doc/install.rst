@@ -38,7 +38,7 @@ System Requirements
     expected with:
 
         * **pandas** (python3-pandas)
-        * **pysnmp** (python3-pysnmp4)
+        * **pysnmp** (python3-pysnmp4), version 4.4.x+ required
         * **cryptography** (python3-cryptography)
 
 Initial setup
