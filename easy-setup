@@ -879,7 +879,7 @@ EOF
             exit 5
         fi
         if [ $CLOUDMANAGER -eq 1 ]; then
-          SNAME=uc/`./sbin/eva-tinyapi -C lm -F test|jq -Mr .system`
+          SNAME=lm/`./sbin/eva-tinyapi -C lm -F test|jq -Mr .system`
           ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
               i=${SNAME} p=masterkey v=\$masterkey save=1 > /dev/null 2>&1
           if [ $? != 0 ]; then
