@@ -459,9 +459,12 @@ class Cycle(eva.item.Item):
             d['status'] = self.cycle_status
             avg = (self.tc / self.c if self.c else self.interval)
             itr = self.iterations
-            d['avg'] = int(avg*10000)/10000.0
+            d['avg'] = int(avg*10000)/10000.0 if avg is not None else None
             d['iterations'] = itr
-            d['value'] = '{},{:.4f},'.format(itr, avg)
+            if avg is None:
+                d['value'] = None
+            else:
+                d['value'] = '{},{:.4f},'.format(itr, avg)
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
@@ -469,3 +472,11 @@ class Cycle(eva.item.Item):
         if config or props:
             d['autostart'] = self.autostart
         return d
+
+    def destroy(self):
+        super().destroy()
+        self.c = None
+        self.interval = None
+        self.iterations = None
+        self.cycle_status = None
+        self.notify()

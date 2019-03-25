@@ -188,9 +188,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 d['id'] = d['full_id']
             if api_func == 'list_cycles':
                 d['int'] = d['interval']
-                v = d['value'].split(',')
-                d['iter'] = v[0]
-                d['avg'] = '{:.4f}'.format(float(v[1]))
+                d['iter'] = d['iterations']
                 d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             elif itype == 'state':
                 try:

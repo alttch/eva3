@@ -640,6 +640,32 @@ Logic cycles
 
 
 
+.. _sfapi_get_cycle:
+
+get_cycle - get cycle information
+---------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/get_cycle.req
+    :response: http-examples/sfapi/get_cycle.resp
+
+Parameters:
+
+* **k** 
+* **i** cycle id
+
+Returns:
+
+field "value" contains real average cycle interval
+
+**RESTful:**
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/get_cycle.rest
+    :response: http-examples/sfapi/get_cycle.resp-rest
+
 .. _sfapi_groups_cycle:
 
 groups_cycle - get cycle groups list

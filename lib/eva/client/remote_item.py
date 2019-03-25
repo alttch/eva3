@@ -219,12 +219,24 @@ class RemoteCycle(RemoteUpdatableItem):
     def __init__(self, remote_lm, state):
         super().__init__('lcycle', remote_lm, state)
         self.mqtt_update_topics.append('interval')
+        self.mqtt_update_topics.append('iterations')
+        self.mqtt_update_topics.append('avg')
 
     def update_config(self, cfg):
         super().update_config(cfg)
         if 'interval' in cfg:
             try:
                 self.interval = float(cfg['interval'])
+            except:
+                eva.core.log_traceback()
+        if 'interval' in cfg:
+            try:
+                self.iterations = int(cfg['interval'])
+            except:
+                eva.core.log_traceback()
+        if 'avg' in cfg:
+            try:
+                self.avg = int(cfg['avg'])
             except:
                 eva.core.log_traceback()
 
@@ -238,6 +250,8 @@ class RemoteCycle(RemoteUpdatableItem):
             full=full, config=config, info=info, props=props, notify=notify)
         d['controller_id'] = self.controller.full_id
         d['interval'] = self.interval
+        d['iterations'] = self.iterations
+        d['avg'] = self.avg
         return d
 
     def notify(self, retain=None, skip_subscribed_mqtt=False):
@@ -248,6 +262,18 @@ class RemoteCycle(RemoteUpdatableItem):
         if topic.endswith('/interval'):
             try:
                 self.interval = float(data)
+                self.notify()
+            except:
+                eva.core.log_traceback()
+        elif topic.endswith('/iterations'):
+            try:
+                self.iterations = int(data)
+                self.notify()
+            except:
+                eva.core.log_traceback()
+        elif topic.endswith('/avg'):
+            try:
+                self.avg = float(data)
                 self.notify()
             except:
                 eva.core.log_traceback()

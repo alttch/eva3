@@ -648,6 +648,24 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return sorted(result, key=lambda k: k['id'])
 
     @log_d
+    def get_cycle(self, **kwargs):
+        """
+        get cycle information
+
+        Args:
+            k:
+            .i: cycle id
+
+        Returns:
+            field "value" contains real average cycle interval
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.S')
+        item = eva.sfa.controller.lm_pool.cycles.get(
+            oid_to_id(i, required='lcycle'))
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        return item.serialize(full=True)
+
+    @log_d
     def groups_cycle(self, **kwargs):
         """
         get cycle groups list
