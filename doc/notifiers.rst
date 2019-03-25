@@ -12,8 +12,8 @@ Each event includes the following data:
 
 * **Event subject** (not to be confused with :ref:`MQTT<mqtt_>` subject)
 * **Notification space** May be used to divide the controlled structure into
-  sectors, e. g. city1/office1, plant1 etc. By dividing spaces you can separate
-  one EVA installation from another using the same notification server, e. g. to
+  sectors, e.g. city1/office1, plant1 etc. By dividing spaces you can separate
+  one EVA installation from another using the same notification server, e.g. to
   create your own multi-control and multi-monitoring systems.
 * **Event data** (usually JSON dict with) data on what's actually happened
 
@@ -31,7 +31,7 @@ The event notifications with the "state" subject are sent by :doc:`/uc/uc` and
 
 Notification sends data similar to those, one can get using :doc:`/uc/uc_api`
 or :doc:`/lm/lm_api` state.  There is one difference for a
-:ref:`sensors:<sensor>`: s ensor with error status (status = -1) does not send
+:ref:`sensors:<sensor>`: sensor with error status (status = -1) does not send
 its value data until the value is null. This was done specifically for the
 logic components to work correctly with the old value until the sensor
 status data is updated correctly and the sensor is back online or until the
@@ -70,8 +70,8 @@ When the system or you add record to the logs, the notification system sends
 * **LEVEL** 10 - DEBUG, 20 - INFO, 30 - WARNING, 40 - ERROR or 50 for CRITICAL
 * **PRODUCT_CODE** "uc" for :doc:`/uc/uc`, "lm" for :doc:`/lm/lm`, "sfa" for
   :doc:`/sfa/sfa`
-* **MODULE** a specific system module, e. g. 'unit'
-* **MODULE_THREAD** the module thread, e. g. "_t_action_processor_lamp1"
+* **MODULE** a specific system module, e.g. 'unit'
+* **MODULE_THREAD** the module thread, e.g. "_t_action_processor_lamp1"
 
 Important: the system does not send the log records related to the notification
 system itself. They are not visible via EI interfaces and are written
@@ -123,7 +123,7 @@ Option *"-y"* enables the notification configuration right after creation (by
 default all notifiers are created as disabled)
 
 The notifier configuration params may be viewed with *props* and changed with
-*set* notifier cli commands. To apply the changes you must restart the
+*set* notifier CLI commands. To apply the changes you must restart the
 controller.
 
 Except for endpoint configuration, notifiers have some additional params:
@@ -186,7 +186,7 @@ To unsubscribe the notifier from the subject, run:
 
     uc-notifier unsubscribe [subject] <notifier_id>
 
-if the subject is not specified, the notifier will be unsubscribed from all
+If the subject is not specified, the notifier will be unsubscribed from all
 notification subjects.
 
 The controller should be restarted to apply the new subscriptions
@@ -349,7 +349,7 @@ ICS nodes via MQTT instead of HTTP:
 * **announce_interval** if greater than zero, controller will announce itself
   with a chosen interval (in seconds) via MQTT to other cloud members.
 * **api_enabled** allows controller to execute API calls from other cloud
-  members viA MQTT.
+  members via MQTT.
 * **discovery enabled** controller will connect other nodes in cloud as soon as
   discover them.
 
@@ -382,11 +382,20 @@ called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically.
 
 History database format is `sqlite3 <https://www.sqlite.org/index.html>`_.
 
+EVA ICS db notifiers work via `SQL Alchemy <https://www.sqlalchemy.org/>`_, so
+MySQL and PosgreSQL data storage is also supported.
+
+E.g. to use MySQL, specify db uri as:
+
+    mysql+pymysql://username:password@host/database
+
+(pymysql Python module is required)
+
 HTTP Notifiers
 ==============
 
-JSON (json)
------------
+JSON
+----
 
 HTTP notifications (aka web hooks) can be transferred to servers which, for
 some reasons, cannot work with MQTT in real time, e.g. servers containing
@@ -403,13 +412,13 @@ successfully:
 
 .. code-block:: json
 
-    { "ok" : True }
+    { "ok" : true }
 
 or if your app failed to process it:
 
 .. code-block:: json
 
-    { "ok" : False }
+    { "ok" : false }
 
 or with HTTP status 202 (Accepted).
 
@@ -420,7 +429,62 @@ When EVA controllers test remote http-json endpoint, they send notifications
 with subject="test" and the remote app should always respond with { "ok": True
 } and HTTP status 200 (OK).
 
-If method is set, JSON RPC 2.0 call is performed. For JSON RPC, errors must be
-specified in "error" field of the response. For successful calls, the "result"
-field in response may contain any data.
+Example of custom notification processing server with Python and `Flask
+<http://flask.pocoo.org/>`_:
+
+.. code-block:: python
+
+    from flask import Flask, app, request, jsonify
+
+    app = Flask(__name__)
+
+    @app.route('/json', methods=['POST'])
+    def j():
+        data = request.json
+        # process notification request
+        return jsonify({'ok': True})
+
+
+JSON RPC
+--------
+
+If **method** is set, JSON RPC 2.0 call is performed. For JSON RPC, errors must
+be specified in "error" field of the response. For successful calls, the
+"result" field in response may contain any data.
+
+Example:
+
+.. code-block:: python
+
+    from flask import Flask, app, jsonify, request, abort, Response
+
+    app = Flask(__name__)
+
+    @app.route('/jsonrpc', methods=['POST'])
+    def jrpc():
+        payload = request.json
+        result = []
+        for p in payload if isinstance(payload, list) else [payload]:
+            if p.get('jsonrpc') != '2.0': abort(400)
+            r = None
+            if p.get('method') == 'notify':
+                data = p.get('params')
+                # process data
+                i = p.get('id')
+                if i:
+                    r = { "jsonrpc": "2.0", "result": { "ok": True }, "id": i}
+            else:
+                i = p.get('id')
+                if i:
+                    r = { "jsonrpc": "2.0", "error":
+                            { "code": 404, "message": "method not found" },
+                            "id": i}
+            if not isinstance(payload, list):
+                result = r
+            else:
+                result.append(r)
+        if result:
+            return jsonify(result)
+        else:
+            return Response(None, 202)
 
