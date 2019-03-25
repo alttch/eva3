@@ -22,6 +22,8 @@ echo $$ > ${PIDFILE}
 
 while [ 1 ]; do
     sleep ${WATCHDOG_INTERVAL}
+    find ./var/${CONTROLLER}_reload -mmin +5 -exec rm -f {} \; > /dev/null 2>&1
+    [ -f ./var/${CONTROLLER}.reload ] && continue
     ./sbin/eva-tinyapi -C ${CONTROLLER} -F test -T ${WATCHDOG_MAX_TIMEOUT} > /dev/null 2>&1
     if [ $? != 0 ]; then
         echo "${PROCESS} not responding, sending restart"

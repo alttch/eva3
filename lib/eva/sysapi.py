@@ -1002,6 +1002,8 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             k: .master
         """
         parse_api_params(kwargs)
+        os.system('touch {}/{}_reload'.format(eva.core.dir_var,
+                                              eva.core.product_code))
         background_job(eva.core.sighandler_term)()
         return True, api_result_accepted
 
