@@ -1022,7 +1022,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     raise Exception('API call failed, code {}'.format(code))
         # ===== ITEM AND MACRO CREATION =====
         for tp in ['unit', 'sensor', 'lvar', 'lmacro', 'lcycle']:
-            print(f'Creating {tp}s...')
+            print('Creating {}s...'.format(tp))
             for i, v in cfg.get(tp, {}).items():
                 c = v.get('controller')
                 print(' -- {}: {}:{}'.format(c, tp, i))
@@ -1112,7 +1112,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                     'File set exec failed, API code {}'.format(
                                         code))
         # ===== RULE CREATION =====
-        print(f'Creating decision rules...')
+        print('Creating decision rules...')
         for i, v in cfg.get('dmatrix_rule', {}).items():
             c = v.get('controller')
             print(' -- {}: {}'.format(c, i))
@@ -1133,7 +1133,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
     def _perform_undeploy(self, props, cfg, macall, del_files=False):
         from eva.client import apiclient
         # ===== RULE DELETION =====
-        print(f'Deleting decision rules...')
+        print('Deleting decision rules...')
         for i, v in cfg.get('dmatrix_rule', {}).items():
             c = v.get('controller')
             print(' -- {}: {}'.format(c, i))
@@ -1150,7 +1150,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 raise Exception('API call failed, code {}'.format(code))
         # ===== ITEM AND MACRO DELETION =====
         for tp in ['lcycle', 'lmacro', 'lvar', 'sensor', 'unit']:
-            print(f'Deleting {tp}s...')
+            print('Deleting {}s...'.format(tp))
             for i, v in cfg.get(tp, {}).items():
                 c = v.get('controller')
                 print(' -- {}: {}:{}'.format(c, tp, i))

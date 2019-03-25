@@ -40,3 +40,9 @@ Before applying this update
     * eva_sfa_result
     * eva_sfa_run
     * eva_sfa_state_history
+
+* if update script fails to install new modules, update existing manually,
+  modules with known issues and update commands:
+
+    * pip3 install -U pyasn1
+
