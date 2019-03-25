@@ -40,12 +40,12 @@ data is expired.
 action - unit and macro action events
 -------------------------------------
 
-Every time the :ref:`unit<unit>` :ref:`action<uc_action>` or :doc:`macro
+Every time the :ref:`unit<unit>` :ref:`action<ucapi_action>` or :doc:`macro
 action</lm/macros>` changes its :ref:`status<uc_queues>`, the notification
 server receives "action" event notification.
 
 Notification sends data similar to ones that can be obtained using UC API
-:ref:`result<uc_result>` command.
+:ref:`result<ucapi_result>` command.
 
 log - logged event
 ------------------
@@ -337,6 +337,30 @@ action uuid and further monitor it.
 To let unit responding to MQTT control messages, set its configuration param
 **mqtt_control** to the local MQTT ID. You may specify QoS as well via
 semicolon, similarly as for **mqtt_update**.
+
+.. _mqtt_cloud:
+
+IoT Cloud setup
+---------------
+
+Special properties of MQTT notifiers allow to set up a cloud and connect EVA
+ICS nodes via MQTT instead of HTTP:
+
+* **announce_interval** if greater than zero, controller will announce itself
+  with a chosen interval (in seconds) via MQTT to other cloud members.
+* **api_enabled** allows controller to execute API calls from other cloud
+  members viA MQTT.
+* **discovery enabled** controller will connect other nodes in cloud as soon as
+  discover them.
+
+To use auto discovery feature, API key named *default* must be present and
+equal on all nodes.
+
+API calls via MQTT are encrypted with AES-128-CBC, this allows to use any 3rd
+party MQTT servers without any risk.
+
+Optionally, controller can be a member of different clouds via different MQTT
+notifiers.
 
 DB Notifiers
 ============

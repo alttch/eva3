@@ -516,7 +516,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         get macro list
 
-        Get the list of all available :doc:`macros<macros>`.
+        Get the list of all available :doc:`macros</lm/macros>`.
 
         Args:
             k:
@@ -576,7 +576,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         execute macro
 
-        Execute a :doc:`macro<macros>` with the specified arguments.
+        Execute a :doc:`macro</lm/macros>` with the specified arguments.
 
         Args:
             k:
@@ -609,7 +609,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         get cycle list
 
-        Get the list of all available :doc:`cycles<cycles>`.
+        Get the list of all available :doc:`cycles</lm/cycles>`.
 
         Args:
             k:
@@ -1188,7 +1188,7 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     env['request'] = cherrypy.serving.request.params
     k = cp_client_key()
     if k:
-        server_info = api.test(k=k)
+        server_info = api.test(k=k)[1]
     else:
         server_info = {}
     server_info['remote_ip'] = http_real_ip()

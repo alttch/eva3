@@ -124,7 +124,7 @@ controller. If LM PLC fails to get the item list during loading, it will use
 the existing one.
 
 To control the list of the received items you can use *lm-cmd* or
-:doc:`/lm/lm_api` function :ref:`list_remote<lm_list_remote>`:
+:doc:`/lm/lm_api` function :ref:`list_remote<lmapi_list_remote>`:
 
 .. code-block:: bash
 
@@ -148,13 +148,13 @@ while LM PLC is running:
   */uc-api/*)
 
 Parameters are displayed with **lm-cmd** command or :doc:`/lm/lm`
-:ref:`list_controller_props<lm_list_controller_props>` function, modified with
-:ref:`set_controller_prop<lm_set_controller_prop>`. Function
-:ref:`list_controllers<lm_list_controllers>` displays the list of all connected
-controllers.
+:ref:`list_controller_props<lmapi_list_controller_props>` function, modified
+with :ref:`set_controller_prop<lmapi_set_controller_prop>`. Function
+:ref:`list_controllers<lmapi_list_controllers>` displays the list of all
+connected controllers.
 
 To remove the connected controller use
-:ref:`remove_controller<lm_remove_controller>` function.
+:ref:`remove_controller<lmapi_remove_controller>` function.
 
 When managing the connected controllers, ID can be either the controller ID
 only or the full ID in the following format: *controller_type/ID* (i.e.
@@ -167,8 +167,9 @@ Prior to execution, the :doc:`macros<macros>` are put into global queue. The
 macros are executed progressively without waiting for the completion of the
 previous macro. The queue is used for reporting only and reserved for some
 internal functions. If a macro is required to block execution of the other
-ones, one should use :ref:`lock<m_lock>` and :ref:`unlock<m_unlock>` macro
-functions operating similarly to :ref:`SYS API locking<sysapi_lock>`.
+ones, one should use :ref:`lock<macro_api_lock>` and
+:ref:`unlock<macro_api_unlock>` macro functions operating similarly to
+:ref:`SYS API locking<sysapi_lock>`.
 
 The status of the macro in queue is similar to the status of the :ref:`Universal
 Controller actions<uc_queues>`.

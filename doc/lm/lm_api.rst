@@ -441,7 +441,7 @@ complete :ref:`lvar<lvar>` configuration.
 list_props - list lvar properties
 ---------------------------------
 
-Get all editable parameters of the :ref:`lvar</var>` confiugration.
+Get all editable parameters of the :ref:`lvar<lvar>` confiugration.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/list_props.req

@@ -845,7 +845,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         list lvar properties
 
-        Get all editable parameters of the :ref:`lvar</var>` confiugration.
+        Get all editable parameters of the :ref:`lvar<lvar>` confiugration.
 
         Args:
             k: .master

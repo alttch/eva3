@@ -173,9 +173,9 @@ quickly, this option would be the best one.
 * To avoid the continuous running of macro, use the rule prop
   **chillout_time**. Or even
 
-* Use :ref:`unit_status<m_unit_status>` macro function to get the current
-  ventilation status and use macro :ref:`lock<m_lock>` function to block its
-  changing too often e.g. for 5 minutes
+* Use :ref:`unit_status<macro_api_unit_status>` macro function to get the
+  current ventilation status and use macro :ref:`lock<macro_api_lock>` function
+  to block its changing too often e.g. for 5 minutes
 
 The macro code will look like:
 
@@ -215,7 +215,7 @@ in the following way:
     start('ventilation/vi') 
     unlock('ventilation-example3')
 
-Not bad, but we loose an ability to exec the :ref:`actions<uc_action>` with
+Not bad, but we loose an ability to exec the :ref:`actions<ucapi_action>` with
 **w** param and get the correct completion status.
 
 **Option 5**

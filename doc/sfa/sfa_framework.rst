@@ -297,7 +297,7 @@ where:
   **type:group/item_id**, i.e. *sensor:env/temperature/temp1*, or multiple
   items comma separated
 * **params** dict with history formatting params equal to SFA API function
-  :ref:`state_history<sfa_state_history>`.
+  :ref:`state_history<sfapi_state_history>`.
 
 eva_sfa_groups
 --------------
@@ -365,10 +365,10 @@ To execute :doc:`macro</lm/macros>`, call the function:
     eva_sfa_run(macro_id, params, cb_success, cb_error);
 
 where **macro_id** - macro id (in a full format, *group/macro_id*) to execute,
-**params** - object containing paramterers equal to LM API :ref:`run<lm_run>`
-function, and **cb_success**, **cb_error** - functions called when the access
-to API has either succeeded or failed. The functions are called with **data**
-param which contains the API response.
+**params** - object containing paramterers equal to LM API
+:ref:`run<lmapi_run>` function, and **cb_success**, **cb_error** - functions
+called when the access to API has either succeeded or failed. The functions are
+called with **data** param which contains the API response.
 
 eva_sfa_action
 --------------
@@ -380,7 +380,7 @@ To run the :ref:`unit<unit>` action, call the function:
     eva_sfa_action(unit_id, params, cb_success, cb_error);
 
 Where unit_id - full unit id (*group/id*), **params** - object containing
-parameters, equal to UC API :ref:`action<uc_action>`, and **cb_success**,
+parameters, equal to UC API :ref:`action<ucapi_action>`, and **cb_success**,
 **cb_error** - functions called when the access to API has either succeeded or
 failed. The functions are called with **data** param which contains the API
 response.
@@ -978,7 +978,7 @@ Common problems which may arise:
 * SFA server reboot and loss of session data.
 * Breaking the WebSocket connection due to frontend reboot or another reason.
 
-To control the session, SFA Framework requests SFA API :ref:`test<sfa_test>`
+To control the session, SFA Framework requests SFA API :ref:`test<sfapi_test>`
 every **eva_sfa_heartbeat_interval** (*5* seconds by default). WebSocket is
 additionally controlled by the framework using { 's': 'ping' } packet, whereto
 the server should send a response { 's': 'pong' }. If there is no response

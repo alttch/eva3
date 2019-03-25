@@ -53,8 +53,8 @@ where:
 
 * **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
-The function is similar to SFA API :ref:`groups<sfa_groups>` except that if API
-key is not specified, the current key is used.
+The function is similar to SFA API :ref:`groups<sfapi_groups>` except that if
+API key is not specified, the current key is used.
 
 state
 -----
@@ -76,6 +76,6 @@ where:
 
 * **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
 
-The function is similar to SFA API :ref:`state<sfa_state>` except that if API
+The function is similar to SFA API :ref:`state<sfapi_state>` except that if API
 key is not specified, the current key is used.
 

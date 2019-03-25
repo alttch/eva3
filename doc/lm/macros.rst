@@ -24,7 +24,7 @@ Executing macros
 ================
 
 To execute a macro, use **macro run** command of :doc:`lm-cmd</cli>` or LM API
-:ref:`run<lm_run>` function.
+:ref:`run<lmapi_run>` function.
 
 Debugging macros
 ================
@@ -43,12 +43,12 @@ Macros configuration
 ====================
 
 After the macro code is placed into *xc/lm/<macro_id>.py* file, it should be
-appended to the controller using :ref:`create_macro<lm_create_macro>` LM API
+appended to the controller using :ref:`create_macro<lmapi_create_macro>` LM API
 function or with **lm-cmd**.
 
 After the macro configuration is created, you may view its params using
-:ref:`list_macro_props<lm_list_macro_props>` and change them with
-:ref:`set_macro_prop<lm_set_macro_prop>`.
+:ref:`list_macro_props<lmapi_list_macro_props>` and change them with
+:ref:`set_macro_prop<lmapi_set_macro_prop>`.
 
 Parameters:
 
@@ -71,8 +71,8 @@ Common principles of macros operation
 Macros are launched simultaneously: system does not wait for the completion of
 the macro and launches its next copy or another macro in parallel. If you want
 only one copy of macro to operate at the certain point of time or to block
-execution of other macros, use macro :ref:`lock<m_lock>` and
-:ref:`unlock<m_unlock>` functions.
+execution of other macros, use macro :ref:`lock<macro_api_lock>` and
+:ref:`unlock<macro_api_unlock>` functions.
 
 The system architecture does not provide the possibility to stop macro from
 outside, that is why macros should have minimum internal logic and cycles.
@@ -93,7 +93,7 @@ some initial :doc:`decision-making rules<decision_matrix>` may call assigned
 macros, or some events may be handled before. In case a macro is launched later
 than :ref:`logic variables<lvar>` or other loadable items update their status
 (e. g. due to slow connection with :ref:`MQTT server<mqtt_>`) it's recommended
-to use :ref:`sleep<m_sleep>` function to do a small delay.
+to use :ref:`sleep<macro_api_sleep>` function to do a small delay.
 
 Macros from **system** group are considered as the local system macros and
 aren't synchronized to :doc:`SFA</sfa/sfa>`.
@@ -126,8 +126,8 @@ edited only by system administrator.
 
 If access permissions to individual macros are configured via API keys, you
 should take into account the following: if a macro runs other macros using
-:ref:`run<m_run>` function, these macros will be executed even if the API key
-allows to run only the initial macro.
+:ref:`run<macro_api_run>` function, these macros will be executed even if the
+API key allows to run only the initial macro.
 
 Macros built-ins
 ================
@@ -193,6 +193,27 @@ pre-imported:
 General functions
 =================
 
+
+
+.. _macro_api_alias:
+
+alias - create object alias
+---------------------------
+
+
+
+.. code-block:: python
+
+    alias('rpush', 'roboger_local_push')
+
+Parameters:
+
+* **alias_obj** alias object
+* **src_obj** source object
+
+Returns:
+
+True if alias is set. Doesn't raise any exceptions, safe to use in common files
 
 
 .. _macro_api_cmd:
@@ -272,7 +293,7 @@ ls - list files in directory
 
 Parameters:
 
-* **mask** path and mask (e.g. /opt/data/*.jpg)
+* **mask** path and mask (e.g. /opt/data/\*.jpg)
 
 Returns:
 
@@ -332,7 +353,7 @@ open_newest - open newest file by mask
 
 Parameters:
 
-* **mask** path and mask (e.g. /opt/data/*.jpg)
+* **mask** path and mask (e.g. /opt/data/\*.jpg)
 
 Optionally:
 
@@ -363,7 +384,7 @@ open_oldest - open oldest file by mask
 
 Parameters:
 
-* **mask** path and mask (e.g. /opt/data/*.jpg)
+* **mask** path and mask (e.g. /opt/data/\*.jpg)
 
 Optionally:
 
@@ -482,6 +503,27 @@ Optionally:
 Returns:
 
 variable value, None (or default) if variable doesn't exist
+
+
+.. _macro_api_sleep:
+
+sleep - pause operations
+------------------------
+
+Unlike standard time.sleep(...), breaks pause when shutdown event is received.
+
+.. code-block:: python
+
+    sleep(0.1)
+
+Parameters:
+
+* **t** number of seconds to sleep
+* **safe** break on shutdown event (default is True)
+
+Returns:
+
+True if sleep is finished, False if shutdown event is received
 
 
 .. _macro_api_system:
@@ -1561,12 +1603,14 @@ dict with cycle information
 .. code-block:: json
 
     {
+        "avg": 0.01,
         "description": "",
         "full_id": "tests/cycle1",
         "group": "tests",
         "ict": 20,
         "id": "cycle1",
         "interval": 0.01,
+        "iterations": 0,
         "macro": "tests/test",
         "oid": "lcycle:tests/cycle1",
         "on_error": null,

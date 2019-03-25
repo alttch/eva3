@@ -98,7 +98,7 @@ maximally synchronize the system time between LM PLC and SFA, if LM PLC
 controllers are set up on the remote servers.
 
 To connect the controllers you should use **sfa-cmd** :doc:`console
-command</cli>` or SFA API :ref:`append_controller<sfa_append_controller>`
+command</cli>` or SFA API :ref:`append_controller<sfapi_append_controller>`
 function.
 
 When connecting, it is necessary to indicate minimum URI of the connected
@@ -129,7 +129,7 @@ controller. If SFA fails to get the item list during loading, it will use the
 existing one.
 
 To control the list of the received items you can use *sfa-cmd* or
-:doc:`/sfa/sfa_api` function :ref:`list_remote<sfa_list_remote>`:
+:doc:`/sfa/sfa_api` function :ref:`list_remote<sfapi_list_remote>`:
 
 .. code-block:: bash
 
@@ -164,13 +164,13 @@ while SFA is running:
   */uc-api/* or */lm-api/*)
 
 Parameters are displayed with **sfa-cmd** command or :doc:`/sfa/sfa`
-:ref:`list_controller_props<sfa_list_controller_props>` function, modified with
-:ref:`set_controller_prop<sfa_set_controller_prop>`. Function
-:ref:`list_controllers<sfa_list_controllers>` displays the list of all connected
-controllers.
+:ref:`list_controller_props<sfapi_list_controller_props>` function, modified
+with :ref:`set_controller_prop<sfapi_set_controller_prop>`. Function
+:ref:`list_controllers<sfapi_list_controllers>` displays the list of all
+connected controllers.
 
 To remove the connected controller use
-:ref:`remove_controller<sfa_remove_controller>` function.
+:ref:`remove_controller<sfapi_remove_controller>` function.
 
 When managing the connected controllers, ID should be always provided in the
 full format: *controller_type/ID* (i.e.  *uc/controller1*).

@@ -122,7 +122,7 @@ completed independently with 0 code, failed - if the code differs from 0.
 
 The script or program can display anything on stdout/stderr. This data, as well
 as the exit code, will be recorded in "out" and "err" fields of the
-:ref:`result<uc_result>` dict.
+:ref:`result<ucapi_result>` dict.
 
 Sometimes it is useful to catch SIGTERM in the script/program, e.g. if you
 operate a motor that must be stopped after the script gets a termination
@@ -248,7 +248,7 @@ Commands
 Commands are used if you need to run some commands remotely on the server where
 EVA controller is installed. Commands are executed with :doc:`controller cli
 tools</cli>`, with SYS API function :`ref`:`cmd<cmd>` or with :ref:`macro
-function<m_cmd>`.
+function<macro_api_cmd>`.
 
 For command scripts:
 

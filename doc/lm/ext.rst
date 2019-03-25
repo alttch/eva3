@@ -60,7 +60,7 @@ times and have different functionality according to specified configuration
 without need to configure module/class params in macros.
 
 If you want to make a short alias for extension function, use
-:ref:`alias<m_alias>` (e.g. in *xc/lm/common.py*):
+:ref:`alias<macro_api_alias>` (e.g. in *xc/lm/common.py*):
 
 .. code-block:: python
 

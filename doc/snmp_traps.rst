@@ -20,7 +20,7 @@ only the relevant ones.
 
 Currently EVA works with SNMP OIDs only - all snmp variables should be created
 in this format. To change **snmp_trap** variable and its child elements you may
-use *uc-cmd* :doc:`console app</cli>` or UC API :ref:`set_prop<uc_set_prop>`
+use *uc-cmd* :doc:`console app</cli>` or UC API :ref:`set_prop<ucapi_set_prop>`
 function. In this tutorial we'll configure SNMP-traps handler with *uc-cmd*. 
 
 ident_vars - identifying the trap

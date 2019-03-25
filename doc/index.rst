@@ -51,8 +51,8 @@ What you get with EVA
   organized, queued and safely executed with :doc:`/uc/uc`
 * easily collect data from the hardware using :ref:`MQTT<mqtt_>` or :doc:`SNMP
   traps</snmp_traps>` with the built-in SNMP trap handler server
-* collect data from your microcontrollers with a simple :ref:`UDP
-  API<uc_udp_api>`
+* collect data from your microcontrollers with a simple :doc:`UDP
+  API</uc/uc_udp_api>`
 * test and monitor the initial setup with controllers' EI web interfaces
 * exchange all automation data between multiple servers with EVA controllers
   and your own apps via :ref:`MQTT<mqtt_>` server or :doc:`HTTP
@@ -65,6 +65,7 @@ What you get with EVA
 * :doc:`/api_clients` to quickly connect controllers' API to your apps
 * develop a modern real-time websocket-powered SCADA web applications with
   :doc:`/sfa/sfa_framework`
+* set up IoT cloud with nodes connected via :ref:`MQTT<mqtt_cloud>`
 * and much more
 
 .. toctree::
@@ -120,6 +121,7 @@ What you get with EVA
 
     sysapi
     uc/uc_api
+    uc/uc_udp_api
     lm/lm_api
     sfa/sfa_api
     api_clients

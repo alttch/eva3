@@ -63,7 +63,7 @@ Installing local MQTT server
 ----------------------------
 
 If you plan to use local MQTT server, here is an example how to install
-`mosquitto <https://mosquitto.org/>`_ MQTT server on Debian-based Linux (i.e.
+`mosquitto`_ MQTT server on Debian-based Linux (i.e.
 Ubuntu):
 
 .. code-block:: bash

@@ -151,10 +151,10 @@ Common API security recommendations
 -----------------------------------
 
 If server is present in several VLANs, make sure that API listens only on
-Supervisory network address. If you do not use :ref:`UDP API<uc_udp_api>` or
-:doc:`SNMP traps</snmp_traps>` in :doc:`/uc/uc`, disable them in the controller
-configuration. Do not enable the remote file control function unless it's
-necessary for external apps.
+Supervisory network address. If you do not use :doc:`UDP API</uc/uc_udp_api>`
+or :doc:`SNMP traps</snmp_traps>` in :doc:`/uc/uc`, disable them in the
+controller configuration. Do not enable the remote file control function unless
+it's necessary for external apps.
 
 Developer mode
 --------------

@@ -1070,7 +1070,7 @@ class MacroAPI(object):
         list files in directory
 
         Args:
-            mask: path and mask (e.g. /opt/data/*.jpg)
+            mask: path and mask (e.g. /opt/data/\*.jpg)
 
         Returns:
             dict with fields 'name', 'size' and 'time' { 'c': created, 'm':
@@ -1094,7 +1094,7 @@ class MacroAPI(object):
         open oldest file by mask
 
         Args:
-            mask: path and mask (e.g. /opt/data/*.jpg)
+            mask: path and mask (e.g. /opt/data/\*.jpg)
 
         Optional:
             mode: file open mode (default: 'r')
@@ -1117,7 +1117,7 @@ class MacroAPI(object):
         open newest file by mask
 
         Args:
-            mask: path and mask (e.g. /opt/data/*.jpg)
+            mask: path and mask (e.g. /opt/data/\*.jpg)
 
         Optional:
             mode: file open mode (default: 'r')

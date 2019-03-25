@@ -9,7 +9,7 @@ is not specified in the configuration at all. In some cases, we may not even
 know whether the relay went off or not. A typical reason is unreliability of
 the relay and its failure to return the current status.
 
-In this case, there is a "foolproof": the :ref:`action<uc_action>` which is
+In this case, there is a "foolproof": the :ref:`action<ucapi_action>` which is
 always executed, even if the unit state is the same as requested and is not
 supposed to be changed.
 

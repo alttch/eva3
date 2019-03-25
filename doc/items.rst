@@ -497,7 +497,7 @@ format.
 
 You can use **uc-tpl** :doc:`command line</cli>` tool to create device
 templates using the existing items and **uc-cmd** or :ref:`device
-management<create_device>` UC API functions to create, update and destroy
+management<ucapi_deploy_device>` UC API functions to create, update and destroy
 devices.
 
 Device management requires master key or a key with *allow=device* permission.
@@ -578,5 +578,5 @@ Device limitations
 
 * :ref:`LVars<lvar>` can not be part of the device and :doc:`/lm/lm` doesn't
   have any device management functions, but devices on the connected UCs can be
-  created from :ref:`logic control macros<m_create_device>`.
+  created from :ref:`logic control macros<macro_api_deploy_device>`.
 

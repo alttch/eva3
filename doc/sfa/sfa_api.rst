@@ -580,7 +580,7 @@ Parameters:
 list_macros - get macro list
 ----------------------------
 
-Get the list of all available :doc:`macros<macros>`.
+Get the list of all available :doc:`macros</lm/macros>`.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/list_macros.req
@@ -606,7 +606,7 @@ Optionally:
 run - execute macro
 -------------------
 
-Execute a :doc:`macro<macros>` with the specified arguments.
+Execute a :doc:`macro</lm/macros>` with the specified arguments.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/run.req
@@ -692,7 +692,7 @@ Parameters:
 list_cycles - get cycle list
 ----------------------------
 
-Get the list of all available :doc:`cycles<cycles>`.
+Get the list of all available :doc:`cycles</lm/cycles>`.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/list_cycles.req
