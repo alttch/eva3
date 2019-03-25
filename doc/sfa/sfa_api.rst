@@ -100,7 +100,7 @@ RESTful API responses
 * **202 Accepted** The server accepted command and will process it later.
 * **204 No Content** API call completed successfully, no content to return
 
-**Error error responses:**
+**Error responses:**
 
 * **403 Forbidden** the API key has no access to this function or resource
 * **404 Not Found** resource doesn't exist
