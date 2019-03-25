@@ -65,7 +65,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create = self.sp.add_parser('create', help='Create notifier')
         ap_create.add_argument('i', help='Notifier ID', metavar='ID')
         ap_create.add_argument('p', help='Notifier properties: ' + \
-                'json:http(s)://[key]@uri[|method] or ' + \
+                'json:http(s)://[key]@uri[#method] or ' + \
                 'mqtt:[username:password]@host:[port] or ' + \
                 'db:db_uri',
                 metavar='PROPS').completer = self.ComplNProto()
@@ -241,27 +241,17 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             else:
                 notify_key = None
             uri = '/'.join(u)
-            if p[0] == 'http':
-                n = eva.notify.HTTPNotifier(
-                    notifier_id=notifier_id,
-                    uri=uri,
-                    notify_key=notify_key,
-                    space=space,
-                    timeout=timeout)
-            elif p[0] == 'http-post':
-                n = eva.notify.HTTP_POSTNotifier(
-                    notifier_id=notifier_id,
-                    uri=uri,
-                    notify_key=notify_key,
-                    space=space,
-                    timeout=timeout)
+            if uri.find('#') != -1:
+                uri, method = uri.split('#', 1)
             else:
-                n = eva.notify.HTTP_JSONNotifier(
-                    notifier_id=notifier_id,
-                    uri=uri,
-                    notify_key=notify_key,
-                    space=space,
-                    timeout=timeout)
+                method = None
+            n = eva.notify.HTTP_JSONNotifier(
+                notifier_id=notifier_id,
+                uri=uri,
+                method=method,
+                notify_key=notify_key,
+                space=space,
+                timeout=timeout)
         elif p[0] == 'mqtt':
             _p = ':'.join(p[1:])
             if _p.find('@') != -1:
@@ -308,11 +298,9 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             n['type'] = i.notifier_type
             n['enabled'] = i.enabled
             n['params'] = ''
-            if isinstance(i, eva.notify.HTTPNotifier) or \
-                    isinstance(i, eva.notify.HTTP_POSTNotifier) or \
-                    isinstance(i, eva.notify.HTTP_JSONNotifier):
+            if isinstance(i, eva.notify.HTTP_JSONNotifier):
                 method = getattr(i, 'method', None)
-                n['params'] = 'uri: {}{} '.format(i.uri, ('|{}'.format(method)
+                n['params'] = 'uri: {}{} '.format(i.uri, ('#{}'.format(method)
                                                           if method else ''))
             elif isinstance(i, eva.notify.SQLANotifier):
                 n['params'] = 'db: %s' % i.db_uri

@@ -73,6 +73,7 @@ Deprecated (will be removed in 3.3.0)
 
     * macro "argv" variable (replaced with "args")
     * PHP API client no longer supported (use JSON RPC)
+    * removed deprecated HTTP/POST and HTTP/GET notifiers
 
 
 3.1.1 (2018-10-22)

@@ -392,8 +392,7 @@ HTTP notifications (aka web hooks) can be transferred to servers which, for
 some reasons, cannot work with MQTT in real time, e.g. servers containing
 third-party or your own web applications.
 
-JSON notifier type is equal to HTTP/POST, the only one difference is that data
-is sent fully in JSON format:
+JSON notifier send POST request to specified URI with data:
 
 * **k** notification key the remote app may use to authorize the sender
 * **subject** event subject
@@ -404,100 +403,24 @@ successfully:
 
 .. code-block:: json
 
-    { "result" : "OK" }
+    { "ok" : True }
 
 or if your app failed to process it:
 
 .. code-block:: json
 
-    { "result" : "ERROR" }
+    { "ok" : False }
+
+or with HTTP status 202 (Accepted).
 
 The event *data* field is always an array and may contain either one event or
 several ones.
 
-When EVA controllers test remote http-post endpoint, they send notifications
-with subject="test" and the remote app should respond with { "result": "OK" }.
+When EVA controllers test remote http-json endpoint, they send notifications
+with subject="test" and the remote app should always respond with { "ok": True
+} and HTTP status 200 (OK).
 
-As HTTP/POST notifier type is no longer supported, we recommend creating web
-hooks only with JSON notifier type.
+If method is set, JSON RPC 2.0 call is performed. For JSON RPC, errors must be
+specified in "error" field of the response. For successful calls, the "result"
+field in response may contain any data.
 
-HTTP/POST (http-post, deprecated)
----------------------------------
-
-.. note::
-
-    This notifier type is deprecated and will be removed in the future
-    versions. Please switch all your existing web hooks to JSON notifiers.
-
-http-post notifier sends data to the URI specified in the configuration with
-POST method, as www-form and in the following format:
-
-* **k** notification key the remote app may use to authorize the sender
-* **subject** event subject
-* **data** event data array in JSON format
-
-Your application must respond with JSON if the event has been processed
-successfully:
-
-.. code-block:: json
-
-    { "result" : "OK" }
-
-or if your app failed to process it:
-
-.. code-block:: json
-
-    { "result" : "ERROR" }
-
-
-The event *data* field is always an array and may contain either one event or
-several ones.
-
-When EVA controllers test remote http-post endpoint, they send notifications
-with subject="test" and the remote app should respond with { "result": "OK" }.
-
-HTTP/GET (http, deprecated)
----------------------------
-
-.. note::
-
-    This notifier type is deprecated and will be removed in the future
-    versions. Please switch all your existing web hooks to JSON notifiers.
-
-As with http-post, event notification can be transferred to remote apps using
-HTTP/GET method. In this case only one event notification can be sent at once.
-
-ET notifications are similar to POST except that k (key), s (subject of the
-message) and all the data fields are transferred directly in the query string.
-
-Example:
-
-.. code-block:: bash
-
-    GET http://server1/notify.php?k=secretkey&s=state&group=env&id=temp1&status=1&value=29.555&type=sensor&space=office
-
-Your application must respond with JSON if the event has been processed
-successfully:
-
-.. code-block:: json
-
-    { "result" : "OK" }
-
-or if your app failed to process it:
-
-.. code-block:: json
-
-    { "result" : "ERROR" }
-
-
-When EVA controllers test remote http-post endpoint, they send notifications
-with subject="test" and the remote app should respond with { "result": "OK" }.
-
-http notifier configuration is similar to http-post one, except that the latter
-has one additional parameter: **stop_on_error**. If it's set to true, when
-multiple notifications are sent at once, the system will stop sending them as
-soon as one of the notifications fails to be delivered.
-
-HTTP/GET (http) is the simplest type of the notification server for personal
-use. It requires neither knowledge of some additional protocols nor JSON
-decoding, your app may obtain all the data from the request query string.
