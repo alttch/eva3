@@ -25,6 +25,7 @@ System Requirements
   all modern Linux distributions)
 * EVA ICS can run on any Linux or UNIX-compatible system, but for the smooth
   install we recommend Ubuntu or Debian.
+* Install system package *libow-dev* to let EVA ICS install owfs module.
 * To sync :doc:`item</items>` status between the components in real time -
   :ref:`MQTT<mqtt_>`-server (e.g. `mosquitto <http://mosquitto.org/>`_)
 
