@@ -1,11 +1,10 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __description__ = "Enhanced sensor LPI"
-__api__ = 1
+__api__ = 4
 
-__id__ = 'esensor'
 __logic__ = 'single and group polling'
 
 __features__ = [
@@ -59,25 +58,13 @@ from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
 from eva.tools import val_to_boolean
 
+from eva.uc.driverapi import lpi_constructor
+
 
 class LPI(GenericLPI):
 
-    def __init__(self, lpi_cfg=None, phi_id=None, info_only=False):
-        super().__init__(lpi_cfg, phi_id, info_only)
-        self.lpi_mod_id = __id__
-        self.__author = __author__
-        self.__license = __license__
-        self.__description = __description__
-        self.__version = __version__
-        self.__api_version = __api__
-        self.__lpi_mod_id = __id__
-        self.__logic = __logic__
-        self.__features = __features__
-        self.__config_help = __config_help__
-        self.__action_help = __action_help__
-        self.__state_help = __state_help__
-        self.__help = __help__
-        if info_only: return
+    @lpi_constructor
+    def __init__(self, **kwargs):
         # skip - skip sensor errors (log error and continue)
         # otherwise if one sensor in a group failed, stop polling others
         #

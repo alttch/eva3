@@ -2,7 +2,7 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.2.0"
-__api__ = 3
+__api__ = 4
 
 import importlib
 import logging
@@ -20,6 +20,8 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceBusy
 from eva.exceptions import ResourceAlreadyExists
+
+from functools import wraps
 
 phis = {}
 drivers = {}
@@ -96,6 +98,32 @@ def get_driver(driver_id):
     if driver:
         driver.phi = get_phi(driver.phi_id)
     return driver
+
+
+def phi_constructor(f):
+    from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
+
+    @wraps(f)
+    def do(self, *args, **kwargs):
+        GenericPHI.__init__(self, **kwargs)
+        if kwargs.get('info_only'):
+            return
+        f(self, *args, **kwargs)
+
+    return do
+
+
+def lpi_constructor(f):
+    from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
+
+    @wraps(f)
+    def do(self, *args, **kwargs):
+        GenericLPI.__init__(self, **kwargs)
+        if kwargs.get('info_only'):
+            return
+        f(self, *args, **kwargs)
+
+    return do
 
 
 # private API functions, not recommended to use
@@ -266,6 +294,7 @@ def list_phi_mods():
                 if d['s']['equipment'][0] != 'abstract':
                     result.append(d['s'])
             except:
+                eva.core.log_traceback()
                 pass
     return sorted(result, key=lambda k: k['mod'])
 
@@ -284,6 +313,7 @@ def list_lpi_mods():
                 if d['s']['logic'] != 'abstract':
                     result.append(d['s'])
             except:
+                eva.core.log_traceback()
                 pass
     return sorted(result, key=lambda k: k['mod'])
 

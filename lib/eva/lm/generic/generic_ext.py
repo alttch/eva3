@@ -3,7 +3,7 @@ __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.2.0"
 __description__ = "Generic macro extension, don't use"
-__api__ = 1
+__api__ = 4
 __mods_required__ = []
 
 __id__ = 'generic'
@@ -19,6 +19,7 @@ the extension code or to EVA ICS documentation.
 """
 
 import logging
+import sys
 
 from eva.lm.extapi import critical
 
@@ -29,23 +30,26 @@ class LMExt(object):
     config
     """
 
-    def __init__(self, cfg=None, info_only=False):
+    def __init__(self, **kwargs):
+        cfg = kwargs.get('cfg')
         if cfg:
             self.cfg = cfg
         else:
             self.cfg = {}
-        self.mod_id = __id__
-        self.__author = __author__
-        self.__license = __license__
-        self.__description = __description__
-        self.__version = __version__
-        self.__mods_required = __mods_required__
-        self.__api_version = __api__
-        self.__config_help = __config_help__
-        self.__functions = __functions__
-        self.__help = __help__
-        self.ready = True
+        mod = sys.modules[self.__module__]
+        self.mod_id = mod.__name__.split('.')[-1]
+        self.__author = mod.__author__
+        self.__license = mod.__license__
+        self.__description = mod.__description__
+        self.__version = mod.__version__
+        self.__mods_required = mod.__mods_required__
+        self.__api_version = mod.__api__
+        self.__config_help = mod.__config_help__
+        self.__functions = mod.__functions__
+        self.__help = mod.__help__
         self.ext_id = None  # set by extapi on load
+        if kwargs.get('info_only'): return
+        self.ready = True
 
     def start(self):
         return True

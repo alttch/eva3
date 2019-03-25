@@ -1,12 +1,10 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __description__ = "Play audio file"
-__api__ = 1
+__api__ = 4
 __mods_required__ = ['soundfile', 'sounddevice']
-
-__id__ = 'audio'
 
 __config_help__ = [{
     'name': 'sdir',
@@ -38,22 +36,13 @@ import json
 from eva.lm.extensions.generic import LMExt as GenericExt
 from eva.lm.extapi import log_traceback
 
+from eva.lm.extapi import ext_constructor
+
 
 class LMExt(GenericExt):
 
-    def __init__(self, cfg=None, info_only=False):
-        super().__init__(cfg)
-        self.mod_id = __id__
-        self.__author = __author__
-        self.__license = __license__
-        self.__description = __description__
-        self.__version = __version__
-        self.__mods_required = __mods_required__
-        self.__api_version = __api__
-        self.__config_help = __config_help__
-        self.__functions = __functions__
-        self.__help = __help__
-        if info_only: return
+    @ext_constructor
+    def __init__(self, **kwargs):
         try:
             self.sdir = self.cfg.get('sdir')
             if not self.sdir:

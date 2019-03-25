@@ -25,6 +25,8 @@ Before applying this update
 * set notifier DBs (if used) to absolute path
 * default item layout is not enterprise, if using simple - specify this in
   configs
+* Custom LM PLC extensions are not compatible with v4 API used in 3.2.0 and
+  should be ported before update (tiny constructor modification required)
 * sessions are off now by default, if user logins are used - turn them by
   setting session_timeout > 0 in configs
 * set SFA ui to use js/eva_sfa.3.1.js until ported. The following SFA FW

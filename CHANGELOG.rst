@@ -42,6 +42,7 @@ UC
     * 1-Wire OWFS support (virtual buses, PHIs), OWFS API functions
 
     * ModBus slave support
+    * Driver API v4
 
 LM
 --
@@ -54,6 +55,7 @@ LM
     * cycles, cycle control API and macro functions
     * removed deprecated dm_rule* acl
     * removed deprecated get/post functions (use requests.get/post instead)
+    * Extension API v4
 
 SFA
 ---

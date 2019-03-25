@@ -3,9 +3,8 @@ __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.2.0"
 __description__ = "Generic LPI, don't use"
-__api__ = 1
+__api__ = 4
 
-__id__ = 'generic'
 __logic__ = 'abstract'
 
 __features__ = []
@@ -26,6 +25,7 @@ import threading
 import logging
 import time
 import uuid
+import sys
 
 from eva.uc.driverapi import get_polldelay
 from eva.uc.driverapi import get_timeout
@@ -35,6 +35,9 @@ from eva.uc.driverapi import get_timeout
 
 
 class LPI(object):
+
+    connections = {'port': 'primary'}
+
     """
     Functions required to be overriden
     """
@@ -224,8 +227,13 @@ class LPI(object):
     just don't forget to call super().__init__ before your code
     """
 
-    def __init__(self, lpi_cfg=None, phi_id=None, info_only=False):
-        self.phi_id = phi_id
+    def __init__(self, **kwargs):
+        self.phi_id = kwargs.get('phi_id')
+        lpi_cfg = kwargs.get('lpi_cfg')
+        self.lpi_id = None  # set by driverapi on load
+        self.driver_id = None  # set by driverapi on load
+        self.phi = None  # set by driverapi on each call
+        self.oid = None
         if lpi_cfg:
             self.lpi_cfg = lpi_cfg
         else:
@@ -235,26 +243,24 @@ class LPI(object):
         self.__results = {}
         self.__terminate_lock = threading.Lock()
         self.__results_lock = threading.Lock()
-        self.__lpi_mod_id = __id__
-        self.__author = __author__
-        self.__license = __license__
-        self.__description = __description__
-        self.__version = __version__
-        self.__api_version = __api__
-        self.__logic = __logic__
-        self.__features = __features__
-        self.__config_help = __config_help__
-        self.__action_help = __action_help__
-        self.__state_help = __state_help__
-        self.__help = __help__
+
+        mod = sys.modules[self.__module__]
+        self.__lpi_mod_id = mod.__name__.split('.')[-1]
+        self.__author = mod.__author__
+        self.__license = mod.__license__
+        self.__description = mod.__description__
+        self.__version = mod.__version__
+        self.__api_version = mod.__api__
+        self.__logic = mod.__logic__
+        self.__features = mod.__features__
+        self.__config_help = mod.__config_help__
+        self.__action_help = mod.__action_help__
+        self.__state_help = mod.__state_help__
+        self.__help = mod.__help__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
+        if kwargs.get('info_only'): return
         self.ready = True
-        self.lpi_id = None  # set by driverapi on load
-        self.driver_id = None  # set by driverapi on load
-        self.phi = None  # set by driverapi on each call
-        self.oid = None
-        self.connections = {'port': 'primary'}
 
     """
     DO NOT OVERRIDE THE FUNCTIONS BELOW

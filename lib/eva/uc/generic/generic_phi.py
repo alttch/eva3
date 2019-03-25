@@ -4,9 +4,8 @@ __license__ = "Apache License 2.0"
 __version__ = "3.2.0"
 __description__ = "Generic PHI, don't use"
 
-__id__ = 'generic'
 __equipment__ = 'abstract'
-__api__ = 1
+__api__ = 4
 __required__ = []
 __mods_required__ = []
 __lpi_default__ = None
@@ -23,6 +22,7 @@ documentation.
 
 import logging
 import threading
+import sys
 
 import eva.core
 
@@ -41,29 +41,32 @@ class PHI(object):
     config
     """
 
-    def __init__(self, phi_cfg=None, info_only=False):
+    def __init__(self, **kwargs):
+        self.phi_id = None
+        self.oid = None
+        phi_cfg = kwargs.get('phi_cfg')
         if phi_cfg:
             self.phi_cfg = phi_cfg
         else:
             self.phi_cfg = {}
-        self.phi_mod_id = __id__
-        self.__author = __author__
-        self.__license = __license__
-        self.__description = __description__
-        self.__version = __version__
-        self.__api_version = __api__
-        self.__equipment = __equipment__
-        self.__features = __features__
-        self.__required = __required__
-        self.__mods_required = __mods_required__
-        self.__lpi_default = __lpi_default__
-        self.__config_help = __config_help__
-        self.__get_help = __get_help__
-        self.__set_help = __set_help__
-        self.__help = __help__
-        self.phi_id = None  # set by driverapi on load
-        self.oid = None
-        if info_only: return
+        mod = sys.modules[self.__module__]
+        self.phi_mod_id = mod.__name__.split('.')[-1]
+        self.__author = mod.__author__
+        self.__license = mod.__license__
+        self.__description = mod.__description__
+        self.__version = mod.__version__
+        self.__api_version = mod.__api__
+        self.__equipment = mod.__equipment__
+        self.__features = mod.__features__
+        self.__required = mod.__required__
+        self.__mods_required = mod.__mods_required__
+        self.__lpi_default = mod.__lpi_default__
+        self.__config_help = mod.__config_help__
+        self.__get_help = mod.__get_help__
+        self.__set_help = mod.__set_help__
+        self.__help = mod.__help__
+        if kwargs.get('info_only'):
+            return
         # True if the equipment can query/modify only all
         # ports at once and can not work with a single ports
         self.aao_get = False

@@ -23,9 +23,8 @@ PHI system info
 
 the next fields are processed by controller, so make them exactly as required
 
-* **__id__**            module ID (usually equals to file name, string)
 * **__equipment__**     supported equipment (list or string)
-* **__api__**           module API (integer number)
+* **__api__**           module API (integer number), current is **4**
 
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
@@ -137,6 +136,7 @@ The main class is defined as:
 .. code-block:: python
 
     from eva.uc.drivers.phi.generic_phi import PHI as GenericPHI
+    from eva.uc.driverapi import phi_constructor
 
     class PHI(GenericPHI):
         #<your code>
@@ -149,27 +149,12 @@ be serialized by parent class if requested:
 
 .. code-block:: python
 
-    def __init__(self, phi_cfg=None, info_only=False):
-        super().__init__(phi_cfg=phi_cfg, info_only=info_only)
-        self.phi_mod_id = __id__
-        self.__author = __author__
-        self.__license = __license__
-        self.__description = __description__
-        self.__version = __version__
-        self.__api_version = __api__
-        self.__equipment = __equipment__
-        self.__features = __features__
-        self.__required = __required__
-        self.__mods_required = __mods_required__
-        self.__lpi_default = __lpi_default__
-        self.__config_help = __config_help__
-        self.__get_help = __get_help__
-        self.__set_help = __set_help__
-        self.__help = __help__
-        if info_only: return
-        # your code, i.e. parsing self.phi_cfg
+    @phi_constructor
+    def __init__(self, **kwargs):
+        # your code, e.g. parsing self.phi_cfg
 
-The super().__init__ call should always be first.
+Decorator *@phi_constructor* automatically invokes parent constructor and
+handles special init requests.
 
 If the constructor faces a problem (e.g. parsing a config or checking
 equipment, e.g. local bus) it may set *self.ready=False* to abort controller
@@ -185,10 +170,6 @@ returns state of all ports at once only), constructor should set variables:
 
 The parent constructor sets the variable **self.phi_cfg** to phi_cfg or to {},
 so it's safe to work with it with *self.phi_cfg.get(cfgvar)*.
-
-If **info_only** param is true, it means the controller loaded module only to
-get its info and the module doesn't need to initialize itself to work and
-perform initial tests.
 
 Primary methods
 ===============

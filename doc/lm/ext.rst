@@ -97,8 +97,7 @@ Required variables in a header
 * **__license__**       module license
 * **__version__**       module version
 * **__description__**   module description (keep it short)
-* **__id__**            module ID (usually equals to file name, string)
-* **__api__**           module API (integer number)
+* **__api__**           module API (integer number), current is **4**
 * **__mods_required__** required python modules (included neither in standard
   Python install nor in EVA ICS)
 * **__config__help__**  module configuration help (on load)
@@ -180,6 +179,7 @@ The main class is defined as:
 .. code-block:: python
 
     from eva.lm.extensions.generic import LMExt as GenericExt
+    from eva.lm.extapi import ext_constructor
     
     class LMExt(GenericExt):
         #<your code>
@@ -192,22 +192,12 @@ be serialized by parent class if requested:
 
 .. code-block:: python
 
-    def __init__(self, cfg=None, info_only=False):
-        super().__init__(cfg)
-        self.mod_id = __id__
-        self.__author = __author__
-        self.__license = __license__
-        self.__description = __description__
-        self.__version = __version__
-        self.__mods_required = __mods_required__
-        self.__api_version = __api__
-        self.__config_help = __config_help__
-        self.__functions = __functions__
-        self.__help = __help__
-        if info_only: return
-        # your code, i.e. parsing self.cfg
+    @ext_constructor
+    def __init__(self, **kwargs):
+        # your code, e.g. parsing self.cfg
 
-The super().__init__ call should always be first.
+Decorator *@ext_constructor* automatically invokes parent constructor and
+handles special init requests.
 
 If the constructor faces a problem (i.e. parsing a config or checking
 required modules) it may set *self.ready=False* to abort controller loading the
