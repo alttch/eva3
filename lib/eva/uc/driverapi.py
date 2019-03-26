@@ -390,6 +390,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
         raise InvalidParameter('PHI %s id contains forbidden symbols' % phi_id)
     try:
         phi_mod = importlib.import_module('eva.uc.drivers.phi.' + phi_mod_id)
+        # doesn't work but we hope
         importlib.reload(phi_mod)
         _api = phi_mod.__api__
         _author = phi_mod.__author__
@@ -449,6 +450,7 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
             'LPI {} id contains forbidden symbols'.format(lpi_id))
     try:
         lpi_mod = importlib.import_module('eva.uc.drivers.lpi.' + lpi_mod_id)
+        # doesn't work but we hope
         importlib.reload(lpi_mod)
         _api = lpi_mod.__api__
         _author = lpi_mod.__author__
