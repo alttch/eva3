@@ -27,6 +27,7 @@ from eva.exceptions import FunctionFailed
 
 from pyaltt import g
 from pyaltt import FunctionCollecton
+from pyaltt import background_job
 
 from twisted.internet import reactor
 
@@ -47,6 +48,8 @@ keep_logmem = 3600
 keep_action_history = 3600
 
 action_cleaner_interval = 60
+
+max_shutdown_time = 15
 
 default_action_cleaner_interval = 60
 
@@ -236,11 +239,17 @@ def sighandler_hup(signum, frame):
     except:
         log_traceback()
 
+def suicide(**kwargs):
+    time.sleep(max_shutdown_time)
+    logging.critical('SUICIDE')
+    os.kill(os.getpid(), signal.SIGKILL)
+
 
 def sighandler_term(signum=None, frame=None):
     global _sigterm_sent
     if _sigterm_sent: return
     _sigterm_sent = True
+    background_job(suicide, daemon=True)()
     logging.info('got TERM signal, exiting')
     if db_update == 2:
         try:
