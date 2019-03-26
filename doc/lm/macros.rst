@@ -285,7 +285,7 @@ Parameters:
 ls - list files in directory
 ----------------------------
 
-
+If recursive is true, the pattern "**" will match any files and zero or more directories and subdirectories.
 
 .. code-block:: python
 
@@ -294,15 +294,17 @@ ls - list files in directory
 Parameters:
 
 * **mask** path and mask (e.g. /opt/data/\*.jpg)
+* **recursive** if True, perform a recursive search
 
 Returns:
 
-dict with fields 'name', 'size' and 'time' { 'c': created, 'm': modified }
+dict with fields 'name' 'file', 'size' and 'time' { 'c': created, 'm': modified }
 
 .. code-block:: json
 
     [
         {
+            "file": "/opt/i/20170926_004347.jpg",
             "name": "20170926_004347.jpg",
             "size": 6464873,
             "time": {
@@ -311,6 +313,7 @@ dict with fields 'name', 'size' and 'time' { 'c': created, 'm': modified }
             }
         },
         {
+            "file": "/opt/i/20171017_095941.jpg",
             "name": "20171017_095941.jpg",
             "size": 1650389,
             "time": {
@@ -319,6 +322,7 @@ dict with fields 'name', 'size' and 'time' { 'c': created, 'm': modified }
             }
         },
         {
+            "file": "/opt/i/20171029_194029.jpg",
             "name": "20171029_194029.jpg",
             "size": 3440296,
             "time": {
@@ -327,6 +331,7 @@ dict with fields 'name', 'size' and 'time' { 'c': created, 'm': modified }
             }
         },
         {
+            "file": "/opt/i/20170926_004334.jpg",
             "name": "20170926_004334.jpg",
             "size": 6523001,
             "time": {

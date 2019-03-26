@@ -1065,22 +1065,29 @@ class MacroAPI(object):
                 wait=wait,
                 timeout=timeout))
 
-    def ls(self, mask):
+    def ls(self, mask, recursive=False):
         """
         list files in directory
 
+        If recursive is true, the pattern "**" will match any files and zero or
+        more directories and subdirectories.
+
         Args:
             mask: path and mask (e.g. /opt/data/\*.jpg)
+            recursive: if True, perform a recursive search
 
         Returns:
-            dict with fields 'name', 'size' and 'time' { 'c': created, 'm':
-            modified }
+            dict with fields 'name' 'file', 'size' and 'time' { 'c': created,
+            'm': modified }
         """
-        fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
+        fls = [
+            x for x in glob.glob(mask, recursive=recursive) if os.path.isfile(x)
+        ]
         l = []
         for x in fls:
             l.append({
                 'name': os.path.basename(x),
+                'file': os.path.abspath(x),
                 'size': os.path.getsize(x),
                 'time': {
                     'c': os.path.getctime(x),
