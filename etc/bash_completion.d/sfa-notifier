@@ -3,6 +3,8 @@ _sfa-notifier_server() {
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
     COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -15,6 +17,9 @@ _sfa-notifier() {
     case "${words[1]}" in
       server)
         _sfa-notifier_${words[1]}
+        ;;
+      *)
+        COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
         ;;
     esac
   fi

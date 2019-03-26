@@ -3,6 +3,8 @@ _eva_system() {
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
     COMPREPLY=( $( compgen -W 'poweroff reboot' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -11,6 +13,8 @@ _eva_sfa_server() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -19,6 +23,8 @@ _eva_sfa_cloud() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'deploy undeploy' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -27,6 +33,8 @@ _eva_sfa_controller() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'append disable enable list ma-test props reload remove set test' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -35,6 +43,8 @@ _eva_sfa_notify() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'reload restart' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -43,6 +53,8 @@ _eva_sfa_cycle() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'list' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -51,6 +63,8 @@ _eva_sfa_macro() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'list result run' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -59,6 +73,8 @@ _eva_sfa_action() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'clear disable enable exec kill result terminate toggle' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -67,6 +83,8 @@ _eva_sfa_user() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -75,6 +93,8 @@ _eva_sfa_key() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy list props regenerate set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -83,6 +103,8 @@ _eva_sfa_file() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create get mod unlink upload' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -91,6 +113,8 @@ _eva_sfa_cvar() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -99,6 +123,8 @@ _eva_sfa_log() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -112,6 +138,9 @@ _eva_sfa() {
       action|cloud|controller|cvar|cycle|file|key|log|macro|notify|server|user)
         _eva_sfa_${words[2]}
         ;;
+      *)
+        COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+        ;;
     esac
   fi
 }
@@ -121,6 +150,8 @@ _eva_lm_server() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -129,6 +160,8 @@ _eva_lm_controller() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'append disable enable get list props reload remove set test' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -137,6 +170,8 @@ _eva_lm_ext() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'get list load modhelp modinfo mods set unload' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -145,6 +180,8 @@ _eva_lm_rule() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy disable enable get list props set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -153,6 +190,8 @@ _eva_lm_edit() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'macro' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -161,6 +200,8 @@ _eva_lm_cycle() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy get list props reset set start stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -169,6 +210,8 @@ _eva_lm_macro() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy edit get list props result run set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -177,6 +220,8 @@ _eva_lm_config() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'get props save set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -185,6 +230,8 @@ _eva_lm_user() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -193,6 +240,8 @@ _eva_lm_key() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy list props regenerate set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -201,6 +250,8 @@ _eva_lm_file() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create get mod unlink upload' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -209,6 +260,8 @@ _eva_lm_cvar() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -217,6 +270,8 @@ _eva_lm_log() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -230,6 +285,9 @@ _eva_lm() {
       config|controller|cvar|cycle|edit|ext|file|key|log|macro|rule|server|user)
         _eva_lm_${words[2]}
         ;;
+      *)
+        COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+        ;;
     esac
   fi
 }
@@ -239,6 +297,8 @@ _eva_uc_server() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -247,6 +307,8 @@ _eva_uc_driver() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'assign get list load set unassign unload' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -255,6 +317,8 @@ _eva_uc_lpi() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'modhelp modinfo mods' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -263,6 +327,8 @@ _eva_uc_phi() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'download exec get list load modhelp modinfo mods set test unlink unload' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -271,6 +337,8 @@ _eva_uc_owfs() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy list scan test' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -279,6 +347,8 @@ _eva_uc_modbus() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy list test' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -287,6 +357,8 @@ _eva_uc_device() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'deploy templates undeploy update' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -295,6 +367,8 @@ _eva_uc_clone() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'group item' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -303,6 +377,8 @@ _eva_uc_config() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'get props save set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -311,6 +387,8 @@ _eva_uc_edit() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'action template update' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -319,6 +397,8 @@ _eva_uc_action() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'clear disable enable exec kill result terminate toggle' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -327,6 +407,8 @@ _eva_uc_user() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy key list password' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -335,6 +417,8 @@ _eva_uc_key() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create destroy list props regenerate set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -343,6 +427,8 @@ _eva_uc_file() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'create get mod unlink upload' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -351,6 +437,8 @@ _eva_uc_cvar() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'all delete get set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -359,6 +447,8 @@ _eva_uc_log() {
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
     COMPREPLY=( $( compgen -W 'critical debug error get info rotate warning' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -372,6 +462,9 @@ _eva_uc() {
       action|clone|config|cvar|device|driver|edit|file|key|log|lpi|modbus|owfs|phi|server|user)
         _eva_uc_${words[2]}
         ;;
+      *)
+        COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+        ;;
     esac
   fi
 }
@@ -381,6 +474,8 @@ _eva_edit() {
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
     COMPREPLY=( $( compgen -W 'crontab' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -389,6 +484,8 @@ _eva_backup() {
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
     COMPREPLY=( $( compgen -W 'list restore save unlink' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -397,6 +494,8 @@ _eva_server() {
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
     COMPREPLY=( $( compgen -W 'disable enable restart start status stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -409,6 +508,9 @@ _eva() {
     case "${words[1]}" in
       backup|edit|lm|server|sfa|system|uc)
         _eva_${words[1]}
+        ;;
+      *)
+        COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
         ;;
     esac
   fi
