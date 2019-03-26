@@ -23,7 +23,7 @@ Before applying this update
 * install **libow** and **libow-dev** system packages
 * install **jq** console JSON parser tool
 * set notifier DBs (if used) to absolute path
-* default item layout is not enterprise, if using simple - specify this in
+* default item layout is now enterprise, if using simple - specify this in
   configs
 * Custom LM PLC extensions are not compatible with v4 API used in 3.2.0 and
   should be ported before update (tiny constructor modification required) * UC
