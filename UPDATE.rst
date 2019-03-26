@@ -26,10 +26,12 @@ Before applying this update
 * default item layout is not enterprise, if using simple - specify this in
   configs
 * Custom LM PLC extensions are not compatible with v4 API used in 3.2.0 and
-  should be ported before update (tiny constructor modification required)
+  should be ported before update (tiny constructor modification required) * UC
+  PHI, developed for Driver API v1 are no longer compatible. Switch them to v4
+  or at least add __equipment__ field.
 * sessions are off now by default, if user logins are used - turn them by
   setting session_timeout > 0 in configs
-* set SFA ui to use js/eva_sfa.3.1.js until ported. The following SFA FW
+* set SFA UI to use js/eva_sfa.3.1.js until ported. The following SFA FW
   function calls are INCOMPATIBLE with previous version:
 
     * eva_sfa_action
