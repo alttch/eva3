@@ -195,25 +195,42 @@ def put_phi_mod(mod, content, force=False):
     if mod == 'generic_phi':
         raise ResourceAlreadyExists('generic PHI can not be overriden')
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
-    code = '{}\n\ns=PHI(info_only=True).serialize(full=True)'.format(content)
-    try:
-        d = {}
-        exec(code, d)
-        if 's' not in d or 'mod' not in d['s']:
-            raise FunctionFailed
-    except:
-        raise FunctionFailed(
-            'Unable to check PHI module {}, invalid module code'.format(mod))
     if os.path.isfile(fname) and not force:
         raise ResourceAlreadyExists(
             'PHI module {} already exists'.format(fname))
+    valid = False
     try:
-        eva.core.prepare_save()
-        open(fname, 'w').write(content)
-        eva.core.finish_save()
-    except Exception as e:
-        raise FunctionFailed('Unable to put PHI module {}: {}'.format(fname, e))
-    return True
+        compile(content, fname, 'exec')
+        try:
+            eva.core.prepare_save()
+            open(fname, 'w').write(content)
+            eva.core.finish_save()
+        except Exception as e:
+            raise FunctionFailed('Unable to put PHI module {}: {}'.format(
+                fname, e))
+        d = {}
+        code = 'from eva.uc.drivers.phi.%s import PHI;' % mod + \
+                ' s=PHI(info_only=True).serialize(full=True)'
+        exec(code, d)
+        if 's' not in d or 'mod' not in d['s']:
+            raise FunctionFailed('Unable to verify module')
+        valid = True
+        return True
+    except FunctionFailed:
+        raise
+    except:
+        raise FunctionFailed(
+            'Unable to check PHI module {}, invalid module code'.format(mod))
+    finally:
+        if not valid:
+            try:
+                eva.core.prepare_save()
+                os.unlink(fname)
+                eva.core.finish_save()
+            except:
+                logging.warning(
+                    'Unable to delete invalid module {}'.format(fname))
+                eva.core.log_traceback()
 
 
 def modhelp_phi(mod, context):
