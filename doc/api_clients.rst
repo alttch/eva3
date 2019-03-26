@@ -52,7 +52,7 @@ and
     eva.client.apiclient.APIClientLocal(product, dir_eva=None)
 
 **APIClientLocal** class may be used on the servers where EVA is installed.
-When specifying **product='<subsystem code>'** parameter (i.e. *product =
+When specifying **product='<subsystem code>'** parameter (e.g. *product =
 'uc'*) API is automatically initialized by loading parameters and keys
 specifically from configuration files of the controller. If you load the
 **apiclient.py** module from **lib/eva/client/** folder, it is not necessary to
@@ -151,6 +151,9 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
     result_func_failed = 10
     # API function is called with invalid params
     result_invalid_params = 11
+
+In case of error, result is an empty dict or contains field "error" which is
+filled with error message from server (if available).
 
 .. json_rpc_client_:
 
