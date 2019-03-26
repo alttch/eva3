@@ -43,6 +43,10 @@ if result.get('debug'):
     api_call('set_debug', {'debug': False})
     turn_debug = True
 
+if result.get('log_level') < 30:
+    print(
+        'Warning: log level lower than "warning" may cause perfomance slow down'
+    )
 api_call(
     'destroy', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor'}, eoe=False)
 api_call('destroy', {'i': 'unit:eva_benchmarks/eva_benchmark_unit'}, eoe=False)

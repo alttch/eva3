@@ -24,6 +24,8 @@ keep_logmem = 86400
 notify_on_start = yes
 ; debug mode
 debug = no
+; logging level, info, warning, error or critical
+;logging_level = info
 ; create crash dump on critical errors
 dump_on_critical = yes
 ; stop server on critical errors (will be restarted via safe-run)

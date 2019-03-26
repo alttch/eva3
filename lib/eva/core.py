@@ -136,6 +136,11 @@ started = False
 
 shutdown_requested = False
 
+default_log_level_name = 'info'
+default_log_level_id = 20
+default_log_level = logging.INFO
+
+
 def critical(log=True, from_driver=False):
     global ignore_critical
     if ignore_critical: return
@@ -147,14 +152,15 @@ def critical(log=True, from_driver=False):
         caller_info = ''
     if log: log_traceback(force=True)
     if dump_on_critical:
+        ignore_critical = True
         logging.critical('critical exception. dump file: %s' % create_dump(
             'critical', caller_info))
+        ignore_critical = False
     if stop_on_critical in ['always', 'yes'] or (not from_driver and
                                                  stop_on_critical == 'core'):
-        logging.critical('critical exception, shutting down')
         ignore_critical = True
+        logging.critical('critical exception, shutting down')
         sighandler_term(None, None)
-
 
 
 class Locker(GenericLocker):
@@ -191,6 +197,7 @@ def log_traceback(display=False, notifier=False, force=False, e=None):
             del _exceptions[0]
     finally:
         _exception_log_lock.release()
+
 
 cvars_lock = RLocker('core')
 
@@ -432,13 +439,15 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
     global stop_on_critical, dump_on_critical
     global notify_on_start, db_uri, userdb_uri
     global polldelay, db_update, keep_action_history, action_cleaner_interval
-    global keep_logmem
+    global keep_logmem, default_log_level, default_log_level_name
+    global default_log_level_id
     global timeout
     global exec_before_save
     global exec_after_save
     global mqtt_update_default
     global enterprise_layout
     global reactor_thread_pool
+    from eva.logs import log_levels_by_name
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
     try:
@@ -469,6 +478,14 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 log_file = dir_eva + '/' + log_file
             if init_log: reset_log(initial)
             try:
+                log_level = cfg.get('server', 'logging_level')
+                if log_level in log_levels_by_name:
+                    default_log_level_name = log_level
+                    default_log_level_id = log_levels_by_name.get(log_level)
+                    default_log_level = getattr(logging, log_level.upper())
+            except:
+                pass
+            try:
                 development = (cfg.get('server', 'development') == 'yes')
                 if development:
                     show_traceback = True
@@ -496,14 +513,15 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 except:
                     pass
                 if not debug:
-                    logging.basicConfig(level=logging.INFO)
-                    if logger: logger.setLevel(logging.INFO)
+                    logging.basicConfig(level=default_log_level)
+                    if logger: logger.setLevel(default_log_level)
             try:
                 system_name = cfg.get('server', 'name')
             except:
                 pass
             logging.info('Loading server config')
             logging.debug('server.pid_file = %s' % pid_file)
+            logging.debug('server.logging_level = %s' % default_log_level_name)
             try:
                 notify_on_start = (cfg.get('server',
                                            'notify_on_start') == 'yes')
@@ -702,23 +720,20 @@ def debug_on():
 def debug_off():
     global debug
     debug = False
-    if logger: logger.setLevel(logging.INFO)
+    if logger: logger.setLevel(default_log_level)
     logging.info('Debug mode OFF')
 
 
 def setup_off():
     global setup_mode
     setup_mode = False
-    if logger: logger.setLevel(logging.INFO)
     logging.info('Setup mode OFF')
 
 
 def setup_on():
     global setup_mode
     setup_mode = True
-    logging.basicConfig(level=logging.WARNING)
-    if logger: logger.setLevel(logging.WARNING)
-    logging.info('Setup mode ON')
+    logging.warning('Setup mode ON')
 
 
 def fork():

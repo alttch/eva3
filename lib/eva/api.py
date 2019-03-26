@@ -611,6 +611,7 @@ class GenericAPI(object):
             'acl': apikey.serialized_acl(k),
             'system': eva.core.system_name,
             'time': time.time(),
+            'log_level': eva.core.default_log_level_id,
             'version': eva.core.version,
             'product_name': eva.core.product_name,
             'product_code': eva.core.product_code,

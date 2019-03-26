@@ -22,6 +22,8 @@ action_cleaner_interval = 60
 keep_logmem = 86400
 ; debug mode
 debug = no
+; logging level, info, warning, error or critical
+;logging_level = info
 ; create crash dump on critical errors
 dump_on_critical = yes
 ; stop server on critical errors (will be restarted via safe-run)
