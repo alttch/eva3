@@ -342,6 +342,28 @@ dict with fields 'name' 'file', 'size' and 'time' { 'c': created, 'm': modified 
     ]
 
 
+.. _macro_api_mail:
+
+mail - send email message
+-------------------------
+
+The function uses *[mailer]* section of the :ref:`LM PLC configuration<lm_ini>` to get sender address and list of the recipients (if not specified).
+
+.. code-block:: python
+
+    mail(subject='we have a problem', text='sensor 5 is down')
+
+Optionally:
+
+* **subject** email subject
+* **text** email text
+* **rcp** recipient or array of the recipients
+
+Raises:
+
+* **FunctionFailed** mail is not sent
+
+
 .. _macro_api_open_newest:
 
 open_newest - open newest file by mask
