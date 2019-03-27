@@ -93,7 +93,7 @@ Client</api_clients>`:
 * **11** API function is called with invalid params
 
 * **12** API function attempted to create resource which already exists and
-  can't be recreated until deleted/removed deleted at this moment
+  can't be recreated until deleted/removed
 
 * **13** the resource is busy (in use) and can not be accessed/recreated or
   deleted at this moment
