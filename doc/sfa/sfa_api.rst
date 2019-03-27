@@ -3,10 +3,14 @@ SFA API
 
 :doc:`SCADA Final Aggregator<sfa>` API is used to manage EVA ICS cloud and aggregated resources.
 
+This document describes API methods for direct and JSON RPC calls. For RESTful
+API look :doc:`/sfa/sfa_api_restful`.
+
+
 API basics
 ==========
 
-Standard API (direct function calling)
+Standard API (direct method calling)
 --------------------------------------
 
 SFA API functions are called through URL request
@@ -22,9 +26,6 @@ Standard API responses
 Good for backward compatibility with any devices, as all API functions can be
 called using GET and POST. When POST is used, the parameters can be passed to
 functions either as multipart/form-data or as JSON.
-
-Also, standard direct method calling is the only way to use built-in user
-sessions.
 
 API key can be sent in request parameters, session (if enabled and user is
 logged in) or in HTTP **X-Auth-Key** header.
@@ -58,59 +59,21 @@ JSON RPC
 --------
 
 Additionally, API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
-sessions, so user authorization is not possible. Also note that default JSON
-RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
-error result, as JSON RPC sends errors in "error" field.
+<https://www.jsonrpc.org/specification>`_ protocol. Note that default JSON RPC
+result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no error
+result, as JSON RPC sends errors in "error" field.
 
 If JSON RPC request is called without ID and server should not return a result,
 it will return http response with a code *202 Accepted*.
 
 .. note::
 
-    JSON RPC is recommended way to use EVA ICS API, unless RESTful is really
-    required.
+    JSON RPC is recommended way to use EVA ICS API, unless direct method
+    calling or RESTful is really required.
 
 JSON RPC API URL:
 
     **\http://<ip_address:8828>/jrpc**
-
-RESTful API
------------
-
-Majority EVA ICS API components and items support `REST
-<https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
-for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
-multipart/form-data. For JSON, *Content-Type: application/json* header must be
-specified.
-
-API key can be sent in request parameters, session (if enabled and user is
-logged in) or in HTTP **X-Auth-Key** header.
-
-RESTful API responses
-~~~~~~~~~~~~~~~~~~~~~~
-
-**Success responses:**
-
-* **200 OK** API call completed successfully
-* **201 Created** API call completed successfully, Response header
-  *Location* contains either uri to the newly created object or resource is
-  accessible by the effective request uri. For resources created with *PUT*,
-  body contains either serialized resource object or resource type and id
-* **202 Accepted** The server accepted command and will process it later.
-* **204 No Content** API call completed successfully, no content to return
-
-**Error responses:**
-
-* **403 Forbidden** the API key has no access to this function or resource
-* **404 Not Found** resource doesn't exist
-* **405 Method Not Allowed** API function/method not found
-* **409 Conflict** resource/object already exists or is locked
-* **500 API Error** API function execution has been failed. Check
-  input parameters and server logs.
-
-Response body may contain additional information encoded in JSON. *{
-"result": "OK" }* and *{ "result": "ERROR" }* in body are not returned.
 
 .. contents::
 
@@ -139,12 +102,6 @@ Parameters:
 Returns:
 
 JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/test.rest
-    :response: http-examples/sfapi/test.resp-rest
 
 
 .. _sfapi_cat_item:
@@ -183,12 +140,6 @@ Returns:
 
 Serialized action object. If action is marked as dead, an error is returned (exception raised)
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/action.rest
-    :response: http-examples/sfapi/action.resp-rest
-
 .. _sfapi_action_toggle:
 
 action_toggle - toggle unit status
@@ -216,12 +167,6 @@ Returns:
 
 Serialized action object. If action is marked as dead, an error is returned (exception raised)
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/action_toggle.rest
-    :response: http-examples/sfapi/action_toggle.resp-rest
-
 .. _sfapi_disable_actions:
 
 disable_actions - disable unit actions
@@ -237,12 +182,6 @@ Parameters:
 
 * **k** 
 * **i** unit id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/disable_actions.rest
-    :response: http-examples/sfapi/disable_actions.resp-rest
 
 .. _sfapi_enable_actions:
 
@@ -260,12 +199,6 @@ Parameters:
 * **k** 
 * **i** unit id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/enable_actions.rest
-    :response: http-examples/sfapi/enable_actions.resp-rest
-
 .. _sfapi_groups:
 
 groups - get item group list
@@ -281,12 +214,6 @@ Parameters:
 
 * **k** 
 * **p** item type (unit [U], sensor [S] or lvar [LV])
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/groups.rest
-    :response: http-examples/sfapi/groups.resp-rest
 
 .. _sfapi_kill:
 
@@ -308,12 +235,6 @@ Returns:
 
 If the current action of the unit cannot be terminated by configuration, the notice "pt" = "denied" will be returned additionally (even if there's no action running)
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/kill.rest
-    :response: http-examples/sfapi/kill.resp-rest
-
 .. _sfapi_q_clean:
 
 q_clean - clean action queue of unit
@@ -329,12 +250,6 @@ Parameters:
 
 * **k** 
 * **i** unit id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/q_clean.rest
-    :response: http-examples/sfapi/q_clean.resp-rest
 
 .. _sfapi_result:
 
@@ -357,13 +272,10 @@ Optionally:
 * **i** unit/macro oid (either uuid or oid must be specified)
 * **g** filter by unit group
 * **s** filter by action status: Q for queued, R for running, F for finished
-* **Return** list or single serialized action object
 
-**RESTful:**
+Returns:
 
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/result.rest
-    :response: http-examples/sfapi/result.resp-rest
+list or single serialized action object
 
 .. _sfapi_state:
 
@@ -386,12 +298,6 @@ Optionally:
 * **i** item id
 * **g** item group
 * **full** return full state
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/state.rest
-    :response: http-examples/sfapi/state.resp-rest
 
 .. _sfapi_state_history:
 
@@ -420,12 +326,6 @@ Optionally:
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
 * **g** output format ("list" or "dict", default is "list")
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/state_history.rest
-    :response: http-examples/sfapi/state_history.resp-rest
-
 .. _sfapi_terminate:
 
 terminate - terminate action execution
@@ -447,12 +347,6 @@ Returns:
 
 An error result will be returned eitner if action is terminated (Resource not found) or if termination process is failed or denied by unit configuration (Function failed)
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/terminate.rest
-    :response: http-examples/sfapi/terminate.resp-rest
-
 .. _sfapi_clear:
 
 clear - clear lvar state
@@ -469,12 +363,6 @@ Parameters:
 * **k** 
 * **i** lvar id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/clear.rest
-    :response: http-examples/sfapi/clear.resp-rest
-
 .. _sfapi_reset:
 
 reset - reset lvar state
@@ -490,12 +378,6 @@ Parameters:
 
 * **k** 
 * **i** lvar id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/reset.rest
-    :response: http-examples/sfapi/reset.resp-rest
 
 .. _sfapi_set:
 
@@ -518,12 +400,6 @@ Optionally:
 * **s** lvar status
 * **v** lvar value
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/set.rest
-    :response: http-examples/sfapi/set.resp-rest
-
 .. _sfapi_toggle:
 
 toggle - clear lvar state
@@ -539,12 +415,6 @@ Parameters:
 
 * **k** 
 * **i** lvar id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/toggle.rest
-    :response: http-examples/sfapi/toggle.resp-rest
 
 
 .. _sfapi_cat_macro:
@@ -569,12 +439,6 @@ Parameters:
 
 * **k** 
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/groups_macro.rest
-    :response: http-examples/sfapi/groups_macro.resp-rest
-
 .. _sfapi_list_macros:
 
 list_macros - get macro list
@@ -594,12 +458,6 @@ Optionally:
 
 * **g** filter by group
 * **i** filter by controller
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_macros.rest
-    :response: http-examples/sfapi/list_macros.resp-rest
 
 .. _sfapi_run:
 
@@ -625,12 +483,6 @@ Optionally:
 * **u** action UUID (will be auto generated if none specified)
 * **p** queue priority (default is 100, lower is better)
 * **q** global queue timeout, if expires, action is marked as "dead"
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/run.rest
-    :response: http-examples/sfapi/run.resp-rest
 
 
 .. _sfapi_cat_cycle:
@@ -660,12 +512,6 @@ Returns:
 
 field "value" contains real average cycle interval
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/get_cycle.rest
-    :response: http-examples/sfapi/get_cycle.resp-rest
-
 .. _sfapi_groups_cycle:
 
 groups_cycle - get cycle groups list
@@ -680,12 +526,6 @@ Get the list of cycles. Useful e.g. for custom interfaces.
 Parameters:
 
 * **k** 
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/groups_cycle.rest
-    :response: http-examples/sfapi/groups_cycle.resp-rest
 
 .. _sfapi_list_cycles:
 
@@ -706,12 +546,6 @@ Optionally:
 
 * **g** filter by group
 * **i** filter by controller
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_cycles.rest
-    :response: http-examples/sfapi/list_cycles.resp-rest
 
 
 .. _sfapi_cat_remotes:
@@ -746,12 +580,6 @@ Optionally:
 * **g** controller type ("uc" or "lm"), autodetected if none
 * **save** save connected controller configuration on the disk immediately after creation
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/append_controller.rest
-    :response: http-examples/sfapi/append_controller.resp-rest
-
 .. _sfapi_disable_controller:
 
 disable_controller - disable connected controller
@@ -771,12 +599,6 @@ Parameters:
 Optionally:
 
 * **save** save configuration after successful call
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/disable_controller.rest
-    :response: http-examples/sfapi/disable_controller.resp-rest
 
 .. _sfapi_enable_controller:
 
@@ -798,12 +620,6 @@ Optionally:
 
 * **save** save configuration after successful call
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/enable_controller.rest
-    :response: http-examples/sfapi/enable_controller.resp-rest
-
 .. _sfapi_get_controller:
 
 get_controller - get connected controller information
@@ -819,12 +635,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** controller id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/get_controller.rest
-    :response: http-examples/sfapi/get_controller.resp-rest
 
 .. _sfapi_list_controller_props:
 
@@ -842,12 +652,6 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** controller id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_controller_props.rest
-    :response: http-examples/sfapi/list_controller_props.resp-rest
-
 .. _sfapi_list_controllers:
 
 list_controllers - get controllers list
@@ -863,12 +667,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **g** filter by group ("uc" or "lm")
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_controllers.rest
-    :response: http-examples/sfapi/list_controllers.resp-rest
 
 .. _sfapi_list_remote:
 
@@ -891,12 +689,6 @@ Optionally:
 * **g** filter by item group
 * **p** filter by item type
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/list_remote.rest
-    :response: http-examples/sfapi/list_remote.resp-rest
-
 .. _sfapi_matest_controller:
 
 matest_controller - test management API connection to remote controller
@@ -912,12 +704,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** controller id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/matest_controller.rest
-    :response: http-examples/sfapi/matest_controller.resp-rest
 
 .. _sfapi_reload_controller:
 
@@ -935,12 +721,6 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** controller id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/reload_controller.rest
-    :response: http-examples/sfapi/reload_controller.resp-rest
-
 .. _sfapi_remove_controller:
 
 remove_controller - disconnect controller
@@ -956,12 +736,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** controller id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/remove_controller.rest
-    :response: http-examples/sfapi/remove_controller.resp-rest
 
 .. _sfapi_set_controller_prop:
 
@@ -985,12 +759,6 @@ Optionally:
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/set_controller_prop.rest
-    :response: http-examples/sfapi/set_controller_prop.resp-rest
-
 .. _sfapi_test_controller:
 
 test_controller - test connection to remote controller
@@ -1006,12 +774,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** controller id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/test_controller.rest
-    :response: http-examples/sfapi/test_controller.resp-rest
 
 
 .. _sfapi_cat_clients:
@@ -1040,12 +802,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/notify_restart.rest
-    :response: http-examples/sfapi/notify_restart.resp-rest
-
 .. _sfapi_reload_clients:
 
 reload_clients - ask connected clients to reload
@@ -1062,10 +818,4 @@ All the connected clients receive the event with *subject="reload"* and *data="a
 Parameters:
 
 * **k** API key with *master* permissions
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sfapi/reload_clients.rest
-    :response: http-examples/sfapi/reload_clients.resp-rest
 

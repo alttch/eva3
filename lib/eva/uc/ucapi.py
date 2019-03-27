@@ -334,7 +334,7 @@ class UC_API(GenericAPI):
             s: filter by action status: Q for queued, R for running, F for
                finished
 
-        Return:
+        Returns:
             list or single serialized action object
         """
         k, u, i, g, s = parse_function_params(kwargs, 'kuigs', '.ssss')
@@ -1516,7 +1516,7 @@ class UC_API(GenericAPI):
 
         Args:
             k: .master
-            i: driver ID
+            .i: driver ID
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.uc.driverapi.unload_driver(i)

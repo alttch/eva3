@@ -3,10 +3,14 @@ LM API
 
 :doc:`Logic Manager<lm>` API is used to manage lvars, rules and other logic elements
 
+This document describes API methods for direct and JSON RPC calls. For RESTful
+API look :doc:`/lm/lm_api_restful`.
+
+
 API basics
 ==========
 
-Standard API (direct function calling)
+Standard API (direct method calling)
 --------------------------------------
 
 LM API functions are called through URL request
@@ -22,9 +26,6 @@ Standard API responses
 Good for backward compatibility with any devices, as all API functions can be
 called using GET and POST. When POST is used, the parameters can be passed to
 functions either as multipart/form-data or as JSON.
-
-Also, standard direct method calling is the only way to use built-in user
-sessions.
 
 API key can be sent in request parameters, session (if enabled and user is
 logged in) or in HTTP **X-Auth-Key** header.
@@ -58,59 +59,21 @@ JSON RPC
 --------
 
 Additionally, API supports `JSON RPC 2.0
-<https://www.jsonrpc.org/specification>`_ protocol. JSON RPC doesn't support
-sessions, so user authorization is not possible. Also note that default JSON
-RPC result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no
-error result, as JSON RPC sends errors in "error" field.
+<https://www.jsonrpc.org/specification>`_ protocol. Note that default JSON RPC
+result is *{ "ok": true }* (instead of *{ "result": "OK" }*). There's no error
+result, as JSON RPC sends errors in "error" field.
 
 If JSON RPC request is called without ID and server should not return a result,
 it will return http response with a code *202 Accepted*.
 
 .. note::
 
-    JSON RPC is recommended way to use EVA ICS API, unless RESTful is really
-    required.
+    JSON RPC is recommended way to use EVA ICS API, unless direct method
+    calling or RESTful is really required.
 
 JSON RPC API URL:
 
     **\http://<ip_address:8817>/jrpc**
-
-RESTful API
------------
-
-Majority EVA ICS API components and items support `REST
-<https://en.wikipedia.org/wiki/Representational_state_transfer>`_. Parameters
-for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
-multipart/form-data. For JSON, *Content-Type: application/json* header must be
-specified.
-
-API key can be sent in request parameters, session (if enabled and user is
-logged in) or in HTTP **X-Auth-Key** header.
-
-RESTful API responses
-~~~~~~~~~~~~~~~~~~~~~~
-
-**Success responses:**
-
-* **200 OK** API call completed successfully
-* **201 Created** API call completed successfully, Response header
-  *Location* contains either uri to the newly created object or resource is
-  accessible by the effective request uri. For resources created with *PUT*,
-  body contains either serialized resource object or resource type and id
-* **202 Accepted** The server accepted command and will process it later.
-* **204 No Content** API call completed successfully, no content to return
-
-**Error responses:**
-
-* **403 Forbidden** the API key has no access to this function or resource
-* **404 Not Found** resource doesn't exist
-* **405 Method Not Allowed** API function/method not found
-* **409 Conflict** resource/object already exists or is locked
-* **500 API Error** API function execution has been failed. Check
-  input parameters and server logs.
-
-Response body may contain additional information encoded in JSON. *{
-"result": "OK" }* and *{ "result": "ERROR" }* in body are not returned.
 
 .. contents::
 
@@ -140,12 +103,6 @@ Returns:
 
 JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/test.rest
-    :response: http-examples/lmapi/test.resp-rest
-
 
 .. _lmapi_cat_lvar:
 
@@ -170,12 +127,6 @@ Parameters:
 * **k** 
 * **i** lvar id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/clear.rest
-    :response: http-examples/lmapi/clear.resp-rest
-
 .. _lmapi_groups:
 
 groups - get item group list
@@ -192,12 +143,6 @@ Parameters:
 * **k** 
 * **p** item type (must be set to lvar [LV])
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/groups.rest
-    :response: http-examples/lmapi/groups.resp-rest
-
 .. _lmapi_reset:
 
 reset - reset lvar state
@@ -213,12 +158,6 @@ Parameters:
 
 * **k** 
 * **i** lvar id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/reset.rest
-    :response: http-examples/lmapi/reset.resp-rest
 
 .. _lmapi_set:
 
@@ -241,12 +180,6 @@ Optionally:
 * **s** lvar status
 * **v** lvar value
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set.rest
-    :response: http-examples/lmapi/set.resp-rest
-
 .. _lmapi_state:
 
 state - get lvar state
@@ -268,12 +201,6 @@ Optionally:
 * **i** item id
 * **g** item group
 * **full** return full state
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/state.rest
-    :response: http-examples/lmapi/state.resp-rest
 
 .. _lmapi_state_history:
 
@@ -302,12 +229,6 @@ Optionally:
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
 * **g** output format ("list" or "dict", default is "list")
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/state_history.rest
-    :response: http-examples/lmapi/state_history.resp-rest
-
 .. _lmapi_toggle:
 
 toggle - toggle lvar state
@@ -323,12 +244,6 @@ Parameters:
 
 * **k** 
 * **i** lvar id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/toggle.rest
-    :response: http-examples/lmapi/toggle.resp-rest
 
 
 .. _lmapi_cat_lvar-management:
@@ -382,12 +297,6 @@ Optionally:
 * **g** lvar group
 * **save** save lvar configuration immediately
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_lvar.rest
-    :response: http-examples/lmapi/create_lvar.resp-rest
-
 .. _lmapi_destroy_lvar:
 
 destroy_lvar - delete lvar
@@ -403,12 +312,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** lvar id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_lvar.rest
-    :response: http-examples/lmapi/destroy_lvar.resp-rest
 
 .. _lmapi_get_config:
 
@@ -430,12 +333,6 @@ Returns:
 
 complete :ref:`lvar<lvar>` configuration.
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_config.rest
-    :response: http-examples/lmapi/get_config.resp-rest
-
 .. _lmapi_list_props:
 
 list_props - list lvar properties
@@ -452,12 +349,6 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** item id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_props.rest
-    :response: http-examples/lmapi/list_props.resp-rest
-
 .. _lmapi_save_config:
 
 save_config - save lvar configuration
@@ -473,12 +364,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** lvar id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/save_config.rest
-    :response: http-examples/lmapi/save_config.resp-rest
 
 .. _lmapi_set_prop:
 
@@ -501,12 +386,6 @@ Optionally:
 
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_prop.rest
-    :response: http-examples/lmapi/set_prop.resp-rest
 
 
 .. _lmapi_cat_rule:
@@ -537,12 +416,6 @@ Optionally:
 * **v** rule properties (dict)
 * **save** save unit configuration immediately
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_rule.rest
-    :response: http-examples/lmapi/create_rule.resp-rest
-
 .. _lmapi_destroy_rule:
 
 destroy_rule - delete rule
@@ -558,12 +431,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** rule id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_rule.rest
-    :response: http-examples/lmapi/destroy_rule.resp-rest
 
 .. _lmapi_get_rule:
 
@@ -581,12 +448,6 @@ Parameters:
 * **k** 
 * **i** rule id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_rule.rest
-    :response: http-examples/lmapi/get_rule.resp-rest
-
 .. _lmapi_list_rule_props:
 
 list_rule_props - list rule properties
@@ -603,12 +464,6 @@ Parameters:
 * **k** 
 * **i** rule id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_rule_props.rest
-    :response: http-examples/lmapi/list_rule_props.resp-rest
-
 .. _lmapi_list_rules:
 
 list_rules - get rules list
@@ -623,12 +478,6 @@ Get the list of all available :doc:`decision rules<decision_matrix>`.
 Parameters:
 
 * **k** 
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_rules.rest
-    :response: http-examples/lmapi/list_rules.resp-rest
 
 .. _lmapi_set_rule_prop:
 
@@ -655,12 +504,6 @@ Optionally:
 
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_rule_prop.rest
-    :response: http-examples/lmapi/set_rule_prop.resp-rest
 
 
 .. _lmapi_cat_macro:
@@ -690,12 +533,6 @@ Optionally:
 
 * **g** macro group
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_macro.rest
-    :response: http-examples/lmapi/create_macro.resp-rest
-
 .. _lmapi_destroy_macro:
 
 destroy_macro - delete macro
@@ -711,12 +548,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** macro id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_macro.rest
-    :response: http-examples/lmapi/destroy_macro.resp-rest
 
 .. _lmapi_get_macro:
 
@@ -734,12 +565,6 @@ Parameters:
 * **k** 
 * **i** macro id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_macro.rest
-    :response: http-examples/lmapi/get_macro.resp-rest
-
 .. _lmapi_groups_macro:
 
 groups_macro - get macro groups list
@@ -754,12 +579,6 @@ Get the list of macros. Useful e.g. for custom interfaces.
 Parameters:
 
 * **k** 
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/groups_macro.rest
-    :response: http-examples/lmapi/groups_macro.resp-rest
 
 .. _lmapi_list_macro_props:
 
@@ -776,12 +595,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** macro id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_macro_props.rest
-    :response: http-examples/lmapi/list_macro_props.resp-rest
 
 .. _lmapi_list_macros:
 
@@ -801,12 +614,6 @@ Parameters:
 Optionally:
 
 * **g** filter by group
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_macros.rest
-    :response: http-examples/lmapi/list_macros.resp-rest
 
 .. _lmapi_result:
 
@@ -829,13 +636,10 @@ Optionally:
 * **i** macro id
 * **g** filter by unit group
 * **s** filter by action status: Q for queued, R for running, F for finished
-* **Return** list or single serialized action object
 
-**RESTful:**
+Returns:
 
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/result.rest
-    :response: http-examples/lmapi/result.resp-rest
+list or single serialized action object
 
 .. _lmapi_run:
 
@@ -862,12 +666,6 @@ Optionally:
 * **p** queue priority (default is 100, lower is better)
 * **q** global queue timeout, if expires, action is marked as "dead"
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/run.rest
-    :response: http-examples/lmapi/run.resp-rest
-
 .. _lmapi_set_macro_prop:
 
 set_macro_prop - set macro configuration property
@@ -889,12 +687,6 @@ Optionally:
 
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_macro_prop.rest
-    :response: http-examples/lmapi/set_macro_prop.resp-rest
 
 
 .. _lmapi_cat_cycle:
@@ -924,12 +716,6 @@ Optionally:
 
 * **g** cycle group
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/create_cycle.rest
-    :response: http-examples/lmapi/create_cycle.resp-rest
-
 .. _lmapi_destroy_cycle:
 
 destroy_cycle - delete cycle
@@ -945,12 +731,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** cycle id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/destroy_cycle.rest
-    :response: http-examples/lmapi/destroy_cycle.resp-rest
 
 .. _lmapi_get_cycle:
 
@@ -972,12 +752,6 @@ Returns:
 
 field "value" contains real average cycle interval
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_cycle.rest
-    :response: http-examples/lmapi/get_cycle.resp-rest
-
 .. _lmapi_groups_cycle:
 
 groups_cycle - get cycle groups list
@@ -992,12 +766,6 @@ Get the list of cycles. Useful e.g. for custom interfaces.
 Parameters:
 
 * **k** 
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/groups_cycle.rest
-    :response: http-examples/lmapi/groups_cycle.resp-rest
 
 .. _lmapi_list_cycle_props:
 
@@ -1014,12 +782,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** cycle id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_cycle_props.rest
-    :response: http-examples/lmapi/list_cycle_props.resp-rest
 
 .. _lmapi_list_cycles:
 
@@ -1040,12 +802,6 @@ Optionally:
 
 * **g** filter by group
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_cycles.rest
-    :response: http-examples/lmapi/list_cycles.resp-rest
-
 .. _lmapi_reset_cycle_stats:
 
 reset_cycle_stats - reset cycle statistic
@@ -1061,12 +817,6 @@ Parameters:
 
 * **k** 
 * **i** cycle id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/reset_cycle_stats.rest
-    :response: http-examples/lmapi/reset_cycle_stats.resp-rest
 
 .. _lmapi_set_cycle_prop:
 
@@ -1090,12 +840,6 @@ Optionally:
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_cycle_prop.rest
-    :response: http-examples/lmapi/set_cycle_prop.resp-rest
-
 .. _lmapi_start_cycle:
 
 start_cycle - start cycle
@@ -1111,12 +855,6 @@ Parameters:
 
 * **k** 
 * **i** cycle id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/start_cycle.rest
-    :response: http-examples/lmapi/start_cycle.resp-rest
 
 .. _lmapi_stop_cycle:
 
@@ -1137,12 +875,6 @@ Parameters:
 Optionally:
 
 * **wait** wait until cycle is stopped
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/stop_cycle.rest
-    :response: http-examples/lmapi/stop_cycle.resp-rest
 
 
 .. _lmapi_cat_ext:
@@ -1168,12 +900,6 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** extension ID
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_ext.rest
-    :response: http-examples/lmapi/get_ext.resp-rest
-
 .. _lmapi_list_ext:
 
 list_ext - get list of available macro extensions
@@ -1193,12 +919,6 @@ Optionally:
 
 * **full** get full information
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_ext.rest
-    :response: http-examples/lmapi/list_ext.resp-rest
-
 .. _lmapi_list_ext_mods:
 
 list_ext_mods - get list of available extension modules
@@ -1213,12 +933,6 @@ list_ext_mods - get list of available extension modules
 Parameters:
 
 * **k** API key with *master* permissions
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_ext_mods.rest
-    :response: http-examples/lmapi/list_ext_mods.resp-rest
 
 .. _lmapi_load_ext:
 
@@ -1242,12 +956,6 @@ Optionally:
 * **c** extension configuration
 * **save** save extension configuration after successful call
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/load_ext.rest
-    :response: http-examples/lmapi/load_ext.resp-rest
-
 .. _lmapi_modhelp_ext:
 
 modhelp_ext - get extension usage help
@@ -1265,12 +973,6 @@ Parameters:
 * **m** extension name (without *.py* extension)
 * **c** help context (*cfg* or *functions*)
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/modhelp_ext.rest
-    :response: http-examples/lmapi/modhelp_ext.resp-rest
-
 .. _lmapi_modinfo_ext:
 
 modinfo_ext - get extension module info
@@ -1286,12 +988,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **m** extension module name (without *.py* extension)
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/modinfo_ext.rest
-    :response: http-examples/lmapi/modinfo_ext.resp-rest
 
 .. _lmapi_set_ext_prop:
 
@@ -1315,12 +1011,6 @@ Optionally:
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_ext_prop.rest
-    :response: http-examples/lmapi/set_ext_prop.resp-rest
-
 .. _lmapi_unload_ext:
 
 unload_ext - unload macro extension
@@ -1336,12 +1026,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** extension ID
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/unload_ext.rest
-    :response: http-examples/lmapi/unload_ext.resp-rest
 
 
 .. _lmapi_cat_remotes:
@@ -1375,12 +1059,6 @@ Optionally:
 * **t** timeout (seconds) for the remote controller API calls
 * **save** save connected controller configuration on the disk immediately after creation
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/append_controller.rest
-    :response: http-examples/lmapi/append_controller.resp-rest
-
 .. _lmapi_disable_controller:
 
 disable_controller - disable connected controller
@@ -1400,12 +1078,6 @@ Parameters:
 Optionally:
 
 * **save** save configuration after successful call
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/disable_controller.rest
-    :response: http-examples/lmapi/disable_controller.resp-rest
 
 .. _lmapi_enable_controller:
 
@@ -1427,12 +1099,6 @@ Optionally:
 
 * **save** save configuration after successful call
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/enable_controller.rest
-    :response: http-examples/lmapi/enable_controller.resp-rest
-
 .. _lmapi_get_controller:
 
 get_controller - get connected controller information
@@ -1448,12 +1114,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** controller id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/get_controller.rest
-    :response: http-examples/lmapi/get_controller.resp-rest
 
 .. _lmapi_list_controller_props:
 
@@ -1471,12 +1131,6 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** controller id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_controller_props.rest
-    :response: http-examples/lmapi/list_controller_props.resp-rest
-
 .. _lmapi_list_controllers:
 
 list_controllers - get controllers list
@@ -1491,12 +1145,6 @@ Get the list of all connected :ref:`UC controllers<lm_remote_uc>`.
 Parameters:
 
 * **k** API key with *master* permissions
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_controllers.rest
-    :response: http-examples/lmapi/list_controllers.resp-rest
 
 .. _lmapi_list_remote:
 
@@ -1519,12 +1167,6 @@ Optionally:
 * **g** filter by item group
 * **p** filter by item type
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/list_remote.rest
-    :response: http-examples/lmapi/list_remote.resp-rest
-
 .. _lmapi_reload_controller:
 
 reload_controller - reload controller
@@ -1541,12 +1183,6 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** controller id
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/reload_controller.rest
-    :response: http-examples/lmapi/reload_controller.resp-rest
-
 .. _lmapi_remove_controller:
 
 remove_controller - disconnect controller
@@ -1562,12 +1198,6 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** controller id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/remove_controller.rest
-    :response: http-examples/lmapi/remove_controller.resp-rest
 
 .. _lmapi_set_controller_prop:
 
@@ -1591,12 +1221,6 @@ Optionally:
 * **v** propery value (or dict for batch set)
 * **save** save configuration after successful call
 
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/set_controller_prop.rest
-    :response: http-examples/lmapi/set_controller_prop.resp-rest
-
 .. _lmapi_test_controller:
 
 test_controller - test connection to remote controller
@@ -1612,10 +1236,4 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** controller id
-
-**RESTful:**
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/lmapi/test_controller.rest
-    :response: http-examples/lmapi/test_controller.resp-rest
 

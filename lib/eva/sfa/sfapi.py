@@ -280,7 +280,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             s: filter by action status: Q for queued, R for running, F for
                finished
 
-        Return:
+        Returns:
             list or single serialized action object
         """
         k, u, i, g, s = parse_function_params(kwargs, 'kuigs', '.ssss')
