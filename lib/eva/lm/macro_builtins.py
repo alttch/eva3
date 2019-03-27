@@ -22,8 +22,8 @@ def sleep(t, safe=True):
     """
     pause operations
 
-    Unlike standard time.sleep(...), breaks pause when shutdown event is
-    received.
+    Unlike standard time.sleep(...), breaks pause when controller shutdown
+    event is received.
 
     Args:
         t: number of seconds to sleep

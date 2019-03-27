@@ -537,7 +537,7 @@ variable value, None (or default) if variable doesn't exist
 sleep - pause operations
 ------------------------
 
-Unlike standard time.sleep(...), breaks pause when shutdown event is received.
+Unlike standard time.sleep(...), breaks pause when controller shutdown event is received.
 
 .. code-block:: python
 
