@@ -52,9 +52,10 @@ slave_reg_max = slave_regsz - 1
 
 class WatchBlock(ModbusSequentialDataBlock):
 
-    event_handlers = {}
-
-    event_handlers_lock = threading.RLock()
+    def __init__(self, *args, **kwargs):
+        self.event_handlers = {}
+        self.event_handlers_lock = threading.RLock()
+        super().__init__(*args, **kwargs)
 
     def setValues(self, addr, values):
         super().setValues(addr, values)
@@ -175,6 +176,9 @@ def register_handler(addr, f, register='h'):
                   c (1 bit) - coil, d (1 bit) - discrete input)
     """
     slave_registers[register].registerEventHandler(addr, f)
+    logging.debug(
+        'registered ModBus slave handler: {}, addr: {}, registers: {}'.format(
+            f, addr, register))
 
 
 def unregister_handler(addr, f, register='h'):
@@ -190,6 +194,9 @@ def unregister_handler(addr, f, register='h'):
                   c (1 bit) - coil, d (1 bit) - discrete input)
     """
     slave_registers[register].unregisterEventHandler(addr, f)
+    logging.debug(
+        'unregistered ModBus slave handler: {}, addr: {}, registers: {}'.format(
+            f, addr, register))
 
 
 # is modbus port with the given ID exist
