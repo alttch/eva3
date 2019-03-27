@@ -68,7 +68,7 @@ def lock(l, timeout=None, expires=None):
         t = timeout
         if t > eva.core.timeout: t = eva.core.timeout
     return eva.sysapi.api.lock(
-        eva.apikey.masterkey, l='eva:phi:' + l, timeout=t, expires=e)
+        eva.apikey.masterkey, l='eva:phi:' + l, t=t, e=e)
 
 
 def unlock(l):
