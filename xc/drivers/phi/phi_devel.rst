@@ -277,6 +277,9 @@ critical() method.
 Handling events
 ===============
 
+Incoming events
+---------------
+
 If the equipment sends any event, PHI should ask Driver API to handle it. This
 can be done with method
 
@@ -297,8 +300,8 @@ minimized amount of additional PHI.get() calls.
 Value *-1* can be used to set unit error status, value *False* to set sensor
 error status.
 
-Handling SNMP traps
--------------------
+SNMP traps
+----------
 
 First you need to subscribe to EVA trap handler. Import **eva.traphandler** mod
 and modify PHI start and stop methods:
@@ -338,8 +341,8 @@ executed in its own thread.
 EVA traphandler doesn't care about the method return value and you must process
 all the errors by yourself.
 
-Schedule events
----------------
+Schedule updates
+----------------
 
 If the equipment doesn't send any events, PHI can initiate updating the items
 by itself. To perform this, PHI should support **aao_get** feature and be
@@ -578,6 +581,65 @@ Let's deal with an equipment which has MQTT topic *topic/POWER* with values
         # then handle PHI event
         handle_phi_event(self, 1, self.get())
 
+Working with ModBus slave memory space
+======================================
+
+Universal Controller can perform basic data processing as ModBus slave, custom
+PHI can do this more flexible. E.g. there's temperature sensor, which reports
+its value multiplied by 100. As ModBus registers don't support floats, custom
+PHI module can listen to the register and automatically divide value by 100
+before sending update to UC item.
+
+Multiple items and PHIs can watch the same register and perform data processing
+independently.
+
+.. code-block:: python
+
+    import eva.uc.modbus as modbus
+
+    @phi_constructor
+    def __init__(self, **kwargs):
+    # ....
+
+    def start(self):
+        # watch changes of ModBus slave register
+        # addr - value from 0 to 9999
+        # self.process_modbus - function to process ModBus data
+        # register - 'h' for holding (default), 'i' for input,
+        #            'c' for coil and 'd' for discrete input
+        modbus.register_handler(addr, self.process_modbus, register='h')
+
+    def stop(self):
+        # don't forget to unregister handler when PHI is unloaded
+        modbus.unregister_handler(addr, self.process_modbus, register='h')
+
+    def process_modbus(self, addr, values):
+        # the function is called as soon as watched ModBus register is changed
+        # parameters: addr - memory address, values - values written (list)
+        #
+        # values of holding and input registers are arrays of 2-byte integers
+        # values of coils and discrete inputs - arrays of booleans (True/False)
+        #
+        # as input registers and discrete inputs are read-only for external
+        # devices, they can be changed only by another local PHI module or UC
+        # itself
+        #
+        _data = values[0]
+        self.log_debug('got data: {} from {}'.format(_data, addr))
+        # process the data
+        # ...
+
+PHI can also manipulate data in ModBus slave memory blocks manually, to do this
+use functions:
+
+.. code-block:: python
+
+    get_data(addr, register='h', count=1)
+    # and
+    set_data(addr, values, register='h')
+    # ("values" should be a list (of unsigned integers or booleans, depending
+    # on memory block type)
+
 Working with UDP API
 ====================
 
@@ -609,11 +671,11 @@ managed by handler).
 
     def start(self):
         # subscribe to UDP API using PHI ID as handler ID
-        udp.subscribe(__id__, self.udp_handler)
+        udp.subscribe(__name__, self.udp_handler)
 
     def stop(self):
         # don't forget to unsubscribe when PHI is unloaded
-        udp.unsubscribe(__id__, self.udp_handler)
+        udp.unsubscribe(__name__, self.udp_handler)
 
     def udp_handler(self, data, address):
         _data = data.decode()

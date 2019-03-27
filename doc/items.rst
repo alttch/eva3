@@ -144,7 +144,7 @@ most cases, the system itself replaces the blank value with "null".
 Units in EVA hive
 -----------------
 
-All units have oids like **unit:group/unit_id** e.g. *unit:light/room1/lamp1*
+All units have OIDs like **unit:group/unit_id** e.g. *unit:light/room1/lamp1*
 
 For synchronization via :ref:`MQTT<mqtt_>`, the following subjects are used for
 units
@@ -231,6 +231,9 @@ Unit parameters
   [priority]". If you want to skip value, but keep priority, set it to null,
   i.e. "status 0 null 50".
 
+* **modbus_status**, **modbus_value** update item state from :ref`ModBus
+  slave<modbus_slave>` memory space.
+
 * **status_labels**  "labels" used to display the unit statuses by the
   interfaces.  Labels may be changed via :doc:`/uc/uc_api` or
   :doc:`uc-cmd</cli>`, in the following way: status:number = label, e.g.
@@ -312,7 +315,7 @@ updates to several addresses at once.
 Sensors in EVA hive
 -------------------
 
-All sensors have oids like **sensor:group/sensor_id** e.g. *sensor:temp/t1*
+All sensors have OIDs like **sensor:group/sensor_id** e.g. *sensor:temp/t1*
 
 For synchronization via :ref:`MQTT<mqtt_>`, the following subjects are used for
 units
@@ -324,7 +327,7 @@ Sensor parameters
 -----------------
 
 Sensors have the same parameters as :ref:`units<unit>`, except they don't have
-action_*, auto_off, mqtt_control and status_labels.
+action_*, auto_off, mqtt_control, modbus_status and status_labels.
 
 .. _lvar:
 
@@ -388,7 +391,7 @@ synchronize time on all computers without any additional software hotfixes.
 LVars in EVA hive
 -----------------
 
-All logic variables have oids like **lvar:group/lvar_id** e.g.
+All logic variables have OIDs like **lvar:group/lvar_id** e.g.
 *lvar:service/var1*
 
 For synchronization via :ref:`MQTT<mqtt_>`, the following subjects are used for
@@ -396,7 +399,7 @@ units
 
 * **[space/]lvar/<group>/<lvar_id>/status** lvar status, integer
 * **[space/]lvar/<group>/<lvar_id>/value** lvar value
-* **[space/]lvar/<group>/<lvar_id>/set_time** last set time (unix timestamp)
+* **[space/]lvar/<group>/<lvar_id>/set_time** last set time (Unix timestamp)
 * **[space/]lvar/<group>/<lvar_id>/expires** value expiration time (seconds)
 
 LVar parameters
@@ -459,7 +462,7 @@ items. Multiupdate can be :doc:`virtual<virtual>`.
 Multiupdates in EVA hive
 ------------------------
 
-All multiupdates have oids like **mu:group/mu_id** e.g.
+All multiupdates have OIDs like **mu:group/mu_id** e.g.
 *mu:environment/mu1*
 
 Multiupdates don't have their own state, so they are not synchronized between
@@ -488,7 +491,7 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except that
 Device
 ======
 
-Multiple cvars, units, sensors and multiupdates can be merged in logical groups
+Multiple CVARs, units, sensors and multiupdates can be merged in logical groups
 called **devices**. It's completely up to you how to merge items into device,
 but it's recommended to keep them in one or several separate item groups.
 

@@ -118,3 +118,28 @@ To delete ModBus virtual port, execute the command:
 Note that controller doesn't check if the port is in use or not, so double
 check this manually before deleting it.
 
+.. _modbus_slave:
+
+ModBus slave
+============
+
+:doc:`/uc/uc` can work as ModBus slave. Ports, the slave listens to, are set in
+*etc/uc.ini*. ModBus over TCP, UDP and serial ports (rtu/ascii/binary) is
+supported.
+
+Controller uses single memory space for all ports it listens to, ports can have
+different ModBus addresses. Memory space has 10 000 holding registers, 10 000
+coils, 10 000 input registers and 10 000 discrete inputs.
+
+:ref:`Units<unit>` can listen to memory space changes and automatically update
+their *status* and *value* as soon as ModBus register is being changed. To
+activate state updates via ModBus slave memory space, set unit
+**modbus_status** and/or **modbus_value** properties to the corresponding
+registers, using before the number **c** for coil and **h** for holding
+register, e.g. *c5* for 5th coil register, *h50* for 50th holding register etc.
+
+:ref:`Sensors<sensor>` can update their *value* only. Don't forget to enable
+sensor (set its status to 1) manually.
+
+More complex data processing can be performed via :ref:`PHI<phi>` modules.
+
