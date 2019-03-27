@@ -7,19 +7,18 @@ EVA ICS CHANGELOG
 Common
 ------
 
-    * Core, API and CLI perfomance improvements
+    * Core, API and CLI performance improvements
 
     * fixes: correct backup/restore if configuration folders are symlinks
     * fixes: correct restore if --runtime flag is specified
     * fixes: LM PLC locking problems
 
-    * notifier perfomance improvements
+    * notifier performance improvements
     * CLI improvements
 
     * personal Cloud support (nodes run API calls via MQTT)
     * automatic node discovery
     * license changed to Apache License 2.0
-    * perfomance improvements
     * new SYS API function: shutdown_core
     * controller/node autodiscovery
     * enterprise layout is now default item layout
@@ -53,7 +52,7 @@ LM
       as variables)
     * set_rule_prop now accepts "condition" and "for_oid"
     * cycles, cycle control API and macro functions
-    * removed deprecated dm_rule* acl
+    * removed deprecated dm_rule* ACL
     * removed deprecated get/post functions (use requests.get/post instead)
     * Extension API v4
 
@@ -66,7 +65,7 @@ SFA
       call the functions in new format only, look UPDATE.rst for more info)
     * SFA framework: data exchange optimization with eva_sfa_state_updates
       variable
-    * removed deprecated dm_rule* acl and rule control functions
+    * removed deprecated dm_rule* ACL and rule control functions
 
 Deprecated (will be removed in 3.3.0)
 -------------------------------------
@@ -74,6 +73,8 @@ Deprecated (will be removed in 3.3.0)
     * macro "argv" variable (replaced with "args")
     * PHP API client no longer supported (use JSON RPC)
     * removed deprecated HTTP/POST and HTTP/GET notifiers
+    * user login sessions are deprecated and will be replaced with access
+      tokens in 3.2.1
 
 
 3.1.1 (2018-10-22)
@@ -95,7 +96,7 @@ Common
 UC
 --
 
-    * fixes: device commands in enterpise layout
+    * fixes: device commands in enterprise layout
     * performance improvements
 
     * "update" command without params starts item passive update
@@ -140,7 +141,7 @@ Core
     * MQTT SSL support
     * JSON notifiers. GET/POST notifiers are marked as deprecated and should
       not be used any more.
-    * exec function (cmd, run) string arguments splitted with ' ' now support
+    * exec function (cmd, run) string arguments split with ' ' now support
       the spaces inside (e.g. 'this is "third argument"')
 
 UC
@@ -268,7 +269,7 @@ UC
 LM PLC
 ------
 
-    * list_remote returns array + controller_id proprety instead of dict
+    * list_remote returns array + controller_id property instead of dict
     * result function in macro api. terminate and result function accept action
       uuid as a param
     * on_set lm rule (status changed to 1)
@@ -283,7 +284,7 @@ SFA
 
     * fixes: dm_rule_props acl in SFA
 
-    * list_remote returns array instead of dict + controller_id proprety
+    * list_remote returns array instead of dict + controller_id property
     * list_macros contains now controller property
     * append_controller now tries to autodetect controller type if no type
       is specified

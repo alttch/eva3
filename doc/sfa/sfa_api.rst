@@ -75,6 +75,32 @@ JSON RPC API URL:
 
     **\http://<ip_address:8828>/jrpc**
 
+JSON RPC error responses
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+JSON RPC calls return error codes equal to the codes of :doc:`EVA API
+Client</api_clients>`:
+
+* **1** the item or resource is not found
+
+* **2** access is denied with the set API key
+
+* **6** Attempt to call undefined API method/function
+
+* **10** API function failed (all errors not listed here fall within this
+  category)
+
+* **11** API function is called with invalid params
+
+* **12** API function attempted to create resource which already exists and
+  can't be recreated until deleted/removed deleted at this moment
+
+* **13** the resource is busy (in use) and can not be accessed/recreated or
+  deleted at this moment
+
+
+Response field *"message"* may contain additional information about error.
+
 .. contents::
 
 .. _sfapi_cat_general:

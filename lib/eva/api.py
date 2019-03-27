@@ -1026,7 +1026,9 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         self._cp_config['tools.auth.on'] = True
         self._cp_config['tools.json_pre.on'] = True
         self._cp_config['tools.json_out.handler'] = cp_json_handler
+        self._expose('test')
 
+    def enable_sessions(self):
         if config.session_timeout:
             self._cp_config.update({
                 'tools.sessions.on':
@@ -1035,8 +1037,6 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
                 config.session_timeout
             })
             self._expose(['login', 'logout'])
-
-        self._expose('test')
 
     def wrap_exposed(self):
         super().wrap_exposed(cp_api_function)

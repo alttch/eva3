@@ -1,5 +1,5 @@
 UC RESTful API
-**************
+****************
 
 :doc:`Universal Controller<uc>` API is used to control and manage units and sensors
 
@@ -34,9 +34,9 @@ parameters (as **k**).
 * **DELETE** request is used to delete resource.
   
 For resource creation and modification, multiple parameters can be specified in
-a single request. For majority requests, a special parameter *save* is used to
-tell server to save the resource configuration immediately after its
-modification.
+a single request. For majority requests of such purpose, a special parameter
+*"save"* is used to tell server (if *"save": true*) to save the resource
+configuration immediately after its modification.
 
 For the group-related calls, put trailing slash at the end of the request URL:
 

@@ -1,5 +1,5 @@
 SFA RESTful API
-**************
+****************
 
 :doc:`SCADA Final Aggregator<sfa>` API is used to manage EVA ICS cloud and aggregated resources.
 
@@ -34,9 +34,9 @@ parameters (as **k**).
 * **DELETE** request is used to delete resource.
   
 For resource creation and modification, multiple parameters can be specified in
-a single request. For majority requests, a special parameter *save* is used to
-tell server to save the resource configuration immediately after its
-modification.
+a single request. For majority requests of such purpose, a special parameter
+*"save"* is used to tell server (if *"save": true*) to save the resource
+configuration immediately after its modification.
 
 For the group-related calls, put trailing slash at the end of the request URL:
 

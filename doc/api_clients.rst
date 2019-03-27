@@ -151,6 +151,12 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
     result_func_failed = 10
     # API function is called with invalid params
     result_invalid_params = 11
+    # API function attempted to create resource which already exists and can't
+    # be recreated until deleted/removed
+    result_invalid_params = 12
+    # the resource is busy (in use) and can not be accessed/recreated or
+    # deleted at this moment
+    result_busy = 13
 
 In case of error, result is an empty dict or contains field "error" which is
 filled with error message from server (if available).

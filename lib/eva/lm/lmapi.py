@@ -1200,6 +1200,7 @@ class LM_HTTP_API(LM_HTTP_API_abstract, GenericHTTP_API):
         self._expose(self.login)
         self._expose(self.logout)
         self.wrap_exposed()
+        self.enable_sessions()
 
 
 class LM_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,
