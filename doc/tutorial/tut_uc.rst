@@ -146,8 +146,8 @@ ventilation units:
 
 .. code-block:: bash
 
-    uc-cmd driver set unit:ventilation/vi relay1.default -c port=1 -y
-    uc-cmd driver set unit:ventilation/ve relay1.default -c port=2 -y
+    uc-cmd driver assign unit:ventilation/vi relay1.default -c port=1 -y
+    uc-cmd driver assign unit:ventilation/ve relay1.default -c port=2 -y
 
 
 Connecting a temperature sensor
@@ -208,7 +208,7 @@ sensor:
 
 .. code-block:: bash
 
-    uc-cmd driver set sensor:env/temp1 w1t.default -c port=28-000006ef85d7 -y
+    uc-cmd driver assign sensor:env/temp1 w1t.default -c port=28-000006ef85d7 -y
 
 As this PHI doesn't provide **aao_get** feature and we can't ask it to update
 sensors automatically, set **update_interval** sensor property to let it
@@ -358,7 +358,7 @@ doesn't need any additional options. Just set it to our sensor:
 
 .. code-block:: bash
 
-    uc-cmd driver set sensor:security/motion1 md1.default -y
+    uc-cmd driver assign sensor:security/motion1 md1.default -y
 
 The sensor is ready. It doesn't require any passive updates since its state is
 updated with SNMP traps parsed by driver.
@@ -446,7 +446,7 @@ lamp unit:
 
 .. code-block:: bash
 
-    uc-cmd driver set unit:light/lamp1 relay2.default -c port=2 -y
+    uc-cmd driver assign unit:light/lamp1 relay2.default -c port=2 -y
 
 Let's update the lamp state every 30 seconds:
 

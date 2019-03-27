@@ -76,9 +76,9 @@ To assign driver to the specified item, use the command:
 
 .. code-block:: bash
 
-    uc-cmd driver set <item_id> <driver_id> [-c config] [-y]
+    uc-cmd driver assign <item_id> <driver_id> [-c config] [-y]
     # example, set test_lamp to 5th relay port of driver v1
-    uc-cmd driver set unit:lamps/test_lamp v1.default -c port=5
+    uc-cmd driver assign unit:lamps/test_lamp v1.default -c port=5
 
 Param *-y* is used to ask the controller to save item configuration right after
 driver is assigned.
@@ -118,7 +118,7 @@ item.
 Use commands *uc-cmd phi unload* and *uc-cmd phi unlink* to unload and unlink
 unnecessary PHI modules, but note that driver and PHI can't be unloaded while
 they're assigned to items. You must first assign a different driver to the item
-or use *uc-cmd driver unset* command.
+or use *uc-cmd driver unassign* command.
 
 You can load PHIs/drivers with the same IDs even if they are already present in
 the system without unloading them first. In this case, new
@@ -184,8 +184,8 @@ Used in default drivers for relay, sockets and similar PHIs, doesn't need to be
 configured when loaded.
 
 When assigning driver containing **basic** LPI mod to the specified item
-(*uc-cmd driver set*), the assign configuration should contain port number (*-c
-port=N*) which usually matches the physical relay port.
+(*uc-cmd driver assign*), the assign configuration should contain port number
+(*-c port=N*) which usually matches the physical relay port.
 
 Port number can be specified as a list (*-c port=N1|N2|N3*), in this case all
 listed ports will be used in commands.
@@ -204,7 +204,7 @@ Basic sensor monitiring, used to get data from specified sensors.
 Used in default drivers for sensors, doesn't need to be configured when loaded.
 
 LPI doesn't provide *action* functionality. When assigning driver containing
-**sensor** LPI mod to the specified item (*uc-cmd driver set*), the assign
+**sensor** LPI mod to the specified item (*uc-cmd driver assign*), the assign
 configuration should contain port or bus address number.
 
 ssp LPI
@@ -240,7 +240,7 @@ Configuration options (set with *uc-cmd driver load*):
   poll the temperature sensors group. All sensors with temperature difference
   *10* degrees or more from the average are ignored.
 
-Update options (set with *uc-cmd driver set*):
+Update options (set with *uc-cmd driver assign*):
 
 * **port** driver port or ports (array). If you use multiple ports (group),
   they should be separated with pipes (**|**) for the items. Group separation
@@ -263,7 +263,7 @@ Configuration options (set with *uc-cmd driver load*):
   status is error, the action will be not executed. Otherwise LPI will pass and
   consider the item status is *0*.
 
-Action options (set with *uc-cmd driver set*):
+Action options (set with *uc-cmd driver assign*):
 
 * **port** contains one or several (separated with **|**) relay ports used to
   power a motor.
@@ -367,7 +367,7 @@ relays:
 
 All of **cfg**, **get** and **set** have an option **host** which should be
 defined ether in PHI configutation (*uc-cmd phi load* with *host* config option
-or in item driver configuration (*uc-cmd driver set* with *_host* config
+or in item driver configuration (*uc-cmd driver assign* with *_host* config
 option). Setting different **host** option value in item driver configuration
 lets one *sr201* PHI manage all available SR-201 relays.
 
@@ -411,7 +411,7 @@ Example:
 
     uc-cmd phi load relay2 sr201 -c host=192.168.20.2,update=5 -y
 
-As soon as the driver is assigned to item (*uc-cmd driver set*), it starts
+As soon as the driver is assigned to item (*uc-cmd driver assign*), it starts
 getting state updates every *5* seconds.
 
 Testing PHIs and additional PHI commands
