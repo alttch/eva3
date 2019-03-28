@@ -1,13 +1,13 @@
-OWFS (1-wire)
+OWFS (1-Wire)
 *************
 
-:doc:`/uc/uc` provides native support of `1-wire
+:doc:`/uc/uc` provides native support of `1-Wire
 <https://en.wikipedia.org/wiki/1-Wire/>`_ technology for OWFS :doc:`physical
 interfaces (PHIs)</drivers>`. Core support is provided with `OWFS
 <http://owfs.org/>`_.
 
-For the simple setups, when 1-wire bus is connected via system GPIO, PHIs can
-access it directly. But when 1-wire is accessed via I2C, USB or other external
+For the simple setups, when 1-Wire bus is connected via system GPIO, PHIs can
+access it directly. But when 1-Wire is accessed via I2C, USB or other external
 bus, OWFS is preferred.
 
 EVA ICS provides additional functionality for OWFS, such as bus locking,
@@ -93,7 +93,7 @@ specified attributes:
 .. code-block:: bash
 
     uc-cmd owfs scan <ID> [options]
-    # e.g. let's find all 1-wire equipment which has "temperature" property:
+    # e.g. let's find all 1-Wire equipment which has "temperature" property:
     uc-cmd owfs scan local1 -a temperature
 
 Deleting OWFS bus
