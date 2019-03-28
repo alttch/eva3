@@ -67,6 +67,7 @@ SFA
       variable
     * removed deprecated dm_rule* ACL and rule control functions
     * SFA templates: **request** now contains full request object
+    * SFA templates: new function api_call (call any SFA API method)
 
 Deprecated (will be removed in 3.3.0)
 -------------------------------------
