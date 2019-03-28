@@ -46,6 +46,7 @@ The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 What you get with EVA
 =====================
 
+* powerful doc:`command-line interface (CLI)<cli>`
 * use pre-made :doc:`drivers</drivers>` or write simple
   :doc:`scripts</item_scripts>` for your automation hardware and keep them
   organized, queued and safely executed with :doc:`/uc/uc`
@@ -55,7 +56,7 @@ What you get with EVA
   API</uc/uc_udp_api>`
 * test and monitor the initial setup with controllers' EI web interfaces
 * exchange all automation data between multiple servers with EVA controllers
-  and your own apps via :ref:`MQTT<mqtt_>` server or :doc:`HTTP
+  and your own apps via :ref:`MQTT<mqtt_>` server or :doc:`JSON
   notifiers</notifiers>`
 * use EVA :doc:`/lm/lm` to write powerful :doc:`macros</lm/macros>` which can
   be run automatically on events in accordance with the :doc:`decision
@@ -97,6 +98,7 @@ What you get with EVA
     drivers
     item_scripts
     modbus
+    owfs
     snmp_traps
     virtual
 

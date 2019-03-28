@@ -13,12 +13,22 @@ located in **bin** folder.
 EVA shell
 ---------
 
-EVA shell (**eva-shell** or **eva** for single commands) is a primary CLI tool.
-It allows you to manage local system as well as calling other tools/subshells
-directly from CLI interactive command line.
+EVA shell (**eva-shell**, **eva -I** or **eva** for single commands) is a
+primary CLI tool.  It allows you to manage local system as well as calling
+other tools/subshells directly from CLI interactive command line.
 
 With EVA shell you can install updates, backup and restore configuration,
 start and stop EVA components.
+
+EVA shell provides commands for all EVA ICS API methods, auto completion for
+everything, command repeat, batch commands and is the recommended way to
+configure, manage and monitor EVA ICS nodes from command line.
+
+.. figure:: eva-shell.png
+    :scale: 100%
+    :alt: EVA shell
+
+    with EVA shell, IoT management is a joy
 
 Universal Controller
 --------------------
