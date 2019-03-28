@@ -1052,13 +1052,13 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
                 cherrypy.session['k'] = k
                 return True, {'key': apikey.key_id(k)}
             else:
-                cherrypy.session['k'] = ''
+                cherrypy.session['k'] = None
                 raise AccessDenied
         key = eva.users.authenticate(u, p)
         if eva.apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
             cherrypy.session['k'] = apikey.key_by_id(key)
             return True, {'key': key}
-        cherrypy.session['k'] = ''
+        cherrypy.session['k'] = None
         raise AccessDenied('Assigned API key is invalid')
 
     @log_d
@@ -1066,7 +1066,7 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         if not hasattr(cherrypy, 'session'):
             raise FunctionFailed('Sessions are disabled')
         parse_api_params(kwargs)
-        cherrypy.session['k'] = ''
+        cherrypy.session['k'] = None
         return True
 
 
