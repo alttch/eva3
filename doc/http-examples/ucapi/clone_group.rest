@@ -3,4 +3,4 @@ Host: localhost:8812
 X-Auth-Key: mykey
 Content-Type: application/json
 
-{ "n": "clone_of_tests", "method": "clone", "n": "clone_tests" }
+{ "method": "clone", "n": "clone_tests" }
