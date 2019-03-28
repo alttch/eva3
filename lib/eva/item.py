@@ -1698,13 +1698,16 @@ class ItemAction(GenericAction):
         self.item_action_lock.release()
 
     def __cmp__(self, other):
-        return cmp(self.priority, other.priority)
+        return cmp(self.priority, other.priority) if \
+                other is not None else 1
 
     def __lt__(self, other):
-        return self.priority < other.priority
+        return (self.priority < other.priority) if \
+                other is not None else True
 
     def __gt__(self, other):
-        return self.priority > other.priority
+        return (self.priority > other.priority) if \
+                other is not None else True
 
     def get_status_name(self):
         return ia_status_names[self.get_status()]
