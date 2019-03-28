@@ -29,8 +29,10 @@ The following variables are available in all templates:
   *X-Real-IP* variable (if set by frontend server).
 
 * **request** contains `CherryPy request
-  object<https://tools.ietf.org/doc/python-cherrypy3/api/cherrypy._cprequest.Request-class.html>`_.
-  (e.g. to output user agent, use *{{ request.headers.get('User-Agent') }}*)
+  object <https://tools.ietf.org/doc/python-cherrypy3/api/cherrypy._cprequest.Request-class.html>`_,
+  e.g. display user agent:
+
+    {{ request.headers.get('User-Agent') }}
 
 Template functions
 ==================
@@ -81,3 +83,4 @@ where:
 The function is similar to SFA API :ref:`state<sfapi_state>` except that if API
 key is not specified, the current key is used.
 
+Template functions never raise exceptions, instead they return *None* values.
