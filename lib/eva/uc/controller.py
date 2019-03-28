@@ -246,7 +246,6 @@ def save():
     return True
 
 
-@with_item_lock
 def save_item_state(item):
     dbconn = eva.core.db()
     try:

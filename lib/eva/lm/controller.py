@@ -189,7 +189,6 @@ def append_item(item, start=False, load=True):
 
 
 @eva.core.save
-@with_item_lock
 def save():
     for i, v in lvars_by_full_id.items():
         if not save_lvar_state(v):
