@@ -1166,11 +1166,10 @@ def j2_state(i=None, g=None, p=None, k=None):
     else:
         _k = cp_client_key()
     try:
-        result = api.state(k=_k, i=i, g=g, p=p)
+        return api.state(k=_k, i=i, g=g, p=p)
     except:
         eva.core.log_traceback()
-        result = None
-    return result
+        return None
 
 
 def j2_groups(g=None, p=None, k=None):
@@ -1179,11 +1178,34 @@ def j2_groups(g=None, p=None, k=None):
     else:
         _k = cp_client_key()
     try:
-        result = api.groups(k=_k, g=g, p=p)
+        return api.groups(k=_k, g=g, p=p)
     except:
         eva.core.log_traceback()
-        result = None
-    return result
+        return None
+
+
+def j2_api_call(method, params={}, k=None):
+    if k:
+        _k = apikey.key_by_id(k)
+    else:
+        _k = cp_client_key()
+    f = getattr(api, method)
+    try:
+        result = f(k=_k, **params)
+        if isinstance(result, tuple):
+            result, data = result
+        else:
+            data = None
+        if result is True:
+            if data == api_result_accepted:
+                return None
+            else:
+                return data
+        else:
+            return result
+    except:
+        eva.core.log_traceback()
+        return None
 
 
 def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
@@ -1205,7 +1227,12 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     env.update(eva.core.cvars)
     template.globals['state'] = j2_state
     template.globals['groups'] = j2_groups
-    return template.render(env).encode()
+    template.globals['api_call'] = j2_api_call
+    try:
+        return template.render(env).encode()
+    except:
+        eva.core.log_traceback()
+        return 'Server error'
 
 
 def j2_handler(*args, **kwargs):

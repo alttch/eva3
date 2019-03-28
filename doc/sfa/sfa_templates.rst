@@ -32,12 +32,15 @@ The following variables are available in all templates:
   object <https://tools.ietf.org/doc/python-cherrypy3/api/cherrypy._cprequest.Request-class.html>`_,
   e.g. display user agent:
 
+.. code-block:: jinja
+
     {{ request.headers.get('User-Agent') }}
 
 Template functions
 ==================
 
-All templates have the following built-in functions:
+All templates have the following built-in functions. Template functions never
+raise exceptions, instead they return *None* values.
 
 groups
 ------
@@ -83,4 +86,28 @@ where:
 The function is similar to SFA API :ref:`state<sfapi_state>` except that if API
 key is not specified, the current key is used.
 
-Template functions never raise exceptions, instead they return *None* values.
+api_call
+--------
+
+Allows to call any :doc:`/sfa/sfa_api` method directly.
+
+.. code-block:: python
+
+    api_call(method, params={}, k=None)
+
+where:
+
+* **method** API method to call
+
+* **params** API call parameters
+
+* **k** :ref:`API key<sfa_apikey>` (use key ID instead of key itself)
+
+Example. Let's warn user when specified UC controller is not connected:
+
+.. code-block:: jinja
+
+    {%- set controller = api_call(
+                'get_controller', { 'i': 'uc/mws1-v1' }, 'masterkey') %}
+    {%- if not controller.connected %}UC controller disconnected{%- endif %}
+

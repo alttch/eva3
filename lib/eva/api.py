@@ -247,7 +247,8 @@ def restful_api_method(f):
             if data == api_result_accepted:
                 cherrypy.serving.response.status = 202
                 return None
-            return data
+            else:
+                return data
         else:
             return result
 
