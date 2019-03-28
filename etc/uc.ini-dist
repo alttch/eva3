@@ -11,9 +11,13 @@ log_file = log/uc.log
 db_update = instant
 ; db file, default runtime/db/uc.db
 db_file = runtime/db/uc.db
+; use MySQL instead of SQLite
+;db = mysql+pymysql://user:password@localhost/dbname
 ; user db file, default = db_file
 ; one user db may be used by multiple controllers at once
 ;userdb_file = runtime/db/users.db
+; use MySQL instead of SQLite
+;userdb = mysql+pymysql://user:password@localhost/dbname
 ; keep action history in seconds
 keep_action_history = 86400
 ; action cleaner interval, in seconds
