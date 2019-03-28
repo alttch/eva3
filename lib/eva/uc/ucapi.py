@@ -1679,8 +1679,8 @@ class UC_HTTP_API(UC_HTTP_API_abstract, GenericHTTP_API):
         self._expose(self.info)
         self._expose(self.login)
         self._expose(self.logout)
-        self.wrap_exposed()
         self.enable_sessions()
+        self.wrap_exposed()
 
 
 class UC_JSONRPC_API(eva.sysapi.SysHTTP_API_abstract,

@@ -1033,8 +1033,8 @@ class SysHTTP_API(SysHTTP_API_abstract, GenericHTTP_API):
         GenericHTTP_API.__init__(self)
         SysHTTP_API_abstract.__init__(self)
         self.expose_api_methods('sysapi')
-        self.wrap_exposed()
         self.enable_sessions()
+        self.wrap_exposed()
 
 
 class SysHTTP_API_REST_abstract:
