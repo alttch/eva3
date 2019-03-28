@@ -68,11 +68,6 @@ eva_sfa_ajax_reload_interval = 2;
 eva_sfa_force_reload_interval = 5;
 
 /**
- * Reload interval for rule monitor (in seconds)
- */
-eva_sfa_rule_monitor_interval = 60;
-
-/**
  * Log refresh interval for AJAX mode (in seconds)
  */
 eva_sfa_log_reload_interval = 2;
@@ -170,24 +165,6 @@ function eva_sfa_restart() {
   eva_sfa_stop();
   eva_sfa_start();
 }
-
-/**
- * Start rule monitor. Rule monitor should be started manually after every
- * login because in many typical cases rules are registered after the sucessful
- * auth
- */
-function eva_sfa_start_rule_monitor() {
-  if (eva_sfa_rule_reload !== null) {
-    clearInterval(eva_sfa_rule_reload);
-  } else {
-    eva_sfa_rule_monitor();
-  }
-  eva_sfa_rule_reload = setInterval(
-    eva_sfa_rule_monitor,
-    eva_sfa_rule_monitor_interval * 1000
-  );
-}
-
 /**
  * Stop API
  * After calling the function will close open WebSocket if available,
@@ -234,18 +211,6 @@ function eva_sfa_call(func, params, cb_success, cb_error) {
   var p = params;
   if (!p) p = {};
   eva_sfa_api_call(func, p, cb_success, cb_error);
-}
-
-/**
- * Register rule to be monitored
- *
- * @param rule_id - rule ID
- * @param cb - function called after rule props are reloaded
- */
-function eva_sfa_register_rule(rule_id, cb) {
-  eva_sfa_rules_to_monitor.push({rule_id: rule_id, cb: cb});
-  var props = eva_sfa_rule_props(rule_id);
-  if (props !== undefined) cb(props);
 }
 
 /**
@@ -296,21 +261,6 @@ function eva_sfa_expires_in(lvar_id) {
   var t = i.expires - new Date().getTime() / 1000 + eva_sfa_tsdiff + i.set_time;
   if (t < 0) t = 0;
   return t;
-}
-
-/**
- * Get rule props
- *
- * @param rule_id - rule ID
- *
- * @returns - object with rule props or undefined if no rule found
- */
-function eva_sfa_rule_props(rule_id) {
-  if (rule_id in eva_sfa_rule_props_data) {
-    return eva_sfa_rule_props_data[rule_id];
-  } else {
-    return undefined;
-  }
 }
 
 /**
@@ -537,32 +487,6 @@ function eva_sfa_clear(lvar_id, cb_success, cb_error) {
   var q = eva_sfa_prepare();
   q['i'] = lvar_id;
   eva_sfa_api_call('clear', q, cb_success, cb_error);
-}
-
-/**
- * Set rule prop
- *
- * @param rule_id - rule ID
- * @param prop - rule property
- * @param value - new prop value, optional
- * @param save - true if rule should be immediately saved
- */
-function eva_sfa_set_rule_prop(
-  rule_id,
-  prop,
-  value,
-  save,
-  cb_success,
-  cb_error
-) {
-  var q = eva_sfa_prepare();
-  q['i'] = rule_id;
-  q['p'] = prop;
-  q['v'] = value;
-  if (save) {
-    q['save'] = 1;
-  }
-  eva_sfa_api_call('set_rule_prop', q, cb_success, cb_error);
 }
 
 /**
@@ -865,13 +789,10 @@ function eva_sfa_popup(ctx, pclass, title, msg, params) {
 
 eva_sfa_update_state_functions = Array();
 eva_sfa_update_state_mask_functions = Array();
-eva_sfa_rules_to_monitor = Array();
 eva_sfa_ws = null;
 eva_sfa_ajax_reload = null;
 eva_sfa_heartbeat_reload = null;
-eva_sfa_rule_reload = null;
 eva_sfa_states = Array();
-eva_sfa_rule_props_data = Array();
 
 eva_sfa_log_level = 20;
 eva_sfa_log_subscribed = false;
@@ -1108,7 +1029,6 @@ function eva_sfa_set_ws_log_level(l) {
 
 function eva_sfa_stop_engine() {
   eva_sfa_states = Array();
-  eva_sfa_rule_props_data = Array();
   eva_sfa_server_info = null;
   eva_sfa_tsdiff = null;
   eva_sfa_last_ping = null;
@@ -1120,10 +1040,6 @@ function eva_sfa_stop_engine() {
   if (eva_sfa_ajax_reload !== null) {
     clearInterval(eva_sfa_ajax_reload);
     eva_sfa_ajax_reload = null;
-  }
-  if (eva_sfa_rule_reload !== null) {
-    clearInterval(eva_sfa_rule_reload);
-    eva_sfa_rule_reload = null;
   }
   if (eva_sfa_ws !== null) {
     try {
@@ -1184,21 +1100,6 @@ function eva_sfa_heartbeat(on_login, data) {
 function eva_sfa_set_cvars(cvars) {
   $.each(cvars, function(k, v) {
     eval(k + ' = "' + v + '"');
-  });
-}
-
-function eva_sfa_rule_monitor() {
-  $.each(eva_sfa_rules_to_monitor, function(i, r) {
-    eva_sfa_load_rule_props(r.rule_id, r.cb);
-  });
-}
-
-function eva_sfa_load_rule_props(rule_id, cb) {
-  var q = eva_sfa_prepare();
-  q['i'] = rule_id;
-  eva_sfa_api_call('list_rule_props', q, function(data) {
-    eva_sfa_rule_props_data[rule_id] = data;
-    if (cb !== undefined && cb !== null) cb(data);
   });
 }
 

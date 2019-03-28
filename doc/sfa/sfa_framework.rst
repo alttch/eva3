@@ -102,7 +102,7 @@ Interval (seconds) for updating data when framework is in AJAX mode:
 eva_sfa_force_reload_interval
 -----------------------------
 
-The next variable forces ajax updates if the framework is running in WebSocket
+The next variable forces AJAX updates if the framework is running in WebSocket
 mode. *0* value disables updating via AJAX completely, but it's recommended to
 keep some value to be sure the interface has the actual data even if some
 websocket events are lost.
@@ -110,16 +110,6 @@ websocket events are lost.
 .. code-block:: javascript
 
     eva_sfa_force_reload_interval = 5;
-
-eva_sfa_rule_monitor_interval
------------------------------
-
-Interval (seconds) for updating settings of the :doc:`decision-making matrix
-rules</lm/decision_matrix>`. Rule settings are updated via AJAX only.
-
-.. code-block:: javascript
-
-    eva_sfa_rule_monitor_interval = 60;
 
 eva_sfa_server_info
 -------------------
@@ -228,17 +218,6 @@ To start the framework, run
 that will authorize the user and run the data update and event handling
 threads.
 
-eva_sfa_start_rule_monitor
---------------------------
-
-After the initialization succeeds, you may additionally start reloading the
-:doc:`decision rules</lm/decision_matrix>`. The following function is not
-called by init/start and you should call it separately:
-
-.. code-block:: javascript
-
-    eva_sfa_start_rule_monitor();
-
 eva_sfa_stop
 ------------
 
@@ -334,23 +313,6 @@ where:
 You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
 case the specified state update function will be called always when item oid
 matches the specified mask.
-
-eva_sfa_register_rule
----------------------
-
-Similarly, you can process the :doc:`decision rules</lm/decision_matrix>`
-settings. When rule params are changed, the framework runs the function
-registered by
-
-.. code-block:: javascript
-
-    eva_sfa_register_rule(rule_id, cb);
-
-where:
-
-* **rule_id** rule id to monitor
-* **cb** function which's called with **props** param containing all the rule
-  props (similar to LM API `list_rule_props<lm_list_rule_props>`)
 
 Macro execution and unit management
 ===================================
@@ -497,18 +459,6 @@ Returns float number of seconds to timer expiration, or:
 * **-1** if the timer is expired
 * **-2** if the timer is disabled (stopped) and has status *0*
 
-Modifying decision rules
-========================
-
-eva_sfa_set_rule_prop
----------------------
-
-To change :doc:`decision rules</lm/decision_matrix>` properties, call:
-
-.. code-block:: javascript
-
-    eva_sfa_set_rule_prop(rule_id, prop, value, save, cb_success, cb_error);
-
 Processing logs
 ===============
 
@@ -551,7 +501,7 @@ Function called with log record param, when the new log event arrives
 eva_sfa_log_postprocess
 -----------------------
 
-Function called when all new log records are processed, i.e. to autoscroll the
+Function called when all new log records are processed, i.e. to auto scroll the
 log viewer
 
 .. code-block:: javascript
@@ -642,7 +592,7 @@ See :ref:`Chart example<sfw_chart_example>`.
 eva_sfa_popup
 -------------
 
-Opens HTML5 popups
+Opens HTML5 popup
 
 .. code-block:: javascript
 
