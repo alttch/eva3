@@ -13,9 +13,9 @@ located in **bin** folder.
 EVA shell
 ---------
 
-EVA shell (**eva-shell**) is a primary CLI tool. It allows you to manage local
-system as well as calling other tools directly from CLI interactive command
-line.
+EVA shell (**eva-shell** or **eva** for single commands) is a primary CLI tool.
+It allows you to manage local system as well as calling other tools/subshells
+directly from CLI interactive command line.
 
 With EVA shell you can install updates, backup and restore configuration,
 start and stop EVA components.
