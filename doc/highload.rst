@@ -25,8 +25,11 @@ To use EVA ICS in high-load environments, remember the following:
 * If you don't need action history, set *keep_action_history* in controllers'
   configuration to zero to disable it.
 
-* Turn off logging (comment *log_file* property in configuration) and reduce
-  *keep_logmem* value.
+* Turn off logging (comment *log_file* property in configuration file) and
+  reduce *keep_logmem* value.
+
+* Increase logging level to *warning* or *error* using *logging_level* config
+  option in [server] section.
 
 * If you use passive updates, set *polldelay* to the minimal value
   (*0.001* - *0.005* for 1-5ms)
