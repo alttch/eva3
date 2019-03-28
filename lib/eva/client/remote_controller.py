@@ -630,7 +630,10 @@ class RemoteControllerPool(object):
                 self.reload_thread_flags[c.item_id] = False
         for i, c in self.controllers.items():
             if c.item_id in self.reload_threads:
-                self.reload_threads[c.item_id].join()
+                try:
+                    self.reload_threads[c.item_id].join()
+                except:
+                    pass
 
     def _t_action_cleaner(self):
         logging.debug('uc pool action cleaner started')

@@ -17,6 +17,8 @@ import psutil
 import threading
 import inspect
 import sqlalchemy as sa
+import faulthandler
+import io
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -239,9 +241,12 @@ def sighandler_hup(signum, frame):
     except:
         log_traceback()
 
+
 def suicide(**kwargs):
     time.sleep(max_shutdown_time)
     logging.critical('SUICIDE')
+    if show_traceback:
+        faulthandler.dump_traceback()
     os.kill(os.getpid(), signal.SIGKILL)
 
 
@@ -770,7 +775,11 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     else: t = timeout
     if delay: p = delay
     else: p = polldelay
-    return _wait_for(func, t, p, wait_for_false)
+    return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
+
+
+def is_shutdown_requested():
+    return shutdown_requested
 
 
 def format_xc_fname(item=None, xc_type='', fname=None, update=False):

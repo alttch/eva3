@@ -28,6 +28,7 @@ class MultiOrderedDict(OrderedDict):
 class InvalidParameter(Exception):
     pass
 
+
 def config_error(fname, section, key, value):
     logging.error('%s error, unknown value %s = "%s" in section %s' % \
             (fname, key, value, section))
@@ -110,14 +111,18 @@ def netacl_match(host, acl):
     return False
 
 
-def wait_for(func, wait_timeout, delay, wait_for_false=False):
+def wait_for(func, wait_timeout, delay, wait_for_false=False, abort_func=None):
     a = 0
     if wait_for_false:
         while func() and a < wait_timeout / delay:
+            if abort_func and abort_func():
+                break
             a += 1
             time.sleep(delay)
     else:
         while not func() and a < wait_timeout / delay:
+            if abort_func and abort_func():
+                break
             a += 1
             time.sleep(delay)
     return func()
@@ -391,6 +396,7 @@ class Locker:
     def critical(self):
         pass
 
+
 def safe_int(i):
     if isinstance(i, int):
         return i
@@ -398,6 +404,7 @@ def safe_int(i):
         return int(i, 16)
     else:
         return int(i)
+
 
 def dict_merge(*args):
     """

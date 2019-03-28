@@ -914,7 +914,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         try:
             logging.debug('.Testing http-json notifier %s (%s)' % \
                     (self.notifier_id,self.uri))
-            d = {'subject': 'test' }
+            d = {'subject': 'test'}
             if self.notify_key:
                 d['k'] = self.notify_key
             if self.method:
@@ -1248,22 +1248,26 @@ class GenericMQTTNotifier(GenericNotifier):
         if t == self.announce_topic and \
                 d != self.announce_msg and \
                 self.discovery_handler:
-            background_job(self.discovery_handler)(self.notifier_id, d)
+            background_job(
+                self.discovery_handler, daemon=True)(self.notifier_id, d)
             return
         if t == self.api_request_topic and self.api_handler:
-            background_job(self.api_handler)(self.notifier_id, d,
-                                             self.send_api_response)
+            background_job(
+                self.api_handler, daemon=True)(self.notifier_id, d,
+                                               self.send_api_response)
             return
         if t.startswith(self.pfx_api_response):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
-                background_job(self.api_callback[response_id][1])(d)
+                background_job(
+                    self.api_callback[response_id][1], daemon=True)(d)
                 self.finish_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
-                background_job(self.exec_custom_handler)(h, d, t, msg.qos,
-                                                         msg.retain)
+                background_job(
+                    self.exec_custom_handler, daemon=True)(h, d, t, msg.qos,
+                                                           msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
                 r = jsonpickle.decode(d)
