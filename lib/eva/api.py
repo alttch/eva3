@@ -40,6 +40,8 @@ from functools import wraps
 
 from types import SimpleNamespace
 
+from base64 import b64decode
+
 default_port = 80
 default_ssl_port = 443
 
@@ -1047,6 +1049,17 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         if not hasattr(cherrypy, 'session'):
             raise FunctionFailed('Sessions are disabled')
         k, u, p = parse_function_params(kwargs, 'kup', '.ss')
+        if not u and hasattr(cherrypy, 'serving') and hasattr(
+                cherrypy.serving, 'request'):
+            auth_header = cherrypy.serving.request.headers.get('authorization')
+            if auth_header:
+                try:
+                    scheme, params = auth_header.split(' ', 1)
+                    if scheme.lower() == 'basic':
+                        u, p = b64decode(params).decode().split(':', 1)
+                except Exception as e:
+                    eva.core.log_traceback()
+                    raise FunctionFailed(e)
         if not u and k:
             if k in apikey.keys:
                 cherrypy.session['k'] = k
