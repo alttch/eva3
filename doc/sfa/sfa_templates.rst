@@ -110,6 +110,6 @@ Example. Let's warn user when specified UC controller is not connected:
     {%- set controller = api_call(
                 'get_controller', { 'i': 'uc/mws1-v1' }, 'masterkey') %}
     {%- if not controller.connected %}
-        UC controller disconnected
+        UC controller is not connected
     {%- endif %}
 
