@@ -1041,7 +1041,7 @@ class UC_API(GenericAPI):
     @api_need_master
     def test_modbus_port(self, **kwargs):
         """
-        list virtual ModBus ports
+        test virtual ModBus port
 
         Verifies virtual :doc:`ModBus port</modbus>` by calling connect()
         ModBus client method.

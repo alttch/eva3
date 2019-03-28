@@ -885,8 +885,8 @@ Parameters:
 
 .. _ucapi_test_modbus_port:
 
-test_modbus_port - list virtual ModBus ports
---------------------------------------------
+test_modbus_port - test virtual ModBus port
+-------------------------------------------
 
 Verifies virtual :doc:`ModBus port</modbus>` by calling connect() ModBus client method.
 

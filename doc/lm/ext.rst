@@ -10,6 +10,8 @@ However macro extensions are more simple, standardized and easy to configure.
 As the goal is to keep macro code as simple as possible, macro extensions are
 the best choice in many cases.
 
+.. contents::
+
 Loading macro extension
 =======================
 

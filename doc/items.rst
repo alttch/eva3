@@ -18,6 +18,8 @@ help of API list_props or :doc:`EVA console tools</cli>` In case the
 configuration file settings are changed manually or by 3rd party software,
 controller should be restarted to reload the configurations.
 
+.. contents::
+
 Common item parameters
 ======================
 

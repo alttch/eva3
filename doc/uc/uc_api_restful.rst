@@ -900,8 +900,8 @@ Parameters:
 
 .. _ucapi_restful_test_modbus_port:
 
-list virtual ModBus ports
--------------------------
+test virtual ModBus port
+------------------------
 
 Verifies virtual :doc:`ModBus port</modbus>` by calling connect() ModBus client method.
 

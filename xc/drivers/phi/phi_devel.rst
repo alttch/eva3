@@ -5,6 +5,8 @@ PHI (Physical interface) is a low level driver which communicates directly with
 an equipment. PHI should not contain any logic, its job is only to get/set an
 equipment to the state requested by LPI.
 
+.. contents::
+
 Required variables in a header
 ==============================
 
