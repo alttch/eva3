@@ -18,7 +18,6 @@ import threading
 import inspect
 import sqlalchemy as sa
 import faulthandler
-import io
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
