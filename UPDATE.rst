@@ -30,7 +30,9 @@ Before applying this update
   PHI, developed for Driver API v1 are no longer compatible. Switch them to v4
   or at least add __equipment__ field.
 * sessions are off now by default, if user logins are used - turn them by
-  setting session_timeout > 0 in configs
+  setting session_timeout > 0 in configs.
+* SFA templates **request** variable now contains full request object. To get
+  request parameters, access them with *request.params*.
 * set SFA UI to use js/eva_sfa.3.1.js until ported. The following SFA FW
   function calls are INCOMPATIBLE with previous version:
 

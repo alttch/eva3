@@ -1165,7 +1165,11 @@ def j2_state(i=None, g=None, p=None, k=None):
         _k = apikey.key_by_id(k)
     else:
         _k = cp_client_key()
-    result = api.state(k=_k, i=i, g=g, p=p)
+    try:
+        result = api.state(k=_k, i=i, g=g, p=p)
+    except:
+        eva.core.log_traceback()
+        result = None
     return result
 
 
@@ -1174,7 +1178,11 @@ def j2_groups(g=None, p=None, k=None):
         _k = apikey.key_by_id(k)
     else:
         _k = cp_client_key()
-    result = api.groups(k=_k, g=g, p=p)
+    try:
+        result = api.groups(k=_k, g=g, p=p)
+    except:
+        eva.core.log_traceback()
+        result = None
     return result
 
 
@@ -1186,7 +1194,7 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     except:
         raise cp_api_404()
     env = {}
-    env['request'] = cherrypy.serving.request.params
+    env['request'] = cherrypy.serving.request
     k = cp_client_key()
     if k:
         server_info = api.test(k=k)[1]

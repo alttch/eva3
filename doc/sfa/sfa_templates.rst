@@ -28,7 +28,9 @@ The following variables are available in all templates:
   **remote_ip** which contains either request IP address or value of
   *X-Real-IP* variable (if set by frontend server).
 
-* **request** contains a dict with all request GET or POST params.
+* **request** contains `CherryPy request
+  object<https://tools.ietf.org/doc/python-cherrypy3/api/cherrypy._cprequest.Request-class.html>`_.
+  (e.g. to output user agent, use *{{ request.headers.get('User-Agent') }}*)
 
 Template functions
 ==================

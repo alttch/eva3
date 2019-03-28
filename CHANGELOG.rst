@@ -66,6 +66,7 @@ SFA
     * SFA framework: data exchange optimization with eva_sfa_state_updates
       variable
     * removed deprecated dm_rule* ACL and rule control functions
+    * SFA templates: **request** now contains full request object
 
 Deprecated (will be removed in 3.3.0)
 -------------------------------------
