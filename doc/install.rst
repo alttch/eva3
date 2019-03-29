@@ -220,7 +220,7 @@ Using system shell
 
     curl -s <UPDATE_SCRIPT_URL> | bash /dev/stdin
     #e.g.
-    #curl -s https://get.eva-ics.com/3.1.1/stable/update.sh | bash /dev/stdin
+    #curl -s https://get.eva-ics.com/3.2.0/stable/update.sh | bash /dev/stdin
 
 * If updating from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if
