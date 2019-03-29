@@ -65,7 +65,7 @@ For each controller, set notifier **eva_1** properties:
 * **api_enabled** true
 * **announce_interval** 30
 
-Create API key default (equal) on each node
+Create equal API key named **default** on each controller.
 
 Enabling Cloud Manager
 ~~~~~~~~~~~~~~~~~~~~~~
