@@ -1,8 +1,8 @@
 EVA ICS 3.2.0
-=============
+*************
 
 What's new
-----------
+==========
 
 * JSON RPC and RESTful API
 * Cloud support (MQTT node autodiscovery)
@@ -11,6 +11,9 @@ What's new
 * ModBus slave
 
 Complete change log: https://get.eva-ics.com/3.2.0/stable/CHANGELOG.html
+
+Updating from versions below 3.2.0
+==================================
 
 Preparing
 ---------
