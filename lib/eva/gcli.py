@@ -68,6 +68,7 @@ class GCLI(object):
         self.interactive = False
         self.pd = None
         self.pd_lock = threading.Lock()
+        self.ac_lock = threading.Lock()
         self.argcomplete = None
         self.parse_primary_args()
 
@@ -123,10 +124,13 @@ class GCLI(object):
         self.load_argcomplete()
 
     def load_argcomplete(self):
+        self.ac_lock.acquire()
         try:
             self.argcomplete = importlib.import_module('argcomplete')
         except:
             pass
+        finally:
+            self.ac_lock.release()
 
     def reset_argcomplete(self):
         if self.argcomplete:
