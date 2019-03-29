@@ -50,3 +50,21 @@ Before applying this update
 
     * pip3 install -U pyasn1
 
+Enabling Cloud API/Autodiscovery
+--------------------------------
+
+For each controller, set notifier **eva_1** properties:
+
+* **discovery_enabled** true
+* **api_enabled** true
+* **announce_interval** 30
+
+Create API key default (equal) on each node
+
+Enabling Cloud Manager
+----------------------
+
+* append section *[cloud]* and prop *cloud_manager = yes* to
+  etc/sfa.ini
+* set *masterkey* property for each controller, connected to SFA
+
