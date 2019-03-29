@@ -12,8 +12,8 @@ What's new
 
 Complete change log: https://get.eva-ics.com/3.2.0/stable/CHANGELOG.html
 
-Updating from versions below 3.2.0
-==================================
+Update instructions
+===================
 
 Preparing
 ---------
