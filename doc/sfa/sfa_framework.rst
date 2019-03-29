@@ -158,12 +158,28 @@ function is called via **data** parameter with the event data set herein.
 
     eva_sfa_ws_event_handler = null;
 
+eva_sfa_state_updates
+---------------------
+
+Update item states via AJAX and subscribe to state updates via websocket
+
+Possible values:
+
+ * **true** get states of all items API key has access to
+ * *{'p': [types], 'g': [groups]}* subscribe to specified types and groups
+ * **false** - disable state updates
+
+.. code-block:: javascript
+
+    eva_sfa_state_updates = true;
+
+
 .. _sfw_reload:
 
 eva_sfa_reload_handler
 ----------------------
 
-This variable contains function which's called when :doc:`/sfa/sfa` asks
+This variable contains function which is called when :doc:`/sfa/sfa` asks
 connected clients to reload the interface. If you want the interface to handle
 the reload event, you must define this function.
 
@@ -181,7 +197,7 @@ the reload event, you must define this function.
 eva_sfa_server_restart_handler
 ------------------------------
 
-This variable contains function which's called when :doc:`/sfa/sfa` notifies
+This variable contains function which is called when :doc:`/sfa/sfa` notifies
 connected clients about server restart. Client application can prepare user for
 the server restart (e.g. display warning message) and forcibly reload data when
 the server is back online.
@@ -258,7 +274,7 @@ The function returns **state** object or **undefined** if the item state is
 unknown.
 
 You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
-case the function returns the array of all item with oids matching the
+case the function returns the array of all item with OIDs matching the
 specified mask.
 
 eva_sfa_state_history
@@ -306,7 +322,7 @@ where:
 
 * **oid** :doc:`item</items>` id in the following format:
   **type:group/item_id**, i.e. *sensor:env/temperature/temp1*
-* **cb** function which's called with **state** param containing the new item
+* **cb** function which is called with **state** param containing the new item
   state data (**state.status**, **state.value** etc. equal to the regular state
   :doc:`notification event</notifiers>`.)
 
@@ -327,7 +343,7 @@ To execute :doc:`macro</lm/macros>`, call the function:
     eva_sfa_run(macro_id, params, cb_success, cb_error);
 
 where **macro_id** - macro id (in a full format, *group/macro_id*) to execute,
-**params** - object containing paramterers equal to LM API
+**params** - object containing parameters equal to LM API
 :ref:`run<lmapi_run>` function, and **cb_success**, **cb_error** - functions
 called when the access to API has either succeeded or failed. The functions are
 called with **data** param which contains the API response.
@@ -574,7 +590,7 @@ where:
   are supported
 * **oid** item OID (or multiple, array or comma separated): **type:group/id**
 * **params** (object):
-    * **timeframe** timeframe to display, e.g. *5T* - last 5 min, *2H* - last 2
+    * **timeframe** time frame to display, e.g. *5T* - last 5 min, *2H* - last 2
       hours, *2D* last 2 days etc.
     * **fill** precision, 10T-60T recommended. The more accurate precision is,
       the more data points are displayed (but chart is slower)
@@ -926,7 +942,7 @@ reliability of the connection.
 Common problems which may arise:
 
 * SFA server reboot and loss of session data.
-* Breaking the WebSocket connection due to frontend reboot or another reason.
+* Breaking the WebSocket connection due to front-end reboot or another reason.
 
 To control the session, SFA Framework requests SFA API :ref:`test<sfapi_test>`
 every **eva_sfa_heartbeat_interval** (*5* seconds by default). WebSocket is
