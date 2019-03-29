@@ -15,8 +15,8 @@ Complete change log: https://get.eva-ics.com/3.2.0/stable/CHANGELOG.html
 Update instructions
 ===================
 
-Preparing
----------
+Before update
+-------------
 
 Before applying this update
 
@@ -53,8 +53,11 @@ Before applying this update
 
     * pip3 install -U pyasn1
 
-Enabling Cloud API/Autodiscovery
---------------------------------
+After update
+------------
+
+Enabling Cloud API/autodiscovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 For each controller, set notifier **eva_1** properties:
 
@@ -65,7 +68,7 @@ For each controller, set notifier **eva_1** properties:
 Create API key default (equal) on each node
 
 Enabling Cloud Manager
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 * append section *[cloud]* and prop *cloud_manager = yes* to
   etc/sfa.ini
