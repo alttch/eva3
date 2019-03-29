@@ -46,7 +46,7 @@ The latest EVA ICS version is |Version|. :doc:`CHANGELOG</changelog>`
 What you get with EVA
 =====================
 
-* powerful doc:`command-line interface (CLI)<cli>`
+* powerful :doc:`command-line interface (CLI)<cli>`
 * use pre-made :doc:`drivers</drivers>` or write simple
   :doc:`scripts</item_scripts>` for your automation hardware and keep them
   organized, queued and safely executed with :doc:`/uc/uc`
