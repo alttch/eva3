@@ -1,7 +1,7 @@
 EVA ICS CHANGELOG
 *****************
 
-3.2.0 (TBA)
+3.2.0 (expected: 2018-04)
 ===========
 
 Common
