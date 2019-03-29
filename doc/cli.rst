@@ -96,8 +96,8 @@ TCP/IP controlled relays
 * **SR-201** controls the SR-201 relay controllers - a quite popular and simple
   solution with TCP/IP management option
 
-1-Wire
-------
+1-Wire (direct access via GPIO)
+-------------------------------
 
 * **w1_ds2408** controls `Dallas
   DS2408 <https://datasheets.maximintegrated.com/en/ds/DS2408.pdf>`_-based
