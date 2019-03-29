@@ -190,6 +190,11 @@ The system is ready. Enable automatic launch in the same way as for
 Updating
 ========
 
+.. warning::
+
+    Before updating from the previous version, read `update
+    manifest <https://github.com/alttch/eva3/blob/3.2.0/UPDATE.rst>`_.
+
 Using EVA Shell
 ---------------
 
