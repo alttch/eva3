@@ -323,27 +323,26 @@ import eva.client.cli
 eva.client.cli.say_bye = False
 eva.client.cli.parent_shell_name = 'eva:{nodename}'
 eva.client.cli.shells_available = {shells_available}
-eva.client.cli.readline_processing = {rlp}
 sys.argv = {argv}
 {xp}
 
 """.format(nodename=self.nodename,
             shells_available=self.products_configured if x == '-cmd' else [],
-            rlp=not interactive_mode,
             argv=sysargs,
             xp=xp) + c
             os.chdir(dir_cwd)
+            if self.interactive: self.save_readline()
             try:
                 exec(c)
                 self.subshell_extra_args = None
             except SystemExit:
-                self.full_reset_after_shell()
-                return True
+                pass
+            return True
         except:
-            self.full_reset_after_shell()
             return False
-        self.full_reset_after_shell()
-        return True
+        finally:
+            if self.interactive:
+                self.full_reset_after_shell()
 
     def full_reset_after_shell(self):
         self.setup_parser()

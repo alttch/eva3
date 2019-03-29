@@ -89,7 +89,10 @@ class GCLI(object):
                 pass
 
     def finish_interactive(self):
+        self.save_readline()
         if self.say_bye: print('Bye')
+
+    def save_readline(self):
         if self.readline_processing:
             try:
                 if self.history_file:
