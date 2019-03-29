@@ -52,6 +52,7 @@ Before applying this update
   Modules with known issues and update commands for them:
 
     * pip3 install -U pyasn1
+    * pip3 install -U cryptography
 
 After update
 ------------
