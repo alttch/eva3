@@ -54,6 +54,12 @@ Before applying this update
     * pip3 install -U pyasn1
     * pip3 install -U cryptography
 
+* if PHIs which use SNMP functions are no longer working, update pysnmp package
+  and restart UC:
+
+    * pip3 install -U pysnmp
+    * eva server restart uc
+
 After update
 ------------
 

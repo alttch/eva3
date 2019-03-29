@@ -1184,7 +1184,7 @@ function eva_sfa_oid_match(oid, mask) {
 }
 
 function _eva_sfa_deprecated(f1, f2) {
-  console.log('!!! function ' + f1 + ' is deprecated. Use ' + f2 + 'instead');
+  console.log('!!! function ' + f1 + ' is deprecated. Use ' + f2 + ' instead');
 }
 
 function eva_sfa_close_popup(ctx) {
