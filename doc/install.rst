@@ -58,7 +58,7 @@ Ubuntu):
 
 .. code-block:: bash
 
-    apt install -y curl python3 python3-pip python3-pandas python3-pysnmp4 python3-cryptography
+    apt install -y curl python3 python3-pip python3-pandas python3-pysnmp4 python3-cryptography jq libow-dev
 
 Installing local MQTT server
 ----------------------------
@@ -189,6 +189,11 @@ The system is ready. Enable automatic launch in the same way as for
 
 Updating
 ========
+
+.. warning::
+
+    Before updating from the previous version, read `update
+    manifest <https://github.com/alttch/eva3/blob/3.2.0/UPDATE.rst>`_.
 
 Using EVA Shell
 ---------------

@@ -11,6 +11,8 @@ import os
 from eva.client import apiclient
 from eva.gcli import GCLI
 
+from pyaltt import background_job
+
 say_bye = True
 readline_processing = True if \
         not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
@@ -759,6 +761,7 @@ class GenericCLI(GCLI):
             'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
 
     def start_interactive(self, reset_sst=True):
+        background_job(self.import_pandas, daemon=True)()
         if reset_sst: globals()['shell_switch_to'] = None
         super().start_interactive()
 

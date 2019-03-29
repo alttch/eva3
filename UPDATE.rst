@@ -1,8 +1,8 @@
 EVA ICS 3.2.0
-=============
+*************
 
 What's new
-----------
+==========
 
 * JSON RPC and RESTful API
 * Cloud support (MQTT node autodiscovery)
@@ -12,8 +12,11 @@ What's new
 
 Complete change log: https://get.eva-ics.com/3.2.0/stable/CHANGELOG.html
 
-Preparing
----------
+Update instructions
+===================
+
+Before update
+-------------
 
 Before applying this update
 
@@ -26,9 +29,9 @@ Before applying this update
 * default item layout is now enterprise, if using simple - specify this in
   configs
 * Custom LM PLC extensions are not compatible with v4 API used in 3.2.0 and
-  should be ported before update (tiny constructor modification required) * UC
-  PHI, developed for Driver API v1 are no longer compatible. Switch them to v4
-  or at least add __equipment__ field.
+  should be ported before update (tiny constructor modification required)
+* UC PHI, developed for Driver API v1 are no longer compatible. Switch them to
+  v4 or at least add __equipment__ field.
 * sessions are off now by default, if user logins are used - turn them by
   setting session_timeout > 0 in configs.
 * SFA templates **request** variable now contains full request object. To get
@@ -49,4 +52,32 @@ Before applying this update
   Modules with known issues and update commands for them:
 
     * pip3 install -U pyasn1
+    * pip3 install -U cryptography
+
+* if PHIs which use SNMP functions are no longer working, update pysnmp package
+  and restart UC:
+
+    * pip3 install -U pysnmp
+    * eva server restart uc
+
+After update
+------------
+
+Enabling Cloud API/autodiscovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For each controller, set notifier **eva_1** properties:
+
+* **discovery_enabled** true
+* **api_enabled** true
+* **announce_interval** 30
+
+Create equal API key named **default** on each controller.
+
+Enabling Cloud Manager
+~~~~~~~~~~~~~~~~~~~~~~
+
+* append section *[cloud]* and prop *cloud_manager = yes* to
+  etc/sfa.ini
+* set *masterkey* property for each controller, connected to SFA
 
