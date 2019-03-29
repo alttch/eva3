@@ -58,10 +58,10 @@ Benchmarks
 
 Benchmark tests for :doc:`/uc/uc` can be performed with
 *tests/benchmark-uc-crt* tool. Benchmark results may be different on a systems
-with different background load, so please stop all unnecesseary processes
+with different background load, so please stop all unnecessary processes
 before starting a test.
 
-The primary parameter for UC which's bening benchmarked is a time, required for
+The primary parameter for UC which is benign benchmarked is a time, required for
 the controller to:
 
 * obtain :doc:`item</items>` state from :doc:`driver</drivers>`
@@ -69,7 +69,7 @@ the controller to:
 * perform a simple in-core event handling (convert item value to float and then
   compare with a float number) with self thread-locking
 
-* get action requiest from event handler and execute it using another driver
+* get action request from event handler and execute it using another driver
 
 The time between a moment when the first driver gets new item value and a
 moment when the second driver is ready to call equipment action is named
@@ -112,3 +112,6 @@ Below are benchmark results on a test systems (lower CRT is better):
 +--------------------+-------------------------------+-------+------------------+-----------+
 | UniPi Axon S115    | ARMv8 Cortex-A53              | 4     | 3.1.1 2018101701 | 27        |
 +--------------------+-------------------------------+-------+------------------+-----------+
+
+*According to tests, EVA ICS 3.2 is about 15% faster than 3.1.1*
+
