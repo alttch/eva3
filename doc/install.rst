@@ -58,7 +58,7 @@ Ubuntu):
 
 .. code-block:: bash
 
-    apt install -y curl python3 python3-pip python3-pandas python3-pysnmp4 python3-cryptography jq
+    apt install -y curl python3 python3-pip python3-pandas python3-pysnmp4 python3-cryptography jq libow-dev
 
 Installing local MQTT server
 ----------------------------
