@@ -145,7 +145,7 @@ function eva_sfa_start() {
   eva_sfa_last_pong = null;
   if (eva_sfa_apikey !== null) {
     if (eva_sfa_apikey != '') {
-      q = eva_sfa_prepare();
+      q = {k: eva_sfa_apikey};
     }
   } else {
     q = {u: eva_sfa_login, p: eva_sfa_password};
@@ -173,7 +173,9 @@ function eva_sfa_restart() {
 function eva_sfa_stop(cb) {
   eva_sfa_stop_engine();
   eva_sfa_logged_in = false;
-  eva_sfa_api_call('logout', undefined, cb, cb);
+  eva_sfa_api_call('logout', eva_sfa_prepare(), cb, cb);
+  eva_sfa_api_token = '';
+  eva_sfa_set_token_cookie();
 }
 
 /**
@@ -208,8 +210,7 @@ function eva_sfa_register_update_state(oid, cb) {
  * @param cb_error - function called if error occured
  */
 function eva_sfa_call(func, params, cb_success, cb_error) {
-  var p = params;
-  if (!p) p = {};
+  var p = eva_sfa_prepare(params);
   eva_sfa_api_call(func, p, cb_success, cb_error);
 }
 
@@ -800,6 +801,8 @@ eva_sfa_log_first_load = true;
 eva_sfa_log_loaded = false;
 eva_sfa_log_started = false;
 
+eva_sfa_api_token = null;
+
 eva_sfa_lr2p = new Array();
 
 eva_sfa_last_ping = null;
@@ -867,6 +870,8 @@ function eva_sfa_api_call(func, params, cb_success, cb_error, use_sysapi) {
 
 function eva_sfa_after_login(data) {
   eva_sfa_logged_in = true;
+  eva_sfa_api_token = data.token;
+  eva_sfa_set_token_cookie();
   eva_sfa_load_initial_states(true, false);
   eva_sfa_heartbeat(true, data);
   if (!eva_sfa_ws_mode) {
@@ -985,11 +990,7 @@ function eva_sfa_start_ws() {
     uri = 'ws:';
   }
   uri += '//' + loc.host;
-  var q = '';
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    q += '?k=' + eva_sfa_apikey;
-  }
-  eva_sfa_ws = new WebSocket(uri + '/ws' + q);
+  eva_sfa_ws = new WebSocket(uri + '/ws?k=' + eva_sfa_api_token);
   eva_sfa_ws.onmessage = function(evt) {
     eva_sfa_process_ws(evt);
   };
@@ -1245,8 +1246,15 @@ function eva_sfa_prepare(params) {
   } else {
     var params = params;
   }
-  if (eva_sfa_apikey !== null && eva_sfa_apikey != '') {
-    params['k'] = eva_sfa_apikey;
+  if (eva_sfa_api_token != null) {
+    params['k'] = eva_sfa_api_token;
   }
   return params;
+}
+
+function eva_sfa_set_token_cookie() {
+  var uris = Array('/ui', '/pvt', '/rpvt');
+  $.each(uris, function(k, v) {
+    document.cookie = 'auth=' + eva_sfa_api_token + '; path=' + v;
+  });
 }

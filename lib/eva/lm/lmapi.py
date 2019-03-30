@@ -116,7 +116,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
             kwargs, 'kigpY', '.sssb', defaults={'p': 'lvar'})
         if tp is None:
             tp = 'lvar'
-        elif tp not in ['LV', 'lvar']: raise ResourceNotFound
+        elif tp not in ['LV', 'lvar']:
+            raise ResourceNotFound
         if i:
             item = eva.lm.controller.get_lvar(i)
             if not item or not apikey.check(k, item): raise ResourceNotFound
@@ -1029,7 +1030,6 @@ class LM_API(GenericAPI, GenericCloudAPI):
         if not c: raise FunctionFailed
         return c.serialize(info=True)
 
-
     @log_i
     @api_need_master
     def reload_controller(self, **kwargs):
@@ -1197,9 +1197,6 @@ class LM_HTTP_API(LM_HTTP_API_abstract, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self.expose_api_methods('lmapi')
-        self._expose(self.login)
-        self._expose(self.logout)
-        self.enable_sessions()
         self.wrap_exposed()
 
 

@@ -50,6 +50,8 @@ from types import SimpleNamespace
 
 import eva.apikey
 
+import eva.tokens as tokens
+
 import eva.users
 
 import eva.notify
@@ -613,6 +615,7 @@ class UserAPI(object):
             v: value
         """
         u, p, v = parse_api_params(kwargs, 'upv', 'SSS')
+        tokens.remove_token(user=u)
         if p == 'password':
             return eva.users.set_user_password(u, v)
         elif p == 'key':
@@ -632,6 +635,7 @@ class UserAPI(object):
             p: new password
         """
         u, p = parse_api_params(kwargs, 'up', 'SS')
+        tokens.remove_token(user=u)
         return eva.users.set_user_password(u, p)
 
     @log_w
@@ -646,6 +650,7 @@ class UserAPI(object):
             a: API key to assign (key id, not a key itself)
         """
         u, a = parse_api_params(kwargs, 'ua', 'SS')
+        tokens.remove_token(user=u)
         return eva.users.set_user_key(u, a)
 
     @log_w
@@ -659,6 +664,7 @@ class UserAPI(object):
             .u: user login
         """
         u = parse_api_params(kwargs, 'u', 'S')
+        tokens.remove_token(user=u)
         return eva.users.destroy_user(u)
 
     @log_i
@@ -764,6 +770,7 @@ class UserAPI(object):
             save: save configuration immediately
         """
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'SS.b')
+        tokens.remove_token(key_id=i)
         key = eva.apikey.keys_by_id.get(i)
         if not key: raise ResourceNotFound
         return key.set_prop(p, v, save)
@@ -782,6 +789,7 @@ class UserAPI(object):
             JSON dict with new key value in "key" field
         """
         i, save = parse_api_params(kwargs, 'iS', 'Sb')
+        tokens.remove_token(key_id=i)
         return eva.apikey.regenerate_key(i, save)
 
     @log_w
@@ -795,6 +803,7 @@ class UserAPI(object):
             .i: API key ID
         """
         i = parse_api_params(kwargs, 'i', 'S')
+        tokens.remove_token(key_id=i)
         return eva.apikey.delete_api_key(i)
 
 
@@ -1033,7 +1042,7 @@ class SysHTTP_API(SysHTTP_API_abstract, GenericHTTP_API):
         GenericHTTP_API.__init__(self)
         SysHTTP_API_abstract.__init__(self)
         self.expose_api_methods('sysapi')
-        self.enable_sessions()
+        self._expose('test')
         self.wrap_exposed()
 
 
@@ -1080,6 +1089,8 @@ class SysHTTP_API_REST_abstract:
                 return self.shutdown_core(k=k)
             else:
                 raise MethodNotFound
+        elif rtp == 'token':
+            return self.login(k=k, **props)
         elif rtp == 'key':
             if method == 'regenerate' and ii:
                 return self.regenerate_key(k=k, i=ii)
@@ -1162,6 +1173,8 @@ class SysHTTP_API_REST_abstract:
     def DELETE(self, rtp, k, ii, save, kind, method, for_dir, props):
         if rtp == 'key':
             return self.destroy_key(k=k, i=ii)
+        if rtp == 'token':
+            return self.logout(k=k)
         elif rtp == 'lock':
             return self.unlock(k=k, l=ii)
         elif rtp == 'runtime':

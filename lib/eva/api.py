@@ -9,6 +9,7 @@ import threading
 import time
 import math
 import jsonpickle
+import eva.tokens as tokens
 
 import eva.core
 from eva import apikey
@@ -55,6 +56,7 @@ config = SimpleNamespace(
     ssl_key=None,
     ssl_chain=None,
     session_timeout=0,
+    session_no_prolong=False,
     thread_pool=15,
     ei_enabled=True,
     use_x_real_ip=False)
@@ -327,9 +329,22 @@ def update_config(cfg):
         pass
     try:
         config.session_timeout = int(cfg.get('webapi', 'session_timeout'))
+        tokens.expire = config.session_timeout
     except:
         pass
     logging.debug('webapi.session_timeout = %u' % config.session_timeout)
+    try:
+        config.session_timeout = int(cfg.get('webapi', 'session_timeout'))
+        tokens.expire = config.session_timeout
+    except:
+        pass
+    try:
+        config.session_no_prolong = (cfg.get('webapi', 'session_no_prolong') == 'yes')
+        tokens.prolong_disabled = config.session_no_prolong
+    except:
+        pass
+    logging.debug('webapi.session_no_prolong = %s' % ('yes' \
+                                if config.session_no_prolong else 'no'))
     try:
         config.thread_pool = int(cfg.get('webapi', 'thread_pool'))
     except:
@@ -405,7 +420,7 @@ def cp_check_perm(api_key=None, path_info=None):
             cherrypy.serving.request.path_info
     if k is not None: cherrypy.serving.request.params['k'] = k
     # pass login and info
-    if path.endswith('/login') or path.endswith('/info'): return
+    if path in ['/login', '/info', '/token']: return
     if apikey.check(k, ip=http_real_ip()): return
     raise cp_forbidden_key()
 
@@ -859,20 +874,39 @@ def cp_jsonrpc_handler(*args, **kwargs):
             value, minimal=not eva.core.development).encode('utf-8')
 
 
-def cp_client_key(_k=None):
+def _http_client_key(_k=None, from_cookie=False):
     if _k: return _k
     k = cherrypy.request.headers.get('X-Auth-Key')
     if k: return k
     if 'k' in cherrypy.serving.request.params:
         k = cherrypy.serving.request.params['k']
-    else:
-        try:
-            k = cherrypy.session.get('k')
-        except:
+    if k: return k
+    if from_cookie:
+        k = cherrypy.serving.request.cookie.get('auth')
+        if k: k = k.value
+        if k and not k.startswith('token:'):
             k = None
-        if k is None:
-            k = eva.apikey.key_by_ip_address(http_real_ip())
+    if k: return k
+    k = eva.apikey.key_by_ip_address(http_real_ip())
     return k
+
+
+def key_token_parse(k):
+    token = tokens.get_token(k)
+    if not token:
+        raise AccessDenied('Invalid token')
+    return apikey.key_by_id(token['ki'])
+
+
+def cp_client_key(k=None, from_cookie=False):
+    k = _http_client_key(k, from_cookie=from_cookie)
+    if k and k.startswith('token:'):
+        try:
+            return key_token_parse(k)
+        except AccessDenied as e:
+            raise cp_forbidden_key(e)
+    else:
+        return k
 
 
 class GenericHTTP_API_abstract:
@@ -963,8 +997,15 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 f = self._get_api_function(method)
                 if not f:
                     raise MethodNotFound
-                if not apikey.check(k=p.get('k')):
-                    raise AccessDenied
+                k = p.get('k')
+                if method != 'login':
+                    if not k:
+                        raise AccessDenied
+                    if k.startswith('token:'):
+                        k = key_token_parse(k)
+                        p['k'] = k
+                    if not apikey.check(k=k):
+                        raise AccessDenied
                 result = f(**p)
                 if isinstance(result, tuple):
                     result, data = result
@@ -1029,57 +1070,54 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         self._cp_config['tools.auth.on'] = True
         self._cp_config['tools.json_pre.on'] = True
         self._cp_config['tools.json_out.handler'] = cp_json_handler
-        self._expose('test')
-
-    def enable_sessions(self):
-        if config.session_timeout:
-            self._cp_config.update({
-                'tools.sessions.on':
-                True,
-                'tools.sessions.timeout':
-                config.session_timeout
-            })
-            self._expose(['login', 'logout'])
 
     def wrap_exposed(self):
         super().wrap_exposed(cp_api_function)
 
     @log_i
     def login(self, **kwargs):
-        if not hasattr(cherrypy, 'session'):
-            raise FunctionFailed('Sessions are disabled')
+        if not tokens.is_enabled():
+            raise FunctionFailed('Session tokens are disabled')
         k, u, p = parse_function_params(kwargs, 'kup', '.ss')
-        if not u and hasattr(cherrypy, 'serving') and hasattr(
-                cherrypy.serving, 'request'):
-            auth_header = cherrypy.serving.request.headers.get('authorization')
-            if auth_header:
-                try:
-                    scheme, params = auth_header.split(' ', 1)
-                    if scheme.lower() == 'basic':
-                        u, p = b64decode(params).decode().split(':', 1)
-                except Exception as e:
-                    eva.core.log_traceback()
-                    raise FunctionFailed(e)
+        # if not u and hasattr(cherrypy, 'serving') and hasattr(
+        # cherrypy.serving, 'request'):
+        # auth_header = cherrypy.serving.request.headers.get('authorization')
+        # if auth_header:
+        # try:
+        # scheme, params = auth_header.split(' ', 1)
+        # if scheme.lower() == 'basic':
+        # u, p = b64decode(params).decode().split(':', 1)
+        # except Exception as e:
+        # eva.core.log_traceback()
+        # raise FunctionFailed(e)
         if not u and k:
             if k in apikey.keys:
-                cherrypy.session['k'] = k
-                return True, {'key': apikey.key_id(k)}
-            else:
-                cherrypy.session['k'] = None
-                raise AccessDenied
+                ki = apikey.key_id(k)
+                token = tokens.append_token(ki)
+                if not token:
+                    raise FunctionFailed('token generation error')
+                return {'key': apikey.key_id(k), 'token': token}
+            raise AccessDenied
         key = eva.users.authenticate(u, p)
-        if eva.apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
-            cherrypy.session['k'] = apikey.key_by_id(key)
-            return True, {'key': key}
-        cherrypy.session['k'] = None
+        if key in apikey.keys_by_id:
+            token = tokens.append_token(key, u)
+            if not token:
+                raise FunctionFailed('token generation error')
+            return {'key': key, 'token': token}
         raise AccessDenied('Assigned API key is invalid')
 
     @log_d
     def logout(self, **kwargs):
-        if not hasattr(cherrypy, 'session'):
-            raise FunctionFailed('Sessions are disabled')
-        parse_api_params(kwargs)
-        cherrypy.session['k'] = None
+        if not tokens.is_enabled():
+            raise FunctionFailed('Session tokens are disabled')
+        k = parse_function_params(kwargs, 'k', '.')
+        if k.startswith('token:'):
+            tokens.remove_token(k)
+        else:
+            if k in apikey.keys:
+                tokens.remove_token(key_id=apikey.key_id(k))
+            else:
+                raise AccessDenied
         return True
 
 
@@ -1211,7 +1249,6 @@ def error_page_500(*args, **kwargs):
 
 api_cp_config = {
     'tools.json_out.on': True,
-    'tools.sessions.on': False,
     'tools.nocache.on': True,
     'tools.trailing_slash.on': False,
     'error_page.400': error_page_400,

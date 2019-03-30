@@ -10,6 +10,9 @@ import socket
 import struct
 import threading
 import logging
+import hashlib
+import uuid
+import os
 
 from collections import OrderedDict
 
@@ -414,3 +417,10 @@ def dict_merge(*args):
     for a in args:
         result.update(a)
     return result
+
+def gen_random_hash():
+    s = hashlib.sha256()
+    s.update(os.urandom(1024))
+    s.update(str(uuid.uuid4()).encode())
+    s.update(os.urandom(1024))
+    return s.hexdigest()

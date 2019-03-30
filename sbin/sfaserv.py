@@ -13,6 +13,7 @@ sys.path.append(dir_lib)
 import eva.core
 import eva.notify
 import eva.api
+import eva.tokens
 import eva.apikey
 import eva.users
 import eva.sfa.controller
@@ -106,6 +107,7 @@ eva.sfa.sfapi.start()
 
 eva.sfa.controller.start()
 
+eva.tokens.start()
 eva.api.start()
 
 eva.core.block()
