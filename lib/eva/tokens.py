@@ -22,7 +22,7 @@ def need_tokens_enabled(f):
 
     @wraps(f)
     def do(*args, **kwargs):
-        if not is_enabled() > 0:
+        if not is_enabled():
             return False
         return f(*args, **kwargs)
 
