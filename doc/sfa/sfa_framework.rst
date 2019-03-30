@@ -55,10 +55,10 @@ in case its value is not NULL, the authentication is done with API key
 
     If you have frontend server installed before UI and it handles HTTP basic
     authentication, you can leave *eva_sfa_login* and *eva_sfa_apikey*
-    variables empty and let framework to log in without them.
+    variables empty and let framework log in without them.
 
     In this case authorization data will be parsed by SFA server from
-    *Authorization* HTTP headers (frontend server should pass it as-is to
+    *Authorization* HTTP header (frontend server should pass it as-is to
     back-end SFA).
 
 eva_sfa_cb_login_success, eva_sfa_cb_login_error
