@@ -954,7 +954,7 @@ class SFA_HTTP_API_abstract(SFA_API, GenericHTTP_API):
                 pass
         if p is None or 'lcycle' in _p:
             try:
-                result += self.list_cycles(k, g=g)
+                result += self.list_cycles(k=k, g=g)
             except:
                 pass
         return sorted(
