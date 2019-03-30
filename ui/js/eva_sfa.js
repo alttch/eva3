@@ -143,11 +143,10 @@ function eva_sfa_start() {
   if (eva_sfa_logged_in) return;
   eva_sfa_last_ping = null;
   eva_sfa_last_pong = null;
-  if (eva_sfa_apikey !== null) {
-    if (eva_sfa_apikey != '') {
+  var q = Array();
+  if (eva_sfa_apikey) {
       q = {k: eva_sfa_apikey};
-    }
-  } else {
+  } else if (eva_sfa_login) {
     q = {u: eva_sfa_login, p: eva_sfa_password};
   }
   eva_sfa_api_call('login', q, eva_sfa_after_login, function(data) {

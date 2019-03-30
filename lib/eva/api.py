@@ -339,7 +339,8 @@ def update_config(cfg):
     except:
         pass
     try:
-        config.session_no_prolong = (cfg.get('webapi', 'session_no_prolong') == 'yes')
+        config.session_no_prolong = (cfg.get('webapi',
+                                             'session_no_prolong') == 'yes')
         tokens.prolong_disabled = config.session_no_prolong
     except:
         pass
@@ -1079,17 +1080,17 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         if not tokens.is_enabled():
             raise FunctionFailed('Session tokens are disabled')
         k, u, p = parse_function_params(kwargs, 'kup', '.ss')
-        # if not u and hasattr(cherrypy, 'serving') and hasattr(
-        # cherrypy.serving, 'request'):
-        # auth_header = cherrypy.serving.request.headers.get('authorization')
-        # if auth_header:
-        # try:
-        # scheme, params = auth_header.split(' ', 1)
-        # if scheme.lower() == 'basic':
-        # u, p = b64decode(params).decode().split(':', 1)
-        # except Exception as e:
-        # eva.core.log_traceback()
-        # raise FunctionFailed(e)
+        if not u and not k and hasattr(cherrypy, 'serving') and hasattr(
+                cherrypy.serving, 'request'):
+            auth_header = cherrypy.serving.request.headers.get('authorization')
+            if auth_header:
+                try:
+                    scheme, params = auth_header.split(' ', 1)
+                    if scheme.lower() == 'basic':
+                        u, p = b64decode(params).decode().split(':', 1)
+                except Exception as e:
+                    eva.core.log_traceback()
+                    raise FunctionFailed(e)
         if not u and k:
             if k in apikey.keys:
                 ki = apikey.key_id(k)
