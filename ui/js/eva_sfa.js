@@ -143,16 +143,16 @@ function eva_sfa_start() {
   if (eva_sfa_logged_in) return;
   eva_sfa_last_ping = null;
   eva_sfa_last_pong = null;
-  var q = Array();
+  var q = {};
   if (eva_sfa_apikey) {
-      q = {k: eva_sfa_apikey};
+    q = {k: eva_sfa_apikey};
   } else if (eva_sfa_login) {
     q = {u: eva_sfa_login, p: eva_sfa_password};
   }
-  eva_sfa_api_call('login', q, eva_sfa_after_login, function(data) {
+  eva_sfa_api_call('login', q, eva_sfa_after_login, function(code, msg, data) {
     eva_sfa_logged_in = false;
     eva_sfa_stop_engine();
-    if (eva_sfa_cb_login_error !== null) eva_sfa_cb_login_error(data);
+    if (eva_sfa_cb_login_error !== null) eva_sfa_cb_login_error(code, msg, data);
   });
 }
 
@@ -613,13 +613,13 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
         chart = new Chart(canvas, work_cfg);
       }
     },
-    function(data) {
+    function(code, msg, data) {
       var d_error = $('<div />', {
         class: 'eva_sfa_chart',
         style:
           'width: 100%; height: 100%; ' +
           'color: red; font-weight: bold; font-size: 14px'
-      }).html('Error loading chart data');
+      }).html('Error loading chart data: ' + msg);
       cc.html(d_error);
       if (chart) chart.destroy();
       chart = null;
@@ -817,53 +817,43 @@ eva_sfa_log_level_names = {
   50: 'CRITICAL'
 };
 
-eva_sfa_sysapi_func = [
-  'cmd',
-  'lock',
-  'unlock',
-  'log_rotate',
-  'log_debug',
-  'log_info',
-  'log_warning',
-  'log_error',
-  'log_critical',
-  'log_get',
-  'notifiers',
-  'enable_notifier',
-  'disable_notifier',
-  'save',
-  'get_cvar',
-  'set_cvar',
-  'set_debug',
-  'setup_mode',
-  'file_unlink',
-  'file_get',
-  'file_put',
-  'file_set_exec',
-  'create_user',
-  'set_user_password',
-  'set_user_key',
-  'destroy_user',
-  'list_keys',
-  'create_key',
-  'list_key_props',
-  'set_key_prop',
-  'destroy_key',
-  'regenerate_key',
-  'list_users',
-  'dump'
-];
-
 function eva_sfa_api_call(func, params, cb_success, cb_error, use_sysapi) {
-  var api = eva_sfa_sysapi_func.indexOf(func) == -1 ? 'sfa-api' : 'sys-api';
+  var id = eva_sfa_uuidv4();
+  var payload = {
+    jsonrpc: '2.0',
+    method: func,
+    params: params,
+    id: id
+  };
   return $.ajax({
     type: 'POST',
-    url: '/' + api + '/' + func,
+    //url: '/' + api + '/' + func,
+    url: '/jrpc',
     contentType: 'application/json',
-    data: JSON.stringify(params),
+    data: JSON.stringify(payload),
     dataType: 'json',
-    success: cb_success,
-    error: cb_error
+    success: function(data) {
+      if (
+        !'id' in data ||
+        data.id != id ||
+        (!'result' in data && !'error' in data)
+      ) {
+        cb_error(9, 'Invalid server response', data);
+      } else if ('error' in data) {
+        if (cb_error) {
+          cb_error(data.error.code, data.error.message, data);
+        }
+      } else {
+        if (cb_success) {
+          cb_success(data.result);
+        }
+      }
+    },
+    error: function(data) {
+      if (cb_error) {
+        cb_error(7, 'Server error', data);
+      }
+    }
   });
 }
 
@@ -1089,9 +1079,9 @@ function eva_sfa_heartbeat(on_login, data) {
         if (eva_sfa_cb_login_success !== null) eva_sfa_cb_login_success(data);
       }
     },
-    function(data) {
+    function(code, msg, data) {
       if (eva_sfa_heartbeat_error !== null) {
-        eva_sfa_heartbeat_error(data);
+        eva_sfa_heartbeat_error(code, msg, data);
       }
     }
   );
@@ -1256,4 +1246,13 @@ function eva_sfa_set_token_cookie() {
   $.each(uris, function(k, v) {
     document.cookie = 'auth=' + eva_sfa_api_token + '; path=' + v;
   });
+}
+
+function eva_sfa_uuidv4() {
+  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    (
+      c ^
+      (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+    ).toString(16)
+  );
 }

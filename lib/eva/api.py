@@ -1115,10 +1115,7 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         if k.startswith('token:'):
             tokens.remove_token(k)
         else:
-            if k in apikey.keys:
-                tokens.remove_token(key_id=apikey.key_id(k))
-            else:
-                raise AccessDenied
+            tokens.remove_token(key_id=apikey.key_id(k))
         return True
 
 
