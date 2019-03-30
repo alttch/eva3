@@ -613,7 +613,7 @@ sys.argv = {argv}
         except:
             return self.local_func_result_failed
         try:
-            with os.popen('{}/eva-tinyapi -B'.format(dir_sbin)) as p:
+            with os.popen('{}/eva-tinyapi -V'.format(dir_sbin)) as p:
                 data = p.read()
                 version = data.strip()
                 int(version.split('.')[0])
