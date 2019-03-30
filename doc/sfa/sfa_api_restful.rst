@@ -167,6 +167,48 @@ Parameters:
 * **debug** true for enabling debug mode, false for disabling
 
 
+.. _sfapi_restful_login:
+
+log in and get authentication token
+-----------------------------------
+
+Obtains authentication :doc:`token</api_tokens>` which can be used in API calls instead of API key.
+
+If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/login.rest
+    :response: http-examples/sfapi/login.resp-rest
+
+Parameters:
+
+* **API Key** valid API key or
+* **u** user login
+* **p** user password
+
+Returns:
+
+A dict, containing API key ID and authentication token
+
+
+.. _sfapi_restful_logout:
+
+log out and purge authentication token
+--------------------------------------
+
+Purges authentication :doc:`token</api_tokens>`
+
+If API key is used as parameter value, the function purges all tokens assigned to it.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/logout.rest
+    :response: http-examples/sfapi/logout.resp-rest
+
+Parameters:
+
+* **API Key** valid API key or token
+
+
 
 .. _sfapi_restful_cat_item:
 

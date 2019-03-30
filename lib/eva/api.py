@@ -729,6 +729,79 @@ class GenericAPI(object):
             'system': eva.core.system_name,
         }
 
+    @log_i
+    def login(self, **kwargs):
+        """
+        log in and get authentication token
+
+        Obtains authentication :doc:`token</api_tokens>` which can be used in
+        API calls instead of API key.
+
+        If both **k** and **u** args are absent, but API method is called with
+        HTTP request, which contain HTTP header for basic authorization, the
+        function will try to parse it and log in user with credentials
+        provided.
+
+        Args:
+            k: valid API key or
+            u: user login
+            p: user password
+
+        Returns:
+            A dict, containing API key ID and authentication token
+        """
+        if not tokens.is_enabled():
+            raise FunctionFailed('Session tokens are disabled')
+        k, u, p = parse_function_params(kwargs, 'kup', '.ss')
+        if not u and not k and hasattr(cherrypy, 'serving') and hasattr(
+                cherrypy.serving, 'request'):
+            auth_header = cherrypy.serving.request.headers.get('authorization')
+            if auth_header:
+                try:
+                    scheme, params = auth_header.split(' ', 1)
+                    if scheme.lower() == 'basic':
+                        u, p = b64decode(params).decode().split(':', 1)
+                except Exception as e:
+                    eva.core.log_traceback()
+                    raise FunctionFailed(e)
+        if not u and k:
+            if k in apikey.keys:
+                ki = apikey.key_id(k)
+                token = tokens.append_token(ki)
+                if not token:
+                    raise FunctionFailed('token generation error')
+                return {'key': apikey.key_id(k), 'token': token}
+            raise AccessDenied
+        key = eva.users.authenticate(u, p)
+        if key in apikey.keys_by_id:
+            token = tokens.append_token(key, u)
+            if not token:
+                raise FunctionFailed('token generation error')
+            return {'key': key, 'token': token}
+        raise AccessDenied('Assigned API key is invalid')
+
+    @log_d
+    def logout(self, **kwargs):
+        """
+        log out and purge authentication token
+
+        Purges authentication :doc:`token</api_tokens>`
+
+        If API key is used as parameter value, the function purges all tokens
+        assigned to it.
+
+        Args:
+            k: valid API key or token
+        """
+        if not tokens.is_enabled():
+            raise FunctionFailed('Session tokens are disabled')
+        k = parse_function_params(kwargs, 'k', '.')
+        if k.startswith('token:'):
+            tokens.remove_token(k)
+        else:
+            tokens.remove_token(key_id=apikey.key_id(k))
+        return True
+
 
 class GenericCloudAPI(object):
 
@@ -1074,49 +1147,6 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
 
     def wrap_exposed(self):
         super().wrap_exposed(cp_api_function)
-
-    @log_i
-    def login(self, **kwargs):
-        if not tokens.is_enabled():
-            raise FunctionFailed('Session tokens are disabled')
-        k, u, p = parse_function_params(kwargs, 'kup', '.ss')
-        if not u and not k and hasattr(cherrypy, 'serving') and hasattr(
-                cherrypy.serving, 'request'):
-            auth_header = cherrypy.serving.request.headers.get('authorization')
-            if auth_header:
-                try:
-                    scheme, params = auth_header.split(' ', 1)
-                    if scheme.lower() == 'basic':
-                        u, p = b64decode(params).decode().split(':', 1)
-                except Exception as e:
-                    eva.core.log_traceback()
-                    raise FunctionFailed(e)
-        if not u and k:
-            if k in apikey.keys:
-                ki = apikey.key_id(k)
-                token = tokens.append_token(ki)
-                if not token:
-                    raise FunctionFailed('token generation error')
-                return {'key': apikey.key_id(k), 'token': token}
-            raise AccessDenied
-        key = eva.users.authenticate(u, p)
-        if key in apikey.keys_by_id:
-            token = tokens.append_token(key, u)
-            if not token:
-                raise FunctionFailed('token generation error')
-            return {'key': key, 'token': token}
-        raise AccessDenied('Assigned API key is invalid')
-
-    @log_d
-    def logout(self, **kwargs):
-        if not tokens.is_enabled():
-            raise FunctionFailed('Session tokens are disabled')
-        k = parse_function_params(kwargs, 'k', '.')
-        if k.startswith('token:'):
-            tokens.remove_token(k)
-        else:
-            tokens.remove_token(key_id=apikey.key_id(k))
-        return True
 
 
 def mqtt_discovery_handler(notifier_id, d):

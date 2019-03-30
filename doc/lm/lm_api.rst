@@ -129,6 +129,46 @@ Returns:
 
 JSON dict with system info and current API key permissions (for masterkey only { "master": true } is returned)
 
+.. _lmapi_login:
+
+login - log in and get authentication token
+-------------------------------------------
+
+Obtains authentication :doc:`token</api_tokens>` which can be used in API calls instead of API key.
+
+If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/login.req
+    :response: http-examples/lmapi/login.resp
+
+Parameters:
+
+* **k** valid API key or
+* **u** user login
+* **p** user password
+
+Returns:
+
+A dict, containing API key ID and authentication token
+
+.. _lmapi_logout:
+
+logout - log out and purge authentication token
+-----------------------------------------------
+
+Purges authentication :doc:`token</api_tokens>`
+
+If API key is used as parameter value, the function purges all tokens assigned to it.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/logout.req
+    :response: http-examples/lmapi/logout.resp
+
+Parameters:
+
+* **k** valid API key or token
+
 
 .. _lmapi_cat_lvar:
 
