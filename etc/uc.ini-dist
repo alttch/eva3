@@ -69,8 +69,10 @@ listen = 0.0.0.0:8812
 ;ssl_cert = test.crt
 ;ssl_key = test.key
 ;ssl_chain = test.pam
-; session timeout, set to non-zero to enable sessions
-;session_timeout = 3600
+; session timeout, set to non-zero to enable API session tokens
+session_timeout = 3600
+; session tokens will expire even if active requests are received
+;session_no_prolong = yes
 ; server thread pool
 ;thread_pool = 15
 ; uncomment to disable UC EI

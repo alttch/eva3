@@ -117,6 +117,7 @@ What you get with EVA
     sfa/sfa_framework
     sfa/sfa_templates
     sfa/sfa_pvt
+    api_tokens
 
 .. toctree::
     :caption:  Extension development

@@ -483,7 +483,11 @@ class GenericNotifier(object):
 
 class GenericNotifier_Client(GenericNotifier):
 
-    def __init__(self, notifier_id=None, notifier_subtype=None, apikey=None):
+    def __init__(self,
+                 notifier_id=None,
+                 notifier_subtype=None,
+                 apikey=None,
+                 token=None):
         if not notifier_id: _id = str(uuid.uuid4())
         else: _id = notifier_id
         _tp = 'client'
@@ -495,6 +499,7 @@ class GenericNotifier_Client(GenericNotifier):
         self.nt_client = True
         self.enabled = True
         self.apikey = apikey
+        self.token = token
 
     def format_data(self, subject, data):
         if not subject or not data: return None
@@ -538,7 +543,9 @@ class GenericNotifier_Client(GenericNotifier):
             eva.core.log_traceback(notifier=True)
 
     def cleanup(self):
-        if self.is_client_dead():
+        from eva.tokens import is_token_alive
+        if self.is_client_dead() or (self.token and
+                                     not is_token_alive(self.token)):
             self.connected = False
             self.unregister()
 
@@ -1582,8 +1589,8 @@ class MQTTNotifier(GenericMQTTNotifier):
 
 class WSNotifier_Client(GenericNotifier_Client):
 
-    def __init__(self, notifier_id=None, apikey=None, ws=None):
-        super().__init__(notifier_id, 'ws', apikey)
+    def __init__(self, notifier_id=None, apikey=None, token=None, ws=None):
+        super().__init__(notifier_id, 'ws', apikey, token)
         self.ws = ws
         if self.ws:
             self.ws.notifier = self

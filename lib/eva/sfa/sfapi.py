@@ -966,9 +966,6 @@ class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self.expose_api_methods('sfapi')
-        self._expose(self.login)
-        self._expose(self.logout)
-        self.enable_sessions()
         self.wrap_exposed()
 
 
@@ -1164,7 +1161,7 @@ def j2_state(i=None, g=None, p=None, k=None):
     if k:
         _k = apikey.key_by_id(k)
     else:
-        _k = cp_client_key()
+        _k = cp_client_key(from_cookie=True)
     try:
         return api.state(k=_k, i=i, g=g, p=p)
     except:
@@ -1176,7 +1173,7 @@ def j2_groups(g=None, p=None, k=None):
     if k:
         _k = apikey.key_by_id(k)
     else:
-        _k = cp_client_key()
+        _k = cp_client_key(from_cookie=True)
     try:
         return api.groups(k=_k, g=g, p=p)
     except:
@@ -1188,7 +1185,7 @@ def j2_api_call(method, params={}, k=None):
     if k:
         _k = apikey.key_by_id(k)
     else:
-        _k = cp_client_key()
+        _k = cp_client_key(from_cookie=True)
     f = getattr(api, method)
     try:
         result = f(k=_k, **params)
@@ -1217,7 +1214,7 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         raise cp_api_404()
     env = {}
     env['request'] = cherrypy.serving.request
-    k = cp_client_key()
+    k = cp_client_key(from_cookie=True)
     if k:
         server_info = api.test(k=k)[1]
     else:
@@ -1285,7 +1282,7 @@ class SFA_HTTP_Root:
 
     @cherrypy.expose
     def rpvt(self, k=None, f=None, nocache=None):
-        _k = cp_client_key(k)
+        _k = cp_client_key(k, from_cookie=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None: raise cp_bad_request('uri not provided')
         if not apikey.check(_k, rpvt_uri=f, ip=http_real_ip()):
@@ -1307,7 +1304,7 @@ class SFA_HTTP_Root:
 
     @cherrypy.expose
     def pvt(self, k=None, f=None, c=None, ic=None, nocache=None):
-        _k = cp_client_key(k)
+        _k = cp_client_key(k, from_cookie=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
             raise cp_api_404()
@@ -1395,8 +1392,7 @@ def start():
         config={
             '/':
             dict_merge({
-                'tools.sessions.on': True,
-                'tools.sessions.timeout': eva.api.config.session_timeout
+                'tools.sessions.on': False,
             }, tiny_httpe),
             '/.evahi': {
                 'tools.sessions.on': False,
@@ -1418,8 +1414,7 @@ def start():
             '/':
             dict_merge(
                 {
-                    'tools.sessions.on': True,
-                    'tools.sessions.timeout': eva.api.config.session_timeout,
+                    'tools.sessions.on': False,
                     'tools.staticdir.dir': eva.core.dir_eva + '/ui',
                     'tools.staticdir.on': True
                 }, tiny_httpe)

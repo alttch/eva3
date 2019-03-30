@@ -60,8 +60,11 @@ listen = 0.0.0.0:8828
 ;ssl_cert = test.crt
 ;ssl_key = test.key
 ;ssl_chain = test.pam
-; session timeout, set to non-zero to enable sessions
+; session timeout, set to non-zero to enable API session tokens
+; note: SFA Framework will not work without sessions
 session_timeout = 3600
+; session tokens will expire even if active requests are received
+;session_no_prolong = yes
 ; server thread pool
 ;thread_pool = 15
 

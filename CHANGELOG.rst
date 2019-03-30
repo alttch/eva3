@@ -1,8 +1,8 @@
 EVA ICS CHANGELOG
 *****************
 
-3.2.0 (TBA)
-===========
+3.2.0 (expected: 2018-04)
+=========================
 
 Common
 ------
@@ -29,6 +29,7 @@ Common
     * JSON notifiers will send JSON RPC 2.0 notifications to the target uri, if
       *method* param is set
     * RESTful API
+    * API session tokens
     * Database support for MySQL and PostgreSQL
     * supervisord support
 
@@ -75,8 +76,6 @@ Deprecated (will be removed in 3.3.0)
     * macro "argv" variable (replaced with "args")
     * PHP API client no longer supported (use JSON RPC)
     * removed deprecated HTTP/POST and HTTP/GET notifiers
-    * user login sessions are deprecated and will be replaced with access
-      tokens in 3.2.1
 
 
 3.1.1 (2018-10-22)

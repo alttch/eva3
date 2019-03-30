@@ -22,9 +22,10 @@ class WS_API(object):
         _k = cp_client_key(k)
         if not apikey.check(_k, ip=http_real_ip()): raise cp_forbidden_key()
         handler = cherrypy.request.ws_handler
+        token = k if isinstance(k, str) and k.startswith('token:') else None
         client = WSNotifier_Client('ws_' + eva.core.product_code + '_' + \
                 cherrypy.request.remote.ip + '_' + \
-                str(cherrypy.request.remote.port), _k, handler)
+                str(cherrypy.request.remote.port), _k, token, handler)
         handler.notifier = client
         client.start()
 
@@ -38,9 +39,4 @@ def start():
             'tools.websocket.handler_cls': NWebSocket,
         }
     }
-    if eva.api.config.session_timeout:
-        config['/'].update({
-            'tools.sessions.on': True,
-            'tools.sessions.timeout': eva.api.config.session_timeout
-        })
     cherrypy.tree.mount(WS_API(), '/ws', config=config)

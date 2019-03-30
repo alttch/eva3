@@ -112,6 +112,7 @@ eva.lm.controller.start()
 if eva.core.notify_on_start:
     eva.lm.controller.notify_all(skip_subscribed_mqtt=True)
 
+eva.tokens.start()
 eva.api.start()
 
 eva.lm.controller.exec_macro('system/autoexec')

@@ -9,6 +9,11 @@ create a web application with EVA interface for a specific configuration.
 operation. Lib folder also contains `Bootstrap <http://getbootstrap.com/>`_
 files often used for web application development.
 
+.. note::
+
+    SFA Framework requires :doc:`API session tokens</api_tokens>` (enabled by
+    default)
+
 .. contents::
 
 Framework connection
@@ -46,12 +51,29 @@ Another way is to use the variable
 
 in case its value is not NULL, the authentication is done with API key
 
+.. note::
+
+    If you have frontend server installed before UI and it handles HTTP basic
+    authentication, you can leave *eva_sfa_login* and *eva_sfa_apikey*
+    variables empty and let framework log in without them.
+
+    In this case authorization data will be parsed by SFA server from
+    *Authorization* HTTP header (frontend server should pass it as-is to
+    back-end SFA).
+
 eva_sfa_cb_login_success, eva_sfa_cb_login_error
 ------------------------------------------------
 
 The following two variables contain functions called when the authentication
-either succeeded or failed (**data** parameter is equal to `jQuery post
-<https://api.jquery.com/jquery.post/>`_):
+either succeeded or failed.
+
+Success callback is called with **result** parameter which contains server
+method response.
+
+Error callback is called with parameters **code**, **mesage** and **data**
+(contains full server response), where *code* and *message* contain error code
+and error message. Error codes are equal to :doc:`API client</api_clients>`
+errors.
 
 .. code-block:: javascript
 
@@ -86,9 +108,12 @@ error:
 
     eva_sfa_heartbeat_error = eva_sfa_restart;
 
-The function is called with **data** parameter containing HTTP error data, or
-without parameter if such data is not available (e. g. the error occurred when
-attempting to send data via WebSocket).
+Error callback is called with parameters **code**, **mesage** and **data**,
+where *code* and *message* contain error code and error message. Error codes
+are equal to :doc:`API client</api_clients>` errors.
+
+If error information is not available (e. g. the error occurred when attempting
+to send data via WebSocket), the function is called without any params.
 
 eva_sfa_ajax_reload_interval
 ----------------------------
@@ -346,7 +371,7 @@ where **macro_id** - macro id (in a full format, *group/macro_id*) to execute,
 **params** - object containing parameters equal to LM API
 :ref:`run<lmapi_run>` function, and **cb_success**, **cb_error** - functions
 called when the access to API has either succeeded or failed. The functions are
-called with **data** param which contains the API response.
+called with **result** param which contains the API response.
 
 eva_sfa_action
 --------------
@@ -360,7 +385,7 @@ To run the :ref:`unit<unit>` action, call the function:
 Where unit_id - full unit id (*group/id*), **params** - object containing
 parameters, equal to UC API :ref:`action<ucapi_action>`, and **cb_success**,
 **cb_error** - functions called when the access to API has either succeeded or
-failed. The functions are called with **data** param which contains the API
+failed. The functions are called with **result** param which contains the API
 response.
 
 eva_sfa_action_toggle
