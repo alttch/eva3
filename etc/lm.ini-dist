@@ -18,6 +18,12 @@ db_file = runtime/db/lm.db
 ;userdb_file = runtime/db/users.db
 ; use MySQL instead of SQLite
 ;userdb = mysql+pymysql://user:password@localhost/dbname
+; launch external script/program when user is created/got new
+; password/destroyed. additional arguments:
+;    1) create | set_password | destroy
+;    2) user
+;    3) password (for create and set_password operations)
+;user_hook = /opt/eva/xbin/htpasswd.sh /opt/eva/etc/htpasswd
 ; keep action history in seconds
 keep_action_history = 86400
 ; action cleaner interval, in seconds
