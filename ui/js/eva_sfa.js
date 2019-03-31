@@ -18,8 +18,18 @@ eva_sfa_password = '';
 eva_sfa_apikey = null;
 
 /**
+ * Set/clear auth cookies for /ui, /pvt and /rpvt
+ */
+eva_sfa_set_auth_cookies = true;
+
+/**
+ * Contains current API token after log in. Filled by framework automatically
+ */
+eva_sfa_api_token = null;
+
+/**
  * True if framework engine is started and user is logged in, false if not.
- * should not be changed outside framework functions
+ * Should not be changed outside framework functions
  */
 eva_sfa_logged_in = false;
 
@@ -174,8 +184,8 @@ function eva_sfa_stop(cb) {
   eva_sfa_stop_engine();
   eva_sfa_logged_in = false;
   eva_sfa_api_call('logout', eva_sfa_prepare(), cb, cb);
-  eva_sfa_api_token = '';
-  eva_sfa_set_token_cookie();
+  eva_sfa_api_token = null;
+  _eva_sfa_set_token_cookie();
 }
 
 /**
@@ -801,8 +811,6 @@ eva_sfa_log_first_load = true;
 eva_sfa_log_loaded = false;
 eva_sfa_log_started = false;
 
-eva_sfa_api_token = null;
-
 eva_sfa_lr2p = new Array();
 
 eva_sfa_last_ping = null;
@@ -861,7 +869,7 @@ function eva_sfa_api_call(func, params, cb_success, cb_error, use_sysapi) {
 function eva_sfa_after_login(data) {
   eva_sfa_logged_in = true;
   eva_sfa_api_token = data.token;
-  eva_sfa_set_token_cookie();
+  _eva_sfa_set_token_cookie();
   eva_sfa_load_initial_states(true, false);
   eva_sfa_heartbeat(true, data);
   if (!eva_sfa_ws_mode) {
@@ -1242,11 +1250,13 @@ function eva_sfa_prepare(params) {
   return params;
 }
 
-function eva_sfa_set_token_cookie() {
-  var uris = Array('/ui', '/pvt', '/rpvt');
-  $.each(uris, function(k, v) {
-    document.cookie = 'auth=' + eva_sfa_api_token + '; path=' + v;
-  });
+function _eva_sfa_set_token_cookie() {
+  if (eva_sfa_set_auth_cookies) {
+    var uris = Array('/ui', '/pvt', '/rpvt');
+    $.each(uris, function(k, v) {
+      document.cookie = 'auth=' + eva_sfa_api_token + '; path=' + v;
+    });
+  }
 }
 
 function eva_sfa_uuidv4() {

@@ -80,6 +80,26 @@ errors.
     eva_sfa_cb_login_success = null;
     eva_sfa_cb_login_error = null;
 
+eva_sfa_logged_in
+-----------------
+
+True if framework engine is started and user is logged in, false if not. Should
+not be changed outside framework functions.
+
+eva_sfa_api_token
+-----------------
+
+Contains current API token after log in. Filled by framework automatically
+
+eva_sfa_set_auth_cookies
+------------------------
+
+Set/clear auth cookies for /ui, /pvt and /rpvt.
+
+.. code-block:: javascript
+
+    eva_sfa_set_auth_cookies = true;
+
 eva_sfa_cb_states_loaded
 ------------------------
 
