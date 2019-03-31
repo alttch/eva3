@@ -7,6 +7,7 @@ import hashlib
 import eva.core
 import logging
 import sqlalchemy as sa
+import subprocess
 
 from eva import apikey
 from eva.core import userdb
@@ -88,9 +89,11 @@ def create_user(user=None, password=None, key=None):
             p=crypt_password(password),
             k=key)
         logging.info('User {} created, key: {}'.format(user, key))
-        return {'user': user, 'key': key}
     except:
         eva.core.report_userdb_error()
+        return None
+    run_hook('create', user, password)
+    return {'user': user, 'key': key}
 
 
 def set_user_password(user=None, password=None):
@@ -103,10 +106,15 @@ def set_user_password(user=None, password=None):
                 p=crypt_password(password),
                 u=user).rowcount:
             logging.info('user {} new password is set'.format(user))
-            return True
+        else:
+            raise ResourceNotFound
+    except ResourceNotFound:
+        raise
     except:
         eva.core.report_userdb_error()
-    raise ResourceNotFound
+        return False
+    run_hook('set_password', user, password)
+    return True
 
 
 def set_user_key(user=None, key=None):
@@ -132,10 +140,15 @@ def destroy_user(user=None):
         if dbconn.execute(
                 sql('delete from users where u = :u'), u=user).rowcount:
             logging.info('User {} deleted'.format(user))
-            return True
+        else:
+            raise ResourceNotFound
+    except ResourceNotFound:
+        raise
     except:
         eva.core.report_userdb_error()
-    raise ResourceNotFound
+        return False
+    run_hook('destroy', user)
+    return True
 
 
 def init():
@@ -150,3 +163,20 @@ def init():
     except:
         eva.core.log_traceback()
         logging.critical('unable to create apikeys table in db')
+
+
+def run_hook(cmd, u, password=None):
+    if not eva.core.user_hook:
+        return True
+    p = subprocess.Popen(
+        eva.core.user_hook + [cmd, u],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE)
+    if password is not None:
+        p.stdin.write(password.encode())
+    p.communicate()
+    exitcode = p.returncode
+    if exitcode:
+        raise FunctionFailed('user hook exited with code {}'.format(exitcode))
+    return True

@@ -136,6 +136,8 @@ start_time = time.time()
 
 enterprise_layout = True
 
+user_hook = None
+
 started = False
 
 shutdown_requested = False
@@ -460,6 +462,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
     global mqtt_update_default
     global enterprise_layout
     global reactor_thread_pool
+    global user_hook
     from eva.logs import log_levels_by_name
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
@@ -581,6 +584,12 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             else:
                 userdb_uri = db_uri
             logging.debug('server.userdb = %s' % userdb_uri)
+            try:
+                user_hook = cfg.get('server', 'user_hook').split()
+            except:
+                pass
+            _uh = ' '.join(user_hook) if user_hook else None
+            logging.debug('server.user_hook = %s' % _uh)
             try:
                 enterprise_layout = (cfg.get('server', 'layout') != 'simple')
             except:
