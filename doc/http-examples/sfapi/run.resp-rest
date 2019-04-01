@@ -7,7 +7,7 @@ Location: /r/action/f16e2088-7900-4282-bc1f-a7899bc7f04a
 Pragma: no-cache
 
 {
-    "argv": [],
+    "args": [],
     "err": "",
     "exitcode": 0,
     "item_group": "tests",

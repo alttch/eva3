@@ -154,7 +154,7 @@ class MacroAction(eva.item.ItemAction):
 
     def serialize(self):
         d = super().serialize()
-        d['argv'] = self.argv
+        d['args'] = self.argv
         d['kwargs'] = self.kwargs
         return d
 
