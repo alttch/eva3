@@ -123,7 +123,7 @@ class MacroAPI(object):
             'warning': self.macro_function(self.warning),
             'error': self.macro_function(self.error),
             'critical': self.macro_function(self.critical),
-            'exit': self.macro_function(self.exit),
+            'exit': self.exit,
             '_sleep': self.macro_function(time.sleep),
             'lock': self.macro_function(self.lock),
             'unlock': self.macro_function(self.unlock),
