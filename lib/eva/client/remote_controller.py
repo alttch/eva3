@@ -455,18 +455,6 @@ class RemoteLM(RemoteController):
         else:
             return None
 
-    def load_rules(self):
-        if not self.item_id: return None
-        code, rules = self.api_call('list_rules')
-        result = []
-        if rules is not None:
-            for r in rules:
-                rule = eva.client.remote_item.RemoteDMRule(self, r['id'])
-                result.append(rule)
-            return result
-        else:
-            return None
-
 
 class RemoteControllerPool(object):
 
@@ -1067,19 +1055,11 @@ class RemoteLMPool(RemoteControllerPool):
         self.cycles_by_controller = {}
         self.controllers_by_cycle = {}
 
-        self.rules = {}
-        self.rules_by_controller = {}
-        self.controllers_by_rule = {}
-
     def append(self, controller):
         return super().append(controller, need_type='lm')
 
     def get_lvar(self, lvar_id):
         return self.lvars[lvar_id] if lvar_id in self.lvars \
-                else None
-
-    def get_dm_rule(self, rule_id):
-        return self.rules[rule_id] if rule_id in self.rules \
                 else None
 
     def get_macro(self, macro_id):
@@ -1119,24 +1099,6 @@ class RemoteLMPool(RemoteControllerPool):
         lm = self.controllers_by_lvar[lvar_id]
         p = {'i': lvar_id}
         return lm.api_call('clear', p)
-
-    def list_rule_props(self, rule_id):
-        if not rule_id in self.controllers_by_rule:
-            return apiclient.result_not_found, None
-        lm = self.controllers_by_rule[rule_id]
-        p = {'i': rule_id}
-        return lm.api_call('list_rule_props', p)
-
-    def set_rule_prop(self, rule_id, prop, val, save):
-        if not rule_id in self.controllers_by_rule:
-            return apiclient.result_not_found, None
-        lm = self.controllers_by_rule[rule_id]
-        p = {'i': rule_id}
-        p['p'] = prop
-        p['v'] = val
-        if save:
-            p['save'] = '1'
-        return lm.api_call('set_rule_prop', p)
 
     def run(self,
             macro,
@@ -1233,17 +1195,6 @@ class RemoteLMPool(RemoteControllerPool):
                     eva.core.log_traceback()
             try:
                 del (self.cycles_by_controller[controller_id])
-            except:
-                eva.core.log_traceback()
-        if controller_id in self.rules_by_controller:
-            for i in self.rules_by_controller[controller_id].keys():
-                try:
-                    del (self.rules[i])
-                    del (self.controllers_by_rule[i])
-                except:
-                    eva.core.log_traceback()
-            try:
-                del (self.rules_by_controller[controller_id])
             except:
                 eva.core.log_traceback()
         self.item_management_lock.release()
@@ -1375,38 +1326,6 @@ class RemoteLMPool(RemoteControllerPool):
                 logging.error('Failed to reload cycles from %s' % controller_id)
                 self.item_management_lock.release()
                 return False
-            rules = lm.load_rules()
-            if rules is not None:
-                p = {}
-                for u in rules:
-                    if u.item_id in self.rules and u.controller != lm:
-                        self.rules[u.item_id].destroy()
-                    if not u.item_id in self.rules or \
-                            self.rules[u.item_id].is_destroyed():
-                        self.rules[u.item_id] = u
-                        self.controllers_by_rule[u.item_id] = lm
-                        u.start_processors()
-                    p[u.item_id] = u
-                if controller_id in self.rules_by_controller:
-                    for i in self.rules_by_controller[
-                            controller_id].copy().keys():
-                        if i not in p:
-                            self.rules[i].destroy()
-                            try:
-                                del (self.rules[i])
-                                del (self.controllers_by_rule[i])
-                                del (self.rules_by_controller[controller_id][i])
-                            except:
-                                eva.core.log_traceback()
-                    for u in rules:
-                        if u.item_id not in self.rules_by_controller[
-                                controller_id].keys():
-                            self.rules_by_controller[controller_id][
-                                u.item_id] = u
-                else:
-                    self.rules_by_controller[controller_id] = p
-                logging.debug('Loaded %u DM rules from %s' % \
-                        (len(p), controller_id))
         except:
             logging.error('failed to reload controller ' + controller_id)
             eva.core.log_traceback()

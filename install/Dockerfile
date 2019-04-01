@@ -19,6 +19,7 @@ RUN apt-get -y install --no-install-recommends python3-setuptools
 RUN apt-get -y install --no-install-recommends gcc
 RUN apt-get -y install --no-install-recommends python3-dev
 RUN apt-get -y install --no-install-recommends python3-wheel
+RUN apt-get -y install --no-install-recommends libow-dev
 # install --no-install-recommends python modules
 COPY check-mods /
 RUN /check-mods install
