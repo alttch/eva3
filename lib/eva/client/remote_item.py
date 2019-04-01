@@ -7,28 +7,6 @@ import eva.core
 import eva.item
 
 
-class RemoteDMRule(object):
-
-    def __init__(self, controller, rule_id):
-        self.item_id = rule_id
-        self.controller = controller
-        self.group = 'dm_rules'
-        self.full_id = self.group + '/' + rule_id
-        self._destroyed = False
-
-    def start_processors(self):
-        return True
-
-    def stop_processors(self):
-        return True
-
-    def destroy(self):
-        self._destroyed = True
-
-    def is_destroyed(self):
-        return self._destroyed
-
-
 class RemoteUpdatableItem(eva.item.UpdatableItem):
 
     def __init__(self, item_type, controller, state):
