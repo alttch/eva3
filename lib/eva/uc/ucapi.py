@@ -1654,7 +1654,7 @@ class UC_API(GenericAPI):
         if item.item_type == 'unit':
             props['action_driver_config'] = c
             props['action_exec'] = drv_p
-        self.set_prop(k=k, i=i, v=props)
+        self.set_prop(k=k, i=i, v=props, save=save)
         return True
 
 
