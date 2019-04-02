@@ -18,7 +18,6 @@ import eva.notify
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
-from eva.tools import parse_host_port
 
 
 class NotifierCLI(GenericCLI, ControllerCLI):
@@ -57,6 +56,9 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         return self.prepare_controller_status_dict(data)
 
     def add_functions(self):
+        import eva.core
+        import eva.sysapi
+        import eva.notify
         super().add_functions()
         self.add_notifier_common_functions()
 
@@ -266,6 +268,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 username = None
                 password = None
                 host = _p
+            from eva.tools import parse_host_port
             host, port = parse_host_port(host)
             n = eva.notify.MQTTNotifier(
                 notifier_id=notifier_id,
