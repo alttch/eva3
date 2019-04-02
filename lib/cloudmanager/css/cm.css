@@ -1,0 +1,117 @@
+.tbar {
+    height: 350px;
+    min-height: 350px;
+}
+
+.controllers {
+    outline: none;
+    max-height: 250px !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.controllers td {
+    padding: 5px;
+    font-size: 14px;
+}
+
+.controller-link {
+  font-weight: bold;
+  color: blue;
+  text-decoration: underline;
+  cursor: hand;
+}
+.controller-disconnected {
+  color: grey;
+}
+
+.controller-connected {
+  color: green;
+  font-weight: bold;
+}
+
+.btn-manage-controller {
+  margin-left: 5px; 
+  height: 20px;
+  font-size: 14px;
+}
+
+.btn-manage-controller-disabled {
+    color: grey;
+}
+
+#logr {
+    outline: none;
+    width: 100%;
+    height: 150px !important;
+    font-size: 11px;
+    overflow: scroll;
+    overflow-x: hidden;
+    margin-bottom: 10px;
+    border-style : Solid;
+    border-color : #3ab0ea;
+    border-color : rgba(58, 176, 234, 1);
+    border-width : 2px;
+    border-radius : 5px;
+    -moz-border-radius : 5px;
+    -webkit-border-radius : 5px;
+    }
+.logentry.logentry_color_10 { color: grey }
+.logentry.logentry_color_20 { color: black }
+.logentry.logentry_color_30 {
+    color: orange;
+    font-weight: bold;
+    font-size: 14px
+}
+.logentry.logentry_color_40 {
+    color: red;
+    font-weight: bold;
+    font-size: 16px
+}
+.logentry.logentry_color_50 {
+    color: red;
+    font-weight: bold;
+    font-size: 20px;
+    animation: blinker 0.5s linear infinite;
+}
+
+@keyframes blinker {  
+  50% { opacity: 0; }
+}
+
+.item-status--1 {
+    color: red;
+    font-weight: bold;
+}
+
+.item-status-0 {
+    color: grey;
+}
+
+.item-status-1 {
+    color: green;
+    font-weight: bold;
+}
+
+.cycle-status-1 {
+    color: green;
+    font-weight: bold;
+}
+
+.cycle-status-0 {
+    color: grey;
+}
+
+.cycle-status-2 {
+    color: red;
+    font-weight: bold;
+    animation: blinker 0.5s linear infinite;
+}
+
+.item-descr {
+    font-size: 13px;
+    font-style: italic;
+}
+
+#version_info { color: #4D4D4D;
+    font-size: 12px; margin-top: 10px; margin-bottom: 10px; }

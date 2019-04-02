@@ -1,0 +1,64 @@
+<html>
+  <head>
+   <title>EVA ICS Cloud Manager</title>
+    <link rel="stylesheet" href="css/eva_sfa.css" />
+    <link rel="stylesheet" href="css/cm.css" />
+    <link rel="stylesheet" href="lib/bootstrap.min.css" />
+    <link rel="stylesheet" href="lib/jquery.dataTables.min.css" />
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/jquery.dataTables.min.js"></script>
+    <script src="js/eva_sfa.js"></script>
+    <script src="js/cookie.js"></script>
+    <script src="js/cm.js"></script>
+    <script src="lib/moment.min.js"></script>
+    <script src="lib/chart.min.js"></script>
+  </head>
+  <body>
+   <div id="popup"></div>
+   <div id="loginform">
+       <form action="#" onsubmit="do_login(); return false">
+       Login: <input type="text" size="10" id="f_login" /><br />
+       Password: <input type="password" size="10" id="f_password" /><br />
+       <label for="f_remember">Remember</label>
+       <input type="checkbox" id="f_remember" />
+       <input type="submit" value="GO" />
+       </form>
+   </div>
+   <div id="main" class="container" style="display: none; margin-top: 10px;">
+       <div class="row" style="margin-bottom: 10px">
+           <div class="col-xs-12">
+               <input type="button" value="Logout" onclick="stop()" />
+           </div>
+       </div>
+        <div class="row">
+            <div class="col-sm-12 col-md-5">
+              <div id="controller-list" style="margin-bottom: 20px">
+                <div>
+                    <b>Universal Controllers</b>
+                    <div class="controllers"><table id="ucs"></table></div>
+                </div>
+                <div>
+                    <b>Logic Manager PLCs</b>
+                    <div class="controllers"><table id="lms"></table></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-7" id="d_tbars">
+            </div>
+        </div>
+        <div style="margin-top: 50px;"></div>
+        <div class="row">
+            <div id="logr" class="col-xs-12"></div>
+        </div>
+        <div class="row" id="version_info">
+            <div class="col-xs-12">
+                EVA ICS Cloud Manager version: <span id="i_version"></span>
+                build <span id="i_build"></span>.
+                <a href="https://www.eva-ics.com/">EVA ICS</a>
+                Copyright &copy; 2012-2018
+                <a href="https://www.altertech.com/">Altertech Group</a>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>
