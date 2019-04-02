@@ -24,15 +24,15 @@ allow Logic Manager to receive UC item states in real time:
 
 .. code-block:: bash
 
-    lm-notifier create eva_1 mqtt:eva:secret@localhost -s plant1 -y
+    eva ns lm create eva_1 mqtt:eva:secret@localhost -s plant1 -y
 
 then subscribe the notification system to receive the states of the local
 :ref:`logic variables<lvar>` which will be created later:
 
 .. code-block:: bash
 
-    lm-notifier subscribe state eva_1 -v lvar -g '#'
-    lm-notifier config eva_1
+    eva ns lm subscribe state eva_1 -v lvar -g '#'
+    eva ns lm config eva_1
 
 .. code-block:: json
 
@@ -329,7 +329,7 @@ put its code to **xc/lm/alarm_start.py**:
     try: lock('alarm-start', expires = 1800) 
     except: exit()
     # call the alarm system API
-    get('http://alarmserver/api/activate?apikey=blahblahblah')
+    requests.get('http://alarmserver/api/activate?apikey=blahblahblah')
 
 The second one will check whether the alarm is switched, to either switch on the
 alarm system or just turn on the lighting:
@@ -352,8 +352,11 @@ sensor detects an activity:
 
 .. code-block:: bash
 
-    lm-rules add -E -y -x value --type sensor --group security --item motion1
-    --eq 1 -m motion1_handler
+    eva lm rule create
+    eva lm rule set <rule_uuid> oid sensor:security/motion1/value
+    eva lm rule set <rule_uuid> condition 'x=1'
+    eva lm rule set <rule_uuid> macro motion1_handler
+    eva lm rule enable <rule_uuid> -y
 
 The logic is set up. We can review and test it in :doc:`/lm/lm_ei` and
 configure :doc:`tut_sfa` to interact with the external applications (in our

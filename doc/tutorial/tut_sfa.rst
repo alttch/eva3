@@ -30,14 +30,14 @@ PLC</lm/lm>` :doc:`items</items>` in real time:
 
 .. code-block:: bash
 
-    sfa-notifier create eva_1 mqtt:eva:secret@localhost -s plant1 -y
+    eva ns sfa create eva_1 mqtt:eva:secret@localhost -s plant1 -y
 
 We won't subscribe the notifier to anything, because all the data are received
 from it, and there is nothing to send instead.
 
 .. code-block:: bash
 
-    sfa-notifier config eva_1 
+    eva ns sfa config eva_1 
 
 .. code-block:: json
 
