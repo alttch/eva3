@@ -83,9 +83,9 @@ Configuring the notification endpoints
 
 Configuration is done using the :doc:`console commands</cli>` uc-notifier for
 :doc:`/uc/uc`, lm-notifier for :doc:`/lm/lm` and sfa-notifier for
-:doc:`/sfa/sfa`. Therefore, even if two controllers are set up in the same
-folder on the same server, they have different notification endpoints
-configurations.
+:doc:`/sfa/sfa` or **eva ns <uc|lm|sfa>**. Therefore, even if two controllers
+are set up in the same folder on the same server, they have different
+notification endpoints configurations.
 
 Basic Configuration
 -------------------
@@ -95,7 +95,7 @@ give us the list of notifiers, including their types, IDs, status and endpoint
 target.
 
 
-    # uc-notifier list
+    # eva ns uc list
 
     ========        ========        ========     ========
     Type            ID              Status       Target
@@ -105,12 +105,12 @@ target.
    
 Let's test the endpoint (for mqtt the system will try to publish [space]/test)
 
-    # uc-notifier test eva_1
+    # eva ns uc test eva_1
     OK
 
 To create the new notifier configuration, run:
 
-    uc-notifier create [-s SPACE] [-t SEC] [-y] ID PROPS
+    eva ns uc create [-s SPACE] [-t SEC] [-y] ID PROPS
 
 where
 
@@ -143,7 +143,7 @@ review all the subscriptions using "get_config" command.
 
 To subscribe notifier to the new subject, run:
 
-    uc-notifier subscribe <subject> <notifier_id> [args]
+    eva ns uc subscribe <subject> <notifier_id> [args]
 
     (where subject is "state", "log" or "action")
 
@@ -162,7 +162,7 @@ notifier to with *-I ITEMS*.
 
 Example:
 
-    uc-notifier subscribe state test1 -v '#' -g 'hall/#'
+    eva ns uc subscribe state test1 -v '#' -g 'hall/#'
 
 subscribes the notifier *test1* to the events of the status change of all the
 items in the *hall* group subgroups.
@@ -177,14 +177,14 @@ all failed actions:
 
 .. code-block:: bash
 
-    uc-notifier subscribe action test2 -v '#' -g '#' -a dead,refused,canceled,ignored,failed,terminated
+    eva ns uc subscribe action test2 -v '#' -g '#' -a dead,refused,canceled,ignored,failed,terminated
 
 Once created, the subscription can't be changed, but new subscription to the
 same subject replaces the configuration of the previous one.
 
 To unsubscribe the notifier from the subject, run:
 
-    uc-notifier unsubscribe [subject] <notifier_id>
+    eva ns uc unsubscribe [subject] <notifier_id>
 
 If the subject is not specified, the notifier will be unsubscribed from all
 notification subjects.
@@ -268,17 +268,17 @@ subjects.
 
 To set the same QoS for all events, use command:
 
-    uc-notifier <notifier_id> set qos <Q>
+    eva ns uc <notifier_id> set qos <Q>
 
     (where Q = 0, 1 or 2)
 
 To set QoS for the specified subject, use command:
 
-    uc-notifier <notifier_id> set qos.<subject> <Q>
+    eva ns uc <notifier_id> set qos.<subject> <Q>
 
 e.g.
 
-    uc-notifier eva_1 set qos.log 0
+    eva ns uc eva_1 set qos.log 0
 
 Quick facts about MQTT QoS:
 

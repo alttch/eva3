@@ -493,10 +493,10 @@ time, configure its notification system. Connect the server to the local
 
 .. code-block:: bash
 
-    uc-notifier create eva_1 mqtt:eva:secret@localhost -s plaint1 -y
-    uc-notifier subscribe state eva_1 -v '#' -g '#'
+    eva ns uc create eva_1 mqtt:eva:secret@localhost -s plaint1 -y
+    eva ns uc subscribe state eva_1 -v '#' -g '#'
 
-    uc-notifier config eva_1
+    eva ns uc config eva_1
 
 .. code-block:: json
 
