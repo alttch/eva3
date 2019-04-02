@@ -164,13 +164,12 @@ Queued action can have the following status:
 Startup and shutdown
 ====================
 
-To manage UC server use **./sbin/uc-control** script with the following options:
+To manage UC controller server, use:
 
-* **start** start UC server
-* **stop** stop UC server
-* **restart** restart UC server
-* **logrotate** call after log rotation to restart the logging
-* **version** display the server version
+* **eva uc server start** start UC server
+* **eva uc server stop** stop UC server
+* **eva uc server restart** restart UC server
+* **eva uc server reload** restart controller only (without watchdogs)
 
 The controller startup/shutdown is also performed by **./sbin/eva-control**
 which is configured during the :doc:`system setup</install>`.

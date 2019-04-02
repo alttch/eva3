@@ -70,7 +70,7 @@ Restart LM PLC:
 
 .. code-block:: bash
 
-    ./sbin/lm-control restart
+    eva lm server restart
 
 Connecting UC controller
 ========================
