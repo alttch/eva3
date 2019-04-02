@@ -55,7 +55,7 @@ Restart SFA:
 
 .. code-block:: bash
 
-    ./sbin/sfa-control restart
+    eva sfa server restart
 
 Connecting controllers
 ======================

@@ -36,7 +36,7 @@ and restart :doc:`SFA</sfa/sfa>`:
 
 .. code-block:: bash
 
-    ./sbin/sfa-control restart
+    eva sfa server restart
 
 Configuring users
 =================

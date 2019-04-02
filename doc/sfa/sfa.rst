@@ -187,13 +187,12 @@ are stored in **ui** folder, interface is available at
 Startup and shutdown
 ====================
 
-To manage SFA server use ./sbin/sfa-control script with the following options:
+To manage SFA controller server, use:
 
-* **start** start SFA controller
-* **stop** stop SFA controller
-* **restart** restart SFA controller
-* **logrotate** call after log rotation to restart the logging
-* **version** display the controller version
+* **eva sfa server start** start SFA server
+* **eva sfa server stop** stop SFA server
+* **eva sfa server restart** restart SFA server
+* **eva sfa server reload** restart controller only (without watchdogs)
 
 The controller startup/shutdown is also performed by **./sbin/eva-control**
 which is configured during the :doc:`system setup</install>`.

@@ -525,6 +525,6 @@ Looks good. Now restart UC:
 
 .. code-block:: bash
 
-    ./sbin/uc-control restart
+    eva uc server restart
 
 The configuration of :doc:`/uc/uc` is complete. Let's proceed to :doc:`tut_lm`.
