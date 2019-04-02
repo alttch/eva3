@@ -83,8 +83,8 @@ tutorial:
 
 .. code-block:: bash
 
-    lm-cmd controller append http://localhost:8812 -a secret_for_lm -m eva_1 -y
-    lm-cmd -J remote -p S
+    eva lm controller append http://localhost:8812 -a secret_for_lm -m eva_1 -y
+    eva lm -J remote -p S
 
 .. code-block:: json
 
@@ -113,14 +113,14 @@ Looks correct, sensors are loaded, let's check the units:
 
 .. code-block:: bash
 
-    lm-cmd -J remote -p U
+    eva lm remote -p U
 
 Let LM PLC reload the items from the connected controller every 60 seconds, if
 new ones are added in future:
 
 .. code-block:: bash
 
-    lm-cmd controller set uc1 reload_interval 60 -y
+    eva lm controller set uc1 reload_interval 60 -y
 
 Building logic
 ==============
@@ -128,8 +128,8 @@ Building logic
 We have two tasks: to switch on the inside ventilation if the temperature is
 above 25 degrees, and handle the events received from the motion sensor. Do not
 forget that the inside ventilation should be off from 9pm till 7am. Though this
-will be later implemented via **sfa-cmd** and system **cron**, we should get
-it prepared now.
+will be later implemented via **eva sfa** (*sfa-cmd*) and system **cron**, we
+should get it prepared now.
 
 Ventilation logic
 -----------------
@@ -237,9 +237,9 @@ Create two :ref:`logic variables<lvar>`:
 
 .. code-block:: bash
 
-    lm-cmd create lvar:ventilation/vi_auto -y
-    lm-cmd create lvar:ventilation/vi_timer -y
-    lm-cmd set vi_auto -s 1 -v 1
+    eva lm create lvar:ventilation/vi_auto -y
+    eva lm create lvar:ventilation/vi_timer -y
+    eva lm set lvar:ventilation/vi_auto -s 1 -v 1
 
 The first one will act as a flag for the ventilation control
 :doc:`macro</lm/macros>`: if the flag is on 1, the control is possible, if
@@ -254,7 +254,7 @@ system cron:
 
 .. code-block:: bash
 
-    lm-cmd macro create control/vi_control -y
+    eva lm macro create control/vi_control -y
 
 Put a macro code in **xc/lm/vi_control.py** file
 
@@ -311,15 +311,15 @@ We will need one variable identifying whether the alarm is switched on or not:
 
 .. code-block:: bash
 
-    lm-cmd create lvar:security/alarm_enabled -y
-    lm-cmd set alarm_enabled -s 1 -v 0
+    eva lm create lvar:security/alarm_enabled -y
+    eva lm set lvar:security/alarm_enabled -s 1 -v 0
 
 Additionally, we will need two macros. The first one will send API call to
 alarm system:
 
 .. code-block:: bash
 
-    lm-cmd macro create security/alarm_start -y
+    eva lm macro create security/alarm_start -y
 
 put its code to **xc/lm/alarm_start.py**:
 
@@ -336,7 +336,7 @@ alarm system or just turn on the lighting:
 
 .. code-block:: bash
 
-    lm-cmd macro create security/motion1_handler -y
+    eva lm macro create security/motion1_handler -y
 
 put its code to **xc/lm/motion1_handler.py**:
 

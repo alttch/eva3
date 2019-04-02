@@ -18,7 +18,7 @@ oid form (*type:group/id*) and be unique in the whole installation.
 
     Example of the controller aggregation with the use of two SFA servers
 
-SFA is set up and controlled with **sfa-cmd** :doc:`console application</cli>`
+SFA is set up and controlled with **eva sfa** :doc:`console application</cli>`
 and :doc:`sfa_api`. The API doesn't have a user interface by default, it's
 developed specifically for certain installation certain installation using
 :doc:`sfa_templates` (server-side part) and :doc:`sfa_framework` (client-side
@@ -63,7 +63,7 @@ The file contains a JSON dict:
     }
 
 Variables can be changed while the server is running via :doc:`/sysapi` as
-well as :doc:`sfa-cmd</cli>` **cvar get** and **cvar set** commands.
+well as :doc:`eva sfa</cli>` **cvar get** and **cvar set** commands.
 
 .. _sfa_apikey:
 
@@ -97,7 +97,7 @@ For timers to be displayed correctly in the user interface, it is important to
 maximally synchronize the system time between LM PLC and SFA, if LM PLC
 controllers are set up on the remote servers.
 
-To connect the controllers you should use **sfa-cmd** :doc:`console
+To connect the controllers you should use **eva sfa** (*sfa-cmd*) :doc:`console
 command</cli>` or SFA API :ref:`append_controller<sfapi_append_controller>`
 function.
 
@@ -109,8 +109,8 @@ local key of its own configuration.
 
 .. code-block:: bash
 
-    sfa-cmd append_controller -u http://localhost:8812 -a secretkey -y
-    sfa-cmd append_controller -u http://localhost:8817 -a secretkey -y
+    eva sfa append_controller -u http://localhost:8812 -a secretkey -y
+    eva sfa append_controller -u http://localhost:8817 -a secretkey -y
 
 You may specify a controller type with *-g* argument (*-g uc* or *-g lm*). If
 the group is not specified, SFA tries to automatically detect the remote
@@ -128,20 +128,20 @@ with **reload_interval** frequency set individually for each connected
 controller. If SFA fails to get the item list during loading, it will use the
 existing one.
 
-To control the list of the received items you can use *sfa-cmd* or
+To control the list of the received items you can use *eva sfa* or
 :doc:`/sfa/sfa_api` function :ref:`list_remote<sfapi_list_remote>`:
 
 .. code-block:: bash
 
-    sfa-cmd list_remote -p unit
-    sfa-cmd list_remote -p sensor
-    sfa-cmd list_remote -p lvar
+    eva sfa remote -p unit
+    eva sfa remote -p sensor
+    efa sfa remote -p lvar
 
 The available logic macros are listed by the command
 
 .. code-block:: bash
 
-    sfa-cmd list_macros
+    eva sfa macro list
 
 .. note::
 
@@ -163,7 +163,7 @@ while SFA is running:
 * **uri** API URI of the connected controller (*proto://host:port*, without
   */uc-api/* or */lm-api/*)
 
-Parameters are displayed with **sfa-cmd** command or :doc:`/sfa/sfa`
+Parameters are displayed with **eva sfa** command or :doc:`/sfa/sfa`
 :ref:`list_controller_props<sfapi_list_controller_props>` function, modified
 with :ref:`set_controller_prop<sfapi_set_controller_prop>`. Function
 :ref:`list_controllers<sfapi_list_controllers>` displays the list of all

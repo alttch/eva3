@@ -26,13 +26,13 @@ List the available PHI mods:
 
 .. code-block:: bash
 
-    uc-cmd phi mods
+    eva uc phi mods
 
 Get PHI module information:
 
 .. code-block:: bash
 
-    uc-cmd phi modinfo <phi_module>
+    eva uc phi modinfo <phi_module>
 
 If the desired PHI is not listed, download it and put to *xc/drivers/phi*
 folder. Official PHI modules are available at `<https://www.eva-ics.com/phi>`_.
@@ -40,17 +40,18 @@ You may either download the module manually or use
 
 .. code-block:: bash
 
-    uc-cmd phi download <phi_module_uri>
+    eva uc phi download <phi_module_uri>
 
 command. Note that UC host doesn't need to have a direct connection to the host
-you download PHI from, module is downloaded first to the host where uc-cmd is
-started, verified and then automatically uploaded to the controller.
+you download PHI from, module is downloaded first to the host where *eva* CLI
+(or *eva uc*) is started, verified and then automatically uploaded to the
+controller.
 
 Execute the command to list PHI configuration variables:
 
 .. code-block:: bash
 
-    uc-cmd phi modhelp <phi_module> cfg
+    eva uc phi modhelp <phi_module> cfg
 
 This will display the configuration variables, used when PHI is loaded (port
 numbers, default values etc.). Variables marked *required=True* should be
@@ -60,9 +61,9 @@ Load PHI with the following command:
 
 .. code-block:: bash
 
-    uc-cmd phi load <phi_id> <phi_module> [-c config] [-y]
+    eva uc phi load <phi_id> <phi_module> [-c config] [-y]
     # example
-    uc-cmd phi load v1 vrtrelay -c default_status=1,update=5 -y
+    eva uc phi load v1 vrtrelay -c default_status=1,update=5 -y
 
 Param *-y* is used to ask the controller to save driver configuration right
 after PHI is loaded.
@@ -76,9 +77,9 @@ To assign driver to the specified item, use the command:
 
 .. code-block:: bash
 
-    uc-cmd driver assign <item_id> <driver_id> [-c config] [-y]
+    eva uc driver assign <item_id> <driver_id> [-c config] [-y]
     # example, set test_lamp to 5th relay port of driver v1
-    uc-cmd driver assign unit:lamps/test_lamp v1.default -c port=5
+    eva uc driver assign unit:lamps/test_lamp v1.default -c port=5
 
 Param *-y* is used to ask the controller to save item configuration right after
 driver is assigned.
@@ -89,7 +90,7 @@ port, logic etc.
 Advanced usage: EVA :doc:`item</items>` can have different drivers or scripts
 for actions and updates. To assign different drivers, modify item properties
 **action_exec**, **update_exec**, **action_driver_config** and
-**update_driver_config** (e.g. with *uc-cmd config props*). Driver is assigned
+**update_driver_config** (e.g. with *eva uc config props*). Driver is assigned
 to the property with *|driver_id* value, e.g. *|v1.default*.
 
 .. note::
@@ -115,10 +116,10 @@ item.
 
     How the driver handles update commands
 
-Use commands *uc-cmd phi unload* and *uc-cmd phi unlink* to unload and unlink
+Use commands *eva uc phi unload* and *eva uc phi unlink* to unload and unlink
 unnecessary PHI modules, but note that driver and PHI can't be unloaded while
 they're assigned to items. You must first assign a different driver to the item
-or use *uc-cmd driver unassign* command.
+or use *eva uc driver unassign* command.
 
 You can load PHIs/drivers with the same IDs even if they are already present in
 the system without unloading them first. In this case, new
@@ -141,13 +142,13 @@ To list available LPI mods, use the command:
 
 .. code-block:: bash
 
-    uc-cmd lpi mods
+    eva uc lpi mods
 
 To get module information, use the command:
 
 .. code-block:: bash
 
-    uc-cmd lpi modinfo <lpi_module>
+    eva uc lpi modinfo <lpi_module>
 
 Currently we don't provide any additional LPI modules or SDK, all available
 mods are included in EVA ICS distribution.
@@ -157,13 +158,13 @@ To get additional module info, use the following commands:
 .. code-block:: bash
 
     # list module configuration options
-    uc-cmd lpi modhelp <lpi_module> cfg
+    eva uc lpi modhelp <lpi_module> cfg
 
     # list module options used when action is called
-    uc-cmd lpi modhelp <lpi_module> action
+    eva uc lpi modhelp <lpi_module> action
 
     # list module options used when state update is called
-    uc-cmd lpi modhelp <lpi_module> update
+    eva uc lpi modhelp <lpi_module> update
 
 Configuration options are used when you load a driver (e.g. to modify LPI
 default behavior), separated with commas.
@@ -184,7 +185,7 @@ Used in default drivers for relay, sockets and similar PHIs, doesn't need to be
 configured when loaded.
 
 When assigning driver containing **basic** LPI mod to the specified item
-(*uc-cmd driver assign*), the assign configuration should contain port number
+(*eva uc driver assign*), the assign configuration should contain port number
 (*-c port=N*) which usually matches the physical relay port.
 
 Port number can be specified as a list (*-c port=N1|N2|N3*), in this case all
@@ -204,7 +205,7 @@ Basic sensor monitiring, used to get data from specified sensors.
 Used in default drivers for sensors, doesn't need to be configured when loaded.
 
 LPI doesn't provide *action* functionality. When assigning driver containing
-**sensor** LPI mod to the specified item (*uc-cmd driver assign*), the assign
+**sensor** LPI mod to the specified item (*eva uc driver assign*), the assign
 configuration should contain port or bus address number.
 
 ssp LPI
@@ -222,7 +223,7 @@ returning average, maximum or minimum value. Can ignore sensor values if they
 seem to be invalid in case one or several sensor in a group fail (while there
 are enough working sensors in a group).
 
-Configuration options (set with *uc-cmd driver load*):
+Configuration options (set with *eva uc driver load*):
 
 * **skip_err** If *True*, failed physical sensor in a group will be skipped,
   otherwise EVA sensor item gets error value.
@@ -240,7 +241,7 @@ Configuration options (set with *uc-cmd driver load*):
   poll the temperature sensors group. All sensors with temperature difference
   *10* degrees or more from the average are ignored.
 
-Update options (set with *uc-cmd driver assign*):
+Update options (set with *eva uc driver assign*):
 
 * **port** driver port or ports (array). If you use multiple ports (group),
   they should be separated with pipes (**|**) for the items. Group separation
@@ -256,14 +257,14 @@ Module used for such common tasks as door or window opening. To use this module
 you must connect your equipment to 2 relay ports: one will give power to
 motors, the second will set the direction.
 
-Configuration options (set with *uc-cmd driver load*):
+Configuration options (set with *eva uc driver load*):
 
 * **bose** (break on state error). The module requires to know the current door
   or window position is. If you set this option to *True* and  the current item
   status is error, the action will be not executed. Otherwise LPI will pass and
   consider the item status is *0*.
 
-Action options (set with *uc-cmd driver assign*):
+Action options (set with *eva uc driver assign*):
 
 * **port** contains one or several (separated with **|**) relay ports used to
   power a motor.
@@ -317,16 +318,16 @@ Firstly, you can list available LPIs with the command:
 
 .. code-block:: bash
 
-    uc-cmd lpi mods
+    eva uc lpi mods
 
 Consider the desired PHI is already loaded. To load the driver and combine
 PHI+LPI, use the command:
 
 .. code-block:: bash
 
-    uc-cmd driver load <phi_id>.<lpi_id> <lpi_module> [-c config] [-y]
+    eva uc driver load <phi_id>.<lpi_id> <lpi_module> [-c config] [-y]
     # in example, for PHI loaded as "v1":
-    uc-cmd driver load v1.ms multistep -c bose=true -y
+    eva uc driver load v1.ms multistep -c bose=true -y
 
 .. _phi:
 
@@ -354,20 +355,20 @@ relays:
 .. code-block:: bash
 
     # get PHI module info
-    uc-cmd phi modinfo sr201
+    eva uc phi modinfo sr201
 
     # get PHI configuration help
-    uc-cmd phi modhelp sr201 cfg
+    eva uc phi modhelp sr201 cfg
 
     # get PHI options for obtaining the data
-    uc-cmd phi modhelp sr201 get
+    eva uc phi modhelp sr201 get
 
     # get PHI options for setting the data
-    uc-cmd phi modhelp sr201 set
+    eva uc phi modhelp sr201 set
 
 All of **cfg**, **get** and **set** have an option **host** which should be
-defined ether in PHI configutation (*uc-cmd phi load* with *host* config option
-or in item driver configuration (*uc-cmd driver assign* with *_host* config
+defined ether in PHI configutation (*eva uc phi load* with *host* config option
+or in item driver configuration (*eva uc driver assign* with *_host* config
 option). Setting different **host** option value in item driver configuration
 lets one *sr201* PHI manage all available SR-201 relays.
 
@@ -409,9 +410,9 @@ Example:
 
 .. code-block:: bash
 
-    uc-cmd phi load relay2 sr201 -c host=192.168.20.2,update=5 -y
+    eva uc phi load relay2 sr201 -c host=192.168.20.2,update=5 -y
 
-As soon as the driver is assigned to item (*uc-cmd driver assign*), it starts
+As soon as the driver is assigned to item (*eva uc driver assign*), it starts
 getting state updates every *5* seconds.
 
 Testing PHIs and additional PHI commands
@@ -422,7 +423,7 @@ the command:
 
 .. code-block:: bash
 
-    uc-cmd phi test <phi_id> self
+    eva uc phi test <phi_id> self
 
 which returns result *"OK"* or *"FAILED"*.
 
@@ -430,23 +431,23 @@ PHI can provide additional testing; to get a list of testing commands, execute:
 
 .. code-block:: bash
 
-    uc-cmd phi test <phi_id> help
+    eva uc phi test <phi_id> help
 
 Some PHIs can provide additional commands to set up or control the hardware
 equipment. To get a list of these commands, execute:
 
 .. code-block:: bash
 
-    uc-cmd phi exec <phi_id> help
+    eva uc phi exec <phi_id> help
 
 Example: PHI module **dae_ro16_modbus** has a command to change ModBus unit ID
 of the hardware equipment. Let's change unit ID to *5*:
 
 .. code-block:: bash
 
-    uc-cmd phi exec <phi_id> id 5
+    eva uc phi exec <phi_id> id 5
 
 The module will flash new unit ID into hardware and change unit ID in self
 configuration. Don't forget to restart the hardware to let it be accessed with
-new unit ID and save PHI config (*uc-cmd save*).
+new unit ID and save PHI config (*eva uc save*).
 

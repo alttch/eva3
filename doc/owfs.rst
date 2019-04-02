@@ -23,13 +23,13 @@ List of the defined OWFS buses be obtained with command:
 
 .. code-block:: bash
 
-    uc-cmd owfs list
+    eva uc owfs list
 
 To define new OWFS bus, execute the following command:
 
 .. code-block:: bash
 
-    uc-cmd owfs create [-h] [-l] [-t SEC] [-r RETRIES] [-d SEC] [-y] ID LOCATION
+    eva uc owfs create [-h] [-l] [-t SEC] [-r RETRIES] [-d SEC] [-y] ID LOCATION
 
 where:
 
@@ -54,19 +54,19 @@ equal to standard OWFS params, except first *--* are not required:
 .. code-block:: bash
 
     # defines owfs bus on I2C#1
-    uc-cmd owfs create local1 "i2c=/dev/i2c-1:ALL" -y
+    eva uc owfs create local1 "i2c=/dev/i2c-1:ALL" -y
     # defines owfs bus on I2C#0 (force)
-    uc-cmd owfs create local2 "/dev/i2c-0 --w1" -y
+    eva uc owfs create local2 "/dev/i2c-0 --w1" -y
     # define owfs bus on local owserver
-    uc-cmd owfs create local3 localhost:4304 -y
+    eva uc owfs create local3 localhost:4304 -y
 
 As soon as the bus is defined, it can be used by PHI.
 
 .. code-block:: bash
 
-    uc-cmd owfs scan local1 -a PIO
+    eva uc owfs scan local1 -a PIO
     # 05.4AEC29CDBAAB  DS2405
-    uc-cmd phi load relay1 ow_ds2405 -c owfs=local1,path=05.4AEC29CDBAAB -y
+    eva uc phi load relay1 ow_ds2405 -c owfs=local1,path=05.4AEC29CDBAAB -y
 
 As the result, controller creates a :doc:`driver</drivers>` *relay.default*
 which can be set to :doc:`item</items>`.
@@ -92,9 +92,9 @@ specified attributes:
 
 .. code-block:: bash
 
-    uc-cmd owfs scan <ID> [options]
+    eva uc owfs scan <ID> [options]
     # e.g. let's find all 1-Wire equipment which has "temperature" property:
-    uc-cmd owfs scan local1 -a temperature
+    eva uc owfs scan local1 -a temperature
 
 Deleting OWFS bus
 =================
@@ -103,9 +103,9 @@ To delete (undefine) OWFS bus, execute the command:
 
 .. code-block:: bash
 
-    uc-cmd owfs destroy <ID>
+    eva uc owfs destroy <ID>
     # e.g.
-    uc-cmd owfs destroy local1
+    eva uc owfs destroy local1
 
 Note that controller doesn't check if the port is in use or not, so double
 check this manually before deleting it.

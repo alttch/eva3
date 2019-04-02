@@ -20,30 +20,30 @@ extension modules, use command:
 
 .. code-block:: bash
 
-    lm-cmd ext mods
+    eva lm ext mods
 
 Next command returns extension info:
 
 .. code-block:: bash
 
-    lm-cmd ext modinfo <ext_module>
+    eva lm ext modinfo <ext_module>
 
 To get information about extension configuration and functions provided, use
 commands:
 
 .. code-block:: bash
 
-    lm-cmd ext modhelp <ext_module> cfg
-    lm-cmd ext modhelp <ext_module> functions
+    eva lm ext modhelp <ext_module> cfg
+    eva lm ext modhelp <ext_module> functions
 
 To load/unload macro extension, use command:
 
 .. code-block:: bash
 
     # load
-    lm-cmd ext load [-c CONFIG] [-y] <ext_id> <ext_module>
+    eva lm ext load [-c CONFIG] [-y] <ext_id> <ext_module>
     # unload
-    lm-cmd ext unload <ext_id>
+    eva lm ext unload <ext_id>
 
 where:
 

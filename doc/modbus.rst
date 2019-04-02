@@ -23,13 +23,13 @@ List of the defined ModBus virtual ports can be obtained with command:
 
 .. code-block:: bash
 
-    uc-cmd modbus list
+    eva uc modbus list
 
 To create new ModBus virtual port, execute the following command:
 
 .. code-block:: bash
 
-    uc-cmd modbus create [-l] [-t SEC] [-r RETRIES] [-d SEC] [-y] ID PARAMS
+    eva uc modbus create [-l] [-t SEC] [-r RETRIES] [-d SEC] [-y] ID PARAMS
 
 where:
 
@@ -66,8 +66,8 @@ port and load **dae_ro16_modbus** PHI module:
 
 .. code-block:: bash
 
-    uc-cmd modbus create p1 tcp:192.168.11.11:502 -y
-    uc-cmd phi load r1 dae_ro16_modbus -c port=p1,unit=1 -y
+    eva uc modbus create p1 tcp:192.168.11.11:502 -y
+    eva uc phi load r1 dae_ro16_modbus -c port=p1,unit=1 -y
 
 As the result, controller creates a :doc:`driver</drivers>` *r1.default*
 which can be set to :doc:`item</items>` to work with any relay port of unit #1
@@ -93,9 +93,9 @@ To test defined ModBus virtual port, execute the following command:
 
 .. code-block:: bash
 
-    uc-cmd modbus test <ID>
+    eva uc modbus test <ID>
     # e.g.
-    uc-cmd modbus test p1
+    eva uc modbus test p1
 
 The command connects UC to ModBus port and checks the operation status.
 
@@ -111,9 +111,9 @@ To delete ModBus virtual port, execute the command:
 
 .. code-block:: bash
 
-    uc-cmd modbus destroy <ID>
+    eva uc modbus destroy <ID>
     # e.g.
-    uc-cmd modbus destroy p1
+    eva uc modbus destroy p1
 
 Note that controller doesn't check if the port is in use or not, so double
 check this manually before deleting it.

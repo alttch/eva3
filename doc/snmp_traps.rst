@@ -20,8 +20,8 @@ only the relevant ones.
 
 Currently EVA works with SNMP OIDs only - all snmp variables should be created
 in this format. To change **snmp_trap** variable and its child elements you may
-use *uc-cmd* :doc:`console app</cli>` or UC API :ref:`set_prop<ucapi_set_prop>`
-function. In this tutorial we'll configure SNMP-traps handler with *uc-cmd*. 
+use *eva uc* :doc:`console app</cli>` or UC API :ref:`set_prop<ucapi_set_prop>`
+function. In this tutorial we'll configure SNMP-traps handler with *eva uc*. 
 
 ident_vars - identifying the trap
 =================================
@@ -38,13 +38,13 @@ Example:
 
 .. code-block:: bash
 
-    uc-cmd set_prop -i unit1 -p snmp_trap.ident_vars -v 1.3.6.1.4.1.3856.1.7.11.0=14,1.3.6.1.4.1.3856.1.7.11.1=U1
+    eva uc config set unit1 snmp_trap.ident_vars 1.3.6.1.4.1.3856.1.7.11.0=14,1.3.6.1.4.1.3856.1.7.11.1=U1
 
 Result:
 
 .. code-block:: bash
 
-    uc-cmd list_props -i unit1
+    eva uc -J config props unit1
 
 .. code-block:: json
 
@@ -74,13 +74,13 @@ Example:
 
 .. code-block:: bash
 
-    uc-cmd set_prop -i unit1 -p snmp_trap.set_down -v 1.3.6.1.4.1.3855.1.7.9.0=7
+    eva uc config set unit1 snmp_trap.set_down 1.3.6.1.4.1.3855.1.7.9.0=7
 
 Result:
 
 .. code-block:: bash
 
-    uc-cmd list_props -i unit1
+    eva uc -J config props unit1
 
 .. code-block:: json
 
@@ -105,13 +105,13 @@ Example:
 
 .. code-block:: bash
 
-    uc-cmd set_prop -i unit1 -p snmp_trap.set_status -v 1.3.6.1.4.1.3855.1.7.17.1
+    eva uc config set unit1 snmp_trap.set_status 1.3.6.1.4.1.3855.1.7.17.1
 
 Result:
 
 .. code-block:: bash
 
-    uc-cmd list_props -i unit1
+    eva uc -J config props unit1
 
 .. code-block:: json
 
@@ -136,13 +136,13 @@ Example:
 
 .. code-block:: bash
 
-    uc-cmd set_prop -i unit1 -p snmp_trap.set_value -v 1.3.6.1.4.1.3855.1.7.17.2
+    eva uc config set unit1 snmp_trap.set_value 1.3.6.1.4.1.3855.1.7.17.2
 
 Result:
 
 .. code-block:: bash
 
-    uc-cmd list_props -i unit1
+    eva uc -J config props unit1
 
 .. code-block:: json
 
@@ -175,14 +175,14 @@ For example, let's add two conditions:
 
 .. code-block:: bash
 
-    uc-cmd set_prop -i unit1 -p snmp_trap.set_if -v 1,null:1.3.6.1.4.1.3855.1.7.1.0=4
-    uc-cmd set_prop -i unit1 -p snmp_trap.set_if -v null,10:1.3.6.1.4.1.3855.1.7.1.0=2
+    eva uc config set unit1 snmp_trap.set_if 1,null:1.3.6.1.4.1.3855.1.7.1.0=4
+    eva uc config set unit1 snmp_trap.set_if null,10:1.3.6.1.4.1.3855.1.7.1.0=2
 
 Result:
 
 .. code-block:: bash
 
-    uc-cmd list_props -i unit1
+    eva uc -J config props unit1
 
 .. code-block:: json
 
@@ -220,5 +220,5 @@ variable:
 
 .. code-block:: bash
 
-    uc-cmd set_prop -i unit1 -p snmp_trap
+    eva uc config set unit1 snmp_trap ''
 
