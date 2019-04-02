@@ -438,7 +438,7 @@ such type, so let's specify all options in PHI config:
 
 .. code-block:: bash
 
-    eva uc phi load relay2 dae_ip16r -c host=192.168.22.4,retries=2
+    eva uc phi load relay2 dae_ip16r -c host=192.168.22.4,retries=2 -y
 
 After loading **dae_ip16r** PHI automatically created driver "relay2.default"
 with "basic" LPI. As we have a simple logic, let's use it as-is. Set driver to
