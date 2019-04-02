@@ -67,12 +67,12 @@ PLC</lm/lm>` to :doc:`/sfa/sfa` with the keys created specifically for SFA:
 
 .. code-block:: bash
 
-    sfa-cmd controller append http://localhost:8812 -a secret_for_sfa -m eva_1 -y
-    sfa-cmd controller append http://localhost:8817 -a secret_for_sfa2 -m eva_1 -y
+    eva sfa controller append http://localhost:8812 -a secret_for_sfa -m eva_1 -y
+    eva sfa controller append http://localhost:8817 -a secret_for_sfa2 -m eva_1 -y
 
 .. code-block:: bash
 
-    sfa-cmd -J remote -p S
+    eva sfa -J remote -p S
 
 .. code-block:: json
 
@@ -102,23 +102,24 @@ and :ref:`logic variables<lvar>`:
 
 .. code-block:: bash
 
-    sfa-cmd -J remote -p U
-    sfa-cmd -J remote -p LV
+    eva sfa -J remote -p U
+    eva sfa -J remote -p LV
 
 Let SFA reload the items from the connected controllers every 60 seconds, if
 new ones are added in future:
 
 .. code-block:: bash
 
-    sfa-cmd controller set uc/uc1 reload_interval 60 -y
-    sfa-cmd controller set lm/lm1 reload_interval 60 -y
+    eva sfa controller set uc/uc1 reload_interval 60 -y
+    eva sfa controller set lm/lm1 reload_interval 60 -y
 
 
 Connecting external applications
 ================================
 
 There is only one external application - system cron. We won't connect it via
-SFA API, but simply by running **sfa-cmd** :doc:`console application</cli>`.
+SFA API, but simply by running **eva sfa** (*sfa-cmd*) :doc:`console
+application</cli>`.
 
 We provide this example for one reason: you should always connect your external
 applications to :doc:`SFA</sfa/sfa>` only. Controllers may be changed and,

@@ -11,8 +11,8 @@ networks and work as cloud controller via the Internet.
 LM PLC operations can be event-based, cycle-based, and called manually by used.
 
 LM PLC is customized and controlled via :doc:`lm_ei` web interface or
-:doc:`lm-cmd</cli>` console application. It can also be integrated into other
-subsystems and third-party programs using :doc:`lm_api`.
+:doc:`eva lm</cli>` (*lm-cmd*) console application. It can also be integrated
+into other subsystems and third-party programs using :doc:`lm_api`.
 
 Additionally, you can use :doc:`console applications</cli>` for better control
 of the :doc:`decision-making rules<decision_matrix>`.
@@ -65,7 +65,7 @@ The file contains a JSON dict:
 
 
 Variables can be changed while the server is running via :doc:`/sysapi` as
-well as :doc:`lm-cmd</cli>` **cvar get** and **cvar set** commands.
+well as :doc:`eva lm</cli>` **cvar get** and **cvar set** commands.
 
 .. _lm_apikey:
 
@@ -99,7 +99,7 @@ controllers; further status monitoring is performed via MQTT. In case MQTT
 server is inaccessible or has data exchange problems, states of the items are
 updated on every remote controller reload (**reload_interval** prop).
 
-To connect UC controllers you should use **lm-cmd** :doc:`console
+To connect UC controllers you should use **eva lm** :doc:`console
 command</cli>` or :doc:`lm_api` **append_controller** function.
 
 When connecting, it is necessary to indicate minimum URI of the connected
@@ -110,7 +110,7 @@ local key of its own configuration.
 
 .. code-block:: bash
 
-    lm-cmd append_controller -u http://localhost:8812 -a secretkey -y
+    eva lm controller append http://localhost:8812 -a secretkey -y
 
 Configurations of connected controllers are stored in the following folder:
 *runtime/lm_remote_uc.d/*
@@ -123,13 +123,13 @@ with **reload_interval** frequency set individually for each connected
 controller. If LM PLC fails to get the item list during loading, it will use
 the existing one.
 
-To control the list of the received items you can use *lm-cmd* or
+To control the list of the received items you can use *eva lm* or
 :doc:`/lm/lm_api` function :ref:`list_remote<lmapi_list_remote>`:
 
 .. code-block:: bash
 
-    lm-cmd list_remote -p unit
-    lm-cmd list_remote -p sensor
+    eva lm remote -p unit
+    eva lm remote -p sensor
 
 All connected controllers have the following properties that can be changed
 while LM PLC is running:
@@ -147,7 +147,7 @@ while LM PLC is running:
 * **uri** API URI of the connected controller (*proto://host:port*, without
   */uc-api/*)
 
-Parameters are displayed with **lm-cmd** command or :doc:`/lm/lm`
+Parameters are displayed with **eva lm** command or :doc:`/lm/lm`
 :ref:`list_controller_props<lmapi_list_controller_props>` function, modified
 with :ref:`set_controller_prop<lmapi_set_controller_prop>`. Function
 :ref:`list_controllers<lmapi_list_controllers>` displays the list of all

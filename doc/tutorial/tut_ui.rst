@@ -45,7 +45,7 @@ Create a login for the user to use with **operator** key:
 
 .. code-block:: bash
 
-    sfa-cmd user create john verysecret operator
+    eva sfa user create john verysecret operator
 
 Create a web application
 ========================

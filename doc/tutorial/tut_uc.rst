@@ -21,8 +21,8 @@ create two :ref:`units<unit>` for ventilation:
 
 .. code-block:: bash
 
-    uc-cmd create unit:ventilation/vi -y # internal
-    uc-cmd create unit:ventilation/ve -y # external
+    eva uc create unit:ventilation/vi -y # internal
+    eva uc create unit:ventilation/ve -y # external
 
 Method 1: with scripts
 ----------------------
@@ -32,7 +32,7 @@ write the full relay control commands anew:
 
 .. code-block:: bash
     
-    uc-cmd cvar set REL1_CMD "SR-201 192.168.22.3"
+    eva uc cvar set REL1_CMD "SR-201 192.168.22.3"
 
 As far as both ventilation systems are connected via the same relay, and it
 displays the states of all ports at once, let's create a multiupdate for
@@ -40,8 +40,8 @@ updating their status with a single command:
 
 .. code-block:: bash
 
-    uc-cmd create mu:ventilation/mu1 -y
-    uc-cmd config set mu:ventilation/mu1 items unit:ventilation/vi,unit:ventilation/ve
+    eva uc create mu:ventilation/mu1 -y
+    eva uc config set mu:ventilation/mu1 items unit:ventilation/vi,unit:ventilation/ve
 
 and the :doc:`script</item_scripts>` for this multiupdate named
 **xc/uc/mu1_update**:
@@ -105,14 +105,14 @@ Enable the ventilation control:
 
 .. code-block:: bash
 
-    uc-cmd action enable unit:ventilation/vi
-    uc-cmd action enable unit:ventilation/ve
+    eva uc action enable unit:ventilation/vi
+    eva uc action enable unit:ventilation/ve
 
 set a multiupdate to update unit states every 30 seconds
 
 .. code-block:: bash
 
-    uc-cmd config set mu:ventilation/mu1 update_interval 30 -y
+    eva uc config set mu:ventilation/mu1 update_interval 30 -y
 
 Method 2: with driver
 ---------------------
@@ -124,7 +124,7 @@ Download PHI module:
 
 .. code-block:: bash
 
-    uc-cmd phi download https://get.eva-ics.com/phi/relays/sr201.py
+    eva uc phi download https://get.eva-ics.com/phi/relays/sr201.py
 
 Load PHI module to controller. As **sr201** PHI provides **aao_get** feature,
 set *update=30* to update all items which use drivers with this PHI every 30
@@ -132,13 +132,13 @@ seconds:
 
 .. code-block:: bash
 
-    uc-cmd phi load relay1 sr201 -c host=192.168.22.3,update=30 -y
+    eva uc phi load relay1 sr201 -c host=192.168.22.3,update=30 -y
 
 Let's test it:
 
 .. code-block:: bash
 
-    uc-cmd phi test relay1 self
+    eva uc phi test relay1 self
 
 After loading **sr201** PHI automatically created driver "relay1.default" with
 "basic" LPI. As we have a simple logic, let's use it as-is. Set driver to both
@@ -146,8 +146,8 @@ ventilation units:
 
 .. code-block:: bash
 
-    uc-cmd driver assign unit:ventilation/vi relay1.default -c port=1 -y
-    uc-cmd driver assign unit:ventilation/ve relay1.default -c port=2 -y
+    eva uc driver assign unit:ventilation/vi relay1.default -c port=1 -y
+    eva uc driver assign unit:ventilation/ve relay1.default -c port=2 -y
 
 
 Connecting a temperature sensor
@@ -157,7 +157,7 @@ Create sensor in UC:
 
 .. code-block:: bash
 
-    uc-cmd create sensor:env/temp1
+    eva uc create sensor:env/temp1
 
 (Consider Linux **w1-gpio** and **w1-therm** kernel modules are already loaded)
 
@@ -183,7 +183,7 @@ Let the temperature update every 20 seconds:
 
 .. code-block:: bash
 
-    uc-cmd config set sensor:env/temp1 update_interval 20 -y
+    eva uc config set sensor:env/temp1 update_interval 20 -y
 
 Method 2: with driver
 ---------------------
@@ -192,7 +192,7 @@ Download PHI module:
 
 .. code-block:: bash
 
-    uc-cmd phi download https://get.eva-ics.com/phi/sensors/env/w1_ds18n20.py
+    eva uc phi download https://get.eva-ics.com/phi/sensors/env/w1_ds18n20.py
 
 Load PHI module to controller. This is **universal** PHI which means you don't
 need to specify particular sensor address when loading, it should be specified
@@ -200,7 +200,7 @@ later when you set driver to sensor:
 
 .. code-block:: bash
 
-    uc-cmd phi load w1t w1_ds18n20 -y
+    eva uc phi load w1t w1_ds18n20 -y
 
 After loading w1_ds18n20 PHI automatically created driver "w1t.default" with
 "sensor" LPI. As we have a simple logic, let's use it as-is. Set driver to
@@ -208,7 +208,7 @@ sensor:
 
 .. code-block:: bash
 
-    uc-cmd driver assign sensor:env/temp1 w1t.default -c port=28-000006ef85d7 -y
+    eva uc driver assign sensor:env/temp1 w1t.default -c port=28-000006ef85d7 -y
 
 As this PHI doesn't provide **aao_get** feature and we can't ask it to update
 sensors automatically, set **update_interval** sensor property to let it
@@ -216,7 +216,7 @@ passively update itself every 20 seconds:
 
 .. code-block:: bash
 
-    uc-cmd config set sensor:env/temp1 update_interval 20 -y
+    eva uc config set sensor:env/temp1 update_interval 20 -y
 
 Connecting a motion sensor
 ==========================
@@ -225,7 +225,7 @@ Create a sensor in UC:
 
 .. code-block:: bash
 
-    uc-cmd create sensor:security/motion1 -y
+    eva uc create sensor:security/motion1 -y
 
 and configure the sensors controller to send :doc:`/snmp_traps` to our server
 IP.
@@ -237,7 +237,7 @@ Switch on the debugging mode and look into the log file:
 
 .. code-block:: bash
 
-    uc-cmd debug on
+    eva uc debug on
     tail -f log/uc.log|grep "snmp trap data"
 
 Let someone walk near the sensor and we'll catch SNMP trap data:
@@ -276,27 +276,27 @@ switch off the debugging mode
 
 .. code-block:: bash
 
-    uc-cmd debug off
+    eva uc debug off
 
 append one ident var to let it parse only "its own" traps:
 
 .. code-block:: bash
 
-    uc-cmd config set sensor:security/motion1 snmp_trap.ident_vars "1.3.6.1.4.1.3854.1.7.6.0=MD Hall" -y
+    eva uc config set sensor:security/motion1 snmp_trap.ident_vars "1.3.6.1.4.1.3854.1.7.6.0=MD Hall" -y
 
 and use SNMP OID *1.3.6.1.4.1.3854.1.7.1.0* to monitor it:
 
 .. code-block:: bash
 
-    uc-cmd config set sensor:security/motion1 snmp_trap.set_down 1.3.6.1.4.1.3854.1.7.1.0=7 -y
-    uc-cmd config set sensor:security/motion1 snmp_trap.set_if 1,1:1.3.6.1.4.1.3854.1.7.1.0=4 -y
-    uc-cmd config set sensor:security/motion1 snmp_trap.set_if 1,0:1.3.6.1.4.1.3854.1.7.1.0=2 -y
+    eva uc config set sensor:security/motion1 snmp_trap.set_down 1.3.6.1.4.1.3854.1.7.1.0=7 -y
+    eva uc config set sensor:security/motion1 snmp_trap.set_if 1,1:1.3.6.1.4.1.3854.1.7.1.0=4 -y
+    eva uc config set sensor:security/motion1 snmp_trap.set_if 1,0:1.3.6.1.4.1.3854.1.7.1.0=2 -y
 
 The final sensor configuration will look like:
 
 .. code-block:: bash
 
-    uc-cmd config get sensor:security/motion1
+    eva uc config get sensor:security/motion1
 
 .. code-block:: json
 
@@ -344,21 +344,21 @@ Download PHI module:
 
 .. code-block:: bash
 
-    uc-cmd phi download https://get.eva-ics.com/phi/sensors/alarm/akcp_md.py
+    eva uc phi download https://get.eva-ics.com/phi/sensors/alarm/akcp_md.py
 
 Load PHI module to controller. Consider motion sensor is connected to AKCP
 sensor controller port #1 and it has IP address *192.168.22.5*. 
 
 .. code-block:: bash
 
-    uc-cmd phi load md1 akcp_md -c host=192.168.22.5,sp=1 -y
+    eva uc phi load md1 akcp_md -c host=192.168.22.5,sp=1 -y
 
 If one port is specified, **akcp_md** creates a driver with **ssp** LPI, which
 doesn't need any additional options. Just set it to our sensor:
 
 .. code-block:: bash
 
-    uc-cmd driver assign sensor:security/motion1 md1.default -y
+    eva uc driver assign sensor:security/motion1 md1.default -y
 
 The sensor is ready. It doesn't require any passive updates since its state is
 updated with SNMP traps parsed by driver.
@@ -370,20 +370,20 @@ Create hall light unit:
 
 .. code-block:: bash
 
-    uc-cmd create unit:light/lamp1 -y
-    uc-cmd action enable unit:light/lamp1
+    eva uc create unit:light/lamp1 -y
+    eva uc action enable unit:light/lamp1
 
 Let it turn off automatically after 10 mins of inactivity:
 
 .. code-block:: bash
 
-    uc-cmd config set unit:light/lamp1 auto_off 600 -y
+    eva uc config set unit:light/lamp1 auto_off 600 -y
 
 and enable the actions to be always executed:
 
 .. code-block:: bash
 
-    uc-cmd config set unit:light/lamp1 action_always_exec 1 -y
+    eva uc config set unit:light/lamp1 action_always_exec 1 -y
 
 Method 1: with scripts
 ----------------------
@@ -393,8 +393,8 @@ similarly to ventilation:
 
 .. code-block:: bash
 
-    uc-cmd cvar set REL2_CMD "snmpset -v2c -c private 192.168.22.4 .1.3.6.1.4.1.42505.6.2.3.1.3"
-    uc-cmd cvar set REL2_UPDATE_CMD "snmpget -v2c -c public 192.168.22.4 .1.3.6.1.4.1.42505.6.2.3.1.3"
+    eva uc cvar set REL2_CMD "snmpset -v2c -c private 192.168.22.4 .1.3.6.1.4.1.42505.6.2.3.1.3"
+    eva uc cvar set REL2_UPDATE_CMD "snmpget -v2c -c public 192.168.22.4 .1.3.6.1.4.1.42505.6.2.3.1.3"
 
 This relay returns the status of each port separately. Additionally, there is
 only one connected device and, therefore, we won't create a multiupdate for the
@@ -420,7 +420,7 @@ Let's update the lamp state every 30 seconds:
 
 .. code-block:: bash
 
-    uc-cmd config set unit:light/lamp1 update_interval 30 -y
+    eva uc config set unit:light/lamp1 update_interval 30 -y
 
 Method 2: with driver
 ---------------------
@@ -429,7 +429,7 @@ Download PHI module:
 
 .. code-block:: bash
 
-    uc-cmd phi download https://get.eva-ics.com/phi/relays/dae_ip16r.py
+    eva uc phi download https://get.eva-ics.com/phi/relays/dae_ip16r.py
 
 Load PHI module to controller. This is **universal** PHI which means you don't
 need to specify particular relay host when loading, it may be specified later
@@ -438,7 +438,7 @@ such type, so let's specify all options in PHI config:
 
 .. code-block:: bash
 
-    uc-cmd phi load relay2 dae_ip16r -c host=192.168.22.4,retries=2
+    eva uc phi load relay2 dae_ip16r -c host=192.168.22.4,retries=2
 
 After loading **dae_ip16r** PHI automatically created driver "relay2.default"
 with "basic" LPI. As we have a simple logic, let's use it as-is. Set driver to
@@ -446,13 +446,13 @@ lamp unit:
 
 .. code-block:: bash
 
-    uc-cmd driver assign unit:light/lamp1 relay2.default -c port=2 -y
+    eva uc driver assign unit:light/lamp1 relay2.default -c port=2 -y
 
 Let's update the lamp state every 30 seconds:
 
 .. code-block:: bash
 
-    uc-cmd config set unit:light/lamp1 update_interval 30 -y
+    eva uc config set unit:light/lamp1 update_interval 30 -y
 
 Now open :doc:`/uc/uc_ei`, check the setup, switch on/off the units, see how the
 sensor values are updated.

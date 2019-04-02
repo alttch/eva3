@@ -238,7 +238,7 @@ Unit parameters
 
 * **status_labels**  "labels" used to display the unit statuses by the
   interfaces.  Labels may be changed via :doc:`/uc/uc_api` or
-  :doc:`uc-cmd</cli>`, in the following way: status:number = label, e.g.
+  :doc:`eva uc</cli>`, in the following way: status:number = label, e.g.
   "status:0" = "stop". By default the unit has labels "status:0" = "OFF",
   "status:1" = "ON". Status labels can be used as **status** param to execute
   unit actions, in this case controllers check the status match to the
@@ -477,7 +477,7 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except that
 "expires", "mqtt_update" and "snmp_trap", plus some additional:
 
 * items = item1, item2, item3... - the list of items for updating, may be
-  changed via :doc:`/uc/uc_api` and :doc:`uc-cmd</cli>` as follows:
+  changed via :doc:`/uc/uc_api` and :doc:`eva uc</cli>` as follows:
 
     * **-p "item+" -v "item_id"** add item for update
     * **-p "item-" -v "item_id"** delete item
@@ -501,7 +501,7 @@ Device templates are stored in *runtime/tpl* folder in YAML (default) or JSON
 format.
 
 You can use **uc-tpl** :doc:`command line</cli>` tool to create device
-templates using the existing items and **uc-cmd** or :ref:`device
+templates using the existing items and **eva uc** or :ref:`device
 management<ucapi_deploy_device>` UC API functions to create, update and destroy
 devices.
 
@@ -560,9 +560,9 @@ Save the final template as *runtime/tpl/mydevice.json* folder, and then
 .. code-block:: bash
 
     # execute this command to create new device "device5"
-    uc-cmd device create mydevice -C ID=5 -y
+    eva uc device create mydevice -C ID=5 -y
     # execute this command to destroy "device5"
-    uc-cmd device destroy mydevice -C ID=5
+    eva uc device destroy mydevice -C ID=5
 
 Configurations of the newly created items of *device5* are exact copies of the
 items of *device1*. The only configuration difference is the params where we've

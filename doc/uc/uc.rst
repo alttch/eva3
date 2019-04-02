@@ -4,9 +4,9 @@ Universal Controller
 EVA Universal Controller (UC) is a control and monitoring subsystem.
 
 It should be installed if you actually want to control something. UC is
-controlled via :doc:`uc_ei` web interface or :doc:`uc-cmd</cli>` console
-application.  Additionally, it can be integrated into other subsystems and
-third-party programs using :doc:`uc_api`.
+controlled via :doc:`uc_ei` web interface or :doc:`eva uc</cli>` (*uc-cmd*)
+console application.  Additionally, it can be integrated into other subsystems
+and third-party programs using :doc:`uc_api`.
 
 .. figure:: uc.png
     :scale: 75%
@@ -50,9 +50,9 @@ Reducing POLL DELAY will increase the CPU load on the server; in turn, if
 increased, the UC reaction time will be longer. Recommended values: 0.1 for
 home and office, 0.01 and less - for industrial applications.
 
-The optimum value of POLL DELAY for UC can be set via :doc:`uc-cmd</cli>`, or by
-manually calling :doc:`uc_api` functions and comparing reaction/execution time
-of the commands.
+The optimum value of POLL DELAY for UC can be set via :doc:`eva sfa</cli>`, or
+by manually calling :doc:`uc_api` functions and comparing reaction/execution
+time of the commands.
 
 The minimum value of POLL DELAY is 0.001 (1 millisecond).
 
@@ -84,13 +84,13 @@ The file contains a JSON dict:
     }
 
 Variables can be changed while the server is running via :doc:`/sysapi` as
-well as :doc:`uc-cmd</cli>` **cvar_get** and **cvar_set** commands.
+well as :doc:`eva uc</cli>` **cvar_get** and **cvar_set** commands.
 
 For example, let's create a variable:
 
 .. code-block:: bash
 
-    uc-cmd cvar set RELAY1_CMD "snmpset -v1 -c private 192.168.1.208 .1.3.6.1.4.1.19865.1.2."
+    eva uc cvar set RELAY1_CMD "snmpset -v1 -c private 192.168.1.208 .1.3.6.1.4.1.19865.1.2."
 
 After UC is started, it will become available for system environment, and unit
 management script on the port 2 of the given relay will be the following:
