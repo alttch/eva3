@@ -12,35 +12,30 @@ from eva.tools import parse_host_port
 from eva.tools import netacl_match
 
 from netaddr import IPNetwork
+from types import SimpleNamespace
+from pyaltt import background_worker
 
 subscribed_items = set()
 
-host = None
-port = None
-community = None
-hosts_allow = []
+config = SimpleNamespace(host=None, port=None, community=None, hosts_allow=[])
+entities = SimpleNamespace(snmpEngine=None)
 
 default_port = 162
 default_community = 'eva'
 
-_t_dispatcher_active = False
-
-_t_dispatcher = None
-
 
 def update_config(cfg):
-    global host, port, community, hosts_allow
     try:
-        host, port = parse_host_port(
+        config.host, config.port = parse_host_port(
             cfg.get('snmptrap', 'listen'), default_port)
-        logging.debug('snmptrap.listen = %s:%u' % (host, port))
+        logging.debug('snmptrap.listen = %s:%u' % (config.host, config.port))
     except:
         return False
     try:
-        community = cfg.get('snmptrap', 'community')
+        config.community = cfg.get('snmptrap', 'community')
     except:
-        community = default_community
-    logging.debug('snmptrap.community = %s' % community)
+        config.community = default_community
+    logging.debug('snmptrap.community = %s' % config.community)
     try:
         _ha = cfg.get('snmptrap', 'hosts_allow')
     except:
@@ -49,15 +44,15 @@ def update_config(cfg):
         try:
             _hosts_allow = list(
                 filter(None, [x.strip() for x in _ha.split(',')]))
-            hosts_allow = [IPNetwork(h) for h in _hosts_allow]
+            config.hosts_allow = [IPNetwork(h) for h in _hosts_allow]
         except:
             logging.error('snmptrap bad host acl!')
-            host = None
+            config.host = None
             eva.core.log_traceback()
             return False
-    if hosts_allow:
+    if config.hosts_allow:
         logging.debug('snmptrap.hosts_allow = %s' % \
-                ', '.join([ str(h) for h in hosts_allow ]))
+                ', '.join([ str(h) for h in config.hosts_allow ]))
     else:
         logging.debug('snmptrap.hosts_allow = 0.0.0.0/0')
     return True
@@ -84,8 +79,8 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
             snmpEngine.msgAndPduDsp.getTransportInfo(stateReference)
     host = transportAddress[0]
     logging.debug('snmp trap from %s' % host)
-    if hosts_allow:
-        if not netacl_match(host, hosts_allow):
+    if config.hosts_allow:
+        if not netacl_match(host, config.hosts_allow):
             logging.warning(
                 'snmp trap from %s denied by server configuration' % host)
             return
@@ -100,17 +95,12 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
 
 
 def start():
-    global _t_dispatcher
-    global _t_dispatcher_active
-    global snmpEngine
-    if not host: return False
-    if not port: _port = default_port
-    else: _port = port
-    if not community: _community = default_community
-    else: _community = community
+    if not config.host: return False
+    _port = config.port if config.port else default_port
+    _community = config.community if config.community else default_community
     try:
         engine = importlib.import_module('pysnmp.entity.engine')
-        config = importlib.import_module('pysnmp.entity.config')
+        snmp_config = importlib.import_module('pysnmp.entity.config')
         udp = importlib.import_module('pysnmp.carrier.asyncore.dgram.udp')
         ntfrcv = importlib.import_module('pysnmp.entity.rfc3413.ntfrcv')
     except:
@@ -119,26 +109,24 @@ def start():
         eva.core.log_traceback()
         return False
     try:
-        snmpEngine = engine.SnmpEngine()
-        config.addTransport(snmpEngine, udp.domainName + (1,),
-                            udp.UdpTransport().openServerMode((host, _port)))
+        entities.snmpEngine = engine.SnmpEngine()
+        snmp_config.addTransport(
+            entities.snmpEngine, udp.domainName + (1,),
+            udp.UdpTransport().openServerMode((config.host, _port)))
     except:
-        logging.error('Can not bind SNMP handler to %s:%s' % (host, _port))
+        logging.error(
+            'Can not bind SNMP handler to %s:%s' % (config.host, _port))
         eva.core.log_traceback()
         return False
     logging.info('Starting SNMP trap handler, listening at %s:%u' % \
-            (host, _port))
+            (config.host, _port))
     try:
-        config.addV1System(snmpEngine, eva.core.product_code, _community)
-        ntfrcv.NotificationReceiver(snmpEngine, __cbFun)
-        snmpEngine.transportDispatcher.jobStarted(1)
+        snmp_config.addV1System(entities.snmpEngine, eva.core.product_code,
+                                _community)
+        ntfrcv.NotificationReceiver(entities.snmpEngine, __cbFun)
+        entities.snmpEngine.transportDispatcher.jobStarted(1)
         eva.core.stop.append(stop)
-        _t_dispatcher = threading.Thread(
-            target=_t_dispatcher,
-            name='traphandler_t_dispatcher',
-            args=(snmpEngine,))
-        _t_dispatcher_active = True
-        _t_dispatcher.start()
+        dispatcher.start(entities.snmpEngine)
     except:
         logging.error(
             'Failed to start SNMP trap handler. Try updating pysnmp library')
@@ -147,24 +135,19 @@ def start():
 
 
 def stop():
-    global _t_dispatcher_active
-    if _t_dispatcher_active:
-        _t_dispatcher_active = False
-        try:
-            snmpEngine.transportDispatcher.jobFinished(1)
-            snmpEngine.transportDispatcher.closeDispatcher()
-        except:
-            pass
-        _t_dispatcher.join()
+    try:
+        entities.snmpEngine.transportDispatcher.jobFinished(1)
+        entities.snmpEngine.transportDispatcher.closeDispatcher()
+    except:
+        pass
+    dispatcher.stop()
 
 
-def _t_dispatcher(snmpEngine):
-    logging.debug('SNMP trap dispatcher started')
-    while _t_dispatcher_active:
-        try:
-            snmpEngine.transportDispatcher.runDispatcher()
-        except:
-            snmpEngine.transportDispatcher.closeDispatcher()
-            logging.error('SNMP trap dispatcher crashed, restarting')
-            eva.core.log_traceback()
-    logging.debug('SNMP trap dispatcher stopped')
+@background_worker(name='snmp_trap_dispatcher')
+def dispatcher(snmpEngine, **kwargs):
+    try:
+        snmpEngine.transportDispatcher.runDispatcher()
+    except:
+        snmpEngine.transportDispatcher.closeDispatcher()
+        logging.error('SNMP trap dispatcher crashed, restarting')
+        eva.core.log_traceback()
