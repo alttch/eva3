@@ -48,18 +48,16 @@ from eva import apikey
 
 from netaddr import IPNetwork
 from cryptography.fernet import Fernet
+from types import SimpleNamespace
 
-host = None
-port = None
-hosts_allow = []
-hosts_allow_encrypted = []
+config = SimpleNamespace(
+    host=None, port=None, hosts_allow=[], hosts_allow_encrypted=[])
+
 custom_handlers = {}
 
 default_port = 8881
 
-_t_dispatcher_active = False
-
-server_socket = None
+_flags = SimpleNamespace(dispatcher_active=False)
 
 
 def subscribe(handler_id, func):
@@ -93,10 +91,10 @@ def exec_custom_handler(func, data, address):
 
 
 def update_config(cfg):
-    global host, port, hosts_allow, hosts_allow_encrypted
     try:
-        host, port = parse_host_port(cfg.get('udpapi', 'listen'), default_port)
-        logging.debug('udpapi.listen = %s:%u' % (host, port))
+        config.host, config.port = parse_host_port(
+            cfg.get('udpapi', 'listen'), default_port)
+        logging.debug('udpapi.listen = %s:%u' % (config.host, config.port))
     except:
         return False
     try:
@@ -107,15 +105,15 @@ def update_config(cfg):
         try:
             _hosts_allow = list(
                 filter(None, [x.strip() for x in _ha.split(',')]))
-            hosts_allow = [IPNetwork(h) for h in _hosts_allow]
+            config.hosts_allow = [IPNetwork(h) for h in _hosts_allow]
         except:
             logging.error('udpapi: invalid hosts allow acl!')
-            host = None
+            config.host = None
             eva.core.log_traceback()
             return False
-    if hosts_allow:
+    if config.hosts_allow:
         logging.debug('udpapi.hosts_allow = %s' % \
-                ', '.join([ str(h) for h in hosts_allow ]))
+                ', '.join([ str(h) for h in config.hosts_allow ]))
     else:
         logging.debug('udpapi.hosts_allow = none')
     try:
@@ -126,58 +124,55 @@ def update_config(cfg):
         try:
             _hosts_allow = list(
                 filter(None, [x.strip() for x in _ha.split(',')]))
-            hosts_allow_encrypted = [IPNetwork(h) for h in _hosts_allow]
+            config.hosts_allow_encrypted = [IPNetwork(h) for h in _hosts_allow]
         except:
             logging.error('udpapi: invalid encrypted hosts allow acl!')
-            host = None
+            config.host = None
             eva.core.log_traceback()
             return False
-    if hosts_allow_encrypted:
+    if config.hosts_allow_encrypted:
         logging.debug('udpapi.hosts_allow_encrypted = %s' % \
-                ', '.join([ str(h) for h in hosts_allow_encrypted ]))
+                ', '.join([ str(h) for h in config.hosts_allow_encrypted ]))
     else:
         logging.debug('udpapi.hosts_allow_encrypted = none')
     return True
 
 
 def start():
-    global _t_dispatcher_active
-    if not host: return False
-    if not port: _port = default_port
-    else: _port = port
-
-    logging.info('Starting UDP API, listening at %s:%u' % (host, _port))
+    if not config.host: return False
+    _port = config.port if config.port else default_port
+    logging.info('Starting UDP API, listening at %s:%u' % (config.host, _port))
     eva.core.stop.append(stop)
     _t = threading.Thread(
-        target=_t_dispatcher, name='udpapi_t_dispatcher', args=(host, _port))
-    _t_dispatcher_active = True
+        target=_t_dispatcher,
+        name='udpapi_t_dispatcher',
+        args=(config.host, _port))
+    _flags.dispatcher_active = True
     _t.setDaemon(True)
     _t.start()
     return True
 
 
 def stop():
-    global _t_dispatcher_active
-    _t_dispatcher_active = False
+    _flags.dispatcher_active = False
 
 
 def check_access(address, data=None):
     if data and data[0] == '|':
-        return hosts_allow_encrypted and netacl_match(address,
-                                                      hosts_allow_encrypted)
+        return config.hosts_allow_encrypted and netacl_match(
+            address, config.hosts_allow_encrypted)
     else:
-        return hosts_allow and netacl_match(address, hosts_allow)
+        return config.hosts_allow and netacl_match(address, config.hosts_allow)
 
 
 def _t_dispatcher(host, port):
-    global server_socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_socket.bind((host, port))
     logging.debug('UDP API dispatcher started')
-    while _t_dispatcher_active:
+    while _flags.dispatcher_active:
         try:
             data, address = server_socket.recvfrom(256)
-            if not _t_dispatcher_active: return
+            if not _flags.dispatcher_active: return
             if not data: continue
             address = address[0]
             logging.debug('UDP API cmd from %s' % address)

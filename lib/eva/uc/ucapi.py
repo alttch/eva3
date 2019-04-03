@@ -1666,7 +1666,7 @@ class UC_HTTP_API_abstract(UC_API, GenericHTTP_API):
 
     def info(self):
         result = super().info()
-        result['udp_api_port'] = eva.udpapi.port if \
+        result['udp_api_port'] = eva.udpapi.config.port if \
                 eva.udpapi.check_access(http_real_ip()) else None
         return result
 
