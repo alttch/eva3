@@ -576,7 +576,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         logging.debug(
             'server.reactor_thread_pool = %s' % config.reactor_thread_pool)
         try:
-            config.db_update = config.db_update_codes.index(
+            config.db_update = db_update_codes.index(
                 cfg.get('server', 'db_update'))
         except:
             pass
