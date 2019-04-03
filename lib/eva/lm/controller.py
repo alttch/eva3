@@ -330,7 +330,8 @@ def load_lvar_db_state(items, clean=False):
                 dbconn.execute(
                     sql('insert into lvar_state (id, set_time, status, value) '
                         + 'values (:id, :t, :status, :value)'),
-                    id=v.item_id,
+                    id=v.full_id if \
+                            eva.core.config.enterprise_layout else v.item_id,
                     t=v.set_time,
                     status=v.status,
                     value=v.value)
