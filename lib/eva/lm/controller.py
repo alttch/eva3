@@ -63,13 +63,10 @@ remote_ucs = {}
 
 configs_to_remove = set()
 
-uc_pool = None
-
-plc = None
-
-Q = None
-
-DM = None
+uc_pool = eva.client.remote_controller.RemoteUCPool()
+plc = eva.lm.plc.PLC()
+Q = eva.lm.lmqueue.LM_Queue('lm_queue')
+DM = eva.lm.dmatrix.DecisionMatrix()
 
 with_item_lock = eva.core.RLocker('lm/controller')
 controller_lock = threading.RLock()
@@ -830,20 +827,12 @@ def pdme(item, ns=False):
 
 @with_item_lock
 def start():
-    global uc_pool
-    global plc
-    global Q
-    global DM
     eva.lm.extapi.start()
-    Q = eva.lm.lmqueue.LM_Queue('lm_queue')
     Q.start()
-    DM = eva.lm.dmatrix.DecisionMatrix()
     for i, r in dm_rules.items():
         DM.append_rule(r, do_sort=False)
     DM.sort()
-    plc = eva.lm.plc.PLC()
     plc.start_processors()
-    uc_pool = eva.client.remote_controller.RemoteUCPool()
     uc_pool.start()
     for i, v in remote_ucs.items():
         background_job(connect_remote_controller, daemon=True)(v)
