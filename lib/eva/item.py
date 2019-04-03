@@ -1693,7 +1693,7 @@ class ItemAction(GenericAction):
             logging.debug('action %s created, %s: %s' % \
                 (self.uuid, self.item.item_type,
                     self.item.full_id))
-            if eva.notify.action_subscribed:
+            if eva.notify.is_action_subscribed():
                 eva.notify.notify('action', (self, self.serialize()))
         self.item_action_lock.release()
 
@@ -1745,7 +1745,7 @@ class ItemAction(GenericAction):
                 self.err = err
             logging.debug('action %s new status: %s' % \
                     (self.uuid, ia_status_names[status]))
-            if eva.notify.action_subscribed:
+            if eva.notify.is_action_subscribed():
                 t = threading.Thread(
                     target=eva.notify.notify,
                     args=('action', (self, self.serialize())))

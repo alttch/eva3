@@ -30,6 +30,8 @@ from eva.tools import val_to_boolean
 
 from ws4py.websocket import WebSocket
 
+from types import SimpleNamespace
+
 default_log_level = 20
 
 notifier_client_clean_delay = 30
@@ -46,7 +48,7 @@ logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 
 notifiers = {}
 
-action_subscribed = False
+_flags = SimpleNamespace(action_subscribed=False)
 
 _ne_kw = {'notifier': True}
 
@@ -198,7 +200,6 @@ class GenericNotifier(object):
                   item_types=[],
                   action_status=[],
                   log_level=None):
-        global action_subscribed
         _e = self.is_subscribed(subject)
         if subject == 'state':
             if _e: self.events.remove(_e)
@@ -213,7 +214,7 @@ class GenericNotifier(object):
                 action_status=action_status)
             self.events.add(e)
             if self.enabled:
-                action_subscribed = True
+                _flags.action_subscribed = True
         elif subject == 'log':
             if log_level is not None:
                 try:
@@ -1979,6 +1980,10 @@ def stop():
     for i, n in notifiers.copy().items():
         n.stop()
     notifier_client_cleaner.stop()
+
+
+def is_action_subscribed():
+    return _flags.action_subscribed
 
 
 def reload_clients():
