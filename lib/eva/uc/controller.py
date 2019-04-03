@@ -331,7 +331,8 @@ def load_db_state(items, item_type, clean=False):
                 dbconn.execute(
                     sql('insert into state (id, tp, status, value) ' +
                         'values (:id, :tp, :status, :value)'),
-                    id=v.item_id,
+                    id=v.full_id if \
+                            eva.core.config.enterprise_layout else v.item_id,
                     tp=item_type,
                     status=v.status,
                     value=v.value)
