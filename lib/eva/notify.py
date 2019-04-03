@@ -1815,9 +1815,8 @@ def get_notifier_fnames():
 
 
 def load(test=True, connect=True):
-    global notifiers
-    _notifiers = {}
     logging.info('Loading notifiers')
+    notifiers.clear()
     try:
         for notifier_fname in get_notifier_fnames():
             try:
@@ -1827,7 +1826,7 @@ def load(test=True, connect=True):
                     test=test,
                     connect=connect)
                 if not n: raise Exception('Notifier load error')
-                _notifiers[n.notifier_id] = n
+                notifiers[n.notifier_id] = n
                 logging.debug('+ notifier %s' % n.notifier_id)
             except:
                 logging.error('Can not load notifier from %s' % notifier_fname)
@@ -1836,7 +1835,6 @@ def load(test=True, connect=True):
         logging.error('Notifiers load error')
         eva.core.log_traceback(notifier=True)
         return False
-    notifiers = _notifiers
     # exec custom load for notifiers
     for i, n in notifiers.copy().items():
         try:
