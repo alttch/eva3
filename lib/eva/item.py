@@ -876,7 +876,7 @@ class UpdatableItem(Item):
     def _t_expiration_checker(self):
         logging.debug('%s expiration checker started' % self.oid)
         while self.expiration_checker_active and self.expires:
-            time.sleep(eva.core.polldelay)
+            time.sleep(eva.core.config.polldelay)
             if self.status != -1 and \
                     (self.status != 0 or self._expire_on_any) and \
                     self.is_expired():
@@ -1644,7 +1644,7 @@ class ActiveItem(Item):
         self.update_config({'action_enabled': False})
         logging.info('%s actions disabled' % self.oid)
         self.notify()
-        if eva.core.db_update == 1: self.save()
+        if eva.core.config.db_update == 1: self.save()
         return True
 
     def enable_actions(self):
@@ -1652,7 +1652,7 @@ class ActiveItem(Item):
         self.update_config({'action_enabled': True})
         logging.info('%s actions enabled' % self.oid)
         self.notify()
-        if eva.core.db_update == 1: self.save()
+        if eva.core.config.db_update == 1: self.save()
         return True
 
     def destroy(self):

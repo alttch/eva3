@@ -18,7 +18,7 @@ from eva.tools import val_to_boolean
 class PLC(eva.item.ActiveItem):
 
     def __init__(self):
-        super().__init__(eva.core.system_name, 'plc')
+        super().__init__(eva.core.config.system_name, 'plc')
         self.update_config({
             'group': 'lm',
             'action_enabled': True,
@@ -96,7 +96,7 @@ class PLC(eva.item.ActiveItem):
         env_globals['argv'] = env_globals['args']
         env_globals['kwargs'] = a.kwargs.copy()
         env_globals['is_shutdown'] = a.is_shutdown_func
-        env_globals['_polldelay'] = eva.core.polldelay
+        env_globals['_polldelay'] = eva.core.config.polldelay
         env_globals['_timeout'] = eva.core.timeout
         for i, v in env_globals['kwargs'].items():
             env_globals[i] = v
@@ -401,7 +401,7 @@ class Cycle(eva.item.Item):
             prev = t
             cycle_end -= corr
             while time.time() < cycle_end and self.cycle_enabled:
-                time.sleep(eva.core.polldelay)
+                time.sleep(eva.core.config.polldelay)
         logging.debug('%s cycle thread stopped' % self.full_id)
         self.cycle_status = 0
         # dirty - wait for prev. state to be sent

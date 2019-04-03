@@ -582,7 +582,7 @@ def destroy_item(item):
         if not items_by_group[i.group]:
             del items_by_group[i.group]
         i.destroy()
-        if eva.core.db_update == 1 and i.config_file_exists:
+        if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
                 os.unlink(i.get_fname())
             except:
@@ -717,7 +717,7 @@ def start():
 @eva.core.stop
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
-    if eva.core.db_update == 1: save()
+    if eva.core.config.db_update == 1: save()
     for i, v in items_by_full_id.copy().items():
         v.stop_processors()
     if Q: Q.stop()

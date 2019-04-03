@@ -443,7 +443,7 @@ def load_dm_rules():
             r = eva.lm.dmatrix.DecisionRule(r_id)
             if r.load():
                 dm_rules[r_id] = r
-                if eva.core.development:
+                if eva.core.config.development:
                     rule_id = r_id
                 else:
                     rule_id = r_id[:14] + '...'
@@ -490,7 +490,7 @@ def destroy_macro(m_id):
     if not i: raise ResourceNotFound
     try:
         i.destroy()
-        if eva.core.db_update == 1 and i.config_file_exists:
+        if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
                 os.unlink(i.get_fname())
             except:
@@ -543,7 +543,7 @@ def destroy_cycle(m_id):
     try:
         i.stop(wait=True)
         i.destroy()
-        if eva.core.db_update == 1 and i.config_file_exists:
+        if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
                 os.unlink(i.get_fname())
             except:
@@ -582,7 +582,7 @@ def destroy_dm_rule(r_id):
         i = dm_rules[r_id]
         i.destroy()
         DM.remove_rule(i)
-        if eva.core.db_update == 1 and i.config_file_exists:
+        if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
                 os.unlink(i.get_fname())
             except:
@@ -686,7 +686,7 @@ def remove_controller(controller_id):
     try:
         i = remote_ucs[_controller_id]
         i.destroy()
-        if eva.core.db_update == 1 and i.config_file_exists:
+        if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
                 os.unlink(i.get_fname())
             except:
@@ -773,7 +773,7 @@ def destroy_item(item):
         if not items_by_group[i.group]:
             del items_by_group[i.group]
         i.destroy()
-        if eva.core.db_update == 1 and i.config_file_exists:
+        if eva.core.config.db_update == 1 and i.config_file_exists:
             try:
                 os.unlink(i.get_fname())
             except:
@@ -855,7 +855,7 @@ def connect_remote_controller(v):
 @eva.core.stop
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
-    if eva.core.db_update == 1: save()
+    if eva.core.config.db_update == 1: save()
     for i, v in cycles_by_id.copy().items():
         v.stop(wait=False)
     for i, v in items_by_full_id.copy().items():

@@ -391,7 +391,7 @@ class API_Logger(object):
         self.log_api_request(func.__name__, params.copy(), logger, fp_hide)
 
     def prepare_info(self, func, p, fp_hide):
-        # if not eva.core.development:
+        # if not eva.core.config.development:
         if 'k' in p: del p['k']
         if func.startswith('set_') or func.endswith('_set'):
             fp = p.get('p')
@@ -628,7 +628,7 @@ class GenericAPI(object):
         k = parse_function_params(kwargs, 'k', 'S')
         result = {
             'acl': apikey.serialized_acl(k),
-            'system': eva.core.system_name,
+            'system': eva.core.config.system_name,
             'time': time.time(),
             'log_level': eva.core.default_log_level_id,
             'version': eva.core.version,
@@ -646,9 +646,9 @@ class GenericAPI(object):
         if apikey.check(k, sysfunc=True):
             result['debug'] = eva.core.config.debug
             result['setup_mode'] = eva.core.config.setup_mode
-            result['db_update'] = eva.core.db_update
-            result['polldelay'] = eva.core.polldelay
-            if eva.core.development:
+            result['db_update'] = eva.core.config.db_update
+            result['polldelay'] = eva.core.config.polldelay
+            if eva.core.config.development:
                 result['development'] = True
             if eva.benchmark.enabled and eva.benchmark.intervals:
                 intervals = []
@@ -726,7 +726,7 @@ class GenericAPI(object):
             'platfrom': 'eva',
             'product': eva.core.product.code,
             'version': eva.core.version,
-            'system': eva.core.system_name,
+            'system': eva.core.config.system_name,
         }
 
     @log_i
@@ -927,7 +927,7 @@ def cp_json_handler(*args, **kwargs):
     response = cherrypy.serving.response
     if value or value == 0 or isinstance(value, list):
         return format_json(
-            value, minimal=not eva.core.development).encode('utf-8')
+            value, minimal=not eva.core.config.development).encode('utf-8')
     else:
         try:
             del response.headers['Content-Type']
@@ -945,7 +945,7 @@ def cp_jsonrpc_handler(*args, **kwargs):
         return
     else:
         return format_json(
-            value, minimal=not eva.core.development).encode('utf-8')
+            value, minimal=not eva.core.config.development).encode('utf-8')
 
 
 def _http_client_key(_k=None, from_cookie=False):
@@ -1218,7 +1218,7 @@ def start():
         if config.ssl_module:
             server_ssl.ssl_module = config.ssl_module
         server_ssl.subscribe()
-    if not eva.core.development:
+    if not eva.core.config.development:
         cherrypy.config.update({'environment': 'production'})
         cherrypy.log.access_log.propagate = False
         cherrypy.log.error_log.propagate = False
@@ -1248,7 +1248,7 @@ def jsonify_error(value):
         return format_json(
             {
                 '_error': value
-            }, minimal=not eva.core.development).encode('utf-8')
+            }, minimal=not eva.core.config.development).encode('utf-8')
 
 
 def error_page_400(*args, **kwargs):

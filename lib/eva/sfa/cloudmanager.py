@@ -22,7 +22,7 @@ class CloudManager():
         except:
             raise cp_api_404()
         env = {'build': eva.core.product.build}
-        if eva.core.development:
+        if eva.core.config.development:
             env['development'] = True
         return template.render(env)
 

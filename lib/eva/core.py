@@ -38,27 +38,13 @@ version = __version__
 
 timeout = 5
 
-system_name = platform.node()
-
 keep_logmem = 3600
-
-keep_action_history = 3600
-
-action_cleaner_interval = 60
 
 max_shutdown_time = 15
 
 default_action_cleaner_interval = 60
 
 dir_eva_default = '/opt/eva'
-
-development = False
-
-show_traceback = False
-
-stop_on_critical = 'always'
-
-dump_on_critical = True
 
 env = {}
 cvars = {}
@@ -78,15 +64,21 @@ config = SimpleNamespace(
     db_uri=None,
     userdb_uri=None,
     debug=False,
+    system_name=platform.node(),
+    development=False,
+    show_traceback=False,
+    stop_on_critical='always',
+    dump_on_critical=True,
+    polldelay=0.01,
+    db_update=0,
+    keep_action_history=3600,
+    action_cleaner_interval=60,
+    notify_on_start=True,
     setup_mode=False)
 
 db_engine = SimpleNamespace(primary=None, user=None)
 
 log_engine = SimpleNamespace(logger=None, log_file_handler=None)
-
-polldelay = 0.01
-
-db_update = 0
 
 db_pool_size = 15
 
@@ -104,8 +96,6 @@ _db_lock = threading.RLock()
 _userdb_lock = threading.RLock()
 
 db_update_codes = ['manual', 'instant', 'on_exit']
-
-notify_on_start = True
 
 dir_eva = os.environ['EVA_DIR'] if 'EVA_DIR' in os.environ \
                                             else dir_eva_default
@@ -144,13 +134,14 @@ def critical(log=True, from_driver=False):
     except:
         caller_info = ''
     if log: log_traceback(force=True)
-    if dump_on_critical:
+    if config.dump_on_critical:
         _flags.ignore_critical = True
         logging.critical('critical exception. dump file: %s' % create_dump(
             'critical', caller_info))
         _flags.ignore_critical = False
-    if stop_on_critical in ['always', 'yes'] or (not from_driver and
-                                                 stop_on_critical == 'core'):
+    if config.stop_on_critical in [
+            'always', 'yes'
+    ] or (not from_driver and config.stop_on_critical == 'core'):
         _flags.ignore_critical = True
         logging.critical('critical exception, shutting down')
         sighandler_term(None, None)
@@ -174,7 +165,7 @@ class RLocker(GenericLocker):
 
 def log_traceback(display=False, notifier=False, force=False, e=None):
     e_msg = traceback.format_exc()
-    if (show_traceback or force) and not display:
+    if (config.show_traceback or force) and not display:
         pfx = '.' if notifier else ''
         logging.error(pfx + e_msg)
     elif display:
@@ -233,7 +224,7 @@ def sighandler_hup(signum, frame):
 def suicide(**kwargs):
     time.sleep(max_shutdown_time)
     logging.critical('SUICIDE')
-    if show_traceback:
+    if config.show_traceback:
         faulthandler.dump_traceback()
     os.kill(os.getpid(), signal.SIGKILL)
 
@@ -243,7 +234,7 @@ def sighandler_term(signum=None, frame=None):
     _flags.sigterm_sent = True
     background_job(suicide, daemon=True)()
     logging.info('got TERM signal, exiting')
-    if db_update == 2:
+    if config.db_update == 2:
         try:
             do_save()
         except:
@@ -320,8 +311,9 @@ def create_dump(e='request', msg=''):
         gzip.open(filename, 'w')
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
         gzip.open(filename, 'a').write(
-            format_json(result, minimal=not development,
-                        unpicklable=True).encode())
+            format_json(
+                result, minimal=not config.development,
+                unpicklable=True).encode())
         logging.warning(
             'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
     except:
@@ -337,23 +329,23 @@ def serialize():
     proc = psutil.Process()
     d['version'] = version
     d['timeout'] = timeout
-    d['system_name'] = system_name
+    d['system_name'] = config.system_name
     d['product_name'] = product.name
     d['product_code'] = product.code
     d['product_build'] = product.build
     d['keep_logmem'] = keep_logmem
-    d['keep_action_history'] = keep_action_history
-    d['action_cleaner_interval'] = action_cleaner_interval
+    d['keep_action_history'] = config.keep_action_history
+    d['action_cleaner_interval'] = config.action_cleaner_interval
     d['debug'] = config.debug
     d['setup_mode'] = config.setup_mode
-    d['development'] = development
-    d['show_traceback'] = show_traceback
-    d['stop_on_critical'] = stop_on_critical
+    d['development'] = config.development
+    d['show_traceback'] = config.show_traceback
+    d['stop_on_critical'] = config.stop_on_critical
     d['cvars'] = cvars
     d['env'] = env
-    d['polldelay'] = polldelay
-    d['db_update'] = db_update
-    d['notify_on_start'] = notify_on_start
+    d['polldelay'] = config.polldelay
+    d['db_update'] = config.db_update
+    d['notify_on_start'] = config.notify_on_start
     d['dir_eva'] = dir_eva
     d['db_uri'] = config.db_uri
     d['userdb_uri'] = config.userdb_uri
@@ -387,7 +379,7 @@ def set_db(db_uri=None, userdb_uri=None):
 def db():
     with _db_lock:
         if not g.has('db'):
-            if db_update == 1:
+            if config.db_update == 1:
                 g.db = db_engine.primary.connect()
             else:
                 g.db = db_engine.primary
@@ -397,7 +389,7 @@ def db():
 def userdb():
     with _userdb_lock:
         if not g.has('userdb'):
-            if db_update == 1:
+            if config.db_update == 1:
                 g.userdb = db_engine.user.connect()
             else:
                 g.userdb = db_engine.user
@@ -416,11 +408,11 @@ def reset_log(initial=False):
             log_engine.logger.removeHandler(h)
     else:
         log_engine.logger.removeHandler(log_engine.log_file_handler)
-    if not development:
-        formatter = logging.Formatter('%(asctime)s ' + system_name + \
+    if not config.development:
+        formatter = logging.Formatter('%(asctime)s ' + config.system_name + \
             '  %(levelname)s ' + product.code + ' %(threadName)s: %(message)s')
     else:
-        formatter = logging.Formatter('%(asctime)s ' + system_name + \
+        formatter = logging.Formatter('%(asctime)s ' + config.system_name + \
             ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
             'l:%(lineno)d th:%(threadName)s :: %(message)s')
     if config.log_file:
@@ -435,10 +427,6 @@ def reset_log(initial=False):
 
 
 def load(fname=None, initial=False, init_log=True, check_pid=True):
-    global system_name, development, show_traceback
-    global stop_on_critical, dump_on_critical
-    global notify_on_start
-    global polldelay, db_update, keep_action_history, action_cleaner_interval
     global keep_logmem, default_log_level, default_log_level_name
     global default_log_level_id
     global timeout
@@ -487,27 +475,25 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             except:
                 pass
             try:
-                development = (cfg.get('server', 'development') == 'yes')
-                if development:
-                    show_traceback = True
+                config.development = (cfg.get('server', 'development') == 'yes')
             except:
-                development = False
-            if development:
-                show_traceback = True
+                config.development = False
+            if config.development:
+                config.show_traceback = True
                 debug_on()
                 logging.critical('DEVELOPMENT MODE STARTED')
                 config.debug = True
             else:
                 try:
-                    show_traceback = (cfg.get('server',
-                                              'show_traceback') == 'yes')
+                    config.show_traceback = (cfg.get('server',
+                                                     'show_traceback') == 'yes')
                 except:
-                    show_traceback = False
-            if not development and not config.debug:
+                    config.show_traceback = False
+            if not config.development and not config.debug:
                 try:
                     if os.environ.get('EVA_CORE_DEBUG'):
                         config.debug = True
-                        show_traceback = True
+                        config.show_traceback = True
                     else:
                         config.debug = (cfg.get('server', 'debug') == 'yes')
                     if config.debug: debug_on()
@@ -518,34 +504,37 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                     if log_engine.logger:
                         log_engine.logger.setLevel(default_log_level)
             try:
-                system_name = cfg.get('server', 'name')
+                config.system_name = cfg.get('server', 'name')
             except:
                 pass
             logging.info('Loading server config')
             logging.debug('server.pid_file = %s' % config.pid_file)
             logging.debug('server.logging_level = %s' % default_log_level_name)
             try:
-                notify_on_start = (cfg.get('server',
-                                           'notify_on_start') == 'yes')
+                config.notify_on_start = (cfg.get('server',
+                                                  'notify_on_start') == 'yes')
             except:
                 pass
             logging.debug('server.notify_on_start = %s' % ('yes' \
-                                        if notify_on_start else 'no'))
+                                        if config.notify_on_start else 'no'))
             try:
-                stop_on_critical = (cfg.get('server', 'stop_on_critical'))
+                config.stop_on_critical = (cfg.get('server',
+                                                   'stop_on_critical'))
             except:
                 pass
-            if stop_on_critical == 'yes': stop_on_critical = 'always'
-            elif stop_on_critical not in ('no', 'always', 'core'):
+            if config.stop_on_critical == 'yes':
+                config.stop_on_critical = 'always'
+            elif config.stop_on_critical not in ['no', 'always', 'core']:
                 stop_on_critical = 'no'
-            logging.debug('server.stop_on_critical = %s' % stop_on_critical)
+            logging.debug(
+                'server.stop_on_critical = %s' % config.stop_on_critical)
             try:
-                dump_on_critical = (cfg.get('server',
-                                            'dump_on_critical') == 'yes')
+                config.dump_on_critical = (cfg.get('server',
+                                                   'dump_on_critical') == 'yes')
             except:
                 pass
             logging.debug('server.dump_on_critical = %s' % ('yes' \
-                                        if dump_on_critical else 'no'))
+                                        if config.dump_on_critical else 'no'))
             try:
                 db_file = cfg.get('server', 'db_file')
             except:
@@ -583,41 +572,41 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             logging.debug('server.layout = %s' % ('enterprise' \
                                         if enterprise_layout else 'simple'))
         try:
-            polldelay = float(cfg.get('server', 'polldelay'))
+            config.polldelay = float(cfg.get('server', 'polldelay'))
         except:
             pass
         try:
             timeout = float(cfg.get('server', 'timeout'))
         except:
             pass
-        if not polldelay: polldelay = 0.01
+        if not config.polldelay: config.polldelay = 0.01
         logging.debug('server.timeout = %s' % timeout)
         logging.debug('server.polldelay = %s  ( %s msec )' % \
-                                            (polldelay, int(polldelay * 1000)))
+                                            (config.polldelay, int(config.polldelay * 1000)))
         try:
             reactor_thread_pool = int(cfg.get('server', 'reactor_thread_pool'))
         except:
             pass
         logging.debug('server.reactor_thread_pool = %s' % reactor_thread_pool)
         try:
-            db_update = db_update_codes.index(cfg.get('server', 'db_update'))
+            config.db_update = config.db_update_codes.index(cfg.get('server', 'db_update'))
         except:
             pass
-        logging.debug('server.db_update = %s' % db_update_codes[db_update])
+        logging.debug('server.db_update = %s' % db_update_codes[config.db_update])
         try:
-            keep_action_history = int(cfg.get('server', 'keep_action_history'))
+            config.keep_action_history = int(cfg.get('server', 'keep_action_history'))
         except:
             pass
         logging.debug('server.keep_action_history = %s sec' % \
-                keep_action_history)
+                config.keep_action_history)
         try:
-            action_cleaner_interval = int(
+            config.action_cleaner_interval = int(
                 cfg.get('server', 'action_cleaner_interval'))
-            if action_cleaner_interval < 0: raise Exception('invalid interval')
+            if config.action_cleaner_interval < 0: raise Exception('invalid interval')
         except:
-            action_cleaner_interval = default_action_cleaner_interval
+            config.action_cleaner_interval = default_action_cleaner_interval
         logging.debug('server.action_cleaner_interval = %s sec' % \
-                action_cleaner_interval)
+                config.action_cleaner_interval)
         try:
             keep_logmem = int(cfg.get('server', 'keep_logmem'))
         except:
@@ -704,7 +693,7 @@ def set_cvar(var, value=None):
             del cvars[str(var)]
         except:
             return False
-    if db_update == 1: save_cvars()
+    if config.db_update == 1: save_cvars()
     else: _flags.cvars_modified = True
     return True
 
@@ -761,7 +750,7 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     if wait_timeout: t = wait_timeout
     else: t = timeout
     if delay: p = delay
-    else: p = polldelay
+    else: p = config.polldelay
     return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
 
 

@@ -1088,7 +1088,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.lm.extapi.unload_ext(i)
-        if eva.core.db_update == 1: eva.lm.extapi.save()
+        if eva.core.config.db_update == 1: eva.lm.extapi.save()
         return True
 
     @log_d

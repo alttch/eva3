@@ -468,7 +468,7 @@ class RemoteControllerPool(object):
         self.action_history_lock = threading.Lock()
         self.action_cleaner = None
         self.action_cleaner_active = False
-        self.action_cleaner_interval = eva.core.action_cleaner_interval
+        self.action_cleaner_interval = eva.core.config.action_cleaner_interval
 
     def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
         if controller_id not in self.controllers:
@@ -599,7 +599,7 @@ class RemoteControllerPool(object):
         return controller.load_remote()
 
     def start(self):
-        if not eva.core.keep_action_history:
+        if not eva.core.config.keep_action_history:
             return
         eva.core.stop.append(self.stop)
         self.action_cleaner = threading.Thread(
@@ -637,7 +637,7 @@ class RemoteControllerPool(object):
                 _actions = self.action_history_by_id.copy()
                 self.action_history_lock.release()
                 for u, a in _actions.items():
-                    if a['t'] < time.time() - eva.core.keep_action_history:
+                    if a['t'] < time.time() - eva.core.config.keep_action_history:
                         logging.debug('action %s too old, removing' % u)
                         self.action_history_remove(a)
             except:
@@ -650,7 +650,7 @@ class RemoteControllerPool(object):
         logging.debug('uc pool action cleaner stopped')
 
     def action_history_append(self, a):
-        if not eva.core.keep_action_history:
+        if not eva.core.config.keep_action_history:
             return True
         if not self.action_history_lock.acquire(timeout=eva.core.timeout):
             logging.critical(

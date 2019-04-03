@@ -492,7 +492,7 @@ def delete_api_key(key_id):
         raise FunctionFailed('Master and static keys can not be deleted')
     del keys[keys_by_id[key_id].key]
     del keys_by_id[key_id]
-    if eva.core.db_update == 1:
+    if eva.core.config.db_update == 1:
         dbconn = userdb()
         try:
             dbconn.execute(

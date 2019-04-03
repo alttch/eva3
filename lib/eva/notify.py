@@ -1075,11 +1075,11 @@ class GenericMQTTNotifier(GenericNotifier):
         self.discovery_enabled = discovery_enabled
         self.announce_interval = announce_interval
         self.controller_topic = '{}controller/{}/{}/'.format(
-            pfx, eva.core.product.code, eva.core.system_name)
+            pfx, eva.core.product.code, eva.core.config.system_name)
         self.api_request_topic = self.controller_topic + 'api/request'
         self.api_response_topic = self.controller_topic + 'api/response'
         self.announce_topic = self.pfx + 'controller/discovery'
-        self.announce_msg = eva.core.product.code + '/' + eva.core.system_name
+        self.announce_msg = eva.core.product.code + '/' + eva.core.config.system_name
         self.api_handler = eva.api.mqtt_api_handler
         self.discovery_handler = eva.api.mqtt_discovery_handler
         # dict of tuples (topic, handler)
@@ -1279,7 +1279,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if self.collect_logs and t == self.log_topic:
             try:
                 r = jsonpickle.decode(d)
-                if r['h'] != eva.core.system_name or \
+                if r['h'] != eva.core.config.system_name or \
                         r['p'] != eva.core.product.code:
                     eva.logs.log_append(rd=r, skip_mqtt=True)
             except:

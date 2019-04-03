@@ -109,7 +109,7 @@ eva.lm.lmapi.start()
 
 eva.lm.controller.start()
 
-if eva.core.notify_on_start:
+if eva.core.config.notify_on_start:
     eva.lm.controller.notify_all(skip_subscribed_mqtt=True)
 
 eva.tokens.start()

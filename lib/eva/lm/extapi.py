@@ -33,7 +33,7 @@ def get_version():
 
 
 def get_polldelay():
-    return eva.core.polldelay
+    return eva.core.config.polldelay
 
 
 def get_timeout():

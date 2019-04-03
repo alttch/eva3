@@ -168,7 +168,7 @@ class DecisionMatrix(object):
                     else:
                         if v >= rule.in_range_max:
                             continue
-            if eva.core.development:
+            if eva.core.config.development:
                 rule_id = rule.item_id
             else:
                 rule_id = rule.item_id[:14] + '...'

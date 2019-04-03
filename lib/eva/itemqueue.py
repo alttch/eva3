@@ -23,7 +23,7 @@ class ActiveItemQueue(object):
         self.default_priority = default_priority
         self.q_id = queue_id
         if keep_history: self.keep_history = keep_history
-        else: self.keep_history = eva.core.keep_action_history
+        else: self.keep_history = eva.core.config.keep_action_history
 
         self.actions = []
         self.actions_by_id = {}
@@ -32,7 +32,7 @@ class ActiveItemQueue(object):
 
         self.actions_lock = threading.RLock()
 
-        self.action_cleaner_interval = eva.core.action_cleaner_interval
+        self.action_cleaner_interval = eva.core.config.action_cleaner_interval
 
         self.action_processor = None
         self.action_cleaner_active = False

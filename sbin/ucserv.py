@@ -112,7 +112,8 @@ eva.udpapi.start()
 eva.uc.ucapi.start()
 eva.uc.controller.start()
 
-if eva.core.notify_on_start: eva.uc.controller.notify_all()
+if eva.core.config.notify_on_start:
+    eva.uc.controller.notify_all()
 
 eva.tokens.start()
 eva.api.start()

@@ -35,7 +35,7 @@ def get_version():
 
 
 def get_polldelay():
-    return eva.core.polldelay
+    return eva.core.config.polldelay
 
 
 def get_sleep_step():
@@ -420,7 +420,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     if not phi.ready:
         raise FunctionFailed('unable to init PHI mod %s' % phi_mod_id)
     phi.phi_id = phi_id
-    phi.oid = 'phi:uc/%s/%s' % (eva.core.system_name, phi_id)
+    phi.oid = 'phi:uc/%s/%s' % (eva.core.config.system_name, phi_id)
     if phi_id in phis:
         try:
             phis[phi_id]._stop()
@@ -481,7 +481,7 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
         raise FunctionFailed('unable to init LPI mod %s' % lpi_mod_id)
     lpi.lpi_id = lpi_id
     lpi.driver_id = phi_id + '.' + lpi_id
-    lpi.oid = 'driver:uc/%s/%s' % (eva.core.system_name, lpi.driver_id)
+    lpi.oid = 'driver:uc/%s/%s' % (eva.core.config.system_name, lpi.driver_id)
     if lpi.driver_id in drivers:
         try:
             drivers[lpi.driver_id]._stop()

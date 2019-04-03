@@ -1008,7 +1008,7 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.modbus.destroy_modbus_port(i)
-        if result and eva.core.db_update == 1: eva.uc.modbus.save()
+        if result and eva.core.config.db_update == 1: eva.uc.modbus.save()
         return result
 
     @log_d
@@ -1121,7 +1121,7 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         result = eva.uc.owfs.destroy_owfs_bus(i)
-        if result and eva.core.db_update == 1: eva.uc.owfs.save()
+        if result and eva.core.config.db_update == 1: eva.uc.owfs.save()
         return result
 
     @log_d
@@ -1390,7 +1390,7 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.uc.driverapi.unload_phi(i)
-        if eva.core.db_update == 1: eva.uc.driverapi.save()
+        if eva.core.config.db_update == 1: eva.uc.driverapi.save()
         return True
 
     @log_w
@@ -1520,7 +1520,7 @@ class UC_API(GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         eva.uc.driverapi.unload_driver(i)
-        if eva.core.db_update == 1: eva.uc.driverapi.save()
+        if eva.core.config.db_update == 1: eva.uc.driverapi.save()
         return True
 
     @log_d

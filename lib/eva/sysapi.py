@@ -1205,7 +1205,7 @@ def update_config(cfg):
 def start():
     http_api = SysHTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
-    lock_processor.start(_interval=eva.core.polldelay)
+    lock_processor.start(_interval=eva.core.config.polldelay)
 
 
 @eva.core.stop

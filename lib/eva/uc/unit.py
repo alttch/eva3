@@ -233,7 +233,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
     def _t_auto_processor(self):
         logging.debug('%s auto processor started' % self.oid)
         while self.auto_processor_active and self.auto_off:
-            time.sleep(eva.core.polldelay)
+            time.sleep(eva.core.config.polldelay)
             if self.last_action and \
                     self.status != 0 and \
                     time.time() - self.last_action > self.auto_off:
@@ -353,7 +353,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
         if super().set_expired():
             self.nstatus = self.status
             self.nvalue = self.value
-            if eva.core.db_update == 1:
+            if eva.core.config.db_update == 1:
                 eva.uc.controller.save_item_state(self)
 
     def reset_nstate(self):
