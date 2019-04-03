@@ -58,7 +58,7 @@ class RemoteController(eva.item.Item):
             return eva.client.apiclient.result_not_ready, None
         for tries in range(self.retries + 1):
             (code, result) = self.api.call(
-                func, params, timeout, _debug=eva.core.debug)
+                func, params, timeout, _debug=eva.core.config.debug)
             if code not in [
                     eva.client.apiclient.result_server_error,
                     eva.client.apiclient.result_server_timeout
@@ -85,7 +85,7 @@ class RemoteController(eva.item.Item):
         p['k'] = self.masterkey
         for tries in range(self.retries + 1):
             (code, result) = self.api.call(
-                func, p, timeout, _debug=eva.core.debug)
+                func, p, timeout, _debug=eva.core.config.debug)
             if code not in [
                     eva.client.apiclient.result_server_error,
                     eva.client.apiclient.result_server_timeout

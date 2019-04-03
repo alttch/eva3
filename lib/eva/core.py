@@ -52,10 +52,6 @@ default_action_cleaner_interval = 60
 
 dir_eva_default = '/opt/eva'
 
-debug = False
-
-setup_mode = False
-
 development = False
 
 show_traceback = False
@@ -64,25 +60,29 @@ stop_on_critical = 'always'
 
 dump_on_critical = True
 
-env = os.environ.copy()
-
+env = {}
 cvars = {}
-
-cvars_modified = False
 
 _flags = SimpleNamespace(
     ignore_critical=False,
     sigterm_sent=False,
     started=False,
-    shutdown_requested=False)
+    shutdown_requested=False,
+    cvars_modified=False)
 
 product = SimpleNamespace(name='', code='', build=None)
 
 config = SimpleNamespace(
-    pid_file = None,
-    log_file = None,
-    db_uri = None,
-    userdb_uri = None)
+    pid_file=None,
+    log_file=None,
+    db_uri=None,
+    userdb_uri=None,
+    debug=False,
+    setup_mode=False)
+
+db_engine = SimpleNamespace(primary=None, user=None)
+
+log_engine = SimpleNamespace(logger=None, log_file_handler=None)
 
 polldelay = 0.01
 
@@ -116,14 +116,6 @@ dir_ui = dir_eva + '/ui'
 dir_pvt = dir_eva + '/pvt'
 dir_lib = dir_eva + '/lib'
 dir_runtime = dir_eva + '/runtime'
-
-
-db_engine = None
-userdb_engine = None
-
-logger = None
-
-log_file_handler = None
 
 exec_before_save = None
 exec_after_save = None
@@ -352,7 +344,8 @@ def serialize():
     d['keep_logmem'] = keep_logmem
     d['keep_action_history'] = keep_action_history
     d['action_cleaner_interval'] = action_cleaner_interval
-    d['debug'] = debug
+    d['debug'] = config.debug
+    d['setup_mode'] = config.setup_mode
     d['development'] = development
     d['show_traceback'] = show_traceback
     d['stop_on_critical'] = stop_on_critical
@@ -387,18 +380,17 @@ def set_product(code, build):
 
 
 def set_db(db_uri=None, userdb_uri=None):
-    global db_engine, userdb_engine
-    db_engine = create_db_engine(db_uri)
-    userdb_engine = create_db_engine(userdb_uri)
+    db_engine.primary = create_db_engine(db_uri)
+    db_engine.user = create_db_engine(userdb_uri)
 
 
 def db():
     with _db_lock:
         if not g.has('db'):
             if db_update == 1:
-                g.db = db_engine.connect()
+                g.db = db_engine.primary.connect()
             else:
-                g.db = db_engine
+                g.db = db_engine.primary
         return g.db
 
 
@@ -406,25 +398,24 @@ def userdb():
     with _userdb_lock:
         if not g.has('userdb'):
             if db_update == 1:
-                g.userdb = userdb_engine.connect()
+                g.userdb = db_engine.user.connect()
             else:
-                g.userdb = userdb_engine
+                g.userdb = db_engine.user
         return g.userdb
 
 
 def reset_log(initial=False):
-    global logger, log_file_handler
-    if logger and not config.log_file: return
-    logger = logging.getLogger()
+    if log_engine.logger and not config.log_file: return
+    log_engine.logger = logging.getLogger()
     try:
-        log_file_handler.stream.close()
+        log_engine.log_file_handler.stream.close()
     except:
         pass
     if initial:
-        for h in logger.handlers:
-            logger.removeHandler(h)
+        for h in log_engine.logger.handlers:
+            log_engine.logger.removeHandler(h)
     else:
-        logger.removeHandler(log_file_handler)
+        log_engine.logger.removeHandler(log_engine.log_file_handler)
     if not development:
         formatter = logging.Formatter('%(asctime)s ' + system_name + \
             '  %(levelname)s ' + product.code + ' %(threadName)s: %(message)s')
@@ -432,17 +423,19 @@ def reset_log(initial=False):
         formatter = logging.Formatter('%(asctime)s ' + system_name + \
             ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
             'l:%(lineno)d th:%(threadName)s :: %(message)s')
-    if config.log_file: log_file_handler = logging.FileHandler(config.log_file)
-    else: log_file_handler = logging.StreamHandler(sys.stdout)
-    log_file_handler.setFormatter(formatter)
-    logger.addHandler(log_file_handler)
+    if config.log_file:
+        log_engine.log_file_handler = logging.FileHandler(config.log_file)
+    else:
+        log_engine.log_file_handler = logging.StreamHandler(sys.stdout)
+    log_engine.log_file_handler.setFormatter(formatter)
+    log_engine.logger.addHandler(log_engine.log_file_handler)
     if initial:
         from eva.logs import MemoryLogHandler
-        logger.addHandler(MemoryLogHandler())
+        log_engine.logger.addHandler(MemoryLogHandler())
 
 
 def load(fname=None, initial=False, init_log=True, check_pid=True):
-    global system_name, debug, development, show_traceback
+    global system_name, development, show_traceback
     global stop_on_critical, dump_on_critical
     global notify_on_start
     global polldelay, db_update, keep_action_history, action_cleaner_interval
@@ -503,26 +496,27 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 show_traceback = True
                 debug_on()
                 logging.critical('DEVELOPMENT MODE STARTED')
-                debug = True
+                config.debug = True
             else:
                 try:
                     show_traceback = (cfg.get('server',
                                               'show_traceback') == 'yes')
                 except:
                     show_traceback = False
-            if not development and not debug:
+            if not development and not config.debug:
                 try:
                     if os.environ.get('EVA_CORE_DEBUG'):
-                        debug = True
+                        config.debug = True
                         show_traceback = True
                     else:
-                        debug = (cfg.get('server', 'debug') == 'yes')
-                    if debug: debug_on()
+                        config.debug = (cfg.get('server', 'debug') == 'yes')
+                    if config.debug: debug_on()
                 except:
                     pass
-                if not debug:
+                if not config.debug:
                     logging.basicConfig(level=default_log_level)
-                    if logger: logger.setLevel(default_log_level)
+                    if log_engine.logger:
+                        log_engine.logger.setLevel(default_log_level)
             try:
                 system_name = cfg.get('server', 'name')
             except:
@@ -653,30 +647,27 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
 
 @cvars_lock
 def load_cvars(fname=None):
-    global env, cvars
     fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
     if not fname_full:
         logging.warning('No file or product specified,' + \
                             ' skipping loading custom variables')
         return False
-    _cvars = {}
-    _env = {}
-    _env = os.environ.copy()
-    if not 'PATH' in _env: _env['PATH'] = ''
-    _env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + _env['PATH']
+    cvars.clear()
+    env.clear()
+    env.update(os.environ.copy())
+    if not 'PATH' in env: env['PATH'] = ''
+    env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + env['PATH']
     logging.info('Loading custom vars from %s' % fname_full)
     try:
         raw = ''.join(open(fname_full).readlines())
-        _cvars = jsonpickle.decode(raw)
+        cvars.update(jsonpickle.decode(raw))
     except:
         logging.error('can not load custom vars from %s' % fname_full)
         log_traceback()
         return False
-    for i, v in _cvars.items():
+    for i, v in cvars.items():
         logging.debug('custom var %s = "%s"' % (i, v))
-    env = _env
-    cvars = _cvars
-    cvars_modified = False
+    _flags.cvars_modified = False
     return True
 
 
@@ -714,39 +705,35 @@ def set_cvar(var, value=None):
         except:
             return False
     if db_update == 1: save_cvars()
-    else: cvars_modified = True
+    else: _flags.cvars_modified = True
     return True
 
 
 @save
 def save_modified():
-    return save_cvars() if cvars_modified else True
+    return save_cvars() if _flags.cvars_modified else True
 
 
 def debug_on():
-    global debug
-    debug = True
+    config.debug = True
     logging.basicConfig(level=logging.DEBUG)
-    if logger: logger.setLevel(logging.DEBUG)
+    if log_engine.logger: log_engine.logger.setLevel(logging.DEBUG)
     logging.info('Debug mode ON')
 
 
 def debug_off():
-    global debug
-    debug = False
-    if logger: logger.setLevel(default_log_level)
+    config.debug = False
+    if log_engine.logger: log_engine.logger.setLevel(default_log_level)
     logging.info('Debug mode OFF')
 
 
 def setup_off():
-    global setup_mode
-    setup_mode = False
+    config.setup_mode = False
     logging.info('Setup mode OFF')
 
 
 def setup_on():
-    global setup_mode
-    setup_mode = True
+    config.setup_mode = True
     logging.warning('Setup mode ON')
 
 

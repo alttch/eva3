@@ -644,8 +644,8 @@ class GenericAPI(object):
             result['file_management'] = \
                     eva.sysapi.config.api_file_management_allowed
         if apikey.check(k, sysfunc=True):
-            result['debug'] = eva.core.debug
-            result['setup_mode'] = eva.core.setup_mode
+            result['debug'] = eva.core.config.debug
+            result['setup_mode'] = eva.core.config.setup_mode
             result['db_update'] = eva.core.db_update
             result['polldelay'] = eva.core.polldelay
             if eva.core.development:
