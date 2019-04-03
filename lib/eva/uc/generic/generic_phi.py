@@ -228,7 +228,7 @@ class PHI(object):
         self._update_processor.start()
 
     def _start_update_scheduler(self):
-        if eva.core.started:
+        if eva.core.is_started():
             self._perform_update()
         self._update_scheduler_active = True
         if self._update_scheduler and \

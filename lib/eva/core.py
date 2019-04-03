@@ -32,6 +32,8 @@ from pyaltt import background_job
 
 from twisted.internet import reactor
 
+from types import SimpleNamespace
+
 version = __version__
 
 timeout = 5
@@ -74,9 +76,11 @@ cvars = {}
 
 cvars_modified = False
 
-ignore_critical = False
-
-_sigterm_sent = False
+_flags = SimpleNamespace(
+    ignore_critical=False,
+    sigterm_sent=False,
+    started=False,
+    shutdown_requested=False)
 
 polldelay = 0.01
 
@@ -138,9 +142,7 @@ enterprise_layout = True
 
 user_hook = None
 
-started = False
-
-shutdown_requested = False
+_flags.shutdown_requested = False
 
 default_log_level_name = 'info'
 default_log_level_id = 20
@@ -148,8 +150,7 @@ default_log_level = logging.INFO
 
 
 def critical(log=True, from_driver=False):
-    global ignore_critical
-    if ignore_critical: return
+    if _flags.ignore_critical: return
     try:
         caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
         caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
@@ -158,13 +159,13 @@ def critical(log=True, from_driver=False):
         caller_info = ''
     if log: log_traceback(force=True)
     if dump_on_critical:
-        ignore_critical = True
+        _flags.ignore_critical = True
         logging.critical('critical exception. dump file: %s' % create_dump(
             'critical', caller_info))
-        ignore_critical = False
+        _flags.ignore_critical = False
     if stop_on_critical in ['always', 'yes'] or (not from_driver and
                                                  stop_on_critical == 'core'):
-        ignore_critical = True
+        _flags.ignore_critical = True
         logging.critical('critical exception, shutting down')
         sighandler_term(None, None)
 
@@ -252,9 +253,8 @@ def suicide(**kwargs):
 
 
 def sighandler_term(signum=None, frame=None):
-    global _sigterm_sent
-    if _sigterm_sent: return
-    _sigterm_sent = True
+    if _flags.sigterm_sent: return
+    _flags.sigterm_sent = True
     background_job(suicide, daemon=True)()
     logging.info('got TERM signal, exiting')
     if db_update == 2:
@@ -305,18 +305,20 @@ def do_save():
 
 
 def block():
-    global started
-    started = True
+    _flags.started = True
     reactor.run(installSignalHandlers=False)
 
 
 def is_shutdown_requested():
-    return shutdown_requested
+    return _flags.shutdown_requested
+
+
+def is_started():
+    return _flags.started
 
 
 def core_shutdown():
-    global shutdown_requested
-    shutdown_requested = True
+    _flags.shutdown_requested = True
     shutdown()
     stop()
     reactor.callFromThread(reactor.stop)
@@ -783,11 +785,7 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     else: t = timeout
     if delay: p = delay
     else: p = polldelay
-    return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
-
-
-def is_shutdown_requested():
-    return shutdown_requested
+    return _wait_for(func, t, p, wait_for_false, is__flags.shutdown_requested)
 
 
 def format_xc_fname(item=None, xc_type='', fname=None, update=False):
