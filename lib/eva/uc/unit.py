@@ -388,7 +388,8 @@ class UnitAction(eva.item.ItemAction):
 
     def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
         if lock:
-            if not self.unit_action_lock.acquire(timeout=eva.core.config.timeout):
+            if not self.unit_action_lock.acquire(
+                    timeout=eva.core.config.timeout):
                 logging.critical('UnitAction::set_status locking broken')
                 return False
         result = super().set_status(

@@ -27,7 +27,8 @@ class LVar(eva.item.VariableItem):
 
     def notify(self, skip_subscribed_mqtt=False):
         super().notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
-        if eva.core.config.db_update == 1: eva.lm.controller.save_lvar_state(self)
+        if eva.core.config.db_update == 1:
+            eva.lm.controller.save_lvar_state(self)
 
     def mqtt_set_state(self, topic, data):
         super().mqtt_set_state(topic, data)

@@ -248,7 +248,8 @@ def save():
 def save_lvar_state(item):
     dbconn = eva.core.db()
     try:
-        _id = item.full_id if eva.core.config.enterprise_layout else item.item_id
+        _id = item.full_id if \
+                eva.core.config.enterprise_layout else item.item_id
         if dbconn.execute(
                 sql('update lvar_state set set_time=:t,' +
                     ' status=:status, value=:value where id=:id'),

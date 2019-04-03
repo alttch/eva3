@@ -27,7 +27,8 @@ class GenericRunner(object):
         self.err = None
         self.exitcode = -15
         if tki: self.term_kill_interval = tki
-        else: self.term_kill_interval = eva.core.config.timeout - default_tki_diff
+        else:
+            self.term_kill_interval = eva.core.config.timeout - default_tki_diff
         if self.term_kill_interval < 0: self.term_kill_interval = 0
         if timeout: self.timeout = timeout
         else: self.timeout = eva.core.config.timeout

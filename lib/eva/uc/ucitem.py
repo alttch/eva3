@@ -12,7 +12,8 @@ class UCItem(eva.item.Item):
 
     def do_notify(self, skip_subscribed_mqtt=False):
         super().notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
-        if eva.core.config.db_update == 1: eva.uc.controller.save_item_state(self)
+        if eva.core.config.db_update == 1:
+            eva.uc.controller.save_item_state(self)
 
     def notify(self, skip_subscribed_mqtt=False):
         self.do_notify(skip_subscribed_mqtt=skip_subscribed_mqtt)

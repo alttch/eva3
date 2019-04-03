@@ -302,7 +302,8 @@ class GenericNotifier(object):
                                     or d.item_type in e.item_types) \
                                     and eva.item.item_match(d, e.item_ids,
                                             e.groups):
-                        if not self.lse_lock.acquire(timeout=eva.core.config.timeout):
+                        if not self.lse_lock.acquire(
+                                timeout=eva.core.config.timeout):
                             logging.critical(
                                 '.GenericNotifier::format_data locking broken')
                             eva.core.critical()
@@ -1079,7 +1080,8 @@ class GenericMQTTNotifier(GenericNotifier):
         self.api_request_topic = self.controller_topic + 'api/request'
         self.api_response_topic = self.controller_topic + 'api/response'
         self.announce_topic = self.pfx + 'controller/discovery'
-        self.announce_msg = eva.core.product.code + '/' + eva.core.config.system_name
+        self.announce_msg = eva.core.product.code + \
+                            '/' + eva.core.config.system_name
         self.api_handler = eva.api.mqtt_api_handler
         self.discovery_handler = eva.api.mqtt_discovery_handler
         # dict of tuples (topic, handler)

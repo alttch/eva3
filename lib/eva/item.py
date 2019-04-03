@@ -137,7 +137,7 @@ class Item(object):
             return fname
         else:
             _id = self.full_id.replace('/', '___') if \
-                    eva.core.config.enterprise_layout and self.respect_layout else \
+                eva.core.config.enterprise_layout and self.respect_layout else \
                         self.item_id
             return eva.core.format_cfg_fname(eva.core.product.code + \
                     '_%s.d/' % self.item_type + _id + '.json', \
@@ -1717,7 +1717,8 @@ class ItemAction(GenericAction):
 
     def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
         if lock:
-            if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
+            if not self.item_action_lock.acquire(
+                    timeout=eva.core.config.timeout):
                 logging.critical('ItemAction::set_status locking broken')
                 eva.core.critical()
                 return False
@@ -1794,7 +1795,8 @@ class ItemAction(GenericAction):
             eva.core.critical()
             return False
         try:
-            if not self.item.queue_lock.acquire(timeout=eva.core.config.timeout):
+            if not self.item.queue_lock.acquire(
+                    timeout=eva.core.config.timeout):
                 logging.critical('ItemAction::terminate locking(2) broken')
                 eva.core.critical()
                 return False
@@ -2022,7 +2024,8 @@ def item_match(item, item_ids, groups=None):
     if (groups and ('#' in groups) or (item.group in groups)) \
             or '#' in item_ids or \
             item.oid in item_ids or \
-            (not eva.core.config.enterprise_layout and item.item_id in item_ids):
+            (not eva.core.config.enterprise_layout and \
+            item.item_id in item_ids):
         return True
     if groups:
         for grp in groups:

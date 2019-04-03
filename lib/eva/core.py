@@ -555,7 +555,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             except:
                 pass
             logging.debug('server.layout = %s' % ('enterprise' \
-                                        if config.enterprise_layout else 'simple'))
+                                    if config.enterprise_layout else 'simple'))
         try:
             config.polldelay = float(cfg.get('server', 'polldelay'))
         except:
