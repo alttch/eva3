@@ -11,8 +11,11 @@ from pyaltt import background_worker
 
 from eva.exceptions import InvalidParameter
 
+from types import SimpleNamespace
+
 _log_records = []
-_mute = False
+
+_flags = SimpleNamespace(mute=False)
 
 log_cleaner_delay = 60
 
@@ -75,7 +78,7 @@ def log_append(record=None, rd=None, skip_mqtt=False):
         _r = rd
     else:
         return
-    if not _mute and _r['msg'] and _r['msg'][0] != '.' and \
+    if not _flags.mute and _r['msg'] and _r['msg'][0] != '.' and \
             _r['mod'] != '_cplogging':
         if not _log_record_lock.acquire(timeout=eva.core.timeout):
             logging.critical('log_append locking broken')
@@ -91,13 +94,11 @@ def log_append(record=None, rd=None, skip_mqtt=False):
 
 
 def mute():
-    global _mute
-    _mute = True
+    _flags.mute = True
 
 
 def unmute():
-    global _mute
-    _mute = False
+    _flags.mute = False
 
 
 def start():
