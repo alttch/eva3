@@ -137,7 +137,7 @@ class Item(object):
             return fname
         else:
             _id = self.full_id.replace('/', '___') if \
-                    eva.core.enterprise_layout and self.respect_layout else \
+                    eva.core.config.enterprise_layout and self.respect_layout else \
                         self.item_id
             return eva.core.format_cfg_fname(eva.core.product.code + \
                     '_%s.d/' % self.item_type + _id + '.json', \
@@ -277,7 +277,7 @@ class UpdatableItem(Item):
         self.update_exec = None
         self.update_interval = 0
         self.update_delay = 0
-        self.update_timeout = eva.core.timeout
+        self.update_timeout = eva.core.config.timeout
         self._update_timeout = None
         self.update_processor = None
         self.update_scheduler = None
@@ -440,7 +440,7 @@ class UpdatableItem(Item):
         elif prop == 'update_timeout':
             if val is None:
                 if self._update_timeout is not None:
-                    self.update_timeout = eva.core.timeout
+                    self.update_timeout = eva.core.config.timeout
                     self._update_timeout = None
                     self.log_set(prop, None)
                     self.set_modified(save)
@@ -1157,9 +1157,9 @@ class ActiveItem(Item):
         self.action_queue = 0
         self.action_exec = None
         self.action_allow_termination = False
-        self.action_timeout = eva.core.timeout
+        self.action_timeout = eva.core.config.timeout
         self._action_timeout = None
-        self.term_kill_interval = eva.core.timeout
+        self.term_kill_interval = eva.core.config.timeout
         self._term_kill_interval = None
         self.queue_lock = threading.Lock()
         self.action_processor = None
@@ -1185,7 +1185,7 @@ class ActiveItem(Item):
     def q_put_task(self, action):
         if self.action_queue == 2:
             self.kill()
-        if not self.queue_lock.acquire(timeout=eva.core.timeout):
+        if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('ActiveItem::q_put_task locking broken')
             eva.core.critical()
             return False
@@ -1205,7 +1205,7 @@ class ActiveItem(Item):
 
     def q_clean(self, lock=True):
         if lock:
-            if not self.queue_lock.acquire(timeout=eva.core.timeout):
+            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('ActiveItem::q_clean locking broken')
                 eva.core.critical()
                 return False
@@ -1226,7 +1226,7 @@ class ActiveItem(Item):
 
     def terminate(self, lock=True):
         if lock:
-            if not self.queue_lock.acquire(timeout=eva.core.timeout):
+            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('ActiveItem::terminate locking broken')
                 eva.core.critical()
                 return False
@@ -1245,7 +1245,7 @@ class ActiveItem(Item):
             if lock: self.queue_lock.release()
 
     def kill(self):
-        if not self.queue_lock.acquire(timeout=eva.core.timeout):
+        if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('ActiveItem::kill locking broken')
             eva.core.critical()
             return False
@@ -1341,7 +1341,7 @@ class ActiveItem(Item):
                 a = self.q_get_task()
                 self.action_after_get_task(a)
                 if not a or not a.item: continue
-                if not self.queue_lock.acquire(timeout=eva.core.timeout):
+                if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                     logging.critical(
                         'ActiveItem::_t_action_processor locking broken')
                     eva.core.critical()
@@ -1400,7 +1400,7 @@ class ActiveItem(Item):
                         '%s action processor got an error, restarting' % \
                                 (self.oid))
                 eva.core.log_traceback()
-            if not self.queue_lock.acquire(timeout=eva.core.timeout):
+            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical(
                     'ActiveItem::_t_action_processor locking broken')
                 eva.core.critical()
@@ -1561,7 +1561,7 @@ class ActiveItem(Item):
         elif prop == 'action_timeout':
             if val is None:
                 if self._action_timeout is not None:
-                    self.action_timeout = eva.core.timeout
+                    self.action_timeout = eva.core.config.timeout
                     self._action_timeout = None
                     self.log_set(prop, None)
                     self.set_modified(save)
@@ -1580,7 +1580,7 @@ class ActiveItem(Item):
         elif prop == 'term_kill_interval':
             if val is None:
                 if self._term_kill_interval is not None:
-                    self.term_kill_interval = eva.core.timeout
+                    self.term_kill_interval = eva.core.config.timeout
                     self._term_kill_interval = None
                     self.log_set(prop, None)
                     self.set_modified(save)
@@ -1674,7 +1674,7 @@ class ItemAction(GenericAction):
     def __init__(self, item, priority=None, action_uuid=None):
         super().__init__()
         self.item_action_lock = threading.Lock()
-        if not self.item_action_lock.acquire(timeout=eva.core.timeout):
+        if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('ItemAction::__init___ locking broken')
             eva.core.critical()
             return False
@@ -1717,7 +1717,7 @@ class ItemAction(GenericAction):
 
     def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
         if lock:
-            if not self.item_action_lock.acquire(timeout=eva.core.timeout):
+            if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('ItemAction::set_status locking broken')
                 eva.core.critical()
                 return False
@@ -1789,12 +1789,12 @@ class ItemAction(GenericAction):
         return {}
 
     def kill(self):
-        if not self.item_action_lock.acquire(timeout=eva.core.timeout):
+        if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('ItemAction::terminate locking broken')
             eva.core.critical()
             return False
         try:
-            if not self.item.queue_lock.acquire(timeout=eva.core.timeout):
+            if not self.item.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('ItemAction::terminate locking(2) broken')
                 eva.core.critical()
                 return False
@@ -2022,7 +2022,7 @@ def item_match(item, item_ids, groups=None):
     if (groups and ('#' in groups) or (item.group in groups)) \
             or '#' in item_ids or \
             item.oid in item_ids or \
-            (not eva.core.enterprise_layout and item.item_id in item_ids):
+            (not eva.core.config.enterprise_layout and item.item_id in item_ids):
         return True
     if groups:
         for grp in groups:

@@ -144,7 +144,7 @@ class LockAPI(object):
                 lock may be released only via unlock function)
         """
         l, t, e = parse_api_params(kwargs, 'lte', 'S.n',
-                                   {'t': eva.core.timeout})
+                                   {'t': eva.core.config.timeout})
         if not l in locks:
             locks[l] = threading.Lock()
         logging.debug(
@@ -216,7 +216,7 @@ class CMD(object):
     def __init__(self, cmd, args=None, timeout=None, tki=None):
         self.cmd = fname_remove_unsafe(cmd)
         self.args = args if args else ()
-        self.timeout = timeout if timeout else eva.core.timeout
+        self.timeout = timeout if timeout else eva.core.config.timeout
         self.xc = None
         self.status = cmd_status_created
         self.time = {'created': time.time()}

@@ -630,16 +630,16 @@ class GenericAPI(object):
             'acl': apikey.serialized_acl(k),
             'system': eva.core.config.system_name,
             'time': time.time(),
-            'log_level': eva.core.default_log_level_id,
+            'log_level': eva.core.config.default_log_level_id,
             'version': eva.core.version,
             'product_name': eva.core.product.name,
             'product_code': eva.core.product.code,
             'product_build': eva.core.product.build,
             'uptime': int(time.time() - eva.core.start_time)
         }
-        if eva.core.enterprise_layout is not None:
+        if eva.core.config.enterprise_layout is not None:
             result['layout'] = 'enterprise' if \
-                    eva.core.enterprise_layout else 'simple'
+                    eva.core.config.enterprise_layout else 'simple'
         if apikey.check_master(k):
             result['file_management'] = \
                     eva.sysapi.config.api_file_management_allowed

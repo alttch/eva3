@@ -241,7 +241,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
                         (self.oid, self.auto_off))
                 self.last_action = time.time()
                 eva.uc.controller.exec_unit_action(
-                    self, 0, None, wait=eva.core.timeout)
+                    self, 0, None, wait=eva.core.config.timeout)
         self.auto_processor_active = False
         logging.debug('%s auto processor stopped' % self.oid)
 
@@ -297,7 +297,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
             logging.error('update %s returned bad data' % self.oid)
             eva.core.log_traceback()
             return False
-        if not self.queue_lock.acquire(timeout=eva.core.timeout):
+        if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('Unit::update_set_state locking broken')
         if self.current_action and self.current_action.is_status_running():
             nstatus = None
@@ -378,7 +378,7 @@ class UnitAction(eva.item.ItemAction):
                  priority=None,
                  action_uuid=None):
         self.unit_action_lock = threading.Lock()
-        if not self.unit_action_lock.acquire(timeout=eva.core.timeout):
+        if not self.unit_action_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('UnitAction::__init__ locking broken')
             return False
         self.nstatus = nstatus
@@ -388,7 +388,7 @@ class UnitAction(eva.item.ItemAction):
 
     def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
         if lock:
-            if not self.unit_action_lock.acquire(timeout=eva.core.timeout):
+            if not self.unit_action_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('UnitAction::set_status locking broken')
                 return False
         result = super().set_status(

@@ -165,7 +165,7 @@ class OWFSBus(object):
             self.timeout = float(kwargs.get('timeout'))
             self._timeout = self.timeout
         except:
-            self.timeout = eva.core.timeout - 1
+            self.timeout = eva.core.config.timeout - 1
             self._timeout = None
             if self.timeout < 1: self.timeout = 1
         try:
@@ -188,7 +188,7 @@ class OWFSBus(object):
     def acquire(self):
         if not self._ow or not self._ow.initialized: return False
         return 0 if self.lock and \
-                not self.locker.acquire(timeout=eva.core.timeout) else True
+                not self.locker.acquire(timeout=eva.core.config.timeout) else True
 
     def release(self):
         if self.lock: self.locker.release()

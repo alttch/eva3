@@ -242,7 +242,7 @@ def append_uc(uri,
             return False
         api.set_timeout(t)
     else:
-        api.set_timeout(eva.core.timeout)
+        api.set_timeout(eva.core.config.timeout)
     uport = ''
     if uri.startswith('http://') or uri.startswith('https://'):
         if uri.count(':') == 1 and uri.count('/') == 2:
@@ -252,7 +252,7 @@ def append_uc(uri,
             uport = ':8812'
     api.set_uri(uri + uport)
     mqu = mqtt_update
-    if mqu is None: mqu = eva.core.mqtt_update_default
+    if mqu is None: mqu = eva.core.config.mqtt_update_default
     u = eva.client.remote_controller.RemoteUC(
         None, api=api, mqtt_update=mqu, static=static)
     u._key = key
@@ -312,7 +312,7 @@ def append_lm(uri,
             return False
         api.set_timeout(t)
     else:
-        api.set_timeout(eva.core.timeout)
+        api.set_timeout(eva.core.config.timeout)
     uport = ''
     if uri.startswith('http://') or uri.startswith('https://'):
         if uri.count(':') == 1 and uri.count('/') == 2:
@@ -322,7 +322,7 @@ def append_lm(uri,
             uport = ':8817'
     api.set_uri(uri + uport)
     mqu = mqtt_update
-    if mqu is None: mqu = eva.core.mqtt_update_default
+    if mqu is None: mqu = eva.core.config.mqtt_update_default
     u = eva.client.remote_controller.RemoteLM(
         None, api=api, mqtt_update=mqu, static=static)
     u._key = key
@@ -428,7 +428,7 @@ def dump():
 
 
 def init():
-    eva.core.enterprise_layout = None
+    eva.core.config.enterprise_layout = None
 
 
 def update_config(cfg):

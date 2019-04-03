@@ -99,7 +99,7 @@ def get_item(item_id):
     item = None
     if i.find('/') > -1:
         if i in items_by_full_id: item = items_by_full_id[i]
-    elif not eva.core.enterprise_layout and i in items_by_id:
+    elif not eva.core.config.enterprise_layout and i in items_by_id:
         item = items_by_id[i]
     return None if item and is_oid(item_id) and item.item_type != tp else item
 
@@ -159,7 +159,7 @@ def get_lvar(lvar_id):
     i = oid_to_id(lvar_id)
     if i.find('/') > -1:
         if i in lvars_by_full_id: return lvars_by_full_id[i]
-    elif not eva.core.enterprise_layout and i in lvars_by_id:
+    elif not eva.core.config.enterprise_layout and i in lvars_by_id:
         return lvars_by_id[i]
     return None
 
@@ -172,11 +172,11 @@ def append_item(item, start=False, load=True):
         eva.core.log_traceback()
         return False
     if item.item_type == 'lvar':
-        if not eva.core.enterprise_layout:
+        if not eva.core.config.enterprise_layout:
             lvars_by_id[item.item_id] = item
         lvars_by_group.setdefault(item.group, {})[item.item_id] = item
         lvars_by_full_id[item.full_id] = item
-    if not eva.core.enterprise_layout:
+    if not eva.core.config.enterprise_layout:
         items_by_id[item.item_id] = item
     items_by_group.setdefault(item.group, {})[item.item_id] = item
     items_by_full_id[item.full_id] = item
@@ -248,7 +248,7 @@ def save():
 def save_lvar_state(item):
     dbconn = eva.core.db()
     try:
-        _id = item.full_id if eva.core.enterprise_layout else item.item_id
+        _id = item.full_id if eva.core.config.enterprise_layout else item.item_id
         if dbconn.execute(
                 sql('update lvar_state set set_time=:t,' +
                     ' status=:status, value=:value where id=:id'),
@@ -350,13 +350,13 @@ def load_lvars(start=False):
                 '_lvar.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             lvar_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.enterprise_layout:
+            if eva.core.config.enterprise_layout:
                 _id = lvar_id.split('___')[-1]
                 lvar_id = lvar_id.replace('___', '/')
             else:
                 _id = lvar_id
             u = eva.lm.lvar.LVar(_id)
-            if eva.core.enterprise_layout:
+            if eva.core.config.enterprise_layout:
                 u.set_group('/'.join(lvar_id.split('/')[:-1]))
             if append_item(u, start=False):
                 _loaded[lvar_id] = u
@@ -651,7 +651,7 @@ def append_controller(uri,
             return False
         api.set_timeout(t)
     else:
-        api.set_timeout(eva.core.timeout)
+        api.set_timeout(eva.core.config.timeout)
     uport = ''
     if uri.startswith('http://') or uri.startswith('https://'):
         if uri.count(':') == 1 and uri.count('/') == 2:
@@ -661,7 +661,7 @@ def append_controller(uri,
             uport = ':8812'
     api.set_uri(uri + uport)
     mqu = mqtt_update
-    if mqu is None: mqu = eva.core.mqtt_update_default
+    if mqu is None: mqu = eva.core.config.mqtt_update_default
     u = eva.lm.lremote.LRemoteUC(None, api=api, mqtt_update=mqu, static=static)
     u._key = key
     if not uc_pool.append(u): return False
@@ -724,7 +724,7 @@ def create_item(item_id, item_type, group=None, virtual=False, save=False):
         raise InvalidParameter(
             'Unable to create item: invalid symbols in ID {}'.format(item_id))
     i_full = grp + '/' + i
-    if (not eva.core.enterprise_layout and i in items_by_id) or \
+    if (not eva.core.config.enterprise_layout and i in items_by_id) or \
             i_full in items_by_full_id:
         raise ResourceAlreadyExists(get_item(i_full).oid)
     item = None
@@ -734,8 +734,8 @@ def create_item(item_id, item_type, group=None, virtual=False, save=False):
     if virtual: virt = True
     else: virt = False
     cfg = {'group': grp, 'virtual': virt}
-    if eva.core.mqtt_update_default:
-        cfg['mqtt_update'] = eva.core.mqtt_update_default
+    if eva.core.config.mqtt_update_default:
+        cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
     append_item(item, start=True, load=False)
     if save: item.save()
@@ -759,12 +759,12 @@ def destroy_item(item):
             if not i: raise ResourceNotFound
         else:
             i = item
-        if not eva.core.enterprise_layout:
+        if not eva.core.config.enterprise_layout:
             del items_by_id[i.item_id]
         del items_by_full_id[i.full_id]
         del items_by_group[i.group][i.item_id]
         if i.item_type == 'lvar':
-            if not eva.core.enterprise_layout:
+            if not eva.core.config.enterprise_layout:
                 del lvars_by_id[i.item_id]
             del lvars_by_full_id[i.full_id]
             del lvars_by_group[i.group][i.item_id]
@@ -882,7 +882,7 @@ def exec_macro(macro,
         m = macro
     if not m: return None
     if q_timeout: qt = q_timeout
-    else: qt = eva.core.timeout
+    else: qt = eva.core.config.timeout
     if argv is None: _argv = []
     else: _argv = argv
     _argvf = []

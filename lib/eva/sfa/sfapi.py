@@ -1289,7 +1289,7 @@ class SFA_HTTP_Root:
         try:
             if f.find('//') == -1: _f = 'http://' + f
             else: _f = f
-            r = requests.get(_f, timeout=eva.core.timeout)
+            r = requests.get(_f, timeout=eva.core.config.timeout)
         except:
             raise cp_api_error()
         if r.status_code != 200:

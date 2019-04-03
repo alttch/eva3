@@ -14,4 +14,4 @@ class UC_Queue(ActiveItemQueue):
             queue_id=queue_id,
             keep_history=keep_history,
             default_priority=default_priority,
-            enterprise_layout=eva.core.enterprise_layout)
+            enterprise_layout=eva.core.config.enterprise_layout)

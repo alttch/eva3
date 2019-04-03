@@ -59,7 +59,7 @@ class WatchBlock(ModbusSequentialDataBlock):
 
     def setValues(self, addr, values):
         super().setValues(addr, values)
-        if not self.event_handlers_lock.acquire(timeout=eva.core.timeout):
+        if not self.event_handlers_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('WatchBlock::setValues locking broken')
             eva.core.critical()
             return False
@@ -72,7 +72,7 @@ class WatchBlock(ModbusSequentialDataBlock):
             self.event_handlers_lock.release()
 
     def registerEventHandler(self, addr, f):
-        if not self.event_handlers_lock.acquire(timeout=eva.core.timeout):
+        if not self.event_handlers_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('WatchBlock::registerEventHandler locking broken')
             eva.core.critical()
             return False
@@ -86,7 +86,7 @@ class WatchBlock(ModbusSequentialDataBlock):
             self.event_handlers_lock.release()
 
     def unregisterEventHandler(self, addr, f):
-        if not self.event_handlers_lock.acquire(timeout=eva.core.timeout):
+        if not self.event_handlers_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 'WatchBlock::unregisterEventHandler locking broken')
             eva.core.critical()
@@ -433,7 +433,7 @@ class ModbusPort(object):
             self.timeout = float(kwargs.get('timeout'))
             self._timeout = self.timeout
         except:
-            self.timeout = eva.core.timeout - 1
+            self.timeout = eva.core.config.timeout - 1
             self._timeout = None
             if self.timeout < 1: self.timeout = 1
         try:
@@ -490,7 +490,7 @@ class ModbusPort(object):
 
     def acquire(self):
         if not self.client: return False
-        if self.lock and not self.locker.acquire(timeout=eva.core.timeout):
+        if self.lock and not self.locker.acquire(timeout=eva.core.config.timeout):
             return 0
         self.client.connect()
         if self.client.is_socket_open():

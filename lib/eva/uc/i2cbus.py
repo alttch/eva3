@@ -14,7 +14,7 @@ def lock(bus):
     if bus not in locks:
         l = threading.Lock()
         locks[bus] = l
-    if not locks[bus].acquire(timeout=eva.core.timeout):
+    if not locks[bus].acquire(timeout=eva.core.config.timeout):
         return False
     return True
 

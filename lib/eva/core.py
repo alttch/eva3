@@ -36,10 +36,6 @@ from types import SimpleNamespace
 
 version = __version__
 
-timeout = 5
-
-keep_logmem = 3600
-
 max_shutdown_time = 15
 
 default_action_cleaner_interval = 60
@@ -74,6 +70,17 @@ config = SimpleNamespace(
     keep_action_history=3600,
     action_cleaner_interval=60,
     notify_on_start=True,
+    keep_logmem=3600,
+    default_log_level_name='info',
+    default_log_level_id=20,
+    default_log_level=logging.INFO,
+    timeout=5,
+    exec_before_save=None,
+    exec_after_save=None,
+    mqtt_update_default=None,
+    enterprise_layout=True,
+    reactor_thread_pool=15,
+    user_hook=None,
     setup_mode=False)
 
 db_engine = SimpleNamespace(primary=None, user=None)
@@ -85,8 +92,6 @@ db_pool_size = 15
 sleep_step = 0.1
 
 keep_exceptions = 100
-
-reactor_thread_pool = 15
 
 _exceptions = []
 
@@ -107,22 +112,7 @@ dir_pvt = dir_eva + '/pvt'
 dir_lib = dir_eva + '/lib'
 dir_runtime = dir_eva + '/runtime'
 
-exec_before_save = None
-exec_after_save = None
-
-mqtt_update_default = None
-
 start_time = time.time()
-
-enterprise_layout = True
-
-user_hook = None
-
-_flags.shutdown_requested = False
-
-default_log_level_name = 'info'
-default_log_level_id = 20
-default_log_level = logging.INFO
 
 
 def critical(log=True, from_driver=False):
@@ -170,7 +160,7 @@ def log_traceback(display=False, notifier=False, force=False, e=None):
         logging.error(pfx + e_msg)
     elif display:
         print(e_msg)
-    if not _exception_log_lock.acquire(timeout=timeout):
+    if not _exception_log_lock.acquire(timeout=config.timeout):
         logging.critical('log_traceback locking broken')
         critical(log=False)
         return
@@ -249,10 +239,10 @@ def sighandler_int(signum, frame):
 
 
 def prepare_save():
-    if not exec_before_save: return True
+    if not config.exec_before_save: return True
     logging.debug('executing before save command "%s"' % \
-        exec_before_save)
-    code = os.system(exec_before_save)
+        config.exec_before_save)
+    code = os.system(config.exec_before_save)
     if code:
         logging.error('before save command exited with code %u' % \
             code)
@@ -261,10 +251,10 @@ def prepare_save():
 
 
 def finish_save():
-    if not exec_after_save: return True
+    if not config.exec_after_save: return True
     logging.debug('executing after save command "%s"' % \
-        exec_after_save)
-    code = os.system(exec_after_save)
+        config.exec_after_save)
+    code = os.system(config.exec_after_save)
     if code:
         logging.error('after save command exited with code %u' % \
             code)
@@ -328,12 +318,12 @@ def serialize():
     d = {}
     proc = psutil.Process()
     d['version'] = version
-    d['timeout'] = timeout
+    d['timeout'] = config.timeout
     d['system_name'] = config.system_name
     d['product_name'] = product.name
     d['product_code'] = product.code
     d['product_build'] = product.build
-    d['keep_logmem'] = keep_logmem
+    d['keep_logmem'] = config.keep_logmem
     d['keep_action_history'] = config.keep_action_history
     d['action_cleaner_interval'] = config.action_cleaner_interval
     d['debug'] = config.debug
@@ -427,15 +417,6 @@ def reset_log(initial=False):
 
 
 def load(fname=None, initial=False, init_log=True, check_pid=True):
-    global keep_logmem, default_log_level, default_log_level_name
-    global default_log_level_id
-    global timeout
-    global exec_before_save
-    global exec_after_save
-    global mqtt_update_default
-    global enterprise_layout
-    global reactor_thread_pool
-    global user_hook
     from eva.logs import log_levels_by_name
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
@@ -469,9 +450,11 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             try:
                 log_level = cfg.get('server', 'logging_level')
                 if log_level in log_levels_by_name:
-                    default_log_level_name = log_level
-                    default_log_level_id = log_levels_by_name.get(log_level)
-                    default_log_level = getattr(logging, log_level.upper())
+                    config.default_log_level_name = log_level
+                    config.default_log_level_id = log_levels_by_name.get(
+                        log_level)
+                    config.default_log_level = getattr(logging,
+                                                       log_level.upper())
             except:
                 pass
             try:
@@ -500,16 +483,17 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 except:
                     pass
                 if not config.debug:
-                    logging.basicConfig(level=default_log_level)
+                    logging.basicConfig(level=config.default_log_level)
                     if log_engine.logger:
-                        log_engine.logger.setLevel(default_log_level)
+                        log_engine.logger.setLevel(config.default_log_level)
             try:
                 config.system_name = cfg.get('server', 'name')
             except:
                 pass
             logging.info('Loading server config')
             logging.debug('server.pid_file = %s' % config.pid_file)
-            logging.debug('server.logging_level = %s' % default_log_level_name)
+            logging.debug(
+                'server.logging_level = %s' % config.default_log_level_name)
             try:
                 config.notify_on_start = (cfg.get('server',
                                                   'notify_on_start') == 'yes')
@@ -560,41 +544,47 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.userdb_uri = config.db_uri
             logging.debug('server.userdb = %s' % config.userdb_uri)
             try:
-                user_hook = cfg.get('server', 'user_hook').split()
+                config.user_hook = cfg.get('server', 'user_hook').split()
             except:
                 pass
-            _uh = ' '.join(user_hook) if user_hook else None
+            _uh = ' '.join(config.user_hook) if config.user_hook else None
             logging.debug('server.user_hook = %s' % _uh)
             try:
-                enterprise_layout = (cfg.get('server', 'layout') != 'simple')
+                config.enterprise_layout = (cfg.get('server', 'layout') !=
+                                            'simple')
             except:
                 pass
             logging.debug('server.layout = %s' % ('enterprise' \
-                                        if enterprise_layout else 'simple'))
+                                        if config.enterprise_layout else 'simple'))
         try:
             config.polldelay = float(cfg.get('server', 'polldelay'))
         except:
             pass
         try:
-            timeout = float(cfg.get('server', 'timeout'))
+            config.timeout = float(cfg.get('server', 'timeout'))
         except:
             pass
         if not config.polldelay: config.polldelay = 0.01
-        logging.debug('server.timeout = %s' % timeout)
+        logging.debug('server.timeout = %s' % config.timeout)
         logging.debug('server.polldelay = %s  ( %s msec )' % \
-                                            (config.polldelay, int(config.polldelay * 1000)))
+                            (config.polldelay, int(config.polldelay * 1000)))
         try:
-            reactor_thread_pool = int(cfg.get('server', 'reactor_thread_pool'))
+            config.reactor_thread_pool = int(
+                cfg.get('server', 'reactor_thread_pool'))
         except:
             pass
-        logging.debug('server.reactor_thread_pool = %s' % reactor_thread_pool)
+        logging.debug(
+            'server.reactor_thread_pool = %s' % config.reactor_thread_pool)
         try:
-            config.db_update = config.db_update_codes.index(cfg.get('server', 'db_update'))
+            config.db_update = config.db_update_codes.index(
+                cfg.get('server', 'db_update'))
         except:
             pass
-        logging.debug('server.db_update = %s' % db_update_codes[config.db_update])
+        logging.debug(
+            'server.db_update = %s' % db_update_codes[config.db_update])
         try:
-            config.keep_action_history = int(cfg.get('server', 'keep_action_history'))
+            config.keep_action_history = int(
+                cfg.get('server', 'keep_action_history'))
         except:
             pass
         logging.debug('server.keep_action_history = %s sec' % \
@@ -602,31 +592,34 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         try:
             config.action_cleaner_interval = int(
                 cfg.get('server', 'action_cleaner_interval'))
-            if config.action_cleaner_interval < 0: raise Exception('invalid interval')
+            if config.action_cleaner_interval < 0:
+                raise Exception('invalid interval')
         except:
             config.action_cleaner_interval = default_action_cleaner_interval
         logging.debug('server.action_cleaner_interval = %s sec' % \
                 config.action_cleaner_interval)
         try:
-            keep_logmem = int(cfg.get('server', 'keep_logmem'))
+            config.keep_logmem = int(cfg.get('server', 'keep_logmem'))
         except:
             pass
-        logging.debug('server.keep_logmem = %s sec' % keep_logmem)
+        logging.debug('server.keep_logmem = %s sec' % config.keep_logmem)
         try:
-            exec_before_save = cfg.get('server', 'exec_before_save')
+            config.exec_before_save = cfg.get('server', 'exec_before_save')
         except:
             pass
-        logging.debug('server.exec_before_save = %s' % exec_before_save)
+        logging.debug('server.exec_before_save = %s' % config.exec_before_save)
         try:
-            exec_after_save = cfg.get('server', 'exec_after_save')
+            config.exec_after_save = cfg.get('server', 'exec_after_save')
         except:
             pass
-        logging.debug('server.exec_after_save = %s' % exec_after_save)
+        logging.debug('server.exec_after_save = %s' % config.exec_after_save)
         try:
-            mqtt_update_default = cfg.get('server', 'mqtt_update_default')
+            config.mqtt_update_default = cfg.get('server',
+                                                 'mqtt_update_default')
         except:
             pass
-        logging.debug('server.mqtt_update_default = %s' % mqtt_update_default)
+        logging.debug(
+            'server.mqtt_update_default = %s' % config.mqtt_update_default)
         return cfg
     except:
         print('Can not read primary config %s' % fname_full)
@@ -712,7 +705,7 @@ def debug_on():
 
 def debug_off():
     config.debug = False
-    if log_engine.logger: log_engine.logger.setLevel(default_log_level)
+    if log_engine.logger: log_engine.logger.setLevel(config.default_log_level)
     logging.info('Debug mode OFF')
 
 
@@ -748,7 +741,7 @@ def unlink_pid_file():
 
 def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     if wait_timeout: t = wait_timeout
-    else: t = timeout
+    else: t = config.timeout
     if delay: p = delay
     else: p = config.polldelay
     return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
@@ -808,8 +801,8 @@ def dummy_false():
 def init():
     signal.signal(signal.SIGHUP, sighandler_hup)
     signal.signal(signal.SIGTERM, sighandler_term)
-    Locker.timeout = timeout
-    RLocker.timeout = timeout
+    Locker.timeout = config.timeout
+    RLocker.timeout = config.timeout
     if not os.environ.get('EVA_CORE_ENABLE_CC'):
         signal.signal(signal.SIGINT, sighandler_int)
     else:
@@ -817,7 +810,7 @@ def init():
 
 
 def start():
-    reactor.suggestThreadPoolSize(reactor_thread_pool)
+    reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
 
 

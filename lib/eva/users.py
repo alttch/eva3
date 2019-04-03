@@ -166,10 +166,10 @@ def init():
 
 
 def run_hook(cmd, u, password=None):
-    if not eva.core.user_hook:
+    if not eva.core.config.user_hook:
         return True
     p = subprocess.Popen(
-        eva.core.user_hook + [cmd, u],
+        eva.core.config.user_hook + [cmd, u],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE)

@@ -38,7 +38,7 @@ class RemoteController(eva.item.Item):
             self._key = api._key
         else:
             self.api = eva.client.coreapiclient.CoreAPIClient()
-            self.api.set_timeout(eva.core.timeout)
+            self.api.set_timeout(eva.core.config.timeout)
             self._key = None
         self.masterkey = None
         self._masterkey = None
@@ -223,7 +223,7 @@ class RemoteController(eva.item.Item):
                 except:
                     return False
             else:
-                self.api.set_timeout(eva.core.timeout)
+                self.api.set_timeout(eva.core.config.timeout)
                 self.set_modified(save)
                 return True
         elif prop == 'retries':
@@ -483,7 +483,7 @@ class RemoteControllerPool(object):
     def append(self, controller, need_type=None):
         if controller.load_remote(need_type=need_type) or \
                 controller.item_id != '':
-            if not self.management_lock.acquire(timeout=eva.core.timeout):
+            if not self.management_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('RemoteControllerPool::append locking broken')
                 eva.core.critical()
                 return False
@@ -502,7 +502,7 @@ class RemoteControllerPool(object):
         return False
 
     def remove(self, controller_id):
-        if not self.management_lock.acquire(timeout=eva.core.timeout):
+        if not self.management_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('RemoteControllerPool::remove locking broken')
             eva.core.critical()
             return False
@@ -532,7 +532,7 @@ class RemoteControllerPool(object):
             controller.item_id,
             args=(controller.item_id,))
         if lock and \
-                not self.management_lock.acquire(timeout=eva.core.timeout):
+                not self.management_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 'RemoteControllerPool::start_controller_reload_' + \
                         'thread locking broken')
@@ -551,7 +551,7 @@ class RemoteControllerPool(object):
                     self.reload_thread_flags[controller_id] = False
                     self.reload_threads[controller_id].join()
                 if lock and \
-                    not self.management_lock.acquire(timeout=eva.core.timeout):
+                    not self.management_lock.acquire(timeout=eva.core.config.timeout):
                     logging.critical(
                         'RemoteControllerPool::stop_controller_reload_' + \
                                 'thread locking broken')
@@ -628,7 +628,7 @@ class RemoteControllerPool(object):
         while self.action_cleaner_active:
             try:
                 if not self.action_history_lock.acquire(
-                        timeout=eva.core.timeout):
+                        timeout=eva.core.config.timeout):
                     logging.critical(
                         'RemoteControllerPool::_t_action_cleaner locking broken'
                     )
@@ -652,7 +652,7 @@ class RemoteControllerPool(object):
     def action_history_append(self, a):
         if not eva.core.config.keep_action_history:
             return True
-        if not self.action_history_lock.acquire(timeout=eva.core.timeout):
+        if not self.action_history_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 'RemoteControllerPool::action_history_append locking broken')
             eva.core.critical()
@@ -667,7 +667,7 @@ class RemoteControllerPool(object):
         return True
 
     def action_history_remove(self, a):
-        if not self.action_history_lock.acquire(timeout=eva.core.timeout):
+        if not self.action_history_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 'RemoteControllerPool::action_history_remove locking broken')
             eva.core.critical()
@@ -682,7 +682,7 @@ class RemoteControllerPool(object):
         return True
 
     def action_history_get(self, uuid):
-        if not self.action_history_lock.acquire(timeout=eva.core.timeout):
+        if not self.action_history_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 'RemoteControllerPool::action_history_get locking broken')
             eva.core.critical()
@@ -837,7 +837,7 @@ class RemoteUCPool(RemoteControllerPool):
 
     def remove(self, controller_id, full=True):
         if full and not super().remove(controller_id): return False
-        if not self.item_management_lock.acquire(timeout=eva.core.timeout):
+        if not self.item_management_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('RemoteUCPool::remove locking broken')
             eva.core.critical()
             return False
@@ -872,7 +872,7 @@ class RemoteUCPool(RemoteControllerPool):
         if not result: return result
         if controller_id == 'ALL': return True
         uc = self.controllers[controller_id]
-        if not self.item_management_lock.acquire(timeout=eva.core.timeout):
+        if not self.item_management_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('RemoteUCPool::reload_controller locking broken')
             eva.core.critical()
             return False
@@ -1157,7 +1157,7 @@ class RemoteLMPool(RemoteControllerPool):
 
     def remove(self, controller_id, full=True):
         if full and not super().remove(controller_id): return False
-        if not self.item_management_lock.acquire(timeout=eva.core.timeout):
+        if not self.item_management_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('RemoteLMPool::remove locking broken')
             eva.core.critical()
             return False
@@ -1205,7 +1205,7 @@ class RemoteLMPool(RemoteControllerPool):
         if not result: return result
         if controller_id == 'ALL': return True
         lm = self.controllers[controller_id]
-        if not self.item_management_lock.acquire(timeout=eva.core.timeout):
+        if not self.item_management_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('RemoteLMPool::reload_controller locking broken')
             eva.core.critical()
             return False

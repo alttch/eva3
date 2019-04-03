@@ -302,7 +302,7 @@ class GenericNotifier(object):
                                     or d.item_type in e.item_types) \
                                     and eva.item.item_match(d, e.item_ids,
                                             e.groups):
-                        if not self.lse_lock.acquire(timeout=eva.core.timeout):
+                        if not self.lse_lock.acquire(timeout=eva.core.config.timeout):
                             logging.critical(
                                 '.GenericNotifier::format_data locking broken')
                             eva.core.critical()
@@ -345,7 +345,7 @@ class GenericNotifier(object):
             return None
 
     def get_timeout(self):
-        return self.timeout if self.timeout else eva.core.timeout
+        return self.timeout if self.timeout else eva.core.config.timeout
 
     def log_error(self, code=None, message=None):
         if not code and not message:
@@ -1104,7 +1104,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.connected = True
         if self.announce_interval and not self.test_only_mode:
             self.announcer.start(_name=self.notifier_id + '_announcer')
-        if not self.api_callback_lock.acquire(timeout=eva.core.timeout):
+        if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 '.GenericMQTTNotifier::api_callback locking broken')
             eva.core.critical()
@@ -1370,7 +1370,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if request_id in self.api_callback:
             logging.error('.GenericMQTTNotifier: duplicate API request ID')
             return False
-        if not self.api_callback_lock.acquire(timeout=eva.core.timeout):
+        if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 '.GenericMQTTNotifier::api_callback locking broken')
             eva.core.critical()
@@ -1391,7 +1391,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if request_id not in self.api_callback:
             logging.warning('.GenericMQTTNotifier: API request ID not found')
             return False
-        if not self.api_callback_lock.acquire(timeout=eva.core.timeout):
+        if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 '.GenericMQTTNotifier::api_callback locking broken')
             eva.core.critical()

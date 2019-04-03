@@ -43,7 +43,7 @@ def get_sleep_step():
 
 
 def get_timeout():
-    return eva.core.timeout
+    return eva.core.config.timeout
 
 
 def critical():
@@ -58,15 +58,15 @@ def lock(l, timeout=None, expires=None):
     import eva.apikey
     import eva.sysapi
     if expires is None:
-        e = eva.core.timeout
+        e = eva.core.config.timeout
     else:
         e = expires
-        if e > eva.core.timeout: e = eva.core.timeout
+        if e > eva.core.config.timeout: e = eva.core.config.timeout
     if timeout is None:
-        t = eva.core.timeout
+        t = eva.core.config.timeout
     else:
         t = timeout
-        if t > eva.core.timeout: t = eva.core.timeout
+        if t > eva.core.config.timeout: t = eva.core.config.timeout
     return eva.sysapi.api.lock(
         eva.apikey.get_masterkey(), l='eva:phi:' + l, t=t, e=e)
 

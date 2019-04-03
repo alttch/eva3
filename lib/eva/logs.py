@@ -80,7 +80,7 @@ def log_append(record=None, rd=None, skip_mqtt=False):
         return
     if not _flags.mute and _r['msg'] and _r['msg'][0] != '.' and \
             _r['mod'] != '_cplogging':
-        if not _log_record_lock.acquire(timeout=eva.core.timeout):
+        if not _log_record_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('log_append locking broken')
             eva.core.critical()
             return
@@ -133,7 +133,7 @@ def log_get(logLevel=0, t=0, n=None):
 
 @background_worker(delay=log_cleaner_delay, on_error=eva.core.log_traceback)
 def log_cleaner(**kwargs):
-    if not _log_record_lock.acquire(timeout=eva.core.timeout):
+    if not _log_record_lock.acquire(timeout=eva.core.config.timeout):
         logging.critical('_t_log_cleaner locking(1) broken')
         eva.core.critical()
         return
@@ -144,8 +144,8 @@ def log_cleaner(**kwargs):
     finally:
         _log_record_lock.release()
     for l in _l:
-        if time.time() - l['t'] > eva.core.keep_logmem:
-            if not _log_record_lock.acquire(timeout=eva.core.timeout):
+        if time.time() - l['t'] > eva.core.config.keep_logmem:
+            if not _log_record_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('_t_log_cleaner locking(1) broken')
                 eva.core.critical()
                 break

@@ -35,7 +35,7 @@ class PLC(eva.item.ActiveItem):
                 a = self.q_get_task()
                 self.action_after_get_task(a)
                 if not a or not a.item: continue
-                if not self.queue_lock.acquire(timeout=eva.core.timeout):
+                if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                     logging.critical(
                         'ActiveItem::_t_action_processor locking broken')
                     eva.core.critical()
@@ -73,7 +73,7 @@ class PLC(eva.item.ActiveItem):
                         '%s action processor got an error, restarting' % \
                                 (self.full_id))
                 eva.core.log_traceback()
-            if not self.queue_lock.acquire(timeout=eva.core.timeout):
+            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical(
                     'ActiveItem::_t_action_processor locking broken')
                 eva.core.critical()
@@ -97,7 +97,7 @@ class PLC(eva.item.ActiveItem):
         env_globals['kwargs'] = a.kwargs.copy()
         env_globals['is_shutdown'] = a.is_shutdown_func
         env_globals['_polldelay'] = eva.core.config.polldelay
-        env_globals['_timeout'] = eva.core.timeout
+        env_globals['_timeout'] = eva.core.config.timeout
         for i, v in env_globals['kwargs'].items():
             env_globals[i] = v
         env_globals['_0'] = a.item.item_id

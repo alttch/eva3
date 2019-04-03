@@ -27,10 +27,10 @@ class GenericRunner(object):
         self.err = None
         self.exitcode = -15
         if tki: self.term_kill_interval = tki
-        else: self.term_kill_interval = eva.core.timeout - default_tki_diff
+        else: self.term_kill_interval = eva.core.config.timeout - default_tki_diff
         if self.term_kill_interval < 0: self.term_kill_interval = 0
         if timeout: self.timeout = timeout
-        else: self.timeout = eva.core.timeout
+        else: self.timeout = eva.core.config.timeout
 
     def get_cvars(self, item=None):
         cvars = eva.core.cvars.copy()
@@ -199,7 +199,7 @@ class ExternalProcess(GenericRunner):
 
     def wait(self, timeout=None):
         if timeout: t = timeout
-        else: t = eva.core.timeout
+        else: t = eva.core.config.timeout
         return self.finished.wait(t)
 
     def run(self):

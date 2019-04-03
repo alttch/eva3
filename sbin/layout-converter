@@ -25,7 +25,7 @@ def usage(version_only=False):
             (
                 'EVA Layout Converter',
                 eva.core.version,
-                eva.core.product_build
+                eva.core.product.build
             )
         )
     if version_only: return
@@ -50,12 +50,12 @@ product_code = p
 
 eva.core.init()
 eva.core.set_product(product_code, product_build)
-eva.core.product_name = 'Layout Converter'
+eva.core.product.name = 'Layout Converter'
 
 cfg = eva.core.load(initial=True, init_log=False)
 if not cfg: sys.exit(2)
 
-if eva.core.enterprise_layout:
+if eva.core.config.enterprise_layout:
     print('\nComponent already has enterprise layout set. Operation aborted')
     sys.exit(3)
 
@@ -109,7 +109,7 @@ input('Press <ENTER> to continue...')
 
 cfg = eva.core.load(initial=True, init_log=False)
 
-if not eva.core.enterprise_layout:
+if not eva.core.config.enterprise_layout:
     eva.core.shutdown()
     print('Layout is set to "simple". Operation aborted')
     sys.exit(4)

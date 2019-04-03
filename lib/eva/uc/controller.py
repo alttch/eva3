@@ -148,7 +148,7 @@ def get_item(item_id):
     item = None
     if i.find('/') > -1:
         if i in items_by_full_id: item = items_by_full_id[i]
-    elif not eva.core.enterprise_layout and i in items_by_id:
+    elif not eva.core.config.enterprise_layout and i in items_by_id:
         item = items_by_id[i]
     return None if item and is_oid(item_id) and item.item_type != tp else item
 
@@ -160,7 +160,7 @@ def get_unit(unit_id):
     i = oid_to_id(unit_id)
     if i.find('/') > -1:
         if i in units_by_full_id: return units_by_full_id[i]
-    elif not eva.core.enterprise_layout and i in units_by_id:
+    elif not eva.core.config.enterprise_layout and i in units_by_id:
         return units_by_id[i]
     return None
 
@@ -173,7 +173,7 @@ def get_sensor(sensor_id):
     if i.find('/') > -1:
         if i in sensors_by_full_id:
             return sensors_by_full_id[i]
-    elif not eva.core.enterprise_layout and i in sensors_by_id:
+    elif not eva.core.config.enterprise_layout and i in sensors_by_id:
         return sensors_by_id[i]
     return None
 
@@ -185,7 +185,7 @@ def get_mu(mu_id):
     i = oid_to_id(mu_id)
     if i.find('/') > -1:
         if i in mu_by_full_id: return mu_by_full_id[i]
-    elif not eva.core.enterprise_layout and i in mu_by_id:
+    elif not eva.core.config.enterprise_layout and i in mu_by_id:
         return mu_by_id[i]
     return None
 
@@ -198,21 +198,21 @@ def append_item(item, start=False, load=True):
         eva.core.log_traceback()
         return False
     if item.item_type == 'unit':
-        if not eva.core.enterprise_layout:
+        if not eva.core.config.enterprise_layout:
             units_by_id[item.item_id] = item
         units_by_group.setdefault(item.group, {})[item.item_id] = item
         units_by_full_id[item.full_id] = item
     elif item.item_type == 'sensor':
-        if not eva.core.enterprise_layout:
+        if not eva.core.config.enterprise_layout:
             sensors_by_id[item.item_id] = item
         sensors_by_group.setdefault(item.group, {})[item.item_id] = item
         sensors_by_full_id[item.full_id] = item
     elif item.item_type == 'mu':
-        if not eva.core.enterprise_layout:
+        if not eva.core.config.enterprise_layout:
             mu_by_id[item.item_id] = item
         mu_by_group.setdefault(item.group, {})[item.item_id] = item
         mu_by_full_id[item.group + '/' + item.item_id] = item
-    if not eva.core.enterprise_layout:
+    if not eva.core.config.enterprise_layout:
         items_by_id[item.item_id] = item
     items_by_group.setdefault(item.group, {})[item.item_id] = item
     items_by_full_id[item.full_id] = item
@@ -249,7 +249,8 @@ def save():
 def save_item_state(item):
     dbconn = eva.core.db()
     try:
-        _id = item.full_id if eva.core.enterprise_layout else item.item_id
+        _id = item.full_id if \
+                eva.core.config.enterprise_layout else item.item_id
         if dbconn.execute(
                 sql('update state set status=:status, value=:value where id=:id'
                    ),
@@ -353,13 +354,13 @@ def load_units(start=False):
                 '_unit.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             unit_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.enterprise_layout:
+            if eva.core.config.enterprise_layout:
                 _id = unit_id.split('___')[-1]
                 unit_id = unit_id.replace('___', '/')
             else:
                 _id = unit_id
             u = eva.uc.unit.Unit(_id)
-            if eva.core.enterprise_layout:
+            if eva.core.config.enterprise_layout:
                 u.set_group('/'.join(unit_id.split('/')[:-1]))
             if append_item(u, start=False):
                 _loaded[unit_id] = u
@@ -383,13 +384,13 @@ def load_sensors(start=False):
                 '_sensor.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             sensor_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.enterprise_layout:
+            if eva.core.config.enterprise_layout:
                 _id = sensor_id.split('___')[-1]
                 sensor_id = sensor_id.replace('___', '/')
             else:
                 _id = sensor_id
             u = eva.uc.sensor.Sensor(_id)
-            if eva.core.enterprise_layout:
+            if eva.core.config.enterprise_layout:
                 u.set_group('/'.join(sensor_id.split('/')[:-1]))
             if append_item(u, start=False):
                 _loaded[sensor_id] = u
@@ -428,7 +429,7 @@ def create_item(item_id,
         raise InvalidParameter(
             'Unable to create item: invalid symbols in ID {}'.format(item_id))
     i_full = grp + '/' + i
-    if (not eva.core.enterprise_layout and i in items_by_id) or \
+    if (not eva.core.config.enterprise_layout and i in items_by_id) or \
             i_full in items_by_full_id:
         raise ResourceAlreadyExists(get_item(i_full).oid)
     item = None
@@ -443,8 +444,8 @@ def create_item(item_id,
     if virtual: virt = True
     else: virt = False
     cfg = {'group': grp, 'virtual': virt}
-    if eva.core.mqtt_update_default:
-        cfg['mqtt_update'] = eva.core.mqtt_update_default
+    if eva.core.config.mqtt_update_default:
+        cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
     append_item(item, start=start, load=False)
     if save: item.save()
@@ -554,26 +555,26 @@ def destroy_item(item):
             if not i: raise ResourceNotFound
         else:
             i = item
-        if not eva.core.enterprise_layout:
+        if not eva.core.config.enterprise_layout:
             del items_by_id[i.item_id]
         del items_by_full_id[i.full_id]
         del items_by_group[i.group][i.item_id]
         if i.item_type == 'unit':
-            if not eva.core.enterprise_layout:
+            if not eva.core.config.enterprise_layout:
                 del units_by_id[i.item_id]
             del units_by_full_id[i.full_id]
             del units_by_group[i.group][i.item_id]
             if not units_by_group[i.group]:
                 del units_by_group[i.group]
         if i.item_type == 'sensor':
-            if not eva.core.enterprise_layout:
+            if not eva.core.config.enterprise_layout:
                 del sensors_by_id[i.item_id]
             del sensors_by_full_id[i.full_id]
             del sensors_by_group[i.group][i.item_id]
             if not sensors_by_group[i.group]:
                 del sensors_by_group[i.group]
         if i.item_type == 'mu':
-            if not eva.core.enterprise_layout:
+            if not eva.core.config.enterprise_layout:
                 del mu_by_id[i.item_id]
             del mu_by_full_id[i.full_id]
             del mu_by_group[i.group][i.item_id]
@@ -607,13 +608,13 @@ def load_mu(start=False):
                 '_mu.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             mu_id = os.path.splitext(os.path.basename(ucfg))[0]
-            if eva.core.enterprise_layout:
+            if eva.core.config.enterprise_layout:
                 _id = mu_id.split('___')[-1]
                 mu_id = mu_id.replace('___', '/')
             else:
                 _id = mu_id
             u = eva.uc.ucmu.UCMultiUpdate(_id)
-            if eva.core.enterprise_layout:
+            if eva.core.config.enterprise_layout:
                 u.set_group('/'.join(mu_id.split('/')[:-1]))
             u.get_item_func = get_item
             if u.load():
@@ -769,7 +770,7 @@ def exec_unit_action(unit,
         _s = u.status_by_label(nstatus)
     if _s is None: return None
     if q_timeout: qt = q_timeout
-    else: qt = eva.core.timeout
+    else: qt = eva.core.config.timeout
     a = u.create_action(_s, nvalue, priority, action_uuid)
     Q.put_task(a)
     if not eva.core.wait_for(a.is_processed, qt):

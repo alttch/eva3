@@ -37,7 +37,7 @@ def get_polldelay():
 
 
 def get_timeout():
-    return eva.core.timeout
+    return eva.core.config.timeout
 
 
 def critical():

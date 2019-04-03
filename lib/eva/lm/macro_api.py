@@ -57,7 +57,7 @@ def shared(name, default=None):
     Returns:
         variable value, None (or default) if variable doesn't exist
     """
-    if not _shared_lock.acquire(timeout=eva.core.timeout):
+    if not _shared_lock.acquire(timeout=eva.core.config.timeout):
         logging.critical('macro_api shared locking broken')
         eva.core.critical()
         return None
@@ -80,7 +80,7 @@ def set_shared(name, value=None):
     Optional:
         value: value to set. If empty, varible is deleted
     """
-    if not _shared_lock.acquire(timeout=eva.core.timeout):
+    if not _shared_lock.acquire(timeout=eva.core.config.timeout):
         logging.critical('macro_api set_shared locking broken')
         eva.core.critical()
         return None
@@ -1373,4 +1373,4 @@ def init():
 @eva.core.shutdown
 def shutdown():
     eva.lm.controller.exec_macro(
-        'system/shutdown', priority=1, wait=eva.core.timeout)
+        'system/shutdown', priority=1, wait=eva.core.config.timeout)

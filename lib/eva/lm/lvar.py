@@ -44,7 +44,7 @@ class LVar(eva.item.VariableItem):
                          from_mqtt=False,
                          force_virtual=False):
         if not self.status and status != 1: return False
-        if not self.update_lock.acquire(timeout=eva.core.timeout):
+        if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LVar::update_set_state locking broken')
             eva.core.critical()
             return False
