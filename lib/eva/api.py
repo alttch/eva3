@@ -632,9 +632,9 @@ class GenericAPI(object):
             'time': time.time(),
             'log_level': eva.core.default_log_level_id,
             'version': eva.core.version,
-            'product_name': eva.core.product_name,
-            'product_code': eva.core.product_code,
-            'product_build': eva.core.product_build,
+            'product_name': eva.core.product.name,
+            'product_code': eva.core.product.code,
+            'product_build': eva.core.product.build,
             'uptime': int(time.time() - eva.core.start_time)
         }
         if eva.core.enterprise_layout is not None:
@@ -724,7 +724,7 @@ class GenericAPI(object):
     def info(self, **kwargs):
         return {
             'platfrom': 'eva',
-            'product': eva.core.product_code,
+            'product': eva.core.product.code,
             'version': eva.core.version,
             'system': eva.core.system_name,
         }

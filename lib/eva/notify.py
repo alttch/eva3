@@ -1075,11 +1075,11 @@ class GenericMQTTNotifier(GenericNotifier):
         self.discovery_enabled = discovery_enabled
         self.announce_interval = announce_interval
         self.controller_topic = '{}controller/{}/{}/'.format(
-            pfx, eva.core.product_code, eva.core.system_name)
+            pfx, eva.core.product.code, eva.core.system_name)
         self.api_request_topic = self.controller_topic + 'api/request'
         self.api_response_topic = self.controller_topic + 'api/response'
         self.announce_topic = self.pfx + 'controller/discovery'
-        self.announce_msg = eva.core.product_code + '/' + eva.core.system_name
+        self.announce_msg = eva.core.product.code + '/' + eva.core.system_name
         self.api_handler = eva.api.mqtt_api_handler
         self.discovery_handler = eva.api.mqtt_discovery_handler
         # dict of tuples (topic, handler)
@@ -1280,7 +1280,7 @@ class GenericMQTTNotifier(GenericNotifier):
             try:
                 r = jsonpickle.decode(d)
                 if r['h'] != eva.core.system_name or \
-                        r['p'] != eva.core.product_code:
+                        r['p'] != eva.core.product.code:
                     eva.logs.log_append(rd=r, skip_mqtt=True)
             except:
                 eva.core.log_traceback(notifier=True)
@@ -1709,7 +1709,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
     if not notifier_id and not fname: return None
     if not fname:
         notifier_fname = eva.core.format_cfg_fname('%s_notify.d/%s.json' % \
-                (eva.core.product_code, notifier_id), runtime = True)
+                (eva.core.product.code, notifier_id), runtime = True)
     else:
         notifier_fname = fname
     if not notifier_id:
@@ -1810,7 +1810,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
 
 
 def get_notifier_fnames():
-    fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+    fnames = eva.core.format_cfg_fname(eva.core.product.code + \
             '_notify.d/*.json', runtime = True)
     return glob.glob(fnames)
 
@@ -1854,7 +1854,7 @@ def serialize(notifier_id=None):
 
 
 def save_notifier(notifier_id):
-    fname_full = eva.core.format_cfg_fname(eva.core.product_code + \
+    fname_full = eva.core.format_cfg_fname(eva.core.product.code + \
             '_notify.d/%s.json' % notifier_id, runtime = True)
     try:
         data = notifiers[notifier_id].serialize()

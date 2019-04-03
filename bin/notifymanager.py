@@ -48,7 +48,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
     def setup_parser(self):
         super().setup_parser()
-        self.enable_controller_management_functions(eva.core.product_code)
+        self.enable_controller_management_functions(eva.core.product.code)
 
     def prepare_result_dict(self, data, api_func, itype):
         if api_func != 'status_controller':
@@ -339,7 +339,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         n = self.get_notifier(params['i'])
         if n:
             notifier_fname = eva.core.format_cfg_fname('%s_notify.d/%s.json' % \
-                (eva.core.product_code, params['i']), runtime = True)
+                (eva.core.product.code, params['i']), runtime = True)
             try:
                 os.unlink(notifier_fname)
             except:

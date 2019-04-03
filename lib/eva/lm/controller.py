@@ -346,7 +346,7 @@ def load_lvars(start=False):
     _loaded = {}
     logging.info('Loading lvars')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_lvar.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             lvar_id = os.path.splitext(os.path.basename(ucfg))[0]
@@ -374,7 +374,7 @@ def load_lvars(start=False):
 def load_remote_ucs():
     logging.info('Loading remote UCs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_remote_uc.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             uc_id = os.path.splitext(os.path.basename(ucfg))[0]
@@ -396,7 +396,7 @@ def load_remote_ucs():
 def load_macros():
     logging.info('Loading macro configs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_lmacro.d/*.json', runtime = True)
         for mcfg in glob.glob(fnames):
             m_id = os.path.splitext(os.path.basename(mcfg))[0]
@@ -416,7 +416,7 @@ def load_macros():
 def load_cycles():
     logging.info('Loading cycle configs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_lcycle.d/*.json', runtime = True)
         for mcfg in glob.glob(fnames):
             m_id = os.path.splitext(os.path.basename(mcfg))[0]
@@ -436,7 +436,7 @@ def load_cycles():
 def load_dm_rules():
     logging.info('Loading DM rules')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_dmatrix_rule.d/*.json', runtime = True)
         for rcfg in glob.glob(fnames):
             r_id = os.path.splitext(os.path.basename(rcfg))[0]

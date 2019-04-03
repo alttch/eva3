@@ -139,7 +139,7 @@ class Item(object):
             _id = self.full_id.replace('/', '___') if \
                     eva.core.enterprise_layout and self.respect_layout else \
                         self.item_id
-            return eva.core.format_cfg_fname(eva.core.product_code + \
+            return eva.core.format_cfg_fname(eva.core.product.code + \
                     '_%s.d/' % self.item_type + _id + '.json', \
                     cfg = None, runtime = True)
 

@@ -40,12 +40,6 @@ timeout = 5
 
 system_name = platform.node()
 
-product_name = ''
-
-product_code = ''
-
-product_build = None
-
 keep_logmem = 3600
 
 keep_action_history = 3600
@@ -82,6 +76,14 @@ _flags = SimpleNamespace(
     started=False,
     shutdown_requested=False)
 
+product = SimpleNamespace(name='', code='', build=None)
+
+config = SimpleNamespace(
+    pid_file = None,
+    log_file = None,
+    db_uri = None,
+    userdb_uri = None)
+
 polldelay = 0.01
 
 db_update = 0
@@ -115,17 +117,9 @@ dir_pvt = dir_eva + '/pvt'
 dir_lib = dir_eva + '/lib'
 dir_runtime = dir_eva + '/runtime'
 
-db_uri = None
-userdb_uri = None
 
 db_engine = None
 userdb_engine = None
-
-pid_file = None
-
-log_file = None
-
-primary_config = None
 
 logger = None
 
@@ -352,9 +346,9 @@ def serialize():
     d['version'] = version
     d['timeout'] = timeout
     d['system_name'] = system_name
-    d['product_name'] = product_name
-    d['product_code'] = product_code
-    d['product_build'] = product_build
+    d['product_name'] = product.name
+    d['product_code'] = product.code
+    d['product_build'] = product.build
     d['keep_logmem'] = keep_logmem
     d['keep_action_history'] = keep_action_history
     d['action_cleaner_interval'] = action_cleaner_interval
@@ -368,10 +362,10 @@ def serialize():
     d['db_update'] = db_update
     d['notify_on_start'] = notify_on_start
     d['dir_eva'] = dir_eva
-    d['db_uri'] = db_uri
-    d['userdb_uri'] = userdb_uri
-    d['pid_file'] = pid_file
-    d['log_file'] = log_file
+    d['db_uri'] = config.db_uri
+    d['userdb_uri'] = config.userdb_uri
+    d['pid_file'] = config.pid_file
+    d['log_file'] = config.log_file
     d['threads'] = {}
     d['uptime'] = int(time.time() - start_time)
     d['exceptions'] = _exceptions
@@ -384,16 +378,12 @@ def serialize():
 
 
 def set_product(code, build):
-    global product_code, product_build
-    global pid_file, log_file, db_uri, userdb_uri
-    global primary_config
-    product_code = code
-    product_build = build
-    pid_file = '%s/%s.pid' % (dir_var, product_code)
-    primary_config = '%s/etc/%s.ini' % (dir_eva, product_code)
-    db_uri = format_db_uri('db/%s.db' % product_code)
-    userdb_uri = db_uri
-    set_db(db_uri, userdb_uri)
+    product.code = code
+    product.build = build
+    config.pid_file = '%s/%s.pid' % (dir_var, product.code)
+    config.db_uri = format_db_uri('db/%s.db' % product.code)
+    config.userdb_uri = config.db_uri
+    set_db(config.db_uri, config.userdb_uri)
 
 
 def set_db(db_uri=None, userdb_uri=None):
@@ -424,7 +414,7 @@ def userdb():
 
 def reset_log(initial=False):
     global logger, log_file_handler
-    if logger and not log_file: return
+    if logger and not config.log_file: return
     logger = logging.getLogger()
     try:
         log_file_handler.stream.close()
@@ -437,12 +427,12 @@ def reset_log(initial=False):
         logger.removeHandler(log_file_handler)
     if not development:
         formatter = logging.Formatter('%(asctime)s ' + system_name + \
-            '  %(levelname)s ' + product_code + ' %(threadName)s: %(message)s')
+            '  %(levelname)s ' + product.code + ' %(threadName)s: %(message)s')
     else:
         formatter = logging.Formatter('%(asctime)s ' + system_name + \
             ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
             'l:%(lineno)d th:%(threadName)s :: %(message)s')
-    if log_file: log_file_handler = logging.FileHandler(log_file)
+    if config.log_file: log_file_handler = logging.FileHandler(config.log_file)
     else: log_file_handler = logging.StreamHandler(sys.stdout)
     log_file_handler.setFormatter(formatter)
     logger.addHandler(log_file_handler)
@@ -452,9 +442,9 @@ def reset_log(initial=False):
 
 
 def load(fname=None, initial=False, init_log=True, check_pid=True):
-    global system_name, log_file, pid_file, debug, development, show_traceback
+    global system_name, debug, development, show_traceback
     global stop_on_critical, dump_on_critical
-    global notify_on_start, db_uri, userdb_uri
+    global notify_on_start
     global polldelay, db_update, keep_action_history, action_cleaner_interval
     global keep_logmem, default_log_level, default_log_level_name
     global default_log_level_id
@@ -472,28 +462,28 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         cfg.read(fname_full)
         if initial:
             try:
-                pid_file = cfg.get('server', 'pid_file')
-                if pid_file and pid_file[0] != '/':
-                    pid_file = dir_eva + '/' + pid_file
+                config.pid_file = cfg.get('server', 'pid_file')
+                if config.pid_file and config.pid_file[0] != '/':
+                    config.pid_file = dir_eva + '/' + config.pid_file
             except:
                 pass
             try:
                 if not check_pid: raise Exception('no check required')
-                pid = int(open(pid_file).readline().strip())
+                pid = int(open(config.pid_file).readline().strip())
                 p = psutil.Process(pid)
                 print('Can not start %s with config %s. ' % \
-                        (product_name, fname_full), end = '')
+                        (product.name, fname_full), end = '')
                 print('Another process is already running')
                 return None
             except:
                 pass
             if not os.environ.get('EVA_CORE_LOG_STDOUT'):
                 try:
-                    log_file = cfg.get('server', 'log_file')
+                    config.log_file = cfg.get('server', 'log_file')
                 except:
-                    log_file = None
-            if log_file and log_file[0] != '/':
-                log_file = dir_eva + '/' + log_file
+                    config.log_file = None
+            if config.log_file and config.log_file[0] != '/':
+                config.log_file = dir_eva + '/' + config.log_file
             if init_log: reset_log(initial)
             try:
                 log_level = cfg.get('server', 'logging_level')
@@ -538,7 +528,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             except:
                 pass
             logging.info('Loading server config')
-            logging.debug('server.pid_file = %s' % pid_file)
+            logging.debug('server.pid_file = %s' % config.pid_file)
             logging.debug('server.logging_level = %s' % default_log_level_name)
             try:
                 notify_on_start = (cfg.get('server',
@@ -570,8 +560,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 db_uri = cfg.get('server', 'db')
             except:
                 if db_file: db_uri = db_file
-            db_uri = format_db_uri(db_uri)
-            logging.debug('server.db = %s' % db_uri)
+            config.db_uri = format_db_uri(db_uri)
+            logging.debug('server.db = %s' % config.db_uri)
             try:
                 userdb_file = cfg.get('server', 'userdb_file')
             except:
@@ -582,10 +572,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 if userdb_file: userdb_uri = userdb_file
                 else: userdb_uri = None
             if userdb_uri:
-                userdb_uri = format_db_uri(userdb_uri)
+                config.userdb_uri = format_db_uri(userdb_uri)
             else:
-                userdb_uri = db_uri
-            logging.debug('server.userdb = %s' % userdb_uri)
+                config.userdb_uri = config.db_uri
+            logging.debug('server.userdb = %s' % config.userdb_uri)
             try:
                 user_hook = cfg.get('server', 'user_hook').split()
             except:
@@ -768,14 +758,14 @@ def fork():
 
 def write_pid_file():
     try:
-        open(pid_file, 'w').write(str(os.getpid()))
+        open(config.pid_file, 'w').write(str(os.getpid()))
     except:
         log_traceback()
 
 
 def unlink_pid_file():
     try:
-        os.unlink(pid_file)
+        os.unlink(config.pid_file)
     except:
         log_traceback()
 
@@ -785,11 +775,11 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     else: t = timeout
     if delay: p = delay
     else: p = polldelay
-    return _wait_for(func, t, p, wait_for_false, is__flags.shutdown_requested)
+    return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
 
 
 def format_xc_fname(item=None, xc_type='', fname=None, update=False):
-    path = dir_xc + '/' + product_code
+    path = dir_xc + '/' + product.code
     if fname:
         return fname if fname[0] == '/' else path + '/' + fname
     if not item: return None
@@ -807,8 +797,8 @@ def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
     if not fname:
         if cfg: sfx = '_' + cfg
         else: sfx = ''
-        if product_code:
-            return '%s/%s%s.%s' % (_path, product_code, sfx, ext)
+        if product.code:
+            return '%s/%s%s.%s' % (_path, product.code, sfx, ext)
         else:
             return None
     elif fname[0] != '.' and fname[0] != '/':
@@ -852,7 +842,7 @@ def init():
 
 def start():
     reactor.suggestThreadPoolSize(reactor_thread_pool)
-    set_db(db_uri, userdb_uri)
+    set_db(config.db_uri, config.userdb_uri)
 
 
 #BD: 20.05.2017

@@ -23,7 +23,7 @@ class WS_API(object):
         if not apikey.check(_k, ip=http_real_ip()): raise cp_forbidden_key()
         handler = cherrypy.request.ws_handler
         token = k if isinstance(k, str) and k.startswith('token:') else None
-        client = WSNotifier_Client('ws_' + eva.core.product_code + '_' + \
+        client = WSNotifier_Client('ws_' + eva.core.product.code + '_' + \
                 cherrypy.request.remote.ip + '_' + \
                 str(cherrypy.request.remote.port), _k, token, handler)
         handler.notifier = client

@@ -27,9 +27,9 @@ def usage(version_only=False):
     if not version_only: print()
     print('%s version %s build %s ' % \
             (
-                eva.core.product_name,
+                eva.core.product.name,
                 eva.core.version,
-                eva.core.product_build
+                eva.core.product.build
             )
         )
     if version_only: return
@@ -48,7 +48,7 @@ product_code = 'lm'
 
 eva.core.init()
 eva.core.set_product(product_code, product_build)
-eva.core.product_name = 'EVA Logic Manager'
+eva.core.product.name = 'EVA Logic Manager'
 
 _fork = False
 _eva_ini = None

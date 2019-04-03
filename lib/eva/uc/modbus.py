@@ -122,7 +122,7 @@ slave_identity.VendorName = 'Altertech'
 slave_identity.ProductCode = 'EVA'
 slave_identity.VendorUrl = 'https://www.eva-ics.com/'
 slave_identity.ProductName = 'EVA ICS'
-slave_identity.ModelName = eva.core.product_name
+slave_identity.ModelName = eva.core.product.name
 slave_identity.MajorMinorRevision = '.'.join(eva.core.version.split('.')[:2])
 
 ports = {}

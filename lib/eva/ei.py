@@ -13,7 +13,7 @@ class EI_HTTP_Root:
 
     @cherrypy.expose
     def index(self):
-        raise cherrypy.HTTPRedirect('/%s-ei/' % eva.core.product_code)
+        raise cherrypy.HTTPRedirect('/%s-ei/' % eva.core.product.code)
 
 
 class EI():
@@ -25,13 +25,13 @@ class EI():
     @cherrypy.expose
     def index(self):
         try:
-            template = self.j2.get_template('%s.j2' % eva.core.product_code)
+            template = self.j2.get_template('%s.j2' % eva.core.product.code)
         except:
             raise cp_api_404()
         env = {
-            'build': eva.core.product_build,
-            'product_name': eva.core.product_name,
-            'product_code': eva.core.product_code
+            'build': eva.core.product.build,
+            'product_name': eva.core.product.name,
+            'product_code': eva.core.product.code
         }
         if eva.core.development:
             env['development'] = True
@@ -61,4 +61,4 @@ def start():
     if not eva.api.config.ei_enabled: return
     cherrypy.tree.mount(EI_HTTP_Root(), '/', config=cp_ei_root_config)
     cherrypy.tree.mount(
-        EI(), '/%s-ei' % eva.core.product_code, config=cp_ei_config)
+        EI(), '/%s-ei' % eva.core.product.code, config=cp_ei_config)

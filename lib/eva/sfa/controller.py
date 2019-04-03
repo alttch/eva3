@@ -143,7 +143,7 @@ def save():
 def load_remote_ucs():
     logging.info('Loading remote UCs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_remote_uc.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             uc_id = os.path.splitext(os.path.basename(ucfg))[0]
@@ -164,7 +164,7 @@ def load_remote_ucs():
 def load_remote_lms():
     logging.info('Loading remote LMs')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_remote_lm.d/*.json', runtime = True)
         for lmfg in glob.glob(fnames):
             lm_id = os.path.splitext(os.path.basename(lmfg))[0]

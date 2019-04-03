@@ -21,7 +21,7 @@ class CloudManager():
             template = self.j2.get_template('cm.j2')
         except:
             raise cp_api_404()
-        env = {'build': eva.core.product_build}
+        env = {'build': eva.core.product.build}
         if eva.core.development:
             env['development'] = True
         return template.render(env)

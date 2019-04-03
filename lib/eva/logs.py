@@ -73,7 +73,7 @@ def log_append(record=None, rd=None, skip_mqtt=False):
         _r['th'] = record.threadName
         _r['mod'] = record.module
         _r['h'] = eva.core.system_name
-        _r['p'] = eva.core.product_code
+        _r['p'] = eva.core.product.code
     elif rd:
         _r = rd
     else:

@@ -349,7 +349,7 @@ def load_units(start=False):
     _loaded = {}
     logging.info('Loading units')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_unit.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             unit_id = os.path.splitext(os.path.basename(ucfg))[0]
@@ -379,7 +379,7 @@ def load_sensors(start=False):
     _loaded = {}
     logging.info('Loading sensors')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_sensor.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             sensor_id = os.path.splitext(os.path.basename(ucfg))[0]
@@ -603,7 +603,7 @@ def destroy_item(item):
 def load_mu(start=False):
     logging.info('Loading multi updates')
     try:
-        fnames = eva.core.format_cfg_fname(eva.core.product_code + \
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
                 '_mu.d/*.json', runtime = True)
         for ucfg in glob.glob(fnames):
             mu_id = os.path.splitext(os.path.basename(ucfg))[0]

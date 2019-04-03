@@ -121,7 +121,7 @@ def start():
     logging.info('Starting SNMP trap handler, listening at %s:%u' % \
             (config.host, _port))
     try:
-        snmp_config.addV1System(entities.snmpEngine, eva.core.product_code,
+        snmp_config.addV1System(entities.snmpEngine, eva.core.product.code,
                                 _community)
         ntfrcv.NotificationReceiver(entities.snmpEngine, __cbFun)
         entities.snmpEngine.transportDispatcher.jobStarted(1)
