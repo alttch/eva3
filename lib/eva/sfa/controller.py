@@ -27,15 +27,17 @@ from eva.exceptions import ResourceAlreadyExists
 
 from eva.exceptions import InvalidParameter
 
+from types import SimpleNamespace
+
 remote_ucs = {}
 remote_lms = {}
 
 configs_to_remove = set()
 
-uc_pool = None
-lm_pool = None
+uc_pool = eva.client.remote_controller.RemoteUCPool()
+lm_pool = eva.client.remote_controller.RemoteLMPool()
 
-cloud_manager = False
+config = SimpleNamespace(cloud_manager=False)
 
 controller_lock = threading.RLock()
 
@@ -379,15 +381,11 @@ def serialize():
 
 
 def start():
-    global uc_pool
-    global lm_pool
-    uc_pool = eva.client.remote_controller.RemoteUCPool()
     uc_pool.start()
     for i, v in remote_ucs.items():
         t = threading.Thread(
             target=connect_remote_controller, args=(uc_pool, v))
         t.start()
-    lm_pool = eva.client.remote_controller.RemoteLMPool()
     lm_pool.start()
     for i, v in remote_lms.items():
         t = threading.Thread(
@@ -434,14 +432,13 @@ def init():
 
 
 def update_config(cfg):
-    global cloud_manager
     try:
-        cloud_manager = (cfg.get('cloud', 'cloud_manager') == 'yes')
+        config.cloud_manager = (cfg.get('cloud', 'cloud_manager') == 'yes')
     except:
         pass
     logging.debug('cloud.cloud_manager = %s' % ('yes' \
-                                if cloud_manager else 'no'))
-    eva.client.remote_controller.cloud_manager = cloud_manager
+                                if config.cloud_manager else 'no'))
+    eva.client.remote_controller.cloud_manager = config.cloud_manager
 
 
 eva.api.mqtt_discovery_handler = handle_discovered_controller
