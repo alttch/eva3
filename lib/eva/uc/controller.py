@@ -55,7 +55,7 @@ items_by_id = {}
 items_by_group = {}
 items_by_full_id = {}
 
-Q = None
+Q = eva.uc.ucqueue.UC_Queue('uc_queue')
 
 configs_to_remove = set()
 
@@ -704,11 +704,9 @@ def serialize_actions():
 
 @with_item_lock
 def start():
-    global Q
     eva.uc.owfs.start()
     eva.uc.modbus.start()
     eva.uc.driverapi.start()
-    Q = eva.uc.ucqueue.UC_Queue('uc_queue')
     Q.start()
     logging.info('UC action queue started')
     for i, v in items_by_full_id.items():
