@@ -29,8 +29,10 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 
 from functools import partial
+from types import SimpleNamespace
 
-masterkey = None
+config = SimpleNamespace(masterkey=None)
+
 keys = {}
 keys_by_id = {}
 
@@ -244,11 +246,10 @@ class APIKey(object):
         return True
 
 
-def load(fname=None):
-    global keys, keys_by_id, masterkey
-    _keys = {}
-    _keys_by_id = {}
-    _masterkey = None
+def load(fname=None, load_from_db=True):
+    keys.clear()
+    keys_by_id.clear()
+    config.masterkey = None
     logging.info('Loading API keys')
     fname_full = eva.core.format_cfg_fname(fname, 'apikeys')
     if not fname_full:
@@ -261,7 +262,7 @@ def load(fname=None):
         for ks in cfg.sections():
             try:
                 k = cfg.get(ks, 'key')
-                if k in _keys.keys():
+                if k in keys.keys():
                     logging.warning(
                             'duplicate key %s, problems might occur' % \
                                     k)
@@ -334,24 +335,22 @@ def load(fname=None):
                         ]))
                 except:
                     pass
-                _keys[k] = key
-                _keys_by_id[ks] = key
-                if key.master and not masterkey:
-                    _masterkey = k
+                keys[k] = key
+                keys_by_id[ks] = key
+                if key.master and not config.masterkey:
+                    config.masterkey = k
                     logging.info('+ masterkey loaded')
             except:
                 pass
-        _keys_from_db, _keys_from_db_by_id = load_keys_from_db()
-        keys = _keys
-        keys.update(_keys_from_db)
-        keys_by_id = _keys_by_id
-        keys_by_id.update(_keys_from_db_by_id)
-        masterkey = _masterkey
-        if not _masterkey:
+        if load_from_db:
+            _keys_from_db, _keys_from_db_by_id = load_keys_from_db()
+            keys.update(_keys_from_db)
+            keys_by_id.update(_keys_from_db_by_id)
+        if not config.masterkey:
             logging.warning('no masterkey in this configuration')
         return True
     except:
-        logging.error('Unable to load users')
+        logging.error('Unable to load API keys')
         eva.core.log_traceback()
         return False
 
@@ -445,8 +444,14 @@ def check(k,
         return False
     return True
 
+
 def check_master(k):
     return check(k, master=True)
+
+
+def get_masterkey():
+    return config.masterkey
+
 
 def serialized_acl(k):
     if not k or not k in keys: return None
@@ -590,4 +595,3 @@ def gen_random_hash():
     s.update(str(uuid.uuid4()).encode())
     s.update(os.urandom(1024))
     return s.hexdigest()
-

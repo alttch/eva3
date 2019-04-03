@@ -772,7 +772,7 @@ class UC_API(GenericAPI):
             kwargs, 'kctS', '..Sb')
         cfg = self._load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
-        _k = eva.apikey.masterkey
+        _k = eva.apikey.get_masterkey()
         if cfg is None: raise ResourceNotFound
         units = cfg.get('units')
         if units:
@@ -833,7 +833,7 @@ class UC_API(GenericAPI):
                           device_tpl=None,
                           cfg=None,
                           save=False):
-        _k = eva.apikey.masterkey
+        _k = eva.apikey.get_masterkey()
         if cfg is None:
             cfg = self._load_device_config(
                 tpl_config=tpl_config, device_tpl=device_tpl)
@@ -899,7 +899,7 @@ class UC_API(GenericAPI):
             kwargs, 'kctS', '..Sb')
         cfg = self._load_device_config(
             tpl_config=tpl_config, device_tpl=device_tpl)
-        _k = eva.apikey.masterkey
+        _k = eva.apikey.get_masterkey()
         if cfg is None: raise ResourceNotFound
         mu = cfg.get('mu')
         if mu:

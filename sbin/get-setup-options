@@ -37,15 +37,15 @@ except:
 eva.core.init()
 eva.core.set_product(product_code, '-1')
 
-eva.apikey.load()
+eva.apikey.load(load_from_db=False)
 eva.notify.load(test=False, connect=False)
 
-print('MASTERKEY=' +
-      (eva.apikey.masterkey if eva.apikey.masterkey is not None else ''))
+print('MASTERKEY=' + (eva.apikey.get_masterkey()
+                      if eva.apikey.get_masterkey() is not None else ''))
 print('REMOTES=', end='')
-if eva.apikey.masterkey:
+if eva.apikey.get_masterkey():
     print(','.join(
-        eva.apikey.keys.get(eva.apikey.masterkey).serialize().get(
+        eva.apikey.keys.get(eva.apikey.get_masterkey()).serialize().get(
             'hosts_allow', '')))
 else:
     print('')

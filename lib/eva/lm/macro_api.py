@@ -226,7 +226,7 @@ class MacroAPI(object):
             list of dicts or dict of lists
         """
         return eva.lm.lmapi.api.state_history(
-            k=eva.apikey.masterkey,
+            k=eva.apikey.get_masterkey(),
             a=db,
             i=oid_to_id(lvar_id, 'lvar'),
             s=t_start,
@@ -324,7 +324,7 @@ class MacroAPI(object):
             FunctionFailed: function failed to acquire lock
         """
         return eva.sysapi.api.lock(
-            k=eva.apikey.masterkey, l=lock_id, t=timeout, e=expires)
+            k=eva.apikey.get_masterkey(), l=lock_id, t=timeout, e=expires)
 
     def unlock(self, lock_id):
         """
@@ -342,7 +342,7 @@ class MacroAPI(object):
             ResourceNotFound: lock is not found
             FunctionFailed: function failed to release lock
         """
-        return eva.sysapi.api.unlock(k=eva.apikey.masterkey, l=lock_id)
+        return eva.sysapi.api.unlock(k=eva.apikey.get_masterkey(), l=lock_id)
 
     def status(self, item_id):
         """
@@ -1238,7 +1238,7 @@ class MacroAPI(object):
             ResourceNotFound: rule is not found
         """
         result = eva.lm.lmapi.api.set_rule_prop(
-            k=eva.apikey.masterkey, i=rule_id, p=prop, v=value, save=save)
+            k=eva.apikey.get_masterkey(), i=rule_id, p=prop, v=value, save=save)
         return result
 
     def start_cycle(self, cycle_id):
