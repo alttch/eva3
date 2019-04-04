@@ -471,9 +471,6 @@ Methods available:
 * **bus.release()** Release bus. As bus may be locked for others, the method
   should be always called immediately after the work with bus is finished.
 
-*read(path, attr)* and *write(path, attr,
-value*).
-
 .. code-block:: python
 
     # everything you need is just import module
