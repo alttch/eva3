@@ -625,6 +625,7 @@ python3 -m venv python3 || exit 2
 if [ ! $SKIP_CHECK ]; then
     echo "Checking mods"
     #./install/check-mods install || exit 1
+    ./python3/bin/pip3 install wheel || exit 1
     ./python3/bin/pip3 install -r ./install/mods.list || exit 1
     echo
 fi
