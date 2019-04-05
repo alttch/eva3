@@ -1,8 +1,8 @@
 #!/bin/sh
 
 D=`realpath $0`
-MY_DIR=`dirname ${D}`
-EVA_DIR=`realpath ${MY_DIR}/..`
+EVA_DIR=`dirname ${D}`/..
+EVA_DIR=`realpath ${EVA_DIR}`
 
 PYTHON=${EVA_DIR}/python3/bin/python3
 
@@ -13,6 +13,6 @@ if [ "$P" = "venvl" ]; then
   exit 1
 fi
 
-PROGRAM=${MY_DIR}/${P}.py
+PROGRAM=${EVA_DIR}/cli/${P}.py
 
 ${PYTHON} ${PROGRAM} $*

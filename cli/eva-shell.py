@@ -16,8 +16,8 @@ dir_backup = os.path.dirname(os.path.realpath(__file__)) + '/../backup'
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 dir_etc = os.path.dirname(os.path.realpath(__file__)) + '/../etc'
 dir_sbin = os.path.dirname(os.path.realpath(__file__)) + '/../sbin'
-dir_bin = os.path.realpath(
-    os.path.dirname(os.path.realpath(__file__)) + '/../bin')
+dir_cli = os.path.realpath(
+    os.path.dirname(os.path.realpath(__file__)) + '/../cli')
 dir_runtime = os.path.realpath(
     os.path.dirname(os.path.realpath(__file__)) + '/../runtime')
 sys.path.append(dir_lib)
@@ -305,13 +305,13 @@ class ManagementCLI(GenericCLI):
     def do_start_shell(self, p, x='-cmd', xp=''):
         try:
             if getattr(self, 'subshell_extra_args', None):
-                sysargs = ['{}/{}{}'.format(dir_bin, p, x)
+                sysargs = ['{}/{}{}'.format(dir_cli, p, x)
                           ] + self.subshell_extra_args
             else:
-                sysargs = ['{}/{}{}'.format(dir_bin, p, x)]
+                sysargs = ['{}/{}{}'.format(dir_cli, p, x)]
                 if interactive_mode:
                     sysargs.append('-I')
-            c = open('{}/{}{}'.format(dir_bin, p, x)).read()
+            c = open('{}/{}{}'.format(dir_cli, p, x)).read()
             if self.in_json:
                 sysargs.append('-J')
             if self.always_suppress_colors:

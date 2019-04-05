@@ -9,4 +9,4 @@ PYTHON=${EVA_DIR}/python3/bin/python3
 ARGS=$*
 [ ! "$ARGS" ] && [ "`basename $0`" = "eva-shell" ] && ARGS=-I
 
-${PYTHON} ${EVA_DIR}/bin/eva-shell.py ${ARGS}
+${PYTHON} ${EVA_DIR}/cli/eva-shell.py ${ARGS}
