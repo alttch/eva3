@@ -460,58 +460,52 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         return self.local_func_result_ok
 
 
-def main():
+try:
+    product
+except:
+    product = os.environ['EVA_PRODUCT']
 
-    try:
-        product
-    except:
-        product = os.environ['EVA_PRODUCT']
+eva.core.set_product(product, '-1')
 
-    eva.core.set_product(product, '-1')
+_me = 'EVA ICS Notification System Manager CLI for %s version %s' % (
+    product.upper(), __version__)
 
-    _me = 'EVA ICS Notification System Manager CLI for %s version %s' % (
-        product.upper(), __version__)
+cli = NotifierCLI(
+    '%s_notifier' % product,
+    _me,
+    remote_api_enabled=False,
+    prog='%s-notifier' % product)
 
-    cli = NotifierCLI(
-        '%s_notifier' % product,
-        _me,
-        remote_api_enabled=False,
-        prog='%s-notifier' % product)
+_api_functions = {
+    'list': cli.list_notifiers,
+    'test': cli.test_notifier,
+    'destroy': cli.destroy_notifier,
+    'create': cli.create_notifier,
+    'enable': cli.enable_notifier,
+    'disable': cli.disable_notifier,
+    'config': cli.get_notifier_config,
+    'props': cli.list_notifier_props,
+    'set': cli.set_notifier_prop,
+    'unsubscribe': cli.unsubscribe_notifier,
+    'subscribe:log': cli.subscribe_notifier_log,
+    'subscribe:state': cli.subscribe_notifier_state,
+    'subscribe:action': cli.subscribe_notifier_action
+}
 
-    _api_functions = {
-        'list': cli.list_notifiers,
-        'test': cli.test_notifier,
-        'destroy': cli.destroy_notifier,
-        'create': cli.create_notifier,
-        'enable': cli.enable_notifier,
-        'disable': cli.disable_notifier,
-        'config': cli.get_notifier_config,
-        'props': cli.list_notifier_props,
-        'set': cli.set_notifier_prop,
-        'unsubscribe': cli.unsubscribe_notifier,
-        'subscribe:log': cli.subscribe_notifier_log,
-        'subscribe:state': cli.subscribe_notifier_state,
-        'subscribe:action': cli.subscribe_notifier_action
-    }
+_pd_cols = {'list_notifiers': ['id', 'type', 'enabled', 'params']}
 
-    _pd_cols = {'list_notifiers': ['id', 'type', 'enabled', 'params']}
+_pd_idx = {}
 
-    _pd_idx = {}
+_fancy_indentsp = {}
 
-    _fancy_indentsp = {}
+_always_json = ['get_notifier_config']
 
-    _always_json = ['get_notifier_config']
-
-    cli.ap.prog = '%s-notifier' % product
-    cli.always_json += _always_json
-    cli.arg_sections += ['subscribe']
-    cli.set_api_functions(_api_functions)
-    cli.set_pd_cols(_pd_cols)
-    cli.set_pd_idx(_pd_idx)
-    cli.set_fancy_indentsp(_fancy_indentsp)
-    code = cli.run()
-    sys.exit(code)
-
-
-if __name__ == '__main__':
-    main()
+cli.ap.prog = '%s-notifier' % product
+cli.always_json += _always_json
+cli.arg_sections += ['subscribe']
+cli.set_api_functions(_api_functions)
+cli.set_pd_cols(_pd_cols)
+cli.set_pd_idx(_pd_idx)
+cli.set_fancy_indentsp(_fancy_indentsp)
+code = cli.run()
+sys.exit(code)

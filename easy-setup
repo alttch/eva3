@@ -553,6 +553,8 @@ D=`realpath $0`
 EVA_DIR=`dirname ${D}`
 cd ${EVA_DIR}
 
+python3 -m venv python3 || exit 2
+
 if [ $USE_SUPERVISOR -eq 1 ]; then
   which supervisorctl > /dev/null 2>&1
   if [ $? -ne 0 ]; then
@@ -617,8 +619,6 @@ if [ $CLEAR -eq 1 ]; then
   rm -f /etc/supervisor/conf.d/eva-lm.conf
   rm -f /etc/supervisor/conf.d/eva-sfa.conf
 fi
-
-python3 -m venv python3 || exit 2
 
 # check mods
 

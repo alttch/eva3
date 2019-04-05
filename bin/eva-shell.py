@@ -293,7 +293,7 @@ class ManagementCLI(GenericCLI):
                     'product=\'{}\''.format(params.get('p'))) else \
             self.local_func_result_failed
 
-    def start_shell(self, p, x='-cmd', xp=''):
+    def start_shell(self, p, x='-cmd.py', xp=''):
         sst = p
         result = False
         while sst:

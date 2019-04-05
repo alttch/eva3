@@ -1,0 +1,20 @@
+#!/bin/sh
+
+D=`realpath $0`
+EVA_DIR=`dirname ${D}`/..
+EVA_DIR=`realpath ${EVA_DIR}`
+
+cd ${EVA_DIR}
+
+ln -sf eva bin/eva-shell
+
+BIN="uc-cmd lm-cmd sfa-cmd test-uc-xc test-ext test-phi uc-tpl"
+SBIN="check-mqtt layout-converter get-setup-options"
+
+for p in ${BIN}; do
+  ln -sf venvl bin/${p}
+done
+
+for p in ${SBIN}; do
+  ln -sf venvl sbin/${p}
+done
