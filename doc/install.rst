@@ -146,7 +146,7 @@ To solve this:
       install pandas* instead). To let venv use system package,
       *SYSTEM_SITE_PACKAGES=1* should also be present.
 
-    * **PIP3_EXTRA_OPTIONS** specify extra options for *pip3*, e.g. *-v* for
+    * **PIP_EXTRA_OPTIONS** specify extra options for *pip3*, e.g. *-v* for
       verbose installation.
 
 .. note::

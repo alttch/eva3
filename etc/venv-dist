@@ -6,4 +6,4 @@
 # preinstalled)
 #SKIP="pandas"
 # specify extra PIP3 options e.g., -v for verbose
-#PIP3_EXTRA_OPTIONS=-v
+#PIP_EXTRA_OPTIONS=-v
