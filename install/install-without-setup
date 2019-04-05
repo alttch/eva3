@@ -15,8 +15,8 @@ if [ -d runtime ]; then
     exit 1
 fi
 
-echo "Checking mods"
-./install/check-mods install || exit 1
+echo "Building VENV"
+./install/build-venv || exit 1
 
 echo "Preparing Universal Controller"
 bash install/install-uc || exit 1

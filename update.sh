@@ -73,13 +73,11 @@ echo "- Stopping everything"
 
 ./sbin/eva-control stop
 
-[ ! -d ./python3 ] && python3 -m venv python3 || exit 2
-
 ./install/mklinks || exit 1
 
 echo "- Installing missing modules"
 
-./_update/eva-${VERSION}/install/check-mods install || exit 2
+./_update/eva-${VERSION}/install/build-venv . || exit 2
 
 echo "- Removing obsolete files and folders"
 
