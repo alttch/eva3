@@ -5,3 +5,5 @@
 # skip packages, space separated (enable system site packages to let venv use
 # preinstalled)
 #SKIP="pandas"
+# specify extra PIP3 options e.g., -v for verbose
+#PIP3_EXTRA_OPTIONS=-v

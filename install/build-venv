@@ -24,7 +24,7 @@ if [ ! -f ${EVA_DIR}/python3/bin/pip3 ]; then
   if [ ! "$USE_SYSTEM_PIP" ]; then
     ( curl https://bootstrap.pypa.io/get-pip.py | python ) || exit 3
   else
-    pip3 install wheel setuptools || exit 3
+    pip3 install ${PIP3_EXTRA_OPTIONS} wheel setuptools || exit 3
   fi
   deactivate
 fi
@@ -45,7 +45,7 @@ else
   PKGLIST=${MY_DIR}/mods.list
 fi
 
-${PIP} install -r ${PKGLIST}
+${PIP} install ${PIP3_EXTRA_OPTIONS} -r ${PKGLIST}
 E=$?
 
 [ "$PTS" ] && rm -f ${TMPFILE}
