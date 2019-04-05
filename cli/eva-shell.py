@@ -302,7 +302,7 @@ class ManagementCLI(GenericCLI):
             sst = eva.client.cli.shell_switch_to
         return result
 
-    def do_start_shell(self, p, x='-cmd', xp=''):
+    def do_start_shell(self, p, x='-cmd.py', xp=''):
         try:
             if getattr(self, 'subshell_extra_args', None):
                 sysargs = ['{}/{}{}'.format(dir_cli, p, x)
@@ -325,7 +325,7 @@ sys.argv = {argv}
 {xp}
 
 """.format(nodename=self.nodename,
-            shells_available=self.products_configured if x == '-cmd' else [],
+            shells_available=self.products_configured if x == '-cmd.py' else [],
             argv=sysargs,
             xp=xp) + c
             os.chdir(dir_cwd)
@@ -380,7 +380,7 @@ sys.argv = {argv}
         result = {}
         if c:
             try:
-                result[c] = out[0].strip().lower.find('running') != -1
+                result[c] = out[0].strip().lower().find('running') != -1
             except:
                 return self.local_func_result_failed
         else:
