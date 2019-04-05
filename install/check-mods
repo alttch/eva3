@@ -1,0 +1,11 @@
+#!/bin/sh
+
+D=`realpath $0`
+EVA_DIR=`dirname ${D}`/..
+EVA_DIR=`realpath ${EVA_DIR}`
+
+PIP=${EVA_DIR}/python3/bin/pip3
+
+${PIP} install wheel || exit 1
+${PIP} install -r ${EVA_DIR}/install/mods.list || exit 1
+exit 0
