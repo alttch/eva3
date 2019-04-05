@@ -1,6 +1,18 @@
 EVA ICS CHANGELOG
 *****************
 
+3.2.1 (TBA)
+===========
+
+Common
+------
+
+    * fixes: small fixes in CLI
+    * fixes: code refactoring, performance optimization
+
+    * EVA ICS now loads 3rd party libraries from virtualenv which increases
+      system stability as only tested version of libraries are used.
+
 3.2.0 (2019-04-02)
 ==================
 
