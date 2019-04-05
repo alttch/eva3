@@ -18,6 +18,7 @@ import threading
 import inspect
 import sqlalchemy as sa
 import faulthandler
+import gzip
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -292,7 +293,6 @@ def core_shutdown():
 
 
 def create_dump(e='request', msg=''):
-    import gzip
     try:
         result = dump.run()
         result.update({'reason': {'event': e, 'info': str(msg)}})
