@@ -16,16 +16,23 @@ almost ready to use.
 System Requirements
 ===================
 
-* Python version 3 (preferably 3.4+) or later, plus pip3 for automatic
-  installation of the additional modules
+* Python version 3 (3.4+)
+
+* Python virtual environment modules (python3-virtualenv)
+
 * Linux or UNIX-compatible system
+
 * For :doc:`/sfa/sfa_pvt` to work with images: libjpeg-dev and libjpeg8-dev
   (for PIL / `pillow <https://python-pillow.org/>`_ installation)
+
 * `realpath <http://www.gnu.org/software/coreutils/realpath>`_ (available in
   all modern Linux distributions)
+
 * EVA ICS can run on any Linux or UNIX-compatible system, but for the smooth
   install we recommend Ubuntu or Debian.
+
 * Install system package *libow-dev* to let EVA ICS install owfs module.
+
 * To sync :doc:`item</items>` status between the components in real time -
   :ref:`MQTT<mqtt_>`-server (e.g. `mosquitto <http://mosquitto.org/>`_)
 
@@ -35,11 +42,12 @@ System Requirements
     automatically, but some of them can have problems installing with pip -
     install can fail or be slow. It's better to install these modules manually,
     before running EVA installation scripts. Currently the problems can be
-    expected with:
+    expected on ARM systems with:
 
         * **pandas** (python3-pandas)
-        * **pysnmp** (python3-pysnmp4), version 4.4.x+ required
         * **cryptography** (python3-cryptography)
+
+    To let EVA ICS venv use system site modules, read instructions below.
 
 Initial setup
 =============
@@ -58,7 +66,7 @@ Ubuntu):
 
 .. code-block:: bash
 
-    apt install -y curl python3 python3-pip python3-pandas python3-pysnmp4 python3-cryptography jq libow-dev
+    apt install -y curl python3 python3-virtualenv jq libow-dev libjpeg-dev libjpeg8-dev
 
 Installing local MQTT server
 ----------------------------
@@ -81,11 +89,11 @@ Ubuntu):
 
 Options for EVA ICS:
 
-* mqtt host: localhost
-* mqtt port: 1883 (default)
-* mqtt user, password: leave empty
-* mqtt space: leave empty
-* mqtt ssl: leave empty (answer 'n' if using *easy-setup*)
+* MQTT host: localhost
+* MQTT port: 1883 (default)
+* MQTT user, password: leave empty
+* MQTT space: leave empty
+* MQTT SSL: leave empty (answer 'n' if using *easy-setup*)
 
 Downloading and extracting EVA ICS distribution
 -----------------------------------------------
@@ -101,7 +109,56 @@ distribution and unpack it e.g. to */opt/eva*:
     mv eva-3.x.x eva
     cd eva
 
-Easy setup
+
+Customizing Python virtual environment
+--------------------------------------
+
+Starting from 3.2.1, EVA ICS uses Python virtual environment (venv). This makes
+software installation more stable, as it uses only tested versions of 3rd party
+libraries.
+
+EVA ICS installation script automatically creates Python virtual environment in
+./python3 folder. It can be customized/recreated later manually, using
+*./install/build-venv* command (if you want to rebuild venv from scratch,
+delete *python3* folder completely).
+
+However on some systems (e.g. ARM-based computers) venv installation can be
+tricky: you can expect slow installation time or problems with some modules
+(e.g. *pandas*).
+
+To solve this:
+
+* If you already run the installation and it has failed, delete *./python3*
+  folder.
+
+* Go to *./etc* folder, copy *venv-dist* to *venv* and customize virtual
+  environment options.
+
+    * **USE_SYSTEM_PIP=1** allows to use system-installed pip3 (*apt-get install
+      python3-pip*) in case installation script has a problems downloading /
+      installing it.
+
+    * **SYSTEM_SITE_PACKAGES=1** virtual environment will use system site
+      packages if their versions match with requested.
+
+    * **SKIP** here you can specify the packages (in quotes, space separated),
+      which should be skipped (e.g.  *pandas* and install it with *apt-get
+      install pandas* instead). To let venv use system package,
+      *SYSTEM_SITE_PACKAGES=1* should also be present.
+
+    * **PIP3_EXTRA_OPTIONS** specify extra options for *pip3*, e.g. *-v* for
+      verbose installation.
+
+.. note::
+
+    Customize venv only if you have serious problems installing EVA ICS with
+    default options, as the system may became unstable when versions of 3rd
+    party libraries are different from tested.
+
+Options, specified in *./etc/venv* are also used by EVA ICS update scripts,
+which check/rebuild venv on every system update.
+
+Installing
 ----------
 
 .. warning::
@@ -137,56 +194,6 @@ systems with *systemd* (all modern Linux distributions):
     cp ./etc/systemd/eva-ics.service /etc/systemd/system/
     systemctl enable eva-ics
 
-Manual setup
-------------
-
-* Run *./install/install-without-setup* in EVA folder
-* In *etc* folder copy *uc.ini-dist* into *uc.ini*; if you plan to use
-  :doc:`/uc/uc`, change necessary configuration parameters.
-* Copy *uc_apikeys.ini-dist* into *uc_apikeys.ini* and set the API keys
-* Repeat the procedure for the configuration of :doc:`/lm/lm` and
-  :doc:`/sfa/sfa`
-* In etc folder copy *eva_servers-dist* into *eva_servers*, set *ENABLED=yes*
-  for the chosen controllers, set *USER* params to run certain controllers
-  under :doc:`restricted users</security>`.
-
-.. code-block:: bash
-
-    UC_ENABLED=yes
-    LM_ENABLED=yes
-    SFA_ENABLED=yes
-    LM_USER=nobody
-    SFA_USER=nobody
-
-* Make sure all restricted users have an access to *log*, *var* and
-  *runtime/db* folders as well to runtime files and folders plus to config
-  files in *etc* (both <component>.ini and <component>_apikeys.ini).
-
-* Setup log rotation by placing *etc/logrotate.d/eva-\** files to
-  */etc/logrotate.d* system folder. Correct the paths to EVA files if
-  necessary.
-* Setup automatic launch at boot time by placing *EVADIR/sbin/eva-control
-  start* command into system startup e.g. to */etc/rc.local* or place
-  ./etc/systemd/eva-ics.service to /etc/systemd/system/ for systemd-based
-  startup.
-
-* Configure the :doc:`notification system</notifiers>` if required.
-
-* Start EVA:
-
-.. code-block:: bash
-
-    ./sbin/eva-control start
-
-The system is ready. Enable automatic launch in the same way as for
-*easy-setup*.
-
-.. note::
-
-    To change or set up (without *easy-setup.sh*) the user controllers are
-    running under, use *./set-run-under-user.sh* script to adjust runtime and
-    database permissions.
-
 Updating
 ========
 
@@ -200,7 +207,7 @@ Using EVA Shell
 
 * Backup everything in system shell
 
-* Launch EVA Shell (*/opt/eva/bin/eva-shell*)
+* Launch EVA Shell (*/opt/eva/bin/eva-shell* or *eva -I*)
 
 * Backup configuration (type *backup save* command in EVA Shell)
 
@@ -276,6 +283,8 @@ for items to have the same id in different groups, however full item id
 
     Before adding items, consider what kind of :ref:`layout<item_layout>` you
     want to use: simple or enterprise
+
+    Starting from 3.2.0, default item layout is **enterprise**.
 
 Item groups can coincide and often it is convenient to make them similar: for
 example, if you set *groups=security/#* in API key config file, you will allow
