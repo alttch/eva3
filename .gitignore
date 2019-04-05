@@ -38,3 +38,4 @@ bin/uc-tpl
 sbin/check-mqtt
 sbin/get-setup-options
 sbin/layout-converter
+tests/benchmark-uc-crt
