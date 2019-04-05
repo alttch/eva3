@@ -28,3 +28,13 @@ xc/drivers/phi/generic_phi.py
 apidoc
 api-tests
 python3
+bin/lm-cmd
+bin/sfa-cmd
+bin/test-ext
+bin/test-phi
+bin/test-uc-xc
+bin/uc-cmd
+bin/uc-tpl
+sbin/check-mqtt
+sbin/get-setup-options
+sbin/layout-converter
