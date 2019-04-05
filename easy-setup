@@ -620,6 +620,8 @@ if [ $CLEAR -eq 1 ]; then
   rm -f /etc/supervisor/conf.d/eva-sfa.conf
 fi
 
+./install/mklinks || exit 1
+
 # check mods
 
 if [ ! $SKIP_CHECK ]; then
