@@ -9,12 +9,6 @@ fi
 D=`realpath $0`
 cd `dirname ${D}`/..
 
-which pip3 > /dev/null
-if [ $? != 0 ]; then
-    echo 'please install pip3'
-    exit 1
-fi
-
 echo "Installing EVA LM PLC to `pwd`"
 
 echo "Creating dirs"
