@@ -73,7 +73,7 @@ echo "- Stopping everything"
 
 ./sbin/eva-control stop
 
-[ ! -d ./python3 ] && python3 -m venv python3
+[ ! -d ./python3 ] && python3 -m venv python3 || exit 2
 
 echo "- Installing missing modules"
 
