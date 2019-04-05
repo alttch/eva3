@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #if [ "x`id -u`" != "x0" ] && [ "x$1" != "x--root" ]; then
     #echo "Please run this script as root"
