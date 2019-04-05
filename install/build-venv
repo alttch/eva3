@@ -13,15 +13,41 @@ fi
 
 EVA_DIR=`realpath ${EVA_DIR}`
 
+[ -f ${EVA_DIR}/etc/venv ] && source ${EVA_DIR}/etc/venv
+
 if [ ! -f ${EVA_DIR}/python3/bin/pip3 ]; then
   [ -d ${EVA_DIR}/python3 ] && rm -rf ${EVA_DIR}/python3
-  python3 -m venv --without-pip ${EVA_DIR}/python3 || exit 2
+  [ "$USE_SYSTEM_PIP" ] && O_PIP="" || O_PIP="--without-pip"
+  [ "${SYSTEM_SITE_PACKAGES}" ]  && O_SSITE="--system-site-packages" || O_SSITE=""
+  python3 -m venv ${O_PIP} ${O_SSITE} ${EVA_DIR}/python3 || exit 2
   source ${EVA_DIR}/python3/bin/activate
-  ( curl https://bootstrap.pypa.io/get-pip.py | python ) || exit 3
+  if [ ! "$USE_SYSTEM_PIP" ]; then
+    ( curl https://bootstrap.pypa.io/get-pip.py | python ) || exit 3
+  else
+    pip3 install wheel setuptools || exit 3
+  fi
   deactivate
 fi
 
+PTS=
+for s in $SKIP; do
+  [ "$PTS" ] && PTS="$PTS|"
+  PTS="$PTS^$s="
+done
+
 PIP=${EVA_DIR}/python3/bin/pip3
 
-${PIP} install -r ${MY_DIR}/mods.list || exit 4
-exit 0
+if [ "$PTS" ]; then
+  TMPFILE=$(mktemp /tmp/eva-venv.XXXXXX)
+  cat ${MY_DIR}/mods.list | grep -vE "$PTS" > ${TMPFILE}
+  PKGLIST=${TMPFILE}
+else
+  PKGLIST=${MY_DIR}/mods.list
+fi
+
+${PIP} install -r ${PKGLIST}
+E=$?
+
+[ "$PTS" ] && rm -f ${TMPFILE}
+
+exit ${E}
