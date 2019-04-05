@@ -50,7 +50,7 @@ function usage {
     echo "                          with --force. WARNING!!! destroys all data)"
     echo
     echo " --force                  force install even if configs are already present"
-    echo " --skip-check             skip initial checking"
+    echo " --skip-check             skip virtualenv check"
     echo " --auto                   perform automatic (unattended) setup"
     echo
     echo " Options for the automatic setup:"

@@ -66,7 +66,7 @@ Ubuntu):
 
 .. code-block:: bash
 
-    apt install -y curl python3 python3-virtualenv jq libow-dev libjpeg-dev libjpeg8-dev
+    apt install -y curl gcc python3 python3-dev python3-virtualenv python3-distutils jq libow-dev libjpeg-dev libjpeg8-dev
 
 Installing local MQTT server
 ----------------------------
