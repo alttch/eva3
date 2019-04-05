@@ -14,6 +14,7 @@ fi
 EVA_DIR=`realpath ${EVA_DIR}`
 
 if [ ! -f ${EVA_DIR}/python3/bin/pip3 ]; then
+  [ -d ${EVA_DIR}/python3 ] && rm -rf ${EVA_DIR}/python3
   python3 -m venv ${EVA_DIR}/python3 || exit 2
 fi
 
