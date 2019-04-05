@@ -73,10 +73,13 @@ echo "- Stopping everything"
 
 ./sbin/eva-control stop
 
+[ ! -d ./python3 ] && python3 -m venv python3
+
 echo "- Installing missing modules"
 
-pip3 install -U pyaltt || exit 2
-./_update/eva-${VERSION}/install/check-mods install || exit 2
+#env pip3 install -U pyaltt || exit 2
+#./_update/eva-${VERSION}/install/check-mods install || exit 2
+./python3/bin/pip3 install -r ./_update/eva-${VERSION}/install/mods.list
 
 echo "- Removing obsolete files and folders"
 

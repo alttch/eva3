@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/opt/eva/python3/bin/python3
 
 import sys
 import os
@@ -71,7 +71,7 @@ for m in mods:
             elif m == 'PIL': mod = 'pillow'
             elif m == 'service_identity': mod = 'service-identity'
             else: mod = m
-            os.system('pip3 install %s' % mod)
+            os.system('env pip3 install %s' % mod)
             try:
                 importlib.import_module(m)
             except:

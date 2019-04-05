@@ -35,7 +35,7 @@ REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 pip3 sha256sum curl jq"
+REQUIRED="realpath python3 sha256sum curl jq"
 
 MAX_START_WAIT=180
 
@@ -618,11 +618,14 @@ if [ $CLEAR -eq 1 ]; then
   rm -f /etc/supervisor/conf.d/eva-sfa.conf
 fi
 
+python3 -m venv python3
+
 # check mods
 
 if [ ! $SKIP_CHECK ]; then
     echo "Checking mods"
-    ./install/check-mods install || exit 1
+    #./install/check-mods install || exit 1
+    ./python3/bin/pip3 install -r ./install/mods.list || exit 1
     echo
 fi
 

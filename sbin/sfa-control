@@ -1,7 +1,5 @@
 #!/bin/bash
 
-PYTHON=python3
-
 D=`realpath $0`
 cd `dirname ${D}`/..
 
@@ -9,6 +7,7 @@ WAIT_TO_KILL=40 # sec * 2 before kill -KILL
 
 export EVA_DIR=`pwd`
 
+PYTHON=${EVA_DIR}/python3/bin/python3
 PIDFILE=${EVA_DIR}/var/sfa.pid
 SFA=${EVA_DIR}/sbin/sfaserv.py
 SFA_ARGS=

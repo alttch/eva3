@@ -1,12 +1,11 @@
 #!/bin/bash
 
-PYTHON=python3
-
 D=`realpath $0`
 cd `dirname ${D}`/..
 
 export EVA_DIR=`pwd`
 export EVA_PRODUCT=`basename $0 | cut -d\- -f1`
 
-${PYTHON} ${EVA_DIR}/bin/notifymanager.py $*
+PYTHON=${EVA_DIR}/python3/bin/python3
 
+${PYTHON} ${EVA_DIR}/bin/notifymanager.py $*
