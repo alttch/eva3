@@ -19,6 +19,6 @@ fi
 
 PIP=${EVA_DIR}/python3/bin/pip3
 
-${PIP} install wheel || exit 3
+${PIP} install setuptools wheel || exit 3
 ${PIP} install -r ${MY_DIR}/mods.list || exit 3
 exit 0
