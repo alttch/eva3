@@ -808,6 +808,7 @@ class GenericCLI(GCLI):
             # interactive mode
             self.start_interactive()
             import shlex
+            import distutils.spawn
             while True:
                 parsed = None
                 while True:
@@ -914,8 +915,8 @@ class GenericCLI(GCLI):
                               ('on' if self.debug else 'off'))
                     elif d[0] == 'top':
                         try:
-                            top = '/usr/bin/htop' if os.path.isfile(
-                                '/usr/bin/htop') else 'top'
+                            top = distutils.spawn.find_executable('htop')
+                            if not top: top = 'top'
                             if os.system(top): raise Exception('exec error')
                         except:
                             self.print_err(
@@ -941,8 +942,8 @@ class GenericCLI(GCLI):
                         print('Executing system shell')
                         shell = os.environ.get('SHELL')
                         if shell is None:
-                            if os.path.isfile('/bin/bash'): shell = '/bin/bash'
-                            else: shell = 'sh'
+                            shell = distutils.spawn.find_executable('bash')
+                            if not shell: shell = 'sh'
                         try:
                             os.system(shell)
                         except:
