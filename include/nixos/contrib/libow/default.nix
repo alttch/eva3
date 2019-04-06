@@ -1,7 +1,8 @@
 { stdenv, fetchurl, pkgconfig }:
 
 stdenv.mkDerivation {
-  name = "libow-3.2p1";
+  version = "3.2p1";
+  name = "libow";
 
   src = fetchurl {
     url = "http://downloads.sourceforge.net/project/owfs/owfs/3.2p1/owfs-3.2p1.tar.gz";
