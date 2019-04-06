@@ -1,11 +1,11 @@
 { stdenv, fetchurl, pkgconfig }:
 
-stdenv.mkDerivation {
+stdenv.mkDerivation rec {
   version = "3.2p1";
-  name = "libow";
+  name = "libow-${version}";
 
   src = fetchurl {
-    url = "http://downloads.sourceforge.net/project/owfs/owfs/3.2p1/owfs-3.2p1.tar.gz";
+    url = "http://downloads.sourceforge.net/project/owfs/owfs/${version}/owfs-${version}.tar.gz";
     sha256 = "1sijb1s1n485gxkz798kbrwpdqyyfc6paznjgiqrm5invcjhn8ik";
   };
 
@@ -15,6 +15,7 @@ stdenv.mkDerivation {
     description = "1-Wire File System full library";
     homepage = http://owfs.org/;
     license = licenses.gpl2;
+    maintainers = with maintainers; [ disserman ];
     platforms = platforms.unix;
   };
 
