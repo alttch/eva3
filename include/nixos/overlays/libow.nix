@@ -1,3 +1,3 @@
 self: super: {
-  libow = self.callPackage /opt/eva/include/nixos/contrib/libow.nix {};
+  libow = self.callPackage /opt/eva/include/nixos/contrib/libow/default.nix {};
 }
