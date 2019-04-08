@@ -10,6 +10,11 @@ import jsonpickle
 import yaml
 import jinja2
 
+try:
+    yaml.warnings({'YAMLLoadWarning': False})
+except:
+    pass
+
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
@@ -95,8 +100,10 @@ def print_debug(o1=None, o2=None, end='\n'):
     if o2: print('', o2, end='')
     print(end=end)
 
+
 def dump_yaml(s):
     return yaml.dump(s, default_flow_style=False)
+
 
 def print_yaml(s):
     print(dump_yaml(s))

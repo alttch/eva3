@@ -14,6 +14,12 @@ from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
 
 
+def dict_safe_get(d, key, default):
+    if d is None: return default
+    result = d.get(key)
+    return default if result is None else result
+
+
 class SFA_CLI(GenericCLI, ControllerCLI):
 
     class ComplItemOID(ComplGeneric):
@@ -734,6 +740,10 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
     def _deploy_undeploy(self, props, und=False, del_files=False):
         import yaml
+        try:
+            yaml.warnings({'YAMLLoadWarning': False})
+        except:
+            pass
         from eva.client import apiclient
         try:
             try:
@@ -762,19 +772,20 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         'lcycle', 'dmatrix_rule'
                 ]:
                     raise Exception('Invalid config section: {}'.format(c))
-            for c, v in cfg.get('controller', {}).items():
-                for k, vv in v.get('phi', {}).items():
-                    if 'module' not in vv:
-                        raise Exception(
-                            'Controller {}, PHI {}: module is not defined'.
-                            format(c, k))
+            for c, v in dict_safe_get(cfg, 'controller', {}).items():
+                for k, vv in dict_safe_get(v, 'phi', {}).items():
+                    if vv:
+                        if 'module' not in vv:
+                            raise Exception(
+                                'Controller {}, PHI {}: module is not defined'.
+                                format(c, k))
             # check basic items
             controllers = set()
             controllers_fm_required = set()
             for x in [
                     'unit', 'sensor', 'lvar', 'lmacro', 'lcycle', 'dmatrix_rule'
             ]:
-                for i, v in cfg.get(x, {}).items():
+                for i, v in dict_safe_get(cfg, x, {}).items():
                     if not v or not 'controller' in v:
                         raise Exception(
                             'No controller specified for {} {}'.format(x, i))
@@ -788,7 +799,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                         'for {} {} (lm required)'.format(x, i))
                     controllers.add(v['controller'])
                     for p in ['action_exec', 'update_exec']:
-                        if v.get(p, '').startswith('^'):
+                        if dict_safe_get(v, p, '').startswith('^'):
                             if not und:
                                 try:
                                     open(v[p][1:])
@@ -799,19 +810,20 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                              v[p][1:], p, x, i))
                             controllers_fm_required.add(v['controller'])
             print('Checking remote controllers...')
-            for c, v in cfg.get('controller', {}).items():
+            for c, v in dict_safe_get(cfg, 'controller', {}).items():
                 controllers.add(c)
-                if 'upload-runtime' in v:
-                    controllers_fm_required.add(c)
-                    if not und:
-                        for f in v['upload-runtime']:
-                            fname, remote_file = f.split(':')
-                            try:
-                                open(fname)
-                            except:
-                                raise Exception(('{}: {} unable to open local '
-                                                 + 'file for upload').format(
-                                                     c, fname))
+                if v:
+                    if 'upload-runtime' in v:
+                        controllers_fm_required.add(c)
+                        if not und:
+                            for f in v['upload-runtime']:
+                                fname, remote_file = f.split(':')
+                                try:
+                                    open(fname)
+                                except:
+                                    raise Exception(
+                                        ('{}: {} unable to open local ' +
+                                         'file for upload').format(c, fname))
             macall = partial(call, 'management_api_call')
             for c in controllers:
                 code, ctest = macall({'i': c, 'f': 'test'})
@@ -842,25 +854,28 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             # ===== BEFORE TASKS =====
             print('Executing commands in before-{}deploy...'.format('un' if und
                                                                     else ''))
-            for c, v in cfg.get('controller', {}).items():
-                for a in v.get('before-{}deploy'.format('un' if und else ''),
-                               []):
-                    try:
-                        func = a['api']
-                        params = a.copy()
-                        del params['api']
-                    except:
-                        raise Exception(
-                            'Controller {}, invalid before-{}deploy'.format(
-                                c, 'un' if und else ''))
-                    print(' -- {} {}'.format(func, params))
-                    code = macall({
-                        'i': c,
-                        'f': func,
-                        'p': params
-                    })[1].get('code')
-                    if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+            for c, v in dict_safe_get(cfg, 'controller', {}).items():
+                if v:
+                    for a in dict_safe_get(
+                            v, 'before-{}deploy'.format('un' if und else ''),
+                        []):
+                        try:
+                            func = a['api']
+                            params = a.copy()
+                            del params['api']
+                        except:
+                            raise Exception(
+                                'Controller {}, invalid before-{}deploy'.format(
+                                    c, 'un' if und else ''))
+                        print(' -- {} {}'.format(func, params))
+                        code = macall({
+                            'i': c,
+                            'f': func,
+                            'p': params
+                        })[1].get('code')
+                        if code != apiclient.result_ok:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
             # ===== CALL DEPLOY/UNDEPLOY =====
             if not und:
                 self._perform_deploy(props, cfg, macall)
@@ -869,25 +884,28 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             # ===== AFTER TASKS =====
             print('Executing commands in after-{}deploy...'.format('un' if und
                                                                    else ''))
-            for c, v in cfg.get('controller', {}).items():
-                for a in v.get('after-{}deploy'.format('un' if und else ''),
-                               []):
-                    try:
-                        func = a['api']
-                        params = a.copy()
-                        del params['api']
-                    except:
-                        raise Exception(
-                            'Controller {}, invalid after-{}deploy'.format(
-                                c, 'un' if und else ''))
-                    print(' -- {} {}'.format(func, params))
-                    code = macall({
-                        'i': c,
-                        'f': func,
-                        'p': params
-                    })[1].get('code')
-                    if code != apiclient.result_ok:
-                        raise Exception('API call failed, code {}'.format(code))
+            for c, v in dict_safe_get(cfg, 'controller', {}).items():
+                if v:
+                    for a in dict_safe_get(
+                            v, 'after-{}deploy'.format('un' if und else ''),
+                        []):
+                        try:
+                            func = a['api']
+                            params = a.copy()
+                            del params['api']
+                        except:
+                            raise Exception(
+                                'Controller {}, invalid after-{}deploy'.format(
+                                    c, 'un' if und else ''))
+                        print(' -- {} {}'.format(func, params))
+                        code = macall({
+                            'i': c,
+                            'f': func,
+                            'p': params
+                        })[1].get('code')
+                        if code != apiclient.result_ok:
+                            raise Exception(
+                                'API call failed, code {}'.format(code))
             if props.get('save'):
                 print('Saving configurations')
                 for c in controllers:
@@ -917,111 +935,116 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         from eva.client import apiclient
         # ===== FILE UPLOAD =====
         print('Uploading files...')
-        for c, v in cfg.get('controller', {}).items():
-            if 'upload-runtime' in v:
-                for f in v['upload-runtime']:
-                    fname, remote_file = f.split(':')
-                    if not remote_file or remote_file.endswith('/'):
-                        remote_file += os.path.basename(fname)
-                    if remote_file.startswith('/'):
-                        remote_file = remote_file[1:]
-                    print(' -- {}: {} -> {}'.format(c, fname, remote_file))
-                    code = macall({
-                        'i': c,
-                        'f': 'file_put',
-                        'p': {
-                            'i': remote_file,
-                            'm': open(fname).read()
-                        }
-                    })[1].get('code')
-                    if code != apiclient.result_ok:
-                        raise Exception(
-                            'File upload failed, API code {}'.format(code))
-                    if os.access(fname, os.X_OK):
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                if 'upload-runtime' in v:
+                    for f in v['upload-runtime']:
+                        fname, remote_file = f.split(':')
+                        if not remote_file or remote_file.endswith('/'):
+                            remote_file += os.path.basename(fname)
+                        if remote_file.startswith('/'):
+                            remote_file = remote_file[1:]
+                        print(' -- {}: {} -> {}'.format(c, fname, remote_file))
                         code = macall({
                             'i': c,
-                            'f': 'file_set_exec',
+                            'f': 'file_put',
                             'p': {
                                 'i': remote_file,
-                                'e': 1
+                                'm': open(fname).read()
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
                             raise Exception(
-                                'File set exec failed, API code {}'.format(
-                                    code))
+                                'File upload failed, API code {}'.format(code))
+                        if os.access(fname, os.X_OK):
+                            code = macall({
+                                'i': c,
+                                'f': 'file_set_exec',
+                                'p': {
+                                    'i': remote_file,
+                                    'e': 1
+                                }
+                            })[1].get('code')
+                            if code != apiclient.result_ok:
+                                raise Exception(
+                                    'File set exec failed, API code {}'.format(
+                                        code))
         # ===== CVARS =====
         print('Creating cvars...')
-        for c, v in cfg.get('controller', {}).items():
-            for i, vv in v.get('cvar', {}).items():
-                print(' -- {}: {}={}'.format(c, i, vv))
-                code = macall({
-                    'i': c,
-                    'f': 'set_cvar',
-                    'p': {
-                        'i': i,
-                        'v': vv
-                    }
-                })[1].get('code')
-                if code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in dict_safe_get(v, 'cvar', {}).items():
+                    print(' -- {}: {}={}'.format(c, i, vv))
+                    code = macall({
+                        'i': c,
+                        'f': 'set_cvar',
+                        'p': {
+                            'i': i,
+                            'v': vv
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         # ===== PHI =====
         print('Loading PHIs...')
-        for c, v in cfg.get('controller', {}).items():
-            for i, vv in v.get('phi', {}).items():
-                print(' -- {}: {} -> {}'.format(c, vv['module'], i))
-                code = macall({
-                    'i': c,
-                    'f': 'load_phi',
-                    'p': {
-                        'i': i,
-                        'm': vv['module'],
-                        'c': vv.get('config')
-                    }
-                })[1].get('code')
-                if code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in dict_safe_get(v, 'phi', {}).items():
+                    print(' -- {}: {} -> {}'.format(c, vv['module'], i))
+                    code = macall({
+                        'i': c,
+                        'f': 'load_phi',
+                        'p': {
+                            'i': i,
+                            'm': vv['module'],
+                            'c': vv.get('config')
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         # ===== DRIVERS =====
         print('Loading drivers...')
-        for c, v in cfg.get('controller', {}).items():
-            for i, vv in v.get('driver', {}).items():
-                print(' -- {}: {} -> {}'.format(c, vv['module'], i))
-                try:
-                    phi_id, lpi_id = i.split('.')
-                except:
-                    raise Exception('Invalid driver id: {}'.format(i))
-                code = macall({
-                    'i': c,
-                    'f': 'load_driver',
-                    'p': {
-                        'i': lpi_id,
-                        'm': vv['module'],
-                        'p': phi_id,
-                        'c': vv.get('config')
-                    }
-                })[1].get('code')
-                if code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in dict_safe_get(v, 'driver', {}).items():
+                    print(' -- {}: {} -> {}'.format(c, vv['module'], i))
+                    try:
+                        phi_id, lpi_id = i.split('.')
+                    except:
+                        raise Exception('Invalid driver id: {}'.format(i))
+                    code = macall({
+                        'i': c,
+                        'f': 'load_driver',
+                        'p': {
+                            'i': lpi_id,
+                            'm': vv['module'],
+                            'p': phi_id,
+                            'c': vv.get('config')
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         # ===== EXT =====
         print('Loading extensions...')
-        for c, v in cfg.get('controller', {}).items():
-            for i, vv in v.get('ext', {}).items():
-                print(' -- {}: {} -> {}'.format(c, vv['module'], i))
-                code = macall({
-                    'i': c,
-                    'f': 'load_ext',
-                    'p': {
-                        'i': i,
-                        'm': vv['module'],
-                        'c': vv.get('config')
-                    }
-                })[1].get('code')
-                if code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in dict_safe_get(v, 'ext', {}).items():
+                    print(' -- {}: {} -> {}'.format(c, vv['module'], i))
+                    code = macall({
+                        'i': c,
+                        'f': 'load_ext',
+                        'p': {
+                            'i': i,
+                            'm': vv['module'],
+                            'c': vv.get('config')
+                        }
+                    })[1].get('code')
+                    if code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         # ===== ITEM AND MACRO CREATION =====
         for tp in ['unit', 'sensor', 'lvar', 'lmacro', 'lcycle']:
             print('Creating {}s...'.format(tp))
-            for i, v in cfg.get(tp, {}).items():
+            for i, v in dict_safe_get(cfg, tp, {}).items():
                 c = v.get('controller')
                 print(' -- {}: {}:{}'.format(c, tp, i))
                 item_props = v.copy()
@@ -1111,7 +1134,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                         code))
         # ===== RULE CREATION =====
         print('Creating decision rules...')
-        for i, v in cfg.get('dmatrix_rule', {}).items():
+        for i, v in dict_safe_get(cfg, 'dmatrix_rule', {}).items():
             c = v.get('controller')
             print(' -- {}: {}'.format(c, i))
             rule_props = v.copy()
@@ -1132,7 +1155,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         from eva.client import apiclient
         # ===== RULE DELETION =====
         print('Deleting decision rules...')
-        for i, v in cfg.get('dmatrix_rule', {}).items():
+        for i, v in dict_safe_get(cfg, 'dmatrix_rule', {}).items():
             c = v.get('controller')
             print(' -- {}: {}'.format(c, i))
             code = macall({
@@ -1149,7 +1172,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         # ===== ITEM AND MACRO DELETION =====
         for tp in ['lcycle', 'lmacro', 'lvar', 'sensor', 'unit']:
             print('Deleting {}s...'.format(tp))
-            for i, v in cfg.get(tp, {}).items():
+            for i, v in dict_safe_get(cfg, tp, {}).items():
                 c = v.get('controller')
                 print(' -- {}: {}:{}'.format(c, tp, i))
                 df = 'destroy'
@@ -1191,94 +1214,99 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                         code))
         # ===== EXT UNLOAD =====
         print('Unloading extensions...')
-        for c, v in cfg.get('controller', {}).items():
-            for i, vv in v.get('ext', {}).items():
-                print(' -- {}: {}'.format(c, i))
-                code = macall({
-                    'i': c,
-                    'f': 'unload_ext',
-                    'p': {
-                        'i': i,
-                    }
-                })[1].get('code')
-                if code == apiclient.result_not_found:
-                    self.print_warn('Extension {} not found'.format(i))
-                elif code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in dict_safe_get(v, 'ext', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'unload_ext',
+                        'p': {
+                            'i': i,
+                        }
+                    })[1].get('code')
+                    if code == apiclient.result_not_found:
+                        self.print_warn('Extension {} not found'.format(i))
+                    elif code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         # ===== DRIVERS UNLOAD =====
         print('Unloading drivers...')
-        for c, v in cfg.get('controller', {}).items():
-            for i, vv in v.get('driver', {}).items():
-                print(' -- {}: {}'.format(c, i))
-                code = macall({
-                    'i': c,
-                    'f': 'unload_driver',
-                    'p': {
-                        'i': i,
-                    }
-                })[1].get('code')
-                if code == apiclient.result_not_found:
-                    self.print_warn('Driver {} not found'.format(i))
-                elif code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in dict_safe_get(v, 'driver', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'unload_driver',
+                        'p': {
+                            'i': i,
+                        }
+                    })[1].get('code')
+                    if code == apiclient.result_not_found:
+                        self.print_warn('Driver {} not found'.format(i))
+                    elif code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         # ===== PHI UNLOAD =====
         print('Unloading PHIs...')
-        for c, v in cfg.get('controller', {}).items():
-            for i, vv in v.get('phi', {}).items():
-                print(' -- {}: {}'.format(c, i))
-                code = macall({
-                    'i': c,
-                    'f': 'unload_phi',
-                    'p': {
-                        'i': i,
-                    }
-                })[1].get('code')
-                if code == apiclient.result_not_found:
-                    self.print_warn('PHI {} not found'.format(i))
-                elif code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in dict_safe_get(v, 'phi', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'unload_phi',
+                        'p': {
+                            'i': i,
+                        }
+                    })[1].get('code')
+                    if code == apiclient.result_not_found:
+                        self.print_warn('PHI {} not found'.format(i))
+                    elif code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         # ===== CVARS =====
         print('Deleting cvars...')
-        for c, v in cfg.get('controller', {}).items():
-            for i, vv in v.get('cvar', {}).items():
-                print(' -- {}: {}'.format(c, i))
-                code = macall({
-                    'i': c,
-                    'f': 'set_cvar',
-                    'p': {
-                        'i': i
-                    }
-                })[1].get('code')
-                if code == apiclient.result_not_found:
-                    self.print_warn('CVAR {} not found'.format(i))
-                elif code != apiclient.result_ok:
-                    raise Exception('API call failed, code {}'.format(code))
+        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            if v:
+                for i, vv in dict_safe_get(v, 'cvar', {}).items():
+                    print(' -- {}: {}'.format(c, i))
+                    code = macall({
+                        'i': c,
+                        'f': 'set_cvar',
+                        'p': {
+                            'i': i
+                        }
+                    })[1].get('code')
+                    if code == apiclient.result_not_found:
+                        self.print_warn('CVAR {} not found'.format(i))
+                    elif code != apiclient.result_ok:
+                        raise Exception('API call failed, code {}'.format(code))
         # ===== FILE DELETION =====
         if del_files:
             print('Deleting uploaded files...')
-            for c, v in cfg.get('controller', {}).items():
-                if 'upload-runtime' in v:
-                    for f in v['upload-runtime']:
-                        fname, remote_file = f.split(':')
-                        if not remote_file or remote_file.endswith('/'):
-                            remote_file += os.path.basename(fname)
-                        if remote_file.startswith('/'):
-                            remote_file = remote_file[1:]
-                        print(' -- {}: {}'.format(c, remote_file))
-                        code = macall({
-                            'i': c,
-                            'f': 'file_unlink',
-                            'p': {
-                                'i': remote_file,
-                            }
-                        })[1].get('code')
-                        if code == apiclient.result_not_found:
-                            self.print_warn(
-                                'file {} not found'.format(remote_file))
-                        elif code != apiclient.result_ok:
-                            raise Exception(
-                                'File deletion failed, API code {}'.format(
-                                    code))
+            for c, v in dict_safe_get(cfg, 'controller', {}).items():
+                if v:
+                    if 'upload-runtime' in v:
+                        for f in v['upload-runtime']:
+                            fname, remote_file = f.split(':')
+                            if not remote_file or remote_file.endswith('/'):
+                                remote_file += os.path.basename(fname)
+                            if remote_file.startswith('/'):
+                                remote_file = remote_file[1:]
+                            print(' -- {}: {}'.format(c, remote_file))
+                            code = macall({
+                                'i': c,
+                                'f': 'file_unlink',
+                                'p': {
+                                    'i': remote_file,
+                                }
+                            })[1].get('code')
+                            if code == apiclient.result_not_found:
+                                self.print_warn(
+                                    'file {} not found'.format(remote_file))
+                            elif code != apiclient.result_ok:
+                                raise Exception(
+                                    'File deletion failed, API code {}'.format(
+                                        code))
 
 
 _me = 'EVA ICS SFA CLI version %s' % __version__

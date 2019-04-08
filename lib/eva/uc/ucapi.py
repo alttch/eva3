@@ -58,6 +58,11 @@ import jinja2
 import jsonpickle
 import logging
 
+try:
+    yaml.warnings({'YAMLLoadWarning': False})
+except:
+    pass
+
 
 def api_need_device(f):
 

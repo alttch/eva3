@@ -1130,6 +1130,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
         import jinja2
         import jsonpickle
         import yaml
+        try:
+            yaml.warnings({'YAMLLoadWarning': False})
+        except:
+            pass
 
         tpl_decoder = {
             'json': jsonpickle.decode,
