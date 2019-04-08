@@ -541,7 +541,7 @@ def create_cycle(m_id, group=None, save=False):
 @with_item_lock
 def destroy_cycle(m_id):
     i = get_cycle(m_id)
-    if not i: return None
+    if not i: raise ResourceNotFound
     try:
         i.stop(wait=True)
         i.destroy()
