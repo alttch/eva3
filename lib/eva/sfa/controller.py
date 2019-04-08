@@ -78,8 +78,7 @@ def get_controller(controller_id):
             if i[0] == 'lm' and i[1] in remote_lms and (tp is None or
                                                         tp == 'remote_lm'):
                 return remote_lms[i[1]]
-        else:
-            raise ResourceNotFound
+        raise ResourceNotFound
     finally:
         controller_lock.release()
 

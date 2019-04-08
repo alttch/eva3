@@ -764,7 +764,6 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         item = eva.sfa.controller.get_controller(i)
-        if item is None: return None
         return True if item.matest() else False
 
     @log_i
@@ -1388,8 +1387,7 @@ def start():
         SFA_HTTP_Root(),
         '/',
         config={
-            '/':
-            dict_merge({
+            '/': dict_merge({
                 'tools.sessions.on': False,
             }, tiny_httpe),
             '/.evahi': {
@@ -1410,12 +1408,11 @@ def start():
         '/ui',
         config={
             '/':
-            dict_merge(
-                {
-                    'tools.sessions.on': False,
-                    'tools.staticdir.dir': eva.core.dir_eva + '/ui',
-                    'tools.staticdir.on': True
-                }, tiny_httpe)
+            dict_merge({
+                'tools.sessions.on': False,
+                'tools.staticdir.dir': eva.core.dir_eva + '/ui',
+                'tools.staticdir.on': True
+            }, tiny_httpe)
         })
     eva.sfa.cloudmanager.start()
 
