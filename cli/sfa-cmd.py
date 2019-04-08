@@ -14,13 +14,13 @@ from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
 
 
-def dict_safe_get(d, key, default):
-    if d is None: return default
-    result = d.get(key)
-    return default if result is None else result
-
-
 class SFA_CLI(GenericCLI, ControllerCLI):
+
+    @staticmethod
+    def dict_safe_get(d, key, default):
+        if d is None: return default
+        result = d.get(key)
+        return default if result is None else result
 
     class ComplItemOID(ComplGeneric):
 
@@ -772,20 +772,22 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         'lcycle', 'dmatrix_rule'
                 ]:
                     raise Exception('Invalid config section: {}'.format(c))
-            for c, v in dict_safe_get(cfg, 'controller', {}).items():
-                for k, vv in dict_safe_get(v, 'phi', {}).items():
-                    if vv:
-                        if 'module' not in vv:
-                            raise Exception(
-                                'Controller {}, PHI {}: module is not defined'.
-                                format(c, k))
+            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
+                if v:
+                    for k, vv in self.dict_safe_get(v, 'phi', {}).items():
+                        if vv:
+                            if 'module' not in vv:
+                                raise Exception(
+                                    'Controller ' + \
+                                            '{}, PHI {}: module is not defined'.
+                                    format(c, k))
             # check basic items
             controllers = set()
             controllers_fm_required = set()
             for x in [
                     'unit', 'sensor', 'lvar', 'lmacro', 'lcycle', 'dmatrix_rule'
             ]:
-                for i, v in dict_safe_get(cfg, x, {}).items():
+                for i, v in self.dict_safe_get(cfg, x, {}).items():
                     if not v or not 'controller' in v:
                         raise Exception(
                             'No controller specified for {} {}'.format(x, i))
@@ -799,7 +801,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                         'for {} {} (lm required)'.format(x, i))
                     controllers.add(v['controller'])
                     for p in ['action_exec', 'update_exec']:
-                        if dict_safe_get(v, p, '').startswith('^'):
+                        if self.dict_safe_get(v, p, '').startswith('^'):
                             if not und:
                                 try:
                                     open(v[p][1:])
@@ -810,7 +812,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                              v[p][1:], p, x, i))
                             controllers_fm_required.add(v['controller'])
             print('Checking remote controllers...')
-            for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
                 controllers.add(c)
                 if v:
                     if 'upload-runtime' in v:
@@ -854,9 +856,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             # ===== BEFORE TASKS =====
             print('Executing commands in before-{}deploy...'.format('un' if und
                                                                     else ''))
-            for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
                 if v:
-                    for a in dict_safe_get(
+                    for a in self.dict_safe_get(
                             v, 'before-{}deploy'.format('un' if und else ''),
                         []):
                         try:
@@ -884,9 +886,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             # ===== AFTER TASKS =====
             print('Executing commands in after-{}deploy...'.format('un' if und
                                                                    else ''))
-            for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
                 if v:
-                    for a in dict_safe_get(
+                    for a in self.dict_safe_get(
                             v, 'after-{}deploy'.format('un' if und else ''),
                         []):
                         try:
@@ -935,7 +937,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         from eva.client import apiclient
         # ===== FILE UPLOAD =====
         print('Uploading files...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
                 if 'upload-runtime' in v:
                     for f in v['upload-runtime']:
@@ -971,9 +973,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                         code))
         # ===== CVARS =====
         print('Creating cvars...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
-                for i, vv in dict_safe_get(v, 'cvar', {}).items():
+                for i, vv in self.dict_safe_get(v, 'cvar', {}).items():
                     print(' -- {}: {}={}'.format(c, i, vv))
                     code = macall({
                         'i': c,
@@ -987,9 +989,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         raise Exception('API call failed, code {}'.format(code))
         # ===== PHI =====
         print('Loading PHIs...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
-                for i, vv in dict_safe_get(v, 'phi', {}).items():
+                for i, vv in self.dict_safe_get(v, 'phi', {}).items():
                     print(' -- {}: {} -> {}'.format(c, vv['module'], i))
                     code = macall({
                         'i': c,
@@ -1004,9 +1006,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         raise Exception('API call failed, code {}'.format(code))
         # ===== DRIVERS =====
         print('Loading drivers...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
-                for i, vv in dict_safe_get(v, 'driver', {}).items():
+                for i, vv in self.dict_safe_get(v, 'driver', {}).items():
                     print(' -- {}: {} -> {}'.format(c, vv['module'], i))
                     try:
                         phi_id, lpi_id = i.split('.')
@@ -1026,9 +1028,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         raise Exception('API call failed, code {}'.format(code))
         # ===== EXT =====
         print('Loading extensions...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
-                for i, vv in dict_safe_get(v, 'ext', {}).items():
+                for i, vv in self.dict_safe_get(v, 'ext', {}).items():
                     print(' -- {}: {} -> {}'.format(c, vv['module'], i))
                     code = macall({
                         'i': c,
@@ -1044,7 +1046,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         # ===== ITEM AND MACRO CREATION =====
         for tp in ['unit', 'sensor', 'lvar', 'lmacro', 'lcycle']:
             print('Creating {}s...'.format(tp))
-            for i, v in dict_safe_get(cfg, tp, {}).items():
+            for i, v in self.dict_safe_get(cfg, tp, {}).items():
                 c = v.get('controller')
                 print(' -- {}: {}:{}'.format(c, tp, i))
                 item_props = v.copy()
@@ -1134,7 +1136,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                         code))
         # ===== RULE CREATION =====
         print('Creating decision rules...')
-        for i, v in dict_safe_get(cfg, 'dmatrix_rule', {}).items():
+        for i, v in self.dict_safe_get(cfg, 'dmatrix_rule', {}).items():
             c = v.get('controller')
             print(' -- {}: {}'.format(c, i))
             rule_props = v.copy()
@@ -1155,7 +1157,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         from eva.client import apiclient
         # ===== RULE DELETION =====
         print('Deleting decision rules...')
-        for i, v in dict_safe_get(cfg, 'dmatrix_rule', {}).items():
+        for i, v in self.dict_safe_get(cfg, 'dmatrix_rule', {}).items():
             c = v.get('controller')
             print(' -- {}: {}'.format(c, i))
             code = macall({
@@ -1172,7 +1174,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         # ===== ITEM AND MACRO DELETION =====
         for tp in ['lcycle', 'lmacro', 'lvar', 'sensor', 'unit']:
             print('Deleting {}s...'.format(tp))
-            for i, v in dict_safe_get(cfg, tp, {}).items():
+            for i, v in self.dict_safe_get(cfg, tp, {}).items():
                 c = v.get('controller')
                 print(' -- {}: {}:{}'.format(c, tp, i))
                 df = 'destroy'
@@ -1214,9 +1216,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                         code))
         # ===== EXT UNLOAD =====
         print('Unloading extensions...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
-                for i, vv in dict_safe_get(v, 'ext', {}).items():
+                for i, vv in self.dict_safe_get(v, 'ext', {}).items():
                     print(' -- {}: {}'.format(c, i))
                     code = macall({
                         'i': c,
@@ -1231,9 +1233,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         raise Exception('API call failed, code {}'.format(code))
         # ===== DRIVERS UNLOAD =====
         print('Unloading drivers...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
-                for i, vv in dict_safe_get(v, 'driver', {}).items():
+                for i, vv in self.dict_safe_get(v, 'driver', {}).items():
                     print(' -- {}: {}'.format(c, i))
                     code = macall({
                         'i': c,
@@ -1248,9 +1250,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         raise Exception('API call failed, code {}'.format(code))
         # ===== PHI UNLOAD =====
         print('Unloading PHIs...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
-                for i, vv in dict_safe_get(v, 'phi', {}).items():
+                for i, vv in self.dict_safe_get(v, 'phi', {}).items():
                     print(' -- {}: {}'.format(c, i))
                     code = macall({
                         'i': c,
@@ -1265,9 +1267,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         raise Exception('API call failed, code {}'.format(code))
         # ===== CVARS =====
         print('Deleting cvars...')
-        for c, v in dict_safe_get(cfg, 'controller', {}).items():
+        for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
             if v:
-                for i, vv in dict_safe_get(v, 'cvar', {}).items():
+                for i, vv in self.dict_safe_get(v, 'cvar', {}).items():
                     print(' -- {}: {}'.format(c, i))
                     code = macall({
                         'i': c,
@@ -1283,7 +1285,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         # ===== FILE DELETION =====
         if del_files:
             print('Deleting uploaded files...')
-            for c, v in dict_safe_get(cfg, 'controller', {}).items():
+            for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
                 if v:
                     if 'upload-runtime' in v:
                         for f in v['upload-runtime']:
