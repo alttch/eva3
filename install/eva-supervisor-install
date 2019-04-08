@@ -52,12 +52,19 @@ while [ 1 ]; do
   [ "x${cloud_manager}" = "x1" ] && CM_OPTS="--cloud-manager"
   [ "x${deploy}" != "x" ] && DEPLOY_OPTS="--deploy"
   [ ${mqtt} ] && MQTT_OPTS="--mqtt" && MQTT_A_OPTS=--mqtt-announce && MQTT_D_OPTS=--mqtt-discovery
-  [ ${product} ] || product=all
+  if [ "${product}" ]; then
+    P_OPTS=
+    for p in ${product}; do
+      P_OPTS="${P_OPTS} -p $p"
+    done
+  else
+    P_OPTS="-p all"
+  fi
   cd /opt/eva
   rm -rf runtime/*_notify.d runtime/*_remote_*.d
   bash ${bash_debug_opts} ./easy-setup --skip-check --auto --supervisor \
     ${AUTO_OPTS} ${MQTT_A_OPTS} ${MQTT_D_OPTS} ${MQTT_OPTS} ${mqtt} \
-    ${LINK_OPTS} -p ${product} ${CM_OPTS} ${DEPLOY_OPTS} ${deploy}
+    ${LINK_OPTS} ${P_OPTS} ${CM_OPTS} ${DEPLOY_OPTS} ${deploy}
   result=$?
   if [ ${result} -eq 0 ]; then
       # create install flag
