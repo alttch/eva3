@@ -440,7 +440,7 @@ equipment. To get a list of these commands, execute:
 
     eva uc phi exec <phi_id> help
 
-Example: PHI module **dae_ro16_modbus** has a command to change ModBus unit ID
+Example: PHI module **dae_ro16_modbus** has a command to change Modbus unit ID
 of the hardware equipment. Let's change unit ID to *5*:
 
 .. code-block:: bash

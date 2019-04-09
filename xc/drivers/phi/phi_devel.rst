@@ -390,10 +390,10 @@ below:
 All I2C/SMBus exceptions, timeouts and retries should be handled by the code of
 your PHI.
 
-Working with ModBus
+Working with Modbus
 ===================
 
-Working with ModBus is pretty easy. PHIs don't need to care about the ModBus
+Working with Modbus is pretty easy. PHIs don't need to care about the Modbus
 connection and data exchange at all, everything is managed by **eva.uc.modbus**
 module.
 
@@ -405,7 +405,7 @@ module.
     @phi_constructor
     def __init__(self, **kwargs):
         # ....
-        # it's recommended to force aao_get in ModBus PHI to let it read states
+        # it's recommended to force aao_get in Modbus PHI to let it read states
         # with one modbus request
         self.aao_get = True
         self.modbus_port = self.phi_cfg.get('port')
@@ -479,7 +479,7 @@ Methods available:
     @phi_constructor
     def __init__(self, **kwargs):
         # ....
-        # it's recommended to force aao_get in ModBus PHI to let it read states
+        # it's recommended to force aao_get in Modbus PHI to let it read states
         # with one modbus request
         self.owfs_bus = self.phi_cfg.get('owfs')
         # check in constructor if the specified modbus port is defined
@@ -580,12 +580,12 @@ Let's deal with an equipment which has MQTT topic *topic/POWER* with values
         # then handle PHI event
         handle_phi_event(self, 1, self.get())
 
-Working with ModBus slave memory space
+Working with Modbus slave memory space
 ======================================
 
-Universal Controller can perform basic data processing as ModBus slave, custom
+Universal Controller can perform basic data processing as Modbus slave, custom
 PHI can do this more flexible. E.g. there's temperature sensor, which reports
-its value multiplied by 100. As ModBus registers don't support floats, custom
+its value multiplied by 100. As Modbus registers don't support floats, custom
 PHI module can listen to the register and automatically divide value by 100
 before sending update to UC item.
 
@@ -601,9 +601,9 @@ independently.
     # ....
 
     def start(self):
-        # watch changes of ModBus slave register
+        # watch changes of Modbus slave register
         # addr - value from 0 to 9999
-        # self.process_modbus - function to process ModBus data
+        # self.process_modbus - function to process Modbus data
         # register - 'h' for holding (default), 'i' for input,
         #            'c' for coil and 'd' for discrete input
         modbus.register_handler(addr, self.process_modbus, register='h')
@@ -613,7 +613,7 @@ independently.
         modbus.unregister_handler(addr, self.process_modbus, register='h')
 
     def process_modbus(self, addr, values):
-        # the function is called as soon as watched ModBus register is changed
+        # the function is called as soon as watched Modbus register is changed
         # parameters: addr - memory address, values - values written (list)
         #
         # values of holding and input registers are arrays of 2-byte integers
@@ -628,7 +628,7 @@ independently.
         # process the data
         # ...
 
-PHI can also manipulate data in ModBus slave memory blocks manually, to do this
+PHI can also manipulate data in Modbus slave memory blocks manually, to do this
 use functions:
 
 .. code-block:: python
@@ -699,7 +699,7 @@ requires test scenario file, which may contain the following functions:
 
 * **nodebug()** turn off debug mode
 
-* **modbus(params)** create virtual ModBus port with ID *default*
+* **modbus(params)** create virtual Modbus port with ID *default*
 
 * **load(phi_mod, phi_cfg=None)** load PHI module for tests. PHI cfg may be
   specified either as string or as dictionary

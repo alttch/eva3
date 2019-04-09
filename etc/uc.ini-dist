@@ -48,7 +48,7 @@ timeout = 5
 ; layout (simple or enterprise)
 layout = enterprise
 
-; reactor thread pool size (used by ModBus slave and some utility workers)
+; reactor thread pool size (used by Modbus slave and some utility workers)
 ;reactor_thread_pool = 15
 
 ; exec commands before/after config/db save,

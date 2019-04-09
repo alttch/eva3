@@ -957,19 +957,19 @@ class UC_API(GenericAPI):
     @api_need_master
     def create_modbus_port(self, **kwargs):
         """
-        create virtual ModBus port
+        create virtual Modbus port
 
-        Creates virtual :doc:`ModBus port</modbus>` with the specified
+        Creates virtual :doc:`Modbus port</modbus>` with the specified
         configuration.
 
-        ModBus params should contain the configuration of hardware ModBus port.
+        Modbus params should contain the configuration of hardware Modbus port.
         The following hardware port types are supported:
 
-        * **tcp** , **udp** ModBus protocol implementations for TCP/IP
+        * **tcp** , **udp** Modbus protocol implementations for TCP/IP
             networks. The params should be specified as:
             *<protocol>:<host>[:port]*, e.g.  *tcp:192.168.11.11:502*
 
-        * **rtu**, **ascii**, **binary** ModBus protocol implementations for
+        * **rtu**, **ascii**, **binary** Modbus protocol implementations for
             the local bus connected with USB or serial port. The params should
             be specified as:
             *<protocol>:<device>:<speed>:<data>:<parity>:<stop>* e.g.
@@ -979,15 +979,15 @@ class UC_API(GenericAPI):
             k: .master
             .i: virtual port ID which will be used later in
                 :doc:`PHI</drivers>` configurations, required
-            p: ModBus params
+            p: Modbus params
 
         Optional:
-            l: lock port on operations, which means to wait while ModBus port
+            l: lock port on operations, which means to wait while Modbus port
                 is used by other controller thread (driver command)
-            t: ModBus operations timeout (in seconds, default: default timeout)
+            t: Modbus operations timeout (in seconds, default: default timeout)
             r: retry attempts for each operation (default: no retries)
             d: delay between virtual port operations (default: 20ms)
-            save: save ModBus port config after creation
+            save: save Modbus port config after creation
 
         Returns:
             If port with the selected ID is already created, error is not
@@ -1003,9 +1003,9 @@ class UC_API(GenericAPI):
     @api_need_master
     def destroy_modbus_port(self, **kwargs):
         """
-        delete virtual ModBus port
+        delete virtual Modbus port
 
-        Deletes virtual :doc:`ModBus port</modbus>`.
+        Deletes virtual :doc:`Modbus port</modbus>`.
 
         Args:
             k: .master
@@ -1020,7 +1020,7 @@ class UC_API(GenericAPI):
     @api_need_master
     def list_modbus_ports(self, **kwargs):
         """
-        list virtual ModBus ports
+        list virtual Modbus ports
 
         Args:
             k: .master
@@ -1033,7 +1033,7 @@ class UC_API(GenericAPI):
     @api_need_master
     def get_modbus_port(self, **kwargs):
         """
-        get virtual ModBus port configuration
+        get virtual Modbus port configuration
 
         Args:
             k: .master
@@ -1046,14 +1046,14 @@ class UC_API(GenericAPI):
     @api_need_master
     def test_modbus_port(self, **kwargs):
         """
-        test virtual ModBus port
+        test virtual Modbus port
 
-        Verifies virtual :doc:`ModBus port</modbus>` by calling connect()
-        ModBus client method.
+        Verifies virtual :doc:`Modbus port</modbus>` by calling connect()
+        Modbus client method.
 
         .. note::
 
-            As ModBus UDP doesn't require a port to be connected, API call
+            As Modbus UDP doesn't require a port to be connected, API call
             always returns success unless the port is locked.
 
         Args:

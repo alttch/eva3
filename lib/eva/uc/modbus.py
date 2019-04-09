@@ -180,7 +180,7 @@ def register_handler(addr, f, register='h'):
     """
     slave_registers[register].registerEventHandler(addr, f)
     logging.debug(
-        'registered ModBus slave handler: {}, addr: {}, registers: {}'.format(
+        'registered Modbus slave handler: {}, addr: {}, registers: {}'.format(
             f, addr, register))
 
 
@@ -198,7 +198,7 @@ def unregister_handler(addr, f, register='h'):
     """
     slave_registers[register].unregisterEventHandler(addr, f)
     logging.debug(
-        'unregistered ModBus slave handler: {}, addr: {}, registers: {}'.format(
+        'unregistered Modbus slave handler: {}, addr: {}, registers: {}'.format(
             f, addr, register))
 
 
@@ -336,7 +336,7 @@ def start():
                 address=(v['h'], v['p']),
                 defer_reactor_run=True)
         except:
-            logging.error('Unable to start ModBus slave tcp:{}:{}'.format(
+            logging.error('Unable to start Modbus slave tcp:{}:{}'.format(
                 v['h'], v['p']))
             eva.core.log_traceback()
     for v in config.slave['udp']:
@@ -347,7 +347,7 @@ def start():
                 address=(v['h'], v['p']),
                 defer_reactor_run=True)
         except:
-            logging.error('Unable to start ModBus slave udp:{}:{}'.format(
+            logging.error('Unable to start Modbus slave udp:{}:{}'.format(
                 v['h'], v['p']))
             eva.core.log_traceback()
     for v in config.slave['serial']:
@@ -363,7 +363,7 @@ def start():
                 framer=slave_framer[v['f']],
                 defer_reactor_run=True)
         except:
-            logging.error('Unable to start ModBus slave, port {}'.format(
+            logging.error('Unable to start Modbus slave, port {}'.format(
                 v['p']))
             eva.core.log_traceback()
 
@@ -628,7 +628,7 @@ def append_serial_slave(c):
         except:
             pass
         if framer not in slave_framer:
-            raise Exception('Invalid ModBus slave framer: {}'.format(framer))
+            raise Exception('Invalid Modbus slave framer: {}'.format(framer))
         config.slave['serial'].append({
             'a': a,
             'p': port,

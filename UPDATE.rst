@@ -8,7 +8,7 @@ What's new
 * Cloud support (MQTT node autodiscovery)
 * Speed and stability improvements
 * OWFS support
-* ModBus slave
+* Modbus slave
 
 Complete change log: https://get.eva-ics.com/3.2.0/stable/CHANGELOG.html
 

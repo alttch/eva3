@@ -852,23 +852,23 @@ Parameters:
 
 .. _ucapi_restful_cat_modbus:
 
-ModBus ports
+Modbus ports
 ============
 
 
 
 .. _ucapi_restful_create_modbus_port:
 
-create virtual ModBus port
+create virtual Modbus port
 --------------------------
 
-Creates virtual :doc:`ModBus port</modbus>` with the specified configuration.
+Creates virtual :doc:`Modbus port</modbus>` with the specified configuration.
 
-ModBus params should contain the configuration of hardware ModBus port. The following hardware port types are supported:
+Modbus params should contain the configuration of hardware Modbus port. The following hardware port types are supported:
 
-* **tcp** , **udp** ModBus protocol implementations for TCP/IP     networks. The params should be specified as:     *<protocol>:<host>[:port]*, e.g.  *tcp:192.168.11.11:502*
+* **tcp** , **udp** Modbus protocol implementations for TCP/IP     networks. The params should be specified as:     *<protocol>:<host>[:port]*, e.g.  *tcp:192.168.11.11:502*
 
-* **rtu**, **ascii**, **binary** ModBus protocol implementations for     the local bus connected with USB or serial port. The params should     be specified as:     *<protocol>:<device>:<speed>:<data>:<parity>:<stop>* e.g.     *rtu:/dev/ttyS0:9600:8:E:1*
+* **rtu**, **ascii**, **binary** Modbus protocol implementations for     the local bus connected with USB or serial port. The params should     be specified as:     *<protocol>:<device>:<speed>:<data>:<parity>:<stop>* e.g.     *rtu:/dev/ttyS0:9600:8:E:1*
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/create_modbus_port.rest
@@ -877,15 +877,15 @@ ModBus params should contain the configuration of hardware ModBus port. The foll
 Parameters:
 
 * **API Key** API key with *master* permissions
-* **p** ModBus params
+* **p** Modbus params
 
 Optionally:
 
-* **l** lock port on operations, which means to wait while ModBus port is used by other controller thread (driver command)
-* **t** ModBus operations timeout (in seconds, default: default timeout)
+* **l** lock port on operations, which means to wait while Modbus port is used by other controller thread (driver command)
+* **t** Modbus operations timeout (in seconds, default: default timeout)
 * **r** retry attempts for each operation (default: no retries)
 * **d** delay between virtual port operations (default: 20ms)
-* **save** save ModBus port config after creation
+* **save** save Modbus port config after creation
 
 Returns:
 
@@ -894,10 +894,10 @@ If port with the selected ID is already created, error is not returned and port 
 
 .. _ucapi_restful_destroy_modbus_port:
 
-delete virtual ModBus port
+delete virtual Modbus port
 --------------------------
 
-Deletes virtual :doc:`ModBus port</modbus>`.
+Deletes virtual :doc:`Modbus port</modbus>`.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/destroy_modbus_port.rest
@@ -910,7 +910,7 @@ Parameters:
 
 .. _ucapi_restful_get_modbus_port:
 
-get virtual ModBus port configuration
+get virtual Modbus port configuration
 -------------------------------------
 
 
@@ -926,7 +926,7 @@ Parameters:
 
 .. _ucapi_restful_list_modbus_ports:
 
-list virtual ModBus ports
+list virtual Modbus ports
 -------------------------
 
 
@@ -942,14 +942,14 @@ Parameters:
 
 .. _ucapi_restful_test_modbus_port:
 
-test virtual ModBus port
+test virtual Modbus port
 ------------------------
 
-Verifies virtual :doc:`ModBus port</modbus>` by calling connect() ModBus client method.
+Verifies virtual :doc:`Modbus port</modbus>` by calling connect() Modbus client method.
 
 .. note::
 
-    As ModBus UDP doesn't require a port to be connected, API call     always returns success unless the port is locked.
+    As Modbus UDP doesn't require a port to be connected, API call     always returns success unless the port is locked.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/test_modbus_port.rest

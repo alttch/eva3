@@ -53,7 +53,7 @@ UC
     * new API functions: list_device_tpl, set_driver_prop, set_phi_prop
     * 1-Wire OWFS support (virtual buses, PHIs), OWFS API functions
 
-    * ModBus slave support
+    * Modbus slave support
     * Driver API v4
 
 LM
@@ -163,7 +163,7 @@ UC
     * new uc-cmd cli
     * old uc-cmd renamed to uc-api
     * UC drivers: logical to physical (LPI) and physical (PHI) interfaces
-    * native ModBus support (drivers only)
+    * native Modbus support (drivers only)
     * device templates
     * new function "state_history" in UC API
     * EVA_ITEM_OID var in the environment of UC scripts

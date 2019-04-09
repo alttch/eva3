@@ -1,31 +1,31 @@
-ModBus
+Modbus
 ******
 
-:doc:`/uc/uc` provides native support of `ModBus <http://www.modbus.org/>`_
-protocol for ModBus :doc:`physical interfaces (PHIs)</drivers>`. Core support
+:doc:`/uc/uc` provides native support of `Modbus <http://www.modbus.org/>`_
+protocol for Modbus :doc:`physical interfaces (PHIs)</drivers>`. Core support
 is provided with `pymodbus <https://pymodbus.readthedocs.io>`_ Python module,
 but with additional functionality, such as bus locking, automatic retry
 attempts, virtual ports for drivers etc.
 
-:doc:`/uc/uc` works as ModBus master, connection links to all slave devices
+:doc:`/uc/uc` works as Modbus master, connection links to all slave devices
 should be defined as virtual ports. After that, defined virtual ports and
-ModBus unit IDs should be set in corresponding :doc:`PHI modules</drivers>`
+Modbus unit IDs should be set in corresponding :doc:`PHI modules</drivers>`
 load configurations.
 
-Defining ModBus virtual port
+Defining Modbus virtual port
 ============================
 
-Before using any ModBus PHI, you must define ModBus virtual port. ModBus PHIs
-work with ModBus virtual ports only, while UC handles all hardware calls and
+Before using any Modbus PHI, you must define Modbus virtual port. Modbus PHIs
+work with Modbus virtual ports only, while UC handles all hardware calls and
 responses.
 
-List of the defined ModBus virtual ports can be obtained with command:
+List of the defined Modbus virtual ports can be obtained with command:
 
 .. code-block:: bash
 
     eva uc modbus list
 
-To create new ModBus virtual port, execute the following command:
+To create new Modbus virtual port, execute the following command:
 
 .. code-block:: bash
 
@@ -33,35 +33,35 @@ To create new ModBus virtual port, execute the following command:
 
 where:
 
-* **-l** lock port on operations, which means to wait while ModBus port is
+* **-l** lock port on operations, which means to wait while Modbus port is
   used by another controller thread (driver command)
 
-* **-t SEC** ModBus operations timeout (in seconds, default: default timeout)
+* **-t SEC** Modbus operations timeout (in seconds, default: default timeout)
 
 * **-r RETRIES** retry attempts for each operation (default: no retries)
 
 * **-d SEC** delay between virtual port operations (default: 20ms)
 
-* **-y** save ModBus port config after creation
+* **-y** save Modbus port config after creation
 
 * **ID** virtual port ID which will be used later in :doc:`PHI</drivers>`
   configurations
 
-* **PARAMS** ModBus params
+* **PARAMS** Modbus params
 
-ModBus params should contain the configuration of hardware ModBus port. The
+Modbus params should contain the configuration of hardware Modbus port. The
 following hardware port types are supported:
 
-* **tcp** , **udp** ModBus protocol implementations for TCP/IP networks. The
+* **tcp** , **udp** Modbus protocol implementations for TCP/IP networks. The
   params should be specified as: *<protocol>:<host>[:port]*, e.g.
   *tcp:192.168.11.11:502*
 
-* **rtu**, **ascii**, **binary** ModBus protocol implementations for the local
+* **rtu**, **ascii**, **binary** Modbus protocol implementations for the local
   bus connected with USB or serial port. The params should be specified as:
   *<protocol>:<device>:<speed>:<data>:<parity>:<stop>* e.g.
   *rtu:/dev/ttyS0:9600:8:E:1*
 
-As soon as the port is created, it can be used by PHI. Let's create ModBus TCP
+As soon as the port is created, it can be used by PHI. Let's create Modbus TCP
 port and load **dae_ro16_modbus** PHI module:
 
 .. code-block:: bash
@@ -71,25 +71,25 @@ port and load **dae_ro16_modbus** PHI module:
 
 As the result, controller creates a :doc:`driver</drivers>` *r1.default*
 which can be set to :doc:`item</items>` to work with any relay port of unit #1
-of the ModBus relay 192.168.11.11 connected via TCP.
+of the Modbus relay 192.168.11.11 connected via TCP.
 
 .. warning::
 
-    UC will grant ModBus port access to PHI only if it has enough timeout to
+    UC will grant Modbus port access to PHI only if it has enough timeout to
     wait for the longest possible call. It means operation timeout
     (**action_timeout**, **update_timeout**) in :doc:`item</items>` should be
     greater than *modbus_port_timeout*(1+modbus_port_retries)*. If the
-    command max timeout is less than this value, attempts to access ModBus
+    command max timeout is less than this value, attempts to access Modbus
     virtual port return an error.
 
-If you need to change ModBus port params or options, you can always create new
-ModBus virtual port with the same ID, without deleting the previous one. Port
+If you need to change Modbus port params or options, you can always create new
+Modbus virtual port with the same ID, without deleting the previous one. Port
 configuration and options will be overwritten.
 
-Testing ModBus virtual port
+Testing Modbus virtual port
 ===========================
 
-To test defined ModBus virtual port, execute the following command:
+To test defined Modbus virtual port, execute the following command:
 
 .. code-block:: bash
 
@@ -97,17 +97,17 @@ To test defined ModBus virtual port, execute the following command:
     # e.g.
     eva uc modbus test p1
 
-The command connects UC to ModBus port and checks the operation status.
+The command connects UC to Modbus port and checks the operation status.
 
 .. note::
 
-    As ModBus UDP doesn't require a port to be connected, **test** command
+    As Modbus UDP doesn't require a port to be connected, **test** command
     always return "OK" result.
 
-Deleting ModBus virtual port
+Deleting Modbus virtual port
 ============================
 
-To delete ModBus virtual port, execute the command:
+To delete Modbus virtual port, execute the command:
 
 .. code-block:: bash
 
@@ -120,20 +120,20 @@ check this manually before deleting it.
 
 .. _modbus_slave:
 
-ModBus slave
+Modbus slave
 ============
 
-:doc:`/uc/uc` can work as ModBus slave. Ports, the slave listens to, are set in
-*etc/uc.ini*. ModBus over TCP, UDP and serial ports (rtu/ascii/binary) is
+:doc:`/uc/uc` can work as Modbus slave. Ports, the slave listens to, are set in
+*etc/uc.ini*. Modbus over TCP, UDP and serial ports (rtu/ascii/binary) is
 supported.
 
 Controller uses single memory space for all ports it listens to, ports can have
-different ModBus addresses. Memory space has 10 000 holding registers, 10 000
+different Modbus addresses. Memory space has 10 000 holding registers, 10 000
 coils, 10 000 input registers and 10 000 discrete inputs.
 
 :ref:`Units<unit>` can listen to memory space changes and automatically update
-their *status* and *value* as soon as ModBus register is being changed. To
-activate state updates via ModBus slave memory space, set unit
+their *status* and *value* as soon as Modbus register is being changed. To
+activate state updates via Modbus slave memory space, set unit
 **modbus_status** and/or **modbus_value** properties to the corresponding
 registers, using before the number **c** for coil and **h** for holding
 register, e.g. *c5* for 5th coil register, *h50* for 50th holding register etc.

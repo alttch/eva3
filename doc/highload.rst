@@ -37,7 +37,7 @@ To use EVA ICS in high-load environments, remember the following:
 * If HTTP API respond too slow, try increasing value of *thread_pool* option in
   [webapi] config section.
 
-* ModBus slave and some utility workers use twisted reactor thread pool. In
+* Modbus slave and some utility workers use twisted reactor thread pool. In
   case the software reacts or performs regular tasks slowly, but system load is
   still low, try increasing value of *reactor_thread_pool* option in [server]
   section.
