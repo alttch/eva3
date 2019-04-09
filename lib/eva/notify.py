@@ -1032,8 +1032,12 @@ class GenericMQTTNotifier(GenericNotifier):
         self.keyfile = keyfile
         if ca_certs:
             try:
+                if certfile and keyfile:
+                    cf, kf = certfile, keyfile
+                else:
+                    cf, kf = None, None
                 self.mq.tls_set(
-                    ca_certs=ca_certs, certfile=certfile, keyfile=keyfile)
+                    ca_certs=ca_certs, certfile=cf, keyfile=kf)
             except:
                 eva.core.log_traceback(notifier=True)
                 self.log_error(message='can not load ssl files')
