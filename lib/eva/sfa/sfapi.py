@@ -205,9 +205,9 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         Args:
             k:
             .i: unit id
-            s: desired unit status
 
         Optional:
+            s: desired unit status
             v: desired unit value
             w: wait for the completion for the specified number of seconds
             .u: action UUID (will be auto generated if none specified)
