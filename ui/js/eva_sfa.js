@@ -251,14 +251,14 @@ function eva_sfa_state(oid) {
 /**
  * Get expiration time left (in seconds)
  *
- * @param lvar_id - item id in format type:full_id, i.e. lvar:timers/timer1
+ * @param lvar_id - item id in format type:full_id, e.g. lvar:timers/timer1
  *
- * @returns - seconds to expiration
+ * @returns - seconds to expiration, -1 if expired, -2 if stopped
  */
 
 function eva_sfa_expires_in(lvar_id) {
   // get item
-  var i = eva_sfa_state('lvar:' + lvar_id);
+  var i = eva_sfa_state(lvar_id.startsWith('lvar:') ? '' : 'lvar:' + lvar_id);
   // if no such item
   if (i === undefined) return undefined;
   // if item has no expiration or expiration is set to zero
