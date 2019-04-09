@@ -1414,7 +1414,7 @@ class GenericMQTTNotifier(GenericNotifier):
             logging.debug('.Testing mqtt notifier %s (%s:%u)' % \
                     (self.notifier_id,self.host, self.port))
             self.check_connection()
-            result = self.mq.publish(self.pfx + 'test', 1, qos=2, retain=False)
+            result = self.mq.publish(self.pfx + 'test', 1, qos=self.qos['system'], retain=False)
             return eva.core.wait_for(result.is_published, self.get_timeout())
         except:
             eva.core.log_traceback(notifier=True)
