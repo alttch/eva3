@@ -74,7 +74,7 @@ function usage {
     echo " --mqtt-key FILE          MQTT authorization key"
     echo " --mqtt-announce          Enable MQTT announces and API calls via MQTT"
     echo " --mqtt-discovery         Enable autodiscovery of other nodes via MQTT"
-    echo " --mqtt-disable-retain    Disable MQTT retain (required for AWS and Azure IoT)"
+    echo " --mqtt-disable-retain    Disable MQTT retain (to work with AWS and Azure IoT)"
     echo
     echo " -p {uc|lm|sfa|all}       specify which controller to set up or all, may be used"
     echo "                          several times"
@@ -190,7 +190,7 @@ function create_notifier {
             BATCH="$BATCH;set eva_1 certfile $MQTT_CERT"
         fi
         if [ "x$MQTT_KEY" != "x" ]; then
-            BATCH="$BATCH;set eva_1 key $MQTT_KEY"
+            BATCH="$BATCH;set eva_1 keyfile $MQTT_KEY"
         fi
         BATCH="$BATCH;subscribe state eva_1 -p '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
@@ -199,7 +199,7 @@ function create_notifier {
             BATCH="$BATCH;set eva_1 announce_interval 30"
         fi
         [ "x$MQTT_DISCOVERY_ENABLED" == "x1" ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
-        [ "x$MQTT_NO_RETAIN" == "x1" ] BATCH="$BATCH;set eva_1 retain_enabled"
+        [ "x$MQTT_NO_RETAIN" == "x1" ] && BATCH="$BATCH;set eva_1 retain_enabled 0"
         BATCH="$BATCH;test eva_1"
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
@@ -355,7 +355,7 @@ function askMQTT {
                 MQTT_ANNOUNCE_ENABLED=$VALUE
                 askYN "Enable autodiscovery of other nodes via MQTT"
                 MQTT_DISCOVERY_ENABLED=$VALUE
-                askYN "Disable MQTT retain topics (required for AWS and Azure IoT)" N
+                askYN "Disable MQTT retain topics (to work with AWS and Azure IoT)" N
                 MQTT_NO_RETAIN=$VALUE
             fi
             return

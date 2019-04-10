@@ -37,7 +37,7 @@ from types import SimpleNamespace
 
 version = __version__
 
-max_shutdown_time = 15
+max_shutdown_time = 30
 
 default_action_cleaner_interval = 60
 
