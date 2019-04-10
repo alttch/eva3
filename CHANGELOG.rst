@@ -12,6 +12,7 @@ Common
 
     * EVA ICS now loads 3rd party libraries from virtualenv which increases
       system stability as only tested version of libraries are used.
+    * Support for AWS and Azure IoT
 
 3.2.0 (2019-04-02)
 ==================

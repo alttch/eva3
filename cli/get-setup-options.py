@@ -62,5 +62,6 @@ if n:
     print('MQTT_CAFILE=' + data.get('ca_certs', ''))
     print('MQTT_CERT=' + data.get('certfile', ''))
     print('MQTT_KEY=' + data.get('keyfile', ''))
+    print('MQTT_NO_RETAIN=' + ('' if data.get('retain_enabled') else '1'))
     print('MQTT_ANNOUNCE_ENABLED=' +
           ('1' if data.get('announce_interval', 0) > 0 else '0'))

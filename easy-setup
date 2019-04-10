@@ -24,6 +24,7 @@ MQTT_CERT=
 MQTT_KEY=
 MQTT_ANNOUNCE_ENABLED=0
 MQTT_DISCOVERY_ENABLED=0
+MQTT_NO_RETAIN=0
 LINK=0
 SKIP_ROOT=0
 BENCHMARK=0
@@ -73,6 +74,7 @@ function usage {
     echo " --mqtt-key FILE          MQTT authorization key"
     echo " --mqtt-announce          Enable MQTT announces and API calls via MQTT"
     echo " --mqtt-discovery         Enable autodiscovery of other nodes via MQTT"
+    echo " --mqtt-disable-retain    Disable MQTT retain (required for AWS and Azure IoT)"
     echo
     echo " -p {uc|lm|sfa|all}       specify which controller to set up or all, may be used"
     echo "                          several times"
@@ -197,6 +199,7 @@ function create_notifier {
             BATCH="$BATCH;set eva_1 announce_interval 30"
         fi
         [ "x$MQTT_DISCOVERY_ENABLED" == "x1" ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
+        [ "x$MQTT_NO_RETAIN" == "x1" ] BATCH="$BATCH;set eva_1 retain_enabled"
         BATCH="$BATCH;test eva_1"
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
@@ -352,6 +355,8 @@ function askMQTT {
                 MQTT_ANNOUNCE_ENABLED=$VALUE
                 askYN "Enable autodiscovery of other nodes via MQTT"
                 MQTT_DISCOVERY_ENABLED=$VALUE
+                askYN "Disable MQTT retain topics (required for AWS and Azure IoT)" N
+                MQTT_NO_RETAIN=$VALUE
             fi
             return
         fi
@@ -437,6 +442,10 @@ do
         ;;
         --mqtt-discovery)
             MQTT_DISCOVERY_ENABLED=1
+            shift
+        ;;
+      --mqtt-disable-retain)
+            MQTT_NO_RETAIN=1
             shift
         ;;
         -u)
