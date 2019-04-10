@@ -1,15 +1,17 @@
-{ stdenv, fetchurl, pkgconfig }:
+{ stdenv, fetchFromGitHub, autoconf, automake, pkgconfig, libtool }:
 
 stdenv.mkDerivation rec {
   version = "3.2p1";
   name = "libow-${version}";
 
-  src = fetchurl {
-    url = "http://downloads.sourceforge.net/project/owfs/owfs/${version}/owfs-${version}.tar.gz";
-    sha256 = "1sijb1s1n485gxkz798kbrwpdqyyfc6paznjgiqrm5invcjhn8ik";
+  src = fetchFromGitHub {
+    owner = "owfs";
+    repo = "owfs";
+    rev = "v${version}";
+    sha256 = "17jhhvlqzndf7q3xnb8bjf4j0j905c420cbxabwpz8xac3z62vb8";
   };
 
-  nativeBuildInputs = [ pkgconfig ];
+  nativeBuildInputs = [ autoconf automake pkgconfig ];
 
   meta = with stdenv.lib; {
     description = "1-Wire File System full library";
@@ -18,6 +20,10 @@ stdenv.mkDerivation rec {
     maintainers = with maintainers; [ disserman ];
     platforms = platforms.unix;
   };
+
+  buildInputs = [ libtool ];
+
+  preConfigure = "./bootstrap";
 
   configureFlags = [
       "--disable-owtcl"
@@ -35,4 +41,3 @@ stdenv.mkDerivation rec {
       "--disable-owexternal"
     ];
 }
-
