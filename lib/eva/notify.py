@@ -1036,8 +1036,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     cf, kf = certfile, keyfile
                 else:
                     cf, kf = None, None
-                self.mq.tls_set(
-                    ca_certs=ca_certs, certfile=cf, keyfile=kf)
+                self.mq.tls_set(ca_certs=ca_certs, certfile=cf, keyfile=kf)
             except:
                 eva.core.log_traceback(notifier=True)
                 self.log_error(message='can not load ssl files')
@@ -1414,7 +1413,8 @@ class GenericMQTTNotifier(GenericNotifier):
             logging.debug('.Testing mqtt notifier %s (%s:%u)' % \
                     (self.notifier_id,self.host, self.port))
             self.check_connection()
-            result = self.mq.publish(self.pfx + 'test', 1, qos=self.qos['system'], retain=False)
+            result = self.mq.publish(
+                self.pfx + 'test', 1, qos=self.qos['system'], retain=False)
             return eva.core.wait_for(result.is_published, self.get_timeout())
         except:
             eva.core.log_traceback(notifier=True)
