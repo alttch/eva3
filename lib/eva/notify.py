@@ -1003,6 +1003,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  api_enabled=None,
                  discovery_enabled=None,
                  announce_interval=None,
+                 retain_enabled=True,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
@@ -1030,6 +1031,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.ca_certs = ca_certs
         self.certfile = certfile
         self.keyfile = keyfile
+        self.retain_enabled = retain_enabled
         if ca_certs:
             try:
                 if certfile and keyfile:
@@ -1312,8 +1314,11 @@ class GenericMQTTNotifier(GenericNotifier):
         if self.qos and subject in self.qos: qos = self.qos[subject]
         else: qos = 1
         if subject == 'state':
-            if retain is not None: _retain = retain
-            else: _retain = True
+            if self.retain_enabled:
+                if retain is not None: _retain = retain
+                else: _retain = True
+            else:
+                _retain = False
             for i in data:
                 for k in i:
                     if not k in ['id', 'group', 'type', 'full_id', 'oid']:
@@ -1321,7 +1326,7 @@ class GenericMQTTNotifier(GenericNotifier):
                                 i['group'] + '/' + i['id'] + '/' + k, i[k], qos,
                                     retain = _retain)
         elif subject == 'action':
-            if retain is not None: _retain = retain
+            if retain is not None and self.retain_enabled: _retain = retain
             else: _retain = False
             for i in data:
                 self.mq.publish(self.pfx + i['item_type'] + '/' + \
@@ -1329,7 +1334,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     jsonpickle.encode(i, unpicklable=unpicklable),
                     qos, retain = _retain)
         elif subject == 'log':
-            if retain is not None: _retain = retain
+            if retain is not None and self.retain_enabled: _retain = retain
             else: _retain = False
             for i in data:
                 self.mq.publish(
@@ -1444,6 +1449,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if self.ca_certs or props: d['ca_certs'] = self.ca_certs
         if self.certfile or props: d['certfile'] = self.certfile
         if self.keyfile or props: d['keyfile'] = self.keyfile
+        d['retain_enabled'] = self.retain_enabled
         d.update(super().serialize(props=props))
         return d
 
@@ -1526,6 +1532,11 @@ class GenericMQTTNotifier(GenericNotifier):
         elif prop == 'password':
             self.password = value
             return True
+        elif prop == 'retain_enabled':
+            v = val_to_boolean(value)
+            if v is None: return False
+            self.retain_enabled = v
+            return True
         elif prop == 'qos':
             if not value:
                 self._qos = None
@@ -1572,6 +1583,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  api_enabled=None,
                  discovery_enabled=None,
                  announce_interval=None,
+                 retain_enabled=True,
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
@@ -1589,6 +1601,7 @@ class MQTTNotifier(GenericMQTTNotifier):
             api_enabled=api_enabled,
             discovery_enabled=discovery_enabled,
             announce_interval=announce_interval,
+            retain_enabled=retain_enabled,
             ca_certs=ca_certs,
             certfile=certfile,
             keyfile=keyfile)
@@ -1743,6 +1756,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         api_enabled = ncfg.get('api_enabled', False)
         discovery_enabled = ncfg.get('discovery_enabled', False)
         announce_interval = ncfg.get('announce_interval', 0)
+        retain_enabled = ncfg.get('retain_enabled', True)
         n = MQTTNotifier(
             _notifier_id,
             host=host,
@@ -1757,6 +1771,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             api_enabled=api_enabled,
             discovery_enabled=discovery_enabled,
             announce_interval=announce_interval,
+            retain_enabled=retain_enabled,
             ca_certs=ca_certs,
             certfile=certfile,
             keyfile=keyfile)
