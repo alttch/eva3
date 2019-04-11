@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.1.2"
 __description__ = "Emulates 16-port relay"
 
 __equipment__ = 'virtual'
@@ -12,7 +12,7 @@ __lpi_default__ = 'basic'
 __features__ = ['port_get', 'port_set', 'aao_set', 'aao_get']
 __config_help__ = [{
     'name': 'default_status',
-    'help': 'ports status on load (default: -1)',
+    'help': 'ports status on load (default: 0)',
     'type': 'int',
     'required': False
 }]
@@ -36,7 +36,7 @@ class PHI(GenericPHI):
     @phi_constructor
     def __init__(self, **kwargs):
         d = self.phi_cfg.get('default_status')
-        if d is None: d = -1
+        if d is None: d = 0
         else:
             try:
                 d = int(d)
