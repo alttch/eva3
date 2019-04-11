@@ -1314,11 +1314,8 @@ class GenericMQTTNotifier(GenericNotifier):
         if self.qos and subject in self.qos: qos = self.qos[subject]
         else: qos = 1
         if subject == 'state':
-            if self.retain_enabled:
-                if retain is not None: _retain = retain
-                else: _retain = True
-            else:
-                _retain = False
+            if retain is not None and self.retain_enabled: _retain = retain
+            else: _retain = False
             for i in data:
                 dts = {'t': time.time()}
                 for k in i:
