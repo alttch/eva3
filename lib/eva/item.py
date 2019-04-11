@@ -309,6 +309,7 @@ class UpdatableItem(Item):
         self._modbus_allowed = True
         self._modbus_status_allowed = True
         self._expire_on_any = False
+        self.mqtt_update_timestamp = 0
 
     def update_config(self, data):
         if 'modbus_status' in data and \
@@ -1032,6 +1033,10 @@ class UpdatableItem(Item):
                 self.update_set_state(value=data)
             elif topic == self.item_type + '/' + self.full_id:
                 j = jsonpickle.decode(data)
+                t = j['t']
+                if t < self.mqtt_update_timestamp:
+                    return None
+                self.mqtt_update_timestamp = t
                 if 'status' in j:
                     s = j['status']
                 else:

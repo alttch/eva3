@@ -1320,7 +1320,7 @@ class GenericMQTTNotifier(GenericNotifier):
             else:
                 _retain = False
             for i in data:
-                dts = {}
+                dts = {'t': time.time()}
                 for k in i:
                     if not k in ['id', 'group', 'type', 'full_id', 'oid']:
                         dts[k] = i[k]
@@ -1333,6 +1333,7 @@ class GenericMQTTNotifier(GenericNotifier):
             if retain is not None and self.retain_enabled: _retain = retain
             else: _retain = False
             for i in data:
+                i['t'] = time.time()
                 self.mq.publish(self.pfx + i['item_type'] + '/' + \
                         i['item_group'] + '/' + i['item_id'] + '/action',
                     jsonpickle.encode(i, unpicklable=unpicklable),

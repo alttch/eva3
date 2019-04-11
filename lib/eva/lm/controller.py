@@ -316,11 +316,12 @@ def load_lvar_db_state(items, clean=False):
                 except:
                     eva.core.log_traceback()
                     items[d.id].status = 0
-                items[d.id].value = d.value
+                items[d.id].value = d.value if d.value != 'null' else ''
                 _db_loaded_ids.append(d.id)
                 logging.debug(
                     '{} state loaded, set_time={}, status={}, value="{}"'.
-                    format(d.id, d.set_time, d.status, d.value))
+                    format(d.id, items[d.id].set_time, items[d.id].status,
+                           items[d.id].value))
             else:
                 _db_to_clean_ids.append(d.id)
         for i, v in items.items():

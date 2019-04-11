@@ -317,13 +317,14 @@ def load_db_state(items, item_type, clean=False):
                 except:
                     eva.core.log_traceback()
                     items[d.id].status = 0
-                items[d.id].value = d.value
+                items[d.id].value = d.value if d.value != 'null' else ''
                 if item_type == 'U':
                     items[d.id].nstatus = items[d.id].status
-                    items[d.id].nvalue = d.value
+                    items[d.id].nvalue = items[d.id].value
                 _db_loaded_ids.append(d.id)
-                logging.debug('{} state loaded, status={}, value="{}"'.format(
-                    d.id, d.status, d.value))
+                logging.debug(
+                    '{}:{} state loaded, status={}, value="{}"'.format(
+                        item_type, d.id, items[d.id].status, items[d.id].value))
             else:
                 _db_to_clean_ids.append(d.id)
         for i, v in items.items():
