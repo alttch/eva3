@@ -24,6 +24,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.update_config(cfg)
         self.status = state['status']
         self.value = state.get('value')
+        self.mqtt_update_topics = ['']
 
     def notify(self, retain=None, skip_subscribed_mqtt=False):
         super().notify(skip_subscribed_mqtt=True)
@@ -61,26 +62,25 @@ class RemoteLVar(RemoteUpdatableItem):
 
     def __init__(self, remote_lm, state):
         super().__init__('lvar', remote_lm, state)
-        self.mqtt_update_topics.append('expires')
-        self.mqtt_update_topics.append('set_time')
 
     def mqtt_set_state(self, topic, data):
-        super().mqtt_set_state(topic, data)
-        try:
-            if topic.endswith('/expires'):
-                try:
-                    self.expires = float(data)
-                    self.notify()
-                except:
-                    pass
-            if topic.endswith('/set_time'):
-                try:
-                    self.set_time = float(data)
-                    self.notify()
-                except:
-                    pass
-        except:
-            eva.core.log_traceback()
+        j = super().mqtt_set_state(topic, data)
+        if j:
+            try:
+                if 'expires' in j:
+                    try:
+                        self.expires = float(j['expires'])
+                        self.notify()
+                    except:
+                        pass
+                if 'set_time' in j:
+                    try:
+                        self.set_time = float(j['set_time'])
+                        self.notify()
+                    except:
+                        pass
+            except:
+                eva.core.log_traceback()
 
     def serialize(self,
                   full=False,
@@ -105,9 +105,6 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
 
     def __init__(self, remote_uc, state):
         super().__init__('unit', remote_uc, state)
-        self.mqtt_update_topics.append('action_enabled')
-        self.mqtt_update_topics.append('nstatus')
-        self.mqtt_update_topics.append('nvalue')
         self.nstatus = self.status
         self.nvalue = self.value
         self.action_enabled = True
@@ -127,7 +124,7 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
                 eva.core.log_traceback()
                 return False
         if nvalue is not None:
-            if nvalue == '': nv = 'null'
+            if nvalue == '': nv = ''
             else: nv = nvalue
             if self.nvalue != nv:
                 self.nvalue = nv
@@ -137,17 +134,25 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
         return True
 
     def mqtt_set_state(self, topic, data):
-        super().mqtt_set_state(topic, data)
-        try:
-            if topic.endswith('/nstatus'):
-                self.update_nstate(nstatus=data)
-            elif topic.endswith('/nvalue'):
-                self.update_nstate(nvalue=data)
-            elif topic.endswith('/action_enabled'):
-                self.action_enabled = eva.tools.val_to_boolean(data)
-                self.notify()
-        except:
-            eva.core.log_traceback()
+        j = super().mqtt_set_state(topic, data)
+        if j:
+            try:
+                if 'nstatus' in j:
+                    s = j['nstatus']
+                else:
+                    s = None
+                if 'nvalue' in j:
+                    v = j['nvalue']
+                else:
+                    v = None
+                if s is not None or v is not None:
+                    self.update_nstate(nstatus=s, nvalue=v)
+                if 'action_enabled' in j:
+                    self.action_enabled = eva.tools.val_to_boolean(
+                        j['action_enabled'])
+                    self.notify()
+            except:
+                eva.core.log_traceback()
 
     def serialize(self,
                   full=False,
@@ -196,9 +201,6 @@ class RemoteCycle(RemoteUpdatableItem):
 
     def __init__(self, remote_lm, state):
         super().__init__('lcycle', remote_lm, state)
-        self.mqtt_update_topics.append('interval')
-        self.mqtt_update_topics.append('iterations')
-        self.mqtt_update_topics.append('avg')
 
     def update_config(self, cfg):
         super().update_config(cfg)
@@ -236,22 +238,32 @@ class RemoteCycle(RemoteUpdatableItem):
         super().notify(skip_subscribed_mqtt=True)
 
     def mqtt_set_state(self, topic, data):
-        super().mqtt_set_state(topic, data)
-        if topic.endswith('/interval'):
-            try:
-                self.interval = float(data)
+        j = super().mqtt_set_state(topic, data)
+        if j:
+            need_notify = False
+            if 'interval' in j:
+                try:
+                    d = float(j['interval'])
+                    if self.interval != d:
+                        self.interval = d
+                        need_notify = True
+                except:
+                    eva.core.log_traceback()
+            if 'iterations' in j:
+                try:
+                    d = int(j['iterations'])
+                    if self.iterations != d:
+                        self.iterations = d
+                        need_notify = True
+                except:
+                    eva.core.log_traceback()
+            if 'avg' in j:
+                try:
+                    d = float(j['avg'])
+                    if self.avg != d:
+                        self.avg = d
+                        need_notify = True
+                except:
+                    eva.core.log_traceback()
+            if need_notify:
                 self.notify()
-            except:
-                eva.core.log_traceback()
-        elif topic.endswith('/iterations'):
-            try:
-                self.iterations = int(data)
-                self.notify()
-            except:
-                eva.core.log_traceback()
-        elif topic.endswith('/avg'):
-            try:
-                self.avg = float(data)
-                self.notify()
-            except:
-                eva.core.log_traceback()

@@ -31,13 +31,14 @@ class LVar(eva.item.VariableItem):
             eva.lm.controller.save_lvar_state(self)
 
     def mqtt_set_state(self, topic, data):
-        super().mqtt_set_state(topic, data)
-        try:
-            if topic.endswith('/set_time'):
-                self.set_time = float(data)
-                self.notify(skip_subscribed_mqtt=True)
-        except:
-            eva.core.log_traceback()
+        j = super().mqtt_set_state(topic, data)
+        if j:
+            try:
+                if 'set_time' in j:
+                    self.set_time = float(j['set_time'])
+                    self.notify(skip_subscribed_mqtt=True)
+            except:
+                eva.core.log_traceback()
 
     def update_set_state(self,
                          status=None,
@@ -49,23 +50,24 @@ class LVar(eva.item.VariableItem):
             logging.critical('LVar::update_set_state locking broken')
             eva.core.critical()
             return False
-        t = self.set_time
-        _status = self.status
-        _value = self.value
-        if super().update_set_state(
-                status=status,
-                value=value,
-                from_mqtt=from_mqtt,
-                force_virtual=force_virtual):
-            if t != self.set_time:
-                self.notify(skip_subscribed_mqtt=from_mqtt)
-            self.prv_status = _status
-            self.prv_value = _value
-            eva.lm.controller.pdme(self)
+        try:
+            t = self.set_time
+            _status = self.status
+            _value = self.value
+            if super().update_set_state(
+                    status=status,
+                    value=value,
+                    from_mqtt=from_mqtt,
+                    force_virtual=force_virtual):
+                if t != self.set_time:
+                    self.notify(skip_subscribed_mqtt=from_mqtt)
+                self.prv_status = _status
+                self.prv_value = _value
+                eva.lm.controller.pdme(self)
+                return True
+            return False
+        finally:
             self.update_lock.release()
-            return True
-        self.update_lock.release()
-        return False
 
     def set_prop(self, prop, val=None, save=False):
         if super().set_prop(prop=prop, val=val, save=save):

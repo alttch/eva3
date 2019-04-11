@@ -29,7 +29,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
         self.action_always_exec = False
         self.auto_off = 0
         self.nstatus = 0
-        self.nvalue = 'null'
+        self.nvalue = ''
         self.last_action = 0
         self.auto_processor_active = False
         self.auto_processor = None
@@ -87,7 +87,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
 
     def create_action(self,
                       nstatus,
-                      nvalue='null',
+                      nvalue='',
                       priority=None,
                       action_uuid=None):
         return UnitAction(self, nstatus, nvalue, priority, action_uuid)
@@ -247,7 +247,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
 
     def action_may_run(self, action):
         nv = action.nvalue
-        if nv is None or nv == '': nv = 'null'
+        if nv is None: nv = ''
         return self.action_always_exec or \
             action.nstatus != self.status or \
             nv != self.value
@@ -263,7 +263,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
         if action.nvalue is not None:
             nvalue = str(action.nvalue)
         elif n2n:
-            nvalue = 'null'
+            nvalue = ''
         else:
             nvalue = None
         return (nstatus, nvalue)
@@ -327,7 +327,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
             if self.status != status: need_notify = True
             self.status = status
         if value is not None:
-            if value == '': v = 'null'
+            if value == '': v = ''
             else: v = value
             if self.value != v: need_notify = True
             self.value = v
@@ -335,7 +335,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
             if self.nstatus != nstatus: need_notify = True
             self.nstatus = nstatus
         if nvalue is not None:
-            if nvalue == '': nv = 'null'
+            if nvalue == '': nv = ''
             else: nv = nvalue
             if self.nvalue != nv: need_notify = True
             self.nvalue = nv
@@ -418,7 +418,7 @@ class UnitAction(eva.item.ItemAction):
 
     def action_env(self):
         if self.nvalue is not None: nvalue = self.nvalue
-        else: nvalue = 'null'
+        else: nvalue = ''
         e = {'EVA_NSTATUS': str(self.nstatus), 'EVA_NVALUE': str(nvalue)}
         e.update(super().action_env())
         return e

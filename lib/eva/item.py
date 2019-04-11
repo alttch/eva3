@@ -290,7 +290,7 @@ class UpdatableItem(Item):
         self.update_xc = None
         # default status: 0 - off, 1 - on, -1 - error
         self.status = 0
-        self.value = 'null'
+        self.value = ''
         self.set_time = time.time()
         self.expires = 0
         self.snmp_trap = None
@@ -298,7 +298,7 @@ class UpdatableItem(Item):
         self.mqtt_update = None
         self.mqtt_update_notifier = None
         self.mqtt_update_qos = 1
-        self.mqtt_update_topics = ['status', 'value']
+        self.mqtt_update_topics = ['', 'status', 'value']
         self.modbus_status = None
         self.modbus_value = None
         self.virtual = False
@@ -624,9 +624,9 @@ class UpdatableItem(Item):
                 if not 'set_if' in self.snmp_trap:
                     self.snmp_trap['set_if'] = []
                 r = {'vars': ivars}
-                if s != 'null':
+                if s != 'null' and s != '':
                     r['status'] = int(s)
-                if va != 'null':
+                if va != 'null' and va != '':
                     r['value'] = va
                 self.log_set('snmp_trap.set_if+', val)
                 self.snmp_trap['set_if'].append(r)
@@ -892,8 +892,8 @@ class UpdatableItem(Item):
         return time.time() - self.set_time > self.expires
 
     def set_expired(self):
-        if self.status == -1 and self.value == 'null': return False
-        self.update_set_state(status=-1, value='null', force_virtual=True)
+        if self.status == -1 and self.value == '': return False
+        self.update_set_state(status=-1, value='', force_virtual=True)
         return True
 
     def update(self, driver_state_in=None):
@@ -957,11 +957,11 @@ class UpdatableItem(Item):
                     status, value = result.split(' ')
                 else:
                     status = result
-                    value = 'null'
+                    value = ''
             else:
                 status = update_out[0]
                 value = update_out[1]
-                if value is None: value = 'null'
+                if value is None: value = ''
         except:
             logging.error('update %s returned bad data' % self.oid)
             eva.core.log_traceback()
@@ -1027,9 +1027,22 @@ class UpdatableItem(Item):
     def mqtt_set_state(self, topic, data):
         try:
             if topic.endswith('/status'):
-                self.update_set_state(status=data, from_mqtt=True)
+                self.update_set_state(status=data)
             elif topic.endswith('/value'):
-                self.update_set_state(value=data, from_mqtt=True)
+                self.update_set_state(value=data)
+            elif topic == self.item_type + '/' + self.full_id:
+                j = jsonpickle.decode(data)
+                if 'status' in j:
+                    s = j['status']
+                else:
+                    s = None
+                if 'value' in j:
+                    v = j['value']
+                else:
+                    v = None
+                if s is not None or v is not None:
+                    self.update_set_state(status=s, value=v, from_mqtt=True)
+                return j
         except:
             eva.core.log_traceback()
 
@@ -1069,11 +1082,9 @@ class UpdatableItem(Item):
                 return False
             need_notify = True
         if value is not None:
-            if value == '': v = 'null'
-            else: v = value
-            if self.value != v:
+            if self.value != value:
                 need_notify = True
-                self.value = v
+                self.value = value
         if need_notify:
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
@@ -1133,7 +1144,7 @@ class UpdatableItem(Item):
 
     def item_env(self, full=True):
         if self.value is not None: value = self.value
-        else: value = 'null'
+        else: value = ''
         e = {'EVA_ITEM_STATUS': str(self.status), 'EVA_ITEM_VALUE': str(value)}
         if full: e.update(super().item_env())
         return e
@@ -1986,11 +1997,9 @@ class VariableItem(UpdatableItem):
             if self.status != _status: need_notify = True
             self.status = _status
         if value is not None and self.status:
-            if value == '': v = 'null'
-            else: v = value
-            if self.value != v: need_notify = True
-            self.value = v
-            if self.status == -1 and _status is None and value != 'null':
+            if self.value != value: need_notify = True
+            self.value = value
+            if self.status == -1 and _status is None and value != '':
                 self.status = 1
                 need_notify = True
         if need_notify:
@@ -2004,20 +2013,20 @@ class VariableItem(UpdatableItem):
         if not self.status: return False
         return super().is_expired()
 
-    def serialize(self,
-                  full=False,
-                  config=False,
-                  info=False,
-                  props=False,
-                  notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
-        if notify and 'value' in d and \
-                self.status == -1 and \
-                self.value != 'null' and \
-                self.value is not None:
-            del d['value']
-        return d
+    # def serialize(self,
+    # full=False,
+    # config=False,
+    # info=False,
+    # props=False,
+    # notify=False):
+    # d = super().serialize(
+    # full=full, config=config, info=info, props=props, notify=notify)
+    # if notify and 'value' in d and \
+    # self.status == -1 and \
+    # self.value != '' and \
+    # self.value is not None:
+    # del d['value']
+    # return d
 
 
 def item_match(item, item_ids, groups=None):

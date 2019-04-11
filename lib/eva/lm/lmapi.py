@@ -156,7 +156,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if s and not -1 <= s <= 1:
             raise InvalidParameter('status should be -1, 0 or 1')
-        if v is None: v = 'null'
+        if v is None: v = ''
         return item.update_set_state(status=s, value=v)
 
     @log_i

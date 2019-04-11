@@ -744,7 +744,7 @@ class SQLANotifier(GenericNotifier):
             t = time.time()
             for d in data:
                 v = d['value'] if 'value' in d and \
-                        d['value'] != 'null' else None
+                        d['value'] != '' else None
                 space = self.space if self.space is not None else ''
                 dbconn = self.db()
                 dbconn.execute(
@@ -1123,7 +1123,7 @@ class GenericMQTTNotifier(GenericNotifier):
                         (self.notifier_id, i, self.qos['system']))
             for i, v in self.items_to_update_by_topic.copy().items():
                 client.subscribe(i, qos=v.mqtt_update_qos)
-                logging.debug('%s resubscribed to %s q%u updates' % \
+                logging.debug('%s resubscribed to %s q%u topic' % \
                         (self.notifier_id, i, v.mqtt_update_qos))
             for i, v in self.items_to_control_by_topic.copy().items():
                 client.subscribe(i, qos=v.mqtt_control_qos)
@@ -1181,32 +1181,32 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def update_item_append(self, item):
         logging.debug('%s subscribing to %s updates' % \
-                (self.notifier_id, item.full_id))
+                (self.notifier_id, item.oid))
         self.items_to_update.add(item)
         for t in item.mqtt_update_topics:
             topic = self.pfx + item.item_type + '/' + \
-                    item.full_id + '/' + t
+                    item.full_id + (('/' + t) if t else '')
             self.items_to_update_by_topic[topic] = item
             self.mq.subscribe(topic, qos=item.mqtt_update_qos)
-            logging.debug('%s subscribed to %s q%u updates' %
+            logging.debug('%s subscribed to %s q%u topic' %
                           (self.notifier_id, topic, item.mqtt_update_qos))
         return True
 
     def control_item_append(self, item):
         logging.debug('%s subscribing to %s control' % \
-                (self.notifier_id, item.full_id))
+                (self.notifier_id, item.oid))
         topic_control = self.pfx + item.item_type + '/' +\
                 item.full_id + '/control'
         self.items_to_control.add(item)
         self.items_to_control_by_topic[topic_control] = item
         self.mq.subscribe(topic_control, qos=item.mqtt_control_qos)
-        logging.debug('%s subscribed to %s q%u control' %
+        logging.debug('%s subscribed to %s q%u topic' %
                       (self.notifier_id, topic_control, item.mqtt_control_qos))
         return True
 
     def update_item_remove(self, item):
         logging.debug('%s unsubscribing from %s updates' % \
-                (self.notifier_id, item.full_id))
+                (self.notifier_id, item.oid))
         if item not in self.items_to_update: return False
         try:
             for t in item.mqtt_update_topics:
@@ -1223,7 +1223,7 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def control_item_remove(self, item):
         logging.debug('%s unsubscribing from %s control' % \
-                (self.notifier_id, item.full_id))
+                (self.notifier_id, item.oid))
         if item not in self.items_to_control: return False
         topic_control = self.pfx + item.item_type + '/' +\
                 item.full_id + '/control'
@@ -1320,11 +1320,15 @@ class GenericMQTTNotifier(GenericNotifier):
             else:
                 _retain = False
             for i in data:
+                dts = {}
                 for k in i:
                     if not k in ['id', 'group', 'type', 'full_id', 'oid']:
-                        self.mq.publish(self.pfx + i['type'] + '/' + \
-                                i['group'] + '/' + i['id'] + '/' + k, i[k], qos,
-                                    retain = _retain)
+                        dts[k] = i[k]
+                self.mq.publish(
+                    self.pfx + i['type'] + '/' + i['group'] + '/' + i['id'],
+                    jsonpickle.encode(dts),
+                    qos,
+                    retain=_retain)
         elif subject == 'action':
             if retain is not None and self.retain_enabled: _retain = retain
             else: _retain = False

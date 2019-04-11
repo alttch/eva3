@@ -436,7 +436,7 @@ class MacroAPI(object):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
             raise ResourceNotFound
-        if lvar.value == 'null': return default
+        if lvar.value == '': return default
         try:
             v = float(lvar.value)
         except:
@@ -519,7 +519,7 @@ class MacroAPI(object):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             raise ResourceNotFound
-        if unit.value == 'null': return default
+        if unit.value == '': return default
         try:
             v = float(unit.value)
         except:
@@ -547,7 +547,7 @@ class MacroAPI(object):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             raise ResourceNotFound
-        if unit.nvalue == 'null': return default
+        if unit.nvalue == '': return default
         try:
             v = float(unit.nvalue)
         except:
@@ -611,7 +611,7 @@ class MacroAPI(object):
             oid_to_id(sensor_id, 'sensor'))
         if not sensor:
             raise ResourceNotFound
-        if sensor.value == 'null': return default
+        if sensor.value == '': return default
         try:
             v = float(sensor.value)
         except:
@@ -635,7 +635,7 @@ class MacroAPI(object):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
             raise ResourceNotFound
-        if value is None: v = 'null'
+        if value is None: v = ''
         else: v = value
         result = lvar.update_set_state(value=v)
         if not result:
