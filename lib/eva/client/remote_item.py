@@ -5,6 +5,7 @@ __version__ = "3.2.1"
 
 import eva.core
 import eva.item
+import eva.tools
 
 
 class RemoteUpdatableItem(eva.item.UpdatableItem):
@@ -107,7 +108,8 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
         super().__init__('unit', remote_uc, state)
         self.nstatus = self.status
         self.nvalue = self.value
-        self.action_enabled = True
+        self.action_enabled = eva.tools.val_to_boolean(
+            state.get('action_enabled', False))
         self.status_labels = state.get('status_labels')
 
     def update_nstate(self, nstatus=None, nvalue=None):

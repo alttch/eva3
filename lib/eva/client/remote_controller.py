@@ -902,6 +902,7 @@ class RemoteUCPool(RemoteControllerPool):
                         self.units[u.full_id].value = u.value
                         self.units[u.full_id].nstatus = u.nstatus
                         self.units[u.full_id].nvalue = u.nvalue
+                        self.units[u.full_id].action_enabled = u.action_enabled
                     p[u.full_id] = u
                     _u = self.get_unit(u.full_id)
                     if _u: _u.update_config(u.serialize(config=True))
