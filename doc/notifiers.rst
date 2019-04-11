@@ -213,7 +213,7 @@ MQTT server.
 
 Item's state is stored in a hive with the subject
 *SPACE/item_type/group/item_id* and contains the item state data and some
-configuration params in the :doc:`subtopics<items>`.
+configuration params in JSON array.
 
 MQTT and action notifications
 -----------------------------
@@ -300,7 +300,8 @@ sending and receiving messages.
 external controller can send active notifications under this protocol.
 
 The items change their state to the state received from MQTT, if someone sends
-its state update to EVA hive with "status" or "value" subtopics.
+its state update to EVA hive with *status* or *value* subtopics. Setting item
+state with primary topic (using JSON dict) is not recommended.
 
 To let the item receive MQTT state updates, set its **mqtt_update**
 configuration param to the local MQTT notifier ID, as well as additionally
