@@ -432,10 +432,10 @@ The call is considered successful when action is put into the action queue of se
 Parameters:
 
 * **API Key** valid API key
-* **s** desired unit status
 
 Optionally:
 
+* **s** desired unit status
 * **v** desired unit value
 * **w** wait for the completion for the specified number of seconds
 * **p** queue priority (default is 100, lower is better)
@@ -954,6 +954,26 @@ Verifies virtual :doc:`Modbus port</modbus>` by calling connect() Modbus client 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/test_modbus_port.rest
     :response: http-examples/ucapi/test_modbus_port.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_get_modbus_slave_data:
+
+get Modbus slave data
+---------------------
+
+Get data from Modbus slave memory space
+
+Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, i - input, c - coil, d - discrete input).
+
+Address ranges can be specified, e.g. h1000-1010,c10-15 will return values of holding registers from 1000 to 1010 and coil registers from 10 to 15
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_modbus_slave_data.rest
+    :response: http-examples/ucapi/get_modbus_slave_data.resp-rest
 
 Parameters:
 

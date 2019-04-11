@@ -230,6 +230,21 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 d['type'] = d['type'] + ' device template'
                 return data
             return result
+        if api_func == 'get_modbus_slave_data':
+            for d in data:
+                rtps = {
+                    'h': 'holding',
+                    'i': 'input',
+                    'd': 'd.input',
+                    'c': 'coil'
+                }
+                rtype = rtps.get(d['addr'][0])
+                addr = int(d['addr'][1:])
+                d['addr'] = addr
+                d['reg'] = rtype
+                d['addr_hex'] = hex(addr)
+                d['hex'] = hex(d['value'])
+            return data
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, itype)
         result = []
@@ -753,6 +768,19 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
 
+        ap_modbus_slave = self.sp.add_parser(
+            'modbus-slave', help='ModBus slave')
+        sp_modbus_slave = ap_modbus_slave.add_subparsers(
+            dest='_func', metavar='func', help='ModBus slave commands')
+        sp_modbus_slave_get = sp_modbus_slave.add_parser(
+            'get', help='Get Modbus slave register values')
+        sp_modbus_slave_get.add_argument(
+            'i',
+            help='Address(es), comma ' +
+            'separated, predicted by type (h, c, i, d), range may be ' +
+            'specified. e.g. h1000-1010,c10-15',
+            metavar='REGISTER(S)')
+
     def add_uc_owfs_functions(self):
         ap_owfs = self.sp.add_parser('owfs', help='OWFS buses')
         sp_owfs = ap_owfs.add_subparsers(
@@ -1193,6 +1221,7 @@ _api_functions = {
     'modbus:create': 'create_modbus_port',
     'modbus:destroy': 'destroy_modbus_port',
     'modbus:test': 'test_modbus_port',
+    'modbus-slave:get': 'get_modbus_slave_data',
     'owfs:list': 'list_owfs_buses',
     'owfs:create': 'create_owfs_bus',
     'owfs:destroy': 'destroy_owfs_bus',
@@ -1236,6 +1265,7 @@ _pd_cols = {
         'status'
     ],
     'list': ['oid', 'description'],
+    'get_modbus_slave_data': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
     'list_modbus_ports':
     ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
     'list_owfs_buses':

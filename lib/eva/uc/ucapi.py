@@ -44,6 +44,7 @@ from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
 
 from eva.tools import parse_function_params
+from eva.tools import safe_int
 
 from eva import apikey
 
@@ -1068,6 +1069,74 @@ class UC_API(GenericAPI):
         elif port == 0: raise ResourceBusy
         return True
 
+    @log_d
+    @api_need_master
+    def get_modbus_slave_data(self, **kwargs):
+        """
+        get Modbus slave data
+
+        Get data from Modbus slave memory space
+
+        Modbus registers must be specified as list or comma separated memory
+        addresses predicated with register type (h - holding, i - input, c -
+        coil, d - discrete input).
+
+        Address ranges can be specified, e.g. h1000-1010,c10-15 will return
+        values of holding registers from 1000 to 1010 and coil registers from
+        10 to 15
+
+        Args:
+            k: .master
+            .i: Modbus register(s)
+        """
+        i = parse_api_params(kwargs, 'i', '.')
+        if isinstance(i, str):
+            regs = i.split(',')
+        elif isinstance(i, list):
+            regs = i
+        else:
+            raise InvalidParameter
+        result = []
+        for reg in regs:
+            if not isinstance(reg, str) or len(reg) < 2:
+                raise InvalidParameter(reg)
+            rtype = reg[0]
+            if rtype not in ['h', 'd', 'i', 'c']:
+                raise InvalidParameter(reg)
+            r = reg[1:]
+            if r.find('-') != -1:
+                try:
+                    addr, ae = r.split('-')
+                except:
+                    raise InvalidParameter(reg)
+            else:
+                addr = r
+                ae = addr
+            try:
+                addr = safe_int(addr)
+            except:
+                raise InvalidParameter(reg)
+            try:
+                ae = safe_int(ae)
+                if ae > eva.uc.modbus.slave_reg_max:
+                    raise Exception
+            except:
+                raise InvalidParameter(reg)
+            count = ae - addr + 1
+            if count < 1:
+                raise InvalidParameter(reg)
+            data = eva.uc.modbus.get_data(addr, rtype, count)
+            for d in data:
+                if d is True:
+                    v = 1
+                elif d is False:
+                    v = 0
+                else:
+                    v = d
+                result.append({'addr': '{}{}'.format(rtype, addr), 'value': v})
+                addr += 1
+        return sorted(result, key=lambda k: k['addr'])
+
     # master functions for owfs bus management
 
     @log_i
@@ -1752,6 +1821,8 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.get_modbus_port(k=k, i=ii)
             else:
                 return self.list_modbus_ports(k=k)
+        elif rtp == 'modbus-slave':
+            return self.get_modbus_slave_data(k=k, i=ii)
         elif rtp == 'owfs':
             if ii:
                 return self.get_owfs_bus(k=k, i=ii)

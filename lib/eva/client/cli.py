@@ -803,6 +803,7 @@ class GenericCLI(GCLI):
             try:
                 return self.execute_function()
             except Exception as e:
+                raise
                 self.print_err(e)
         else:
             # interactive mode

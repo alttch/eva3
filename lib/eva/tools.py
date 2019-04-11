@@ -29,7 +29,10 @@ class MultiOrderedDict(OrderedDict):
 
 
 class InvalidParameter(Exception):
-    pass
+
+    def __str__(self):
+        msg = super().__str__()
+        return 'Invalid parameter' + (': {}'.format(msg) if msg else '')
 
 
 def config_error(fname, section, key, value):
@@ -417,6 +420,7 @@ def dict_merge(*args):
     for a in args:
         result.update(a)
     return result
+
 
 def gen_random_hash():
     s = hashlib.sha256()

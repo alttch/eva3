@@ -1054,13 +1054,13 @@ class UpdatableItem(Item):
     def modbus_update_status(self, addr, values):
         v = values[0]
         if v is True: v = 1
-        if v is False: v = 0
+        elif v is False: v = 0
         self.update_set_state(status=v)
 
     def modbus_update_value(self, addr, values):
         v = values[0]
         if v is True: v = 1
-        if v is False: v = 0
+        elif v is False: v = 0
         self.update_set_state(value=v)
 
     def update_set_state(self,
