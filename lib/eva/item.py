@@ -2119,8 +2119,14 @@ def get_state_history(a=None,
             df = pd.DataFrame(result)
             df = df.set_index('t')
             df.index = pd.to_datetime(df.index, utc=True)
-            sp1 = df.resample(fill).mean()
-            sp2 = df.resample(fill).pad()
+            if fill.find(':') != -1:
+                _fill, _pc = fill.split(':')
+                _pc = pow(10, int(_pc))
+            else:
+                _fill = fill
+                _pc = None
+            sp1 = df.resample(_fill).mean()
+            sp2 = df.resample(_fill).pad()
             sp = sp1.fillna(sp2).to_dict(orient='split')
             result = []
             for i in range(0, len(sp['index'])):
@@ -2141,12 +2147,13 @@ def get_state_history(a=None,
                         r['status'] = None
                 elif 'value' in sp['columns']:
                     r['value'] = sp['data'][i][0]
-                if 'value' in r and isinstance(
-                        r['value'], float) and math.isnan(r['value']):
-                    r['value'] = None
+                if 'value' in r and isinstance(r['value'], float):
+                    if math.isnan(r['value']):
+                        r['value'] = None
+                    elif _pc:
+                        r['value'] = math.floor(r['value'] * _pc) / _pc
                 result.append(r)
         except:
-            logging.warning('state history dataframe error')
             eva.core.log_traceback()
             raise FunctionFailed
     if not fmt or fmt == 'list':
