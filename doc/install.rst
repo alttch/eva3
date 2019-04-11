@@ -318,6 +318,9 @@ logs:
 Using NGINX as a frontend for SFA interface
 ===========================================
 
+External authentication
+-----------------------
+
 Suppose `NGINX <https://www.nginx.com/>`_ operates on 8443 port with SSL, and
 :doc:`/sfa/sfa` - without SSL. Let's make the task even more complicated: let
 NGINX receive the request not directly, but via port forwarding from the router
@@ -404,3 +407,70 @@ Our final config for all of this should look like:
             proxy_set_header X-Frontend "nginx";
         }
     }
+
+Using HTTP basic auth for EVA ICS authentication
+------------------------------------------------
+
+The following example demonstrates how to use basic authentication and
+automatically log in user into SFA UI.
+
+Firstly, set *user_hook* option in *./etc/sfa.ini*, this will allow EVA ICS to
+sync htpasswd file with SFA users (make sure *htpasswd* program is installed as
+well).
+
+.. code-block:: ini
+
+    [server]
+    .......
+    user_hook = /opt/eva/xbin/htpasswd.sh /opt/eva/etc/htpasswd
+
+Then, front-end config (e.g. for NGINX) should look like:
+
+.. code-block:: nginx
+
+    upstream eva-sfa {
+            server 127.0.0.1:8828;
+        }
+
+    server {
+        listen 80 default_server;
+
+        location / {
+            auth_basic $eva_authentication;
+            auth_basic_user_file /opt/eva/etc/htpasswd;
+            rewrite ^/pvt/(.+)$ /pvt?f=$1 last;
+            proxy_buffers 16 16k;
+            proxy_buffer_size 16k;
+            proxy_busy_buffers_size 240k;
+            proxy_pass http://eva-sfa;
+            proxy_set_header X-Host $host;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-Proto http;
+            proxy_set_header X-Port $server_port;
+            proxy_set_header X-Frontend "nginx";
+        }
+
+        location /ws {
+            auth_basic $eva_authentication;
+            auth_basic_user_file /opt/eva/etc/htpasswd;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_buffers 16 16k;
+            proxy_buffer_size 16k;
+            proxy_busy_buffers_size 240k;
+            proxy_pass http://eva-sfa;
+            proxy_set_header X-Host $host;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-Proto http;
+            proxy_set_header X-Port $server_port;
+            proxy_set_header X-Frontend "nginx";
+        }
+    }
+
+With such setup, :doc:`/sfa/sfa_framework`-based interface doesn't perform any
+authentication, *eva_sfa_start()* function is called as soon as UI is loaded.
+API method *login* called by framework function will automatically log in user
+using basic authentication credentials provided to front-end server.
