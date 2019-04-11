@@ -776,10 +776,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'get', help='Get Modbus slave register values')
         sp_modbus_slave_get.add_argument(
             'i',
-            help='Address(es), comma ' +
-            'separated, predicted by type (h, c, i, d), range may be ' +
+            help='Regiser address(es), comma ' +
+            'separated, predicated by type (h, c, i, d), range may be ' +
             'specified. e.g. h1000-1010,c10-15',
-            metavar='REGISTER(S)')
+            metavar='REGISTERS')
 
     def add_uc_owfs_functions(self):
         ap_owfs = self.sp.add_parser('owfs', help='OWFS buses')
