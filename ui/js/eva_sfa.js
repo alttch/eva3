@@ -547,8 +547,8 @@ function eva_sfa_log_level_name(log_level) {
  * @param params - object with props
  *              timeframe - timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2
  *                          days etc.), default: 1D
- *              fill - precision (10T - 60T recommended, more accurate - more
- *                     data), default: 30T
+ *              fill - precision[:np] (10T - 60T recommended, more accurate -
+   *              more data), np - number precision, optional. default: 30T:2
  *              update - update interval in seconds
  *              prop - item property to use (default is value)
  *
@@ -563,7 +563,7 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   }
   var fill = params['fill'];
   if (!fill) {
-    fill = '30T';
+    fill = '30T:2';
   }
   var update = params['update'];
   var prop = params['prop'];

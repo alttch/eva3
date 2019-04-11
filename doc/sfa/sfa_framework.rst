@@ -637,10 +637,11 @@ where:
 * **params** (object):
     * **timeframe** time frame to display, e.g. *5T* - last 5 min, *2H* - last 2
       hours, *2D* last 2 days etc.
-    * **fill** precision, 10T-60T recommended. The more accurate precision is,
-      the more data points are displayed (but chart is slower)
+    * **fill** precision[:np], 10T-60T recommended. The more accurate precision
+          is, the more data points are displayed (but chart is slower). np -
+          optional parameter, number precision. Default: *30T:2*
     * **update** chart update interval, in seconds. Set *0* or *null* to disable
-      updates
+          updates
     * **prop** item state property to use (default: *'value'*)
 
 .. note::
