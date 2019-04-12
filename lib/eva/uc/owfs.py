@@ -5,7 +5,7 @@ __version__ = "3.2.1"
 
 default_delay = 0.05
 
-import onewire
+import importlib
 import eva.core
 import logging
 import jsonpickle
@@ -181,6 +181,11 @@ class OWFSBus(object):
         self.location = location
         self.locker = threading.Lock()
         self.last_action = 0
+        try:
+            onewire = importlib.import_module('onewire')
+        except:
+            logging.error('Unable to import onewire module')
+            raise
         self._ow = onewire.Onewire(('--' if location.find('=') != -1 and
                                     not location.startswith('--') else '') +
                                    location)
