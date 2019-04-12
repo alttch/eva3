@@ -1303,7 +1303,7 @@ cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'cmd']
 cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'owfs', 'phi', 'lpi',
-    'driver'
+    'driver', 'modbus-slave'
 ]
 cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)
