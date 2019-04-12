@@ -13,7 +13,7 @@ Common
     * EVA ICS now loads 3rd party libraries from virtualenv which increases
       system stability as only tested version of libraries are used.
     * Support for AWS and Azure IoT
-    * Modbus slave memory space monitoring functions
+    * Modbus slave register monitoring functions
 
 3.2.0 (2019-04-02)
 ==================
