@@ -62,9 +62,6 @@ Other
 * **sbin/layout-converter** allows to convert **simple** :ref:`item
   layout<item_layout>` to **enterprise**.
 
-:doc:`Virtual item</virtual>` management is performed using **xc/evirtual**
-application.
-
 Device control apps
 ===================
 

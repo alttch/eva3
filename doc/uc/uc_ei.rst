@@ -54,9 +54,6 @@ display the changes made. Use reload button or refresh the page in browser.
     :scale: 70%
     :alt: Units page
 
-:doc:`Virtual items</virtual>` are marked in italic and have **~** character
-before ID. Virtual items don't have **SET** button.
-
 On the page, you can:
 
 * execute actions commands to the units (buttons change unit status, you cannot

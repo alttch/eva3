@@ -41,9 +41,6 @@ Common item parameters
 
 * **description** item description
 
-* **virtual** boolean (true/false) param which shows if the item is
-  :doc:`virtual<virtual>` or real.
-
 .. note::
 
     All EVA functions, commands and parameters can accept oid as the item
@@ -108,8 +105,7 @@ Each unit has its unique ID, for example "lamp1". ID can include numbers,
 uppercase and lowercase Latin characters and some special characters like minus
 (-) or dot (.).
 
-Unit parameters are set via configuration. The unit can be either physical or
-:doc:`virtual<virtual>`.
+Unit parameters are set via configuration.
 
 Status of the unit state
 ------------------------
@@ -296,9 +292,7 @@ Important: the sensor error may be set even if the sensor is disabled. It means
 that the disabled sensor may be switched to "error" and then to "work" mode by
 the system itself. Why it works that way? According to the logic of the system,
 the sensor error is an emergency situation that should affect its status even
-if it is disabled and requires an immediate attention of the user. If you want
-the sensor not to respond to external state updates - set it to the
-:doc:`virtual state<virtual>`
+if it is disabled and requires an immediate attention of the user.
 
 Sensors (and sometimes units) can be placed on the same detector, controller or
 bus queried by a single command. EVA can use :ref:`multiupdates<multiupdate>`
@@ -409,8 +403,7 @@ LVar parameters
 
 As LVars behavior is similar to :ref:`sensors<sensor>` except the values are
 set by user/system, they have the same parameters, except lvars can't be
-updated via SNMP traps and can't be virtual (lvar is actually virtual by
-default).
+updated via SNMP traps / MQTT.
 
 .. _lvar_examples:
 
@@ -459,7 +452,7 @@ command.
 
 Multiupdate is an independent item in the system with its own configuration
 and without status and value. In turn, it updates statuses of the included
-items. Multiupdate can be :doc:`virtual<virtual>`.
+items.
 
 Multiupdates in EVA hive
 ------------------------
