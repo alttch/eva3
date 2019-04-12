@@ -45,9 +45,15 @@ System Requirements
     expected on ARM systems with:
 
         * **pandas** (python3-pandas)
-        * **cryptography** (python3-cryptography)
 
     To let EVA ICS venv use system site modules, read instructions below.
+
+Optional modules (can be disabled in :ref:`venv<install_venv>` configuration):
+
+* **onewire** required for 1-Wire via :doc:`OWFS</owfs>`
+* **pymodbus** required for :doc:`Modbus</modbus>` master/slave functions
+* **pysnmp** required for SNMP client/server functions
+
 
 Initial setup
 =============
@@ -159,6 +165,7 @@ distribution and unpack it e.g. to */opt/eva*:
     mv eva-3.x.x eva
     cd eva
 
+.. _install_venv:
 
 Customizing Python virtual environment
 --------------------------------------
@@ -168,9 +175,13 @@ software installation more stable, as it uses only tested versions of 3rd party
 libraries.
 
 EVA ICS installation script automatically creates Python virtual environment in
-./python3 folder. It can be customized/recreated later manually, using
-*./install/build-venv* command (if you want to rebuild venv from scratch,
-delete *python3* folder completely).
+./python3 folder. It can be customized/recreated later manually, using command:
+
+.. code-block:: bash
+
+    ./install/build-venv
+    
+If you want to rebuild venv from scratch, delete *python3* folder completely.
 
 However on some systems (e.g. ARM-based computers) venv installation can be
 tricky: you can expect slow installation time or problems with some modules

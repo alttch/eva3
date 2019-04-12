@@ -105,7 +105,7 @@ def start():
         ntfrcv = importlib.import_module('pysnmp.entity.rfc3413.ntfrcv')
     except:
         logging.error(
-            'Failed to import SNMP modules. Try updating pysnmp library')
+            'Unable to import pysnmp module')
         eva.core.log_traceback()
         return False
     try:

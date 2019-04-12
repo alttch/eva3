@@ -5,6 +5,7 @@ requests==2.21.0
 pyaltt==0.2.1
 argcomplete==1.9.4
 jinja2==2.10
+six==1.11.0
 pyyaml==3.12
 netaddr==0.7.19
 onewire==0.2
