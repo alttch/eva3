@@ -11,7 +11,9 @@ import uuid
 import queue
 import logging
 import jsonpickle
+
 import eva.core
+import eva.notify
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
@@ -648,6 +650,7 @@ class UpdatableItem(Item):
             else:
                 params = val.split(':')
                 n = params[0]
+                import eva.notify
                 notifier = eva.notify.get_notifier(n)
                 if not notifier or notifier.notifier_type != 'mqtt':
                     return False
@@ -1533,6 +1536,7 @@ class ActiveItem(Item):
             else:
                 params = val.split(':')
                 n = params[0]
+                import eva.notify
                 notifier = eva.notify.get_notifier(n)
                 if not notifier or notifier.notifier_type != 'mqtt':
                     return False
