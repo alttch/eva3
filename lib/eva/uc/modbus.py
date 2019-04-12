@@ -5,10 +5,7 @@ __version__ = "3.2.1"
 
 default_delay = 0.02
 
-from pymodbus.client.sync import ModbusTcpClient
-from pymodbus.client.sync import ModbusUdpClient
-from pymodbus.client.sync import ModbusSerialClient
-
+import importlib
 import eva.core
 import threading
 import time
@@ -29,104 +26,12 @@ import threading
 
 from pyaltt import background_job
 
-from pymodbus.server.async import StartTcpServer
-from pymodbus.server.async import StartUdpServer
-
-from pymodbus.device import ModbusDeviceIdentification
-from pymodbus.datastore import ModbusSequentialDataBlock
-from pymodbus.datastore import ModbusSlaveContext, ModbusServerContext
-from pymodbus.transaction import (ModbusRtuFramer, ModbusAsciiFramer,
-                                  ModbusBinaryFramer)
-
 config = SimpleNamespace(slave={'tcp': [], 'udp': [], 'serial': []})
-
-slave_framer = {
-    'rtu': ModbusRtuFramer,
-    'ascii': ModbusAsciiFramer,
-    'binary': ModbusBinaryFramer
-}
 
 slave_regsz = 10000
 slave_reg_max = slave_regsz - 1
 
-
-class WatchBlock(ModbusSequentialDataBlock):
-
-    def __init__(self, *args, **kwargs):
-        self.event_handlers = {}
-        self.event_handlers_lock = threading.RLock()
-        super().__init__(*args, **kwargs)
-
-    def setValues(self, addr, values):
-        super().setValues(addr, values)
-        if not self.event_handlers_lock.acquire(
-                timeout=eva.core.config.timeout):
-            logging.critical('WatchBlock::setValues locking broken')
-            eva.core.critical()
-            return False
-        try:
-            if addr not in self.event_handlers:
-                return
-            for f in self.event_handlers[addr]:
-                background_job(f)(addr, values)
-        finally:
-            self.event_handlers_lock.release()
-
-    def registerEventHandler(self, addr, f):
-        if not self.event_handlers_lock.acquire(
-                timeout=eva.core.config.timeout):
-            logging.critical('WatchBlock::registerEventHandler locking broken')
-            eva.core.critical()
-            return False
-        try:
-            self.event_handlers.setdefault(safe_int(addr), set()).add(f)
-        except:
-            logging.error(
-                'Unable to register modbus handler for address {}'.format(addr))
-            eva.core.log_traceback()
-        finally:
-            self.event_handlers_lock.release()
-
-    def unregisterEventHandler(self, addr, f):
-        if not self.event_handlers_lock.acquire(
-                timeout=eva.core.config.timeout):
-            logging.critical(
-                'WatchBlock::unregisterEventHandler locking broken')
-            eva.core.critical()
-            return False
-        try:
-            a = safe_int(addr)
-            if a in self.event_handlers:
-                try:
-                    self.event_handlers[a].remove(f)
-                except KeyError:
-                    pass
-                except:
-                    logging.error(
-                        'Unable to register modbus handler for address {}'.
-                        format(addr))
-                    eva.core.log_traceback()
-        finally:
-            self.event_handlers_lock.release()
-
-
-slave_di = WatchBlock(0, [0] * slave_regsz)
-slave_co = WatchBlock(0, [0] * slave_regsz)
-slave_hr = WatchBlock(0, [0] * slave_regsz)
-slave_ir = WatchBlock(0, [0] * slave_regsz)
-
-slave_registers = {'h': slave_hr, 'i': slave_ir, 'c': slave_co, 'd': slave_di}
-
-slave_store = ModbusSlaveContext(
-    di=slave_di, co=slave_co, hr=slave_hr, ir=slave_ir, zero_mode=True)
-
-slave_identity = ModbusDeviceIdentification()
-slave_identity.VendorName = 'Altertech'
-slave_identity.ProductCode = 'EVA'
-slave_identity.VendorUrl = 'https://www.eva-ics.com/'
-slave_identity.ProductName = 'EVA ICS'
-slave_identity.ModelName = eva.core.product.name
-slave_identity.MajorMinorRevision = '.'.join(eva.core.version.split('.')[:2])
+slave_registers = {}
 
 ports = {}
 
@@ -145,6 +50,9 @@ def set_data(addr, values, register='h'):
         register: h (default, 16 bit) - holding, i (16 bit) - input,
                   c (1 bit) - coil, d (1 bit) - discrete input)
     """
+    if register not in slave_registers:
+        raise FunctionFailed(
+            'Slave register {} not initialized'.format(register))
     slave_registers[register].setValues(addr, values)
 
 
@@ -160,6 +68,9 @@ def get_data(addr, register='h', count=1):
                   c (1 bit) - coil, d (1 bit) - discrete input)
         count: amount of data to get (default: 1 value)
     """
+    if register not in slave_registers:
+        raise FunctionFailed(
+            'Slave register {} not initialized'.format(register))
     return slave_registers[register].getValues(addr, count)
 
 
@@ -178,6 +89,9 @@ def register_handler(addr, f, register='h'):
         register: h (default, 16 bit) - holding, i (16 bit) - input,
                   c (1 bit) - coil, d (1 bit) - discrete input)
     """
+    if register not in slave_registers:
+        raise FunctionFailed(
+            'Slave register {} not initialized'.format(register))
     slave_registers[register].registerEventHandler(addr, f)
     logging.debug(
         'registered Modbus slave handler: {}, addr: {}, registers: {}'.format(
@@ -196,6 +110,9 @@ def unregister_handler(addr, f, register='h'):
         register: h (default, 16 bit) - holding, i (16 bit) - input,
                   c (1 bit) - coil, d (1 bit) - discrete input)
     """
+    if register not in slave_registers:
+        raise FunctionFailed(
+            'Slave register {} not initialized'.format(register))
     slave_registers[register].unregisterEventHandler(addr, f)
     logging.debug(
         'unregistered Modbus slave handler: {}, addr: {}, registers: {}'.format(
@@ -327,11 +244,123 @@ def save():
     return True
 
 
+def modbus_slave_block(size):
+    from pymodbus.datastore import ModbusSequentialDataBlock
+
+    class WatchBlock(ModbusSequentialDataBlock):
+
+        def __init__(self, *args, **kwargs):
+            self.event_handlers = {}
+            self.event_handlers_lock = threading.RLock()
+            super().__init__(*args, **kwargs)
+
+        def setValues(self, addr, values):
+            super().setValues(addr, values)
+            if not self.event_handlers_lock.acquire(
+                    timeout=eva.core.config.timeout):
+                logging.critical('WatchBlock::setValues locking broken')
+                eva.core.critical()
+                return False
+            try:
+                if addr not in self.event_handlers:
+                    return
+                for f in self.event_handlers[addr]:
+                    background_job(f)(addr, values)
+            finally:
+                self.event_handlers_lock.release()
+
+        def registerEventHandler(self, addr, f):
+            if not self.event_handlers_lock.acquire(
+                    timeout=eva.core.config.timeout):
+                logging.critical(
+                    'WatchBlock::registerEventHandler locking broken')
+                eva.core.critical()
+                return False
+            try:
+                self.event_handlers.setdefault(safe_int(addr), set()).add(f)
+            except:
+                logging.error(
+                    'Unable to register modbus handler for address {}'.format(
+                        addr))
+                eva.core.log_traceback()
+            finally:
+                self.event_handlers_lock.release()
+
+        def unregisterEventHandler(self, addr, f):
+            if not self.event_handlers_lock.acquire(
+                    timeout=eva.core.config.timeout):
+                logging.critical(
+                    'WatchBlock::unregisterEventHandler locking broken')
+                eva.core.critical()
+                return False
+            try:
+                a = safe_int(addr)
+                if a in self.event_handlers:
+                    try:
+                        self.event_handlers[a].remove(f)
+                    except KeyError:
+                        pass
+                    except:
+                        logging.error(
+                            'Unable to register modbus handler for address {}'.
+                            format(addr))
+                        eva.core.log_traceback()
+            finally:
+                self.event_handlers_lock.release()
+
+    return WatchBlock(0, [0] * size)
+
+
 def start():
+    if not config.slave['tcp'] and \
+            not config.slave['udp'] and \
+            not config.slave['serial']:
+        return
+    try:
+        modbus_server = importlib.import_module('pymodbus.server.async')
+        modbus_device = importlib.import_module('pymodbus.device')
+        modbus_transactions = importlib.import_module('pymodbus.transaction')
+        modbus_datastore = importlib.import_module('pymodbus.datastore')
+    except:
+        logging.error('Unable to import pymodbus module')
+        eva.core.log_traceback()
+        return
+
+    slave_identity = modbus_device.ModbusDeviceIdentification()
+    slave_identity.VendorName = 'Altertech'
+    slave_identity.ProductCode = 'EVA'
+    slave_identity.VendorUrl = 'https://www.eva-ics.com/'
+    slave_identity.ProductName = 'EVA ICS'
+    slave_identity.ModelName = eva.core.product.name
+    slave_identity.MajorMinorRevision = '.'.join(
+        eva.core.version.split('.')[:2])
+
+    slave_framer = {
+        'rtu': modbus_transactions.ModbusRtuFramer,
+        'ascii': modbus_transactions.ModbusAsciiFramer,
+        'binary': modbus_transactions.ModbusBinaryFramer
+    }
+
+    slave_di = modbus_slave_block(slave_regsz)
+    slave_co = modbus_slave_block(slave_regsz)
+    slave_hr = modbus_slave_block(slave_regsz)
+    slave_ir = modbus_slave_block(slave_regsz)
+
+    slave_registers.update({
+        'h': slave_hr,
+        'i': slave_ir,
+        'c': slave_co,
+        'd': slave_di
+    })
+
+    slave_store = modbus_datastore.ModbusSlaveContext(
+        di=slave_di, co=slave_co, hr=slave_hr, ir=slave_ir, zero_mode=True)
+
     for v in config.slave['tcp']:
         try:
-            StartTcpServer(
-                ModbusServerContext(slaves={v['a']: slave_store}, single=False),
+            modbus_server.StartTcpServer(
+                modbus_datastore.ModbusServerContext(
+                    slaves={v['a']: slave_store}, single=False),
                 identity=slave_identity,
                 address=(v['h'], v['p']),
                 defer_reactor_run=True)
@@ -341,8 +370,9 @@ def start():
             eva.core.log_traceback()
     for v in config.slave['udp']:
         try:
-            StartUdpServer(
-                ModbusServerContext(slaves={v['a']: slave_store}, single=False),
+            modbus_server.StartUdpServer(
+                modbus_datastore.ModbusServerContext(
+                    slaves={v['a']: slave_store}, single=False),
                 identity=slave_identity,
                 address=(v['h'], v['p']),
                 defer_reactor_run=True)
@@ -352,8 +382,9 @@ def start():
             eva.core.log_traceback()
     for v in config.slave['serial']:
         try:
-            StartSerialServer(
-                ModbusServerContext(slaves={v['a']: slave_store}, single=False),
+            modbus_server.StartSerialServer(
+                modbus_datastore.ModbusServerContext(
+                    slaves={v['a']: slave_store}, single=False),
                 identity=slave_identity,
                 port=v['p'],
                 baudrate=v['b'],
@@ -370,7 +401,7 @@ def start():
 
 def StartSerialServer(context,
                       identity=None,
-                      framer=ModbusAsciiFramer,
+                      framer=None,
                       defer_reactor_run=False,
                       **kwargs):
     """ Helper method to start the Modbus Async Serial server
@@ -454,6 +485,11 @@ class ModbusPort(object):
         self.client_type = None
         self.locker = threading.Lock()
         self.last_action = 0
+        try:
+            modbus_client = importlib.import_module('pymodbus.client.sync')
+        except:
+            logging.error('Unable to import pymodbus module')
+            raise
         if params:
             p = params.split(':')
             if p[0] in ['tcp', 'udp']:
@@ -464,9 +500,9 @@ class ModbusPort(object):
                     except:
                         port = 502
                     if p[0] == 'tcp':
-                        self.client = ModbusTcpClient(host, port)
+                        self.client = modbus_client.ModbusTcpClient(host, port)
                     else:
-                        self.client = ModbusUdpClient(host, port)
+                        self.client = modbus_client.ModbusUdpClient(host, port)
                     self.client.timeout = self.timeout
                 except:
                     eva.core.log_traceback()
@@ -482,7 +518,7 @@ class ModbusPort(object):
                     raise InvalidParameter('parity should be: N, E, O, M or S')
                 if stopbits < 1 or stopbits > 2:
                     raise InvalidParameter('stopbits not in range 1..2')
-                self.client = ModbusSerialClient(
+                self.client = modbus_client.ModbusSerialClient(
                     method=p[0],
                     port=port,
                     stopbits=stopbits,
@@ -627,7 +663,7 @@ def append_serial_slave(c):
             port = int(port)
         except:
             pass
-        if framer not in slave_framer:
+        if framer not in ['rtu', 'ascii', 'binary']:
             raise Exception('Invalid Modbus slave framer: {}'.format(framer))
         config.slave['serial'].append({
             'a': a,
