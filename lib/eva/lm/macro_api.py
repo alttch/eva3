@@ -46,7 +46,7 @@ def shared(name, default=None):
     """
     get value of the shared variable
 
-    Get value of the variable, shared between node macros
+    Get value of the variable, shared between controller macros
 
     Args:
         name: variable name
@@ -72,7 +72,7 @@ def set_shared(name, value=None):
     """
     set value of the shared variable
 
-    Set value of the variable, shared between node macros
+    Set value of the variable, shared between controller macros
 
     Args:
         name: variable name
@@ -90,6 +90,56 @@ def set_shared(name, value=None):
         else:
             _shared[name] = value
         return True
+    finally:
+        _shared_lock.release()
+
+
+def increment_shared(name):
+    """
+    increment value of the shared variable
+
+    Increment value of the variable, shared between controller macros. Initial
+    value must be number
+
+    Args:
+        name: variable name
+    """
+    if not _shared_lock.acquire(timeout=eva.core.config.timeout):
+        logging.critical('macro_api increment_shared locking broken')
+        eva.core.critical()
+        return None
+    try:
+        v = shared(name)
+        if v is None:
+            v = 0
+        else:
+            v = int(v)
+        return set_shared(name, v + 1)
+    finally:
+        _shared_lock.release()
+
+
+def decrement_shared(name):
+    """
+    decrement value of the shared variable
+
+    Decrement value of the variable, shared between controller macros. Initial
+    value must be number
+
+    Args:
+        name: variable name
+    """
+    if not _shared_lock.acquire(timeout=eva.core.config.timeout):
+        logging.critical('macro_api increment_shared locking broken')
+        eva.core.critical()
+        return None
+    try:
+        v = shared(name)
+        if v is None:
+            v = 0
+        else:
+            v = int(v)
+        return set_shared(name, v - 1)
     finally:
         _shared_lock.release()
 
@@ -116,6 +166,8 @@ class MacroAPI(object):
             'no': False,
             'shared': self.macro_function(shared),
             'set_shared': self.macro_function(set_shared),
+            'increment_shared': self.macro_function(increment_shared),
+            'decrement_shared': self.macro_function(decrement_shared),
             'print': self.macro_function(self.info),
             'mail': self.macro_function(eva.mailer.send),
             'debug': self.macro_function(self.debug),

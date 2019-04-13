@@ -266,6 +266,22 @@ Raises:
 * **ResourceNotFound** command script or controller is not found
 
 
+.. _macro_api_decrement_shared:
+
+decrement_shared - decrement value of the shared variable
+---------------------------------------------------------
+
+Decrement value of the variable, shared between controller macros. Initial value must be number
+
+.. code-block:: python
+
+    decrement_shared('counter1')
+
+Parameters:
+
+* **name** variable name
+
+
 .. _macro_api_exit:
 
 exit - finish macro execution
@@ -280,6 +296,22 @@ exit - finish macro execution
 Parameters:
 
 * **code** macro exit code (default: 0, no errors)
+
+
+.. _macro_api_increment_shared:
+
+increment_shared - increment value of the shared variable
+---------------------------------------------------------
+
+Increment value of the variable, shared between controller macros. Initial value must be number
+
+.. code-block:: python
+
+    increment_shared('counter1')
+
+Parameters:
+
+* **name** variable name
 
 
 .. _macro_api_ls:
@@ -492,7 +524,7 @@ Raises:
 set_shared - set value of the shared variable
 ---------------------------------------------
 
-Set value of the variable, shared between node macros
+Set value of the variable, shared between controller macros
 
 .. code-block:: python
 
@@ -512,7 +544,7 @@ Optionally:
 shared - get value of the shared variable
 -----------------------------------------
 
-Get value of the variable, shared between node macros
+Get value of the variable, shared between controller macros
 
 .. code-block:: python
 
