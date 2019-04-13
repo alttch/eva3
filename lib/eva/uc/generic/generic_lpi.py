@@ -112,7 +112,7 @@ class LPI(object):
             d['cfg'] = self.lpi_cfg
         d['lpi_id'] = self.lpi_id
         d['id'] = self.driver_id
-        d['mod'] = self.__lpi_mod_id
+        d['mod'] = self.lpi_mod_id
         d['phi_id'] = self.phi_id
         d['features'] = self.__features
         return d
@@ -245,7 +245,7 @@ class LPI(object):
         self.__results_lock = threading.Lock()
 
         mod = sys.modules[self.__module__]
-        self.__lpi_mod_id = mod.__name__.split('.')[-1]
+        self.lpi_mod_id = mod.__name__.split('.')[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
         self.__description = mod.__description__
