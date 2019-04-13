@@ -8,12 +8,12 @@ Virtual drivers
 ===============
 
 If you want to build a virtual setup, the best idea is to use virtual
-:doc:`drivers</drivers>` . EVA ICS distribution includes 2 virtual drivers
-which cover all typical needs:
+:doc:`drivers</drivers>` . EVA ICS distribution includes 2 virtual PHIs
+(drivers) which cover all typical needs:
 
 * **vrtrelay** Virtual relay driver
 * **vrtsensors** Virtual sensor pool driver
 
-Both drivers work like the real ones so it's not necessary to set the item to
-virtual. When using virtual drivers, set item option *virtual=false*.
-
+Both PHIs work like the real ones so all you need to switch your setup to
+production  - assign "real" drivers to items or just load "real" PHIs with the
+same IDs.
