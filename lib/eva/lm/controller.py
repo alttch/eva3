@@ -535,6 +535,7 @@ def create_cycle(m_id, group=None, save=False):
     cycles_by_id[i] = m
     cycles_by_full_id[m.full_id] = m
     if save: m.save()
+    m.notify()
     logging.info('cycle "%s" created' % m.full_id)
     return m
 
@@ -802,11 +803,17 @@ def save_lvars():
 
 def notify_all(skip_subscribed_mqtt=False):
     notify_all_lvars(skip_subscribed_mqtt=skip_subscribed_mqtt)
+    notify_all_cycles(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 
 @with_item_lock
 def notify_all_lvars(skip_subscribed_mqtt=False):
     for i, u in lvars_by_full_id.items():
+        u.notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
+
+@with_item_lock
+def notify_all_cycles(skip_subscribed_mqtt=False):
+    for i, u in cycles_by_full_id.items():
         u.notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 

@@ -1315,15 +1315,19 @@ class GenericMQTTNotifier(GenericNotifier):
         else: qos = 1
         if subject == 'state':
             if retain is not None and self.retain_enabled: _retain = retain
-            else: _retain = False
+            else: _retain = True if self.retain_enabled else False
             for i in data:
-                dts = {'t': time.time()}
-                for k in i:
-                    if not k in ['id', 'group', 'type', 'full_id', 'oid']:
-                        dts[k] = i[k]
+                if i.get('destroyed'):
+                    dts = ''
+                else:
+                    dts = {'t': time.time()}
+                    for k in i:
+                        if not k in ['id', 'group', 'type', 'full_id', 'oid']:
+                            dts[k] = i[k]
+                    dts = jsonpickle.encode(dts)
                 self.mq.publish(
                     self.pfx + i['type'] + '/' + i['group'] + '/' + i['id'],
-                    jsonpickle.encode(dts),
+                    dts,
                     qos,
                     retain=_retain)
         elif subject == 'action':

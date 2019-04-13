@@ -43,9 +43,9 @@ before applying an update, create file *./etc/venv* with the following context:
     SKIP="pandas"
     #PIP_EXTRA_OPTIONS=-v
 
-Also, version 3.2.1 no longer requires obsolete retain MQTT topics. However
-*status* and *value* subtopics can still be used to update item states via
-MQTT. To avoid any possible conflicts:
+Also, version 3.2.1 no longer requires obsolete retain MQTT topics except item
+"shadow" state. However *status* and *value* subtopics can still be used to
+update item states via MQTT. To avoid any possible conflicts:
 
 * manually stop all nodes in cluster (*eva server stop*)
 * clean up MQTT database or remove retain MQTT topics

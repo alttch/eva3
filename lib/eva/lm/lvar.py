@@ -25,8 +25,9 @@ class LVar(eva.item.VariableItem):
         self.prv_status = 1
         self.update_lock = threading.Lock()
 
-    def notify(self, skip_subscribed_mqtt=False):
-        super().notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
+    def notify(self, skip_subscribed_mqtt=False, for_destroy=False):
+        super().notify(
+            skip_subscribed_mqtt=skip_subscribed_mqtt, for_destroy=for_destroy)
         if eva.core.config.db_update == 1:
             eva.lm.controller.save_lvar_state(self)
 

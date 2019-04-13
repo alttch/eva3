@@ -27,8 +27,9 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.value = state.get('value')
         self.mqtt_update_topics = ['']
 
-    def notify(self, retain=None, skip_subscribed_mqtt=False):
-        super().notify(skip_subscribed_mqtt=True)
+    def notify(self, retain=None, skip_subscribed_mqtt=False,
+               for_destroy=False):
+        super().notify(skip_subscribed_mqtt=True, for_destroy=for_destroy)
 
     def start_expiration_checker(self):
         pass

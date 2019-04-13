@@ -97,11 +97,14 @@ class Item(object):
     def copy(self):
         return copy.copy(self)
 
-    def notify(self, retain=None, skip_subscribed_mqtt=False):
+    def notify(self, retain=None, skip_subscribed_mqtt=False,
+               for_destroy=False):
         try:
             if skip_subscribed_mqtt: s = self
             else: s = None
             d = self.serialize(notify=True)
+            if for_destroy:
+                d['destroyed'] = True
             eva.notify.notify(
                 'state',
                 data=(self, d),
@@ -1159,9 +1162,7 @@ class UpdatableItem(Item):
 
     def destroy(self):
         super().destroy()
-        self.status = None
-        self.value = None
-        self.notify()
+        self.notify(for_destroy=True)
 
 
 class ActiveItem(Item):
@@ -1677,7 +1678,6 @@ class ActiveItem(Item):
 
     def destroy(self):
         self.action_enabled = None
-        self.notify()
         super().destroy()
 
 

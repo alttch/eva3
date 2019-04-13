@@ -198,7 +198,8 @@ class Macro(eva.item.ActiveItem):
                 return False
         return super().set_prop(prop, val, save)
 
-    def notify(self, retain=None, skip_subscribed_mqtt=False):
+    def notify(self, retain=None, skip_subscribed_mqtt=False,
+               for_destroy=False):
         pass
 
     def serialize(self,
@@ -459,7 +460,7 @@ class Cycle(eva.item.Item):
             d['status'] = self.cycle_status
             avg = (self.tc / self.c if self.c else self.interval)
             itr = self.iterations
-            d['avg'] = int(avg*10000)/10000.0 if avg is not None else None
+            d['avg'] = int(avg * 10000) / 10000.0 if avg is not None else None
             d['iterations'] = itr
             if avg is None:
                 d['value'] = None
@@ -475,8 +476,4 @@ class Cycle(eva.item.Item):
 
     def destroy(self):
         super().destroy()
-        self.c = None
-        self.interval = None
-        self.iterations = None
-        self.cycle_status = None
-        self.notify()
+        self.notify(for_destroy=True)
