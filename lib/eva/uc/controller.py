@@ -408,12 +408,7 @@ def load_sensors(start=False):
 
 
 @with_item_lock
-def create_item(item_id,
-                item_type,
-                group=None,
-                virtual=False,
-                start=True,
-                save=False):
+def create_item(item_id, item_type, group=None, start=True, save=False):
     if not item_id: raise InvalidParameter('item id not specified')
     if group and item_id.find('/') != -1:
         raise InvalidParameter(
@@ -443,9 +438,7 @@ def create_item(item_id,
         item = eva.uc.ucmu.UCMultiUpdate(i)
     if not item:
         raise FunctionFailed
-    if virtual: virt = True
-    else: virt = False
-    cfg = {'group': grp, 'virtual': virt}
+    cfg = {'group': grp}
     if eva.core.config.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
@@ -456,34 +449,31 @@ def create_item(item_id,
 
 
 @with_item_lock
-def create_unit(unit_id, group=None, virtual=False, save=False):
+def create_unit(unit_id, group=None, save=False):
     return create_item(
         item_id=unit_id,
         item_type='U',
         group=group,
-        virtual=virtual,
         start=True,
         save=save)
 
 
 @with_item_lock
-def create_sensor(sensor_id, group=None, virtual=False, save=False):
+def create_sensor(sensor_id, group=None, save=False):
     return create_item(
         item_id=sensor_id,
         item_type='S',
         group=group,
-        virtual=virtual,
         start=True,
         save=save)
 
 
 @with_item_lock
-def create_mu(mu_id, group=None, virtual=False, save=False):
+def create_mu(mu_id, group=None, save=False):
     return create_item(
         item_id=mu_id,
         item_type='MU',
         group=group,
-        virtual=virtual,
         start=True,
         save=save)
 

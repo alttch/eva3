@@ -369,13 +369,11 @@ class UC_API(GenericAPI):
             s: item status
             v: item value
         """
-        k, i, s, v, force_virtual = parse_function_params(
-            kwargs, 'kisvO', '.si.b')
+        k, i, s, v = parse_function_params(kwargs, 'kisv', '.si.')
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if s or v:
-            return item.update_set_state(
-                status=s, value=v, force_virtual=force_virtual)
+            return item.update_set_state(status=s, value=v)
         else:
             item.need_update.set()
             return True, api_result_accepted
@@ -588,13 +586,11 @@ class UC_API(GenericAPI):
 
         Optional:
             .g: unit group
-            .v: virtual unit (deprecated)
             save: save unit configuration immediately
         """
-        i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
+        i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
         return eva.uc.controller.create_unit(
-            unit_id=oid_to_id(i, 'unit'), group=g, virtual=v,
-            save=save).serialize()
+            unit_id=oid_to_id(i, 'unit'), group=g, save=save).serialize()
 
     @log_i
     @api_need_master
@@ -610,13 +606,11 @@ class UC_API(GenericAPI):
 
         Optional:
             .g: sensor group
-            .v: virtual sensor (deprecated)
             save: save sensor configuration immediately
         """
-        i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
+        i, g, v, save = parse_api_params(kwargs, 'igS', 'Ssb')
         return eva.uc.controller.create_sensor(
-            sensor_id=oid_to_id(i, 'sensor'), group=g, virtual=v,
-            save=save).serialize()
+            sensor_id=oid_to_id(i, 'sensor'), group=g, save=save).serialize()
 
     @log_i
     @api_need_master
@@ -632,13 +626,11 @@ class UC_API(GenericAPI):
 
         Optional:
             .g: multi-update group
-            .v: virtual multi-update (deprecated)
             save: save multi-update configuration immediately
         """
-        i, g, v, save = parse_api_params(kwargs, 'igVS', 'Ssbb')
+        i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
         return eva.uc.controller.create_mu(
-            mu_id=oid_to_id(i, 'mu'), group=g, virtual=v,
-            save=save).serialize()
+            mu_id=oid_to_id(i, 'mu'), group=g, save=save).serialize()
 
     @log_i
     @api_need_master
@@ -654,17 +646,16 @@ class UC_API(GenericAPI):
 
         Optional:
             .g: item group
-            .v: virtual item (deprecated)
             save: save multi-update configuration immediately
         """
-        k, i, g, v, save = parse_function_params(kwargs, 'kigvS', '.Osbb')
+        k, i, g, save = parse_function_params(kwargs, 'kigS', '.Osb')
         t, i = parse_oid(i)
         if t == 'unit':
-            return self.create_unit(k=k, i=i, virtual=v, save=save)
+            return self.create_unit(k=k, i=i, save=save)
         elif t == 'sensor':
-            return self.create_sensor(k=k, i=i, virtual=v, save=save)
+            return self.create_sensor(k=k, i=i, save=save)
         elif t == 'mu':
-            return self.create_mu(k=k, i=i, virtual=v, save=save)
+            return self.create_mu(k=k, i=i, save=save)
         raise InvalidParameter('oid type unknown')
 
     @log_i

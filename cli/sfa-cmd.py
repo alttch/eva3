@@ -1351,7 +1351,7 @@ _pd_cols = {
         'exp_in'
     ],
     'state_': [
-        'oid', 'virtual', 'action_enabled', 'description', 'location', 'status',
+        'oid', 'action_enabled', 'description', 'location', 'status',
         'value', 'nstatus', 'nvalue', 'set', 'expires', 'exp_in'
     ],
     'result': [

@@ -710,7 +710,7 @@ def remove_controller(controller_id):
 
 
 @with_item_lock
-def create_item(item_id, item_type, group=None, virtual=False, save=False):
+def create_item(item_id, item_type, group=None, save=False):
     if not item_id: raise InvalidParameter('item id not specified')
     if group and item_id.find('/') != -1:
         raise InvalidParameter(
@@ -735,9 +735,7 @@ def create_item(item_id, item_type, group=None, virtual=False, save=False):
     if item_type == 'LV' or item_type == 'lvar':
         item = eva.lm.lvar.LVar(i)
     if not item: return False
-    if virtual: virt = True
-    else: virt = False
-    cfg = {'group': grp, 'virtual': virt}
+    cfg = {'group': grp}
     if eva.core.config.mqtt_update_default:
         cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
@@ -751,8 +749,7 @@ def create_item(item_id, item_type, group=None, virtual=False, save=False):
 
 @with_item_lock
 def create_lvar(lvar_id, group=None, save=False):
-    return create_item(
-        item_id=lvar_id, item_type='LV', group=group, virtual=False, save=save)
+    return create_item(item_id=lvar_id, item_type='LV', group=group, save=save)
 
 
 @with_item_lock
@@ -810,6 +807,7 @@ def notify_all(skip_subscribed_mqtt=False):
 def notify_all_lvars(skip_subscribed_mqtt=False):
     for i, u in lvars_by_full_id.items():
         u.notify(skip_subscribed_mqtt=skip_subscribed_mqtt)
+
 
 @with_item_lock
 def notify_all_cycles(skip_subscribed_mqtt=False):

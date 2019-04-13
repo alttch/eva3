@@ -283,13 +283,8 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
     def update_set_state(self,
                          status=None,
                          value=None,
-                         from_mqtt=False,
-                         force_virtual=0):
+                         from_mqtt=False):
         if self._destroyed: return False
-        if self.virtual and not force_virtual:
-            logging.debug('%s skipping update - it\'s virtual' % \
-                    self.oid)
-            return False
         try:
             if status is not None: _status = int(status)
             else: _status = None

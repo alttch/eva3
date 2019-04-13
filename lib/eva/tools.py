@@ -149,8 +149,6 @@ __special_param_names = {
     'Y': 'full',
     'J': '_j',
     'F': 'force',
-    'V': 'virtual',
-    'O': 'force_virtual',
     'H': 'has_all',
     'W': 'wait',
     'U': 'uri'
@@ -162,8 +160,6 @@ __special_param_codes = {
     'full': 'Y',
     '_j': 'J',
     'force': 'F',
-    'virtual': 'V',
-    'force_virtual': 'O',
     'has_all': 'H',
     'wait': 'W',
     'uri': 'U'
@@ -191,7 +187,6 @@ def parse_function_params(params,
             Y: equal to 'full'
             J: equal to '_j'
             F: equal to 'force'
-            V: equal to 'force_virtual'
         values: parameter values
             R: required, any not null and non-empty string
             r: required, but empty strings are possible

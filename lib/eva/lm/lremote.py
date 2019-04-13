@@ -37,8 +37,7 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
     def update_set_state(self,
                          status=None,
                          value=None,
-                         from_mqtt=False,
-                         force_virtual=False):
+                         from_mqtt=False):
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LRemoteUnit::update_set_state locking broken')
             eva.core.critical()
@@ -49,8 +48,7 @@ class LRemoteUnit(eva.client.remote_item.RemoteUnit):
             if super().update_set_state(
                     status=status,
                     value=value,
-                    from_mqtt=from_mqtt,
-                    force_virtual=force_virtual):
+                    from_mqtt=from_mqtt):
                 self.prv_status = _status
                 self.prv_value = _value
                 eva.lm.controller.pdme(self)
@@ -95,8 +93,7 @@ class LRemoteSensor(eva.client.remote_item.RemoteSensor):
     def update_set_state(self,
                          status=None,
                          value=None,
-                         from_mqtt=False,
-                         force_virtual=False):
+                         from_mqtt=False):
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LRemoteSensor::update_set_state locking broken')
             eva.core.critical()
@@ -107,8 +104,7 @@ class LRemoteSensor(eva.client.remote_item.RemoteSensor):
             if super().update_set_state(
                     status=status,
                     value=value,
-                    from_mqtt=from_mqtt,
-                    force_virtual=force_virtual):
+                    from_mqtt=from_mqtt):
                 self.prv_status = _status
                 self.prv_value = _value
                 eva.lm.controller.pdme(self)

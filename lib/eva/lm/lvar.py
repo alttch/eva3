@@ -15,7 +15,6 @@ class LVar(eva.item.VariableItem):
 
     def __init__(self, var_id):
         super().__init__(var_id, 'lvar')
-        self._virtual_allowed = False
         self._snmp_traps_allowed = False
         self._drivers_allowed = False
         self._modbus_allowed = False
@@ -41,11 +40,7 @@ class LVar(eva.item.VariableItem):
             except:
                 eva.core.log_traceback()
 
-    def update_set_state(self,
-                         status=None,
-                         value=None,
-                         from_mqtt=False,
-                         force_virtual=False):
+    def update_set_state(self, status=None, value=None, from_mqtt=False):
         if not self.status and status != 1: return False
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LVar::update_set_state locking broken')
@@ -56,10 +51,7 @@ class LVar(eva.item.VariableItem):
             _status = self.status
             _value = self.value
             if super().update_set_state(
-                    status=status,
-                    value=value,
-                    from_mqtt=from_mqtt,
-                    force_virtual=force_virtual):
+                    status=status, value=value, from_mqtt=from_mqtt):
                 if t != self.set_time:
                     self.notify(skip_subscribed_mqtt=from_mqtt)
                 self.prv_status = _status
@@ -76,9 +68,8 @@ class LVar(eva.item.VariableItem):
             return True
         return False
 
-    def set(self, value=None, force_virtual=False):
-        self.update_set_state(
-            status=1, value=value, force_virtual=force_virtual)
+    def set(self, value=None):
+        self.update_set_state(status=1, value=value)
         logging.debug('%s set, expires: %f' % \
                 (self.oid, self.set_time + self.expires))
         if value is not None:

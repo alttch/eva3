@@ -170,13 +170,9 @@ class ExternalProcess(GenericRunner):
                  tki=None):
         super().__init__(timeout=timeout, tki=tki)
         if item:
-            if item.virtual:
-                self.xc_fname = eva.core.dir_xc + '/evirtual'
-                self.args = (item.item_type,)
-            else:
-                self.xc_fname = eva.core.format_xc_fname(
-                    item=item, xc_type='', update=update, fname=fname)
-                self.args = ()
+            self.xc_fname = eva.core.format_xc_fname(
+                item=item, xc_type='', update=update, fname=fname)
+            self.args = ()
             self.env = item.item_env()
             self.args += (item.item_id,)
             if update:

@@ -306,8 +306,6 @@ class UpdatableItem(Item):
         self.mqtt_update_topics = ['', 'status', 'value']
         self.modbus_status = None
         self.modbus_value = None
-        self.virtual = False
-        self._virtual_allowed = True
         self._mqtt_updates_allowed = True
         self._snmp_traps_allowed = True
         self._drivers_allowed = True
@@ -322,8 +320,6 @@ class UpdatableItem(Item):
             self.modbus_status = data['modbus_status']
         if 'modbus_value' in data and self._modbus_allowed:
             self.modbus_value = data['modbus_value']
-        if 'virtual' in data and self._virtual_allowed:
-            self.virtual = data['virtual']
         if 'snmp_trap' in data:
             self.snmp_trap = data['snmp_trap']
         if 'update_driver_config' in data:
@@ -359,17 +355,7 @@ class UpdatableItem(Item):
         super().update_config(data)
 
     def set_prop(self, prop, val=None, save=False):
-        if prop == 'virtual' and self._virtual_allowed:
-            v = val_to_boolean(val)
-            if v is not None:
-                if self.virtual != v:
-                    self.virtual = v
-                    self.log_set(prop, v)
-                    self.set_modified(save)
-                return True
-            else:
-                return False
-        elif prop == 'expires':
+        if prop == 'expires':
             if val is None:
                 expires = 0
             else:
@@ -900,7 +886,7 @@ class UpdatableItem(Item):
 
     def set_expired(self):
         if self.status == -1 and self.value == '': return False
-        self.update_set_state(status=-1, value='', force_virtual=True)
+        self.update_set_state(status=-1, value='')
         return True
 
     def update(self, driver_state_in=None):
@@ -927,8 +913,8 @@ class UpdatableItem(Item):
 
     def get_update_xc(self, driver_state_in=None):
         import eva.runner
-        if self._drivers_allowed and not self.virtual and \
-                self.update_exec and self.update_exec[0] == '|':
+        if self._drivers_allowed and self.update_exec and \
+                self.update_exec[0] == '|':
             return eva.runner.DriverCommand(
                 item=self,
                 update=True,
@@ -973,7 +959,7 @@ class UpdatableItem(Item):
             logging.error('update %s returned bad data' % self.oid)
             eva.core.log_traceback()
             return False
-        return self.update_set_state(status, value, force_virtual=True)
+        return self.update_set_state(status, value)
 
     def process_snmp_trap(self, host, data):
         if not self.snmp_trap: return
@@ -1071,15 +1057,7 @@ class UpdatableItem(Item):
         elif v is False: v = 0
         self.update_set_state(value=v)
 
-    def update_set_state(self,
-                         status=None,
-                         value=None,
-                         from_mqtt=False,
-                         force_virtual=False):
-        if self.virtual and not force_virtual:
-            logging.debug('%s skipping update - it\'s virtual' % \
-                    self.oid)
-            return
+    def update_set_state(self, status=None, value=None, from_mqtt=False):
         self.update_expiration()
         need_notify = False
         if status is not None and status != '':
@@ -1148,9 +1126,6 @@ class UpdatableItem(Item):
         elif not info:
             d['status'] = self.status
             d['value'] = self.value
-        if (full or config or props) and self._virtual_allowed:
-            if not config or self.virtual:
-                d['virtual'] = self.virtual
         d.update(super().serialize(
             full=full, config=config, info=info, props=props, notify=notify))
         return d
@@ -1434,8 +1409,8 @@ class ActiveItem(Item):
 
     def get_action_xc(self, a):
         import eva.runner
-        if self._drivers_allowed and not self.virtual and \
-                self.action_exec and self.action_exec[0] == '|':
+        if self._drivers_allowed and self.action_exec and \
+                self.action_exec[0] == '|':
             return eva.runner.DriverCommand(
                 item=self,
                 state=self.action_run_args(a, n2n=False),
@@ -1981,16 +1956,8 @@ class MultiUpdate(UpdatableItem):
 
 class VariableItem(UpdatableItem):
 
-    def update_set_state(self,
-                         status=None,
-                         value=None,
-                         from_mqtt=False,
-                         force_virtual=False):
+    def update_set_state(self, status=None, value=None, from_mqtt=False):
         if self._destroyed: return False
-        if self.virtual and not force_virtual:
-            logging.debug('%s skipping update - it\'s virtual' % \
-                    self.oid)
-            return False
         try:
             if status is not None: _status = int(status)
             else: _status = None

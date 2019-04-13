@@ -1132,8 +1132,6 @@ class GenericCLI(GCLI):
             params['has_all'] = 1
         elif getattr(a, '_full_display', False):
             self.cur_api_func_is_full = '_'
-        if getattr(a, '_virtual', False):
-            params['virtual'] = 1
         if getattr(a, '_save', False):
             params['save'] = 1
         if getattr(a, '_force', False):
