@@ -48,6 +48,16 @@ _uc-cmd_owfs() {
   fi
 }
 
+_uc-cmd_modbus-slave() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'get' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _uc-cmd_modbus() {
   local cur prev words cword
   _init_completion || return
@@ -162,10 +172,10 @@ _uc-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi modbus owfs phi save server state test unlock update user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
   else
     case "${words[1]}" in
-      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|modbus|owfs|phi|server|user)
+      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|modbus|modbus-slave|owfs|phi|server|user)
         _uc-cmd_${words[1]}
         ;;
       *)
