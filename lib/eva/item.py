@@ -1038,6 +1038,8 @@ class UpdatableItem(Item):
             elif topic.endswith('/value'):
                 self.update_set_state(value=data)
             elif topic == self.item_type + '/' + self.full_id:
+                if not data:
+                    return
                 j = jsonpickle.decode(data)
                 t = j['t']
                 if t < self.mqtt_update_timestamp:
