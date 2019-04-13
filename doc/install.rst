@@ -261,7 +261,7 @@ Updating
 .. warning::
 
     Before updating from the previous version, read `update
-    manifest <https://github.com/alttch/eva3/blob/3.2.0/UPDATE.rst>`_.
+    manifest <https://github.com/alttch/eva3/blob/3.2.1/UPDATE.rst>`_.
 
 Using EVA Shell
 ---------------
@@ -302,6 +302,15 @@ Using system shell
 .. note::
 
     The system downgrade is officially not supported and not recommended.
+
+Intermediate versions
+---------------------
+
+It is usually absolutely safe to update old EVA ICS installations to newer
+version without applying all intermediate updates.
+
+However, it is highly recommended to read update manifests for all skipped
+versions and combine before / after update instructions.
 
 Moving to another folder
 ========================
