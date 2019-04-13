@@ -1096,6 +1096,13 @@ class RemoteLMPool(RemoteControllerPool):
         p = {'i': lvar_id}
         return lm.api_call('reset', p)
 
+    def clear(self, lvar_id):
+        if not lvar_id in self.controllers_by_lvar:
+            return apiclient.result_not_found, None
+        lm = self.controllers_by_lvar[lvar_id]
+        p = {'i': lvar_id}
+        return lm.api_call('clear', p)
+
     def toggle(self, lvar_id):
         if not lvar_id in self.controllers_by_lvar:
             return apiclient.result_not_found, None
@@ -1103,12 +1110,19 @@ class RemoteLMPool(RemoteControllerPool):
         p = {'i': lvar_id}
         return lm.api_call('toggle', p)
 
-    def clear(self, lvar_id):
+    def increment(self, lvar_id):
         if not lvar_id in self.controllers_by_lvar:
             return apiclient.result_not_found, None
         lm = self.controllers_by_lvar[lvar_id]
         p = {'i': lvar_id}
-        return lm.api_call('clear', p)
+        return lm.api_call('increment', p)
+
+    def decrement(self, lvar_id):
+        if not lvar_id in self.controllers_by_lvar:
+            return apiclient.result_not_found, None
+        lm = self.controllers_by_lvar[lvar_id]
+        p = {'i': lvar_id}
+        return lm.api_call('decrement', p)
 
     def run(self,
             macro,

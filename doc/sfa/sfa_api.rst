@@ -190,12 +190,12 @@ The call is considered successful when action is put into the action queue of se
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
-* **s** desired unit status
 
 Optionally:
 
+* **s** desired unit status
 * **v** desired unit value
 * **w** wait for the completion for the specified number of seconds
 * **u** action UUID (will be auto generated if none specified)
@@ -219,7 +219,7 @@ Create unit control action to toggle its status (1->0, 0->1)
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 Optionally:
@@ -246,7 +246,7 @@ Disables unit to run and queue new actions.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 .. _sfapi_enable_actions:
@@ -262,7 +262,7 @@ Enables unit to run and queue new actions.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 .. _sfapi_groups:
@@ -278,7 +278,7 @@ Get the list of item groups. Useful e.g. for custom interfaces.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **p** item type (unit [U], sensor [S] or lvar [LV])
 
 .. _sfapi_kill:
@@ -294,7 +294,7 @@ Apart from canceling all queued commands, this function also terminates the curr
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 Returns:
@@ -314,7 +314,7 @@ Cancels all queued actions, keeps the current action running.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 .. _sfapi_result:
@@ -330,7 +330,7 @@ Checks the result of the action by its UUID or returns the actions for the speci
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 Optionally:
 
@@ -356,7 +356,7 @@ State of the item or all items of the specified type can be obtained using state
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **p** item type (unit [U], sensor [S] or lvar [LV])
 
 Optionally:
@@ -378,7 +378,7 @@ State history of one :doc:`item</items>` or several items of the specified type 
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **a** history notifier id (default: db_1)
 * **i** item oids or full ids, list or comma separated
 
@@ -405,7 +405,7 @@ Terminates or cancel the action if it is still queued
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **u** action uuid or
 * **i** unit id
 
@@ -426,7 +426,7 @@ set status (if **expires** lvar param > 0) or value (if **expires** isn't set) o
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** lvar id
 
 .. _sfapi_reset:
@@ -442,7 +442,7 @@ Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful when lvar i
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** lvar id
 
 .. _sfapi_set:
@@ -458,7 +458,7 @@ Set status and value of a :ref:`logic variable<lvar>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** lvar id
 
 Optionally:
@@ -479,7 +479,47 @@ set status (if **expires** lvar param > 0) or value (if **expires** isn't set) o
 
 Parameters:
 
-* **k** 
+* **k** valid API key
+* **i** lvar id
+
+
+.. _sfapi_cat_lvar:
+
+LVar functions
+==============
+
+
+
+.. _sfapi_decrement:
+
+decrement - decrement lvar value
+--------------------------------
+
+Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/decrement.req
+    :response: http-examples/sfapi/decrement.resp
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
+
+.. _sfapi_increment:
+
+increment - increment lvar value
+--------------------------------
+
+Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/increment.req
+    :response: http-examples/sfapi/increment.resp
+
+Parameters:
+
+* **k** valid API key
 * **i** lvar id
 
 
@@ -503,7 +543,7 @@ Get the list of macros. Useful e.g. for custom interfaces.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 .. _sfapi_list_macros:
 
@@ -518,7 +558,7 @@ Get the list of all available :doc:`macros</lm/macros>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 Optionally:
 
@@ -538,7 +578,7 @@ Execute a :doc:`macro</lm/macros>` with the specified arguments.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** macro id
 
 Optionally:
@@ -571,7 +611,7 @@ get_cycle - get cycle information
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** cycle id
 
 Returns:
@@ -591,7 +631,7 @@ Get the list of cycles. Useful e.g. for custom interfaces.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 .. _sfapi_list_cycles:
 
@@ -606,7 +646,7 @@ Get the list of all available :doc:`cycles</lm/cycles>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 Optionally:
 

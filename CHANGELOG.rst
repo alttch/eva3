@@ -14,6 +14,7 @@ Common
       system stability as only tested version of libraries are used.
     * Support for AWS and Azure IoT
     * Modbus slave register monitoring functions
+    * increment/decrement functions for lvars and shared macro variables
 
 3.2.0 (2019-04-02)
 ==================

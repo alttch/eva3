@@ -247,10 +247,10 @@ The call is considered successful when action is put into the action queue of se
 Parameters:
 
 * **API Key** valid API key
-* **s** desired unit status
 
 Optionally:
 
+* **s** desired unit status
 * **v** desired unit value
 * **w** wait for the completion for the specified number of seconds
 * **p** queue priority (default is 100, lower is better)
@@ -513,6 +513,46 @@ Optionally:
 
 * **s** lvar status
 * **v** lvar value
+
+
+
+.. _sfapi_restful_cat_lvar:
+
+LVar functions
+==============
+
+
+
+.. _sfapi_restful_decrement:
+
+decrement lvar value
+--------------------
+
+Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/decrement.rest
+    :response: http-examples/sfapi/decrement.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
+.. _sfapi_restful_increment:
+
+increment lvar value
+--------------------
+
+Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/increment.rest
+    :response: http-examples/sfapi/increment.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
 
 
 

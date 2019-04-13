@@ -190,7 +190,23 @@ set status (if **expires** lvar param > 0) or value (if **expires** isn't set) o
 
 Parameters:
 
-* **k** 
+* **k** valid API key
+* **i** lvar id
+
+.. _lmapi_decrement:
+
+decrement - decrement lvar value
+--------------------------------
+
+Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/decrement.req
+    :response: http-examples/lmapi/decrement.resp
+
+Parameters:
+
+* **k** valid API key
 * **i** lvar id
 
 .. _lmapi_groups:
@@ -206,8 +222,24 @@ Get the list of item groups. Useful e.g. for custom interfaces.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **p** item type (must be set to lvar [LV])
+
+.. _lmapi_increment:
+
+increment - increment lvar value
+--------------------------------
+
+Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/increment.req
+    :response: http-examples/lmapi/increment.resp
+
+Parameters:
+
+* **k** valid API key
+* **i** lvar id
 
 .. _lmapi_reset:
 
@@ -222,7 +254,7 @@ Set status and value of a :ref:`logic variable<lvar>` to *1*. Useful when lvar i
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** lvar id
 
 .. _lmapi_set:
@@ -238,7 +270,7 @@ Set status and value of a :ref:`logic variable<lvar>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** lvar id
 
 Optionally:
@@ -259,7 +291,7 @@ State of lvar or all lvars can be obtained using state command.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 Optionally:
 
@@ -281,7 +313,7 @@ State history of one :doc:`item</items>` or several items of the specified type 
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **a** history notifier id (default: db_1)
 * **i** item oids or full ids, list or comma separated
 
@@ -308,7 +340,7 @@ switch value of a :ref:`logic variable<lvar>` between *0* and *1*. Useful when l
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** lvar id
 
 
@@ -511,7 +543,7 @@ get_rule - get rule information
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** rule id
 
 .. _lmapi_list_rule_props:
@@ -527,7 +559,7 @@ Get all editable parameters of the :doc:`decision rule</lm/decision_matrix>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** rule id
 
 .. _lmapi_list_rules:
@@ -543,7 +575,7 @@ Get the list of all available :doc:`decision rules<decision_matrix>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 .. _lmapi_set_rule_prop:
 
@@ -562,7 +594,7 @@ Set configuration parameters of the :doc:`decision rule</lm/decision_matrix>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** rule id
 * **p** property name (or empty for batch set)
 
@@ -628,7 +660,7 @@ get_macro - get macro information
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** macro id
 
 .. _lmapi_groups_macro:
@@ -644,7 +676,7 @@ Get the list of macros. Useful e.g. for custom interfaces.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 .. _lmapi_list_macro_props:
 
@@ -675,7 +707,7 @@ Get the list of all available :doc:`macros<macros>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 Optionally:
 
@@ -694,7 +726,7 @@ Get :doc:`macro<macros>` execution results either by action uuid or by macro id.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 Optionally:
 
@@ -720,7 +752,7 @@ Execute a :doc:`macro<macros>` with the specified arguments.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** macro id
 
 Optionally:
@@ -811,7 +843,7 @@ get_cycle - get cycle information
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** cycle id
 
 Returns:
@@ -831,7 +863,7 @@ Get the list of cycles. Useful e.g. for custom interfaces.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 .. _lmapi_list_cycle_props:
 
@@ -862,7 +894,7 @@ Get the list of all available :doc:`cycles<cycles>`.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 Optionally:
 
@@ -881,7 +913,7 @@ reset_cycle_stats - reset cycle statistic
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** cycle id
 
 .. _lmapi_set_cycle_prop:
@@ -919,7 +951,7 @@ start_cycle - start cycle
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** cycle id
 
 .. _lmapi_stop_cycle:
@@ -935,7 +967,7 @@ stop_cycle - stop cycle
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** cycle id
 
 Optionally:

@@ -145,6 +145,8 @@ class MacroAPI(object):
             'reset': self.macro_function(self.reset),
             'clear': self.macro_function(self.clear),
             'toggle': self.macro_function(self.toggle),
+            'increment': self.macro_function(self.increment),
+            'decrement': self.macro_function(self.decrement),
             'expires': self.macro_function(self.expires),
             'action': self.macro_function(self.action),
             'action_toggle': self.macro_function(self.action_toggle),
@@ -709,6 +711,46 @@ class MacroAPI(object):
             return self.clear(item_id)
         else:
             return self.reset(item_id)
+
+    def increment(self, lvar_id):
+        """
+        increment lvar value
+
+        Increment value of lvar. Initial value should be number
+
+        Args:
+            lvar_id: lvar id
+
+        Raises:
+            FunctionFailed: lvar value increment error
+            ResourceNotFound: lvar is not found
+        """
+        lvar = eva.lm.controller.get_lvar(lvar_id)
+        if not lvar:
+            raise ResourceNotFound
+        if not lvar.increment():
+            raise FunctionFailed
+        return True
+
+    def decrement(self, lvar_id):
+        """
+        decrement lvar value
+
+        Decrement value of lvar. Initial value should be number
+
+        Args:
+            lvar_id: lvar id
+
+        Raises:
+            FunctionFailed: lvar value decrement error
+            ResourceNotFound: lvar is not found
+        """
+        lvar = eva.lm.controller.get_lvar(lvar_id)
+        if not lvar:
+            raise ResourceNotFound
+        if not lvar.decrement():
+            raise FunctionFailed
+        return True
 
     def expires(self, lvar_id, etime=0):
         """

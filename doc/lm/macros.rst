@@ -23,7 +23,7 @@ files of the controller.
 Executing macros
 ================
 
-To execute a macro, use **macro run** command of :doc:`eva lm</cli>` or LM API
+To execute a macro, use **macro run** command of :doc:`lm-cmd</cli>` or LM API
 :ref:`run<lmapi_run>` function.
 
 Debugging macros
@@ -37,14 +37,14 @@ To receive information about errors you may run the following command:
 
 .. code-block:: bash
 
-    eva lm -J run <macro_id> -w 3600 | jq -r .err
+    lm-cmd -J run <macro_id> -w 3600 | jq -r .err
 
 Macros configuration
 ====================
 
 After the macro code is placed into *xc/lm/<macro_id>.py* file, it should be
 appended to the controller using :ref:`create_macro<lmapi_create_macro>` LM API
-function or with **eva lm**.
+function or with **lm-cmd**.
 
 After the macro configuration is created, you may view its params using
 :ref:`list_macro_props<lmapi_list_macro_props>` and change them with
@@ -63,7 +63,7 @@ Parameters:
   with an exception, the controller ignores this and continues the code
   execution (false by default)
 * **send_critical** if *true*, allows to send critical events to controller
-  with *critical(msg, send_event=True)*
+  core with *critical(msg, send_event=True)*
 
 Common principles of macros operation
 =====================================
@@ -165,6 +165,8 @@ Macros have the following built-in variables:
 * **lm_cvars** all :ref:`lm_cvars<lm_cvars>` variables
 * **out** macro may use this variable to output the data which will be set to
   **out** field of the execution result
+* **is_shutdown** if defined, contains a function which returns *True* if macro
+  caller got shutdown/stop event (set by :doc:`logic cycle<cycles>`)
 
 .. note::
 
@@ -456,7 +458,7 @@ Serialized macro action object (dict)
 .. code-block:: json
 
     {
-        "argv": [],
+        "args": [],
         "err": "",
         "exitcode": 0,
         "item_group": "tests",
@@ -960,6 +962,27 @@ Raises:
 * **ResourceNotFound** lvar is not found
 
 
+.. _macro_api_decrement:
+
+decrement - decrement lvar value
+--------------------------------
+
+Decrement value of lvar. Initial value should be number
+
+.. code-block:: python
+
+    decrement('tests/test1')
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Raises:
+
+* **FunctionFailed** lvar value decrement error
+* **ResourceNotFound** lvar is not found
+
+
 .. _macro_api_expires:
 
 expires - set lvar expiration time
@@ -982,6 +1005,27 @@ Optionally:
 Raises:
 
 * **FunctionFailed** lvar expiration set error
+* **ResourceNotFound** lvar is not found
+
+
+.. _macro_api_increment:
+
+increment - increment lvar value
+--------------------------------
+
+Increment value of lvar. Initial value should be number
+
+.. code-block:: python
+
+    increment('tests/test1')
+
+Parameters:
+
+* **lvar_id** lvar id
+
+Raises:
+
+* **FunctionFailed** lvar value increment error
 * **ResourceNotFound** lvar is not found
 
 

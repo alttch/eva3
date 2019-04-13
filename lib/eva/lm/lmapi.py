@@ -216,6 +216,40 @@ class LM_API(GenericAPI, GenericCloudAPI):
             return self.reset(k=k, i=i)
 
     @log_i
+    def increment(self, **kwargs):
+        """
+        increment lvar value
+
+        Increment value of a :ref:`logic variable<lvar>`. Initial value should
+        be number
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i, = parse_function_params(kwargs, 'ki', '.s')
+        item = eva.lm.controller.get_lvar(i)
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        return item.increment()
+
+    @log_i
+    def decrement(self, **kwargs):
+        """
+        decrement lvar value
+
+        Decrement value of a :ref:`logic variable<lvar>`. Initial value should
+        be number
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i, = parse_function_params(kwargs, 'ki', '.s')
+        item = eva.lm.controller.get_lvar(i)
+        if not item or not apikey.check(k, item): raise ResourceNotFound
+        return item.decrement()
+
+    @log_i
     def run(self, **kwargs):
         """
         execute macro
@@ -1306,6 +1340,11 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
             pass
         if rtp == 'lvar':
             if ii:
+                v = props.get('v')
+                if v == '!increment':
+                    return self.increment(k=k, i=ii)
+                if v == '!decrement':
+                    return self.decrement(k=k, i=ii)
                 s = props.get('s')
                 if s == 'reset':
                     return self.reset(k=k, i=ii)

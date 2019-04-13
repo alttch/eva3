@@ -22,7 +22,33 @@ class LVar(eva.item.VariableItem):
         self.mqtt_update_topics.append('set_time')
         self.prv_value = None
         self.prv_status = 1
-        self.update_lock = threading.Lock()
+        self.update_lock = threading.RLock()
+
+    def increment(self):
+        return self._increment_decrement(op=1)
+
+    def decrement(self):
+        return self._increment_decrement(op=-1)
+
+    def _increment_decrement(self, op=1):
+        if not self.update_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('LVar::_increment_decrement locking broken')
+            eva.core.critical()
+            return False
+        try:
+            if self.value != '':
+                try:
+                    v = int(self.value)
+                except:
+                    return False
+            else:
+                v = 0
+            return self.update_set_state(value=v + op)
+        except:
+            eva.core.log_traceback()
+            return False
+        finally:
+            self.update_lock.release()
 
     def notify(self, skip_subscribed_mqtt=False, for_destroy=False):
         super().notify(

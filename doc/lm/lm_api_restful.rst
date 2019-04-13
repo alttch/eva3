@@ -233,6 +233,22 @@ Parameters:
 * **API Key** valid API key
 
 
+.. _lmapi_restful_decrement:
+
+decrement lvar value
+--------------------
+
+Decrement value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/decrement.rest
+    :response: http-examples/lmapi/decrement.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
 .. _lmapi_restful_groups:
 
 get item group list
@@ -293,6 +309,22 @@ Parameters:
 
 Optionally:
 
+
+
+.. _lmapi_restful_increment:
+
+increment lvar value
+--------------------
+
+Increment value of a :ref:`logic variable<lvar>`. Initial value should be number
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/increment.rest
+    :response: http-examples/lmapi/increment.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
 
 
 .. _lmapi_restful_reset:

@@ -190,7 +190,7 @@ The call is considered successful when action is put into the action queue of se
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 Optionally:
@@ -219,7 +219,7 @@ Create unit control action to toggle its status (1->0, 0->1)
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 Optionally:
@@ -246,7 +246,7 @@ Disables unit to run and queue new actions.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 .. _ucapi_enable_actions:
@@ -262,7 +262,7 @@ Enables unit to run and queue new actions.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 .. _ucapi_groups:
@@ -278,7 +278,7 @@ Get the list of item groups. Useful e.g. for custom interfaces.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **p** item type (unit [U] or sensor [S])
 
 .. _ucapi_kill:
@@ -294,7 +294,7 @@ Apart from canceling all queued commands, this function also terminates the curr
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 Returns:
@@ -314,7 +314,7 @@ Cancels all queued actions, keeps the current action running.
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** unit id
 
 .. _ucapi_result:
@@ -330,7 +330,7 @@ Checks the result of the action by its UUID or returns the actions for the speci
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 
 Optionally:
 
@@ -356,7 +356,7 @@ State of the item or all items of the specified type can be obtained using state
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **p** item type (unit [U] or sensor [S])
 
 Optionally:
@@ -378,7 +378,7 @@ State history of one :doc:`item</items>` or several items of the specified type 
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **a** history notifier id (default: db_1)
 * **i** item oids or full ids, list or comma separated
 
@@ -405,7 +405,7 @@ Terminates or cancel the action if it is still queued
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **u** action uuid or
 * **i** unit id
 
@@ -430,7 +430,7 @@ Updates the status and value of the :doc:`item</items>`. This is one of the ways
 
 Parameters:
 
-* **k** 
+* **k** valid API key
 * **i** item id
 
 Optionally:
@@ -489,7 +489,6 @@ Parameters:
 Optionally:
 
 * **g** item group
-* **v** virtual item (deprecated)
 * **save** save multi-update configuration immediately
 
 .. _ucapi_create_mu:
@@ -511,7 +510,6 @@ Parameters:
 Optionally:
 
 * **g** multi-update group
-* **v** virtual multi-update (deprecated)
 * **save** save multi-update configuration immediately
 
 .. _ucapi_create_sensor:
@@ -533,7 +531,6 @@ Parameters:
 Optionally:
 
 * **g** sensor group
-* **v** virtual sensor (deprecated)
 * **save** save sensor configuration immediately
 
 .. _ucapi_create_unit:
@@ -555,7 +552,6 @@ Parameters:
 Optionally:
 
 * **g** unit group
-* **v** virtual unit (deprecated)
 * **save** save unit configuration immediately
 
 .. _ucapi_destroy:

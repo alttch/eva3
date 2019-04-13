@@ -472,6 +472,25 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             eva.sfa.controller.lm_pool.reset(lvar_id=oid_to_id(i, 'lvar')))
 
     @log_i
+    def clear(self, **kwargs):
+        """
+        clear lvar state
+
+        set status (if **expires** lvar param > 0) or value (if **expires**
+        isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is
+        used as a timer to stop it, or as a flag to set it *False*.
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
+        lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
+        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar')))
+
+    @log_i
     def toggle(self, **kwargs):
         """
         clear lvar state
@@ -491,13 +510,12 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             eva.sfa.controller.lm_pool.toggle(lvar_id=oid_to_id(i, 'lvar')))
 
     @log_i
-    def clear(self, **kwargs):
+    def increment(self, **kwargs):
         """
-        clear lvar state
+        increment lvar value
 
-        set status (if **expires** lvar param > 0) or value (if **expires**
-        isn't set) of a :ref:`logic variable<lvar>` to *0*. Useful when lvar is
-        used as a timer to stop it, or as a flag to set it *False*.
+        Increment value of a :ref:`logic variable<lvar>`. Initial value should
+        be number
 
         Args:
             k:
@@ -507,7 +525,25 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
         if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
         return ecall(
-            eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar')))
+            eva.sfa.controller.lm_pool.increment(lvar_id=oid_to_id(i, 'lvar')))
+
+    @log_i
+    def decrement(self, **kwargs):
+        """
+        decrement lvar value
+
+        Decrement value of a :ref:`logic variable<lvar>`. Initial value should
+        be number
+
+        Args:
+            k:
+            .i: lvar id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
+        lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
+        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        return ecall(
+            eva.sfa.controller.lm_pool.decrement(lvar_id=oid_to_id(i, 'lvar')))
 
     @log_d
     def list_macros(self, **kwargs):
@@ -1070,6 +1106,11 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return a
         elif rtp == 'lvar':
             if ii:
+                v = props.get('v')
+                if v == '!increment':
+                    return self.increment(k=k, i=ii)
+                if v == '!decrement':
+                    return self.decrement(k=k, i=ii)
                 s = props.get('s')
                 if s == 'reset':
                     return self.reset(k=k, i=ii)
