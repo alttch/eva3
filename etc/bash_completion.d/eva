@@ -342,16 +342,6 @@ _eva_uc_owfs() {
   fi
 }
 
-_eva_uc_modbus-slave() {
-  local cur prev words cword
-  _init_completion || return
-  if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'get' -- "$cur" ))
-  else
-    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
-  fi
-}
-
 _eva_uc_modbus() {
   local cur prev words cword
   _init_completion || return
@@ -466,10 +456,10 @@ _eva_uc() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi modbus owfs phi save server state test unlock update user' -- "$cur" ))
   else
     case "${words[2]}" in
-      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|modbus|owfs|phi|server|user)
         _eva_uc_${words[2]}
         ;;
       *)

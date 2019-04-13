@@ -109,6 +109,14 @@ class ManagementCLI(GenericCLI):
             'f', help='Backup name',
             metavar='NAME').completer = ComplBackupList(self)
         sp_backup_restore.add_argument(
+            '-i',
+            '--file',
+            dest='file',
+            action='append',
+            nargs='?',
+            help='Restore single file',
+            metavar='FILE')
+        sp_backup_restore.add_argument(
             '-r',
             '--runtime',
             dest='r',
@@ -519,6 +527,16 @@ sys.argv = {argv}
             self.print_err('no such backup')
             return self.local_func_result_failed
         if not self.before_save(): return self.local_func_result_failed
+        if params.get('file'):
+            for i in params.get('file'):
+                try:
+                    if not self.backup_restore_file(fname=f, frestore=i):
+                        raise Exception('restore failed')
+                except:
+                    self.after_save()
+                    return self.local_func_result_failed
+            if not self.after_save(): return self.local_func_result_failed
+            return self.local_func_result_ok
         if params.get('full'):
             self.clear_runtime(full=True)
             self.clear_xc()
@@ -595,6 +613,13 @@ sys.argv = {argv}
             self.colored(
                 'Restoring {}...'.format(dirname), color='green', attrs=[]))
         cmd = ('tar', 'xpf', fname, dirname)
+        return False if os.system(' '.join(cmd)) else True
+
+    def backup_restore_file(self, fname, frestore):
+        print(
+            self.colored(
+                'Restoring {}...'.format(frestore), color='green', attrs=[]))
+        cmd = ('tar', 'xpf', fname, frestore)
         return False if os.system(' '.join(cmd)) else True
 
     def update(self, params):
