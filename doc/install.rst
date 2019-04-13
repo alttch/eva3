@@ -183,9 +183,9 @@ EVA ICS installation script automatically creates Python virtual environment in
     
 If you want to rebuild venv from scratch, delete *python3* folder completely.
 
-However on some systems (e.g. ARM-based computers) venv installation can be
-tricky: you can expect slow installation time or problems with some modules
-(e.g. *pandas*).
+On some systems (e.g. ARM-based computers) venv installation can be tricky: you
+can expect slow installation time or problems with some heavy modules (e.g.
+*pandas*).
 
 To solve this:
 
