@@ -608,7 +608,7 @@ class UC_API(GenericAPI):
             .g: sensor group
             save: save sensor configuration immediately
         """
-        i, g, v, save = parse_api_params(kwargs, 'igS', 'Ssb')
+        i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
         return eva.uc.controller.create_sensor(
             sensor_id=oid_to_id(i, 'sensor'), group=g, save=save).serialize()
 
