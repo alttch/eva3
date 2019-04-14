@@ -455,7 +455,7 @@ port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
 work with the equipment of the same type which uses e.g. different registers
 for different connection types.
 
-Working with 1-wire via OWFS
+Working with 1-Wire via OWFS
 ============================
 
 As EVA ICS has virtual OWFS buses, you don't need to initialize OWFS by

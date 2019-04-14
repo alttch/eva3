@@ -1141,7 +1141,7 @@ class UC_API(GenericAPI):
 
         Parameter "location" ("n") should contain the connection configuration,
         e.g.  "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0
-        --w1" for local 1-wire bus via I2C, depending on type.
+        --w1" for local 1-Wire bus via I2C, depending on type.
 
         Args:
             k: .master
@@ -1240,7 +1240,7 @@ class UC_API(GenericAPI):
         """
         scan OWFS bus
 
-        Scan :doc:`OWFS bus</owfs>` for connected 1-wire devices.
+        Scan :doc:`OWFS bus</owfs>` for connected 1-Wire devices.
 
         Args:
             k: .master

@@ -705,7 +705,7 @@ create_owfs_bus - create OWFS bus
 
 Creates (defines) :doc:`OWFS bus</owfs>` with the specified configuration.
 
-Parameter "location" ("n") should contain the connection configuration, e.g.  "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1" for local 1-wire bus via I2C, depending on type.
+Parameter "location" ("n") should contain the connection configuration, e.g.  "localhost:4304" for owhttpd or "i2c=/dev/i2c-1:ALL", "/dev/i2c-0 --w1" for local 1-Wire bus via I2C, depending on type.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/create_owfs_bus.req
@@ -785,7 +785,7 @@ Parameters:
 scan_owfs_bus - scan OWFS bus
 -----------------------------
 
-Scan :doc:`OWFS bus</owfs>` for connected 1-wire devices.
+Scan :doc:`OWFS bus</owfs>` for connected 1-Wire devices.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/scan_owfs_bus.req
