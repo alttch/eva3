@@ -73,8 +73,6 @@ echo "- Stopping everything"
 
 ./sbin/eva-control stop
 
-./install/mklinks || exit 1
-
 echo "- Installing missing modules"
 
 ./_update/eva-${VERSION}/install/build-venv . || exit 2
@@ -144,6 +142,8 @@ mkdir -p ./xc/extensions || exit 1
 
 rm -f bin/eva-shell
 ln -sf eva bin/eva-shell
+
+./install/mklinks || exit 1
 
 echo "- Updating tables"
 
