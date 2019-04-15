@@ -133,8 +133,8 @@ The next step it to connect cron for it to run ventilation control macro (edit
 
 .. code-block:: bash
 
-    0 7 * * *    root   /path/to/sfa-cmd macro run control/vi_control -a "0 cron"
-    0 21 * * *    root   /path/to/sfa-cmd macro run control/vi_control -a "1 cron"
+    0 7 * * *    root   /path/to/eva sfa macro run control/vi_control -a "0 cron"
+    0 21 * * *    root   /path/to/eva sfa macro run control/vi_control -a "1 cron"
 
 As you can see, there is no rocket science here. :doc:`/sfa/sfa` is configured
 by a few commands and immediately starts collecting the data and events. In
