@@ -139,7 +139,7 @@ eva_sfa_tsdiff = null;
 eva_sfa_ws_mode = true;
 
 /**
- * Update item states via AJAX and subscribe to state updates via websocket
+ * Update item states via AJAX and subscribe to state updates via WebSocket
  *
  * Possible values:
  *  true - get states of all items API key has access to
