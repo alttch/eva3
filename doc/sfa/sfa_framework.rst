@@ -157,7 +157,7 @@ Server restart handler (WebSocket mode only). Contains function which's called a
 eva_sfa_state_updates
 ---------------------
 
-Update item states via AJAX and subscribe to state updates via websocket
+Update item states via AJAX and subscribe to state updates via WebSocket
  
 Possible values:  true - get states of all items API key has access to  {'p': [types], 'g': [groups]} - subscribe to specified types and groups  false - disable state updates
 
