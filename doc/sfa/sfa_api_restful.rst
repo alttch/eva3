@@ -929,7 +929,7 @@ ask connected clients to reload
 
 Sends **reload** event to all connected clients asking them to reload the interface.
 
-All the connected clients receive the event with *subject="reload"* and *data="asap"*. If the clients use :doc:`sfa_framework`, they can define :ref:`eva_sfa_reload_handler<sfw_reload>` function.
+All the connected clients receive the event with *subject="reload"* and *data="asap"*. If the clients use :doc:`sfa_framework`, they can define :ref:`reload handler<sfw_eva_sfa_reload_handler>` function.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/reload_clients.rest
@@ -947,7 +947,7 @@ notify connected clients about server restart
 
 Sends a **server restart** event to all connected clients asking them to prepare for server restart.
 
-All the connected clients receive the event with *subject="server"* and *data="restart"*. If the clients use :doc:`sfa_framework`, they can define :ref:`eva_sfa_server_restart_handler<sfw_server_restart>` function.
+All the connected clients receive the event with *subject="server"* and *data="restart"*. If the clients use :doc:`sfa_framework`, they can define :ref:`restart handler<sfw_eva_sfa_server_restart_handler>` function.
 
 Server restart notification is sent automatically to all connected clients when the server is restarting. This API function allows to send server restart notification without actual server restart, which may be useful e.g. for testing, handling frontend restart etc.
 

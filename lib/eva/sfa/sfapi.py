@@ -936,7 +936,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
         All the connected clients receive the event with *subject="reload"* and
         *data="asap"*. If the clients use :doc:`sfa_framework`, they can
-        define :ref:`eva_sfa_reload_handler<sfw_reload>` function.
+        define :ref:`reload handler<sfw_eva_sfa_reload_handler>` function.
 
         Args:
             k: .master
@@ -954,7 +954,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
         All the connected clients receive the event with *subject="server"* and
         *data="restart"*. If the clients use :doc:`sfa_framework`, they can
-        define :ref:`eva_sfa_server_restart_handler<sfw_server_restart>`
+        define :ref:`restart handler<sfw_eva_sfa_server_restart_handler>`
         function.
 
         Server restart notification is sent automatically to all connected
