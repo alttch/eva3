@@ -50,6 +50,8 @@ class APIKey(object):
         self.sysfunc = False
         self.item_ids = []
         self.groups = []
+        self.item_ids_ro = []
+        self.groups_ro = []
         self.allow = []
         self.hosts_allow = []
         self.hosts_assign = []
@@ -68,6 +70,8 @@ class APIKey(object):
             'sysfunc': self.sysfunc,
             'items': self.item_ids,
             'groups': self.groups,
+            'items_ro': self.item_ids_ro,
+            'groups_ro': self.groups_ro,
             'allow': self.allow,
             'pvt': self.pvt_files,
             'rpvt': self.rpvt_uris
@@ -122,6 +126,30 @@ class APIKey(object):
                     val = []
             if self.groups != val:
                 self.groups = val
+                self.set_modified(save)
+            return True
+        elif prop == 'items_ro':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            if self.item_ids_ro != val:
+                self.item_ids_ro = val
+                self.set_modified(save)
+            return True
+        elif prop == 'groups_ro':
+            if isinstance(value, list):
+                val = value
+            else:
+                if value:
+                    val = value.split(',')
+                else:
+                    val = []
+            if self.groups_ro != val:
+                self.groups_ro = val
                 self.set_modified(save)
             return True
         elif prop == 'allow':
@@ -202,8 +230,8 @@ class APIKey(object):
             return False
         data = self.serialize()
         for d in [
-                'items', 'groups', 'allow', 'hosts_allow', 'hosts_assign',
-                'pvt', 'rpvt'
+                'items', 'groups', 'items_ro', 'groups_ro', 'allow',
+                'hosts_allow', 'hosts_assign', 'pvt', 'rpvt'
         ]:
             data[d] = ','.join(data[d])
         dbconn = userdb()
@@ -211,15 +239,17 @@ class APIKey(object):
             if not self.in_db:
                 dbconn.execute(
                     sql('insert into apikeys(k_id, k, m, s, i,' +
-                        ' g, a,hal, has, pvt, rpvt) values ' +
-                        '(:k_id, :k, :m, :s, :i, :g, :a, :hal, :has,' +
-                        ' :pvt, :rpvt)'),
+                        ' g, i_ro, g_ro, a,hal, has, pvt, rpvt) values ' +
+                        '(:k_id, :k, :m, :s, :i, :g, :i_ro, :g_ro, :a, ' +
+                        ':hal, :has, :pvt, :rpvt)'),
                     k_id=data['id'],
                     k=data['key'],
                     m=1 if data['master'] else 0,
                     s=1 if data['sysfunc'] else 0,
                     i=data['items'],
                     g=data['groups'],
+                    i_ro=data['items_ro'],
+                    g_ro=data['groups_ro'],
                     a=data['allow'],
                     hal=data['hosts_allow'],
                     has=data['hosts_assign'],
@@ -227,13 +257,16 @@ class APIKey(object):
                     rpvt=data['rpvt'])
             else:
                 dbconn.execute(
-                    sql('update apikeys set k=:k, s=:s, i=:i, g=:g, a=:a, ' +
+                    sql('update apikeys set k=:k, s=:s, i=:i, g=:g, ' +
+                        'i_ro=:i_ro, g_ro=:g_ro, a=:a, ' +
                         'hal=:hal, has=:has, pvt=:pvt, rpvt=:rpvt where ' +
                         'k_id=:k_id'),
                     k=self.key,
                     s=1 if data['sysfunc'] else 0,
                     i=data['items'],
                     g=data['groups'],
+                    i_ro=data['items_ro'],
+                    g_ro=data['groups_ro'],
                     a=data['allow'],
                     hal=data['hosts_allow'],
                     has=data['hosts_assign'],
@@ -317,6 +350,22 @@ def load(fname=None, load_from_db=True):
                 except:
                     pass
                 try:
+                    key.item_ids_ro = list(
+                        filter(None, [
+                            x.strip()
+                            for x in cfg.get(ks, 'items_ro').split(',')
+                        ]))
+                except:
+                    pass
+                try:
+                    key.groups_ro = list(
+                        filter(None, [
+                            x.strip()
+                            for x in cfg.get(ks, 'groups_ro').split(',')
+                        ]))
+                except:
+                    pass
+                try:
                     key.pvt_files = list(filter(None,
                         [x.strip() for x in \
                                 cfg.get(ks, 'pvt').split(',')]))
@@ -388,7 +437,8 @@ def check(k,
           rpvt_uri=None,
           ip=None,
           master=False,
-          sysfunc=False):
+          sysfunc=False,
+          ro_op=False):
     if eva.core.config.setup_mode:
         return True
     if not k or not k in keys or (master and not keys[k].master): return False
@@ -402,7 +452,12 @@ def check(k,
             grp = item.group
         except:
             grp = 'nogroup'
-        if not eva.item.item_match(item, _k.item_ids, _k.groups): return False
+        if not eva.item.item_match(item, _k.item_ids, _k.groups):
+            if ro_op:
+                if not eva.item.item_match(item, _k.item_ids_ro, _k.groups_ro):
+                    return False
+            else:
+                return False
     if allow:
         for a in allow:
             if not a in _k.allow: return False
@@ -461,6 +516,8 @@ def serialized_acl(k):
     r['sysfunc'] = _k.sysfunc
     r['items'] = _k.item_ids
     r['groups'] = _k.groups
+    r['items_ro'] = _k.item_ids_ro
+    r['groups_ro'] = _k.groups_ro
     if _k.pvt_files: r['pvt'] = _k.pvt_files
     if _k.rpvt_uris: r['rpvt'] = _k.rpvt_uris
     r['allow'] = {}
@@ -528,6 +585,8 @@ def load_keys_from_db():
                          sa.Column('m', sa.Integer), sa.Column('s', sa.Integer),
                          sa.Column('i', sa.String(1024)),
                          sa.Column('g', sa.String(1024)),
+                         sa.Column('i_ro', sa.String(1024)),
+                         sa.Column('g_ro', sa.String(1024)),
                          sa.Column('a', sa.String(256)),
                          sa.Column('hal', sa.String(1024)),
                          sa.Column('has', sa.String(1024)),
@@ -548,6 +607,8 @@ def load_keys_from_db():
             for i, v in {
                     'item_ids': 'i',
                     'groups': 'g',
+                    'item_ids_ro': 'i_ro',
+                    'groups_ro': 'g_ro',
                     'allow': 'a',
                     'pvt_files': 'pvt',
                     'rpvt_uris': 'rpvt'

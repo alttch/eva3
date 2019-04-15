@@ -150,7 +150,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         else:
             return []
         if _i:
-            if _i in gi and apikey.check(k, gi[_i]):
+            if _i in gi and apikey.check(k, gi[_i], ro_op=True):
                 return gi[_i].serialize(full=full)
             else:
                 raise ResourceNotFound
@@ -158,7 +158,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if isinstance(group, list): _group = group
         else: _group = str(group).split(',')
         for i, v in gi.copy().items():
-            if apikey.check(k, v) and \
+            if apikey.check(k, v, ro_op=True) and \
                     (not group or \
                         eva.item.item_match(v, [], _group)):
                 r = v.serialize(full=full)
@@ -188,7 +188,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             return None
         result = []
         for i, v in gi.copy().items():
-            if apikey.check(k, v) and (not group or \
+            if apikey.check(k, v, ro_op=True) and (not group or \
                         eva.item.item_match(v, [], [group])) and \
                         v.group not in result:
                 result.append(v.group)
@@ -300,7 +300,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                     item = eva.sfa.controller.lm_pool.get_macro(_i)
             else:
                 item = eva.sfa.controller.uc_pool.get_unit(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item or not apikey.check(k, item, ro_op=True):
+            raise ResourceNotFound
         if item.item_type == 'unit':
             return ecall(
                 eva.sfa.controller.uc_pool.result(
@@ -660,7 +661,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             for c, d in \
                 eva.sfa.controller.lm_pool.cycles_by_controller.copy().items():
                 for a, v in d.copy().items():
-                    if apikey.check(k, v) and \
+                    if apikey.check(k, v, ro_op=True) and \
                         (not group or \
                             eva.item.item_match(v, [], _group)):
                         result.append(v.serialize(full=True))
@@ -676,7 +677,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             for a, v in \
                 eva.sfa.controller.lm_pool.cycles_by_controller[\
                                                         c_id].copy().items():
-                if apikey.check(k, v) and (not group or \
+                if apikey.check(k, v, ro_op=True) and (not group or \
                         eva.item.item_match(v, [], _group)):
                     result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['id'])
@@ -696,7 +697,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k, i = parse_function_params(kwargs, 'ki', '.S')
         item = eva.sfa.controller.lm_pool.cycles.get(
             oid_to_id(i, required='lcycle'))
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item or not apikey.check(k, item, ro_op=True):
+            raise ResourceNotFound
         return item.serialize(full=True)
 
     @log_d
@@ -713,7 +715,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k = parse_function_params(kwargs, 'k', '.')
         result = []
         for a, v in eva.sfa.controller.lm_pool.cycles.copy().items():
-            if apikey.check(k, v) and not v.group in result:
+            if apikey.check(k, v, ro_op=True) and not v.group in result:
                 result.append(v.group)
         return sorted(result)
 

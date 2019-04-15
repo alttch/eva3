@@ -15,6 +15,7 @@ Common
     * Support for AWS IoT and Azure IoT
     * Modbus slave register monitoring functions
     * increment/decrement functions for lvars and shared macro variables
+    * read-only permissions for API keys
 
 3.2.0 (2019-04-02)
 ==================

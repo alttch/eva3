@@ -164,7 +164,7 @@ class UC_API(GenericAPI):
                 m = eva.uc.controller.sensors_by_full_id
             if m:
                 for i, v in m.copy().items():
-                    if apikey.check(k, v) and not v.group in groups:
+                    if apikey.check(k, v, ro_op=True) and not v.group in groups:
                         groups.append(v.group)
                 return sorted(groups)
             else:
@@ -190,7 +190,8 @@ class UC_API(GenericAPI):
         k, i, group, tp, full = parse_function_params(kwargs, 'kigpY', '.sssb')
         if i:
             item = eva.uc.controller.get_item(i)
-            if not item or not apikey.check(k, item): raise ResourceNotFound
+            if not item or not apikey.check(k, item, ro_op=True):
+                raise ResourceNotFound
             if is_oid(i):
                 t, iid = parse_oid(i)
                 if not item or item.item_type != t: raise ResourceNotFound
@@ -209,7 +210,7 @@ class UC_API(GenericAPI):
                 raise ResourceNotFound
             result = []
             for i, v in gi.copy().items():
-                if apikey.check(k, v) and \
+                if apikey.check(k, v, ro_op=True) and \
                         (not group or \
                             eva.item.item_match(v, [], [grp])):
                     r = v.serialize(full=full)

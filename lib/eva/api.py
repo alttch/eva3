@@ -538,7 +538,8 @@ class GenericAPI(object):
                            g=None):
         import eva.item
         item = self.controller.get_item(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound(i)
+        if not item or not apikey.check(k, item, ro_op=True):
+            raise ResourceNotFound(i)
         if is_oid(i):
             _t, iid = parse_oid(i)
             if not item or item.item_type != _t: raise ResourceNotFound(i)
@@ -557,7 +558,8 @@ class GenericAPI(object):
         import eva.item
         if u:
             a = self.controller.Q.history_get(u)
-            if not a or not apikey.check(k, a.item): raise ResourceNotFound
+            if not a or not apikey.check(k, a.item, ro_op=True):
+                raise ResourceNotFound
             return a.serialize()
         else:
             result = []
@@ -566,7 +568,7 @@ class GenericAPI(object):
                 if item_id is None: raise ResourceNotFound
                 ar = None
                 item = self.controller.get_item(rtp + ':' + item_id)
-                if not apikey.check(k, item): raise ResourceNotFound
+                if not apikey.check(k, item, ro_op=True): raise ResourceNotFound
                 if item_id.find('/') > -1:
                     if item_id in self.controller.Q.actions_by_item_full_id:
                         ar = self.controller.Q.actions_by_item_full_id[item_id]
@@ -577,7 +579,7 @@ class GenericAPI(object):
             else:
                 ar = self.controller.Q.actions
             for a in ar:
-                if not apikey.check(k, a.item): continue
+                if not apikey.check(k, a.item, ro_op=True): continue
                 if g and \
                         not eva.item.item_match(a.item, [], [ g ]):
                     continue

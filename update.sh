@@ -145,6 +145,12 @@ mkdir -p ./xc/extensions || exit 1
 rm -f bin/eva-shell
 ln -sf eva bin/eva-shell
 
+echo "- Updating tables"
+
+./sbin/eva-update-tables uc || exit 1
+./sbin/eva-update-tables lm || exit 1
+./sbin/eva-update-tables sfa || exit 1
+
 echo "- Cleaning up"
 
 rm -rf _update

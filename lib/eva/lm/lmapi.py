@@ -90,7 +90,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
                 m = eva.lm.controller.lvars_by_full_id
             if m:
                 for i, v in m.copy().items():
-                    if apikey.check(k, v) and not v.group in groups:
+                    if apikey.check(k, v, ro_op=True) and not v.group in groups:
                         groups.append(v.group)
                 return sorted(groups)
             else:
@@ -120,7 +120,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
             raise ResourceNotFound
         if i:
             item = eva.lm.controller.get_lvar(i)
-            if not item or not apikey.check(k, item): raise ResourceNotFound
+            if not item or not apikey.check(k, item, ro_op=True):
+                raise ResourceNotFound
             if is_oid(i):
                 t, iid = parse_oid(i)
                 if not item or item.item_type != t: raise ResourceNotFound
@@ -129,7 +130,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             gi = eva.lm.controller.lvars_by_full_id
             result = []
             for i, v in gi.copy().items():
-                if apikey.check(k, v) and \
+                if apikey.check(k, v, ro_op=True) and \
                         (not group or \
                             eva.item.item_match(v, [], [group])):
                     r = v.serialize(full=full)
@@ -384,7 +385,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         item = eva.lm.controller.get_dm_rule(i)
         if not item or (is_oid(i) and item and item.item_type != t):
             raise ResourceNotFound
-        if not apikey.check(k, item): raise ResourceNotFound
+        if not apikey.check(k, item, ro_op=True): raise ResourceNotFound
         result = item.serialize(props=True)
         if not apikey.check_master(k):
             for i in result:
@@ -448,7 +449,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         k = parse_function_params(kwargs, 'k', '.')
         result = []
         for i in eva.lm.controller.DM.rules.copy():
-            if apikey.check(k, i):
+            if apikey.check(k, i, ro_op=True):
                 d = i.serialize(info=True)
                 if not apikey.check_master(k):
                     for x in d.copy():
@@ -476,7 +477,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.lm.controller.get_dm_rule(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item or not apikey.check(k, item, ro_op=True):
+            raise ResourceNotFound
         d = item.serialize(info=True)
         if not apikey.check_master(k):
             for x in d.copy():
@@ -635,7 +637,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         k = parse_function_params(kwargs, 'k', '.')
         result = []
         for i, v in eva.lm.controller.cycles_by_id.copy().items():
-            if apikey.check(k, v) and \
+            if apikey.check(k, v, ro_op=True) and \
                     v.group not in result:
                 result.append(v.group)
         return sorted(result)
@@ -656,7 +658,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         k, group = parse_function_params(kwargs, 'kg', '.s')
         result = []
         for i, v in eva.lm.controller.cycles_by_id.copy().items():
-            if apikey.check(k, v) and \
+            if apikey.check(k, v, ro_op=True) and \
                     (not group or eva.item.item_match(v, [], [ group ])):
                 result.append(v.serialize(info=True))
         return sorted(result, key=lambda k: k['full_id'])
@@ -751,7 +753,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.S')
         item = eva.lm.controller.get_cycle(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item or not apikey.check(k, item, ro_op=True):
+            raise ResourceNotFound
         return item.serialize(info=True)
 
     @log_i

@@ -38,4 +38,5 @@ bin/uc-tpl
 sbin/check-mqtt
 sbin/get-setup-options
 sbin/layout-converter
+sbin/eva-update-tables
 tests/benchmark-uc-crt
