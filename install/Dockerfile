@@ -10,20 +10,22 @@ RUN apt-get -y install --no-install-recommends vim-tiny
 RUN apt-get -y install --no-install-recommends iproute2
 RUN apt-get -y install --no-install-recommends net-tools
 RUN apt-get -y install --no-install-recommends libow-dev
+RUN apt-get -y install --no-install-recommends libjpeg-dev libjpeg8-dev
 RUN apt-get -y install --no-install-recommends python3
-RUN apt-get -y install --no-install-recommends python3-pip
-RUN apt-get -y install --no-install-recommends python3-pandas
-RUN apt-get -y install --no-install-recommends python3-cryptography
-RUN apt-get -y install --no-install-recommends python3-pysnmp4
-RUN apt-get -y install --no-install-recommends python3-setuptools
+RUN apt-get -y install --no-install-recommends python3-dev
+RUN apt-get -y install --no-install-recommends python3-virtualenv
+RUN apt-get -y install --no-install-recommends python3-distutils
 RUN apt-get -y install --no-install-recommends gcc
 RUN apt-get -y install --no-install-recommends python3-dev
 RUN apt-get -y install --no-install-recommends python3-wheel
+RUN apt-get -y install --no-install-recommends python3-pandas
 RUN apt-get -y install --no-install-recommends libow-dev
 # install --no-install-recommends python modules
-COPY check-mods /
-RUN /check-mods install
-RUN rm -f /check-mods
+COPY build-venv /
+COPY mods.list /
+COPY venv-docker /etc/venv
+RUN /build-venv /
+RUN rm -f /build-venv /mods.list
 # final tricks
 RUN apt-get -y clean
 RUN ln -sf /opt/eva/bin/eva /usr/local/bin/eva-shell

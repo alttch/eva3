@@ -61,6 +61,11 @@ while [ 1 ]; do
     P_OPTS="-p all"
   fi
   cd /opt/eva
+  # link to python venv
+  ln -sf /python3
+  # move venv config
+  mv -f /etc/venv ./etc/
+  # clean some old configs
   rm -rf runtime/*_notify.d runtime/*_remote_*.d
   bash ${bash_debug_opts} ./easy-setup --skip-check --auto --supervisor \
     ${AUTO_OPTS} ${MQTT_A_OPTS} ${MQTT_D_OPTS} ${MQTT_OPTS} ${mqtt} \
