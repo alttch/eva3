@@ -49,7 +49,7 @@ General functions and variables
 eva_sfa_server_info
 -------------------
 
-After successfull login contains server info (API test function output) data is refreshed every eva_sfa_heartbeat_interval seconds
+After successfull login contains server info (API test function output). Data is refreshed every eva_sfa_heartbeat_interval seconds
 
 .. code-block:: javascript
 
@@ -121,7 +121,7 @@ Reload interval for WS mode (in seconds), to get data in case something is wrong
 eva_sfa_heartbeat_error
 -----------------------
 
-Heartbeat error handler. Contains function called if heartbeat got an error (usually user is forcibly logged out). The function is called f(data) if there's HTTP error data or f() if there's no HTTP error data (e.g. unable to send WebSocket message)
+Heartbeat error handler. Contains function called if heartbeat got an error (usually user is forcibly logged out). The function is called as f(code, msg, data) if there's HTTP error data or f() if there's no HTTP error data (e.g.  unable to send WebSocket message)
 
 .. code-block:: javascript
 
@@ -395,7 +395,7 @@ Parameters:
 eva_sfa_register_update_state - register state update callback
 --------------------------------------------------------------
 
-Register the function (or javascript code) to be called in case of state change event (or at first state load).
+Register the function to be called in case of state change event (or at first state load).
 If state is already loaded, function will be called immediately
 
 .. code-block:: javascript
@@ -431,7 +431,7 @@ object state or undefined if no object found
 eva_sfa_state_history - get item state history
 ----------------------------------------------
 
-
+@oid - item oid, list or comma separated
 
 .. code-block:: javascript
 
@@ -520,8 +520,8 @@ Parameters:
 
 .. _sfw_eva_sfa_action_toggle:
 
-eva_sfa_action_toggle - execute unit action, toggle status beteween 0 and 1
----------------------------------------------------------------------------
+eva_sfa_action_toggle - execute unit toggle action
+--------------------------------------------------
 
 
 
@@ -629,8 +629,8 @@ Parameters:
 
 .. _sfw_eva_sfa_terminate:
 
-eva_sfa_terminate - terminate current unit action if possible
--------------------------------------------------------------
+eva_sfa_terminate - terminate current unit action
+-------------------------------------------------
 
 
 
@@ -644,8 +644,8 @@ Parameters:
 
 .. _sfw_eva_sfa_terminate_by_uuid:
 
-eva_sfa_terminate_by_uuid - terminate current unit action by uuid if possible
------------------------------------------------------------------------------
+eva_sfa_terminate_by_uuid - terminate current unit action by uuid
+-----------------------------------------------------------------
 
 
 
@@ -919,8 +919,8 @@ Parameters:
 Examples
 ========
 
-Examples of the SFA framework usage are provided in ":doc:`/tutorial/tut_ui`"
-part of the EVA :doc:`tutorial</tutorial/tutorial>`.
+Examples of the SFA framework usage are also provided in
+":doc:`/tutorial/tut_ui`" part of the EVA :doc:`tutorial</tutorial/tutorial>`.
 
 .. _sfw_example_general:
 

@@ -77,9 +77,9 @@ eva_sfa_server_restart_handler = null;
 
 /**
  * Heartbeat error handler. Contains function called if heartbeat got an error
- * (usually user is forcibly logged out). The function is called f(data) if
- * there's HTTP error data or f() if there's no HTTP error data (e.g. unable to
- * send WebSocket message)
+ * (usually user is forcibly logged out). The function is called as f(code,
+ * msg, data) if there's HTTP error data or f() if there's no HTTP error data
+ * (e.g.  unable to send WebSocket message)
  */
 eva_sfa_heartbeat_error = eva_sfa_restart;
 
@@ -121,8 +121,8 @@ eva_sfa_log_postprocess = null;
 eva_sfa_heartbeat_interval = 5;
 
 /**
- * After successfull login contains server info (API test function output)
- * data is refreshed every eva_sfa_heartbeat_interval seconds
+ * After successfull login contains server info (API test function output).
+ * Data is refreshed every eva_sfa_heartbeat_interval seconds
  */
 eva_sfa_server_info = null;
 
@@ -211,8 +211,8 @@ function eva_sfa_stop(cb) {
 /**
  * register state update callback
  *
- * Register the function (or javascript code) to be called in case of state
- * change event (or at first state load).
+ * Register the function to be called in case of state change event (or at
+ * first state load).
  *
  * If state is already loaded, function will be called immediately
  *
@@ -345,6 +345,7 @@ function eva_sfa_groups(params, cb_success, cb_error) {
 /**
  * get item state history
  *
+ * @oid - item oid, list or comma separated
  * @param params - state history params
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
@@ -394,7 +395,7 @@ function eva_sfa_action(unit_id, params, cb_success, cb_error) {
 }
 
 /**
- * execute unit action, toggle status beteween 0 and 1
+ * execute unit toggle action
  *
  * @param unit_id - full unit ID
  * @param params - object with props
@@ -449,7 +450,7 @@ function eva_sfa_q_clean(unit_id, cb_success, cb_error) {
 }
 
 /**
- * terminate current unit action if possible
+ * terminate current unit action
  *
  * @param unit_id - full unit ID
  */
@@ -460,7 +461,7 @@ function eva_sfa_terminate(unit_id, cb_success, cb_error) {
 }
 
 /**
- * terminate current unit action by uuid if possible
+ * terminate current unit action by uuid
  *
  * @param uuid - action uuid
  */
