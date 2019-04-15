@@ -27,7 +27,7 @@ def usage(version_only=False):
             )
         )
     if version_only: return
-    print("""Usage: layout-convertor.py <uc|lm>
+    print("""Usage: layout-converter <uc|lm>
 
 This tool converts simple item layout to enterprise.
 
