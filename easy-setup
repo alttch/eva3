@@ -817,7 +817,7 @@ if [ $INSTALL_SFA -eq 1 ]; then
     [ $VALUE == "1" ] && CLOUDMANAGER=1
     echo "SFA_ENABLED=yes" >> etc/eva_servers
     echo
-    askUser "Enter the user account to run under (root is not recommended!)" ${DEFAULT_USER}
+    askUser "Enter the user account to run under (use root only if you are sure)" ${DEFAULT_USER}
     id ${USER} > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "Invalid user: ${USER}"
