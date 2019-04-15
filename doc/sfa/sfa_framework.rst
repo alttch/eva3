@@ -26,689 +26,940 @@ Open the file *ui/index.html* in the editor, connect jQuery and SFA Framework:
     <script src="lib/jquery.min.js"></script>
     <script src="js/eva_sfa.min.js"></script>
 
-Framework variables
-===================
+Callback functions and handlers
+===============================
 
-eva_sfa_login, eva_sfa_password
--------------------------------
+* **success functions** are called with one parameter containing API call result dict
 
-The following variables contain the user login/password, and are used for the
-initial authentication:
+* **error functions** are called with 3 parameters:
 
-.. code-block:: javascript
+    * **code** API call error code
+    * **msg** API call error message
+    * **response** full API response dict (if available)
 
-    eva_sfa_login = '';
-    eva_sfa_password = '';
 
-eva_sfa_apikey
---------------
+.. _sfw_cat_general:
 
-Another way is to use the variable
+General functions and variables
+===============================
 
-.. code-block:: javascript
 
-    eva_sfa_apikey = null;
-
-in case its value is not NULL, the authentication is done with API key
-
-.. note::
-
-    If you have frontend server installed before UI and it handles HTTP basic
-    authentication, you can leave *eva_sfa_login* and *eva_sfa_apikey*
-    variables empty and let framework log in without them.
-
-    In this case authorization data will be parsed by SFA server from
-    *Authorization* HTTP header (frontend server should pass it as-is to
-    back-end SFA).
-
-eva_sfa_cb_login_success, eva_sfa_cb_login_error
-------------------------------------------------
-
-The following two variables contain functions called when the authentication
-either succeeded or failed.
-
-Success callback is called with **result** parameter which contains server
-method response.
-
-Error callback is called with parameters **code**, **mesage** and **data**
-(contains full server response), where *code* and *message* contain error code
-and error message. Error codes are equal to :doc:`API client</api_clients>`
-errors.
-
-.. code-block:: javascript
-
-    eva_sfa_cb_login_success = null;
-    eva_sfa_cb_login_error = null;
-
-eva_sfa_logged_in
------------------
-
-True if framework engine is started and user is logged in, false if not. Should
-not be changed outside framework functions.
-
-eva_sfa_api_token
------------------
-
-Contains current API token after log in. Filled by framework automatically
-
-eva_sfa_set_auth_cookies
-------------------------
-
-Set/clear auth cookies for /ui, /pvt and /rpvt.
-
-.. code-block:: javascript
-
-    eva_sfa_set_auth_cookies = true;
-
-eva_sfa_cb_states_loaded
-------------------------
-
-This function called after framework loads initial item states
-
-.. code-block:: javascript
-
-    eva_sfa_cb_states_loaded = null;
-
-eva_sfa_heartbeat_interval
---------------------------
-
-The interval for a server ping test (heartbeat)
-
-.. code-block:: javascript
-
-    eva_sfa_heartbeat_interval = 5;
-
-eva_sfa_heartbeat_error
------------------------
-
-The following function is automatically called in case of a server heartbeat
-error:
-
-.. code-block:: javascript
-
-    eva_sfa_heartbeat_error = eva_sfa_restart;
-
-Error callback is called with parameters **code**, **mesage** and **data**,
-where *code* and *message* contain error code and error message. Error codes
-are equal to :doc:`API client</api_clients>` errors.
-
-If error information is not available (e. g. the error occurred when attempting
-to send data via WebSocket), the function is called without any params.
-
-eva_sfa_ajax_reload_interval
-----------------------------
-
-Interval (seconds) for updating data when framework is in AJAX mode:
-
-.. code-block:: javascript
-
-    eva_sfa_ajax_reload_interval = 2;
-
-eva_sfa_force_reload_interval
------------------------------
-
-The next variable forces AJAX updates if the framework is running in WebSocket
-mode. *0* value disables updating via AJAX completely, but it's recommended to
-keep some value to be sure the interface has the actual data even if some
-websocket events are lost.
-
-.. code-block:: javascript
-
-    eva_sfa_force_reload_interval = 5;
+.. _sfw_eva_sfa_server_info:
 
 eva_sfa_server_info
 -------------------
 
-The next variable is updated by heartbeat and contains API **test** call
-results.  This variable may be used by the application to check whether the
-framework has established connection to the server - if not, the variable is
-*null*.
+After successfull login contains server info (API test function output) data is refreshed every eva_sfa_heartbeat_interval seconds
 
 .. code-block:: javascript
 
     eva_sfa_server_info = null;
 
+
+.. _sfw_eva_sfa_tsdiff:
+
 eva_sfa_tsdiff
 --------------
 
-This variable contains the time difference (in seconds) between server and
-connected client. The value is updated every time client gets new server info.
+Contains difference (in seconds) between server and client time
 
 .. code-block:: javascript
 
     eva_sfa_tsdiff = null;
 
-eva_sfa_ws_mode
----------------
 
-This variable sets the framework working mode. If its value is *true*, SFA
-framework operates via WebSocket, if false - via AJAX. This value is changed by
-:ref:`eva_sfa_init()<sf_init>` which tries to detect if web browser is
-compatible with web socket. To change the mode manually, change the variable
-after the initial framework initialization.
+.. _sfw_eva_sfa_heartbeat_interval:
+
+eva_sfa_heartbeat_interval
+--------------------------
+
+Heartbeat interval. Requests to API function "test" (system info), in seconds
 
 .. code-block:: javascript
 
-    eva_sfa_ws_mode = true;
+    eva_sfa_heartbeat_interval = 5;
 
-eva_sfa_ws_event_handler
+
+.. _sfw_eva_sfa_ajax_reload_interval:
+
+eva_sfa_ajax_reload_interval
+----------------------------
+
+Reload interval for AJAX mode (in seconds)
+
+.. code-block:: javascript
+
+    eva_sfa_ajax_reload_interval = 2;
+
+
+.. _sfw_eva_sfa_cb_states_loaded:
+
+eva_sfa_cb_states_loaded
 ------------------------
 
-The next variable contains function processing WebSocket data. If the user
-declares this function, it should return *true* (in case the data processing is
-possible hereafter) or false (if the data has already been processed). The
-function is called via **data** parameter with the event data set herein.
+State callback. Contains function called after framework loads initial item states
 
 .. code-block:: javascript
 
-    eva_sfa_ws_event_handler = null;
+    eva_sfa_cb_states_loaded = null;
+
+
+.. _sfw_eva_sfa_force_reload_interval:
+
+eva_sfa_force_reload_interval
+-----------------------------
+
+Reload interval for WS mode (in seconds), to get data in case something is wrong with WS
+
+.. code-block:: javascript
+
+    eva_sfa_force_reload_interval = 5;
+
+
+.. _sfw_eva_sfa_heartbeat_error:
+
+eva_sfa_heartbeat_error
+-----------------------
+
+Heartbeat error handler. Contains function called if heartbeat got an error (usually user is forcibly logged out). The function is called f(data) if there's HTTP error data or f() if there's no HTTP error data (e.g. unable to send WebSocket message)
+
+.. code-block:: javascript
+
+    eva_sfa_heartbeat_error = eva_sfa_restart;
+
+
+.. _sfw_eva_sfa_reload_handler:
+
+eva_sfa_reload_handler
+----------------------
+
+Reload events handler (WebSocket mode only). Contains function which's called as f() when reload event is received (server ask the clients to reload the interface)
+
+.. code-block:: javascript
+
+    eva_sfa_reload_handler = null;
+
+
+.. _sfw_eva_sfa_server_restart_handler:
+
+eva_sfa_server_restart_handler
+------------------------------
+
+Server restart handler (WebSocket mode only). Contains function which's called as f() when server restart event is received (server warns the clients about it's restart)
+
+.. code-block:: javascript
+
+    eva_sfa_server_restart_handler = null;
+
+
+.. _sfw_eva_sfa_state_updates:
 
 eva_sfa_state_updates
 ---------------------
 
 Update item states via AJAX and subscribe to state updates via websocket
-
-Possible values:
-
- * **true** get states of all items API key has access to
- * *{'p': [types], 'g': [groups]}* subscribe to specified types and groups
- * **false** - disable state updates
+ 
+Possible values:  true - get states of all items API key has access to  {'p': [types], 'g': [groups]} - subscribe to specified types and groups  false - disable state updates
 
 .. code-block:: javascript
 
     eva_sfa_state_updates = true;
 
 
-.. _sfw_reload:
+.. _sfw_eva_sfa_ws_event_handler:
 
-eva_sfa_reload_handler
-----------------------
+eva_sfa_ws_event_handler
+------------------------
 
-This variable contains function which is called when :doc:`/sfa/sfa` asks
-connected clients to reload the interface. If you want the interface to handle
-the reload event, you must define this function.
-
-.. note::
-
-    reload event can be processed only when the framework is in a websocket
-    mode
+WebSocket event handler. Contains function which's called as f(data) when ws event is received function should return true, if it return false, WS data processing is stopped
 
 .. code-block:: javascript
 
-    eva_sfa_reload_handler = null;
+    eva_sfa_ws_event_handler = null;
 
-.. _sfw_server_restart:
 
-eva_sfa_server_restart_handler
-------------------------------
+.. _sfw_eva_sfa_ws_mode:
 
-This variable contains function which is called when :doc:`/sfa/sfa` notifies
-connected clients about server restart. Client application can prepare user for
-the server restart (e.g. display warning message) and forcibly reload data when
-the server is back online.
+eva_sfa_ws_mode
+---------------
 
-SFA cvars
----------
-
-All :ref:`user-defined SFA variables<sfa_cvars>` are directly available in SFA
-Framework after login with any valid user or API key.
-
-.. _sf_init:
-
-Primary functions
-=================
-
-eva_sfa_init
-------------
-
-To initialize the framework run
+WebSocket mode if true, is set by eva_sfa_init(). Setting this to false (after calling eva_sfa_init()) will force AJAX mode
 
 .. code-block:: javascript
 
-    eva_sfa_init();
+    eva_sfa_ws_mode = true;
 
-eva_sfa_start
--------------
 
-To start the framework, run
 
-.. code-block:: javascript
 
-    eva_sfa_start();
+.. _sfw_eva_sfa_call:
 
-that will authorize the user and run the data update and event handling
-threads.
+eva_sfa_call - call API function
+--------------------------------
 
-eva_sfa_stop
-------------
-
-To stop the framework, call:
+Calls any available SFA API function
 
 .. code-block:: javascript
 
-    eva_sfa_stop();
+    function eva_sfa_call(func, params, cb_success, cb_error)
 
-eva_sfa_call
-------------
+Parameters:
 
-Calls any available API function (:doc:`/sfa/sfa_api` or :doc:`/sysapi`),
-params - object, containing function parameters.
+* **func** API function
+* **params** function params
+* **cb_success** function called on success
+* **cb_error** function called if error occured
+
+.. _sfw_eva_sfa_init:
+
+eva_sfa_init - initialize Framework
+-----------------------------------
+
+Initializes eva_sfa javascript API automatically sets WebSocket or AJAX mode depending on the browser features.
+Always call this function at your program start
 
 .. code-block:: javascript
 
-    eva_sfa_call(func, params, cb_success, cb_error)
+    function eva_sfa_init()
 
-Event Handling
+.. _sfw_eva_sfa_restart:
+
+eva_sfa_restart - restart Framework API
+---------------------------------------
+
+e.g. used on heartbeat error
+
+.. code-block:: javascript
+
+    function eva_sfa_restart()
+
+
+.. _sfw_cat_auth:
+
+Authentication
 ==============
 
-eva_sfa_state
+
+.. _sfw_eva_sfa_login:
+
+eva_sfa_login
 -------------
 
-To manually get :doc:`item</items>` state, use the function
+Should always contain authentication login or API will be unable to reconnect in case of e.g. server reboot
 
 .. code-block:: javascript
 
-    eva_sfa_state(oid);
+    eva_sfa_login = '';
 
-where:
 
-* **oid** :doc:`item</items>` id in the following format:
-  **type:group/item_id**, i.e. *sensor:env/temperature/temp1*
+.. _sfw_eva_sfa_password:
 
-The function returns **state** object or **undefined** if the item state is
-unknown.
+eva_sfa_password
+----------------
 
-You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
-case the function returns the array of all item with OIDs matching the
-specified mask.
-
-eva_sfa_state_history
----------------------
-
-Returns state history for the chosen item(s)
+Should always contain authentication password
 
 .. code-block:: javascript
 
-    eva_sfa_state_history(oid, params, cb_success, cb_error);
+    eva_sfa_password = '';
 
-where:
 
-* **oid** :doc:`item</items>` id in the following format:
-  **type:group/item_id**, i.e. *sensor:env/temperature/temp1*, or multiple
-  items comma separated
-* **params** dict with history formatting params equal to SFA API function
-  :ref:`state_history<sfapi_state_history>`.
+.. _sfw_eva_sfa_apikey:
 
-eva_sfa_groups
+eva_sfa_apikey
 --------------
 
-Returns a list of item groups, **params** - object containing function
-parameters (p - item type, g - group filter, mqtt style):
+Use API key instead of login. Insecure but fine for testing and specific configs
 
 .. code-block:: javascript
 
-    eva_sfa_groups(params, cb_success, cb_error);
+    eva_sfa_apikey = null;
 
-* **cb_success**, **cb_error** - functions called when the access to API has
-  either succeeded or failed.
 
-eva_sfa_register_update_state
------------------------------
+.. _sfw_eva_sfa_set_auth_cookies:
 
-When the new data is obtained from the server, the framework may run a
-specified function to handle events. To register such function in the
-framework, use
- 
+eva_sfa_set_auth_cookies
+------------------------
+
+Use auth cookies for /ui, /pvt and /rpvt
+
 .. code-block:: javascript
 
-    eva_sfa_register_update_state(oid, cb);
+    eva_sfa_set_auth_cookies = true;
 
-where:
 
-* **oid** :doc:`item</items>` id in the following format:
-  **type:group/item_id**, i.e. *sensor:env/temperature/temp1*
-* **cb** function which is called with **state** param containing the new item
-  state data (**state.status**, **state.value** etc. equal to the regular state
-  :doc:`notification event</notifiers>`.)
+.. _sfw_eva_sfa_cb_login_success:
 
-You can use a simple mask for **oid** (like \*id, id\*, \*id\*, i\*d), in this
-case the specified state update function will be called always when item oid
-matches the specified mask.
+eva_sfa_cb_login_success
+------------------------
+
+Successful login callback. Contains function called after successful login
+
+.. code-block:: javascript
+
+    eva_sfa_cb_login_success = null;
+
+
+.. _sfw_eva_sfa_cb_login_error:
+
+eva_sfa_cb_login_error
+----------------------
+
+Failed login callback. Contains function called after failed login
+
+.. code-block:: javascript
+
+    eva_sfa_cb_login_error = null;
+
+
+.. _sfw_eva_sfa_api_token:
+
+eva_sfa_api_token
+-----------------
+
+Contains current API token after log in. Filled by framework automatically
+
+.. code-block:: javascript
+
+    eva_sfa_api_token = null;
+
+
+.. _sfw_eva_sfa_logged_in:
+
+eva_sfa_logged_in
+-----------------
+
+True if framework engine is started and user is logged in, false if not. Should not be changed outside framework functions
+
+.. code-block:: javascript
+
+    eva_sfa_logged_in = false;
+
+
+
+
+.. _sfw_eva_sfa_start:
+
+eva_sfa_start - start Framework API
+-----------------------------------
+
+After calling the function will authenticate user, open WebSocket (in case of WS mode) or schedule AJAX refresh interval.
+
+.. code-block:: javascript
+
+    function eva_sfa_start()
+
+.. _sfw_eva_sfa_stop:
+
+eva_sfa_stop - stop Framework API
+---------------------------------
+
+After calling the function will close open WebSocket if available, clear all the refresh intervals then try to close server session
+
+.. code-block:: javascript
+
+    function eva_sfa_stop(cb)
+
+
+.. _sfw_cat_events:
+
+Item events
+===========
+
+
+
+
+.. _sfw_eva_sfa_groups:
+
+eva_sfa_groups - get groups list
+--------------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_groups(params, cb_success, cb_error)
+
+Parameters:
+
+* **params** object with props
+
+    * **p** item type (U for unit, S for sensor, LV for lvar)
+
+    * **g** group filter (mqtt style)
+* **cb_success** function called on success
+* **cb_error** function called if error occured
+
+.. _sfw_eva_sfa_register_update_state:
+
+eva_sfa_register_update_state - register state update callback
+--------------------------------------------------------------
+
+Register the function (or javascript code) to be called in case of state change event (or at first state load).
+If state is already loaded, function will be called immediately
+
+.. code-block:: javascript
+
+    function eva_sfa_register_update_state(oid, cb)
+
+Parameters:
+
+* **oid** item id in format type:full_id, e.g. sensor:env/temp1
+* **cb** function to be called
+
+.. _sfw_eva_sfa_state:
+
+eva_sfa_state - get item state
+------------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_state(oid)
+
+Parameters:
+
+* **oid** item id in format type:full_id, e.g. sensor:env/temp1
+
+Returns:
+
+object state or undefined if no object found
+
+.. _sfw_eva_sfa_state_history:
+
+eva_sfa_state_history - get item state history
+----------------------------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_state_history(oid, params, cb_success, cb_error)
+
+Parameters:
+
+* **params** state history params
+* **cb_success** function called on success
+* **cb_error** function called if error occured
+
+.. _sfw_eva_sfa_status:
+
+eva_sfa_status - get item status
+--------------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_status(oid)
+
+Parameters:
+
+* **oid** item id in format type:full_id, e.g. sensor:env/temp1
+
+Returns:
+
+object status(int) or undefined if no object found
+
+.. _sfw_eva_sfa_value:
+
+eva_sfa_value - get item value
+------------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_value(oid)
+
+Parameters:
+
+* **oid** item id in format type:full_id, e.g. sensor:env/temp1
+
+Returns:
+
+object value (null, string or numeric if possible) or undefined if no object found
+
+
+.. _sfw_cat_mgmt:
 
 Macro execution and unit management
 ===================================
 
-eva_sfa_run
------------
 
-To execute :doc:`macro</lm/macros>`, call the function:
 
-.. code-block:: javascript
 
-    eva_sfa_run(macro_id, params, cb_success, cb_error);
+.. _sfw_eva_sfa_action:
 
-where **macro_id** - macro id (in a full format, *group/macro_id*) to execute,
-**params** - object containing parameters equal to LM API
-:ref:`run<lmapi_run>` function, and **cb_success**, **cb_error** - functions
-called when the access to API has either succeeded or failed. The functions are
-called with **result** param which contains the API response.
+eva_sfa_action - execute unit action
+------------------------------------
 
-eva_sfa_action
---------------
 
-To run the :ref:`unit<unit>` action, call the function:
 
 .. code-block:: javascript
 
-    eva_sfa_action(unit_id, params, cb_success, cb_error);
+    function eva_sfa_action(unit_id, params, cb_success, cb_error)
 
-Where unit_id - full unit id (*group/id*), **params** - object containing
-parameters, equal to UC API :ref:`action<ucapi_action>`, and **cb_success**,
-**cb_error** - functions called when the access to API has either succeeded or
-failed. The functions are called with **result** param which contains the API
-response.
+Parameters:
 
-eva_sfa_action_toggle
----------------------
+* **unit_id** full unit ID
+* **params** object with props
 
-In case you want to switch :ref:`unit<unit>` status between *0* and *1*, call:
+    * **s** new unit status (int)
+
+    * **v** new unit value (optional)
+
+    * **w** seconds to wait until complete
+
+    * **p** action priority (optional)
+
+    * **u** action uuid (optional)
+* **cb_success** function called on success
+* **cb_error** function called if error occured
+
+.. _sfw_eva_sfa_action_toggle:
+
+eva_sfa_action_toggle - execute unit action, toggle status beteween 0 and 1
+---------------------------------------------------------------------------
+
+
 
 .. code-block:: javascript
 
-    eva_sfa_action_toggle(unit_id, params, cb_success, cb_error);
+    function eva_sfa_action_toggle(unit_id, params, cb_success, cb_error)
 
-eva_sfa_result
+Parameters:
+
+* **unit_id** full unit ID
+* **params** object with props
+
+    * **v** new unit value (optional)
+
+    * **w** seconds to wait until complete
+
+    * **p** action priority (optional)
+
+    * **u** action uuid (optional)
+* **cb_success** function called on success
+* **cb_error** function called if error occured
+
+.. _sfw_eva_sfa_kill:
+
+eva_sfa_kill - kill running unit action and clean queue
+-------------------------------------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_kill(unit_id, cb_success, cb_error)
+
+Parameters:
+
+* **unit_id** full unit ID
+
+.. _sfw_eva_sfa_q_clean:
+
+eva_sfa_q_clean - clean queue for unit
 --------------------------------------
 
-To obtain a result of the executed actions, use the functions:
+
 
 .. code-block:: javascript
 
-    eva_sfa_result(params, cb_success, cb_error);
+    function eva_sfa_q_clean(unit_id, cb_success, cb_error)
 
-where params - object containing function parameters:
+Parameters:
 
-* *i* - object oid (type:group/id), unit or lmacro
-* *u* - action uuid (either i or u must be specified)
-* *g* - filter by group
-* *s* - filter by status (Q, R, F - queued, running, finished)
+* **unit_id** full unit ID
 
-eva_sfa_kill
-------------
+.. _sfw_eva_sfa_result:
 
-Terminate unit action and clean up queued commands:
+eva_sfa_result - get action result
+----------------------------------
 
-.. code-block:: javascript
 
-    eva_sfa_kill(unit_id, cb_success, cb_error);
-
-eva_sfa_q_clean
----------------
-
-Clean unit action queue but keep the current action running:
 
 .. code-block:: javascript
 
-    eva_sfa_q_clean(unit_id, cb_success, cb_error);
+    function eva_sfa_result(params, cb_success, cb_error)
 
-eva_sfa_terminate, eva_sfa_terminate_by_uuid
---------------------------------------------
+Parameters:
 
-Terminate the current unit action either by unit id, or by action uuid:
+* **params** object with props
 
-.. code-block:: javascript
+    * **i** object oid (type:group/id), unit or lmacro
 
-    eva_sfa_terminate(unit_id, cb_success, cb_error);
-    eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error);
+    * **u** action uuid (either i or u must be specified)
 
-Working with logic variables
-============================
+    * **g** filter by group
 
-eva_sfa_set
------------
+    * **s** filter by status (Q, R, F - queued, running, finished)
+* **cb_success** function called on success
+* **cb_error** function called if error occured
 
-To set the :ref:`logic variable<lvar>` status, use the function:
+.. _sfw_eva_sfa_run:
 
-.. code-block:: javascript
+eva_sfa_run - run macro
+-----------------------
 
-    eva_sfa_set(lvar_id, value, cb_success, cb_error);
 
-eva_sfa_toggle
---------------
-
-To switch lvar value between *0* and *1* use
 
 .. code-block:: javascript
 
-    eva_sfa_toggle(lvar_id, cb_success, cb_error);
+    function eva_sfa_run(macro_id, params, cb_success, cb_error)
 
-eva_sfa_reset
--------------
+Parameters:
 
-To reset lvar when used as timer or flag:
+* **macro_id** full macro ID
+* **params** object with props
+
+    * **a** macro args
+
+    * **kw** macro kwargs
+
+    * **w** seconds to wait until complete
+
+    * **p** action priority
+
+    * **u** action uuid
+* **cb_success** function called on success
+* **cb_error** function called if error occured
+
+.. _sfw_eva_sfa_terminate:
+
+eva_sfa_terminate - terminate current unit action if possible
+-------------------------------------------------------------
+
+
 
 .. code-block:: javascript
 
-    eva_sfa_reset(lvar_id, cb_success, cb_error);
+    function eva_sfa_terminate(unit_id, cb_success, cb_error)
 
-eva_sfa_clear
--------------
+Parameters:
 
-To clear lvar flag or stop the timer:
+* **unit_id** full unit ID
 
-.. code-block:: javascript
+.. _sfw_eva_sfa_terminate_by_uuid:
 
-    eva_sfa_clear(lvar_id, cb_success, cb_error);
+eva_sfa_terminate_by_uuid - terminate current unit action by uuid if possible
+-----------------------------------------------------------------------------
 
-eva_sfa_expires_in
-------------------
 
-Get timer expiration (in seconds). Allows to :ref:`display
-timers<sfw_example_timer>` and interactive progress bars of the production
-cycles.
 
 .. code-block:: javascript
 
-    eva_sfa_expires_in(lvar_id);
+    function eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error)
 
-Returns float number of seconds to timer expiration, or:
+Parameters:
 
-* **undefined** if :ref:`lvar<lvar>` is not found, or **eva_sfa_tsdiff** is not
-  set yet.
-* **null** if lvar has no expiration set
+* **uuid** action uuid
 
-* **-1** if the timer is expired
-* **-2** if the timer is disabled (stopped) and has status *0*
+
+.. _sfw_cat_lvar:
+
+LVar management
+===============
+
+
+
+
+.. _sfw_eva_sfa_clear:
+
+eva_sfa_clear - clear lvar
+--------------------------
+
+For timer - set status to 0, otherwise value to 0
+
+.. code-block:: javascript
+
+    function eva_sfa_clear(lvar_id, cb_success, cb_error)
+
+Parameters:
+
+* **lvar_id** full lvar ID
+
+.. _sfw_eva_sfa_expires_in:
+
+eva_sfa_expires_in - get lvar expiration time left
+--------------------------------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_expires_in(lvar_id)
+
+Parameters:
+
+* **lvar_id** item id in format type:full_id, e.g. lvar:timers/timer1
+
+Returns:
+
+- seconds to expiration, -1 if expired, -2 if stopped
+
+.. _sfw_eva_sfa_reset:
+
+eva_sfa_reset - reset lvar
+--------------------------
+
+Set status/value to 1
+
+.. code-block:: javascript
+
+    function eva_sfa_reset(lvar_id, cb_success, cb_error)
+
+Parameters:
+
+* **lvar_id** full lvar ID
+
+.. _sfw_eva_sfa_set:
+
+eva_sfa_set - set lvar value
+----------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_set(lvar_id, value, cb_success, cb_error)
+
+Parameters:
+
+* **lvar_id** full lvar ID
+* **value** new lvar value, optional
+
+.. _sfw_eva_sfa_toggle:
+
+eva_sfa_toggle - toggle lvar value
+----------------------------------
+
+Toggle current value (if value is 0 or 1) useful when lvar is being used as flag
+
+.. code-block:: javascript
+
+    function eva_sfa_toggle(lvar_id, cb_success, cb_error)
+
+Parameters:
+
+* **lvar_id** full lvar ID
+
+
+.. _sfw_cat_log:
 
 Processing logs
 ===============
+For log processing the client API key should have sysfunc=yes permission.
 
-SFA Framework has built-in functions to display SFA logs. In case
-:doc:`SFA</sfa/sfa>` is a :doc:`log aggregator</notifiers>`, this allows to
-:ref:`view logs<sfw_example_log>` from the whole EVA installation.
+.. _sfw_eva_sfa_log_postprocess:
 
-.. note::
+eva_sfa_log_postprocess
+-----------------------
 
-    For log processing the client :ref:`API key<sfa_apikey>` should have
-    *sysfunc=yes* permission.
+Log post processing callback function e.g. to autoscroll the log viewer
+
+.. code-block:: javascript
+
+    eva_sfa_log_postprocess = null;
+
+
+.. _sfw_eva_sfa_log_records_max:
+
+eva_sfa_log_records_max
+-----------------------
+
+Max log records to get/keep
+
+.. code-block:: javascript
+
+    eva_sfa_log_records_max = 200;
+
+
+.. _sfw_eva_sfa_log_reload_interval:
 
 eva_sfa_log_reload_interval
 ---------------------------
 
-This variable sets log reload interval if the framework works in AJAX mode.
+Log refresh interval for AJAX mode (in seconds)
 
 .. code-block:: javascript
 
     eva_sfa_log_reload_interval = 2;
 
-eva_sfa_log_records_max
------------------------
 
-Maximum number of log records to get initially
-
-.. code-block:: javascript
-
-  eva_sfa_log_records_max = 200;
+.. _sfw_eva_sfa_process_log_record:
 
 eva_sfa_process_log_record
 --------------------------
 
-Function called with log record param, when the new log event arrives
+New log record handler
 
 .. code-block:: javascript
 
-  eva_sfa_process_log_record = null;
+    eva_sfa_process_log_record = null;
 
-eva_sfa_log_postprocess
------------------------
 
-Function called when all new log records are processed, i.e. to auto scroll the
-log viewer
 
-.. code-block:: javascript
 
-  eva_sfa_log_postprocess = null;
+.. _sfw_eva_sfa_change_log_level:
 
-eva_sfa_log_start
------------------
+eva_sfa_change_log_level - change log processing level
+------------------------------------------------------
 
-This function starts log processing engine
+
 
 .. code-block:: javascript
 
-    eva_sfa_log_start(log_level);
+    function eva_sfa_change_log_level(log_level)
 
-**log_level** - optional param, log level records with *level >= 20 (INFO)* are
-processed by default, if not specified.
+Parameters:
 
-eva_sfa_change_log_level
-------------------------
+* **log_level** log processing level
 
-This function allows to change log level processing
+.. _sfw_eva_sfa_log_start:
 
-.. code-block:: javascript
+eva_sfa_log_start - start log processing
+----------------------------------------
 
-  eva_sfa_change_log_level(log_level);
 
-Here **log_level** param is required. The function reloads all log records with
-the specified level, so it's a good idea to clean log viewer before.
-
-eva_sfa_log_level_name
-----------------------
-
-This function returns log level name matching the given log level code:
 
 .. code-block:: javascript
 
-  eva_sfa_log_level_name(log_level);
+    function eva_sfa_log_start(log_level)
 
-Returns *DEBUG* for *10*, *INFO* for *20*, *WARNING* for *30*, *ERROR* for
-*40*, *CRITICAL* for *50*.
+Parameters:
 
-UI functions
-============
+* **log_level** log processing level (optional)
 
-eva_sfa_load_animation
-----------------------
 
-Draws load animation inside specified <div />
+.. _sfw_cat_tools:
 
-.. code-block:: javascript
+Utility functions
+=================
 
-    eva_sfa_load_animation(div_id);
 
-eva_sfa_chart
--------------
 
-Calls **eva_sfa_load_animation**, then **eva_sfa_state_history** and builds a
-chart inside specified <div />
 
-.. code-block:: javascript
+.. _sfw_eva_sfa_chart:
 
-    eva_sfa_chart(ctx, cfg, oid, params);
+eva_sfa_chart - displays a chart
+--------------------------------
 
-where:
-
-* **ctx** HTML element (<div />) ID to draw a chart in.
-* **cfg** chart configuration. SFA Framework uses `Chart.js
-  <https://www.chartjs.org/>`_ library. At this moment, *line* and *bar* charts
-  are supported
-* **oid** item OID (or multiple, array or comma separated): **type:group/id**
-* **params** (object):
-    * **timeframe** time frame to display, e.g. *5T* - last 5 min, *2H* - last 2
-      hours, *2D* last 2 days etc.
-    * **fill** precision[:np], 10T-60T recommended. The more accurate precision
-          is, the more data points are displayed (but chart is slower). np -
-          optional parameter, number precision. Default: *30T:2*
-    * **update** chart update interval, in seconds. Set *0* or *null* to disable
-          updates
-    * **prop** item state property to use (default: *'value'*)
-
-.. note::
-
-    To work with charts you should include Chart.js library, which is located
-    in file *lib/chart.min.js* (*ui* folder).
-
-See :ref:`Chart example<sfw_chart_example>`.
-
-eva_sfa_popup
--------------
-
-Opens HTML5 popup
+To work with charts you should include Chart.js library, which is located in file lib/chart.min.js (ui folder).
 
 .. code-block:: javascript
 
-  eva_sfa_popup(ctx, pclass, title, msg, params);
+    function eva_sfa_chart(ctx, cfg, oid, params, _do_update)
 
-where:
+Parameters:
+
+* **ctx** html container element id to draw in (must have fixed width/height)
+* **cfg** Chart.js configuration
+* **oid** item oid or oids, array or comma separated (type:full_id)
+* **params** object with props
+
+    * **timeframe** timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2 days etc.), default: 1D
+
+    * **fill** precision[:np] (10T - 60T recommended, more accurate - more data), np - number precision, optional. default: 30T:2
+
+    * **update** update interval in seconds. If the chart conteiner is no longer visible, chart stops updating.
+
+    * **prop** item property to use (default is value)
+
+.. _sfw_eva_sfa_load_animation:
+
+eva_sfa_load_animation - animate html element block
+---------------------------------------------------
+
+Simple loading animation
+
+.. code-block:: javascript
+
+    function eva_sfa_load_animation(el_id)
+
+Parameters:
+
+* **el_id** html element id
+
+.. _sfw_eva_sfa_popup:
+
+eva_sfa_popup - popup window
+----------------------------
+
+Opens popup window. Requires bootstrap css included There may be only 1 popup opened. If the page want to open another popup, the current one will be overwritten unless it's class is higher than a new one.
+
+.. code-block:: javascript
+
+    function eva_sfa_popup(ctx, pclass, title, msg, params)
+
+Parameters:
 
 * **ctx** html element id to use as popup (any empty <div /> is fine)
-* **pclass** popup class: *info*, *warning* or *error*. opens big popup window
-  if '!' is put before the class (e.g. *!info*)
+* **pclass** popup class: info, warning or error. opens big popup window if '!' is put before the class (e.g. !info)
 * **title** popup window title
 * **msg** popup window message
-* **params** (object):
+* **params** object with handlers and additional parameters:
+
     * **ct** popup auto close time (sec), equal to pressing escape
-    * **btn1** button 1 name (default: *'OK'*)
+
+    * **btn1** button 1 name ('OK' if not specified)
+
     * **btn2** button 2 name
+
     * **btn1a** function to run if button 1 (or enter) is pressed
-    * **btn2a** function(arg) to run if button 2 (or escape) is pressed. arg
-      is *true* if the button was pressed, *false* if escape key or auto close.
-    * **va** validate function which runs before btn1a. If the function returns
-      *true*, the popup is closed and btn1a function is executed. Otherwise the
-      popup is kept and the function btn1a is not executed. *va* function is
-      used to validate input, e.g. if popup contains any input fields.
 
-Example (consider *<div id="popup" style="display: none"></div>* is placed
-somewhere in HTML):
+    * **btn2a** function(arg) to run if button 2 (or escape) is pressed. arg is true if the button was pressed, false if escape key or auto close.
 
-.. code-block:: javascript
+    * **va** validate function which runs before btn1a. if the function return true, the popup is closed and btn1a function is executed. otherwise the popup is kept and the function btn1a is not executed. va function is used to validate an input, if popup contains any input fields.
 
-    // after successful login
-    eva_sfa_popup('popup', 'info', 'Logged in', 'You are logged in', {ct:2});
-    // .......
-    // reload handler
-    function reload_me() {
-        document.location='/ui/';
-    }
-    eva_sfa_reload_handler = function() {
-        eva_sfa_popup(
-          'popup',
-          'warning',
-          null,
-          'Reloading interface',
-          {
-          ct:2,
-          btn1a: reload_me,
-          btn2a: reload_me}
-          );
-    }
+
 
 Examples
 ========
 
 Examples of the SFA framework usage are provided in ":doc:`/tutorial/tut_ui`"
 part of the EVA :doc:`tutorial</tutorial/tutorial>`.
+
+.. _sfw_example_general:
+
+Framework start
+---------------
+
+.. code-block:: javascript
+
+    /**
+    * Hide login form and show primary interface <div />
+    */
+    function after_login() {
+        $('#login_form').hide();
+        $('#interface').show();
+    }
+
+    /**
+    * Show error message
+    */
+    function failed_login(code, msg, response) {
+        $('#login_form_error').html(msg);
+    }
+
+    $(document).ready(function() {
+        eva_sfa_cb_login_success = after_login;
+        eva_sfa_cb_login_error = failed_login;
+        eva_sfa_init();
+        // function ui_set_sensor will handle sensor event by the specified mask
+        eva_sfa_register_update_state('sensor:greenhouse*/env/temp', ui_set_sensor);
+        eva_sfa_register_update_state('sensor:greenhouse*/env/hum', ui_set_sensor);
+        // function for login form submit event
+        $('#login_form').submit(function(e) {
+          e.preventDefault();
+          eva_sfa_login = e.currentTarget.login.value;
+          eva_sfa_password = e.currentTarget.password.value;
+          eva_sfa_start();
+          });
+    }
+
 
 .. _sfw_example_timer:
 
@@ -1043,3 +1294,13 @@ And for automatic reconnection it should look like:
             }
        }
 
+
+Authentication with front-end server
+====================================
+
+If you have front-end server installed before UI and it handles HTTP basic
+authentication, you can leave **eva_sfa_login** and **eva_sfa_apikey**
+variables empty and let framework log in without them.
+
+In this case authorization data will be parsed by SFA server from Authorization
+HTTP header (front-end server should pass it as-is to back-end SFA).

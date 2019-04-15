@@ -6,19 +6,24 @@
  */
 
 /**
- * Next 2 vars should always contain login and password or API will be unable
- * to reconnect in case of i.e. server reboot
+ * Should always contain authentication login or API will be unable
+ * to reconnect in case of e.g. server reboot
  */
 eva_sfa_login = '';
+
+/**
+ * Should always contain authentication password
+ */
 eva_sfa_password = '';
 
 /**
- * Use API key instead of login. Insecure but fine for testing
+ * Use API key instead of login. Insecure but fine for testing and specific
+ * configs
  */
 eva_sfa_apikey = null;
 
 /**
- * Set/clear auth cookies for /ui, /pvt and /rpvt
+ * Use auth cookies for /ui, /pvt and /rpvt
  */
 eva_sfa_set_auth_cookies = true;
 
@@ -34,36 +39,47 @@ eva_sfa_api_token = null;
 eva_sfa_logged_in = false;
 
 /**
- * Contains functions called after either successful or failed login
+ * Successful login callback. Contains function called after successful login
  */
 eva_sfa_cb_login_success = null;
+
+/**
+ * Failed login callback. Contains function called after failed login
+ */
 eva_sfa_cb_login_error = null;
 
 /**
- * Contains function called after framework loads initial item states
+ * State callback. Contains function called after framework loads initial item
+ * states
  */
 eva_sfa_cb_states_loaded = null;
 
-/** Contains function which's called as f(data) when ws event is received
- *  function should return true, if it return false, WS data processing
- *  is stopped
+/**
+ * WebSocket event handler. Contains function which's called as f(data) when ws
+ * event is received function should return true, if it return false, WS data
+ * processing is stopped
  */
 eva_sfa_ws_event_handler = null;
 
-/** Contains function which's called as f() when reload event is received
- *  (server ask the clients to reload the interface)
+/**
+ * Reload events handler (WebSocket mode only). Contains function which's
+ * called as f() when reload event is received (server ask the clients to
+ * reload the interface)
  */
 eva_sfa_reload_handler = null;
 
-/** Contains function which's called as f() when server restart event is
- * received (server warns the clients about it's restart)
+/**
+ * Server restart handler (WebSocket mode only). Contains function which's
+ * called as f() when server restart event is received (server warns the
+ * clients about it's restart)
  */
 eva_sfa_server_restart_handler = null;
 
 /**
- * Contains function called if heartbeat got an error (usually user is forcibly
- * logged out). The function is called f(data) if there's HTTP error data or
- * f() if there's no HTTP error data (i.e. unable to send WebSocket message)
+ * Heartbeat error handler. Contains function called if heartbeat got an error
+ * (usually user is forcibly logged out). The function is called f(data) if
+ * there's HTTP error data or f() if there's no HTTP error data (e.g. unable to
+ * send WebSocket message)
  */
 eva_sfa_heartbeat_error = eva_sfa_restart;
 
@@ -73,7 +89,8 @@ eva_sfa_heartbeat_error = eva_sfa_restart;
 eva_sfa_ajax_reload_interval = 2;
 
 /**
- * Reload interval for WS mode (in seconds), just in case something wrong
+ * Reload interval for WS mode (in seconds), to get data in case something is
+ * wrong with WS
  */
 eva_sfa_force_reload_interval = 5;
 
@@ -88,17 +105,18 @@ eva_sfa_log_reload_interval = 2;
 eva_sfa_log_records_max = 200;
 
 /**
- * Append log entry
+ * New log record handler
  */
 eva_sfa_process_log_record = null;
 
 /**
- * Log post processing function i.e. to autoscroll the log viewer
+ * Log post processing callback function e.g. to autoscroll the log viewer
  */
 eva_sfa_log_postprocess = null;
 
 /**
- * "Heartbeat" interval (requests to system info, in seconds)
+ * Heartbeat interval. Requests to API function "test" (system info), in
+ * seconds
  */
 eva_sfa_heartbeat_interval = 5;
 
@@ -108,13 +126,13 @@ eva_sfa_heartbeat_interval = 5;
  */
 eva_sfa_server_info = null;
 
-/*
+/**
  * Contains difference (in seconds) between server and client time
  */
 eva_sfa_tsdiff = null;
 
 /**
- * WebSocket mode if true, is set by eva_sfa_init()
+ * WebSocket mode if true, is set by eva_sfa_init().
  * Setting this to false (after calling eva_sfa_init()) will force
  * AJAX mode
  */
@@ -131,8 +149,10 @@ eva_sfa_ws_mode = true;
 eva_sfa_state_updates = true;
 
 /**
+ * initialize Framework
+ *
  * Initializes eva_sfa javascript API
- * automatically sets WebSocket or AJAX mode depending on the browser features
+ * automatically sets WebSocket or AJAX mode depending on the browser features.
  *
  * Always call this function at your program start
  */
@@ -145,9 +165,9 @@ function eva_sfa_init() {
 }
 
 /**
- * Start API
- * After calling the function will authorize user, open WebSocket
- * (in case of WS mode) or schedule AJAX refresh interval
+ * start Framework API
+ * After calling the function will authenticate user, open WebSocket (in case
+ * of WS mode) or schedule AJAX refresh interval.
  */
 function eva_sfa_start() {
   if (eva_sfa_logged_in) return;
@@ -168,15 +188,15 @@ function eva_sfa_start() {
 }
 
 /**
- * Restart API
- * i.e. used on heartbeat error
+ * restart Framework API
+ * e.g. used on heartbeat error
  */
 function eva_sfa_restart() {
   eva_sfa_stop();
   eva_sfa_start();
 }
 /**
- * Stop API
+ * stop Framework API
  * After calling the function will close open WebSocket if available,
  * clear all the refresh intervals then try to close server session
  */
@@ -189,13 +209,16 @@ function eva_sfa_stop(cb) {
 }
 
 /**
- * Register the function (or javascript code) to be called in case of state
- * change event (or at first state load)
+ * register state update callback
  *
- * @param oid - item id in format type:full_id, i.e. sensor:env/temp1
+ * Register the function (or javascript code) to be called in case of state
+ * change event (or at first state load).
+ *
+ * If state is already loaded, function will be called immediately
+ *
+ * @param oid - item id in format type:full_id, e.g. sensor:env/temp1
  * @param cb - function to be called
  *
- * if state is already loaded, function will be called immediately
  */
 function eva_sfa_register_update_state(oid, cb) {
   if (!oid.includes('*')) {
@@ -212,7 +235,9 @@ function eva_sfa_register_update_state(oid, cb) {
 }
 
 /**
- * Calls any available API function
+ * call API function
+ *
+ * Calls any available SFA API function
  *
  * @param func - API function
  * @param params - function params
@@ -225,11 +250,11 @@ function eva_sfa_call(func, params, cb_success, cb_error) {
 }
 
 /**
- * Get item state
+ * get item state
  *
- * @param oid - item id in format type:full_id, i.e. sensor:env/temp1
+ * @param oid - item id in format type:full_id, e.g. sensor:env/temp1
  *
- * @returns - object state or undefined if no object found
+ * @returns object state or undefined if no object found
  */
 function eva_sfa_state(oid) {
   if (!oid.includes('*')) {
@@ -249,13 +274,12 @@ function eva_sfa_state(oid) {
 }
 
 /**
- * Get expiration time left (in seconds)
+ * get lvar expiration time left
  *
  * @param lvar_id - item id in format type:full_id, e.g. lvar:timers/timer1
  *
  * @returns - seconds to expiration, -1 if expired, -2 if stopped
  */
-
 function eva_sfa_expires_in(lvar_id) {
   // get item
   var i = eva_sfa_state(lvar_id.startsWith('lvar:') ? '' : 'lvar:' + lvar_id);
@@ -275,9 +299,9 @@ function eva_sfa_expires_in(lvar_id) {
 }
 
 /**
- * Get item status
+ * get item status
  *
- * @param oid - item id in format type:full_id, i.e. sensor:env/temp1
+ * @param oid - item id in format type:full_id, e.g. sensor:env/temp1
  *
  * @returns object status(int) or undefined if no object found
  */
@@ -288,9 +312,9 @@ function eva_sfa_status(oid) {
 }
 
 /**
- * Get item status
+ * get item value
  *
- * @param oid - item id in format type:full_id, i.e. sensor:env/temp1
+ * @param oid - item id in format type:full_id, e.g. sensor:env/temp1
  *
  * @returns object value (null, string or numeric if possible)
  * or undefined if no object found
@@ -306,11 +330,11 @@ function eva_sfa_value(oid) {
 }
 
 /**
- * Get groups list
+ * get groups list
  *
  * @param params - object with props
- *              p = item type (U for unit, S for sensor, LV for lvar)
- *              g - group filter (mqtt style)
+ *              @p - item type (U for unit, S for sensor, LV for lvar)
+ *              @g - group filter (mqtt style)
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
@@ -319,7 +343,7 @@ function eva_sfa_groups(params, cb_success, cb_error) {
 }
 
 /**
- * Get item state history
+ * get item state history
  *
  * @param params - state history params
  * @param cb_success - function called on success
@@ -332,15 +356,15 @@ function eva_sfa_state_history(oid, params, cb_success, cb_error) {
 }
 
 /**
- * Run macro
+ * run macro
  *
  * @param macro_id - full macro ID
  * @param params - object with props
- *              a - macro args
- *              kw - macro kwargs
- *              w - seconds to wait until complete
- *              p - action priority
- *              u - action uuid
+ *              @a - macro args
+ *              @kw - macro kwargs
+ *              @w - seconds to wait until complete
+ *              @p - action priority
+ *              @u - action uuid
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
@@ -351,15 +375,15 @@ function eva_sfa_run(macro_id, params, cb_success, cb_error) {
 }
 
 /**
- * Execute unit action
+ * execute unit action
  *
  * @param unit_id - full unit ID
  * @param params - object with props
- *              s - new unit status (int)
- *              v - new unit value (optional)
- *              w - seconds to wait until complete
- *              p - action priority (optional)
- *              u - action uuid (optional)
+ *              @s - new unit status (int)
+ *              @v - new unit value (optional)
+ *              @w - seconds to wait until complete
+ *              @p - action priority (optional)
+ *              @u - action uuid (optional)
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
@@ -370,15 +394,14 @@ function eva_sfa_action(unit_id, params, cb_success, cb_error) {
 }
 
 /**
- * Execute unit action, toggle status beteween 0 and 1
+ * execute unit action, toggle status beteween 0 and 1
  *
  * @param unit_id - full unit ID
  * @param params - object with props
- *              s - new unit status (int)
- *              v - new unit value (optional)
- *              w - seconds to wait until complete
- *              p - action priority (optional)
- *              u - action uuid (optional)
+ *              @v - new unit value (optional)
+ *              @w - seconds to wait until complete
+ *              @p - action priority (optional)
+ *              @u - action uuid (optional)
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
@@ -389,13 +412,13 @@ function eva_sfa_action_toggle(unit_id, params, cb_success, cb_error) {
 }
 
 /**
- * Get action results by unit ID
+ * get action result
  *
  * @param params - object with props
- *              i - object oid (type:group/id), unit or lmacro
- *              u - action uuid (either i or u must be specified)
- *              g - filter by group
- *              s - filter by status (Q, R, F - queued, running, finished)
+ *              @i - object oid (type:group/id), unit or lmacro
+ *              @u - action uuid (either i or u must be specified)
+ *              @g - filter by group
+ *              @s - filter by status (Q, R, F - queued, running, finished)
  * @param cb_success - function called on success
  * @param cb_error - function called if error occured
  */
@@ -404,7 +427,7 @@ function eva_sfa_result(params, cb_success, cb_error) {
 }
 
 /**
- * Kill running unit action and clean queue
+ * kill running unit action and clean queue
  *
  * @param unit_id - full unit ID
  */
@@ -415,7 +438,7 @@ function eva_sfa_kill(unit_id, cb_success, cb_error) {
 }
 
 /**
- * Clean queue for unit
+ * clean queue for unit
  *
  * @param unit_id - full unit ID
  */
@@ -426,7 +449,7 @@ function eva_sfa_q_clean(unit_id, cb_success, cb_error) {
 }
 
 /**
- * Terminate current unit action if possible
+ * terminate current unit action if possible
  *
  * @param unit_id - full unit ID
  */
@@ -437,7 +460,7 @@ function eva_sfa_terminate(unit_id, cb_success, cb_error) {
 }
 
 /**
- * Terminate current unit action by uuid if possible
+ * terminate current unit action by uuid if possible
  *
  * @param uuid - action uuid
  */
@@ -448,7 +471,7 @@ function eva_sfa_terminate_by_uuid(uuid, cb_success, cb_error) {
 }
 
 /**
- * Set lvar value
+ * set lvar value
  *
  * @param lvar_id - full lvar ID
  * @param value - new lvar value, optional
@@ -461,8 +484,10 @@ function eva_sfa_set(lvar_id, value, cb_success, cb_error) {
 }
 
 /**
- * Set lvar value, toggle current value (if value is 0 or 1)
- * useful when lvar is being used as flag
+ * toggle lvar value
+ *
+ * Toggle current value (if value is 0 or 1) useful when lvar is being used as
+ * flag
  *
  * @param lvar_id - full lvar ID
  */
@@ -479,7 +504,9 @@ function eva_sfa_set_toggle(lvar_id, cb_success, cb_error) {
 }
 
 /**
- * Reset lvar (set status/value to 1)
+ * reset lvar
+ *
+ * Set status/value to 1
  *
  * @param lvar_id - full lvar ID
  */
@@ -490,7 +517,9 @@ function eva_sfa_reset(lvar_id, cb_success, cb_error) {
 }
 
 /**
- * Clear lvar (for timer - set status to 0, otherwise value to 0)
+ * clear lvar
+ *
+ * For timer - set status to 0, otherwise value to 0
  *
  * @param lvar_id - full lvar ID
  */
@@ -501,7 +530,7 @@ function eva_sfa_clear(lvar_id, cb_success, cb_error) {
 }
 
 /**
- * Start log processing
+ * start log processing
  *
  * @param log_level - log processing level (optional)
  */
@@ -517,7 +546,7 @@ function eva_sfa_log_start(log_level) {
 }
 
 /**
- * Change log processing level
+ * change log processing level
  *
  * @param log_level - log processing level
  */
@@ -528,7 +557,7 @@ function eva_sfa_change_log_level(log_level) {
 }
 
 /**
- * Get log level name
+ * get log level name
  *
  * @param lid - log level id
  */
@@ -537,22 +566,25 @@ function eva_sfa_log_level_name(log_level) {
   return eva_sfa_log_level_names[log_level];
 }
 
-/*
- * Displays a chart
+/**
+ * displays a chart
+ *
+ * To work with charts you should include Chart.js library, which is located in
+ * file lib/chart.min.js (ui folder). 
  *
  * @param ctx - html container element id to draw in (must have fixed
  *              width/height)
  * @param cfg - Chart.js configuration
  * @param oid - item oid or oids, array or comma separated (type:full_id)
  * @param params - object with props
- *              timeframe - timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2
+ *              @timeframe - timeframe to display (5T - 5 min, 2H - 2 hr, 2D - 2
  *                          days etc.), default: 1D
- *              fill - precision[:np] (10T - 60T recommended, more accurate -
-   *              more data), np - number precision, optional. default: 30T:2
- *              update - update interval in seconds
- *              prop - item property to use (default is value)
+ *              @fill - precision[:np] (10T - 60T recommended, more accurate -
+ *              more data), np - number precision, optional. default: 30T:2
+ *              @update - update interval in seconds. If the chart conteiner is
+ *                        no longer visible, chart stops updating.
+ *              @prop - item property to use (default is value)
  *
- * note: if the conteiner is no longer visible, chart ends updating forever
  */
 function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   var params = params;
@@ -644,8 +676,10 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   }
 }
 
-/*
- * Animate html element block (simple loading animation)
+/**
+ * animate html element block
+ *
+ * Simple loading animation
  *
  * @param el_id - html element id
  */
@@ -659,25 +693,27 @@ function eva_sfa_load_animation(el_id) {
   );
 }
 
-/*
+/**
+ * popup window
+ *
  * Opens popup window. Requires bootstrap css included
  * There may be only 1 popup opened. If the page want to open another popup, the
  * current one will be overwritten unless it's class is higher than a new one.
  *
  * @param ctx - html element id to use as popup (any empty <div /> is fine)
  * @param pclass - popup class: info, warning or error. opens big popup window
- *                 if '!' is put before the class (i.e. !info)
+ *                 if '!' is put before the class (e.g. !info)
  * @param title - popup window title
  * @param msg - popup window message
  * @param params - object with handlers and additional parameters:
- *              ct - popup auto close time (sec), equal to pressing escape
- *              btn1 - button 1 name ('OK' if not specified)
- *              btn2 - button 2 name
- *              btn1a - function to run if button 1 (or enter) is pressed
- *              btn2a - function(arg) to run if button 2 (or escape) is
+ *              @ct - popup auto close time (sec), equal to pressing escape
+ *              @btn1 - button 1 name ('OK' if not specified)
+ *              @btn2 - button 2 name
+ *              @btn1a - function to run if button 1 (or enter) is pressed
+ *              @btn2a - function(arg) to run if button 2 (or escape) is
  *                      pressed. arg is true if the button was pressed, false
  *                      if escape key or auto close.
- *              va - validate function which runs before btn1a.
+ *              @va - validate function which runs before btn1a.
  *                   if the function return true, the popup is closed and btn1a
  *                   function is executed. otherwise the popup is kept and the
  *                   function btn1a is not executed. va function is used to
