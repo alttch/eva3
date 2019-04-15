@@ -15,9 +15,6 @@ class LVar(eva.item.VariableItem):
 
     def __init__(self, var_id):
         super().__init__(var_id, 'lvar')
-        self._snmp_traps_allowed = False
-        self._drivers_allowed = False
-        self._modbus_allowed = False
         self.status = 1
         self.mqtt_update_topics.append('set_time')
         self.prv_value = None

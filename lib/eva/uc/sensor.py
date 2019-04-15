@@ -12,7 +12,7 @@ import time
 from eva.uc.ucitem import UCItem
 
 
-class Sensor(eva.item.VariableItem, eva.item.PhysicalItem, UCItem):
+class Sensor(UCItem, eva.item.VariableItem, eva.item.PhysicalItem):
 
     def __init__(self, sensor_id):
         super().__init__(sensor_id, 'sensor')

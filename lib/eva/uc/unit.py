@@ -6,21 +6,27 @@ __version__ = "3.2.1"
 import eva.core
 import eva.item
 import eva.uc.controller
+import eva.uc.driverapi
+import eva.uc.modbus
 import logging
 import threading
 import time
+import eva.runner
 
+from eva.tools import safe_int
 from eva.tools import val_to_boolean
+from eva.tools import dict_from_str
 from eva.uc.ucitem import UCItem
 
 status_label_off = 'OFF'
 status_label_on = 'ON'
 
 
-class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
-           UCItem):
+class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
+           eva.item.PhysicalItem):
 
     def __init__(self, unit_id):
+        self.action_driver_config = None
         super().__init__(unit_id, 'unit')
 
         self.update_exec_after_action = False
@@ -33,6 +39,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
         self.last_action = 0
         self.auto_processor_active = False
         self.auto_processor = None
+        self.modbus_status = None
         # labels have string keys to be JSON compatible
         self.default_status_labels = {
             '0': status_label_off,
@@ -68,6 +75,12 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
                 d['update_if_action'] = self.update_if_action
             if not config or self.auto_off:
                 d['auto_off'] = self.auto_off
+            if self.action_driver_config:
+                d['action_driver_config'] = self.action_driver_config
+            elif props:
+                d['action_driver_config'] = None
+            if not config or self.modbus_status:
+                        d['modbus_status'] = self.modbus_status
             if not config or \
                     (self.status_labels.keys() != \
                         self.default_status_labels.keys()) or \
@@ -85,10 +98,27 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
             full=full, config=config, info=info, props=props, notify=notify))
         return d
 
-    def create_action(self,
-                      nstatus,
-                      nvalue='',
-                      priority=None,
+    def register_modbus_status_updates(self):
+        if self.modbus_status:
+            eva.uc.modbus.register_handler(
+                self.modbus_status[1:],
+                self.modbus_update_status,
+                register=self.modbus_status[0])
+
+    def unregister_modbus_status_updates(self):
+        if self.modbus_status:
+            eva.uc.modbus.unregister_handler(
+                self.modbus_status[1:],
+                self.modbus_update_status,
+                register=self.modbus_status[0])
+
+    def modbus_update_status(self, addr, values):
+        v = values[0]
+        if v is True: v = 1
+        elif v is False: v = 0
+        self.update_set_state(status=v)
+
+    def create_action(self, nstatus, nvalue='', priority=None,
                       action_uuid=None):
         return UnitAction(self, nstatus, nvalue, priority, action_uuid)
 
@@ -96,6 +126,8 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
         eva.uc.controller.exec_mqtt_unit_action(self, msg)
 
     def update_config(self, data):
+        if 'action_driver_config' in data:
+            self.action_driver_config = data['action_driver_config']
         if 'action_always_exec' in data:
             self.action_always_exec = data['action_always_exec']
         if 'update_exec_after_action' in data:
@@ -110,10 +142,63 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
             self.auto_off = data['auto_off']
         if 'status_labels' in data:
             self.status_labels = data['status_labels']
+        if 'modbus_status' in data:
+            self.modbus_status = data['modbus_status']
         super().update_config(data)
 
     def set_prop(self, prop, val=None, save=False):
-        if prop == 'action_always_exec':
+        if prop == 'action_exec':
+            if self.action_exec != val:
+                if val and val[0] == '|':
+                    d = eva.uc.driverapi.get_driver(val[1:])
+                    if not d:
+                        logging.error(
+                            'Can not set ' + \
+                                '%s.action_exec = %s, no such driver'
+                                % (self.oid, val))
+                        return False
+                self.action_exec = val
+                self.log_set(prop, val)
+                self.set_modified(save)
+            return True
+        elif prop == 'action_driver_config':
+            if val is None:
+                self.action_driver_config = None
+                self.log_set(prop, None)
+                self.set_modified(save)
+                return True
+            else:
+                try:
+                    v = dict_from_str(val)
+                except:
+                    eva.core.log_traceback()
+                    return False
+                self.action_driver_config = v
+                self.log_set(prop, 'dict')
+                self.set_modified(save)
+                return True
+        elif prop == 'modbus_status':
+            if self.modbus_status == val: return True
+            if val is None:
+                self.unregister_modbus_status_updates()
+                self.modbus_status = None
+            else:
+                if val[0] not in ['h', 'c']: return False
+                try:
+                    addr = safe_int(val[1:])
+                    if addr > eva.uc.modbus.slave_reg_max or addr < 0:
+                        return False
+                except:
+                    return False
+                self.unregister_modbus_status_updates()
+                self.modbus_status = val
+                self.modbus_update_status(addr,
+                                          eva.uc.modbus.get_data(addr, val[0]))
+                self.register_modbus_status_updates()
+            self.log_set('modbus_status', val)
+            self.set_modified(save)
+            return True
+        elif prop == 'action_always_exec':
             v = val_to_boolean(val)
             if v is not None:
                 if self.action_always_exec != v:
@@ -206,11 +291,13 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
 
     def start_processors(self):
         super().start_processors()
+        self.register_modbus_status_updates()
         self.start_auto_processor()
 
     def stop_processors(self):
         super().stop_processors()
         self.stop_auto_processor()
+        self.unregister_modbus_status_updates()
 
     def start_auto_processor(self):
         self.auto_processor_active = True
@@ -244,6 +331,17 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
                     self, 0, None, wait=eva.core.config.timeout)
         self.auto_processor_active = False
         logging.debug('%s auto processor stopped' % self.oid)
+
+    def get_action_xc(self, a):
+        if self.action_exec and self.action_exec[0] == '|':
+            return eva.runner.DriverCommand(
+                item=self,
+                state=self.action_run_args(a, n2n=False),
+                timeout=self.action_timeout,
+                tki=self.term_kill_interval,
+                _uuid=a.uuid)
+        else:
+            return super().get_action_xc(a)
 
     def action_may_run(self, action):
         nv = action.nvalue
@@ -280,10 +378,7 @@ class Unit(eva.item.UpdatableItem, eva.item.ActiveItem, eva.item.PhysicalItem,
         if self.update_exec_after_action: self.do_update()
         self.enable_updates()
 
-    def update_set_state(self,
-                         status=None,
-                         value=None,
-                         from_mqtt=False):
+    def update_set_state(self, status=None, value=None, from_mqtt=False):
         if self._destroyed: return False
         try:
             if status is not None: _status = int(status)

@@ -17,10 +17,8 @@ import eva.notify
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
-from eva.tools import dict_from_str
 from eva.tools import is_oid
 from eva.tools import parse_oid
-from eva.tools import safe_int
 # from evacpp.evacpp import GenericAction
 from eva.generic import GenericAction
 
@@ -298,32 +296,15 @@ class UpdatableItem(Item):
         self.value = ''
         self.set_time = time.time()
         self.expires = 0
-        self.snmp_trap = None
-        self.update_driver_config = None
         self.mqtt_update = None
         self.mqtt_update_notifier = None
         self.mqtt_update_qos = 1
         self.mqtt_update_topics = ['', 'status', 'value']
-        self.modbus_status = None
-        self.modbus_value = None
         self._mqtt_updates_allowed = True
-        self._snmp_traps_allowed = True
-        self._drivers_allowed = True
-        self._modbus_allowed = True
-        self._modbus_status_allowed = True
         self._expire_on_any = False
         self.mqtt_update_timestamp = 0
 
     def update_config(self, data):
-        if 'modbus_status' in data and \
-                self._modbus_allowed and self._modbus_status_allowed:
-            self.modbus_status = data['modbus_status']
-        if 'modbus_value' in data and self._modbus_allowed:
-            self.modbus_value = data['modbus_value']
-        if 'snmp_trap' in data:
-            self.snmp_trap = data['snmp_trap']
-        if 'update_driver_config' in data:
-            self.update_driver_config = data['update_driver_config']
         if 'expires' in data:
             self.expires = data['expires']
         if 'update_exec' in data:
@@ -374,25 +355,9 @@ class UpdatableItem(Item):
             return True
         elif prop == 'update_exec':
             if self.update_exec != val:
-                if val and val[0] == '|':
-                    if self._drivers_allowed:
-                        import eva.uc.driverapi
-                        d = eva.uc.driverapi.get_driver(val[1:])
-                        if not d:
-                            logging.error(
-                                'Can not set ' + \
-                                    '%s.update_exec = %s, no such driver'
-                                    % (self.oid, val))
-                            return False
-                    else:
-                        return False
-                if not val:
-                    self.unregister_driver_updates()
                 self.update_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
-                if val and val[0] == '|':
-                    self.register_driver_updates()
             return True
         elif prop == 'update_interval':
             if val is None:
@@ -448,185 +413,6 @@ class UpdatableItem(Item):
                     self.log_set(prop, update_timeout)
                     self.set_modified(save)
             return True
-        elif prop == 'snmp_trap' and self._snmp_traps_allowed:
-            if val is None:
-                self.snmp_trap = None
-                self.unsubscribe_snmp_traps()
-                self.log_set(prop, None)
-                self.set_modified(save)
-                return True
-            elif isinstance(val, dict):
-                self.snmp_trap = val
-                self.subscribe_snmp_traps()
-                self.log_set('snmp_trap', 'dict')
-                self.set_modified(save)
-                return True
-            return False
-        elif prop == 'update_driver_config' and self._drivers_allowed:
-            if val is None:
-                self.update_driver_config = None
-                self.log_set(prop, None)
-                self.set_modified(save)
-                return True
-            else:
-                try:
-                    v = dict_from_str(val)
-                except:
-                    eva.core.log_traceback()
-                    return False
-                self.update_driver_config = v
-                self.log_set(prop, 'dict')
-                self.set_modified(save)
-                return True
-        elif prop == 'modbus_status' and self._modbus_allowed and \
-                self._modbus_status_allowed:
-            import eva.uc.modbus
-            if self.modbus_status == val: return True
-            if val is None:
-                self.unregister_modbus_status_updates()
-                self.modbus_status = None
-            else:
-                if val[0] not in ['h', 'c']: return False
-                try:
-                    addr = safe_int(val[1:])
-                    if addr > eva.uc.modbus.slave_reg_max or addr < 0:
-                        return False
-                except:
-                    return False
-                self.unregister_modbus_status_updates()
-                self.modbus_status = val
-                self.modbus_update_status(addr,
-                                          eva.uc.modbus.get_data(addr, val[0]))
-                self.register_modbus_status_updates()
-            self.log_set('modbus_status', val)
-            self.set_modified(save)
-            return True
-        elif prop == 'modbus_value' and self._modbus_allowed:
-            import eva.uc.modbus
-            if self.modbus_value == val: return True
-            if val is None:
-                self.unregister_modbus_value_updates()
-                self.modbus_value = None
-            else:
-                if val[0] not in ['h', 'c']: return False
-                try:
-                    addr = safe_int(val[1:])
-                    if addr > eva.uc.modbus.slave_reg_max or addr < 0:
-                        return False
-                except:
-                    return False
-                self.unregister_modbus_value_updates()
-                self.modbus_value = val
-                self.modbus_update_value(addr,
-                                         eva.uc.modbus.get_data(addr, val[0]))
-                self.register_modbus_value_updates()
-            self.log_set('modbus_value', val)
-            self.set_modified(save)
-            return True
-        elif prop == 'snmp_trap.ident_vars' and self._snmp_traps_allowed:
-            if val is None:
-                if self.snmp_trap and 'ident_vars' in self.snmp_trap:
-                    del self.snmp_trap['ident_vars']
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
-                    self.log_set('snmp_trap.ident_vars', None)
-                    self.set_modified(save)
-                return True
-            else:
-                ivars = {}
-                try:
-                    for x in val.split(','):
-                        k, v = x.split('=')
-                        ivars[k] = v
-                except:
-                    return False
-                if not self.snmp_trap: self.snmp_trap = {}
-                self.snmp_trap['ident_vars'] = ivars
-                self.subscribe_snmp_traps()
-                self.log_set('snmp_trap.ident_vars', val)
-                self.set_modified(save)
-                return True
-        elif prop == 'snmp_trap.set_down' and self._snmp_traps_allowed:
-            if val is None:
-                if self.snmp_trap and 'set_down' in self.snmp_trap:
-                    del self.snmp_trap['set_down']
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
-                    self.log_set('snmp_trap.set_down', None)
-                    self.set_modified(save)
-                return True
-            else:
-                ivars = {}
-                try:
-                    for x in val.split(','):
-                        k, v = x.split('=')
-                        ivars[k] = v
-                except:
-                    return False
-                if not self.snmp_trap: self.snmp_trap = {}
-                self.snmp_trap['set_down'] = ivars
-                self.log_set('snmp_trap.set_down', val)
-                self.subscribe_snmp_traps()
-                self.set_modified(save)
-                return True
-        elif prop == 'snmp_trap.set_status' and self._snmp_traps_allowed:
-            if val is None:
-                if self.snmp_trap and 'set_status' in self.snmp_trap:
-                    del self.snmp_trap['set_status']
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
-                    self.log_set('snmp_trap.set_status', None)
-                    self.set_modified(save)
-                return True
-            else:
-                if not self.snmp_trap: self.snmp_trap = {}
-                self.snmp_trap['set_status'] = val
-                self.subscribe_snmp_traps()
-                self.log_set('snmp_trap.set_status', val)
-                self.set_modified(save)
-                return True
-        elif prop == 'snmp_trap.set_value' and self._snmp_traps_allowed:
-            if val is None:
-                if self.snmp_trap and 'set_value' in self.snmp_trap:
-                    del self.snmp_trap['set_value']
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
-                    self.log_set('snmp_trap.set_value', None)
-                    self.set_modified(save)
-                return True
-            else:
-                if not self.snmp_trap: self.snmp_trap = {}
-                self.snmp_trap['set_value'] = val
-                self.subscribe_snmp_traps()
-                self.log_set('snmp_trap.set_value', val)
-                self.set_modified(save)
-                return True
-        elif prop[:16] == 'snmp_trap.set_if' and self._snmp_traps_allowed:
-            if val is None:
-                if self.snmp_trap and 'set_if' in self.snmp_trap:
-                    del self.snmp_trap['set_if']
-                    self.log_set('snmp_trap.set_if', None)
-                    self.set_modified(save)
-                    if not self.snmp_trap: self.unsubscribe_snmp_traps()
-                return True
-            try:
-                state, iv = val.split(':')
-                s, va = state.split(',')
-                ivars = {}
-                for x in iv.split(','):
-                    k, v = x.split('=')
-                    ivars[k] = v
-                if not self.snmp_trap: self.snmp_trap = {}
-                if not 'set_if' in self.snmp_trap:
-                    self.snmp_trap['set_if'] = []
-                r = {'vars': ivars}
-                if s != 'null' and s != '':
-                    r['status'] = int(s)
-                if va != 'null' and va != '':
-                    r['value'] = va
-                self.log_set('snmp_trap.set_if+', val)
-                self.snmp_trap['set_if'].append(r)
-            except:
-                return False
-            self.subscribe_snmp_traps()
-            self.set_modified(save)
-            return True
         elif prop == 'mqtt_update' and self._mqtt_updates_allowed:
             if val is None:
                 if self.mqtt_update is not None:
@@ -663,44 +449,8 @@ class UpdatableItem(Item):
         else:
             return super().set_prop(prop, val, save)
 
-    def register_modbus_status_updates(self):
-        if self.modbus_status:
-            import eva.uc.modbus
-            eva.uc.modbus.register_handler(
-                self.modbus_status[1:],
-                self.modbus_update_status,
-                register=self.modbus_status[0])
-
-    def register_modbus_value_updates(self):
-        if self.modbus_value:
-            import eva.uc.modbus
-            eva.uc.modbus.register_handler(
-                self.modbus_value[1:],
-                self.modbus_update_value,
-                register=self.modbus_value[0])
-
-    def unregister_modbus_status_updates(self):
-        if self.modbus_status:
-            import eva.uc.modbus
-            eva.uc.modbus.unregister_handler(
-                self.modbus_status[1:],
-                self.modbus_update_status,
-                register=self.modbus_status[0])
-
-    def unregister_modbus_value_updates(self):
-        if self.modbus_value:
-            import eva.uc.modbus
-            eva.uc.modbus.unregister_handler(
-                self.modbus_value[1:],
-                self.modbus_update_value,
-                register=self.modbus_value[0])
-
     def start_processors(self):
         self.subscribe_mqtt_update()
-        self.subscribe_snmp_traps()
-        self.register_modbus_status_updates()
-        self.register_modbus_value_updates()
-        self.register_driver_updates()
         self.start_update_processor()
         self.start_update_scheduler()
         self.start_expiration_checker()
@@ -708,34 +458,10 @@ class UpdatableItem(Item):
 
     def stop_processors(self):
         self.unsubscribe_mqtt_update()
-        self.unregister_driver_updates()
-        self.unregister_modbus_value_updates()
-        self.unregister_modbus_status_updates()
-        self.unsubscribe_snmp_traps()
         self.stop_update_processor()
         self.stop_update_scheduler()
         self.stop_expiration_checker()
         super().stop_processors()
-
-    def subscribe_snmp_traps(self):
-        if self.snmp_trap and self._snmp_traps_allowed:
-            eva.traphandler.subscribe(self)
-
-    def register_driver_updates(self):
-        if self._drivers_allowed and \
-                self.update_exec and self.update_exec[0] == '|':
-            import eva.uc.driverapi
-            eva.uc.driverapi.register_item_update(self)
-
-    def unsubscribe_snmp_traps(self):
-        if self._snmp_traps_allowed:
-            eva.traphandler.unsubscribe(self)
-
-    def unregister_driver_updates(self):
-        if self._drivers_allowed and \
-                self.update_exec and self.update_exec[0] == '|':
-            import eva.uc.driverapi
-            eva.uc.driverapi.unregister_item_update(self)
 
     def subscribe_mqtt_update(self):
         if not self.mqtt_update or \
@@ -889,15 +615,15 @@ class UpdatableItem(Item):
         self.update_set_state(status=-1, value='')
         return True
 
-    def update(self, driver_state_in=None):
+    def update(self):
         if self.updates_allowed() and not self.is_destroyed():
-            self._perform_update(driver_state_in)
+            self._perform_update()
 
-    def _perform_update(self, driver_state_in=None):
+    def _perform_update(self, **kwargs):
         try:
             self.update_log_run()
             self.update_before_run()
-            xc = self.get_update_xc(driver_state_in)
+            xc = self.get_update_xc(**kwargs)
             self.update_xc = xc
             xc.run()
             if xc.exitcode < 0:
@@ -911,15 +637,7 @@ class UpdatableItem(Item):
             logging.error('update %s failed' % self.oid)
             eva.core.log_traceback()
 
-    def get_update_xc(self, driver_state_in=None):
-        import eva.runner
-        if self._drivers_allowed and self.update_exec and \
-                self.update_exec[0] == '|':
-            return eva.runner.DriverCommand(
-                item=self,
-                update=True,
-                timeout=self.update_timeout,
-                state_in=driver_state_in)
+    def get_update_xc(self, **kwargs):
         return eva.runner.ExternalProcess(
             fname=self.update_exec,
             item=self,
@@ -961,62 +679,6 @@ class UpdatableItem(Item):
             return False
         return self.update_set_state(status, value)
 
-    def process_snmp_trap(self, host, data):
-        if not self.snmp_trap: return
-        try:
-            if 'ident_vars' in self.snmp_trap:
-                for i, v in self.snmp_trap['ident_vars'].items():
-                    if not i in data or data[i] != v:
-                        return
-            _set = True
-            if 'set_down' in self.snmp_trap:
-                for i, v in self.snmp_trap['set_down'].items():
-                    if not i in data or data[i] != v:
-                        _set = False
-                        break
-            if _set:
-                logging.debug('%s according to the trap has failed' % \
-                        self.oid)
-                self.update_set_state(status=-1)
-                return
-            if 'set_if' in self.snmp_trap:
-                for cond in self.snmp_trap['set_if']:
-                    if 'vars' in cond:
-                        _set = True
-                        for i, v in cond['vars'].items():
-                            if not i in data or data[i] != v:
-                                _set = False
-                                break
-                        if _set:
-                            if 'status' in cond:
-                                status = cond['status']
-                            else:
-                                status = None
-                            if 'value' in cond:
-                                value = cond['value']
-                            else:
-                                value = None
-                            if status is not None or value is not None:
-                                self.update_set_state(status, value)
-            status = None
-            value = None
-            if 'set_status' in self.snmp_trap and \
-                    self.snmp_trap['set_status'] in data:
-                try:
-                    status = \
-                        int(data[self.snmp_trap['set_status']])
-                except:
-                    logging.error(
-                        '%s bad status integer in snmp trap' % \
-                                self.oid)
-            if 'set_value' in self.snmp_trap and \
-                    self.snmp_trap['set_value'] in data:
-                value = data[self.snmp_trap['set_value']]
-            if status is not None or value is not None:
-                self.update_set_state(status, value)
-        except:
-            eva.core.log_traceback()
-
     def mqtt_set_state(self, topic, data):
         try:
             if topic.endswith('/status'):
@@ -1044,18 +706,6 @@ class UpdatableItem(Item):
                 return j
         except:
             eva.core.log_traceback()
-
-    def modbus_update_status(self, addr, values):
-        v = values[0]
-        if v is True: v = 1
-        elif v is False: v = 0
-        self.update_set_state(status=v)
-
-    def modbus_update_value(self, addr, values):
-        v = values[0]
-        if v is True: v = 1
-        elif v is False: v = 0
-        self.update_set_state(value=v)
 
     def update_set_state(self, status=None, value=None, from_mqtt=False):
         self.update_expiration()
@@ -1088,16 +738,6 @@ class UpdatableItem(Item):
                   notify=False):
         d = {}
         if config or props:
-            if self._snmp_traps_allowed:
-                if self.snmp_trap:
-                    d['snmp_trap'] = self.snmp_trap
-                elif props:
-                    d['snmp_trap'] = None
-            if self._drivers_allowed:
-                if self.update_driver_config:
-                    d['update_driver_config'] = self.update_driver_config
-                elif props:
-                    d['update_driver_config'] = None
             if not config or self.expires:
                 d['expires'] = self.expires
             if self.update_exec:
@@ -1117,12 +757,6 @@ class UpdatableItem(Item):
                 d['update_timeout'] = self._update_timeout
             elif props:
                 d['update_timeout'] = None
-            if self._modbus_allowed:
-                if self._modbus_status_allowed:
-                    if not config or self.modbus_status:
-                        d['modbus_status'] = self.modbus_status
-                if not config or self.modbus_value:
-                    d['modbus_value'] = self.modbus_value
         elif not info:
             d['status'] = self.status
             d['value'] = self.value
@@ -1167,8 +801,6 @@ class ActiveItem(Item):
         self.mqtt_control_notifier = None
         self.mqtt_control_qos = 1
         self._expire_on_any = True
-        self._drivers_allowed = True
-        self.action_driver_config = None
 
     def q_is_task(self):
         return not self.queue.empty()
@@ -1408,32 +1040,20 @@ class ActiveItem(Item):
         logging.debug('%s action processor stopped' % self.oid)
 
     def get_action_xc(self, a):
-        import eva.runner
-        if self._drivers_allowed and self.action_exec and \
-                self.action_exec[0] == '|':
-            return eva.runner.DriverCommand(
-                item=self,
-                state=self.action_run_args(a, n2n=False),
-                timeout=self.action_timeout,
-                tki=self.term_kill_interval,
-                _uuid=a.uuid)
-        else:
-            return eva.runner.ExternalProcess(
-                fname=self.action_exec,
-                item=self,
-                env=a.action_env(),
-                update=False,
-                args=self.action_run_args(a),
-                timeout=self.action_timeout,
-                tki=self.term_kill_interval)
+        return eva.runner.ExternalProcess(
+            fname=self.action_exec,
+            item=self,
+            env=a.action_env(),
+            update=False,
+            args=self.action_run_args(a),
+            timeout=self.action_timeout,
+            tki=self.term_kill_interval)
 
     def update_config(self, data):
         if 'action_enabled' in data:
             self.action_enabled = data['action_enabled']
         if 'action_exec' in data:
             self.action_exec = data['action_exec']
-        if 'action_driver_config' in data:
-            self.action_driver_config = data['action_driver_config']
         if 'mqtt_control' in data and data['mqtt_control'] is not None:
             self.mqtt_control = data['mqtt_control']
             params = data['mqtt_control'].split(':')
@@ -1470,38 +1090,10 @@ class ActiveItem(Item):
                 return False
         elif prop == 'action_exec':
             if self.action_exec != val:
-                if val and val[0] == '|':
-                    if self._drivers_allowed:
-                        import eva.uc.driverapi
-                        d = eva.uc.driverapi.get_driver(val[1:])
-                        if not d:
-                            logging.error(
-                                'Can not set ' + \
-                                    '%s.action_exec = %s, no such driver'
-                                    % (self.oid, val))
-                            return False
-                    else:
-                        return False
                 self.action_exec = val
                 self.log_set(prop, val)
                 self.set_modified(save)
             return True
-        elif prop == 'action_driver_config' and self._drivers_allowed:
-            if val is None:
-                self.action_driver_config = None
-                self.log_set(prop, None)
-                self.set_modified(save)
-                return True
-            else:
-                try:
-                    v = dict_from_str(val)
-                except:
-                    eva.core.log_traceback()
-                    return False
-                self.action_driver_config = v
-                self.log_set(prop, 'dict')
-                self.set_modified(save)
-                return True
         elif prop == 'mqtt_control':
             if val is None:
                 if self.mqtt_control is not None:
@@ -1608,11 +1200,6 @@ class ActiveItem(Item):
             if not config or self.action_enabled:
                 d['action_enabled'] = self.action_enabled
         if config or props:
-            if self._drivers_allowed:
-                if self.action_driver_config:
-                    d['action_driver_config'] = self.action_driver_config
-                elif props:
-                    d['action_driver_config'] = None
             if self.action_exec:
                 d['action_exec'] = self.action_exec
             elif props:
@@ -1836,9 +1423,6 @@ class MultiUpdate(UpdatableItem):
         self._update_run_args = ()
         self.update_allow_check = True
         self.get_item_func = None
-        self._drivers_allowed = False
-        self._snmp_traps_allowed = False
-        self._modbus_allowed = False
         self._mqtt_updates_allowed = False
 
     def updates_allowed(self):
@@ -1846,12 +1430,6 @@ class MultiUpdate(UpdatableItem):
         for i in self.items_to_update:
             if not i.updates_allowed(): return False
         return True
-
-    def register_driver_updates(self):
-        return
-
-    def unregister_driver_updates(self):
-        return
 
     def update_after_run(self, update_out):
         if self._destroyed: return
@@ -1935,8 +1513,6 @@ class MultiUpdate(UpdatableItem):
             full=full, config=config, info=info, props=props, notify=notify)
         if 'mqtt_update' in d:
             del d['mqtt_update']
-        if 'snmp_trap' in d:
-            del d['snmp_trap']
         if 'expires' in d:
             del d['expires']
         if config or props:

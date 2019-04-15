@@ -14,9 +14,6 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         item_id = state['id']
         super().__init__(item_id, item_type)
         self.controller = controller
-        self._snmp_traps_allowed = False
-        self._drivers_allowed = False
-        self._modbus_allowed = False
         cfg = {}
         if controller.mqtt_update:
             cfg['mqtt_update'] = controller.mqtt_update
