@@ -1293,7 +1293,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 eva.core.log_traceback(notifier=True)
         elif t in self.items_to_update_by_topic:
             i = self.items_to_update_by_topic[t]
-            i.mqtt_set_state(t, d)
+            i.mqtt_set_state(t[0 if not self.space else len(self.space) + 1:],
+                             d)
         elif t in self.items_to_control_by_topic:
             i = self.items_to_control_by_topic[t]
             i.mqtt_action(msg=d)
