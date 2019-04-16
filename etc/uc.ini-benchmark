@@ -18,6 +18,7 @@ db_file = runtime/db/uc.db
 keep_action_history = 86400
 ; keep memory log in seconds
 keep_logmem = 86400
+logging_level = warning
 ; notify state on start
 notify_on_start = yes
 ; debug mode
