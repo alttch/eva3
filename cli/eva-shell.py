@@ -694,7 +694,10 @@ sys.argv = {argv}
                 return self.local_func_result_empty
         url = '{}/{}/stable/update.sh'.format(_update_repo, new_version)
         cmd = ('curl -s ' + url + ' | bash /dev/stdin')
-        if not self.before_save() or os.system(cmd) or not self.after_save():
+        if os.system(dir_sbin + '/eva-control stop') or \
+            not self.before_save() or \
+            os.system(cmd) or \
+            not self.after_save():
             return self.local_func_result_failed
         print('Update completed', end='')
         if self.interactive:
