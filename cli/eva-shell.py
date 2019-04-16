@@ -34,7 +34,6 @@ exec_after_save = None
 cmds = []
 
 update_repo = 'https://get.eva-ics.com'
-interactive_mode = False
 
 import eva.client.cli
 
@@ -317,7 +316,7 @@ class ManagementCLI(GenericCLI):
                           ] + self.subshell_extra_args
             else:
                 sysargs = ['{}/{}{}'.format(dir_cli, p, x)]
-                if interactive_mode:
+                if self.interactive:
                     sysargs.append('-I')
             c = open('{}/{}{}'.format(dir_cli, p, x)).read()
             if self.in_json:
@@ -837,7 +836,6 @@ banner = """     _______    _____       _______________
   www.eva-ics.com (c) 2012-2019 Altertech
 """
 if '-I' in sys.argv or '--interactive' in sys.argv:
-    interactive_mode = True
     print(cli.colored(banner, color='blue'))
     cli.execute_function(['version'])
     print()
