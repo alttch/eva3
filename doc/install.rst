@@ -54,6 +54,7 @@ Optional modules (can be disabled in :ref:`venv<install_venv>` configuration):
 * **onewire** required for 1-Wire via :doc:`OWFS</owfs>`
 * **pymodbus** required for :doc:`Modbus</modbus>` master/slave functions
 * **pysnmp** required for SNMP client/server functions
+* **pillow** required for :doc:`SFA PVT</sfa/sfa_pvt>` image processing
 
 
 Initial setup
