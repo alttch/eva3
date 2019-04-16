@@ -898,10 +898,10 @@ class RemoteUCPool(RemoteControllerPool):
                         self.controllers_by_unit[u.full_id] = uc
                         u.start_processors()
                     else:
-                        self.units[u.full_id].status = u.status
-                        self.units[u.full_id].value = u.value
-                        self.units[u.full_id].nstatus = u.nstatus
-                        self.units[u.full_id].nvalue = u.nvalue
+                        self.units[u.full_id].update_set_state(
+                            status=u.status, value=u.value)
+                        self.units[u.full_id].update_nstate(
+                            nstatus=u.nstatus, nvalue=u.nvalue)
                         self.units[u.full_id].action_enabled = u.action_enabled
                     p[u.full_id] = u
                     _u = self.get_unit(u.full_id)
@@ -940,8 +940,8 @@ class RemoteUCPool(RemoteControllerPool):
                         self.sensors[u.full_id] = u
                         u.start_processors()
                     else:
-                        self.sensors[u.full_id].status = u.status
-                        self.sensors[u.full_id].value = u.value
+                        self.sensors[u.full_id].update_set_state(
+                            status=u.status, value=u.value)
                     p[u.full_id] = u
                     _u = self.get_sensor(u.full_id)
                     if _u: _u.update_config(u.serialize(config=True))

@@ -103,8 +103,8 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
 
     def __init__(self, remote_uc, state):
         super().__init__('unit', remote_uc, state)
-        self.nstatus = self.status
-        self.nvalue = self.value
+        self.nstatus = state['nstatus']
+        self.nvalue = state.get('nvalue', '')
         self.action_enabled = eva.tools.val_to_boolean(
             state.get('action_enabled', False))
         self.status_labels = state.get('status_labels')
