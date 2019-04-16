@@ -928,7 +928,6 @@ class RemoteUCPool(RemoteControllerPool):
                     'Loaded %u units from %s' % (len(p), controller_id))
             else:
                 logging.error('Failed to reload units from %s' % controller_id)
-                self.item_management_lock.release()
                 return False
             sensors = uc.load_sensors()
             if sensors is not None:
@@ -969,14 +968,13 @@ class RemoteUCPool(RemoteControllerPool):
             else:
                 logging.error(
                     'Failed to reload sensors from %s' % controller_id)
-                self.item_management_lock.release()
                 return False
         except:
             logging.error('failed to reload controller ' + controller_id)
             eva.core.log_traceback()
-            self.item_management_lock.release()
             return False
-        self.item_management_lock.release()
+        finally:
+            self.item_management_lock.release()
         return True
 
     def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
@@ -1272,7 +1270,6 @@ class RemoteLMPool(RemoteControllerPool):
                     'Loaded %u lvars from %s' % (len(p), controller_id))
             else:
                 logging.error('Failed to reload lvars from %s' % controller_id)
-                self.item_management_lock.release()
                 return False
             macros = lm.load_macros(skip_system=True)
             if macros is not None:
@@ -1311,7 +1308,6 @@ class RemoteLMPool(RemoteControllerPool):
                     'Loaded %u macros from %s' % (len(p), controller_id))
             else:
                 logging.error('Failed to reload macros from %s' % controller_id)
-                self.item_management_lock.release()
                 return False
             cycles = lm.load_cycles()
             if cycles is not None:
@@ -1350,12 +1346,11 @@ class RemoteLMPool(RemoteControllerPool):
                     'Loaded %u cycles from %s' % (len(p), controller_id))
             else:
                 logging.error('Failed to reload cycles from %s' % controller_id)
-                self.item_management_lock.release()
                 return False
         except:
             logging.error('failed to reload controller ' + controller_id)
             eva.core.log_traceback()
-            self.item_management_lock.release()
             return False
-        self.item_management_lock.release()
+        finally:
+            self.item_management_lock.release()
         return True
