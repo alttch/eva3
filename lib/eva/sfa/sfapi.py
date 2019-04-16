@@ -68,8 +68,6 @@ import eva.sfa.controller
 import eva.sfa.cloudmanager
 import eva.sysapi
 
-from PIL import Image
-
 api = None
 
 
@@ -1390,6 +1388,7 @@ class SFA_HTTP_Root:
                     y = int(y)
                     q = int(q)
                     if os.path.getsize(_f) > 10000000: raise
+                    from PIL import Image
                     try:
                         image = Image.open(_f)
                         image.thumbnail((x, y))

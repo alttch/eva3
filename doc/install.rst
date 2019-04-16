@@ -45,6 +45,7 @@ System Requirements
     expected on ARM systems with:
 
         * **pandas** (python3-pandas)
+        * **cryptography** (python3-cryptography)
 
     To let EVA ICS venv use system site modules, read instructions below.
 
@@ -185,7 +186,7 @@ If you want to rebuild venv from scratch, delete *python3* folder completely.
 
 On some systems (e.g. ARM-based computers) venv installation can be tricky: you
 can expect slow installation time or problems with some heavy modules (e.g.
-*pandas*).
+*pandas*, *cryptography*).
 
 To solve this:
 
@@ -203,9 +204,9 @@ To solve this:
       packages if their versions match with requested.
 
     * **SKIP** here you can specify the packages (in quotes, space separated),
-      which should be skipped (e.g.  *pandas* and install it with *apt-get
-      install pandas* instead). To let venv use system package,
-      *SYSTEM_SITE_PACKAGES=1* should also be present.
+      which should be skipped (e.g.  *pandas cryptography* and install it with
+      *apt-get install python3-pandas python3-cryptography* instead). To let
+      venv use system package, *SYSTEM_SITE_PACKAGES=1* should also be present.
 
     * **PIP_EXTRA_OPTIONS** specify extra options for *pip3*, e.g. *-v* for
       verbose installation.
