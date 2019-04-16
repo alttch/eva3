@@ -147,9 +147,9 @@ ln -sf eva bin/eva-shell
 
 echo "- Updating tables"
 
-./sbin/eva-update-tables uc || exit 1
-./sbin/eva-update-tables lm || exit 1
-./sbin/eva-update-tables sfa || exit 1
+[ -f ./etc/uc.ini ] && ./sbin/eva-update-tables uc || exit 1
+[ -f ./etc/lm.ini ] && ./sbin/eva-update-tables lm || exit 1
+[ -f ./etc/sfa.ini ] && ./sbin/eva-update-tables sfa || exit 1
 
 echo "- Cleaning up"
 
