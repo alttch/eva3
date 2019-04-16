@@ -10,12 +10,12 @@ BUILD=2019041701
 
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 
-OBS="lm-ei uc-ei INSTALL.txt install.sh install-uc.sh install-lm.sh install-sfa.sh easy-setup.sh install/check_mods sbin/check_mods sbin/check_mqtt set-run-under-user.sh"
+OBS=""
 
-UC_NEW_CFG="runtime/uc_drivers.json"
-UC_NEW_CFG_L="runtime/uc_modbus.json runtime/uc_owfs.json"
-LM_NEW_CFG="runtime/lm_extensions.json"
-LM_NEW_DIR="runtime/lm_lcycle.d"
+UC_NEW_CFG=""
+UC_NEW_CFG_L=""
+LM_NEW_CFG=""
+LM_NEW_DIR=""
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
     echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"
