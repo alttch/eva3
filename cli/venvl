@@ -15,4 +15,4 @@ fi
 
 PROGRAM=${EVA_DIR}/cli/${P}.py
 
-${PYTHON} ${PROGRAM} $*
+${PYTHON} ${PROGRAM} "$@"

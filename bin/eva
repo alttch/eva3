@@ -6,7 +6,7 @@ EVA_DIR=`realpath ${EVA_DIR}`
 
 PYTHON=${EVA_DIR}/python3/bin/python3
 
-ARGS=$*
-[ ! "$ARGS" ] && [ "`basename $0`" = "eva-shell" ] && ARGS=-I
+I=
+[ ! "$*" ] && [ "`basename $0`" = "eva-shell" ] && I=-I
 
-${PYTHON} ${EVA_DIR}/cli/eva-shell.py ${ARGS}
+${PYTHON} ${EVA_DIR}/cli/eva-shell.py "$@" ${I}
