@@ -214,7 +214,7 @@ fi
 
 DATA="$DATA \"k\" : \"$_PROP\""
 
-ID=`date "+%N"`
+ID=1
 DATA="{ \"jsonrpc\": \"2.0\", \"method\": \"${FUNCTION}\", \"params\": { ${DATA} }, \"id\": \"${ID}\"}"
 
 echoV "API call to $U"
