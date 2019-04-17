@@ -31,7 +31,7 @@ def usage(version_only=False):
     if version_only: return
     print("""Usage: update-tables <uc|lm>
 
-This tool converts simple item layout to enterprise.
+Updates EVA ICS database tables.
 
 Specify uc|lm|sfa
 """)
