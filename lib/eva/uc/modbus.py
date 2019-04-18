@@ -317,7 +317,7 @@ def start():
             not config.slave['serial']:
         return
     try:
-        modbus_server = importlib.import_module('pymodbus.server.async')
+        modbus_server = importlib.import_module('pymodbus.server.asynchronous')
         modbus_device = importlib.import_module('pymodbus.device')
         modbus_transactions = importlib.import_module('pymodbus.transaction')
         modbus_datastore = importlib.import_module('pymodbus.datastore')
@@ -397,58 +397,6 @@ def start():
             logging.error('Unable to start Modbus slave, port {}'.format(
                 v['p']))
             eva.core.log_traceback()
-
-
-def StartSerialServer(context,
-                      identity=None,
-                      framer=None,
-                      defer_reactor_run=False,
-                      **kwargs):
-    """ Helper method to start the Modbus Async Serial server
-
-    Modified to set serial baudrate / stopbits
-
-    :param context: The server data context
-    :param identify: The server identity to use (default empty)
-    :param framer: The framer to use (default ModbusAsciiFramer)
-    :param port: The serial port to attach to
-    :param baudrate: The baud rate to use for the serial device
-    :param console: A flag indicating if you want the debug console
-    :param ignore_missing_slaves: True to not send errors on a request to a
-    missing slave
-    :param defer_reactor_run: True/False defer running reactor.run() as part
-    of starting server, to be explictly started by the user
-    """
-    from twisted.internet import reactor
-    from twisted.internet.serialport import SerialPort
-
-    from pymodbus.server.async import ModbusServerFactory
-    from pymodbus.internal.ptwisted import InstallManagementConsole
-
-    port = kwargs.get('port', '/dev/ttyS0')
-    baudrate = kwargs.get('baudrate', 9600)
-    bytesize = kwargs.get('bytesize')
-    parity = kwargs.get('parity')
-    stopbits = kwargs.get('stopbits')
-    console = kwargs.get('console', False)
-
-    logging.info("Starting Modbus Serial Server on %s" % port)
-    factory = ModbusServerFactory(context, framer, identity, **kwargs)
-    if console:
-        InstallManagementConsole({'factory': factory})
-
-    protocol = factory.buildProtocol(None)
-    SerialPort.getHost = lambda self: port  # hack for logging
-    SerialPort(
-        protocol,
-        port,
-        reactor,
-        baudrate=baudrate,
-        bytesize=bytesize,
-        parity=parity,
-        stopbits=stopbits)
-    if not defer_reactor_run:
-        reactor.run(installSignalHandlers=_is_main_thread())
 
 
 # started by uc controller
