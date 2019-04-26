@@ -56,9 +56,56 @@ Optional modules (can be disabled in :ref:`venv<install_venv>` configuration):
 * **pysnmp** required for SNMP client/server functions
 * **pillow** required for :doc:`SFA PVT</sfa/sfa_pvt>` image processing
 
+Using installer
+===============
 
-Initial setup
-=============
+Supported Linux distributions:
+
+ * Debian/Ubuntu/Raspbian
+ * Fedora
+
+Automatic and unattended
+------------------------
+
+Install requires system packages, configure local MQTT server (mosquitto),
+setup EVA ICS components:
+
+.. code-block:: bash
+
+    sudo -s
+    curl https://get.eva-ics.com/install.sh | sh /dev/stdin -a
+
+Customized
+----------
+
+Customize API keys:
+
+.. code-block:: bash
+
+    sudo -s
+    curl https://get.eva-ics.com/install.sh | env MASTERKEY=123 DEFAULTKEY=qwerty sh /dev/stdin -a
+
+More options, interactive setup:
+
+.. code-block:: bash
+
+    sudo -s
+    curl https://get.eva-ics.com/install.sh -o install.sh
+    sh install.sh --help
+
+E.g. install required system packages, setup :doc:`/uc/uc` only, use external
+MQTT server and predefined API keys:
+
+.. code-block:: bash
+
+    sudo -s
+    curl https://get.eva-ics.com/install.sh | \
+        env MASTERKEY=mykey DEFAULTKEY=mydefaultkey sh /dev/stdin \
+            --autostart --logrotate --bash-completion \
+            -- --auto -p uc --mqtt eva:password@192.168.1.100 --mqtt-announce --mqtt-discovery
+
+Manual installation
+===================
 
 .. note::
 
