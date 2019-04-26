@@ -1262,7 +1262,8 @@ class GenericMQTTNotifier(GenericNotifier):
             return
         if t == self.announce_topic and \
                 d != self.announce_msg and \
-                self.discovery_handler:
+                self.discovery_handler and \
+                not eva.core.config.setup_mode:
             background_job(
                 self.discovery_handler, daemon=True)(self.notifier_id, d)
             return

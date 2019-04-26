@@ -789,8 +789,17 @@ EOF
     save_controller_state lm || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
+        SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|jq -Mr .system`
+        ./sbin/eva-tinyapi -C lm -F setup_mode setup=1
+        ./sbin/eva-tinyapi -C lm -F remove_controller i=${SNAME}
         ./sbin/eva-tinyapi -C lm -F append_controller \
             u=http://localhost:8812 a=\$default m=eva_1 save=1 > /dev/null 2>&1
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
+        ./sbin/eva-tinyapi -C lm -F setup_mode setup=0
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -864,6 +873,9 @@ EOF
     save_controller_state sfa || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
+        SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|jq -Mr .system`
+        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1
+        ./sbin/eva-tinyapi -C sfa -F remove_controller i=${SNAME}
         ./sbin/eva-tinyapi -C sfa -F append_controller \
             g=uc u=http://localhost:8812 a=\$default m=eva_1 save=1 > /dev/null 2>&1
         if [ $? != 0 ]; then
@@ -871,8 +883,13 @@ EOF
             ./sbin/eva-control stop
             exit 5
         fi
+        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
         if [ $CLOUDMANAGER -eq 1 ]; then
-          SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|jq -Mr .system`
           ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
               i=${SNAME} p=masterkey v=\$masterkey save=1 > /dev/null 2>&1
           if [ $? != 0 ]; then
@@ -884,6 +901,9 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
         echo "Linking local LM PLC to SFA"
+        SNAME=lm/`./sbin/eva-tinyapi -C lm -F test|jq -Mr .system`
+        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1
+        ./sbin/eva-tinyapi -C sfa -F remove_controller i=${SNAME}
         ./sbin/eva-tinyapi -C sfa -F append_controller \
             g=lm u=http://localhost:8817 a=\$default m=eva_1 save=1 > /dev/null 2>&1
         if [ $? != 0 ]; then
@@ -891,8 +911,13 @@ EOF
             ./sbin/eva-control stop
             exit 5
         fi
+        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
         if [ $CLOUDMANAGER -eq 1 ]; then
-          SNAME=lm/`./sbin/eva-tinyapi -C lm -F test|jq -Mr .system`
           ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
               i=${SNAME} p=masterkey v=\$masterkey save=1 > /dev/null 2>&1
           if [ $? != 0 ]; then
