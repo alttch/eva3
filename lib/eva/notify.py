@@ -1211,7 +1211,7 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             for t in item.mqtt_update_topics:
                 topic = self.pfx + item.item_type + '/' + \
-                        item.full_id + '/' + t
+                        item.full_id + (('/' + t) if t else '')
                 self.mq.unsubscribe(topic)
                 logging.debug('%s unsubscribed from %s updates' %
                               (self.notifier_id, topic))
