@@ -530,8 +530,10 @@ do
             INTERACTIVE=0
             INSTALL_UC=1
             cp -v ./etc/uc.ini-benchmark ./etc/uc.ini
-            echo 'SYSTEM_SITE_PACKAGES=1' > ./etc/venv
-            echo 'SKIP="pandas"' >> ./etc/venv
+            if [ ! -f ./etc/venv ]; then
+              echo 'SYSTEM_SITE_PACKAGES=1' > ./etc/venv
+              echo 'SKIP="pandas"' >> ./etc/venv
+            fi
             BENCHMARK=1
             shift
         ;;
