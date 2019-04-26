@@ -1098,6 +1098,7 @@ class GenericMQTTNotifier(GenericNotifier):
             interval=self.announce_interval)
 
     def connect(self):
+        self.connected = True
         self.check_connection()
 
     def disconnect(self):
@@ -1108,7 +1109,6 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def on_connect(self, client, userdata, flags, rc):
         logging.debug('%s mqtt reconnect' % self.notifier_id)
-        self.connected = True
         if self.announce_interval and not self.test_only_mode:
             self.announcer.start(_name=self.notifier_id + '_announcer')
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
@@ -1304,11 +1304,16 @@ class GenericMQTTNotifier(GenericNotifier):
                       (mid, self.host, self.port))
 
     def check_connection(self):
-        if self.mq._state != mqtt.mqtt_cs_connected:
-            self.mq.loop_stop()
-            self.mq.connect(
-                host=self.host, port=self.port, keepalive=self.keepalive)
-            self.mq.loop_start()
+        try:
+            if self.mq._state != mqtt.mqtt_cs_connected:
+                self.mq.loop_stop()
+                self.mq.connect(
+                    host=self.host, port=self.port, keepalive=self.keepalive)
+                self.mq.loop_start()
+            return True
+        except:
+            eva.core.log_traceback(notifier=True)
+            return False
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
         self.check_connection()
@@ -1424,7 +1429,8 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             logging.debug('.Testing mqtt notifier %s (%s:%u)' % \
                     (self.notifier_id,self.host, self.port))
-            self.check_connection()
+            if not self.check_connection():
+                return False
             result = self.mq.publish(
                 self.pfx + 'test', 1, qos=self.qos['system'], retain=False)
             return eva.core.wait_for(result.is_published, self.get_timeout())
