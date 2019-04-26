@@ -373,7 +373,7 @@ class UC_API(GenericAPI):
         k, i, s, v = parse_function_params(kwargs, 'kisv', '.si.')
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
-        if s or v:
+        if s is not None or v is not None:
             return item.update_set_state(status=s, value=v)
         else:
             item.need_update.set()

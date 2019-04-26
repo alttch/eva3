@@ -83,11 +83,14 @@ class GCLI(object):
         self.reset_argcomplete()
         if self.readline_processing:
             readline.set_history_length(self.history_length)
-            try:
-                if self.history_file:
-                    readline.read_history_file(self.history_file)
-            except:
-                pass
+            self.load_readline()
+
+    def load_readline(self):
+        try:
+            if self.history_file:
+                readline.read_history_file(self.history_file)
+        except:
+            pass
 
     def finish_interactive(self):
         self.save_readline()

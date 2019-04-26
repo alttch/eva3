@@ -1,9 +1,9 @@
-def AND(*args):
+def AND(args):
     for a in args:
         if not a: return False
     return True
 
-def OR(*args):
+def OR(args):
     for a in args:
         if a: return True
     return False
@@ -11,7 +11,7 @@ def OR(*args):
 def XOR(value1, value2):
     return value1 != value2
 
-def ADD(IN0, *args):
+def ADD(IN0, args):
     result = IN0
     for a in args:
         result += a
@@ -23,7 +23,7 @@ def SUB(IN1, IN2=None):
         result -= IN2
     return result
 
-def MUL(*args):
+def MUL(args):
     for a in args:
         result *= a
     return result
@@ -34,37 +34,37 @@ def DIV(IN1, IN2=None):
         result /= IN2
     return result
 
-def EQ(IN, *args):
+def EQ(IN, args):
     for a in args:
         if IN != a:
             return False
     return True
 
-def NE(IN, *args):
+def NE(IN, args):
     for a in args:
         if IN == a:
             return False
     return True
 
-def LT(IN, *args):
+def LT(IN, args):
     for a in args:
         if IN >= a:
             return False
     return True
 
-def LE(IN, *args):
+def LE(IN, args):
     for a in args:
         if IN > a:
             return False
     return True
 
-def GT(IN, *args):
+def GT(IN, args):
     for a in args:
         if IN <= a:
             return False
     return True
 
-def GE(IN, *args):
+def GE(IN, args):
     for a in args:
         if IN < a:
             return False
@@ -73,7 +73,7 @@ def GE(IN, *args):
 def SEL(G, IN0, IN1):
     return IN1 if g else IN0
 
-def MUX(K, *args):
+def MUX(K, args):
     if isinstance(K, bool):
         K = 0 if K else 1
     return args[K]
