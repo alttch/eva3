@@ -100,17 +100,23 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
 
     def register_modbus_status_updates(self):
         if self.modbus_status:
-            eva.uc.modbus.register_handler(
-                self.modbus_status[1:],
-                self.modbus_update_status,
-                register=self.modbus_status[0])
+            try:
+                eva.uc.modbus.register_handler(
+                    self.modbus_status[1:],
+                    self.modbus_update_status,
+                    register=self.modbus_status[0])
+            except:
+                eva.core.log_traceback()
 
     def unregister_modbus_status_updates(self):
         if self.modbus_status:
-            eva.uc.modbus.unregister_handler(
-                self.modbus_status[1:],
-                self.modbus_update_status,
-                register=self.modbus_status[0])
+            try:
+                eva.uc.modbus.unregister_handler(
+                    self.modbus_status[1:],
+                    self.modbus_update_status,
+                    register=self.modbus_status[0])
+            except:
+                eva.core.log_traceback()
 
     def modbus_update_status(self, addr, values):
         v = values[0]

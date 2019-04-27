@@ -37,17 +37,23 @@ class UCItem(eva.item.Item):
 
     def register_modbus_value_updates(self):
         if self.modbus_value:
-            eva.uc.modbus.register_handler(
-                self.modbus_value[1:],
-                self.modbus_update_value,
-                register=self.modbus_value[0])
+            try:
+                eva.uc.modbus.register_handler(
+                    self.modbus_value[1:],
+                    self.modbus_update_value,
+                    register=self.modbus_value[0])
+            except:
+                eva.core.log_traceback()
 
     def unregister_modbus_value_updates(self):
         if self.modbus_value:
-            eva.uc.modbus.unregister_handler(
-                self.modbus_value[1:],
-                self.modbus_update_value,
-                register=self.modbus_value[0])
+            try:
+                eva.uc.modbus.unregister_handler(
+                    self.modbus_value[1:],
+                    self.modbus_update_value,
+                    register=self.modbus_value[0])
+            except:
+                eva.core.log_traceback()
 
     def do_notify(self, skip_subscribed_mqtt=False, for_destroy=False):
         super().notify(
