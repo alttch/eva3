@@ -224,18 +224,23 @@ def append_item(item, start=False, load=True):
 @eva.core.save
 @with_item_lock
 def save():
-    for i, v in items_by_full_id.items():
-        if isinstance(v, eva.uc.unit.Unit) or \
-                isinstance(v, eva.uc.sensor.Sensor):
-            if not save_item_state(v):
-                return False
-        if v.config_changed:
-            if not v.save():
-                return False
-        try:
-            configs_to_remove.remove(v.get_fname())
-        except:
-            pass
+    db = eva.core.db()
+    dbt = db.begin()
+    try:
+        for i, v in items_by_full_id.items():
+            if isinstance(v, eva.uc.unit.Unit) or \
+                    isinstance(v, eva.uc.sensor.Sensor):
+                if not save_item_state(v, db):
+                    return False
+            if v.config_changed:
+                if not v.save():
+                    return False
+            try:
+                configs_to_remove.remove(v.get_fname())
+            except:
+                pass
+    finally:
+        dbt.commit()
     for f in configs_to_remove:
         try:
             os.unlink(f)
@@ -246,8 +251,8 @@ def save():
     return True
 
 
-def save_item_state(item):
-    dbconn = eva.core.db()
+def save_item_state(item, db=None):
+    dbconn = db if db else eva.core.db()
     try:
         _id = item.full_id if \
                 eva.core.config.enterprise_layout else item.item_id
@@ -451,31 +456,19 @@ def create_item(item_id, item_type, group=None, start=True, save=False):
 @with_item_lock
 def create_unit(unit_id, group=None, save=False):
     return create_item(
-        item_id=unit_id,
-        item_type='U',
-        group=group,
-        start=True,
-        save=save)
+        item_id=unit_id, item_type='U', group=group, start=True, save=save)
 
 
 @with_item_lock
 def create_sensor(sensor_id, group=None, save=False):
     return create_item(
-        item_id=sensor_id,
-        item_type='S',
-        group=group,
-        start=True,
-        save=save)
+        item_id=sensor_id, item_type='S', group=group, start=True, save=save)
 
 
 @with_item_lock
 def create_mu(mu_id, group=None, save=False):
     return create_item(
-        item_id=mu_id,
-        item_type='MU',
-        group=group,
-        start=True,
-        save=save)
+        item_id=mu_id, item_type='MU', group=group, start=True, save=save)
 
 
 @with_item_lock
@@ -641,8 +634,8 @@ def save_mu():
 
 
 def notify_all():
-    notify_all_units()
-    notify_all_sensors()
+    background_job(notify_all_units)()
+    background_job(notify_all_sensors)()
 
 
 @with_item_lock

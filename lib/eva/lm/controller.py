@@ -187,16 +187,21 @@ def append_item(item, start=False, load=True):
 
 @eva.core.save
 def save():
-    for i, v in lvars_by_full_id.items():
-        if not save_lvar_state(v):
-            return False
-        if v.config_changed:
-            if not v.save():
+    db = eva.core.db()
+    dbt = db.begin()
+    try:
+        for i, v in lvars_by_full_id.items():
+            if not save_lvar_state(v, db):
                 return False
-        try:
-            configs_to_remove.remove(v.get_fname())
-        except:
-            pass
+            if v.config_changed:
+                if not v.save():
+                    return False
+            try:
+                configs_to_remove.remove(v.get_fname())
+            except:
+                pass
+    finally:
+        dbt.commit()
     controller_lock.acquire()
     try:
         for i, v in remote_ucs.items():
@@ -245,8 +250,8 @@ def save():
 
 
 @with_item_lock
-def save_lvar_state(item):
-    dbconn = eva.core.db()
+def save_lvar_state(item, db=None):
+    dbconn = db if db else eva.core.db()
     try:
         _id = item.full_id if \
                 eva.core.config.enterprise_layout else item.item_id
@@ -799,8 +804,8 @@ def save_lvars():
 
 
 def notify_all(skip_subscribed_mqtt=False):
-    notify_all_lvars(skip_subscribed_mqtt=skip_subscribed_mqtt)
-    notify_all_cycles(skip_subscribed_mqtt=skip_subscribed_mqtt)
+    background_job(notify_all_lvars)(skip_subscribed_mqtt=skip_subscribed_mqtt)
+    background_job(notify_all_cycles)(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 
 @with_item_lock
