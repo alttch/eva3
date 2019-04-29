@@ -292,13 +292,18 @@ class PyThread(object):
         self.err = None
         self.bcode = bcode if bcode else ''
         self.exitcode = -15
+        self.compile_lock = threading.RLock()
 
     def compile(self):
-        if self.script_file in code_cache:
-            omtime = code_cache_m[self.script_file]
-        else:
-            omtime = None
+        if not self.compile_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ActiveItem::q_put_task locking broken')
+            eva.core.critical()
+            return False
         try:
+            if self.script_file in code_cache:
+                omtime = code_cache_m[self.script_file]
+            else:
+                omtime = None
             mtime = os.path.getmtime(self.script_file)
             try:
                 mtime_c = os.path.getmtime(self.common_file)
@@ -328,6 +333,8 @@ class PyThread(object):
             eva.core.log_traceback(force=True)
             self.err = traceback.format_exc()
             return False
+        finally:
+            self.compile_lock.release()
 
     def run(self):
         if not self.code:
