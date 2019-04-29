@@ -71,12 +71,12 @@ fnsrc = inspect.getsource({})
                 if not x:
                     indent = len(s) - len(st)
                 x += 1
+        fpointer = d[fname]
         result = {
             'name': fname,
             'var_in': [],
             'var_out': [],
-            'src': src,
-            'f': d[fname]
+            'src': src
         }
         doc = d['fndoc']
         for d in doc.split('\n'):
@@ -86,7 +86,7 @@ fnsrc = inspect.getsource({})
             if d.startswith('@var_out'):
                 result['var_out'].append(parse_arg(d))
         macro_functions[fname] = result
-        macro_function_pointers[fname] = result['f']
+        macro_function_pointers[fname] = fpointer
         return True
     except Exception as e:
         raise FunctionFailed(e)
@@ -106,6 +106,17 @@ def remove_macro_function(file_name):
 @with_macro_functions_lock
 def get_macro_function_pointers():
     return macro_function_pointers.copy()
+
+
+@with_macro_functions_lock
+def get_macro_function(fname=None):
+    if fname:
+        if fname in macro_functions:
+            return macro_functions[fname].copy()
+        else:
+            return None
+    else:
+        return macro_functions.copy()
 
 
 class PLC(eva.item.ActiveItem):

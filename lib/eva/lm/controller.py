@@ -404,8 +404,10 @@ def load_remote_ucs():
 
 
 @with_macro_functions_m_lock
-def reload_macro_function(fname=None):
-    if fname is None:
+def reload_macro_function(file_name=None, fname=None):
+    if file_name is None and fname:
+        file_name = '{}/lm/functions/{}.py'.format(eva.core.dir_xc, fname)
+    if file_name is None:
         logging.info('Loading macro functions')
         fncs = []
         for f in glob.glob('{}/lm/functions/*.py'.format(eva.core.dir_xc)):
@@ -416,17 +418,23 @@ def reload_macro_function(fname=None):
                 del macro_functions_m[f]
                 eva.lm.plc.remove_macro_function(f)
     else:
-        logging.info('Loading macro function {}'.format(fname))
-        if fname in macro_functions_m:
-            omtime = macro_functions_m[fname]
+        logging.info('Loading macro function {}'.format(file_name))
+        if file_name in macro_functions_m:
+            omtime = macro_functions_m[file_name]
         else:
             omtime = None
-        mtime = os.path.getmtime(fname)
+        mtime = os.path.getmtime(file_name)
         if not omtime or mtime > omtime:
             try:
-                eva.lm.plc.append_macro_function(fname)
+                eva.lm.plc.append_macro_function(file_name)
             except:
                 eva.core.log_traceback()
+                return False
+        return True
+
+
+def get_macro_function(fname=None):
+    return eva.lm.plc.get_macro_function(fname)
 
 
 @with_item_lock

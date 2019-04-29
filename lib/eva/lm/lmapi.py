@@ -492,6 +492,37 @@ class LM_API(GenericAPI, GenericCloudAPI):
 # macro functions
 
     @log_d
+    @api_need_master
+    def get_macro_function(self, **kwargs):
+        i = parse_api_params(kwargs, 'i', 'S')
+        f = eva.lm.controller.get_macro_function(i)
+        if not f:
+            raise ResourceNotFound
+        return f
+
+    @log_d
+    @api_need_master
+    def list_macro_functions(self, **kwargs):
+        fn = eva.lm.controller.get_macro_function()
+        result = []
+        for f, v in fn.items():
+            v = v.copy()
+            del v['src']
+            result.append(v)
+        return sorted(result, key=lambda k: k['name'])
+
+    @log_i
+    @api_need_master
+    def reload_macro_function(self, **kwargs):
+        i = parse_api_params(kwargs, 'i', 's')
+        if not eva.lm.controller.reload_macro_function(fname=i):
+            raise FunctionFailed
+        else:
+            return True
+
+# macros
+
+    @log_d
     def groups_macro(self, **kwargs):
         """
         get macro groups list
@@ -1305,6 +1336,11 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.groups_macro(k=k)
                 else:
                     return self.list_macros(k=k)
+        elif rtp == 'lmacro-function':
+            if ii:
+                return self.get_macro_function(k=k, i=ii)
+            else:
+                return self.list_macro_functions(k=k)
         elif rtp == 'lcycle':
             if ii:
                 if kind == 'props':
