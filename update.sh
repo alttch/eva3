@@ -15,7 +15,7 @@ OBS=""
 UC_NEW_CFG=""
 UC_NEW_CFG_L=""
 LM_NEW_CFG=""
-LM_NEW_DIR=""
+LM_NEW_DIR="xc/lm/functions"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
     echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"

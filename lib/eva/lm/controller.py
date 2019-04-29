@@ -50,6 +50,8 @@ lvars_by_full_id = {}
 macros_by_id = {}
 macros_by_full_id = {}
 
+macro_functions_m = {}
+
 cycles_by_id = {}
 cycles_by_full_id = {}
 
@@ -69,6 +71,7 @@ Q = eva.lm.lmqueue.LM_Queue('lm_queue')
 DM = eva.lm.dmatrix.DecisionMatrix()
 
 with_item_lock = eva.core.RLocker('lm/controller')
+with_macro_functions_m_lock = eva.core.RLocker('lm/controller')
 controller_lock = threading.RLock()
 
 
@@ -400,8 +403,35 @@ def load_remote_ucs():
         return False
 
 
+@with_macro_functions_m_lock
+def reload_macro_function(fname=None):
+    if fname is None:
+        logging.info('Loading macro functions')
+        fncs = []
+        for f in glob.glob('{}/lm/functions/*.py'.format(eva.core.dir_xc)):
+            fncs.append(f)
+            reload_macro_function(f)
+        for f in macro_functions_m.keys():
+            if f not in fncs:
+                del macro_functions_m[f]
+                eva.lm.plc.remove_macro_function(f)
+    else:
+        logging.info('Loading macro function {}'.format(fname))
+        if fname in macro_functions_m:
+            omtime = macro_functions_m[fname]
+        else:
+            omtime = None
+        mtime = os.path.getmtime(fname)
+        if not omtime or mtime > omtime:
+            try:
+                eva.lm.plc.append_macro_function(fname)
+            except:
+                eva.core.log_traceback()
+
+
 @with_item_lock
 def load_macros():
+    reload_macro_function()
     logging.info('Loading macro configs')
     try:
         fnames = eva.core.format_cfg_fname(eva.core.product.code + \

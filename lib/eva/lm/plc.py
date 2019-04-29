@@ -10,9 +10,102 @@ import eva.lm.macro_api
 import eva.lm.extapi
 import threading
 import time
+import os
+import re
 import logging
 
 from eva.tools import val_to_boolean
+from eva.exceptions import FunctionFailed
+
+macro_functions = {}
+macro_function_pointers = {}
+
+with_macro_functions_lock = eva.core.RLocker('lm/plc')
+
+
+@with_macro_functions_lock
+def append_macro_function(file_name):
+    try:
+
+        def parse_arg(fndoc):
+            x = re.split('[\ \t]+', d, 2)
+            argname = x[1]
+            if len(x) > 2:
+                argdescr = x[2]
+            else:
+                argdescr = ''
+            result = {'description': argdescr}
+            if argname.find('=') != -1:
+                argname, argval = argname.split('=', 1)
+                try:
+                    argval = float(argval)
+                    if argval == int(argval):
+                        argval = int(argval)
+                except:
+                    pass
+                result['default'] = argval
+            result['var'] = argname
+            return result
+
+        fname = os.path.basename(file_name)[:-3]
+        code = open(file_name).read()
+        code += '''
+
+import inspect
+fndoc = inspect.getdoc({})
+fnsrc = inspect.getsource({})
+        '''.format(fname, fname, fname)
+        d = {}
+        c = compile(code, file_name, 'exec')
+        exec(c, d)
+        src = ''
+        x = 0
+        indent = 4
+        for s in d['fnsrc'].split('\n'):
+            if x >= 2:
+                if src:
+                    src += '\n'
+                src += s[indent:]
+            st = s.strip()
+            if st.startswith('\'\'\'') or st.startswith('"""'):
+                if not x:
+                    indent = len(s) - len(st)
+                x += 1
+        result = {
+            'name': fname,
+            'var_in': [],
+            'var_out': [],
+            'src': src,
+            'f': d[fname]
+        }
+        doc = d['fndoc']
+        for d in doc.split('\n'):
+            d = d.strip()
+            if d.startswith('@var_in'):
+                result['var_in'].append(parse_arg(d))
+            if d.startswith('@var_out'):
+                result['var_out'].append(parse_arg(d))
+        macro_functions[fname] = result
+        macro_function_pointers[fname] = result['f']
+        return True
+    except Exception as e:
+        raise FunctionFailed(e)
+
+
+@with_macro_functions_lock
+def remove_macro_function(file_name):
+    fname = os.path.basename(file_name)[:-3]
+    if fname in macro_functions:
+        del macro_functions[fname]
+        del macro_function_pointers[fname]
+        return True
+    else:
+        return False
+
+
+@with_macro_functions_lock
+def get_macro_function_pointers():
+    return macro_function_pointers.copy()
 
 
 class PLC(eva.item.ActiveItem):
@@ -90,6 +183,7 @@ class PLC(eva.item.ActiveItem):
         env_globals = {}
         env_globals.update(eva.lm.extapi.env)
         env_globals.update(a.item.api.get_globals())
+        env_globals.update(get_macro_function_pointers())
         env_globals['_source'] = a.source
         env_globals['args'] = a.argv.copy()
         # deprecated
