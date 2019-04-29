@@ -520,6 +520,12 @@ class LM_API(GenericAPI, GenericCloudAPI):
         else:
             return True
 
+    @log_w
+    @api_need_master
+    def destroy_macro_function(self, **kwargs):
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.lm.controller.destroy_macro_function(i)
+
 # macros
 
     @log_d

@@ -404,8 +404,31 @@ def load_remote_ucs():
 
 
 @with_macro_functions_m_lock
+def destroy_macro_function(fname):
+    if not re.match("^[A-Za-z0-9_-]*$", fname):
+        raise InvalidParameter(
+            'Unable to destroy function: invalid symbols in ID {}'.format(
+                fname))
+    file_name = '{}/lm/functions/{}.py'.format(eva.core.dir_xc, fname)
+    if file_name in macro_functions_m:
+        del macro_functions_m[file_name]
+        eva.lm.plc.remove_macro_function(file_name)
+        if not eva.core.prepare_save():
+            raise FunctionFailed
+        os.unlink(file_name)
+        eva.core.finish_save()
+        return True
+    else:
+        raise ResourceNotFound
+
+
+@with_macro_functions_m_lock
 def reload_macro_function(file_name=None, fname=None):
     if file_name is None and fname:
+        if not re.match("^[A-Za-z0-9_-]*$", fname):
+            raise InvalidParameter(
+                'Unable to reload function: invalid symbols in ID {}'.format(
+                    fname))
         file_name = '{}/lm/functions/{}.py'.format(eva.core.dir_xc, fname)
     if file_name is None:
         logging.info('Loading macro functions')
@@ -423,10 +446,14 @@ def reload_macro_function(file_name=None, fname=None):
             omtime = macro_functions_m[file_name]
         else:
             omtime = None
-        mtime = os.path.getmtime(file_name)
+        try:
+            mtime = os.path.getmtime(file_name)
+        except:
+            raise FunctionFailed('File not found: {}'.format(file_name))
         if not omtime or mtime > omtime:
             try:
                 eva.lm.plc.append_macro_function(file_name)
+                macro_functions_m[file_name] = mtime
             except:
                 eva.core.log_traceback()
                 return False
