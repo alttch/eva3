@@ -76,7 +76,8 @@ fnsrc = inspect.getsource({})
             'name': fname,
             'var_in': [],
             'var_out': [],
-            'src': src
+            'src': src,
+            'editable': True,
         }
         doc = d['fndoc']
         for d in doc.split('\n'):
