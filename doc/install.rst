@@ -67,7 +67,7 @@ Supported Linux distributions:
 Automatic and unattended
 ------------------------
 
-Install requires system packages, configure local MQTT server (mosquitto),
+Install required system packages, configure local MQTT server (mosquitto),
 setup EVA ICS components:
 
 .. code-block:: bash
