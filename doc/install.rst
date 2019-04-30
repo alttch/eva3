@@ -73,7 +73,7 @@ setup EVA ICS components:
 .. code-block:: bash
 
     sudo -s
-    curl https://get.eva-ics.com/install.sh | sh /dev/stdin -a
+    curl geteva.cc | sh /dev/stdin -a
 
 Customized
 ----------
@@ -83,14 +83,14 @@ Customize API keys:
 .. code-block:: bash
 
     sudo -s
-    curl https://get.eva-ics.com/install.sh | env MASTERKEY=123 DEFAULTKEY=qwerty sh /dev/stdin -a
+    curl geteva.cc | env MASTERKEY=123 DEFAULTKEY=qwerty sh /dev/stdin -a
 
 More options, interactive setup:
 
 .. code-block:: bash
 
     sudo -s
-    curl https://get.eva-ics.com/install.sh -o install.sh
+    curl geteva.cc -o install.sh
     sh install.sh --help
 
 E.g. install required system packages, setup :doc:`/uc/uc` only, use external
@@ -99,7 +99,7 @@ MQTT server and predefined API keys:
 .. code-block:: bash
 
     sudo -s
-    curl https://get.eva-ics.com/install.sh | \
+    curl geteva.cc | \
         env MASTERKEY=mykey DEFAULTKEY=mydefaultkey sh /dev/stdin \
             --autostart --logrotate --bash-completion \
             -- --auto -p uc --mqtt eva:password@192.168.1.100 --mqtt-announce --mqtt-discovery
