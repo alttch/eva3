@@ -514,8 +514,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
     @log_i
     @api_need_master
     def reload_macro_function(self, **kwargs):
-        i = parse_api_params(kwargs, 'i', 's')
-        if not eva.lm.controller.reload_macro_function(fname=i):
+        i, tp = parse_api_params(kwargs, 'ip', 'ss')
+        if not eva.lm.controller.reload_macro_function(fname=i, tp=tp):
             raise FunctionFailed
         else:
             return True

@@ -423,13 +423,14 @@ def destroy_macro_function(fname):
 
 
 @with_macro_functions_m_lock
-def reload_macro_function(file_name=None, fname=None):
+def reload_macro_function(file_name=None, fname=None, tp=None, rebuild=True):
     if file_name is None and fname:
         if not re.match("^[A-Za-z0-9_-]*$", fname):
             raise InvalidParameter(
                 'Unable to reload function: invalid symbols in ID {}'.format(
                     fname))
-        file_name = '{}/lm/functions/{}.py'.format(eva.core.dir_xc, fname)
+        _tp = tp if tp else 'py'
+        file_name = '{}/lm/functions/{}.{}'.format(eva.core.dir_xc, fname, _tp)
     if file_name is None:
         logging.info('Loading macro functions')
         fncs = []
@@ -437,11 +438,12 @@ def reload_macro_function(file_name=None, fname=None):
             for f in glob.glob('{}/lm/functions/*.{}'.format(
                     eva.core.dir_xc, tp)):
                 fncs.append(f)
-                reload_macro_function(f)
+                reload_macro_function(f, rebuild=False)
         for f in macro_functions_m.keys():
             if f not in fncs:
                 del macro_functions_m[f]
-                eva.lm.plc.remove_macro_function(f)
+                eva.lm.plc.remove_macro_function(f, rebuild=False)
+        eva.lm.plc.rebuild_mfcode()
     else:
         logging.info('Loading macro function {}'.format(file_name))
         if file_name in macro_functions_m:
@@ -452,13 +454,12 @@ def reload_macro_function(file_name=None, fname=None):
             mtime = os.path.getmtime(file_name)
         except:
             raise FunctionFailed('File not found: {}'.format(file_name))
-        if not omtime or mtime > omtime:
-            try:
-                eva.lm.plc.append_macro_function(file_name)
-                macro_functions_m[file_name] = mtime
-            except:
-                eva.core.log_traceback()
-                return False
+        try:
+            eva.lm.plc.append_macro_function(file_name, rebuild=rebuild)
+            macro_functions_m[file_name] = mtime
+        except:
+            eva.core.log_traceback()
+            return False
         return True
 
 

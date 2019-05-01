@@ -19,14 +19,27 @@ import json
 from eva.tools import val_to_boolean
 from eva.exceptions import FunctionFailed
 
+from types import SimpleNamespace
+
 macro_functions = {}
-macro_function_pointers = {}
+macro_function_codes = {}
+
+mfcode = SimpleNamespace(code='', build_time=0)
 
 with_macro_functions_lock = eva.core.RLocker('lm/plc')
 
 
+def rebuild_mfcode():
+    code = ''
+    for m, v in macro_function_codes.items():
+        code += v + '\n'
+    mfcode.code = code
+    mfcode.build_time = time.time()
+    logging.debug('mfcode rebuilt: {}'.format(mfcode.build_time))
+
+
 @with_macro_functions_lock
-def append_macro_function(file_name):
+def append_macro_function(file_name, rebuild=True):
     try:
 
         def parse_arg(fndoc):
@@ -61,6 +74,8 @@ def append_macro_function(file_name):
         else:
             raise FunctionFailed('Macro function type unknown: {}'.format(tp))
 
+        src_code = code
+
         code += '\nimport inspect\nfndoc = inspect.getdoc({})\n'.format(
             fname, fname)
         if tp == 'py':
@@ -84,7 +99,6 @@ def append_macro_function(file_name):
                     x += 1
         elif tp == 'fbd':
             src = j
-        fpointer = d[fname]
         result = {
             'name': fname,
             'var_in': [],
@@ -114,26 +128,28 @@ def append_macro_function(file_name):
                     'description': x.get('description', '')
                 })
         macro_functions[fname] = result
-        macro_function_pointers[fname] = fpointer
+        macro_function_codes[fname] = src_code
+        if rebuild: rebuild_mfcode()
         return True
     except Exception as e:
         raise FunctionFailed(e)
 
 
 @with_macro_functions_lock
-def remove_macro_function(file_name):
+def remove_macro_function(file_name, rebuild=True):
     fname = os.path.basename(file_name)[:-3]
     if fname in macro_functions:
         del macro_functions[fname]
-        del macro_function_pointers[fname]
+        del macro_function_codes[fname]
+        if rebuild: rebuild_mfcode()
         return True
     else:
         return False
 
 
 @with_macro_functions_lock
-def get_macro_function_pointers():
-    return macro_function_pointers.copy()
+def get_macro_function_codes():
+    return macro_function_codes.copy()
 
 
 @with_macro_functions_lock
@@ -222,7 +238,6 @@ class PLC(eva.item.ActiveItem):
         env_globals = {}
         env_globals.update(eva.lm.extapi.env)
         env_globals.update(a.item.api.get_globals())
-        env_globals.update(get_macro_function_pointers())
         env_globals['_source'] = a.source
         env_globals['args'] = a.argv.copy()
         # deprecated
@@ -249,7 +264,7 @@ class PLC(eva.item.ActiveItem):
         xc = eva.runner.PyThread(
             item=a.item,
             env_globals=env_globals,
-            bcode=eva.lm.macro_api.mbi_code)
+            bcode=eva.lm.macro_api.mbi_code, mfcode=mfcode)
         self.queue_lock.release()
         xc.run()
         self.action_after_run(a, xc)
