@@ -8,11 +8,13 @@ import eva.item
 import eva.lm.controller
 import eva.lm.macro_api
 import eva.lm.extapi
+import eva.lm.iec_compiler
 import threading
 import time
 import os
 import re
 import logging
+import json
 
 from eva.tools import val_to_boolean
 from eva.exceptions import FunctionFailed
@@ -47,30 +49,41 @@ def append_macro_function(file_name):
             result['var'] = argname
             return result
 
-        fname = os.path.basename(file_name)[:-3]
-        code = open(file_name).read()
-        code += '''
+        tp = file_name.split('.')[-1]
 
-import inspect
-fndoc = inspect.getdoc({})
-fnsrc = inspect.getsource({})
-        '''.format(fname, fname, fname)
+        if tp == 'py':
+            fname = os.path.basename(file_name)[:-3]
+            code = open(file_name).read()
+        elif tp == 'fbd':
+            fname = os.path.basename(file_name)[:-4]
+            j = json.loads(open(file_name).read())
+            code = eva.lm.iec_compiler.gen_code_from_fbd(j)
+        else:
+            raise FunctionFailed('Macro function type unknown: {}'.format(tp))
+
+        code += '\nimport inspect\nfndoc = inspect.getdoc({})\n'.format(
+            fname, fname)
+        if tp == 'py':
+            code += 'fnsrc = inspect.getsource({})\n'.format(fname)
         d = {}
         c = compile(code, file_name, 'exec')
         exec(c, d)
-        src = ''
-        x = 0
-        indent = 4
-        for s in d['fnsrc'].split('\n'):
-            if x >= 2:
-                if src:
-                    src += '\n'
-                src += s[indent:]
-            st = s.strip()
-            if st.startswith('\'\'\'') or st.startswith('"""'):
-                if not x:
-                    indent = len(s) - len(st)
-                x += 1
+        if tp == 'py':
+            src = ''
+            x = 0
+            indent = 4
+            for s in d['fnsrc'].split('\n'):
+                if x >= 2:
+                    if src:
+                        src += '\n'
+                    src += s[indent:]
+                st = s.strip()
+                if st.startswith('\'\'\'') or st.startswith('"""'):
+                    if not x:
+                        indent = len(s) - len(st)
+                    x += 1
+        elif tp == 'fbd':
+            src = j
         fpointer = d[fname]
         result = {
             'name': fname,
@@ -78,14 +91,28 @@ fnsrc = inspect.getsource({})
             'var_out': [],
             'src': src,
             'editable': True,
+            'type': tp
         }
-        doc = d['fndoc']
-        for d in doc.split('\n'):
-            d = d.strip()
-            if d.startswith('@var_in'):
-                result['var_in'].append(parse_arg(d))
-            if d.startswith('@var_out'):
-                result['var_out'].append(parse_arg(d))
+        if tp == 'py':
+            doc = d['fndoc']
+            if doc:
+                for d in doc.split('\n'):
+                    d = d.strip()
+                    if d.startswith('@var_in'):
+                        result['var_in'].append(parse_arg(d))
+                    if d.startswith('@var_out'):
+                        result['var_out'].append(parse_arg(d))
+        elif tp == 'fbd':
+            for x in j.get('input', []):
+                result['var_in'].append({
+                    'var': x.get('var'),
+                    'description': x.get('description', '')
+                })
+            for x in j.get('output', []):
+                result['var_out'].append({
+                    'var': x.get('var'),
+                    'description': x.get('description', '')
+                })
         macro_functions[fname] = result
         macro_function_pointers[fname] = fpointer
         return True

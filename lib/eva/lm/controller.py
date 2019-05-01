@@ -433,9 +433,11 @@ def reload_macro_function(file_name=None, fname=None):
     if file_name is None:
         logging.info('Loading macro functions')
         fncs = []
-        for f in glob.glob('{}/lm/functions/*.py'.format(eva.core.dir_xc)):
-            fncs.append(f)
-            reload_macro_function(f)
+        for tp in ['py', 'fbd']:
+            for f in glob.glob('{}/lm/functions/*.{}'.format(
+                    eva.core.dir_xc, tp)):
+                fncs.append(f)
+                reload_macro_function(f)
         for f in macro_functions_m.keys():
             if f not in fncs:
                 del macro_functions_m[f]
