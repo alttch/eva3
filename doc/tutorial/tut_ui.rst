@@ -130,10 +130,10 @@ unauthorized users, the additional .js files with such data may be served by
        // after the authentication succeeds the main interface is displayed
        eva_sfa_cb_login_success = function(data) { $('#interface').show(); }
        // if there is a login error
-       eva_sfa_cb_login_error = function(data) {
+       eva_sfa_cb_login_error = function(code, msg, data) {
            // end session and display the authentication form,
            // if auth data is incorrect
-           if (data.status == 403) { 
+           if (code == 2) { 
                show_login_form();
                } else {
                // otherwise - repeat the attempts every 2 seconds

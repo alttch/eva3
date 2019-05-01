@@ -1282,9 +1282,9 @@ And for automatic reconnection it should look like:
 
 .. code-block:: javascript
 
-    eva_sfa_cb_login_error = function(data) {
-        if (data.status == 403) {
-            // if the server returned error 403 (authentication failed
+    eva_sfa_cb_login_error = function(code, msg, data) {
+        if (code == 2) {
+            // if the server returned error 2 (authentication failed
             // due to invalid auth data), the user should get a login form
             show_login_form();
             } else {
