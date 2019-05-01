@@ -55,6 +55,9 @@ macro_functions_m = {}
 cycles_by_id = {}
 cycles_by_full_id = {}
 
+jobs_by_id = {}
+jobs_by_full_id = {}
+
 dm_rules = {}
 
 items_by_id = {}
@@ -227,6 +230,14 @@ def save():
         except:
             pass
     for i, v in cycles_by_id.items():
+        if v.config_changed:
+            if not v.save():
+                return False
+        try:
+            configs_to_remove.remove(v.get_fname())
+        except:
+            pass
+    for i, v in jobs_by_id.items():
         if v.config_changed:
             if not v.save():
                 return False
@@ -504,6 +515,25 @@ def load_cycles():
         return True
     except:
         logging.error('Cycle configs load error')
+        eva.core.log_traceback()
+        return False
+
+@with_item_lock
+def load_jobs():
+    logging.info('Loading job configs')
+    try:
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
+                '_job.d/*.json', runtime = True)
+        for mcfg in glob.glob(fnames):
+            m_id = os.path.splitext(os.path.basename(mcfg))[0]
+            m = eva.lm.plc.Job(m_id)
+            if m.load():
+                jobss_by_id[m_id] = m
+                jobs_by_full_id[m.full_id] = m
+                logging.debug('job "%s" config loaded' % m_id)
+        return True
+    except:
+        logging.error('Job configs load error')
         eva.core.log_traceback()
         return False
 

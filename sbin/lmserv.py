@@ -101,6 +101,7 @@ eva.lm.controller.load_remote_ucs()
 eva.lm.controller.load_macros()
 eva.lm.controller.load_dm_rules()
 eva.lm.controller.load_cycles()
+eva.lm.controller.load_jobs()
 
 eva.api.init()
 eva.sysapi.start()
