@@ -385,26 +385,21 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 macro += ')'
             else:
                 macro = ''
-            data2.append({'every': ('every {}'.format(r['every'])) if r['every'] else '', 'macro': macro})
+            data2.append({
+                'every': ('every {}'.format(r['every'])) if r['every'] else '',
+                'macro':
+                macro
+            })
             data3.append({
-                'id':
-                r['id'],
-                'E':
-                self.bool2yn(r['enabled']),
-                'Description':
-                r['description'],
-                'Last':
-                r['last']
+                'id': r['id'],
+                'E': self.bool2yn(r['enabled']),
+                'Description': r['description'],
+                'Last': r['last']
             })
         df2 = self.pd.DataFrame(data2)
         df2.set_index('every', inplace=True)
         df3 = self.pd.DataFrame(data3)
-        df3 = df3.ix[:, [
-            'id',
-            'E',
-            'Description',
-            'Last'
-        ]]
+        df3 = df3.ix[:, ['id', 'E', 'Description', 'Last']]
         df3.set_index('id', inplace=True)
         out2 = df2.to_string().split('\n')
         out3 = df3.to_string().split('\n')
@@ -476,26 +471,25 @@ class LM_CLI(GenericCLI, ControllerCLI):
         if api_func == 'create_rule' and result and result.get(
                 'result') == 'OK':
             del result['result']
-        if api_func == 'create_job' and result and result.get(
-                'result') == 'OK':
+        if api_func == 'create_job' and result and result.get('result') == 'OK':
             del result['result']
         # if api_func == 'list_jobs':
-            # for r in result:
-                # args = []
-                # kwargs = []
-                # for o in r['macro_args']:
-                    # args.append('\'' + o + '\'')
-                # if r.get('macro_kwargs'):
-                    # for i, v in r['macro_kwargs'].items():
-                        # kwargs.append('{}=\'{}\''.format(i, v))
-                # if r['macro']:
-                    # macro = r['macro'] + '(' + ', '.join(args)
-                    # if kwargs:
-                        # macro += ', '  + ', '.join(kwargs)
-                    # macro += ')'
-                # else:
-                    # macro = ''
-                # r['macro'] = macro
+        # for r in result:
+        # args = []
+        # kwargs = []
+        # for o in r['macro_args']:
+        # args.append('\'' + o + '\'')
+        # if r.get('macro_kwargs'):
+        # for i, v in r['macro_kwargs'].items():
+        # kwargs.append('{}=\'{}\''.format(i, v))
+        # if r['macro']:
+        # macro = r['macro'] + '(' + ', '.join(args)
+        # if kwargs:
+        # macro += ', '  + ', '.join(kwargs)
+        # macro += ')'
+        # else:
+        # macro = ''
+        # r['macro'] = macro
         return super().process_result(result, code, api_func, itype, a)
 
     def prepare_result_dict(self, data, api_func, itype):
@@ -994,8 +988,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_job_list_props.add_argument(
             'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
 
-        sp_job_set_prop = sp_job.add_parser(
-            'set', help='Set job config prop')
+        sp_job_set_prop = sp_job.add_parser('set', help='Set job config prop')
         sp_job_set_prop.add_argument(
             'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
         sp_job_set_prop.add_argument(
@@ -1239,7 +1232,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
 _me = 'EVA ICS LM CLI version %s' % __version__
 
-cli = LM_CLI('lm', _me)
+prog = os.path.basename(__file__)[:-3]
+if prog == 'eva-shell': prog = 'eva lm'
+
+cli = LM_CLI('lm', _me, prog=prog)
 
 _api_functions = {
     'history': 'state_history',

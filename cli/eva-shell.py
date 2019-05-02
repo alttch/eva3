@@ -759,7 +759,7 @@ _me = 'EVA ICS Management CLI version %s' % (__version__)
 if os.path.basename(sys.argv[0]) == 'eva-shell' and len(sys.argv) < 2:
     sys.argv = [sys.argv[0]] + ['-I']
 
-cli = ManagementCLI('eva', _me, remote_api_enabled=False)
+cli = ManagementCLI('eva', _me, remote_api_enabled=False, prog='eva')
 
 _api_functions = {
     'server:start': cli.start_controller,

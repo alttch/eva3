@@ -1313,7 +1313,10 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
 _me = 'EVA ICS SFA CLI version %s' % __version__
 
-cli = SFA_CLI('sfa', _me)
+prog = os.path.basename(__file__)[:-3]
+if prog == 'eva-shell': prog = 'eva sfa'
+
+cli = SFA_CLI('sfa', _me, prog=prog)
 
 _api_functions = {
     'history': 'state_history',

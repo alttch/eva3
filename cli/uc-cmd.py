@@ -1197,7 +1197,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
 _me = 'EVA ICS UC CLI version %s' % __version__
 
-cli = UC_CLI('uc', _me)
+prog = os.path.basename(__file__)[:-3]
+if prog == 'eva-shell': prog = 'eva uc'
+
+cli = UC_CLI('uc', _me, prog=prog)
 
 _api_functions = {
     'history': 'state_history',
