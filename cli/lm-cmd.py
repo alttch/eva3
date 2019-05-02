@@ -385,7 +385,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 macro += ')'
             else:
                 macro = ''
-            data2.append({'every': 'every {}'.format(r['every']), 'macro': macro})
+            data2.append({'every': ('every {}'.format(r['every'])) if r['every'] else '', 'macro': macro})
             data3.append({
                 'id':
                 r['id'],
