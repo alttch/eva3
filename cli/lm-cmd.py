@@ -473,23 +473,6 @@ class LM_CLI(GenericCLI, ControllerCLI):
             del result['result']
         if api_func == 'create_job' and result and result.get('result') == 'OK':
             del result['result']
-        # if api_func == 'list_jobs':
-        # for r in result:
-        # args = []
-        # kwargs = []
-        # for o in r['macro_args']:
-        # args.append('\'' + o + '\'')
-        # if r.get('macro_kwargs'):
-        # for i, v in r['macro_kwargs'].items():
-        # kwargs.append('{}=\'{}\''.format(i, v))
-        # if r['macro']:
-        # macro = r['macro'] + '(' + ', '.join(args)
-        # if kwargs:
-        # macro += ', '  + ', '.join(kwargs)
-        # macro += ')'
-        # else:
-        # macro = ''
-        # r['macro'] = macro
         return super().process_result(result, code, api_func, itype, a)
 
     def prepare_result_dict(self, data, api_func, itype):
