@@ -73,6 +73,7 @@ class Job(eva.item.Item):
             try:
                 job.at(x[3])
             except:
+                self.unschedule()
                 raise FunctionFailed(err)
             at_interval = ' at {}'.format(x[3])
         else:
