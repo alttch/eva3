@@ -594,8 +594,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k = parse_function_params(kwargs, 'k', '.')
         result = []
-        for i in eva.lm.controller.jobs.copy():
-            d = i.serialize(info=True)
+        for i, v in eva.lm.controller.jobs.copy().items():
+            d = v.serialize(info=True)
             result.append(d)
         return result
 
