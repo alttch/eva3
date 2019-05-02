@@ -15,6 +15,7 @@ pillow==5.4.1
 psutil==5.4.6
 sqlalchemy==1.2.18
 service_identity==18.1.0
+schedule==0.6.0
 pymodbus==2.2.0
 pysnmp==4.4.4
 pygments==2.2.0

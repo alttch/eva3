@@ -87,6 +87,7 @@ def format_rule_id(r_id):
         if g != 'dm_rules': return None
     return r_id
 
+
 def format_job_id(r_id):
     if is_oid(r_id):
         r_id = oid_to_id(r_id, required='job')
@@ -95,6 +96,7 @@ def format_job_id(r_id):
         g, r_id = r_id.split('/')
         if g != 'jobs': return None
     return r_id
+
 
 @with_item_lock
 def get_item(item_id):
@@ -167,12 +169,14 @@ def get_dm_rule(r_id):
     if r_id in dm_rules: return dm_rules[r_id]
     return None
 
+
 @with_item_lock
 def get_job(r_id):
     r_id = format_job_id(r_id)
     if not r_id: return None
     if r_id in jobs: return jobs[r_id]
     return None
+
 
 @with_item_lock
 def get_lvar(lvar_id):
@@ -534,6 +538,7 @@ def load_cycles():
         eva.core.log_traceback()
         return False
 
+
 @with_item_lock
 def load_dm_rules():
     logging.info('Loading DM rules')
@@ -555,6 +560,7 @@ def load_dm_rules():
         logging.error('DM rules load error')
         eva.core.log_traceback()
         return False
+
 
 @with_item_lock
 def load_jobs():
@@ -723,6 +729,7 @@ def destroy_dm_rule(r_id):
         eva.core.log_traceback()
         return FunctionFailed(e)
 
+
 @with_item_lock
 def create_job(save=False, job_uuid=None):
     if job_uuid in jobs:
@@ -759,6 +766,7 @@ def destroy_job(r_id):
     except Exception as e:
         eva.core.log_traceback()
         return FunctionFailed(e)
+
 
 def handle_discovered_controller(notifier_id, controller_id, **kwargs):
     try:
@@ -1008,7 +1016,11 @@ def start():
     for i, v in cycles_by_id.copy().items():
         v.start(autostart=True)
     for i, r in jobs.items():
-        r.schedule()
+        try:
+            r.schedule()
+        except:
+            eva.core.log_traceback()
+    eva.lm.jobs.scheduler.start()
 
 
 def connect_remote_controller(v):
@@ -1025,6 +1037,7 @@ def connect_remote_controller(v):
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.config.db_update == 1: save()
+    eva.lm.jobs.scheduler.stop()
     for i, v in cycles_by_id.copy().items():
         v.stop(wait=False)
     for i, v in items_by_full_id.copy().items():

@@ -279,6 +279,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
     def fancy_print_result(self, result, api_func, itype, tab=0, print_ok=True):
         if api_func == 'list_rules':
             self.print_list_rules(result)
+        elif api_func == 'list_jobs':
+            self.print_list_jobs(result)
         else:
             super().fancy_print_result(result, api_func, itype, tab, print_ok)
 
@@ -361,6 +363,58 @@ class LM_CLI(GenericCLI, ControllerCLI):
             print(' ' + out2[i + 2])
             print()
 
+    def print_list_jobs(self, result):
+        if not result:
+            print('no data')
+            return
+        self.import_pandas()
+        data2 = []
+        data3 = []
+        for r in result:
+            args = []
+            kwargs = []
+            for o in r['macro_args']:
+                args.append('\'' + o + '\'')
+            if r.get('macro_kwargs'):
+                for i, v in r['macro_kwargs'].items():
+                    kwargs.append('{}=\'{}\''.format(i, v))
+            if r['macro']:
+                macro = r['macro'] + '(' + ', '.join(args)
+                if kwargs:
+                    macro += ', ' + ', '.join(kwargs)
+                macro += ')'
+            else:
+                macro = ''
+            data2.append({'every': 'every {}'.format(r['every']), 'macro': macro})
+            data3.append({
+                'id':
+                r['id'],
+                'E':
+                self.bool2yn(r['enabled']),
+                'Description':
+                r['description'],
+                'Last':
+                r['last']
+            })
+        df2 = self.pd.DataFrame(data2)
+        df2.set_index('every', inplace=True)
+        df3 = self.pd.DataFrame(data3)
+        df3 = df3.ix[:, [
+            'id',
+            'E',
+            'Description',
+            'Last'
+        ]]
+        df3.set_index('id', inplace=True)
+        out2 = df2.to_string().split('\n')
+        out3 = df3.to_string().split('\n')
+        print(self.colored(out3[0], color='blue'))
+        print(self.colored('-' * max(len(out2[0]), len(out3[0])), color='grey'))
+        for i in range(0, len(data2)):
+            print(out3[i + 2])
+            print(' ' + out2[i + 2])
+            print()
+
     def prepare_run(self, api_func, params, a):
         if api_func == 'set_rule_prop':
             if a._func in ['enable', 'disable']:
@@ -425,23 +479,23 @@ class LM_CLI(GenericCLI, ControllerCLI):
         if api_func == 'create_job' and result and result.get(
                 'result') == 'OK':
             del result['result']
-        if api_func == 'list_jobs':
-            for r in result:
-                args = []
-                kwargs = []
-                for o in r['macro_args']:
-                    args.append('\'' + o + '\'')
-                if r.get('macro_kwargs'):
-                    for i, v in r['macro_kwargs'].items():
-                        kwargs.append('{}=\'{}\''.format(i, v))
-                if r['macro']:
-                    macro = r['macro'] + '(' + ', '.join(args)
-                    if kwargs:
-                        macro += ', '  + ', '.join(kwargs)
-                    macro += ')'
-                else:
-                    macro = ''
-                r['macro'] = macro
+        # if api_func == 'list_jobs':
+            # for r in result:
+                # args = []
+                # kwargs = []
+                # for o in r['macro_args']:
+                    # args.append('\'' + o + '\'')
+                # if r.get('macro_kwargs'):
+                    # for i, v in r['macro_kwargs'].items():
+                        # kwargs.append('{}=\'{}\''.format(i, v))
+                # if r['macro']:
+                    # macro = r['macro'] + '(' + ', '.join(args)
+                    # if kwargs:
+                        # macro += ', '  + ', '.join(kwargs)
+                    # macro += ')'
+                # else:
+                    # macro = ''
+                # r['macro'] = macro
         return super().process_result(result, code, api_func, itype, a)
 
     def prepare_result_dict(self, data, api_func, itype):
@@ -1264,7 +1318,7 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_jobs': ['id', 'description', 'enabled', 'macro'],
+    'list_jobs': ['id', 'description', 'enabled', 'every', 'macro'],
     'list_cycles': ['id', 'description', 'status', 'int', 'iter', 'avg'],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
