@@ -24,6 +24,7 @@ import eva.lm.plc
 import eva.lm.lremote
 import eva.lm.lmqueue
 import eva.lm.dmatrix
+import eva.lm.jobs
 import eva.lm.extapi
 import eva.lm.macro_api
 
@@ -55,8 +56,7 @@ macro_functions_m = {}
 cycles_by_id = {}
 cycles_by_full_id = {}
 
-jobs_by_id = {}
-jobs_by_full_id = {}
+jobs = {}
 
 dm_rules = {}
 
@@ -87,6 +87,14 @@ def format_rule_id(r_id):
         if g != 'dm_rules': return None
     return r_id
 
+def format_job_id(r_id):
+    if is_oid(r_id):
+        r_id = oid_to_id(r_id, required='job')
+    if not isinstance(r_id, str): return None
+    if r_id.find('/') != -1:
+        g, r_id = r_id.split('/')
+        if g != 'jobs': return None
+    return r_id
 
 @with_item_lock
 def get_item(item_id):
@@ -102,6 +110,8 @@ def get_item(item_id):
         return get_cycle(i)
     elif tp == 'dmatrix_rule':
         return get_dm_rule(i)
+    elif tp == 'job':
+        return get_job(i)
     item = None
     if i.find('/') > -1:
         if i in items_by_full_id: item = items_by_full_id[i]
@@ -157,6 +167,12 @@ def get_dm_rule(r_id):
     if r_id in dm_rules: return dm_rules[r_id]
     return None
 
+@with_item_lock
+def get_job(r_id):
+    r_id = format_job_id(r_id)
+    if not r_id: return None
+    if r_id in jobs: return jobs[r_id]
+    return None
 
 @with_item_lock
 def get_lvar(lvar_id):
@@ -237,7 +253,7 @@ def save():
             configs_to_remove.remove(v.get_fname())
         except:
             pass
-    for i, v in jobs_by_id.items():
+    for i, v in jobs.items():
         if v.config_changed:
             if not v.save():
                 return False
@@ -519,26 +535,6 @@ def load_cycles():
         return False
 
 @with_item_lock
-def load_jobs():
-    logging.info('Loading job configs')
-    try:
-        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
-                '_job.d/*.json', runtime = True)
-        for mcfg in glob.glob(fnames):
-            m_id = os.path.splitext(os.path.basename(mcfg))[0]
-            m = eva.lm.plc.Job(m_id)
-            if m.load():
-                jobss_by_id[m_id] = m
-                jobs_by_full_id[m.full_id] = m
-                logging.debug('job "%s" config loaded' % m_id)
-        return True
-    except:
-        logging.error('Job configs load error')
-        eva.core.log_traceback()
-        return False
-
-
-@with_item_lock
 def load_dm_rules():
     logging.info('Loading DM rules')
     try:
@@ -557,6 +553,28 @@ def load_dm_rules():
         return True
     except:
         logging.error('DM rules load error')
+        eva.core.log_traceback()
+        return False
+
+@with_item_lock
+def load_jobs():
+    logging.info('Loading jobs')
+    try:
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
+                '_job.d/*.json', runtime = True)
+        for rcfg in glob.glob(fnames):
+            r_id = os.path.splitext(os.path.basename(rcfg))[0]
+            r = eva.lm.jobs.Job(r_id)
+            if r.load():
+                jobs[r_id] = r
+                if eva.core.config.development:
+                    job_id = r_id
+                else:
+                    job_id = r_id[:14] + '...'
+                logging.debug('Job %s loaded' % job_id)
+        return True
+    except:
+        logging.error('Jobs load error')
         eva.core.log_traceback()
         return False
 
@@ -705,6 +723,42 @@ def destroy_dm_rule(r_id):
         eva.core.log_traceback()
         return FunctionFailed(e)
 
+@with_item_lock
+def create_job(save=False, job_uuid=None):
+    if job_uuid in jobs:
+        raise ResourceAlreadyExists
+    r = eva.lm.jobs.Job(job_uuid=job_uuid)
+    jobs[r.item_id] = r
+    if save: r.save()
+    r.schedule()
+    logging.info('new job created: %s' % r.item_id)
+    return r
+
+
+@with_item_lock
+def destroy_job(r_id):
+    r_id = format_job_id(r_id)
+    if r_id not in jobs:
+        raise ResourceNotFound
+    try:
+        i = jobs[r_id]
+        i.unschedule()
+        i.destroy()
+        if eva.core.config.db_update == 1 and i.config_file_exists:
+            try:
+                os.unlink(i.get_fname())
+            except:
+                logging.error('Can not remove job %s config' % \
+                        r_id)
+                eva.core.log_traceback()
+        elif i.config_file_exists:
+            configs_to_remove.add(i.get_fname())
+        del (jobs[r_id])
+        logging.info('Job %s removed' % r_id)
+        return True
+    except Exception as e:
+        eva.core.log_traceback()
+        return FunctionFailed(e)
 
 def handle_discovered_controller(notifier_id, controller_id, **kwargs):
     try:
@@ -953,6 +1007,8 @@ def start():
         v.start_processors()
     for i, v in cycles_by_id.copy().items():
         v.start(autostart=True)
+    for i, r in jobs.items():
+        r.schedule()
 
 
 def connect_remote_controller(v):
