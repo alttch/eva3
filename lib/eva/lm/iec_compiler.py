@@ -1,10 +1,20 @@
-class CompilerError(Exception): pass
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__license__ = "Apache License 2.0"
+__version__ = "3.2.2"
+
+
+class CompilerError(Exception):
+    pass
+
 
 def gen_code_from_fbd(fbd, indent=4):
 
     def _fbparam_code(param):
         pt = param.get('type')
-        if pt == 'const':
+        if pt == 'var_in':
+            return param['value']
+        elif pt == 'const':
             result = param['value']
             try:
                 result = float(param['value'])
