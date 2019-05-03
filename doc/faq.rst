@@ -22,7 +22,7 @@ Is this IoT?
 
 In a way, yes. As far as `IoT
 <https://en.wikipedia.org/wiki/Internet_of_things>`_ is a part of the
-automation process, we are a part of IoT, in turn. However, from the thoursands
+automation process, we are a part of IoT, in turn. However, from the thousands
 of components positioning themselves as "IoT", we choose only those working:
 
 * Reliably
@@ -67,7 +67,7 @@ In addition, if:
 * you want to make us an offer we can't refuse
 
 you should `contact us <https://www.altertech.com/>`_ and we will make a
-siutable offer to you.
+suitable offer to you.
 
 Is EVA complex and difficult to learn?
 ======================================
@@ -98,7 +98,7 @@ What programming languages can I use to write scripts and macros?
 As for :doc:`scripts</item_scripts>` - you can use any. A script or a program
 runs as a separate process in the system. It's only necessary that it reads the
 input parameters correctly and writes the result in an appropriate format. If
-you need speed - PERL or DASH are preffered. If speed is not so important, you
+you need speed - PERL or DASH are preferred. If speed is not so important, you
 may use BASH or even PHP.
 
 Logic Manager :doc:`macros</lm/macros>` are written in Python, but in most
@@ -176,7 +176,7 @@ Where is the interface? I want a web interface!
 Each automated setup needs an interface. EVA has a very powerful
 :doc:`/sfa/sfa` component, which combines the whole setup itself and provides a
 flexible :doc:`/sfa/sfa_framework` which allows you to create a modern
-websocket-powered web interface with a few strings of javascript
+websocket-powered web interface with a few strings of JavaScript:
 
 .. code-block:: javascript
 
