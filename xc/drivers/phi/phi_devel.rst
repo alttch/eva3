@@ -498,7 +498,7 @@ Methods available:
         bus = owfs.get_bus(self.owfs_bus)
         if not bus: return None
         try:
-            value = us.read(path, 'temperature')
+            value = bus.read(path, 'temperature')
             if not value:
                 raise Exception('can not obtain temperature value')
             return {'temperature': value}
