@@ -779,7 +779,7 @@ class GenericAPI(object):
             token = tokens.append_token(key, u)
             if not token:
                 raise FunctionFailed('token generation error')
-            return {'key': key, 'token': token}
+            return {'user': u, 'key': key, 'token': token}
         raise AccessDenied('Assigned API key is invalid')
 
     @log_d

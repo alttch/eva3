@@ -33,6 +33,11 @@ eva_sfa_set_auth_cookies = true;
 eva_sfa_api_token = null;
 
 /**
+ * Contains authorized user name. Filled by framework automatically
+ */
+eva_sfa_authorized_user = null;
+
+/**
  * True if framework engine is started and user is logged in, false if not.
  * Should not be changed outside framework functions
  */
@@ -205,6 +210,7 @@ function eva_sfa_stop(cb) {
   eva_sfa_logged_in = false;
   eva_sfa_api_call('logout', eva_sfa_prepare(), cb, cb);
   eva_sfa_api_token = null;
+  eva_sfa_authorized_user = null;
   _eva_sfa_set_token_cookie();
 }
 
@@ -571,7 +577,7 @@ function eva_sfa_log_level_name(log_level) {
  * displays a chart
  *
  * To work with charts you should include Chart.js library, which is located in
- * file lib/chart.min.js (ui folder). 
+ * file lib/chart.min.js (ui folder).
  *
  * @param ctx - html container element id to draw in (must have fixed
  *              width/height)
@@ -692,6 +698,67 @@ function eva_sfa_load_animation(el_id) {
       'eva-sfa-cssload-square-pink">' +
       '</div><div class="eva-sfa-cssload-square-blend"></div></div>'
   );
+}
+
+/**
+ * QR code for EvaHI
+ *
+ * Generates QR code for EvaHI. Current framework session must be authorized
+ * using user login. If eva_sfa_password is defined, QR code also contains
+ * password value. Requires qrious js library.
+ *
+ * @param ctx - html element id to generate QR code in
+ * @param params - object with additional parameters:
+ *              @size - QR code size in px (default: 200)
+ *              @url - override UI url (default: document.location)
+ *              @user - override user (default: eva_sfa_authorized_user)
+ *              @password - override password
+ *
+ * @returns true if QR code is generated
+ */
+function eva_sfa_hi_qr(ctx, params) {
+  var url = params['url'];
+  if (!url) {
+    url = document.location;
+  }
+  var user = params['user'];
+  if (!user) {
+    user = eva_sfa_authorized_user;
+  }
+  var password = params['password'];
+  if (!password) {
+    password = eva_sfa_password;
+  }
+  var size = params['size'];
+  if (!size) {
+    size = 200;
+  }
+  if (!url || !user) {
+    return false;
+  }
+  var l = document.createElement('a');
+  l.href = url;
+  var protocol = l.protocol.substring(0, l.protocol.length - 1);
+  var host = l.hostname;
+  var port = l.port;
+  var value =
+    'scheme:' +
+    protocol +
+    '|address:' +
+    host +
+    '|port:' +
+    port +
+    '|user:' +
+    user;
+  if (password) {
+    value += '|password:' + password;
+  }
+  var qr = new QRious({
+    element: document.getElementById('ctx'),
+    value: value,
+    size: size
+  });
+  return true;
 }
 
 /**
@@ -906,6 +973,7 @@ function eva_sfa_api_call(func, params, cb_success, cb_error, use_sysapi) {
 function eva_sfa_after_login(data) {
   eva_sfa_logged_in = true;
   eva_sfa_api_token = data.token;
+  eva_sfa_authorized_user = data.user;
   _eva_sfa_set_token_cookie();
   eva_sfa_load_initial_states(true, false);
   eva_sfa_heartbeat(true, data);
