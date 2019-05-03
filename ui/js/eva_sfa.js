@@ -707,7 +707,7 @@ function eva_sfa_load_animation(el_id) {
  * using user login. If eva_sfa_password is defined, QR code also contains
  * password value. Requires qrious js library.
  *
- * @param ctx - html element id to generate QR code in
+ * @param ctx - html <canvas /> element id to generate QR code in
  * @param params - object with additional parameters:
  *              @size - QR code size in px (default: 200)
  *              @url - override UI url (default: document.location)
@@ -717,6 +717,8 @@ function eva_sfa_load_animation(el_id) {
  * @returns true if QR code is generated
  */
 function eva_sfa_hi_qr(ctx, params) {
+  var params = params;
+  if (!params) params = {};
   var url = params['url'];
   if (!url) {
     url = document.location;
@@ -754,7 +756,7 @@ function eva_sfa_hi_qr(ctx, params) {
     value += '|password:' + password;
   }
   var qr = new QRious({
-    element: document.getElementById('ctx'),
+    element: document.getElementById(ctx),
     value: value,
     size: size
   });

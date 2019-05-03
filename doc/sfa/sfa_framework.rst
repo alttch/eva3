@@ -26,10 +26,24 @@ Open the file *ui/index.html* in the editor, connect jQuery and SFA Framework:
     <script src="lib/jquery.min.js"></script>
     <script src="js/eva_sfa.min.js"></script>
 
+To use chart functions, additionally:
+
+.. code-block:: html
+
+    <script src="lib/moment.min.js"></script>
+    <script src="lib/chart.min.js"></script>
+
+To generate QR codes:
+
+.. code-block:: html
+
+    <script src="lib/qrious.min.js"></script>
+
 Callback functions and handlers
 ===============================
 
-* **success functions** are called with one parameter containing API call result dict
+* **success functions** are called with one parameter containing API call
+  result dict
 
 * **error functions** are called with 3 parameters:
 
@@ -322,6 +336,18 @@ Contains current API token after log in. Filled by framework automatically
 .. code-block:: javascript
 
     eva_sfa_api_token = null;
+
+
+.. _sfw_eva_sfa_authorized_user:
+
+eva_sfa_authorized_user
+-----------------------
+
+Contains authorized user name. Filled by framework automatically
+
+.. code-block:: javascript
+
+    eva_sfa_authorized_user = null;
 
 
 .. _sfw_eva_sfa_logged_in:
@@ -868,6 +894,34 @@ Parameters:
 
     * **prop** item property to use (default is value)
 
+.. _sfw_eva_sfa_hi_qr:
+
+eva_sfa_hi_qr - QR code for EvaHI
+---------------------------------
+
+Generates QR code for EvaHI. Current framework session must be authorized using user login. If eva_sfa_password is defined, QR code also contains password value. Requires qrious js library.
+
+.. code-block:: javascript
+
+    function eva_sfa_hi_qr(ctx, params)
+
+Parameters:
+
+* **ctx** html <canvas /> element id to generate QR code in
+* **params** object with additional parameters:
+
+    * **size** QR code size in px (default: 200)
+
+    * **url** override UI url (default: document.location)
+
+    * **user** override user (default: eva_sfa_authorized_user)
+
+    * **password** override password
+
+Returns:
+
+true if QR code is generated
+
 .. _sfw_eva_sfa_load_animation:
 
 eva_sfa_load_animation - animate html element block
@@ -1282,9 +1336,9 @@ And for automatic reconnection it should look like:
 
 .. code-block:: javascript
 
-    eva_sfa_cb_login_error = function(code, msg, data) {
-        if (code == 2) {
-            // if the server returned error 2 (authentication failed
+    eva_sfa_cb_login_error = function(data) {
+        if (data.status == 403) {
+            // if the server returned error 403 (authentication failed
             // due to invalid auth data), the user should get a login form
             show_login_form();
             } else {
