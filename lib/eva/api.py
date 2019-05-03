@@ -767,20 +767,20 @@ class GenericAPI(object):
                     eva.core.log_traceback()
                     raise FunctionFailed(e)
         if not u and k:
-            if k in apikey.keys:
-                ki = apikey.key_id(k)
-                token = tokens.append_token(ki)
-                if not token:
-                    raise FunctionFailed('token generation error')
-                return {'key': apikey.key_id(k), 'token': token}
-            raise AccessDenied
-        key = eva.users.authenticate(u, p)
-        if key in apikey.keys_by_id:
-            token = tokens.append_token(key, u)
+            if not apikey.check(k, ip=http_real_ip()):
+                raise AccessDenied
+            ki = apikey.key_id(k)
+            token = tokens.append_token(ki)
             if not token:
                 raise FunctionFailed('token generation error')
-            return {'user': u, 'key': key, 'token': token}
-        raise AccessDenied('Assigned API key is invalid')
+            return {'key': apikey.key_id(k), 'token': token}
+        key = eva.users.authenticate(u, p)
+        if not apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
+            raise AccessDenied
+        token = tokens.append_token(key, u)
+        if not token:
+            raise FunctionFailed('token generation error')
+        return {'user': u, 'key': key, 'token': token}
 
     @log_d
     def logout(self, **kwargs):
