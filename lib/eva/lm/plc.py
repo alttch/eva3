@@ -25,9 +25,17 @@ from types import SimpleNamespace
 macro_functions = {}
 macro_function_codes = {}
 
+macro_iec_functions = {}
+
 mfcode = SimpleNamespace(code='', build_time=0)
 
 with_macro_functions_lock = eva.core.RLocker('lm/plc')
+
+
+def load_iec_functions():
+    macro_iec_functions.clear()
+    macro_iec_functions.update(json.loads(
+        open(eva.core.dir_lib + '/eva/lm/iec_functions.json').read()))
 
 
 def rebuild_mfcode():
@@ -41,39 +49,37 @@ def rebuild_mfcode():
 
 @with_macro_functions_lock
 def append_macro_function(file_name, rebuild=True):
+
+    def parse_arg(fndoc):
+        x = re.split('[\ \t]+', d, 2)
+        argname = x[1]
+        if len(x) > 2:
+            argdescr = x[2]
+        else:
+            argdescr = ''
+        result = {'description': argdescr}
+        if argname.find('=') != -1:
+            argname, argval = argname.split('=', 1)
+            try:
+                argval = float(argval)
+                if argval == int(argval):
+                    argval = int(argval)
+            except:
+                pass
+            result['default'] = argval
+        result['var'] = argname
+        return result
+
     try:
-
-        def parse_arg(fndoc):
-            x = re.split('[\ \t]+', d, 2)
-            argname = x[1]
-            if len(x) > 2:
-                argdescr = x[2]
-            else:
-                argdescr = ''
-            result = {'description': argdescr}
-            if argname.find('=') != -1:
-                argname, argval = argname.split('=', 1)
-                try:
-                    argval = float(argval)
-                    if argval == int(argval):
-                        argval = int(argval)
-                except:
-                    pass
-                result['default'] = argval
-            result['var'] = argname
-            return result
-
-        tp = file_name.split('.')[-1]
-
-        if tp == 'py':
-            fname = os.path.basename(file_name)[:-3]
-            code = open(file_name).read()
-        elif tp == 'fbd':
-            fname = os.path.basename(file_name)[:-4]
+        raw = open(file_name).read()
+        fname = os.path.basename(file_name)
+        if raw.startswith('{'):
+            tp = 'fbd-json'
             j = json.loads(open(file_name).read())
             code = eva.lm.iec_compiler.gen_code_from_fbd(j)
         else:
-            raise FunctionFailed('Macro function type unknown: {}'.format(tp))
+            tp = 'py'
+            code = raw
 
         src_code = code
 
@@ -98,7 +104,7 @@ def append_macro_function(file_name, rebuild=True):
                     if not x:
                         indent = len(s) - len(st)
                     x += 1
-        elif tp == 'fbd':
+        elif tp == 'fbd-json':
             src = j
         result = {
             'name': fname,
@@ -106,6 +112,7 @@ def append_macro_function(file_name, rebuild=True):
             'var_out': [],
             'src': src,
             'editable': True,
+            'group': 'Custom',
             'type': tp
         }
         if tp == 'py':
@@ -117,7 +124,10 @@ def append_macro_function(file_name, rebuild=True):
                         result['var_in'].append(parse_arg(d))
                     if d.startswith('@var_out'):
                         result['var_out'].append(parse_arg(d))
-        elif tp == 'fbd':
+                    if d.startswith('@description'):
+                        result['description'] = re.split('[\ \t]+', d, 1)[1]
+        elif tp == 'fbd-json':
+            result['description'] = j.get('description', '')
             for x in j.get('input', []):
                 result['var_in'].append({
                     'var': x.get('var'),
@@ -158,10 +168,14 @@ def get_macro_function(fname=None):
     if fname:
         if fname in macro_functions:
             return macro_functions[fname].copy()
+        elif fname in macro_iec_functions:
+            return macro_iec_functions[fname].copy()
         else:
             return None
     else:
-        return macro_functions.copy()
+        result = macro_functions.copy()
+        result.update(macro_iec_functions)
+        return result
 
 
 class PLC(eva.item.ActiveItem):
@@ -266,7 +280,8 @@ class PLC(eva.item.ActiveItem):
         xc = eva.runner.PyThread(
             item=a.item,
             env_globals=env_globals,
-            bcode=eva.lm.macro_api.mbi_code, mfcode=mfcode)
+            bcode=eva.lm.macro_api.mbi_code,
+            mfcode=mfcode)
         self.queue_lock.release()
         xc.run()
         self.action_after_run(a, xc)

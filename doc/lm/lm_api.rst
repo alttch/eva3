@@ -512,7 +512,7 @@ Optionally:
 
 * **u** rule UUID to set
 * **v** rule properties (dict)
-* **save** save unit configuration immediately
+* **save** save rule configuration immediately
 
 .. _lmapi_destroy_rule:
 
@@ -1334,4 +1334,94 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** controller id
+
+
+.. _lmapi_cat_job:
+
+Scheduled jobs
+==============
+
+
+
+.. _lmapi_create_job:
+
+create_job - create new job
+---------------------------
+
+Creates new :doc:`scheduled job<jobs>`. Job id (UUID) is generated automatically unless specified.
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+Optionally:
+
+* **u** job UUID to set
+* **v** job properties (dict)
+* **save** save unit configuration immediately
+
+.. _lmapi_destroy_job:
+
+destroy_job - delete job
+------------------------
+
+Deletes :doc:`scheduled job<jobs>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** job id
+
+.. _lmapi_get_job:
+
+get_job - get job information
+-----------------------------
+
+
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** job id
+
+.. _lmapi_list_job_props:
+
+list_job_props - list job properties
+------------------------------------
+
+Get all editable parameters of the :doc:`scheduled job</lm/jobs>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** job id
+
+.. _lmapi_list_jobs:
+
+list_jobs - get jobs list
+-------------------------
+
+Get the list of all available :doc:`scheduled jobs<jobs>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _lmapi_set_job_prop:
+
+set_job_prop - set job parameters
+---------------------------------
+
+Set configuration parameters of the :doc:`scheduled job</lm/jobs>`.
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** job id
+* **p** property name (or empty for batch set)
+
+Optionally:
+
+* **v** propery value (or dict for batch set)
+* **save** save configuration after successful call
 

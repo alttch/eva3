@@ -440,7 +440,7 @@ def destroy_macro_function(fname):
         raise InvalidParameter(
             'Unable to destroy function: invalid symbols in ID {}'.format(
                 fname))
-    file_name = '{}/lm/functions/{}.py'.format(eva.core.dir_xc, fname)
+    file_name = '{}/lm/functions/{}'.format(eva.core.dir_xc, fname)
     if file_name in macro_functions_m:
         del macro_functions_m[file_name]
         eva.lm.plc.remove_macro_function(file_name)
@@ -454,22 +454,20 @@ def destroy_macro_function(fname):
 
 
 @with_macro_functions_m_lock
-def reload_macro_function(file_name=None, fname=None, tp=None, rebuild=True):
+def reload_macro_function(file_name=None, fname=None, rebuild=True):
     if file_name is None and fname:
         if not re.match("^[A-Za-z0-9_-]*$", fname):
             raise InvalidParameter(
                 'Unable to reload function: invalid symbols in ID {}'.format(
                     fname))
-        _tp = tp if tp else 'py'
-        file_name = '{}/lm/functions/{}.{}'.format(eva.core.dir_xc, fname, _tp)
+        file_name = '{}/lm/functions/{}'.format(eva.core.dir_xc, fname)
     if file_name is None:
         logging.info('Loading macro functions')
         fncs = []
-        for tp in ['py', 'fbd']:
-            for f in glob.glob('{}/lm/functions/*.{}'.format(
-                    eva.core.dir_xc, tp)):
-                fncs.append(f)
-                reload_macro_function(f, rebuild=False)
+        for f in glob.glob('{}/lm/functions/*'.format(
+                eva.core.dir_xc)):
+            fncs.append(f)
+            reload_macro_function(f, rebuild=False)
         for f in macro_functions_m.keys():
             if f not in fncs:
                 del macro_functions_m[f]
@@ -501,6 +499,7 @@ def get_macro_function(fname=None):
 @with_item_lock
 def load_macros():
     reload_macro_function()
+    eva.lm.plc.load_iec_functions()
     logging.info('Loading macro configs')
     try:
         fnames = eva.core.format_cfg_fname(eva.core.product.code + \
