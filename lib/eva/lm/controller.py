@@ -500,6 +500,7 @@ def get_macro_function(fname=None):
 def load_macros():
     reload_macro_function()
     eva.lm.plc.load_iec_functions()
+    eva.lm.plc.load_macro_api_functions()
     logging.info('Loading macro configs')
     try:
         fnames = eva.core.format_cfg_fname(eva.core.product.code + \

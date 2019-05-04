@@ -1416,7 +1416,7 @@ list or single serialized action object
 
 Raises:
 
-* **ResourceNotFound** unit is not found
+* **ResourceNotFound** unit or action is not found
 
 
 .. _macro_api_start:

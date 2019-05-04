@@ -859,6 +859,9 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: action is "dead"
             ResourceNotFound: unit is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
@@ -894,6 +897,9 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: action is "dead"
             ResourceNotFound: unit is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
@@ -925,7 +931,10 @@ class MacroAPI(object):
             list or single serialized action object
 
         Raises:
-            ResourceNotFound: unit is not found
+            ResourceNotFound: unit or action is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         if unit_id:
             unit = eva.lm.controller.uc_pool.get_unit(
@@ -962,6 +971,9 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: action is "dead"
             ResourceNotFound: unit is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         return self.action(
             unit_id=oid_to_id(unit_id, 'unit'),
@@ -993,6 +1005,9 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: action is "dead"
             ResourceNotFound: unit is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         return self.action(
             unit_id=oid_to_id(unit_id, 'unit'),
@@ -1092,6 +1107,10 @@ class MacroAPI(object):
 
         Raises:
             ResourceNotFound: macro is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
+        @var_out out Macro "out" variable
         """
         _argv = []
         if isinstance(argv, str):
@@ -1150,6 +1169,9 @@ class MacroAPI(object):
 
         Raises:
             ResourceNotFound: command script or controller is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         return ecall(
             eva.lm.controller.uc_pool.cmd(

@@ -26,6 +26,7 @@ macro_functions = {}
 macro_function_codes = {}
 
 macro_iec_functions = {}
+macro_api_functions = {}
 
 mfcode = SimpleNamespace(code='', build_time=0)
 
@@ -37,6 +38,11 @@ def load_iec_functions():
     macro_iec_functions.update(json.loads(
         open(eva.core.dir_lib + '/eva/lm/iec_functions.json').read()))
 
+
+def load_macro_api_functions():
+    macro_api_functions.clear()
+    macro_api_functions.update(json.loads(
+        open(eva.core.dir_lib + '/eva/lm/macro_api_functions.json').read()))
 
 def rebuild_mfcode():
     code = ''
@@ -170,11 +176,14 @@ def get_macro_function(fname=None):
             return macro_functions[fname].copy()
         elif fname in macro_iec_functions:
             return macro_iec_functions[fname].copy()
+        elif fname in macro_api_functions:
+            return macro_api_functions[fname].copy()
         else:
             return None
     else:
         result = macro_functions.copy()
         result.update(macro_iec_functions)
+        result.update(macro_api_functions)
         return result
 
 
