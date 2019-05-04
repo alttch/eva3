@@ -9,6 +9,7 @@ import eva.lm.controller
 import eva.lm.macro_api
 import eva.lm.extapi
 import eva.lm.iec_compiler
+import eva.lm.iec_functions
 import threading
 import time
 import os
@@ -238,6 +239,7 @@ class PLC(eva.item.ActiveItem):
         env_globals = {}
         env_globals.update(eva.lm.extapi.env)
         env_globals.update(a.item.api.get_globals())
+        env_globals.update(eva.lm.iec_functions.g)
         env_globals['_source'] = a.source
         env_globals['args'] = a.argv.copy()
         # deprecated
