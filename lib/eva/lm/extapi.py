@@ -2,7 +2,7 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.2.2"
-__api__ = 4
+__api__ = 5
 
 import importlib
 import logging
@@ -24,6 +24,8 @@ from eva.exceptions import ResourceAlreadyExists
 
 exts = {}
 env = {}
+
+iec_functions = {}
 
 # extension functions
 
@@ -67,17 +69,31 @@ def get_ext(ext_id):
 
 
 def rebuild_env():
-    global env
+    global env, iec_functions
     _env = {}
+    _iec_functions = {}
     for i, e in exts.copy().items():
         for f in e.get_functions():
             try:
-                _env['%s_%s' % (e.ext_id, f)] = getattr(e, f)
+                _env['{}_{}'.format(e.ext_id, f)] = getattr(e, f)
                 logging.info('New macro function loaded: %s_%s' % (i, f))
             except:
                 logging.error('Unable to add function %s extension %s' % (i, f))
                 eva.core.log_traceback()
+        for f, v in e.get_iec_functions().items():
+            if '{}_{}'.format(e.ext_id, f) in _env:
+                _iec_functions['{}_{}'.format(e.ext_id, f)] = {
+                        'name': '{}_{}'.format(e.ext_id, f),
+                        'description': v.get('description', ''),
+                        'editable': False,
+                        'src': None,
+                        'type': 'extension',
+                        'group': 'Extensions: {}'.format(e.ext_id),
+                        'var_in': v.get('var_in', []),
+                        'var_out': v.get('var_out', []),
+                        }
     env = _env
+    iec_functions = _iec_functions
 
 
 def modinfo(mod):

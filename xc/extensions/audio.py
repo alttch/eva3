@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __description__ = "Play audio file"
-__api__ = 4
+__api__ = 5
 __mods_required__ = ['soundfile', 'sounddevice']
 
 __config_help__ = [{
@@ -23,7 +23,24 @@ __config_help__ = [{
     'required': False
 }]
 
-__functions__ = {'play(soundfile, gain=0, wait=True)': 'Play sound file'}
+__functions__ = {'play(soundfile, gain=0, wait=True)': 'Play audio file'}
+
+__iec_functions__ = {
+    'play': {
+        'description':
+        'Play audio file',
+        'var_in': [{
+            'var': 'soundfile',
+            'description': 'audio file to play'
+        }, {
+            'var': 'gain',
+            'description': 'volume gain'
+        }, {
+            'var': 'wait',
+            'description': 'wait until playbach finish'
+        }]
+    }
+}
 
 __help__ = """
 Plays audio file inside the specified directory. The file path should be

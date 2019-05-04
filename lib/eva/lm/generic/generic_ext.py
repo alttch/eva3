@@ -47,6 +47,10 @@ class LMExt(object):
         self.__config_help = mod.__config_help__
         self.__functions = mod.__functions__
         self.__help = mod.__help__
+        try:
+            self.__iec_functions = mod.__iec_functions__
+        except:
+            self.__iec_functions = {}
         self.ext_id = None  # set by extapi on load
         if kwargs.get('info_only'): return
         self.ready = True
@@ -113,3 +117,6 @@ class LMExt(object):
         for f, h in self.__functions.copy().items():
             result.append(f.split('(')[0].strip())
         return result
+
+    def get_iec_functions(self):
+        return self.__iec_functions.copy()

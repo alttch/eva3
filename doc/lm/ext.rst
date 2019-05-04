@@ -99,7 +99,7 @@ Required variables in a header
 * **__license__**       module license
 * **__version__**       module version
 * **__description__**   module description (keep it short)
-* **__api__**           module API (integer number), current is **4**
+* **__api__**           module API (integer number), current is **5**
 * **__mods_required__** required python modules (included neither in standard
   Python install nor in EVA ICS)
 * **__config__help__**  module configuration help (on load)

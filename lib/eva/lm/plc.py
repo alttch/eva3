@@ -178,12 +178,15 @@ def get_macro_function(fname=None):
             return macro_iec_functions[fname].copy()
         elif fname in macro_api_functions:
             return macro_api_functions[fname].copy()
+        elif fname in eva.lm.extapi.iec_functions:
+            return eva.lm.extapi.iec_functions[fname].copy()
         else:
             return None
     else:
         result = macro_functions.copy()
-        result.update(macro_iec_functions)
-        result.update(macro_api_functions)
+        result.update(macro_iec_functions.copy())
+        result.update(macro_api_functions.copy())
+        result.update(eva.lm.extapi.iec_functions.copy())
         return result
 
 
