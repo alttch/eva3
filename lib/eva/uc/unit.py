@@ -351,10 +351,9 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
 
     def action_may_run(self, action):
         nv = action.nvalue
-        if nv is None: nv = ''
         return self.action_always_exec or \
             action.nstatus != self.status or \
-            nv != self.value
+            (nv is not None and nv != self.value)
 
     def action_log_run(self, action):
         logging.info(
@@ -369,7 +368,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         elif n2n:
             nvalue = ''
         else:
-            nvalue = None
+            nvalue = self.value
         return (nstatus, nvalue)
 
     def action_before_get_task(self):
