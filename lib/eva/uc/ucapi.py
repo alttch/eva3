@@ -1366,7 +1366,7 @@ class UC_API(GenericAPI):
             .v: propery value (or dict for batch set)
             save: save configuration after successful call
         """
-        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S..b')
         eva.uc.driverapi.set_phi_prop(i, p, v)
         if save: eva.uc.driverapi.save()
         return True
@@ -1639,7 +1639,7 @@ class UC_API(GenericAPI):
             .v: propery value (or dict for batch set)
             save: save driver configuration after successful call
         """
-        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S..b')
         if i.split('.')[-1] == 'default':
             raise ResourceBusy('Properties for default drivers can not be set')
         eva.uc.driverapi.set_driver_prop(i, p, v)
