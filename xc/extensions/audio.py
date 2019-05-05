@@ -37,7 +37,7 @@ __iec_functions__ = {
             'description': 'volume gain'
         }, {
             'var': 'wait',
-            'description': 'wait until playbach finish'
+            'description': 'wait until playback finish'
         }]
     }
 }
