@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.2"
+__version__ = "1.2.0"
 __description__ = "Emulates 16-port relay"
 
 __equipment__ = 'virtual'
@@ -14,6 +14,11 @@ __config_help__ = [{
     'name': 'default_status',
     'help': 'ports status on load (default: 0)',
     'type': 'int',
+    'required': False
+}, {
+    'name': 'state_full',
+    'help': 'full state (status/value)',
+    'type': 'bool',
     'required': False
 }]
 __get_help__ = []
@@ -31,11 +36,14 @@ import eva.benchmark
 from eva.uc.controller import register_benchmark_handler
 from eva.uc.controller import unregister_benchmark_handler
 
+
 class PHI(GenericPHI):
 
     @phi_constructor
     def __init__(self, **kwargs):
         d = self.phi_cfg.get('default_status')
+        if self.phi_cfg.get('state_full'):
+            self._state_full = True
         if d is None: d = 0
         else:
             try:
@@ -44,7 +52,7 @@ class PHI(GenericPHI):
                 d = -1
         self.data = {}
         for i in range(1, 17):
-            self.data[str(i)] = d
+            self.data[str(i)] = (d, '') if self._state_full else d
 
     def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data
@@ -68,13 +76,15 @@ class PHI(GenericPHI):
                 d = data[i]
             else:
                 d = data
+            if self._state_full:
+                d, value = d
             try:
                 _data = int(d)
             except:
                 return False
             if not _port in self.data:
                 return False
-            self.data[_port] = _data
+            self.data[_port] = (_data, value) if self._state_full else _data
             eva.benchmark.report('ACTION', _data, end=True)
 
         if self.phi_cfg.get('event_on_set'):
@@ -101,10 +111,19 @@ class PHI(GenericPHI):
         try:
             port, val = cmd.split('=')
             port = int(port)
+            if self._state_full:
+                if val.find(',') != -1:
+                    val, value = val.split(',', 1)
+                else:
+                    value = ''
             val = int(val)
+            if self._state_full:
+                state = val, value
+            else:
+                state = val
             if port < 1 or port > 16 or val < -1 or val > 1: return None
-            self.data[str(port)] = val
-            self.log_debug('test set port %s=%s' % (port, val))
+            self.data[str(port)] = state
+            self.log_debug('test set port %s=%s' % (port, state))
             if self.phi_cfg.get('event_on_test_set'):
                 handle_phi_event(self, port, self.data)
             return self.data
