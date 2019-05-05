@@ -26,7 +26,7 @@ PHI system info
 the next fields are processed by controller, so make them exactly as required
 
 * **__equipment__**     supported equipment (list or string)
-* **__api__**           module API (integer number), current is **4**
+* **__api__**           module API (integer number), current is **5**
 
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
