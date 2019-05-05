@@ -1,13 +1,13 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __description__ = "Single port unit LPI"
 __api__ = 4
 
 __logic__ = 'single port, basic status on/off'
 
-__features__ = ['status', 'port_get', 'port_set', 'events', 'usp']
+__features__ = ['status', 'port_get', 'port_set', 'events', 'usp', 'value']
 
 __config_help__ = []
 
@@ -46,11 +46,15 @@ class LPI(GenericLPI):
                 1, cfg=phi_cfg, timeout=timeout + time_start - time())
             if isinstance(status, dict):
                 status = status.get(list(status)[0])
+            if isinstance(status, tuple):
+                status, value = status
+            else:
+                value = None
         if status is None and evh:
             return self.state_result_skip(_uuid)
         if status is None or status is False:
             return self.state_result_error(_uuid)
-        self.set_result(_uuid, (status, None))
+        self.set_result(_uuid, (status, value))
         return
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
@@ -62,12 +66,16 @@ class LPI(GenericLPI):
             status = int(status)
         except:
             return self.action_result_error(_uuid, msg='status is not integer')
-        if status not in [0, 1]:
-            return self.action_result_error(
-                _uuid, msg='status is not in range 0..1')
+        # if status not in [0, 1]:
+            # return self.action_result_error(
+                # _uuid, msg='status is not in range 0..1')
         _port = 1
+        if self.phi._state_full:
+            state = status, value
+        else:
+            state = status
         set_result = self.phi.set(
-            _port, status, phi_cfg, timeout=(timeout + time_start - time()))
+            _port, state, phi_cfg, timeout=(timeout + time_start - time()))
         if set_result is False or set_result is None:
             return self.action_result_error(
                 _uuid, msg='port %s set error' % _port)
