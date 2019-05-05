@@ -2,7 +2,7 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.2.2"
-__api__ = 4
+__api__ = 5
 
 import importlib
 import logging
@@ -532,6 +532,10 @@ def unload_phi(phi_id):
         raise ResourceBusy('Unable to unload PHI %s, it is in use' % (phi_id))
     try:
         phi._stop()
+    except:
+        eva.core.log_traceback()
+    try:
+        phi.unload()
     except:
         eva.core.log_traceback()
     del phis[phi_id]
