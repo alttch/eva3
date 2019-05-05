@@ -5,7 +5,7 @@ __version__ = "3.2.2"
 __description__ = "Generic PHI, don't use"
 
 __equipment__ = 'abstract'
-__api__ = 4
+__api__ = 5
 __required__ = []
 __mods_required__ = []
 __lpi_default__ = None
@@ -71,6 +71,10 @@ class PHI(object):
         # ports at once and can not work with a single ports
         self.aao_get = False
         self.aao_set = False
+        if self.__required:
+            self._state_full = 'value' in self.__required
+        else:
+            self._state_full = False
         self.ready = True
         # cache time, useful for aao_get devices
         self._cache_set = 0
@@ -106,7 +110,7 @@ class PHI(object):
         self._cache_data = None
 
     def get(self, port=None, cfg=None, timeout=0):
-        return None
+        return None, None if self.state_full else None
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
         return False
@@ -118,6 +122,9 @@ class PHI(object):
         return True
 
     def stop(self):
+        return True
+
+    def unload(self):
         return True
 
     def get_default_lpi(self):
