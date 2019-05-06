@@ -672,7 +672,7 @@ class UpdatableItem(Item):
             else:
                 status = update_out[0]
                 value = update_out[1]
-                if value is None: value = ''
+                # if value is None: value = ''
         except:
             logging.error('update %s returned bad data' % self.oid)
             eva.core.log_traceback()
