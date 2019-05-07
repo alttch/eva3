@@ -342,7 +342,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         if self.action_exec and self.action_exec[0] == '|':
             return eva.runner.DriverCommand(
                 item=self,
-                state=self.action_run_args(a, n2n=False),
+                state=self.action_run_args(a),
                 timeout=self.action_timeout,
                 tki=self.term_kill_interval,
                 _uuid=a.uuid)
@@ -361,12 +361,10 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
              (self.oid, action.uuid, action.priority,
                  action.nstatus, action.nvalue))
 
-    def action_run_args(self, action, n2n=True):
+    def action_run_args(self, action):
         nstatus = str(action.nstatus)
         if action.nvalue is not None:
             nvalue = str(action.nvalue)
-        elif n2n:
-            nvalue = ''
         else:
             nvalue = self.value
         return (nstatus, nvalue)

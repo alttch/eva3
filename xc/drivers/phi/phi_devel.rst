@@ -204,6 +204,11 @@ call.
         #specified in features, PHI should deal with both single port and list
         #of ports
 
+.. note::
+
+    If unit action is called without value, PHI **set** method is called with
+    previous known unit value
+
 **port** and **data** may be integers, string, contain lists or be set as None.
 PHI should always be ready to any incoming params and handle the missing or
 incorrect by itself. If **port** contains a list, **data** always contain a

@@ -135,10 +135,6 @@ EVA does not use unit value for internal control and monitoring logic (except
 in your custom macros), that is why you can set it to any value or several
 values separating them with special characters for further processing.
 
-The blank value is "null". It is not recommended to use "" (blank) value,
-because such values cannot be transmitted via :ref:`MQTT<mqtt_>` correctly. In
-most cases, the system itself replaces the blank value with "null".
-
 Units in EVA hive
 -----------------
 

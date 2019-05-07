@@ -940,7 +940,7 @@ class ActiveItem(Item):
             '%s executing action %s pr=%u' % \
              (self.oid, action.uuid, action.priority))
 
-    def action_run_args(self, action, n2n=True):
+    def action_run_args(self, action):
         return ()
 
     def action_before_get_task(self):
