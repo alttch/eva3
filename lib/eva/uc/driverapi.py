@@ -38,6 +38,10 @@ def get_polldelay():
     return eva.core.config.polldelay
 
 
+def get_system_name():
+    return eva.core.config.system_name
+
+
 def get_sleep_step():
     return eva.core.sleep_step
 
