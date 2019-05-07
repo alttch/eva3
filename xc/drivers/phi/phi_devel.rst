@@ -121,6 +121,7 @@ Importing modules **eva.uc.drivers.tools**, **eva.tools**, **eva.traphandler**,
 * **get_version()** get Driver API version
 * **get_polldelay()** get EVA poll delay
 * **get_timeout()** get default timeout
+* **get_system_name()** get system name
 * **critical()** send EVA critical call
 * **log_traceback()** log traceback debug info
 * **lock(l, timeout, expires)** acquire lock "eva:phi:**l**", wait max
@@ -254,6 +255,10 @@ driver load/unload:
     def stop(self):
         #<your code>
 
+    def unload(self):
+        # called when PHI is unloaded from the controller
+        #<your code>
+
 
 Parent methods
 ==============
@@ -275,6 +280,19 @@ All the logging should be done with the following methods:
 
 The last two methods do the same, logging an event and calling controller
 critical() method.
+
+Working with unit values
+========================
+
+For units, method **get** can return either single integer (*status*) or a
+state tuple (*status*, *value*). If *value* is set to *None*, it is ignored
+and only status is updated. LPI automatically detects output data and parses
+either status or (status, value) pair.
+
+For method **set**, by default data contains either *status* (integer) or a
+list of integers only. To accept extended state (*status, value* tuple or a
+list of tuples) for **set**, **value** string must be specified in
+**__required__** header list variable.
 
 Handling events
 ===============
