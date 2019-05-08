@@ -15,7 +15,7 @@ You can use official `EVA ICS Control Center client
     :scale: 50%
     :align: right
 
-The client is evaHI-based application, so it can be `configured the same way
+The client is evaHI-based application, so it can be `configured in the same way
 <https://github.com/alttch/evaHI#create-configuration-file-on-your-web-server>`_
 
 :doc:`SFA</sfa/sfa>` automatically maps *ui/.evahi* directory to */.evahi* URI.
