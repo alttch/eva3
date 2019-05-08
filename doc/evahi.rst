@@ -8,11 +8,11 @@ EVA ICS Control Center client
 -----------------------------
 
 You can use official `EVA ICS Control Center client
-<https://play.google.com/store/apps/details?id=com.altertech.evacc`_ to access
+<https://play.google.com/store/apps/details?id=com.altertech.evacc>`_ to access
 :doc:`SFA</sfa/sfa>` UI from Android-based mobile phones.
 
-.. figure:: sfa.png
-    :scale: 100%
+.. figure:: evacc.png
+    :scale: 50%
     :align: right
 
 The client is evaHI-based application, so it can be `configured the same way
@@ -30,7 +30,7 @@ Building own client
 
 You can easily build custom Android client for your EVA ICS UI, customizing
 application class, name, menu, icons. Please refer to
-`evaHI<https://github.com/alttch/evaHI>`_ building instructions.
+`evaHI <https://github.com/alttch/evaHI>`_ building instructions.
 
 Apple iOS and other mobile platforms
 ====================================
