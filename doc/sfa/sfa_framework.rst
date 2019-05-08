@@ -899,7 +899,7 @@ Parameters:
 eva_sfa_hi_qr - QR code for EvaHI
 ---------------------------------
 
-Generates QR code for EvaHI. Current framework session must be authorized using user login. If eva_sfa_password is defined, QR code also contains password value. Requires qrious js library.
+Generates QR code for :doc:`EvaHI</evahi>`-compatible apps (e.g. for EVA ICS Control Center mobile app for Android). Current framework session must be authorized using user login. If eva_sfa_password is defined, QR code also contains password value. Requires qrious js library.
 
 .. code-block:: javascript
 
