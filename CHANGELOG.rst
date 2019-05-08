@@ -4,11 +4,21 @@ EVA ICS CHANGELOG
 3.2.2 (TBA)
 ===========
 
+UC
+--
+
+    * Driver API 5: "unload" method, unit values in PHIs.
+
 LM
 --
 
     * scheduled jobs
     * IEC 61131-3 compliant macro functions
+
+SFA
+---
+
+    * evaHI integration
 
 3.2.1 (2019-04-16)
 ==================
