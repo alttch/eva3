@@ -45,7 +45,7 @@ automatically via :doc:`sfa/sfa_framework`:
 
 .. code-block:: javascript
 
-    if (navigator.userAgent.startsWith("evaHI")) {
+    if (navigator.userAgent.startsWith("evaHI ")) {
         eva_sfa_start();
     } else {
         // show login form
