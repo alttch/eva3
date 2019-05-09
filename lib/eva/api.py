@@ -71,6 +71,10 @@ class MethodNotFound(Exception):
         return msg if msg else 'API method not found'
 
 
+class EvaHIAuthenticationRequired(Exception):
+    pass
+
+
 def api_need_master(f):
 
     @wraps(f)
@@ -763,9 +767,13 @@ class GenericAPI(object):
                     scheme, params = auth_header.split(' ', 1)
                     if scheme.lower() == 'basic':
                         u, p = b64decode(params).decode().split(':', 1)
+                        u = u.strip()
                 except Exception as e:
                     eva.core.log_traceback()
                     raise FunctionFailed(e)
+            elif cherrypy.request.headers.get('User-Agent',
+                                              '').startswith('evaHI '):
+                raise EvaHIAuthenticationRequired
         if not u and k:
             if not apikey.check(k, ip=http_real_ip()):
                 raise AccessDenied
@@ -941,6 +949,7 @@ def cp_json_handler(*args, **kwargs):
 
 
 def cp_jsonrpc_handler(*args, **kwargs):
+    if cherrypy.serving.response.status == 401: return
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     if value is None:
         cherrypy.serving.response.status = 202
@@ -1114,6 +1123,11 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             except ResourceBusy as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_busy, e)
+            except EvaHIAuthenticationRequired:
+                cherrypy.serving.response.status = 401
+                cherrypy.serving.response.headers[
+                    'WWW-Authenticate'] = 'Basic realm="?"'
+                return ''
             except Exception as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_func_failed, e)
