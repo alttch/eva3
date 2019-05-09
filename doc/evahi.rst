@@ -32,6 +32,25 @@ You can easily build custom Android client for your EVA ICS UI, customizing
 application class, name, menu, icons. Please refer to
 `evaHI <https://github.com/alttch/evaHI>`_ building instructions.
 
+Authentication
+--------------
+
+evaHI sends username/password only if basic authentication is set up. However
+API login method automatically detects evaHI client (by HTTP *User-Agent*
+header) and ask it to provide authentication credentials.
+
+If there is no front-end with basic authentication set up for all clients, you
+may display log in form for all, but let evaHI-based clients to try logging in
+automatically via :doc:`sfa/sfa_framework`:
+
+.. code-block:: javascript
+
+    if (navigator.userAgent.startsWith("evaHI")) {
+        eva_sfa_start();
+    } else {
+        // show login form
+    }
+
 Apple iOS and other mobile platforms
 ====================================
 
