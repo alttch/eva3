@@ -35,14 +35,17 @@ with_macro_functions_lock = eva.core.RLocker('lm/plc')
 
 def load_iec_functions():
     macro_iec_functions.clear()
-    macro_iec_functions.update(json.loads(
-        open(eva.core.dir_lib + '/eva/lm/iec_functions.json').read()))
+    macro_iec_functions.update(
+        json.loads(
+            open(eva.core.dir_lib + '/eva/lm/iec_functions.json').read()))
 
 
 def load_macro_api_functions():
     macro_api_functions.clear()
-    macro_api_functions.update(json.loads(
-        open(eva.core.dir_lib + '/eva/lm/macro_api_functions.json').read()))
+    macro_api_functions.update(
+        json.loads(
+            open(eva.core.dir_lib + '/eva/lm/macro_api_functions.json').read()))
+
 
 def rebuild_mfcode():
     code = ''
@@ -78,16 +81,19 @@ def append_macro_function(file_name, rebuild=True):
 
     try:
         raw = open(file_name).read()
-        fname = os.path.basename(file_name)
-        if raw.startswith('{'):
+        fname = os.path.basename(file_name[:-3])
+        if raw.startswith('# FBD'):
+            l = raw.split('\n')
+            jcode = ''
+            for i in range(2, len(l)):
+                jcode += l[i]
+                if l.startswith('"""'):
+                    break
             tp = 'fbd-json'
-            j = json.loads(open(file_name).read())
-            code = eva.lm.iec_compiler.gen_code_from_fbd(j)
         else:
             tp = 'py'
-            code = raw
 
-        src_code = code
+        code, src_code = raw, raw
 
         code += '\nimport inspect\nfndoc = inspect.getdoc({})\n'.format(
             fname, fname)
@@ -111,7 +117,7 @@ def append_macro_function(file_name, rebuild=True):
                         indent = len(s) - len(st)
                     x += 1
         elif tp == 'fbd-json':
-            src = j
+            src = jcode
         result = {
             'name': fname,
             'var_in': [],

@@ -460,13 +460,12 @@ def reload_macro_function(file_name=None, fname=None, rebuild=True):
             raise InvalidParameter(
                 'Unable to reload function: invalid symbols in ID {}'.format(
                     fname))
-        file_name = '{}/lm/functions/{}'.format(eva.core.dir_xc, fname)
+        file_name = '{}/lm/functions/{}.py'.format(eva.core.dir_xc, fname)
     if file_name is None:
         logging.info('Loading macro functions')
         fncs = []
-        for f in glob.glob('{}/lm/functions/*'.format(
-                eva.core.dir_xc)):
-            fncs.append(f)
+        for f in glob.glob('{}/lm/functions/*.py'.format(eva.core.dir_xc)):
+            fncs.append(f[:-3])
             reload_macro_function(f, rebuild=False)
         for f in macro_functions_m.keys():
             if f not in fncs:
