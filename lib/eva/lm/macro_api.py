@@ -17,6 +17,7 @@ import requests
 import json
 import threading
 import shlex
+import datetime
 
 from eva.tools import is_oid
 from eva.tools import oid_to_id
@@ -213,6 +214,7 @@ class MacroAPI(object):
             'history': self.macro_function(self.history),
             'system': self.macro_function(os.system),
             'time': self.macro_function(time.time),
+            'date': self.macro_function(self.date),
             'ls': self.macro_function(self.ls),
             'open_oldest': self.macro_function(self.open_oldest),
             'open_newest': self.macro_function(self.open_newest),
@@ -1180,6 +1182,34 @@ class MacroAPI(object):
                 args=args,
                 wait=wait,
                 timeout=timeout))
+
+    def date(self):
+        """
+        get current date/time
+
+        Returns:
+            Serialized date/time object (dict)
+
+        @var_out year
+        @var_out month
+        @var_out day
+        @var_out weekday
+        @var_out hour
+        @var_out minute
+        @var_out second
+        @var_out timestamp
+        """
+        t = datetime.datetime.now()
+        return {
+            'year': t.year,
+            'month': t.month,
+            'day': t.day,
+            'weekday': t.weekday(),
+            'hour': t.hour,
+            'minute': t.minute,
+            'second': t.second,
+            'timestamp': t.timestamp()
+        }
 
     def ls(self, mask, recursive=False):
         """

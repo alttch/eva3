@@ -266,6 +266,35 @@ Raises:
 * **ResourceNotFound** command script or controller is not found
 
 
+.. _macro_api_date:
+
+date - date/time
+----------------
+
+
+
+.. code-block:: python
+
+    r = date()
+
+Returns:
+
+Serialized date/time object (dict)
+
+.. code-block:: json
+
+    {
+        "day": 14,
+        "hour": 0,
+        "minute": 47,
+        "month": 5,
+        "second": 16,
+        "timestamp": 1557787636.680612,
+        "weekday": 1,
+        "year": 2019
+    }
+
+
 .. _macro_api_decrement_shared:
 
 decrement_shared - decrement value of the shared variable
