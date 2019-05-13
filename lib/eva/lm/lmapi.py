@@ -640,8 +640,18 @@ class LM_API(GenericAPI, GenericCloudAPI):
     @log_w
     @api_need_master
     def put_macro_function(self, **kwargs):
-        m = parse_api_params(kwargs, 'm', 'D')
-        return eva.lm.controller.put_macro_function(m)
+        name, description, i, o, code = parse_api_params(
+            kwargs, ['function', 'description', 'input', 'output', 'src'],
+            'ss...')
+        fname = eva.lm.controller.put_macro_function(
+                fname=name,
+                fdescr=description,
+                i=i,
+                o=o,
+                fcode=code)
+        if not fname:
+            raise FunctionFailed
+        return eva.lm.controller.get_macro_function(fname)
 
     @log_i
     @api_need_master
@@ -1396,6 +1406,7 @@ class LM_HTTP_API_abstract(LM_API, GenericHTTP_API):
 
     def __init__(self):
         super().__init__()
+        self._nofp_log('put_macro_function', 'src')
 
 
 class LM_HTTP_API(LM_HTTP_API_abstract, GenericHTTP_API):

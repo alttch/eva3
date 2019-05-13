@@ -59,6 +59,34 @@ def rebuild_mfcode():
 def compile_macro_function(fcode):
     return eva.lm.iec_compiler.gen_code_from_fbd(fcode)
 
+def prepare_macro_function_code(fcode, fname, fdescr, i, o):
+    var_in = ''
+    var_out = ''
+    in_params = ''
+    if i:
+        for v in i:
+            descr = v.get('description')
+            if descr is None:
+                descr = ''
+            in_params += '{}, '.format(v['var'])
+            var_in += '    @var_in    {}    {}\n'.format(v['var'], descr)
+    if o:
+        for v in o:
+            descr = v.get('description')
+            if descr is None:
+                descr = ''
+            var_out += '    @var_in    {}    {}\n'.format(v['var'], descr)
+    out = 'def {}({}):\n'.format(fname, in_params[:-2])
+    out += '    """\n'
+    if fdescr is not None and fdescr != '':
+        out += '    @description    {}\n'.format(fdescr)
+    out += var_in
+    out += var_out
+    out += '    """\n'
+    for l in fcode.split('\n'):
+        out += '    {}\n'.format(l)
+    return out
+
 
 @with_macro_functions_lock
 def append_macro_function(file_name, rebuild=True):
@@ -130,6 +158,7 @@ def append_macro_function(file_name, rebuild=True):
             'src': src,
             'editable': True,
             'group': 'Custom',
+            'description': '',
             'type': tp
         }
         if tp == 'py':
@@ -142,7 +171,10 @@ def append_macro_function(file_name, rebuild=True):
                     if d.startswith('@var_out'):
                         result['var_out'].append(parse_arg(d))
                     if d.startswith('@description'):
-                        result['description'] = re.split('[\ \t]+', d, 1)[1]
+                        try:
+                            result['description'] = re.split('[\ \t]+', d, 1)[1]
+                        except:
+                            pass
         elif tp == 'fbd-json':
             result['description'] = j.get('description', '')
             for x in j.get('input', []):

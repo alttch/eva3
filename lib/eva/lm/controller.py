@@ -456,25 +456,38 @@ def destroy_macro_function(fname):
 
 
 @with_macro_functions_m_lock
-def put_macro_function(fcode):
+def put_macro_function(fname=None, fdescr=None, i={}, o={}, fcode=None):
     try:
-        pcode = eva.lm.plc.compile_macro_function(fcode)
+        if isinstance(fcode, dict):
+            pcode = eva.lm.plc.compile_macro_function(fcode)
+            fn = fcode['function']
+        else:
+            if not fname:
+                raise InvalidParameter('Function name not specified')
+            pcode = eva.lm.plc.prepare_macro_function_code(
+                fcode, fname, fdescr, i, o)
+            fn = fname
+        file_name = eva.core.format_xc_fname(fname='functions/{}.py'.format(fn))
+        if not isinstance(fcode, dict):
+            compile(pcode, file_name, 'exec')
     except Exception as e:
         eva.core.log_traceback()
         raise FunctionFailed('Function compile failed: {}'.format(e))
     try:
-        with open(
-                eva.core.format_xc_fname(
-                    fname='functions/{}.py'.format(fcode['function'])),
-                'w') as f:
-            f.write('# FBD\n')
-            f.write('# auto generated code, do not modify\n')
-            f.write('"""\n{}\n"""\n{}\n'.format(
-                jsonpickle.encode(fcode), pcode))
+        with open(file_name, 'w') as f:
+            if isinstance(fcode, dict):
+                f.write('# FBD\n')
+                f.write('# auto generated code, do not modify\n')
+                f.write('"""\n{}\n"""\n{}\n'.format(
+                    jsonpickle.encode(fcode), pcode))
+            else:
+                f.write(pcode)
+        if not reload_macro_function(fname=fn):
+            raise FunctionFailed
+        return fn
     except Exception as e:
         eva.core.log_traceback()
-        raise FunctionFailed('Function write failed: {}'.foramt(e))
-    return reload_macro_function(fname=fcode['function'])
+        raise FunctionFailed('Function write failed: {}'.format(e))
 
 
 @with_macro_functions_m_lock
