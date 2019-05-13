@@ -474,7 +474,7 @@ def reload_macro_function(file_name=None, fname=None, rebuild=True):
         if rebuild:
             eva.lm.plc.rebuild_mfcode()
     else:
-        logging.info('Loading macro function {}'.format(file_name))
+        logging.info('Loading macro function {}'.format(file_name if file_name else fname))
         if file_name in macro_functions_m:
             omtime = macro_functions_m[file_name]
         else:

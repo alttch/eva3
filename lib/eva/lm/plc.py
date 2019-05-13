@@ -77,7 +77,7 @@ def append_macro_function(file_name, rebuild=True):
                 pass
             result['default'] = argval
         result['var'] = argname
-            return result
+        return result
 
     try:
         raw = open(file_name).read()
@@ -86,18 +86,19 @@ def append_macro_function(file_name, rebuild=True):
             l = raw.split('\n')
             jcode = ''
             for i in range(3, len(l)):
-                jcode += l[i]
-                if l.startswith('"""'):
+                if l[i].startswith('"""'):
                     break
+                jcode += l[i]
+            j = json.loads(jcode)
             tp = 'fbd-json'
         else:
             tp = 'py'
 
         code, src_code = raw, raw
 
-        code += '\nimport inspect\nfndoc = inspect.getdoc({})\n'.format(
-            fname, fname)
         if tp == 'py':
+            code += '\nimport inspect\nfndoc = inspect.getdoc({})\n'.format(
+                fname, fname)
             code += 'fnsrc = inspect.getsource({})\n'.format(fname)
         d = {}
         c = compile(code, file_name, 'exec')
@@ -117,7 +118,7 @@ def append_macro_function(file_name, rebuild=True):
                         indent = len(s) - len(st)
                     x += 1
         elif tp == 'fbd-json':
-            src = jcode
+            src = j
         result = {
             'name': fname,
             'var_in': [],
