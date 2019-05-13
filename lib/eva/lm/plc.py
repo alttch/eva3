@@ -77,7 +77,7 @@ def append_macro_function(file_name, rebuild=True):
                 pass
             result['default'] = argval
         result['var'] = argname
-        return result
+            return result
 
     try:
         raw = open(file_name).read()
@@ -85,7 +85,7 @@ def append_macro_function(file_name, rebuild=True):
         if raw.startswith('# FBD'):
             l = raw.split('\n')
             jcode = ''
-            for i in range(2, len(l)):
+            for i in range(3, len(l)):
                 jcode += l[i]
                 if l.startswith('"""'):
                     break

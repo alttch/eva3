@@ -465,13 +465,14 @@ def reload_macro_function(file_name=None, fname=None, rebuild=True):
         logging.info('Loading macro functions')
         fncs = []
         for f in glob.glob('{}/lm/functions/*.py'.format(eva.core.dir_xc)):
-            fncs.append(f[:-3])
+            fncs.append(f)
             reload_macro_function(f, rebuild=False)
-        for f in macro_functions_m.keys():
+        for f in macro_functions_m.copy().keys():
             if f not in fncs:
                 del macro_functions_m[f]
                 eva.lm.plc.remove_macro_function(f, rebuild=False)
-        eva.lm.plc.rebuild_mfcode()
+        if rebuild:
+            eva.lm.plc.rebuild_mfcode()
     else:
         logging.info('Loading macro function {}'.format(file_name))
         if file_name in macro_functions_m:
