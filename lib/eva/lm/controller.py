@@ -44,6 +44,8 @@ from eva.core import db
 from functools import wraps
 from pyaltt import background_job
 
+import jsonpickle
+
 lvars_by_id = {}
 lvars_by_group = {}
 lvars_by_full_id = {}
@@ -454,6 +456,28 @@ def destroy_macro_function(fname):
 
 
 @with_macro_functions_m_lock
+def put_macro_function(fcode):
+    try:
+        pcode = eva.lm.plc.compile_macro_function(fcode)
+    except Exception as e:
+        eva.core.log_traceback()
+        raise FunctionFailed('Function compile failed: {}'.format(e))
+    try:
+        with open(
+                eva.core.format_xc_fname(
+                    fname='functions/{}.py'.format(fcode['function'])),
+                'w') as f:
+            f.write('# FBD\n')
+            f.write('# auto generated code, do not modify\n')
+            f.write('"""\n{}\n"""\n{}\n'.format(
+                jsonpickle.encode(fcode), pcode))
+    except Exception as e:
+        eva.core.log_traceback()
+        raise FunctionFailed('Function write failed: {}'.foramt(e))
+    return reload_macro_function(fname=fcode['function'])
+
+
+@with_macro_functions_m_lock
 def reload_macro_function(file_name=None, fname=None, rebuild=True):
     if file_name is None and fname:
         if not re.match("^[A-Za-z0-9_-]*$", fname):
@@ -474,7 +498,8 @@ def reload_macro_function(file_name=None, fname=None, rebuild=True):
         if rebuild:
             eva.lm.plc.rebuild_mfcode()
     else:
-        logging.info('Loading macro function {}'.format(file_name if file_name else fname))
+        logging.info('Loading macro function {}'.format(file_name if file_name
+                                                        else fname))
         if file_name in macro_functions_m:
             omtime = macro_functions_m[file_name]
         else:

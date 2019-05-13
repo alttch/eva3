@@ -56,6 +56,10 @@ def rebuild_mfcode():
     logging.debug('mfcode rebuilt: {}'.format(mfcode.build_time))
 
 
+def compile_macro_function(fcode):
+    return eva.lm.iec_compiler.gen_code_from_fbd(fcode)
+
+
 @with_macro_functions_lock
 def append_macro_function(file_name, rebuild=True):
 

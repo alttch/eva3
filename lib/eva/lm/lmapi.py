@@ -637,6 +637,12 @@ class LM_API(GenericAPI, GenericCloudAPI):
             result.append(v)
         return sorted(result, key=lambda k: k['name'])
 
+    @log_w
+    @api_need_master
+    def put_macro_function(self, **kwargs):
+        m = parse_api_params(kwargs, 'm', 'D')
+        return eva.lm.controller.put_macro_function(m)
+
     @log_i
     @api_need_master
     def reload_macro_function(self, **kwargs):
