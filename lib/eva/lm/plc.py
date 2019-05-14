@@ -485,7 +485,7 @@ class Macro(eva.item.ActiveItem):
         if 'term_kill_interval' in d:
             del d['term_kill_interval']
         if props:
-            d['src'] = None
+            d['src'] = ''
         return d
 
 
