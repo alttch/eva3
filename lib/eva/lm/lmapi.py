@@ -798,7 +798,13 @@ class LM_API(GenericAPI, GenericCloudAPI):
         k, i = parse_function_params(kwargs, 'ki', '.S')
         item = eva.lm.controller.get_macro(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
-        return item.serialize(info=True)
+        result = item.serialize(info=True)
+        if apikey.check_master(k):
+            t, s = eva.lm.controller.get_macro_source(item)
+            result['src'] = s
+            if t:
+                result['type'] += ':' + t
+        return result
 
 # cycle functions
 
@@ -1407,6 +1413,9 @@ class LM_HTTP_API_abstract(LM_API, GenericHTTP_API):
     def __init__(self):
         super().__init__()
         self._nofp_log('put_macro_function', 'src')
+        self._nofp_log('put_macro_function', 'input')
+        self._nofp_log('put_macro_function', 'output')
+        self._nofp_log('set_macro_prop', 'v')
 
 
 class LM_HTTP_API(LM_HTTP_API_abstract, GenericHTTP_API):

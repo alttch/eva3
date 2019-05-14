@@ -95,3 +95,140 @@ def gen_code_from_fbd(fbd, indent=4):
             code += '\'{}\':{},'.format(r, r)
         code += '}'
     return code
+
+
+def gen_code_from_sfc(sfc):
+
+    sfc_name = sfc['name']
+
+    def _sparam_code(param):
+        pt = param.get('type')
+        if pt == 'const':
+            result = param['value']
+            try:
+                result = float(param['value'])
+                if result == int(result):
+                    result = int(result)
+            except:
+                result = '\'' + result + '\''
+            return result
+        elif pt == 'var':
+            return 'shared(\'__{}_{}\')'.format(sfc_name, param['value'])
+        elif pt == 'var_shared':
+            return 'shared(\'{}\')'.format(param['value'])
+        elif pt == 'func':
+            code = _sfunction_code(param['value']['func'],
+                                   param['value']['params'])
+            if 'func_var_out' in param['value']:
+                code += '[\'{}\']'.format(param['value']['func_var_out'])
+            return code
+        else:
+            raise CompilerError('Invalid param type: {}'.format(pt))
+
+    def _sfunction_code(f, params):
+        code = f + '('
+        if params:
+            for p, v in params.items():
+                if isinstance(v, list):
+                    code += '{}=['.format(p)
+                    for vv in v:
+                        code += '{},'.format(_sparam_code(vv))
+                    code += '],'
+                else:
+                    code += '{}={},'.format(p, _sparam_code(v))
+        code += ')'
+        return code
+
+    def _sfc_block_code(blocks, indent, thread_id):
+        if not blocks:
+            return None
+        first_block_id = 0
+        code = ' ' * indent + 'while True:\n'
+        for b in blocks:
+            code += ' ' * (indent + 4)
+            if first_block_id:
+                code += 'el'
+            code += 'if __SFC_STEP == {}:\n'.format(b['id'])
+            fncode = ''
+            if 'func' in b:
+                fncode = _sfunction_code(b['func'], b['params'])
+            elif b['type'] == 'thread_start':
+                for t_id in b['thread']:
+                    fncode = ('__thread_{} = threading.Thread(' +
+                              'target=__sfc_thread_{})\n').format(t_id, t_id)
+                    fncode += ' ' * (indent + 8) + '__thread_{}.start()'.format(
+                        t_id)
+            elif b['type'] == 'thread_wait':
+                for t_id in b['thread']:
+                    fncode = '__thread_{}.join()'.format(t_id)
+            if b['type'] == 'set':
+                if b['var'] == 'out':
+                    if thread_id != 0:
+                        raise CompilerError(
+                            'Variable "out" can be set only from main thread')
+                    var_name = 'out'
+                else:
+                    var_name = b['var'] if b.get(
+                        'var_shared') else '__{}_{}'.format(sfc_name, b['var'])
+                if b.get('func_var_out'):
+                    fncode += '[\'{}\']'.format(b['func_var_out'])
+                code += ' ' * (indent + 8)
+                if var_name != 'out':
+                    code += 'set_shared(\'{}\', {})\n'.format(var_name, fncode)
+                else:
+                    if fncode:
+                        code += 'out = {}\n'.format(fncode)
+                    else:
+                        var_name = b['var_in'] if b.get(
+                            'var_in_shared') else '__{}_{}'.format(
+                                sfc_name, b['var_in'])
+                        code += 'out = shared(\'{}\')\n'.format(var_name)
+            elif b['type'] == 'cond':
+                code += ' ' * (indent + 8) + 'if {}:\n'.format(fncode)
+                code += ' ' * (indent + 12) + '__SFC_STEP = {}\n'.format(
+                    b['next'])
+                code += ' ' * (indent + 8) + 'else:\n'
+                code += ' ' * (indent + 12) + '__SFC_STEP = {}\n'.format(
+                    b['next-false'])
+            else:
+                code += ' ' * (indent + 8) + fncode + '\n'
+            if b['type'] != 'cond':
+                if 'next' in b:
+                    code += ' ' * (indent + 8) + '__SFC_STEP = {}\n'.format(
+                        b['next'])
+                else:
+                    code += ' ' * (indent + 8) + 'break\n'
+            if not first_block_id or b['id'] < first_block_id:
+                first_block_id = b['id']
+        if first_block_id:
+            code = ' ' * indent + '__SFC_STEP = {}\n{}'.format(
+                first_block_id, code)
+            return code
+        else:
+            return None
+
+    code_threads = {}
+    for c in sfc['code-blocks']:
+        thread_id = c['thread']
+        # if thread_id > 0:
+        indent = 4
+        # else:
+        # indent = 8
+        code = _sfc_block_code(c.get('blocks', []), indent, thread_id)
+        if code:
+            code_threads[thread_id] = code
+    sfc_code = ''
+    for c, code in code_threads.items():
+        if c > 0:
+            sfc_code += 'def __sfc_thread_{}(*args, **kwargs):\n'.format(c)
+            sfc_code += code
+    sfc_code += '\ntry:\n' + code_threads[0]
+    sfc_code += 'finally:\n'
+    final_code = _sfc_block_code(sfc.get('final-blocks'), 4, 0)
+    if final_code:
+        sfc_code += final_code
+    else:
+        sfc_code += '    pass'
+    if len(code_threads) > 1:
+        sfc_code = 'import threading\n' + sfc_code
+    return sfc_code

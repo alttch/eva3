@@ -56,8 +56,13 @@ def rebuild_mfcode():
     logging.debug('mfcode rebuilt: {}'.format(mfcode.build_time))
 
 
-def compile_macro_function(fcode):
+def compile_macro_function_fbd(fcode):
     return eva.lm.iec_compiler.gen_code_from_fbd(fcode)
+
+
+def compile_macro_sfc(code):
+    return eva.lm.iec_compiler.gen_code_from_sfc(code)
+
 
 def prepare_macro_function_code(fcode, fname, fdescr, i, o):
     var_in = ''
@@ -405,7 +410,7 @@ class Macro(eva.item.ActiveItem):
                 return True
             else:
                 return False
-        if prop == 'send_critical':
+        elif prop == 'send_critical':
             v = val_to_boolean(val)
             if v is not None:
                 if self.api.send_critical != v:
@@ -414,6 +419,37 @@ class Macro(eva.item.ActiveItem):
                     self.set_modified(save)
                 return True
             else:
+                return False
+        elif prop == 'src':
+            if isinstance(val, str):
+                code = val
+            elif isinstance(val, dict):
+                try:
+                    v = val.copy()
+                    if 'name' in v:
+                        del v['name']
+                    code = '# SFC\n# auto generated code, do not modify\n"""\n{}\n"""\n'.format(
+                        json.dumps(v)) + compile_macro_sfc(val)
+                except Exception as e:
+                    logging.error(
+                        'Unable to compile macro source for {}: {}'.format(
+                            self.oid, e))
+                    return False
+            else:
+                return False
+            try:
+                file_name = eva.core.format_xc_fname(
+                    fname=self.action_exec
+                    if self.action_exec else '{}.py'.format(self.item_id))
+                eva.core.prepare_save()
+                open(file_name, 'w').write(code)
+                eva.core.finish_save()
+                return True
+            except FunctionFailed:
+                raise
+            except Exception as e:
+                logging.error('Unable to write macro source for {}: {}'.format(
+                    self.oid, e))
                 return False
         return super().set_prop(prop, val, save)
 
@@ -448,6 +484,8 @@ class Macro(eva.item.ActiveItem):
             del d['mqtt_control']
         if 'term_kill_interval' in d:
             del d['term_kill_interval']
+        if props:
+            d['src'] = None
         return d
 
 

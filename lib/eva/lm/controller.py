@@ -459,7 +459,7 @@ def destroy_macro_function(fname):
 def put_macro_function(fname=None, fdescr=None, i={}, o={}, fcode=None):
     try:
         if isinstance(fcode, dict):
-            pcode = eva.lm.plc.compile_macro_function(fcode)
+            pcode = eva.lm.plc.compile_macro_function_fbd(fcode)
             fn = fcode['function']
         else:
             if not fname:
@@ -474,6 +474,7 @@ def put_macro_function(fname=None, fdescr=None, i={}, o={}, fcode=None):
         eva.core.log_traceback()
         raise FunctionFailed('Function compile failed: {}'.format(e))
     try:
+        eva.core.prepare_save()
         with open(file_name, 'w') as f:
             if isinstance(fcode, dict):
                 f.write('# FBD\n')
@@ -482,9 +483,12 @@ def put_macro_function(fname=None, fdescr=None, i={}, o={}, fcode=None):
                     jsonpickle.encode(fcode), pcode))
             else:
                 f.write(pcode)
+        eva.core.finish_save()
         if not reload_macro_function(fname=fn):
             raise FunctionFailed
         return fn
+    except FunctionFailed:
+        raise
     except Exception as e:
         eva.core.log_traceback()
         raise FunctionFailed('Function write failed: {}'.format(e))
@@ -533,6 +537,33 @@ def reload_macro_function(file_name=None, fname=None, rebuild=True):
 def get_macro_function(fname=None):
     return eva.lm.plc.get_macro_function(fname)
 
+def get_macro_source(macro_id):
+    if isinstance(macro_id, str):
+        macro = get_macro(macro_id)
+    else:
+        macro = macro_id
+    if not macro:
+        return None
+    file_name = eva.core.format_xc_fname(
+        fname=macro.action_exec
+        if macro.action_exec else '{}.py'.format(macro.item_id))
+    if os.path.isfile(file_name):
+        code = open(file_name).read()
+        if code.startswith('# SFC'):
+            src_type ='sfc-json'
+            l = code.split('\n')
+            jcode = ''
+            for i in range(3, len(l)):
+                if l[i].startswith('"""'):
+                    break
+                jcode += l[i]
+            code = jsonpickle.decode(jcode)
+            code['name'] = macro.full_id
+        else:
+            src_type = ''
+        return src_type, code
+    else:
+        return None, None
 
 @with_item_lock
 def load_macros():

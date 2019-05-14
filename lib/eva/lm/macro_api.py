@@ -193,6 +193,7 @@ class MacroAPI(object):
             'sensor_status': self.macro_function(self.sensor_status),
             'sensor_value': self.macro_function(self.sensor_value),
             'set': self.macro_function(self.set),
+            'state': self.macro_function(self.state),
             'status': self.macro_function(self.status),
             'value': self.macro_function(self.value),
             'reset': self.macro_function(self.reset),
@@ -399,6 +400,38 @@ class MacroAPI(object):
             FunctionFailed: function failed to release lock
         """
         return eva.sysapi.api.unlock(k=eva.apikey.get_masterkey(), l=lock_id)
+
+    def state(self, item_id):
+        """
+        get item state
+
+        Args:
+            item_id: item id (oid required)
+
+        Returns:
+            item status/value dict
+
+        Raises:
+            ResourceNotFound: item is not found
+
+        @var_out status
+        @var_out value
+        """
+        if is_oid(item_id):
+            tp, i = parse_oid(item_id)
+        else:
+            tp = 'lvar'
+            i = item_id
+        if tp == 'unit':
+            return {'status': self.unit_status(i), 'value': self.unit_value(i)}
+        if tp == 'sensor':
+            return {
+                'status': self.sensor_status(i),
+                'value': self.sensor_value(i)
+            }
+        if tp == 'lvar':
+            return {'status': self.lvar_status(i), 'value': self.lvar_value(i)}
+        raise ResourceNotFound
 
     def status(self, item_id):
         """

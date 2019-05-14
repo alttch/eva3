@@ -601,7 +601,9 @@ class GenericAPI(object):
 
     @staticmethod
     def _set_prop(item, p=None, v=None, save=False):
-        for prop, value in v.items() if isinstance(v, dict) else {p: v}.items():
+        for prop, value in v.items() if isinstance(v, dict) and not p else {
+                p: v
+        }.items():
             if not item.set_prop(prop, value, False):
                 raise FunctionFailed('{}.{} = {} unable to set'.format(
                     item.oid, prop, value))

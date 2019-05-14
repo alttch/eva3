@@ -820,6 +820,37 @@ Raises:
 * **ResourceNotFound** sensor is not found
 
 
+.. _macro_api_state:
+
+state - get item state
+----------------------
+
+
+
+.. code-block:: python
+
+    r = state('sensor:env/temp1')
+
+Parameters:
+
+* **item_id** item id (oid required)
+
+Returns:
+
+item status/value dict
+
+.. code-block:: json
+
+    {
+        "status": 1,
+        "value": 55.0
+    }
+
+Raises:
+
+* **ResourceNotFound** item is not found
+
+
 .. _macro_api_status:
 
 status - get item status
