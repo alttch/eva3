@@ -607,8 +607,20 @@ class SQLANotifier(GenericNotifier):
         n = 'notifier_{}_db'.format(self.notifier_id)
         with self.db_lock:
             if not g.has(n):
-                g.set(n, self.db_engine.connect())
-            return g.get(n)
+                c = self.db_engine.connect()
+                g.set(n, c)
+            else:
+                c = g.get(n)
+                try:
+                    c.execute('select 1')
+                except:
+                    try:
+                        c.close()
+                    except:
+                        pass
+                    c = self.db_engine.connect()
+                    g.set(n, c)
+            return c
 
     def get_state(self,
                   oid,

@@ -373,6 +373,15 @@ def db():
                 g.db = db_engine.primary.connect()
             else:
                 g.db = db_engine.primary
+        elif config.db_update == 1:
+            try:
+                g.db.execute('select 1')
+            except:
+                try:
+                    g.db.close()
+                except:
+                    pass
+                g.db = db_engine.primary.connect()
         return g.db
 
 
@@ -383,6 +392,15 @@ def userdb():
                 g.userdb = db_engine.user.connect()
             else:
                 g.userdb = db_engine.user
+        elif config.db_update == 1:
+            try:
+                g.userdb.execute('select 1')
+            except:
+                try:
+                    g.userdb.close()
+                except:
+                    pass
+                g.userdb = db_engine.user.connect()
         return g.userdb
 
 
