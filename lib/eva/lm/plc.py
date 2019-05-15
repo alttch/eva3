@@ -162,7 +162,7 @@ def append_macro_function(file_name, rebuild=True):
             'var_out': [],
             'src': src,
             'editable': True,
-            'group': 'Custom',
+            'group': 'custom',
             'description': '',
             'type': tp
         }

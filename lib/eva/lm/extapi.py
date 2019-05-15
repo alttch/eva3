@@ -88,7 +88,7 @@ def rebuild_env():
                         'editable': False,
                         'src': None,
                         'type': 'extension',
-                        'group': 'Extensions: {}'.format(e.ext_id),
+                        'group': 'extensions/{}'.format(e.ext_id),
                         'var_in': v.get('var_in', []),
                         'var_out': v.get('var_out', []),
                         }
