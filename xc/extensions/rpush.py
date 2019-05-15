@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __description__ = "Push client for Roboger"
-__api__ = 4
+__api__ = 5
 __mods_required__ = ['pyrpush']
 
 __config_help__ = [{
@@ -20,6 +20,41 @@ __config_help__ = [{
 __functions__ = {
     'push(media_file=None, **kwargs)':
     'Push message (calls pyrpush.Client.push)'
+}
+
+__iec_functions__ = {
+    'push': {
+        'description':
+        'Push message to Roboger server',
+        'var_in': [{
+            'var': 'msg',
+            'description': 'message text'
+        }, {
+            'var': 'addr',
+            'description': 'destination address'
+        }, {
+            'var': 'subject',
+            'description': 'message subject'
+        }, {
+            'var': 'sender',
+            'description': 'message sender'
+        }, {
+            'var': 'location',
+            'description': 'event location'
+        }, {
+            'var': 'keywords',
+            'description': 'keywords, comma separated'
+        }, {
+            'var': 'level',
+            'description': 'event level'
+        }, {
+            'var': 'media',
+            'description': 'base-64 encoded media'
+        }, {
+            'var': 'media_file',
+            'description': 'media file name or descriptor'
+        }]
+    }
 }
 
 __help__ = """
