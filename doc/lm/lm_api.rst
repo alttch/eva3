@@ -1353,6 +1353,10 @@ create_job - create new job
 
 Creates new :doc:`scheduled job<jobs>`. Job id (UUID) is generated automatically unless specified.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_job.req
+    :response: http-examples/lmapi/create_job.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -1370,6 +1374,10 @@ destroy_job - delete job
 
 Deletes :doc:`scheduled job<jobs>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_job.req
+    :response: http-examples/lmapi/destroy_job.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -1381,6 +1389,10 @@ get_job - get job information
 -----------------------------
 
 
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_job.req
+    :response: http-examples/lmapi/get_job.resp
 
 Parameters:
 
@@ -1394,6 +1406,10 @@ list_job_props - list job properties
 
 Get all editable parameters of the :doc:`scheduled job</lm/jobs>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_job_props.req
+    :response: http-examples/lmapi/list_job_props.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -1406,6 +1422,10 @@ list_jobs - get jobs list
 
 Get the list of all available :doc:`scheduled jobs<jobs>`.
 
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_jobs.req
+    :response: http-examples/lmapi/list_jobs.resp
+
 Parameters:
 
 * **k** API key with *master* permissions
@@ -1416,6 +1436,10 @@ set_job_prop - set job parameters
 ---------------------------------
 
 Set configuration parameters of the :doc:`scheduled job</lm/jobs>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_job_prop.req
+    :response: http-examples/lmapi/set_job_prop.resp
 
 Parameters:
 
