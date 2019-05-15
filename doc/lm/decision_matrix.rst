@@ -4,7 +4,7 @@ Decision-making matrix
 Decision-making matrix is a set of rules and conditions under which :doc:`lm`
 runs the specified :doc:`macros<macros>` when certain events occur.
 
-To change the decision rules you may use **eva lm** (*lm-cmd*) :doc:`console
+To manage the decision rules you may use **eva lm** (*lm-cmd*) :doc:`console
 applications</cli>`, :doc:`lm_api` functions or an appropriate :doc:`lm_ei`
 interface section.
 
@@ -59,8 +59,6 @@ Unmodifiable rule parameters:
 * **id** rule id, always generated automatically when it is created
 * **chillout_ends_in** a virtual parameter specifying for how long (in seconds)
   the rule is ignored, if **chillout_time** is set
-* **condition** get/set rule condition in the readable format (e.g. *25 < x <=
-  28*)
 
 Modifiable Parameters:
 
@@ -69,6 +67,9 @@ Modifiable Parameters:
 
 * **chillout_time** the rule is ignored for a specified time (in seconds)
   after match
+
+* **condition** "virtual" parameter which allows get/set rule condition in the
+  readable format (e.g. *25 < x <= 28*)
 
 * **description** rule description
 

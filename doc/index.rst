@@ -108,6 +108,7 @@ What you get with EVA
 
     lm/macros
     lm/decision_matrix
+    lm/jobs
     lm/cycles
 
 .. toctree::
