@@ -25,7 +25,7 @@ __functions__ = {
 __iec_functions__ = {
     'push': {
         'description':
-        'Push message to Roboger server',
+        'push message to Roboger server',
         'var_in': [{
             'var': 'msg',
             'description': 'message text'
