@@ -1284,6 +1284,26 @@ Then register update event function:
         $('#' + $.escapeSelector(state.oid)).html('S: ' + state.value);
     }
 
+Multi page interfaces
+=====================
+
+By default, the interface should be programmed in a single HTML/J2 document
+*ui/index.html* or *ui/index.j2*, however sometimes it's useful to split parts
+of the interface to different html page files.
+
+Each HTML document should initialize/login SFA framework to access its
+functions. However if *eva_sfa_set_auth_cookies* is set to *true*, the
+secondary page can log in user with the existing token:
+
+.. code-block:: javascript
+
+    eva_sfa_init();
+    eva_sfa_cb_login_error = function() {
+        // token is invalid or expired, redirect user to main page
+        document.location = '/ui/';
+    }
+    eva_sfa_start();
+
 Controlling reliability of the connection
 =========================================
 

@@ -13,12 +13,12 @@ LM
 --
 
     * scheduled jobs
-    * IEC 61131-3 compliant macro functions
 
 SFA
 ---
 
     * evaHI integration
+    * transparent authentication on secondary UI pages
 
 3.2.1 (2019-04-16)
 ==================
