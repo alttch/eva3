@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __description__ = "Text-to-speech via ttsbroker"
-__api__ = 4
+__api__ = 5
 __mods_required__ = ['ttsbroker']
 
 __config_help__ = [{
@@ -54,6 +54,26 @@ __config_help__ = [{
 
 __functions__ = {
     'say(text, **kwargs)': 'Say text (calls ttsbroker.TTSEngine.say)'
+}
+
+__iec_functions__ = {
+    'say': {
+        'description':
+        'say text',
+        'var_in': [{
+            'var': 'text',
+            'description': 'text to say'
+        }, {
+            'var': 'gain',
+            'description': 'volume gain'
+        }, {
+            'var': 'cache',
+            'description': 'use cache'
+        }, {
+            'var': 'wait',
+            'description': 'wait until playback finish'
+        }]
+    }
 }
 
 __help__ = """
