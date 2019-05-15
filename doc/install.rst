@@ -310,7 +310,7 @@ Updating
 .. warning::
 
     Before updating from the previous version, read `update
-    manifest <https://github.com/alttch/eva3/blob/3.2.1/UPDATE.rst>`_.
+    manifest <https://github.com/alttch/eva3/blob/3.2.2/UPDATE.rst>`_.
 
 Using EVA Shell
 ---------------
