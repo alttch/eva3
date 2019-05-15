@@ -176,6 +176,8 @@ Obtains authentication :doc:`token</api_tokens>` which can be used in API calls 
 
 If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
 
+If authentication token is specified, the function will check it and return token information if it is valid.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/login.rest
     :response: http-examples/lmapi/login.resp-rest
@@ -185,6 +187,7 @@ Parameters:
 * **API Key** valid API key or
 * **u** user login
 * **p** user password
+* **a** authentication token
 
 Returns:
 
@@ -540,7 +543,7 @@ Parameters:
 
 Optionally:
 
-* **save** save unit configuration immediately
+* **save** save rule configuration immediately
 
 
 .. _lmapi_restful_destroy_rule:
@@ -1353,6 +1356,94 @@ test connection to remote controller
 Parameters:
 
 * **API Key** API key with *master* permissions
+
+
+
+.. _lmapi_restful_cat_job:
+
+Scheduled jobs
+==============
+
+
+
+.. _lmapi_restful_create_job:
+
+create new job
+--------------
+
+Creates new :doc:`scheduled job<jobs>`. Job id (UUID) is generated automatically unless specified.
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+* **save** save unit configuration immediately
+
+
+.. _lmapi_restful_destroy_job:
+
+delete job
+----------
+
+Deletes :doc:`scheduled job<jobs>`.
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_get_job:
+
+get job information
+-------------------
+
+
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_list_jobs:
+
+get jobs list
+-------------
+
+Get the list of all available :doc:`scheduled jobs<jobs>`.
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_list_job_props:
+
+list job properties
+-------------------
+
+Get all editable parameters of the :doc:`scheduled job</lm/jobs>`.
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_set_job_prop:
+
+set job parameters
+------------------
+
+Set configuration parameters of the :doc:`scheduled job</lm/jobs>`.
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+* **save** save configuration after successful call
 
 
 

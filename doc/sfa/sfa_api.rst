@@ -138,6 +138,8 @@ Obtains authentication :doc:`token</api_tokens>` which can be used in API calls 
 
 If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
 
+If authentication token is specified, the function will check it and return token information if it is valid.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/login.req
     :response: http-examples/sfapi/login.resp
@@ -147,6 +149,7 @@ Parameters:
 * **k** valid API key or
 * **u** user login
 * **p** user password
+* **a** authentication token
 
 Returns:
 

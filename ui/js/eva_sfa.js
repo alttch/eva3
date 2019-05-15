@@ -183,6 +183,11 @@ function eva_sfa_start() {
     q = {k: eva_sfa_apikey};
   } else if (eva_sfa_login) {
     q = {u: eva_sfa_login, p: eva_sfa_password};
+  } else if (eva_sfa_set_auth_cookies) {
+    var token = eva_sfa_read_cookie('auth');
+    if (token) {
+      q = {a: token};
+    }
   }
   eva_sfa_api_call('login', q, eva_sfa_after_login, function(code, msg, data) {
     eva_sfa_logged_in = false;
@@ -1365,6 +1370,17 @@ function _eva_sfa_set_token_cookie() {
       document.cookie = 'auth=' + eva_sfa_api_token + '; path=' + v;
     });
   }
+}
+
+function eva_sfa_read_cookie(name) {
+  var nameEQ = name + '=';
+  var ca = document.cookie.split(';');
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
 }
 
 function eva_sfa_uuidv4() {
