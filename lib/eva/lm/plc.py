@@ -428,7 +428,8 @@ class Macro(eva.item.ActiveItem):
                     v = val.copy()
                     if 'name' in v:
                         del v['name']
-                    code = '# SFC\n# auto generated code, do not modify\n"""\n{}\n"""\n'.format(
+                    code = '# SFC\n# auto generated code, ' + \
+                            'do not modify\n"""\n{}\n"""\n'.format(
                         json.dumps(v)) + compile_macro_sfc(val)
                 except Exception as e:
                     logging.error(
