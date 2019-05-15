@@ -1,7 +1,7 @@
 Decision-making matrix
 **********************
 
-Decision-making matrix is a set of rules and conditions under which :doc:`lm`
+Decision-making matrix is a set of rules and conditions under that :doc:`lm`
 runs the specified :doc:`macros<macros>` when certain events occur.
 
 To manage the decision rules you may use **eva lm** (*lm-cmd*) :doc:`console
