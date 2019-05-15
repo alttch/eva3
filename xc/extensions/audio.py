@@ -28,7 +28,7 @@ __functions__ = {'play(soundfile, gain=0, wait=True)': 'Play audio file'}
 __iec_functions__ = {
     'play': {
         'description':
-        'Play audio file',
+        'play audio file',
         'var_in': [{
             'var': 'soundfile',
             'description': 'audio file to play'
