@@ -64,6 +64,9 @@ Parameters:
   execution (false by default)
 * **send_critical** if *true*, allows to send critical events to controller
   core with *critical(msg, send_event=True)*
+* **src** virtual write-only parameter that allows to write/replace macro
+  source. Note that source isn't checked when written and is compiled at the
+  first run.
 
 Common principles of macros operation
 =====================================
