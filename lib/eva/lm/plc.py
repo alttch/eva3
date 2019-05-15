@@ -73,7 +73,7 @@ def prepare_macro_function_code(fcode, fname, fdescr, i, o):
             descr = v.get('description')
             if descr is None:
                 descr = ''
-            in_params += '{}, '.format(v['var'])
+            in_params += '{}=None, '.format(v['var'])
             var_in += '    @var_in    {}    {}\n'.format(v['var'], descr)
     if o:
         for v in o:

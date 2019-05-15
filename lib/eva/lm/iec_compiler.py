@@ -68,8 +68,10 @@ def gen_code_from_fbd(fbd, indent=4):
         if 'default' in input_args[a]:
             args_code += '={}'.format(input_args[a]['var'],
                                       input_args[a]['default'])
+        else:
+            args_code += '=None'
         if a < len(input_args) - 1:
-            args_code += ','
+            args_code += ', '
     code = 'def {}({}):\n'.format(func, args_code)
     code += '{}'.format(main_code)
     output_args = fbd.get('output', [])
