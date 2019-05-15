@@ -750,17 +750,21 @@ class GenericAPI(object):
         function will try to parse it and log in user with credentials
         provided.
 
+        If authentication token is specified, the function will check it and
+        return token information if it is valid.
+
         Args:
             k: valid API key or
             u: user login
             p: user password
+            a: authentication token
 
         Returns:
             A dict, containing API key ID and authentication token
         """
         if not tokens.is_enabled():
             raise FunctionFailed('Session tokens are disabled')
-        k, u, p = parse_function_params(kwargs, 'kup', '.ss')
+        k, u, p, a = parse_function_params(kwargs, 'kupa', '.sss')
         if not u and not k and hasattr(cherrypy, 'serving') and hasattr(
                 cherrypy.serving, 'request'):
             auth_header = cherrypy.serving.request.headers.get('authorization')
@@ -776,6 +780,15 @@ class GenericAPI(object):
             elif cherrypy.request.headers.get('User-Agent',
                                               '').startswith('evaHI '):
                 raise EvaHIAuthenticationRequired
+        if a:
+            t = tokens.get_token(a)
+            if t:
+                result = { 'key': t['ki'], 'token': a }
+                if t['u'] is not None:
+                    result['user'] = t['u']
+                return result
+            else:
+                raise AccessDenied('Invalid token')
         if not u and k:
             if not apikey.check(k, ip=http_real_ip()):
                 raise AccessDenied
