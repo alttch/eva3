@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __description__ = "Run macro on remote LM PLC"
-__api__ = 4
+__api__ = 5
 __mods_required__ = []
 
 __config_help__ = [{
@@ -24,8 +24,44 @@ __config_help__ = [{
 }]
 
 __functions__ = {
-    'run(macro, args=None, wait=None, priority=None, q=None, _uuid=None)':
+    'run(macro, args=None, kwargs=None, ' + \
+            'wait=None, priority=None, q=None, _uuid=None)':
     'Launch macro on remote LM PLC'
+}
+
+__iec_functions__ = {
+    'run': {
+        'description':
+        'run remote macro',
+        'var_in': [{
+            'var': 'macro',
+            'description': 'macro id'
+        }, {
+            'var': 'args',
+            'description': 'arguments'
+        }, {
+            'var': 'kwargs',
+            'description': 'keyword arguments'
+        }, {
+            'var': 'wait',
+            'description': 'wait (sec) until execution finish'
+        }, {
+            'var': 'priority'
+        }],
+        'var_out': [{
+            'var': 'exitcode',
+            'description': 'result code'
+        }, {
+            'var': 'out',
+            'description': 'macro output'
+        }, {
+            'var': 'status',
+            'description': 'execution status'
+        }, {
+            'var': 'uuid',
+            'description': 'execution task uuid'
+        }]
+    }
 }
 
 __help__ = """
@@ -53,7 +89,9 @@ class LMExt(GenericExt):
             timeout = float(timeout)
         except:
             timeout = get_timeout()
-        if not url: self.ready = False
+        if not url:
+            self.log_error('remote LM PLC API url not specified')
+            self.ready = False
         else:
             apiclient = CoreAPIClient()
             apiclient.set_uri(url)
@@ -65,12 +103,14 @@ class LMExt(GenericExt):
     def run(self,
             macro_id,
             args=None,
+            kwargs=None,
             wait=None,
             priority=None,
             q=None,
             _uuid=None):
         params = {'i': macro_id}
         if args is not None: params['a'] = args
+        if kwargs is not None: params['kw'] = kwargs
         if priority is not None: params['p'] = priority
         if wait is not None: params['w'] = wait
         if q is not None: params['q'] = q
