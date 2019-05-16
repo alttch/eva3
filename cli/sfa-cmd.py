@@ -769,7 +769,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             for c in cfg.keys():
                 if c not in [
                         'controller', 'unit', 'sensor', 'lvar', 'lmacro',
-                        'lcycle', 'dmatrix_rule'
+                        'lcycle', 'dmatrix_rule', 'job'
                 ]:
                     raise Exception('Invalid config section: {}'.format(c))
             for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -785,7 +785,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             controllers = set()
             controllers_fm_required = set()
             for x in [
-                    'unit', 'sensor', 'lvar', 'lmacro', 'lcycle', 'dmatrix_rule'
+                    'unit', 'sensor', 'lvar', 'lmacro', 'lcycle',
+                    'dmatrix_rule', 'job'
             ]:
                 for i, v in self.dict_safe_get(cfg, x, {}).items():
                     if not v or not 'controller' in v:
@@ -795,7 +796,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             ] and not v['controller'].startswith('uc/'):
                         raise Exception('Invalid controller specified ' +
                                         'for {} {} (uc required)'.format(x, i))
-                    if x in ['lvar', 'lmacro', 'lcycle', 'dmatrix_rule'
+                    if x in ['lvar', 'lmacro', 'lcycle', 'dmatrix_rule', 'job'
                             ] and not v['controller'].startswith('lm/'):
                         raise Exception('Invalid controller specified ' +
                                         'for {} {} (lm required)'.format(x, i))
@@ -1152,9 +1153,43 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             })[1].get('code')
             if code != apiclient.result_ok:
                 raise Exception('API call failed, code {}'.format(code))
+        # ===== JOB CREATION =====
+        print('Creating scheduled jobs...')
+        for i, v in self.dict_safe_get(cfg, 'job', {}).items():
+            c = v.get('controller')
+            print(' -- {}: {}'.format(c, i))
+            job_props = v.copy()
+            if 'controller' in job_props:
+                del job_props['controller']
+            code = macall({
+                'i': c,
+                'f': 'create_job',
+                'p': {
+                    'u': i,
+                    'v': job_props
+                }
+            })[1].get('code')
+            if code != apiclient.result_ok:
+                raise Exception('API call failed, code {}'.format(code))
 
     def _perform_undeploy(self, props, cfg, macall, del_files=False):
         from eva.client import apiclient
+        # ===== JOB DELETION =====
+        print('Deleting scheduled jobs...')
+        for i, v in self.dict_safe_get(cfg, 'job', {}).items():
+            c = v.get('controller')
+            print(' -- {}: {}'.format(c, i))
+            code = macall({
+                'i': c,
+                'f': 'destroy_job',
+                'p': {
+                    'i': i
+                }
+            })[1].get('code')
+            if code == apiclient.result_not_found:
+                self.print_warn('Job not found')
+            elif code != apiclient.result_ok:
+                raise Exception('API call failed, code {}'.format(code))
         # ===== RULE DELETION =====
         print('Deleting decision rules...')
         for i, v in self.dict_safe_get(cfg, 'dmatrix_rule', {}).items():
@@ -1354,8 +1389,8 @@ _pd_cols = {
         'exp_in'
     ],
     'state_': [
-        'oid', 'action_enabled', 'description', 'location', 'status',
-        'value', 'nstatus', 'nvalue', 'set', 'expires', 'exp_in'
+        'oid', 'action_enabled', 'description', 'location', 'status', 'value',
+        'nstatus', 'nvalue', 'set', 'expires', 'exp_in'
     ],
     'result': [
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
