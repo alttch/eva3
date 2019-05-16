@@ -850,10 +850,15 @@ class GenericCLI(GCLI):
                             (d[0] in ['..', '/'] and parent_shell_name):
                         self.finish_interactive()
                         return 0
-
                     if parent_shell_name and d[0] in shells_available:
-                        globals()['shell_switch_to'] = d[0]
-                        return 0
+                        if len(d) > 1:
+                            self.print_err(
+                                'sub-shell execution with extra commands is ' +
+                                'not available in a sub-shell\ntype ' +
+                                '"{}" to switch to {} shell'.format(d[0], d[0]))
+                        else:
+                            globals()['shell_switch_to'] = d[0]
+                            return 0
                     if parent_shell_name and d[0].startswith(
                             '/') and d[0][1:] in shells_available:
                         globals()['shell_switch_to'] = d[0][1:]
