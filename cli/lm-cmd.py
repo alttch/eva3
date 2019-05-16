@@ -1316,7 +1316,9 @@ _always_json = ['get_config']
 
 cli.always_json += _always_json
 cli.always_print += ['run', 'cmd']
-cli.arg_sections += ['config', 'macro', 'cycle', 'rule', 'controller', 'ext']
+cli.arg_sections += [
+    'config', 'macro', 'cycle', 'job', 'rule', 'controller', 'ext'
+]
 cli.api_cmds_timeout_correction = ['run']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
