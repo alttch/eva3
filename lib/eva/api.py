@@ -765,8 +765,8 @@ class GenericAPI(object):
         if not tokens.is_enabled():
             raise FunctionFailed('Session tokens are disabled')
         k, u, p, a = parse_function_params(kwargs, 'kupa', '.sss')
-        if not u and not k and hasattr(cherrypy, 'serving') and hasattr(
-                cherrypy.serving, 'request'):
+        if not u and not k and not a and hasattr(
+                cherrypy, 'serving') and hasattr(cherrypy.serving, 'request'):
             auth_header = cherrypy.serving.request.headers.get('authorization')
             if auth_header:
                 try:
@@ -783,12 +783,21 @@ class GenericAPI(object):
         if a:
             t = tokens.get_token(a)
             if t:
-                result = { 'key': t['ki'], 'token': a }
+                result = {'key': t['ki'], 'token': a}
                 if t['u'] is not None:
                     result['user'] = t['u']
                 return result
             else:
-                raise AccessDenied('Invalid token')
+                # try basic auth or evaHI login
+                if hasattr(cherrypy, 'serving') and hasattr(
+                        cherrypy.serving, 'request'):
+                    auth_header = cherrypy.serving.request.headers.get(
+                        'authorization')
+                    if auth_header or cherrypy.request.headers.get(
+                            'User-Agent', '').startswith('evaHI '):
+                        return self.login()
+                else:
+                    raise AccessDenied('Invalid token')
         if not u and k:
             if not apikey.check(k, ip=http_real_ip()):
                 raise AccessDenied
