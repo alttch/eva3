@@ -749,6 +749,13 @@ function eva_sfa_hi_qr(ctx, params) {
   var protocol = l.protocol.substring(0, l.protocol.length - 1);
   var host = l.hostname;
   var port = l.port;
+  if (!port) {
+    if (protocol == 'http') {
+      port = 80;
+    } else {
+      port = 443;
+    }
+  }
   var value =
     'scheme:' +
     protocol +
