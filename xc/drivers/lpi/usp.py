@@ -44,12 +44,12 @@ class LPI(GenericLPI):
         else:
             status = self.phi.get(
                 1, cfg=phi_cfg, timeout=timeout + time_start - time())
-            if isinstance(status, dict):
-                status = status.get(list(status)[0])
-            if isinstance(status, tuple):
-                status, value = status
-            else:
-                value = None
+        if isinstance(status, dict):
+            status = status.get(list(status)[0])
+        if isinstance(status, tuple):
+            status, value = status
+        else:
+            value = None
         if status is None and evh:
             return self.state_result_skip(_uuid)
         if status is None or status is False:

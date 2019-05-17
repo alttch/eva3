@@ -123,7 +123,7 @@ class LPI(GenericLPI):
                 else:
                     if st is None:
                         st = (_status, value)
-                    elif st != _status:
+                    elif st[0] != _status or st[1] != value:
                         self.set_result(_uuid, (-1, None))
                         return
             if multi:
@@ -150,8 +150,8 @@ class LPI(GenericLPI):
         except:
             return self.action_result_error(_uuid, msg='status is not integer')
         # if status not in [0, 1] and not eva.benchmark.enabled:
-            # return self.action_result_error(
-                # _uuid, msg='status is not in range 0..1')
+        # return self.action_result_error(
+        # _uuid, msg='status is not in range 0..1')
         if not isinstance(port, list):
             _port = [port]
         else:
