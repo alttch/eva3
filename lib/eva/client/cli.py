@@ -980,8 +980,8 @@ class GenericCLI(GCLI):
                             if self.in_json:
                                 opts += ['-J']
                             clear_screen = False
-                            if '|' in d[-1] and not d[-1].startswith('|'):
-                                cmd = d[-1].split('|')
+                            if ' |' in d[-1] and not d[-1].startswith(' |'):
+                                cmd = d[-1].split(' |')
                                 cmd[-1] = '|' + cmd[-1]
                                 d.pop(-1)
                                 d.extend(cmd)
