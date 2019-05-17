@@ -508,7 +508,7 @@ sys.argv = {argv}
         result = []
         for f in files:
             result.append({'name': f[7:-4], 'time': os.path.getmtime(f)})
-        return 0, result
+        return 0, sorted(result, key=lambda k: k['time'], reverse=True)
 
     def backup_unlink(self, params):
         if not self.before_save(): return self.local_func_result_failed
