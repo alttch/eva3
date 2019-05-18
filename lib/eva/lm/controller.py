@@ -216,6 +216,8 @@ def append_item(item, start=False, load=True):
 @eva.core.save
 def save():
     db = eva.core.db()
+    if eva.core.config.db_update != 1:
+        db = db.connect()
     dbt = db.begin()
     try:
         for i, v in lvars_by_full_id.items():
@@ -230,6 +232,8 @@ def save():
                 pass
     finally:
         dbt.commit()
+        if eva.core.config.db_update != 1:
+            db.close()
     controller_lock.acquire()
     try:
         for i, v in remote_ucs.items():
