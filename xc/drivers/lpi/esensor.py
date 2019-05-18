@@ -1,14 +1,15 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __description__ = "Enhanced sensor LPI"
-__api__ = 4
+__api__ = 5
 
 __logic__ = 'single and group polling'
 
 __features__ = [
-    'value', 'value_mp', 'mu_value', 'mu_value_mp', 'port_get', 'aao_get', 'cfg'
+    'value', 'value_mp', 'mu_value', 'mu_value_mp', 'port_get', 'aao_get',
+    'cfg', 'events'
 ]
 
 __config_help__ = [{
@@ -94,7 +95,7 @@ class LPI(GenericLPI):
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
-        if self.phi.aao_get:
+        if self.phi._is_required.aao_get:
             _state_in = self.phi.get(cfg=phi_cfg, timeout=timeout)
             if not _state_in: return self.state_result_error(_uuid)
         else:

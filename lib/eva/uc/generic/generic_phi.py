@@ -34,6 +34,8 @@ from eva.uc.driverapi import handle_phi_event
 from time import time
 from time import sleep
 
+from types import SimpleNamespace
+
 
 class PHI(object):
     """
@@ -65,16 +67,48 @@ class PHI(object):
         self.__get_help = mod.__get_help__
         self.__set_help = mod.__set_help__
         self.__help = mod.__help__
+        if isinstance(self.__features, str):
+            self.__features = [self.__features]
+        else:
+            self.__features = sorted(self.__features)
+        if isinstance(self.__required, str):
+            self.__required = [self.__required]
+        else:
+            self.__required = sorted(self.__required)
+        self._is_required = SimpleNamespace(
+            aao_get=False,
+            aao_set=False,
+            action=False,
+            events=False,
+            port_get=False,
+            port_set=False,
+            status=False,
+            value=False)
+        self._has_feature = SimpleNamespace(
+            aao_get=False,
+            aao_set=False,
+            action=False,
+            cache=False,
+            events=False,
+            port_get=False,
+            port_set=False,
+            status=False,
+            universal=False,
+            value=False)
+        for f in self.__required:
+            try:
+                setattr(self._is_required, f, True)
+            except:
+                self.log_error('feature unknown: {}'.format(f))
+            if f not in self.__features:
+                self.__features.append(f)
+        for f in self.__features:
+            try:
+                setattr(self._has_feature, f, True)
+            except:
+                self.log_error('feature unknown: {}'.format(f))
         if kwargs.get('info_only'):
             return
-        # True if the equipment can query/modify only all
-        # ports at once and can not work with a single ports
-        self.aao_get = False
-        self.aao_set = False
-        if self.__required:
-            self._state_full = 'value' in self.__required
-        else:
-            self._state_full = False
         self.ready = True
         # cache time, useful for aao_get devices
         self._cache_set = 0
@@ -110,7 +144,7 @@ class PHI(object):
         self._cache_data = None
 
     def get(self, port=None, cfg=None, timeout=0):
-        return None, None if self.state_full else None
+        return None, None if self._is_required.value else None
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
         return False

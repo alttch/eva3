@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.0"
+__version__ = "1.2.2"
 __description__ = "Basic LPI for simple devices"
-__api__ = 4
+__api__ = 5
 
 __logic__ = 'basic status on/off'
 
@@ -57,7 +57,7 @@ class LPI(GenericLPI):
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
-        if self.phi.aao_get and not _state_in:
+        if self.phi._is_required.aao_get and not _state_in:
             _state_in = self.phi.get(
                 cfg=phi_cfg, timeout=(timeout + time_start - time()))
             if not _state_in: return self.state_result_error(_uuid)
@@ -156,7 +156,7 @@ class LPI(GenericLPI):
             _port = [port]
         else:
             _port = port
-        if self.phi.aao_set:
+        if self.phi._is_required.aao_set:
             ports_to_set = []
             data_to_set = []
         for p in _port:
@@ -165,8 +165,8 @@ class LPI(GenericLPI):
                 _status = 1 - status
             else:
                 _status = status
-            state = (_status, value) if self.phi._state_full else _status
-            if self.phi.aao_set:
+            state = (_status, value) if self.phi._is_required.value else _status
+            if self.phi._is_required.aao_set:
                 ports_to_set.append(_port)
                 data_to_set.append(_status)
             else:
@@ -178,7 +178,7 @@ class LPI(GenericLPI):
                 if set_result is False or set_result is None:
                     return self.action_result_error(
                         _uuid, msg='port %s set error' % _port)
-        if self.phi.aao_set:
+        if self.phi._is_required.aao_set:
             set_result = self.phi.set(
                 ports_to_set, data_to_set, timeout=timeout)
             if set_result is False or set_result is None:

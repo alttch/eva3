@@ -31,13 +31,14 @@ the next fields are processed by controller, so make them exactly as required
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
 
- * **port_get** get single port data
- * **port_set** set single port data
  * **aao_get** get and process all ports at once
  * **aao_set** set all ports at once
+ * **action** unit actions
+ * **events** event processing
+ * **port_get** get single port data
+ * **port_set** set single port data
  * **status** process item status
  * **value** process item values
- * **action** unit actions
 
 * **__mods_required__** required python modules (not included neither in
   standard Python install nor in EVA ICS)
@@ -45,13 +46,13 @@ the next fields are processed by controller, so make them exactly as required
 * **__lpi_default__** if specified, the default driver will be created for this
   PHI when loaded.
 
-* **__features__**      own features provided (list):
+* **__features__**      own features provided (list, features from __required__
+  are automatically included):
 
- * **port_get** get single port data
- * **port_set** set single port data
- * **aao_get** get all ports at once (if no port is specified)
- * **aao_set** set all ports at once (if list of ports and
-   list of data is given)
+ * **aao_get** PHI can return state of all ports at once but can work with a
+   single ports as well
+ * **aao_set** PHI can set state of all ports at once but can work with a
+   single ports as well
  * **universal** PHI is universal and process **cfg** in requests.
  * **cache** PHI supports state caching (useful for slow devices)
 
@@ -165,11 +166,6 @@ loading the module.
 
 If PHI methods get/set can't work with single ports at all (e.g. equipment
 returns state of all ports at once only), constructor should set variables:
-
-* **self.aao_get=True** tells LPI the returned with PHI.get method data will
-  always contain all port states even if the port is specified in **get**.
-* **self.aao_set=True** asks LPI to collect as much data to set as possible, and
-  then call PHI **set** method
 
 The parent constructor sets the variable **self.phi_cfg** to phi_cfg or to {},
 so it's safe to work with it with *self.phi_cfg.get(cfgvar)*.
@@ -430,7 +426,6 @@ module.
         # ....
         # it's recommended to force aao_get in Modbus PHI to let it read states
         # with one modbus request
-        self.aao_get = True
         self.modbus_port = self.phi_cfg.get('port')
         # check in constructor if the specified modbus port is defined
         if not modbus.is_port(self.modbus_port):
@@ -502,8 +497,8 @@ Methods available:
     @phi_constructor
     def __init__(self, **kwargs):
         # ....
-        # it's recommended to force aao_get in Modbus PHI to let it read states
-        # with one modbus request
+        # it's recommended to force aao_get in Modbus PHI (list it in
+        # __required__) to let it read states # with one modbus request
         self.owfs_bus = self.phi_cfg.get('owfs')
         # check in constructor if the specified modbus port is defined
         if not owfs.is_bus(self.owfs_bus):
