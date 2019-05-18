@@ -657,6 +657,7 @@ def serialize():
     d['sensors'] = serialize_sensors(full=True)
     d['sensors_config'] = serialize_sensors(config=True)
     d['mu_config'] = serialize_mu(config=True)
+    d['actions'] = serialize_actions()
     return d
 
 
@@ -767,13 +768,8 @@ def exec_unit_action(unit,
 
 @with_item_lock
 @eva.core.dump
-def dump(item_id=None):
-    if item_id: return items_by_full_id[item_id]
-    else:
-        return {
-            'uc_items': items_by_full_id,
-            'uc_actions': Q.actions_by_item_full_id
-        }
+def dump():
+    return serialize()
 
 
 def init():
