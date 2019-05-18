@@ -156,7 +156,7 @@ class LPI(GenericLPI):
             _port = [port]
         else:
             _port = port
-        if self.phi._is_required.aao_set:
+        if self.phi._has_feature.aao_set:
             ports_to_set = []
             data_to_set = []
         for p in _port:
@@ -166,9 +166,9 @@ class LPI(GenericLPI):
             else:
                 _status = status
             state = (_status, value) if self.phi._is_required.value else _status
-            if self.phi._is_required.aao_set:
+            if self.phi._has_feature.aao_set:
                 ports_to_set.append(_port)
-                data_to_set.append(_status)
+                data_to_set.append(state)
             else:
                 set_result = self.phi.set(
                     _port,
@@ -178,7 +178,7 @@ class LPI(GenericLPI):
                 if set_result is False or set_result is None:
                     return self.action_result_error(
                         _uuid, msg='port %s set error' % _port)
-        if self.phi._is_required.aao_set:
+        if self.phi._has_feature.aao_set:
             set_result = self.phi.set(
                 ports_to_set, data_to_set, timeout=timeout)
             if set_result is False or set_result is None:
