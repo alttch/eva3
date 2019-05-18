@@ -40,6 +40,15 @@ REQUIRED="realpath python3 sha256sum curl jq"
 
 MAX_START_WAIT=180
 
+function on_exit {
+  local err=$?
+  if [ $err -ne 0 ]; then
+    echo
+    ./sbin/eva-control stop
+    echo "SETUP FAILED, CODE: $err"
+  fi
+}
+
 function usage {
     echo "Usage: easy-setup [--force] [--clear] [--auto] [--local-only] [-u USER]"
     echo "          [--link] [--mqtt user:password@host:port/space] [-p {uc,lm,sfa,all}]"
@@ -497,7 +506,7 @@ do
         ;;
         -h|--help)
             usage
-            exit 99
+            exit 0
         ;;
         --auto)
             INTERACTIVE=0
@@ -545,13 +554,15 @@ done
 
 if [ "x$SKIP_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
     echo "Please run this script as root"
-    exit 98
+    exit 1
 fi
 
 if [ $LINK -eq 1 ] && [ "x$MQTT_HOST" = "x" ]; then
     echo "Linking requested but no MQTT HOST specified"
     option_error
 fi
+
+trap on_exit exit
 
 if [ ! $SKIP_CHECK ]; then
     e=0
@@ -560,7 +571,6 @@ if [ ! $SKIP_CHECK ]; then
     done
     [ $e -ne 0 ] && exit 1
 fi
-
 
 D=`realpath $0`
 EVA_DIR=`dirname ${D}`
