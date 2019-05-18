@@ -298,12 +298,11 @@ def create_dump(e='request', msg=''):
         result.update({'reason': {'event': e, 'info': str(msg)}})
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
+        dmp = format_json(
+            result, minimal=not config.development, unpicklable=True).encode()
         gzip.open(filename, 'w')
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
-        gzip.open(filename, 'a').write(
-            format_json(
-                result, minimal=not config.development,
-                unpicklable=True).encode())
+        gzip.open(filename, 'a').write(dmp)
         logging.warning(
             'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
     except:

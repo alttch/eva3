@@ -537,6 +537,7 @@ def reload_macro_function(file_name=None, fname=None, rebuild=True):
 def get_macro_function(fname=None):
     return eva.lm.plc.get_macro_function(fname)
 
+
 def get_macro_source(macro_id):
     if isinstance(macro_id, str):
         macro = get_macro(macro_id)
@@ -550,7 +551,7 @@ def get_macro_source(macro_id):
     if os.path.isfile(file_name):
         code = open(file_name).read()
         if code.startswith('# SFC'):
-            src_type ='sfc-json'
+            src_type = 'sfc-json'
             l = code.split('\n')
             jcode = ''
             for i in range(3, len(l)):
@@ -564,6 +565,7 @@ def get_macro_source(macro_id):
         return src_type, code
     else:
         return None, None
+
 
 @with_item_lock
 def load_macros():
@@ -1161,18 +1163,13 @@ def exec_macro(macro,
 
 
 @eva.core.dump
-def dump(item_id=None):
-    if item_id: return items_by_full_id[item_id]
+def dump():
     rcs = {}
     for i, v in remote_ucs.copy().items():
         rcs[i] = v.serialize()
-    else:
-        return {
-            'lm_items': items_by_full_id,
-            'remote_ucs': rcs,
-            'macros': macros_by_full_id,
-            'dm_rules': dm_rules
-        }
+    result = serialize()
+    result.update({'remote_ucs': rcs})
+    return result
 
 
 def init():
