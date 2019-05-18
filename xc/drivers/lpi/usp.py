@@ -1,13 +1,15 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.0"
+__version__ = "1.2.2"
 __description__ = "Single port unit LPI"
-__api__ = 4
+__api__ = 5
 
 __logic__ = 'single port, basic status on/off'
 
-__features__ = ['status', 'port_get', 'port_set', 'events', 'usp', 'value']
+__features__ = [
+    'status', 'port_get', 'port_set', 'events', 'usp', 'value', 'action'
+]
 
 __config_help__ = []
 
@@ -67,10 +69,10 @@ class LPI(GenericLPI):
         except:
             return self.action_result_error(_uuid, msg='status is not integer')
         # if status not in [0, 1]:
-            # return self.action_result_error(
-                # _uuid, msg='status is not in range 0..1')
+        # return self.action_result_error(
+        # _uuid, msg='status is not in range 0..1')
         _port = 1
-        if self.phi._state_full:
+        if self.phi._is_required.value:
             state = status, value
         else:
             state = status

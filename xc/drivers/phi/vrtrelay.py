@@ -1,15 +1,15 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.0"
+__version__ = "1.2.2"
 __description__ = "Emulates 16-port relay"
 
 __equipment__ = 'virtual'
-__api__ = 4
-__required__ = ['port_get', 'port_set']
+__api__ = 5
+__required__ = ['port_get', 'port_set', 'action']
 __mods_required__ = []
 __lpi_default__ = 'basic'
-__features__ = ['port_get', 'port_set', 'aao_set', 'aao_get']
+__features__ = ['aao_set', 'aao_get']
 __config_help__ = [{
     'name': 'default_status',
     'help': 'ports status on load (default: 0)',
@@ -43,7 +43,8 @@ class PHI(GenericPHI):
     def __init__(self, **kwargs):
         d = self.phi_cfg.get('default_status')
         if self.phi_cfg.get('state_full'):
-            self._state_full = True
+            self._has_feature.value = True
+            self._is_required.value = True
         if d is None: d = 0
         else:
             try:
@@ -52,7 +53,7 @@ class PHI(GenericPHI):
                 d = -1
         self.data = {}
         for i in range(1, 17):
-            self.data[str(i)] = (d, '') if self._state_full else d
+            self.data[str(i)] = (d, '') if self._is_required.value else d
 
     def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data
@@ -76,7 +77,7 @@ class PHI(GenericPHI):
                 d = data[i]
             else:
                 d = data
-            if self._state_full:
+            if self._is_required.value:
                 d, value = d
             try:
                 _data = int(d)
@@ -84,7 +85,8 @@ class PHI(GenericPHI):
                 return False
             if not _port in self.data:
                 return False
-            self.data[_port] = (_data, value) if self._state_full else _data
+            self.data[_port] = (_data,
+                                value) if self._is_required.value else _data
             eva.benchmark.report('ACTION', _data, end=True)
 
         if self.phi_cfg.get('event_on_set'):
@@ -111,13 +113,13 @@ class PHI(GenericPHI):
         try:
             port, val = cmd.split('=')
             port = int(port)
-            if self._state_full:
+            if self._is_required.value:
                 if val.find(',') != -1:
                     val, value = val.split(',', 1)
                 else:
                     value = ''
             val = int(val)
-            if self._state_full:
+            if self._is_required.value:
                 state = val, value
             else:
                 state = val
