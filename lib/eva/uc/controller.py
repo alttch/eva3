@@ -225,6 +225,8 @@ def append_item(item, start=False, load=True):
 @with_item_lock
 def save():
     db = eva.core.db()
+    if eva.core.config.db_update != 1:
+        db = db.connect()
     dbt = db.begin()
     try:
         for i, v in items_by_full_id.items():
@@ -241,6 +243,8 @@ def save():
                 pass
     finally:
         dbt.commit()
+        if eva.core.config.db_update != 1:
+            db.close()
     for f in configs_to_remove:
         try:
             os.unlink(f)
