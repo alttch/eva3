@@ -45,6 +45,7 @@ function on_exit {
   if [ $err -ne 0 ]; then
     echo
     ./sbin/eva-control stop
+    echo
     echo "SETUP FAILED, CODE: $err"
   fi
 }
