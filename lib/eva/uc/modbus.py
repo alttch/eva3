@@ -26,6 +26,8 @@ import threading
 
 from pyaltt import background_job
 
+with_ports_lock = eva.core.RLocker('uc/modbus')
+
 config = SimpleNamespace(slave={'tcp': [], 'udp': [], 'serial': []})
 
 slave_regsz = 10000
@@ -120,10 +122,12 @@ def unregister_handler(addr, f, register='h'):
 
 
 # is modbus port with the given ID exist
+@with_ports_lock
 def is_port(port_id):
     return port_id in ports
 
 
+@with_ports_lock
 def get_port(port_id, timeout=None):
     """Get modbus port with the choosen ID
 
@@ -154,6 +158,7 @@ def get_port(port_id, timeout=None):
 # private functions
 
 
+@with_ports_lock
 def serialize(port_id=None, config=False):
     if port_id:
         if port_id in ports:
@@ -172,6 +177,7 @@ def dump():
     return result
 
 
+@with_ports_lock
 def create_modbus_port(port_id, params, **kwargs):
     """Create new modbus port
 
@@ -201,6 +207,7 @@ def create_modbus_port(port_id, params, **kwargs):
         return True
 
 
+@with_ports_lock
 def destroy_modbus_port(port_id):
     if port_id in ports:
         ports[port_id].stop()
@@ -400,9 +407,12 @@ def start():
 
 
 # started by uc controller
+@with_ports_lock
 def stop():
     for k, p in ports.copy().items():
         p.stop()
+    if eva.core.config.db_update != 0:
+        save()
 
 
 class ModbusPort(object):

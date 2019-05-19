@@ -27,6 +27,8 @@ phis = {}
 drivers = {}
 items_by_phi = {}
 
+with_drivers_lock = eva.core.RLocker('uc/driverapi')
+
 # public API functions, may be imported into PHI and LPI
 
 
@@ -81,6 +83,7 @@ def unlock(l):
     return eva.sysapi.api.unlock(eva.apikey.get_masterkey(), l='eva:phi:' + l)
 
 
+@with_drivers_lock
 def handle_phi_event(phi, port, data):
     if not data: return
     iph = items_by_phi.get(phi.phi_id)
@@ -93,10 +96,12 @@ def handle_phi_event(phi, port, data):
                 t.start()
 
 
+@with_drivers_lock
 def get_phi(phi_id):
     return phis.get(phi_id)
 
 
+@with_drivers_lock
 def get_driver(driver_id):
     driver = drivers.get(driver_id)
     if driver:
@@ -162,6 +167,7 @@ def _gen_phi_map(phi_id, pmap, action_map=False):
     return result
 
 
+@with_drivers_lock
 def get_map(phi_id=None, action_map=False):
     try:
         result = {}
@@ -177,6 +183,7 @@ def get_map(phi_id=None, action_map=False):
         return None
 
 
+@with_drivers_lock
 def unlink_phi_mod(mod):
     if mod.find('/') != -1 or mod == 'generic_phi': return False
     for k, p in phis.copy().items():
@@ -339,6 +346,7 @@ def list_lpi_mods():
     return sorted(result, key=lambda k: k['mod'])
 
 
+@with_drivers_lock
 def register_item_update(i):
     u = i.update_exec
     if not u or u[0] != '|' or u.find('.') == -1:
@@ -359,6 +367,7 @@ def register_item_update(i):
     return True
 
 
+@with_drivers_lock
 def unregister_item_update(i):
     u = i.update_exec
     if not u or u[0] != '|' or u.find('.') == -1:
@@ -388,6 +397,7 @@ def update_item(i, data):
     i.update(driver_state_in=data)
 
 
+@with_drivers_lock
 def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     if not phi_id: raise InvalidParameter('PHI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", phi_id):
@@ -444,6 +454,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     return phi
 
 
+@with_drivers_lock
 def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     if get_phi(phi_id) is None:
         raise ResourceNotFound(
@@ -500,6 +511,7 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     return lpi
 
 
+@with_drivers_lock
 def set_phi_prop(phi_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
@@ -525,6 +537,7 @@ def set_phi_prop(phi_id, p, v):
         return True
 
 
+@with_drivers_lock
 def unload_phi(phi_id):
     phi = get_phi(phi_id)
     if phi is None: raise ResourceNotFound
@@ -546,6 +559,7 @@ def unload_phi(phi_id):
     return True
 
 
+@with_drivers_lock
 def set_driver_prop(driver_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
@@ -570,6 +584,7 @@ def set_driver_prop(driver_id, p, v):
         return True
 
 
+@with_drivers_lock
 def unload_driver(driver_id):
     lpi = get_driver(driver_id)
     if lpi is None: raise ResourceNotFound
@@ -597,6 +612,7 @@ def serialize(full=False, config=False):
     }
 
 
+@with_drivers_lock
 def serialize_phi(full=False, config=False):
     result = []
     for k, p in phis.copy().items():
@@ -609,6 +625,7 @@ def serialize_phi(full=False, config=False):
     return result
 
 
+@with_drivers_lock
 def serialize_lpi(full=False, config=False):
     result = []
     for k in drivers.copy().keys():
@@ -686,6 +703,7 @@ def start():
             eva.core.log_traceback()
 
 
+@with_drivers_lock
 def stop():
     for k, p in drivers.items():
         try:
@@ -699,3 +717,5 @@ def stop():
         except Exception as e:
             logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()
+    if eva.core.config.db_update != 0:
+        save()
