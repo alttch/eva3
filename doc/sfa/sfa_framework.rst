@@ -844,6 +844,21 @@ Parameters:
 
 * **log_level** log processing level
 
+.. _sfw_eva_sfa_log_level_name:
+
+eva_sfa_log_level_name - get log level name
+-------------------------------------------
+
+
+
+.. code-block:: javascript
+
+    function eva_sfa_log_level_name(log_level)
+
+Parameters:
+
+* **log_level** log level id
+
 .. _sfw_eva_sfa_log_start:
 
 eva_sfa_log_start - start log processing
@@ -870,8 +885,8 @@ Utility functions
 
 .. _sfw_eva_sfa_chart:
 
-eva_sfa_chart - displays a chart
---------------------------------
+eva_sfa_chart - display a chart
+-------------------------------
 
 To work with charts you should include Chart.js library, which is located in file lib/chart.min.js (ui folder).
 

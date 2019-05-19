@@ -571,15 +571,14 @@ function eva_sfa_change_log_level(log_level) {
 /**
  * get log level name
  *
- * @param lid - log level id
+ * @param log_level - log level id
  */
-
 function eva_sfa_log_level_name(log_level) {
   return eva_sfa_log_level_names[log_level];
 }
 
 /**
- * displays a chart
+ * display a chart
  *
  * To work with charts you should include Chart.js library, which is located in
  * file lib/chart.min.js (ui folder).
