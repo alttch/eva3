@@ -229,9 +229,16 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             return super().process_result(result, code, api_func, itype, a)
 
     def prepare_result_dict(self, data, api_func, itype):
-        if api_func != 'status_controller':
+        if api_func == 'status_controller':
+            return self.prepare_controller_status_dict(data)
+        elif api_func == 'result' and 'created' in data:
+            from datetime import datetime
+            for x in data.keys():
+                data[x] = '{:.7f} | {}'.format(data[x],
+                                               datetime.fromtimestamp(data[x]))
             return super().prepare_result_dict(data, api_func, itype)
-        return self.prepare_controller_status_dict(data)
+        else:
+            return super().prepare_result_dict(data, api_func, itype)
 
     def setup_parser(self):
         super().setup_parser()
