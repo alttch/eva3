@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+trap '' HUP
+
 CONTROLLER=$1
 PROCESS=$2
 
