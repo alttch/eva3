@@ -27,6 +27,8 @@ env = {}
 
 iec_functions = {}
 
+with_exts_lock = eva.core.RLocker('lm/extapi')
+
 # extension functions
 
 
@@ -64,10 +66,12 @@ def ext_constructor(f):
 # internal functions
 
 
+@with_exts_lock
 def get_ext(ext_id):
     return exts.get(ext_id)
 
 
+@with_exts_lock
 def rebuild_env():
     global env, iec_functions
     _env = {}
@@ -147,6 +151,7 @@ def list_mods():
     return sorted(result, key=lambda k: k['mod'])
 
 
+@with_exts_lock
 def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
     if not ext_id: raise InvalidParameter('ext id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", ext_id):
@@ -190,6 +195,7 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
     return ext
 
 
+@with_exts_lock
 def unload_ext(ext_id):
     ext = get_ext(ext_id)
     if ext is None: raise ResourceNotFound
@@ -203,6 +209,7 @@ def unload_ext(ext_id):
         return False
 
 
+@with_exts_lock
 def serialize(full=False, config=False):
     result = []
     for k, p in exts.copy().items():
@@ -215,6 +222,7 @@ def serialize(full=False, config=False):
     return result
 
 
+@with_exts_lock
 def set_ext_prop(ext_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
@@ -279,6 +287,7 @@ def start():
 
 
 @eva.core.stop
+@with_exts_lock
 def stop():
     for k, p in exts.items():
         try:
@@ -286,3 +295,5 @@ def stop():
         except Exception as e:
             logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()
+    if eva.core.config.db_update != 0:
+        save()
