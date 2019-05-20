@@ -12,7 +12,8 @@ import threading
 import logging
 import hashlib
 import uuid
-import os
+import string
+import random
 
 from collections import OrderedDict
 
@@ -417,9 +418,6 @@ def dict_merge(*args):
     return result
 
 
-def gen_random_hash():
-    s = hashlib.sha256()
-    s.update(os.urandom(1024))
-    s.update(str(uuid.uuid4()).encode())
-    s.update(os.urandom(1024))
-    return s.hexdigest()
+def gen_random_str(length=64):
+    symbols = string.ascii_letters + '0123456789'
+    return ''.join(random.choice(symbols) for i in range(length))

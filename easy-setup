@@ -36,7 +36,7 @@ REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 sha256sum curl jq"
+REQUIRED="realpath python3 curl jq"
 
 MAX_START_WAIT=180
 
@@ -608,9 +608,9 @@ if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
     APPEND=1
 fi
 
-[ $MASTERKEY ] || MASTERKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-[ $DEFAULTKEY ] || DEFAULTKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-[ $OPKEY ] || OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+[ $MASTERKEY ] || MASTERKEY=`tr -cd '[:alnum:]' < /dev/urandom | dd if=/dev/stdin count=32|head -c64`
+[ $DEFAULTKEY ] || DEFAULTKEY=`tr -cd '[:alnum:]' < /dev/urandom | dd if=/dev/stdin count=32|head -c64`
+[ $OPKEY ] || OPKEY=`tr -cd '[:alnum:]' < /dev/urandom | dd if=/dev/stdin count=32|head -c64`
 
 if [ $INTERACTIVE -eq 1 ]; then
     echo

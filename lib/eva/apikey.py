@@ -23,6 +23,7 @@ from eva.core import userdb
 
 from eva.tools import netacl_match
 from eva.tools import val_to_boolean
+from eva.tools import gen_random_str
 
 from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import ResourceNotFound
@@ -529,7 +530,7 @@ def serialized_acl(k):
 def add_api_key(key_id=None, save=False):
     if key_id is None: raise FunctionFailed
     if key_id in keys_by_id: raise ResourceAlreadyExists
-    key_hash = gen_random_hash()
+    key_hash = gen_random_str()
     key = APIKey(key_hash, key_id)
     key.master = False
     key.dynamic = True
@@ -568,7 +569,7 @@ def regenerate_key(key_id, k=None, save=False):
         raise FunctionFailed('Master and static keys can not be changed')
     key = keys_by_id[key_id]
     old_key = key.key
-    key.set_key(gen_random_hash() if k is None else k)
+    key.set_key(gen_random_str() if k is None else k)
     keys[key.key] = keys.pop(old_key)
     key.set_modified(save)
     return key.key
@@ -648,11 +649,3 @@ def save():
 
 def init():
     pass
-
-
-def gen_random_hash():
-    s = hashlib.sha256()
-    s.update(os.urandom(1024))
-    s.update(str(uuid.uuid4()).encode())
-    s.update(os.urandom(1024))
-    return s.hexdigest()
