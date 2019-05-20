@@ -1,7 +1,7 @@
 import time
 import logging
 import eva.core
-from eva.tools import gen_random_hash
+from eva.tools import gen_random_str
 from functools import wraps
 from pyaltt import background_worker
 
@@ -34,7 +34,7 @@ def need_tokens_enabled(f):
 def append_token(key_id, user=None):
     i = 0
     while True:
-        token = 'token:' + gen_random_hash()
+        token = 'token:' + gen_random_str()
         if token not in tokens:
             break
         i += 1
