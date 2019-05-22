@@ -2,6 +2,8 @@ EVA ICS v3. https://www.eva-ics.com/
 
 Builds: https://get.eva-ics.com/3.2.2/stable/
 
+Install instructions: https://www.eva-ics.com/download
+
 Documentation: https://www.eva-ics.com/doc
 
 EVA ICS is a platform for automated control and monitoring systems development,
