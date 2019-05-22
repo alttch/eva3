@@ -400,6 +400,9 @@ class API_Logger(object):
         if func.startswith('set_') or func.endswith('_set'):
             fp = p.get('p')
             if fp in ['key', 'masterkey', 'password']: p[fp] = '<hidden>'
+        elif func == 'login':
+            if 'p' in p: p['p'] = '<hidden>'
+            if 'a' in p: p['a'] = '<hidden>'
         fplist = fp_hide.get(func)
         if fplist:
             for fp in fplist:
