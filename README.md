@@ -16,7 +16,7 @@ Using MQTT server, EVA ICS allows to set up single IoT/IIoT management node
 and then easily scale it to your own automation Cloud, where nodes and
 components discover each other automatically.
 
-You design IoT set up. EVA ICS builds it for you.
+You design IoT setup. EVA ICS builds it for you.
 
 ![EVA shell - best IoT CLI tool](doc/eva-shell.png?raw=true "Eva
 shell - best IoT CLI tool")
