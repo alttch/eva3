@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DEFAULT_TIMEOUT=5
+DEFAULT_TIMEOUT=15
 
 # author     :  Altertech Group, http://www.altertech.com/
 # copyright  :  Copyright (C) 2018 Altertech Group
