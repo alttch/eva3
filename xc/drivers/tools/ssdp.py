@@ -1,9 +1,14 @@
+__author__ = "Altertech Group, https://www.altertech.com/"
+__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__license__ = "Apache License 2.0"
+__version__ = "3.2.3"
+
 import socket
 import logging
 import netifaces
 
-# from eva.uc.driverapi import get_timeout
-# from eva.uc.driverapi import log_traceback
+from eva.uc.driverapi import get_timeout
+from eva.uc.driverapi import log_traceback
 
 
 def discover(st,
@@ -51,8 +56,8 @@ def discover(st,
             addr, broadcast = inet[0]['addr'], inet[0]['broadcast']
         except:
             logging.debug(
-                    'ssdp scan: skipping interface {}, no ip addr or broadcast'.
-                    format(iface))
+                'ssdp scan: skipping interface {}, no ip addr or broadcast'.
+                format(iface))
             continue
         logging.debug('ssdp scan {}:{}'.format(iface, addr))
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -87,10 +92,11 @@ def discover(st,
             pass
         except:
             log_traceback()
-            logging.error('ssdp scan error ({}:{}:{}/{})'.format(iface, addr, port, st))
+            logging.error('ssdp scan error ({}:{}:{}/{})'.format(
+                iface, addr, port, st))
     return result
 
 
-import json
-print(json.dumps(discover('ssdp:all', timeout=10), indent=2, sort_keys=True))
+# import json
+# print(json.dumps(discover('ssdp:all', timeout=10), indent=2, sort_keys=True))
 # print(discover('upnp:rootdevice', timeout=2))
