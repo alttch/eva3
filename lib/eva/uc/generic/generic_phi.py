@@ -194,6 +194,7 @@ class PHI(object):
             d['author'] = self.__author
             d['license'] = self.__license
             d['description'] = self.__description
+            d['can_discover'] = hasattr(self, 'discover')
             d['version'] = self.__version
             d['api'] = self.__api_version
             d['oid'] = self.oid
