@@ -6,6 +6,11 @@
  */
 
 /**
+ * Framework version
+ */
+eva_sfa_framework_version = "3.2.3";
+
+/**
  * Should always contain authentication login or API will be unable
  * to reconnect in case of e.g. server reboot
  */
@@ -138,8 +143,7 @@ eva_sfa_tsdiff = null;
 
 /**
  * WebSocket mode if true, is set by eva_sfa_init().
- * Setting this to false (after calling eva_sfa_init()) will force
- * AJAX mode
+ * Setting this to false will force AJAX mode
  */
 eva_sfa_ws_mode = true;
 
@@ -159,7 +163,8 @@ eva_sfa_state_updates = true;
  * Initializes eva_sfa javascript API
  * automatically sets WebSocket or AJAX mode depending on the browser features.
  *
- * Always call this function at your program start
+ * The function is called automatically after script is loaded or can be
+ * re-called manually later
  */
 function eva_sfa_init() {
   if (window.WebSocket) {
@@ -1400,3 +1405,6 @@ function eva_sfa_uuidv4() {
   });
   return uuid;
 }
+
+// init
+eva_sfa_init();
