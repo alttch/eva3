@@ -158,6 +158,14 @@ function create_operator_key {
     return 0
 }
 
+function create_operator_user {
+    local P=$1
+    ./sbin/eva-tinyapi -C $P -F destroy_user u=operator > /dev/null 2>&1
+    ./sbin/eva-tinyapi -C $P -F create_user \
+        u=operator p=${OPPASSWD} a=operator > /dev/null 2>&1 || return 1
+    return 0
+}
+
 function create_default_key {
     local P=$1
     local ALLOW=$2
@@ -611,12 +619,16 @@ fi
 [ $MASTERKEY ] || MASTERKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
 [ $DEFAULTKEY ] || DEFAULTKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
 [ $OPKEY ] || OPKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
+[ $OPPASSWD ] || OPPASSWD=`(tr -cd '[:alnum:]' < /dev/urandom | head -c16) 2>/dev/null`
 
 if [ $INTERACTIVE -eq 1 ]; then
     echo
     echo "Your masterkey: ${MASTERKEY}"
     echo "Your controller default key: ${DEFAULTKEY}"
     echo "Your operator key: ${OPKEY}"
+    echo
+    echo "Default user: operator"
+    echo "Password: ${OPPASSWD}"
     echo
     cat << EOF
 WARNING: If you want to run some components under restricted users, create
@@ -883,6 +895,8 @@ EOF
     echo "Creating SFA keys"
     create_operator_key sfa || exit 21
     create_default_key sfa || exit 22
+    echo "Creating SFA operator user"
+    create_operator_user sfa || exit 21
     save_controller_state sfa || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
@@ -982,6 +996,9 @@ echo
 echo "MASTERKEY: ${MASTERKEY}"
 echo "Controller default key: ${DEFAULTKEY}"
 echo "Operator key: ${OPKEY}"
+echo
+echo "Default user: operator"
+echo "Password: ${OPPASSWD}"
 echo
 
 mkdir -p backup
