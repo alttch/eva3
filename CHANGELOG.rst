@@ -1,6 +1,14 @@
 EVA ICS CHANGELOG
 *****************
 
+3.2.3 (TBA)
+===========
+
+SFA
+---
+
+    * easy-setup now creates default user (operator)
+
 3.2.2 (2019-05-21)
 ==================
 
