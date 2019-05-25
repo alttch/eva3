@@ -9,6 +9,12 @@ import glob
 import logging
 import jinja2
 import requests
+import yaml
+
+try:
+    yaml.warnings({'YAMLLoadWarning': False})
+except:
+    pass
 
 from io import BytesIO
 
@@ -37,6 +43,7 @@ from eva.api import api_result_accepted
 
 from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
+from eva.api import cp_bad_request
 from eva.api import cp_api_404
 
 from eva.api import api_need_master
@@ -1269,6 +1276,32 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         eva.core.log_traceback()
         return 'Server error'
 
+def serve_json_yml(fname):
+    infile = eva.core.dir_eva + '/ui/' + fname
+    if not os.path.isfile(infile):
+        raise cp_api_404()
+    data = open(eva.core.dir_eva + '/ui/' + fname).read()
+    cas = cherrypy.serving.request.params.get('as')
+    if cas:
+        data = yaml.load(data)
+        if cas == 'json':
+            data = format_json(data, minimal=not eva.core.config.development)
+            cherrypy.serving.response.headers['Content-Type'] = 'application/json'
+        elif cas in ['yml', 'yaml']:
+            data = yaml.dump(data, default_flow_style=False)
+            cherrypy.serving.response.headers['Content-Type'] = 'application/x-yaml'
+        elif cas == 'js':
+            var = cherrypy.serving.request.params.get('var')
+            if not var:
+                raise cp_bad_request('var not specified')
+            if eva.core.config.development:
+                data = '{} = {};'.format(var, format_json(data, minimal=False))
+            else:
+                data = '{}={}'.format(var, format_json(data, minimal=True))
+            cherrypy.serving.response.headers['Content-Type'] = 'application/javascript'
+        else:
+            raise cp_bad_request('Invalid "as" format')
+    return data.encode('utf-8')
 
 def j2_handler(*args, **kwargs):
     try:
@@ -1278,9 +1311,23 @@ def j2_handler(*args, **kwargs):
     return serve_j2(cherrypy.serving.request.path_info.replace('..', ''))
 
 
+def json_yml_handler(*args, **kwargs):
+    try:
+        del cherrypy.serving.response.headers['Content-Length']
+    except:
+        pass
+    return serve_json_yml(cherrypy.serving.request.path_info.replace('..', ''))
+
+
 def j2_hook(*args, **kwargs):
     if cherrypy.serving.request.path_info[-3:] == '.j2':
         cherrypy.serving.request.handler = j2_handler
+
+
+def json_yml_hook(*args, **kwargs):
+    if cherrypy.serving.request.path_info[-5:] in ['.json', 'yaml'] or \
+        cherrypy.serving.request.path_info[-4:] == '.yml':
+        cherrypy.serving.request.handler = json_yml_handler
 
 
 # ui and pvt
@@ -1288,11 +1335,13 @@ def j2_hook(*args, **kwargs):
 
 class UI_ROOT():
 
-    _cp_config = {'tools.j2.on': True}
+    _cp_config = {'tools.j2.on': True, 'tools.jconverter.on': True}
 
     def __init__(self):
         cherrypy.tools.j2 = cherrypy.Tool(
             'before_handler', j2_hook, priority=100)
+        cherrypy.tools.jconverter = cherrypy.Tool(
+            'before_handler', json_yml_hook, priority=100)
 
     @cherrypy.expose
     def index(self, **kwargs):
