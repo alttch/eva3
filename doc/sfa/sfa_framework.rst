@@ -67,7 +67,7 @@ Framework version
 
 .. code-block:: javascript
 
-    eva_sfa_framework_version = "3.2.3";
+    eva_sfa_framework_version = '3.2.3';
 
 
 .. _sfw_eva_sfa_server_info:
@@ -80,6 +80,18 @@ After successfull login contains server info (API test function output). Data is
 .. code-block:: javascript
 
     eva_sfa_server_info = null;
+
+
+.. _sfw_eva_sfa_framework_build:
+
+eva_sfa_framework_build
+-----------------------
+
+Framework build
+
+.. code-block:: javascript
+
+    eva_sfa_framework_build = 2019052502;
 
 
 .. _sfw_eva_sfa_tsdiff:
