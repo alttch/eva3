@@ -58,6 +58,18 @@ General functions and variables
 ===============================
 
 
+.. _sfw_eva_sfa_framework_version:
+
+eva_sfa_framework_version
+-------------------------
+
+Framework version
+
+.. code-block:: javascript
+
+    eva_sfa_framework_version = "3.2.3";
+
+
 .. _sfw_eva_sfa_server_info:
 
 eva_sfa_server_info
@@ -197,7 +209,7 @@ WebSocket event handler. Contains function which's called as f(data) when ws eve
 eva_sfa_ws_mode
 ---------------
 
-WebSocket mode if true, is set by eva_sfa_init(). Setting this to false (after calling eva_sfa_init()) will force AJAX mode
+WebSocket mode if true, is set by eva_sfa_init(). Setting this to false will force AJAX mode
 
 .. code-block:: javascript
 
@@ -230,7 +242,7 @@ eva_sfa_init - initialize Framework
 -----------------------------------
 
 Initializes eva_sfa javascript API automatically sets WebSocket or AJAX mode depending on the browser features.
-Always call this function at your program start
+The function is called automatically after script is loaded or can be re-called manually later
 
 .. code-block:: javascript
 
