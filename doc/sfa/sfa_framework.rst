@@ -359,7 +359,7 @@ Contains current API token after log in. Filled by framework automatically
 
 .. code-block:: javascript
 
-    eva_sfa_api_token = null;
+    eva_sfa_api_token = '';
 
 
 .. _sfw_eva_sfa_authorized_user:
@@ -387,6 +387,17 @@ True if framework engine is started and user is logged in, false if not. Should 
 
 
 
+
+.. _sfw_eva_sfa_erase_token_cookie:
+
+eva_sfa_erase_token_cookie - erase auth token cookie
+----------------------------------------------------
+
+It's recommended to call this function when login form is displayed to prevent old token caching
+
+.. code-block:: javascript
+
+    function eva_sfa_erase_token_cookie()
 
 .. _sfw_eva_sfa_start:
 
@@ -1040,7 +1051,8 @@ Framework start
     $(document).ready(function() {
         eva_sfa_cb_login_success = after_login;
         eva_sfa_cb_login_error = failed_login;
-        eva_sfa_init();
+        // as this is primary page, erase token cookie if set
+        eva_sfa_erase_token_cookie();
         // function ui_set_sensor will handle sensor event by the specified mask
         eva_sfa_register_update_state('sensor:greenhouse*/env/temp', ui_set_sensor);
         eva_sfa_register_update_state('sensor:greenhouse*/env/hum', ui_set_sensor);

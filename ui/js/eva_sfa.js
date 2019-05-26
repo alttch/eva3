@@ -40,7 +40,7 @@ eva_sfa_set_auth_cookies = true;
 /**
  * Contains current API token after log in. Filled by framework automatically
  */
-eva_sfa_api_token = null;
+eva_sfa_api_token = '';
 
 /**
  * Contains authorized user name. Filled by framework automatically
@@ -224,8 +224,18 @@ function eva_sfa_stop(cb) {
   eva_sfa_stop_engine();
   eva_sfa_logged_in = false;
   eva_sfa_api_call('logout', eva_sfa_prepare(), cb, cb);
-  eva_sfa_api_token = null;
   eva_sfa_authorized_user = null;
+  eva_sfa_erase_token_cookie();
+}
+
+/**
+ * erase auth token cookie
+ *
+ * It's recommended to call this function when login form is displayed to
+ * prevent old token caching
+ */
+function eva_sfa_erase_token_cookie() {
+  eva_sfa_api_token = '';
   _eva_sfa_set_token_cookie();
 }
 
@@ -1370,7 +1380,7 @@ function eva_sfa_cmp(a, b) {
 
 function eva_sfa_prepare(params) {
   var p = $.extend({}, params);
-  if (eva_sfa_api_token != null) {
+  if (eva_sfa_api_token) {
     p['k'] = eva_sfa_api_token;
   }
   return p;
@@ -1394,6 +1404,21 @@ function eva_sfa_read_cookie(name) {
     if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
   }
   return null;
+}
+
+function eva_sfa_read_cookie(name) {
+  var nameEQ = name + '=';
+  var ca = document.cookie.split(';');
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+    if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+  }
+  return null;
+}
+
+function eva_sfa_erase_cookie(name, path) {
+  create_cookie(name, '', -1, path);
 }
 
 function eva_sfa_uuidv4() {
