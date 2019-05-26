@@ -1259,7 +1259,10 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         raise cp_api_404()
     env = {}
     env['request'] = cherrypy.serving.request
-    k = cp_client_key(from_cookie=True)
+    try:
+        k = cp_client_key(from_cookie=True)
+    except:
+        k = None
     if k:
         server_info = api.test(k=k)[1]
     else:
@@ -1276,6 +1279,7 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         eva.core.log_traceback()
         return 'Server error'
 
+
 def serve_json_yml(fname):
     infile = eva.core.dir_eva + '/ui/' + fname
     if not os.path.isfile(infile):
@@ -1286,10 +1290,12 @@ def serve_json_yml(fname):
         data = yaml.load(data)
         if cas == 'json':
             data = format_json(data, minimal=not eva.core.config.development)
-            cherrypy.serving.response.headers['Content-Type'] = 'application/json'
+            cherrypy.serving.response.headers[
+                'Content-Type'] = 'application/json'
         elif cas in ['yml', 'yaml']:
             data = yaml.dump(data, default_flow_style=False)
-            cherrypy.serving.response.headers['Content-Type'] = 'application/x-yaml'
+            cherrypy.serving.response.headers[
+                'Content-Type'] = 'application/x-yaml'
         elif cas == 'js':
             var = cherrypy.serving.request.params.get('var')
             if not var:
@@ -1298,10 +1304,12 @@ def serve_json_yml(fname):
                 data = '{} = {};'.format(var, format_json(data, minimal=False))
             else:
                 data = '{}={}'.format(var, format_json(data, minimal=True))
-            cherrypy.serving.response.headers['Content-Type'] = 'application/javascript'
+            cherrypy.serving.response.headers[
+                'Content-Type'] = 'application/javascript'
         else:
             raise cp_bad_request('Invalid "as" format')
     return data.encode('utf-8')
+
 
 def j2_handler(*args, **kwargs):
     try:
