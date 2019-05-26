@@ -739,11 +739,11 @@ function eva_sfa_hi_qr(ctx, params) {
     url = document.location;
   }
   var user = params['user'];
-  if (!user) {
+  if (user === undefined) {
     user = eva_sfa_authorized_user;
   }
   var password = params['password'];
-  if (!password) {
+  if (password === undefined) {
     password = eva_sfa_password;
   }
   var size = params['size'];
