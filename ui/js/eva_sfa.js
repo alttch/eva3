@@ -1368,15 +1368,11 @@ function eva_sfa_cmp(a, b) {
 }
 
 function eva_sfa_prepare(params) {
-  if (params === null || params === undefined) {
-    var params = {};
-  } else {
-    var params = params;
-  }
+  var p = $.extend({}, params);
   if (eva_sfa_api_token != null) {
-    params['k'] = eva_sfa_api_token;
+    p['k'] = eva_sfa_api_token;
   }
-  return params;
+  return p;
 }
 
 function _eva_sfa_set_token_cookie() {
