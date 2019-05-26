@@ -1419,7 +1419,7 @@ function eva_sfa_create_cookie(name, value, days, path) {
 }
 
 function eva_sfa_erase_cookie(name, path) {
-  create_cookie(name, '', -1, path);
+  eva_sfa_create_cookie(name, '', -1, path);
 }
 
 function eva_sfa_uuidv4() {
