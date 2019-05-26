@@ -1316,6 +1316,7 @@ function _eva_sfa_deprecated(f1, f2) {
 }
 
 function eva_sfa_close_popup(ctx) {
+  clearTimeout(eva_sfa_popup_tick_closer);
   $(document).off('keydown');
   $('#' + ctx).hide();
   eva_sfa_popup_active = null;
@@ -1344,7 +1345,7 @@ function eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct) {
     txt = btn1text;
   }
   obj.html(txt + ' (' + ct + ')');
-  setTimeout(function() {
+  eva_sfa_popup_tick_closer = setTimeout(function() {
     eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct - 1);
   }, 1000);
 }
