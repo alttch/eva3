@@ -9,6 +9,7 @@ SFA
 
     * easy-setup now creates default user (operator)
     * "as" parameter for .json and .yml files changes their format on the flow
+    * eva_sfa_erase_token_cookie() function to make login pages more secure
 
 3.2.2 (2019-05-21)
 ==================
