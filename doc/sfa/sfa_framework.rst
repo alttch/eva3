@@ -1334,26 +1334,13 @@ Then register update event function:
         $('#' + $.escapeSelector(state.oid)).html('S: ' + state.value);
     }
 
-Multi-page interfaces
-=====================
+Multi-page interfaces, external authentication
+==============================================
 
-By default, the interface should be programmed in a single HTML/J2 document
-*ui/index.html* or *ui/index.j2*, however sometimes it's useful to split parts
-of the interface to different html page files.
+Primary page
+------------
 
-Each HTML document should initialize/login SFA framework to access its
-functions. However if *eva_sfa_set_auth_cookies* is set to *true*, the
-secondary page can log in user with the existing token:
-
-.. code-block:: javascript
-
-    eva_sfa_cb_login_error = function() {
-        // token is invalid or expired, redirect user to main page
-        document.location = '/ui/';
-    }
-    eva_sfa_start();
-
-If multi-page navigation includes navigation back to the main page, it should
+If multi-page navigation contains links back to the main page, it should
 perform a single authentication attempt to re-use existing token:
 
 .. code-block:: javascript
@@ -1372,6 +1359,30 @@ perform a single authentication attempt to re-use existing token:
         }
     }
     eva_sfa_start();
+
+The same method is used when client can authenticate itself with basic
+authentication on front-end sever or uses :doc:`EVA ICS Smartphone
+application</evahi>`
+
+Secondary pages
+---------------
+
+By default, the interface should be programmed in a single HTML/J2 document
+*ui/index.html* or *ui/index.j2*, however sometimes it's useful to split parts
+of the interface to different html page files.
+
+Each HTML document should initialize/login SFA framework to access its
+functions. However if *eva_sfa_set_auth_cookies* is set to *true*, the
+secondary page can log in user with the existing token:
+
+.. code-block:: javascript
+
+    eva_sfa_cb_login_error = function() {
+        // token is invalid or expired, redirect user to main page
+        document.location = '/ui/';
+    }
+    eva_sfa_start();
+
 
 Controlling reliability of the connection
 =========================================
