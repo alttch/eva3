@@ -202,6 +202,7 @@ function eva_sfa_start() {
   eva_sfa_api_call('login', q, eva_sfa_after_login, function(code, msg, data) {
     eva_sfa_logged_in = false;
     eva_sfa_stop_engine();
+    eva_sfa_erase_token_cookie();
     if (eva_sfa_cb_login_error !== null)
       eva_sfa_cb_login_error(code, msg, data);
   });
