@@ -1303,7 +1303,6 @@ The following example shows how to build a log viewer, similar to included in
           $('#logr').scrollTop($('#logr').prop('scrollHeight'));
         }
 
-        eva_sfa_init();
         eva_sfa_apikey="SECRET_KEY_JUST_FOR_EXAMPLE_DONT_STORE_KEYS_IN_JS";
         eva_sfa_cb_login_success = function(data) {
             eva_sfa_log_records_max = 100;
@@ -1335,7 +1334,7 @@ Then register update event function:
         $('#' + $.escapeSelector(state.oid)).html('S: ' + state.value);
     }
 
-Multi page interfaces
+Multi-page interfaces
 =====================
 
 By default, the interface should be programmed in a single HTML/J2 document
@@ -1348,10 +1347,29 @@ secondary page can log in user with the existing token:
 
 .. code-block:: javascript
 
-    eva_sfa_init();
     eva_sfa_cb_login_error = function() {
         // token is invalid or expired, redirect user to main page
         document.location = '/ui/';
+    }
+    eva_sfa_start();
+
+If multi-page navigation includes navigation back to the main page, it should
+perform a single authentication attempt to re-use existing token:
+
+.. code-block:: javascript
+
+    ui_first_auth = true;
+
+    eva_sfa_cb_login_error = function(code, msg, data) {
+        // show login form
+        // ..........
+        if (ui_first_auth) {
+            ui_first_auth = false;
+        } else {
+            // display login error
+            // e.g.
+            // $('login_error_msg').html(msg);
+        }
     }
     eva_sfa_start();
 

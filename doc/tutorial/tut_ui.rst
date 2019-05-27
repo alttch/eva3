@@ -125,8 +125,6 @@ unauthorized users, the additional .js files with such data may be served by
     
      // after the page is loaded
      $(document).ready(function() {
-       // initialize SFA Framework
-       eva_sfa_init();
        // erase token cookie if cached
        eva_sfa_erase_token_cookie();
        // after the authentication succeeds the main interface is displayed
