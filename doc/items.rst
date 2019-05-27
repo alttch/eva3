@@ -23,7 +23,7 @@ controller should be restarted to reload the configurations.
 Common item parameters
 ======================
 
-* **id** item ID, i.e. 'lamp1'. When using **simple**
+* **id** item ID, e.g. 'lamp1'. When using **simple**
   :ref:`layout<item_layout>`, must be unique within one controller, even if
   items are in different groups. This creates some complications when designing
   the whole installation architecture but allows to keep EVA configuration and
