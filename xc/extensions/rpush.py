@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 __description__ = "Push client for Roboger"
 __api__ = 5
 __mods_required__ = ['pyrpush']
@@ -91,9 +91,9 @@ class LMExt(GenericExt):
             log_traceback()
             self.ready = False
 
-    def push(self, media_file=None, **kwargs):
+    def push(self, msg=None, media_file=None, **kwargs):
         try:
-            return self.rpush.push(media_file, **kwargs)
+            return self.rpush.push(msg, media_file, **kwargs)
         except:
             log_traceback()
             return False
