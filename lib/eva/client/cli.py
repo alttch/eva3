@@ -846,6 +846,7 @@ class GenericCLI(GCLI):
                 for i in range(0, len(cmds)):
                     d = cmds[i]
                     if i and i < len(cmds): print()
+                    if not d: continue
                     if d[0] in ['q', 'quit', 'exit', 'bye'] or \
                             (d[0] in ['..', '/'] and parent_shell_name):
                         self.finish_interactive()
