@@ -1260,6 +1260,11 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
     env = {}
     env['request'] = cherrypy.serving.request
     try:
+        env['evaHI'] = cherrypy.serving.request.headers.get(
+            'User-Agent', '').find('evaHI ') == -1
+    except:
+        env['evaHI'] = False
+    try:
         k = cp_client_key(from_cookie=True)
     except:
         k = None
