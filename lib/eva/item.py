@@ -1611,13 +1611,15 @@ def item_match(item, item_ids, groups=None):
                     if match: return True
     return False
 
+
 __p_periods = {
     'S': 1,
     'T': 60,
     'H': 3600,
     'D': 86400,
     'W': 604800,
-    }
+}
+
 
 def get_state_history(a=None,
                       oid=None,
