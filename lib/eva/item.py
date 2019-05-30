@@ -1611,6 +1611,13 @@ def item_match(item, item_ids, groups=None):
                     if match: return True
     return False
 
+__p_periods = {
+    'S': 1,
+    'T': 60,
+    'H': 3600,
+    'D': 86400,
+    'W': 604800,
+    }
 
 def get_state_history(a=None,
                       oid=None,
@@ -1626,7 +1633,6 @@ def get_state_history(a=None,
     import pandas as pd
     import math
     from datetime import datetime
-
     if oid is None: raise ResourceNotFound
     n = eva.notify.get_db_notifier(a)
     if not t_start and fill:
@@ -1705,6 +1711,24 @@ def get_state_history(a=None,
         except:
             eva.core.log_traceback()
             raise FunctionFailed
+    # check dataframe, fill till t_e if not filled
+    try:
+        if fill:
+            if len(result) > 1:
+                per = result[-1]['t'] - result[-2]['t']
+            else:
+                per = int(_fill[:-1]) * __p_periods[_fill[-1].upper()]
+            r_ts = result[-1]['t']
+            while True:
+                r_ts += per
+                if r_ts > t_e:
+                    break
+                lf = result[-1].copy()
+                lf['t'] = r_ts
+                result.append(lf)
+    except:
+        pass
+    # convert to list if required
     if not fmt or fmt == 'list':
         res = {'t': []}
         for r in result:
