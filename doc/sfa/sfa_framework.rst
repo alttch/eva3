@@ -944,6 +944,8 @@ Parameters:
 
     * **prop** item property to use (default is value)
 
+    * **u** data units (e.g. mm or °C)
+
 .. _sfw_eva_sfa_hi_qr:
 
 eva_sfa_hi_qr - QR code for EvaHI

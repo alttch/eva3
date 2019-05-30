@@ -616,6 +616,7 @@ function eva_sfa_log_level_name(log_level) {
  *              @update - update interval in seconds. If the chart conteiner is
  *                        no longer visible, chart stops updating.
  *              @prop - item property to use (default is value)
+ *              @u - data units (e.g. mm or °C)
  *
  */
 function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
@@ -632,6 +633,7 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   var update = params['update'];
   var prop = params['prop'];
   var cc = $('#' + ctx);
+  var data_units = params['u'];
   var chart = null;
   if (_do_update) {
     chart = _do_update;
@@ -686,6 +688,11 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
         }
         cc.html(canvas);
         chart = new Chart(canvas, work_cfg);
+        if (data_units) {
+          work_cfg.options.tooltips.callbacks.label = function(tti) {
+            return tti.yLabel + data_units;
+          }
+        }
       }
     },
     function(code, msg, data) {
