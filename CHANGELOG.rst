@@ -11,6 +11,7 @@ SFA
     * "as" parameter for .json and .yml files changes their format on the flow
     * eva_sfa_erase_token_cookie() function to make login pages more secure
     * default UI Bootstrap CSS lib updated to 4.3.1
+    * default UI Chart.js updated to 2.8.0
 
 3.2.2 (2019-05-21)
 ==================
