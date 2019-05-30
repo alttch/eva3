@@ -772,7 +772,7 @@ class SQLANotifier(GenericNotifier):
     def set_prop(self, prop, value):
         if prop == 'db':
             if value is None or value == '': return False
-            self.set_db(db_uri)
+            self.set_db(value)
             return True
         elif prop == 'keep':
             if value is None:
