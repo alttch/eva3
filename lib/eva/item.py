@@ -1716,17 +1716,27 @@ def get_state_history(a=None,
     # check dataframe, fill till t_e if not filled
     try:
         if fill:
+            if time_format == 'iso':
+                r_ts = dateutil.parser.parse(result[-1]['t']).timestamp()
+            else:
+                r_ts = result[-1]['t']
             if len(result) > 1:
-                per = result[-1]['t'] - result[-2]['t']
+                if time_format == 'iso':
+                    per = r_ts - dateutil.parser.parse(
+                        result[-2]['t']).timestamp()
+                else:
+                    per = r_ts - result[-2]['t']
             else:
                 per = int(_fill[:-1]) * __p_periods[_fill[-1].upper()]
-            r_ts = result[-1]['t']
             while True:
                 r_ts += per
                 if r_ts > t_e:
                     break
                 lf = result[-1].copy()
-                lf['t'] = r_ts
+                if time_format == 'iso':
+                    lf['t'] = datetime.fromtimestamp(r_ts, tz).isoformat()
+                else:
+                    lf['t'] = r_ts
                 result.append(lf)
     except:
         pass
