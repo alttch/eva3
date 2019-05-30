@@ -493,9 +493,9 @@ sys.argv = {argv}
             self.print_err('File already exists')
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
-               '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime/*',
-               'xc/cmd/*', 'xc/drivers/phi/*', 'xc/extensions/*', 'etc/*',
-               'ui/*')
+               '--exclude=etc/*-dist', '--exclude=__pycache__',
+               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'xc/cmd',
+               'xc/drivers/phi', 'xc/extensions', 'etc', 'ui')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
