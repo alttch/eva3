@@ -1303,12 +1303,22 @@ def serve_json_yml(fname):
                 'Content-Type'] = 'application/x-yaml'
         elif cas == 'js':
             var = cherrypy.serving.request.params.get('var')
-            if not var:
-                raise cp_bad_request('var not specified')
-            if eva.core.config.development:
-                data = '{} = {};'.format(var, format_json(data, minimal=False))
+            func = cherrypy.serving.request.params.get('func')
+            if var:
+                if eva.core.config.development:
+                    data = '{} = {};'.format(var,
+                                             format_json(data, minimal=False))
+                else:
+                    data = '{}={}'.format(var, format_json(data, minimal=True))
+            elif func:
+                if eva.core.config.development:
+                    data = 'function {}() {{\n  return {};\n}}'.format(
+                        func, format_json(data, minimal=False))
+                else:
+                    data = 'function {}(){{return {};}}'.format(
+                        func, format_json(data, minimal=False))
             else:
-                data = '{}={}'.format(var, format_json(data, minimal=True))
+                raise cp_bad_request('var/func not specified')
             cherrypy.serving.response.headers[
                 'Content-Type'] = 'application/javascript'
         else:
