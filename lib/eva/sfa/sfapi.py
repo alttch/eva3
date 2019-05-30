@@ -1316,7 +1316,7 @@ def serve_json_yml(fname):
                         func, format_json(data, minimal=False))
                 else:
                     data = 'function {}(){{return {};}}'.format(
-                        func, format_json(data, minimal=False))
+                        func, format_json(data, minimal=True))
             else:
                 raise cp_bad_request('var/func not specified')
             cherrypy.serving.response.headers[
