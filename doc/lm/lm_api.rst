@@ -162,15 +162,13 @@ logout - log out and purge authentication token
 
 Purges authentication :doc:`token</api_tokens>`
 
-If API key is used as parameter value, the function purges all tokens assigned to it.
-
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/logout.req
     :response: http-examples/lmapi/logout.resp
 
 Parameters:
 
-* **k** valid API key or token
+* **k** valid token
 
 
 .. _lmapi_cat_lvar:

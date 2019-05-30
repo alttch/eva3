@@ -824,19 +824,16 @@ class GenericAPI(object):
 
         Purges authentication :doc:`token</api_tokens>`
 
-        If API key is used as parameter value, the function purges all tokens
-        assigned to it.
-
         Args:
-            k: valid API key or token
+            k: valid token
         """
         if not tokens.is_enabled():
             raise FunctionFailed('Session tokens are disabled')
         k = parse_function_params(kwargs, 'k', '.')
         if k.startswith('token:'):
             tokens.remove_token(k)
-        else:
-            tokens.remove_token(key_id=apikey.key_id(k))
+        # else:
+            # tokens.remove_token(key_id=apikey.key_id(k))
         return True
 
 
