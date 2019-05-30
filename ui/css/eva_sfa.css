@@ -154,7 +154,7 @@
 
 /* load animation styles */
 .eva-sfa-cssload-square {
-    margin: 123px auto;
+    margin: auto auto;
     width: 35px;
     height: 35px;
     transform: rotate(-45deg);
