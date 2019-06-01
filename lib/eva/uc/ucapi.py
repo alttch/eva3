@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -42,6 +43,7 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import ResourceBusy
 from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
+from eva.exceptions import MethodNotImplemented
 
 from eva.tools import parse_function_params
 from eva.tools import safe_int
@@ -1437,6 +1439,24 @@ class UC_API(GenericAPI):
         else:
             return {'output': result}
 
+    @log_i
+    @api_need_master
+    def get_phi_ports(self, **kwargs):
+        """
+        get PHI ports
+
+        Get list of PHI ports. If PHI has no method, 
+
+        Args:
+            k: .master
+            .i: PHI id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        phi = eva.uc.driverapi.get_phi(i)
+        if not phi: raise ResourceNotFound
+        if not hasattr(phi, 'get_ports'): raise MethodNotImplemented
+        return phi.get_ports()
+
     @log_w
     @api_need_master
     def unload_phi(self, **kwargs):
@@ -1797,7 +1817,10 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.list_lpi_mods(k=k)
         elif rtp == 'phi':
             if ii:
-                return self.get_phi(k=k, i=ii)
+                if kind == 'ports':
+                    return self.get_phi_ports(k=k, i=ii)
+                elif not kind:
+                    return self.get_phi(k=k, i=ii)
             else:
                 return self.list_phi(k=k)
         elif rtp == 'phi-module':
