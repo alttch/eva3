@@ -275,11 +275,12 @@ def modinfo_phi(mod):
     except Exception as e:
         raise FunctionFailed(e)
 
-def phi_discover(mod, wait):
+
+def phi_discover(mod, interface, wait):
     code = 'from eva.uc.drivers.phi.{} import PHI;'.format(mod) + \
-            ' s=PHI(info_only=True).discover({})'.format(wait)
+            ' s=PHI(info_only=True).discover(interface, {})'.format(wait)
     try:
-        d = {}
+        d = {'interface': interface}
         exec(code, d)
         result = d.get('s')
         return result

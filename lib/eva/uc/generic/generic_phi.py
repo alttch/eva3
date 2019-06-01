@@ -71,6 +71,12 @@ class PHI(object):
             self.__ports_help = mod.__ports_help__
         else:
             self.__ports_help = ''
+        if hasattr(mod, '__discover__'):
+            self.__discover = mod.__discover__
+        else:
+            self.__discover = None
+        if self.__discover and not isinstance(self.__discover, list):
+            self.__discover = [self.__discover]
         if hasattr(mod, '__discover_help__'):
             self.__discover_help = mod.__discover_help__
         else:
@@ -206,7 +212,10 @@ class PHI(object):
             d['author'] = self.__author
             d['license'] = self.__license
             d['description'] = self.__description
-            d['can_discover'] = hasattr(self, 'discover')
+            if hasattr(self, 'discover') and self.__discover:
+                d['can_discover'] = self.__discover
+            else:
+                d['can_discover'] = None
             d['can_get_ports'] = hasattr(self, 'get_ports')
             d['version'] = self.__version
             d['api'] = self.__api_version

@@ -1063,6 +1063,19 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_phi_discover.add_argument(
             'm', help='PHI module',
             metavar='PHI_MOD').completer = self.ComplPHIMods(self)
+        sp_phi_discover.add_argument(
+            '-x',
+            '--interface',
+            help='Interface to perform discovery on',
+            metavar='INTERFACE',
+            dest='x')
+        sp_phi_discover.add_argument(
+            '-w',
+            '--wait',
+            help='Max operation timeout',
+            metavar='SEC',
+            type=float,
+            dest='w')
 
         sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
         sp_lpi_modinfo.add_argument(

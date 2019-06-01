@@ -1538,12 +1538,15 @@ class UC_API(GenericAPI):
         Args:
             k: .master
             .m: PHI module name (without *.py* extension)
+
+        Optional:
+            x: interface to perform discover on
             w: max time for the operation
         """
-        m, w = parse_api_params(kwargs, 'mw', 'Sn')
+        m, x, w = parse_api_params(kwargs, 'mxw', 'S.n')
         if not w:
             w = eva.core.config.timeout
-        return eva.uc.driverapi.phi_discover(m, w)
+        return eva.uc.driverapi.phi_discover(m, x, w)
 
     @log_d
     @api_need_master
