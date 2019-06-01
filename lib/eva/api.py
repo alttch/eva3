@@ -30,6 +30,7 @@ from eva.exceptions import AccessDenied
 from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import ResourceBusy
 from eva.exceptions import InvalidParameter
+from eva.exceptions import MethodNotImplemented
 
 import eva.users
 import eva.notify
@@ -189,6 +190,8 @@ def generic_web_api_method(f):
             return f(*args, **kwargs)
         except InvalidParameter as e:
             eva.core.log_traceback()
+            raise cp_bad_request(e)
+        except MethodNotImplemented as e:
             raise cp_bad_request(e)
         except TypeError as e:
             eva.core.log_traceback()
@@ -833,7 +836,7 @@ class GenericAPI(object):
         if k.startswith('token:'):
             tokens.remove_token(k)
         # else:
-            # tokens.remove_token(key_id=apikey.key_id(k))
+        # tokens.remove_token(key_id=apikey.key_id(k))
         return True
 
 
@@ -1141,6 +1144,8 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             except InvalidParameter as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_invalid_params, e)
+            except MethodNotImplemented as e:
+                r = format_error(apiclient.result_not_implemented, e)
             except ResourceAlreadyExists as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_already_exists, e)

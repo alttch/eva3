@@ -157,6 +157,8 @@ Result codes are stored in module variables (i.e. **apiclient.result_ok**)
     # the resource is busy (in use) and can not be accessed/recreated or
     # deleted at this moment
     result_busy = 13
+    #
+    result_not_implemented = 14
 
 In case of error, result is an empty dict or contains field "error" which is
 filled with error message from server (if available).

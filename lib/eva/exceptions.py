@@ -51,6 +51,13 @@ class AccessDenied(GenericException):
         return msg if msg else 'Access to resource is denied'
 
 
+class MethodNotImplemented(GenericException):
+
+    def __str__(self):
+        msg = super().__str__()
+        return msg if msg else 'Method not implemented'
+
+
 def ecall(eresult):
     code, result = eresult
     import eva.client.apiclient as a
@@ -72,6 +79,8 @@ def ecall(eresult):
         raise ResourceBusy(err)
     elif code == a.result_invalid_params:
         raise InvalidParameter(err)
+    elif code == a.result_not_implemented:
+        raise MethodNotImplemented(err)
     elif code == a.result_forbidden:
         raise AccessDenied(err)
     else:
