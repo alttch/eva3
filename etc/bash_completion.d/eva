@@ -336,7 +336,7 @@ _eva_uc_phi() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'download exec get list load modhelp modinfo mods set test unlink unload' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'download exec get list load modhelp modinfo mods ports set test unlink unload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
