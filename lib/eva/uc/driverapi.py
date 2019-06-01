@@ -20,6 +20,7 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceBusy
 from eva.exceptions import ResourceAlreadyExists
+from eva.exceptions import MethodNotImplemented
 
 from functools import wraps
 
@@ -271,6 +272,19 @@ def modinfo_phi(mod):
             except:
                 pass
         return result
+    except Exception as e:
+        raise FunctionFailed(e)
+
+def phi_discover(mod, wait):
+    code = 'from eva.uc.drivers.phi.{} import PHI;'.format(mod) + \
+            ' s=PHI(info_only=True).discover({})'.format(wait)
+    try:
+        d = {}
+        exec(code, d)
+        result = d.get('s')
+        return result
+    except AttributeError:
+        raise MethodNotImplemented
     except Exception as e:
         raise FunctionFailed(e)
 

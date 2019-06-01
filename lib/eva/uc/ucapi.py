@@ -1529,6 +1529,22 @@ class UC_API(GenericAPI):
         m = parse_api_params(kwargs, 'm', 'S')
         return eva.uc.driverapi.modinfo_phi(m)
 
+    @log_i
+    @api_need_master
+    def phi_discover(self, **kwargs):
+        """
+        Discover installed equipment supported by PHI module
+
+        Args:
+            k: .master
+            .m: PHI module name (without *.py* extension)
+            w: max time for the operation
+        """
+        m, w = parse_api_params(kwargs, 'mw', 'Sn')
+        if not w:
+            w = eva.core.config.timeout
+        return eva.uc.driverapi.phi_discover(m, w)
+
     @log_d
     @api_need_master
     def modhelp_phi(self, **kwargs):
@@ -1824,13 +1840,16 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             else:
                 return self.list_phi(k=k)
         elif rtp == 'phi-module':
-            if ii:
-                if 'help' in props:
-                    return self.modhelp_phi(k=k, m=ii, c=props['help'])
+            if kind == 'discover':
+                return self.phi_discover(k=k, m=ii, **props)
+            elif not kind:
+                if ii:
+                    if 'help' in props:
+                        return self.modhelp_phi(k=k, m=ii, c=props['help'])
+                    else:
+                        return self.modinfo_phi(k=k, m=ii)
                 else:
-                    return self.modinfo_phi(k=k, m=ii)
-            else:
-                return self.list_phi_mods(k=k)
+                    return self.list_phi_mods(k=k)
         elif rtp == 'modbus':
             if ii:
                 return self.get_modbus_port(k=k, i=ii)

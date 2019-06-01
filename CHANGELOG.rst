@@ -7,7 +7,8 @@ EVA ICS CHANGELOG
 UC
 --
 
-    * get_phi_ports API method to get ports of loaded PHI
+    * get_phi_ports API method - get ports of loaded PHI
+    * phi_discover API method - search for equipment supported by PHI module
 
 SFA
 ---

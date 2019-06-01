@@ -1057,6 +1057,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'm', help='PHI module',
             metavar='PHI_MOD').completer = self.ComplPHIMods(self)
 
+        sp_phi_discover = sp_phi.add_parser(
+            'discover',
+            help='Discover installed equipment suppored by PHI module')
+        sp_phi_discover.add_argument(
+            'm', help='PHI module',
+            metavar='PHI_MOD').completer = self.ComplPHIMods(self)
+
         sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
         sp_lpi_modinfo.add_argument(
             'm', help='LPI module',
@@ -1070,7 +1077,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'c',
             help='Help context (cfg, get, set)',
             metavar='CONTEXT',
-            choices=['cfg', 'get', 'set'])
+            choices=['cfg', 'discover', 'ports', 'get', 'set'])
 
         sp_lpi_modhelp = sp_lpi.add_parser('modhelp', help='LPI module help')
         sp_lpi_modhelp.add_argument(
@@ -1255,6 +1262,7 @@ _api_functions = {
     'phi:unlink': 'unlink_phi_mod',
     'phi:download': 'put_phi_mod',
     'phi:modinfo': 'modinfo_phi',
+    'phi:discover': 'phi_discover',
     'phi:modhelp': 'modhelp_phi',
     'lpi:mods': 'list_lpi_mods',
     'lpi:modinfo': 'modinfo_lpi',

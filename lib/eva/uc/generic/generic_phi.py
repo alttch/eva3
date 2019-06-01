@@ -67,6 +67,14 @@ class PHI(object):
         self.__get_help = mod.__get_help__
         self.__set_help = mod.__set_help__
         self.__help = mod.__help__
+        if hasattr(mod, '__ports_help__'):
+            self.__ports_help = mod.__ports_help__
+        else:
+            self.__ports_help = ''
+        if hasattr(mod, '__discover_help__'):
+            self.__discover_help = mod.__discover_help__
+        else:
+            self.__discover_help = ''
         if isinstance(self.__features, str):
             self.__features = [self.__features]
         else:
@@ -187,6 +195,10 @@ class PHI(object):
                 d = self.__get_help.copy()
             elif helpinfo == 'set':
                 d = self.__set_help.copy()
+            elif helpinfo == 'ports':
+                d = self.__ports_help
+            elif helpinfo == 'discover':
+                d = self.__discover_help
             else:
                 d = None
             return d
