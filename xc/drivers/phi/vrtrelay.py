@@ -60,7 +60,8 @@ class PHI(GenericPHI):
         for i in range(1, 17):
             result.append({
                 'port': str(i),
-                'name': 'virtual relay port #{}'.format(i)
+                'name': 'port #{}'.format(i),
+                'description': 'virtual relay port #{}'.format(i)
             })
         return result
 

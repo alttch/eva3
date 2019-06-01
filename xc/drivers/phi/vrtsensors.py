@@ -54,7 +54,8 @@ class PHI(GenericPHI):
         for i in range(1000, 1011):
             result.append({
                 'port': str(i),
-                'name': 'virtual sensor port #{}'.format(i)
+                'name': 'port #{}'.format(i),
+                'description': 'virtual sensor port #{}'.format(i)
             })
         return result
 
