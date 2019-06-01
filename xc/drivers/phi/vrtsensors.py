@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.1"
+__version__ = "1.2.0"
 __description__ = "Emulates virtual sensors"
 
 __equipment__ = 'virtual'
@@ -46,8 +46,12 @@ class PHI(GenericPHI):
             except:
                 d = None
         self.data = {}
-        for i in range(1000, 1010):
+        for i in range(1000, 1011):
             self.data[str(i)] = d
+
+    def get_ports(self):
+        for i in range(1000, 1011):
+            return {str(i): 'virtual sensor port #'.format(i)}
 
     def get(self, port=None, cfg=None, timeout=0):
         if not port: return self.data

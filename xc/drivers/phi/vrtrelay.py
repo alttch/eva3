@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.2"
+__version__ = "1.3.0"
 __description__ = "Emulates 16-port relay"
 
 __equipment__ = 'virtual'
@@ -54,6 +54,10 @@ class PHI(GenericPHI):
         self.data = {}
         for i in range(1, 17):
             self.data[str(i)] = (d, '') if self._is_required.value else d
+
+    def get_ports(self):
+        for i in range(0, 17):
+            return {str(i): 'virtual relay port #'.format(i)}
 
     def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data
