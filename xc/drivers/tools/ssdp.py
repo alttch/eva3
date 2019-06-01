@@ -37,9 +37,9 @@ def discover(st,
         timeout: socket timeout (for a single interface)
 
     Returns:
-        dict, where key=equipment IP addr, value=dict of variables (or raw)
-        note that dict of variables has all keys converted to lowercase and
-        capitalized
+        if data is parsed: list of dicts, where ip=equipment IP, otherwise
+        dict, where key=equipment IP addr, value=raw ssdp reply. Note: if data
+        is parsed, all variables converted to lowercase and capitalized.
     """
 
     class _DiscoveryResult:
@@ -72,8 +72,16 @@ def discover(st,
                 except:
                     log_traceback()
 
-        def get(self):
-            return self.result
+        def get(self, raw=False):
+            if raw:
+                return self.result
+            else:
+                result = []
+                for i, v in self.result.items():
+                    d = { 'ip':  i }
+                    d.update(v)
+                    result.append(d)
+                return result
 
     def _t_discover_on_interface(iface, addr, msg, result, timeout):
         logging.debug('ssdp scan {}:{}'.format(iface, addr))
@@ -132,4 +140,4 @@ def discover(st,
         t.start()
     for t in scanners:
         t.join()
-    return result.get()
+    return result.get(raw=not parse_data)
