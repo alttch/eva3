@@ -56,8 +56,13 @@ class PHI(GenericPHI):
             self.data[str(i)] = (d, '') if self._is_required.value else d
 
     def get_ports(self):
-        for i in range(0, 17):
-            return {str(i): 'virtual relay port #'.format(i)}
+        result = []
+        for i in range(1, 17):
+            result.append({
+                'port': str(i),
+                'name': 'virtual relay port #{}'.format(i)
+            })
+        return result
 
     def get(self, port=None, cfg=None, timeout=0):
         # if self.aao_get: return self.data
