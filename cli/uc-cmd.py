@@ -908,6 +908,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='PHI ID',
             metavar='PHI_ID').completer = self.ComplPHI(self)
 
+        sp_phi_ports = sp_phi.add_parser(
+            'ports', help='Get available ports of loaded PHI')
+        sp_phi_ports.add_argument(
+            'i', help='PHI ID',
+            metavar='PHI_ID').completer = self.ComplPHI(self)
+
         sp_phi_set = sp_phi.add_parser('set', help='Set PHI config prop')
         sp_phi_set.add_argument(
             'i', help='PHI ID',
@@ -1239,6 +1245,7 @@ _api_functions = {
     'owfs:scan': 'scan_owfs_bus',
     'phi:list': 'list_phi',
     'phi:get': 'get_phi',
+    'phi:ports': 'get_phi_ports',
     'phi:set': 'set_phi_prop',
     'phi:mods': 'list_phi_mods',
     'phi:test': 'test_phi',
@@ -1285,6 +1292,7 @@ _pd_cols = {
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
     'list_drivers': ['id', 'mod', 'phi_id'],
     'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
+    'get_phi_ports': ['port', 'name', 'description'],
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
     'modhelp_lpi': ['name', 'type', 'required', 'help'],
     'modhelp_phi': ['name', 'type', 'required', 'help']
