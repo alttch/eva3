@@ -225,6 +225,17 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return result
 
     def prepare_result_data(self, data, api_func, itype):
+        if api_func == 'phi_discover':
+            if data:
+                for d in data:
+                    if '!load' in d:
+                        d['Load'] = '-c '
+                        load = []
+                        for i, v in d['!load'].items():
+                            load.append('{}={}'.format(i, v))
+                        d['Load'] += ','.join(load)
+                        del d['!load']
+            return data
         if api_func == 'list_device_tpl':
             for d in data:
                 d['type'] = d['type'] + ' device template'
