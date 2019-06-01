@@ -4,6 +4,11 @@ EVA ICS CHANGELOG
 3.2.3 (TBA)
 ===========
 
+UC
+--
+
+    * get_phi_ports API method to get ports of loaded PHI
+
 SFA
 ---
 
