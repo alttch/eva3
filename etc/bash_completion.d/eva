@@ -336,7 +336,7 @@ _eva_uc_phi() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'download exec get list load modhelp modinfo mods ports set test unlink unload' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'discover download exec get list load modhelp modinfo mods ports set test unlink unload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -523,7 +523,7 @@ _eva() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'backup dmesg edit lm ns server sfa system uc update version' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'backup edit ll lm mycmd1 ns server sfa system uc update version' -- "$cur" ))
   else
     case "${words[1]}" in
       backup|edit|lm|server|sfa|system|uc)
