@@ -37,9 +37,9 @@ def discover(st,
         timeout: socket timeout (for a single interface)
 
     Returns:
-        if data is parsed: list of dicts, where ip=equipment IP, otherwise
+        if data is parsed: list of dicts, where IP=equipment IP, otherwise
         dict, where key=equipment IP addr, value=raw ssdp reply. Note: if data
-        is parsed, all variables converted to lowercase and capitalized.
+        is parsed, all variables are converted to lowercase and capitalized.
     """
 
     class _DiscoveryResult:
@@ -78,7 +78,7 @@ def discover(st,
             else:
                 result = []
                 for i, v in self.result.items():
-                    d = { 'ip':  i }
+                    d = { 'IP':  i }
                     d.update(v)
                     result.append(d)
                 return result
