@@ -6,6 +6,7 @@ __version__ = "3.2.3"
 import socket
 import logging
 import netifaces
+import math
 # use threading until asyncio have all required features
 import threading
 
@@ -76,11 +77,18 @@ def discover(st,
 
     def _t_discover_on_interface(iface, addr, msg, result, timeout):
         logging.debug('ssdp scan {}:{}'.format(iface, addr))
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, timeout)
-        s.bind((addr, 0))
-        s.settimeout(timeout)
-        s.sendto(msg, (ip, port))
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST,
+                         math.ceil(timeout))
+            s.bind((addr, 0))
+            s.settimeout(timeout)
+            s.sendto(msg, (ip, port))
+        except:
+            raise
+            logging.info('ssdp unable to scan ({}:{}:{}/{})'.format(
+                iface, addr, port, st))
+            return
         try:
             while True:
                 data, addr = s.recvfrom(65507)
@@ -88,7 +96,6 @@ def discover(st,
         except socket.timeout:
             pass
         except:
-            raise
             log_traceback()
             logging.error('ssdp scan error ({}:{}:{}/{})'.format(
                 iface, addr, port, st))
@@ -102,7 +109,7 @@ def discover(st,
         req += ['MX: {}'.format(_timeout)]
     msg = ('\r\n'.join(req) + '\r\n' if trailing_crlf else '').encode('utf-8')
     if interface:
-        its = interface
+        its = interface if isinstance(interface, list) else [interface]
     else:
         its = netifaces.interfaces()
     result = _DiscoveryResult(
