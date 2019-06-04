@@ -236,9 +236,11 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 else:
                     code, data = self.cli.call('remote')
                 if code: return True
+                result = []
                 for d in data:
-                    yield d['oid'] + '/status'
-                    yield d['oid'] + '/value'
+                    result.append(d['oid'] + '/status')
+                    result.append(d['oid'] + '/value')
+                return result
             return True
 
     class ComplJob(ComplGeneric):

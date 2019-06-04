@@ -103,8 +103,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('device templates')
             if code: return True
+            result = []
             for v in data:
-                yield v['name']
+                result.append(v['name'])
+            return result
 
     class ComplItemProp(ComplGeneric):
 
