@@ -223,6 +223,7 @@ class MacroAPI(object):
             'update_device': self.macro_function(self.update_device),
             'undeploy_device': self.macro_function(self.undeploy_device),
             'set_rule_prop': self.macro_function(self.set_rule_prop),
+            'set_job_prop': self.macro_function(self.set_job_prop),
             'start_cycle': self.macro_function(self.start_cycle),
             'stop_cycle': self.macro_function(self.stop_cycle),
             'reset_cycle_stats': self.macro_function(self.reset_cycle_stats),
@@ -1418,6 +1419,25 @@ class MacroAPI(object):
         """
         result = eva.lm.lmapi.api.set_rule_prop(
             k=eva.apikey.get_masterkey(), i=rule_id, p=prop, v=value, save=save)
+        return result
+
+    def set_job_prop(self, job_id, prop, value=None, save=False):
+        """
+        set job prop
+
+        Args:
+            job_id: job id (uuid)
+            prop: property to set
+            value: value to set
+
+        Optional:
+            save: save job config after the operation
+
+        Raises:
+            ResourceNotFound: job is not found
+        """
+        result = eva.lm.lmapi.api.set_job_prop(
+            k=eva.apikey.get_masterkey(), i=job_id, p=prop, v=value, save=save)
         return result
 
     def start_cycle(self, cycle_id):

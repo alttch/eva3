@@ -10,6 +10,11 @@ UC
     * get_phi_ports API method - get ports of loaded PHI
     * phi_discover API method - search for equipment supported by PHI module
 
+LM PLC
+------
+
+    * set_job_prop macro function
+
 SFA
 ---
 
@@ -27,8 +32,8 @@ UC
 
     * Driver API 5: "unload" method, unit values in PHIs.
 
-LM
---
+LM PLC
+------
 
     * scheduled jobs
 
@@ -97,8 +102,8 @@ UC
     * Modbus slave support
     * Driver API v4
 
-LM
---
+LM PLC
+------
 
     * new API functions: enable_controller, disable_controller,
       matest_controller, set_ext_prop
@@ -161,8 +166,8 @@ UC
     * MQTT tools for PHIs
     * test-phi CLI tool
 
-LM
---
+LM PLC
+------
 
     * fixes: double quoted macro arguments in DM rules
     * fixes: gain param in "tts" and "audio" extensions
@@ -384,8 +389,8 @@ UC
     * 'clone_group' function - clones all matching items in a group
     * 'destroy_group' function destroys all items in the specified group
 
-LM
---
+LM PLC
+------
 
     * item id in LM rules match by simple mask (i.e. '\*id\'* or 'id\'* or
       '\*id')

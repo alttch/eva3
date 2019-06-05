@@ -64,9 +64,6 @@ Parameters:
   execution (false by default)
 * **send_critical** if *true*, allows to send critical events to controller
   core with *critical(msg, send_event=True)*
-* **src** virtual write-only parameter that allows to write/replace macro
-  source. Note that source isn't checked when written and is compiled at the
-  first run.
 
 Common principles of macros operation
 =====================================
@@ -1650,6 +1647,40 @@ Optionally:
 Raises:
 
 * **ResourceNotFound** rule is not found
+
+
+
+.. _macro_api_cat_job:
+
+Scheduled job management
+========================
+
+
+
+.. _macro_api_set_job_prop:
+
+set_job_prop - set job prop
+---------------------------
+
+
+
+.. code-block:: python
+
+    set_job_prop('6970e296-5cb4-4448-9f2a-1ab2a14ed7f1', 'enabled', True)
+
+Parameters:
+
+* **job_id** job id (uuid)
+* **prop** property to set
+* **value** value to set
+
+Optionally:
+
+* **save** save job config after the operation
+
+Raises:
+
+* **ResourceNotFound** job is not found
 
 
 
