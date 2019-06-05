@@ -229,7 +229,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
     def prepare_result_data(self, data, api_func, itype):
         if api_func == 'phi_discover':
             if data:
-                for d in data:
+                for z, d in enumerate(data.copy()):
                     if '!load' in d:
                         d['Load'] = '-c '
                         load = []
@@ -237,6 +237,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
                             load.append('{}={}'.format(i, v))
                         d['Load'] += ','.join(load)
                         del d['!load']
+                    if '!opt' in d:
+                        if d['!opt'] == 'cols' and 'value' in d and isinstance(
+                                d['value'], list):
+                            self.pd_cols[api_func] = d['value'] + ['Load']
+                        del data[z]
             return data
         if api_func == 'list_device_tpl':
             for d in data:
