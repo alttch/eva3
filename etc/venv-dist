@@ -7,3 +7,5 @@
 #SKIP="pandas"
 # specify extra PIP3 options e.g., -v for verbose
 #PIP_EXTRA_OPTIONS=-v
+# additional modules to install, space separated
+#EXTRA=""

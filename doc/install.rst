@@ -256,6 +256,10 @@ To solve this:
       *apt-get install python3-pandas python3-cryptography* instead). To let
       venv use system package, *SYSTEM_SITE_PACKAGES=1* should also be present.
 
+    * **EXTRA** extra modules to install, e.g. required by :ref:`PHIs<phi>`,
+      used by :doc:`logic macros</lm/macros>` or :doc:`macro
+      extensions</lm/ext>` etc.
+
     * **PIP_EXTRA_OPTIONS** specify extra options for *pip3*, e.g. *-v* for
       verbose installation.
 

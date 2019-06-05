@@ -35,11 +35,18 @@ for s in $SKIP; do
   PTS="$PTS^$s="
 done
 
+ETS=
+for s in $EXTRA; do
+  [ "$ETS" ] && ETS="$ETS|"
+  ETS="$ETS$s"
+done
+
 PIP=${EVA_DIR}/python3/bin/pip3
 
-if [ "$PTS" ]; then
+if [ "$PTS" ] || [ "$ETS" ]; then
   TMPFILE=$(mktemp /tmp/eva-venv.XXXXXX)
   cat ${MY_DIR}/mods.list | grep -vE "$PTS" > ${TMPFILE}
+  echo -e "\n`echo $ETS | tr '|' '\n'`" >> ${TMPFILE}
   PKGLIST=${TMPFILE}
 else
   PKGLIST=${MY_DIR}/mods.list
@@ -48,6 +55,6 @@ fi
 ${PIP} install ${PIP_EXTRA_OPTIONS} -r ${PKGLIST}
 E=$?
 
-[ "$PTS" ] && rm -f ${TMPFILE}
+[ "$PTS" ] || [ "$ETS" ] && rm -f ${TMPFILE}
 
 exit ${E}
