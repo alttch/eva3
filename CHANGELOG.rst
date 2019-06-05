@@ -8,7 +8,9 @@ UC
 --
 
     * get_phi_ports API method - get ports of loaded PHI
-    * phi_discover API method - search for equipment supported by PHI module
+    * phi_discover API method - search for equipment supported by PHI module *
+      Modbus values reported to UC slave can now be automatically converted to
+      signed and divided (or multiplied).
 
 LM PLC
 ------

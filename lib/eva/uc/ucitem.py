@@ -14,11 +14,16 @@ import eva.traphandler
 from eva.tools import safe_int
 from eva.tools import dict_from_str
 
+
 class UCItem(eva.item.Item):
 
     def __init__(self, item_id, item_type):
         self.update_driver_config = None
         self.modbus_value = None
+        self.modbus_value_reg = None
+        self.modbus_value_addr = None
+        self.modbus_value_multiplier = 1
+        self.modbus_value_signed = False
         self.snmp_trap = None
         super().__init__(item_id, item_type)
 
@@ -29,6 +34,10 @@ class UCItem(eva.item.Item):
             self.snmp_trap = data['snmp_trap']
         if 'modbus_value' in data:
             self.modbus_value = data['modbus_value']
+            self.modbus_value_reg, self.modbus_value_addr, \
+                    self.modbus_value_multiplier, \
+                    self.modbus_value_signed = self.format_modbus_value(
+                self.modbus_value)
         super().update_config(data)
 
     def update(self, **kwargs):
@@ -39,9 +48,9 @@ class UCItem(eva.item.Item):
         if self.modbus_value:
             try:
                 eva.uc.modbus.register_handler(
-                    self.modbus_value[1:],
+                    self.modbus_value_addr,
                     self.modbus_update_value,
-                    register=self.modbus_value[0])
+                    register=self.modbus_value_reg)
             except:
                 eva.core.log_traceback()
 
@@ -49,9 +58,9 @@ class UCItem(eva.item.Item):
         if self.modbus_value:
             try:
                 eva.uc.modbus.unregister_handler(
-                    self.modbus_value[1:],
+                    self.modbus_value_addr,
                     self.modbus_update_value,
-                    register=self.modbus_value[0])
+                    register=self.modbus_value_multiplier)
             except:
                 eva.core.log_traceback()
 
@@ -106,17 +115,17 @@ class UCItem(eva.item.Item):
                 self.unregister_modbus_value_updates()
                 self.modbus_value = None
             else:
-                if val[0] not in ['h', 'c']: return False
-                try:
-                    addr = safe_int(val[1:])
-                    if addr > eva.uc.modbus.slave_reg_max or addr < 0:
-                        return False
-                except:
+                reg, addr, multiplier, signed = self.format_modbus_value(val)
+                if reg is None or addr is None or multiplier is None:
                     return False
                 self.unregister_modbus_value_updates()
                 self.modbus_value = val
-                self.modbus_update_value(addr,
-                                         eva.uc.modbus.get_data(addr, val[0]))
+                self.modbus_value_reg = reg
+                self.modbus_value_addr = addr
+                self.modbus_value_multiplier = multiplier
+                self.modbus_value_signed = signed
+                self.modbus_update_value(addr, eva.uc.modbus.get_data(
+                    addr, reg))
                 self.register_modbus_value_updates()
             self.log_set('modbus_value', val)
             self.set_modified(save)
@@ -258,8 +267,9 @@ class UCItem(eva.item.Item):
         v = values[0]
         if v is True: v = 1
         elif v is False: v = 0
-        self.update_set_state(value=v)
-
+        if self.modbus_value_signed and v > 32767:
+            v = v - 65536
+        self.update_set_state(value=v * self.modbus_value_multiplier)
 
     def register_driver_updates(self):
         if self.update_exec and self.update_exec[0] == '|':
@@ -332,7 +342,6 @@ class UCItem(eva.item.Item):
         except:
             eva.core.log_traceback()
 
-
     def get_update_xc(self, **kwargs):
         if self.update_exec and self.update_exec[0] == '|':
             return eva.runner.DriverCommand(
@@ -363,3 +372,35 @@ class UCItem(eva.item.Item):
             if not config or self.modbus_value:
                 d['modbus_value'] = self.modbus_value
         return d
+
+    @staticmethod
+    def format_modbus_value(val):
+        try:
+            if val[0] not in ['h', 'c']: return None, None, None, None
+            if val.find('*') != -1:
+                addr, multiplier = val[1:].split('*', 1)
+                try:
+                    multiplier = float(multiplier)
+                except:
+                    return None, None, None, None
+            elif val.find('/') != -1:
+                addr, multiplier = val[1:].split('/', 1)
+                try:
+                    multiplier = float(multiplier)
+                    multiplier = 1 / multiplier
+                except:
+                    return None, None, None, None
+            else:
+                addr = val[1:]
+                multiplier = 1
+            if addr.startswith('S'):
+                addr = addr[1:]
+                signed = True
+            else:
+                signed = False
+            addr = safe_int(addr)
+            if addr > eva.uc.modbus.slave_reg_max or addr < 0:
+                return None, None, None, None
+            return val[0], addr, multiplier, signed
+        except:
+            return None, None, None, None
