@@ -470,7 +470,7 @@ class UnitAction(eva.item.ItemAction):
                  nvalue=None,
                  priority=None,
                  action_uuid=None):
-        self.unit_action_lock = threading.Lock()
+        self.unit_action_lock = threading.RLock()
         if not self.unit_action_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('UnitAction::__init__ locking broken')
             return False
@@ -479,35 +479,36 @@ class UnitAction(eva.item.ItemAction):
         super().__init__(item=unit, priority=priority, action_uuid=action_uuid)
         self.unit_action_lock.release()
 
-    def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
-        if lock:
-            if not self.unit_action_lock.acquire(
-                    timeout=eva.core.config.timeout):
-                logging.critical('UnitAction::set_status locking broken')
-                return False
-        result = super().set_status(
-            status=status, exitcode=exitcode, out=out, err=err, lock=lock)
-        if not result:
-            if lock: self.unit_action_lock.release()
+    def set_status(self, status, exitcode=None, out=None, err=None):
+        if not self.unit_action_lock.acquire(
+                timeout=eva.core.config.timeout):
+            logging.critical('UnitAction::set_status locking broken')
             return False
-        if self.is_status_running():
-            self.item.set_state(nstatus=self.nstatus, nvalue=self.nvalue)
-        elif self.is_status_failed() or self.is_status_terminated():
-            self.item.reset_nstate()
-        elif self.is_status_completed():
-            if self.item.update_exec_after_action:
-                smsg = 'status will be set by update'
-            elif not self.item.update_state_after_action:
-                smsg = 'status will be set by external'
-            else:
-                self.item.update_expiration()
-                self.item.set_state_to_n()
-                smsg = 'status=%u value="%s"' % (self.item.status,
-                                                 self.item.value)
-            logging.debug(
-                'action %s completed, %s %s' % (self.uuid, self.item.oid, smsg))
-        if lock: self.unit_action_lock.release()
-        return True
+        try:
+            result = super().set_status(
+                status=status, exitcode=exitcode, out=out, err=err)
+            if not result:
+                if lock: self.unit_action_lock.release()
+                return False
+            if self.is_status_running():
+                self.item.set_state(nstatus=self.nstatus, nvalue=self.nvalue)
+            elif self.is_status_failed() or self.is_status_terminated():
+                self.item.reset_nstate()
+            elif self.is_status_completed():
+                if self.item.update_exec_after_action:
+                    smsg = 'status will be set by update'
+                elif not self.item.update_state_after_action:
+                    smsg = 'status will be set by external'
+                else:
+                    self.item.update_expiration()
+                    self.item.set_state_to_n()
+                    smsg = 'status=%u value="%s"' % (self.item.status,
+                                                     self.item.value)
+                logging.debug(
+                    'action %s completed, %s %s' % (self.uuid, self.item.oid, smsg))
+            return True
+        finally:
+            self.unit_action_lock.release()
 
     def action_env(self):
         if self.nvalue is not None: nvalue = self.nvalue
@@ -517,7 +518,14 @@ class UnitAction(eva.item.ItemAction):
         return e
 
     def serialize(self):
-        d = super().serialize()
-        d['nstatus'] = self.nstatus
-        d['nvalue'] = self.nvalue
-        return d
+        if not self.unit_action_lock.acquire(
+                timeout=eva.core.config.timeout):
+            logging.critical('UnitAction::set_status locking broken')
+            return False
+        try:
+            d = super().serialize()
+            d['nstatus'] = self.nstatus
+            d['nvalue'] = self.nvalue
+            return d
+        finally:
+            self.unit_action_lock.release()

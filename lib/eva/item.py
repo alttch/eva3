@@ -832,12 +832,11 @@ class ActiveItem(Item):
         finally:
             self.queue_lock.release()
 
-    def q_clean(self, lock=True):
-        if lock:
-            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical('ActiveItem::q_clean locking broken')
-                eva.core.critical()
-                return False
+    def q_clean(self):
+        if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ActiveItem::q_clean locking broken')
+            eva.core.critical()
+            return False
         try:
             i = 0
             while self.q_is_task():
@@ -851,14 +850,13 @@ class ActiveItem(Item):
             logging.info('removed %u actions from queue of %s' % (i, self.oid))
             return True
         finally:
-            if lock: self.queue_lock.release()
+            self.queue_lock.release()
 
-    def terminate(self, lock=True):
-        if lock:
-            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical('ActiveItem::terminate locking broken')
-                eva.core.critical()
-                return False
+    def terminate(self):
+        if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ActiveItem::terminate locking broken')
+            eva.core.critical()
+            return False
         try:
             if self.action_xc and not self.action_xc.is_finished():
                 if not self.action_allow_termination:
@@ -871,7 +869,7 @@ class ActiveItem(Item):
                 return True
             return None
         finally:
-            if lock: self.queue_lock.release()
+            self.queue_lock.release()
 
     def kill(self):
         if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
@@ -879,8 +877,8 @@ class ActiveItem(Item):
             eva.core.critical()
             return False
         try:
-            self.q_clean(lock=False)
-            self.terminate(lock=False)
+            self.q_clean()
+            self.terminate()
             return True
         finally:
             self.queue_lock.release()
@@ -1257,7 +1255,7 @@ class ItemAction(GenericAction):
 
     def __init__(self, item, priority=None, action_uuid=None):
         super().__init__()
-        self.item_action_lock = threading.Lock()
+        self.item_action_lock = threading.RLock()
         if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('ItemAction::__init___ locking broken')
             eva.core.critical()
@@ -1299,13 +1297,11 @@ class ItemAction(GenericAction):
     def _set_status_only(self, status):
         super().set_status(status)
 
-    def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
-        if lock:
-            if not self.item_action_lock.acquire(
-                    timeout=eva.core.config.timeout):
-                logging.critical('ItemAction::set_status locking broken')
-                eva.core.critical()
-                return False
+    def set_status(self, status, exitcode=None, out=None, err=None):
+        if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ItemAction::set_status locking broken')
+            eva.core.critical()
+            return False
         try:
             if self.is_status_dead():
                 return False
@@ -1338,7 +1334,7 @@ class ItemAction(GenericAction):
                 t.start()
             return True
         finally:
-            if lock: self.item_action_lock.release()
+            self.item_action_lock.release()
 
     def set_pending(self):
         return self.set_status(ia_status_pending)
@@ -1387,10 +1383,9 @@ class ItemAction(GenericAction):
             try:
                 if self.is_finished(): return None
                 if self.is_status_running():
-                    result = self.item.terminate(lock=False)
+                    result = self.item.terminate()
                 else:
-                    result = self.set_status(
-                        eva.core.item.ia_status_canceled, lock=False)
+                    result = self.set_status(eva.core.item.ia_status_canceled)
                 return result
             finally:
                 self.item.queue_lock.release()
