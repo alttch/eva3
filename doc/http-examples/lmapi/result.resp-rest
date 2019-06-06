@@ -10,6 +10,7 @@ Pragma: no-cache
         "args": [],
         "err": "",
         "exitcode": 0,
+        "finished": true,
         "item_group": "tests",
         "item_id": "test_macro",
         "item_oid": "lmacro:tests/test_macro",

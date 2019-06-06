@@ -9,6 +9,7 @@ Pragma: no-cache
     {
         "err": "",
         "exitcode": null,
+        "finished": true,
         "item_group": "tests",
         "item_id": "unit1",
         "item_oid": "unit:tests/unit1",
@@ -28,6 +29,7 @@ Pragma: no-cache
     {
         "err": "",
         "exitcode": 0,
+        "finished": true,
         "item_group": "tests",
         "item_id": "unit3",
         "item_oid": "unit:tests/unit3",
