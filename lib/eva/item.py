@@ -792,7 +792,7 @@ class ActiveItem(Item):
         self._action_timeout = None
         self.term_kill_interval = eva.core.config.timeout
         self._term_kill_interval = None
-        self.queue_lock = threading.Lock()
+        self.queue_lock = threading.RLock()
         self.action_processor = None
         self.action_processor_active = False
         self.current_action = None
@@ -1413,8 +1413,11 @@ class ItemAction(GenericAction):
             d['item_type'] = self.item.item_type
             d['item_oid'] = self.item.oid
             d['time'] = {}
+            t_max = 0
             for i, v in self.time.items():
                 d['time'][ia_status_names[i]] = v
+                if v > t_max: t_max = v
+            d['finished_in'] = round(t_max - self.time[ia_status_created], 7)
             return d
         finally:
             self.item_action_lock.release()
