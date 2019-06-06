@@ -668,7 +668,7 @@ sys.argv = {argv}
         if build == new_build:
             return self.local_func_result_empty
         if build > new_build:
-            print('Where did you get this build from? Invented a time machine?')
+            print('Your build is newer than this server has')
             return self.local_func_result_failed
         if not params.get('y'):
             if version != new_version:
