@@ -1149,6 +1149,7 @@ class ActiveItem(Item):
         elif prop == 'action_timeout':
             if val is None:
                 if self._action_timeout is not None:
+                    import eva.core
                     self.action_timeout = eva.core.config.timeout
                     self._action_timeout = None
                     self.log_set(prop, None)
@@ -1168,6 +1169,7 @@ class ActiveItem(Item):
         elif prop == 'term_kill_interval':
             if val is None:
                 if self._term_kill_interval is not None:
+                    import eva.core
                     self.term_kill_interval = eva.core.config.timeout
                     self._term_kill_interval = None
                     self.log_set(prop, None)
