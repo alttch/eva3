@@ -244,6 +244,7 @@ class UC_API(GenericAPI):
         """
         k, i, s, v, w, u, p, q = parse_function_params(kwargs, 'kisvwupq',
                                                        '.sR.nsin')
+        if v is not None: v = str(v)
         item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if s == 'toggle':
@@ -372,6 +373,7 @@ class UC_API(GenericAPI):
             v: item value
         """
         k, i, s, v = parse_function_params(kwargs, 'kisv', '.si.')
+        if v is not None: v = str(v)
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if s is not None or v is not None:

@@ -726,7 +726,7 @@ class MacroAPI(object):
         if not lvar:
             raise ResourceNotFound
         if value is None: v = ''
-        else: v = value
+        else: v = str(value)
         result = lvar.update_set_state(value=v)
         if not result:
             raise FunctionFailed('lvar set error: %s, value = "%s"' % \

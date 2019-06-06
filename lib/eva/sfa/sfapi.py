@@ -225,6 +225,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i, s, v, w, u, p, q = parse_function_params(kwargs, 'kisvwupq',
                                                        '.sR.nsin')
+        if v is not None: v = str(v)
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): raise ResourceNotFound
         return ecall(
@@ -452,6 +453,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             v: lvar value
         """
         k, i, s, v, = parse_function_params(kwargs, 'kisv', '.si.')
+        if v is not None: v = str(v)
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
         if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
         return ecall(

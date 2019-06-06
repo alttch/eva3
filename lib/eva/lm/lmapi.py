@@ -158,6 +158,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         if s and not -1 <= s <= 1:
             raise InvalidParameter('status should be -1, 0 or 1')
         if v is None: v = ''
+        else: v = str(v)
         return item.update_set_state(status=s, value=v)
 
     @log_i
