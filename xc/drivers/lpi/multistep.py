@@ -1,7 +1,7 @@
 __author__ = 'Altertech Group, https://www.altertech.com/'
 __copyright__ = 'Copyright (C) 2012-2019 Altertech Group'
 __license__ = 'Apache License 2.0'
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 __description__ = 'Multistep LPI (opener)'
 __api__ = 4
 
@@ -90,6 +90,10 @@ from eva.uc.driverapi import log_traceback
 from eva.tools import val_to_boolean
 
 from eva.uc.driverapi import lpi_constructor
+
+
+class PredictedTimeoutException(Exception):
+    pass
 
 
 class LPI(BasicLPI):
@@ -209,33 +213,37 @@ class LPI(BasicLPI):
                 te = int(te)
             except:
                 return self.action_result_error(_uuid, 1, 'te is not a number')
-        if nstatus < pstatus and ts and ts <= nstatus:
-            # we need to go to start then to nstatus
-            _delay = self._calc_delay(pstatus, 0, steps, warmup, tuning)
-            _delay += self._calc_delay(0, nstatus, steps, warmup, tuning)
-            if _delay > time_start - time() + timeout:
-                return self.action_result_error(
-                    _uuid, 4,
-                    'can not perform action. requires: %s sec, timeout: %s sec'
-                    % (_delay, timeout))
-            _pstatus = [pstatus, 0]
-            _nstatus = [0, nstatus]
-        elif nstatus > pstatus and te and te <= nstatus:
-            # we need to go to the end then to nstatus
-            _delay = self._calc_delay(pstatus, len(steps), steps, warmup,
-                                      tuning)
-            _delay += self._calc_delay(
-                len(steps), nstatus, steps, warmup, tuning)
-            if _delay > time_start - time() + timeout:
-                return self.action_result_error(
-                    _uuid, 4,
-                    'can not perform action. requires: %s sec, timeout: %s sec'
-                    % (_delay, timeout))
-            _pstatus = [pstatus, len(steps)]
-            _nstatus = [len(steps), nstatus]
-        else:
-            _pstatus = [pstatus]
-            _nstatus = [nstatus]
+        try:
+            if nstatus < pstatus and ts and ts <= nstatus:
+                # we need to go to start then to nstatus
+                _delay = self._calc_delay(pstatus, 0, steps, warmup, tuning)
+                _delay += self._calc_delay(0, nstatus, steps, warmup, tuning)
+                if _delay > time_start - time() + timeout:
+                    raise PredictedTimeoutException
+                _pstatus = [pstatus, 0]
+                _nstatus = [0, nstatus]
+            elif nstatus > pstatus and te and te <= nstatus:
+                # we need to go to the end then to nstatus
+                _delay = self._calc_delay(pstatus, len(steps), steps, warmup,
+                                          tuning)
+                _delay += self._calc_delay(
+                    len(steps), nstatus, steps, warmup, tuning)
+                if _delay > time_start - time() + timeout:
+                    raise PredictedTimeoutException
+                _pstatus = [pstatus, len(steps)]
+                _nstatus = [len(steps), nstatus]
+            else:
+                _delay = self._calc_delay(pstatus, nstatus, steps, warmup,
+                                          tuning)
+                if _delay > time_start - time() + timeout:
+                    raise PredictedTimeoutException
+                _pstatus = [pstatus]
+                _nstatus = [nstatus]
+        except PredictedTimeoutException:
+            return self.action_result_error(
+                _uuid, 4,
+                'can not perform action. requires: %s sec, timeout: %s sec' %
+                (_delay, timeout))
         for i in range(0, len(_pstatus)):
             pstatus = _pstatus[i]
             nstatus = _nstatus[i]
