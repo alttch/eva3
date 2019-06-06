@@ -1398,21 +1398,29 @@ class ItemAction(GenericAction):
             self.item_action_lock.release()
 
     def serialize(self):
-        d = {}
-        d['uuid'] = self.uuid
-        d['status'] = ia_status_names[self.get_status()]
-        d['priority'] = self.priority
-        d['exitcode'] = self.exitcode
-        d['out'] = self.out
-        d['err'] = self.err
-        d['item_id'] = self.item.item_id
-        d['item_group'] = self.item.group
-        d['item_type'] = self.item.item_type
-        d['item_oid'] = self.item.oid
-        d['time'] = {}
-        for i, v in self.time.items():
-            d['time'][ia_status_names[i]] = v
-        return d
+        if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ItemAction::set_status locking broken')
+            eva.core.critical()
+            return False
+        try:
+            d = {}
+            d['uuid'] = self.uuid
+            d['status'] = ia_status_names[self.get_status()]
+            d['finished'] = self.is_finished()
+            d['priority'] = self.priority
+            d['exitcode'] = self.exitcode
+            d['out'] = self.out
+            d['err'] = self.err
+            d['item_id'] = self.item.item_id
+            d['item_group'] = self.item.group
+            d['item_type'] = self.item.item_type
+            d['item_oid'] = self.item.oid
+            d['time'] = {}
+            for i, v in self.time.items():
+                d['time'][ia_status_names[i]] = v
+            return d
+        finally:
+            self.item_action_lock.release()
 
 
 class MultiUpdate(UpdatableItem):
