@@ -37,7 +37,6 @@ from eva.uc.driverapi import get_timeout
 class LPI(object):
 
     connections = {'port': 'primary'}
-
     """
     Functions required to be overriden
     """
@@ -162,11 +161,10 @@ class LPI(object):
     """
 
     def delay(self, _uuid, sec):
-        i = 0
-        while i < sec:
+        t_end = time.time() + sec
+        while time.time() < t_end:
             if self.need_terminate(_uuid): return False
             time.sleep(get_polldelay())
-            i += get_polldelay()
         return not self.need_terminate(_uuid)
 
     def action_result_terminated(self, _uuid):
