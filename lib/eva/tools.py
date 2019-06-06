@@ -421,3 +421,35 @@ def dict_merge(*args):
 def gen_random_str(length=64):
     symbols = string.ascii_letters + '0123456789'
     return ''.join(random.choice(symbols) for i in range(length))
+
+
+def format_modbus_value(val):
+    try:
+        if val[0] not in ['h', 'c']: return None, None, None, None
+        if val.find('*') != -1:
+            addr, multiplier = val[1:].split('*', 1)
+            try:
+                multiplier = float(multiplier)
+            except:
+                return None, None, None, None
+        elif val.find('/') != -1:
+            addr, multiplier = val[1:].split('/', 1)
+            try:
+                multiplier = float(multiplier)
+                multiplier = 1 / multiplier
+            except:
+                return None, None, None, None
+        else:
+            addr = val[1:]
+            multiplier = 1
+        if addr.startswith('S'):
+            addr = addr[1:]
+            signed = True
+        else:
+            signed = False
+        addr = safe_int(addr)
+        if addr > 9999 or addr < 0:
+            return None, None, None, None
+        return val[0], addr, multiplier, signed
+    except:
+        return None, None, None, None

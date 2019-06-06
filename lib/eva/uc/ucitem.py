@@ -13,6 +13,7 @@ import eva.traphandler
 
 from eva.tools import safe_int
 from eva.tools import dict_from_str
+from eva.tools import format_modbus_value
 
 
 class UCItem(eva.item.Item):
@@ -36,7 +37,7 @@ class UCItem(eva.item.Item):
             self.modbus_value = data['modbus_value']
             self.modbus_value_reg, self.modbus_value_addr, \
                     self.modbus_value_multiplier, \
-                    self.modbus_value_signed = self.format_modbus_value(
+                    self.modbus_value_signed = format_modbus_value(
                 self.modbus_value)
         super().update_config(data)
 
@@ -60,7 +61,7 @@ class UCItem(eva.item.Item):
                 eva.uc.modbus.unregister_handler(
                     self.modbus_value_addr,
                     self.modbus_update_value,
-                    register=self.modbus_value_multiplier)
+                    register=self.modbus_value_reg)
             except:
                 eva.core.log_traceback()
 
@@ -115,7 +116,7 @@ class UCItem(eva.item.Item):
                 self.unregister_modbus_value_updates()
                 self.modbus_value = None
             else:
-                reg, addr, multiplier, signed = self.format_modbus_value(val)
+                reg, addr, multiplier, signed = format_modbus_value(val)
                 if reg is None or addr is None or multiplier is None:
                     return False
                 self.unregister_modbus_value_updates()
@@ -372,35 +373,3 @@ class UCItem(eva.item.Item):
             if not config or self.modbus_value:
                 d['modbus_value'] = self.modbus_value
         return d
-
-    @staticmethod
-    def format_modbus_value(val):
-        try:
-            if val[0] not in ['h', 'c']: return None, None, None, None
-            if val.find('*') != -1:
-                addr, multiplier = val[1:].split('*', 1)
-                try:
-                    multiplier = float(multiplier)
-                except:
-                    return None, None, None, None
-            elif val.find('/') != -1:
-                addr, multiplier = val[1:].split('/', 1)
-                try:
-                    multiplier = float(multiplier)
-                    multiplier = 1 / multiplier
-                except:
-                    return None, None, None, None
-            else:
-                addr = val[1:]
-                multiplier = 1
-            if addr.startswith('S'):
-                addr = addr[1:]
-                signed = True
-            else:
-                signed = False
-            addr = safe_int(addr)
-            if addr > eva.uc.modbus.slave_reg_max or addr < 0:
-                return None, None, None, None
-            return val[0], addr, multiplier, signed
-        except:
-            return None, None, None, None
