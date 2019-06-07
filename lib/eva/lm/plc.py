@@ -260,7 +260,7 @@ class PLC(eva.item.ActiveItem):
                 if not a or not a.item: continue
                 if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                     logging.critical(
-                        'ActiveItem::_t_action_processor locking broken')
+                        'PLC::_t_action_processor locking broken')
                     eva.core.critical()
                     continue
                 self.current_action = a
@@ -298,7 +298,7 @@ class PLC(eva.item.ActiveItem):
                 eva.core.log_traceback()
             if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical(
-                    'ActiveItem::_t_action_processor locking broken')
+                    'PLC::_t_action_processor locking broken')
                 eva.core.critical()
                 continue
             self.current_action = None
