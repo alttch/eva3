@@ -2023,7 +2023,6 @@ def start():
 
 @eva.core.stop
 def stop():
-    notify_restart()
     for i, n in notifiers.copy().items():
         n.stop()
     notifier_client_cleaner.stop()
@@ -2039,6 +2038,7 @@ def reload_clients():
         if n.nt_client: n.send_reload()
 
 
+@eva.core.shutdown
 def notify_restart():
     logging.warning('sending server restart event to clients')
     for k, n in notifiers.copy().items():

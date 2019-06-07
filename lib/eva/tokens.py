@@ -105,7 +105,7 @@ def start():
         token_cleaner.start()
 
 
-@eva.core.shutdown
+@eva.core.stop
 def stop():
     if is_enabled():
         token_cleaner.stop()
