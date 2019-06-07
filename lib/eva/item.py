@@ -792,7 +792,8 @@ class ActiveItem(Item):
         self._action_timeout = None
         self.term_kill_interval = eva.core.config.timeout
         self._term_kill_interval = None
-        self.queue_lock = threading.RLock()
+        # Lock() is REQUIRED for LM PLC (released in plc._t_action thread)
+        self.queue_lock = threading.Lock()
         self.action_processor = None
         self.action_processor_active = False
         self.current_action = None
@@ -832,8 +833,9 @@ class ActiveItem(Item):
         finally:
             self.queue_lock.release()
 
-    def q_clean(self):
-        if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
+    def q_clean(self, lock=True):
+        if lock and \
+                not self.queue_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('ActiveItem::q_clean locking broken')
             eva.core.critical()
             return False
@@ -850,10 +852,11 @@ class ActiveItem(Item):
             logging.info('removed %u actions from queue of %s' % (i, self.oid))
             return True
         finally:
-            self.queue_lock.release()
+            if lock: self.queue_lock.release()
 
-    def terminate(self):
-        if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
+    def terminate(self, lock=True):
+        if lock and \
+                not self.queue_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('ActiveItem::terminate locking broken')
             eva.core.critical()
             return False
@@ -869,7 +872,7 @@ class ActiveItem(Item):
                 return True
             return None
         finally:
-            self.queue_lock.release()
+            if lock: self.queue_lock.release()
 
     def kill(self):
         if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
@@ -877,8 +880,8 @@ class ActiveItem(Item):
             eva.core.critical()
             return False
         try:
-            self.q_clean()
-            self.terminate()
+            self.q_clean(lock=False)
+            self.terminate(lock=False)
             return True
         finally:
             self.queue_lock.release()
