@@ -238,6 +238,11 @@ class APIKey(object):
         dbconn = userdb()
         try:
             if not self.in_db:
+                # if save on exit is set, deleted key with the same name could
+                # still be present in the database
+                dbconn.execute(
+                    sql('delete from apikeys where k_id=:k_id'),
+                    k_id=data['id'])
                 dbconn.execute(
                     sql('insert into apikeys(k_id, k, m, s, i,' +
                         ' g, i_ro, g_ro, a,hal, has, pvt, rpvt) values ' +
