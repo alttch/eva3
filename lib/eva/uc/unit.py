@@ -80,7 +80,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             elif props:
                 d['action_driver_config'] = None
             if not config or self.modbus_status:
-                        d['modbus_status'] = self.modbus_status
+                d['modbus_status'] = self.modbus_status
             if not config or \
                     (self.status_labels.keys() != \
                         self.default_status_labels.keys()) or \
@@ -480,8 +480,7 @@ class UnitAction(eva.item.ItemAction):
         self.unit_action_lock.release()
 
     def set_status(self, status, exitcode=None, out=None, err=None):
-        if not self.unit_action_lock.acquire(
-                timeout=eva.core.config.timeout):
+        if not self.unit_action_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('UnitAction::set_status locking broken')
             return False
         try:
@@ -504,8 +503,8 @@ class UnitAction(eva.item.ItemAction):
                     self.item.set_state_to_n()
                     smsg = 'status=%u value="%s"' % (self.item.status,
                                                      self.item.value)
-                logging.debug(
-                    'action %s completed, %s %s' % (self.uuid, self.item.oid, smsg))
+                logging.debug('action %s completed, %s %s' %
+                              (self.uuid, self.item.oid, smsg))
             return True
         finally:
             self.unit_action_lock.release()
@@ -518,8 +517,7 @@ class UnitAction(eva.item.ItemAction):
         return e
 
     def serialize(self):
-        if not self.unit_action_lock.acquire(
-                timeout=eva.core.config.timeout):
+        if not self.unit_action_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('UnitAction::set_status locking broken')
             return False
         try:
