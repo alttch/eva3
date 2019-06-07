@@ -532,7 +532,7 @@ class GenericAPI(object):
     def _process_action_result(a):
         if not a: raise ResourceNotFound('item found, but something not')
         if a.is_status_dead():
-            raise FunctionFailed('{} is dead'.format(a.uiid))
+            raise FunctionFailed('{} is dead'.format(a.uuid))
         return a.serialize()
 
     def _get_state_history(self,
