@@ -643,6 +643,7 @@ class GenericAPI(object):
         result = {
             'acl': apikey.serialized_acl(k),
             'system': eva.core.config.system_name,
+            'controller': eva.core.config.controller_name,
             'time': time.time(),
             'log_level': eva.core.config.default_log_level_id,
             'version': eva.core.version,

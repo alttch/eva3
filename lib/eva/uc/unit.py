@@ -434,8 +434,9 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             self.nvalue = nv
         if need_notify:
             logging.debug(
-                '%s status = %u, value = "%s", nstatus = %u, nvalue = "%s"' % \
-                        (self.oid, self.status, self.value,
+                '%s%s status = %u, value = "%s", nstatus = %u, nvalue = "%s"' %\
+                    (self.oid, ' (mqtt update)' if \
+                    from_mqtt else '', self.status, self.value,
                             self.nstatus, self.nvalue))
             if self.status == -1:
                 logging.error('%s status is -1 (failed)' % self.oid)

@@ -690,7 +690,8 @@ class UpdatableItem(Item):
                     return
                 j = jsonpickle.decode(data)
                 t = j['t']
-                if t < self.mqtt_update_timestamp:
+                if t < self.mqtt_update_timestamp or \
+                        j.get('c') == eva.core.config.controller_name:
                     return None
                 self.mqtt_update_timestamp = t
                 if 'status' in j:

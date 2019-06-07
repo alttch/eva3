@@ -62,6 +62,7 @@ config = SimpleNamespace(
     userdb_uri=None,
     debug=False,
     system_name=platform.node(),
+    controller_name=None,
     development=False,
     show_traceback=False,
     stop_on_critical='always',
@@ -358,6 +359,11 @@ def set_product(code, build):
     config.db_uri = format_db_uri('db/%s.db' % product.code)
     config.userdb_uri = config.db_uri
     set_db(config.db_uri, config.userdb_uri)
+    update_controller_name()
+
+
+def update_controller_name():
+    config.controller_name = '{}/{}'.format(product.code, config.system_name)
 
 
 def set_db(db_uri=None, userdb_uri=None):
@@ -505,6 +511,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                         log_engine.logger.setLevel(config.default_log_level)
             try:
                 config.system_name = cfg.get('server', 'name')
+                update_controller_name()
             except:
                 pass
             logging.info('Loading server config')
