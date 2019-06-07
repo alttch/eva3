@@ -8,6 +8,8 @@ Pragma: no-cache
 {
     "err": "",
     "exitcode": null,
+    "finished": true,
+    "finished_in": 0.0005889,
     "item_group": "tests",
     "item_id": "unit1",
     "item_oid": "unit:tests/unit1",
@@ -16,12 +18,11 @@ Pragma: no-cache
     "nvalue": null,
     "out": "",
     "priority": 100,
-    "status": "running",
+    "status": "refused",
     "time": {
-        "created": 1553393178.7079775,
-        "pending": 1553393178.7081232,
-        "queued": 1553393178.708571,
-        "running": 1553393178.7089026
+        "created": 1559868835.75104,
+        "pending": 1559868835.751197,
+        "refused": 1559868835.7516289
     },
-    "uuid": "28a51359-3b72-48dd-8197-dcee7fb0aa21"
+    "uuid": "d2aab822-ec47-4370-8145-f8f455db4d27"
 }

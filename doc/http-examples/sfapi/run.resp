@@ -8,21 +8,22 @@ Pragma: no-cache
 {
     "args": [],
     "err": "",
-    "exitcode": 0,
+    "exitcode": null,
+    "finished": false,
+    "finished_in": null,
     "item_group": "tests",
     "item_id": "test1",
     "item_oid": "lmacro:tests/test1",
     "item_type": "lmacro",
     "kwargs": {},
-    "out": "i am macro 1",
+    "out": "",
     "priority": 100,
-    "status": "completed",
+    "status": "running",
     "time": {
-        "completed": 1553393179.5617268,
-        "created": 1553393179.5584521,
-        "pending": 1553393179.558769,
-        "queued": 1553393179.5597007,
-        "running": 1553393179.5601742
+        "created": 1559868836.2586453,
+        "pending": 1559868836.258813,
+        "queued": 1559868836.2594464,
+        "running": 1559868836.2602909
     },
-    "uuid": "58b39005-e1d4-4e62-9700-74a06a36ed98"
+    "uuid": "d7ced6b4-f0fc-4b11-8e4c-c2960ca8617e"
 }

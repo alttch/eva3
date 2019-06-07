@@ -2,6 +2,8 @@
     "args": [],
     "err": "",
     "exitcode": 0,
+    "finished": true,
+    "finished_in": 0.0047829,
     "item_group": "tests",
     "item_id": "test1",
     "item_oid": "lmacro:tests/test1",
@@ -10,15 +12,15 @@
         "v1": "test",
         "v2": 999
     },
-    "out": "i am macro 1",
+    "out": "",
     "priority": 100,
     "status": "completed",
     "time": {
-        "completed": 1553466277.50619,
-        "created": 1553466277.5015311,
-        "pending": 1553466277.502084,
-        "queued": 1553466277.5031419,
-        "running": 1553466277.5042534
+        "completed": 1559869087.3697698,
+        "created": 1559869087.364987,
+        "pending": 1559869087.3653126,
+        "queued": 1559869087.3661342,
+        "running": 1559869087.3669574
     },
-    "uuid": "f8dc24bf-bd50-4c2e-9728-9939807329f6"
+    "uuid": "fc0e8c8e-9c93-49c4-bb30-e7905fedc33f"
 }

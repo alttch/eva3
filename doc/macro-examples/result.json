@@ -2,6 +2,31 @@
     {
         "err": "",
         "exitcode": 0,
+        "finished": true,
+        "finished_in": 0.0147429,
+        "item_group": "tests",
+        "item_id": "unit1",
+        "item_oid": "unit:tests/unit1",
+        "item_type": "unit",
+        "nstatus": 0,
+        "nvalue": null,
+        "out": "",
+        "priority": 100,
+        "status": "completed",
+        "time": {
+            "completed": 1559869099.8924437,
+            "created": 1559869099.8777008,
+            "pending": 1559869099.8778677,
+            "queued": 1559869099.8782423,
+            "running": 1559869099.8786528
+        },
+        "uuid": "d5b82c8c-9a95-482a-9063-e3048addc741"
+    },
+    {
+        "err": "",
+        "exitcode": 0,
+        "finished": true,
+        "finished_in": 0.0149484,
         "item_group": "tests",
         "item_id": "unit1",
         "item_oid": "unit:tests/unit1",
@@ -12,32 +37,12 @@
         "priority": 100,
         "status": "completed",
         "time": {
-            "completed": 1553441469.549005,
-            "created": 1553441469.5324786,
-            "pending": 1553441469.5328996,
-            "queued": 1553441469.5334597,
-            "running": 1553441469.533866
+            "completed": 1559869105.9634602,
+            "created": 1559869105.9485118,
+            "pending": 1559869105.9487257,
+            "queued": 1559869105.9491074,
+            "running": 1559869105.949467
         },
-        "uuid": "fbfd9426-911e-4c40-9d59-4fd835723c98"
-    },
-    {
-        "err": "",
-        "exitcode": null,
-        "item_group": "tests",
-        "item_id": "unit1",
-        "item_oid": "unit:tests/unit1",
-        "item_type": "unit",
-        "nstatus": 1,
-        "nvalue": null,
-        "out": "",
-        "priority": 100,
-        "status": "ignored",
-        "time": {
-            "created": 1553441793.621345,
-            "ignored": 1553441793.623007,
-            "pending": 1553441793.6215,
-            "queued": 1553441793.622087
-        },
-        "uuid": "d62241b7-0c28-4f7a-80c4-07d40a876213"
+        "uuid": "4bce26a6-7203-4a3c-a123-14c144dcc613"
     }
 ]

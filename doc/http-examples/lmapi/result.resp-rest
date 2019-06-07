@@ -11,6 +11,7 @@ Pragma: no-cache
         "err": "",
         "exitcode": 0,
         "finished": true,
+        "finished_in": 0.0097811,
         "item_group": "tests",
         "item_id": "test_macro",
         "item_oid": "lmacro:tests/test_macro",
@@ -20,12 +21,12 @@ Pragma: no-cache
         "priority": 100,
         "status": "completed",
         "time": {
-            "completed": 1553208910.6751578,
-            "created": 1553208910.6690092,
-            "pending": 1553208910.669596,
-            "queued": 1553208910.6709642,
-            "running": 1553208910.6717882
+            "completed": 1559868831.1551707,
+            "created": 1559868831.1453896,
+            "pending": 1559868831.1458647,
+            "queued": 1559868831.1469553,
+            "running": 1559868831.1479862
         },
-        "uuid": "35540036-c941-489c-bda7-c2d209c3abd6"
+        "uuid": "7707c382-eefa-48d2-9b5e-92d114af4e85"
     }
 ]

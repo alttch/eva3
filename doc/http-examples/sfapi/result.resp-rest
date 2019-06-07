@@ -10,6 +10,7 @@ Pragma: no-cache
         "err": "",
         "exitcode": null,
         "finished": true,
+        "finished_in": 0.0006144,
         "item_group": "tests",
         "item_id": "unit1",
         "item_oid": "unit:tests/unit1",
@@ -20,16 +21,17 @@ Pragma: no-cache
         "priority": 100,
         "status": "refused",
         "time": {
-            "created": 1553390700.351254,
-            "pending": 1553390700.3515577,
-            "refused": 1553390700.3521607
+            "created": 1559868829.0452583,
+            "pending": 1559868829.0455182,
+            "refused": 1559868829.0458727
         },
-        "uuid": "43fc6cf8-868c-41e6-973a-3bd0651a7a58"
+        "uuid": "70db470b-7d7e-4698-a001-01958c0ff3a7"
     },
     {
         "err": "",
         "exitcode": null,
         "finished": true,
+        "finished_in": 0.0010161,
         "item_group": "tests",
         "item_id": "unit1",
         "item_oid": "unit:tests/unit1",
@@ -40,10 +42,52 @@ Pragma: no-cache
         "priority": 100,
         "status": "refused",
         "time": {
-            "created": 1553390734.4005053,
-            "pending": 1553390734.4006555,
-            "refused": 1553390734.401113
+            "created": 1559868829.087297,
+            "pending": 1559868829.0876813,
+            "refused": 1559868829.088313
         },
-        "uuid": "fe463243-789d-4f63-ac7d-ec1d4d81c30b"
+        "uuid": "3737a15b-515c-4e85-be2a-c937392851fa"
+    },
+    {
+        "err": "",
+        "exitcode": null,
+        "finished": true,
+        "finished_in": 0.0005889,
+        "item_group": "tests",
+        "item_id": "unit1",
+        "item_oid": "unit:tests/unit1",
+        "item_type": "unit",
+        "nstatus": 1,
+        "nvalue": null,
+        "out": "",
+        "priority": 100,
+        "status": "refused",
+        "time": {
+            "created": 1559868835.75104,
+            "pending": 1559868835.751197,
+            "refused": 1559868835.7516289
+        },
+        "uuid": "d2aab822-ec47-4370-8145-f8f455db4d27"
+    },
+    {
+        "err": "",
+        "exitcode": null,
+        "finished": true,
+        "finished_in": 0.001091,
+        "item_group": "tests",
+        "item_id": "unit1",
+        "item_oid": "unit:tests/unit1",
+        "item_type": "unit",
+        "nstatus": 1,
+        "nvalue": null,
+        "out": "",
+        "priority": 100,
+        "status": "refused",
+        "time": {
+            "created": 1559868835.7902575,
+            "pending": 1559868835.7906036,
+            "refused": 1559868835.7913485
+        },
+        "uuid": "8038de65-3833-4aa5-94c1-c0f0e86eb3fe"
     }
 ]
