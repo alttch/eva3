@@ -302,7 +302,7 @@ class PyThread(object):
 
     def compile(self):
         if not self.compile_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical('ActiveItem::q_put_task locking broken')
+            logging.critical('PyThread::compile locking broken')
             eva.core.critical()
             return False
         try:
