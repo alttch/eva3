@@ -1388,9 +1388,9 @@ class ItemAction(GenericAction):
             try:
                 if self.is_finished(): return None
                 if self.is_status_running():
-                    result = self.item.terminate()
+                    result = self.item.terminate(lock=False)
                 else:
-                    result = self.set_status(eva.core.item.ia_status_canceled)
+                    result = self.set_status(ia_status_canceled)
                 return result
             finally:
                 self.item.queue_lock.release()
