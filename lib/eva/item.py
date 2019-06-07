@@ -1420,7 +1420,8 @@ class ItemAction(GenericAction):
             for i, v in self.time.items():
                 d['time'][ia_status_names[i]] = v
                 if v > t_max: t_max = v
-            d['finished_in'] = round(t_max - self.time[ia_status_created], 7)
+            d['finished_in'] = round(t_max - self.time[ia_status_created], 7) \
+                    if self.is_finished() else None
             return d
         finally:
             self.item_action_lock.release()
