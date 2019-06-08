@@ -627,8 +627,13 @@ function eva_sfa_log_level_name(log_level) {
  *
  */
 function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
-  var params = params;
-  if (!params) params = {};
+  var params = $.extend({}, params);
+  var oid;
+  if (typeof(oid) === 'object') {
+    _oid = oid.join();
+  } else {
+    _oid = oid;
+  }
   var timeframe = params['timeframe'];
   if (!timeframe) {
     timeframe = '1D';
@@ -665,15 +670,15 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
     x = prop;
   }
   eva_sfa_state_history(
-    oid,
+    _oid,
     {t: 'iso', s: d.toISOString(), x: x, w: fill},
     function(data) {
       if (chart) {
         chart.data.labels = data.t;
-        if (oid.indexOf(',') == -1) {
+        if (_oid.indexOf(',') == -1) {
           chart.data.datasets[0].data = data[x];
         } else {
-          $.each(oid.split(','), function(a, v) {
+          $.each(_oid.split(','), function(a, v) {
             chart.data.datasets[a].data = data[v + '/' + x];
           });
         }
@@ -686,10 +691,10 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
         });
         var work_cfg = $.extend({}, cfg);
         work_cfg.data.labels = data.t;
-        if (oid.indexOf(',') == -1) {
+        if (_oid.indexOf(',') == -1) {
           work_cfg.data.datasets[0].data = data[x];
         } else {
-          $.each(oid.split(','), function(a, v) {
+          $.each(_oid.split(','), function(a, v) {
             work_cfg.data.datasets[a].data = data[v + '/' + x];
           });
         }
@@ -717,7 +722,7 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
 
   if (update) {
     setTimeout(function() {
-      eva_sfa_chart(ctx, cfg, oid, params, chart);
+      eva_sfa_chart(ctx, cfg, _oid, params, chart);
     }, update * 1000);
   }
 }
