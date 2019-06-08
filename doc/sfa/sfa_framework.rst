@@ -91,7 +91,7 @@ Framework build
 
 .. code-block:: javascript
 
-    eva_sfa_framework_build = 2019052502;
+    eva_sfa_framework_build = 2019060302;
 
 
 .. _sfw_eva_sfa_tsdiff:
@@ -923,11 +923,11 @@ Utility functions
 eva_sfa_chart - display a chart
 -------------------------------
 
-To work with charts you should include Chart.js library, which is located in file lib/chart.min.js (ui folder).
+To work with charts you should include momentus.js and chart.js libraries, which are located in file lib/chart.min.js (ui folder).
 
 .. code-block:: javascript
 
-    function eva_sfa_chart(ctx, cfg, oid, params, _do_update)
+    function eva_sfa_chart(ctx, cfg, oid, params)
 
 Parameters:
 

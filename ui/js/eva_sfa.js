@@ -608,8 +608,8 @@ function eva_sfa_log_level_name(log_level) {
 /**
  * display a chart
  *
- * To work with charts you should include Chart.js library, which is located in
- * file lib/chart.min.js (ui folder).
+ * To work with charts you should include momentus.js and chart.js libraries,
+ * which are located in file lib/chart.min.js (ui folder).
  *
  * @param ctx - html container element id to draw in (must have fixed
  *              width/height)
