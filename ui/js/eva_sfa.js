@@ -257,7 +257,6 @@ function eva_sfa_register_update_state(oid, cb) {
     if (!(oid in eva_sfa_update_state_functions)) {
       eva_sfa_update_state_functions[oid] = Array();
     }
-    console.log(eva_sfa_update_state_functions[oid]);
     eva_sfa_update_state_functions[oid].push(cb);
     var state = eva_sfa_state(oid);
     if (state !== undefined) cb(state);
