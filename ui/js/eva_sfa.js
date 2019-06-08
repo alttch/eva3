@@ -628,7 +628,7 @@ function eva_sfa_log_level_name(log_level) {
  */
 function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   var params = $.extend({}, params);
-  var oid;
+  var _oid;
   if (typeof(oid) === 'object') {
     _oid = oid.join();
   } else {
