@@ -970,6 +970,7 @@ eva_sfa_last_ping = null;
 eva_sfa_last_pong = null;
 
 eva_sfa_popup_active = null;
+eva_sfa_popup_tick_closer = null;
 
 eva_sfa_log_level_names = {
   10: 'DEBUG',
