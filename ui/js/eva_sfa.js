@@ -13,7 +13,7 @@ eva_sfa_framework_version = '3.2.3';
 /**
  * Framework build
  */
-eva_sfa_framework_build = 2019060302;
+eva_sfa_framework_build = 2019060902;
 
 /**
  * Should always contain authentication login or API will be unable
