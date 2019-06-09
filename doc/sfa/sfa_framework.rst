@@ -5,9 +5,9 @@ SFA Framework is a component of :doc:`/sfa/sfa` that allows you to quickly
 create a web application with EVA interface for a specific configuration.
 
 **ui** folder contains *js/eva_sfa.js* file, the framework itself and
-**lib/jquery*.js** - `jQuery <https://jquery.com/>`_, necessary for correct
-operation. Lib folder also contains `Bootstrap <http://getbootstrap.com/>`_
-files often used for web application development.
+Lib folder also contains `Bootstrap <http://getbootstrap.com/>`_ and `jQuery
+<https://jquery.com/>`_) files often used for web application development and
+several other 3rd party libraries.
 
 .. note::
 
@@ -23,7 +23,6 @@ Open the file *ui/index.html* in the editor, connect jQuery and SFA Framework:
 
 .. code-block:: html
 
-    <script src="lib/jquery.min.js"></script>
     <script src="js/eva_sfa.min.js"></script>
 
 To use chart functions, additionally:
@@ -38,6 +37,20 @@ To generate QR codes:
 .. code-block:: html
 
     <script src="lib/qrious.min.js"></script>
+
+To perform API calls, SFA Framework uses **fetch** function which is available
+in all modern web browsers. For older browsers polyfill must be included, e.g.
+`Unfetch <https://github.com/developit/unfetch>`_:
+
+.. code-block:: html
+
+    <script type="text/javascript" src="lib/polyfill/fetch.js"></script>
+
+.. note::
+
+    Starting from EVA ICS 3.2.3, SFA Framework doesn't require jQuery anymore,
+    however jQuery is used in UI examples. You may choose any framework for own
+    interfaces or use vanilla JS.
 
 Callback functions and handlers
 ===============================
@@ -923,7 +936,7 @@ Utility functions
 eva_sfa_chart - display a chart
 -------------------------------
 
-To work with charts you should include momentus.js and chart.js libraries, which are located in file lib/chart.min.js (ui folder).
+To work with charts you should include Chart.js library, which is located in file lib/chart.min.js (ui folder).
 
 .. code-block:: javascript
 
@@ -972,7 +985,7 @@ Parameters:
 
 Returns:
 
-true if QR code is generated
+Qrious QR object if QR code is generated
 
 .. _sfw_eva_sfa_load_animation:
 
@@ -1197,7 +1210,7 @@ The following example shows how to build a log viewer, similar to included in
 
   <html>
     <head>
-    <script src="lib/jquery.min.js"></script>
+    <script src="jquery.min.js"></script>
     <script src="js/eva_sfa.js"></script>
     <style type="text/css">
       #logr {
