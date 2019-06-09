@@ -19,7 +19,7 @@ several other 3rd party libraries.
 Framework connection
 ====================
 
-Open the file *ui/index.html* in the editor, connect jQuery and SFA Framework:
+Open the file *ui/index.html* in the editor, connect SFA Framework JavaScript:
 
 .. code-block:: html
 
@@ -104,7 +104,7 @@ Framework build
 
 .. code-block:: javascript
 
-    eva_sfa_framework_build = 2019060302;
+    eva_sfa_framework_build = 2019060902;
 
 
 .. _sfw_eva_sfa_tsdiff:
