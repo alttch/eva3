@@ -682,7 +682,7 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
       if (chart) {
         chart.data.labels = data.t;
         for (var i = 0; i < _oid.length; i++) {
-          chart.data.datasets[i].data = data[oid[i] + '/' + x];
+          chart.data.datasets[i].data = data[_oid[i] + '/' + x];
         }
         chart.update();
       } else {
@@ -693,7 +693,7 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
         var work_cfg = eva_sfa_extend({}, cfg);
         work_cfg.data.labels = data.t;
         for (var i = 0; i < _oid.length; i++) {
-          work_cfg.data.datasets[i].data = data[oid[i] + '/' + x];
+          work_cfg.data.datasets[i].data = data[_oid[i] + '/' + x];
         }
         cc.innerHTML = '';
         cc.appendChild(canvas);
