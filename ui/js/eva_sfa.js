@@ -265,10 +265,14 @@ function eva_sfa_register_update_state(oid, cb) {
       eva_sfa_update_state_mask_functions[oid] = Array();
     }
     eva_sfa_update_state_mask_functions[oid].push(cb);
-    var i = eva_sfa_state(oid);
-    $.each(i, function(k, v) {
+    var v = eva_sfa_state(oid);
+    if (typeof v === 'object') {
+      for (var i = 0; i < v.length; i++) {
+        cb(v[i]);
+      }
+    } else {
       cb(v);
-    });
+    }
   }
 }
 
@@ -303,11 +307,11 @@ function eva_sfa_state(oid) {
     }
   }
   var result = new Array();
-  $.each(Object.keys(eva_sfa_states), function(i, v) {
-    if (eva_sfa_oid_match(v, oid)) {
-      result.push(eva_sfa_states[v]);
+  for (var k in eva_sfa_states) {
+    if (eva_sfa_oid_match(k, oid)) {
+      result.push(eva_sfa_states[k]);
     }
-  });
+  }
   return result;
 }
 
@@ -607,8 +611,8 @@ function eva_sfa_log_level_name(log_level) {
 /**
  * display a chart
  *
- * To work with charts you should include momentus.js and chart.js libraries,
- * which are located in file lib/chart.min.js (ui folder).
+ * To work with charts you should include Chart.js library, which is located in
+ * file lib/chart.min.js (ui folder).
  *
  * @param ctx - html container element id to draw in (must have fixed
  *              width/height)
@@ -626,12 +630,12 @@ function eva_sfa_log_level_name(log_level) {
  *
  */
 function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
-  var params = $.extend({}, params);
+  var params = eva_sfa_extend({}, params);
   var _oid;
-  if (typeof(oid) === 'object') {
-    _oid = oid.join();
-  } else {
+  if (typeof oid === 'object') {
     _oid = oid;
+  } else {
+    _oid = oid.split(',');
   }
   var timeframe = params['timeframe'];
   if (!timeframe) {
@@ -643,13 +647,16 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   }
   var update = params['update'];
   var prop = params['prop'];
-  var cc = $('#' + ctx);
+  var cc = document.getElementById(ctx);
   var data_units = params['u'];
   var chart = null;
   if (_do_update) {
     chart = _do_update;
   }
-  if (_do_update !== undefined && !cc.is(':visible')) {
+  if (
+    _do_update !== undefined &&
+    (cc.offsetWidth <= 0 || cc.offsetHeight <= 0)
+  ) {
     if (chart) chart.destroy();
     return;
   }
@@ -665,7 +672,7 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
   }
   if (!_do_update) eva_sfa_load_animation(ctx);
   var x = 'value';
-  if (prop !== undefined && prop != null) {
+  if (prop !== undefined && prop !== null) {
     x = prop;
   }
   eva_sfa_state_history(
@@ -674,30 +681,22 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
     function(data) {
       if (chart) {
         chart.data.labels = data.t;
-        if (_oid.indexOf(',') == -1) {
-          chart.data.datasets[0].data = data[x];
-        } else {
-          $.each(_oid.split(','), function(a, v) {
-            chart.data.datasets[a].data = data[v + '/' + x];
-          });
+        for (var i = 0; i < _oid.length; i++) {
+          chart.data.datasets[i].data = data[oid[i] + '/' + x];
         }
         chart.update();
       } else {
-        var canvas = $('<canvas />', {
-          width: '100%',
-          height: '100%',
-          class: 'eva_sfa_chart'
-        });
-        var work_cfg = $.extend({}, cfg);
+        var canvas = document.createElement('canvas');
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.className = 'eva_sfa_chart';
+        var work_cfg = eva_sfa_extend({}, cfg);
         work_cfg.data.labels = data.t;
-        if (_oid.indexOf(',') == -1) {
-          work_cfg.data.datasets[0].data = data[x];
-        } else {
-          $.each(_oid.split(','), function(a, v) {
-            work_cfg.data.datasets[a].data = data[v + '/' + x];
-          });
+        for (var i = 0; i < _oid.length; i++) {
+          work_cfg.data.datasets[i].data = data[oid[i] + '/' + x];
         }
-        cc.html(canvas);
+        cc.innerHTML = '';
+        cc.appendChild(canvas);
         chart = new Chart(canvas, work_cfg);
         if (data_units) {
           work_cfg.options.tooltips.callbacks.label = function(tti) {
@@ -707,13 +706,14 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
       }
     },
     function(code, msg, data) {
-      var d_error = $('<div />', {
-        class: 'eva_sfa_chart',
-        style:
-          'width: 100%; height: 100%; ' +
-          'color: red; font-weight: bold; font-size: 14px'
-      }).html('Error loading chart data: ' + msg);
-      cc.html(d_error);
+      var d_error = document.createElement('div');
+      d_error.className = 'eva_sfa_chart';
+      d_error.style.cssText =
+        'width: 100%; height: 100%; ' +
+        'color: red; font-weight: bold; font-size: 14px';
+      d_error.innerHTML = 'Error loading chart data: ' + msg;
+      cc.innerHTML = '';
+      cc.appendChild(d_error);
       if (chart) chart.destroy();
       chart = null;
     }
@@ -734,13 +734,12 @@ function eva_sfa_chart(ctx, cfg, oid, params, _do_update) {
  * @param el_id - html element id
  */
 function eva_sfa_load_animation(el_id) {
-  $('#' + el_id).html(
+  document.getElementById(el_id).innerHTML =
     '<div class="eva-sfa-cssload-square"><div ' +
-      'class="eva-sfa-cssload-square-part eva-sfa-cssload-square-green">' +
-      '</div><div class="eva-sfa-cssload-square-part ' +
-      'eva-sfa-cssload-square-pink">' +
-      '</div><div class="eva-sfa-cssload-square-blend"></div></div>'
-  );
+    'class="eva-sfa-cssload-square-part eva-sfa-cssload-square-green">' +
+    '</div><div class="eva-sfa-cssload-square-part ' +
+    'eva-sfa-cssload-square-pink">' +
+    '</div><div class="eva-sfa-cssload-square-blend"></div></div>';
 }
 
 /**
@@ -758,7 +757,7 @@ function eva_sfa_load_animation(el_id) {
  *              @user - override user (default: eva_sfa_authorized_user)
  *              @password - override password
  *
- * @returns true if QR code is generated
+ * @returns Qrious QR object if QR code is generated
  */
 function eva_sfa_hi_qr(ctx, params) {
   var params = params;
@@ -806,12 +805,11 @@ function eva_sfa_hi_qr(ctx, params) {
   if (password) {
     value += '|password:' + password;
   }
-  var qr = new QRious({
+  return new QRious({
     element: document.getElementById(ctx),
     value: value,
     size: size
   });
-  return true;
 }
 
 /**
@@ -861,47 +859,52 @@ function eva_sfa_popup(ctx, pclass, title, msg, params) {
     return false;
   }
   eva_sfa_popup_active = _pclass;
-  var popup = $('#' + ctx);
-  popup.removeClass();
-  popup.html('');
-  popup.addClass('eva_sfa_popup');
-  var popup_window = $('<div />', {class: 'eva_sfa_popup_window'});
-  popup.append(popup_window);
+  var popup = document.getElementById(ctx);
+  popup.innerHTML = '';
+  popup.className = 'eva_sfa_popup';
+  var popup_window = document.createElement('div');
+  popup.appendChild(popup_window);
   if (pclass[0] == '!') {
-    popup_window.addClass('eva_sfa_popup_window_big');
+    popup_window.className = 'eva_sfa_popup_window_big';
   } else {
-    popup_window.addClass('eva_sfa_popup_window');
+    popup_window.className = 'eva_sfa_popup_window';
   }
-  var popup_header = $('<div />', {
-    class: 'eva_sfa_popup_header eva_sfa_popup_header_' + _pclass
-  });
-  if (title !== undefined && title != null) {
-    popup_header.html(title);
+  var popup_header = document.createElement('div');
+  popup_header.className =
+    'eva_sfa_popup_header eva_sfa_popup_header_' + _pclass;
+  if (title !== undefined && title !== null) {
+    popup_header.innerHTML = title;
   } else {
-    popup_header.html(_pclass.charAt(0).toUpperCase() + _pclass.slice(1));
+    popup_header.innerHTML = _pclass.charAt(0).toUpperCase() + _pclass.slice(1);
   }
   popup_window.append(popup_header);
-  var popup_content = $('<div />', {class: 'eva_sfa_popup_content'});
-  popup_content.html(msg);
-  popup_window.append(popup_content);
-  var popup_footer = $('<div />', {class: 'eva_sfa_popup_footer'});
-  popup_window.append(popup_footer);
-  var popup_buttons = $('<div />', {class: 'row'});
-  popup_window.append(popup_buttons);
-  var popup_btn1 = $('<div />');
-  var popup_btn2 = $('<div />');
-  $('<div />', {class: 'col-xs-1 col-sm-2'}).appendTo(popup_buttons);
-  popup_buttons.append(popup_btn1);
-  popup_buttons.append(popup_btn2);
-  $('<div />', {class: 'col-xs-1 col-sm-2'}).appendTo(popup_buttons);
+  var popup_content = document.createElement('div');
+  popup_content.className = 'eva_sfa_popup_content';
+  popup_content.innerHTML = msg;
+  popup_window.appendChild(popup_content);
+  var popup_footer = document.createElement('div');
+  popup_footer.className = 'eva_sfa_popup_footer';
+  popup_window.appendChild(popup_footer);
+  var popup_buttons = document.createElement('div');
+  popup_buttons.className = 'row';
+  popup_window.appendChild(popup_buttons);
+  var popup_btn1 = document.createElement('div');
+  var popup_btn2 = document.createElement('div');
+  var spacer = document.createElement('div');
+  spacer.className = 'col-xs-1 col-sm-2';
+  popup_buttons.appendChild(spacer);
+  popup_buttons.appendChild(popup_btn1);
+  popup_buttons.appendChild(popup_btn2);
+  spacer = document.createElement('div');
+  spacer.className = 'col-xs-1 col-sm-2';
+  popup_buttons.appendChild(spacer);
   var btn1text = 'OK';
   if (btn1) {
     btn1text = btn1;
   }
-  var btn1_o = $('<div />', {
-    class: 'eva_sfa_popup_btn eva_sfa_popup_btn_' + _pclass,
-    html: btn1text
-  });
+  var btn1_o = document.createElement('div');
+  btn1_o.className = 'eva_sfa_popup_btn eva_sfa_popup_btn_' + _pclass;
+  btn1_o.innerHTML = btn1text;
   var f_validate_run_and_close = function() {
     if (va === undefined || va == null || va()) {
       eva_sfa_close_popup(ctx);
@@ -909,32 +912,32 @@ function eva_sfa_popup(ctx, pclass, title, msg, params) {
     }
   };
   if (btn1a) {
-    btn1_o.on('click', f_validate_run_and_close);
+    btn1_o.addEventListener('click', f_validate_run_and_close);
   } else {
-    btn1_o.on('click', function() {
+    btn1_o.addEventListener('click', function() {
       eva_sfa_close_popup(ctx);
     });
   }
-  var btn2_o = null;
-  popup_btn1.append(btn1_o);
+  popup_btn1.appendChild(btn1_o);
+  var btn2_o;
   if (btn2) {
-    btn2_o = $('<div />', {
-      class: 'eva_sfa_popup_btn eva_sfa_popup_btn_' + _pclass,
-      html: btn2
-    });
-    btn2_o.on('click', function() {
+    btn2_o = document.createElement('div');
+    btn2_o.className = 'eva_sfa_popup_btn eva_sfa_popup_btn_' + _pclass;
+    btn2_o.innerHTML = btn2;
+    btn2_o.addEventListener('click', function() {
       if (btn2a) btn2a(true);
       eva_sfa_close_popup(ctx);
     });
-    popup_btn2.append(btn2_o);
-    popup_btn1.addClass('col-xs-5 col-sm-4');
-    popup_btn2.addClass('col-xs-5 col-sm-4');
+    popup_btn2.appendChild(btn2_o);
+    popup_btn1.className += ' col-xs-5 col-sm-4';
+    popup_btn2.className += ' col-xs-5 col-sm-4';
   } else {
-    popup_btn1.addClass('col-xs-10 col-sm-8');
-    popup_btn2.hide();
+    popup_btn1.className += ' col-xs-10 col-sm-8';
+    popup_btn2.style.display = 'none';
   }
-  popup.show();
-  $(document).on('keydown', function(e) {
+  popup.style.display = 'block';
+  document.removeEventListener('keydown', eva_sfa_popup_key_listener);
+  eva_sfa_popup_key_listener = function(e) {
     if (e.which == 27) {
       eva_sfa_close_popup(ctx);
       if (btn2a) btn2a(false);
@@ -944,7 +947,8 @@ function eva_sfa_popup(ctx, pclass, title, msg, params) {
       f_validate_run_and_close();
       e.preventDefault();
     }
-  });
+  };
+  document.addEventListener('keydown', eva_sfa_popup_key_listener);
   if (ct && ct > 0) {
     eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct);
   }
@@ -975,6 +979,7 @@ eva_sfa_last_pong = null;
 
 eva_sfa_popup_active = null;
 eva_sfa_popup_tick_closer = null;
+eva_sfa_popup_key_listener = null;
 
 eva_sfa_log_level_names = {
   10: 'DEBUG',
@@ -992,36 +997,53 @@ function eva_sfa_api_call(func, params, cb_success, cb_error, use_sysapi) {
     params: params,
     id: id
   };
-  return $.ajax({
-    type: 'POST',
-    //url: '/' + api + '/' + func,
-    url: '/jrpc',
-    contentType: 'application/json',
-    data: JSON.stringify(payload),
-    dataType: 'json',
-    success: function(data) {
-      if (
-        !'id' in data ||
-        data.id != id ||
-        (!'result' in data && !'error' in data)
-      ) {
-        cb_error(9, 'Invalid server response', data);
-      } else if ('error' in data) {
-        if (cb_error) {
-          cb_error(data.error.code, data.error.message, data);
-        }
-      } else {
-        if (cb_success) {
-          cb_success(data.result);
-        }
-      }
+  return fetch('/jrpc', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
     },
-    error: function(data) {
-      if (cb_error) {
-        cb_error(7, 'Server error', data);
+    redirect: 'error',
+    body: JSON.stringify(payload)
+  })
+    .then(function(response) {
+      if (response.ok) {
+        response
+          .json()
+          .then(function(data) {
+            if (
+              !'id' in data ||
+              data.id != id ||
+              (!'result' in data && !'error' in data)
+            ) {
+              if (cb_error) {
+                cb_error(9, 'Invalid server response', data);
+              }
+            } else if ('error' in data) {
+              if (cb_error) {
+                cb_error(data.error.code, data.error.message, data);
+              }
+            } else {
+              if (cb_success) {
+                cb_success(data.result);
+              }
+            }
+          })
+          .catch(function(err) {
+            if (cb_error) {
+              cb_error(9, 'Invalid server response', response);
+            }
+          });
+      } else {
+        if (cb_error) {
+          cb_error(7, 'Server error', response);
+        }
       }
-    }
-  });
+    })
+    .catch(function(err) {
+      if (cb_error) {
+        cb_error(7, 'Server error', null);
+      }
+    });
 }
 
 function eva_sfa_after_login(data) {
@@ -1065,12 +1087,12 @@ function eva_sfa_process_ws(evt) {
     return;
   }
   if (data.s == 'reload') {
-    if (eva_sfa_reload_handler != null) {
+    if (eva_sfa_reload_handler) {
       return eva_sfa_reload_handler();
     }
   }
   if (data.s == 'server' && data.d == 'restart') {
-    if (eva_sfa_server_restart_handler != null) {
+    if (eva_sfa_server_restart_handler) {
       eva_sfa_server_restart_handler();
     }
     return;
@@ -1079,16 +1101,24 @@ function eva_sfa_process_ws(evt) {
     if (!eva_sfa_ws_event_handler(data)) return;
   }
   if (data.s == 'state') {
-    $.each(data.d, function(i, s) {
-      eva_sfa_process_state(s);
-    });
+    if (typeof data.d === 'object') {
+      for (var i = 0; i < data.d.length; i++) {
+        eva_sfa_process_state(data.d[i]);
+      }
+    } else {
+      eva_sfa_process_state(data.d);
+    }
     return;
   }
   if (data.s == 'log') {
-    $.each(data.d, function(i, l) {
-      eva_sfa_preprocess_log_record(l);
-    });
-    if (eva_sfa_log_postprocess != null) {
+    if (typeof data.d === 'object') {
+      for (var i = 0; i < data.d.length; i++) {
+        eva_sfa_preprocess_log_record(data.d[i]);
+      }
+    } else {
+      eva_sfa_preprocess_log_record(data.d);
+    }
+    if (eva_sfa_log_postprocess) {
       eva_sfa_log_postprocess();
     }
     return;
@@ -1096,45 +1126,63 @@ function eva_sfa_process_ws(evt) {
 }
 
 function eva_sfa_process_state(state) {
-  var oid = state.type + ':' + state.group + '/' + state.id;
+  var oid = state.oid;
   // copy missing fields from old state
   if (oid in eva_sfa_states) {
     var old_state = eva_sfa_states[oid];
-    $.each(Object.getOwnPropertyNames(old_state), function(k, v) {
-      if (!(v in state)) {
-        state[v] = old_state[v];
+    for (var k in old_state) {
+      if (!(k in state)) {
+        state[k] = old_state[k];
       }
-    });
+    }
   }
   eva_sfa_states[oid] = state;
   if (!eva_sfa_cmp(state, old_state)) {
     if (oid in eva_sfa_update_state_functions) {
-      $.each(eva_sfa_update_state_functions[oid], function(j, f) {
-        if (typeof f === 'string' || f instanceof String) {
-          eval(f);
-        } else {
-          f(state);
-        }
-      });
-    }
-    $.each(Object.keys(eva_sfa_update_state_mask_functions), function(i, v) {
-      if (eva_sfa_oid_match(oid, v)) {
-        $.each(eva_sfa_update_state_mask_functions[v], function(j, f) {
+      for (var i = 0; i < eva_sfa_update_state_functions[oid].length; i++) {
+        var f = eva_sfa_update_state_functions[oid][i];
+        try {
           if (typeof f === 'string' || f instanceof String) {
             eval(f);
           } else {
             f(state);
           }
-        });
+        } catch (err) {
+          eva_sfa_console_log_error(
+            'Error in state function processing for ' + oid + ': ' + err
+          );
+        }
       }
-    });
+    }
+    for (var k in eva_sfa_update_state_mask_functions) {
+      if (eva_sfa_oid_match(oid, k)) {
+        for (
+          var i = 0;
+          i < eva_sfa_update_state_mask_functions[k].length;
+          i++
+        ) {
+          var f = eva_sfa_update_state_mask_functions[k][i];
+          try {
+            if (typeof f === 'string' || f instanceof String) {
+              eval(f);
+            } else {
+              f(state);
+            }
+          } catch (err) {
+            eva_sfa_console_log_error(
+              'Error in state function processing for ' + k + ': ' + err
+            );
+          }
+        }
+      }
+    }
   }
 }
 
 function eva_sfa_preprocess_log_record(l) {
   if (!eva_sfa_log_loaded) {
     eva_sfa_lr2p.push(l);
-  } else if (eva_sfa_process_log_record != null) {
+  } else if (eva_sfa_process_log_record) {
     eva_sfa_process_log_record(l);
   }
 }
@@ -1182,7 +1230,7 @@ function eva_sfa_start_ws() {
 function eva_sfa_set_ws_log_level(l) {
   eva_sfa_log_subscribed = true;
   try {
-    if (eva_sfa_ws != null) eva_sfa_ws.send(JSON.stringify({s: 'log', l: l}));
+    if (eva_sfa_ws) eva_sfa_ws.send(JSON.stringify({s: 'log', l: l}));
   } catch (err) {}
 }
 
@@ -1257,9 +1305,10 @@ function eva_sfa_heartbeat(on_login, data) {
 }
 
 function eva_sfa_set_cvars(cvars) {
-  $.each(cvars, function(k, v) {
-    eval(k + ' = "' + v + '"');
-  });
+  if (cvars)
+    for (var k in cvars) {
+      eval(k + ' = "' + cvars[k] + '"');
+    }
 }
 
 function eva_sfa_do_load_states(cb) {
@@ -1283,9 +1332,9 @@ function eva_sfa_do_load_states(cb) {
 
 function eva_sfa_load_initial_states(on_login, reload) {
   eva_sfa_do_load_states(function(data) {
-    $.each(data, function(i, s) {
-      eva_sfa_process_state(s);
-    });
+    for (var i = 0; i < data.length; i++) {
+      eva_sfa_process_state(data[i]);
+    }
     if (eva_sfa_ws_mode && reload !== true) {
       eva_sfa_start_ws();
     }
@@ -1307,18 +1356,18 @@ function eva_sfa_load_log_entries(r, postprocess) {
       if (eva_sfa_ws_mode && eva_sfa_log_first_load) {
         eva_sfa_set_ws_log_level(eva_sfa_log_level);
       }
-      $.each(data, function(t, l) {
-        if (eva_sfa_process_log_record != null) {
-          eva_sfa_process_log_record(l);
+      for (var i = 0; i < data.length; i++) {
+        if (eva_sfa_process_log_record) {
+          eva_sfa_process_log_record(data[i]);
         }
-      });
+      }
       eva_sfa_log_loaded = true;
-      $.each(eva_sfa_lr2p, function(i, l) {
-        if (eva_sfa_process_log_record != null) {
-          eva_sfa_process_log_record(l);
+      for (var i = 0; i < eva_sfa_l2rp.length; i++) {
+        if (eva_sfa_process_log_record) {
+          eva_sfa_process_log_record(eva_sfa_l2rp[i]);
         }
-      });
-      if (postprocess && eva_sfa_log_postprocess != null) {
+      }
+      if (postprocess && eva_sfa_log_postprocess) {
         eva_sfa_log_postprocess();
       }
       if ((!eva_sfa_ws_mode && eva_sfa_log_first_load) || r) {
@@ -1343,13 +1392,17 @@ function eva_sfa_oid_match(oid, mask) {
 }
 
 function _eva_sfa_deprecated(f1, f2) {
-  console.log('!!! function ' + f1 + ' is deprecated. Use ' + f2 + ' instead');
+  eva_sfa_console_log_warning(
+    '!!! function ' + f1 + ' is deprecated. Use ' + f2 + ' instead',
+    'color: red'
+  );
 }
 
 function eva_sfa_close_popup(ctx) {
   clearTimeout(eva_sfa_popup_tick_closer);
-  $(document).off('keydown');
-  $('#' + ctx).hide();
+  document.getElementById(ctx).style.display = 'none';
+  document.getElementById(ctx).innerHTML = '';
+  document.removeEventListener('keydown', eva_sfa_popup_key_listener);
   eva_sfa_popup_active = null;
 }
 
@@ -1375,7 +1428,7 @@ function eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct) {
     obj = btn1_o;
     txt = btn1text;
   }
-  obj.html(txt + ' (' + ct + ')');
+  obj.innerHTML = txt + ' (' + ct + ')';
   eva_sfa_popup_tick_closer = setTimeout(function() {
     eva_sfa_popup_tick(ctx, btn1_o, btn1text, btn2_o, btn2, btn2a, ct - 1);
   }, 1000);
@@ -1399,8 +1452,38 @@ function eva_sfa_cmp(a, b) {
   return true;
 }
 
+function eva_sfa_extend() {
+  var extended = {};
+  var deep = false;
+  var i = 0;
+  var length = arguments.length;
+  if (Object.prototype.toString.call(arguments[0]) === '[object Boolean]') {
+    deep = arguments[0];
+    i++;
+  }
+  var merge = function(obj) {
+    for (var prop in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+        if (
+          deep &&
+          Object.prototype.toString.call(obj[prop]) === '[object Object]'
+        ) {
+          extended[prop] = extend(true, extended[prop], obj[prop]);
+        } else {
+          extended[prop] = obj[prop];
+        }
+      }
+    }
+  };
+  for (; i < length; i++) {
+    var obj = arguments[i];
+    merge(obj);
+  }
+  return extended;
+}
+
 function eva_sfa_prepare(params) {
-  var p = $.extend({}, params);
+  var p = eva_sfa_extend({}, params);
   if (eva_sfa_api_token) {
     p['k'] = eva_sfa_api_token;
   }
@@ -1410,9 +1493,9 @@ function eva_sfa_prepare(params) {
 function _eva_sfa_set_token_cookie() {
   if (eva_sfa_set_auth_cookies) {
     var uris = Array('/ui', '/pvt', '/rpvt');
-    $.each(uris, function(k, v) {
-      document.cookie = 'auth=' + eva_sfa_api_token + '; path=' + v;
-    });
+    for (var i = 0; i < uris.length; i++) {
+      document.cookie = 'auth=' + eva_sfa_api_token + '; path=' + uris[i];
+    }
   }
 }
 
@@ -1453,6 +1536,20 @@ function eva_sfa_uuidv4() {
     return (c == 'x' ? r : (r & 0x3) | 0x8).toString(16);
   });
   return uuid;
+}
+
+function eva_sfa_console_log_warning(msg) {
+  console.log(
+    '%c ' + msg,
+    'color: orange; font-weight: bold; font-size: 14px;'
+  );
+}
+
+function eva_sfa_console_log_error(msg) {
+  console.log(
+    '%c ' + msg,
+    'color: red; font-weight: bold; font-size: 14px;'
+  );
 }
 
 // init
