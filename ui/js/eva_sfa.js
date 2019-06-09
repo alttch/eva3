@@ -185,7 +185,14 @@ function eva_sfa_init() {
  * of WS mode) or schedule AJAX refresh interval.
  */
 function eva_sfa_start() {
-  if (eva_sfa_logged_in) return;
+  if (!self.fetch) {
+    eva_sfa_console_log_error(
+      '"fetch" function is unavailable. Upgrade your web browser or ' +
+        'connect polyfill (lib/polyfill/fetch.js)'
+    );
+    return false;
+  }
+  if (eva_sfa_logged_in) return true;
   eva_sfa_last_ping = null;
   eva_sfa_last_pong = null;
   var q = {};
@@ -206,6 +213,7 @@ function eva_sfa_start() {
     if (eva_sfa_cb_login_error !== null)
       eva_sfa_cb_login_error(code, msg, data);
   });
+  return true;
 }
 
 /**
@@ -1539,17 +1547,11 @@ function eva_sfa_uuidv4() {
 }
 
 function eva_sfa_console_log_warning(msg) {
-  console.log(
-    '%c ' + msg,
-    'color: orange; font-weight: bold; font-size: 14px;'
-  );
+  console.log('%c' + msg, 'color: orange; font-weight: bold; font-size: 14px;');
 }
 
 function eva_sfa_console_log_error(msg) {
-  console.log(
-    '%c ' + msg,
-    'color: red; font-weight: bold; font-size: 14px;'
-  );
+  console.log('%c' + msg, 'color: red; font-weight: bold; font-size: 14px;');
 }
 
 // init
