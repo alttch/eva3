@@ -39,7 +39,7 @@ To generate QR codes:
     <script src="lib/qrious.min.js"></script>
 
 To perform API calls, SFA Framework uses **fetch** function which is available
-in all modern web browsers. For older browsers polyfill must be included, e.g.
+in all modern web browsers. For older browsers polyfill must be connected, e.g.
 `Unfetch <https://github.com/developit/unfetch>`_:
 
 .. code-block:: html
