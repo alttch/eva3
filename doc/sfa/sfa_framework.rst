@@ -44,7 +44,7 @@ in all modern web browsers. For older browsers polyfill must be connected, e.g.
 
 .. code-block:: html
 
-    <script type="text/javascript" src="lib/polyfill/fetch.js"></script>
+    <script type="text/javascript" src="lib/polyfill/unfetch.js"></script>
 
 .. note::
 
