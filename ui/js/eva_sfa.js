@@ -1196,8 +1196,8 @@ function eva_sfa_preprocess_log_record(l) {
 }
 
 function eva_sfa_start_ws() {
-  var loc = window.location,
-    uri;
+  var uri;
+  var loc = window.location;
   if (loc.protocol === 'https:') {
     uri = 'wss:';
   } else {
