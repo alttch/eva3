@@ -332,7 +332,7 @@ function eva_sfa_state(oid) {
  */
 function eva_sfa_expires_in(lvar_id) {
   // get item
-  var i = eva_sfa_state(lvar_id.startsWith('lvar:') ? '' : 'lvar:' + lvar_id);
+  var i = eva_sfa_state((lvar_id.startsWith('lvar:') ? '' : 'lvar:') + lvar_id);
   // if no such item
   if (i === undefined) return undefined;
   // if item has no expiration or expiration is set to zero
