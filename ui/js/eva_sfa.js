@@ -224,6 +224,7 @@ function eva_sfa_restart() {
   eva_sfa_stop();
   eva_sfa_start();
 }
+
 /**
  * stop Framework API
  * After calling the function will close open WebSocket if available,
