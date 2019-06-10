@@ -1476,7 +1476,7 @@ function eva_sfa_extend() {
           deep &&
           Object.prototype.toString.call(obj[prop]) === '[object Object]'
         ) {
-          extended[prop] = extend(true, extended[prop], obj[prop]);
+          extended[prop] = eva_sfa_extend(true, extended[prop], obj[prop]);
         } else {
           extended[prop] = obj[prop];
         }
