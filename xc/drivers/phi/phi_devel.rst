@@ -657,6 +657,7 @@ use functions:
     # ("values" should be a list (of unsigned integers or booleans, depending
     # on memory block type)
 
+
 Working with UDP API
 ====================
 
@@ -700,6 +701,7 @@ managed by handler).
         # process the data
         # ...
 
+
 Asynchronous I/O
 ================
 
@@ -720,6 +722,7 @@ ports at once: get/set multiple registers or special "group" registers (e.g.
 for Modbus or SNMP), use asynchronous HTTP API calls or launch multiple
 threads, by yourself. However, using *aao_get*/*aao_set* is always good
 practice and recommended if possible.
+
 
 Exceptions
 ==========
