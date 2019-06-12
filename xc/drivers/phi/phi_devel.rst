@@ -717,11 +717,11 @@ While *__features__* **allows** LPI to send multi-port command, however it can
 be single as well. In this case get/set methods of PHI should manually check
 incoming data format (single value or list).
 
-You, as PHI developer, always choose the way how to work with multiple hardware
-ports at once: get/set multiple registers or special "group" registers (e.g.
-for Modbus or SNMP), use asynchronous HTTP API calls or launch multiple
-threads, by yourself. However, using *aao_get*/*aao_set* is always good
-practice and recommended if possible.
+You, as PHI developer, always choose by yourself the way how to work with
+multiple hardware ports at once: get/set multiple registers or special "group"
+registers (e.g.  for Modbus or SNMP), use asynchronous HTTP API calls or launch
+multiple threads. However, using *aao_get*/*aao_set* is always good practice
+and recommended if possible.
 
 
 Exceptions
