@@ -1308,10 +1308,11 @@ def serve_json_yml(fname):
             func = cherrypy.serving.request.params.get('func')
             if var:
                 if eva.core.config.development:
-                    data = '{} = {};'.format(var,
-                                             format_json(data, minimal=False))
+                    data = 'var {} = {};'.format(
+                        var, format_json(data, minimal=False))
                 else:
-                    data = '{}={}'.format(var, format_json(data, minimal=True))
+                    data = 'var {}={}'.format(var,
+                                              format_json(data, minimal=True))
             elif func:
                 if eva.core.config.development:
                     data = 'function {}() {{\n  return {};\n}}'.format(
