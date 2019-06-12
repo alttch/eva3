@@ -1357,7 +1357,7 @@ class GenericMQTTNotifier(GenericNotifier):
             else: _retain = False
             for i in data:
                 i['t'] = time.time()
-                t['c'] = eva.core.config.controller_name
+                i['c'] = eva.core.config.controller_name
                 self.mq.publish(self.pfx + i['item_type'] + '/' + \
                         i['item_group'] + '/' + i['item_id'] + '/action',
                     jsonpickle.encode(i, unpicklable=unpicklable),
