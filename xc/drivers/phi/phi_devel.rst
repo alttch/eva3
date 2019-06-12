@@ -700,12 +700,6 @@ managed by handler).
         # process the data
         # ...
 
-Exceptions
-==========
-
-The methods of PHI should not raise any exceptions and handle/log all errors by
-themselves.
-
 Asynchronous I/O
 ================
 
@@ -726,6 +720,13 @@ ports at once: get/set multiple registers or special "group" registers (e.g.
 for Modbus or SNMP), use asynchronous HTTP API calls or launch multiple
 threads, by yourself. However, using *aao_get*/*aao_set* is always good
 practice and recommended if possible.
+
+Exceptions
+==========
+
+The methods of PHI should not raise any exceptions and handle/log all errors by
+themselves.
+
 
 Testing
 =======
