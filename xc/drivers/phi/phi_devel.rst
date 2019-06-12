@@ -706,6 +706,27 @@ Exceptions
 The methods of PHI should not raise any exceptions and handle/log all errors by
 themselves.
 
+Asynchronous I/O
+================
+
+Calls to PHIs are always synchronous. If equipment can set multiple ports at
+once or PHI can provide asynchronous features itself, it should have
+*aao_get*/*aao_set* in *__features__* or *__required__* lists.
+
+The difference between last two is that *__required__* **requires** parent LPI
+to have a feature for working with multiple ports at once and PHI get/set
+methods always get list of ports/data.
+
+While *__features__* **allows** LPI to send multi-port command, however it can
+be single as well. In this case get/set methods of PHI should manually check
+incoming data format (single value or list).
+
+You, as PHI developer, always choose the way how to work with multiple hardware
+ports at once: get/set multiple registers or special "group" registers (e.g.
+for Modbus or SNMP), use asynchronous HTTP API calls or launch multiple
+threads, by yourself. However, using *aao_get*/*aao_set* is always good
+practice and recommended if possible.
+
 Testing
 =======
 
