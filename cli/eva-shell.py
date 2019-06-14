@@ -270,9 +270,9 @@ class ManagementCLI(GenericCLI):
             help='Controller type (' + ', '.join(self.products_configured) +
             ')')
 
-    def exec_control_script(self, product, command, collect_output=False):
-        script = 'eva-control' if not product else product + '-control'
-        cmd = '{}/{} {}'.format(dir_sbin, script, command)
+    def exec_control_script(self, command, product, collect_output=False):
+        cmd = '{}/eva-control {} {}'.format(dir_sbin, command, product
+                                            if product else '')
         if collect_output:
             with os.popen(cmd) as p:
                 result = p.readlines()
@@ -362,28 +362,28 @@ sys.argv = {argv}
         c = params['p']
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
-        self.exec_control_script(c, 'start')
+        self.exec_control_script('start', c)
         return self.local_func_result_ok
 
     def stop_controller(self, params):
         c = params['p']
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
-        self.exec_control_script(c, 'stop')
+        self.exec_control_script('stop', c)
         return self.local_func_result_ok
 
     def restart_controller(self, params):
         c = params['p']
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
-        self.exec_control_script(c, 'restart')
+        self.exec_control_script('restart', c)
         return self.local_func_result_ok
 
     def status_controller(self, params):
         c = params['p']
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
-        out = self.exec_control_script(c, 'status', collect_output=True)
+        out = self.exec_control_script('status', c, collect_output=True)
         result = {}
         if c:
             try:

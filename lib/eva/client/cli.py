@@ -1275,8 +1275,8 @@ class ControllerCLI(object):
         return 0, result
 
     def exec_control_script(self, command, collect_output=False):
-        script = self._management_controller_id + '-control'
-        cmd = '{}/{} {}'.format(self.dir_sbin, script, command)
+        cmd = '{}/eva-control {} {}'.format(self.dir_sbin, command,
+                                            self._management_controller_id)
         if collect_output:
             with os.popen(cmd) as p:
                 result = p.readlines()

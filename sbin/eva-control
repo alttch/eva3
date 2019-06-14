@@ -12,17 +12,30 @@ if [ ! -f ./etc/eva_servers ]; then
 fi
 source ./etc/eva_servers
 
-function start_controller() {
-    ./sbin/$1-control start
+function controller_cmd() {
+  c=${1,,}
+  CN=${1^^}
+  CMD=$2
+  if [ ! $(eval "echo \$${CN}_SUPERVISORD") ] &&
+    [ "x$(eval "echo \$${CN}_ENABLED")" != "xyes" ]; then
+    if [ "x$3" == "xA" ]; then
+      [ $3 == "status" ] && echo disabled || echo "${CN} is disabled"
+      return 1
+    else
+      return 0
+    fi
+  fi
+  ./sbin/$c-control $2
+  if [ $2 == "start" ]; then
     I=0
     sleep 0.5
-    ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
+    ./sbin/eva-tinyapi -C $c -F test > /dev/null 2>&1
     R=$?
     if [ $R -eq 9 ]; then
         echo " configs missing!"
         return 1
     fi
-    echo -n "$1: ." | tr "a-z" "A-Z"
+    echo -n "$c: ." | tr "a-z" "A-Z"
     while [ $R -ne 0 ]; do
         if [ $I -gt ${MAX_START_WAIT} ]; then
             echo " failed to start!"
@@ -31,25 +44,37 @@ function start_controller() {
         I=`expr $I + 1`
         sleep 0.5
         echo -n "."
-        ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
+        ./sbin/eva-tinyapi -C $c -F test > /dev/null 2>&1
         R=$?
     done
     echo " started"
     return 0
+  fi
 }
+
+CS="uc lm sfa"
+CSTOP="sfa lm uc"
 
 case $1 in
 start)
-    echo 'Starting EVA'
-    [ ${UC_SUPERVISORD} ] || [ "x${UC_ENABLED}" == "xyes" ] && (start_controller uc || exit 1)
-    [ ${LM_SUPERVISORD} ] || [ "x${LM_ENABLED}" == "xyes" ] && (start_controller lm || exit 1)
-    [ ${SFA_SUPERVISORD} ] || [ "x${SFA_ENABLED}" == "xyes" ] && (start_controller sfa || exit 1)
+    if [ $2 ]; then
+      controller_cmd $2 start A || exit 1
+    else
+      echo "Starting EVA"
+      for C in ${CS}; do
+        controller_cmd ${C} start || exit 1
+      done
+    fi
     ;;
 stop)
-    echo 'Stopping EVA'
-    [ ${SFA_SUPERVISORD} ] || [ "x${SFA_ENABLED}" == "xyes" ] && ./sbin/sfa-control stop
-    [ ${LM_SUPERVISORD} ] || [ "x${LM_ENABLED}" == "xyes" ] && ./sbin/lm-control stop
-    [ ${UC_SUPERVISORD} ] || [ "x${UC_ENABLED}" == "xyes" ] && ./sbin/uc-control stop
+    if [ $2 ]; then
+      controller_cmd $2 stop A || exit 1
+    else
+      echo "Stopping EVA"
+      for C in ${CSTOP}; do
+        controller_cmd ${C} stop || exit 1
+      done
+    fi
     exit 0
     ;;
 restart)
@@ -58,12 +83,17 @@ restart)
     exit 0
     ;;
 status)
-    [ ${UC_SUPERVISORD} ] || [ "x${UC_ENABLED}" == "xyes" ] && (echo -n "UC: "; ./sbin/uc-control status)
-    [ ${LM_SUPERVISORD} ] || [ "x${LM_ENABLED}" == "xyes" ] && (echo -n "LM: "; ./sbin/lm-control status)
-    [ ${SFA_SUPERVISORD} ] || [ "x${SFA_ENABLED}" == "xyes" ] && (echo -n "SFA: "; ./sbin/sfa-control status)
+    if [ $2 ]; then
+      controller_cmd $2 status A || exit 1
+    else
+      for C in ${CS}; do
+        echo -n "${C^^}: "
+        controller_cmd ${C} status
+      done
+    fi
     ;;
 *)
     echo "Usage: eva-control start|stop|restart"
-    exit 1
+    exit 0
 esac
 exit 0
