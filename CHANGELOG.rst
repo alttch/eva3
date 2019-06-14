@@ -4,6 +4,13 @@ EVA ICS CHANGELOG
 3.2.3 (TBA)
 ===========
 
+Common
+------
+
+    * MQTT server is not required anymore for local host/network installations,
+      controllers can exchange information real-time via P2P sockets (turned on
+      automatically if MQTT server for controller is not specified).
+
 UC
 --
 
