@@ -11,6 +11,7 @@ Complete change log: https://get.eva-ics.com/3.2.3/stable/CHANGELOG.html
 Update instructions
 ===================
 
-Default bootstrap UI library updated to 4.3.1. If your UI depends on 3.x, make
-required changes in UI files or preserve and link old version.
+* JS SFA Framework is now deprecated. Use EVA JS Framework instead:
+  https://github.com/alttch/eva-js-framework (majority functions are compatible
+  with SFA Framework, very easy to switch).
 
