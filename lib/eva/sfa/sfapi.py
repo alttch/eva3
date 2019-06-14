@@ -1287,11 +1287,11 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         return 'Server error'
 
 
-def serve_json_yml(fname):
-    infile = eva.core.dir_eva + '/ui/' + fname
+def serve_json_yml(fname, dts='ui'):
+    infile = '{}/{}/{}'.format(eva.core.dir_eva, dts, fname).replace('..', '')
     if not os.path.isfile(infile):
         raise cp_api_404()
-    data = open(eva.core.dir_eva + '/ui/' + fname).read()
+    data = open(infile).read()
     cas = cherrypy.serving.request.params.get('as')
     if cas:
         data = yaml.load(data)
@@ -1342,7 +1342,7 @@ def json_yml_handler(*args, **kwargs):
         del cherrypy.serving.response.headers['Content-Length']
     except:
         pass
-    return serve_json_yml(cherrypy.serving.request.path_info.replace('..', ''))
+    return serve_json_yml(cherrypy.serving.request.path_info)
 
 
 def j2_hook(*args, **kwargs):
@@ -1416,7 +1416,7 @@ class SFA_HTTP_Root:
         return BytesIO(r.content)
 
     @cherrypy.expose
-    def pvt(self, k=None, f=None, c=None, ic=None, nocache=None):
+    def pvt(self, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
         _k = cp_client_key(k, from_cookie=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
@@ -1424,8 +1424,10 @@ class SFA_HTTP_Root:
         if not apikey.check(_k, pvt_file=f, ip=http_real_ip()):
             logging.warning('pvt %s file %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
-        if f[-3:] == '.j2':
+        if f.endswith('.j2'):
             return serve_j2('/' + f, tpl_dir=eva.core.dir_pvt)
+        elif f.endswith('.json') or f.endswith('.yml') or f.endswith('.yaml'):
+            return serve_json_yml(f, dts='pvt')
         _f = eva.core.dir_pvt + '/' + f
         _f_alt = None
         if c:
