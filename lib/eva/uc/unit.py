@@ -381,7 +381,11 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         if self.update_exec_after_action: self.do_update()
         self.enable_updates()
 
-    def update_set_state(self, status=None, value=None, from_mqtt=False):
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_notify=False):
         if self._destroyed: return False
         try:
             if status is not None: _status = int(status)

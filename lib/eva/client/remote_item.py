@@ -22,6 +22,7 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.status = state['status']
         self.value = state.get('value')
         self.mqtt_update_topics = ['']
+        self.allow_mqtt_updates_from_controllers = True
 
     def notify(self, retain=None, skip_subscribed_mqtt=False,
                for_destroy=False):
@@ -60,25 +61,33 @@ class RemoteLVar(RemoteUpdatableItem):
 
     def __init__(self, remote_lm, state):
         super().__init__('lvar', remote_lm, state)
+        self.expires = state.get('expires')
+        self.set_time = state.get('set_time')
 
-    def mqtt_set_state(self, topic, data):
-        j = super().mqtt_set_state(topic, data)
-        if j:
-            try:
-                if 'expires' in j:
-                    try:
-                        self.expires = float(j['expires'])
-                        self.notify()
-                    except:
-                        pass
-                if 'set_time' in j:
-                    try:
-                        self.set_time = float(j['set_time'])
-                        self.notify()
-                    except:
-                        pass
-            except:
-                eva.core.log_traceback()
+    def set_state_from_serialized(self, data, from_mqtt=False):
+        need_notify = False
+        try:
+            if 'expires' in data:
+                try:
+                    expires = float(data['expires'])
+                    if self.expires != expires:
+                        self.expires = expires
+                        need_notify = True
+                    need_notify = True
+                except:
+                    pass
+            if 'set_time' in data:
+                try:
+                    set_time = float(data['set_time'])
+                    if self.set_time != set_time:
+                        self.set_time = set_time
+                        need_notify = True
+                except:
+                    pass
+            super().set_state_from_serialized(
+                data, from_mqtt=from_mqtt, force_notify=need_notify)
+        except:
+            eva.core.log_traceback()
 
     def serialize(self,
                   full=False,
@@ -177,6 +186,7 @@ class RemoteMacro(eva.item.Item):
         super().__init__(macro_id, 'lmacro')
         self.controller = controller
         self.action_enabled = False
+        self.allow_mqtt_updates_from_controllers = True
 
     def update_config(self, cfg):
         super().update_config(cfg)
@@ -200,6 +210,7 @@ class RemoteCycle(RemoteUpdatableItem):
 
     def __init__(self, remote_lm, state):
         super().__init__('lcycle', remote_lm, state)
+        self.allow_mqtt_updates_from_controllers = True
 
     def update_config(self, cfg):
         super().update_config(cfg)
@@ -208,9 +219,9 @@ class RemoteCycle(RemoteUpdatableItem):
                 self.interval = float(cfg['interval'])
             except:
                 eva.core.log_traceback()
-        if 'interval' in cfg:
+        if 'iterations' in cfg:
             try:
-                self.iterations = int(cfg['interval'])
+                self.iterations = int(cfg['iterations'])
             except:
                 eva.core.log_traceback()
         if 'avg' in cfg:

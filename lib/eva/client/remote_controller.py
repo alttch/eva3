@@ -557,7 +557,7 @@ class RemoteControllerPool(object):
             if not controller.mqtt_update and controller.api._uri.startswith(
                     'http'):
                 self.websocket_threads[controller.item_id] = background_worker(
-                    self._w_websocket,
+                    self._w_websocket, daemon=True,
                     name='pool_ws_worker_{}'.format(uuid.uuid4()),
                     o=self)
                 self.websocket_threads[controller.item_id].start(
@@ -622,7 +622,7 @@ class RemoteControllerPool(object):
                 eva.core.log_traceback()
                 return
             o.websocket_pinger_threads[controller_id] = background_worker(
-                o._w_websocket_pinger, interval=5, o=o)
+                o._w_websocket_pinger, daemon=True, interval=5, o=o)
             if not o.management_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical(
                     'RemoteControllerPool::_w_websocket_' + \
@@ -1295,6 +1295,16 @@ class RemoteLMPool(RemoteControllerPool):
                     _u = self.get_lvar(s['full_id'])
                     if _u:
                         _u.update_config(s)
+                        _u.set_state_from_serialized(s)
+                    else:
+                        logging.debug(
+                            'WS state for {} skipped, not found'.format(
+                                s['oid']))
+                elif s['type'] == 'lcycle':
+                    _u = self.get_cycle(s['full_id'])
+                    if _u:
+                        _u.update_config(s)
+                        _u.set_state_from_serialized(s)
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1489,7 +1499,9 @@ class RemoteLMPool(RemoteControllerPool):
                         u.start_processors()
                     p[u.full_id] = u
                     _u = self.get_lvar(u.full_id)
-                    if _u: _u.update_config(u.serialize(config=True))
+                    if _u:
+                        _u.update_config(u.serialize(config=True))
+                        _u.set_state_from_serialized(u.serialize())
                 if controller_id in self.lvars_by_controller:
                     for i in self.lvars_by_controller[
                             controller_id].copy().keys():
@@ -1526,7 +1538,7 @@ class RemoteLMPool(RemoteControllerPool):
                         u.start_processors()
                     p[u.full_id] = u
                     _u = self.get_macro(u.full_id)
-                    if _u: _u.update_config(u.serialize(config=True))
+                    if _u:_u.update_config(u.serialize(config=True))
                 if controller_id in self.macros_by_controller:
                     for i in self.macros_by_controller[
                             controller_id].copy().keys():
@@ -1564,7 +1576,9 @@ class RemoteLMPool(RemoteControllerPool):
                         u.start_processors()
                     p[u.full_id] = u
                     _u = self.get_cycle(u.full_id)
-                    if _u: _u.update_config(u.serialize(config=True))
+                    if _u:
+                        _u.update_config(u.serialize(config=True))
+                        _u.set_state_from_serialized(u.serialize())
                 if controller_id in self.cycles_by_controller:
                     for i in self.cycles_by_controller[
                             controller_id].copy().keys():

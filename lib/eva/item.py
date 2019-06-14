@@ -302,6 +302,7 @@ class UpdatableItem(Item):
         self.mqtt_update_topics = ['', 'status', 'value']
         self._mqtt_updates_allowed = True
         self._expire_on_any = False
+        self.allow_mqtt_updates_from_controllers = False
         self.mqtt_update_timestamp = 0
 
     def update_config(self, data):
@@ -690,25 +691,46 @@ class UpdatableItem(Item):
                     return
                 j = jsonpickle.decode(data)
                 t = j['t']
-                if t < self.mqtt_update_timestamp or \
-                        j.get('c') == eva.core.config.controller_name:
+                remote_controller = j.get('c')
+                if (
+                        not self.allow_mqtt_updates_from_controllers and
+                        remote_controller
+                ) or t < self.mqtt_update_timestamp or \
+                        remote_controller == eva.core.config.controller_name:
                     return None
                 self.mqtt_update_timestamp = t
-                if 'status' in j:
-                    s = j['status']
-                else:
-                    s = None
-                if 'value' in j:
-                    v = j['value']
-                else:
-                    v = None
-                if s is not None or v is not None:
-                    self.update_set_state(status=s, value=v, from_mqtt=True)
+                self.set_state_from_serialized(j, from_mqtt=True)
                 return j
         except:
             eva.core.log_traceback()
 
-    def update_set_state(self, status=None, value=None, from_mqtt=False):
+    def set_state_from_serialized(self,
+                                  data,
+                                  from_mqtt=False,
+                                  force_notify=False):
+        try:
+            if 'status' in data:
+                s = data['status']
+            else:
+                s = None
+            if 'value' in data:
+                v = data['value']
+            else:
+                v = None
+            if s is not None or v is not None:
+                self.update_set_state(
+                    status=s,
+                    value=v,
+                    from_mqtt=from_mqtt,
+                    force_notify=force_notify)
+        except:
+            eva.core.log_traceback()
+
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_notify=False):
         self.update_expiration()
         need_notify = False
         if status is not None and status != '':
@@ -727,7 +749,7 @@ class UpdatableItem(Item):
             if self.value != value:
                 need_notify = True
                 self.value = value
-        if need_notify:
+        if need_notify or force_notify:
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 
@@ -1545,7 +1567,11 @@ class MultiUpdate(UpdatableItem):
 
 class VariableItem(UpdatableItem):
 
-    def update_set_state(self, status=None, value=None, from_mqtt=False):
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_notify=False):
         if self._destroyed: return False
         try:
             if status is not None: _status = int(status)
@@ -1569,7 +1595,7 @@ class VariableItem(UpdatableItem):
             if self.status == -1 and _status is None and value != '':
                 self.status = 1
                 need_notify = True
-        if need_notify:
+        if need_notify or force_notify:
             logging.debug(
                 '%s status = %u, value = "%s"' % \
                         (self.oid, self.status, self.value))
