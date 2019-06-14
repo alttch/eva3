@@ -557,7 +557,8 @@ class RemoteControllerPool(object):
             if not controller.mqtt_update and controller.api._uri.startswith(
                     'http'):
                 self.websocket_threads[controller.item_id] = background_worker(
-                    self._w_websocket, daemon=True,
+                    self._w_websocket,
+                    daemon=True,
                     name='pool_ws_worker_{}'.format(uuid.uuid4()),
                     o=self)
                 self.websocket_threads[controller.item_id].start(
@@ -596,7 +597,9 @@ class RemoteControllerPool(object):
             ws = websocket.create_connection(
                 '{}/ws?k={}'.format(uri, controller.api._key),
                 timeout=round(controller.api._timeout),
-                enable_multithread=True)
+                enable_multithread=True,
+                sslopt={"cert_reqs": ssl.CERT_NONE}
+                if not controller.api._ssl_verify else None)
             ws.settimeout(5 + eva.core.config.timeout)
             ws.worker_terminated = False
             try:
@@ -1538,7 +1541,7 @@ class RemoteLMPool(RemoteControllerPool):
                         u.start_processors()
                     p[u.full_id] = u
                     _u = self.get_macro(u.full_id)
-                    if _u:_u.update_config(u.serialize(config=True))
+                    if _u: _u.update_config(u.serialize(config=True))
                 if controller_id in self.macros_by_controller:
                     for i in self.macros_by_controller[
                             controller_id].copy().keys():
