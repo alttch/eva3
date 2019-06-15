@@ -8,15 +8,15 @@ Common
 ------
 
     * MQTT server is not required anymore for local host/network installations,
-      controllers can exchange information real-time via P2P sockets (turned on
-      automatically if MQTT server for controller is not specified).
+      controllers can exchange information in real-time via P2P sockets (turned
+      on automatically if MQTT server for controller is not specified).
 
 UC
 --
 
     * get_phi_ports API method - get ports of loaded PHI
-    * phi_discover API method - search for equipment supported by PHI module *
-      Modbus values reported to UC slave can now be automatically converted to
+    * phi_discover API method - search for equipment supported by PHI module
+    * Modbus values reported to UC slave can now be automatically converted to
       signed and divided (or multiplied).
 
 LM PLC
@@ -29,9 +29,6 @@ SFA
 
     * easy-setup now creates default user (operator)
     * "as" parameter for .json and .yml files changes their format on the flow
-    * eva_sfa_erase_token_cookie() function to make login pages more secure
-    * default UI Bootstrap CSS lib updated to 4.3.1
-    * default UI Chart.js updated to 2.8.0
     * JS SFA Framework is now deprecated. Use EVA JS Framework instead:
       https://github.com/alttch/eva-js-framework
 
