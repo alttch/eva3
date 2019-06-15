@@ -42,7 +42,7 @@ from functools import wraps
 
 from types import SimpleNamespace
 
-from base64 import b64decode
+import base64
 
 default_port = 80
 default_ssl_port = 443
@@ -187,7 +187,7 @@ def generic_web_api_method(f):
     @wraps(f)
     def do(*args, **kwargs):
         try:
-            return f(*args, **kwargs)
+            return jsonify(f(*args, **kwargs))
         except InvalidParameter as e:
             eva.core.log_traceback()
             raise cp_bad_request(e)
@@ -244,6 +244,9 @@ def restful_api_method(f):
                    method, for_dir, props)
         if isinstance(result, tuple):
             result, data = result
+            if isinstance(result, bytes):
+                cherrypy.serving.response.headers['Content-Type'] = data
+                return result
         else:
             data = None
         if result is False:
@@ -277,6 +280,9 @@ def cp_api_function(f):
             result = f(*args, **kwargs)
             if isinstance(result, tuple):
                 result, data = result
+                if isinstance(result, bytes):
+                    cherrypy.serving.response.headers['Content-Type'] = data
+                    return result
             else:
                 data = None
             if result is True:
@@ -706,6 +712,48 @@ class GenericAPI(object):
         """
         k, a, i, s, e, l, x, t, w, g = parse_function_params(
             kwargs, 'kaiselxtwg', '.sr..issss')
+
+        def format_result(result, prop, output_image=None):
+            if not output_image:
+                return result
+            if not prop: prop = 'value'
+            line, fmt, chart_t, title = output_image
+            import pygal
+            import datetime
+            chart = pygal.Line()
+            if title: chart.title = title
+            chart.x_labels = map(
+                lambda t: datetime.datetime.fromtimestamp(t).strftime(chart_t),
+                result['t'])
+            if prop != 'multiple':
+                chart.add(None, result[prop] if prop else result['value'])
+            else:
+                del result['t']
+                for i, v in result.items():
+                    chart.add(i, v)
+            return chart.render(), 'image/svg+xml'
+
+        output_image = None
+        if g and g not in ['list', 'dlict']:
+            if g.find(':') != -1:
+                try:
+                    line, title, fmt = g.split(':', 2)
+                except:
+                    line, fmt = g.split(':')
+                    title = None
+            else:
+                line = g
+                fmt = 'svg'
+                title = None
+            if line not in ['line']:
+                raise InvalidParameter(
+                    'output format should be in: list, dict, line')
+            if fmt not in ['svg', 'png']:
+                raise InvalidParameter('image format should be in: svg, png')
+            chart_t = t if t else '%Y-%m-%d %H:%M'
+            output_image = (line, fmt, chart_t, title)
+            t = None
+            g = 'list'
         if (isinstance(i, str) and i and i.find(',') != -1) or \
                 isinstance(i, list):
             if not w:
@@ -728,11 +776,11 @@ class GenericAPI(object):
                     result[i + '/status'] = r['status']
                 if 'value' in r:
                     result[i + '/value'] = r['value']
-            return result
+            return format_result(result, 'multiple', output_image)
         else:
             result = self._get_state_history(
                 k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            return result
+            return format_result(result, x, output_image)
 
     # return version for embedded hardware
     @log_d
@@ -779,7 +827,7 @@ class GenericAPI(object):
                 try:
                     scheme, params = auth_header.split(' ', 1)
                     if scheme.lower() == 'basic':
-                        u, p = b64decode(params).decode().split(':', 1)
+                        u, p = base64.b64decode(params).decode().split(':', 1)
                         u = u.strip()
                 except Exception as e:
                     eva.core.log_traceback()
@@ -960,10 +1008,12 @@ class GenericCloudAPI(object):
         return controller.set_prop('enabled', False, save)
 
 
-def cp_json_handler(*args, **kwargs):
-    value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
+def jsonify(value):
     response = cherrypy.serving.response
+    if isinstance(value, bytes):
+        return value
     if value or value == 0 or isinstance(value, list):
+        response.headers['Content-Type'] = 'application/json'
         return format_json(
             value, minimal=not eva.core.config.development).encode('utf-8')
     else:
@@ -1082,6 +1132,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
         if api_uri:
             self.api_uri = api_uri
         self._cp_config['tools.jsonrpc_pre.on'] = True
+        self._cp_config['tools.json_out.on'] = True,
         self._cp_config['tools.json_out.handler'] = cp_jsonrpc_handler
 
     def __call__(self, **kwargs):
@@ -1119,20 +1170,30 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                         p['k'] = k
                     if not apikey.check(k=k):
                         raise AccessDenied
-                result = f(**p)
-                if isinstance(result, tuple):
-                    result, data = result
+                res = f(**p)
+                if isinstance(res, tuple):
+                    res, data = res
+                    if isinstance(res, bytes):
+                        try:
+                            if data != 'image/svg+xml':
+                                raise Exception
+                            res = {'content': data, 'data': res.decode('utf-8')}
+                        except:
+                            res = {
+                                'content': data,
+                                'data': base64.b64encode(res).decode()
+                            }
                 else:
                     data = None
-                if result is True:
-                    result = {'ok': True}
+                if res is True:
+                    res = {'ok': True}
                     if isinstance(data, dict):
-                        result.update(data)
-                elif result is False:
+                        res.update(data)
+                elif res is False:
                     raise FunctionFailed
-                elif result is None:
+                elif res is None:
                     raise ResourceNotFound
-                r = {'jsonrpc': '2.0', 'result': result, 'id': req_id}
+                r = {'jsonrpc': '2.0', 'result': res, 'id': req_id}
             except ResourceNotFound as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_not_found, e)
@@ -1189,7 +1250,6 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         self._cp_config = api_cp_config.copy()
         self._cp_config['tools.auth.on'] = True
         self._cp_config['tools.json_pre.on'] = True
-        self._cp_config['tools.json_out.handler'] = cp_json_handler
 
     def wrap_exposed(self):
         super().wrap_exposed(cp_api_function)
@@ -1322,7 +1382,6 @@ def error_page_500(*args, **kwargs):
 
 
 api_cp_config = {
-    'tools.json_out.on': True,
     'tools.nocache.on': True,
     'tools.trailing_slash.on': False,
     'error_page.400': error_page_400,
