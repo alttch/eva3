@@ -864,6 +864,7 @@ class GenericCLI(GCLI):
                             continue
                         else:
                             globals()['shell_switch_to'] = ss
+                            self.finish_interactive()
                             return 0
                     if (d[0] == 'k.' or
                             d[0] == 'c.') and self.remote_api_enabled:
