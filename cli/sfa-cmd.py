@@ -15,6 +15,7 @@ from eva.client.cli import ComplGeneric
 
 import eva.client.cli
 
+
 class SFA_CLI(GenericCLI, ControllerCLI):
 
     @staticmethod
@@ -758,6 +759,19 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         return self._deploy_undeploy(
             props, und=True, del_files=props.get('del_files', False))
 
+    @staticmethod
+    def _read_uri(fname, dirname=None):
+        target = (dirname + '/' + fname) if dirname else fname
+        if target.startswith('http://') or target.startswith('https://'):
+            import requests
+            result = requests.get(target)
+            if not result.ok:
+                raise Exception('http code {}'.format(
+                    result.status_code))
+            return result.text
+        else:
+            return open(target).read()
+
     def _deploy_undeploy(self, props, und=False, del_files=False):
         import yaml
         try:
@@ -768,16 +782,10 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         try:
             try:
                 fname = props.get('f')
-                if fname.startswith('http://') or fname.startswith('https://'):
-                    import requests
-                    result = requests.get(fname)
-                    if not result.ok: raise Exception
-                    y = result.text
-                else:
-                    y = open(props.get('f')).read()
-                cfg = yaml.load(y)
-            except:
-                raise Exception('Unable to parse {}'.format(props.get('f')))
+                dirname = os.path.dirname(fname)
+                cfg = yaml.load(self._read_uri(fname))
+            except Exception as e:
+                raise Exception('Unable to parse {}: {}'.format(fname, e))
             api = props['_api']
             from functools import partial
             call = partial(
@@ -833,11 +841,11 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         if self.dict_safe_get(v, p, '').startswith('^'):
                             if not und:
                                 try:
-                                    open(v[p][1:])
+                                    self._read_uri(v[p][1:], dirname)
                                 except:
                                     raise Exception(
                                         ('{} is defined as {} for {} {}, ' +
-                                         'but local file is not found').format(
+                                         'but file is not found').format(
                                              v[p][1:], p, x, i))
                             controllers_fm_required.add(v['controller'])
             print('Checking remote controllers...')
@@ -850,10 +858,10 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             for f in v['upload-runtime']:
                                 fname, remote_file = f.split(':')
                                 try:
-                                    open(fname)
+                                    self._read_uri(fname, dirname)
                                 except:
                                     raise Exception(
-                                        ('{}: {} unable to open local ' +
+                                        ('{}: {} unable to open ' +
                                          'file for upload').format(c, fname))
             macall = partial(call, 'management_api_call')
             for c in controllers:
@@ -909,7 +917,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                 'API call failed, code {}'.format(code))
             # ===== CALL DEPLOY/UNDEPLOY =====
             if not und:
-                self._perform_deploy(props, cfg, macall)
+                self._perform_deploy(props, cfg, macall, dirname)
             else:
                 self._perform_undeploy(props, cfg, macall, del_files)
             # ===== AFTER TASKS =====
@@ -962,7 +970,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         print('-' * 60)
         return self.local_func_result_ok
 
-    def _perform_deploy(self, props, cfg, macall):
+    def _perform_deploy(self, props, cfg, macall, dirname):
         from eva.client import apiclient
         # ===== FILE UPLOAD =====
         print('Uploading files...')
@@ -981,7 +989,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             'f': 'file_put',
                             'p': {
                                 'i': remote_file,
-                                'm': open(fname).read()
+                                'm': self._read_uri(fname, dirname)
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
@@ -1144,7 +1152,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             'f': 'file_put',
                             'p': {
                                 'i': remotefn,
-                                'm': open(file2u).read()
+                                'm': self._read_uri(file2u, dirname)
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
