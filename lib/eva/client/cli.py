@@ -1217,20 +1217,12 @@ class GenericCLI(GCLI):
                     out_file.buffer.write(data)
 
     def process_result(self, result, code, api_func, itype, a):
-        # if api_func == 'file_get' and result == apiclient.result_ok:
-        # try:
-        # open(a._fname, 'w').write(result['data'])
-        # print('OK')
-        # except:
-        # self.print_err('FAILED')
-        # self.print_err('Unable to write to local file')
-        # return 95
         if code != apiclient.result_ok:
             self.print_failed_result(result)
         if 'content_type' in result:
             if sys.stdout.isatty():
                 self.print_err('File received, output file must be specified')
-                return 8
+                return apiclient.result_invalid_params
             else:
                 self.write_result(result, sys.stdout)
         else:
