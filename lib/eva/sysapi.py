@@ -45,6 +45,7 @@ from eva.exceptions import InvalidParameter
 from eva.tools import parse_function_params
 
 from pyaltt import background_worker
+from pyaltt import background_job
 
 from types import SimpleNamespace
 
@@ -990,10 +991,10 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
     @api_need_master
     def setup_mode(self, **kwargs):
         setup = parse_api_params(kwargs, ('setup',), 'B')
-        if not config.api_setup_mode_allowed:
+        if not config.api_setup_mode:
             return False
         if setup:
-            eva.core.setup_on()
+            eva.core.setup_on(config.api_setup_mode)
         else:
             eva.core.setup_off()
         return True
@@ -1193,12 +1194,12 @@ def update_config(cfg):
     logging.debug('sysapi.file_management = %s' % ('yes' \
             if config.api_file_management_allowed else 'no'))
     try:
-        config.api_setup_mode_allowed = (cfg.get('sysapi',
-                                                 'setup_mode') == 'yes')
+        s = cfg.get('sysapi', 'setup_mode')
+        s = 60 if s == 'yes' else int(s)
+        config.api_setup_mode = s
     except:
         pass
-    logging.debug('sysapi.setup_mode = %s' % ('yes' \
-            if config.api_setup_mode_allowed else 'no'))
+    logging.debug('sysapi.setup_mode = %s' % config.api_setup_mode)
     return True
 
 
@@ -1231,4 +1232,4 @@ def lock_processor(**kwargs):
 api = SysAPI()
 
 config = SimpleNamespace(
-    api_file_management_allowed=False, api_setup_mode_allowed=False)
+    api_file_management_allowed=False, api_setup_mode=None)

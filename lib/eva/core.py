@@ -51,7 +51,8 @@ _flags = SimpleNamespace(
     sigterm_sent=False,
     started=False,
     shutdown_requested=False,
-    cvars_modified=False)
+    cvars_modified=False,
+    setup_mode=0)
 
 product = SimpleNamespace(name='', code='', build=None)
 
@@ -82,8 +83,7 @@ config = SimpleNamespace(
     mqtt_update_default=None,
     enterprise_layout=True,
     reactor_thread_pool=15,
-    user_hook=None,
-    setup_mode=False)
+    user_hook=None)
 
 db_engine = SimpleNamespace(primary=None, user=None)
 
@@ -327,7 +327,8 @@ def serialize():
     d['keep_action_history'] = config.keep_action_history
     d['action_cleaner_interval'] = config.action_cleaner_interval
     d['debug'] = config.debug
-    d['setup_mode'] = config.setup_mode
+    d['setup_mode'] = _flags.setup_mode
+    d['setup_mode_on'] = is_setup_mode()
     d['development'] = config.development
     d['show_traceback'] = config.show_traceback
     d['stop_on_critical'] = config.stop_on_critical
@@ -343,6 +344,7 @@ def serialize():
     d['log_file'] = config.log_file
     d['threads'] = {}
     d['uptime'] = int(time.time() - start_time)
+    d['time'] = time.time()
     d['exceptions'] = _exceptions
     d['fd'] = proc.open_files()
     for t in threading.enumerate().copy():
@@ -734,13 +736,20 @@ def debug_off():
 
 
 def setup_off():
-    config.setup_mode = False
+    _flags.setup_mode = 0
     logging.info('Setup mode OFF')
 
 
-def setup_on():
-    config.setup_mode = True
-    logging.warning('Setup mode ON')
+def setup_on(duration):
+    import datetime
+    _flags.setup_mode = time.time() + duration
+    logging.warning('Setup mode ON, ends: {}'.format(
+        datetime.datetime.fromtimestamp(
+            _flags.setup_mode).strftime('%Y-%m-%d %T')))
+
+
+def is_setup_mode():
+    return _flags.setup_mode > time.time()
 
 
 def fork():

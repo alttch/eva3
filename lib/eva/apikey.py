@@ -445,7 +445,7 @@ def check(k,
           master=False,
           sysfunc=False,
           ro_op=False):
-    if eva.core.config.setup_mode:
+    if eva.core.is_setup_mode():
         return True
     if not k or not k in keys or (master and not keys[k].master): return False
     _k = keys[k]
@@ -515,10 +515,14 @@ def get_masterkey():
 
 
 def serialized_acl(k):
-    if not k or not k in keys: return None
+    r = {'key_id': None, 'master': True}
+    setup_on = eva.core.is_setup_mode()
+    if not k or not k in keys:
+        return r if setup_on else None
     _k = keys[k]
-    r = {'key_id': _k.key_id, 'master': _k.master or eva.core.config.setup_mode}
-    if _k.master or eva.core.config.setup_mode: return r
+    r['key_id'] = _k.key_id
+    r['master'] = _k.master or setup_on
+    if _k.master or setup_on: return r
     r['sysfunc'] = _k.sysfunc
     r['items'] = _k.item_ids
     r['groups'] = _k.groups
