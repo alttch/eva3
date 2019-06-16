@@ -24,6 +24,7 @@ LM PLC
 ------
 
     * set_job_prop macro function
+    * cycle can now run macros with args and kwargs
 
 SFA
 ---

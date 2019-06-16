@@ -18,6 +18,7 @@ import logging
 import json
 
 from eva.tools import val_to_boolean
+from eva.tools import dict_from_str
 from eva.exceptions import FunctionFailed
 
 from types import SimpleNamespace
@@ -496,6 +497,8 @@ class Cycle(eva.item.Item):
         super().__init__(item_id, 'lcycle')
         self.respect_layout = False
         self.macro = None
+        self.macro_args = []
+        self.macro_kwargs = {}
         self.on_error = None
         self.interval = 1
         self.ict = 100
@@ -511,6 +514,18 @@ class Cycle(eva.item.Item):
     def update_config(self, data):
         if 'macro' in data:
             self.macro = eva.lm.controller.get_macro(data['macro'])
+        if 'macro_args' in data:
+            m = data['macro_args']
+            if isinstance(m, str):
+                try:
+                    m = shlex.split(m)
+                except:
+                    m = m.split(' ')
+            elif not m:
+                m = []
+            self.macro_args = m
+        if 'macro_kwargs' in data:
+            self.macro_kwargs = dict_from_str(data['macro_kwargs'])
         if 'on_error' in data:
             self.on_error = eva.lm.controller.get_macro(data['on_error'])
         if 'interval' in data:
@@ -540,6 +555,26 @@ class Cycle(eva.item.Item):
                 return True
             else:
                 return False
+        elif prop == 'macro_args':
+            if val is not None:
+                try:
+                    v = shlex.split(val)
+                except:
+                    v = val.split(' ')
+            else:
+                v = []
+            self.macro_args = v
+            self.log_set(prop, val)
+            self.set_modified(save)
+            return True
+        elif prop == 'macro_kwargs':
+            if val is None:
+                self.macro_kwargs = {}
+            else:
+                self.macro_kwargs = dict_from_str(val)
+            self.log_set(prop, val)
+            self.set_modified(save)
+            return True
         elif prop == 'on_error':
             if val is None:
                 if self.on_error is not None:
@@ -613,6 +648,8 @@ class Cycle(eva.item.Item):
                 try:
                     result = eva.lm.controller.exec_macro(
                         self.macro,
+                        argv=self.macro_args,
+                        kwargs=self.macro_kwargs,
                         wait=self.interval,
                         source=self,
                         is_shutdown_func=self.is_shutdown)
@@ -728,6 +765,8 @@ class Cycle(eva.item.Item):
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
             d['on_error'] = self.on_error.full_id if self.on_error else None
+            d['macro_args'] = self.macro_args
+            d['macro_kwargs'] = self.macro_kwargs
         if config or props:
             d['autostart'] = self.autostart
         return d
