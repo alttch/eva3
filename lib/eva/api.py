@@ -21,6 +21,7 @@ from eva.tools import val_to_boolean
 from eva.tools import is_oid
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
+from eva.tools import dict_from_str
 
 from eva.client import apiclient
 
@@ -708,23 +709,45 @@ class GenericAPI(object):
             t: time format("iso" or "raw" for unix timestamp, default is "raw")
             w: fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours
                 etc.), start time is required
-            g: output format ("list" or "dict", default is "list")
-        """
-        k, a, i, s, e, l, x, t, w, g = parse_function_params(
-            kwargs, 'kaiselxtwg', '.sr..issss')
+            g: output format ("list", "dict" or "chart", default is "list")
+            c: options for chart (dict or comma separated)
 
-        def format_result(result, prop, output_image=None):
-            if not output_image:
+        Returns: history data in specified format or chart image.
+
+        Options for chart (all are optional):
+            type: chart type (line or bar, default is line)
+            xr: x label rotation (degrees)
+            yr: y label rotation (degrees)
+            title: chart title
+            tf: chart time format
+            fmt: output format (svg, png, default is svg),
+
+        For chart, JSON RPC gets reply with "content" and "data" fields, where
+        content is image content type. If PNG image format is selected, data is
+        base64-encoded.
+        """
+        k, a, i, s, e, l, x, t, w, g, c = parse_function_params(
+            kwargs, 'kaiselxtwgc', '.sr..issss.')
+
+        def format_result(result, prop, c=None):
+            if c is None:
                 return result
             if not prop: prop = 'value'
-            line, fmt, chart_t, title = output_image
+            line = c.get('type', 'line')
+            fmt = c.get('fmt', 'svg')
+            chart_t = c.get('tf', '%Y-%m-%d %H:%M')
+            title = c.get('title')
+            xr = c.get('xr', 0)
+            yr = c.get('yr', 0)
             import pygal
             import datetime
-            if line == 'bar':
+            if line == 'line':
+                chartfunc = pygal.Line
+            elif line == 'bar':
                 chartfunc = pygal.Bar
             else:
-                chartfunc = pygal.Line
-            chart = chartfunc(x_label_rotation=45)
+                raise InvalidParameter('Chart type should be in: line, bar')
+            chart = chartfunc(x_label_rotation=xr, y_label_rotation=yr)
             if title: chart.title = title
             chart.x_labels = map(
                 lambda t: datetime.datetime.fromtimestamp(t).strftime(chart_t),
@@ -743,28 +766,26 @@ class GenericAPI(object):
             elif fmt == 'png':
                 import cairosvg
                 return cairosvg.svg2png(bytestring=result), 'image/png'
-
-        output_image = None
-        if g and g not in ['list', 'dlict']:
-            gp = g.split(':')
-            line = gp[0]
-            try:
-                title = gp[1]
-            except:
-                title = None
-            try:
-                fmt = gp[2]
-            except:
-                fmt = 'svg'
-            if line not in ['line', 'bar']:
+            else:
                 raise InvalidParameter(
-                    'output format should be in: list, dict, line, bar')
-            if fmt not in ['svg', 'png']:
-                raise InvalidParameter('image format should be in: svg, png')
-            chart_t = t if t else '%Y-%m-%d %H:%M'
-            output_image = (line, fmt, chart_t, title)
+                    'chart output format must be in: svg, png')
+
+        if g and g not in ['list', 'dict', 'chart']:
+            raise InvalidParameter(
+                'output format should be in: list, dict or chart')
+        if g == 'chart':
+            if c:
+                try:
+                    c = dict_from_str(c)
+                    if not isinstance(c, dict): raise Exception
+                except:
+                    raise InvalidParameter('chart options are invalid')
+            else:
+                c = {}
             t = None
             g = 'list'
+        else:
+            c = None
         if (isinstance(i, str) and i and i.find(',') != -1) or \
                 isinstance(i, list):
             if not w:
@@ -787,11 +808,11 @@ class GenericAPI(object):
                     result[i + '/status'] = r['status']
                 if 'value' in r:
                     result[i + '/value'] = r['value']
-            return format_result(result, 'multiple', output_image)
+            return format_result(result, 'multiple', c)
         else:
             result = self._get_state_history(
                 k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            return format_result(result, x, output_image)
+            return format_result(result, x, c)
 
     # return version for embedded hardware
     @log_d
