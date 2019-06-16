@@ -15,6 +15,7 @@ from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
 
+import eva.client.cli
 
 class LM_CLI(GenericCLI, ControllerCLI):
 

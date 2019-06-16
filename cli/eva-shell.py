@@ -282,33 +282,36 @@ class ManagementCLI(GenericCLI):
             time.sleep(1)
 
     def uc_shell(self, params):
-        return self.local_func_result_empty if \
-            self.start_shell('uc') else self.local_func_result_failed
+        code = self.start_shell('uc')
+        return self.local_func_result_empty if not code else (code, '')
 
     def lm_shell(self, params):
-        return self.local_func_result_empty if \
-            self.start_shell('lm') else self.local_func_result_failed
+        code = self.start_shell('lm')
+        return self.local_func_result_empty if not code else (code, '')
 
     def sfa_shell(self, params):
-        return self.local_func_result_empty if \
-            self.start_shell('sfa') else self.local_func_result_failed
+        code = self.start_shell('sfa')
+        return self.local_func_result_empty if not code else (code, '')
 
     def manage_ns(self, params):
-        return self.local_func_result_empty if \
-            self.start_shell('notifymanager',
-                    '.py',
-                    'product=\'{}\''.format(params.get('p'))) else \
-            self.local_func_result_failed
+        code = self.start_shell('notifymanager', '.py', 'product=\'{}\''.format(
+            params.get('p')))
+        return self.local_func_result_empty if not code else (code, '')
 
     def start_shell(self, p, x='-cmd.py', xp=''):
         sst = p
-        result = False
+        code = 10
         while sst:
             result = self.do_start_shell(sst, x, xp)
-            if not result: break
+            if not result:
+                code = 10
+                break
+            else:
+                code = 0
             sst = eva.client.cli.shell_switch_to
-        if eva.client.cli.subshell_exit_code != 0: result = False
-        return result
+        if eva.client.cli.subshell_exit_code:
+            code = eva.client.cli.subshell_exit_code + 100
+        return code
 
     def do_start_shell(self, p, x='-cmd.py', xp=''):
         try:

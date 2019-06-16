@@ -13,6 +13,7 @@ from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
 
+import eva.client.cli
 
 class SFA_CLI(GenericCLI, ControllerCLI):
 
@@ -766,7 +767,15 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         from eva.client import apiclient
         try:
             try:
-                cfg = yaml.load(open(props.get('f')).read())
+                fname = props.get('f')
+                if fname.startswith('http://') or fname.startswith('https://'):
+                    import requests
+                    result = requests.get(fname)
+                    if not result.ok: raise Exception
+                    y = result.text
+                else:
+                    y = open(props.get('f')).read()
+                cfg = yaml.load(y)
             except:
                 raise Exception('Unable to parse {}'.format(props.get('f')))
             api = props['_api']

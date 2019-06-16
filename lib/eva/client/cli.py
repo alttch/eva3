@@ -1177,13 +1177,15 @@ class GenericCLI(GCLI):
         if code != apiclient.result_ok:
             if debug and self.remote_api_enabled:
                 self.print_debug('API result code: %u' % code)
-            if 'error' not in result:
-                self.print_err('Error: ' +
-                               default_errors.get(code, 'Operation failed'))
-            else:
-                self.print_failed_result(result)
+            if code < 100:
+                if 'error' not in result:
+                    self.print_err('Error: ' +
+                                   default_errors.get(code, 'Operation failed'))
+                else:
+                    self.print_failed_result(result)
             if code == apiclient.result_func_unknown and not debug:
                 self.ap.print_help()
+            if code > 100: code -= 100
             return code
         else:
             if a._output_file and code == apiclient.result_ok:
