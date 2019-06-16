@@ -10,6 +10,7 @@ Common
     * MQTT server is not required anymore for local host/network installations,
       controllers can exchange information in real-time via P2P sockets (turned
       on automatically if MQTT server for controller is not specified).
+    * state_history method can now return chart image (SVG/PNG)
 
 UC
 --

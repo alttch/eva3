@@ -730,21 +730,28 @@ class GenericAPI(object):
             else:
                 del result['t']
                 for i, v in result.items():
-                    chart.add(i, v)
-            return chart.render(), 'image/svg+xml'
+                    item = self.controller.get_item(i.rsplit('/', 1)[0])
+                    chart.add(
+                        item.description if item and item.description else i, v)
+            result = chart.render()
+            if fmt == 'svg':
+                return result, 'image/svg+xml'
+            elif fmt == 'png':
+                import cairosvg
+                return cairosvg.svg2png(bytestring=result), 'image/png'
 
         output_image = None
         if g and g not in ['list', 'dlict']:
-            if g.find(':') != -1:
-                try:
-                    line, title, fmt = g.split(':', 2)
-                except:
-                    line, fmt = g.split(':')
-                    title = None
-            else:
-                line = g
-                fmt = 'svg'
+            gp = g.split(':')
+            line = gp[0]
+            try:
+                title = gp[1]
+            except:
                 title = None
+            try:
+                fmt = gp[2]
+            except:
+                fmt = 'svg'
             if line not in ['line']:
                 raise InvalidParameter(
                     'output format should be in: list, dict, line')

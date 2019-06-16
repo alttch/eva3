@@ -1,5 +1,6 @@
 pyasn1==0.4.5
 cryptography==2.6.1
+cairosvg==2.4.0
 jsonpickle==0.9.6
 requests==2.21.0
 pyaltt==0.2.1
