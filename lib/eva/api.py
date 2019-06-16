@@ -720,7 +720,7 @@ class GenericAPI(object):
             line, fmt, chart_t, title = output_image
             import pygal
             import datetime
-            chart = pygal.Line()
+            chart = pygal.Line(x_label_rotation=45)
             if title: chart.title = title
             chart.x_labels = map(
                 lambda t: datetime.datetime.fromtimestamp(t).strftime(chart_t),
