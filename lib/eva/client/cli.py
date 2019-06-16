@@ -1201,7 +1201,8 @@ class GenericCLI(GCLI):
         return 0
 
     def write_result(self, obj, out_file):
-        if 'content_type' not in obj and 'data' not in obj:
+        if not isinstance(obj, dict) or \
+                ('content_type' not in obj and 'data' not in obj):
             open(out_file, 'w').write(self.format_json(obj))
         else:
             data = obj['data']
@@ -1221,7 +1222,7 @@ class GenericCLI(GCLI):
     def process_result(self, result, code, api_func, itype, a):
         if code != apiclient.result_ok:
             self.print_failed_result(result)
-        if 'content_type' in result:
+        if isinstance(result, dict) and 'content_type' in result:
             if sys.stdout.isatty():
                 self.print_err('File received, output file must be specified')
                 return apiclient.result_invalid_params

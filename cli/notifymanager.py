@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -365,11 +366,11 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
     def get_notifier_config(self, params):
         n = self.get_notifier(params['i'])
-        return 0, n.serialize() if n else None
+        return (0, n.serialize()) if n else self.local_func_result_failed
 
     def list_notifier_props(self, params):
         n = self.get_notifier(params['i'])
-        return 0, n.serialize(props=True) if n else None
+        return (0, n.serialize(props=True)) if n else self.local_func_result_failed
 
     def set_notifier_prop(self, params):
         n = self.get_notifier(params['i'])
