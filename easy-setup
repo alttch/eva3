@@ -566,11 +566,6 @@ if [ "x$SKIP_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
     exit 1
 fi
 
-if [ $LINK -eq 1 ] && [ "x$MQTT_HOST" = "x" ]; then
-    echo "Linking requested but no MQTT HOST specified"
-    option_error
-fi
-
 trap on_exit exit
 
 if [ ! $SKIP_CHECK ]; then
@@ -818,7 +813,7 @@ EOF
         ./sbin/eva-tinyapi -C lm -F setup_mode setup=1 > /dev/null 2>&1
         ./sbin/eva-tinyapi -C lm -F remove_controller i=${SNAME} > /dev/null 2>&1
         ./sbin/eva-tinyapi -C lm -F append_controller \
-            u=http://localhost:8812 a=\$default m=eva_1 save=1 > /dev/null 2>&1
+            u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -904,7 +899,7 @@ EOF
         ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
         ./sbin/eva-tinyapi -C sfa -F remove_controller i=${SNAME} > /dev/null 2>&1
         ./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=uc u=http://localhost:8812 a=\$default m=eva_1 save=1 > /dev/null 2>&1
+            g=uc u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -932,7 +927,7 @@ EOF
         ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
         ./sbin/eva-tinyapi -C sfa -F remove_controller i=${SNAME} > /dev/null 2>&1
         ./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=lm u=http://localhost:8817 a=\$default m=eva_1 save=1 > /dev/null 2>&1
+            g=lm u=http://localhost:8817 a=\$default save=1 > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
