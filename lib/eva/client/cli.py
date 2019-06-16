@@ -637,8 +637,8 @@ class GenericCLI(GCLI):
             'i',
             help='File name (relative to runtime, without / in the beginning)',
             metavar='REMOTE_FILE')
-        sp_file_get.add_argument(
-            '_fname', help='Local file name', metavar='LOCAL_FILE')
+        # sp_file_get.add_argument(
+        # '_fname', help='Local file name', metavar='LOCAL_FILE')
 
         sp_file_upload = sp_file.add_parser('upload', help='Upload file')
         sp_file_upload.add_argument(
@@ -1159,7 +1159,6 @@ class GenericCLI(GCLI):
                 func in self.api_cmds_timeout_correction) and \
                 wait + 2 > self.default_timeout:
                 timeout = wait + 2
-
         if debug and self.remote_api_enabled:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)
@@ -1187,25 +1186,56 @@ class GenericCLI(GCLI):
                 self.ap.print_help()
             return code
         else:
-            if c.get('json') or a._json or api_func in self.always_json:
+            if a._output_file and code == apiclient.result_ok:
+                try:
+                    self.write_result(result, a._output_file)
+                except Exception as e:
+                    self.print_err(e)
+                    return 9
+            elif c.get('json') or a._json or api_func in self.always_json:
                 self.print_json(result)
             else:
                 return self.process_result(result, code, api_func, itype, a)
         return 0
 
+    def write_result(self, obj, out_file):
+        if 'content_type' not in obj and 'data' not in obj:
+            open(out_file, 'w').write(self.format_json(obj))
+        else:
+            data = obj['data']
+            if obj['content_type'] in ['image/svg+xml', 'text/plain']:
+                if isinstance(out_file, str):
+                    open(out_file, 'w').write(data)
+                else:
+                    out_file.write(data)
+            else:
+                import base64
+                data = base64.b64decode(data)
+                if isinstance(out_file, str):
+                    open(out_file, 'wb').write(data)
+                else:
+                    out_file.buffer.write(data)
+
     def process_result(self, result, code, api_func, itype, a):
-        if api_func == 'file_get' and result == apiclient.result_ok:
-            try:
-                open(a._fname, 'w').write(result['data'])
-                print('OK')
-            except:
-                self.print_err('FAILED')
-                self.print_err('Unable to write to local file')
-                return 95
+        # if api_func == 'file_get' and result == apiclient.result_ok:
+        # try:
+        # open(a._fname, 'w').write(result['data'])
+        # print('OK')
+        # except:
+        # self.print_err('FAILED')
+        # self.print_err('Unable to write to local file')
+        # return 95
         if code != apiclient.result_ok:
             self.print_failed_result(result)
-        self.fancy_print_result(
-            result, api_func, itype, print_ok=code == apiclient.result_ok)
+        if 'content_type' in result:
+            if sys.stdout.isatty():
+                self.print_err('File received, output file must be specified')
+                return 8
+            else:
+                self.write_result(result, sys.stdout)
+        else:
+            self.fancy_print_result(
+                result, api_func, itype, print_ok=code == apiclient.result_ok)
         return code
 
     def print_tdf(self, result_in, time_field):

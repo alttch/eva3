@@ -174,6 +174,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 result.add(v['group'])
             return list(result)
 
+    def prepare_run(self, api_func, params, a):
+        if api_func == 'state_history':
+            if params['c']:
+                params['g'] = 'chart'
+        return super().prepare_run(api_func, params, a)
+
     def prepare_result_data(self, data, api_func, itype):
         if api_func not in [
                 'state', 'list_macros', 'list_cycles', 'list_controllers',
@@ -222,7 +228,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
     def process_result(self, result, code, api_func, itype, a):
         if api_func == 'state_history' and \
-                isinstance(result, dict):
+                isinstance(result, dict) and 'content_type' not in result:
             self.print_tdf(result, 't')
             return 0
         else:
@@ -316,6 +322,12 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
             metavar='INTERVAL',
             dest='w')
+        sp_history.add_argument(
+            '-c',
+            '--chart-options',
+            help='Chart options',
+            metavar='OPTS',
+            dest='c')
 
     def add_sfa_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')
@@ -1433,4 +1445,5 @@ cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
+eva.client.cli.subshell_exit_code = code
 sys.exit(code)

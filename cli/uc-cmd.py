@@ -299,7 +299,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return super().process_result(result, code, api_func, itype, a)
 
     def prepare_run(self, api_func, params, a):
-        if api_func == 'load_driver':
+        if api_func == 'state_history':
+            if params['c']:
+                params['g'] = 'chart'
+        elif api_func == 'load_driver':
             try:
                 import re
                 params['p'], params['i'] = re.split('[.:]', params['i'])
@@ -408,6 +411,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
             metavar='INTERVAL',
             dest='w')
+        sp_history.add_argument(
+            '-c',
+            '--chart-options',
+            help='Chart options',
+            metavar='OPTS',
+            dest='c')
 
         sp_update = self.sp.add_parser('update', help='Update item state')
         sp_update.add_argument(
@@ -1368,4 +1377,5 @@ cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
+eva.client.cli.subshell_exit_code = code
 sys.exit(code)

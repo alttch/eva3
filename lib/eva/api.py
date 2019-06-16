@@ -723,9 +723,9 @@ class GenericAPI(object):
             http://pygal.org/en/stable/documentation/configuration/chart.html#options
             (use range_min, range_max for range, other are passed as-is)
 
-        For chart, JSON RPC gets reply with "content" and "data" fields, where
-        content is image content type. If PNG image format is selected, data is
-        base64-encoded.
+        For chart, JSON RPC gets reply with "content_type" and "data" fields,
+        where content is image content type. If PNG image format is selected,
+        data is base64-encoded.
         """
         k, a, i, s, e, l, x, t, w, g, c = parse_function_params(
             kwargs, 'kaiselxtwgc', '.sr..issss.')
@@ -1227,10 +1227,13 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                         try:
                             if data != 'image/svg+xml':
                                 raise Exception
-                            res = {'content': data, 'data': res.decode('utf-8')}
+                            res = {
+                                'content_type': data,
+                                'data': res.decode('utf-8')
+                            }
                         except:
                             res = {
-                                'content': data,
+                                'content_type': data,
                                 'data': base64.b64encode(res).decode()
                             }
                 else:

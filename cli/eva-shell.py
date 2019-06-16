@@ -307,6 +307,7 @@ class ManagementCLI(GenericCLI):
             result = self.do_start_shell(sst, x, xp)
             if not result: break
             sst = eva.client.cli.shell_switch_to
+        if eva.client.cli.subshell_exit_code != 0: result = False
         return result
 
     def do_start_shell(self, p, x='-cmd.py', xp=''):
@@ -338,6 +339,7 @@ sys.argv = {argv}
             os.chdir(dir_cwd)
             if self.interactive: self.save_readline()
             try:
+                eva.client.cli.subshell_exit_code = 0
                 exec(c)
                 self.subshell_extra_args = None
             except SystemExit:

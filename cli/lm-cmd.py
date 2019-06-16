@@ -422,7 +422,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
             print()
 
     def prepare_run(self, api_func, params, a):
-        if api_func == 'set_rule_prop':
+        if api_func == 'state_history':
+            if params['c']:
+                params['g'] = 'chart'
+        elif api_func == 'set_rule_prop':
             if a._func in ['enable', 'disable']:
                 params['p'] = 'enabled'
                 params['v'] = 1 if a._func == 'enable' else 0
@@ -573,6 +576,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
             help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
             metavar='INTERVAL',
             dest='w')
+        sp_history.add_argument(
+            '-c',
+            '--chart-options',
+            help='Chart options',
+            metavar='OPTS',
+            dest='c')
 
         sp_set = self.sp.add_parser('set', help='Set LVar state')
         sp_set.add_argument(
@@ -1343,4 +1352,5 @@ cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
+eva.client.cli.subshell_exit_code = code
 sys.exit(code)

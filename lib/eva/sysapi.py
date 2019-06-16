@@ -1031,7 +1031,12 @@ class SysHTTP_API_abstract(SysAPI):
 
     def file_get(self, **kwargs):
         data, e = super().file_get(**kwargs)
-        return {'file': kwargs.get('i'), 'data': data, 'e': e}
+        return {
+            'file': kwargs.get('i'),
+            'data': data,
+            'e': e,
+            'content_type': 'text/plain'
+        }
 
     def regenerate_key(self, **kwargs):
         return {'key': super().regenerate_key(**kwargs)}
@@ -1231,5 +1236,4 @@ def lock_processor(**kwargs):
 
 api = SysAPI()
 
-config = SimpleNamespace(
-    api_file_management_allowed=False, api_setup_mode=None)
+config = SimpleNamespace(api_file_management_allowed=False, api_setup_mode=None)
