@@ -720,7 +720,11 @@ class GenericAPI(object):
             line, fmt, chart_t, title = output_image
             import pygal
             import datetime
-            chart = pygal.Line(x_label_rotation=45)
+            if line == 'bar':
+                chartfunc = pygal.Bar
+            else:
+                chartfunc = pygal.Line
+            chart = chartfunc(x_label_rotation=45)
             if title: chart.title = title
             chart.x_labels = map(
                 lambda t: datetime.datetime.fromtimestamp(t).strftime(chart_t),
@@ -752,9 +756,9 @@ class GenericAPI(object):
                 fmt = gp[2]
             except:
                 fmt = 'svg'
-            if line not in ['line']:
+            if line not in ['line', 'bar']:
                 raise InvalidParameter(
-                    'output format should be in: list, dict, line')
+                    'output format should be in: list, dict, line, bar')
             if fmt not in ['svg', 'png']:
                 raise InvalidParameter('image format should be in: svg, png')
             chart_t = t if t else '%Y-%m-%d %H:%M'
