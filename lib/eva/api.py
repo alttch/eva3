@@ -716,11 +716,12 @@ class GenericAPI(object):
 
         Options for chart (all are optional):
             type: chart type (line or bar, default is line)
-            xr: x label rotation (degrees)
-            yr: y label rotation (degrees)
-            title: chart title
             tf: chart time format
-            fmt: output format (svg, png, default is svg),
+            out: output format (svg, png, default is svg),
+
+            other options:
+            http://pygal.org/en/stable/documentation/configuration/chart.html#options
+            (use range_min, range_max for range, other are passed as-is)
 
         For chart, JSON RPC gets reply with "content" and "data" fields, where
         content is image content type. If PNG image format is selected, data is
@@ -734,11 +735,27 @@ class GenericAPI(object):
                 return result
             if not prop: prop = 'value'
             line = c.get('type', 'line')
-            fmt = c.get('fmt', 'svg')
+            fmt = c.get('out', 'svg')
             chart_t = c.get('tf', '%Y-%m-%d %H:%M')
-            title = c.get('title')
-            xr = c.get('xr', 0)
-            yr = c.get('yr', 0)
+            range_min = c.get('range_min')
+            range_max = c.get('range_max')
+            for x in ['type', 'out', 'tf', 'range_min', 'range_max']:
+                try:
+                    del c[x]
+                except:
+                    pass
+            for x in [
+                    'explicit_size', 'show_x_labels', 'show_y_labels',
+                    'show_minor_x_labels', 'show_minor_y_labels', 'show_legend',
+                    'legend_at_bottom', 'include_x_axis', 'inverse_y_axis',
+                    'logarithmic', 'print_values', 'dynamic_print_values',
+                    'print_zeroes', 'print_labels', 'human_readable', 'stroke',
+                    'fill', 'show_only_major_dots', 'show_x_guides',
+                    'show_y_guides', 'pretty_print', 'disable_xml_declaration',
+                    'no_prefix', 'strict', 'missing_value_fill_truncation'
+            ]:
+                if x in c:
+                    c[x] = val_to_boolean(c[x])
             import pygal
             import datetime
             if line == 'line':
@@ -747,8 +764,9 @@ class GenericAPI(object):
                 chartfunc = pygal.Bar
             else:
                 raise InvalidParameter('Chart type should be in: line, bar')
-            chart = chartfunc(x_label_rotation=xr, y_label_rotation=yr)
-            if title: chart.title = title
+            chart = chartfunc(**c)
+            if range_min is not None and range_max is not None:
+                chart.range = (range_min, range_max)
             chart.x_labels = map(
                 lambda t: datetime.datetime.fromtimestamp(t).strftime(chart_t),
                 result['t'])
