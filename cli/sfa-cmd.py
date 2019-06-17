@@ -725,6 +725,13 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Undeploy old configuration first',
             dest='und',
             action='store_true')
+        sp_cloud_deploy.add_argument(
+            '-c',
+            '--config',
+            help='Template vars, comma separated',
+            metavar='VARS',
+            dest='c',
+        )
 
         sp_cloud_undeploy = sp_cloud.add_parser(
             'undeploy', help='Undeploy items and configuration from file')
@@ -743,6 +750,13 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Save controllers\' configurations after undeploy',
             dest='_save',
             action='store_true')
+        sp_cloud_undeploy.add_argument(
+            '-c',
+            '--config',
+            help='Template vars, comma separated',
+            metavar='VARS',
+            dest='c',
+        )
 
     # cloud management
 
@@ -766,8 +780,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             import requests
             result = requests.get(target)
             if not result.ok:
-                raise Exception('http code {}'.format(
-                    result.status_code))
+                raise Exception('http code {}'.format(result.status_code))
             return result.text
         else:
             return open(target).read()
@@ -781,9 +794,15 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         from eva.client import apiclient
         try:
             try:
+                import jinja2
+                from eva.tools import dict_from_str
                 fname = props.get('f')
+                v = props.get('c')
+                if v: v = dict_from_str(v)
+                else: v = {}
                 dirname = os.path.dirname(fname)
-                cfg = yaml.load(self._read_uri(fname))
+                tpl = jinja2.Template(self._read_uri(fname))
+                cfg = yaml.load(tpl.render(v))
             except Exception as e:
                 raise Exception('Unable to parse {}: {}'.format(fname, e))
             api = props['_api']
@@ -860,9 +879,9 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                 try:
                                     self._read_uri(fname, dirname)
                                 except:
-                                    raise Exception(
-                                        ('{}: {} unable to open ' +
-                                         'file for upload').format(c, fname))
+                                    raise Exception(('{}: {} unable to open ' +
+                                                     'file for upload').format(
+                                                         c, fname))
             macall = partial(call, 'management_api_call')
             for c in controllers:
                 code, ctest = macall({'i': c, 'f': 'test'})
