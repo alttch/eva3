@@ -50,14 +50,8 @@ class PHI(GenericPHI):
             self.data[str(i)] = d
 
     def get_ports(self):
-        result = []
-        for i in range(1000, 1011):
-            result.append({
-                'port': str(i),
-                'name': 'port #{}'.format(i),
-                'description': 'virtual sensor port #{}'.format(i)
-            })
-        return result
+        return self.generate_port_list(
+            port_min=1000, port_max=1010, description='virtual sensor port #{}')
 
     def get(self, port=None, cfg=None, timeout=0):
         if not port: return self.data

@@ -271,6 +271,21 @@ class PHI(object):
         logging.critical('PHI %s: %s' % (i, msg))
         critical()
 
+    @staticmethod
+    def generate_port_list(port_min=1,
+                         port_max=1,
+                         name='port #{}',
+                         description='port #{}'):
+        result = []
+        for i in range(port_min, port_max + 1):
+            p = str(i)
+            result.append({
+                'port': p,
+                'name': name.replace('{}', p),
+                'description': description.replace('{}', p)
+            })
+        return result
+
     def _start(self):
         if self._update_interval and 'aao_get' in self.__features:
             self._start_update_processor()
