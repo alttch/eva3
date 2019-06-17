@@ -34,6 +34,7 @@ SFA
     * JS SFA Framework is now deprecated. Use EVA JS Framework instead:
       https://github.com/alttch/eva-js-framework
 
+
 3.2.2 (2019-05-21)
 ==================
 
@@ -53,6 +54,7 @@ SFA
     * evaHI integration
     * transparent authentication on secondary UI pages
 
+
 3.2.1 (2019-04-16)
 ==================
 
@@ -68,6 +70,7 @@ Common
     * Modbus slave register monitoring functions
     * increment/decrement functions for lvars and shared macro variables
     * read-only permissions for API keys
+
 
 3.2.0 (2019-04-02)
 ==================
@@ -194,6 +197,7 @@ SFA
     * new API function: "test_controller", detailed info in "list controllers"
     * SFA framework fixes and improvements
 
+
 3.1.0 (2018-09-01)
 ==================
 
@@ -300,6 +304,7 @@ Common
     * oid support in API keys
     * other stability improvements
 
+
 3.0.2 (2018-06-23)
 ==================
 
@@ -372,6 +377,7 @@ Common
       current host
     * ability to run controllers under restricted user
 
+
 3.0.1 (2018-02-21)
 ==================
 
@@ -404,6 +410,7 @@ LM PLC
 
     * item id in LM rules match by simple mask (i.e. '\*id\'* or 'id\'* or
       '\*id')
+
 
 3.0.0 (2017-10-19)
 ==================
