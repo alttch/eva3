@@ -622,9 +622,6 @@ if [ $INTERACTIVE -eq 1 ]; then
     echo "Your controller default key: ${DEFAULTKEY}"
     echo "Your operator key: ${OPKEY}"
     echo
-    echo "Default user: operator"
-    echo "Password: ${OPPASSWD}"
-    echo
     cat << EOF
 WARNING: If you want to run some components under restricted users, create
 "var" and "log" folders in EVA installation dir and make sure the restricted

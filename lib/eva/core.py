@@ -842,8 +842,9 @@ def init():
         signal.signal(signal.SIGINT, sighandler_term)
 
 
-def start():
-    reactor.suggestThreadPoolSize(config.reactor_thread_pool)
+def start(init_db_only=False):
+    if not init_db_only:
+        reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
 
 
