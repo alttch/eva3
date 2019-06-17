@@ -9,6 +9,7 @@ FORCE=0
 CLEAR=0
 USE_SUPERVISOR=0
 APPEND=0
+APPEND_MQTT=0
 INTERACTIVE=1
 DEFAULT_USER=root
 INSTALL_UC=0
@@ -302,7 +303,7 @@ function askYN {
 function askMQTT {
     while [ 1 ]; do
         if [ $INTERACTIVE -eq 1 ]; then
-            echo -n "MQTT host, required for linking (use empty value to skip MQTT connection for now): "
+            echo -n "MQTT host, required for cloud setup (use empty value to skip MQTT connection for now): "
             read MQTT_HOST
             if [ "x${MQTT_HOST}"  = "x" ]; then
                 return
@@ -607,7 +608,7 @@ if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
     [ "x$LM_ENABLED" == 'xyes' ] && PRD=lm
     [ "x$SFA_ENABLED" == 'xyes' ] && PRD=sfa
     echo "Will use settings from $PRD"
-    eval "`./sbin/get-setup-options $PRD`" || exit 1
+    eval "`./sbin/get-setup-options $PRD|grep -A999 ^MASTERKEY`" || exit 1
     APPEND=1
 fi
 
@@ -669,10 +670,14 @@ if [ $APPEND -ne 1 ]; then
     askYN "Should this node grant API access for the remote instances"
     [ $VALUE == "0" ] && REMOTES="127.0.0.1"
     askMQTT
+elif [ ! $MQTT_HOST ]; then
+  askMQTT
+  [ $MQTT_HOST ] && APPEND_MQTT=1
+  echo
 fi
 
 
-if [ "x$MQTT_HOST" != "x" ] && [ $APPEND -ne 1 ]; then
+if [ $APPEND -ne 1 ]; then
     echo
     askYN "Link controllers statically"
     [ $VALUE == "1" ] && LINK=1
@@ -688,6 +693,14 @@ if [ "x$UC_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
     echo
     askYN "Install EVA Universal Controller on this host"
     [ $VALUE == "1" ] && INSTALL_UC=1
+elif [ $APPEND_MQTT -eq 1 ]; then
+  ./bin/uc-notifier config eva_1 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Setting up MQTT for UC"
+    ./sbin/uc-control stop || exit 1
+    create_notifier uc || exit 1
+    start_controller uc || exit 1
+  fi
 else
     echo "UC is already installed. Skipping"
     INSTALL_UC=0
@@ -750,6 +763,14 @@ fi
 if [ "x$LM_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
     askYN "Install EVA Logical Manager PLC on this host"
     [ $VALUE == "1" ] && INSTALL_LM=1
+elif [ $APPEND_MQTT -eq 1 ]; then
+  ./bin/lm-notifier config eva_1 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Setting up MQTT for LM PLC"
+    ./sbin/lm-control stop || exit 1
+    create_notifier lm || exit 1
+    start_controller lm || exit 1
+  fi
 else
     echo "LM is already installed. Skipping"
     INSTALL_LM=0
@@ -831,6 +852,14 @@ fi
 if [ "x$SFA_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
     askYN "Install SCADA Final Aggregator on this host"
     [ $VALUE == "1" ] && INSTALL_SFA=1
+elif [ $APPEND_MQTT -eq 1 ]; then
+  ./bin/sfa-notifier config eva_1 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Setting up MQTT for SFA"
+    ./sbin/sfa-control stop || exit 1
+    create_notifier sfa || exit 1
+    start_controller sfa || exit 1
+  fi
 else
     echo "SFA is already installed. Skipping"
     INSTALL_SFA=0
@@ -953,7 +982,9 @@ setup_supervisor_onboot || exit 11
 
 # COMPLETED
 
-if [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; then
+if [ $APPEND_MQTT -eq 1 ]; then
+  echo "MQTT connection is set up"
+elif [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; then
     echo "No products selected, nothing was installed"
     exit 0
 fi
@@ -981,17 +1012,21 @@ fi
 
 ln -sf eva bin/eva-shell
 
-echo "Setup completed!"
-echo
-echo "EVA ICS v`./sbin/eva-tinyapi -V` build `./sbin/eva-tinyapi -B`"
-echo
-echo "MASTERKEY: ${MASTERKEY}"
-echo "Controller default key: ${DEFAULTKEY}"
-echo "Operator key: ${OPKEY}"
-echo
-echo "Default user: operator"
-echo "Password: ${OPPASSWD}"
-echo
+if [ $APPEND_MQTT -ne 1 ]; then
+  echo "Setup completed!"
+  echo
+  echo "EVA ICS v`./sbin/eva-tinyapi -V` build `./sbin/eva-tinyapi -B`"
+  echo
+  echo "MASTERKEY: ${MASTERKEY}"
+  echo "Controller default key: ${DEFAULTKEY}"
+  echo "Operator key: ${OPKEY}"
+  echo
+  if [ $INSTALL_SFA -eq 1 ]; then
+    echo "Default user: operator"
+    echo "Password: ${OPPASSWD}"
+    echo
+  fi
+fi
 
 mkdir -p backup
 chmod 700 backup
