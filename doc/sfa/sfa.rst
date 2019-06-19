@@ -21,7 +21,7 @@ oid form (*type:group/id*) and be unique in the whole installation.
 SFA is set up and controlled with **eva sfa** :doc:`console application</cli>`
 and :doc:`sfa_api`. The API doesn't have a user interface by default, it's
 developed specifically for certain installation certain installation using
-:doc:`sfa_templates` (server-side part) and :doc:`sfa_framework` (client-side
+:doc:`sfa_templates` (server-side part) and :ref:`js_framework` (client-side
 part).
 
 All changes of item status, actions, and logs are sent to the
@@ -50,7 +50,7 @@ runtime/sfa_cvars.json variables file
 =====================================
 
 sfa_cvars.json - file containing user variables. All SFA user variables are
-directly available in :doc:`sfa_templates` and :doc:`sfa_framework` after login
+directly available in :doc:`sfa_templates` and :ref:`js_framework` after login
 with any valid user or API key.
 
 The file contains a JSON dict:
@@ -179,7 +179,7 @@ Interface
 =========
 
 SFA interface is always specifically designed for a certain installation using
-:doc:`sfa_templates`, :doc:`sfa_framework` and :doc:`sfa_pvt`. Interface files
+:doc:`sfa_templates`, :ref:`js_framework` and :doc:`sfa_pvt`. Interface files
 are stored in **ui** folder, interface is available at
 *http(s)://<IP_address_SFA:Port>/* (redirects to */ui/*) or
 *http(s)://<IP_address_SFA:Port>/ui/*.

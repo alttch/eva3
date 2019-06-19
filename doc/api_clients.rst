@@ -23,6 +23,26 @@ offer ready-made client libraries.
 
 .. contents::
 
+.. _js_framework:
+
+EVA JS Framework
+================
+
+`EVA JS Framework <https://www.npmjs.com/package/@eva-ics/framework>`_ and `EVA
+JS Toolbox <https://www.npmjs.com/package/@eva-ics/toolbox>`_ are used to build
+web browser interfaces with HTML and JavaScript .
+
+Framework also can be used in `Node.js <https://nodejs.org/>`_ apps.
+
+.. note::
+
+    Starting from EVA ICS 3.2.3 JavaScript Framework is not installed by
+    default. Previous EVA SFA Framework is deprecated and no longer supported.
+
+Framework requires **fetch** function, which is available in all modern
+web browsers. For old browsers polyfill should be used, `unfetch
+<https://github.com/developit/unfetch>`_ is a recommended one.
+
 API client for Python
 =====================
 

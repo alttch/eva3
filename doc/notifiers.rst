@@ -199,10 +199,11 @@ MQTT (mqtt)
 
 MQTT is a major endpoint type used to link several EVA subsystems. For
 instance, it enables :doc:`/lm/lm` and :doc:`/sfa/sfa` controllers to
-receive the latest item status from :doc:`/uc/uc` servers. We test and use EVA
-with `mosquitto <http://mosquitto.org/>`_ server, but you can use any server
-supporting `MQTT <http://mqtt.org/>`_ protocol.  As far as MQTT is the major
-type of the EVA notification system, let us examine it in detailed.
+receive the latest item status from :doc:`/uc/uc` servers when set on a nodes
+in different networks. We test and use EVA with `mosquitto
+<http://mosquitto.org/>`_ server, but you can use any server supporting `MQTT
+<http://mqtt.org/>`_ protocol. As far as MQTT is the major type of the EVA
+notification system, let us examine it in detailed.
 
 MQTT and state notifications
 ----------------------------
@@ -367,8 +368,8 @@ DB Notifiers
 ============
 
 EVA ICS has a special notifier type: **db**, which is used to store items'
-state history. State history can be obtained later via API calls or :doc:`SFA
-Framework</sfa/sfa_framework>` for analysis and e.g. to build graphical charts.
+state history. State history can be obtained later via API calls or
+:ref:`js_framework` for analysis and e.g. to build graphical charts.
 
 To create db notifier, specify notifier props as **db:<dbfile>[:keeptime]**,
 e.g. *db:history1.db:604800*, where *history1.db* - database file in

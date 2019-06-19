@@ -175,18 +175,17 @@ Where is the interface? I want a web interface!
 
 Each automated setup needs an interface. EVA has a very powerful
 :doc:`/sfa/sfa` component, which combines the whole setup itself and provides a
-flexible :doc:`/sfa/sfa_framework` which allows you to create a modern
+flexible :ref:`js_framework` which allows you to create a modern
 websocket-powered web interface with a few strings of JavaScript:
 
 .. code-block:: javascript
 
-    eva_sfa_apikey = 'MY_VERY_SECRET_KEY';
-    eva_sfa_init();
-    eva_sfa_start();
-    eva_sfa_register_update_state('sensor:env/temperature1',
+    $eva.apikey = 'MY_VERY_SECRET_KEY';
+    $eva.watch'sensor:env/temperature1',
         function(state) {
-            $('#temp1').html(state.value);
+            document.getElementById('temp1').innerHTML = state.value;
         }
+    $eva.start();
 
 no rocket science as well.
 

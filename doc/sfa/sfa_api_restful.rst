@@ -378,7 +378,16 @@ Optionally:
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
-* **g** output format ("list" or "dict", default is "list")
+* **g** output format ("list", "dict" or "chart", default is "list")
+* **c** options for chart (dict or comma separated)
+
+Returns:
+
+Options for chart (all are optional): type: chart type (line or bar, default is line) tf: chart time format out: output format (svg, png, default is svg),
+
+other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
 
 
 .. _sfapi_restful_kill:
@@ -930,7 +939,7 @@ ask connected clients to reload
 
 Sends **reload** event to all connected clients asking them to reload the interface.
 
-All the connected clients receive the event with *subject="reload"* and *data="asap"*. If the clients use :doc:`sfa_framework`, they can define :ref:`reload handler<sfw_eva_sfa_reload_handler>` function.
+All the connected clients receive the event with *subject="reload"* and *data="asap"*. If the clients use :ref:`js_framework`, they can catch *server.reload* event.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/reload_clients.rest
@@ -948,7 +957,7 @@ notify connected clients about server restart
 
 Sends a **server restart** event to all connected clients asking them to prepare for server restart.
 
-All the connected clients receive the event with *subject="server"* and *data="restart"*. If the clients use :doc:`sfa_framework`, they can define :ref:`restart handler<sfw_eva_sfa_server_restart_handler>` function.
+All the connected clients receive the event with *subject="server"* and *data="restart"*. If the clients use :ref:`js_framework`, they can catch *server.restart* event.
 
 Server restart notification is sent automatically to all connected clients when the server is restarting. This API function allows to send server restart notification without actual server restart, which may be useful e.g. for testing, handling frontend restart etc.
 

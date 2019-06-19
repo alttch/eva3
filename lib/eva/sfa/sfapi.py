@@ -942,8 +942,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         the interface.
 
         All the connected clients receive the event with *subject="reload"* and
-        *data="asap"*. If the clients use :doc:`sfa_framework`, they can
-        define :ref:`reload handler<sfw_eva_sfa_reload_handler>` function.
+        *data="asap"*. If the clients use :ref:`js_framework`, they can catch
+        *server.reload* event.
 
         Args:
             k: .master
@@ -960,9 +960,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         to prepare for server restart.
 
         All the connected clients receive the event with *subject="server"* and
-        *data="restart"*. If the clients use :doc:`sfa_framework`, they can
-        define :ref:`restart handler<sfw_eva_sfa_server_restart_handler>`
-        function.
+        *data="restart"*. If the clients use :ref:`js_framework`, they can
+        catch *server.restart* event.
 
         Server restart notification is sent automatically to all connected
         clients when the server is restarting. This API function allows to send

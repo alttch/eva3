@@ -22,8 +22,8 @@ The client is evaHI-based application, so it can be `configured in the same way
 If front-end server is used, URI should be accessible without user
 authentication to let all application features work properly.
 
-SFA framework function :ref:`eva_sfa_hi_qr<sfw_eva_sfa_hi_qr>` can be used to
-generate configuration QR code for the current authenticated user.
+:ref:`js_framework` function *$eva.hiQR* can be used to generate configuration
+QR code for the current authenticated user.
 
 Building own client
 -------------------
@@ -41,12 +41,12 @@ header) and ask it to provide authentication credentials.
 
 If there is no front-end with basic authentication set up for all clients, you
 may display log in form for all, but let evaHI-based clients to try logging in
-automatically via :doc:`sfa/sfa_framework`:
+automatically via :ref:`js_framework`:
 
 .. code-block:: javascript
 
-    if (navigator.userAgent.startsWith("evaHI ")) {
-        eva_sfa_start();
+    if ($eva.in_evaHI) {
+        $eva.start();
     } else {
         // show login form
     }

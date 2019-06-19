@@ -28,9 +28,8 @@ What is EVA
 * :doc:`Logic Manager</lm/lm>` programming logic controllers used for automatic
   data processing and decision-making.
 
-* :doc:`SFA Framework</sfa/sfa_framework>` and :doc:`SFA
-  Templates</sfa/sfa_templates>`, allowing quick development of the interfaces
-  for a specific configuration.
+* :ref:`js_framework` and :doc:`SFA Templates</sfa/sfa_templates>`, allowing
+  quick development of the interfaces for a specific configuration.
 
 EVA can be installed either partially or fully, it can be scaled up to many
 servers or all components can be installed onto the only one. The system is
@@ -65,7 +64,7 @@ What you get with EVA
   controllers</sfa/sfa>`
 * :doc:`/api_clients` to quickly connect controllers' API to your apps
 * develop a modern real-time websocket-powered SCADA web applications with
-  :doc:`/sfa/sfa_framework`
+  :ref:`js_framework`
 * set up IoT cloud with nodes connected via :ref:`MQTT<mqtt_cloud>`
 * and much more
 
@@ -115,7 +114,6 @@ What you get with EVA
     :caption:  Interface development
     :maxdepth: 1
 
-    sfa/sfa_framework
     sfa/sfa_templates
     sfa/sfa_pvt
     api_tokens

@@ -9,7 +9,7 @@ almost ready to use.
 
     Each EVA ICS installation (**node**) can run multiple components. Despite
     they share node resources, they still act as independent processes and
-    require :ref:`MQTT server<mqtt_>` for inter-connection.
+    require inter-connection set up.
 
 .. contents::
 
@@ -33,8 +33,9 @@ System Requirements
 
 * Install system package *libow-dev* to let EVA ICS install owfs module.
 
-* To sync :doc:`item</items>` status between the components in real time -
-  :ref:`MQTT<mqtt_>`-server (e.g. `mosquitto <http://mosquitto.org/>`_)
+* To sync :doc:`item</items>` status between the controllers in different
+  networks - :ref:`MQTT<mqtt_>`-server (e.g. `mosquitto
+  <http://mosquitto.org/>`_)
 
 .. warning::
 
@@ -125,6 +126,17 @@ Ubuntu):
 
 Configuring MQTT broker
 -----------------------
+
+MQTT broker is used when EVA ICS controllers are located in different networks
+and can not exchange data with P2P connections.
+
+.. note::
+
+    Starting from EVA ICS 3.2.3, MQTT broker for inter-connection of
+    controllers which run on a single host/network is no longer required.
+
+If EVA ICS node is already set up without MQTT configuration, you can add it
+later with *easy-setup* or manually, using *eva ns* command.
 
 Installing local MQTT server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -593,7 +605,7 @@ Then, front-end config (e.g. for NGINX) should look like:
         }
     }
 
-With such setup, :doc:`/sfa/sfa_framework`-based interface doesn't perform any
-authentication, *eva_sfa_start()* function is called as soon as UI is loaded.
+With such setup, :ref:`js_framework`-based interface doesn't perform any
+authentication, *$eva.start()* function is called as soon as UI is loaded.
 API method *login* called by framework function will automatically log in user
 using basic authentication credentials provided to front-end server.
