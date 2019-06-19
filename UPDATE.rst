@@ -17,7 +17,7 @@ Update instructions
 
 * MQTT server is no longer required if EVA ICS controllers run on a single
   host/network. You may remove MQTT data exchange between controllers by
-  setting *mqtt_update* property to null* (exec *controller prop <controller>
+  setting *mqtt_update* property to null* (exec *controller set <controller>
   mqtt_update* command for SFA and LM controllers). Once it's set, controllers
   start exchanging data P2P.
 
