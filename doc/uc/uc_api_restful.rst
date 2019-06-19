@@ -350,7 +350,16 @@ Optionally:
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
-* **g** output format ("list" or "dict", default is "list")
+* **g** output format ("list", "dict" or "chart", default is "list")
+* **c** options for chart (dict or comma separated)
+
+Returns:
+
+Options for chart (all are optional): type: chart type (line or bar, default is line) tf: chart time format out: output format (svg, png, default is svg),
+
+other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
 
 
 .. _ucapi_restful_kill:
@@ -989,6 +998,27 @@ Physical interfaces (PHIs)
 
 
 
+.. _ucapi_restful_phi_discover:
+
+Discover installed equipment supported by PHI module
+----------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/phi_discover.rest
+    :response: http-examples/ucapi/phi_discover.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+* **x** interface to perform discover on
+* **w** max time for the operation
+
+
 .. _ucapi_restful_unlink_phi_mod:
 
 delete PHI module file
@@ -1033,6 +1063,22 @@ get PHI module info
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/modinfo_phi.rest
     :response: http-examples/ucapi/modinfo_phi.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_get_phi_ports:
+
+get PHI ports
+-------------
+
+Get list of PHI ports. If PHI has no method,
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi_ports.rest
+    :response: http-examples/ucapi/get_phi_ports.resp-rest
 
 Parameters:
 

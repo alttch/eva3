@@ -56,6 +56,10 @@ the next fields are processed by controller, so make them exactly as required
  * **universal** PHI is universal and process **cfg** in requests.
  * **cache** PHI supports state caching (useful for slow devices)
 
+* **__discover__** string or list, which describes how "discover" method (if
+  implemented) will search for the equipment: **net** for network or EVA ICS
+  bus name (*modbus*, *owfs* etc.)
+
 PHI help
 --------
 
@@ -66,6 +70,7 @@ Each PHI module should contain 4 help variables:
   with **get** command
 * **__set_help__** additional configuration params possible for LPI to send
   with **set** command
+* **__discover_help** help for "discover" method
 
 First variable should be human readable, others may copy, join or process the
 first one or each other in any way.
@@ -281,6 +286,73 @@ All the logging should be done with the following methods:
 
 The last two methods do the same, logging an event and calling controller
 critical() method.
+
+Optional methods
+================
+
+get_phi_ports
+-------------
+
+The method should be implemented if you want to let PHI to respond to API
+"get_phi_ports" method.
+
+.. code-block:: python
+
+    def get_ports(self):
+        #<your code>
+
+The method should return list of dictionaries with "port", "name" and
+"description" fields. Are fields are required and should be strings.
+
+If hardware equipment always has fixed amount of ports and they all are used
+for the same purpose (e.g. relay), you may use parent function
+*generate_port_list*:
+
+.. code-block:: python
+
+        def get_ports(self):
+            return self.generate_port_list(
+                port_max=16, description='relay port #{}')
+
+        # parent function has the following params:
+        # def generate_port_list(
+        #       port_min=1, port_max=1, name='port #{}', description='port #{}')
+
+discover
+--------
+
+The method should be implemented if you want let PHI to respond to API
+"phi_discover" method and should return all supported equipment discovered,
+including parameters for PHI loading.
+
+"discover" method should be always implemented as static as it is always called
+on module, before PHI is loaded and primary class is created. If PHI implements
+discovery, *__discover__* header should always be present in module.
+
+.. code-block:: python
+
+    __discover__ = 'net'
+
+    # ............
+
+        @staticmethod
+        def discover(interface=None, timeout=0):
+            # interface - network or bus name, can be list or string
+            #<your code>
+
+The method should return array of dictionaries, which may contain any fields.
+Field *!load* is required and should contain dictionary with PHI loading
+params, e.g. *{ 'host': '<ip_of_hardware>' }*.
+
+You may specify result column ordering for EVA ICS interfaces. For that, a
+special record:
+
+.. code-block:: python
+
+    [{ '!opt': 'cols', 'value': [<columns>]}]
+
+must be present as first in a result. A special column *'!load'* in a
+column list is not required.
 
 Working with unit values
 ========================
@@ -700,6 +772,42 @@ managed by handler).
         self.log_debug('got data: {} from {}'.format(_data, address))
         # process the data
         # ...
+
+
+Discovering SSDP hardware
+=========================
+
+If "discover" method is implemented and discovers hardware equipment via SSDP,
+driver tool can be used:
+
+.. code-block:: python
+
+    def discover(interface=None, timeout=0):
+        import eva.uc.drivers.tools.ssdp as ssdp
+        result = ssdp.discover(
+            'upnp:all',
+            interface=interface,
+            timeout=timeout,
+            discard_headers=[
+                'Cache-control', 'Ext', 'Location', 'Host'
+            ])
+        # if upnp:all is used - filter result to leave only supported hardware
+
+    # eva.uc.drivers.tools.ssdp.discover function has the following params:
+    # def discover(st,
+    #             ip='239.255.255.250',
+    #             port=1900,
+    #             mx=True,
+    #             interface=None,
+    #             trailing_crlf=True,
+    #             parse_data=True,
+    #             discard_headers=['Cache-control', 'Host'],
+    #             timeout=None)
+    # where
+    #   mx                  send MX header or not
+    #   trailing_crlf       append trailing CR/LF at the end of request
+    #   parse_data          try parsing data automatically
+    #   discard_headers     discard specified headers if data is parsed
 
 
 Asynchronous I/O

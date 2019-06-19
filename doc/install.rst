@@ -35,7 +35,8 @@ System Requirements
 
 * To sync :doc:`item</items>` status between the controllers in different
   networks - :ref:`MQTT<mqtt_>`-server (e.g. `mosquitto
-  <http://mosquitto.org/>`_)
+  <http://mosquitto.org/>`_) or to communicate with other equipment and 3rd
+  party software.
 
 .. warning::
 

@@ -391,7 +391,16 @@ Optionally:
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
-* **g** output format ("list" or "dict", default is "list")
+* **g** output format ("list", "dict" or "chart", default is "list")
+* **c** options for chart (dict or comma separated)
+
+Returns:
+
+Options for chart (all are optional): type: chart type (line or bar, default is line) tf: chart time format out: output format (svg, png, default is svg),
+
+other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
 
 .. _ucapi_terminate:
 
@@ -986,6 +995,22 @@ Parameters:
 * **c** command to exec
 * **a** command argument
 
+.. _ucapi_get_phi_ports:
+
+get_phi_ports - get PHI ports
+-----------------------------
+
+Get list of PHI ports. If PHI has no method,
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi_ports.req
+    :response: http-examples/ucapi/get_phi_ports.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** PHI id
+
 .. _ucapi_list_phi:
 
 list_phi - list loaded PHIs
@@ -1071,6 +1096,27 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **m** PHI module name (without *.py* extension)
+
+.. _ucapi_phi_discover:
+
+phi_discover - Discover installed equipment supported by PHI module
+-------------------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/phi_discover.req
+    :response: http-examples/ucapi/phi_discover.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** PHI module name (without *.py* extension)
+
+Optionally:
+
+* **x** interface to perform discover on
+* **w** max time for the operation
 
 .. _ucapi_put_phi_mod:
 

@@ -31,7 +31,7 @@ def discover(st,
         port: multicast port
         mx: use MX header (=timeout)
         interface: network interface (None - scan all)
-        trailing_crlf: put trainling CRLF at the end of msg
+        trailing_crlf: put trailing CRLF at the end of msg
         parse_data: if False, raw data will be returned
         discard_headers: headers to discard (if parse_data is True)
         timeout: socket timeout (for a single interface)

@@ -326,7 +326,16 @@ Optionally:
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
-* **g** output format ("list" or "dict", default is "list")
+* **g** output format ("list", "dict" or "chart", default is "list")
+* **c** options for chart (dict or comma separated)
+
+Returns:
+
+Options for chart (all are optional): type: chart type (line or bar, default is line) tf: chart time format out: output format (svg, png, default is svg),
+
+other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
 
 .. _lmapi_toggle:
 
