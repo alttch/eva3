@@ -686,6 +686,7 @@ sys.argv = {argv}
                 except Exception as e:
                     print('Unable to download update manifest: {}'.format(e))
                     return self.local_func_result_failed
+                print()
                 print(r.text)
             try:
                 u = input('Type ' +
