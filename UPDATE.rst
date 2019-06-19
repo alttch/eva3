@@ -12,8 +12,8 @@ Update instructions
 ===================
 
 * JS SFA Framework is now deprecated. Use [EVA JS
-  Framework](https://www.npmjs.com/package/@eva-ics/framework) instead:
- (majority functions are compatible with SFA Framework).
+  Framework](https://www.npmjs.com/package/@eva-ics/framework) instead
+  (majority functions are compatible with SFA Framework).
 
 * MQTT server is no longer required if EVA ICS controllers run on a single
   host/network. You may remove MQTT data exchange between controllers by
