@@ -55,7 +55,7 @@ According to tests, EVA ICS can show bad performance (slow startup/shutdown) on
 industrial and micro computers if they have:
 
 * small amount of RAM (minimum 512 MB is recommended)
-* slow SSD driver or SD card.
+* slow SSD drive or SD card.
 
 We strongly recommend using at least UHS-I SD cards which can show a speed up
 to 100 MB/s.
