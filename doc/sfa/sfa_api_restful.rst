@@ -383,9 +383,9 @@ Optionally:
 
 Returns:
 
-Options for chart (all are optional): type: chart type (line or bar, default is line) tf: chart time format out: output format (svg, png, default is svg),
+Options for chart (all are optional): * type: chart type (line or bar, default is line) * tf: chart time format * out: output format (svg, png, default is svg), * style: chart style (without "Style" suffix, e.g. Dark)
 
-other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+* other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
 
 For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
 
