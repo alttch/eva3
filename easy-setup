@@ -223,10 +223,16 @@ function create_notifier {
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
             BATCH="${BATCH}set eva_1 collect_logs 1"
-            BATCH="${BATCH};create db_1 db:runtime/db/sfa_history.db -y;subscribe state db_1 -p '#' -g '#'"
         fi
     fi
     [ "x${BATCH}" = "x" ] && return 0
+    echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
+    return $?
+}
+
+function create_db_notifier {
+    local T=$1
+    local BATCH="create db_1 db:runtime/db/sfa_history.db -y;subscribe state db_1 -p '#' -g '#'"
     echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
     return $?
 }
@@ -904,6 +910,7 @@ hosts_allow = ${REMOTES}
 EOF
     chmod 600 etc/sfa_apikeys.ini
     create_notifier sfa || exit 1
+    create_db_notifier sfa || exit 1
     SFA_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
