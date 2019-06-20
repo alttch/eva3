@@ -1312,7 +1312,7 @@ class RemoteLMPool(RemoteControllerPool):
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
                                 s['oid']))
-                else:
+                elif s['type'] not in ['unit', 'sensor']:
                     logging.warning('WS: unknown item type from {}: {}'.format(
                         controller_id, s['type']))
         finally:
