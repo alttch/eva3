@@ -8,6 +8,7 @@ import logging
 import threading
 import time
 import math
+import importlib
 import jsonpickle
 import eva.tokens as tokens
 
@@ -715,11 +716,12 @@ class GenericAPI(object):
         Returns: history data in specified format or chart image.
 
         Options for chart (all are optional):
-            type: chart type (line or bar, default is line)
-            tf: chart time format
-            out: output format (svg, png, default is svg),
+        * type: chart type (line or bar, default is line)
+        * tf: chart time format
+        * out: output format (svg, png, default is svg),
+        * style: chart style (without "Style" suffix, e.g. Dark)
 
-            other options:
+        * other options:
             http://pygal.org/en/stable/documentation/configuration/chart.html#options
             (use range_min, range_max for range, other are passed as-is)
 
@@ -739,7 +741,8 @@ class GenericAPI(object):
             chart_t = c.get('tf', '%Y-%m-%d %H:%M')
             range_min = c.get('range_min')
             range_max = c.get('range_max')
-            for x in ['type', 'out', 'tf', 'range_min', 'range_max']:
+            style = c.get('style')
+            for x in ['type', 'out', 'tf', 'range_min', 'range_max', 'style']:
                 try:
                     del c[x]
                 except:
@@ -764,6 +767,13 @@ class GenericAPI(object):
                 chartfunc = pygal.Bar
             else:
                 raise InvalidParameter('Chart type should be in: line, bar')
+            if style:
+                try:
+                    pstyles = importlib.import_module('pygal.style')
+                    style = getattr(pstyles, '{}Style'.format(style))
+                    c['style'] = style
+                except:
+                    raise ResourceNotFound('chart style: {}'.format(style))
             chart = chartfunc(**c)
             if range_min is not None and range_max is not None:
                 chart.range = (range_min, range_max)
