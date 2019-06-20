@@ -927,7 +927,7 @@ class RemoteUCPool(RemoteControllerPool):
                             'WS state for {} skipped, not found'.format(
                                 s['oid']))
                 else:
-                    logging.warning('WS: unknown item type from {}:'.format(
+                    logging.warning('WS: unknown item type from {}: {}'.format(
                         controller_id, s['type']))
         finally:
             self.item_management_lock.release()
@@ -1313,7 +1313,7 @@ class RemoteLMPool(RemoteControllerPool):
                             'WS state for {} skipped, not found'.format(
                                 s['oid']))
                 else:
-                    logging.warning('WS: unknown item type from {}:'.format(
+                    logging.warning('WS: unknown item type from {}: {}'.format(
                         controller_id, s['type']))
         finally:
             self.item_management_lock.release()
