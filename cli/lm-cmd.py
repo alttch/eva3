@@ -452,6 +452,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
+                d['proto'] += '/' + ('mqtt' if d.get('mqtt_update') else 'ws')
             elif api_func == 'result':
                 from datetime import datetime
                 d['time'] = datetime.fromtimestamp(

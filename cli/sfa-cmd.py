@@ -196,6 +196,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     d['time']['created']).isoformat()
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
+                d['proto'] += '/' + ('mqtt' if d.get('mqtt_update') else 'ws')
             if api_func in ['list_macros', 'list_cycles', 'list_controllers']:
                 d['id'] = d['full_id']
             if api_func == 'list_cycles':
