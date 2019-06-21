@@ -257,6 +257,12 @@ Module used for such common tasks as door or window opening. To use this module
 you must connect your equipment to 2 relay ports: one will give power to
 motors, the second will set the direction.
 
+.. figure:: schemas/ac_motor.png
+    :scale: 75%
+    :alt: AC motor connection
+
+    AC motor connection
+
 Configuration options (set with *eva uc driver load*):
 
 * **bose** (break on state error). The module requires to know the current door
@@ -264,13 +270,22 @@ Configuration options (set with *eva uc driver load*):
   status is error, the action will be not executed. Otherwise LPI will pass and
   consider the item status is *0*.
 
+* **rdc** (reversible DC motor). If **True**, LPI will work in another way: set
+  *port* = 1, *dport = 0* for opening and *port = 0*, *dport = 1*) for closing.
+
+.. figure:: schemas/rdc_motor.png
+    :scale: 75%
+    :alt: reversible DC motor connection
+
+    Reversible DC motor connection
+
 Action options (set with *eva uc driver assign*):
 
 * **port** contains one or several (separated with **|**) relay ports used to
-  power a motor.
+  power a motor (or plus for reversible DC).
 
 * **dport** contains one or several (separated with **|**) relay ports used to
-  set a direction.
+  set a direction (or minus for reversible DC).
 
 * **steps** list of float numbers, contains time (in seconds) of power access
   period to the motor to reach the next step. E.g. you have a door with 3
