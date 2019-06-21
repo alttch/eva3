@@ -1,7 +1,7 @@
 __author__ = 'Altertech Group, https://www.altertech.com/'
 __copyright__ = 'Copyright (C) 2012-2019 Altertech Group'
 __license__ = 'Apache License 2.0'
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 __description__ = 'Multistep LPI (opener)'
 __api__ = 4
 
@@ -12,6 +12,11 @@ __features__ = ['action', 'action_mp', 'port_set', 'aao_set']
 __config_help__ = [{
     'name': 'bose',
     'help': 'allow action even if current status is error',
+    'type': 'bool',
+    'required': False
+}, {
+    'name': 'rdc',
+    'help': 'reversible DC motor control',
     'type': 'bool',
     'required': False
 }]
@@ -80,6 +85,9 @@ i.e. to 'socket', 'dsocket' for a more fancy unit configuration.  Each port and
 dport may be specified as a single value or contain an array of values, in this
 case multiple ports are used simultaneously.
 
+For reversible DC motor schema use "port" for plus (up) and "dport" for minus
+(down).
+
 You may set i: before the port label/number, i.e. i:2, to return/use inverted
 port state. This works both for power and direction ports.
 """
@@ -103,6 +111,7 @@ class LPI(BasicLPI):
     @lpi_constructor
     def __init__(self, **kwargs):
         self.bose = val_to_boolean(self.lpi_cfg.get('bose'))
+        self.rdc = val_to_boolean(self.lpi_cfg.get('rdc'))
 
     def get_item_cmap(self, cfg):
         result = super().get_item_cmap(cfg)
@@ -267,9 +276,10 @@ class LPI(BasicLPI):
                     % (_delay, time_start - time() + timeout))
             _c = {self.io_label: port}
             _cd = {self.io_label: dport}
-            # direction
-            r = self.exec_super_subaction(direction, _cd,
-                                          time_start - time() + timeout, tki)
+            # direction or open/close minus for rdc
+            r = self.exec_super_subaction(
+                direction if not self.rdc else abs(direction - 1), _cd,
+                time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
@@ -277,19 +287,21 @@ class LPI(BasicLPI):
                     _uuid, 4,
                     'direction set error: %s, %s' % (r.get('exitcode'),
                                                      r.get('err')))
-            # power on
-            r = self.exec_super_subaction(1, _c, time_start - time() + timeout,
-                                          tki)
+            # power on or open/close plus for rdc
+            r = self.exec_super_subaction(1 if not self.rdc else direction, _c,
+                                          time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
                 return self.action_result_error(
                     _uuid, 4, 'power on error: %s, %s' % (r.get('exitcode'),
                                                           r.get('err')))
+            # delay
             dr = self.delay(_uuid, _delay)
-            # power off
-            r = self.exec_super_subaction(0, _c, time_start - time() + timeout,
-                                          tki)
+            # power off or open plus/minus for rdc
+            r = self.exec_super_subaction(
+                0, _c if not self.rdc else (_c if direction else _cd),
+                time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
