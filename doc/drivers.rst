@@ -259,9 +259,9 @@ motors, the second will set the direction.
 
 .. figure:: schemas/ac_motor.png
     :scale: 75%
-    :alt: AC motor connection
+    :alt: AC motor circiut
 
-    AC motor connection
+    AC motor circuit
 
 Configuration options (set with *eva uc driver load*):
 
@@ -270,15 +270,15 @@ Configuration options (set with *eva uc driver load*):
   status is error, the action will be not executed. Otherwise LPI will pass and
   consider the item status is *0*.
 
-* **rdc** (reversible DC motor). If **True**, LPI will work in another way: set
-  *port* = 1, *dport = 0* for "opening" and *port = 0*, *dport = 1* for
-  "closing".
+* **logic** *default* or *rdc* (reversible DC motor circuit). If set to
+  *rdc*, LPI will set *port* = 1, *dport = 0* for "opening" and *port = 0*,
+  *dport = 1* for "closing".
 
 .. figure:: schemas/rdc_motor.png
     :scale: 75%
-    :alt: reversible DC motor connection
+    :alt: reversible DC motor circuit
 
-    Reversible DC motor connection
+    Reversible DC motor circiut
 
 Action options (set with *eva uc driver assign*):
 
@@ -319,7 +319,7 @@ Action options (set with *eva uc driver assign*):
 .. note::
 
     LPI will completely refuse to run the action if it calculates that therese
-    is not enough time to complete it. Set item **action_timeout** to the
+    is not enough time to complete it. Set unit **action_timeout** to the
     proper value.
 
 Update options:

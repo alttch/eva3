@@ -1,7 +1,7 @@
 __author__ = 'Altertech Group, https://www.altertech.com/'
 __copyright__ = 'Copyright (C) 2012-2019 Altertech Group'
 __license__ = 'Apache License 2.0'
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 __description__ = 'Multistep LPI (opener)'
 __api__ = 4
 
@@ -15,9 +15,9 @@ __config_help__ = [{
     'type': 'bool',
     'required': False
 }, {
-    'name': 'rdc',
-    'help': 'reversible DC motor control',
-    'type': 'bool',
+    'name': 'logic',
+    'help': 'default: default circuit, rdc: reversible DC',
+    'type': 'enum:str:default:rdc',
     'required': False
 }]
 
@@ -111,7 +111,10 @@ class LPI(BasicLPI):
     @lpi_constructor
     def __init__(self, **kwargs):
         self.bose = val_to_boolean(self.lpi_cfg.get('bose'))
-        self.rdc = val_to_boolean(self.lpi_cfg.get('rdc'))
+        logic = self.lpi_cfg.get('logic')
+        if logic and logic not in ['default', 'rdc']:
+            raise Exception('logic not supported: {}'.format(logic))
+        self.logic_rdc = logic == 'rdc'
 
     def get_item_cmap(self, cfg):
         result = super().get_item_cmap(cfg)
@@ -165,8 +168,9 @@ class LPI(BasicLPI):
         except:
             return self.action_result_error(_uuid, msg='status is not integer')
         _steps = cfg.get('steps')
-        if not _steps or not isinstance(_steps, list):
+        if not _steps:  #or not isinstance(_steps, list):
             return self.action_result_error(_uuid, msg='no steps provided')
+        if not isinstance(_steps, list): _steps = [_steps]
         steps = []
         for i in _steps:
             try:
@@ -278,7 +282,7 @@ class LPI(BasicLPI):
             _cd = {self.io_label: dport}
             # direction or open/close minus for rdc
             r = self.exec_super_subaction(
-                direction if not self.rdc else abs(direction - 1), _cd,
+                direction if not self.logic_rdc else abs(direction - 1), _cd,
                 time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
@@ -288,8 +292,9 @@ class LPI(BasicLPI):
                     'direction set error: %s, %s' % (r.get('exitcode'),
                                                      r.get('err')))
             # power on or open/close plus for rdc
-            r = self.exec_super_subaction(1 if not self.rdc else direction, _c,
-                                          time_start - time() + timeout, tki)
+            r = self.exec_super_subaction(
+                1 if not self.logic_rdc else direction, _c,
+                time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
@@ -300,7 +305,7 @@ class LPI(BasicLPI):
             dr = self.delay(_uuid, _delay)
             # power off or open plus/minus for rdc
             r = self.exec_super_subaction(
-                0, _c if not self.rdc else (_c if direction else _cd),
+                0, _c if not self.logic_rdc else (_c if direction else _cd),
                 time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
