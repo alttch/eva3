@@ -8,6 +8,7 @@ import os
 import time
 import configparser
 import platform
+import argparse
 
 nodename = platform.node()
 
@@ -40,6 +41,45 @@ import eva.client.cli
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
+
+
+class ComplSubshellCmd(ComplGeneric):
+
+    def __init__(self, cli, for_notifier=False):
+        self.for_notifier = for_notifier
+        super().__init__(cli)
+
+    def __call__(self, prefix, **kwargs):
+        shell = kwargs[
+            'parsed_args']._type if not self.for_notifier else kwargs[
+                'parsed_args'].p
+        c = kwargs['parsed_args'].subcommand
+        if shell:
+            try:
+                os.environ['_ARGCOMPLETE'] = '1'
+                os.environ['_ARGCOMPLETE_IFS'] = '\n'
+                args = c + [prefix]
+                line = 's ' + ' '.join(args)
+                os.environ['COMP_POINT'] = str(len(line))
+                os.environ['COMP_LINE'] = line
+                self.cli.subshell_extra_args = args
+                if self.for_notifier:
+                    cli.do_start_shell(
+                        'notifymanager',
+                        '.py',
+                        'product=\'{}\''.format(shell),
+                        restart_interactive=False)
+                else:
+                    cli.do_start_shell(shell, restart_interactive=False)
+                eva.client.cli.completer_stream.seek(0)
+                eva.client.cli.complete_only = True
+                compl = eva.client.cli.completer_stream.readlines()
+                result = [x.decode().strip() for x in compl]
+                return result
+            finally:
+                del os.environ['_ARGCOMPLETE']
+                eva.client.cli.complete_only = False
+        return
 
 
 class ComplBackupList(ComplGeneric):
@@ -261,7 +301,20 @@ class ManagementCLI(GenericCLI):
     def add_management_shells(self):
         for p in self.products_configured:
             ap = self.sp.add_parser(p, help='{} shell'.format(p.upper()))
+            ap.add_argument(
+                'subcommand',
+                nargs=argparse.REMAINDER).completer = ComplSubshellCmd(self)
             self.api_functions[p] = getattr(self, '{}_shell'.format(p))
+
+        ap_save = self.sp.add_parser('save', help='Save controller config')
+        ap_save.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            choices=self.products_configured,
+            nargs='?',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')')
+
         ap_ns = self.sp.add_parser('ns', help='Notifier management')
         ap_ns.add_argument(
             'p',
@@ -269,6 +322,10 @@ class ManagementCLI(GenericCLI):
             choices=self.products_configured,
             help='Controller type (' + ', '.join(self.products_configured) +
             ')')
+        ap_ns.add_argument(
+            'subcommand',
+            nargs=argparse.REMAINDER).completer = ComplSubshellCmd(
+                self, for_notifier=True)
 
     def exec_control_script(self, command, product, collect_output=False):
         cmd = '{}/eva-control {} {}'.format(dir_sbin, command, product
@@ -294,6 +351,7 @@ class ManagementCLI(GenericCLI):
         return self.local_func_result_empty if not code else (code, '')
 
     def manage_ns(self, params):
+        self.subshell_extra_args = params.get('subcommand', [])
         code = self.start_shell('notifymanager', '.py', 'product=\'{}\''.format(
             params.get('p')))
         return self.local_func_result_empty if not code else (code, '')
@@ -301,32 +359,54 @@ class ManagementCLI(GenericCLI):
     def start_shell(self, p, x='-cmd.py', xp=''):
         sst = p
         code = 10
-        while sst:
-            result = self.do_start_shell(sst, x, xp)
+        old_to = None
+        old_force_interactive = False
+        while sst or old_to:
+            if not sst and old_to:
+                sst = old_to
+                force_interactive = old_force_interactive
+                old_to = None
+            else:
+                force_interactive = False
+            result = self.do_start_shell(
+                sst, x, xp, force_interactive=force_interactive)
             if not result:
                 code = 10
                 break
             else:
                 code = 0
+            self.subshell_extra_args = eva.client.cli.shell_switch_to_extra_args
+            if self.subshell_extra_args:
+                old_to = sst
+                old_force_interactive = eva.client.cli.shell_back_interactive
             sst = eva.client.cli.shell_switch_to
+            eva.client.cli.shell_switch_to = None
+            eva.client.cli.shell_switch_to_extra_args = None
+            eva.client.cli.shell_back_interactive = False
         if eva.client.cli.subshell_exit_code:
             code = eva.client.cli.subshell_exit_code + 100
         return code
 
-    def do_start_shell(self, p, x='-cmd.py', xp=''):
+    def do_start_shell(self,
+                       p,
+                       x='-cmd.py',
+                       xp='',
+                       force_interactive=False,
+                       restart_interactive=True):
+        _xargs = []
+        if self.in_json:
+            _xargs += ['-J']
+        if self.always_suppress_colors:
+            _xargs += ['-R']
         try:
-            if getattr(self, 'subshell_extra_args', None):
+            if getattr(self, 'subshell_extra_args'):
                 sysargs = ['{}/{}{}'.format(dir_cli, p, x)
-                          ] + self.subshell_extra_args
+                          ] + _xargs + self.subshell_extra_args
             else:
-                sysargs = ['{}/{}{}'.format(dir_cli, p, x)]
-                if self.interactive:
+                sysargs = ['{}/{}{}'.format(dir_cli, p, x)] + _xargs
+                if self.interactive or force_interactive:
                     sysargs.append('-I')
             c = open('{}/{}{}'.format(dir_cli, p, x)).read()
-            if self.in_json:
-                sysargs.append('-J')
-            if self.always_suppress_colors:
-                sysargs.append('-R')
             c = """import sys
 import eva.client.cli
 eva.client.cli.say_bye = False
@@ -352,11 +432,13 @@ sys.argv = {argv}
             return False
         finally:
             if self.interactive:
-                self.full_reset_after_shell()
+                self.full_reset_after_shell(
+                    restart_interactive=restart_interactive)
 
-    def full_reset_after_shell(self):
+    def full_reset_after_shell(self, restart_interactive=True):
         self.setup_parser()
-        self.start_interactive(reset_sst=False)
+        if restart_interactive:
+            self.start_interactive(reset_sst=False)
         eva.client.cli.say_bye = True
         eva.client.cli.readline_processing = True if \
                 not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
@@ -751,6 +833,26 @@ sys.argv = {argv}
         if not self.after_save() or c: return self.local_func_result_failed
         return self.local_func_result_ok
 
+    def save(self, params):
+        p = params['p']
+        if p:
+            if p not in self.products_configured:
+                return self.local_func_result_failed
+            code, result = self.call('{} save'.format(p))
+            return self.local_func_result_empty if not code else (code, '')
+        else:
+            ok = True
+            for p in self.products_configured:
+                print(
+                    '{}: '.format(
+                        self.colored(p, color='blue', attrs=['bold'])),
+                    end='')
+                code, result = self.call('{} save'.format(p))
+                if code:
+                    print(self.colored('FAILED', color='red'))
+                    ok = False
+            return self.local_func_result_empty if ok else (10, '')
+
 
 def make_exec_cmd_func(cmd):
 
@@ -780,6 +882,7 @@ _api_functions = {
     'update': cli.update,
     'system:reboot': cli.power_reboot,
     'system:poweroff': cli.power_poweroff,
+    'save': cli.save,
     'ns': cli.manage_ns,
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,

@@ -8,6 +8,7 @@ import argparse
 import getopt
 import sys
 import os
+import io
 from eva.client import apiclient
 from eva.gcli import GCLI
 
@@ -20,6 +21,10 @@ parent_shell_name = None
 shells_available = []
 
 shell_switch_to = None
+shell_switch_to_extra_args = None
+shell_back_interactive = False
+
+completer_stream = io.BytesIO()
 
 default_errors = {
     apiclient.result_not_found: 'Object not found',
@@ -40,7 +45,8 @@ default_errors = {
 class ComplGeneric(object):
 
     def __init__(self, cli):
-        self.cli = cli if cli.interactive else None
+        # self.cli = cli if cli.interactive else None
+        self.cli = cli
 
 
 class ComplCVAR(ComplGeneric):
@@ -104,6 +110,7 @@ class GenericCLI(GCLI):
         self.ssl_verify = False
         self.say_bye = say_bye
         self.readline_processing = readline_processing
+        self._argcompleted = False
         if remote_api_enabled:
             self.always_print = ['cmd']
             self.common_api_functions = {
@@ -856,16 +863,11 @@ class GenericCLI(GCLI):
                                                d[0][1:] in shells_available)):
                         ss = d[0][1:] if d[0].startswith('/') else d[0]
                         if len(d) > 1:
-                            self.print_err(
-                                'sub-shell execution with extra commands is ' +
-                                'not available in a sub-shells\ntype ' +
-                                '"{}" to switch to {} shell'.format(ss, ss))
-                            self.print_err('type "/" to return to parent shell')
-                            continue
-                        else:
-                            globals()['shell_switch_to'] = ss
-                            self.finish_interactive()
-                            return 0
+                            globals()['shell_switch_to_extra_args'] = d[1:]
+                        globals()['shell_switch_to'] = ss
+                        globals()['shell_back_interactive'] = True
+                        self.finish_interactive()
+                        return 0
                     if (d[0] == 'k.' or
                             d[0] == 'c.') and self.remote_api_enabled:
                         self.apikey = None
@@ -1059,9 +1061,18 @@ class GenericCLI(GCLI):
 
     def execute_function(self, args=None, return_result=False):
         self.suppress_colors = False
-        if self.argcomplete:
+        if os.environ.get('_ARGCOMPLETE') and not self._argcompleted:
+            ostream = completer_stream
+            ostream.seek(0)
+            ostream.truncate()
+        else:
+            ostream = None
+        if self.argcomplete and not self._argcompleted:
+            self._argcompleted = True
             self.argcomplete.autocomplete(
                 self.ap,
+                exit_method=sys.exit,
+                output_stream=ostream,
                 default_completer=self.argcomplete.completers.SuppressCompleter(
                 ))
         try:

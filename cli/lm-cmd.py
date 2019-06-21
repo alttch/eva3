@@ -17,6 +17,7 @@ from eva.client.cli import ComplGeneric
 
 import eva.client.cli
 
+
 class LM_CLI(GenericCLI, ControllerCLI):
 
     class ComplLVAR(ComplGeneric):
@@ -151,7 +152,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
     class ComplController(ComplGeneric):
 
         def __init__(self, cli, allow_all=False):
-            super().__init__(cli)
+            ComplGeneric.__init__(self, cli)
             self.allow_all = allow_all
 
         def __call__(self, prefix, **kwargs):
