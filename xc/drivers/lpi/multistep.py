@@ -168,7 +168,7 @@ class LPI(BasicLPI):
         except:
             return self.action_result_error(_uuid, msg='status is not integer')
         _steps = cfg.get('steps')
-        if not _steps:  #or not isinstance(_steps, list):
+        if not _steps:
             return self.action_result_error(_uuid, msg='no steps provided')
         if not isinstance(_steps, list): _steps = [_steps]
         steps = []
