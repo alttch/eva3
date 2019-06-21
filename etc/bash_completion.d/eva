@@ -523,7 +523,7 @@ _eva() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'backup edit ll lm mycmd1 ns server sfa system uc update version' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'backup edit lm ns save server sfa system uc update version' -- "$cur" ))
   else
     case "${words[1]}" in
       backup|edit|lm|server|sfa|system|uc)
