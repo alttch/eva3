@@ -271,7 +271,8 @@ Configuration options (set with *eva uc driver load*):
   consider the item status is *0*.
 
 * **rdc** (reversible DC motor). If **True**, LPI will work in another way: set
-  *port* = 1, *dport = 0* for opening and *port = 0*, *dport = 1*) for closing.
+  *port* = 1, *dport = 0* for "opening" and *port = 0*, *dport = 1* for
+  "closing".
 
 .. figure:: schemas/rdc_motor.png
     :scale: 75%
