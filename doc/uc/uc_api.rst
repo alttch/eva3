@@ -1014,10 +1014,10 @@ Parameters:
 
 .. _ucapi_get_phi_ports:
 
-get_phi_ports - get PHI ports
------------------------------
+get_phi_ports - Get list of PHI ports
+-------------------------------------
 
-Get list of PHI ports. If PHI has no method,
+
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/get_phi_ports.req

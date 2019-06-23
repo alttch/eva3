@@ -1444,9 +1444,7 @@ class UC_API(GenericAPI):
     @api_need_master
     def get_phi_ports(self, **kwargs):
         """
-        get PHI ports
-
-        Get list of PHI ports. If PHI has no method, 
+        Get list of PHI ports
 
         Args:
             k: .master
