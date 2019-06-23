@@ -1035,6 +1035,22 @@ Optionally:
 * **w** max time for the operation
 
 
+.. _ucapi_restful_get_phi_ports:
+
+Get list of PHI ports
+---------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi_ports.rest
+    :response: http-examples/ucapi/get_phi_ports.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
 .. _ucapi_restful_unlink_phi_mod:
 
 delete PHI module file
@@ -1079,22 +1095,6 @@ get PHI module info
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/modinfo_phi.rest
     :response: http-examples/ucapi/modinfo_phi.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
-
-
-.. _ucapi_restful_get_phi_ports:
-
-get PHI ports
--------------
-
-Get list of PHI ports. If PHI has no method,
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_phi_ports.rest
-    :response: http-examples/ucapi/get_phi_ports.resp-rest
 
 Parameters:
 
