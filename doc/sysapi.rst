@@ -97,6 +97,7 @@ Client</api_clients>`:
 * **13** the resource is busy (in use) and can not be accessed/recreated or
   deleted at this moment
 
+* **14** the method is not implemented in/for requested resource
 
 Response field *"message"* may contain additional information about error.
 

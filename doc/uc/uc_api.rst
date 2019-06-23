@@ -98,6 +98,7 @@ Client</api_clients>`:
 * **13** the resource is busy (in use) and can not be accessed/recreated or
   deleted at this moment
 
+* **14** the method is not implemented in/for requested resource
 
 Response field *"message"* may contain additional information about error.
 
@@ -414,7 +415,7 @@ Options for chart (all are optional):
 
 If option "w" (fill) is used, number of digits after comma may be specified. E.g. 5T:3 will output values with 3 digits after comma.
 
-Additionally, SI prefix can be specified to convert value to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
+Additionally, SI prefix may be specified to convert value to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
 
 If binary prefix is required, it should be followed by "b", e.g. 5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
 
