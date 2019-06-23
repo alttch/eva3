@@ -1014,9 +1014,25 @@ Physical interfaces (PHIs)
 
 
 
+.. _ucapi_restful_unlink_phi_mod:
+
+delete PHI module file
+----------------------
+
+Deletes PHI module file, if the module is loaded, all its instances should be unloaded first.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/unlink_phi_mod.rest
+    :response: http-examples/ucapi/unlink_phi_mod.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
 .. _ucapi_restful_phi_discover:
 
-Discover installed equipment supported by PHI module
+discover installed equipment supported by PHI module
 ----------------------------------------------------
 
 
@@ -1033,38 +1049,6 @@ Optionally:
 
 * **x** interface to perform discover on
 * **w** max time for the operation
-
-
-.. _ucapi_restful_get_phi_ports:
-
-Get list of PHI ports
----------------------
-
-
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/get_phi_ports.rest
-    :response: http-examples/ucapi/get_phi_ports.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
-
-
-.. _ucapi_restful_unlink_phi_mod:
-
-delete PHI module file
-----------------------
-
-Deletes PHI module file, if the module is loaded, all its instances should be unloaded first.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/ucapi/unlink_phi_mod.rest
-    :response: http-examples/ucapi/unlink_phi_mod.resp-rest
-
-Parameters:
-
-* **API Key** API key with *master* permissions
 
 
 .. _ucapi_restful_exec_phi:
@@ -1111,6 +1095,22 @@ get PHI usage help
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/modhelp_phi.rest
     :response: http-examples/ucapi/modhelp_phi.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_get_phi_ports:
+
+get list of PHI ports
+---------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi_ports.rest
+    :response: http-examples/ucapi/get_phi_ports.resp-rest
 
 Parameters:
 
