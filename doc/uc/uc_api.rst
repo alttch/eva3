@@ -1014,7 +1014,7 @@ Parameters:
 
 .. _ucapi_get_phi_ports:
 
-get_phi_ports - Get list of PHI ports
+get_phi_ports - get list of PHI ports
 -------------------------------------
 
 
@@ -1116,7 +1116,7 @@ Parameters:
 
 .. _ucapi_phi_discover:
 
-phi_discover - Discover installed equipment supported by PHI module
+phi_discover - discover installed equipment supported by PHI module
 -------------------------------------------------------------------
 
 

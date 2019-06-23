@@ -1444,7 +1444,7 @@ class UC_API(GenericAPI):
     @api_need_master
     def get_phi_ports(self, **kwargs):
         """
-        Get list of PHI ports
+        get list of PHI ports
 
         Args:
             k: .master
@@ -1532,7 +1532,7 @@ class UC_API(GenericAPI):
     @api_need_master
     def phi_discover(self, **kwargs):
         """
-        Discover installed equipment supported by PHI module
+        discover installed equipment supported by PHI module
 
         Args:
             k: .master
