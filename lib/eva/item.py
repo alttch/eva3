@@ -1659,6 +1659,44 @@ __p_periods = {
     'W': 604800,
 }
 
+# val_prefixes = {
+# 'k': 1000,
+# 'kb': 1024,
+# 'M': 1000 * 1000,
+# 'Mb': 1024 * 1024,
+# 'G': 1000 * 1000 * 1000,
+# 'Gb': 1024 * 1024 * 1024,
+# 'T': 1000 * 1000 * 1000 * 1000,
+# 'Tb': 1024 * 1024 * 1024 * 1024,
+# 'P': 1000 * 1000 * 1000 * 1000 * 1000,
+# 'Pb': 1024 * 1024 * 1024 * 1024 * 1024,
+# 'E': 1000 * 1000 * 1000 * 1000 * 1000 * 1000,
+# 'Eb': 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
+# 'Z': 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000,
+# 'Zb': 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
+# 'Y': 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000,
+# 'Yb': 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024
+# }
+
+val_prefixes = {
+    'k': 1000,
+    'kb': 1024,
+    'M': 1000000,
+    'Mb': 1048576,
+    'G': 1000000000,
+    'Gb': 1073741824,
+    'T': 1000000000000,
+    'Tb': 1099511627776,
+    'P': 1000000000000000,
+    'Pb': 1125899906842624,
+    'E': 1000000000000000000,
+    'Eb': 1152921504606846976,
+    'Z': 1000000000000000000000,
+    'Zb': 1180591620717411303424,
+    'Y': 1000000000000000000000000,
+    'Yb': 1208925819614629174706176
+}
+
 
 def get_state_history(a=None,
                       oid=None,
@@ -1716,11 +1754,23 @@ def get_state_history(a=None,
             df = df.set_index('t')
             df.index = pd.to_datetime(df.index, utc=True)
             if fill.find(':') != -1:
-                _fill, _pc = fill.split(':')
+                _fill, _pc = fill.split(':', 1)
+                if _pc.find(':') != -1:
+                    _divider, _pc = _pc.split(':')
+                    try:
+                        _divider = pow(10, int(_divider))
+                    except:
+                        if not _divider in val_prefixes:
+                            raise FunctionFailed(
+                                'Prefix unknown: {}'.format(_divider))
+                        _divider = val_prefixes[_divider]
+                else:
+                    _divider = None
                 _pc = pow(10, int(_pc))
             else:
                 _fill = fill
                 _pc = None
+                _divider = None
             sp1 = df.resample(_fill).mean()
             sp2 = df.resample(_fill).pad()
             sp = sp1.fillna(sp2).to_dict(orient='split')
@@ -1747,8 +1797,12 @@ def get_state_history(a=None,
                     if math.isnan(r['value']):
                         r['value'] = None
                     elif _pc:
+                        if _divider:
+                            r['value'] = r['value'] / _divider
                         r['value'] = math.floor(r['value'] * _pc) / _pc
                 result.append(r)
+        except FunctionFailed:
+            raise
         except:
             eva.core.log_traceback()
             raise FunctionFailed

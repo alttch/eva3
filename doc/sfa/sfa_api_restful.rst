@@ -383,9 +383,25 @@ Optionally:
 
 Returns:
 
-Options for chart (all are optional): * type: chart type (line or bar, default is line) * tf: chart time format * out: output format (svg, png, default is svg), * style: chart style (without "Style" suffix, e.g. Dark)
+history data in specified format or chart image.
+
+Options for chart (all are optional):
+
+* type: chart type (line or bar, default is line)
+
+* tf: chart time format
+
+* out: output format (svg, png, default is svg),
+
+* style: chart style (without "Style" suffix, e.g. Dark)
 
 * other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+If option "w" (fill) is used, number digits after comma can be specified. E.g. 5T:3 will output values with 3 digits after comma.
+
+Additionally SI prefix can be specified and value will be converted to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
+
+If binary prefix is required, it should be followed by "b", e.g. 5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
 
 For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
 
