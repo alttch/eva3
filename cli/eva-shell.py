@@ -416,8 +416,8 @@ sys.argv = {argv}
 {xp}
 
 """.format(nodename=self.nodename,
-            shells_available=self.products_configured
-            if x == '-cmd.py' and p not in sys.argv else [],
+            shells_available=self.products_configured if x == '-cmd.py' and
+            (len(sys.argv) < 2 or p != sys.argv[1]) else [],
             argv=sysargs,
             xp=xp) + c
             os.chdir(dir_cwd)
