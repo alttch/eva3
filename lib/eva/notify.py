@@ -713,7 +713,7 @@ class SQLANotifier(GenericNotifier):
                 try:
                     h['value'] = float(v)
                 except:
-                    h['value'] = v
+                    h['value'] = v if v else None
             result.append(h)
         return sorted(result, key=lambda k: k['t'])
 
