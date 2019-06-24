@@ -1255,7 +1255,10 @@ class GenericCLI(GCLI):
             r = {}
             for k in result.keys():
                 if k != time_field:
-                    r[k] = result[k][i]
+                    try:
+                        r[k] = result[k][i]
+                    except:
+                        r[k] = ''
                 else:
                     from datetime import datetime
                     r[k] = datetime.fromtimestamp(result[k][i]).isoformat()
