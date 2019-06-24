@@ -1128,7 +1128,7 @@ class UC_API(GenericAPI):
                     raise InvalidParameter(reg)
                 try:
                     ae = safe_int(ae)
-                    if ae > eva.uc.modbus.slave_reg_max:
+                    if ae > 65535:
                         raise Exception
                 except:
                     raise InvalidParameter(reg)
