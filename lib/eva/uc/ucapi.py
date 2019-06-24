@@ -1066,6 +1066,170 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    def read_modbus_port(self, **kwargs):
+        """
+        read Modbus registers from remote slave
+
+        Modbus registers must be specified as list or comma separated memory
+        addresses predicated with register type (h - holding, i - input, c -
+        coil, d - discrete input).
+
+        Address ranges can be specified, e.g. h1000-1010,c10-15 will return
+        values of holding registers from 1000 to 1010 and coil registers from
+        10 to 15
+
+        Args:
+            k: .master
+            .p: Modbus virtual port
+            .s: Slave ID
+            .i: Modbus register(s)
+
+        Optional:
+            t: max allowed timeout for the operation
+        """
+        i, p, s, t = parse_api_params(kwargs, 'ipst', '.SRn')
+        if not t:
+            t = eva.core.config.timeout
+        if isinstance(i, str):
+            regs = i.split(',')
+        elif isinstance(i, list):
+            regs = i
+        else:
+            raise InvalidParameter('registers')
+        try:
+            slave_id = safe_int(s)
+        except:
+            raise InvalidParameter('Invalid slave ID')
+        if not eva.uc.modbus.is_port(p):
+            raise ResourceNotFound('Modbus port')
+        result = []
+        mb = eva.uc.modbus.get_port(p, t)
+        if not mb:
+            raise FunctionFailed('Unable to acquire Modbus port')
+        try:
+            for reg in regs:
+                if not isinstance(reg, str) or len(reg) < 2:
+                    raise InvalidParameter(reg)
+                rtype = reg[0]
+                if rtype not in ['h', 'd', 'i', 'c']:
+                    raise InvalidParameter(reg)
+                r = reg[1:]
+                if r.find('-') != -1:
+                    try:
+                        addr, ae = r.split('-')
+                    except:
+                        raise InvalidParameter(reg)
+                else:
+                    addr = r
+                    ae = addr
+                try:
+                    addr = safe_int(addr)
+                except:
+                    raise InvalidParameter(reg)
+                try:
+                    ae = safe_int(ae)
+                    if ae > eva.uc.modbus.slave_reg_max:
+                        raise Exception
+                except:
+                    raise InvalidParameter(reg)
+                count = ae - addr + 1
+                if count < 1:
+                    raise InvalidParameter(reg)
+                if rtype == 'h':
+                    data = mb.read_holding_registers(addr, count, unit=slave_id)
+                elif rtype == 'd':
+                    data = mb.read_discrete_inputs(addr, count, unit=slave_id)
+                elif rtype == 'i':
+                    data = mb.read_input_registers(addr, count, unit=slave_id)
+                else:
+                    data = mb.read_coils(addr, count, unit=slave_id)
+                if data.isError():
+                    result.append({
+                        'addr': '{}{}'.format(rtype, addr),
+                        'value': str(data)
+                    })
+                else:
+                    cc = 1
+                    for d in data.registers if rtype in ['h',
+                                                         'i'] else data.bits:
+                        if d is True:
+                            v = 1
+                        elif d is False:
+                            v = 0
+                        else:
+                            v = d
+                        result.append({
+                            'addr': '{}{}'.format(rtype, addr),
+                            'value': v
+                        })
+                        addr += 1
+                        cc += 1
+                        if cc > count: break
+            return sorted(result, key=lambda k: k['addr'])
+        finally:
+            mb.release()
+
+    @log_d
+    @api_need_master
+    def write_modbus_port(self, **kwargs):
+        """
+        write Modbus register(s) to remote slave
+
+        Modbus registers must be specified as list or comma separated memory
+        addresses predicated with register type (h - holding, c - coil).
+
+        Args:
+            k: .master
+            .p: Modbus virtual port
+            .s: Slave ID
+            .i: Modbus register address
+            v: register value(s) (integer or hex or list)
+
+        Optional:
+            t: max allowed timeout for the operation
+        """
+        i, p, s, t, v = parse_api_params(kwargs, 'ipstv', 'SSRnR')
+        if not t:
+            t = eva.core.config.timeout
+        try:
+            slave_id = safe_int(s)
+        except:
+            raise InvalidParameter('slave ID')
+        rtype = i[0]
+        if rtype not in ['h', 'c']:
+            raise InvalidParameter(i)
+        try:
+            if isinstance(v, list):
+                value = []
+                for val in v:
+                    value.append(
+                        safe_int(val) if rtype == 'h' else val_to_boolean(v))
+            else:
+                value = [safe_int(v) if rtype == 'h' else val_to_boolean(v)]
+        except:
+            raise InvalidParameter('value')
+        if not eva.uc.modbus.is_port(p):
+            raise ResourceNotFound('Modbus port')
+        try:
+            addr = safe_int(i[1:])
+        except:
+            raise InvalidParameter(i)
+        mb = eva.uc.modbus.get_port(p, t)
+        if not mb:
+            raise FunctionFailed('Unable to acquire Modbus port')
+        try:
+            if rtype == 'h':
+                data = mb.write_registers(addr, value, unit=slave_id)
+            elif rtype == 'c':
+                data = mb.write_coils(addr, value, unit=slave_id)
+            if data.isError():
+                raise FunctionFailed(value)
+            return True
+        finally:
+            mb.release()
+
+    @log_d
+    @api_need_master
     def get_modbus_slave_data(self, **kwargs):
         """
         get Modbus slave data
@@ -1090,7 +1254,7 @@ class UC_API(GenericAPI):
         elif isinstance(i, list):
             regs = i
         else:
-            raise InvalidParameter
+            raise InvalidParameter('registers')
         result = []
         for reg in regs:
             if not isinstance(reg, str) or len(reg) < 2:
@@ -1854,7 +2018,15 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.list_phi_mods(k=k)
         elif rtp == 'modbus':
             if ii:
-                return self.get_modbus_port(k=k, i=ii)
+                if ii.find('/') == -1:
+                    return self.get_modbus_port(k=k, i=ii)
+                else:
+                    try:
+                        ii, slave_id, regs = ii.split('/')
+                    except:
+                        raise InvalidParameter
+                    return self.read_modbus_port(
+                        k=k, p=ii, s=slave_id, i=regs, **props)
             else:
                 return self.list_modbus_ports(k=k)
         elif rtp == 'modbus-slave':
@@ -1955,8 +2127,16 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 raise InvalidParameter('Invalid driver ID')
             return self.load_driver(k=k, i=lpi_id, p=phi_id, save=save, **props)
         elif rtp == 'modbus':
-            self.create_modbus_port(k=k, i=ii, save=save, **props)
-            return self.get_modbus_port(k=k, i=ii)
+            if ii.find('/') == -1:
+                self.create_modbus_port(k=k, i=ii, save=save, **props)
+                return self.get_modbus_port(k=k, i=ii)
+            else:
+                try:
+                    ii, slave_id, regs = ii.split('/')
+                except:
+                    raise InvalidParameter
+                return self.write_modbus_port(
+                    k=k, p=ii, s=slave_id, i=regs, **props)
         elif rtp == 'owfs':
             self.create_owfs_bus(k=k, i=ii, save=save, **props)
             return self.get_owfs_bus(k=k, i=ii)

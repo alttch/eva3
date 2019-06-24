@@ -17,6 +17,7 @@ from eva.client.cli import ComplGeneric
 
 import eva.client.cli
 
+
 class UC_CLI(GenericCLI, ControllerCLI):
 
     class ComplItemOID(ComplGeneric):
@@ -249,7 +250,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 d['type'] = d['type'] + ' device template'
                 return data
             return result
-        if api_func == 'get_modbus_slave_data':
+        if api_func in ['get_modbus_slave_data', 'read_modbus_port']:
             for d in data:
                 rtps = {
                     'h': 'holding',
@@ -802,6 +803,43 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_modbus_destroy.add_argument(
             'i', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_test = sp_modbus.add_parser('test', help='Test defined port')
+        sp_modbus_test.add_argument(
+            'i', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_read = sp_modbus.add_parser(
+            'read', help='Read registers from remote Modbus slave')
+        sp_modbus_read.add_argument(
+            'p', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_read.add_argument(
+            's', help='Modbus slave ID', metavar='Slave ID')
+        sp_modbus_read.add_argument(
+            'i',
+            help='Regiser address(es), comma ' +
+            'separated, predicated by type (h, c, i, d), range may be ' +
+            'specified. e.g. h1000-1010,c10-15',
+            metavar='REGISTERS')
+        sp_modbus_write = sp_modbus.add_parser(
+            'write', help='Write register value to remote Modbus slave')
+        sp_modbus_write.add_argument(
+            'p', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_write.add_argument(
+            's', help='Modbus slave ID', metavar='Slave ID')
+        sp_modbus_write.add_argument(
+            'i',
+            help='Regiser address, predicated by type (h, c)',
+            metavar='REGISTER')
+        sp_modbus_write.add_argument(
+            'v',
+            help='Regiser value',
+            metavar='VALUE')
+        sp_modbus_destroy = sp_modbus.add_parser(
+            'destroy', help='Destroy (undefine) port')
+        sp_modbus_destroy.add_argument(
+            'i', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
 
         ap_modbus_slave = self.sp.add_parser(
             'modbus-slave', help='ModBus slave')
@@ -1285,6 +1323,8 @@ _api_functions = {
     'modbus:create': 'create_modbus_port',
     'modbus:destroy': 'destroy_modbus_port',
     'modbus:test': 'test_modbus_port',
+    'modbus:read': 'read_modbus_port',
+    'modbus:write': 'write_modbus_port',
     'modbus-slave:get': 'get_modbus_slave_data',
     'owfs:list': 'list_owfs_buses',
     'owfs:create': 'create_owfs_bus',
@@ -1332,6 +1372,7 @@ _pd_cols = {
     ],
     'list': ['oid', 'description'],
     'get_modbus_slave_data': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
+    'read_modbus_port': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
     'list_modbus_ports':
     ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
     'list_owfs_buses':
