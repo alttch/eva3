@@ -321,12 +321,12 @@ Parameters:
 
 Optionally:
 
-* **s** start time (timestamp or ISO)
-* **e** end time (timestamp or ISO)
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
 * **l** records limit (doesn't work with "w")
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
-* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
+* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required, set to 1D if not specified
 * **g** output format ("list", "dict" or "chart", default is "list")
 * **c** options for chart (dict or comma separated)
 
