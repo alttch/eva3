@@ -352,6 +352,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         self.add_uc_action_functions()
         self.add_uc_edit_functions()
         self.add_uc_configure_functions()
+        self.add_uc_maintenance_functions()
         self.add_uc_device_functions()
         self.add_uc_modbus_functions()
         self.add_uc_owfs_functions()
@@ -749,6 +750,24 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help='Template vars, comma separated',
             metavar='VARS',
             dest='c')
+
+    def add_uc_maintenance_functions(self):
+        ap_maintenance = self.sp.add_parser(
+            'maintenance', help='Maintenance mode')
+        sp_maintenance = ap_maintenance.add_subparsers(
+            dest='_func', metavar='func', help='Maintenance commands')
+
+        sp_maintenance_start = sp_maintenance.add_parser(
+            'start', help='Start unit/sensor maintenance mode')
+        sp_maintenance_start.add_argument(
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
+
+        sp_maintenance_stop = sp_maintenance.add_parser(
+            'stop', help='Stop unit/sensor maintenance mode')
+        sp_maintenance_stop.add_argument(
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
 
     def add_uc_modbus_functions(self):
         ap_modbus = self.sp.add_parser('modbus', help='ModBus ports')
@@ -1320,6 +1339,8 @@ _api_functions = {
     'device:deploy': 'deploy_device',
     'device:update': 'update_device',
     'device:undeploy': 'undeploy_device',
+    'maintenance:start': 'start_item_maintenance',
+    'maintenance:stop': 'stop_item_maintenance',
     'modbus:list': 'list_modbus_ports',
     'modbus:create': 'create_modbus_port',
     'modbus:destroy': 'destroy_modbus_port',
@@ -1365,7 +1386,7 @@ _pd_cols = {
     'state': ['oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue'],
     'state_': [
         'oid', 'action_enabled', 'description', 'location', 'status', 'value',
-        'nstatus', 'nvalue'
+        'nstatus', 'nvalue', 'maintenance'
     ],
     'result': [
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
@@ -1412,7 +1433,7 @@ cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'cmd']
 cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'owfs', 'phi', 'lpi',
-    'driver', 'modbus-slave'
+    'driver', 'modbus-slave', 'maintenance'
 ]
 cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)

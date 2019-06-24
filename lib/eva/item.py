@@ -730,8 +730,10 @@ class UpdatableItem(Item):
                          status=None,
                          value=None,
                          from_mqtt=False,
-                         force_notify=False):
-        self.update_expiration()
+                         force_notify=False,
+                         update_expiration=True):
+        if update_expiration:
+            self.update_expiration()
         need_notify = False
         if status is not None and status != '':
             try:
@@ -1571,7 +1573,7 @@ class VariableItem(UpdatableItem):
                          status=None,
                          value=None,
                          from_mqtt=False,
-                         force_notify=False):
+                         force_notify=False, update_expiration=True):
         if self._destroyed: return False
         try:
             if status is not None: _status = int(status)
@@ -1584,7 +1586,8 @@ class VariableItem(UpdatableItem):
             logging.debug('%s skipping update - it\'s not active' % \
                     self.oid)
             return False
-        self.update_expiration()
+        if update_expiration:
+            self.update_expiration()
         need_notify = False
         if _status is not None:
             if self.status != _status: need_notify = True

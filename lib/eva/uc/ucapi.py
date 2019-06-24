@@ -326,6 +326,39 @@ class UC_API(GenericAPI):
         return item.enable_actions()
 
     @log_i
+    @api_need_master
+    def start_item_maintenance(self, **kwargs):
+        """
+        start item maintenance mode
+
+        During maintenance mode all item updates are ignored, however actions
+        still can be executed
+
+        Args:
+            k: masterkey
+            .i: item ID
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        item = eva.uc.controller.get_item(i)
+        if not item: raise ResourceNotFound
+        return item.start_maintenance_mode()
+
+    @log_i
+    @api_need_master
+    def stop_item_maintenance(self, **kwargs):
+        """
+        stop item maintenance mode
+
+        Args:
+            k: masterkey
+            .i: item ID
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        item = eva.uc.controller.get_item(i)
+        if not item: raise ResourceNotFound
+        return item.stop_maintenance_mode()
+
+    @log_i
     def result(self, **kwargs):
         """
         get action status
@@ -2168,6 +2201,17 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         else:
                             raise InvalidParameter(
                                 '"action_enabled" has invalid value')
+                        del props['action_enabled']
+                if 'maintenance' in props:
+                    v = val_to_boolean(props['maintenance'])
+                    if v is True:
+                        self.start_item_maintenance(k=k, i=ii)
+                    elif v is False:
+                        self.stop_item_maintenance(k=k, i=ii)
+                    else:
+                            raise InvalidParameter(
+                                '"maintenance" has invalid value')
+                    del props['maintenance']
                 if props:
                     return super().set_prop(k=k, i=ii, save=save, v=props)
                 else:

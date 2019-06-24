@@ -345,6 +345,22 @@ Returns:
 
 list or single serialized action object
 
+.. _ucapi_start_item_maintenance:
+
+start_item_maintenance - start item maintenance mode
+----------------------------------------------------
+
+During maintenance mode all item updates are ignored, however actions still can be executed
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/start_item_maintenance.req
+    :response: http-examples/ucapi/start_item_maintenance.resp
+
+Parameters:
+
+* **k** masterkey
+* **i** item ID
+
 .. _ucapi_state:
 
 state - get item state
@@ -418,6 +434,22 @@ If option "w" (fill) is used, number of digits after comma may be specified. E.g
 Additionally, SI prefix may be specified to convert value to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
 
 If binary prefix is required, it should be followed by "b", e.g. 5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
+
+.. _ucapi_stop_item_maintenance:
+
+stop_item_maintenance - stop item maintenance mode
+--------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/stop_item_maintenance.req
+    :response: http-examples/ucapi/stop_item_maintenance.resp
+
+Parameters:
+
+* **k** masterkey
+* **i** item ID
 
 .. _ucapi_terminate:
 
