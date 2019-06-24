@@ -1712,12 +1712,23 @@ def get_state_history(a=None,
     import pandas as pd
     import math
     from datetime import datetime
+
+    def fmt_time(t):
+        try:
+            return time.time() - __p_periods.get(t[-1]) * int(t[:-1])
+        except:
+            return t
+
     if oid is None: raise ResourceNotFound
     n = eva.notify.get_db_notifier(a)
-    if not t_start and fill:
-        raise InvalidParameter('start time is required when fill is used')
-    if t_start and fill: tf = 'iso'
-    else: tf = time_format
+    if fill:
+        tf = 'iso'
+        if not t_start:
+            t_start = time.time() - 86400
+    else:
+        tf = time_format
+    t_start = fmt_time(t_start)
+    t_end = fmt_time(t_end)
     if not n: raise ResourceNotFound('notifier')
     try:
         result = n.get_state(
