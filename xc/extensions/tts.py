@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.0"
+__version__ = "1.2.5"
 __description__ = "Text-to-speech via ttsbroker"
 __api__ = 5
 __mods_required__ = ['ttsbroker']
@@ -50,6 +50,11 @@ __config_help__ = [{
     'help': 'Default gain (-10..inf)',
     'type': 'float',
     'required': False
+}, {
+    'name': 'cmd',
+    'help': 'External playback command',
+    'type': 'str',
+    'required': False
 }]
 
 __functions__ = {
@@ -79,6 +84,9 @@ __iec_functions__ = {
 __help__ = """
 Text-to-speech engine via ttsbroker Python module. Refer to module
 documentation for more info: https://pypi.org/project/ttsbroker/
+
+Params for external command: %f - file, if no %f is specified, file name is
+automatically added to the end.
 """
 
 import importlib
@@ -132,7 +140,8 @@ class LMExt(GenericExt):
                     device=device,
                     gain=gain,
                     provider=self.cfg.get('p'),
-                    provider_options=opts)
+                    provider_options=opts,
+                    cmd=self.cfg.get('cmd'))
             except:
                 self.log_error('unable to init TTS broker')
                 raise
