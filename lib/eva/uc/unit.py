@@ -387,11 +387,15 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                          from_mqtt=False,
                          force_notify=False):
         if self._destroyed: return False
+        if self.is_maintenance_mode():
+            logging.info('Ignoring {} update in maintenance mode'.format(
+                self.oid))
+            return False
         try:
             if status is not None: _status = int(status)
             else: _status = None
         except:
-            logging.error('update %s returned bad data' % self.oid)
+            logging.error('update %s returned invalid data' % self.oid)
             eva.core.log_traceback()
             return False
         if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
@@ -402,7 +406,15 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         else:
             nstatus = _status
             nvalue = value
-        self.update_expiration()
+        if not self.is_value_valid(value):
+            logging.error('Unit {} got invalid value {}'.format(
+                self.oid, value))
+            _status = -1
+            nstatus = -1
+            value = None
+            nvalue = None
+        else:
+            self.update_expiration()
         self.set_state(
             status=_status,
             value=value,

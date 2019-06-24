@@ -398,6 +398,38 @@ Returns:
 If the current action of the unit cannot be terminated by configuration, the notice "pt" = "denied" will be returned additionally (even if there's no action running)
 
 
+.. _ucapi_restful_start_item_maintenance:
+
+start item maintenance mode
+---------------------------
+
+During maintenance mode all item updates are ignored, however actions still can be executed
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/start_item_maintenance.rest
+    :response: http-examples/ucapi/start_item_maintenance.resp-rest
+
+Parameters:
+
+* **API Key** masterkey
+
+
+.. _ucapi_restful_stop_item_maintenance:
+
+stop item maintenance mode
+--------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/stop_item_maintenance.rest
+    :response: http-examples/ucapi/stop_item_maintenance.resp-rest
+
+Parameters:
+
+* **API Key** masterkey
+
+
 .. _ucapi_restful_terminate:
 
 terminate action execution
