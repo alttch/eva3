@@ -948,8 +948,8 @@ Parameters:
 
 .. _ucapi_read_modbus_port:
 
-read_modbus_port - read Modbus registers from remote slave
-----------------------------------------------------------
+read_modbus_port - read Modbus register(s) from remote slave
+------------------------------------------------------------
 
 Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, i - input, c - coil, d - discrete input).
 
