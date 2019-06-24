@@ -843,15 +843,30 @@ class GenericAPI(object):
             else:
                 raise InvalidParameter(
                     'format should be list only to process multiple items')
+            result_keys = set()
             for i in items:
                 r = self._get_state_history(
-                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                result['t'] = r['t']
-                if 'status' in r:
-                    result[i + '/status'] = r['status']
-                if 'value' in r:
-                    result[i + '/value'] = r['value']
-            return format_result(result, 'multiple', c)
+                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=None)
+                process_status = 'status' in r
+                process_value = 'value' in r
+                for z, tt in enumerate(r['t']):
+                    if tt not in result:
+                        result[tt] = {}
+                    if process_status:
+                        rk = i + '/status'
+                        result[tt][rk] = r['status'][z]
+                        result_keys.add(rk)
+                    if process_value:
+                        rk = i + '/value'
+                        result[tt][rk] = r['value'][z]
+                        result_keys.add(rk)
+            if not result_keys: return {}
+            merged_result = {'t':[]}
+            for tt in sorted(result):
+                merged_result['t'].append(tt)
+                for rk in result_keys:
+                    merged_result.setdefault(rk, []).append(result[tt].get(rk))
+            return format_result(merged_result, 'multiple', c)
         else:
             result = self._get_state_history(
                 k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
