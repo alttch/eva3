@@ -62,7 +62,7 @@ _uc-cmd_modbus() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'create destroy list test' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'create destroy list read test write' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi

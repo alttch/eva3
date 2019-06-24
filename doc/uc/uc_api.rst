@@ -946,6 +946,30 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** virtual port ID
 
+.. _ucapi_read_modbus_port:
+
+read_modbus_port - read Modbus registers from remote slave
+----------------------------------------------------------
+
+Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, i - input, c - coil, d - discrete input).
+
+Address ranges can be specified, e.g. h1000-1010,c10-15 will return values of holding registers from 1000 to 1010 and coil registers from 10 to 15
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/read_modbus_port.req
+    :response: http-examples/ucapi/read_modbus_port.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **p** Modbus virtual port
+* **s** Slave ID
+* **i** Modbus register(s)
+
+Optionally:
+
+* **t** max allowed timeout for the operation
+
 .. _ucapi_test_modbus_port:
 
 test_modbus_port - test virtual Modbus port
@@ -965,6 +989,29 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** virtual port ID
+
+.. _ucapi_write_modbus_port:
+
+write_modbus_port - write Modbus register(s) to remote slave
+------------------------------------------------------------
+
+Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, c - coil).
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/write_modbus_port.req
+    :response: http-examples/ucapi/write_modbus_port.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **p** Modbus virtual port
+* **s** Slave ID
+* **i** Modbus register address
+* **v** register value(s) (integer or hex or list)
+
+Optionally:
+
+* **t** max allowed timeout for the operation
 
 .. _ucapi_get_modbus_slave_data:
 
