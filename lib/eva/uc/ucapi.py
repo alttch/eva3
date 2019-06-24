@@ -1068,7 +1068,7 @@ class UC_API(GenericAPI):
     @api_need_master
     def read_modbus_port(self, **kwargs):
         """
-        read Modbus registers from remote slave
+        read Modbus register(s) from remote slave
 
         Modbus registers must be specified as list or comma separated memory
         addresses predicated with register type (h - holding, i - input, c -
