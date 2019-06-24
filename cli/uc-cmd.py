@@ -262,8 +262,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 addr = int(d['addr'][1:])
                 d['addr'] = addr
                 d['reg'] = rtype
-                d['addr_hex'] = hex(addr)
-                d['hex'] = hex(d['value'])
+                if 'error' in d:
+                    d['err'] = d['error']
+                    del (d['error'])
+                else:
+                    d['addr_hex'] = hex(addr)
+                    d['hex'] = hex(d['value'])
             return data
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, itype)
@@ -831,10 +835,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i',
             help='Regiser address, predicated by type (h, c)',
             metavar='REGISTER')
-        sp_modbus_write.add_argument(
-            'v',
-            help='Regiser value',
-            metavar='VALUE')
+        sp_modbus_write.add_argument('v', help='Regiser value', metavar='VALUE')
         sp_modbus_destroy = sp_modbus.add_parser(
             'destroy', help='Destroy (undefine) port')
         sp_modbus_destroy.add_argument(
@@ -1372,7 +1373,7 @@ _pd_cols = {
     ],
     'list': ['oid', 'description'],
     'get_modbus_slave_data': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
-    'read_modbus_port': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
+    'read_modbus_port': ['reg', 'addr', 'addr_hex', 'value', 'hex', 'err'],
     'list_modbus_ports':
     ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
     'list_owfs_buses':
