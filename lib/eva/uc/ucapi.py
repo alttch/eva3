@@ -1145,8 +1145,10 @@ class UC_API(GenericAPI):
                     data = mb.read_coils(addr, count, unit=slave_id)
                 if data.isError():
                     result.append({
-                        'addr': '{}{}'.format(rtype, addr),
-                        'value': str(data)
+                        'addr':
+                        '{}{}'.format(rtype, addr),
+                        'error':
+                        str(data.message if hasattr(data, 'message') else data)
                     })
                 else:
                     cc = 1
