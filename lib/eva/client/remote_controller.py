@@ -575,16 +575,17 @@ class RemoteControllerPool(object):
 
     def _w_websocket_pinger(*args, **kwargs):
         controller_id = kwargs.get('controller_id')
+        controller = kwargs.get('controller')
         o = kwargs.get('o')
         try:
             if controller_id not in o.websockets:
                 return False
             ws = o.websockets[controller_id]
             if not ws.worker_terminated:
-                logging.debug('WS {}: PING'.format(controller_id))
+                logging.debug('WS {}: PING'.format(controller.oid))
                 ws.send(json.dumps({'s': 'ping'}))
             else:
-                logging.debug('WS {}: pinger terminated'.format(controller_id))
+                logging.debug('WS {}: pinger terminated'.format(controller.oid))
                 return False
         except:
             eva.core.log_traceback()
@@ -593,7 +594,7 @@ class RemoteControllerPool(object):
 
         def create_connection(controller):
             uri = 'ws' + controller.api._uri[4:]
-            logging.debug('WS {}: connecting'.format(controller_id))
+            logging.debug('WS {}: connecting'.format(controller.oid))
             ws = websocket.create_connection(
                 '{}/ws?k={}'.format(uri, controller.api._key),
                 timeout=round(controller.api._timeout),
@@ -610,7 +611,7 @@ class RemoteControllerPool(object):
                 except:
                     pass
                 raise
-            logging.debug('WS {}: connected'.format(controller_id))
+            logging.debug('WS {}: connected'.format(controller.oid))
             return ws
 
         controller_id = kwargs.get('controller_id')
@@ -619,8 +620,12 @@ class RemoteControllerPool(object):
         if controller_id not in o.websockets:
             try:
                 ws = create_connection(controller)
+                logging.info('WS: controller connected {}'.format(
+                    controller.oid))
             except:
-                logging.error('WS {}: connection error'.format(controller_id))
+                logfunc = logging.error if \
+                        controller.connected else logging.debug
+                logfunc('WS {}: connection error'.format(controller.oid))
                 time.sleep(eva.core.sleep_step)
                 eva.core.log_traceback()
                 return
@@ -639,16 +644,16 @@ class RemoteControllerPool(object):
             finally:
                 o.management_lock.release()
             o.websocket_pinger_threads[controller_id].start(
-                controller_id=controller_id)
-            logging.debug('WS {}: pinger started'.format(controller_id))
+                controller_id=controller_id, controller=controller)
+            logging.debug('WS {}: pinger started'.format(controller.oid))
             return
         else:
             ws = o.websockets[controller_id]
             if ws.worker_terminated:
                 return False
             try:
-                logging.debug(
-                    'WS {}: waiting for data frame'.format(controller_id))
+                logging.debug('WS {}: waiting for data frame'.format(
+                    controller.oid))
                 frame = ws.recv_frame()
                 if not o.management_lock.acquire(
                         timeout=eva.core.config.timeout):
@@ -660,8 +665,8 @@ class RemoteControllerPool(object):
                 if not ws.worker_terminated:
                     controller.connected = True
                 o.management_lock.release()
-                logging.debug(
-                    'WS {}: processing data frame'.format(controller_id))
+                logging.debug('WS {}: processing data frame'.format(
+                    controller.oid))
                 if frame.opcode == websocket.ABNF.OPCODE_PING:
                     ws.pong(frame.data)
                 else:
@@ -670,17 +675,21 @@ class RemoteControllerPool(object):
                     except:
                         logging.warning(
                             'WS {}: Invalid data frame received'.format(
-                                controller_id))
+                                controller.oid))
                         eva.core.log_traceback()
             except:
                 eva.core.log_traceback()
                 if not ws.worker_terminated:
-                    logging.info('WS {}: reconnecting'.format(controller_id))
+                    logging.debug('WS {}: reconnecting'.format(controller.oid))
                     try:
                         new_ws = create_connection(controller)
+                        logging.info('WS: controller reconnected {}'.format(
+                            controller.oid))
                     except:
-                        logging.error(
-                            'WS {}: connection failed'.format(controller_id))
+                        logfunc = logging.error if \
+                                controller.connected else logging.debug
+                        logfunc('WS {}: connection failed'.format(
+                            controller.oid))
                         eva.core.log_traceback()
                         if not o.management_lock.acquire(
                                 timeout=eva.core.config.timeout):
@@ -701,8 +710,8 @@ class RemoteControllerPool(object):
                                     ' locking broken')
                         eva.core.critical()
                         return False
-                    logging.debug(
-                        'WS {}: new connection set'.format(controller_id))
+                    logging.debug('WS {}: new connection set'.format(
+                        controller.oid))
                     o.websockets[controller_id] = new_ws
                     o.management_lock.release()
                     try:
@@ -917,7 +926,7 @@ class RemoteUCPool(RemoteControllerPool):
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
-                                d['oid']))
+                                s['oid']))
                 elif s['type'] == 'sensor':
                     if s['full_id'] in self.sensors:
                         self.sensors[s['full_id']].update_set_state(
