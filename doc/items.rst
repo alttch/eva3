@@ -327,8 +327,8 @@ Sensor parameters
 Sensors have the same parameters as :ref:`units<unit>`, except they don't have
 action_*, auto_off, mqtt_control, modbus_status and status_labels.
 
-Validation of unit and sensor state value
------------------------------------------
+Validation of state value
+=========================
 
 State value of units and sensors can be validated before :doc:`/uc/uc` perform
 item update.
