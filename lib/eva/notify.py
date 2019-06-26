@@ -521,9 +521,10 @@ class GenericNotifier_Client(GenericNotifier):
                 if apikey.check(self.apikey, d, ro_op=True):
                     fdata.append(d)
         elif subject == 'action':
-            for d in data_in:
+            for din in data_in:
+                d, dts = din
                 if apikey.check(self.apikey, d.item, ro_op=True):
-                    fdata.append(d)
+                    fdata.append(dts)
         return super().format_data(subject, fdata)
 
     def is_client_dead(self):
