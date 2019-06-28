@@ -1393,7 +1393,7 @@ class SFA_HTTP_Root:
         cherrypy.serving.response.headers['Pragma'] = 'no-cache'
 
     @cherrypy.expose
-    def rpvt(self, k=None, f=None, nocache=None):
+    def rpvt(self, k=None, f=None, ic=None, nocache=None):
         _k = cp_client_key(k, from_cookie=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None: raise cp_bad_request('uri not provided')
@@ -1412,7 +1412,28 @@ class SFA_HTTP_Root:
         if ctype:
             cherrypy.serving.response.headers['Content-Type'] = ctype
         if nocache: self._no_cache()
-        return BytesIO(r.content)
+        result = r.content
+        if ic:
+            try:
+                icmd, args, fmt = ic.split(':')
+                if icmd == 'resize':
+                    x, y, q = args.split('x')
+                    x = int(x)
+                    y = int(y)
+                    q = int(q)
+                    from PIL import Image
+                    image = Image.open(BytesIO(result))
+                    image.thumbnail((x, y))
+                    result = image.tobytes(fmt, 'RGB', q)
+                    cherrypy.response.headers['Content-Type'] = 'image/' + fmt
+                else:
+                    raise cp_bad_request()
+            except cherrypy.HTTPError:
+                raise
+            except:
+                eva.core.log_traceback()
+                raise cp_api_error()
+        return BytesIO(result)
 
     @cherrypy.expose
     def pvt(self, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
@@ -1480,9 +1501,11 @@ class SFA_HTTP_Root:
                     logging.info('pvt %s file access %s' % (_r, f))
                     return result
                 else:
-                    logging.error('pvt %s file %s resize error' % (_r, f))
-                    raise
+                    raise cp_bad_request()
+            except cherrypy.HTTPError:
+                raise
             except:
+                eva.core.log_taceback()
                 raise cp_api_error()
         if nocache: self._no_cache()
         logging.info('pvt %s file access %s' % (_r, f))
