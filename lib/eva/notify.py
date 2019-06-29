@@ -597,7 +597,11 @@ class SQLANotifier(GenericNotifier):
     def set_db(self, db_uri=None):
         self._db = db_uri
         self.db_uri = eva.core.format_db_uri(db_uri)
-        self.db_engine = eva.core.create_db_engine(self.db_uri)
+        self.init_db_engine()
+
+    def init_db_engine(self):
+        self.db_engine = eva.core.create_db_engine(
+            self.db_uri, timeout=self.timeout)
 
     def test(self):
         if self.connected: return True
@@ -703,7 +707,7 @@ class SQLANotifier(GenericNotifier):
             if time_format == 'iso':
                 h['t'] = datetime.fromtimestamp(float(d[0]), tz).isoformat()
             elif time_format == 'dt_utc':
-                h['t'] =datetime.fromtimestamp(float(d[0]))
+                h['t'] = datetime.fromtimestamp(float(d[0]))
             else:
                 h['t'] = float(d[0])
             if req_status:
@@ -788,15 +792,16 @@ class SQLANotifier(GenericNotifier):
                 return False
             self._keep = self.keep
             return True
+        elif prop == 'timeout':
+            if super().set_prop(prop, value):
+                self.init_db_engine()
+                return True
+            else:
+                return False
         return super().set_prop(prop, value)
 
     def serialize(self, props=False):
         d = super().serialize(props)
-        # sqla has no timeout
-        try:
-            del d['timeout']
-        except:
-            pass
         if self._keep or props: d['keep'] = self._keep
         if self._db or props: d['db'] = self._db
         return d
