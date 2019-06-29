@@ -206,9 +206,8 @@ def create_db_engine(db_uri, timeout=None):
         return sa.create_engine(
             db_uri,
             pool_size=db_pool_size,
-            max_overflow=db_pool_size * 2,
-            connect_args={'timeout': timeout if timeout else config.timeout})
-
+            max_overflow=db_pool_size * 2
+            )
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
