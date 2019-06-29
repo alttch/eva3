@@ -190,6 +190,23 @@ class ManagementCLI(GenericCLI):
 
         sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
 
+        ap_masterkey = self.sp.add_parser(
+            'masterkey', help='Masterkey management')
+
+        sp_masterkey = ap_masterkey.add_subparsers(
+            dest='_func', metavar='func', help='Masterkey commands')
+
+        sp_masterkey_set = sp_masterkey.add_parser(
+            'set', help='Set masterkey for all controllers configured')
+        sp_masterkey_set.add_argument(
+            'a', metavar='KEY', help='New masterkey', nargs='?')
+        sp_masterkey_set.add_argument(
+            '-a',
+            '--access',
+            choices=['local-only', 'remote'],
+            metavar='ACCESS_TYPE',
+            help='Access type')
+
     def add_manager_control_functions(self):
         eva.client.cli.shells_available = []
         if not self.products_configured:
@@ -854,6 +871,82 @@ sys.argv = {argv}
                     ok = False
             return self.local_func_result_empty if ok else (10, '')
 
+    def set_masterkey(self, params):
+
+        def set_masterkey_for(p, a, access):
+            try:
+                in_section = False
+                key_found = False
+                nf = []
+                for st in open('{}/{}_apikeys.ini'.format(dir_etc,
+                                                          p)).readlines():
+                    st = st.strip()
+                    s = st.split(';')[0].strip()
+                    if s == '[masterkey]':
+                        in_section = True
+                    elif s.startswith('['):
+                        in_section = False
+                    elif s.find('=') != -1:
+                        i = s.split('=')[0].strip()
+                        if i == 'key' and in_section and a:
+                            key_found = True
+                            nf.append('key = {}'.format(a))
+                            continue
+                        if i == 'hosts_allow' and in_section and access:
+                            nf.append('hosts_allow = {}'.format(
+                                '127.0.0.1'
+                                if access == 'local-only' else '0.0.0.0/0'))
+                            continue
+                    nf.append(st)
+                if a and not key_found:
+                    raise Exception(
+                        'masterkey not found in {}_apikeys.ini'.format(p))
+                open('{}/{}_apikeys.ini'.format(dir_etc, p),
+                     'w').write('\n'.join(nf) + '\n')
+                return True
+            except Exception as e:
+                self.print_err(e)
+                return False
+
+        import re
+        p = params.get('p')
+        a = params.get('a')
+        access = params.get('access')
+        if a and not re.match("^[A-Za-z0-9]*$", a):
+            self.print_err('Masterkey should contain only letters and numbers')
+            return self.local_func_result_failed
+        if p:
+            if p not in self.products_configured:
+                return self.local_func_result_failed
+            result = set_masterkey_for(p, a, access)
+            if result:
+                print(
+                    self.colored(
+                        'To apply new masterkey, restart the controller',
+                        color='yellow',
+                        attrs=['bold']))
+            return self.local_func_result_ok if result \
+                    else self.local_func_result_failed
+        else:
+            ok = True
+            for p in self.products_configured:
+                print(
+                    '{}: '.format(
+                        self.colored(p, color='blue', attrs=['bold'])),
+                    end='')
+                if set_masterkey_for(p, a, access):
+                    print('OK')
+                else:
+                    print(self.colored('FAILED', color='red'))
+                    ok = False
+            if ok:
+                print(
+                    self.colored(
+                        'To apply new masterkey, restart the controllers',
+                        color='yellow',
+                        attrs=['bold']))
+            return self.local_func_result_empty if ok else (10, '')
+
 
 def make_exec_cmd_func(cmd):
 
@@ -889,7 +982,8 @@ _api_functions = {
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
     'backup:restore': cli.backup_restore,
-    'edit:crontab': cli.edit_crontab
+    'edit:crontab': cli.edit_crontab,
+    'masterkey:set': cli.set_masterkey
 }
 
 cfg = configparser.ConfigParser(inline_comment_prefixes=';')
@@ -933,7 +1027,7 @@ except:
     pass
 
 cli.default_prompt = '# '
-cli.arg_sections += ['backup', 'server', 'edit', 'system']
+cli.arg_sections += ['backup', 'server', 'edit', 'masterkey', 'system']
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()
 cli.nodename = nodename
