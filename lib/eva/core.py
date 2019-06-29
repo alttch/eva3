@@ -196,13 +196,18 @@ def format_db_uri(db_uri):
     return _uri
 
 
-def create_db_engine(db_uri):
+def create_db_engine(db_uri, timeout=None):
     if not db_uri: return None
     if db_uri.startswith('sqlite:///'):
-        return sa.create_engine(db_uri)
+        return sa.create_engine(
+            db_uri,
+            connect_args={'timeout': timeout if timeout else config.timeout})
     else:
         return sa.create_engine(
-            db_uri, pool_size=db_pool_size, max_overflow=db_pool_size * 2)
+            db_uri,
+            pool_size=db_pool_size,
+            max_overflow=db_pool_size * 2,
+            connect_args={'timeout': timeout if timeout else config.timeout})
 
 
 def sighandler_hup(signum, frame):
