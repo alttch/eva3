@@ -393,6 +393,22 @@ E.g. to use MySQL, specify db uri as:
 
 (pymysql Python module is required)
 
+or
+    mysql+mysqldb://username:password@host/database
+
+(mysqlclient Python module is required)
+
+If you get "failed to create state_history table" error with MySQL/MariaDB, try
+setting:
+
+.. code-block:: sql
+
+    set global innodb_file_format=Barracuda;
+    set global innodb_large_prefix=1;
+    set global innodb_default_row_format=dynamic;
+
+or put these options to database server configuration file.
+
 HTTP Notifiers
 ==============
 
