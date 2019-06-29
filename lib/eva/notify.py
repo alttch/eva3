@@ -702,6 +702,8 @@ class SQLANotifier(GenericNotifier):
             h = {}
             if time_format == 'iso':
                 h['t'] = datetime.fromtimestamp(float(d[0]), tz).isoformat()
+            elif time_format == 'dt_utc':
+                h['t'] =datetime.fromtimestamp(float(d[0]))
             else:
                 h['t'] = float(d[0])
             if req_status:

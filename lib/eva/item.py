@@ -1740,7 +1740,7 @@ def get_state_history(a=None,
             t_end=t_end,
             limit=limit,
             prop=prop,
-            time_format=tf)
+            time_format=tf if not t_start or not fill else 'dt_utc')
     except:
         raise FunctionFailed
     if t_start and fill and result:
@@ -1766,7 +1766,6 @@ def get_state_history(a=None,
         try:
             df = pd.DataFrame(result)
             df = df.set_index('t')
-            df.index = pd.to_datetime(df.index, utc=True)
             if fill.find(':') != -1:
                 _fill, _pc = fill.split(':', 1)
                 if _pc.find(':') != -1:
@@ -1815,6 +1814,8 @@ def get_state_history(a=None,
                             r['value'] = r['value'] / _divider
                         r['value'] = math.floor(r['value'] * _pc) / _pc
                 result.append(r)
+        except pd.core.base.DataError:
+            result = []
         except FunctionFailed:
             raise
         except:
