@@ -382,6 +382,16 @@ _eva_uc_device() {
   fi
 }
 
+_eva_uc_maintenance() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 3 ]]; then
+    COMPREPLY=( $( compgen -W 'start stop' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _eva_uc_clone() {
   local cur prev words cword
   _init_completion || return
@@ -476,16 +486,26 @@ _eva_uc() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
   else
     case "${words[2]}" in
-      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
         _eva_uc_${words[2]}
         ;;
       *)
         COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
         ;;
     esac
+  fi
+}
+
+_eva_masterkey() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
 }
 
@@ -523,10 +543,10 @@ _eva() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'backup edit lm ns save server sfa system uc update version' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'backup edit lm masterkey ns save server sfa system uc update version' -- "$cur" ))
   else
     case "${words[1]}" in
-      backup|edit|lm|server|sfa|system|uc)
+      backup|edit|lm|masterkey|server|sfa|system|uc)
         _eva_${words[1]}
         ;;
       *)
