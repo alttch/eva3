@@ -831,7 +831,18 @@ class GenericHTTPNotifier(GenericNotifier):
         self.uri = uri
         self.notify_key = notify_key
         self.uri = uri
+        self.rs_lock = threading.RLock()
         self.connected = True
+
+    def rsession(self):
+        n = 'notifier_{}_rsession'.format(self.notifier_id)
+        with self.rs_lock:
+            if not g.has(n):
+                c = requests.Session()
+                g.set(n, c)
+            else:
+                c = g.get(n)
+            return c
 
     def log_notify(self):
         logging.debug('.sending data notification to ' + \
@@ -896,7 +907,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         key = apikey.format_key(self.notify_key)
         if key: d['k'] = key
         if self.space: d['space'] = self.space
-        if self.method:
+        if self.method == 'jsonrpc':
             data_ts = []
             for dd in data:
                 dts = {'jsonrpc': '2.0', 'method': self.method}
@@ -910,12 +921,12 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         else:
             data_ts = d
             data_ts['data'] = data
-        r = requests.post(
+        r = self.rsession().post(
             self.uri,
             json=data_ts,
             timeout=self.get_timeout(),
             verify=self.ssl_verify)
-        if self.method:
+        if self.method == 'jsonrpc':
             if r.ok:
                 return True
             else:
@@ -946,7 +957,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             d = {'subject': 'test'}
             if self.notify_key:
                 d['k'] = self.notify_key
-            if self.method:
+            if self.method == 'jsonrpc':
                 req_id = str(uuid.uuid4())
                 data_ts = {
                     'jsonrpc': '2.0',
@@ -956,14 +967,14 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                 }
             else:
                 data_ts = d
-            r = requests.post(
+            r = self.rsession().post(
                 self.uri,
                 json=data_ts,
                 timeout=self.get_timeout(),
                 verify=self.ssl_verify)
             if not r.ok: return False
             result = r.json()
-            if self.method:
+            if self.method == 'jsonrpc':
                 if result.get('jsonrpc') != '2.0' or \
                         result.get('id') != req_id or 'error' in result:
                     return False
@@ -976,17 +987,17 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
 
     def serialize(self, props=False):
         d = {}
-        if props:
-            d['method'] = self.method
-        elif self.method:
-            d['method'] = self.method
+        d['method'] = self.method
         d.update(super().serialize(props=props))
         return d
 
     def set_prop(self, prop, value):
         if prop == 'method':
-            self.method = value
-            return True
+            if value is not None and value not in ['jsonrpc']:
+                return False
+            else:
+                self.method = value
+                return True
         else:
             return super().set_prop(prop, value)
 

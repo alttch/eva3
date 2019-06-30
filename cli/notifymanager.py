@@ -65,7 +65,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create = self.sp.add_parser('create', help='Create notifier')
         ap_create.add_argument('i', help='Notifier ID', metavar='ID')
         ap_create.add_argument('p', help='Notifier properties: ' + \
-                'json:http(s)://[key]@uri[#method] or ' + \
+                'json:http(s)://[key]@uri[#jsonrpc] or ' + \
                 'mqtt:[username:password]@host:[port] or ' + \
                 'db:db_uri',
                 metavar='PROPS').completer = self.ComplNProto()
