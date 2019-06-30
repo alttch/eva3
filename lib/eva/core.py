@@ -206,8 +206,9 @@ def create_db_engine(db_uri, timeout=None):
         return sa.create_engine(
             db_uri,
             pool_size=db_pool_size,
-            max_overflow=db_pool_size * 2
-            )
+            max_overflow=db_pool_size * 2,
+            isolation_level='READ UNCOMMITTED')
+
 
 def sighandler_hup(signum, frame):
     logging.info('got HUP signal, rotating logs')
