@@ -38,8 +38,8 @@ notifier_client_clean_delay = 30
 
 default_mqtt_qos = 1
 
-sqlite_default_keep = 86400
-sqlite_default_id = 'db_1'
+db_default_keep = 86400
+default_stats_notifier_id = 'db_1'
 
 default_notifier_id = 'eva_1'
 
@@ -589,7 +589,7 @@ class SQLANotifier(GenericNotifier):
             notifier_id=notifier_id, notifier_type=notifier_type, space=space)
         self.state_storage = 'sql'
         self.keep = keep if keep else \
-            sqlite_default_keep
+            db_default_keep
         self._keep = keep
         self.history_cleaner = self.HistoryCleaner(
             name=self.notifier_id + '_cleaner', o=self)
@@ -633,9 +633,12 @@ class SQLANotifier(GenericNotifier):
                   oid,
                   t_start=None,
                   t_end=None,
+                  fill=None,
                   limit=None,
                   prop=None,
-                  time_format=None):
+                  time_format=None,
+                  xopts=None,
+                  **kwargs):
         import pytz
         import dateutil.parser
         from datetime import datetime
@@ -704,6 +707,8 @@ class SQLANotifier(GenericNotifier):
                     q),
                 space=space,
                 oid=oid).fetchall())
+        if l and len(data) > l:
+            data = data[:l]
         for d in data:
             h = {}
             if time_format == 'iso':
@@ -785,7 +790,7 @@ class SQLANotifier(GenericNotifier):
             return True
         elif prop == 'keep':
             if value is None:
-                self.keep = sqlite_default_keep
+                self.keep = db_default_keep
                 self._keep = None
                 return True
             try:
@@ -835,7 +840,7 @@ class GenericHTTPNotifier(GenericNotifier):
         self.rs_lock = threading.RLock()
         self.username = username
         self.password = password
-        self.xrargs = {'url': self.uri, 'verify': self.ssl_verify}
+        self.xrargs = {'verify': self.ssl_verify}
         if self.username is not None and self.password is not None:
             self.xrargs['auth'] = requests.auth.HTTPBasicAuth(
                 self.username, self.password)
@@ -937,7 +942,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             data_ts = d
             data_ts['data'] = data
         r = self.rsession().post(
-            json=data_ts, timeout=self.get_timeout(), **self.xrargs)
+            self.uri, json=data_ts, timeout=self.get_timeout(), **self.xrargs)
         if self.method == 'jsonrpc':
             if r.ok:
                 return True
@@ -980,7 +985,10 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             else:
                 data_ts = d
             r = self.rsession().post(
-                json=data_ts, timeout=self.get_timeout(), **self.xrargs)
+                self.uri,
+                json=data_ts,
+                timeout=self.get_timeout(),
+                **self.xrargs)
             if not r.ok: return False
             result = r.json()
             if self.method == 'jsonrpc':
@@ -1010,6 +1018,197 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                 return True
         elif prop == 'notify_key':
             self.notify_key = value
+            return True
+        else:
+            return super().set_prop(prop, value)
+
+
+class InfluxDB_Notifier(GenericHTTPNotifier):
+
+    def __init__(self,
+                 notifier_id,
+                 uri,
+                 db=None,
+                 username=None,
+                 password=None,
+                 method=None,
+                 notify_key=None,
+                 space=None,
+                 timeout=None,
+                 ssl_verify=True):
+        super().__init__(
+            notifier_id=notifier_id,
+            ssl_verify=ssl_verify,
+            uri=uri,
+            username=username,
+            password=password,
+            space=space,
+            timeout=timeout)
+        self.method = method
+        self.notify_key = notify_key
+        self.notifier_type = 'influxdb'
+        self.db = db
+        self.state_storage = 'tsdb'
+
+    __fills = {'S': 's', 'T': 'm', 'H': 'h', 'D': 'd', 'w': 'w'}
+
+    def get_state(self,
+                  oid,
+                  t_start=None,
+                  t_end=None,
+                  fill=None,
+                  limit=None,
+                  prop=None,
+                  time_format=None,
+                  xopts=None,
+                  **kwargs):
+        import pytz
+        import dateutil.parser
+        from datetime import datetime
+        l = int(limit) if limit else None
+        if t_start:
+            try:
+                t_s = float(t_start)
+            except:
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    t_s = None
+        else:
+            t_s = None
+        if t_end:
+            try:
+                t_e = float(t_end)
+            except:
+                try:
+                    t_e = dateutil.parser.parse(t_end).timestamp()
+                except:
+                    t_e = None
+        else:
+            t_e = None
+        q = ''
+        rp = ''
+        if xopts and 'rp' in xopts:
+            rp = '"{}".'.format(xopts['rp'])
+        if t_s:
+            q += 'where time>%u' % (t_s * 1000000000)
+        if t_e:
+            q += ' and' if q else 'where'
+            q += ' time<=%u' % (t_e * 1000000000)
+        if prop in ['status', 'S']:
+            props = 'status' if not fill else 'mode(status)'
+        elif prop in ['value', 'V']:
+            props = 'value' if not fill else 'mean(value)'
+        else:
+            props = 'status,value' if not fill else 'mode(status),mean(value)'
+        data = []
+        space = (self.space + '/') if self.space is not None else ''
+        if time_format == 'iso':
+            tz = pytz.timezone(time.tzname[0])
+        q = 'select {} from {}"{}" {}'.format(props, rp, oid, q)
+        try:
+            if fill:
+                q += ' group by time({}{}) fill(previous)'.format(
+                    fill[:-1], self.__fills[fill[-1]])
+            if l:
+                q += ' limit %u' % l
+            r = self.rsession().post(
+                url=self.uri + '/query?db={}'.format(self.db),
+                data={
+                    'q': q,
+                    'epoch': 'ms'
+                },
+                timeout=self.get_timeout(),
+                **self.xrargs)
+            if not r.ok:
+                raise Exception('influxdb server error HTTP code {}'.format(
+                    r.status_code))
+            data = r.json()
+            if 'error' in data['results'][0]:
+                self.log_error(message=data['results'][0]['error'])
+                raise Exception
+            if not data['results'][0] or 'series' not in data['results'][0]:
+                return []
+            else:
+                data = data['results'][0]['series'][0]['values']
+        except:
+            eva.core.log_traceback()
+            self.log_error(message='unable to get state for {}'.format(oid))
+            raise
+        for d in data:
+            if time_format == 'iso':
+                d[0] = datetime.fromtimestamp(d[0] / 1000, tz).isoformat()
+            else:
+                d[0] = d[0] / 1000
+        return data
+
+    def send_notification(self, subject, data, retain=None, unpicklable=False):
+        space = (self.space + '/') if self.space is not None else ''
+        if subject == 'state':
+            t = int(time.time() * 1000000000)
+            for d in data:
+                q = space + '{} status={}i'.format(d['oid'], d['status'])
+                if d['value'] is not None and d['value'] != '':
+                    try:
+                        value = float(d['value'])
+                        q += ',value={}'.format(value)
+                    except:
+                        q += ',value="{}"'.format(d['value'])
+                q += ' {}'.format(t)
+                r = self.rsession().post(
+                    url=self.uri + '/write?db={}'.format(self.db),
+                    data=q,
+                    headers={'Content-Type': 'application/octet-stream'},
+                    timeout=self.get_timeout(),
+                    **self.xrargs)
+                if not r.ok:
+                    self.log_error(code=r.status_code)
+                    return False
+            return True
+
+    def log_notify(self):
+        logging.debug('.sending data notification to ' + \
+                '%s method = %s, uri: %s, db: %s' % (self.notifier_id,
+                                    self.notifier_type, self.uri, self.db))
+
+    def test(self):
+        self.connect()
+        if self.db is None: return False
+        space = self.space if self.space is not None else ''
+        try:
+            logging.debug('.Testing influxdb notifier %s (%s)' % \
+                    (self.notifier_id,self.uri))
+            r = self.rsession().post(
+                url=self.uri + '/write?db={}'.format(self.db),
+                data=space + ':eva_test test="passed"',
+                headers={'Content-Type': 'application/octet-stream'},
+                timeout=self.get_timeout(),
+                **self.xrargs)
+            return r.ok
+        except:
+            eva.core.log_traceback(notifier=True)
+            return False
+
+    def serialize(self, props=False):
+        d = {}
+        if self.method or props: d['method'] = self.method
+        if self.notify_key or props: d['notify_key'] = self.notify_key
+        d['db'] = self.db
+        d.update(super().serialize(props=props))
+        return d
+
+    def set_prop(self, prop, value):
+        if prop == 'method':
+            if value is not None and value not in ['jsonrpc']:
+                return False
+            else:
+                self.method = value
+                return True
+        elif prop == 'notify_key':
+            self.notify_key = value
+            return True
+        elif prop == 'db':
+            self.db = value
             return True
         else:
             return super().set_prop(prop, value)
@@ -1863,6 +2062,25 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             notify_key=notify_key,
             space=space,
             timeout=timeout)
+    elif ncfg['type'] == 'influxdb':
+        space = ncfg.get('space')
+        db = ncfg.get('db')
+        ssl_verify = ncfg.get('ssl_verify')
+        uri = ncfg.get('uri')
+        timeout = ncfg.get('timeout')
+        method = ncfg.get('method')
+        username = ncfg.get('username')
+        password = ncfg.get('password')
+        n = InfluxDB_Notifier(
+            _notifier_id,
+            ssl_verify=ssl_verify,
+            uri=uri,
+            db=db,
+            username=username,
+            password=password,
+            method=method,
+            space=space,
+            timeout=timeout)
     else:
         logging.error('Invalid notifier type = %s' % ncfg['type'])
         return None
@@ -2021,10 +2239,10 @@ def get_default_notifier():
     return notifiers.get(default_notifier_id)
 
 
-def get_db_notifier(notifier_id):
-    if notifier_id is None: return get_notifier(sqlite_default_id)
+def get_stats_notifier(notifier_id):
+    if notifier_id is None: return get_notifier(default_stats_notifier_id)
     n = get_notifier(notifier_id)
-    return n if n and n.notifier_type == 'db' else None
+    return n if n and n.state_storage else None
 
 
 def get_notifiers():

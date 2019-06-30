@@ -329,6 +329,7 @@ Optionally:
 * **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required, set to 1D if not specified
 * **g** output format ("list", "dict" or "chart", default is "list")
 * **c** options for chart (dict or comma separated)
+* **o** extra options for notifier data request
 
 Returns:
 

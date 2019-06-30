@@ -23,7 +23,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
     class ComplNProto(object):
 
         def __call__(self, prefix, **kwargs):
-            return ['mqtt:', 'json:', 'db:'] if \
+            return ['mqtt:', 'json:', 'db:', 'influxdb:'] if \
                     prefix.find(':') == -1 else True
 
     class ComplN(ComplGeneric):
@@ -67,7 +67,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         ap_create.add_argument('p', help='Notifier properties: ' + \
                 'json:http(s)://[key]@uri[#jsonrpc] or ' + \
                 'mqtt:[username:password]@host:[port] or ' + \
-                'db:db_uri',
+                'db:db_uri or ' + \
+                'influxdb:http(s)://uri#database',
                 metavar='PROPS').completer = self.ComplNProto()
         ap_create.add_argument(
             '-s',
@@ -230,7 +231,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
         space = params.get('s')
         timeout = params.get('t')
         if len(p) < 2: return self.local_func_result_failed
-        if p[0] in ['json']:
+        if p[0] == 'json':
             u = (':'.join(p[1:])).split('/')
             if len(u) < 3: return self.local_func_result_failed
             if u[2].find('@') != -1:
@@ -250,6 +251,21 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 uri=uri,
                 method=method,
                 notify_key=notify_key,
+                space=space,
+                timeout=timeout)
+        if p[0] == 'influxdb':
+            u = (':'.join(p[1:])).split('/')
+            if len(u) < 3: return self.local_func_result_failed
+            uri = '/'.join(u)
+            if uri.find('#') != -1:
+                uri, db = uri.split('#', 1)
+            else:
+                self.print_err('database not specified')
+                return self.local_func_result_failed
+            n = eva.notify.InfluxDB_Notifier(
+                notifier_id=notifier_id,
+                uri=uri,
+                db=db,
                 space=space,
                 timeout=timeout)
         elif p[0] == 'mqtt':
@@ -305,6 +321,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                                                           if method else ''))
             elif isinstance(i, eva.notify.SQLANotifier):
                 n['params'] = 'db: %s' % i.db_uri
+            elif isinstance(i, eva.notify.InfluxDB_Notifier):
+                n['params'] = 'uri: {}, db: {}'.format(i.uri, i.db)
             elif isinstance(i, eva.notify.MQTTNotifier):
                 if i.username is not None:
                     n['params'] = '%s%s@' % (i.username, ':*'
@@ -369,7 +387,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
     def list_notifier_props(self, params):
         n = self.get_notifier(params['i'])
-        return (0, n.serialize(props=True)) if n else self.local_func_result_failed
+        return (0,
+                n.serialize(props=True)) if n else self.local_func_result_failed
 
     def set_notifier_prop(self, params):
         n = self.get_notifier(params['i'])

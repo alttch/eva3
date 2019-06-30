@@ -553,7 +553,8 @@ class GenericAPI(object):
                            x=None,
                            t=None,
                            w=None,
-                           g=None):
+                           g=None,
+                           o=None):
         import eva.item
         item = self.controller.get_item(i)
         if not item or not apikey.check(k, item, ro_op=True):
@@ -570,7 +571,8 @@ class GenericAPI(object):
             prop=x,
             time_format=t,
             fill=w,
-            fmt=g)
+            fmt=g,
+            xopts=o)
 
     def _result(self, k, u, i, g, s, rtp):
         import eva.item
@@ -712,6 +714,7 @@ class GenericAPI(object):
                 etc.), start time is required, set to 1D if not specified
             g: output format ("list", "dict" or "chart", default is "list")
             c: options for chart (dict or comma separated)
+            o: extra options for notifier data request
 
         Returns:
             history data in specified format or chart image.
@@ -744,8 +747,16 @@ class GenericAPI(object):
         If binary prefix is required, it should be followed by "b", e.g.
         5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
         """
-        k, a, i, s, e, l, x, t, w, g, c = parse_function_params(
-            kwargs, 'kaiselxtwgc', '.sr..issss.')
+        k, a, i, s, e, l, x, t, w, g, c, o = parse_function_params(
+            kwargs, 'kaiselxtwgco', '.sr..issss..')
+
+        if o:
+            if isinstance(o, dict):
+                pass
+            elif isinstance(o, str):
+                o = dict_from_str(o)
+            else:
+                raise InvalidParameter('o must be dict or str')
 
         def format_result(result, prop, c=None):
             if c is None:
@@ -846,7 +857,7 @@ class GenericAPI(object):
             result_keys = set()
             for i in items:
                 r = self._get_state_history(
-                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=None)
+                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=None, o=o)
                 process_status = 'status' in r
                 process_value = 'value' in r
                 for z, tt in enumerate(r['t']):
@@ -861,7 +872,7 @@ class GenericAPI(object):
                         result[tt][rk] = r['value'][z]
                         result_keys.add(rk)
             if not result_keys: return {}
-            merged_result = {'t':[]}
+            merged_result = {'t': []}
             for tt in sorted(result):
                 merged_result['t'].append(tt)
                 for rk in result_keys:
@@ -869,7 +880,7 @@ class GenericAPI(object):
             return format_result(merged_result, 'multiple', c)
         else:
             result = self._get_state_history(
-                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
+                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g, o=o)
             return format_result(result, x, c)
 
     # return version for embedded hardware

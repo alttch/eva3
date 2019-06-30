@@ -1574,7 +1574,8 @@ class VariableItem(UpdatableItem):
                          status=None,
                          value=None,
                          from_mqtt=False,
-                         force_notify=False, update_expiration=True):
+                         force_notify=False,
+                         update_expiration=True):
         if self._destroyed: return False
         try:
             if status is not None: _status = int(status)
@@ -1710,7 +1711,8 @@ def get_state_history(a=None,
                       prop=None,
                       time_format=None,
                       fill=None,
-                      fmt=None):
+                      fmt=None,
+                      xopts=None):
     import dateutil
     import pytz
     import pandas as pd
@@ -1724,9 +1726,9 @@ def get_state_history(a=None,
             return t
 
     if oid is None: raise ResourceNotFound
-    n = eva.notify.get_db_notifier(a)
+    n = eva.notify.get_stats_notifier(a)
     if not n: raise ResourceNotFound('notifier')
-    if not n.state_storage:
+    if n.state_storage not in ['sql', 'tsdb']:
         raise MethodNotImplemented
     if fill:
         tf = 'iso'
@@ -1741,20 +1743,29 @@ def get_state_history(a=None,
             oid=oid,
             t_start=t_start,
             t_end=t_end,
+            fill=fill.split(':', 1)[0] if fill else None,
             limit=limit,
             prop=prop,
-            time_format=tf if not t_start or not fill else 'dt_utc')
+            time_format=tf if not t_start or not fill else 'dt_utc',
+            xopts=xopts)
     except:
         raise FunctionFailed
-    if t_start and fill and result:
+    if n.state_storage == 'sql':
+        parse_df = True
+        parse_tsdb = False
+    else:
+        parse_df = False
+        parse_tsdb = True
+    if ((t_start and fill) or parse_tsdb) and result:
         tz = pytz.timezone(time.tzname[0])
-        try:
-            t_s = float(t_start)
-        except:
+        if t_start:
             try:
-                t_s = dateutil.parser.parse(t_start).timestamp()
+                t_s = float(t_start)
             except:
-                raise InvalidParameter('time format is unknown')
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    raise InvalidParameter('time format is unknown')
         if t_end:
             try:
                 t_e = float(t_end)
@@ -1766,49 +1777,68 @@ def get_state_history(a=None,
         else:
             t_e = time.time()
         if t_e > time.time(): t_e = time.time()
-        try:
-            df = pd.DataFrame(result)
-            df = df.set_index('t')
-            if fill.find(':') != -1:
-                _fill, _pc = fill.split(':', 1)
-                if _pc.find(':') != -1:
-                    _divider, _pc = _pc.split(':')
-                    try:
-                        _divider = pow(10, int(_divider))
-                    except:
-                        if not _divider in val_prefixes:
-                            raise FunctionFailed(
-                                'Prefix unknown: {}'.format(_divider))
-                        _divider = val_prefixes[_divider]
-                else:
-                    _divider = None
-                _pc = pow(10, int(_pc))
+        if fill and fill.find(':') != -1:
+            _fill, _pc = fill.split(':', 1)
+            if _pc.find(':') != -1:
+                _divider, _pc = _pc.split(':')
+                try:
+                    _divider = pow(10, int(_divider))
+                except:
+                    if not _divider in val_prefixes:
+                        raise FunctionFailed(
+                            'Prefix unknown: {}'.format(_divider))
+                    _divider = val_prefixes[_divider]
             else:
-                _fill = fill
-                _pc = None
                 _divider = None
-            sp1 = df.resample(_fill).mean()
-            sp2 = df.resample(_fill).pad()
-            sp = sp1.fillna(sp2).to_dict(orient='split')
+            _pc = pow(10, int(_pc))
+        else:
+            _fill = fill
+            _pc = None
+            _divider = None
+        try:
+            if parse_df:
+                df = pd.DataFrame(result)
+                df = df.set_index('t')
+                sp1 = df.resample(_fill).mean()
+                sp2 = df.resample(_fill).pad()
+                sp = sp1.fillna(sp2).to_dict(orient='split')
+            else:
+                sp = result
             result = []
-            for i in range(0, len(sp['index'])):
-                t = sp['index'][i].timestamp()
+            for i in range(0, len(sp['index']) if parse_df else len(sp)):
+                t = sp['index'][i].timestamp() if parse_df else sp[i][0]
                 if time_format == 'iso':
                     t = datetime.fromtimestamp(t, tz).isoformat()
                 r = {'t': t}
-                if 'status' in sp['columns'] and 'value' in sp['columns']:
-                    try:
-                        r['status'] = int(sp['data'][i][0])
-                    except:
-                        r['status'] = None
-                    r['value'] = sp['data'][i][1]
-                elif 'status' in sp['columns']:
-                    try:
-                        r['status'] = int(sp['data'][i][0])
-                    except:
-                        r['status'] = None
-                elif 'value' in sp['columns']:
-                    r['value'] = sp['data'][i][0]
+                if parse_df:
+                    if 'status' in sp['columns'] and 'value' in sp['columns']:
+                        try:
+                            r['status'] = int(sp['data'][i][0])
+                        except:
+                            r['status'] = None
+                        r['value'] = sp['data'][i][1]
+                    elif 'status' in sp['columns']:
+                        try:
+                            r['status'] = int(sp['data'][i][0])
+                        except:
+                            r['status'] = None
+                    elif 'value' in sp['columns']:
+                        r['value'] = sp['data'][i][0]
+                else:
+                    if prop:
+                        if prop in ['status', 'S']:
+                            try:
+                                r['status'] = int(sp[i][1])
+                            except:
+                                r['status'] = None
+                        elif prop in ['value', 'V']:
+                            r['value'] = sp[i][1]
+                    else:
+                        try:
+                            r['status'] = int(sp[i][1])
+                        except:
+                            r['status'] = None
+                        r['value'] = sp[i][2]
                 if 'value' in r and isinstance(r['value'], float):
                     if math.isnan(r['value']):
                         r['value'] = None
@@ -1826,7 +1856,7 @@ def get_state_history(a=None,
             raise FunctionFailed
     # check dataframe, fill till t_e if not filled
     try:
-        if fill:
+        if fill and (not limit or len(result) < limit):
             if time_format == 'iso':
                 r_ts = dateutil.parser.parse(result[-1]['t']).timestamp()
             else:
