@@ -192,6 +192,7 @@ class GenericNotifier(object):
         self.lse_lock = threading.RLock()
         self.notifier_worker = self.NotifierWorker(
             o=self, name='notifier_' + self.notifier_id)
+        self.state_storage = None
 
     def subscribe(self,
                   subject,
@@ -586,6 +587,7 @@ class SQLANotifier(GenericNotifier):
         notifier_type = 'db'
         super().__init__(
             notifier_id=notifier_id, notifier_type=notifier_type, space=space)
+        self.state_storage = 'sql'
         self.keep = keep if keep else \
             sqlite_default_keep
         self._keep = keep
@@ -816,7 +818,8 @@ class GenericHTTPNotifier(GenericNotifier):
                  notifier_id,
                  notifier_subtype=None,
                  uri=None,
-                 notify_key=None,
+                 username=None,
+                 password=None,
                  space=None,
                  timeout=None,
                  ssl_verify=True):
@@ -829,9 +832,13 @@ class GenericHTTPNotifier(GenericNotifier):
             timeout=timeout)
         self.ssl_verify = ssl_verify
         self.uri = uri
-        self.notify_key = notify_key
-        self.uri = uri
         self.rs_lock = threading.RLock()
+        self.username = username
+        self.password = password
+        self.xrargs = {'url': self.uri, 'verify': self.ssl_verify}
+        if self.username is not None and self.password is not None:
+            self.xrargs['auth'] = requests.auth.HTTPBasicAuth(
+                self.username, self.password)
         self.connected = True
 
     def rsession(self):
@@ -858,7 +865,8 @@ class GenericHTTPNotifier(GenericNotifier):
         if (self.ssl_verify is not None and \
                 self.ssl_verify is not True) or props:
             d['ssl_verify'] = self.ssl_verify
-        if self.notify_key or props: d['notify_key'] = self.notify_key
+        if self.username or props: d['username'] = self.username
+        if self.password or props: d['password'] = self.password
         d.update(super().serialize(props=props))
         return d
 
@@ -866,6 +874,12 @@ class GenericHTTPNotifier(GenericNotifier):
         if prop == 'uri':
             if value is None: return False
             self.uri = value
+            return True
+        if prop == 'username':
+            self.username = value
+            return True
+        if prop == 'password':
+            self.password = value
             return True
         elif prop == 'ssl_verify':
             if value is None:
@@ -875,9 +889,6 @@ class GenericHTTPNotifier(GenericNotifier):
             if val is None: return False
             self.ssl_verify = val
             return True
-        elif prop == 'notify_key':
-            self.notify_key = value
-            return True
         return super().set_prop(prop, value)
 
 
@@ -886,20 +897,24 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
     def __init__(self,
                  notifier_id,
                  uri,
+                 username=None,
+                 password=None,
                  method=None,
                  notify_key=None,
                  space=None,
                  timeout=None,
                  ssl_verify=True):
-        self.method = method
         super().__init__(
             notifier_id=notifier_id,
             notifier_subtype='json',
             ssl_verify=ssl_verify,
             uri=uri,
-            notify_key=notify_key,
+            username=username,
+            password=password,
             space=space,
             timeout=timeout)
+        self.method = method
+        self.notify_key = notify_key
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
         from eva import apikey
@@ -922,10 +937,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             data_ts = d
             data_ts['data'] = data
         r = self.rsession().post(
-            self.uri,
-            json=data_ts,
-            timeout=self.get_timeout(),
-            verify=self.ssl_verify)
+            json=data_ts, timeout=self.get_timeout(), **self.xrargs)
         if self.method == 'jsonrpc':
             if r.ok:
                 return True
@@ -968,10 +980,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             else:
                 data_ts = d
             r = self.rsession().post(
-                self.uri,
-                json=data_ts,
-                timeout=self.get_timeout(),
-                verify=self.ssl_verify)
+                json=data_ts, timeout=self.get_timeout(), **self.xrargs)
             if not r.ok: return False
             result = r.json()
             if self.method == 'jsonrpc':
@@ -987,7 +996,8 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
 
     def serialize(self, props=False):
         d = {}
-        d['method'] = self.method
+        if self.method or props: d['method'] = self.method
+        if self.notify_key or props: d['notify_key'] = self.notify_key
         d.update(super().serialize(props=props))
         return d
 
@@ -998,6 +1008,9 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             else:
                 self.method = value
                 return True
+        elif prop == 'notify_key':
+            self.notify_key = value
+            return True
         else:
             return super().set_prop(prop, value)
 
@@ -1838,10 +1851,14 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         notify_key = ncfg.get('notify_key')
         timeout = ncfg.get('timeout')
         method = ncfg.get('method')
+        username = ncfg.get('username')
+        password = ncfg.get('password')
         n = HTTP_JSONNotifier(
             _notifier_id,
             ssl_verify=ssl_verify,
             uri=uri,
+            username=username,
+            password=password,
             method=method,
             notify_key=notify_key,
             space=space,

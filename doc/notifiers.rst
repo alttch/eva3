@@ -466,9 +466,10 @@ Example of custom notification processing server with Python and `Flask
 JSON RPC
 --------
 
-If **method** is set, JSON RPC 2.0 call is performed. For JSON RPC, errors must
-be specified in "error" field of the response. For successful calls, the
-"result" field in response may contain any data.
+If notifier **method** property is set to *jsonrpc*, JSON RPC 2.0 call is
+performed. For JSON RPC, errors must be specified in "error" field of the
+response. For successful calls, the "result" field in response may contain any
+data.
 
 Example:
 
@@ -506,3 +507,9 @@ Example:
         else:
             return Response(None, 202)
 
+
+Basic authentication
+--------------------
+
+All HTTP notifiers support basic authentication. To start using it, set
+**username** and **password** notifier properties.
