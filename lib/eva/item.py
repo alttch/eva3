@@ -25,6 +25,7 @@ from eva.generic import GenericAction
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import InvalidParameter
+from eva.exceptions import MethodNotImplemented
 
 from eva.generic import ia_status_created
 from eva.generic import ia_status_pending
@@ -1724,6 +1725,9 @@ def get_state_history(a=None,
 
     if oid is None: raise ResourceNotFound
     n = eva.notify.get_db_notifier(a)
+    if not n: raise ResourceNotFound('notifier')
+    if not n.state_storage:
+        raise MethodNotImplemented
     if fill:
         tf = 'iso'
         if not t_start:
@@ -1732,7 +1736,6 @@ def get_state_history(a=None,
         tf = time_format
     t_start = fmt_time(t_start)
     t_end = fmt_time(t_end)
-    if not n: raise ResourceNotFound('notifier')
     try:
         result = n.get_state(
             oid=oid,
