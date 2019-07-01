@@ -685,8 +685,7 @@ class SQLANotifier(GenericNotifier):
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
-        if time_format == 'iso':
-            tz = pytz.timezone(time.tzname[0])
+        tz = pytz.timezone(time.tzname[0])
         data = []
         # if we have start time - fetch newest record before it
         if t_s:
@@ -714,7 +713,7 @@ class SQLANotifier(GenericNotifier):
             if time_format == 'iso':
                 h['t'] = datetime.fromtimestamp(float(d[0]), tz).isoformat()
             elif time_format == 'dt_utc':
-                h['t'] = datetime.fromtimestamp(float(d[0]))
+                h['t'] = datetime.fromtimestamp(float(d[0]), tz)
             else:
                 h['t'] = float(d[0])
             if req_status:
