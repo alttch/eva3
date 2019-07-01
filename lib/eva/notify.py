@@ -1190,7 +1190,6 @@ class GenericMQTTNotifier(GenericNotifier):
                 logging.debug('%s subscribed to %s' % \
                         (self.notifier_id, self.announce_topic))
         except:
-            print(self.api_callback)
             eva.core.log_traceback(notifier=True)
         finally:
             self.api_callback_lock.release()
