@@ -642,7 +642,7 @@ class SQLANotifier(GenericNotifier):
         import pytz
         import dateutil.parser
         from datetime import datetime
-        l = int(limit) if limit else None
+        l = int(limit) if limit and not fill else None
         if t_start:
             try:
                 t_s = float(t_start)
@@ -1064,8 +1064,10 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                   **kwargs):
         import pytz
         import dateutil.parser
+        import eva.item
         from datetime import datetime
         l = int(limit) if limit else None
+        sfr = False
         if t_start:
             try:
                 t_s = float(t_start)
@@ -1074,6 +1076,9 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                     t_s = dateutil.parser.parse(t_start).timestamp()
                 except:
                     t_s = None
+            if t_s and fill:
+                t_s -= int(fill[:-1]) * eva.item._p_periods[fill[-1].upper()]
+                sfr = True
         else:
             t_s = None
         if t_end:
@@ -1109,7 +1114,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
         try:
             if fill:
                 q += ' group by time({}{}) fill(previous)'.format(
-                    fill[:-1], self.__fills[fill[-1]])
+                    fill[:-1], self.__fills[fill[-1].upper()])
             if l:
                 q += ' limit %u' % l
             r = self.rsession().post(
@@ -1135,12 +1140,12 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             eva.core.log_traceback()
             self.log_error(message='unable to get state for {}'.format(oid))
             raise
-        for d in data:
+        for d in data[1:] if sfr else data:
             if time_format == 'iso':
                 d[0] = datetime.fromtimestamp(d[0] / 1000, tz).isoformat()
             else:
                 d[0] = d[0] / 1000
-        return data
+        return data[1:] if sfr else data
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
         space = (self.space + '/') if self.space is not None else ''

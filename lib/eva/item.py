@@ -1656,7 +1656,7 @@ def item_match(item, item_ids, groups=None):
     return False
 
 
-__p_periods = {
+_p_periods = {
     'S': 1,
     'T': 60,
     'H': 3600,
@@ -1721,7 +1721,7 @@ def get_state_history(a=None,
 
     def fmt_time(t):
         try:
-            return time.time() - __p_periods.get(t[-1]) * int(t[:-1])
+            return time.time() - _p_periods.get(t[-1]) * int(t[:-1])
         except:
             return t
 
@@ -1868,7 +1868,7 @@ def get_state_history(a=None,
                 else:
                     per = r_ts - result[-2]['t']
             else:
-                per = int(_fill[:-1]) * __p_periods[_fill[-1].upper()]
+                per = int(_fill[:-1]) * _p_periods[_fill[-1].upper()]
             while True:
                 r_ts += per
                 if r_ts > t_e:
@@ -1882,6 +1882,8 @@ def get_state_history(a=None,
     except:
         pass
     # convert to list if required
+    if limit is not None:
+        result = result[:int(limit)]
     if not fmt or fmt == 'list':
         res = {'t': []}
         for r in result:
