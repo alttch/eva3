@@ -185,14 +185,17 @@ stop = FunctionCollecton(on_error=log_traceback)
 
 def format_db_uri(db_uri):
     if not db_uri: return None
-    if db_uri.find('://') == -1:
-        if db_uri[0] == '/':
-            _uri = db_uri
+    _db_uri = db_uri
+    if _db_uri.startswith('sqlite:///'):
+        _db_uri = _db_uri[10:]
+    if _db_uri.find('://') == -1:
+        if _db_uri[0] == '/':
+            _uri = _db_uri
         else:
-            _uri = dir_eva + '/' + db_uri
+            _uri = dir_eva + '/' + _db_uri
         _uri = 'sqlite:///' + _uri
     else:
-        _uri = db_uri
+        _uri = _db_uri
     return _uri
 
 

@@ -384,6 +384,12 @@ called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically.
 
 History database format is `sqlite3 <https://www.sqlite.org/index.html>`_.
 
+.. note::
+
+    To create default (sqlite) db notifier, you may specify either database
+    absolute path or relative to EVA ICS directory. *sqlite:///* prefix is
+    optional and will be added automatically if missing.
+
 EVA ICS db notifiers work via `SQL Alchemy <https://www.sqlalchemy.org/>`_, so
 MySQL and PosgreSQL data storage is also supported.
 
