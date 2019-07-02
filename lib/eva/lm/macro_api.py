@@ -251,7 +251,7 @@ class MacroAPI(object):
         return self.__globals
 
     def history(self,
-                lvar_id,
+                item_id,
                 t_start=None,
                 t_end=None,
                 limit=None,
@@ -261,10 +261,13 @@ class MacroAPI(object):
                 fmt=None,
                 db=None):
         """
-        get lvar state history
+        get item state history
 
         Args:
-            lvar_id: lvar ID, or multiple IDs (list or comma separated)
+            item_id: item ID, or multiple IDs (list or comma separated)
+
+        To use this function, DB or TSDB notifier in LM PLC must be present.
+        (notifier can share DB with SFA in read/only mode).
 
         Optional:
             t_start: time frame start, ISO or Unix timestamp
@@ -286,7 +289,9 @@ class MacroAPI(object):
         return eva.lm.lmapi.api.state_history(
             k=eva.apikey.get_masterkey(),
             a=db,
-            i=oid_to_id(lvar_id, 'lvar'),
+            i=[ 'lvar:' + i if not is_oid(i) else i for i in item_id ] if \
+                    isinstance(item_id, list) else \
+                     item_id if is_oid(item_id) else 'lvar:' + item_id,
             s=t_start,
             e=t_end,
             l=limit,

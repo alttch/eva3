@@ -557,14 +557,15 @@ class GenericAPI(object):
                            o=None):
         import eva.item
         item = self.controller.get_item(i)
-        if not item or not apikey.check(k, item, ro_op=True):
+        if not apikey.check_master(k) and (
+                not item or not apikey.check(k, item, ro_op=True)):
             raise ResourceNotFound(i)
         if is_oid(i):
             _t, iid = parse_oid(i)
-            if not item or item.item_type != _t: raise ResourceNotFound(i)
+            if item and item.item_type != _t: raise ResourceNotFound(i)
         return eva.item.get_state_history(
             a=a,
-            oid=item.oid,
+            oid=item.oid if item else i,
             t_start=s,
             t_end=e,
             limit=l,
@@ -698,6 +699,9 @@ class GenericAPI(object):
 
         State history of one :doc:`item</items>` or several items of the
         specified type can be obtained using **state_history** command.
+
+        If master key is used, method attempt to get stored state for item even
+        if it currently doesn't present.
 
         Args:
             k:

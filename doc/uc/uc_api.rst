@@ -390,6 +390,8 @@ state_history - get item state history
 
 State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
 
+If master key is used, method attempt to get stored state for item even if it currently doesn't present.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/state_history.req
     :response: http-examples/ucapi/state_history.resp
