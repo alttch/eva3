@@ -20,6 +20,13 @@ SFA API functions are called through URL request
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
 Standard API responses
 ~~~~~~~~~~~~~~~~~~~~~~
 
