@@ -716,7 +716,7 @@ class MacroAPI(object):
             lvar_id: lvar id
 
         Optional:
-            value: lvar value (if npt specified, lvar is set to null)
+            value: lvar value (if not specified, lvar is set to null)
 
         Raises:
             FunctionFailed: lvar value set error
