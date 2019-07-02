@@ -15,6 +15,16 @@ for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
 multipart/form-data. For JSON, *Content-Type: application/json* header must be
 specified.
 
+Long API calls
+--------------
+
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
 Requests
 --------
 
