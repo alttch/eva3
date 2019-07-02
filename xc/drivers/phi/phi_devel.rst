@@ -597,6 +597,35 @@ Methods available:
         finally:
             bus.release()
 
+Working with SNMP
+=================
+
+EVA ICS has bindings to primary `pysnmp <https://pypi.org/project/pysnmp/>`_
+methods, which can be found in *eva.uc.drivers.tools.snmp* module. Pysnmp is a
+reach-feature SNMP module and is included in setup by default, however it's not
+recommended to use it on a slow hardware for the production.
+
+The rule of good taste is to check if alternative (faster) SNMP module is
+present (such as e.g. `python3-netsnmp
+<https://pypi.org/project/python3-netsnmp/>`_) and use it for a regular get/set
+functions instead:
+
+.. code-block:: python
+
+    import eva.uc.drivers.tools.snmp as snmp
+    try:
+        import netsnmp
+    except:
+        netsnmp = None
+
+    #....................................
+    #....................................
+    #....................................
+
+    if netsnmp:
+        # ... use netsnmp module
+    else:
+        # ... use default pysnmp module
 
 Working with MQTT
 =================
