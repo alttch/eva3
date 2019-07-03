@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.2"
+__version__ = "1.2.3"
 __description__ = "Basic LPI for simple devices"
 __api__ = 5
 
@@ -182,5 +182,5 @@ class LPI(GenericLPI):
             set_result = self.phi.set(
                 ports_to_set, data_to_set, timeout=timeout)
             if set_result is False or set_result is None:
-                self.action_result_error(_uuid, msg='ports set error')
+                return self.action_result_error(_uuid, msg='ports set error')
         return self.action_result_ok(_uuid)
