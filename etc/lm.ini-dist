@@ -34,6 +34,8 @@ keep_logmem = 86400
 notify_on_start = yes
 ; debug mode
 debug = no
+; show error traceback
+;show_traceback = yes
 ; logging level, info, warning, error or critical
 ;logging_level = info
 ; create crash dump on critical errors

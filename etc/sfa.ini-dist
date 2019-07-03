@@ -33,6 +33,8 @@ action_cleaner_interval = 60
 keep_logmem = 86400
 ; debug mode
 debug = no
+; show error traceback
+;show_traceback = yes
 ; logging level, info, warning, error or critical
 ;logging_level = info
 ; create crash dump on critical errors
