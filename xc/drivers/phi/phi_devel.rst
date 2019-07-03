@@ -26,7 +26,7 @@ PHI system info
 the next fields are processed by controller, so make them exactly as required
 
 * **__equipment__**     supported equipment (list or string)
-* **__api__**           module API (integer number), current is **5**
+* **__api__**           module API (integer number), current is **7**
 
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
@@ -59,6 +59,10 @@ the next fields are processed by controller, so make them exactly as required
 * **__discover__** string or list, which describes how "discover" method (if
   implemented) will search for the equipment: **net** for network or EVA ICS
   bus name (*modbus*, *owfs* etc.)
+
+* **__shared_namespaces__** list of shared namespaces used by PHI. If you are
+  going to use shared namespaces, listing them in this variable is
+  **required**, otherwise PHI will have no access to them.
 
 PHI help
 --------
@@ -137,7 +141,7 @@ Importing modules **eva.uc.drivers.tools**, **eva.tools**, **eva.traphandler**,
 * **handle_phi_event(phi, port, data)** ask Driver API to handle event (see
   below)
 
-is highly welcome. Importing other EVA modules or driverapi functions is not
+is highly welcome. Importing other EVA modules or Driver API functions is not
 recommended unless you really know what you do.
 
 The main class is defined as:
@@ -286,6 +290,9 @@ All the logging should be done with the following methods:
 
 The last two methods do the same, logging an event and calling controller
 critical() method.
+
+* **self.get_shared_namespace(namespace_id)** returns namespace object,
+  shared between all PHIs.
 
 Optional methods
 ================
@@ -601,6 +608,9 @@ Methods available:
 Working with SNMP
 =================
 
+Performing get/set calls
+------------------------
+
 EVA ICS has bindings to primary `pysnmp <https://pypi.org/project/pysnmp/>`_
 methods, which can be found in *eva.uc.drivers.tools.snmp* module. Pysnmp is a
 reach-feature SNMP module and is included in setup by default, however this
@@ -628,6 +638,20 @@ functions instead:
     else:
         # ... use default pysnmp module
 
+.. note::
+
+    It is always better to perform a single getbulk request rather than using
+    get/walk SNMP methods.
+
+SNMP MIBs
+---------
+
+As PHI is always written for the specific known equipment, there's usually no
+need to use SNMP MIBs and dotted number SNMP OIDs are used instead.
+
+If you plan to use SNMP MIBs, you should warn user to download them and place
+to the proper location or include MIB directly into PHI code to generate it on
+the flow.
 
 Working with MQTT
 =================
@@ -839,6 +863,57 @@ driver tool can be used:
     #   trailing_crlf       append trailing CR/LF at the end of request
     #   parse_data          try parsing data automatically
     #   discard_headers     discard specified headers if data is parsed
+
+
+Shared namespaces
+=================
+
+Some equipment modules or system libraries don't allow to retake ownership on
+the particular device once it's initialized until the process restart. As the
+result, *phi reload* and *phi set* (*set* command reloads PHI module with the
+new params) methods for such devices will not work.
+
+There are tons of libraries and buses and we can not integrate everything in
+EVA ICS to provide native functions. For that, we offer you to use shared
+namespaces.
+
+Shared namespace is a simple object, shared between all PHIs in system.
+Namespace ids you plan to use should be always listed in
+**__shared_namespaces__** module header.
+
+After, you can obtain shared namespace at any time, by calling
+*self.get_shared_namespace(namespace_id)*.
+
+Namespace object methods:
+
+* **has(obj_id)** returns *True* if namespace has specified object
+* **set(obj_id, val)** set namespace object to the specified value *
+  **get(obj_id, default=None)** get namespace object, set it to *default* value
+  if doesn't exist.
+* **locker** *threading.RLock()* object which can be used to safely manipulate
+  objects inside namespace.
+
+.. warning::
+
+    Don't manipulate thread-unsafe objects inside namespace without
+    thread-locking.
+
+Example:
+
+.. code-block:: python
+
+    __shared_namespaces__ = ['gpiozero']
+
+    # ......
+
+    ns = self.get_shared_namespace('gpiozero')
+    with ns.locker:
+        d_id = 'port_'.format(port)
+        if ns.has(d_id):
+            gpio_device = ns.get(d_id)
+        else:
+            gpio_device = gpiozero.DigitalOutputDevice(port)
+            ns.set(d_id, gpio_device)
 
 
 Asynchronous I/O

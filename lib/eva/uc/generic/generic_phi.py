@@ -30,6 +30,7 @@ from eva.uc.driverapi import critical
 from eva.uc.driverapi import get_sleep_step
 from eva.uc.driverapi import get_timeout
 from eva.uc.driverapi import handle_phi_event
+from eva.uc.driverapi import get_shared_namespace
 
 from time import time
 from time import sleep
@@ -71,6 +72,12 @@ class PHI(object):
             self.__ports_help = mod.__ports_help__
         else:
             self.__ports_help = ''
+        if hasattr(mod, '__shared_namespaces__'):
+            self.__shared_namespaces = mod.__shared_namespaces__
+            if not isinstance(self.__shared_namespaces, list):
+                self.__shared_namespaces = [self.__shared_namespaces]
+        else:
+            self.__shared_namespaces = []
         if hasattr(mod, '__discover__'):
             self.__discover = mod.__discover__
         else:
@@ -271,11 +278,17 @@ class PHI(object):
         logging.critical('PHI %s: %s' % (i, msg))
         critical()
 
+    def get_shared_namespace(self, namespace_id):
+        if namespace_id not in self.__shared_namespaces:
+            return None
+        else:
+            return get_shared_namespace(namespace_id)
+
     @staticmethod
     def generate_port_list(port_min=1,
-                         port_max=1,
-                         name='port #{}',
-                         description='port #{}'):
+                           port_max=1,
+                           name='port #{}',
+                           description='port #{}'):
         result = []
         for i in range(port_min, port_max + 1):
             p = str(i)

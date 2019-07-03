@@ -2,7 +2,7 @@ __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.2.4"
-__api__ = 6
+__api__ = 7
 
 import importlib
 import logging
@@ -28,7 +28,10 @@ phis = {}
 drivers = {}
 items_by_phi = {}
 
+shared_namespaces = {}
+
 with_drivers_lock = eva.core.RLocker('uc/driverapi')
+with_shared_namespaces_lock = eva.core.RLocker('uc/driverapi/shared_namespaces')
 
 # public API functions, may be imported into PHI and LPI
 
@@ -734,3 +737,33 @@ def stop():
             eva.core.log_traceback()
     if eva.core.config.db_update != 0:
         save()
+
+
+class NS:
+
+    def __init__(self):
+        self.locker = threading.RLock()
+
+    def has(self, obj_id):
+        with self.locker:
+            return hasattr(self, obj_id)
+
+    def set(self, obj_id, val):
+        with self.locker:
+            setattr(self, obj_id, val)
+
+    def get(self, obj_id, default=None):
+        with self.locker:
+            if not self.has(obj_id):
+                if default is None:
+                    return None
+                else:
+                    set(obj_id, default)
+            return getattr(self, obj_id)
+
+
+@with_shared_namespaces_lock
+def get_shared_namespace(namespace_id):
+    if namespace_id not in shared_namespaces:
+        shared_namespaces[namespace_id] = NS()
+    return shared_namespaces[namespace_id]
