@@ -31,8 +31,8 @@ the next fields are processed by controller, so make them exactly as required
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
 
- * **aao_get** get and process all ports at once
- * **aao_set** set all ports at once
+ * **aao_get** get and process all ports at once (bulk)
+ * **aao_set** set all ports at once (bulk)
  * **action** unit actions
  * **events** event processing
  * **port_get** get single port data
