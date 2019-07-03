@@ -406,6 +406,7 @@ Parameters:
 Optionally:
 
 * **g** filter by item group
+* **x** serialize specified item prop(s)
 
 Returns:
 

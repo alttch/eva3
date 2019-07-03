@@ -245,6 +245,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
                             self.pd_cols[api_func] = d['value'] + ['Load']
                         del data[z]
             return data
+        if api_func == 'list':
+            self.pd_cols[api_func] = ['oid']
+            x = self.last_api_call_params.get('x')
+            if x:
+                for p in  x.split(','):
+                    self.pd_cols[api_func].append(p)
+            else:
+                self.pd_cols[api_func].append('description')
         if api_func == 'list_device_tpl':
             for d in data:
                 d['type'] = d['type'] + ' device template'
@@ -585,6 +593,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_list.add_argument(
             '-g', '--group', help='Filter by group', metavar='GROUP',
             dest='g').completer = self.ComplItemGroupList(self)
+        sp_list.add_argument(
+            '-x',
+            '--prop',
+            help='List specified prop(s), comma separated',
+            metavar='PROPS',
+            dest='x')
 
         ap_config = self.sp.add_parser('config', help='Item configuration')
         sp_config = ap_config.add_subparsers(
@@ -1392,7 +1406,6 @@ _pd_cols = {
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
         'status'
     ],
-    'list': ['oid', 'description'],
     'get_modbus_slave_data': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
     'read_modbus_port': ['reg', 'addr', 'addr_hex', 'value', 'hex', 'err'],
     'list_modbus_ports':

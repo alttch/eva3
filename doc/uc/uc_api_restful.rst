@@ -563,6 +563,7 @@ Parameters:
 
 Optionally:
 
+* **x** serialize specified item prop(s)
 
 Returns:
 

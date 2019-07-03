@@ -1170,6 +1170,7 @@ class GenericCLI(GCLI):
                 func in self.api_cmds_timeout_correction) and \
                 wait + 2 > self.default_timeout:
                 timeout = wait + 2
+        self.last_api_call_params = params
         if debug and self.remote_api_enabled:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)

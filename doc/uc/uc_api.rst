@@ -534,6 +534,7 @@ Optionally:
 
 * **p** filter by item type
 * **g** filter by item group
+* **x** serialize specified item prop(s)
 
 Returns:
 

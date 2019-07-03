@@ -438,6 +438,19 @@ class LM_CLI(GenericCLI, ControllerCLI):
         super().prepare_run(api_func, params, a)
 
     def prepare_result_data(self, data, api_func, itype):
+        if api_func == 'list':
+            self.pd_cols[api_func] = ['oid']
+            x = self.last_api_call_params.get('x')
+            if x:
+                for p in  x.split(','):
+                    self.pd_cols[api_func].append(p)
+            else:
+                self.pd_cols[api_func].append('description')
+        if api_func == 'list_device_tpl':
+            for d in data:
+                d['type'] = d['type'] + ' device template'
+                return data
+            return result
         if api_func not in [
                 'state', 'list_macros', 'list_cycles', 'list_controllers',
                 'result'
@@ -616,6 +629,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_list.add_argument(
             '-g', '--group', help='Filter by group', metavar='GROUP',
             dest='g').completer = self.ComplLVARGroup(self)
+        sp_list.add_argument(
+            '-x',
+            '--prop',
+            help='List specified prop(s), comma separated',
+            metavar='PROPS',
+            dest='x')
 
         ap_config = self.sp.add_parser('config', help='LVar configuration')
         sp_config = ap_config.add_subparsers(

@@ -645,11 +645,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             kwargs, ['function', 'description', 'input', 'output', 'src'],
             'ss...')
         fname = eva.lm.controller.put_macro_function(
-                fname=name,
-                fdescr=description,
-                i=i,
-                o=o,
-                fcode=code)
+            fname=name, fdescr=description, i=i, o=o, fcode=code)
         if not fname:
             raise FunctionFailed
         return eva.lm.controller.get_macro_function(fname)
@@ -1048,11 +1044,19 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Optional:
             .g: filter by item group
+            x: serialize specified item prop(s)
 
         Returns:
             the list of all :ref:`lvars<lvar>` available
         """
-        tp, group = parse_api_params(kwargs, 'pg', 'ss', {'p': 'lvar'})
+        tp, group, prop = parse_api_params(kwargs, 'pgx', 'ss.', {'p': 'lvar'})
+        if prop:
+            if isinstance(prop, list):
+                pass
+            elif isinstance(prop, str):
+                prop = prop.split(',')
+            else:
+                raise InvalidParameter('"x" must be list or string')
         result = []
         if tp == 'LV' or tp == 'lvar':
             items = eva.lm.controller.lvars_by_full_id
@@ -1060,8 +1064,26 @@ class LM_API(GenericAPI, GenericCloudAPI):
             items = eva.lm.controller.items_by_full_id
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
-                result.append(v.serialize(info=True))
-        return sorted(result, key=lambda k: k['oid'])
+                if not prop:
+                    result.append(v.serialize(info=True))
+                else:
+                    r = {'oid': v.oid}
+                    s = v.serialize(props=True)
+                    for p in prop:
+                        try:
+                            r[p] = s[p]
+                        except:
+                            raise ResourceNotFound('{}: config prop {}'.format(
+                                v.oid, p))
+                    result.append(r)
+        result = sorted(result, key=lambda k: k['oid'])
+        if prop:
+            for s in reversed(prop):
+                try:
+                    result = sorted(result, key=lambda k: k[s])
+                except:
+                    pass
+        return result
 
     @log_i
     @api_need_master

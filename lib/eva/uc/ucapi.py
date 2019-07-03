@@ -543,11 +543,19 @@ class UC_API(GenericAPI):
         Optional:
             .p: filter by item type
             .g: filter by item group
+            x: serialize specified item prop(s)
 
         Returns:
             the list of all :doc:`item</items>` available
         """
-        tp, group = parse_api_params(kwargs, 'pg', 'ss')
+        tp, group, prop = parse_api_params(kwargs, 'pgx', 'ss.')
+        if prop:
+            if isinstance(prop, list):
+                pass
+            elif isinstance(prop, str):
+                prop = prop.split(',')
+            else:
+                raise InvalidParameter('"x" must be list or string')
         result = []
         if tp == 'U' or tp == 'unit':
             items = eva.uc.controller.units_by_full_id
@@ -559,8 +567,26 @@ class UC_API(GenericAPI):
             items = eva.uc.controller.items_by_full_id
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
-                result.append(v.serialize(info=True))
-        return sorted(result, key=lambda k: k['oid'])
+                if not prop:
+                    result.append(v.serialize(info=True))
+                else:
+                    r = {'oid': v.oid}
+                    s = v.serialize(props=True)
+                    for p in prop:
+                        try:
+                            r[p] = s[p]
+                        except:
+                            raise ResourceNotFound('{}: config prop {}'.format(
+                                v.oid, p))
+                    result.append(r)
+        result = sorted(result, key=lambda k: k['oid'])
+        if prop:
+            for s in reversed(prop):
+                try:
+                    result = sorted(result, key=lambda k: k[s])
+                except:
+                    pass
+        return result
 
     @log_i
     @api_need_master
@@ -2010,7 +2036,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             elif kind == 'history':
                 return self.state_history(k=k, i=ii, **props)
             elif kind == 'props':
-                return self.list_props(k=k, i=ii)
+                return self.list_props(k=k, i=ii, **props)
             elif kind == 'config':
                 return self.get_config(k=k, i=ii)
             elif for_dir:
@@ -2209,8 +2235,8 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     elif v is False:
                         self.stop_item_maintenance(k=k, i=ii)
                     else:
-                            raise InvalidParameter(
-                                '"maintenance" has invalid value')
+                        raise InvalidParameter(
+                            '"maintenance" has invalid value')
                     del props['maintenance']
                 if props:
                     return super().set_prop(k=k, i=ii, save=save, v=props)
