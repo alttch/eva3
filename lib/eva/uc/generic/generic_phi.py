@@ -369,15 +369,15 @@ class PHI(object):
                 if v != self._last_update_state.get(x):
                     stu[x] = v
         else:
-            self.__last_update_reset = time()
+            # self.__last_update_reset = time()
             stu = state
-        self.__update_count += 1
+        # self.__update_count += 1
         self._last_update_state = state.copy()
         if stu:
             handle_phi_event(self, 'scheduler', stu)
-        if self.__update_count > 10 / self._update_interval:
-            logging.debug('update benchmark: {}/s'.format(
-                round(
-                    self.__update_count / (time() - self.__last_update_reset))))
-            self.__update_count = 0
-            self.__last_update_reset = time()
+        # if self.__update_count > 10 / self._update_interval:
+            # logging.debug('update benchmark: {}/s'.format(
+                # round(
+                    # self.__update_count / (time() - self.__last_update_reset))))
+            # self.__update_count = 0
+            # self.__last_update_reset = time()
