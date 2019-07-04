@@ -260,8 +260,7 @@ class PLC(eva.item.ActiveItem):
                 self.action_after_get_task(a)
                 if not a or not a.item: continue
                 if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                    logging.critical(
-                        'PLC::_t_action_processor locking broken')
+                    logging.critical('PLC::_t_action_processor locking broken')
                     eva.core.critical()
                     continue
                 self.current_action = a
@@ -298,8 +297,7 @@ class PLC(eva.item.ActiveItem):
                                 (self.full_id))
                 eva.core.log_traceback()
             if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical(
-                    'PLC::_t_action_processor locking broken')
+                logging.critical('PLC::_t_action_processor locking broken')
                 eva.core.critical()
                 continue
             self.current_action = None
@@ -695,9 +693,15 @@ class Cycle(eva.item.Item):
             else:
                 corr = 0
             prev = t
-            cycle_end -= corr
-            while time.time() < cycle_end and self.cycle_enabled:
-                time.sleep(eva.core.config.polldelay)
+            if self.interval >= 1:
+                cycle_end -= corr
+                while time.time() < cycle_end and self.cycle_enabled:
+                    time.sleep(eva.core.sleep_step)
+            else:
+                try:
+                    time.sleep(self.interval - corr)
+                except:
+                    pass
         logging.debug('%s cycle thread stopped' % self.full_id)
         self.cycle_status = 0
         # dirty - wait for prev. state to be sent
