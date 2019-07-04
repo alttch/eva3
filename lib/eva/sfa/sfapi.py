@@ -1285,6 +1285,12 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         eva.core.log_traceback()
         return 'Server error'
 
+def _tool_error_response(e, code=500):
+    cherrypy.serving.response.headers[
+        'Content-Type'] = 'text/plain'
+    cherrypy.serving.response.status = code
+    return str(e).encode()
+
 
 def serve_json_yml(fname, dts='ui'):
     infile = '{}/{}/{}'.format(eva.core.dir_eva, dts, fname).replace('..', '')
@@ -1293,7 +1299,10 @@ def serve_json_yml(fname, dts='ui'):
     data = open(infile).read()
     cas = cherrypy.serving.request.params.get('as')
     if cas:
-        data = yaml.load(data)
+        try:
+            data = yaml.load(data)
+        except Exception as e:
+            return _tool_error_response(e)
         if cas == 'json':
             data = format_json(data, minimal=not eva.core.config.development)
             cherrypy.serving.response.headers[
@@ -1320,11 +1329,11 @@ def serve_json_yml(fname, dts='ui'):
                     data = 'function {}(){{return {};}}'.format(
                         func, format_json(data, minimal=True))
             else:
-                raise cp_bad_request('var/func not specified')
+                return _tool_error_response('var/func not specified', 400)
             cherrypy.serving.response.headers[
                 'Content-Type'] = 'application/javascript'
         else:
-            raise cp_bad_request('Invalid "as" format')
+            return _tool_error_response('Invalid "as" format', 400)
     return data.encode('utf-8')
 
 
