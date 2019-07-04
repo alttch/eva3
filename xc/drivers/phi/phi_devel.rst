@@ -279,6 +279,11 @@ Parent class provides the following useful functions:
 * **self.get_cached_state()** return the state cached before. If the cache is
   expired (self.cache param handled by parent), the method return None
 
+.. warning::
+
+    If *get_cached_state()* method is used, PHI should return a **copy** of
+    cached object
+
 All the logging should be done with the following methods:
 
 * **self.log_debug(msg)**
