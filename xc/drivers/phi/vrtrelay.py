@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.3.0"
+__version__ = "1.3.1"
 __description__ = "Emulates 16-port relay"
 
 __equipment__ = 'virtual'
@@ -60,8 +60,7 @@ class PHI(GenericPHI):
             port_max=16, description='virtual relay port #{}')
 
     def get(self, port=None, cfg=None, timeout=0):
-        # if self.aao_get: return self.data
-        if not port: return self.data
+        if not port: return self.data.copy()
         try:
             return self.data.get(str(port))
         except:

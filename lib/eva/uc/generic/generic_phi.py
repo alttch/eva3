@@ -27,6 +27,7 @@ import sys
 import eva.core
 
 from eva.uc.driverapi import critical
+from eva.uc.driverapi import get_polldelay
 from eva.uc.driverapi import get_sleep_step
 from eva.uc.driverapi import get_timeout
 from eva.uc.driverapi import handle_phi_event
@@ -140,6 +141,10 @@ class PHI(object):
         self._update_processor_active = False
         self._update_scheduler_active = False
         self._need_update = threading.Event()
+        self._last_update_state = None
+        # benchmarking
+        self.__update_count = 0
+        self.__last_update_reset = 0
 
     def get_cached_state(self):
         if not self._cache or not self._cache_data:
@@ -333,14 +338,17 @@ class PHI(object):
 
     def _t_update_scheduler(self):
         logging.debug('%s update scheduler started' % self.oid)
+        sleep_step = get_sleep_step()
         while self._update_scheduler_active and self._update_interval:
-            i = 0
-            while i < self._update_interval and self._update_scheduler_active:
-                sleep(get_sleep_step())
-                i += get_sleep_step()
+            if self._update_interval >= 1:
+                t_cont = time() + self._update_interval
+                while time() < t_cont and self._update_scheduler_active:
+                    sleep(sleep_step)
+            else:
+                sleep(self._update_interval)
             if not self._update_scheduler_active or not self._update_interval:
                 break
-            self._perform_update()
+            self._need_update.set()
         self._update_scheduler_active = False
         logging.debug('%s update scheduler stopped' % self.oid)
 
@@ -354,5 +362,22 @@ class PHI(object):
         logging.debug('%s update processor stopped' % self.oid)
 
     def _perform_update(self):
-        logging.debug('%s updating' % self.oid)
-        handle_phi_event(self, 'scheduler', self.get(timeout=get_timeout()))
+        state = self.get(timeout=get_timeout())
+        if self._last_update_state:
+            stu = {}
+            for x, v in state.items():
+                if v != self._last_update_state.get(x):
+                    stu[x] = v
+        else:
+            self.__last_update_reset = time()
+            stu = state
+        self.__update_count += 1
+        self._last_update_state = state.copy()
+        if stu:
+            handle_phi_event(self, 'scheduler', stu)
+        if self.__update_count > 10 / self._update_interval:
+            logging.debug('update benchmark: {}/s'.format(
+                round(
+                    self.__update_count / (time() - self.__last_update_reset))))
+            self.__update_count = 0
+            self.__last_update_reset = time()
