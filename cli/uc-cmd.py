@@ -268,7 +268,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 else:
                     d['addr_hex'] = hex(addr)
                     d['hex'] = hex(d['value'])
-            return data
+            return sorted(
+                sorted(data, key=lambda k: k['addr']), key=lambda k: k['reg'])
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, itype)
         result = []
