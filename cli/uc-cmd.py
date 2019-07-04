@@ -249,7 +249,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             self.pd_cols[api_func] = ['oid']
             x = self.last_api_call_params.get('x')
             if x:
-                for p in  x.split(','):
+                for p in x.split(','):
                     self.pd_cols[api_func].append(p)
             else:
                 self.pd_cols[api_func].append('description')
@@ -276,7 +276,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 else:
                     d['addr_hex'] = hex(addr)
                     d['hex'] = hex(d['value'])
-            return data
+            return sorted(
+                sorted(data, key=lambda k: k['addr']), key=lambda k: k['reg'])
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, itype)
         result = []
