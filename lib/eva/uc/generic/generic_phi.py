@@ -152,6 +152,7 @@ class PHI(object):
         # benchmarking
         self.__update_count = 0
         self.__last_update_reset = 0
+        self.__benchmark = self.phi_cfg.get('benchmark', False)
 
     def get_cached_state(self):
         if not self._cache or not self._cache_data:
@@ -382,15 +383,18 @@ class PHI(object):
                 if v != self._last_update_state.get(x):
                     stu[x] = v
         else:
-            # self.__last_update_reset = time()
+            if self.__benchmark:
+                self.__last_update_reset = time()
+                self.log_warning('benchmark mode')
             stu = state
-        # self.__update_count += 1
+        if self.__benchmark:
+            self.__update_count += 1
         self._last_update_state = state.copy()
         if stu:
             handle_phi_event(self, 'scheduler', stu)
-        # if self.__update_count > 10 / self._update_interval:
-            # logging.debug('update benchmark: {}/s'.format(
-                # round(
-                    # self.__update_count / (time() - self.__last_update_reset))))
-            # self.__update_count = 0
-            # self.__last_update_reset = time()
+        if self.__benchmark and self.__update_count > 1 / self._update_interval:
+            self.log_warning('update benchmark: {}/s'.format(
+                round(
+                    self.__update_count / (time() - self.__last_update_reset))))
+            self.__update_count = 0
+            self.__last_update_reset = time()
