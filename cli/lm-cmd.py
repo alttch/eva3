@@ -240,8 +240,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 if code: return True
                 result = []
                 for d in data:
-                    result.append(d['oid'] + '/status')
-                    result.append(d['oid'] + '/value')
+                    result.append(d['oid'] + '.status')
+                    result.append(d['oid'] + '.value')
                 return result
             return True
 
@@ -431,10 +431,14 @@ class LM_CLI(GenericCLI, ControllerCLI):
             if a._func in ['enable', 'disable']:
                 params['p'] = 'enabled'
                 params['v'] = 1 if a._func == 'enable' else 0
+            elif isinstance(params['v'], list):
+                params['v'] = ' '.join(params['v'])
         elif api_func == 'set_job_prop':
             if a._func in ['enable', 'disable']:
                 params['p'] = 'enabled'
                 params['v'] = 1 if a._func == 'enable' else 0
+            elif isinstance(params['v'], list):
+                params['v'] = ' '.join(params['v'])
         super().prepare_run(api_func, params, a)
 
     def prepare_result_data(self, data, api_func, itype):
@@ -442,7 +446,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             self.pd_cols[api_func] = ['oid']
             x = self.last_api_call_params.get('x')
             if x:
-                for p in  x.split(','):
+                for p in x.split(','):
                     self.pd_cols[api_func].append(p)
             else:
                 self.pd_cols[api_func].append('description')
@@ -958,7 +962,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='PROP').completer = self.ComplRuleProp(self)
         sp_rule_set_prop.add_argument(
             'v', help='Value', metavar='VAL',
-            nargs='?').completer = self.ComplRulePropVal(self)
+            nargs='*').completer = self.ComplRulePropVal(self)
         sp_rule_set_prop.add_argument(
             '-y',
             '--save',
@@ -1028,7 +1032,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='PROP').completer = self.ComplJobProp(self)
         sp_job_set_prop.add_argument(
             'v', help='Value', metavar='VAL',
-            nargs='?').completer = self.ComplJobPropVal(self)
+            nargs='*').completer = self.ComplJobPropVal(self)
         sp_job_set_prop.add_argument(
             '-y',
             '--save',
