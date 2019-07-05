@@ -194,8 +194,9 @@ listed ports will be used in commands.
 .. note::
 
     If relay port number is specified as i:N e.g. i:2, LPI commands will
-    consider it is inverted meaning *0* is for *on* and *1* is for *off*. This
-    works both for **basic** as well as for any other relay control LPI.
+    consider it is inverted (falling edge) meaning *0* is for *on* and *1* is
+    for *off*. This works both for **basic** as well as for any other relay
+    control LPI.
 
 sensor LPI
 ----------
