@@ -1051,6 +1051,7 @@ Parameters:
 * **s** Slave ID
 * **i** Modbus register address
 * **v** register value(s) (integer or hex or list)
+* **z** if True, use 0x05-06 commands (write single register/coil)
 
 Optionally:
 
