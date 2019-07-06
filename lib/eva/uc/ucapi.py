@@ -1245,11 +1245,12 @@ class UC_API(GenericAPI):
             .s: Slave ID
             .i: Modbus register address
             v: register value(s) (integer or hex or list)
+            z: if True, use 0x05-06 commands (write single register/coil)
 
         Optional:
             t: max allowed timeout for the operation
         """
-        i, p, s, t, v = parse_api_params(kwargs, 'ipstv', 'SSRnR')
+        i, p, s, t, v, z = parse_api_params(kwargs, 'ipstvz', 'SSRnRb')
         if not t:
             t = eva.core.config.timeout
         try:
@@ -1280,9 +1281,15 @@ class UC_API(GenericAPI):
             raise FunctionFailed('Unable to acquire Modbus port')
         try:
             if rtype == 'h':
-                data = mb.write_registers(addr, value, unit=slave_id)
+                if z:
+                    data = mb.write_register(addr, value[0], unit=slave_id)
+                else:
+                    data = mb.write_registers(addr, value, unit=slave_id)
             elif rtype == 'c':
-                data = mb.write_coils(addr, value, unit=slave_id)
+                if z:
+                    data = mb.write_coil(addr, value[0], unit=slave_id)
+                else:
+                    data = mb.write_coils(addr, value, unit=slave_id)
             if data.isError():
                 raise FunctionFailed(value)
             return True

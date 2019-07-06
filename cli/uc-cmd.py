@@ -870,6 +870,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help='Regiser address, predicated by type (h, c)',
             metavar='REGISTER')
         sp_modbus_write.add_argument('v', help='Regiser value', metavar='VALUE')
+        sp_modbus_write.add_argument(
+            '-z',
+            '--single',
+            help='Use single-write Modbus command (0x05-0x06)',
+            action='store_true',
+            dest='z')
+
         sp_modbus_destroy = sp_modbus.add_parser(
             'destroy', help='Destroy (undefine) port')
         sp_modbus_destroy.add_argument(
