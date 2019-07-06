@@ -212,7 +212,7 @@ def put_phi_mod(mod, content, force=False):
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
     if os.path.isfile(fname) and not force:
         raise ResourceAlreadyExists(
-            'PHI module {} already exists'.format(fname))
+            'PHI module {}'.format(fname))
     valid = False
     try:
         compile(content, fname, 'exec')
