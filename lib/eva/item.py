@@ -52,6 +52,7 @@ class Item(object):
         self.config_file_exists = False
         # generate long config names or use IDs in enterprise layout
         self.respect_layout = True
+        self.notify_events = 2  # 2 - all events, 1 - state only, 0 - no
 
     def set_group(self, group=None):
         if group: self.group = group
@@ -64,6 +65,8 @@ class Item(object):
             self.set_group(data['group'])
         if 'description' in data:
             self.description = data['description']
+        if 'notify_events' in data:
+            self.notify_events = data['notify_events']
         self.config_changed = True
 
     def set_prop(self, prop, val=None, save=False):
@@ -77,6 +80,19 @@ class Item(object):
                 self.log_set(prop, v)
                 self.set_modified(save)
             return True
+        elif prop == 'notify_events':
+            try:
+                v = int(val)
+                if v >= 0 and v <= 2:
+                    if self.notify_events != v:
+                        self.notify_events = v
+                        self.log_set(prop, v)
+                        self.set_modified(save)
+                    return True
+                else:
+                    raise Exception
+            except:
+                return False
         return False
 
     def log_set(self, prop, val):
@@ -98,6 +114,8 @@ class Item(object):
 
     def notify(self, retain=None, skip_subscribed_mqtt=False,
                for_destroy=False):
+        if not self.notify_events:
+            return
         try:
             if skip_subscribed_mqtt: s = self
             else: s = None
@@ -126,6 +144,8 @@ class Item(object):
         if not props:
             d['full_id'] = self.group + '/' + self.item_id
             d['oid'] = self.oid
+        if config or props:
+            d['notify_events'] = self.notify_events
         if full or config or info or props:
             if not config or self.description != '':
                 d['description'] = self.description
@@ -1306,7 +1326,8 @@ class ItemAction(GenericAction):
             logging.debug('action %s created, %s: %s' % \
                 (self.uuid, self.item.item_type,
                     self.item.full_id))
-            if eva.notify.is_action_subscribed():
+            if self.item.notify_events > 1 and eva.notify.is_action_subscribed(
+            ):
                 eva.notify.notify('action', (self, self.serialize()))
         self.item_action_lock.release()
 
@@ -1357,7 +1378,8 @@ class ItemAction(GenericAction):
                 self.err = err
             logging.debug('action %s new status: %s' % \
                     (self.uuid, ia_status_names[status]))
-            if eva.notify.is_action_subscribed():
+            if self.item.notify_events > 1 and eva.notify.is_action_subscribed(
+            ):
                 t = threading.Thread(
                     target=eva.notify.notify,
                     args=('action', (self, self.serialize())))

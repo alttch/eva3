@@ -218,6 +218,13 @@ Unit parameters
   and can be used later e.g. to filter units by location or to put units on
   geographical map.
 
+* **maintenance_duration** integer, if greater than zero, item can enter
+  maintenance mode on the specified amount of seconds. During maintenance mode
+  all item updates are ignored, however actions still can be executed. If
+  *expires* property is also set, item state expire after *maintenance_end +
+  expires* seconds.
+
+
 * **mqtt_control = "notifier:qos"** item gets actions through notifications
   from a specified :ref:`MQTT server<mqtt_>`, for example "eva_1:2",
   actions should be sent to path/to/unit/control (e.g.
@@ -227,6 +234,9 @@ Unit parameters
 
 * **modbus_status**, **modbus_value** update item state from :ref`Modbus
   slave<modbus_slave>` memory space.
+
+* **notify_events** 2 (default) - send notifications about all events, 1 -
+  about state only, 0 - disable all event notifications.
 
 * **status_labels**  "labels" used to display the unit statuses by the
   interfaces.  Labels may be changed via :doc:`/uc/uc_api` or
@@ -251,12 +261,6 @@ Unit parameters
 * **update_state_after_action** boolean, if action is completed successfully,
   the controller assumes that its actual unit state has been changed correctly
   and sets it without calling/waiting for the state update.
-
-* **maintenance_duration** integer, if greater than zero, item can enter
-  maintenance mode on the specified amount of seconds. During maintenance mode
-  all item updates are ignored, however actions still can be executed. If
-  *expires* property is also set, item state expire after *maintenance_end +
-  expires* seconds.
 
 .. _sensor:
 
