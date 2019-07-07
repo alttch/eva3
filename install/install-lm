@@ -30,10 +30,12 @@ chmod 700 ./runtime/lm_remote_uc.d || exit 1
 mkdir -p ./runtime/db || exit 1
 touch runtime/db/lm.db || exit 1
 mkdir -p ./runtime/xc/lm || exit 1
+mkdir -p ./runtime/xc/lm/functions || exit 1
 mkdir -p ./xc/cmd || exit 1
 mkdir -p ./xc/extensions || exit 1
 
 (cd xc && ln -sf ../runtime/xc/lm) || exit 1
+
 (cd lib/eva/lm && ln -sf ../../../xc/extensions) || exit 1
 (cd xc/extensions && ln -sf ../../lib/eva/lm/generic/generic_ext.py generic.py) || exit 1
 
