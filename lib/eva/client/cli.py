@@ -171,10 +171,10 @@ class GenericCLI(GCLI):
         prompt = self.default_prompt
         ppeva = '' if not parent_shell_name else \
                 self.colored(parent_shell_name,
-                        'green', attrs=['bold'], rlsafe=True) + '/'
+                        'yellow', attrs=['bold'], rlsafe=True) + '/'
         if self.product:
             product_str = self.colored(
-                self.product, 'green', attrs=['bold'], rlsafe=True)
+                self.product, 'yellow', attrs=['bold'], rlsafe=True)
             host_str = ''
             if self.nodename:
                 nodename = self.nodename
@@ -221,7 +221,7 @@ class GenericCLI(GCLI):
                         h, 'grey', attrs=['bold'], rlsafe=True)
             else:
                 product_str += self.colored(
-                    ':' + nodename, 'green', attrs=['bold'], rlsafe=True)
+                    ':' + nodename, 'yellow', attrs=['bold'], rlsafe=True)
             prompt = '[%s%s]%s' % (ppeva + product_str, host_str, prompt)
         return prompt
 
