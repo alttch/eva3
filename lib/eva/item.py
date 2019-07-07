@@ -399,6 +399,7 @@ class UpdatableItem(Item):
         elif prop == 'update_timeout':
             if val is None:
                 if self._update_timeout is not None:
+                    import eva.core
                     self.update_timeout = eva.core.config.timeout
                     self._update_timeout = None
                     self.log_set(prop, None)
