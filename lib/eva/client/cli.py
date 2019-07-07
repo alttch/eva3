@@ -1344,8 +1344,9 @@ class ControllerCLI(object):
             'stop', help='Stop controller server')
         ap_restart = sp_controller.add_parser(
             'restart', help='Restart controller server')
-        ap_restart = sp_controller.add_parser(
-            'reload', help='Reload controller server')
+        if self.remote_api_enabled:
+            ap_reload = sp_controller.add_parser(
+                'reload', help='Reload controller server')
         ap_status = sp_controller.add_parser(
             'status', help='Status of the controller server')
 
