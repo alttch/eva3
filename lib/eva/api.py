@@ -1280,7 +1280,8 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                     res, data = res
                     if isinstance(res, bytes):
                         try:
-                            if data != 'image/svg+xml':
+                            if data != 'image/svg+xml' and not data.startswith(
+                                    'text/'):
                                 raise Exception
                             res = {
                                 'content_type': data,

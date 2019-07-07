@@ -72,6 +72,17 @@ def api_need_file_management(f):
     return do
 
 
+def api_need_rpvt(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not config.api_rpvt_allowed:
+            raise AccessDenied
+        return f(*args, **kwargs)
+
+    return do
+
+
 def api_need_cmd(f):
 
     @wraps(f)
@@ -816,6 +827,49 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         self._nofp_log('set_user_password', 'p')
         self._nofp_log('file_put', 'm')
 
+    @log_d
+    @api_need_rpvt
+    def rpvt(self, **kwargs):
+        k, f, ic, nocache = parse_function_params(
+            kwargs, ['k', 'f', 'ic', 'nocache'], '.S..')
+        if not eva.apikey.check(k, rpvt_uri=f):
+            logging.warning('rpvt uri %s access forbidden' % (f))
+            raise AccessDenied
+        try:
+            import requests
+            if f.find('//') == -1: _f = 'http://' + f
+            else: _f = f
+            r = requests.get(_f, timeout=eva.core.config.timeout)
+        except:
+            raise FunctionFailed('remote error')
+        if r.status_code != 200:
+            raise FunctionFailed('remote response %s' % r.status_code)
+        ctype = r.headers.get('Content-Type', 'text/html')
+        if nocache: self._no_cache()
+        result = r.content
+        if ic:
+            try:
+                icmd, args, fmt = ic.split(':')
+                if icmd == 'resize':
+                    x, y, q = args.split('x')
+                    x = int(x)
+                    y = int(y)
+                    q = int(q)
+                    from PIL import Image
+                    from io import BytesIO
+                    image = Image.open(BytesIO(result))
+                    image.thumbnail((x, y))
+                    result = image.tobytes(fmt, 'RGB', q)
+                    ctype = 'image/' + fmt
+                else:
+                    raise FunctionFailed('image processing failed')
+            except FunctionFailed:
+                raise
+            except:
+                eva.core.log_traceback()
+                raise FunctionFailed
+        return result, ctype
+
     @log_i
     @api_need_sysfunc
     def save(self, **kwargs):
@@ -1196,6 +1250,11 @@ def update_config(cfg):
             'sysapi', 'file_management') == 'yes')
     except:
         pass
+    try:
+        config.api_rpvt_allowed = (cfg.get(
+            'sysapi', 'rpvt') == 'yes')
+    except:
+        pass
     logging.debug('sysapi.file_management = %s' % ('yes' \
             if config.api_file_management_allowed else 'no'))
     try:
@@ -1236,4 +1295,7 @@ def lock_processor(**kwargs):
 
 api = SysAPI()
 
-config = SimpleNamespace(api_file_management_allowed=False, api_setup_mode=None)
+config = SimpleNamespace(
+    api_file_management_allowed=False,
+    api_setup_mode=None,
+    api_rpvt_allowed=False)

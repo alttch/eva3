@@ -10,6 +10,7 @@ import logging
 import jinja2
 import requests
 import yaml
+import base64
 
 try:
     yaml.warnings({'YAMLLoadWarning': False})
@@ -1285,9 +1286,9 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         eva.core.log_traceback()
         return 'Server error'
 
+
 def _tool_error_response(e, code=500):
-    cherrypy.serving.response.headers[
-        'Content-Type'] = 'text/plain'
+    cherrypy.serving.response.headers['Content-Type'] = 'text/plain'
     cherrypy.serving.response.status = code
     return str(e).encode()
 
@@ -1405,10 +1406,32 @@ class SFA_HTTP_Root:
     def rpvt(self, k=None, f=None, ic=None, nocache=None):
         _k = cp_client_key(k, from_cookie=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
-        if f is None: raise cp_bad_request('uri not provided')
+        if f is None: return _tool_error_response('uri not provided', code=400)
         if not apikey.check(_k, rpvt_uri=f, ip=http_real_ip()):
             logging.warning('rpvt %s uri %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
+        if f[:3] in ['uc/', 'lm/']:
+            try:
+                controller_id, f = f.split(':', 1)
+            except:
+                return _tool_error_response('invalid param: {}'.format(f))
+            try:
+                controller = eva.sfa.controller.get_controller(controller_id)
+            except:
+                ResourceNotFound
+                return _tool_error_response(
+                    'Controller not found: {}'.format(controller_id))
+            code, result = controller.api_call('rpvt', {
+                'f': f,
+                'ic': ic,
+                'nocache': nocache
+            })
+            if code:
+                return _tool_error_response(
+                    'remote controller code {}'.format(code))
+            cherrypy.serving.response.headers['Content-Type'] = result[
+                'content_type']
+            return base64.b64decode(result['data'])
         try:
             if f.find('//') == -1: _f = 'http://' + f
             else: _f = f
@@ -1416,7 +1439,7 @@ class SFA_HTTP_Root:
         except:
             raise cp_api_error()
         if r.status_code != 200:
-            raise cp_api_error('remote response %s' % r.status_code)
+            return _tool_error_response('remote response %s' % r.status_code)
         ctype = r.headers.get('Content-Type')
         if ctype:
             cherrypy.serving.response.headers['Content-Type'] = ctype
