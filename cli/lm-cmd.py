@@ -424,6 +424,16 @@ class LM_CLI(GenericCLI, ControllerCLI):
             print()
 
     def prepare_run(self, api_func, params, a):
+        if api_func in [
+                'set_prop', 'set_cycle_prop', 'set_macro_prop', 'set_rule_prop',
+                'set_job_prop', 'set_controller_prop', 'set_ext_prop'
+        ]:
+            if params['p'] and params['p'].find('=') != -1:
+                params['p'], v = params['p'].split('=', 1)
+                if isinstance(params['v'], list):
+                    params['v'] = [v] + params['v']
+                else:
+                    params['v'] = v
         if api_func == 'state_history':
             if params['c']:
                 params['g'] = 'chart'
