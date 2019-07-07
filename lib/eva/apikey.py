@@ -484,8 +484,8 @@ def check(k,
                     if match: return True
         return False
     if rpvt_uri:
-        if rpvt_uri.find('//') != -1:
-            r = rpvt_uri.split('//')[1]
+        if rpvt_uri.find('//') != -1 and rpvt_uri[:3] not in ['uc/', 'lm/']:
+            r = rpvt_uri.split('//', 1)[1]
         else:
             r = rpvt_uri
         if '#' in _k.rpvt_uris or r in _k.rpvt_uris: return True

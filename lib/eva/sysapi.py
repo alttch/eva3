@@ -834,6 +834,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             kwargs, ['k', 'f', 'ic', 'nocache'], '.S..')
         if not eva.apikey.check(k, rpvt_uri=f):
             logging.warning('rpvt uri %s access forbidden' % (f))
+            eva.core.log_traceback()
             raise AccessDenied
         try:
             import requests
@@ -841,11 +842,11 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             else: _f = f
             r = requests.get(_f, timeout=eva.core.config.timeout)
         except:
+            eva.core.log_traceback()
             raise FunctionFailed('remote error')
         if r.status_code != 200:
             raise FunctionFailed('remote response %s' % r.status_code)
         ctype = r.headers.get('Content-Type', 'text/html')
-        if nocache: self._no_cache()
         result = r.content
         if ic:
             try:
@@ -862,8 +863,10 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                     result = image.tobytes(fmt, 'RGB', q)
                     ctype = 'image/' + fmt
                 else:
+                    eva.core.log_traceback()
                     raise FunctionFailed('image processing failed')
             except FunctionFailed:
+                eva.core.log_traceback()
                 raise
             except:
                 eva.core.log_traceback()
