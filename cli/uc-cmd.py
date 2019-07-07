@@ -306,6 +306,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return super().process_result(result, code, api_func, itype, a)
 
     def prepare_run(self, api_func, params, a):
+        if api_func in ['set_prop', 'set_phi_prop', 'set_driver_prop']:
+            if params['p'] and params['p'].find('=') != -1 and not params['v']:
+                params['p'], params['v'] = params['p'].split('=', 1)
         if api_func == 'state_history':
             if params['c']:
                 params['g'] = 'chart'
