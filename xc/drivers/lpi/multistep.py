@@ -1,7 +1,7 @@
 __author__ = 'Altertech Group, https://www.altertech.com/'
 __copyright__ = 'Copyright (C) 2012-2019 Altertech Group'
 __license__ = 'Apache License 2.0'
-__version__ = '1.1.3'
+__version__ = '1.1.4'
 __description__ = 'Multistep LPI (opener)'
 __api__ = 4
 
@@ -124,8 +124,8 @@ class LPI(BasicLPI):
         return result
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
-        self.log_error('state function not implemented')
-        return self.state_result_error(_uuid)
+        self.log_debug('state function not implemented')
+        return self.state_result_skip(_uuid)
 
     def _calc_delay(self, s, ns, steps, warmup=0, tuning=0):
         _delay = 0
