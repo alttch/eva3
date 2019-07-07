@@ -575,7 +575,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.userdb_uri = config.db_uri
             logging.debug('server.userdb = %s' % config.userdb_uri)
             try:
-                config.user_hook = cfg.get('server', 'user_hook').split()
+                uh = cfg.get('server', 'user_hook')
+                if not uh.startswith('/'):
+                    uh = dir_eva + '/' + uh
+                config.user_hook = uh.split()
             except:
                 pass
             _uh = ' '.join(config.user_hook) if config.user_hook else None
