@@ -752,14 +752,6 @@ class RemoteControllerPool(object):
                 if self.reload_threads[controller_id].is_alive():
                     self.reload_thread_flags[controller_id] = False
                     self.reload_threads[controller_id].join()
-                if lock and \
-                    not self.management_lock.acquire(
-                            timeout=eva.core.config.timeout):
-                    logging.critical(
-                        'RemoteControllerPool::stop_controller_reload_' + \
-                                'thread locking broken')
-                    eva.core.critical()
-                    return False
                 del (self.reload_thread_flags[controller_id])
                 del (self.reload_threads[controller_id])
         except:
