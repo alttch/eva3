@@ -593,14 +593,10 @@ Then, front-end config (e.g. for NGINX) should look like:
         }
 
         location /ws {
-            auth_basic $eva_authentication;
-            auth_basic_user_file /opt/eva/etc/htpasswd;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
-            proxy_buffers 16 16k;
-            proxy_buffer_size 16k;
-            proxy_busy_buffers_size 240k;
+            proxy_buffering off;
             proxy_pass http://eva-sfa;
             proxy_set_header X-Host $host;
             proxy_set_header Host $host;
