@@ -638,8 +638,8 @@ def save_mu():
 
 
 def notify_all():
-    background_job(notify_all_units)()
-    background_job(notify_all_sensors)()
+    notify_all_units()
+    notify_all_sensors()
 
 
 @with_item_lock
