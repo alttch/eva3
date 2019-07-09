@@ -445,7 +445,8 @@ def reset_log(initial=False):
     if config.log_file:
         log_engine.log_file_handler = logging.FileHandler(config.log_file)
     else:
-        log_engine.log_file_handler = logging.StreamHandler(sys.stdout)
+        from eva.logs import StdoutHandler
+        log_engine.log_file_handler = StdoutHandler()
     log_engine.log_file_handler.setFormatter(formatter)
     log_engine.logger.addHandler(log_engine.log_file_handler)
     if initial:

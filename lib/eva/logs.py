@@ -6,12 +6,17 @@ __version__ = "3.2.4"
 import logging
 import eva.core
 import time
+import sys
+import os
 import threading
 from pyaltt import background_worker
 
 from eva.exceptions import InvalidParameter
 
 from types import SimpleNamespace
+from termcolor import colored
+
+from functools import partial
 
 _log_records = []
 
@@ -56,6 +61,34 @@ def get_log_level_by_id(l):
     if not level:
         raise InvalidParameter('Invalid log level specified: {}'.format(l))
     return level
+
+
+class StdoutHandler(logging.StreamHandler):
+
+    def __init__(self):
+        self.colorize = sys.stdout.isatty(
+        ) and not os.environ.get('EVA_CORE_RAW_STDOUT')
+        self.suppress_notifier_logs = os.environ.get('EVA_CORE_SNLSO')
+        self.cfunc = {
+            10: partial(colored, color='grey', attrs=['bold']),
+            30: partial(colored, color='yellow'),
+            40: partial(colored, color='red'),
+            50: partial(colored, color='red', attrs=['bold'])
+        }
+        super().__init__(sys.stdout)
+
+    def emit(self, record):
+        if not self.suppress_notifier_logs or not record.getMessage(
+        ).startswith('.'):
+            super().emit(record)
+
+    def format(self, record):
+        if self.colorize:
+            r = super().format(record)
+            cfunc = self.cfunc.get(record.levelno)
+            return cfunc(r) if cfunc else r
+        else:
+            return super().format(record)
 
 
 class MemoryLogHandler(logging.Handler):
