@@ -22,6 +22,7 @@ import gzip
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
+from eva.tools import parse_host_port
 
 from eva.tools import Locker as GenericLocker
 
@@ -82,12 +83,14 @@ config = SimpleNamespace(
     exec_after_save=None,
     mqtt_update_default=None,
     enterprise_layout=True,
+    syslog=None,
     reactor_thread_pool=15,
     user_hook=None)
 
 db_engine = SimpleNamespace(primary=None, user=None)
 
-log_engine = SimpleNamespace(logger=None, log_file_handler=None)
+log_engine = SimpleNamespace(
+    logger=None, log_file_handler=None, syslog_handler=None)
 
 db_pool_size = 15
 
@@ -447,6 +450,22 @@ def reset_log(initial=False):
     if initial:
         from eva.logs import MemoryLogHandler
         log_engine.logger.addHandler(MemoryLogHandler())
+        if config.syslog:
+            if config.syslog.startswith('/'):
+                syslog_addr = config.syslog
+            else:
+                addr, port = parse_host_port(config.syslog, 514)
+                if addr:
+                    syslog_addr = (addr, port)
+                else:
+                    logging.error('Invalid syslog configuration: {}'.format(
+                        config.syslog))
+                    syslog_addr = None
+            if syslog_addr:
+                log_engine.syslog_handler = logging.handlers.SysLogHandler(
+                    address=syslog_addr)
+                log_engine.syslog_handler.setFormatter(formatter)
+                log_engine.logger.addHandler(log_engine.syslog_handler)
 
 
 def load(fname=None, initial=False, init_log=True, check_pid=True):
@@ -479,6 +498,12 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                     config.log_file = None
             if config.log_file and config.log_file[0] != '/':
                 config.log_file = dir_eva + '/' + config.log_file
+            try:
+                config.syslog = cfg.get('server', 'syslog')
+                if config.syslog == 'yes':
+                    config.syslog = '/dev/log'
+            except:
+                pass
             if init_log: reset_log(initial)
             try:
                 log_level = cfg.get('server', 'logging_level')

@@ -7,6 +7,12 @@ polldelay = 0.01
 pid_file = var/sfa.pid
 ; log file
 log_file = log/sfa.log
+; logging to local syslog
+;syslog = yes
+; logging to non-standard (/dev/log) local syslog socket
+;syslog = /var/run/syslog
+; logging to remote syslog
+;syslog = hostname:514
 ; db updates - instant, manual or on_exit
 db_update = instant
 ; db file, default runtime/db/sfa.db
