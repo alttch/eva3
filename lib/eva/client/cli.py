@@ -1301,6 +1301,18 @@ class ControllerCLI(object):
         self.exec_control_script('restart')
         return self.local_func_result_ok
 
+    def launch_controller(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        snl = '' if params.get('show_notifier_logs') else 'EVA_CORE_SNLSO=1 '
+        raw = '' if self.can_colorize() else 'EVA_CORE_RAW_STDOUT=1 '
+        env = '' if not snl and not raw else 'env '
+        os.system('{}{}{}{}/{}-control launch{}'.format(
+            env, snl, raw, self.dir_sbin, self._management_controller_id,
+            ' debug' if params.get('_debug') else ''))
+        return self.local_func_result_ok
+
     def status_controller(self, params):
         if self.apiuri:
             self.print_local_only()
@@ -1349,7 +1361,13 @@ class ControllerCLI(object):
                 'reload', help='Reload controller server')
         ap_status = sp_controller.add_parser(
             'status', help='Status of the controller server')
-
+        ap_launch = sp_controller.add_parser(
+            'launch', help='Launch controller server in foreground')
+        ap_launch.add_argument(
+            '-n',
+            '--show-notifier-logs',
+            help='Show notifier event logs',
+            action='store_true')
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
 
@@ -1366,6 +1384,7 @@ class ControllerCLI(object):
             'server:stop': self.stop_controller,
             'server:restart': self.restart_controller,
             'server:status': self.status_controller,
+            'server:launch': self.launch_controller,
             'server:reload': 'shutdown_core'
         }
         self.append_api_functions(funcs)
