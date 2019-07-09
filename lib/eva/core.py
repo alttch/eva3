@@ -84,6 +84,7 @@ config = SimpleNamespace(
     mqtt_update_default=None,
     enterprise_layout=True,
     syslog=None,
+    syslog_format=None,
     reactor_thread_pool=15,
     user_hook=None)
 
@@ -464,7 +465,10 @@ def reset_log(initial=False):
             if syslog_addr:
                 log_engine.syslog_handler = logging.handlers.SysLogHandler(
                     address=syslog_addr)
-                log_engine.syslog_handler.setFormatter(formatter)
+                log_engine.syslog_handler.setFormatter(
+                    logging.Formatter(
+                        config.syslog_format.replace('%(name)s', product.code))
+                    if config.syslog_format else formatter)
                 log_engine.logger.addHandler(log_engine.syslog_handler)
 
 
@@ -502,6 +506,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.syslog = cfg.get('server', 'syslog')
                 if config.syslog == 'yes':
                     config.syslog = '/dev/log'
+            except:
+                pass
+            try:
+                config.syslog_format = cfg.get('server', 'syslog_format')
             except:
                 pass
             if init_log: reset_log(initial)

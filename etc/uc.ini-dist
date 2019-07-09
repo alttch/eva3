@@ -14,6 +14,8 @@ log_file = log/uc.log
 ; logging to remote syslog
 ;syslog = hostname:514
 ; db updates - instant, manual or on_exit
+; custom syslog format (use double %)
+;syslog_format = EVA: { "loggerName":"%%(name)s", "timestamp":"%%(asctime)s", "pathName":"%%(pathname)s", "logRecordCreationTime":"%%(created)f", "functionName":"%%(funcName)s", "levelNo":"%%(levelno)s", "lineNo":"%%(lineno)d", "time":"%%(msecs)d", "levelName":"%%(levelname)s", "message":"%%(message)s"}
 db_update = instant
 ; db file, default runtime/db/uc.db
 db_file = runtime/db/uc.db
