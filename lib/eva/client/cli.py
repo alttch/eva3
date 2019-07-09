@@ -1359,7 +1359,7 @@ class ControllerCLI(object):
         ap_status = sp_controller.add_parser(
             'status', help='Status of the controller server')
         ap_launch = sp_controller.add_parser(
-            'launch', help='Launch controller in debug mode')
+            'launch', help='Launch controller server in debug mode')
 
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
