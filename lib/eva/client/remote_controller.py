@@ -17,6 +17,7 @@ import threading
 import websocket
 import json
 import uuid
+import random
 from pyaltt import BackgroundWorker
 
 # websocket.enableTrace(True)
@@ -108,7 +109,7 @@ class WebSocketWorker(BackgroundWorker):
             return False
         self.controller.connected = state
         if graceful_shutdown:
-            self.controller.annouced_shutdown = time.time()
+            self.controller.last_reload_time = time.time()
         self.pool.management_lock.release()
 
     def run(self, *args, **kwargs):
@@ -147,6 +148,7 @@ class WebSocketWorker(BackgroundWorker):
                 logfunc = logging.error if \
                         self.controller.connected else logging.debug
                 logfunc('WS {}: connection error'.format(self.controller.oid))
+                self.set_controller_connected(False)
                 time.sleep(eva.core.sleep_step)
                 eva.core.log_traceback()
                 self.retries_made += 1
@@ -195,6 +197,7 @@ class WebSocketWorker(BackgroundWorker):
             logging.error('Remote controller {} is gone'.format(
                 self.controller.oid))
             self.stop_ping()
+            self.set_controller_connected(False)
             eva.core.log_traceback()
             self.clear_ws()
 
@@ -231,7 +234,7 @@ class RemoteController(eva.item.Item):
         self.static = static
         self.enabled = enabled
         self.wait_for_autoremove = False
-        self.annouced_shutdown = 0
+        self.last_reload_time = 0
 
     def api_call(self, func, params=None, timeout=None):
         if not self.api or not self.enabled:
@@ -781,17 +784,13 @@ class RemoteControllerPool(object):
         while self.reload_thread_flags[controller_id]:
             if controller.reload_interval > 0:
                 i = 0
-                while i < controller.reload_interval and \
+                while controller.last_reload_time + \
+                        controller.reload_interval > time.time() and \
                         self.reload_thread_flags[controller_id]:
                     time.sleep(eva.core.sleep_step)
                     i += eva.core.sleep_step
                 try:
-                    if controller.annouced_shutdown + \
-                            controller.reload_interval > time.time():
-                        logging.debug('Skipping controller reload {}'.format(
-                            controller.oid))
-                    else:
-                        self.reload_controller(controller_id)
+                    self.reload_controller(controller_id)
                 except:
                     logging.error('%s reload error' % controller.oid)
                     eva.core.log_traceback()
@@ -800,12 +799,12 @@ class RemoteControllerPool(object):
         logging.debug('%s reload thread stopped' % controller.oid)
         return
 
-    def reload_controller(self, controller_id):
+    def reload_controller(self, controller_id, with_delay=False):
         if controller_id == 'ALL':
             success = True
             for c in self.controllers.copy():
                 try:
-                    if not self.reload_controller(c):
+                    if not self.reload_controller(c, with_delay=with_delay):
                         raise Exception('reload error')
                 except:
                     eva.core.log_traceback()
@@ -813,6 +812,9 @@ class RemoteControllerPool(object):
             return success
         if not controller_id in self.controllers: return None
         controller = self.controllers[controller_id]
+        controller.last_reload_time = time.time()
+        if with_delay:
+            time.sleep(random.randint(0, 200) / 100)
         result = controller.load_remote()
         if result and controller_id in self.websocket_threads:
             self.websocket_threads[controller_id].need_reload_flag = True
@@ -1124,8 +1126,8 @@ class RemoteUCPool(RemoteControllerPool):
         self.item_management_lock.release()
         return True
 
-    def reload_controller(self, controller_id):
-        result = super().reload_controller(controller_id)
+    def reload_controller(self, controller_id, with_delay=False):
+        result = super().reload_controller(controller_id, with_delay=with_delay)
         if not result: return result
         if controller_id == 'ALL': return True
         uc = self.controllers[controller_id]
@@ -1504,8 +1506,8 @@ class RemoteLMPool(RemoteControllerPool):
         self.item_management_lock.release()
         return True
 
-    def reload_controller(self, controller_id):
-        result = super().reload_controller(controller_id)
+    def reload_controller(self, controller_id, with_delay=False):
+        result = super().reload_controller(controller_id, with_delay=with_delay)
         if not result: return result
         if controller_id == 'ALL': return True
         lm = self.controllers[controller_id]

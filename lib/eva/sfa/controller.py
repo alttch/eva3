@@ -191,7 +191,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
         controller_lock.acquire()
         try:
             if (ct == 'uc' and c_id in uc_pool.controllers):
-                    # (ct == 'lm' and c_id in lm_pool.controllers):
+                # (ct == 'lm' and c_id in lm_pool.controllers):
                 if uc_pool.controllers[c_id].connected:
                     logging.debug(
                         'Controller ' +
@@ -201,7 +201,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
                     logging.debug(
                         'Controller ' +
                         '{} back online, reloading'.format(controller_id))
-                    uc_pool.reload_controller(c_id)
+                    uc_pool.reload_controller(c_id, with_delay=True)
                 return True
             if (ct == 'lm' and c_id in lm_pool.controllers):
                 if lm_pool.controllers[c_id].connected:
@@ -213,7 +213,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
                     logging.debug(
                         'Controller ' +
                         '{} back online, reloading'.format(controller_id))
-                    lm_pool.reload_controller(c_id)
+                    lm_pool.reload_controller(c_id, with_delay=True)
                 return True
         finally:
             controller_lock.release()

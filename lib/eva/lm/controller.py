@@ -862,7 +862,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
                     logging.debug(
                         'Controller ' +
                         '{} back online, reloading'.format(controller_id))
-                    uc_pool.reload_controller(c_id)
+                    uc_pool.reload_controller(c_id, with_delay=True)
                 return True
         finally:
             controller_lock.release()
