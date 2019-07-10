@@ -256,8 +256,9 @@ class RemoteController(eva.item.Item):
         elif code != eva.client.apiclient.result_ok and \
                 code != eva.client.apiclient.result_func_failed \
                 and code != eva.client.apiclient.result_not_found:
-            logging.error('Remote controller access error %s, code %u' % \
-                    (self.api._uri, code))
+            if not eva.core.is_shutdown_requested():
+                logging.error('Remote controller access error %s, code %u' %
+                              (self.api._uri, code))
             return code, None
         return code, result
 
@@ -279,6 +280,8 @@ class RemoteController(eva.item.Item):
     def test(self):
         code, result = self.api_call('test')
         if code or not isinstance(result, dict):
+            if eva.core.is_shutdown_requested():
+                return False
             logging.error('Remote controller {} test failed'.format(
                 self.full_id))
             return False
