@@ -127,7 +127,8 @@ def wait_for(func, wait_timeout, delay, wait_for_false=False, abort_func=None):
             a += 1
             time.sleep(delay)
     else:
-        while not func() and a < wait_timeout / delay:
+        while not func() and a < (wait_timeout() if callable(wait_timeout) else
+                                  wait_timeout) / delay:
             if abort_func and abort_func():
                 break
             a += 1

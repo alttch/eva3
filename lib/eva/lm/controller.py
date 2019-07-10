@@ -853,9 +853,16 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
         controller_lock.acquire()
         try:
             if c_id in uc_pool.controllers:
-                logging.debug('Controller ' +
-                              '{} already exists, skipped (discovered from {})'.
-                              format(controller_id, notifier_id))
+                if uc_pool.controllers[c_id].connected:
+                    logging.debug(
+                        'Controller ' +
+                        '{} already exists, skipped (discovered from {})'.
+                        format(controller_id, notifier_id))
+                else:
+                    logging.debug(
+                        'Controller ' +
+                        '{} back online, reloading'.format(controller_id))
+                    uc_pool.reload_controller(c_id)
                 return True
         finally:
             controller_lock.release()

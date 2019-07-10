@@ -1230,6 +1230,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 **kwargs)
 
         def run(self, o, **kwargs):
+            if eva.core.is_shutdown_requested():
+                return False
+            if not eva.core.is_started():
+                eva.core.wait_for(eva.core.is_started, 30)
             o.send_message(
                 o.announce_topic,
                 o.announce_msg,
@@ -1509,7 +1513,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if t == self.announce_topic and \
                 d != self.announce_msg and \
                 self.discovery_handler and \
-                not eva.core.is_setup_mode():
+                not eva.core.is_setup_mode() and eva.core.is_started():
             background_job(
                 self.discovery_handler, daemon=True)(self.notifier_id, d)
             return
@@ -2222,15 +2226,18 @@ def notify(subject,
         except:
             eva.core.log_traceback(notifier=True)
     else:
-        for i in notifiers:
-            if notifiers[i].can_notify():
-                notify(
-                    subject=subject,
-                    data=data,
-                    notifier_id=i,
-                    retain=retain,
-                    skip_subscribed_mqtt_item=skip_subscribed_mqtt_item,
-                    skip_mqtt=skip_mqtt)
+        for i in list(notifiers):
+            try:
+                if notifiers[i].can_notify():
+                    notify(
+                        subject=subject,
+                        data=data,
+                        notifier_id=i,
+                        retain=retain,
+                        skip_subscribed_mqtt_item=skip_subscribed_mqtt_item,
+                        skip_mqtt=skip_mqtt)
+            except KeyError:
+                pass
 
 
 def get_notifier(notifier_id=None):
