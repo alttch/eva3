@@ -902,7 +902,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='ID').completer = self.ComplCycle(self)
 
     def add_lm_edit_functions(self):
-        ap_edit = self.sp.add_parser('edit', help='Edit item scripts')
+        ap_edit = self.sp.add_parser('edit', help='Edit commands')
 
         sp_edit = ap_edit.add_subparsers(
             dest='_func', metavar='func', help='Edit commands')
@@ -912,6 +912,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='Macro ID (common.py for common code)',
             metavar='ID').completer = self.ComplMacro(
                 self, with_common=True)
+
+        self._append_edit(sp_edit)
 
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')

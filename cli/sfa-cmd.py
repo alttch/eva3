@@ -263,6 +263,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         self.add_sfa_action_functions()
         self.add_sfa_macro_functions()
         self.add_sfa_cycle_functions()
+        self.add_sfa_edit_functions()
         self.add_sfa_lvar_functions()
         self.add_sfa_notify_functions()
         self.add_sfa_controller_functions()
@@ -334,6 +335,14 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Chart options',
             metavar='OPTS',
             dest='c')
+
+    def add_sfa_edit_functions(self):
+        ap_edit = self.sp.add_parser('edit', help='Edit commands')
+
+        sp_edit = ap_edit.add_subparsers(
+            dest='_func', metavar='func', help='Edit commands')
+
+        self._append_edit(sp_edit)
 
     def add_sfa_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')

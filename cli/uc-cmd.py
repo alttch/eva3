@@ -585,6 +585,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='Template name',
             metavar='TPL').completer = self.ComplDeviceTPL(self)
 
+        self._append_edit(sp_edit)
+
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')
         sp_list.add_argument(

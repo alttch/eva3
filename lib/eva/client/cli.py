@@ -1336,8 +1336,6 @@ class ControllerCLI(object):
             return result
         else:
             os.system(cmd)
-            import time
-            time.sleep(1)
 
     def prepare_controller_status_dict(self, data):
         result = {}
@@ -1373,11 +1371,23 @@ class ControllerCLI(object):
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
 
+    def _append_edit(self, parser):
+        sp_edit_server_config = parser.add_parser(
+            'server-config', help='Edit server configuration')
+
+    def edit_server_config(self, params):
+        editor = os.environ.get('EDITOR', 'vi')
+        code = os.system('{} {}/{}.ini'.format(editor, self.dir_etc,
+                                               self._management_controller_id))
+        return self.local_func_result_ok if not code else self.local_func_result_failed
+
     def enable_controller_management_functions(self, controller_id):
         if self.apiuri:
             return
         self.dir_sbin = os.path.realpath(
             os.path.dirname(os.path.realpath(__file__)) + '/../../../sbin')
+        self.dir_etc = os.path.realpath(
+            os.path.dirname(os.path.realpath(__file__)) + '/../../../etc')
         self.add_manager_control_functions()
         if controller_id:
             self._management_controller_id = controller_id
@@ -1388,6 +1398,7 @@ class ControllerCLI(object):
             'server:status': self.status_controller,
             'server:reload': 'shutdown_core',
             'server:launch': self.launch_controller,
+            'edit:server-config': self.edit_server_config
         }
         self.append_api_functions(funcs)
 

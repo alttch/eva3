@@ -112,7 +112,7 @@ _uc-cmd_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action template update' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action server-config template update' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
