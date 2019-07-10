@@ -41,6 +41,9 @@ default_errors = {
     apiclient.result_busy: 'resource is in use'
 }
 
+dir_eva = os.path.realpath(
+    os.path.dirname(os.path.realpath(__file__)) + '/../../..')
+
 
 class ComplGeneric(object):
 
@@ -1182,6 +1185,7 @@ class GenericCLI(GCLI):
             params['_api'] = api
             params['_timeout'] = timeout
             params['_debug'] = debug
+            params['_func'] = func
             code, result = api_func(params)
         if return_result:
             return code, result
@@ -1371,15 +1375,19 @@ class ControllerCLI(object):
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
 
-    def _append_edit(self, parser):
+    def _append_edit_server_config(self, parser):
         sp_edit_server_config = parser.add_parser(
             'server-config', help='Edit server configuration')
 
     def edit_server_config(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
         editor = os.environ.get('EDITOR', 'vi')
         code = os.system('{} {}/{}.ini'.format(editor, self.dir_etc,
                                                self._management_controller_id))
-        return self.local_func_result_ok if not code else self.local_func_result_failed
+        return self.local_func_result_ok if \
+                not code else self.local_func_result_failed
 
     def enable_controller_management_functions(self, controller_id):
         if self.apiuri:
@@ -1391,7 +1399,7 @@ class ControllerCLI(object):
         self.add_manager_control_functions()
         if controller_id:
             self._management_controller_id = controller_id
-        funcs = {
+        self.append_api_functions({
             'server:start': self.start_controller,
             'server:stop': self.stop_controller,
             'server:restart': self.restart_controller,
@@ -1399,9 +1407,76 @@ class ControllerCLI(object):
             'server:reload': 'shutdown_core',
             'server:launch': self.launch_controller,
             'edit:server-config': self.edit_server_config
-        }
-        self.append_api_functions(funcs)
+        })
 
     @staticmethod
     def bool2yn(b):
         return 'Y' if b else 'N'
+
+
+class LECLI:
+
+    class ComplPVT(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            import glob
+            result = []
+            files = glob.glob(
+                '{}/pvt/**/*'.format(dir_eva), recursive=True) + glob.glob(
+                    '{}/pvt/.**/*'.format(dir_eva), recursive=True)
+            for f in files:
+                if os.path.isfile(f):
+                    result.append(f.split('/', dir_eva.count('/') + 2)[-1])
+            return result
+
+    class ComplUI(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            import glob
+            result = []
+            exts = [
+                'json', 'yml', 'yaml', 'js', 'html', 'js', 'j2', 'css', 'txt',
+                'htm'
+            ]
+            hidden_dirs = ['apps', 'lib']
+            files = glob.glob(
+                '{}/ui/**/*'.format(dir_eva), recursive=True) + glob.glob(
+                    '{}/ui/.**/*'.format(dir_eva), recursive=True)
+            for f in files:
+                if os.path.isfile(f):
+                    fname = f.rsplit('/', 1)[-1]
+                    d = f.split('/', 5)[4]
+                    if fname.find('.') != -1 and fname.rsplit(
+                            '.', 1)[-1] in exts and not (
+                                d in hidden_dirs and
+                                os.path.isdir('{}/ui/{}'.format(dir_eva, d))):
+                        result.append(f.split('/', dir_eva.count('/') + 2)[-1])
+            return result
+
+    def _append_edit_pvt_and_ui(self, parser):
+        ap_edit_pvt = parser.add_parser('pvt', help='Edit PVT files')
+        ap_edit_pvt.add_argument(
+            'f', help='File to edit',
+            metavar='FILE').completer = self.ComplPVT(self)
+
+        ap_edit_pvt = parser.add_parser('ui', help='Edit UI files')
+        ap_edit_pvt.add_argument(
+            'f', help='File to edit',
+            metavar='FILE').completer = self.ComplUI(self)
+
+    def edit(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        editor = os.environ.get('EDITOR', 'vi')
+        code = os.system('{} {}/{}/{}'.format(editor, dir_eva, params['_func'],
+                                              params['f']))
+        return self.local_func_result_ok if \
+                not code else self.local_func_result_failed
+
+    def enable_le_functions(self):
+        if not self.apiuri:
+            self.append_api_functions({
+                'edit:pvt': self.edit,
+                'edit:ui': self.edit,
+            })

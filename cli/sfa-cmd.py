@@ -11,12 +11,15 @@ sys.path.append(dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
+from eva.client.cli import LECLI
 from eva.client.cli import ComplGeneric
 
 import eva.client.cli
 
+dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
 
-class SFA_CLI(GenericCLI, ControllerCLI):
+
+class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     @staticmethod
     def dict_safe_get(d, key, default):
@@ -255,6 +258,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
     def setup_parser(self):
         super().setup_parser()
         self.enable_controller_management_functions('sfa')
+        self.enable_le_functions()
 
     def add_functions(self):
         super().add_functions()
@@ -342,7 +346,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         sp_edit = ap_edit.add_subparsers(
             dest='_func', metavar='func', help='Edit commands')
 
-        self._append_edit(sp_edit)
+        self._append_edit_pvt_and_ui(sp_edit)
+        self._append_edit_server_config(sp_edit)
 
     def add_sfa_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')

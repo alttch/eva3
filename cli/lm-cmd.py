@@ -913,7 +913,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='ID').completer = self.ComplMacro(
                 self, with_common=True)
 
-        self._append_edit(sp_edit)
+        self._append_edit_server_config(sp_edit)
 
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')

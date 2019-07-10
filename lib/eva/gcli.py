@@ -141,9 +141,9 @@ class GCLI(object):
                 self.ap,
                 default_completer=self.argcomplete.completers.SuppressCompleter(
                 ))
-            readline.set_completer_delims("")
+            readline.set_completer_delims('')
             readline.set_completer(completer.rl_complete)
-            readline.parse_and_bind("tab: complete")
+            readline.parse_and_bind('tab: complete')
 
     def print_json(self, obj):
         j = self.format_json(obj)

@@ -40,6 +40,7 @@ import eva.client.cli
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
+from eva.client.cli import LECLI
 from eva.client.cli import ComplGeneric
 
 
@@ -93,7 +94,7 @@ class ComplBackupList(ComplGeneric):
         return result
 
 
-class ManagementCLI(GenericCLI):
+class ManagementCLI(GenericCLI, LECLI):
 
     def prepare_result_data(self, data, api_func, itype):
         if itype not in ['backup']:
@@ -189,6 +190,8 @@ class ManagementCLI(GenericCLI):
             dest='_func', metavar='func', help='Edit commands')
 
         sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
+
+        self._append_edit_pvt_and_ui(sp_edit)
 
         ap_masterkey = self.sp.add_parser(
             'masterkey', help='Masterkey management')
@@ -452,6 +455,10 @@ sys.argv = {argv}
             if self.interactive:
                 self.full_reset_after_shell(
                     restart_interactive=restart_interactive)
+
+    def setup_parser(self):
+        super().setup_parser()
+        self.enable_le_functions()
 
     def full_reset_after_shell(self, restart_interactive=True):
         self.setup_parser()

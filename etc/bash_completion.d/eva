@@ -52,7 +52,7 @@ _eva_sfa_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 3 ]]; then
-    COMPREPLY=( $( compgen -W 'server-config' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'pvt server-config ui' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -523,7 +523,7 @@ _eva_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'crontab' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'crontab pvt ui' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
