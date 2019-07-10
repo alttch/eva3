@@ -6,7 +6,7 @@
 #fi
 
 VERSION=3.2.4
-BUILD=2019070704
+BUILD=2019071101
 
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 
