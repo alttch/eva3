@@ -1048,8 +1048,8 @@ def save_lvars():
 
 
 def notify_all(skip_subscribed_mqtt=False):
-    background_job(notify_all_lvars)(skip_subscribed_mqtt=skip_subscribed_mqtt)
-    background_job(notify_all_cycles)(skip_subscribed_mqtt=skip_subscribed_mqtt)
+    notify_all_lvars(skip_subscribed_mqtt=skip_subscribed_mqtt)
+    notify_all_cycles(skip_subscribed_mqtt=skip_subscribed_mqtt)
 
 
 @with_item_lock
