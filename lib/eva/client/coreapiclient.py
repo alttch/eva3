@@ -105,8 +105,9 @@ class CoreAPIClient(APIClient):
         self._notifier_id = notifier_id
         if self._notifier_id == '': self._notifier_id = None
 
-    def set_key(self, key, key_id='default'):
+    def set_key(self, key, key_id=None):
         if key is None: return
+        if key_id is None: key_id = eva.core.config.default_cloud_key
         if key.find(':') != -1:
             (_key_id, _key) = key.split(':', 1)
         else:
