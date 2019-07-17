@@ -83,6 +83,19 @@
 
         </div>
 
+        <div class="ctrl_block" style="display: none;">
+
+          <select class="ctrl_cur" role="tablist" id="ctrl_select" 
+            onchange="showCurrentController(
+              $(this.options[this.options.selectedIndex])
+              .data('type'), this.value)">
+            <option data-type="-1">Close</option>
+          </select>
+
+          <div class="ctrl_content"></div>
+
+        </div>
+
       </div>
     </div>
 
