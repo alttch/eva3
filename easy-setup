@@ -9,6 +9,7 @@ FORCE=0
 CLEAR=0
 USE_SUPERVISOR=0
 APPEND=0
+APPEND_MQTT=0
 INTERACTIVE=1
 DEFAULT_USER=root
 INSTALL_UC=0
@@ -36,9 +37,19 @@ REMOTES='0.0.0.0/0'
 
 VALUE=
 
-REQUIRED="realpath python3 sha256sum curl jq"
+REQUIRED="realpath python3 curl jq"
 
 MAX_START_WAIT=180
+
+function on_exit {
+  local err=$?
+  if [ $err -ne 0 ]; then
+    echo
+    ./sbin/eva-control stop
+    echo
+    echo "SETUP FAILED, CODE: $err"
+  fi
+}
 
 function usage {
     echo "Usage: easy-setup [--force] [--clear] [--auto] [--local-only] [-u USER]"
@@ -148,6 +159,14 @@ function create_operator_key {
     return 0
 }
 
+function create_operator_user {
+    local P=$1
+    ./sbin/eva-tinyapi -C $P -F destroy_user u=operator > /dev/null 2>&1
+    ./sbin/eva-tinyapi -C $P -F create_user \
+        u=operator p=${OPPASSWD} a=operator > /dev/null 2>&1 || return 1
+    return 0
+}
+
 function create_default_key {
     local P=$1
     local ALLOW=$2
@@ -204,10 +223,16 @@ function create_notifier {
         if [ "x$T" = "xsfa" ]; then
             [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
             BATCH="${BATCH}set eva_1 collect_logs 1"
-            BATCH="${BATCH};create db_1 db:runtime/db/sfa_history.db -y;subscribe state db_1 -p '#' -g '#'"
         fi
     fi
     [ "x${BATCH}" = "x" ] && return 0
+    echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
+    return $?
+}
+
+function create_db_notifier {
+    local T=$1
+    local BATCH="create db_1 db:runtime/db/sfa_history.db -y;subscribe state db_1 -p '#' -g '#'"
     echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
     return $?
 }
@@ -237,7 +262,10 @@ function setup_supervisor {
   local u=$2
   [ $USE_SUPERVISOR -eq 1 ] || return 0
   cp -vf ./etc/supervisor/conf.d/eva-${p}.conf /etc/supervisor/conf.d/ || return 1
-  [ $SUPERVISOR_SET_LOG_STDOUT ] && sed -i 's/^\(\[program:eva-.*\]\)/\1\nstdout_logfile=\/dev\/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/stderr\nstderr_logfile_maxbytes=0/g' /etc/supervisor/conf.d/eva-${p}.conf
+  if [ $SUPERVISOR_SET_LOG_STDOUT ]; then
+    sed -i 's/^\(\[program:eva-.*\]\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' /etc/supervisor/conf.d/eva-${p}.conf
+    sed -i 's/\(events=TICK_60\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' /etc/supervisor/conf.d/eva-${p}.conf
+  fi
   local d=`echo ${EVA_DIR}|sed 's/\\//\\\\\\//g'`
   sed -i "s/\\/opt\\/eva/${d}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 2
   if [ "x$u" != "xroot" ]; then
@@ -284,7 +312,7 @@ function askYN {
 function askMQTT {
     while [ 1 ]; do
         if [ $INTERACTIVE -eq 1 ]; then
-            echo -n "MQTT host, required for linking (use empty value to skip MQTT connection for now): "
+            echo -n "MQTT host, required for cloud setup (use empty value to skip MQTT connection for now): "
             read MQTT_HOST
             if [ "x${MQTT_HOST}"  = "x" ]; then
                 return
@@ -497,7 +525,7 @@ do
         ;;
         -h|--help)
             usage
-            exit 99
+            exit 0
         ;;
         --auto)
             INTERACTIVE=0
@@ -530,8 +558,10 @@ do
             INTERACTIVE=0
             INSTALL_UC=1
             cp -v ./etc/uc.ini-benchmark ./etc/uc.ini
-            echo 'SYSTEM_SITE_PACKAGES=1' > ./etc/venv
-            echo 'SKIP="pandas"' >> ./etc/venv
+            if [ ! -f ./etc/venv ]; then
+              echo 'SYSTEM_SITE_PACKAGES=1' > ./etc/venv
+              echo 'SKIP="pandas"' >> ./etc/venv
+            fi
             BENCHMARK=1
             shift
         ;;
@@ -543,13 +573,10 @@ done
 
 if [ "x$SKIP_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
     echo "Please run this script as root"
-    exit 98
+    exit 1
 fi
 
-if [ $LINK -eq 1 ] && [ "x$MQTT_HOST" = "x" ]; then
-    echo "Linking requested but no MQTT HOST specified"
-    option_error
-fi
+trap on_exit exit
 
 if [ ! $SKIP_CHECK ]; then
     e=0
@@ -558,7 +585,6 @@ if [ ! $SKIP_CHECK ]; then
     done
     [ $e -ne 0 ] && exit 1
 fi
-
 
 D=`realpath $0`
 EVA_DIR=`dirname ${D}`
@@ -591,13 +617,14 @@ if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
     [ "x$LM_ENABLED" == 'xyes' ] && PRD=lm
     [ "x$SFA_ENABLED" == 'xyes' ] && PRD=sfa
     echo "Will use settings from $PRD"
-    eval "`./sbin/get-setup-options $PRD`" || exit 1
+    eval "`./sbin/get-setup-options $PRD|grep -A999 ^MASTERKEY`" || exit 1
     APPEND=1
 fi
 
-[ $MASTERKEY ] || MASTERKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-[ $DEFAULTKEY ] || DEFAULTKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
-[ $OPKEY ] || OPKEY=`head -1024 /dev/urandom | sha256sum | awk '{ print $1 }'`
+[ $MASTERKEY ] || MASTERKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
+[ $DEFAULTKEY ] || DEFAULTKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
+[ $OPKEY ] || OPKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
+[ $OPPASSWD ] || OPPASSWD=`(tr -cd '[:alnum:]' < /dev/urandom | head -c16) 2>/dev/null`
 
 if [ $INTERACTIVE -eq 1 ]; then
     echo
@@ -652,10 +679,14 @@ if [ $APPEND -ne 1 ]; then
     askYN "Should this node grant API access for the remote instances"
     [ $VALUE == "0" ] && REMOTES="127.0.0.1"
     askMQTT
+elif [ ! $MQTT_HOST ]; then
+  askMQTT
+  [ $MQTT_HOST ] && APPEND_MQTT=1
+  echo
 fi
 
 
-if [ "x$MQTT_HOST" != "x" ] && [ $APPEND -ne 1 ]; then
+if [ $APPEND -ne 1 ]; then
     echo
     askYN "Link controllers statically"
     [ $VALUE == "1" ] && LINK=1
@@ -671,6 +702,14 @@ if [ "x$UC_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
     echo
     askYN "Install EVA Universal Controller on this host"
     [ $VALUE == "1" ] && INSTALL_UC=1
+elif [ $APPEND_MQTT -eq 1 ]; then
+  ./bin/uc-notifier config eva_1 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Setting up MQTT for UC"
+    ./sbin/uc-control stop || exit 1
+    create_notifier uc || exit 1
+    start_controller uc || exit 1
+  fi
 else
     echo "UC is already installed. Skipping"
     INSTALL_UC=0
@@ -733,6 +772,14 @@ fi
 if [ "x$LM_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
     askYN "Install EVA Logical Manager PLC on this host"
     [ $VALUE == "1" ] && INSTALL_LM=1
+elif [ $APPEND_MQTT -eq 1 ]; then
+  ./bin/lm-notifier config eva_1 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Setting up MQTT for LM PLC"
+    ./sbin/lm-control stop || exit 1
+    create_notifier lm || exit 1
+    start_controller lm || exit 1
+  fi
 else
     echo "LM is already installed. Skipping"
     INSTALL_LM=0
@@ -789,8 +836,17 @@ EOF
     save_controller_state lm || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
+        SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|jq -Mr .system`
+        ./sbin/eva-tinyapi -C lm -F setup_mode setup=1 > /dev/null 2>&1
+        ./sbin/eva-tinyapi -C lm -F remove_controller i=${SNAME} > /dev/null 2>&1
         ./sbin/eva-tinyapi -C lm -F append_controller \
-            u=http://localhost:8812 a=\$default m=eva_1 save=1 > /dev/null 2>&1
+            u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
+        ./sbin/eva-tinyapi -C lm -F setup_mode setup=0 > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
@@ -805,6 +861,14 @@ fi
 if [ "x$SFA_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
     askYN "Install SCADA Final Aggregator on this host"
     [ $VALUE == "1" ] && INSTALL_SFA=1
+elif [ $APPEND_MQTT -eq 1 ]; then
+  ./bin/sfa-notifier config eva_1 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Setting up MQTT for SFA"
+    ./sbin/sfa-control stop || exit 1
+    create_notifier sfa || exit 1
+    start_controller sfa || exit 1
+  fi
 else
     echo "SFA is already installed. Skipping"
     INSTALL_SFA=0
@@ -846,6 +910,7 @@ hosts_allow = ${REMOTES}
 EOF
     chmod 600 etc/sfa_apikeys.ini
     create_notifier sfa || exit 1
+    create_db_notifier sfa || exit 1
     SFA_USER=${USER}
     if [ "x$USER" != "xroot" ]; then
         chmod 777 runtime/db
@@ -861,18 +926,28 @@ EOF
     echo "Creating SFA keys"
     create_operator_key sfa || exit 21
     create_default_key sfa || exit 22
+    echo "Creating SFA operator user"
+    create_operator_user sfa || exit 21
     save_controller_state sfa || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
+        SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|jq -Mr .system`
+        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
+        ./sbin/eva-tinyapi -C sfa -F remove_controller i=${SNAME} > /dev/null 2>&1
         ./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=uc u=http://localhost:8812 a=\$default m=eva_1 save=1 > /dev/null 2>&1
+            g=uc u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
+        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
         fi
         if [ $CLOUDMANAGER -eq 1 ]; then
-          SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|jq -Mr .system`
           ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
               i=${SNAME} p=masterkey v=\$masterkey save=1 > /dev/null 2>&1
           if [ $? != 0 ]; then
@@ -884,15 +959,23 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
         echo "Linking local LM PLC to SFA"
+        SNAME=lm/`./sbin/eva-tinyapi -C lm -F test|jq -Mr .system`
+        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
+        ./sbin/eva-tinyapi -C sfa -F remove_controller i=${SNAME} > /dev/null 2>&1
         ./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=lm u=http://localhost:8817 a=\$default m=eva_1 save=1 > /dev/null 2>&1
+            g=lm u=http://localhost:8817 a=\$default save=1 > /dev/null 2>&1
+        if [ $? != 0 ]; then
+            echo "Linking failed!"
+            ./sbin/eva-control stop
+            exit 5
+        fi
+        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1
         if [ $? != 0 ]; then
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
         fi
         if [ $CLOUDMANAGER -eq 1 ]; then
-          SNAME=lm/`./sbin/eva-tinyapi -C lm -F test|jq -Mr .system`
           ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
               i=${SNAME} p=masterkey v=\$masterkey save=1 > /dev/null 2>&1
           if [ $? != 0 ]; then
@@ -909,7 +992,9 @@ setup_supervisor_onboot || exit 11
 
 # COMPLETED
 
-if [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; then
+if [ $APPEND_MQTT -eq 1 ]; then
+  echo "MQTT connection is set up"
+elif [ $INSTALL_UC -eq 0 ] && [ $INSTALL_LM -eq 0 ] && [ $INSTALL_SFA -eq 0 ]; then
     echo "No products selected, nothing was installed"
     exit 0
 fi
@@ -937,14 +1022,21 @@ fi
 
 ln -sf eva bin/eva-shell
 
-echo "Setup completed!"
-echo
-echo "EVA ICS v`./sbin/eva-tinyapi -V` build `./sbin/eva-tinyapi -B`"
-echo
-echo "MASTERKEY: ${MASTERKEY}"
-echo "Controller default key: ${DEFAULTKEY}"
-echo "Operator key: ${OPKEY}"
-echo
+if [ $APPEND_MQTT -ne 1 ]; then
+  echo "Setup completed!"
+  echo
+  echo "EVA ICS v`./sbin/eva-tinyapi -V` build `./sbin/eva-tinyapi -B`"
+  echo
+  echo "MASTERKEY: ${MASTERKEY}"
+  echo "Controller default key: ${DEFAULTKEY}"
+  echo "Operator key: ${OPKEY}"
+  echo
+  if [ $INSTALL_SFA -eq 1 ]; then
+    echo "Default user: operator"
+    echo "Password: ${OPPASSWD}"
+    echo
+  fi
+fi
 
 mkdir -p backup
 chmod 700 backup

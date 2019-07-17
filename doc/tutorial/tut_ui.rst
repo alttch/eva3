@@ -1,5 +1,5 @@
-Building an interface with SFA Framework
-****************************************
+Building an interface with EVA JS Framework
+*******************************************
 
 * EVA Tutorial parts
 
@@ -7,12 +7,12 @@ Building an interface with SFA Framework
   * :doc:`tut_uc`
   * :doc:`tut_lm`
   * :doc:`tut_sfa`
-  * **Building an interface with SFA Framework** << we are here
+  * **Building an interface with EVA JS Framework** << we are here
 
 So, let us proceed with our configuration. :doc:`/uc/uc`, :doc:`/lm/lm` and
 :doc:`/sfa/sfa` have already been configured.
 
-The last step is to create the user interface with :doc:`/sfa/sfa_framework`.
+The last step is to create the user interface with :ref:`js_framework`.
 
 .. contents::
 
@@ -47,23 +47,38 @@ Create a login for the user to use with **operator** key:
 
     eva sfa user create john verysecret operator
 
+Framework installation
+======================
+
+:ref:`js_framework` is not included in EVA ICS distribution and should be
+downloaded manually. Let's download pre-built JavaScript, full version:
+
+.. code-block:: bash
+
+    curl https://raw.githubusercontent.com/alttch/eva-js-framework/master/dist/eva.min.js \
+        -o /opt/eva/ui/eva.min.js
+
+
 Create a web application
 ========================
 
-Use :doc:`/sfa/sfa_framework` to write a simple web application to manage our
+We'll use :ref:`js_framework` to write a simple web application to manage our
 example setup. Create a new **index.html** file and put it to **ui** folder:
 
 If the :doc:`item</items>` ids or other information should be hidden from
 unauthorized users, the additional .js files with such data may be served by
 :doc:`/sfa/sfa_pvt` or frontend server with additional authentication.
 
+We'll use `jQuery <https://jquery.com/>`_ in this example but of course any
+JavaScript library can be used, as well as Vanilla JS.
+
 .. code-block:: html
 
     <html>
      <head>
        <title>Plant1 interface</title>
-       <script src="lib/jquery.min.js"></script>
-       <script src="js/eva_sfa.min.js"></script>
+       <script src="jquery.min.js"></script>
+       <script src="eva.min.js"></script>
      </head>
     <body>
     <!-- simple authentication form -->
@@ -82,41 +97,47 @@ unauthorized users, the additional .js files with such data may be served by
      <div id="interface" style="display: none">
       <div>Temperature: <span id="temp1"></span></div>
       <div>Internal ventilation:
-        <a onclick="eva_sfa_action_toggle('ventilation/vi')" href="#">
+        <a onclick="$eva.call('action_toggle', 'ventilation/vi')" href="#">
             <span id="vi"></span></a>
       </div>
       <div>External ventilation:
-        <a onclick="eva_sfa_action_toggle('ventilation/ve')" href="#">
+        <a onclick="$eva.call('action_toggle', 'ventilation/ve')" href="#">
             <span id="ve"></span></a>
       </div>
       <div>Hall light:
-        <a onclick="eva_sfa_action_toggle('light/lamp1')" href="#">
+        <a onclick="$eva.call('action_toggle', 'light/lamp1')" href="#">
             <span id="lamp1"></span></a>
       </div>
       <div>Alarm system:
-        <a onclick="eva_sfa_toggle('security/alarm_enabled')" href="#">
+        <a onclick="$eva.call('toggle', 'security/alarm_enabled')" href="#">
             <span id="alarm_enabled"></span></a>
       </div>
       <div style="margin-top: 30px">
-        <a onclick="eva_sfa_stop(show_login_form)" href="#">logout</a>
+        <a onclick="do_logout()" href="#">logout</a>
       </div>
      </div>
      <script type="text/javascript">
     
      var ed_labels = [ 'DISABLED', 'ENABLED' ];
     
-     // function starting SFA Framework after the
+     // function starting EVA JS Framework after the
      // authentication form has been submitted
      function do_login() {
        $('#loginform').hide();
-       eva_sfa_login = $('#i_login').val();
-       eva_sfa_password = $('#i_password').val();
-       eva_sfa_start();
+       $eva.login = $('#i_login').val();
+       $eva.password = $('#i_password').val();
+       $eva.start();
+     }
+
+     // Logout function
+     function do_logout() {
+       $eva.stop().then(show_login_form).catch(show_login_form);
      }
     
      // function displaying the authentication form
      function show_login_form(data) {
-       eva_sfa_password = '';
+       $eva.password = '';
+       $eva.erase_token_cookies();
        $('#interface').hide();
        $('#i_login').val(eva_sfa_login);
        $('#i_password').val('');
@@ -125,35 +146,33 @@ unauthorized users, the additional .js files with such data may be served by
     
      // after the page is loaded
      $(document).ready(function() {
-       // initialize SFA Framework
-       eva_sfa_init();
        // after the authentication succeeds the main interface is displayed
-       eva_sfa_cb_login_success = function(data) { $('#interface').show(); }
+       $eva.on('login.success', function(data) { $('#interface').show(); });
        // if there is a login error
-       eva_sfa_cb_login_error = function(data) {
+       $eva.on('login.failed', function(err) {
            // end session and display the authentication form,
            // if auth data is incorrect
-           if (data.status == 403) { 
+           if (err.code == 2) { 
                show_login_form();
                } else {
                // otherwise - repeat the attempts every 2 seconds
                // until the server responds
-               setTimeout(eva_sfa_start, 1 * 2000);
+               setTimeout(function() { $eva.start() }, 1 * 2000);
                }
            }
        // register the event handlers
-       eva_sfa_register_update_state(
+       $eva.watch(
             'sensor:env/temp1', function(state) {$('#temp1').html(state.value)})
-       eva_sfa_register_update_state(
+       $eva.watch(
             'unit:ventilation/vi',
             function(state) {$('#vi').html(ed_labels[state.status])});
-       eva_sfa_register_update_state(
+       $eva.watch(
             'unit:ventilation/ve',
             function(state) {$('#ve').html(ed_labels[state.status])});
-       eva_sfa_register_update_state(
+       $eva.watch(
             'unit:light/lamp1',
             function(state) {$('#lamp1').html(ed_labels[state.status])});
-       eva_sfa_register_update_state(
+       $eva.watch(
             'lvar:security/alarm_enabled',
             function(state) {$('#alarm_enabled').html(ed_labels[state.value])});
      })

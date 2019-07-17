@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import cherrypy
 import os
@@ -9,6 +9,13 @@ import glob
 import logging
 import jinja2
 import requests
+import yaml
+import base64
+
+try:
+    yaml.warnings({'YAMLLoadWarning': False})
+except:
+    pass
 
 from io import BytesIO
 
@@ -37,6 +44,7 @@ from eva.api import api_result_accepted
 
 from eva.api import cp_forbidden_key
 from eva.api import cp_api_error
+from eva.api import cp_bad_request
 from eva.api import cp_api_404
 
 from eva.api import api_need_master
@@ -218,6 +226,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i, s, v, w, u, p, q = parse_function_params(kwargs, 'kisvwupq',
                                                        '.sR.nsin')
+        if v is not None: v = str(v)
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
         if not unit or not apikey.check(k, unit): raise ResourceNotFound
         return ecall(
@@ -445,6 +454,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             v: lvar value
         """
         k, i, s, v, = parse_function_params(kwargs, 'kisv', '.si.')
+        if v is not None: v = str(v)
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
         if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
         return ecall(
@@ -933,8 +943,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         the interface.
 
         All the connected clients receive the event with *subject="reload"* and
-        *data="asap"*. If the clients use :doc:`sfa_framework`, they can
-        define :ref:`reload handler<sfw_eva_sfa_reload_handler>` function.
+        *data="asap"*. If the clients use :ref:`js_framework`, they can catch
+        *server.reload* event.
 
         Args:
             k: .master
@@ -951,9 +961,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         to prepare for server restart.
 
         All the connected clients receive the event with *subject="server"* and
-        *data="restart"*. If the clients use :doc:`sfa_framework`, they can
-        define :ref:`restart handler<sfw_eva_sfa_server_restart_handler>`
-        function.
+        *data="restart"*. If the clients use :ref:`js_framework`, they can
+        catch *server.restart* event.
 
         Server restart notification is sent automatically to all connected
         clients when the server is restarting. This API function allows to send
@@ -1252,7 +1261,15 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         raise cp_api_404()
     env = {}
     env['request'] = cherrypy.serving.request
-    k = cp_client_key(from_cookie=True)
+    try:
+        env['evaHI'] = cherrypy.serving.request.headers.get(
+            'User-Agent', '').find('evaHI ') == -1
+    except:
+        env['evaHI'] = False
+    try:
+        k = cp_client_key(from_cookie=True)
+    except:
+        k = None
     if k:
         server_info = api.test(k=k)[1]
     else:
@@ -1270,6 +1287,57 @@ def serve_j2(tpl_file, tpl_dir=eva.core.dir_ui):
         return 'Server error'
 
 
+def _tool_error_response(e, code=500):
+    cherrypy.serving.response.headers['Content-Type'] = 'text/plain'
+    cherrypy.serving.response.status = code
+    return str(e).encode()
+
+
+def serve_json_yml(fname, dts='ui'):
+    infile = '{}/{}/{}'.format(eva.core.dir_eva, dts, fname).replace('..', '')
+    if not os.path.isfile(infile):
+        raise cp_api_404()
+    data = open(infile).read()
+    cas = cherrypy.serving.request.params.get('as')
+    if cas:
+        try:
+            data = yaml.load(data)
+        except Exception as e:
+            return _tool_error_response(e)
+        if cas == 'json':
+            data = format_json(data, minimal=not eva.core.config.development)
+            cherrypy.serving.response.headers[
+                'Content-Type'] = 'application/json'
+        elif cas in ['yml', 'yaml']:
+            data = yaml.dump(data, default_flow_style=False)
+            cherrypy.serving.response.headers[
+                'Content-Type'] = 'application/x-yaml'
+        elif cas == 'js':
+            var = cherrypy.serving.request.params.get('var')
+            func = cherrypy.serving.request.params.get('func')
+            if var:
+                if eva.core.config.development:
+                    data = 'var {} = {};'.format(
+                        var, format_json(data, minimal=False))
+                else:
+                    data = 'var {}={}'.format(var,
+                                              format_json(data, minimal=True))
+            elif func:
+                if eva.core.config.development:
+                    data = 'function {}() {{\n  return {};\n}}'.format(
+                        func, format_json(data, minimal=False))
+                else:
+                    data = 'function {}(){{return {};}}'.format(
+                        func, format_json(data, minimal=True))
+            else:
+                return _tool_error_response('var/func not specified', 400)
+            cherrypy.serving.response.headers[
+                'Content-Type'] = 'application/javascript'
+        else:
+            return _tool_error_response('Invalid "as" format', 400)
+    return data.encode('utf-8')
+
+
 def j2_handler(*args, **kwargs):
     try:
         del cherrypy.serving.response.headers['Content-Length']
@@ -1278,9 +1346,23 @@ def j2_handler(*args, **kwargs):
     return serve_j2(cherrypy.serving.request.path_info.replace('..', ''))
 
 
+def json_yml_handler(*args, **kwargs):
+    try:
+        del cherrypy.serving.response.headers['Content-Length']
+    except:
+        pass
+    return serve_json_yml(cherrypy.serving.request.path_info)
+
+
 def j2_hook(*args, **kwargs):
     if cherrypy.serving.request.path_info[-3:] == '.j2':
         cherrypy.serving.request.handler = j2_handler
+
+
+def json_yml_hook(*args, **kwargs):
+    if cherrypy.serving.request.path_info[-5:] in ['.json', 'yaml'] or \
+        cherrypy.serving.request.path_info[-4:] == '.yml':
+        cherrypy.serving.request.handler = json_yml_handler
 
 
 # ui and pvt
@@ -1288,11 +1370,13 @@ def j2_hook(*args, **kwargs):
 
 class UI_ROOT():
 
-    _cp_config = {'tools.j2.on': True}
+    _cp_config = {'tools.j2.on': True, 'tools.jconverter.on': True}
 
     def __init__(self):
         cherrypy.tools.j2 = cherrypy.Tool(
             'before_handler', j2_hook, priority=100)
+        cherrypy.tools.jconverter = cherrypy.Tool(
+            'before_handler', json_yml_hook, priority=100)
 
     @cherrypy.expose
     def index(self, **kwargs):
@@ -1319,13 +1403,35 @@ class SFA_HTTP_Root:
         cherrypy.serving.response.headers['Pragma'] = 'no-cache'
 
     @cherrypy.expose
-    def rpvt(self, k=None, f=None, nocache=None):
+    def rpvt(self, k=None, f=None, ic=None, nocache=None):
         _k = cp_client_key(k, from_cookie=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
-        if f is None: raise cp_bad_request('uri not provided')
+        if f is None: return _tool_error_response('uri not provided', code=400)
         if not apikey.check(_k, rpvt_uri=f, ip=http_real_ip()):
             logging.warning('rpvt %s uri %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
+        if f[:3] in ['uc/', 'lm/']:
+            try:
+                controller_id, f = f.split(':', 1)
+            except:
+                return _tool_error_response('invalid param: {}'.format(f))
+            try:
+                controller = eva.sfa.controller.get_controller(controller_id)
+            except:
+                ResourceNotFound
+                return _tool_error_response(
+                    'Controller not found: {}'.format(controller_id))
+            code, result = controller.api_call('rpvt', {
+                'f': f,
+                'ic': ic,
+                'nocache': nocache
+            })
+            if code:
+                return _tool_error_response(
+                    'remote controller code {}'.format(code))
+            cherrypy.serving.response.headers['Content-Type'] = result[
+                'content_type']
+            return base64.b64decode(result['data'])
         try:
             if f.find('//') == -1: _f = 'http://' + f
             else: _f = f
@@ -1333,15 +1439,36 @@ class SFA_HTTP_Root:
         except:
             raise cp_api_error()
         if r.status_code != 200:
-            raise cp_api_error('remote response %s' % r.status_code)
+            return _tool_error_response('remote response %s' % r.status_code)
         ctype = r.headers.get('Content-Type')
         if ctype:
             cherrypy.serving.response.headers['Content-Type'] = ctype
         if nocache: self._no_cache()
-        return BytesIO(r.content)
+        result = r.content
+        if ic:
+            try:
+                icmd, args, fmt = ic.split(':')
+                if icmd == 'resize':
+                    x, y, q = args.split('x')
+                    x = int(x)
+                    y = int(y)
+                    q = int(q)
+                    from PIL import Image
+                    image = Image.open(BytesIO(result))
+                    image.thumbnail((x, y))
+                    result = image.tobytes(fmt, 'RGB', q)
+                    cherrypy.response.headers['Content-Type'] = 'image/' + fmt
+                else:
+                    raise cp_bad_request()
+            except cherrypy.HTTPError:
+                raise
+            except:
+                eva.core.log_traceback()
+                raise cp_api_error()
+        return BytesIO(result)
 
     @cherrypy.expose
-    def pvt(self, k=None, f=None, c=None, ic=None, nocache=None):
+    def pvt(self, k=None, f=None, c=None, ic=None, nocache=None, **kwargs):
         _k = cp_client_key(k, from_cookie=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
         if f is None or f == '' or f.find('..') != -1 or f[0] == '/':
@@ -1349,8 +1476,10 @@ class SFA_HTTP_Root:
         if not apikey.check(_k, pvt_file=f, ip=http_real_ip()):
             logging.warning('pvt %s file %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
-        if f[-3:] == '.j2':
+        if f.endswith('.j2'):
             return serve_j2('/' + f, tpl_dir=eva.core.dir_pvt)
+        elif f.endswith('.json') or f.endswith('.yml') or f.endswith('.yaml'):
+            return serve_json_yml(f, dts='pvt')
         _f = eva.core.dir_pvt + '/' + f
         _f_alt = None
         if c:
@@ -1404,9 +1533,11 @@ class SFA_HTTP_Root:
                     logging.info('pvt %s file access %s' % (_r, f))
                     return result
                 else:
-                    logging.error('pvt %s file %s resize error' % (_r, f))
-                    raise
+                    raise cp_bad_request()
+            except cherrypy.HTTPError:
+                raise
             except:
+                eva.core.log_taceback()
                 raise cp_api_error()
         if nocache: self._no_cache()
         logging.info('pvt %s file access %s' % (_r, f))

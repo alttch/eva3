@@ -2,7 +2,7 @@ _lm-cmd_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'launch reload restart start status stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -28,6 +28,16 @@ _lm-cmd_ext() {
   fi
 }
 
+_lm-cmd_job() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'create destroy disable enable get list props set' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _lm-cmd_rule() {
   local cur prev words cword
   _init_completion || return
@@ -42,7 +52,7 @@ _lm-cmd_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'macro' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'macro server-config' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -132,10 +142,10 @@ _lm-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'clear cmd config controller create cvar cycle debug destroy dump edit ext file history key list lock log macro remote reset rule save server set state test toggle unlock user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'clear cmd config controller create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user' -- "$cur" ))
   else
     case "${words[1]}" in
-      config|controller|cvar|cycle|edit|ext|file|key|log|macro|rule|server|user)
+      config|controller|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
         _lm-cmd_${words[1]}
         ;;
       *)

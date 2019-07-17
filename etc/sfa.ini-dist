@@ -7,6 +7,14 @@ polldelay = 0.01
 pid_file = var/sfa.pid
 ; log file
 log_file = log/sfa.log
+; logging to local syslog
+;syslog = yes
+; logging to non-standard (/dev/log) local syslog socket
+;syslog = /var/run/syslog
+; logging to remote syslog
+;syslog = hostname:514
+; custom syslog format (use double %)
+;syslog_format = EVA: { "loggerName":"%%(name)s", "timestamp":"%%(asctime)s", "pathName":"%%(pathname)s", "logRecordCreationTime":"%%(created)f", "functionName":"%%(funcName)s", "levelNo":"%%(levelno)s", "lineNo":"%%(lineno)d", "time":"%%(msecs)d", "levelName":"%%(levelname)s", "message":"%%(message)s"}
 ; db updates - instant, manual or on_exit
 db_update = instant
 ; db file, default runtime/db/sfa.db
@@ -33,6 +41,8 @@ action_cleaner_interval = 60
 keep_logmem = 86400
 ; debug mode
 debug = no
+; show error traceback
+;show_traceback = yes
 ; logging level, info, warning, error or critical
 ;logging_level = info
 ; create crash dump on critical errors
@@ -58,6 +68,8 @@ timeout = 5
 [sysapi]
 ; enable remote file management functions
 ;file_management = yes
+; allow entering setup mode
+setup_mode = yes
 
 [webapi]
 ; web api listen on IP/port

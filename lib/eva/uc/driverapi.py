@@ -1,8 +1,8 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
-__api__ = 4
+__version__ = "3.2.4"
+__api__ = 7
 
 import importlib
 import logging
@@ -20,12 +20,18 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceBusy
 from eva.exceptions import ResourceAlreadyExists
+from eva.exceptions import MethodNotImplemented
 
 from functools import wraps
 
 phis = {}
 drivers = {}
 items_by_phi = {}
+
+shared_namespaces = {}
+
+with_drivers_lock = eva.core.RLocker('uc/driverapi')
+with_shared_namespaces_lock = eva.core.RLocker('uc/driverapi/shared_namespaces')
 
 # public API functions, may be imported into PHI and LPI
 
@@ -36,6 +42,10 @@ def get_version():
 
 def get_polldelay():
     return eva.core.config.polldelay
+
+
+def get_system_name():
+    return eva.core.config.system_name
 
 
 def get_sleep_step():
@@ -77,6 +87,7 @@ def unlock(l):
     return eva.sysapi.api.unlock(eva.apikey.get_masterkey(), l='eva:phi:' + l)
 
 
+@with_drivers_lock
 def handle_phi_event(phi, port, data):
     if not data: return
     iph = items_by_phi.get(phi.phi_id)
@@ -89,10 +100,12 @@ def handle_phi_event(phi, port, data):
                 t.start()
 
 
+@with_drivers_lock
 def get_phi(phi_id):
     return phis.get(phi_id)
 
 
+@with_drivers_lock
 def get_driver(driver_id):
     driver = drivers.get(driver_id)
     if driver:
@@ -158,6 +171,7 @@ def _gen_phi_map(phi_id, pmap, action_map=False):
     return result
 
 
+@with_drivers_lock
 def get_map(phi_id=None, action_map=False):
     try:
         result = {}
@@ -173,6 +187,7 @@ def get_map(phi_id=None, action_map=False):
         return None
 
 
+@with_drivers_lock
 def unlink_phi_mod(mod):
     if mod.find('/') != -1 or mod == 'generic_phi': return False
     for k, p in phis.copy().items():
@@ -197,7 +212,7 @@ def put_phi_mod(mod, content, force=False):
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
     if os.path.isfile(fname) and not force:
         raise ResourceAlreadyExists(
-            'PHI module {} already exists'.format(fname))
+            'PHI module {}'.format(fname))
     valid = False
     try:
         compile(content, fname, 'exec')
@@ -260,6 +275,20 @@ def modinfo_phi(mod):
             except:
                 pass
         return result
+    except Exception as e:
+        raise FunctionFailed(e)
+
+
+def phi_discover(mod, interface, wait):
+    code = 'from eva.uc.drivers.phi.{} import PHI;'.format(mod) + \
+            ' s=PHI(info_only=True).discover(interface, {})'.format(wait)
+    try:
+        d = {'interface': interface}
+        exec(code, d)
+        result = d.get('s')
+        return result
+    except AttributeError:
+        raise MethodNotImplemented
     except Exception as e:
         raise FunctionFailed(e)
 
@@ -335,6 +364,7 @@ def list_lpi_mods():
     return sorted(result, key=lambda k: k['mod'])
 
 
+@with_drivers_lock
 def register_item_update(i):
     u = i.update_exec
     if not u or u[0] != '|' or u.find('.') == -1:
@@ -355,6 +385,7 @@ def register_item_update(i):
     return True
 
 
+@with_drivers_lock
 def unregister_item_update(i):
     u = i.update_exec
     if not u or u[0] != '|' or u.find('.') == -1:
@@ -384,6 +415,7 @@ def update_item(i, data):
     i.update(driver_state_in=data)
 
 
+@with_drivers_lock
 def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     if not phi_id: raise InvalidParameter('PHI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", phi_id):
@@ -440,6 +472,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     return phi
 
 
+@with_drivers_lock
 def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     if get_phi(phi_id) is None:
         raise ResourceNotFound(
@@ -496,6 +529,7 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     return lpi
 
 
+@with_drivers_lock
 def set_phi_prop(phi_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
@@ -521,6 +555,7 @@ def set_phi_prop(phi_id, p, v):
         return True
 
 
+@with_drivers_lock
 def unload_phi(phi_id):
     phi = get_phi(phi_id)
     if phi is None: raise ResourceNotFound
@@ -534,10 +569,15 @@ def unload_phi(phi_id):
         phi._stop()
     except:
         eva.core.log_traceback()
+    try:
+        phi.unload()
+    except:
+        eva.core.log_traceback()
     del phis[phi_id]
     return True
 
 
+@with_drivers_lock
 def set_driver_prop(driver_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
@@ -562,6 +602,7 @@ def set_driver_prop(driver_id, p, v):
         return True
 
 
+@with_drivers_lock
 def unload_driver(driver_id):
     lpi = get_driver(driver_id)
     if lpi is None: raise ResourceNotFound
@@ -589,6 +630,7 @@ def serialize(full=False, config=False):
     }
 
 
+@with_drivers_lock
 def serialize_phi(full=False, config=False):
     result = []
     for k, p in phis.copy().items():
@@ -601,6 +643,7 @@ def serialize_phi(full=False, config=False):
     return result
 
 
+@with_drivers_lock
 def serialize_lpi(full=False, config=False):
     result = []
     for k in drivers.copy().keys():
@@ -678,6 +721,7 @@ def start():
             eva.core.log_traceback()
 
 
+@with_drivers_lock
 def stop():
     for k, p in drivers.items():
         try:
@@ -691,3 +735,35 @@ def stop():
         except Exception as e:
             logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()
+    if eva.core.config.db_update != 0:
+        save()
+
+
+class NS:
+
+    def __init__(self):
+        self.locker = threading.RLock()
+
+    def has(self, obj_id):
+        with self.locker:
+            return hasattr(self, obj_id)
+
+    def set(self, obj_id, val):
+        with self.locker:
+            setattr(self, obj_id, val)
+
+    def get(self, obj_id, default=None):
+        with self.locker:
+            if not self.has(obj_id):
+                if default is None:
+                    return None
+                else:
+                    set(obj_id, default)
+            return getattr(self, obj_id)
+
+
+@with_shared_namespaces_lock
+def get_shared_namespace(namespace_id):
+    if namespace_id not in shared_namespaces:
+        shared_namespaces[namespace_id] = NS()
+    return shared_namespaces[namespace_id]

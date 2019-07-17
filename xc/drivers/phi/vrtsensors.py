@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __description__ = "Emulates virtual sensors"
 
 __equipment__ = 'virtual'
@@ -9,7 +9,7 @@ __api__ = 4
 __required__ = ['port_get', 'value']
 __mods_required__ = []
 __lpi_default__ = 'sensor'
-__features__ = ['port_get', 'aao_get']
+__features__ = ['aao_get']
 __config_help__ = [{
     'name': 'default_value',
     'help': 'sensors value on load (default: None)',
@@ -46,8 +46,12 @@ class PHI(GenericPHI):
             except:
                 d = None
         self.data = {}
-        for i in range(1000, 1010):
+        for i in range(1000, 1011):
             self.data[str(i)] = d
+
+    def get_ports(self):
+        return self.generate_port_list(
+            port_min=1000, port_max=1010, description='virtual sensor port #{}')
 
     def get(self, port=None, cfg=None, timeout=0):
         if not port: return self.data

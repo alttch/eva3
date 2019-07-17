@@ -26,18 +26,19 @@ PHI system info
 the next fields are processed by controller, so make them exactly as required
 
 * **__equipment__**     supported equipment (list or string)
-* **__api__**           module API (integer number), current is **4**
+* **__api__**           module API (integer number), current is **7**
 
 * **__required__**      features required from LPI (Logical to Physical
   Interface, list):
 
+ * **aao_get** get and process all ports at once (bulk)
+ * **aao_set** set all ports at once (bulk)
+ * **action** unit actions
+ * **events** event processing
  * **port_get** get single port data
  * **port_set** set single port data
- * **aao_get** get and process all ports at once
- * **aao_set** set all ports at once
  * **status** process item status
  * **value** process item values
- * **action** unit actions
 
 * **__mods_required__** required python modules (not included neither in
   standard Python install nor in EVA ICS)
@@ -45,15 +46,23 @@ the next fields are processed by controller, so make them exactly as required
 * **__lpi_default__** if specified, the default driver will be created for this
   PHI when loaded.
 
-* **__features__**      own features provided (list):
+* **__features__**      own features provided (list, features from __required__
+  are automatically included):
 
- * **port_get** get single port data
- * **port_set** set single port data
- * **aao_get** get all ports at once (if no port is specified)
- * **aao_set** set all ports at once (if list of ports and
-   list of data is given)
+ * **aao_get** PHI can return state of all ports at once but can work with a
+   single ports as well
+ * **aao_set** PHI can set state of all ports at once but can work with a
+   single ports as well
  * **universal** PHI is universal and process **cfg** in requests.
  * **cache** PHI supports state caching (useful for slow devices)
+
+* **__discover__** string or list, which describes how "discover" method (if
+  implemented) will search for the equipment: **net** for network or EVA ICS
+  bus name (*modbus*, *owfs* etc.)
+
+* **__shared_namespaces__** list of shared namespaces used by PHI. If you are
+  going to use shared namespaces, listing them in this variable is
+  **required**, otherwise PHI will have no access to them.
 
 PHI help
 --------
@@ -65,6 +74,7 @@ Each PHI module should contain 4 help variables:
   with **get** command
 * **__set_help__** additional configuration params possible for LPI to send
   with **set** command
+* **__discover_help** help for "discover" method
 
 First variable should be human readable, others may copy, join or process the
 first one or each other in any way.
@@ -121,6 +131,7 @@ Importing modules **eva.uc.drivers.tools**, **eva.tools**, **eva.traphandler**,
 * **get_version()** get Driver API version
 * **get_polldelay()** get EVA poll delay
 * **get_timeout()** get default timeout
+* **get_system_name()** get system name
 * **critical()** send EVA critical call
 * **log_traceback()** log traceback debug info
 * **lock(l, timeout, expires)** acquire lock "eva:phi:**l**", wait max
@@ -130,7 +141,7 @@ Importing modules **eva.uc.drivers.tools**, **eva.tools**, **eva.traphandler**,
 * **handle_phi_event(phi, port, data)** ask Driver API to handle event (see
   below)
 
-is highly welcome. Importing other EVA modules or driverapi functions is not
+is highly welcome. Importing other EVA modules or Driver API functions is not
 recommended unless you really know what you do.
 
 The main class is defined as:
@@ -165,11 +176,6 @@ loading the module.
 If PHI methods get/set can't work with single ports at all (e.g. equipment
 returns state of all ports at once only), constructor should set variables:
 
-* **self.aao_get=True** tells LPI the returned with PHI.get method data will
-  always contain all port states even if the port is specified in **get**.
-* **self.aao_set=True** asks LPI to collect as much data to set as possible, and
-  then call PHI **set** method
-
 The parent constructor sets the variable **self.phi_cfg** to phi_cfg or to {},
 so it's safe to work with it with *self.phi_cfg.get(cfgvar)*.
 
@@ -202,6 +208,11 @@ call.
         #if no - with a single port only. If both port_set and aao_set are
         #specified in features, PHI should deal with both single port and list
         #of ports
+
+.. note::
+
+    If unit action is called without value, PHI **set** method is called with
+    previous known unit value
 
 **port** and **data** may be integers, string, contain lists or be set as None.
 PHI should always be ready to any incoming params and handle the missing or
@@ -254,6 +265,10 @@ driver load/unload:
     def stop(self):
         #<your code>
 
+    def unload(self):
+        # called when PHI is unloaded from the controller
+        #<your code>
+
 
 Parent methods
 ==============
@@ -263,6 +278,11 @@ Parent class provides the following useful functions:
 * **self.set_cached_state(data)** set driver cached state (any format)
 * **self.get_cached_state()** return the state cached before. If the cache is
   expired (self.cache param handled by parent), the method return None
+
+.. warning::
+
+    If *get_cached_state()* method is used, PHI should return a **copy** of
+    cached object
 
 All the logging should be done with the following methods:
 
@@ -275,6 +295,89 @@ All the logging should be done with the following methods:
 
 The last two methods do the same, logging an event and calling controller
 critical() method.
+
+* **self.get_shared_namespace(namespace_id)** returns namespace object,
+  shared between all PHIs.
+
+Optional methods
+================
+
+get_phi_ports
+-------------
+
+The method should be implemented if you want to let PHI to respond to API
+"get_phi_ports" method.
+
+.. code-block:: python
+
+    def get_ports(self):
+        #<your code>
+
+The method should return list of dictionaries with "port", "name" and
+"description" fields. Are fields are required and should be strings.
+
+If hardware equipment always has fixed amount of ports and they all are used
+for the same purpose (e.g. relay), you may use parent function
+*generate_port_list*:
+
+.. code-block:: python
+
+        def get_ports(self):
+            return self.generate_port_list(
+                port_max=16, description='relay port #{}')
+
+        # parent function has the following params:
+        # def generate_port_list(
+        #       port_min=1, port_max=1, name='port #{}', description='port #{}')
+
+discover
+--------
+
+The method should be implemented if you want let PHI to respond to API
+"phi_discover" method and should return all supported equipment discovered,
+including parameters for PHI loading.
+
+"discover" method should be always implemented as static as it is always called
+on module, before PHI is loaded and primary class is created. If PHI implements
+discovery, *__discover__* header should always be present in module.
+
+.. code-block:: python
+
+    __discover__ = 'net'
+
+    # ............
+
+        @staticmethod
+        def discover(interface=None, timeout=0):
+            # interface - network or bus name, can be list or string
+            #<your code>
+
+The method should return array of dictionaries, which may contain any fields.
+Field *!load* is required and should contain dictionary with PHI loading
+params, e.g. *{ 'host': '<ip_of_hardware>' }*.
+
+You may specify result column ordering for EVA ICS interfaces. For that, a
+special record:
+
+.. code-block:: python
+
+    [{ '!opt': 'cols', 'value': [<columns>]}]
+
+must be present as first in a result. A special column *'!load'* in a
+column list is not required.
+
+Working with unit values
+========================
+
+For units, method **get** can return either single integer (*status*) or a
+state tuple (*status*, *value*). If *value* is set to *None*, it is ignored
+and only status is updated. LPI automatically detects output data and parses
+either status or (status, value) pair.
+
+For method **set**, by default data contains either *status* (integer) or a
+list of integers only. To accept extended state (*status, value* tuple or a
+list of tuples) for **set**, **value** string must be specified in
+**__required__** header list variable.
 
 Handling events
 ===============
@@ -407,7 +510,6 @@ module.
         # ....
         # it's recommended to force aao_get in Modbus PHI to let it read states
         # with one modbus request
-        self.aao_get = True
         self.modbus_port = self.phi_cfg.get('port')
         # check in constructor if the specified modbus port is defined
         if not modbus.is_port(self.modbus_port):
@@ -479,8 +581,8 @@ Methods available:
     @phi_constructor
     def __init__(self, **kwargs):
         # ....
-        # it's recommended to force aao_get in Modbus PHI to let it read states
-        # with one modbus request
+        # it's recommended to force aao_get in Modbus PHI (list it in
+        # __required__) to let it read states # with one modbus request
         self.owfs_bus = self.phi_cfg.get('owfs')
         # check in constructor if the specified modbus port is defined
         if not owfs.is_bus(self.owfs_bus):
@@ -498,7 +600,7 @@ Methods available:
         bus = owfs.get_bus(self.owfs_bus)
         if not bus: return None
         try:
-            value = us.read(path, 'temperature')
+            value = bus.read(path, 'temperature')
             if not value:
                 raise Exception('can not obtain temperature value')
             return {'temperature': value}
@@ -507,6 +609,54 @@ Methods available:
         finally:
             bus.release()
 
+
+Working with SNMP
+=================
+
+Performing get/set calls
+------------------------
+
+EVA ICS has bindings to primary `pysnmp <https://pypi.org/project/pysnmp/>`_
+methods, which can be found in *eva.uc.drivers.tools.snmp* module. Pysnmp is a
+reach-feature SNMP module and is included in setup by default, however this
+module is not recommended to use on a slow hardware in production.
+
+The rule of good taste is to check if alternative (faster) SNMP module is
+present (such as e.g. `python3-netsnmp
+<https://pypi.org/project/python3-netsnmp/>`_) and use it for a regular get/set
+functions instead:
+
+.. code-block:: python
+
+    import eva.uc.drivers.tools.snmp as snmp
+    try:
+        import netsnmp
+    except:
+        netsnmp = None
+
+    #....................................
+    #....................................
+    #....................................
+
+    if netsnmp:
+        # ... use netsnmp module
+    else:
+        # ... use default pysnmp module
+
+.. note::
+
+    It is always better to perform a single getbulk request rather than using
+    get/walk SNMP methods.
+
+SNMP MIBs
+---------
+
+As PHI is always written for the specific known equipment, there's usually no
+need to use SNMP MIBs and dotted number SNMP OIDs are used instead.
+
+If you plan to use SNMP MIBs, you should warn user to download them and place
+to the proper location or include MIB directly into PHI code to generate it on
+the flow.
 
 Working with MQTT
 =================
@@ -639,6 +789,7 @@ use functions:
     # ("values" should be a list (of unsigned integers or booleans, depending
     # on memory block type)
 
+
 Working with UDP API
 ====================
 
@@ -682,11 +833,122 @@ managed by handler).
         # process the data
         # ...
 
+
+Discovering SSDP hardware
+=========================
+
+If "discover" method is implemented and discovers hardware equipment via SSDP,
+driver tool can be used:
+
+.. code-block:: python
+
+    def discover(interface=None, timeout=0):
+        import eva.uc.drivers.tools.ssdp as ssdp
+        result = ssdp.discover(
+            'upnp:all',
+            interface=interface,
+            timeout=timeout,
+            discard_headers=[
+                'Cache-control', 'Ext', 'Location', 'Host'
+            ])
+        # if upnp:all is used - filter result to leave only supported hardware
+
+    # eva.uc.drivers.tools.ssdp.discover function has the following params:
+    # def discover(st,
+    #             ip='239.255.255.250',
+    #             port=1900,
+    #             mx=True,
+    #             interface=None,
+    #             trailing_crlf=True,
+    #             parse_data=True,
+    #             discard_headers=['Cache-control', 'Host'],
+    #             timeout=None)
+    # where
+    #   mx                  send MX header or not
+    #   trailing_crlf       append trailing CR/LF at the end of request
+    #   parse_data          try parsing data automatically
+    #   discard_headers     discard specified headers if data is parsed
+
+
+Shared namespaces
+=================
+
+Some equipment modules or system libraries don't allow to retake ownership on
+the particular device once it's initialized until the process restart. As the
+result, *phi reload* and *phi set* (*set* command reloads PHI module with the
+new params) methods for such devices will not work.
+
+There are tons of libraries and buses and we can not integrate everything in
+EVA ICS to provide native functions. For that, we offer you to use shared
+namespaces.
+
+Shared namespace is a simple object, shared between all PHIs in system.
+Namespace ids you plan to use should be always listed in
+**__shared_namespaces__** module header.
+
+After, you can obtain shared namespace at any time, by calling
+*self.get_shared_namespace(namespace_id)*.
+
+Namespace object methods:
+
+* **has(obj_id)** returns *True* if namespace has specified object
+* **set(obj_id, val)** set namespace object to the specified value *
+  **get(obj_id, default=None)** get namespace object, set it to *default* value
+  if doesn't exist.
+* **locker** *threading.RLock()* object which can be used to safely manipulate
+  objects inside namespace.
+
+.. warning::
+
+    Don't manipulate thread-unsafe objects inside namespace without
+    thread-locking.
+
+Example:
+
+.. code-block:: python
+
+    __shared_namespaces__ = ['gpiozero']
+
+    # ......
+
+    ns = self.get_shared_namespace('gpiozero')
+    with ns.locker:
+        d_id = 'port_'.format(port)
+        if ns.has(d_id):
+            gpio_device = ns.get(d_id)
+        else:
+            gpio_device = gpiozero.DigitalOutputDevice(port)
+            ns.set(d_id, gpio_device)
+
+
+Asynchronous I/O
+================
+
+Calls to PHIs are always synchronous. If equipment can set multiple ports at
+once or PHI can provide asynchronous features itself, it should have
+*aao_get*/*aao_set* in *__features__* or *__required__* lists.
+
+The difference between last two is that *__required__* **requires** parent LPI
+to have a feature for working with multiple ports at once and PHI get/set
+methods always get list of ports/data.
+
+While *__features__* **allows** LPI to send multi-port command, however it can
+be single as well. In this case get/set methods of PHI should manually check
+incoming data format (single value or list).
+
+You, as PHI developer, always choose by yourself the way how to work with
+multiple hardware ports at once: get/set multiple registers or special "group"
+registers (e.g.  for Modbus or SNMP), use asynchronous HTTP API calls or launch
+multiple threads. However, using *aao_get*/*aao_set* is always good practice
+and recommended if possible.
+
+
 Exceptions
 ==========
 
 The methods of PHI should not raise any exceptions and handle/log all errors by
 themselves.
+
 
 Testing
 =======

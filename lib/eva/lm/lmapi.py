@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import cherrypy
 import jsonpickle
@@ -158,6 +158,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         if s and not -1 <= s <= 1:
             raise InvalidParameter('status should be -1, 0 or 1')
         if v is None: v = ''
+        else: v = str(v)
         return item.update_set_state(status=s, value=v)
 
     @log_i
@@ -345,7 +346,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         Optional:
             .u: rule UUID to set
             .v: rule properties (dict)
-            save: save unit configuration immediately
+            save: save rule configuration immediately
         """
         u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
         rule = eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
@@ -489,7 +490,182 @@ class LM_API(GenericAPI, GenericCloudAPI):
                     del d[x]
         return d
 
+# jobs functions
+
+    @log_i
+    @api_need_master
+    def create_job(self, **kwargs):
+        """
+        create new job
+
+        Creates new :doc:`scheduled job<jobs>`. Job id (UUID) is
+        generated automatically unless specified.
+
+        Args:
+            k: .master
+
+        Optional:
+            .u: job UUID to set
+            .v: job properties (dict)
+            save: save unit configuration immediately
+        """
+        u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
+        job = eva.lm.controller.create_job(save=save, job_uuid=u)
+        if v and isinstance(v, dict):
+            self._set_prop(job, v=v, save=save)
+        return job.serialize(info=True)
+
+    @log_w
+    @api_need_master
+    def destroy_job(self, k=None, i=None):
+        """
+        delete job
+
+        Deletes :doc:`scheduled job<jobs>`.
+
+        Args:
+            k: .master
+            .i: job id
+        """
+        return eva.lm.controller.destroy_job(i)
+
+    @log_d
+    @api_need_master
+    def list_job_props(self, **kwargs):
+        """
+        list job properties
+
+        Get all editable parameters of the :doc:`scheduled job</lm/jobs>`.
+
+        Args:
+            k: .master
+            .i: job id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
+        if is_oid(i):
+            t, i = parse_oid(i)
+        item = eva.lm.controller.get_job(i)
+        if not item or (is_oid(i) and item and item.item_type != t):
+            raise ResourceNotFound
+        result = item.serialize(props=True)
+        return result
+
+    @log_i
+    @api_need_master
+    def set_job_prop(self, **kwargs):
+        """
+        set job parameters
+
+        Set configuration parameters of the :doc:`scheduled job</lm/jobs>`.
+
+        Args:
+        
+            k: .master
+            .i: job id
+            .p: property name (or empty for batch set)
+        
+        Optional:
+            .v: propery value (or dict for batch set)
+            save: save configuration after successful call
+        """
+        k, i, p, v, save = parse_function_params(kwargs, 'kipvS', '.s..b')
+        item = eva.lm.controller.get_job(i)
+        if not p and not isinstance(v, dict):
+            raise InvalidParameter('property not specified')
+        if not item:
+            raise ResourceNotFound
+        if not self._set_prop(item, p, v, save):
+            raise FunctionFailed
+        if (p and p in ['every']) or \
+                (isinstance(v, dict) and \
+                ('every' in v)):
+            item.reschedule()
+        return True
+
+    @log_i
+    @api_need_master
+    def list_jobs(self, **kwargs):
+        """
+        get jobs list
+
+        Get the list of all available :doc:`scheduled jobs<jobs>`.
+
+        Args:
+            k: .master
+        """
+        k = parse_function_params(kwargs, 'k', '.')
+        result = []
+        for i, v in eva.lm.controller.jobs.copy().items():
+            d = v.serialize(info=True)
+            result.append(d)
+        return result
+
+    @log_i
+    @api_need_master
+    def get_job(self, **kwargs):
+        """
+        get job information
+
+        Args:
+            k: .master
+            .i: job id
+        """
+        k, i = parse_function_params(kwargs, 'ki', '.s')
+        item = eva.lm.controller.get_job(i)
+        if not item:
+            raise ResourceNotFound
+        d = item.serialize(info=True)
+        return d
 # macro functions
+
+    @log_d
+    @api_need_master
+    def get_macro_function(self, **kwargs):
+        i = parse_api_params(kwargs, 'i', 'S')
+        f = eva.lm.controller.get_macro_function(i)
+        if not f:
+            raise ResourceNotFound
+        return f
+
+    @log_d
+    @api_need_master
+    def list_macro_functions(self, **kwargs):
+        fn = eva.lm.controller.get_macro_function()
+        result = []
+        for f, v in fn.items():
+            v = v.copy()
+            del v['src']
+            result.append(v)
+        return sorted(result, key=lambda k: k['name'])
+
+    @log_w
+    @api_need_master
+    def put_macro_function(self, **kwargs):
+        name, description, i, o, code = parse_api_params(
+            kwargs, ['function', 'description', 'input', 'output', 'src'],
+            'ss...')
+        fname = eva.lm.controller.put_macro_function(
+            fname=name, fdescr=description, i=i, o=o, fcode=code)
+        if not fname:
+            raise FunctionFailed
+        return eva.lm.controller.get_macro_function(fname)
+
+    @log_i
+    @api_need_master
+    def reload_macro_function(self, **kwargs):
+        i, tp = parse_api_params(kwargs, 'ip', 'ss')
+        if not eva.lm.controller.reload_macro_function(fname=i, tp=tp):
+            raise FunctionFailed
+        else:
+            return True
+
+    @log_w
+    @api_need_master
+    def destroy_macro_function(self, **kwargs):
+        i = parse_api_params(kwargs, 'i', 'S')
+        return eva.lm.controller.destroy_macro_function(i)
+
+# macros
 
     @log_d
     def groups_macro(self, **kwargs):
@@ -619,7 +795,13 @@ class LM_API(GenericAPI, GenericCloudAPI):
         k, i = parse_function_params(kwargs, 'ki', '.S')
         item = eva.lm.controller.get_macro(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
-        return item.serialize(info=True)
+        result = item.serialize(info=True)
+        if apikey.check_master(k):
+            t, s = eva.lm.controller.get_macro_source(item)
+            result['src'] = s
+            if t:
+                result['type'] += ':' + t
+        return result
 
 # cycle functions
 
@@ -862,11 +1044,19 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Optional:
             .g: filter by item group
+            x: serialize specified item prop(s)
 
         Returns:
             the list of all :ref:`lvars<lvar>` available
         """
-        tp, group = parse_api_params(kwargs, 'pg', 'ss', {'p': 'lvar'})
+        tp, group, prop = parse_api_params(kwargs, 'pgx', 'ss.', {'p': 'lvar'})
+        if prop:
+            if isinstance(prop, list):
+                pass
+            elif isinstance(prop, str):
+                prop = prop.split(',')
+            else:
+                raise InvalidParameter('"x" must be list or string')
         result = []
         if tp == 'LV' or tp == 'lvar':
             items = eva.lm.controller.lvars_by_full_id
@@ -874,8 +1064,26 @@ class LM_API(GenericAPI, GenericCloudAPI):
             items = eva.lm.controller.items_by_full_id
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
-                result.append(v.serialize(info=True))
-        return sorted(result, key=lambda k: k['oid'])
+                if not prop:
+                    result.append(v.serialize(info=True))
+                else:
+                    r = {'oid': v.oid}
+                    s = v.serialize(props=True)
+                    for p in prop:
+                        try:
+                            r[p] = s[p]
+                        except:
+                            raise ResourceNotFound('{}: config prop {}'.format(
+                                v.oid, p))
+                    result.append(r)
+        result = sorted(result, key=lambda k: k['oid'])
+        if prop:
+            for s in reversed(prop):
+                try:
+                    result = sorted(result, key=lambda k: k[s])
+                except:
+                    pass
+        return result
 
     @log_i
     @api_need_master
@@ -1227,6 +1435,10 @@ class LM_HTTP_API_abstract(LM_API, GenericHTTP_API):
 
     def __init__(self):
         super().__init__()
+        self._nofp_log('put_macro_function', 'src')
+        self._nofp_log('put_macro_function', 'input')
+        self._nofp_log('put_macro_function', 'output')
+        self._nofp_log('set_macro_prop', 'v')
 
 
 class LM_HTTP_API(LM_HTTP_API_abstract, GenericHTTP_API):
@@ -1291,6 +1503,14 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.get_rule(k=k, i=ii)
             else:
                 return self.list_rules(k=k)
+        elif rtp == 'job':
+            if ii:
+                if kind == 'props':
+                    return self.list_job_props(k=k, i=ii)
+                else:
+                    return self.get_job(k=k, i=ii)
+            else:
+                return self.list_jobs(k=k)
         elif rtp == 'lmacro':
             if ii:
                 if kind == 'props':
@@ -1305,6 +1525,11 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.groups_macro(k=k)
                 else:
                     return self.list_macros(k=k)
+        elif rtp == 'lmacro-function':
+            if ii:
+                return self.get_macro_function(k=k, i=ii)
+            else:
+                return self.list_macro_functions(k=k)
         elif rtp == 'lcycle':
             if ii:
                 if kind == 'props':
@@ -1387,6 +1612,12 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 if not r: raise FunctionFailed
                 set_restful_response_location(r['id'], rtp)
                 return r
+        elif rtp == 'job':
+            if not ii:
+                r = self.create_job(k=k, v=props)
+                if not r: raise FunctionFailed
+                set_restful_response_location(r['id'], rtp)
+                return r
         raise MethodNotFound
 
     @generic_web_api_method
@@ -1403,6 +1634,9 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
         elif rtp == 'dmatrix_rule':
             if ii:
                 return self.create_rule(k=k, u=ii, v=props)
+        elif rtp == 'job':
+            if ii:
+                return self.create_job(k=k, u=ii, v=props)
         elif rtp == 'lmacro':
             if ii:
                 return self.create_macro(k=k, i=ii)
@@ -1436,6 +1670,9 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
         elif rtp == 'dmatrix_rule':
             if ii:
                 return self.set_rule_prop(k=k, i=ii, v=props, save=save)
+        elif rtp == 'job':
+            if ii:
+                return self.set_job_prop(k=k, i=ii, v=props, save=save)
         elif rtp == 'lmacro':
             if ii:
                 return self.set_macro_prop(k=k, i=ii, v=props, save=save)
@@ -1464,6 +1701,9 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
         elif rtp == 'dmatrix_rule':
             if ii:
                 return self.destroy_rule(k=k, i=ii)
+        elif rtp == 'job':
+            if ii:
+                return self.destroy_job(k=k, i=ii)
         elif rtp == 'lmacro':
             if ii:
                 return self.destroy_macro(k=k, i=ii)

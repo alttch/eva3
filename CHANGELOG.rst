@@ -1,6 +1,60 @@
 EVA ICS CHANGELOG
 *****************
 
+3.2.3 (2019-06-24)
+==================
+
+Common
+------
+
+    * MQTT server is not required anymore for local host/network installations,
+      controllers can exchange information in real-time via P2P sockets (turned
+      on automatically if MQTT server for controller is not specified).
+    * state_history method can now return chart image (SVG/PNG)
+
+UC
+--
+
+    * get_phi_ports API method - get ports of loaded PHI
+    * phi_discover API method - search for equipment supported by PHI module
+    * Modbus values reported to UC slave can now be automatically converted to
+      signed and divided (or multiplied).
+
+LM PLC
+------
+
+    * set_job_prop macro function
+    * cycle can now run macros with args and kwargs
+
+SFA
+---
+
+    * easy-setup now creates default user (operator)
+    * "as" parameter for .json and .yml files changes their format on the flow
+    * JS SFA Framework is now deprecated. Use EVA JS Framework instead:
+      https://github.com/alttch/eva-js-framework
+
+
+3.2.2 (2019-05-21)
+==================
+
+UC
+--
+
+    * Driver API 5: "unload" method, unit values in PHIs.
+
+LM PLC
+------
+
+    * scheduled jobs
+
+SFA
+---
+
+    * evaHI integration
+    * transparent authentication on secondary UI pages
+
+
 3.2.1 (2019-04-16)
 ==================
 
@@ -16,6 +70,7 @@ Common
     * Modbus slave register monitoring functions
     * increment/decrement functions for lvars and shared macro variables
     * read-only permissions for API keys
+
 
 3.2.0 (2019-04-02)
 ==================
@@ -60,8 +115,8 @@ UC
     * Modbus slave support
     * Driver API v4
 
-LM
---
+LM PLC
+------
 
     * new API functions: enable_controller, disable_controller,
       matest_controller, set_ext_prop
@@ -124,8 +179,8 @@ UC
     * MQTT tools for PHIs
     * test-phi CLI tool
 
-LM
---
+LM PLC
+------
 
     * fixes: double quoted macro arguments in DM rules
     * fixes: gain param in "tts" and "audio" extensions
@@ -141,6 +196,7 @@ SFA
 
     * new API function: "test_controller", detailed info in "list controllers"
     * SFA framework fixes and improvements
+
 
 3.1.0 (2018-09-01)
 ==================
@@ -248,6 +304,7 @@ Common
     * oid support in API keys
     * other stability improvements
 
+
 3.0.2 (2018-06-23)
 ==================
 
@@ -320,6 +377,7 @@ Common
       current host
     * ability to run controllers under restricted user
 
+
 3.0.1 (2018-02-21)
 ==================
 
@@ -347,11 +405,12 @@ UC
     * 'clone_group' function - clones all matching items in a group
     * 'destroy_group' function destroys all items in the specified group
 
-LM
---
+LM PLC
+------
 
     * item id in LM rules match by simple mask (i.e. '\*id\'* or 'id\'* or
       '\*id')
+
 
 3.0.0 (2017-10-19)
 ==================

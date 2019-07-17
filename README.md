@@ -1,6 +1,6 @@
 EVA ICS v3. https://www.eva-ics.com/
 
-Builds: https://get.eva-ics.com/3.2.1/stable/
+Install instructions and stable builds: https://www.eva-ics.com/download
 
 Documentation: https://www.eva-ics.com/doc
 
@@ -12,22 +12,17 @@ available under Apache License 2.0.
 
 ![What is EVA ICS](doc/promo/what-is-eva-ics.png?raw=true "What is EVA ICS")
 
-Automated control systems are facing a new stage of evolution: IoT-devices
-become interesting for those, who have never dealt with automation, cheap
-programmable devices become reliable enough for industrial use, commercial
-solutions move away from old protocols and involve computer networks instead.
-We do not reform automation – we change the approach: taking the classical
-technology as a basis, we simplify everything else to the maximum. Automation
-is simple and available for everyone!
+Using MQTT server, EVA ICS allows to set up single IoT/IIoT management node
+and then easily scale it to your own automation Cloud, where nodes and
+components discover each other automatically.
+
+You design IoT setup. EVA ICS builds it for you.
 
 ![EVA shell - best IoT CLI tool](doc/eva-shell.png?raw=true "Eva
 shell - best IoT CLI tool")
 
-Using MQTT protocol, EVA ICS allows to set up single IoT/IIoT management node
-and then easily scale it to your own automation Cloud, where nodes and
-components discover each other automatically.
-
-You design IoT set up. EVA ICS builds it for you.
+Note: code in master branch can be unstable or even broken. Please use version
+branches, [stable builds or installer](https://www.eva-ics.com/download).
 
 (c) 2012-2019 Altertech Group https://www.altertech.com/
 

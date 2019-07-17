@@ -2,7 +2,7 @@ _uc-cmd_server() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'reload restart start status stop' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'launch reload restart start status stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -32,7 +32,7 @@ _uc-cmd_phi() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'download exec get list load modhelp modinfo mods set test unlink unload' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'discover download exec get list load modhelp modinfo mods ports set test unlink unload' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -62,7 +62,7 @@ _uc-cmd_modbus() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'create destroy list test' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'create destroy list read test write' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -73,6 +73,16 @@ _uc-cmd_device() {
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
     COMPREPLY=( $( compgen -W 'deploy templates undeploy update' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
+_uc-cmd_maintenance() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'start stop' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -102,7 +112,7 @@ _uc-cmd_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'action template update' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action server-config template update' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -172,10 +182,10 @@ _uc-cmd() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user' -- "$cur" ))
   else
     case "${words[1]}" in
-      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|modbus|modbus-slave|owfs|phi|server|user)
+      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
         _uc-cmd_${words[1]}
         ;;
       *)

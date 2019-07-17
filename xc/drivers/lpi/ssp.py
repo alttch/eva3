@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __description__ = "Single port sensor LPI"
-__api__ = 4
+__api__ = 5
 
 __logic__ = 'single port'
 

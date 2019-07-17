@@ -8,21 +8,22 @@ Pragma: no-cache
 {
     "args": [],
     "err": "",
-    "exitcode": 0,
+    "exitcode": null,
+    "finished": false,
+    "finished_in": null,
     "item_group": "tests",
     "item_id": "test_macro",
     "item_oid": "lmacro:tests/test_macro",
     "item_type": "lmacro",
     "kwargs": {},
-    "out": "test passed",
+    "out": "",
     "priority": 100,
-    "status": "completed",
+    "status": "running",
     "time": {
-        "completed": 1553208911.3452165,
-        "created": 1553208911.342089,
-        "pending": 1553208911.3428166,
-        "queued": 1553208911.3436902,
-        "running": 1553208911.3441064
+        "created": 1559868831.9307947,
+        "pending": 1559868831.9313061,
+        "queued": 1559868831.9320123,
+        "running": 1559868831.9324815
     },
-    "uuid": "34975c4f-e482-417d-b8d7-9fab219f7dc6"
+    "uuid": "c1ac8b97-54c3-40e3-9db0-df859d9585c7"
 }

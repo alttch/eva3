@@ -1,10 +1,10 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.2.5"
 __description__ = "Play audio file"
-__api__ = 4
-__mods_required__ = ['soundfile', 'sounddevice']
+__api__ = 5
+__mods_required__ = []
 
 __config_help__ = [{
     'name': 'sdir',
@@ -21,13 +21,41 @@ __config_help__ = [{
     'help': 'Default gain (-10..inf)',
     'type': 'float',
     'required': False
+}, {
+    'name': 'cmd',
+    'help': 'External playback command',
+    'type': 'str',
+    'required': False
 }]
 
-__functions__ = {'play(soundfile, gain=0, wait=True)': 'Play sound file'}
+__functions__ = {'play(soundfile, gain=0, wait=True)': 'Play audio file'}
+
+__iec_functions__ = {
+    'play': {
+        'description':
+        'play audio file',
+        'var_in': [{
+            'var': 'soundfile',
+            'description': 'audio file to play'
+        }, {
+            'var': 'gain',
+            'description': 'volume gain'
+        }, {
+            'var': 'wait',
+            'description': 'wait until playback finish'
+        }]
+    }
+}
 
 __help__ = """
 Plays audio file inside the specified directory. The file path should be
 relative to the directory root, witout a starting slash.
+
+If external playback command is not specified, "sounddevice" and "soundfile"
+python modules must be present in system.
+
+Params for external command: %f - file, %g - gain, e.g. "play %f gain %g", if
+no %f is specified, file name is automatically added to the end.
 """
 
 import importlib
@@ -59,16 +87,18 @@ class LMExt(GenericExt):
             except:
                 self.log_error('invalid device number: %s' % self.cfg.get('d'))
                 raise
-            try:
-                self.sf = importlib.import_module('soundfile')
-            except:
-                self.log_error('soundfile Python module not installed')
-                raise
-            try:
-                self.sd = importlib.import_module('sounddevice')
-            except:
-                self.log_error('sounddevice Python module not installed')
-                raise
+            self.cmd = self.cfg.get('cmd')
+            if not self.cmd:
+                try:
+                    self.sf = importlib.import_module('soundfile')
+                except:
+                    self.log_error('soundfile Python module not installed')
+                    raise
+                try:
+                    self.sd = importlib.import_module('sounddevice')
+                except:
+                    self.log_error('sounddevice Python module not installed')
+                    raise
         except:
             log_traceback()
             self.ready = False
@@ -78,13 +108,29 @@ class LMExt(GenericExt):
                           str) or fname[0] == '/' or fname.find('..') != -1:
             return False
         try:
-            data, rate = self.sf.read(self.sdir + '/' + fname)
-            if data is None or not rate:
-                raise Exception('invalid audio file %s' % fname)
-            gain = gain if gain is not None else self.gain
-            if gain: data = data * self._gain_multiplier(gain)
-            self.sd.play(data, rate, blocking=wait, device=self.device)
-            return True
+            f = self.sdir + '/' + fname
+            if self.cmd:
+                cmd = self.cmd.replace(
+                    '%g',
+                    str(gain)
+                    if gain is not None else str(self.gain)).replace('%f', f)
+                if self.cmd.find('%f') == -1:
+                    cmd += ' ' + f
+                if not wait:
+                    cmd += ' &'
+                import os
+                ec = os.system(cmd)
+                if ec:
+                    raise Exception('Command "{}" exit code: {}'.format(
+                        cmd, ec))
+            else:
+                data, rate = self.sf.read(f)
+                if data is None or not rate:
+                    raise Exception('invalid audio file %s' % fname)
+                gain = gain if gain is not None else self.gain
+                if gain: data = data * self._gain_multiplier(gain)
+                self.sd.play(data, rate, blocking=wait, device=self.device)
+                return True
         except:
             self.log_error('file %s playback failed' % fname)
             log_traceback()

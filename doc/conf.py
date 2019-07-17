@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 # -*- coding: utf-8 -*-
 #
@@ -53,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'EVA ICS'
-copyright = '2018, AlterTech'
+copyright = '2019, AlterTech'
 author = 'AlterTech'
 
 # The version info for the project you're documenting, acts as replacement for

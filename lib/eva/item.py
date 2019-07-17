@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import copy
 import os
@@ -25,6 +25,7 @@ from eva.generic import GenericAction
 from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import InvalidParameter
+from eva.exceptions import MethodNotImplemented
 
 from eva.generic import ia_status_created
 from eva.generic import ia_status_pending
@@ -51,6 +52,7 @@ class Item(object):
         self.config_file_exists = False
         # generate long config names or use IDs in enterprise layout
         self.respect_layout = True
+        self.notify_events = 2  # 2 - all events, 1 - state only, 0 - no
 
     def set_group(self, group=None):
         if group: self.group = group
@@ -63,6 +65,8 @@ class Item(object):
             self.set_group(data['group'])
         if 'description' in data:
             self.description = data['description']
+        if 'notify_events' in data:
+            self.notify_events = data['notify_events']
         self.config_changed = True
 
     def set_prop(self, prop, val=None, save=False):
@@ -76,6 +80,19 @@ class Item(object):
                 self.log_set(prop, v)
                 self.set_modified(save)
             return True
+        elif prop == 'notify_events':
+            try:
+                v = int(val)
+                if v >= 0 and v <= 2:
+                    if self.notify_events != v:
+                        self.notify_events = v
+                        self.log_set(prop, v)
+                        self.set_modified(save)
+                    return True
+                else:
+                    raise Exception
+            except:
+                return False
         return False
 
     def log_set(self, prop, val):
@@ -97,6 +114,8 @@ class Item(object):
 
     def notify(self, retain=None, skip_subscribed_mqtt=False,
                for_destroy=False):
+        if not self.notify_events:
+            return
         try:
             if skip_subscribed_mqtt: s = self
             else: s = None
@@ -125,6 +144,8 @@ class Item(object):
         if not props:
             d['full_id'] = self.group + '/' + self.item_id
             d['oid'] = self.oid
+        if config or props:
+            d['notify_events'] = self.notify_events
         if full or config or info or props:
             if not config or self.description != '':
                 d['description'] = self.description
@@ -302,6 +323,7 @@ class UpdatableItem(Item):
         self.mqtt_update_topics = ['', 'status', 'value']
         self._mqtt_updates_allowed = True
         self._expire_on_any = False
+        self.allow_mqtt_updates_from_controllers = False
         self.mqtt_update_timestamp = 0
 
     def update_config(self, data):
@@ -397,6 +419,7 @@ class UpdatableItem(Item):
         elif prop == 'update_timeout':
             if val is None:
                 if self._update_timeout is not None:
+                    import eva.core
                     self.update_timeout = eva.core.config.timeout
                     self._update_timeout = None
                     self.log_set(prop, None)
@@ -672,7 +695,7 @@ class UpdatableItem(Item):
             else:
                 status = update_out[0]
                 value = update_out[1]
-                if value is None: value = ''
+                # if value is None: value = ''
         except:
             logging.error('update %s returned bad data' % self.oid)
             eva.core.log_traceback()
@@ -690,25 +713,49 @@ class UpdatableItem(Item):
                     return
                 j = jsonpickle.decode(data)
                 t = j['t']
-                if t < self.mqtt_update_timestamp:
+                remote_controller = j.get('c')
+                if (
+                        not self.allow_mqtt_updates_from_controllers and
+                        remote_controller
+                ) or t < self.mqtt_update_timestamp or \
+                        remote_controller == eva.core.config.controller_name:
                     return None
                 self.mqtt_update_timestamp = t
-                if 'status' in j:
-                    s = j['status']
-                else:
-                    s = None
-                if 'value' in j:
-                    v = j['value']
-                else:
-                    v = None
-                if s is not None or v is not None:
-                    self.update_set_state(status=s, value=v, from_mqtt=True)
+                self.set_state_from_serialized(j, from_mqtt=True)
                 return j
         except:
             eva.core.log_traceback()
 
-    def update_set_state(self, status=None, value=None, from_mqtt=False):
-        self.update_expiration()
+    def set_state_from_serialized(self,
+                                  data,
+                                  from_mqtt=False,
+                                  force_notify=False):
+        try:
+            if 'status' in data:
+                s = data['status']
+            else:
+                s = None
+            if 'value' in data:
+                v = data['value']
+            else:
+                v = None
+            if s is not None or v is not None:
+                self.update_set_state(
+                    status=s,
+                    value=v,
+                    from_mqtt=from_mqtt,
+                    force_notify=force_notify)
+        except:
+            eva.core.log_traceback()
+
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_notify=False,
+                         update_expiration=True):
+        if update_expiration:
+            self.update_expiration()
         need_notify = False
         if status is not None and status != '':
             try:
@@ -726,7 +773,7 @@ class UpdatableItem(Item):
             if self.value != value:
                 need_notify = True
                 self.value = value
-        if need_notify:
+        if need_notify or force_notify:
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
 
@@ -792,6 +839,7 @@ class ActiveItem(Item):
         self._action_timeout = None
         self.term_kill_interval = eva.core.config.timeout
         self._term_kill_interval = None
+        # Lock() is REQUIRED for LM PLC (released in plc._t_action thread)
         self.queue_lock = threading.Lock()
         self.action_processor = None
         self.action_processor_active = False
@@ -833,11 +881,11 @@ class ActiveItem(Item):
             self.queue_lock.release()
 
     def q_clean(self, lock=True):
-        if lock:
-            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical('ActiveItem::q_clean locking broken')
-                eva.core.critical()
-                return False
+        if lock and \
+                not self.queue_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ActiveItem::q_clean locking broken')
+            eva.core.critical()
+            return False
         try:
             i = 0
             while self.q_is_task():
@@ -854,11 +902,11 @@ class ActiveItem(Item):
             if lock: self.queue_lock.release()
 
     def terminate(self, lock=True):
-        if lock:
-            if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical('ActiveItem::terminate locking broken')
-                eva.core.critical()
-                return False
+        if lock and \
+                not self.queue_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ActiveItem::terminate locking broken')
+            eva.core.critical()
+            return False
         try:
             if self.action_xc and not self.action_xc.is_finished():
                 if not self.action_allow_termination:
@@ -940,7 +988,7 @@ class ActiveItem(Item):
             '%s executing action %s pr=%u' % \
              (self.oid, action.uuid, action.priority))
 
-    def action_run_args(self, action, n2n=True):
+    def action_run_args(self, action):
         return ()
 
     def action_before_get_task(self):
@@ -1151,6 +1199,7 @@ class ActiveItem(Item):
         elif prop == 'action_timeout':
             if val is None:
                 if self._action_timeout is not None:
+                    import eva.core
                     self.action_timeout = eva.core.config.timeout
                     self._action_timeout = None
                     self.log_set(prop, None)
@@ -1170,6 +1219,7 @@ class ActiveItem(Item):
         elif prop == 'term_kill_interval':
             if val is None:
                 if self._term_kill_interval is not None:
+                    import eva.core
                     self.term_kill_interval = eva.core.config.timeout
                     self._term_kill_interval = None
                     self.log_set(prop, None)
@@ -1257,7 +1307,7 @@ class ItemAction(GenericAction):
 
     def __init__(self, item, priority=None, action_uuid=None):
         super().__init__()
-        self.item_action_lock = threading.Lock()
+        self.item_action_lock = threading.RLock()
         if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('ItemAction::__init___ locking broken')
             eva.core.critical()
@@ -1277,7 +1327,8 @@ class ItemAction(GenericAction):
             logging.debug('action %s created, %s: %s' % \
                 (self.uuid, self.item.item_type,
                     self.item.full_id))
-            if eva.notify.is_action_subscribed():
+            if self.item.notify_events > 1 and eva.notify.is_action_subscribed(
+            ):
                 eva.notify.notify('action', (self, self.serialize()))
         self.item_action_lock.release()
 
@@ -1299,13 +1350,11 @@ class ItemAction(GenericAction):
     def _set_status_only(self, status):
         super().set_status(status)
 
-    def set_status(self, status, exitcode=None, out=None, err=None, lock=True):
-        if lock:
-            if not self.item_action_lock.acquire(
-                    timeout=eva.core.config.timeout):
-                logging.critical('ItemAction::set_status locking broken')
-                eva.core.critical()
-                return False
+    def set_status(self, status, exitcode=None, out=None, err=None):
+        if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ItemAction::set_status locking broken')
+            eva.core.critical()
+            return False
         try:
             if self.is_status_dead():
                 return False
@@ -1330,7 +1379,8 @@ class ItemAction(GenericAction):
                 self.err = err
             logging.debug('action %s new status: %s' % \
                     (self.uuid, ia_status_names[status]))
-            if eva.notify.is_action_subscribed():
+            if self.item.notify_events > 1 and eva.notify.is_action_subscribed(
+            ):
                 t = threading.Thread(
                     target=eva.notify.notify,
                     args=('action', (self, self.serialize())))
@@ -1338,7 +1388,7 @@ class ItemAction(GenericAction):
                 t.start()
             return True
         finally:
-            if lock: self.item_action_lock.release()
+            self.item_action_lock.release()
 
     def set_pending(self):
         return self.set_status(ia_status_pending)
@@ -1389,8 +1439,7 @@ class ItemAction(GenericAction):
                 if self.is_status_running():
                     result = self.item.terminate(lock=False)
                 else:
-                    result = self.set_status(
-                        eva.core.item.ia_status_canceled, lock=False)
+                    result = self.set_status(ia_status_canceled)
                 return result
             finally:
                 self.item.queue_lock.release()
@@ -1398,21 +1447,33 @@ class ItemAction(GenericAction):
             self.item_action_lock.release()
 
     def serialize(self):
-        d = {}
-        d['uuid'] = self.uuid
-        d['status'] = ia_status_names[self.get_status()]
-        d['priority'] = self.priority
-        d['exitcode'] = self.exitcode
-        d['out'] = self.out
-        d['err'] = self.err
-        d['item_id'] = self.item.item_id
-        d['item_group'] = self.item.group
-        d['item_type'] = self.item.item_type
-        d['item_oid'] = self.item.oid
-        d['time'] = {}
-        for i, v in self.time.items():
-            d['time'][ia_status_names[i]] = v
-        return d
+        if not self.item_action_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('ItemAction::set_status locking broken')
+            eva.core.critical()
+            return False
+        try:
+            d = {}
+            d['uuid'] = self.uuid
+            d['status'] = ia_status_names[self.get_status()]
+            d['finished'] = self.is_finished()
+            d['priority'] = self.priority
+            d['exitcode'] = self.exitcode
+            d['out'] = self.out
+            d['err'] = self.err
+            d['item_id'] = self.item.item_id
+            d['item_group'] = self.item.group
+            d['item_type'] = self.item.item_type
+            d['item_oid'] = self.item.oid
+            d['time'] = {}
+            t_max = 0
+            for i, v in self.time.items():
+                d['time'][ia_status_names[i]] = v
+                if v > t_max: t_max = v
+            d['finished_in'] = round(t_max - self.time[ia_status_created], 7) \
+                    if self.is_finished() else None
+            return d
+        finally:
+            self.item_action_lock.release()
 
 
 class MultiUpdate(UpdatableItem):
@@ -1532,7 +1593,12 @@ class MultiUpdate(UpdatableItem):
 
 class VariableItem(UpdatableItem):
 
-    def update_set_state(self, status=None, value=None, from_mqtt=False):
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_notify=False,
+                         update_expiration=True):
         if self._destroyed: return False
         try:
             if status is not None: _status = int(status)
@@ -1545,7 +1611,8 @@ class VariableItem(UpdatableItem):
             logging.debug('%s skipping update - it\'s not active' % \
                     self.oid)
             return False
-        self.update_expiration()
+        if update_expiration:
+            self.update_expiration()
         need_notify = False
         if _status is not None:
             if self.status != _status: need_notify = True
@@ -1556,7 +1623,7 @@ class VariableItem(UpdatableItem):
             if self.status == -1 and _status is None and value != '':
                 self.status = 1
                 need_notify = True
-        if need_notify:
+        if need_notify or force_notify:
             logging.debug(
                 '%s status = %u, value = "%s"' % \
                         (self.oid, self.status, self.value))
@@ -1612,6 +1679,53 @@ def item_match(item, item_ids, groups=None):
     return False
 
 
+_p_periods = {
+    'S': 1,
+    'T': 60,
+    'H': 3600,
+    'D': 86400,
+    'W': 604800,
+}
+
+# val_prefixes = {
+# 'k': 1000,
+# 'kb': 1024,
+# 'M': 1000 * 1000,
+# 'Mb': 1024 * 1024,
+# 'G': 1000 * 1000 * 1000,
+# 'Gb': 1024 * 1024 * 1024,
+# 'T': 1000 * 1000 * 1000 * 1000,
+# 'Tb': 1024 * 1024 * 1024 * 1024,
+# 'P': 1000 * 1000 * 1000 * 1000 * 1000,
+# 'Pb': 1024 * 1024 * 1024 * 1024 * 1024,
+# 'E': 1000 * 1000 * 1000 * 1000 * 1000 * 1000,
+# 'Eb': 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
+# 'Z': 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000,
+# 'Zb': 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024,
+# 'Y': 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000 * 1000,
+# 'Yb': 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024 * 1024
+# }
+
+val_prefixes = {
+    'k': 1000,
+    'kb': 1024,
+    'M': 1000000,
+    'Mb': 1048576,
+    'G': 1000000000,
+    'Gb': 1073741824,
+    'T': 1000000000000,
+    'Tb': 1099511627776,
+    'P': 1000000000000000,
+    'Pb': 1125899906842624,
+    'E': 1000000000000000000,
+    'Eb': 1152921504606846976,
+    'Z': 1000000000000000000000,
+    'Zb': 1180591620717411303424,
+    'Y': 1000000000000000000000000,
+    'Yb': 1208925819614629174706176
+}
+
+
 def get_state_history(a=None,
                       oid=None,
                       t_start=None,
@@ -1620,39 +1734,61 @@ def get_state_history(a=None,
                       prop=None,
                       time_format=None,
                       fill=None,
-                      fmt=None):
+                      fmt=None,
+                      xopts=None):
     import dateutil
     import pytz
     import pandas as pd
     import math
     from datetime import datetime
 
+    def fmt_time(t):
+        try:
+            return time.time() - _p_periods.get(t[-1]) * int(t[:-1])
+        except:
+            return t
+
     if oid is None: raise ResourceNotFound
-    n = eva.notify.get_db_notifier(a)
-    if not t_start and fill:
-        raise InvalidParameter('start time is required when fill is used')
-    if t_start and fill: tf = 'iso'
-    else: tf = time_format
+    n = eva.notify.get_stats_notifier(a)
     if not n: raise ResourceNotFound('notifier')
+    if n.state_storage not in ['sql', 'tsdb']:
+        raise MethodNotImplemented
+    if fill:
+        tf = 'iso'
+        if not t_start:
+            t_start = time.time() - 86400
+    else:
+        tf = time_format
+    t_start = fmt_time(t_start)
+    t_end = fmt_time(t_end)
     try:
         result = n.get_state(
             oid=oid,
             t_start=t_start,
             t_end=t_end,
+            fill=fill.split(':', 1)[0] if fill else None,
             limit=limit,
             prop=prop,
-            time_format=tf)
+            time_format=tf if not t_start or not fill else 'dt_utc',
+            xopts=xopts)
     except:
         raise FunctionFailed
-    if t_start and fill and result:
+    if n.state_storage == 'sql':
+        parse_df = True
+        parse_tsdb = False
+    else:
+        parse_df = False
+        parse_tsdb = True
+    if ((t_start and fill) or parse_tsdb) and result:
         tz = pytz.timezone(time.tzname[0])
-        try:
-            t_s = float(t_start)
-        except:
+        if t_start:
             try:
-                t_s = dateutil.parser.parse(t_start).timestamp()
+                t_s = float(t_start)
             except:
-                raise InvalidParameter('time format is unknown')
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    raise InvalidParameter('time format is unknown')
         if t_end:
             try:
                 t_e = float(t_end)
@@ -1664,47 +1800,113 @@ def get_state_history(a=None,
         else:
             t_e = time.time()
         if t_e > time.time(): t_e = time.time()
-        try:
-            df = pd.DataFrame(result)
-            df = df.set_index('t')
-            df.index = pd.to_datetime(df.index, utc=True)
-            if fill.find(':') != -1:
-                _fill, _pc = fill.split(':')
-                _pc = pow(10, int(_pc))
+        if fill and fill.find(':') != -1:
+            _fill, _pc = fill.split(':', 1)
+            if _pc.find(':') != -1:
+                _divider, _pc = _pc.split(':')
+                try:
+                    _divider = pow(10, int(_divider))
+                except:
+                    if not _divider in val_prefixes:
+                        raise FunctionFailed(
+                            'Prefix unknown: {}'.format(_divider))
+                    _divider = val_prefixes[_divider]
             else:
-                _fill = fill
-                _pc = None
-            sp1 = df.resample(_fill).mean()
-            sp2 = df.resample(_fill).pad()
-            sp = sp1.fillna(sp2).to_dict(orient='split')
+                _divider = None
+            _pc = pow(10, int(_pc))
+        else:
+            _fill = fill
+            _pc = None
+            _divider = None
+        try:
+            if parse_df:
+                df = pd.DataFrame(result)
+                df = df.set_index('t')
+                sp1 = df.resample(_fill).mean()
+                sp2 = df.resample(_fill).pad()
+                sp = sp1.fillna(sp2).to_dict(orient='split')
+            else:
+                sp = result
             result = []
-            for i in range(0, len(sp['index'])):
-                t = sp['index'][i].timestamp()
+            for i in range(0, len(sp['index']) if parse_df else len(sp)):
+                t = sp['index'][i].timestamp() if parse_df else sp[i][0]
                 if time_format == 'iso':
                     t = datetime.fromtimestamp(t, tz).isoformat()
                 r = {'t': t}
-                if 'status' in sp['columns'] and 'value' in sp['columns']:
-                    try:
-                        r['status'] = int(sp['data'][i][0])
-                    except:
-                        r['status'] = None
-                    r['value'] = sp['data'][i][1]
-                elif 'status' in sp['columns']:
-                    try:
-                        r['status'] = int(sp['data'][i][0])
-                    except:
-                        r['status'] = None
-                elif 'value' in sp['columns']:
-                    r['value'] = sp['data'][i][0]
+                if parse_df:
+                    if 'status' in sp['columns'] and 'value' in sp['columns']:
+                        try:
+                            r['status'] = int(sp['data'][i][0])
+                        except:
+                            r['status'] = None
+                        r['value'] = sp['data'][i][1]
+                    elif 'status' in sp['columns']:
+                        try:
+                            r['status'] = int(sp['data'][i][0])
+                        except:
+                            r['status'] = None
+                    elif 'value' in sp['columns']:
+                        r['value'] = sp['data'][i][0]
+                else:
+                    if prop:
+                        if prop in ['status', 'S']:
+                            try:
+                                r['status'] = int(sp[i][1])
+                            except:
+                                r['status'] = None
+                        elif prop in ['value', 'V']:
+                            r['value'] = sp[i][1]
+                    else:
+                        try:
+                            r['status'] = int(sp[i][1])
+                        except:
+                            r['status'] = None
+                        r['value'] = sp[i][2]
                 if 'value' in r and isinstance(r['value'], float):
                     if math.isnan(r['value']):
                         r['value'] = None
                     elif _pc:
+                        if _divider:
+                            r['value'] = r['value'] / _divider
                         r['value'] = math.floor(r['value'] * _pc) / _pc
                 result.append(r)
+        except pd.core.base.DataError:
+            result = []
+        except FunctionFailed:
+            raise
         except:
             eva.core.log_traceback()
             raise FunctionFailed
+    # check dataframe, fill till t_e if not filled
+    try:
+        if fill and (not limit or len(result) < limit):
+            if time_format == 'iso':
+                r_ts = dateutil.parser.parse(result[-1]['t']).timestamp()
+            else:
+                r_ts = result[-1]['t']
+            if len(result) > 1:
+                if time_format == 'iso':
+                    per = r_ts - dateutil.parser.parse(
+                        result[-2]['t']).timestamp()
+                else:
+                    per = r_ts - result[-2]['t']
+            else:
+                per = int(_fill[:-1]) * _p_periods[_fill[-1].upper()]
+            while True:
+                r_ts += per
+                if r_ts > t_e:
+                    break
+                lf = result[-1].copy()
+                if time_format == 'iso':
+                    lf['t'] = datetime.fromtimestamp(r_ts, tz).isoformat()
+                else:
+                    lf['t'] = r_ts
+                result.append(lf)
+    except:
+        pass
+    # convert to list if required
+    if limit is not None:
+        result = result[:int(limit)]
     if not fmt or fmt == 'list':
         res = {'t': []}
         for r in result:

@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import subprocess
 import threading
@@ -275,7 +275,12 @@ code_cache_m = {}
 
 class PyThread(object):
 
-    def __init__(self, item=None, script=None, env_globals=None, bcode=None):
+    def __init__(self,
+                 item=None,
+                 script=None,
+                 env_globals=None,
+                 bcode=None,
+                 mfcode=None):
         if item:
             if item.action_exec:
                 sfile = item.action_exec
@@ -291,14 +296,20 @@ class PyThread(object):
         self.out = None
         self.err = None
         self.bcode = bcode if bcode else ''
+        self.mfcode = mfcode
         self.exitcode = -15
+        self.compile_lock = threading.RLock()
 
     def compile(self):
-        if self.script_file in code_cache:
-            omtime = code_cache_m[self.script_file]
-        else:
-            omtime = None
+        if not self.compile_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('PyThread::compile locking broken')
+            eva.core.critical()
+            return False
         try:
+            if self.script_file in code_cache:
+                omtime = code_cache_m[self.script_file]
+            else:
+                omtime = None
             mtime = os.path.getmtime(self.script_file)
             try:
                 mtime_c = os.path.getmtime(self.common_file)
@@ -306,14 +317,18 @@ class PyThread(object):
                 mtime_c = 0
             if mtime_c > mtime:
                 mtime = mtime_c
+            if self.mfcode and self.mfcode.build_time > mtime:
+                mtime = self.mfcode.build_time
             if not omtime or mtime > omtime:
                 raw = ''.join(open(self.script_file).readlines())
                 try:
                     raw_c = ''.join(open(self.common_file).readlines())
                 except:
                     raw_c = ''
-                self.code = compile(self.bcode + raw_c + '\n' + raw,
-                                    self.script, 'exec')
+                self.code = compile(
+                    (self.mfcode.code
+                     if self.mfcode else '') + self.bcode + raw_c + '\n' + raw,
+                    self.script, 'exec')
                 code_cache[self.script_file] = self.code
                 code_cache_m[self.script_file] = mtime
                 logging.debug('File %s compiled successfully' % \
@@ -328,6 +343,8 @@ class PyThread(object):
             eva.core.log_traceback(force=True)
             self.err = traceback.format_exc()
             return False
+        finally:
+            self.compile_lock.release()
 
     def run(self):
         if not self.code:

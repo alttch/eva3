@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.0"
+__version__ = "3.2.4"
 
 import sys
 import os
@@ -14,6 +14,8 @@ sys.path.append(dir_lib)
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
+
+import eva.client.cli
 
 
 class LM_CLI(GenericCLI, ControllerCLI):
@@ -150,7 +152,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
     class ComplController(ComplGeneric):
 
         def __init__(self, cli, allow_all=False):
-            super().__init__(cli)
+            ComplGeneric.__init__(self, cli)
             self.allow_all = allow_all
 
         def __call__(self, prefix, **kwargs):
@@ -236,9 +238,38 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 else:
                     code, data = self.cli.call('remote')
                 if code: return True
+                result = []
                 for d in data:
-                    yield d['oid'] + '/status'
-                    yield d['oid'] + '/value'
+                    result.append(d['oid'] + '.status')
+                    result.append(d['oid'] + '.value')
+                return result
+            return True
+
+    class ComplJob(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call('job list')
+            if code: return True
+            result = set()
+            for v in data:
+                result.add(v['id'])
+            return list(result)
+
+    class ComplJobProp(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(
+                ['job', 'props', kwargs.get('parsed_args').i])
+            if code: return True
+            result = list(data.keys())
+            return result
+
+    class ComplJobPropVal(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            p = kwargs.get('parsed_args').p
+            if p == 'macro':
+                return self.cli.ComplMacro(self.cli)(prefix, **kwargs)
             return True
 
     class ComplCyclePropVal(ComplGeneric):
@@ -252,6 +283,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
     def fancy_print_result(self, result, api_func, itype, tab=0, print_ok=True):
         if api_func == 'list_rules':
             self.print_list_rules(result)
+        elif api_func == 'list_jobs':
+            self.print_list_jobs(result)
         else:
             super().fancy_print_result(result, api_func, itype, tab, print_ok)
 
@@ -288,7 +321,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             if r['macro']:
                 macro = r['macro'] + '(' + ', '.join(args)
                 if kwargs:
-                    macro += '|' + ','.join(kwargs)
+                    macro += ', ' + ', '.join(kwargs)
                 macro += ')'
             else:
                 macro = ''
@@ -334,14 +367,104 @@ class LM_CLI(GenericCLI, ControllerCLI):
             print(' ' + out2[i + 2])
             print()
 
+    def print_list_jobs(self, result):
+        if not result:
+            print('no data')
+            return
+        self.import_pandas()
+        data2 = []
+        data3 = []
+        data4 = []
+        for r in result:
+            args = []
+            kwargs = []
+            for o in r['macro_args']:
+                args.append('\'' + o + '\'')
+            if r.get('macro_kwargs'):
+                for i, v in r['macro_kwargs'].items():
+                    kwargs.append('{}=\'{}\''.format(i, v))
+            if r['macro']:
+                macro = r['macro'] + '(' + ', '.join(args)
+                if kwargs:
+                    macro += ', ' + ', '.join(kwargs)
+                macro += ')'
+            else:
+                macro = ''
+            data2.append({
+                'every': ('every {}'.format(r['every']))
+                if r['every'] else 'not scheduled',
+                'macro':
+                macro
+            })
+            data4.append({'last': 'last: {}'.format(r['last']), '': ''})
+            data3.append({
+                'id': r['id'],
+                'E': self.bool2yn(r['enabled']),
+                'Description': r['description'],
+            })
+        df2 = self.pd.DataFrame(data2)
+        df2.set_index('every', inplace=True)
+        df3 = self.pd.DataFrame(data3)
+        df3 = df3.ix[:, ['id', 'E', 'Description']]
+        df3.set_index('id', inplace=True)
+        df4 = self.pd.DataFrame(data4)
+        df4.set_index('last', inplace=True)
+        out2 = df2.to_string().split('\n')
+        out3 = df3.to_string().split('\n')
+        out4 = df4.to_string().split('\n')
+        print(self.colored(out3[0], color='blue'))
+        print(
+            self.colored(
+                '-' * max(len(out2[0]), len(out3[0]), len(out4[0])),
+                color='grey'))
+        for i in range(0, len(data2)):
+            print(out3[i + 2])
+            print(' ' + out2[i + 2])
+            print(' ' + out4[i + 2])
+            print()
+
     def prepare_run(self, api_func, params, a):
-        if api_func == 'set_rule_prop':
+        if api_func in [
+                'set_prop', 'set_cycle_prop', 'set_macro_prop', 'set_rule_prop',
+                'set_job_prop', 'set_controller_prop', 'set_ext_prop'
+        ]:
+            if params['p'] and params['p'].find('=') != -1:
+                params['p'], v = params['p'].split('=', 1)
+                if isinstance(params['v'], list):
+                    params['v'] = [v] + params['v']
+                else:
+                    params['v'] = v
+        if api_func == 'state_history':
+            if params['c']:
+                params['g'] = 'chart'
+        elif api_func == 'set_rule_prop':
             if a._func in ['enable', 'disable']:
                 params['p'] = 'enabled'
                 params['v'] = 1 if a._func == 'enable' else 0
+            elif isinstance(params['v'], list):
+                params['v'] = ' '.join(params['v'])
+        elif api_func == 'set_job_prop':
+            if a._func in ['enable', 'disable']:
+                params['p'] = 'enabled'
+                params['v'] = 1 if a._func == 'enable' else 0
+            elif isinstance(params['v'], list):
+                params['v'] = ' '.join(params['v'])
         super().prepare_run(api_func, params, a)
 
     def prepare_result_data(self, data, api_func, itype):
+        if api_func == 'list':
+            self.pd_cols[api_func] = ['oid']
+            x = self.last_api_call_params.get('x')
+            if x:
+                for p in x.split(','):
+                    self.pd_cols[api_func].append(p)
+            else:
+                self.pd_cols[api_func].append('description')
+        if api_func == 'list_device_tpl':
+            for d in data:
+                d['type'] = d['type'] + ' device template'
+                return data
+            return result
         if api_func not in [
                 'state', 'list_macros', 'list_cycles', 'list_controllers',
                 'result'
@@ -357,6 +480,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 d['status'] = ['stopped', 'running', 'stopping'][d['status']]
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
+                d['proto'] += '/' + ('mqtt' if d.get('mqtt_update') else 'ws')
             elif api_func == 'result':
                 from datetime import datetime
                 d['time'] = datetime.fromtimestamp(
@@ -391,12 +515,21 @@ class LM_CLI(GenericCLI, ControllerCLI):
         if api_func == 'create_rule' and result and result.get(
                 'result') == 'OK':
             del result['result']
+        if api_func == 'create_job' and result and result.get('result') == 'OK':
+            del result['result']
         return super().process_result(result, code, api_func, itype, a)
 
     def prepare_result_dict(self, data, api_func, itype):
-        if api_func != 'status_controller':
+        if api_func == 'status_controller':
+            return self.prepare_controller_status_dict(data)
+        elif api_func == 'result' and 'created' in data:
+            from datetime import datetime
+            for x in data.keys():
+                data[x] = '{:.7f} | {}'.format(data[x],
+                                               datetime.fromtimestamp(data[x]))
             return super().prepare_result_dict(data, api_func, itype)
-        return self.prepare_controller_status_dict(data)
+        else:
+            return super().prepare_result_dict(data, api_func, itype)
 
     def setup_parser(self):
         super().setup_parser()
@@ -411,6 +544,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
         self.add_lm_cycle_functions()
         self.add_lm_edit_functions()
         self.add_lm_rule_functions()
+        self.add_lm_job_functions()
         self.add_lm_ext_functions()
         self.add_lm_controller_functions()
 
@@ -472,6 +606,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
             help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
             metavar='INTERVAL',
             dest='w')
+        sp_history.add_argument(
+            '-c',
+            '--chart-options',
+            help='Chart options',
+            metavar='OPTS',
+            dest='c')
 
         sp_set = self.sp.add_parser('set', help='Set LVar state')
         sp_set.add_argument(
@@ -503,6 +643,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_list.add_argument(
             '-g', '--group', help='Filter by group', metavar='GROUP',
             dest='g').completer = self.ComplLVARGroup(self)
+        sp_list.add_argument(
+            '-x',
+            '--prop',
+            help='List specified prop(s), comma separated',
+            metavar='PROPS',
+            dest='x')
 
         ap_config = self.sp.add_parser('config', help='LVar configuration')
         sp_config = ap_config.add_subparsers(
@@ -756,7 +902,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='ID').completer = self.ComplCycle(self)
 
     def add_lm_edit_functions(self):
-        ap_edit = self.sp.add_parser('edit', help='Edit item scripts')
+        ap_edit = self.sp.add_parser('edit', help='Edit commands')
 
         sp_edit = ap_edit.add_subparsers(
             dest='_func', metavar='func', help='Edit commands')
@@ -766,6 +912,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='Macro ID (common.py for common code)',
             metavar='ID').completer = self.ComplMacro(
                 self, with_common=True)
+
+        self._append_edit_server_config(sp_edit)
 
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')
@@ -826,7 +974,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='PROP').completer = self.ComplRuleProp(self)
         sp_rule_set_prop.add_argument(
             'v', help='Value', metavar='VAL',
-            nargs='?').completer = self.ComplRulePropVal(self)
+            nargs='*').completer = self.ComplRulePropVal(self)
         sp_rule_set_prop.add_argument(
             '-y',
             '--save',
@@ -837,6 +985,76 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_rule_destroy = sp_rule.add_parser('destroy', help='Delete rule')
         sp_rule_destroy.add_argument(
             'i', help='Rule ID', metavar='ID').completer = self.ComplRule(self)
+
+    def add_lm_job_functions(self):
+        ap_job = self.sp.add_parser('job', help='Scheduled jobs')
+        sp_job = ap_job.add_subparsers(
+            dest='_func', metavar='func', help='Jobs commands')
+
+        sp_job_list = sp_job.add_parser('list', help='List defined jobs')
+
+        sp_job_get = sp_job.add_parser('get', help='Get job info')
+        sp_job_get.add_argument(
+            'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
+
+        sp_job_create = sp_job.add_parser('create', help='Create new job')
+        sp_job_create.add_argument(
+            '-u',
+            '--uuid',
+            help='Job UUID (generated if not specified)',
+            dest='u',
+            metavar='UUID')
+        sp_job_create.add_argument(
+            '-y',
+            '--save',
+            help='Save job config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_job_enable = sp_job.add_parser('enable', help='Enable job')
+        sp_job_enable.add_argument(
+            'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
+        sp_job_enable.add_argument(
+            '-y',
+            '--save',
+            help='Save job config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_job_disable = sp_job.add_parser('disable', help='Disable job')
+        sp_job_disable.add_argument(
+            'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
+        sp_job_disable.add_argument(
+            '-y',
+            '--save',
+            help='Save job config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_job_list_props = sp_job.add_parser(
+            'props', help='List job config props')
+        sp_job_list_props.add_argument(
+            'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
+
+        sp_job_set_prop = sp_job.add_parser('set', help='Set job config prop')
+        sp_job_set_prop.add_argument(
+            'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
+        sp_job_set_prop.add_argument(
+            'p', help='Config property',
+            metavar='PROP').completer = self.ComplJobProp(self)
+        sp_job_set_prop.add_argument(
+            'v', help='Value', metavar='VAL',
+            nargs='*').completer = self.ComplJobPropVal(self)
+        sp_job_set_prop.add_argument(
+            '-y',
+            '--save',
+            help='Save job config after set',
+            dest='_save',
+            action='store_true')
+
+        sp_job_destroy = sp_job.add_parser('destroy', help='Delete job')
+        sp_job_destroy.add_argument(
+            'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
 
     def add_lm_controller_functions(self):
         ap_controller = self.sp.add_parser(
@@ -1062,7 +1280,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
 _me = 'EVA ICS LM CLI version %s' % __version__
 
-cli = LM_CLI('lm', _me)
+prog = os.path.basename(__file__)[:-3]
+if prog == 'eva-shell': prog = 'eva lm'
+
+cli = LM_CLI('lm', _me, prog=prog)
 
 _api_functions = {
     'history': 'state_history',
@@ -1098,6 +1319,14 @@ _api_functions = {
     'rule:set': 'set_rule_prop',
     'rule:destroy': 'destroy_rule',
     'rule:get': 'get_rule',
+    'job:list': 'list_jobs',
+    'job:create': 'create_job',
+    'job:enable': 'set_job_prop',
+    'job:disable': 'set_job_prop',
+    'job:props': 'list_job_props',
+    'job:set': 'set_job_prop',
+    'job:destroy': 'destroy_job',
+    'job:get': 'get_job',
     'controller:list': 'list_controllers',
     'controller:test': 'test_controller',
     'controller:props': 'list_controller_props',
@@ -1133,6 +1362,7 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
+    'list_jobs': ['id', 'description', 'enabled', 'every', 'macro'],
     'list_cycles': ['id', 'description', 'status', 'int', 'iter', 'avg'],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
@@ -1151,11 +1381,14 @@ _always_json = ['get_config']
 
 cli.always_json += _always_json
 cli.always_print += ['run', 'cmd']
-cli.arg_sections += ['config', 'macro', 'cycle', 'rule', 'controller', 'ext']
+cli.arg_sections += [
+    'config', 'macro', 'cycle', 'job', 'rule', 'controller', 'ext'
+]
 cli.api_cmds_timeout_correction = ['run']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
+eva.client.cli.subshell_exit_code = code
 sys.exit(code)

@@ -19,6 +19,13 @@ SYS API functions are called through URL request
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
 Standard API responses
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -97,6 +104,7 @@ Client</api_clients>`:
 * **13** the resource is busy (in use) and can not be accessed/recreated or
   deleted at this moment
 
+* **14** the method is not implemented in/for requested resource
 
 Response field *"message"* may contain additional information about error.
 
@@ -205,6 +213,8 @@ Obtains authentication :doc:`token</api_tokens>` which can be used in API calls 
 
 If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
 
+If authentication token is specified, the function will check it and return token information if it is valid.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/login.req
     :response: http-examples/sysapi/login.resp
@@ -214,6 +224,7 @@ Parameters:
 * **k** valid API key or
 * **u** user login
 * **p** user password
+* **a** authentication token
 
 Returns:
 
@@ -226,15 +237,13 @@ logout - log out and purge authentication token
 
 Purges authentication :doc:`token</api_tokens>`
 
-If API key is used as parameter value, the function purges all tokens assigned to it.
-
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/logout.req
     :response: http-examples/sysapi/logout.resp
 
 Parameters:
 
-* **k** valid API key or token
+* **k** valid token
 
 
 .. _sysapi_cat_cvar:

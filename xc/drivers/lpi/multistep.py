@@ -1,7 +1,7 @@
 __author__ = 'Altertech Group, https://www.altertech.com/'
 __copyright__ = 'Copyright (C) 2012-2019 Altertech Group'
 __license__ = 'Apache License 2.0'
-__version__ = '1.1.0'
+__version__ = '1.1.4'
 __description__ = 'Multistep LPI (opener)'
 __api__ = 4
 
@@ -13,6 +13,11 @@ __config_help__ = [{
     'name': 'bose',
     'help': 'allow action even if current status is error',
     'type': 'bool',
+    'required': False
+}, {
+    'name': 'logic',
+    'help': 'default: default circuit, rdc: reversible DC',
+    'type': 'enum:str:default:rdc',
     'required': False
 }]
 
@@ -80,6 +85,9 @@ i.e. to 'socket', 'dsocket' for a more fancy unit configuration.  Each port and
 dport may be specified as a single value or contain an array of values, in this
 case multiple ports are used simultaneously.
 
+For reversible DC motor schema use "port" for plus (up) and "dport" for minus
+(down).
+
 You may set i: before the port label/number, i.e. i:2, to return/use inverted
 port state. This works both for power and direction ports.
 """
@@ -92,6 +100,10 @@ from eva.tools import val_to_boolean
 from eva.uc.driverapi import lpi_constructor
 
 
+class PredictedTimeoutException(Exception):
+    pass
+
+
 class LPI(BasicLPI):
 
     connections = {'port': 'power', 'dport': 'destination'}
@@ -99,6 +111,10 @@ class LPI(BasicLPI):
     @lpi_constructor
     def __init__(self, **kwargs):
         self.bose = val_to_boolean(self.lpi_cfg.get('bose'))
+        logic = self.lpi_cfg.get('logic')
+        if logic and logic not in ['default', 'rdc']:
+            raise Exception('logic not supported: {}'.format(logic))
+        self.logic_rdc = logic == 'rdc'
 
     def get_item_cmap(self, cfg):
         result = super().get_item_cmap(cfg)
@@ -108,8 +124,8 @@ class LPI(BasicLPI):
         return result
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
-        self.log_error('state function not implemented')
-        return self.state_result_error(_uuid)
+        self.log_debug('state function not implemented')
+        return self.state_result_skip(_uuid)
 
     def _calc_delay(self, s, ns, steps, warmup=0, tuning=0):
         _delay = 0
@@ -152,8 +168,9 @@ class LPI(BasicLPI):
         except:
             return self.action_result_error(_uuid, msg='status is not integer')
         _steps = cfg.get('steps')
-        if not _steps or not isinstance(_steps, list):
+        if not _steps:
             return self.action_result_error(_uuid, msg='no steps provided')
+        if not isinstance(_steps, list): _steps = [_steps]
         steps = []
         for i in _steps:
             try:
@@ -209,33 +226,37 @@ class LPI(BasicLPI):
                 te = int(te)
             except:
                 return self.action_result_error(_uuid, 1, 'te is not a number')
-        if nstatus < pstatus and ts and ts <= nstatus:
-            # we need to go to start then to nstatus
-            _delay = self._calc_delay(pstatus, 0, steps, warmup, tuning)
-            _delay += self._calc_delay(0, nstatus, steps, warmup, tuning)
-            if _delay > time_start - time() + timeout:
-                return self.action_result_error(
-                    _uuid, 4,
-                    'can not perform action. requires: %s sec, timeout: %s sec'
-                    % (_delay, timeout))
-            _pstatus = [pstatus, 0]
-            _nstatus = [0, nstatus]
-        elif nstatus > pstatus and te and te <= nstatus:
-            # we need to go to the end then to nstatus
-            _delay = self._calc_delay(pstatus, len(steps), steps, warmup,
-                                      tuning)
-            _delay += self._calc_delay(
-                len(steps), nstatus, steps, warmup, tuning)
-            if _delay > time_start - time() + timeout:
-                return self.action_result_error(
-                    _uuid, 4,
-                    'can not perform action. requires: %s sec, timeout: %s sec'
-                    % (_delay, timeout))
-            _pstatus = [pstatus, len(steps)]
-            _nstatus = [len(steps), nstatus]
-        else:
-            _pstatus = [pstatus]
-            _nstatus = [nstatus]
+        try:
+            if nstatus < pstatus and ts and ts <= nstatus:
+                # we need to go to start then to nstatus
+                _delay = self._calc_delay(pstatus, 0, steps, warmup, tuning)
+                _delay += self._calc_delay(0, nstatus, steps, warmup, tuning)
+                if _delay > time_start - time() + timeout:
+                    raise PredictedTimeoutException
+                _pstatus = [pstatus, 0]
+                _nstatus = [0, nstatus]
+            elif nstatus > pstatus and te and te <= nstatus:
+                # we need to go to the end then to nstatus
+                _delay = self._calc_delay(pstatus, len(steps), steps, warmup,
+                                          tuning)
+                _delay += self._calc_delay(
+                    len(steps), nstatus, steps, warmup, tuning)
+                if _delay > time_start - time() + timeout:
+                    raise PredictedTimeoutException
+                _pstatus = [pstatus, len(steps)]
+                _nstatus = [len(steps), nstatus]
+            else:
+                _delay = self._calc_delay(pstatus, nstatus, steps, warmup,
+                                          tuning)
+                if _delay > time_start - time() + timeout:
+                    raise PredictedTimeoutException
+                _pstatus = [pstatus]
+                _nstatus = [nstatus]
+        except PredictedTimeoutException:
+            return self.action_result_error(
+                _uuid, 4,
+                'can not perform action. requires: %s sec, timeout: %s sec' %
+                (_delay, timeout))
         for i in range(0, len(_pstatus)):
             pstatus = _pstatus[i]
             nstatus = _nstatus[i]
@@ -259,9 +280,10 @@ class LPI(BasicLPI):
                     % (_delay, time_start - time() + timeout))
             _c = {self.io_label: port}
             _cd = {self.io_label: dport}
-            # direction
-            r = self.exec_super_subaction(direction, _cd,
-                                          time_start - time() + timeout, tki)
+            # direction or open/close minus for rdc
+            r = self.exec_super_subaction(
+                direction if not self.logic_rdc else abs(direction - 1), _cd,
+                time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
@@ -269,19 +291,22 @@ class LPI(BasicLPI):
                     _uuid, 4,
                     'direction set error: %s, %s' % (r.get('exitcode'),
                                                      r.get('err')))
-            # power on
-            r = self.exec_super_subaction(1, _c, time_start - time() + timeout,
-                                          tki)
+            # power on or open/close plus for rdc
+            r = self.exec_super_subaction(
+                1 if not self.logic_rdc else direction, _c,
+                time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
                 return self.action_result_error(
                     _uuid, 4, 'power on error: %s, %s' % (r.get('exitcode'),
                                                           r.get('err')))
+            # delay
             dr = self.delay(_uuid, _delay)
-            # power off
-            r = self.exec_super_subaction(0, _c, time_start - time() + timeout,
-                                          tki)
+            # power off or open plus/minus for rdc
+            r = self.exec_super_subaction(
+                0, _c if not self.logic_rdc else (_c if direction else _cd),
+                time_start - time() + timeout, tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}

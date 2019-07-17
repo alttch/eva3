@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import threading
 import cherrypy
@@ -45,6 +45,7 @@ from eva.exceptions import InvalidParameter
 from eva.tools import parse_function_params
 
 from pyaltt import background_worker
+from pyaltt import background_job
 
 from types import SimpleNamespace
 
@@ -65,6 +66,17 @@ def api_need_file_management(f):
     @wraps(f)
     def do(*args, **kwargs):
         if not config.api_file_management_allowed:
+            raise AccessDenied
+        return f(*args, **kwargs)
+
+    return do
+
+
+def api_need_rpvt(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not config.api_rpvt_allowed:
             raise AccessDenied
         return f(*args, **kwargs)
 
@@ -815,6 +827,52 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         self._nofp_log('set_user_password', 'p')
         self._nofp_log('file_put', 'm')
 
+    @log_d
+    @api_need_rpvt
+    def rpvt(self, **kwargs):
+        k, f, ic, nocache = parse_function_params(
+            kwargs, ['k', 'f', 'ic', 'nocache'], '.S..')
+        if not eva.apikey.check(k, rpvt_uri=f):
+            logging.warning('rpvt uri %s access forbidden' % (f))
+            eva.core.log_traceback()
+            raise AccessDenied
+        try:
+            import requests
+            if f.find('//') == -1: _f = 'http://' + f
+            else: _f = f
+            r = requests.get(_f, timeout=eva.core.config.timeout)
+        except:
+            eva.core.log_traceback()
+            raise FunctionFailed('remote error')
+        if r.status_code != 200:
+            raise FunctionFailed('remote response %s' % r.status_code)
+        ctype = r.headers.get('Content-Type', 'text/html')
+        result = r.content
+        if ic:
+            try:
+                icmd, args, fmt = ic.split(':')
+                if icmd == 'resize':
+                    x, y, q = args.split('x')
+                    x = int(x)
+                    y = int(y)
+                    q = int(q)
+                    from PIL import Image
+                    from io import BytesIO
+                    image = Image.open(BytesIO(result))
+                    image.thumbnail((x, y))
+                    result = image.tobytes(fmt, 'RGB', q)
+                    ctype = 'image/' + fmt
+                else:
+                    eva.core.log_traceback()
+                    raise FunctionFailed('image processing failed')
+            except FunctionFailed:
+                eva.core.log_traceback()
+                raise
+            except:
+                eva.core.log_traceback()
+                raise FunctionFailed
+        return result, ctype
+
     @log_i
     @api_need_sysfunc
     def save(self, **kwargs):
@@ -990,10 +1048,10 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
     @api_need_master
     def setup_mode(self, **kwargs):
         setup = parse_api_params(kwargs, ('setup',), 'B')
-        if not config.api_setup_mode_allowed:
+        if not config.api_setup_mode:
             return False
         if setup:
-            eva.core.setup_on()
+            eva.core.setup_on(config.api_setup_mode)
         else:
             eva.core.setup_off()
         return True
@@ -1030,7 +1088,12 @@ class SysHTTP_API_abstract(SysAPI):
 
     def file_get(self, **kwargs):
         data, e = super().file_get(**kwargs)
-        return {'file': kwargs.get('i'), 'data': data, 'e': e}
+        return {
+            'file': kwargs.get('i'),
+            'data': data,
+            'e': e,
+            'content_type': 'text/plain'
+        }
 
     def regenerate_key(self, **kwargs):
         return {'key': super().regenerate_key(**kwargs)}
@@ -1190,15 +1253,20 @@ def update_config(cfg):
             'sysapi', 'file_management') == 'yes')
     except:
         pass
+    try:
+        config.api_rpvt_allowed = (cfg.get(
+            'sysapi', 'rpvt') == 'yes')
+    except:
+        pass
     logging.debug('sysapi.file_management = %s' % ('yes' \
             if config.api_file_management_allowed else 'no'))
     try:
-        config.api_setup_mode_allowed = (cfg.get('sysapi',
-                                                 'setup_mode') == 'yes')
+        s = cfg.get('sysapi', 'setup_mode')
+        s = 60 if s == 'yes' else int(s)
+        config.api_setup_mode = s
     except:
         pass
-    logging.debug('sysapi.setup_mode = %s' % ('yes' \
-            if config.api_setup_mode_allowed else 'no'))
+    logging.debug('sysapi.setup_mode = %s' % config.api_setup_mode)
     return True
 
 
@@ -1231,4 +1299,6 @@ def lock_processor(**kwargs):
 api = SysAPI()
 
 config = SimpleNamespace(
-    api_file_management_allowed=False, api_setup_mode_allowed=False)
+    api_file_management_allowed=False,
+    api_setup_mode=None,
+    api_rpvt_allowed=False)

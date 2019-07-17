@@ -139,4 +139,4 @@ The next step it to connect cron for it to run ventilation control macro (edit
 As you can see, there is no rocket science here. :doc:`/sfa/sfa` is configured
 by a few commands and immediately starts collecting the data and events. In
 turn, it will save you a lot of time by structuring your setup. Now let's
-create :doc:`SFA Framework interface<tut_ui>` that will be served by SFA.
+create :doc:`User interface<tut_ui>` that will be served by SFA.

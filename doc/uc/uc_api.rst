@@ -20,6 +20,13 @@ UC API functions are called through URL request
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
 Standard API responses
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,6 +105,7 @@ Client</api_clients>`:
 * **13** the resource is busy (in use) and can not be accessed/recreated or
   deleted at this moment
 
+* **14** the method is not implemented in/for requested resource
 
 Response field *"message"* may contain additional information about error.
 
@@ -138,6 +146,8 @@ Obtains authentication :doc:`token</api_tokens>` which can be used in API calls 
 
 If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
 
+If authentication token is specified, the function will check it and return token information if it is valid.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/login.req
     :response: http-examples/ucapi/login.resp
@@ -147,6 +157,7 @@ Parameters:
 * **k** valid API key or
 * **u** user login
 * **p** user password
+* **a** authentication token
 
 Returns:
 
@@ -159,15 +170,13 @@ logout - log out and purge authentication token
 
 Purges authentication :doc:`token</api_tokens>`
 
-If API key is used as parameter value, the function purges all tokens assigned to it.
-
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/logout.req
     :response: http-examples/ucapi/logout.resp
 
 Parameters:
 
-* **k** valid API key or token
+* **k** valid token
 
 
 .. _ucapi_cat_item:
@@ -343,6 +352,22 @@ Returns:
 
 list or single serialized action object
 
+.. _ucapi_start_item_maintenance:
+
+start_item_maintenance - start item maintenance mode
+----------------------------------------------------
+
+During maintenance mode all item updates are ignored, however actions still can be executed
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/start_item_maintenance.req
+    :response: http-examples/ucapi/start_item_maintenance.resp
+
+Parameters:
+
+* **k** masterkey
+* **i** item ID
+
 .. _ucapi_state:
 
 state - get item state
@@ -372,6 +397,8 @@ state_history - get item state history
 
 State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
 
+If master key is used, method attempt to get stored state for item even if it currently doesn't present.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/state_history.req
     :response: http-examples/ucapi/state_history.resp
@@ -384,13 +411,55 @@ Parameters:
 
 Optionally:
 
-* **s** start time (timestamp or ISO)
-* **e** end time (timestamp or ISO)
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
 * **l** records limit (doesn't work with "w")
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
-* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
-* **g** output format ("list" or "dict", default is "list")
+* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required, set to 1D if not specified
+* **g** output format ("list", "dict" or "chart", default is "list")
+* **c** options for chart (dict or comma separated)
+* **o** extra options for notifier data request
+
+Returns:
+
+history data in specified format or chart image.
+
+For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
+
+Options for chart (all are optional):
+
+* type: chart type (line or bar, default is line)
+
+* tf: chart time format
+
+* out: output format (svg, png, default is svg),
+
+* style: chart style (without "Style" suffix, e.g. Dark)
+
+* other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+If option "w" (fill) is used, number of digits after comma may be specified. E.g. 5T:3 will output values with 3 digits after comma.
+
+Additionally, SI prefix may be specified to convert value to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
+
+If binary prefix is required, it should be followed by "b", e.g. 5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
+
+.. _ucapi_stop_item_maintenance:
+
+stop_item_maintenance - stop item maintenance mode
+--------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/stop_item_maintenance.req
+    :response: http-examples/ucapi/stop_item_maintenance.resp
+
+Parameters:
+
+* **k** masterkey
+* **i** item ID
 
 .. _ucapi_terminate:
 
@@ -465,6 +534,7 @@ Optionally:
 
 * **p** filter by item type
 * **g** filter by item group
+* **x** serialize specified item prop(s)
 
 Returns:
 
@@ -919,6 +989,30 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** virtual port ID
 
+.. _ucapi_read_modbus_port:
+
+read_modbus_port - read Modbus register(s) from remote slave
+------------------------------------------------------------
+
+Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, i - input, c - coil, d - discrete input).
+
+Address ranges can be specified, e.g. h1000-1010,c10-15 will return values of holding registers from 1000 to 1010 and coil registers from 10 to 15
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/read_modbus_port.req
+    :response: http-examples/ucapi/read_modbus_port.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **p** Modbus virtual port
+* **s** Slave ID
+* **i** Modbus register(s)
+
+Optionally:
+
+* **t** max allowed timeout for the operation
+
 .. _ucapi_test_modbus_port:
 
 test_modbus_port - test virtual Modbus port
@@ -938,6 +1032,30 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **i** virtual port ID
+
+.. _ucapi_write_modbus_port:
+
+write_modbus_port - write Modbus register(s) to remote slave
+------------------------------------------------------------
+
+Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, c - coil).
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/write_modbus_port.req
+    :response: http-examples/ucapi/write_modbus_port.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **p** Modbus virtual port
+* **s** Slave ID
+* **i** Modbus register address
+* **v** register value(s) (integer or hex or list)
+* **z** if True, use 0x05-06 commands (write single register/coil)
+
+Optionally:
+
+* **t** max allowed timeout for the operation
 
 .. _ucapi_get_modbus_slave_data:
 
@@ -984,6 +1102,22 @@ Parameters:
 * **i** PHI id
 * **c** command to exec
 * **a** command argument
+
+.. _ucapi_get_phi_ports:
+
+get_phi_ports - get list of PHI ports
+-------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi_ports.req
+    :response: http-examples/ucapi/get_phi_ports.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **i** PHI id
 
 .. _ucapi_list_phi:
 
@@ -1070,6 +1204,27 @@ Parameters:
 
 * **k** API key with *master* permissions
 * **m** PHI module name (without *.py* extension)
+
+.. _ucapi_phi_discover:
+
+phi_discover - discover installed equipment supported by PHI module
+-------------------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/phi_discover.req
+    :response: http-examples/ucapi/phi_discover.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **m** PHI module name (without *.py* extension)
+
+Optionally:
+
+* **x** interface to perform discover on
+* **w** max time for the operation
 
 .. _ucapi_put_phi_mod:
 

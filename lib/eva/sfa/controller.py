@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import glob
 import os
@@ -182,17 +182,38 @@ def load_remote_lms():
 
 
 def handle_discovered_controller(notifier_id, controller_id, **kwargs):
+    if eva.core.is_shutdown_requested() or not eva.core.is_started():
+        return False
     try:
         ct, c_id = controller_id.split('/')
         if ct not in ['uc', 'lm']:
             return True
         controller_lock.acquire()
         try:
-            if (ct == 'uc' and c_id in uc_pool.controllers) or \
-                    (ct == 'lm' and c_id in lm_pool.controllers):
-                logging.debug('Controller ' +
-                              '{} already exists, skipped (discovered from {})'.
-                              format(controller_id, notifier_id))
+            if (ct == 'uc' and c_id in uc_pool.controllers):
+                # (ct == 'lm' and c_id in lm_pool.controllers):
+                if uc_pool.controllers[c_id].connected:
+                    logging.debug(
+                        'Controller ' +
+                        '{} already exists, skipped (discovered from {})'.
+                        format(controller_id, notifier_id))
+                else:
+                    logging.debug(
+                        'Controller ' +
+                        '{} back online, reloading'.format(controller_id))
+                    uc_pool.reload_controller(c_id, with_delay=True)
+                return True
+            if (ct == 'lm' and c_id in lm_pool.controllers):
+                if lm_pool.controllers[c_id].connected:
+                    logging.debug(
+                        'Controller ' +
+                        '{} already exists, skipped (discovered from {})'.
+                        format(controller_id, notifier_id))
+                else:
+                    logging.debug(
+                        'Controller ' +
+                        '{} back online, reloading'.format(controller_id))
+                    lm_pool.reload_controller(c_id, with_delay=True)
                 return True
         finally:
             controller_lock.release()

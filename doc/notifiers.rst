@@ -199,10 +199,11 @@ MQTT (mqtt)
 
 MQTT is a major endpoint type used to link several EVA subsystems. For
 instance, it enables :doc:`/lm/lm` and :doc:`/sfa/sfa` controllers to
-receive the latest item status from :doc:`/uc/uc` servers. We test and use EVA
-with `mosquitto <http://mosquitto.org/>`_ server, but you can use any server
-supporting `MQTT <http://mqtt.org/>`_ protocol.  As far as MQTT is the major
-type of the EVA notification system, let us examine it in detailed.
+receive the latest item status from :doc:`/uc/uc` servers when set on a nodes
+in different networks. We test and use EVA with `mosquitto
+<http://mosquitto.org/>`_ server, but you can use any server supporting `MQTT
+<http://mqtt.org/>`_ protocol. As far as MQTT is the major type of the EVA
+notification system, let us examine it in detailed.
 
 MQTT and state notifications
 ----------------------------
@@ -367,8 +368,8 @@ DB Notifiers
 ============
 
 EVA ICS has a special notifier type: **db**, which is used to store items'
-state history. State history can be obtained later via API calls or :doc:`SFA
-Framework</sfa/sfa_framework>` for analysis and e.g. to build graphical charts.
+state history. State history can be obtained later via API calls or
+:ref:`js_framework` for analysis and e.g. to build graphical charts.
 
 To create db notifier, specify notifier props as **db:<dbfile>[:keeptime]**,
 e.g. *db:history1.db:604800*, where *history1.db* - database file in
@@ -383,6 +384,12 @@ called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically.
 
 History database format is `sqlite3 <https://www.sqlite.org/index.html>`_.
 
+.. note::
+
+    To create default (sqlite) db notifier, you may specify either database
+    absolute path or relative to EVA ICS directory. *sqlite:///* prefix is
+    optional and will be added automatically if missing.
+
 EVA ICS db notifiers work via `SQL Alchemy <https://www.sqlalchemy.org/>`_, so
 MySQL and PosgreSQL data storage is also supported.
 
@@ -391,6 +398,22 @@ E.g. to use MySQL, specify db uri as:
     mysql+pymysql://username:password@host/database
 
 (pymysql Python module is required)
+
+or
+    mysql+mysqldb://username:password@host/database
+
+(mysqlclient Python module is required)
+
+If you get "failed to create state_history table" error with MySQL/MariaDB, try
+setting:
+
+.. code-block:: sql
+
+    set global innodb_file_format=Barracuda;
+    set global innodb_large_prefix=1;
+    set global innodb_default_row_format=dynamic;
+
+or put these options to database server configuration file.
 
 HTTP Notifiers
 ==============
@@ -449,9 +472,10 @@ Example of custom notification processing server with Python and `Flask
 JSON RPC
 --------
 
-If **method** is set, JSON RPC 2.0 call is performed. For JSON RPC, errors must
-be specified in "error" field of the response. For successful calls, the
-"result" field in response may contain any data.
+If notifier **method** property is set to *jsonrpc*, JSON RPC 2.0 call is
+performed. For JSON RPC, errors must be specified in "error" field of the
+response. For successful calls, the "result" field in response may contain any
+data.
 
 Example:
 
@@ -489,3 +513,9 @@ Example:
         else:
             return Response(None, 202)
 
+
+Basic authentication
+--------------------
+
+All HTTP notifiers support basic authentication. To start using it, set
+**username** and **password** notifier properties.

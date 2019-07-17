@@ -51,6 +51,15 @@ and :doc:`CLI</cli>` tools may require more time to launch on architectures
 different than Intel x86_64, but the regular performance should not be affected
 even on an embedded ARM-based systems.
 
+According to tests, EVA ICS can show bad performance (slow startup/shutdown) on
+industrial and micro computers if they have:
+
+* small amount of RAM (minimum 512 MB is recommended)
+* slow SSD drive or SD card.
+
+We strongly recommend using at least UHS-I SD cards which can show a speed up
+to 100 MB/s.
+
 .. _benchmarks:
 
 Benchmarks

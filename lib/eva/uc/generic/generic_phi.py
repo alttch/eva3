@@ -1,11 +1,11 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 __description__ = "Generic PHI, don't use"
 
 __equipment__ = 'abstract'
-__api__ = 4
+__api__ = 5
 __required__ = []
 __mods_required__ = []
 __lpi_default__ = None
@@ -27,12 +27,16 @@ import sys
 import eva.core
 
 from eva.uc.driverapi import critical
+from eva.uc.driverapi import get_polldelay
 from eva.uc.driverapi import get_sleep_step
 from eva.uc.driverapi import get_timeout
 from eva.uc.driverapi import handle_phi_event
+from eva.uc.driverapi import get_shared_namespace
 
 from time import time
 from time import sleep
+
+from types import SimpleNamespace
 
 
 class PHI(object):
@@ -65,12 +69,68 @@ class PHI(object):
         self.__get_help = mod.__get_help__
         self.__set_help = mod.__set_help__
         self.__help = mod.__help__
+        if hasattr(mod, '__ports_help__'):
+            self.__ports_help = mod.__ports_help__
+        else:
+            self.__ports_help = ''
+        if hasattr(mod, '__shared_namespaces__'):
+            self.__shared_namespaces = mod.__shared_namespaces__
+            if not isinstance(self.__shared_namespaces, list):
+                self.__shared_namespaces = [self.__shared_namespaces]
+        else:
+            self.__shared_namespaces = []
+        if hasattr(mod, '__discover__'):
+            self.__discover = mod.__discover__
+        else:
+            self.__discover = None
+        if self.__discover and not isinstance(self.__discover, list):
+            self.__discover = [self.__discover]
+        if hasattr(mod, '__discover_help__'):
+            self.__discover_help = mod.__discover_help__
+        else:
+            self.__discover_help = ''
+        if isinstance(self.__features, str):
+            self.__features = [self.__features]
+        else:
+            self.__features = sorted(self.__features)
+        if isinstance(self.__required, str):
+            self.__required = [self.__required]
+        else:
+            self.__required = sorted(self.__required)
+        self._is_required = SimpleNamespace(
+            aao_get=False,
+            aao_set=False,
+            action=False,
+            events=False,
+            port_get=False,
+            port_set=False,
+            status=False,
+            value=False)
+        self._has_feature = SimpleNamespace(
+            aao_get=False,
+            aao_set=False,
+            action=False,
+            cache=False,
+            events=False,
+            port_get=False,
+            port_set=False,
+            status=False,
+            universal=False,
+            value=False)
+        for f in self.__required:
+            try:
+                setattr(self._is_required, f, True)
+            except:
+                self.log_error('feature unknown: {}'.format(f))
+            if f not in self.__features:
+                self.__features.append(f)
+        for f in self.__features:
+            try:
+                setattr(self._has_feature, f, True)
+            except:
+                self.log_error('feature unknown: {}'.format(f))
         if kwargs.get('info_only'):
             return
-        # True if the equipment can query/modify only all
-        # ports at once and can not work with a single ports
-        self.aao_get = False
-        self.aao_set = False
         self.ready = True
         # cache time, useful for aao_get devices
         self._cache_set = 0
@@ -88,6 +148,11 @@ class PHI(object):
         self._update_processor_active = False
         self._update_scheduler_active = False
         self._need_update = threading.Event()
+        self._last_update_state = None
+        # benchmarking
+        self.__update_count = 0
+        self.__last_update_reset = 0
+        self.__benchmark = self.phi_cfg.get('benchmark', False)
 
     def get_cached_state(self):
         if not self._cache or not self._cache_data:
@@ -106,7 +171,7 @@ class PHI(object):
         self._cache_data = None
 
     def get(self, port=None, cfg=None, timeout=0):
-        return None
+        return None, None if self._is_required.value else None
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
         return False
@@ -118,6 +183,9 @@ class PHI(object):
         return True
 
     def stop(self):
+        return True
+
+    def unload(self):
         return True
 
     def get_default_lpi(self):
@@ -146,6 +214,10 @@ class PHI(object):
                 d = self.__get_help.copy()
             elif helpinfo == 'set':
                 d = self.__set_help.copy()
+            elif helpinfo == 'ports':
+                d = self.__ports_help
+            elif helpinfo == 'discover':
+                d = self.__discover_help
             else:
                 d = None
             return d
@@ -153,6 +225,11 @@ class PHI(object):
             d['author'] = self.__author
             d['license'] = self.__license
             d['description'] = self.__description
+            if hasattr(self, 'discover') and self.__discover:
+                d['can_discover'] = self.__discover
+            else:
+                d['can_discover'] = None
+            d['can_get_ports'] = hasattr(self, 'get_ports')
             d['version'] = self.__version
             d['api'] = self.__api_version
             d['oid'] = self.oid
@@ -207,6 +284,27 @@ class PHI(object):
         logging.critical('PHI %s: %s' % (i, msg))
         critical()
 
+    def get_shared_namespace(self, namespace_id):
+        if namespace_id not in self.__shared_namespaces:
+            return None
+        else:
+            return get_shared_namespace(namespace_id)
+
+    @staticmethod
+    def generate_port_list(port_min=1,
+                           port_max=1,
+                           name='port #{}',
+                           description='port #{}'):
+        result = []
+        for i in range(port_min, port_max + 1):
+            p = str(i)
+            result.append({
+                'port': p,
+                'name': name.replace('{}', p),
+                'description': description.replace('{}', p)
+            })
+        return result
+
     def _start(self):
         if self._update_interval and 'aao_get' in self.__features:
             self._start_update_processor()
@@ -254,14 +352,17 @@ class PHI(object):
 
     def _t_update_scheduler(self):
         logging.debug('%s update scheduler started' % self.oid)
+        sleep_step = get_sleep_step()
         while self._update_scheduler_active and self._update_interval:
-            i = 0
-            while i < self._update_interval and self._update_scheduler_active:
-                sleep(get_sleep_step())
-                i += get_sleep_step()
+            if self._update_interval >= 1:
+                t_cont = time() + self._update_interval
+                while time() < t_cont and self._update_scheduler_active:
+                    sleep(sleep_step)
+            else:
+                sleep(self._update_interval)
             if not self._update_scheduler_active or not self._update_interval:
                 break
-            self._perform_update()
+            self._need_update.set()
         self._update_scheduler_active = False
         logging.debug('%s update scheduler stopped' % self.oid)
 
@@ -275,5 +376,25 @@ class PHI(object):
         logging.debug('%s update processor stopped' % self.oid)
 
     def _perform_update(self):
-        logging.debug('%s updating' % self.oid)
-        handle_phi_event(self, 'scheduler', self.get(timeout=get_timeout()))
+        state = self.get(timeout=get_timeout())
+        if self._last_update_state:
+            stu = {}
+            for x, v in state.items():
+                if v != self._last_update_state.get(x):
+                    stu[x] = v
+        else:
+            if self.__benchmark:
+                self.__last_update_reset = time()
+                self.log_warning('benchmark mode')
+            stu = state
+        if self.__benchmark:
+            self.__update_count += 1
+        self._last_update_state = state.copy()
+        if stu:
+            handle_phi_event(self, 'scheduler', stu)
+        if self.__benchmark and self.__update_count > 1 / self._update_interval:
+            self.log_warning('update benchmark: {}/s'.format(
+                round(
+                    self.__update_count / (time() - self.__last_update_reset))))
+            self.__update_count = 0
+            self.__last_update_reset = time()

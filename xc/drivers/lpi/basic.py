@@ -1,15 +1,15 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.1.0"
+__version__ = "1.2.3"
 __description__ = "Basic LPI for simple devices"
-__api__ = 4
+__api__ = 5
 
 __logic__ = 'basic status on/off'
 
 __features__ = [
     'status', 'status_mp', 'mu_status', 'mu_status_mp', 'port_get', 'aao_get',
-    'action', 'action_mp', 'port_set', 'aao_set', 'events'
+    'action', 'action_mp', 'port_set', 'aao_set', 'events', 'value'
 ]
 
 __config_help__ = []
@@ -57,7 +57,7 @@ class LPI(GenericLPI):
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
-        if self.phi.aao_get and not _state_in:
+        if self.phi._is_required.aao_get and not _state_in:
             _state_in = self.phi.get(
                 cfg=phi_cfg, timeout=(timeout + time_start - time()))
             if not _state_in: return self.state_result_error(_uuid)
@@ -81,6 +81,7 @@ class LPI(GenericLPI):
             else:
                 pp = [pi]
             st_prev = None
+            val_prev = None
             for p in pp:
                 _p, invert = self.need_invert(p)
                 if _state_in:
@@ -88,6 +89,10 @@ class LPI(GenericLPI):
                 else:
                     status = self.phi.get(
                         str(_p), phi_cfg, timeout + time_start - time())
+                if isinstance(status, tuple):
+                    status, value = status
+                else:
+                    value = None
                 try:
                     status = int(status)
                 except:
@@ -98,7 +103,7 @@ class LPI(GenericLPI):
                         break
                     else:
                         return self.state_result_skip(_uuid)
-                if status is None or status not in [0, 1]:
+                if status is None or (invert and status not in [0, 1]):
                     if multi:
                         st_prev = -1
                         break
@@ -111,24 +116,22 @@ class LPI(GenericLPI):
                 if multi:
                     if st_prev is None:
                         st_prev = _status
-                    elif st_prev != _status:
+                        val_prev = value
+                    elif st_prev != _status or val_prev != value:
                         st_prev = -1
                         break
                 else:
                     if st is None:
-                        st = _status
-                    elif st != _status:
+                        st = (_status, value)
+                    elif st[0] != _status or st[1] != value:
                         self.set_result(_uuid, (-1, None))
                         return
             if multi:
                 if st_prev is False:
                     st.append(False)
                 else:
-                    st.append((st_prev, None))
-        if multi:
-            self.set_result(_uuid, st)
-        else:
-            self.set_result(_uuid, (st, None))
+                    st.append((st_prev, val_prev))
+        self.set_result(_uuid, st)
         return
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
@@ -146,14 +149,14 @@ class LPI(GenericLPI):
             status = int(status)
         except:
             return self.action_result_error(_uuid, msg='status is not integer')
-        if status not in [0, 1] and not eva.benchmark.enabled:
-            return self.action_result_error(
-                _uuid, msg='status is not in range 0..1')
+        # if status not in [0, 1] and not eva.benchmark.enabled:
+        # return self.action_result_error(
+        # _uuid, msg='status is not in range 0..1')
         if not isinstance(port, list):
             _port = [port]
         else:
             _port = port
-        if self.phi.aao_set:
+        if self.phi._has_feature.aao_set:
             ports_to_set = []
             data_to_set = []
         for p in _port:
@@ -162,21 +165,22 @@ class LPI(GenericLPI):
                 _status = 1 - status
             else:
                 _status = status
-            if self.phi.aao_set:
+            state = (_status, value) if self.phi._is_required.value else _status
+            if self.phi._has_feature.aao_set:
                 ports_to_set.append(_port)
-                data_to_set.append(_status)
+                data_to_set.append(state)
             else:
                 set_result = self.phi.set(
                     _port,
-                    _status,
+                    state,
                     phi_cfg,
                     timeout=(timeout + time_start - time()))
                 if set_result is False or set_result is None:
                     return self.action_result_error(
                         _uuid, msg='port %s set error' % _port)
-        if self.phi.aao_set:
+        if self.phi._has_feature.aao_set:
             set_result = self.phi.set(
                 ports_to_set, data_to_set, timeout=timeout)
             if set_result is False or set_result is None:
-                self.action_result_error(_uuid, msg='ports set error')
+                return self.action_result_error(_uuid, msg='ports set error')
         return self.action_result_ok(_uuid)

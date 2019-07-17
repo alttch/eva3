@@ -141,9 +141,9 @@ class GCLI(object):
                 self.ap,
                 default_completer=self.argcomplete.completers.SuppressCompleter(
                 ))
-            readline.set_completer_delims("")
+            readline.set_completer_delims('')
             readline.set_completer(completer.rl_complete)
-            readline.parse_and_bind("tab: complete")
+            readline.parse_and_bind('tab: complete')
 
     def print_json(self, obj):
         j = self.format_json(obj)
@@ -158,7 +158,7 @@ class GCLI(object):
 
     def print_err(self, *args):
         for s in args:
-            print(self.colored(s, color='red', attrs=[]))
+            print(self.colored(s, color='red', attrs=[]), file=sys.stderr)
 
     def print_warn(self, s, w=True):
         print(
@@ -201,6 +201,12 @@ class GCLI(object):
             action='store_true',
             dest='_raw',
             default=False)
+        self.ap.add_argument(
+            '-O',
+            '--output-file',
+            help='Store output to local file',
+            dest='_output_file',
+            metavar='FILE')
         if not self.interactive:
             self.ap.add_argument(
                 '-I',

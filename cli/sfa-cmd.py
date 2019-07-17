@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.0"
+__version__ = "3.2.4"
 
 import sys
 import os
@@ -11,10 +11,15 @@ sys.path.append(dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
+from eva.client.cli import LECLI
 from eva.client.cli import ComplGeneric
 
+import eva.client.cli
 
-class SFA_CLI(GenericCLI, ControllerCLI):
+dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
+
+
+class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     @staticmethod
     def dict_safe_get(d, key, default):
@@ -174,6 +179,15 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                 result.add(v['group'])
             return list(result)
 
+    def prepare_run(self, api_func, params, a):
+        if api_func in ['set_controller_prop']:
+            if params['p'] and params['p'].find('=') != -1 and not params['v']:
+                params['p'], params['v'] = params['p'].split('=', 1)
+        if api_func == 'state_history':
+            if params['c']:
+                params['g'] = 'chart'
+        return super().prepare_run(api_func, params, a)
+
     def prepare_result_data(self, data, api_func, itype):
         if api_func not in [
                 'state', 'list_macros', 'list_cycles', 'list_controllers',
@@ -188,6 +202,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                     d['time']['created']).isoformat()
             if api_func == 'list_controllers':
                 d['type'] = 'static' if d['static'] else 'dynamic'
+                d['proto'] += '/' + ('mqtt' if d.get('mqtt_update') else 'ws')
             if api_func in ['list_macros', 'list_cycles', 'list_controllers']:
                 d['id'] = d['full_id']
             if api_func == 'list_cycles':
@@ -222,20 +237,28 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
     def process_result(self, result, code, api_func, itype, a):
         if api_func == 'state_history' and \
-                isinstance(result, dict):
+                isinstance(result, dict) and 'content_type' not in result:
             self.print_tdf(result, 't')
             return 0
         else:
             return super().process_result(result, code, api_func, itype, a)
 
     def prepare_result_dict(self, data, api_func, itype):
-        if api_func != 'status_controller':
+        if api_func == 'status_controller':
+            return self.prepare_controller_status_dict(data)
+        elif api_func == 'result' and 'created' in data:
+            from datetime import datetime
+            for x in data.keys():
+                data[x] = '{:.7f} | {}'.format(data[x],
+                                               datetime.fromtimestamp(data[x]))
             return super().prepare_result_dict(data, api_func, itype)
-        return self.prepare_controller_status_dict(data)
+        else:
+            return super().prepare_result_dict(data, api_func, itype)
 
     def setup_parser(self):
         super().setup_parser()
         self.enable_controller_management_functions('sfa')
+        self.enable_le_functions()
 
     def add_functions(self):
         super().add_functions()
@@ -244,6 +267,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         self.add_sfa_action_functions()
         self.add_sfa_macro_functions()
         self.add_sfa_cycle_functions()
+        self.add_sfa_edit_functions()
         self.add_sfa_lvar_functions()
         self.add_sfa_notify_functions()
         self.add_sfa_controller_functions()
@@ -309,6 +333,21 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
             metavar='INTERVAL',
             dest='w')
+        sp_history.add_argument(
+            '-c',
+            '--chart-options',
+            help='Chart options',
+            metavar='OPTS',
+            dest='c')
+
+    def add_sfa_edit_functions(self):
+        ap_edit = self.sp.add_parser('edit', help='Edit commands')
+
+        sp_edit = ap_edit.add_subparsers(
+            dest='_func', metavar='func', help='Edit commands')
+
+        self._append_edit_pvt_and_ui(sp_edit)
+        self._append_edit_server_config(sp_edit)
 
     def add_sfa_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')
@@ -704,6 +743,13 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Undeploy old configuration first',
             dest='und',
             action='store_true')
+        sp_cloud_deploy.add_argument(
+            '-c',
+            '--config',
+            help='Template vars, comma separated',
+            metavar='VARS',
+            dest='c',
+        )
 
         sp_cloud_undeploy = sp_cloud.add_parser(
             'undeploy', help='Undeploy items and configuration from file')
@@ -722,6 +768,13 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             help='Save controllers\' configurations after undeploy',
             dest='_save',
             action='store_true')
+        sp_cloud_undeploy.add_argument(
+            '-c',
+            '--config',
+            help='Template vars, comma separated',
+            metavar='VARS',
+            dest='c',
+        )
 
     # cloud management
 
@@ -738,6 +791,18 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         return self._deploy_undeploy(
             props, und=True, del_files=props.get('del_files', False))
 
+    @staticmethod
+    def _read_uri(fname, dirname=None):
+        target = (dirname + '/' + fname) if dirname else fname
+        if target.startswith('http://') or target.startswith('https://'):
+            import requests
+            result = requests.get(target)
+            if not result.ok:
+                raise Exception('http code {}'.format(result.status_code))
+            return result.text
+        else:
+            return open(target).read()
+
     def _deploy_undeploy(self, props, und=False, del_files=False):
         import yaml
         try:
@@ -747,9 +812,17 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         from eva.client import apiclient
         try:
             try:
-                cfg = yaml.load(open(props.get('f')).read())
-            except:
-                raise Exception('Unable to parse {}'.format(props.get('f')))
+                import jinja2
+                from eva.tools import dict_from_str
+                fname = props.get('f')
+                v = props.get('c')
+                if v: v = dict_from_str(v)
+                else: v = {}
+                dirname = os.path.dirname(fname)
+                tpl = jinja2.Template(self._read_uri(fname))
+                cfg = yaml.load(tpl.render(v))
+            except Exception as e:
+                raise Exception('Unable to parse {}: {}'.format(fname, e))
             api = props['_api']
             from functools import partial
             call = partial(
@@ -769,7 +842,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             for c in cfg.keys():
                 if c not in [
                         'controller', 'unit', 'sensor', 'lvar', 'lmacro',
-                        'lcycle', 'dmatrix_rule'
+                        'lcycle', 'dmatrix_rule', 'job'
                 ]:
                     raise Exception('Invalid config section: {}'.format(c))
             for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
@@ -785,7 +858,8 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             controllers = set()
             controllers_fm_required = set()
             for x in [
-                    'unit', 'sensor', 'lvar', 'lmacro', 'lcycle', 'dmatrix_rule'
+                    'unit', 'sensor', 'lvar', 'lmacro', 'lcycle',
+                    'dmatrix_rule', 'job'
             ]:
                 for i, v in self.dict_safe_get(cfg, x, {}).items():
                     if not v or not 'controller' in v:
@@ -795,7 +869,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             ] and not v['controller'].startswith('uc/'):
                         raise Exception('Invalid controller specified ' +
                                         'for {} {} (uc required)'.format(x, i))
-                    if x in ['lvar', 'lmacro', 'lcycle', 'dmatrix_rule'
+                    if x in ['lvar', 'lmacro', 'lcycle', 'dmatrix_rule', 'job'
                             ] and not v['controller'].startswith('lm/'):
                         raise Exception('Invalid controller specified ' +
                                         'for {} {} (lm required)'.format(x, i))
@@ -804,11 +878,11 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                         if self.dict_safe_get(v, p, '').startswith('^'):
                             if not und:
                                 try:
-                                    open(v[p][1:])
+                                    self._read_uri(v[p][1:], dirname)
                                 except:
                                     raise Exception(
                                         ('{} is defined as {} for {} {}, ' +
-                                         'but local file is not found').format(
+                                         'but file is not found').format(
                                              v[p][1:], p, x, i))
                             controllers_fm_required.add(v['controller'])
             print('Checking remote controllers...')
@@ -821,11 +895,11 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             for f in v['upload-runtime']:
                                 fname, remote_file = f.split(':')
                                 try:
-                                    open(fname)
+                                    self._read_uri(fname, dirname)
                                 except:
-                                    raise Exception(
-                                        ('{}: {} unable to open local ' +
-                                         'file for upload').format(c, fname))
+                                    raise Exception(('{}: {} unable to open ' +
+                                                     'file for upload').format(
+                                                         c, fname))
             macall = partial(call, 'management_api_call')
             for c in controllers:
                 code, ctest = macall({'i': c, 'f': 'test'})
@@ -880,7 +954,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                                 'API call failed, code {}'.format(code))
             # ===== CALL DEPLOY/UNDEPLOY =====
             if not und:
-                self._perform_deploy(props, cfg, macall)
+                self._perform_deploy(props, cfg, macall, dirname)
             else:
                 self._perform_undeploy(props, cfg, macall, del_files)
             # ===== AFTER TASKS =====
@@ -933,7 +1007,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
         print('-' * 60)
         return self.local_func_result_ok
 
-    def _perform_deploy(self, props, cfg, macall):
+    def _perform_deploy(self, props, cfg, macall, dirname):
         from eva.client import apiclient
         # ===== FILE UPLOAD =====
         print('Uploading files...')
@@ -952,7 +1026,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             'f': 'file_put',
                             'p': {
                                 'i': remote_file,
-                                'm': open(fname).read()
+                                'm': self._read_uri(fname, dirname)
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
@@ -1115,7 +1189,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
                             'f': 'file_put',
                             'p': {
                                 'i': remotefn,
-                                'm': open(file2u).read()
+                                'm': self._read_uri(file2u, dirname)
                             }
                         })[1].get('code')
                         if code != apiclient.result_ok:
@@ -1152,9 +1226,43 @@ class SFA_CLI(GenericCLI, ControllerCLI):
             })[1].get('code')
             if code != apiclient.result_ok:
                 raise Exception('API call failed, code {}'.format(code))
+        # ===== JOB CREATION =====
+        print('Creating scheduled jobs...')
+        for i, v in self.dict_safe_get(cfg, 'job', {}).items():
+            c = v.get('controller')
+            print(' -- {}: {}'.format(c, i))
+            job_props = v.copy()
+            if 'controller' in job_props:
+                del job_props['controller']
+            code = macall({
+                'i': c,
+                'f': 'create_job',
+                'p': {
+                    'u': i,
+                    'v': job_props
+                }
+            })[1].get('code')
+            if code != apiclient.result_ok:
+                raise Exception('API call failed, code {}'.format(code))
 
     def _perform_undeploy(self, props, cfg, macall, del_files=False):
         from eva.client import apiclient
+        # ===== JOB DELETION =====
+        print('Deleting scheduled jobs...')
+        for i, v in self.dict_safe_get(cfg, 'job', {}).items():
+            c = v.get('controller')
+            print(' -- {}: {}'.format(c, i))
+            code = macall({
+                'i': c,
+                'f': 'destroy_job',
+                'p': {
+                    'i': i
+                }
+            })[1].get('code')
+            if code == apiclient.result_not_found:
+                self.print_warn('Job not found')
+            elif code != apiclient.result_ok:
+                raise Exception('API call failed, code {}'.format(code))
         # ===== RULE DELETION =====
         print('Deleting decision rules...')
         for i, v in self.dict_safe_get(cfg, 'dmatrix_rule', {}).items():
@@ -1313,7 +1421,10 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
 _me = 'EVA ICS SFA CLI version %s' % __version__
 
-cli = SFA_CLI('sfa', _me)
+prog = os.path.basename(__file__)[:-3]
+if prog == 'eva-shell': prog = 'eva sfa'
+
+cli = SFA_CLI('sfa', _me, prog=prog)
 
 _api_functions = {
     'history': 'state_history',
@@ -1351,8 +1462,8 @@ _pd_cols = {
         'exp_in'
     ],
     'state_': [
-        'oid', 'action_enabled', 'description', 'location', 'status',
-        'value', 'nstatus', 'nvalue', 'set', 'expires', 'exp_in'
+        'oid', 'action_enabled', 'description', 'location', 'status', 'value',
+        'nstatus', 'nvalue', 'set', 'expires', 'exp_in'
     ],
     'result': [
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
@@ -1388,4 +1499,5 @@ cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
+eva.client.cli.subshell_exit_code = code
 sys.exit(code)

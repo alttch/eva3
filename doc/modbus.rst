@@ -138,6 +138,12 @@ activate state updates via Modbus slave memory space, set unit
 registers, using before the number **c** for coil and **h** for holding
 register, e.g. *c5* for 5th coil register, *h50* for 50th holding register etc.
 
+As Modbus values can be only integers, you may specify divider (or multiplier
+as well). To convert unsigned integer to signed, specify "S" before address.
+E.g. you have Modbus temperature sensor which stores its value every X seconds
+to holding register 5 on :doc:`/uc/uc`, multiplied by 100 and as signed integer.
+To automatically convert this value, set **modbus_value** = *hS5/100*
+
 :ref:`Sensors<sensor>` can update their *value* only. Don't forget to enable
 sensor (set its status to 1) manually.
 

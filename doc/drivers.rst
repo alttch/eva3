@@ -194,8 +194,9 @@ listed ports will be used in commands.
 .. note::
 
     If relay port number is specified as i:N e.g. i:2, LPI commands will
-    consider it is inverted meaning *0* is for *on* and *1* is for *off*. This
-    works both for **basic** as well as for any other relay control LPI.
+    consider it is inverted (falling edge) meaning *0* is for *on* and *1* is
+    for *off*. This works both for **basic** as well as for any other relay
+    control LPI.
 
 sensor LPI
 ----------
@@ -257,6 +258,12 @@ Module used for such common tasks as door or window opening. To use this module
 you must connect your equipment to 2 relay ports: one will give power to
 motors, the second will set the direction.
 
+.. figure:: schemas/ac_motor.png
+    :scale: 75%
+    :alt: AC motor circiut
+
+    AC motor circuit
+
 Configuration options (set with *eva uc driver load*):
 
 * **bose** (break on state error). The module requires to know the current door
@@ -264,13 +271,23 @@ Configuration options (set with *eva uc driver load*):
   status is error, the action will be not executed. Otherwise LPI will pass and
   consider the item status is *0*.
 
+* **logic** *default* or *rdc* (reversible DC motor circuit). If set to
+  *rdc*, LPI will set *port* = 1, *dport = 0* for "opening" and *port = 0*,
+  *dport = 1* for "closing".
+
+.. figure:: schemas/rdc_motor.png
+    :scale: 75%
+    :alt: reversible DC motor circuit
+
+    Reversible DC motor circiut
+
 Action options (set with *eva uc driver assign*):
 
 * **port** contains one or several (separated with **|**) relay ports used to
-  power a motor.
+  power a motor (or plus for reversible DC).
 
 * **dport** contains one or several (separated with **|**) relay ports used to
-  set a direction.
+  set a direction (or minus for reversible DC).
 
 * **steps** list of float numbers, contains time (in seconds) of power access
   period to the motor to reach the next step. E.g. you have a door with 3
@@ -303,7 +320,7 @@ Action options (set with *eva uc driver assign*):
 .. note::
 
     LPI will completely refuse to run the action if it calculates that therese
-    is not enough time to complete it. Set item **action_timeout** to the
+    is not enough time to complete it. Set unit **action_timeout** to the
     proper value.
 
 Update options:

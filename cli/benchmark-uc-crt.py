@@ -10,7 +10,7 @@ from eva.client.apiclient import result_ok
 
 c = APIClientLocal('uc')
 
-iterations = 1000
+iterations = 10000
 
 turn_debug = False
 

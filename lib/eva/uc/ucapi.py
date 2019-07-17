@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import cherrypy
 import os
@@ -42,6 +42,7 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import ResourceBusy
 from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
+from eva.exceptions import MethodNotImplemented
 
 from eva.tools import parse_function_params
 from eva.tools import safe_int
@@ -243,6 +244,7 @@ class UC_API(GenericAPI):
         """
         k, i, s, v, w, u, p, q = parse_function_params(kwargs, 'kisvwupq',
                                                        '.sR.nsin')
+        if v is not None: v = str(v)
         item = eva.uc.controller.get_unit(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if s == 'toggle':
@@ -324,6 +326,39 @@ class UC_API(GenericAPI):
         return item.enable_actions()
 
     @log_i
+    @api_need_master
+    def start_item_maintenance(self, **kwargs):
+        """
+        start item maintenance mode
+
+        During maintenance mode all item updates are ignored, however actions
+        still can be executed
+
+        Args:
+            k: masterkey
+            .i: item ID
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        item = eva.uc.controller.get_item(i)
+        if not item: raise ResourceNotFound
+        return item.start_maintenance_mode()
+
+    @log_i
+    @api_need_master
+    def stop_item_maintenance(self, **kwargs):
+        """
+        stop item maintenance mode
+
+        Args:
+            k: masterkey
+            .i: item ID
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        item = eva.uc.controller.get_item(i)
+        if not item: raise ResourceNotFound
+        return item.stop_maintenance_mode()
+
+    @log_i
     def result(self, **kwargs):
         """
         get action status
@@ -371,6 +406,7 @@ class UC_API(GenericAPI):
             v: item value
         """
         k, i, s, v = parse_function_params(kwargs, 'kisv', '.si.')
+        if v is not None: v = str(v)
         item = eva.uc.controller.get_item(i)
         if not item or not apikey.check(k, item): raise ResourceNotFound
         if s is not None or v is not None:
@@ -507,11 +543,19 @@ class UC_API(GenericAPI):
         Optional:
             .p: filter by item type
             .g: filter by item group
+            x: serialize specified item prop(s)
 
         Returns:
             the list of all :doc:`item</items>` available
         """
-        tp, group = parse_api_params(kwargs, 'pg', 'ss')
+        tp, group, prop = parse_api_params(kwargs, 'pgx', 'ss.')
+        if prop:
+            if isinstance(prop, list):
+                pass
+            elif isinstance(prop, str):
+                prop = prop.split(',')
+            else:
+                raise InvalidParameter('"x" must be list or string')
         result = []
         if tp == 'U' or tp == 'unit':
             items = eva.uc.controller.units_by_full_id
@@ -523,8 +567,26 @@ class UC_API(GenericAPI):
             items = eva.uc.controller.items_by_full_id
         for i, v in items.copy().items():
             if not group or eva.item.item_match(v, [], [group]):
-                result.append(v.serialize(info=True))
-        return sorted(result, key=lambda k: k['oid'])
+                if not prop:
+                    result.append(v.serialize(info=True))
+                else:
+                    r = {'oid': v.oid}
+                    s = v.serialize(props=True)
+                    for p in prop:
+                        try:
+                            r[p] = s[p]
+                        except:
+                            raise ResourceNotFound('{}: config prop {}'.format(
+                                v.oid, p))
+                    result.append(r)
+        result = sorted(result, key=lambda k: k['oid'])
+        if prop:
+            for s in reversed(prop):
+                try:
+                    result = sorted(result, key=lambda k: k[s])
+                except:
+                    pass
+        return result
 
     @log_i
     @api_need_master
@@ -1063,6 +1125,179 @@ class UC_API(GenericAPI):
 
     @log_d
     @api_need_master
+    def read_modbus_port(self, **kwargs):
+        """
+        read Modbus register(s) from remote slave
+
+        Modbus registers must be specified as list or comma separated memory
+        addresses predicated with register type (h - holding, i - input, c -
+        coil, d - discrete input).
+
+        Address ranges can be specified, e.g. h1000-1010,c10-15 will return
+        values of holding registers from 1000 to 1010 and coil registers from
+        10 to 15
+
+        Args:
+            k: .master
+            .p: Modbus virtual port
+            .s: Slave ID
+            .i: Modbus register(s)
+
+        Optional:
+            t: max allowed timeout for the operation
+        """
+        i, p, s, t = parse_api_params(kwargs, 'ipst', '.SRn')
+        if not t:
+            t = eva.core.config.timeout
+        if isinstance(i, str):
+            regs = i.split(',')
+        elif isinstance(i, list):
+            regs = i
+        else:
+            raise InvalidParameter('registers')
+        try:
+            slave_id = safe_int(s)
+        except:
+            raise InvalidParameter('Invalid slave ID')
+        if not eva.uc.modbus.is_port(p):
+            raise ResourceNotFound('Modbus port')
+        result = []
+        mb = eva.uc.modbus.get_port(p, t)
+        if not mb:
+            raise FunctionFailed('Unable to acquire Modbus port')
+        try:
+            for reg in regs:
+                if not isinstance(reg, str) or len(reg) < 2:
+                    raise InvalidParameter(reg)
+                rtype = reg[0]
+                if rtype not in ['h', 'd', 'i', 'c']:
+                    raise InvalidParameter(reg)
+                r = reg[1:]
+                if r.find('-') != -1:
+                    try:
+                        addr, ae = r.split('-')
+                    except:
+                        raise InvalidParameter(reg)
+                else:
+                    addr = r
+                    ae = addr
+                try:
+                    addr = safe_int(addr)
+                except:
+                    raise InvalidParameter(reg)
+                try:
+                    ae = safe_int(ae)
+                    if ae > 65535:
+                        raise Exception
+                except:
+                    raise InvalidParameter(reg)
+                count = ae - addr + 1
+                if count < 1:
+                    raise InvalidParameter(reg)
+                if rtype == 'h':
+                    data = mb.read_holding_registers(addr, count, unit=slave_id)
+                elif rtype == 'd':
+                    data = mb.read_discrete_inputs(addr, count, unit=slave_id)
+                elif rtype == 'i':
+                    data = mb.read_input_registers(addr, count, unit=slave_id)
+                else:
+                    data = mb.read_coils(addr, count, unit=slave_id)
+                if data.isError():
+                    result.append({
+                        'addr':
+                        '{}{}'.format(rtype, addr),
+                        'error':
+                        str(data.message if hasattr(data, 'message') else data)
+                    })
+                else:
+                    cc = 1
+                    for d in data.registers if rtype in ['h',
+                                                         'i'] else data.bits:
+                        if d is True:
+                            v = 1
+                        elif d is False:
+                            v = 0
+                        else:
+                            v = d
+                        result.append({
+                            'addr': '{}{}'.format(rtype, addr),
+                            'value': v
+                        })
+                        addr += 1
+                        cc += 1
+                        if cc > count: break
+            return sorted(result, key=lambda k: k['addr'])
+        finally:
+            mb.release()
+
+    @log_d
+    @api_need_master
+    def write_modbus_port(self, **kwargs):
+        """
+        write Modbus register(s) to remote slave
+
+        Modbus registers must be specified as list or comma separated memory
+        addresses predicated with register type (h - holding, c - coil).
+
+        Args:
+            k: .master
+            .p: Modbus virtual port
+            .s: Slave ID
+            .i: Modbus register address
+            v: register value(s) (integer or hex or list)
+            z: if True, use 0x05-06 commands (write single register/coil)
+
+        Optional:
+            t: max allowed timeout for the operation
+        """
+        i, p, s, t, v, z = parse_api_params(kwargs, 'ipstvz', 'SSRnRb')
+        if not t:
+            t = eva.core.config.timeout
+        try:
+            slave_id = safe_int(s)
+        except:
+            raise InvalidParameter('slave ID')
+        rtype = i[0]
+        if rtype not in ['h', 'c']:
+            raise InvalidParameter(i)
+        try:
+            if isinstance(v, list):
+                value = []
+                for val in v:
+                    value.append(
+                        safe_int(val) if rtype == 'h' else val_to_boolean(v))
+            else:
+                value = [safe_int(v) if rtype == 'h' else val_to_boolean(v)]
+        except:
+            raise InvalidParameter('value')
+        if not eva.uc.modbus.is_port(p):
+            raise ResourceNotFound('Modbus port')
+        try:
+            addr = safe_int(i[1:])
+        except:
+            raise InvalidParameter(i)
+        mb = eva.uc.modbus.get_port(p, t)
+        if not mb:
+            raise FunctionFailed('Unable to acquire Modbus port')
+        try:
+            if rtype == 'h':
+                if z:
+                    data = mb.write_register(addr, value[0], unit=slave_id)
+                else:
+                    data = mb.write_registers(addr, value, unit=slave_id)
+            elif rtype == 'c':
+                if z:
+                    data = mb.write_coil(addr, value[0], unit=slave_id)
+                else:
+                    data = mb.write_coils(addr, value, unit=slave_id)
+            if data.isError():
+                raise FunctionFailed(value)
+            return True
+        finally:
+            mb.release()
+
+    @log_d
+    @api_need_master
     def get_modbus_slave_data(self, **kwargs):
         """
         get Modbus slave data
@@ -1087,7 +1322,7 @@ class UC_API(GenericAPI):
         elif isinstance(i, list):
             regs = i
         else:
-            raise InvalidParameter
+            raise InvalidParameter('registers')
         result = []
         for reg in regs:
             if not isinstance(reg, str) or len(reg) < 2:
@@ -1366,7 +1601,7 @@ class UC_API(GenericAPI):
             .v: propery value (or dict for batch set)
             save: save configuration after successful call
         """
-        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S..b')
         eva.uc.driverapi.set_phi_prop(i, p, v)
         if save: eva.uc.driverapi.save()
         return True
@@ -1436,6 +1671,22 @@ class UC_API(GenericAPI):
             return result
         else:
             return {'output': result}
+
+    @log_i
+    @api_need_master
+    def get_phi_ports(self, **kwargs):
+        """
+        get list of PHI ports
+
+        Args:
+            k: .master
+            .i: PHI id
+        """
+        i = parse_api_params(kwargs, 'i', 'S')
+        phi = eva.uc.driverapi.get_phi(i)
+        if not phi: raise ResourceNotFound
+        if not hasattr(phi, 'get_ports'): raise MethodNotImplemented
+        return phi.get_ports()
 
     @log_w
     @api_need_master
@@ -1508,6 +1759,25 @@ class UC_API(GenericAPI):
         """
         m = parse_api_params(kwargs, 'm', 'S')
         return eva.uc.driverapi.modinfo_phi(m)
+
+    @log_i
+    @api_need_master
+    def phi_discover(self, **kwargs):
+        """
+        discover installed equipment supported by PHI module
+
+        Args:
+            k: .master
+            .m: PHI module name (without *.py* extension)
+
+        Optional:
+            x: interface to perform discover on
+            w: max time for the operation
+        """
+        m, x, w = parse_api_params(kwargs, 'mxw', 'S.n')
+        if not w:
+            w = eva.core.config.timeout
+        return eva.uc.driverapi.phi_discover(m, x, w)
 
     @log_d
     @api_need_master
@@ -1639,7 +1909,7 @@ class UC_API(GenericAPI):
             .v: propery value (or dict for batch set)
             save: save driver configuration after successful call
         """
-        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S.Rb')
+        i, p, v, save = parse_api_params(kwargs, 'ipvS', 'S..b')
         if i.split('.')[-1] == 'default':
             raise ResourceBusy('Properties for default drivers can not be set')
         eva.uc.driverapi.set_driver_prop(i, p, v)
@@ -1773,7 +2043,7 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
             elif kind == 'history':
                 return self.state_history(k=k, i=ii, **props)
             elif kind == 'props':
-                return self.list_props(k=k, i=ii)
+                return self.list_props(k=k, i=ii, **props)
             elif kind == 'config':
                 return self.get_config(k=k, i=ii)
             elif for_dir:
@@ -1797,20 +2067,34 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.list_lpi_mods(k=k)
         elif rtp == 'phi':
             if ii:
-                return self.get_phi(k=k, i=ii)
+                if kind == 'ports':
+                    return self.get_phi_ports(k=k, i=ii)
+                elif not kind:
+                    return self.get_phi(k=k, i=ii)
             else:
                 return self.list_phi(k=k)
         elif rtp == 'phi-module':
-            if ii:
-                if 'help' in props:
-                    return self.modhelp_phi(k=k, m=ii, c=props['help'])
+            if kind == 'discover':
+                return self.phi_discover(k=k, m=ii, **props)
+            elif not kind:
+                if ii:
+                    if 'help' in props:
+                        return self.modhelp_phi(k=k, m=ii, c=props['help'])
+                    else:
+                        return self.modinfo_phi(k=k, m=ii)
                 else:
-                    return self.modinfo_phi(k=k, m=ii)
-            else:
-                return self.list_phi_mods(k=k)
+                    return self.list_phi_mods(k=k)
         elif rtp == 'modbus':
             if ii:
-                return self.get_modbus_port(k=k, i=ii)
+                if ii.find('/') == -1:
+                    return self.get_modbus_port(k=k, i=ii)
+                else:
+                    try:
+                        ii, slave_id, regs = ii.split('/')
+                    except:
+                        raise InvalidParameter
+                    return self.read_modbus_port(
+                        k=k, p=ii, s=slave_id, i=regs, **props)
             else:
                 return self.list_modbus_ports(k=k)
         elif rtp == 'modbus-slave':
@@ -1911,8 +2195,16 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 raise InvalidParameter('Invalid driver ID')
             return self.load_driver(k=k, i=lpi_id, p=phi_id, save=save, **props)
         elif rtp == 'modbus':
-            self.create_modbus_port(k=k, i=ii, save=save, **props)
-            return self.get_modbus_port(k=k, i=ii)
+            if ii.find('/') == -1:
+                self.create_modbus_port(k=k, i=ii, save=save, **props)
+                return self.get_modbus_port(k=k, i=ii)
+            else:
+                try:
+                    ii, slave_id, regs = ii.split('/')
+                except:
+                    raise InvalidParameter
+                return self.write_modbus_port(
+                    k=k, p=ii, s=slave_id, i=regs, **props)
         elif rtp == 'owfs':
             self.create_owfs_bus(k=k, i=ii, save=save, **props)
             return self.get_owfs_bus(k=k, i=ii)
@@ -1942,6 +2234,17 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         else:
                             raise InvalidParameter(
                                 '"action_enabled" has invalid value')
+                        del props['action_enabled']
+                if 'maintenance' in props:
+                    v = val_to_boolean(props['maintenance'])
+                    if v is True:
+                        self.start_item_maintenance(k=k, i=ii)
+                    elif v is False:
+                        self.stop_item_maintenance(k=k, i=ii)
+                    else:
+                        raise InvalidParameter(
+                            '"maintenance" has invalid value')
+                    del props['maintenance']
                 if props:
                     return super().set_prop(k=k, i=ii, save=save, v=props)
                 else:

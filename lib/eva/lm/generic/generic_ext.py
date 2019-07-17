@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 __description__ = "Generic macro extension, don't use"
 __api__ = 4
 __mods_required__ = []
@@ -47,6 +47,10 @@ class LMExt(object):
         self.__config_help = mod.__config_help__
         self.__functions = mod.__functions__
         self.__help = mod.__help__
+        try:
+            self.__iec_functions = mod.__iec_functions__
+        except:
+            self.__iec_functions = {}
         self.ext_id = None  # set by extapi on load
         if kwargs.get('info_only'): return
         self.ready = True
@@ -113,3 +117,6 @@ class LMExt(object):
         for f, h in self.__functions.copy().items():
             result.append(f.split('(')[0].strip())
         return result
+
+    def get_iec_functions(self):
+        return self.__iec_functions.copy()

@@ -20,6 +20,13 @@ SFA API functions are called through URL request
 If SSL is allowed in the controller configuration file, you can also use https
 calls.
 
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
 Standard API responses
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -98,6 +105,7 @@ Client</api_clients>`:
 * **13** the resource is busy (in use) and can not be accessed/recreated or
   deleted at this moment
 
+* **14** the method is not implemented in/for requested resource
 
 Response field *"message"* may contain additional information about error.
 
@@ -138,6 +146,8 @@ Obtains authentication :doc:`token</api_tokens>` which can be used in API calls 
 
 If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
 
+If authentication token is specified, the function will check it and return token information if it is valid.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/login.req
     :response: http-examples/sfapi/login.resp
@@ -147,6 +157,7 @@ Parameters:
 * **k** valid API key or
 * **u** user login
 * **p** user password
+* **a** authentication token
 
 Returns:
 
@@ -159,15 +170,13 @@ logout - log out and purge authentication token
 
 Purges authentication :doc:`token</api_tokens>`
 
-If API key is used as parameter value, the function purges all tokens assigned to it.
-
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/logout.req
     :response: http-examples/sfapi/logout.resp
 
 Parameters:
 
-* **k** valid API key or token
+* **k** valid token
 
 
 .. _sfapi_cat_item:
@@ -372,6 +381,8 @@ state_history - get item state history
 
 State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
 
+If master key is used, method attempt to get stored state for item even if it currently doesn't present.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/state_history.req
     :response: http-examples/sfapi/state_history.resp
@@ -384,13 +395,39 @@ Parameters:
 
 Optionally:
 
-* **s** start time (timestamp or ISO)
-* **e** end time (timestamp or ISO)
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
 * **l** records limit (doesn't work with "w")
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
-* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
-* **g** output format ("list" or "dict", default is "list")
+* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required, set to 1D if not specified
+* **g** output format ("list", "dict" or "chart", default is "list")
+* **c** options for chart (dict or comma separated)
+* **o** extra options for notifier data request
+
+Returns:
+
+history data in specified format or chart image.
+
+For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
+
+Options for chart (all are optional):
+
+* type: chart type (line or bar, default is line)
+
+* tf: chart time format
+
+* out: output format (svg, png, default is svg),
+
+* style: chart style (without "Style" suffix, e.g. Dark)
+
+* other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+If option "w" (fill) is used, number of digits after comma may be specified. E.g. 5T:3 will output values with 3 digits after comma.
+
+Additionally, SI prefix may be specified to convert value to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
+
+If binary prefix is required, it should be followed by "b", e.g. 5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
 
 .. _sfapi_terminate:
 
@@ -896,7 +933,7 @@ notify_restart - notify connected clients about server restart
 
 Sends a **server restart** event to all connected clients asking them to prepare for server restart.
 
-All the connected clients receive the event with *subject="server"* and *data="restart"*. If the clients use :doc:`sfa_framework`, they can define :ref:`restart handler<sfw_eva_sfa_server_restart_handler>` function.
+All the connected clients receive the event with *subject="server"* and *data="restart"*. If the clients use :ref:`js_framework`, they can catch *server.restart* event.
 
 Server restart notification is sent automatically to all connected clients when the server is restarting. This API function allows to send server restart notification without actual server restart, which may be useful e.g. for testing, handling frontend restart etc.
 
@@ -915,7 +952,7 @@ reload_clients - ask connected clients to reload
 
 Sends **reload** event to all connected clients asking them to reload the interface.
 
-All the connected clients receive the event with *subject="reload"* and *data="asap"*. If the clients use :doc:`sfa_framework`, they can define :ref:`reload handler<sfw_eva_sfa_reload_handler>` function.
+All the connected clients receive the event with *subject="reload"* and *data="asap"*. If the clients use :ref:`js_framework`, they can catch *server.reload* event.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/reload_clients.req

@@ -1,13 +1,14 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import cherrypy
 import logging
 import threading
 import time
 import math
+import importlib
 import jsonpickle
 import eva.tokens as tokens
 
@@ -21,6 +22,7 @@ from eva.tools import val_to_boolean
 from eva.tools import is_oid
 from eva.tools import oid_to_id
 from eva.tools import parse_oid
+from eva.tools import dict_from_str
 
 from eva.client import apiclient
 
@@ -30,6 +32,7 @@ from eva.exceptions import AccessDenied
 from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import ResourceBusy
 from eva.exceptions import InvalidParameter
+from eva.exceptions import MethodNotImplemented
 
 import eva.users
 import eva.notify
@@ -41,7 +44,7 @@ from functools import wraps
 
 from types import SimpleNamespace
 
-from base64 import b64decode
+import base64
 
 default_port = 80
 default_ssl_port = 443
@@ -69,6 +72,10 @@ class MethodNotFound(Exception):
     def __str__(self):
         msg = super().__str__()
         return msg if msg else 'API method not found'
+
+
+class EvaHIAuthenticationRequired(Exception):
+    pass
 
 
 def api_need_master(f):
@@ -182,9 +189,11 @@ def generic_web_api_method(f):
     @wraps(f)
     def do(*args, **kwargs):
         try:
-            return f(*args, **kwargs)
+            return jsonify(f(*args, **kwargs))
         except InvalidParameter as e:
             eva.core.log_traceback()
+            raise cp_bad_request(e)
+        except MethodNotImplemented as e:
             raise cp_bad_request(e)
         except TypeError as e:
             eva.core.log_traceback()
@@ -237,6 +246,9 @@ def restful_api_method(f):
                    method, for_dir, props)
         if isinstance(result, tuple):
             result, data = result
+            if isinstance(result, bytes):
+                cherrypy.serving.response.headers['Content-Type'] = data
+                return result
         else:
             data = None
         if result is False:
@@ -270,6 +282,9 @@ def cp_api_function(f):
             result = f(*args, **kwargs)
             if isinstance(result, tuple):
                 result, data = result
+                if isinstance(result, bytes):
+                    cherrypy.serving.response.headers['Content-Type'] = data
+                    return result
             else:
                 data = None
             if result is True:
@@ -396,6 +411,9 @@ class API_Logger(object):
         if func.startswith('set_') or func.endswith('_set'):
             fp = p.get('p')
             if fp in ['key', 'masterkey', 'password']: p[fp] = '<hidden>'
+        elif func == 'login':
+            if 'p' in p: p['p'] = '<hidden>'
+            if 'a' in p: p['a'] = '<hidden>'
         fplist = fp_hide.get(func)
         if fplist:
             for fp in fplist:
@@ -520,9 +538,9 @@ class GenericAPI(object):
 
     @staticmethod
     def _process_action_result(a):
-        if not a: raise ResourceNotFound('item found, but something not')
+        if not a: raise ResourceNotFound('item found, option')
         if a.is_status_dead():
-            raise FunctionFailed('{} is dead'.format(a.uiid))
+            raise FunctionFailed('{} is dead'.format(a.uuid))
         return a.serialize()
 
     def _get_state_history(self,
@@ -535,24 +553,27 @@ class GenericAPI(object):
                            x=None,
                            t=None,
                            w=None,
-                           g=None):
+                           g=None,
+                           o=None):
         import eva.item
         item = self.controller.get_item(i)
-        if not item or not apikey.check(k, item, ro_op=True):
+        if not apikey.check_master(k) and (
+                not item or not apikey.check(k, item, ro_op=True)):
             raise ResourceNotFound(i)
         if is_oid(i):
             _t, iid = parse_oid(i)
-            if not item or item.item_type != _t: raise ResourceNotFound(i)
+            if item and item.item_type != _t: raise ResourceNotFound(i)
         return eva.item.get_state_history(
             a=a,
-            oid=item.oid,
+            oid=item.oid if item else i,
             t_start=s,
             t_end=e,
             limit=l,
             prop=x,
             time_format=t,
             fill=w,
-            fmt=g)
+            fmt=g,
+            xopts=o)
 
     def _result(self, k, u, i, g, s, rtp):
         import eva.item
@@ -597,7 +618,9 @@ class GenericAPI(object):
 
     @staticmethod
     def _set_prop(item, p=None, v=None, save=False):
-        for prop, value in v.items() if isinstance(v, dict) else {p: v}.items():
+        for prop, value in v.items() if isinstance(v, dict) and not p else {
+                p: v
+        }.items():
             if not item.set_prop(prop, value, False):
                 raise FunctionFailed('{}.{} = {} unable to set'.format(
                     item.oid, prop, value))
@@ -631,6 +654,7 @@ class GenericAPI(object):
         result = {
             'acl': apikey.serialized_acl(k),
             'system': eva.core.config.system_name,
+            'controller': eva.core.config.controller_name,
             'time': time.time(),
             'log_level': eva.core.config.default_log_level_id,
             'version': eva.core.version,
@@ -647,7 +671,7 @@ class GenericAPI(object):
                     eva.sysapi.config.api_file_management_allowed
         if apikey.check(k, sysfunc=True):
             result['debug'] = eva.core.config.debug
-            result['setup_mode'] = eva.core.config.setup_mode
+            result['setup_mode'] = eva.core.is_setup_mode()
             result['db_update'] = eva.core.config.db_update
             result['polldelay'] = eva.core.config.polldelay
             if eva.core.config.development:
@@ -676,23 +700,150 @@ class GenericAPI(object):
         State history of one :doc:`item</items>` or several items of the
         specified type can be obtained using **state_history** command.
 
+        If master key is used, method attempt to get stored state for item even
+        if it currently doesn't present.
+
         Args:
             k:
             a: history notifier id (default: db_1)
             .i: item oids or full ids, list or comma separated
 
         Optional:
-            s: start time (timestamp or ISO)
-            e: end time (timestamp or ISO)
+            s: start time (timestamp or ISO or e.g. 1D for -1 day)
+            e: end time (timestamp or ISO or e.g. 1D for -1 day)
             l: records limit (doesn't work with "w")
             x: state prop ("status" or "value")
             t: time format("iso" or "raw" for unix timestamp, default is "raw")
             w: fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours
-                etc.), start time is required
-            g: output format ("list" or "dict", default is "list")
+                etc.), start time is required, set to 1D if not specified
+            g: output format ("list", "dict" or "chart", default is "list")
+            c: options for chart (dict or comma separated)
+            o: extra options for notifier data request
+
+        Returns:
+            history data in specified format or chart image.
+
+        For chart, JSON RPC gets reply with "content_type" and "data" fields,
+        where content is image content type. If PNG image format is selected,
+        data is base64-encoded.
+
+        Options for chart (all are optional):
+
+            * type: chart type (line or bar, default is line)
+
+            * tf: chart time format
+
+            * out: output format (svg, png, default is svg),
+
+            * style: chart style (without "Style" suffix, e.g. Dark)
+
+            * other options:
+                http://pygal.org/en/stable/documentation/configuration/chart.html#options
+                (use range_min, range_max for range, other are passed as-is)
+
+        If option "w" (fill) is used, number of digits after comma may be
+        specified. E.g. 5T:3 will output values with 3 digits after comma.
+
+        Additionally, SI prefix may be specified to convert value to kilos,
+        megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after
+        comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
+
+        If binary prefix is required, it should be followed by "b", e.g.
+        5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
         """
-        k, a, i, s, e, l, x, t, w, g = parse_function_params(
-            kwargs, 'kaiselxtwg', '.sr..issss')
+        k, a, i, s, e, l, x, t, w, g, c, o = parse_function_params(
+            kwargs, 'kaiselxtwgco', '.sr..issss..')
+
+        if o:
+            if isinstance(o, dict):
+                pass
+            elif isinstance(o, str):
+                o = dict_from_str(o)
+            else:
+                raise InvalidParameter('o must be dict or str')
+
+        def format_result(result, prop, c=None):
+            if c is None:
+                return result
+            if not prop: prop = 'value'
+            line = c.get('type', 'line')
+            fmt = c.get('out', 'svg')
+            chart_t = c.get('tf', '%Y-%m-%d %H:%M')
+            range_min = c.get('range_min')
+            range_max = c.get('range_max')
+            style = c.get('style')
+            for x in ['type', 'out', 'tf', 'range_min', 'range_max', 'style']:
+                try:
+                    del c[x]
+                except:
+                    pass
+            for x in [
+                    'explicit_size', 'show_x_labels', 'show_y_labels',
+                    'show_minor_x_labels', 'show_minor_y_labels', 'show_legend',
+                    'legend_at_bottom', 'include_x_axis', 'inverse_y_axis',
+                    'logarithmic', 'print_values', 'dynamic_print_values',
+                    'print_zeroes', 'print_labels', 'human_readable', 'stroke',
+                    'fill', 'show_only_major_dots', 'show_x_guides',
+                    'show_y_guides', 'pretty_print', 'disable_xml_declaration',
+                    'no_prefix', 'strict', 'missing_value_fill_truncation'
+            ]:
+                if x in c:
+                    c[x] = val_to_boolean(c[x])
+            import pygal
+            import datetime
+            if line == 'line':
+                chartfunc = pygal.Line
+            elif line == 'bar':
+                chartfunc = pygal.Bar
+            else:
+                raise InvalidParameter('Chart type should be in: line, bar')
+            if style:
+                try:
+                    pstyles = importlib.import_module('pygal.style')
+                    style = getattr(pstyles, '{}Style'.format(style))
+                    c['style'] = style
+                except:
+                    raise ResourceNotFound('chart style: {}'.format(style))
+            chart = chartfunc(**c)
+            if range_min is not None and range_max is not None:
+                chart.range = (range_min, range_max)
+            chart.x_labels = map(
+                lambda t: datetime.datetime.fromtimestamp(t).strftime(chart_t),
+                result['t'])
+            if prop != 'multiple':
+                chart.add(None, result[prop] if prop else result['value'])
+            else:
+                del result['t']
+                for i, v in result.items():
+                    item = self.controller.get_item(i.rsplit('/', 1)[0])
+                    chart.add(
+                        item.description if item and item.description else i, v)
+            result = chart.render()
+            if fmt == 'svg':
+                return result, 'image/svg+xml'
+            elif fmt == 'png':
+                import cairosvg
+                return cairosvg.svg2png(bytestring=result), 'image/png'
+            else:
+                raise InvalidParameter(
+                    'chart output format must be in: svg, png')
+
+        if g and g not in ['list', 'dict', 'chart']:
+            raise InvalidParameter(
+                'output format should be in: list, dict or chart')
+        if g == 'chart':
+            if c:
+                try:
+                    c = dict_from_str(c)
+                    if not isinstance(c, dict): raise Exception
+                except:
+                    raise InvalidParameter('chart options are invalid')
+            else:
+                c = {}
+            t = None
+            g = 'list'
+        else:
+            c = None
         if (isinstance(i, str) and i and i.find(',') != -1) or \
                 isinstance(i, list):
             if not w:
@@ -707,19 +858,34 @@ class GenericAPI(object):
             else:
                 raise InvalidParameter(
                     'format should be list only to process multiple items')
+            result_keys = set()
             for i in items:
                 r = self._get_state_history(
-                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-                result['t'] = r['t']
-                if 'status' in r:
-                    result[i + '/status'] = r['status']
-                if 'value' in r:
-                    result[i + '/value'] = r['value']
-            return result
+                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=None, o=o)
+                process_status = 'status' in r
+                process_value = 'value' in r
+                for z, tt in enumerate(r['t']):
+                    if tt not in result:
+                        result[tt] = {}
+                    if process_status:
+                        rk = i + '/status'
+                        result[tt][rk] = r['status'][z]
+                        result_keys.add(rk)
+                    if process_value:
+                        rk = i + '/value'
+                        result[tt][rk] = r['value'][z]
+                        result_keys.add(rk)
+            if not result_keys: return {}
+            merged_result = {'t': []}
+            for tt in sorted(result):
+                merged_result['t'].append(tt)
+                for rk in result_keys:
+                    merged_result.setdefault(rk, []).append(result[tt].get(rk))
+            return format_result(merged_result, 'multiple', c)
         else:
             result = self._get_state_history(
-                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g)
-            return result
+                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g, o=o)
+            return format_result(result, x, c)
 
     # return version for embedded hardware
     @log_d
@@ -744,43 +910,69 @@ class GenericAPI(object):
         function will try to parse it and log in user with credentials
         provided.
 
+        If authentication token is specified, the function will check it and
+        return token information if it is valid.
+
         Args:
             k: valid API key or
             u: user login
             p: user password
+            a: authentication token
 
         Returns:
             A dict, containing API key ID and authentication token
         """
         if not tokens.is_enabled():
             raise FunctionFailed('Session tokens are disabled')
-        k, u, p = parse_function_params(kwargs, 'kup', '.ss')
-        if not u and not k and hasattr(cherrypy, 'serving') and hasattr(
-                cherrypy.serving, 'request'):
+        k, u, p, a = parse_function_params(kwargs, 'kupa', '.sss')
+        if not u and not k and not a and hasattr(
+                cherrypy, 'serving') and hasattr(cherrypy.serving, 'request'):
             auth_header = cherrypy.serving.request.headers.get('authorization')
             if auth_header:
                 try:
                     scheme, params = auth_header.split(' ', 1)
                     if scheme.lower() == 'basic':
-                        u, p = b64decode(params).decode().split(':', 1)
+                        u, p = base64.b64decode(params).decode().split(':', 1)
+                        u = u.strip()
                 except Exception as e:
                     eva.core.log_traceback()
                     raise FunctionFailed(e)
+            elif cherrypy.request.headers.get('User-Agent',
+                                              '').startswith('evaHI '):
+                raise EvaHIAuthenticationRequired
+        if a:
+            t = tokens.get_token(a)
+            if t:
+                result = {'key': t['ki'], 'token': a}
+                if t['u'] is not None:
+                    result['user'] = t['u']
+                return result
+            else:
+                # try basic auth or evaHI login
+                if hasattr(cherrypy, 'serving') and hasattr(
+                        cherrypy.serving, 'request'):
+                    auth_header = cherrypy.serving.request.headers.get(
+                        'authorization')
+                    if auth_header or cherrypy.request.headers.get(
+                            'User-Agent', '').startswith('evaHI '):
+                        return self.login()
+                else:
+                    raise AccessDenied('Invalid token')
         if not u and k:
-            if k in apikey.keys:
-                ki = apikey.key_id(k)
-                token = tokens.append_token(ki)
-                if not token:
-                    raise FunctionFailed('token generation error')
-                return {'key': apikey.key_id(k), 'token': token}
-            raise AccessDenied
-        key = eva.users.authenticate(u, p)
-        if key in apikey.keys_by_id:
-            token = tokens.append_token(key, u)
+            if not apikey.check(k, ip=http_real_ip()):
+                raise AccessDenied
+            ki = apikey.key_id(k)
+            token = tokens.append_token(ki)
             if not token:
                 raise FunctionFailed('token generation error')
-            return {'key': key, 'token': token}
-        raise AccessDenied('Assigned API key is invalid')
+            return {'key': apikey.key_id(k), 'token': token}
+        key = eva.users.authenticate(u, p)
+        if not apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
+            raise AccessDenied
+        token = tokens.append_token(key, u)
+        if not token:
+            raise FunctionFailed('token generation error')
+        return {'user': u, 'key': key, 'token': token}
 
     @log_d
     def logout(self, **kwargs):
@@ -789,19 +981,16 @@ class GenericAPI(object):
 
         Purges authentication :doc:`token</api_tokens>`
 
-        If API key is used as parameter value, the function purges all tokens
-        assigned to it.
-
         Args:
-            k: valid API key or token
+            k: valid token
         """
         if not tokens.is_enabled():
             raise FunctionFailed('Session tokens are disabled')
         k = parse_function_params(kwargs, 'k', '.')
         if k.startswith('token:'):
             tokens.remove_token(k)
-        else:
-            tokens.remove_token(key_id=apikey.key_id(k))
+        # else:
+        # tokens.remove_token(key_id=apikey.key_id(k))
         return True
 
 
@@ -924,10 +1113,12 @@ class GenericCloudAPI(object):
         return controller.set_prop('enabled', False, save)
 
 
-def cp_json_handler(*args, **kwargs):
-    value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
+def jsonify(value):
     response = cherrypy.serving.response
+    if isinstance(value, bytes):
+        return value
     if value or value == 0 or isinstance(value, list):
+        response.headers['Content-Type'] = 'application/json'
         return format_json(
             value, minimal=not eva.core.config.development).encode('utf-8')
     else:
@@ -941,6 +1132,7 @@ def cp_json_handler(*args, **kwargs):
 
 
 def cp_jsonrpc_handler(*args, **kwargs):
+    if cherrypy.serving.response.status == 401: return
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     if value is None:
         cherrypy.serving.response.status = 202
@@ -1045,6 +1237,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
         if api_uri:
             self.api_uri = api_uri
         self._cp_config['tools.jsonrpc_pre.on'] = True
+        self._cp_config['tools.json_out.on'] = True,
         self._cp_config['tools.json_out.handler'] = cp_jsonrpc_handler
 
     def __call__(self, **kwargs):
@@ -1082,20 +1275,34 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                         p['k'] = k
                     if not apikey.check(k=k):
                         raise AccessDenied
-                result = f(**p)
-                if isinstance(result, tuple):
-                    result, data = result
+                res = f(**p)
+                if isinstance(res, tuple):
+                    res, data = res
+                    if isinstance(res, bytes):
+                        try:
+                            if data != 'image/svg+xml' and not data.startswith(
+                                    'text/'):
+                                raise Exception
+                            res = {
+                                'content_type': data,
+                                'data': res.decode('utf-8')
+                            }
+                        except:
+                            res = {
+                                'content_type': data,
+                                'data': base64.b64encode(res).decode()
+                            }
                 else:
                     data = None
-                if result is True:
-                    result = {'ok': True}
+                if res is True:
+                    res = {'ok': True}
                     if isinstance(data, dict):
-                        result.update(data)
-                elif result is False:
+                        res.update(data)
+                elif res is False:
                     raise FunctionFailed
-                elif result is None:
+                elif res is None:
                     raise ResourceNotFound
-                r = {'jsonrpc': '2.0', 'result': result, 'id': req_id}
+                r = {'jsonrpc': '2.0', 'result': res, 'id': req_id}
             except ResourceNotFound as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_not_found, e)
@@ -1108,12 +1315,19 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             except InvalidParameter as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_invalid_params, e)
+            except MethodNotImplemented as e:
+                r = format_error(apiclient.result_not_implemented, e)
             except ResourceAlreadyExists as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_already_exists, e)
             except ResourceBusy as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_busy, e)
+            except EvaHIAuthenticationRequired:
+                cherrypy.serving.response.status = 401
+                cherrypy.serving.response.headers[
+                    'WWW-Authenticate'] = 'Basic realm="?"'
+                return ''
             except Exception as e:
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_func_failed, e)
@@ -1145,7 +1359,6 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         self._cp_config = api_cp_config.copy()
         self._cp_config['tools.auth.on'] = True
         self._cp_config['tools.json_pre.on'] = True
-        self._cp_config['tools.json_out.handler'] = cp_json_handler
 
     def wrap_exposed(self):
         super().wrap_exposed(cp_api_function)
@@ -1278,7 +1491,6 @@ def error_page_500(*args, **kwargs):
 
 
 api_cp_config = {
-    'tools.json_out.on': True,
     'tools.nocache.on': True,
     'tools.trailing_slash.on': False,
     'error_page.400': error_page_400,

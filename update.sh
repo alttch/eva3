@@ -5,8 +5,8 @@
     #exit 98
 #fi
 
-VERSION=3.2.1
-BUILD=2019041701
+VERSION=3.2.4
+BUILD=2019071101
 
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 
@@ -15,7 +15,7 @@ OBS=""
 UC_NEW_CFG=""
 UC_NEW_CFG_L=""
 LM_NEW_CFG=""
-LM_NEW_DIR=""
+LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
     echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"

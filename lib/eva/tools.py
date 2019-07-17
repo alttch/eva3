@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import json
 import jsonpickle
@@ -12,7 +12,8 @@ import threading
 import logging
 import hashlib
 import uuid
-import os
+import string
+import random
 
 from collections import OrderedDict
 
@@ -126,7 +127,8 @@ def wait_for(func, wait_timeout, delay, wait_for_false=False, abort_func=None):
             a += 1
             time.sleep(delay)
     else:
-        while not func() and a < wait_timeout / delay:
+        while not func() and a < (wait_timeout() if callable(wait_timeout) else
+                                  wait_timeout) / delay:
             if abort_func and abort_func():
                 break
             a += 1
@@ -417,9 +419,38 @@ def dict_merge(*args):
     return result
 
 
-def gen_random_hash():
-    s = hashlib.sha256()
-    s.update(os.urandom(1024))
-    s.update(str(uuid.uuid4()).encode())
-    s.update(os.urandom(1024))
-    return s.hexdigest()
+def gen_random_str(length=64):
+    symbols = string.ascii_letters + '0123456789'
+    return ''.join(random.choice(symbols) for i in range(length))
+
+
+def format_modbus_value(val):
+    try:
+        if val[0] not in ['h', 'c']: return None, None, None, None
+        if val.find('*') != -1:
+            addr, multiplier = val[1:].split('*', 1)
+            try:
+                multiplier = float(multiplier)
+            except:
+                return None, None, None, None
+        elif val.find('/') != -1:
+            addr, multiplier = val[1:].split('/', 1)
+            try:
+                multiplier = float(multiplier)
+                multiplier = 1 / multiplier
+            except:
+                return None, None, None, None
+        else:
+            addr = val[1:]
+            multiplier = 1
+        if addr.startswith('S'):
+            addr = addr[1:]
+            signed = True
+        else:
+            signed = False
+        addr = safe_int(addr)
+        if addr > 9999 or addr < 0:
+            return None, None, None, None
+        return val[0], addr, multiplier, signed
+    except:
+        return None, None, None, None

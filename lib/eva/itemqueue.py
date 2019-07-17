@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import threading
 from queue import PriorityQueue
@@ -22,8 +22,7 @@ class ActiveItemQueue(object):
                  enterprise_layout=False):
         self.default_priority = default_priority
         self.q_id = queue_id
-        if keep_history: self.keep_history = keep_history
-        else: self.keep_history = eva.core.config.keep_action_history
+        self.keep_history = keep_history
 
         self.actions = []
         self.actions_by_id = {}
@@ -31,8 +30,6 @@ class ActiveItemQueue(object):
         self.actions_by_item_full_id = {}
 
         self.actions_lock = threading.RLock()
-
-        self.action_cleaner_interval = eva.core.config.action_cleaner_interval
 
         self.action_processor = None
         self.action_cleaner_active = False
@@ -115,6 +112,10 @@ class ActiveItemQueue(object):
             self.actions_lock.release()
 
     def start(self):
+        if self.keep_history is None:
+            self.keep_history = eva.core.config.keep_action_history
+        self.action_cleaner_interval = eva.core.config.action_cleaner_interval
+
         self.action_cleaner = background_worker(
             action_cleaner, delay=self.action_cleaner_interval, o=self)
         self.action_cleaner.start()

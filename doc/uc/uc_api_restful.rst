@@ -15,6 +15,16 @@ for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
 multipart/form-data. For JSON, *Content-Type: application/json* header must be
 specified.
 
+Long API calls
+--------------
+
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
 Requests
 --------
 
@@ -176,6 +186,8 @@ Obtains authentication :doc:`token</api_tokens>` which can be used in API calls 
 
 If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
 
+If authentication token is specified, the function will check it and return token information if it is valid.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/login.rest
     :response: http-examples/ucapi/login.resp-rest
@@ -185,6 +197,7 @@ Parameters:
 * **API Key** valid API key or
 * **u** user login
 * **p** user password
+* **a** authentication token
 
 Returns:
 
@@ -198,15 +211,13 @@ log out and purge authentication token
 
 Purges authentication :doc:`token</api_tokens>`
 
-If API key is used as parameter value, the function purges all tokens assigned to it.
-
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/logout.rest
     :response: http-examples/ucapi/logout.resp-rest
 
 Parameters:
 
-* **API Key** valid API key or token
+* **API Key** valid token
 
 
 
@@ -332,6 +343,8 @@ get item state history
 
 State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
 
+If master key is used, method attempt to get stored state for item even if it currently doesn't present.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/state_history.rest
     :response: http-examples/ucapi/state_history.resp-rest
@@ -343,13 +356,39 @@ Parameters:
 
 Optionally:
 
-* **s** start time (timestamp or ISO)
-* **e** end time (timestamp or ISO)
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
 * **l** records limit (doesn't work with "w")
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
-* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
-* **g** output format ("list" or "dict", default is "list")
+* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required, set to 1D if not specified
+* **g** output format ("list", "dict" or "chart", default is "list")
+* **c** options for chart (dict or comma separated)
+* **o** extra options for notifier data request
+
+Returns:
+
+history data in specified format or chart image.
+
+For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
+
+Options for chart (all are optional):
+
+* type: chart type (line or bar, default is line)
+
+* tf: chart time format
+
+* out: output format (svg, png, default is svg),
+
+* style: chart style (without "Style" suffix, e.g. Dark)
+
+* other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+If option "w" (fill) is used, number of digits after comma may be specified. E.g. 5T:3 will output values with 3 digits after comma.
+
+Additionally, SI prefix may be specified to convert value to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
+
+If binary prefix is required, it should be followed by "b", e.g. 5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
 
 
 .. _ucapi_restful_kill:
@@ -370,6 +409,38 @@ Parameters:
 Returns:
 
 If the current action of the unit cannot be terminated by configuration, the notice "pt" = "denied" will be returned additionally (even if there's no action running)
+
+
+.. _ucapi_restful_start_item_maintenance:
+
+start item maintenance mode
+---------------------------
+
+During maintenance mode all item updates are ignored, however actions still can be executed
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/start_item_maintenance.rest
+    :response: http-examples/ucapi/start_item_maintenance.resp-rest
+
+Parameters:
+
+* **API Key** masterkey
+
+
+.. _ucapi_restful_stop_item_maintenance:
+
+stop item maintenance mode
+--------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/stop_item_maintenance.rest
+    :response: http-examples/ucapi/stop_item_maintenance.resp-rest
+
+Parameters:
+
+* **API Key** masterkey
 
 
 .. _ucapi_restful_terminate:
@@ -492,6 +563,7 @@ Parameters:
 
 Optionally:
 
+* **x** serialize specified item prop(s)
 
 Returns:
 
@@ -940,6 +1012,28 @@ Parameters:
 * **API Key** API key with *master* permissions
 
 
+.. _ucapi_restful_read_modbus_port:
+
+read Modbus register(s) from remote slave
+-----------------------------------------
+
+Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, i - input, c - coil, d - discrete input).
+
+Address ranges can be specified, e.g. h1000-1010,c10-15 will return values of holding registers from 1000 to 1010 and coil registers from 10 to 15
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/read_modbus_port.rest
+    :response: http-examples/ucapi/read_modbus_port.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+* **t** max allowed timeout for the operation
+
+
 .. _ucapi_restful_test_modbus_port:
 
 test virtual Modbus port
@@ -958,6 +1052,28 @@ Verifies virtual :doc:`Modbus port</modbus>` by calling connect() Modbus client 
 Parameters:
 
 * **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_write_modbus_port:
+
+write Modbus register(s) to remote slave
+----------------------------------------
+
+Modbus registers must be specified as list or comma separated memory addresses predicated with register type (h - holding, c - coil).
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/write_modbus_port.rest
+    :response: http-examples/ucapi/write_modbus_port.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+* **v** register value(s) (integer or hex or list)
+* **z** if True, use 0x05-06 commands (write single register/coil)
+
+Optionally:
+
+* **t** max allowed timeout for the operation
 
 
 .. _ucapi_restful_get_modbus_slave_data:
@@ -1004,6 +1120,27 @@ Parameters:
 * **API Key** API key with *master* permissions
 
 
+.. _ucapi_restful_phi_discover:
+
+discover installed equipment supported by PHI module
+----------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/phi_discover.rest
+    :response: http-examples/ucapi/phi_discover.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+* **x** interface to perform discover on
+* **w** max time for the operation
+
+
 .. _ucapi_restful_exec_phi:
 
 execute additional PHI commands
@@ -1048,6 +1185,22 @@ get PHI usage help
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/ucapi/modhelp_phi.rest
     :response: http-examples/ucapi/modhelp_phi.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_get_phi_ports:
+
+get list of PHI ports
+---------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/get_phi_ports.rest
+    :response: http-examples/ucapi/get_phi_ports.resp-rest
 
 Parameters:
 

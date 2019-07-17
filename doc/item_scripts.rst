@@ -61,6 +61,11 @@ The startup parameters of the action script include:
 * **param2** new unit status
 * **param3** new unit value
 
+.. note::
+
+    If unit action is called without value, action control script is called
+    with previous known unit value
+
 A simple example script: send toe command to `X10
 <https://en.wikipedia.org/wiki/X10>`_ controller via `mochad
 <https://sourceforge.net/projects/mochad/>`_

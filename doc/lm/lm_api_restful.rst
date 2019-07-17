@@ -15,6 +15,16 @@ for *POST, PUT, PATCH* and *DELETE* requests can be sent in both JSON and
 multipart/form-data. For JSON, *Content-Type: application/json* header must be
 specified.
 
+Long API calls
+--------------
+
+.. warning::
+
+    It's highly not recommended to perform long API calls, calling API
+    functions from JavaScript in a web browser (e.g. giving "w" param to action
+    methods to wait until action finish). Web browser may repeat API call
+    continuously, which may lead to absolutely unexpected behavior.
+
 Requests
 --------
 
@@ -176,6 +186,8 @@ Obtains authentication :doc:`token</api_tokens>` which can be used in API calls 
 
 If both **k** and **u** args are absent, but API method is called with HTTP request, which contain HTTP header for basic authorization, the function will try to parse it and log in user with credentials provided.
 
+If authentication token is specified, the function will check it and return token information if it is valid.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/login.rest
     :response: http-examples/lmapi/login.resp-rest
@@ -185,6 +197,7 @@ Parameters:
 * **API Key** valid API key or
 * **u** user login
 * **p** user password
+* **a** authentication token
 
 Returns:
 
@@ -198,15 +211,13 @@ log out and purge authentication token
 
 Purges authentication :doc:`token</api_tokens>`
 
-If API key is used as parameter value, the function purges all tokens assigned to it.
-
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/logout.rest
     :response: http-examples/lmapi/logout.resp-rest
 
 Parameters:
 
-* **API Key** valid API key or token
+* **API Key** valid token
 
 
 
@@ -272,6 +283,8 @@ get item state history
 
 State history of one :doc:`item</items>` or several items of the specified type can be obtained using **state_history** command.
 
+If master key is used, method attempt to get stored state for item even if it currently doesn't present.
+
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/lmapi/state_history.rest
     :response: http-examples/lmapi/state_history.resp-rest
@@ -283,13 +296,39 @@ Parameters:
 
 Optionally:
 
-* **s** start time (timestamp or ISO)
-* **e** end time (timestamp or ISO)
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
 * **l** records limit (doesn't work with "w")
 * **x** state prop ("status" or "value")
 * **t** time format("iso" or "raw" for unix timestamp, default is "raw")
-* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required
-* **g** output format ("list" or "dict", default is "list")
+* **w** fill frame with the interval (e.g. "1T" - 1 min, "2H" - 2 hours etc.), start time is required, set to 1D if not specified
+* **g** output format ("list", "dict" or "chart", default is "list")
+* **c** options for chart (dict or comma separated)
+* **o** extra options for notifier data request
+
+Returns:
+
+history data in specified format or chart image.
+
+For chart, JSON RPC gets reply with "content_type" and "data" fields, where content is image content type. If PNG image format is selected, data is base64-encoded.
+
+Options for chart (all are optional):
+
+* type: chart type (line or bar, default is line)
+
+* tf: chart time format
+
+* out: output format (svg, png, default is svg),
+
+* style: chart style (without "Style" suffix, e.g. Dark)
+
+* other options: http://pygal.org/en/stable/documentation/configuration/chart.html#options (use range_min, range_max for range, other are passed as-is)
+
+If option "w" (fill) is used, number of digits after comma may be specified. E.g. 5T:3 will output values with 3 digits after comma.
+
+Additionally, SI prefix may be specified to convert value to kilos, megas etc, e.g. 5T:k:3 - divide value by 1000 and output 3 digits after comma. Valid prefixes are: k, M, G, T, P, E, Z, Y.
+
+If binary prefix is required, it should be followed by "b", e.g. 5T:Mb:3 - divide value by 2^20 and output 3 digits after comma.
 
 
 .. _lmapi_restful_state:
@@ -401,6 +440,7 @@ Parameters:
 
 Optionally:
 
+* **x** serialize specified item prop(s)
 
 Returns:
 
@@ -540,7 +580,7 @@ Parameters:
 
 Optionally:
 
-* **save** save unit configuration immediately
+* **save** save rule configuration immediately
 
 
 .. _lmapi_restful_destroy_rule:
@@ -1353,6 +1393,118 @@ test connection to remote controller
 Parameters:
 
 * **API Key** API key with *master* permissions
+
+
+
+.. _lmapi_restful_cat_job:
+
+Scheduled jobs
+==============
+
+
+
+.. _lmapi_restful_create_job:
+
+create new job
+--------------
+
+Creates new :doc:`scheduled job<jobs>`. Job id (UUID) is generated automatically unless specified.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/create_job.rest
+    :response: http-examples/lmapi/create_job.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+* **save** save unit configuration immediately
+
+
+.. _lmapi_restful_destroy_job:
+
+delete job
+----------
+
+Deletes :doc:`scheduled job<jobs>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/destroy_job.rest
+    :response: http-examples/lmapi/destroy_job.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_get_job:
+
+get job information
+-------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/get_job.rest
+    :response: http-examples/lmapi/get_job.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_list_jobs:
+
+get jobs list
+-------------
+
+Get the list of all available :doc:`scheduled jobs<jobs>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_jobs.rest
+    :response: http-examples/lmapi/list_jobs.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_list_job_props:
+
+list job properties
+-------------------
+
+Get all editable parameters of the :doc:`scheduled job</lm/jobs>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/list_job_props.rest
+    :response: http-examples/lmapi/list_job_props.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _lmapi_restful_set_job_prop:
+
+set job parameters
+------------------
+
+Set configuration parameters of the :doc:`scheduled job</lm/jobs>`.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/set_job_prop.rest
+    :response: http-examples/lmapi/set_job_prop.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+Optionally:
+
+* **save** save configuration after successful call
 
 
 

@@ -53,7 +53,7 @@ function exec_cmd {
 case $1 in
 start)
     echo 'Starting UC server'
-    ps xa|grep -v grep|grep ${UC} > /dev/null 2>&1
+    ps xaww|grep -v grep|grep ${UC} > /dev/null 2>&1
     if [ $? == 0 ]; then
         echo "already started"
         exit 2
@@ -66,7 +66,7 @@ launch)
     env EVA_CORE_ENABLE_CC=1 EVA_CORE_LOG_STDOUT=1 ${DEBUG} ${PYTHON} ${UC} ${UC_ARGS}
     ;;
 stop)
-    ps xa|grep -v grep|grep ${UC} > /dev/null 2>&1
+    ps xaww|grep -v grep|grep ${UC} > /dev/null 2>&1
     [ $? == 0 ] || exit 1
     echo -n 'Stopping UC server '
     PID_SAFE_RUN=
@@ -98,10 +98,10 @@ stop)
         done
         rm -f ${PIDFILE}
     fi
-    ps xa|grep -v grep|grep ${UC}|awk '{ print $1 }'|xargs kill > /dev/null 2>&1
+    ps xaww|grep -v grep|grep ${UC}|awk '{ print $1 }'|xargs kill > /dev/null 2>&1
     if [ $? == 0 ]; then
         sleep 10
-        ps xa|grep -v grep|grep ${UC}|awk '{ print $1 }'|xargs kill -9 > /dev/null 2>&1
+        ps xaww|grep -v grep|grep ${UC}|awk '{ print $1 }'|xargs kill -9 > /dev/null 2>&1
     fi
     echo ' stopped'
     ;;
@@ -113,7 +113,7 @@ logrotate)
     [ -f ${PIDFILE} ] && kill -HUP `cat ${PIDFILE}`
     ;;
 status)
-    ps xa|grep -v grep|grep ${UC} > /dev/null 2>&1
+    ps xaww|grep -v grep|grep ${UC} > /dev/null 2>&1
     if [ $? == 0 ]; then
         echo "running"
     else

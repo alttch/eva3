@@ -1,18 +1,242 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import eva.core
 import eva.item
 import eva.lm.controller
 import eva.lm.macro_api
 import eva.lm.extapi
+import eva.lm.iec_compiler
+import eva.lm.iec_functions
 import threading
 import time
+import os
+import re
 import logging
+import json
 
 from eva.tools import val_to_boolean
+from eva.tools import dict_from_str
+from eva.exceptions import FunctionFailed
+
+from types import SimpleNamespace
+
+macro_functions = {}
+macro_function_codes = {}
+
+macro_iec_functions = {}
+macro_api_functions = {}
+
+mfcode = SimpleNamespace(code='', build_time=0)
+
+with_macro_functions_lock = eva.core.RLocker('lm/plc')
+
+
+def load_iec_functions():
+    macro_iec_functions.clear()
+    macro_iec_functions.update(
+        json.loads(
+            open(eva.core.dir_lib + '/eva/lm/iec_functions.json').read()))
+
+
+def load_macro_api_functions():
+    macro_api_functions.clear()
+    macro_api_functions.update(
+        json.loads(
+            open(eva.core.dir_lib + '/eva/lm/macro_api_functions.json').read()))
+
+
+def rebuild_mfcode():
+    code = ''
+    for m, v in macro_function_codes.items():
+        code += v + '\n'
+    mfcode.code = code
+    mfcode.build_time = time.time()
+    logging.debug('mfcode rebuilt: {}'.format(mfcode.build_time))
+
+
+def compile_macro_function_fbd(fcode):
+    return eva.lm.iec_compiler.gen_code_from_fbd(fcode)
+
+
+def compile_macro_sfc(code):
+    return eva.lm.iec_compiler.gen_code_from_sfc(code)
+
+
+def prepare_macro_function_code(fcode, fname, fdescr, i, o):
+    var_in = ''
+    var_out = ''
+    in_params = ''
+    if i:
+        for v in i:
+            descr = v.get('description')
+            if descr is None:
+                descr = ''
+            in_params += '{}=None, '.format(v['var'])
+            var_in += '    @var_in    {}    {}\n'.format(v['var'], descr)
+    if o:
+        for v in o:
+            descr = v.get('description')
+            if descr is None:
+                descr = ''
+            var_out += '    @var_in    {}    {}\n'.format(v['var'], descr)
+    out = 'def {}({}):\n'.format(fname, in_params[:-2])
+    out += '    """\n'
+    if fdescr is not None and fdescr != '':
+        out += '    @description    {}\n'.format(fdescr)
+    out += var_in
+    out += var_out
+    out += '    """\n'
+    for l in fcode.split('\n'):
+        out += '    {}\n'.format(l)
+    return out
+
+
+@with_macro_functions_lock
+def append_macro_function(file_name, rebuild=True):
+
+    def parse_arg(fndoc):
+        x = re.split('[\ \t]+', d, 2)
+        argname = x[1]
+        if len(x) > 2:
+            argdescr = x[2]
+        else:
+            argdescr = ''
+        result = {'description': argdescr}
+        if argname.find('=') != -1:
+            argname, argval = argname.split('=', 1)
+            try:
+                argval = float(argval)
+                if argval == int(argval):
+                    argval = int(argval)
+            except:
+                pass
+            result['default'] = argval
+        result['var'] = argname
+        return result
+
+    try:
+        raw = open(file_name).read()
+        fname = os.path.basename(file_name[:-3])
+        if raw.startswith('# FBD'):
+            l = raw.split('\n')
+            jcode = ''
+            for i in range(3, len(l)):
+                if l[i].startswith('"""'):
+                    break
+                jcode += l[i]
+            j = json.loads(jcode)
+            tp = 'fbd-json'
+        else:
+            tp = 'py'
+
+        code, src_code = raw, raw
+
+        if tp == 'py':
+            code += '\nimport inspect\nfndoc = inspect.getdoc({})\n'.format(
+                fname, fname)
+            code += 'fnsrc = inspect.getsource({})\n'.format(fname)
+        d = {}
+        c = compile(code, file_name, 'exec')
+        exec(c, d)
+        if tp == 'py':
+            src = ''
+            x = 0
+            indent = 4
+            for s in d['fnsrc'].split('\n'):
+                if x >= 2:
+                    if src:
+                        src += '\n'
+                    src += s[indent:]
+                st = s.strip()
+                if st.startswith('\'\'\'') or st.startswith('"""'):
+                    if not x:
+                        indent = len(s) - len(st)
+                    x += 1
+        elif tp == 'fbd-json':
+            src = j
+        result = {
+            'name': fname,
+            'var_in': [],
+            'var_out': [],
+            'src': src,
+            'editable': True,
+            'group': 'custom',
+            'description': '',
+            'type': tp
+        }
+        if tp == 'py':
+            doc = d['fndoc']
+            if doc:
+                for d in doc.split('\n'):
+                    d = d.strip()
+                    if d.startswith('@var_in'):
+                        result['var_in'].append(parse_arg(d))
+                    if d.startswith('@var_out'):
+                        result['var_out'].append(parse_arg(d))
+                    if d.startswith('@description'):
+                        try:
+                            result['description'] = re.split('[\ \t]+', d, 1)[1]
+                        except:
+                            pass
+        elif tp == 'fbd-json':
+            result['description'] = j.get('description', '')
+            for x in j.get('input', []):
+                result['var_in'].append({
+                    'var': x.get('var'),
+                    'description': x.get('description', '')
+                })
+            for x in j.get('output', []):
+                result['var_out'].append({
+                    'var': x.get('var'),
+                    'description': x.get('description', '')
+                })
+        macro_functions[fname] = result
+        macro_function_codes[fname] = src_code
+        if rebuild: rebuild_mfcode()
+        return True
+    except Exception as e:
+        raise FunctionFailed(e)
+
+
+@with_macro_functions_lock
+def remove_macro_function(file_name, rebuild=True):
+    fname = os.path.basename(file_name)[:-3]
+    if fname in macro_functions:
+        del macro_functions[fname]
+        del macro_function_codes[fname]
+        if rebuild: rebuild_mfcode()
+        return True
+    else:
+        return False
+
+
+@with_macro_functions_lock
+def get_macro_function_codes():
+    return macro_function_codes.copy()
+
+
+@with_macro_functions_lock
+def get_macro_function(fname=None):
+    if fname:
+        if fname in macro_functions:
+            return macro_functions[fname].copy()
+        elif fname in macro_iec_functions:
+            return macro_iec_functions[fname].copy()
+        elif fname in macro_api_functions:
+            return macro_api_functions[fname].copy()
+        elif fname in eva.lm.extapi.iec_functions:
+            return eva.lm.extapi.iec_functions[fname].copy()
+        else:
+            return None
+    else:
+        result = macro_functions.copy()
+        result.update(macro_iec_functions.copy())
+        result.update(macro_api_functions.copy())
+        result.update(eva.lm.extapi.iec_functions.copy())
+        return result
 
 
 class PLC(eva.item.ActiveItem):
@@ -36,8 +260,7 @@ class PLC(eva.item.ActiveItem):
                 self.action_after_get_task(a)
                 if not a or not a.item: continue
                 if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                    logging.critical(
-                        'ActiveItem::_t_action_processor locking broken')
+                    logging.critical('PLC::_t_action_processor locking broken')
                     eva.core.critical()
                     continue
                 self.current_action = a
@@ -74,8 +297,7 @@ class PLC(eva.item.ActiveItem):
                                 (self.full_id))
                 eva.core.log_traceback()
             if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical(
-                    'ActiveItem::_t_action_processor locking broken')
+                logging.critical('PLC::_t_action_processor locking broken')
                 eva.core.critical()
                 continue
             self.current_action = None
@@ -90,6 +312,7 @@ class PLC(eva.item.ActiveItem):
         env_globals = {}
         env_globals.update(eva.lm.extapi.env)
         env_globals.update(a.item.api.get_globals())
+        env_globals.update(eva.lm.iec_functions.g)
         env_globals['_source'] = a.source
         env_globals['args'] = a.argv.copy()
         # deprecated
@@ -116,7 +339,8 @@ class PLC(eva.item.ActiveItem):
         xc = eva.runner.PyThread(
             item=a.item,
             env_globals=env_globals,
-            bcode=eva.lm.macro_api.mbi_code)
+            bcode=eva.lm.macro_api.mbi_code,
+            mfcode=mfcode)
         self.queue_lock.release()
         xc.run()
         self.action_after_run(a, xc)
@@ -185,7 +409,7 @@ class Macro(eva.item.ActiveItem):
                 return True
             else:
                 return False
-        if prop == 'send_critical':
+        elif prop == 'send_critical':
             v = val_to_boolean(val)
             if v is not None:
                 if self.api.send_critical != v:
@@ -194,6 +418,38 @@ class Macro(eva.item.ActiveItem):
                     self.set_modified(save)
                 return True
             else:
+                return False
+        elif prop == 'src':
+            if isinstance(val, str):
+                code = val
+            elif isinstance(val, dict):
+                try:
+                    v = val.copy()
+                    if 'name' in v:
+                        del v['name']
+                    code = '# SFC\n# auto generated code, ' + \
+                            'do not modify\n"""\n{}\n"""\n'.format(
+                        json.dumps(v)) + compile_macro_sfc(val)
+                except Exception as e:
+                    logging.error(
+                        'Unable to compile macro source for {}: {}'.format(
+                            self.oid, e))
+                    return False
+            else:
+                return False
+            try:
+                file_name = eva.core.format_xc_fname(
+                    fname=self.action_exec
+                    if self.action_exec else '{}.py'.format(self.item_id))
+                eva.core.prepare_save()
+                open(file_name, 'w').write(code)
+                eva.core.finish_save()
+                return True
+            except FunctionFailed:
+                raise
+            except Exception as e:
+                logging.error('Unable to write macro source for {}: {}'.format(
+                    self.oid, e))
                 return False
         return super().set_prop(prop, val, save)
 
@@ -228,6 +484,8 @@ class Macro(eva.item.ActiveItem):
             del d['mqtt_control']
         if 'term_kill_interval' in d:
             del d['term_kill_interval']
+        if props:
+            d['src'] = ''
         return d
 
 
@@ -237,6 +495,8 @@ class Cycle(eva.item.Item):
         super().__init__(item_id, 'lcycle')
         self.respect_layout = False
         self.macro = None
+        self.macro_args = []
+        self.macro_kwargs = {}
         self.on_error = None
         self.interval = 1
         self.ict = 100
@@ -252,6 +512,18 @@ class Cycle(eva.item.Item):
     def update_config(self, data):
         if 'macro' in data:
             self.macro = eva.lm.controller.get_macro(data['macro'])
+        if 'macro_args' in data:
+            m = data['macro_args']
+            if isinstance(m, str):
+                try:
+                    m = shlex.split(m)
+                except:
+                    m = m.split(' ')
+            elif not m:
+                m = []
+            self.macro_args = m
+        if 'macro_kwargs' in data:
+            self.macro_kwargs = dict_from_str(data['macro_kwargs'])
         if 'on_error' in data:
             self.on_error = eva.lm.controller.get_macro(data['on_error'])
         if 'interval' in data:
@@ -281,6 +553,26 @@ class Cycle(eva.item.Item):
                 return True
             else:
                 return False
+        elif prop == 'macro_args':
+            if val is not None:
+                try:
+                    v = shlex.split(val)
+                except:
+                    v = val.split(' ')
+            else:
+                v = []
+            self.macro_args = v
+            self.log_set(prop, val)
+            self.set_modified(save)
+            return True
+        elif prop == 'macro_kwargs':
+            if val is None:
+                self.macro_kwargs = {}
+            else:
+                self.macro_kwargs = dict_from_str(val)
+            self.log_set(prop, val)
+            self.set_modified(save)
+            return True
         elif prop == 'on_error':
             if val is None:
                 if self.on_error is not None:
@@ -354,6 +646,8 @@ class Cycle(eva.item.Item):
                 try:
                     result = eva.lm.controller.exec_macro(
                         self.macro,
+                        argv=self.macro_args,
+                        kwargs=self.macro_kwargs,
                         wait=self.interval,
                         source=self,
                         is_shutdown_func=self.is_shutdown)
@@ -399,9 +693,15 @@ class Cycle(eva.item.Item):
             else:
                 corr = 0
             prev = t
-            cycle_end -= corr
-            while time.time() < cycle_end and self.cycle_enabled:
-                time.sleep(eva.core.config.polldelay)
+            if self.interval >= 1:
+                cycle_end -= corr
+                while time.time() < cycle_end and self.cycle_enabled:
+                    time.sleep(eva.core.sleep_step)
+            else:
+                try:
+                    time.sleep(self.interval - corr)
+                except:
+                    pass
         logging.debug('%s cycle thread stopped' % self.full_id)
         self.cycle_status = 0
         # dirty - wait for prev. state to be sent
@@ -469,6 +769,8 @@ class Cycle(eva.item.Item):
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
             d['on_error'] = self.on_error.full_id if self.on_error else None
+            d['macro_args'] = self.macro_args
+            d['macro_kwargs'] = self.macro_kwargs
         if config or props:
             d['autostart'] = self.autostart
         return d

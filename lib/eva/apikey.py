@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import hashlib
 import os
@@ -23,6 +23,7 @@ from eva.core import userdb
 
 from eva.tools import netacl_match
 from eva.tools import val_to_boolean
+from eva.tools import gen_random_str
 
 from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import ResourceNotFound
@@ -237,6 +238,11 @@ class APIKey(object):
         dbconn = userdb()
         try:
             if not self.in_db:
+                # if save on exit is set, deleted key with the same name could
+                # still be present in the database
+                dbconn.execute(
+                    sql('delete from apikeys where k_id=:k_id'),
+                    k_id=data['id'])
                 dbconn.execute(
                     sql('insert into apikeys(k_id, k, m, s, i,' +
                         ' g, i_ro, g_ro, a,hal, has, pvt, rpvt) values ' +
@@ -439,7 +445,7 @@ def check(k,
           master=False,
           sysfunc=False,
           ro_op=False):
-    if eva.core.config.setup_mode:
+    if eva.core.is_setup_mode():
         return True
     if not k or not k in keys or (master and not keys[k].master): return False
     _k = keys[k]
@@ -478,8 +484,8 @@ def check(k,
                     if match: return True
         return False
     if rpvt_uri:
-        if rpvt_uri.find('//') != -1:
-            r = rpvt_uri.split('//')[1]
+        if rpvt_uri.find('//') != -1 and rpvt_uri[:3] not in ['uc/', 'lm/']:
+            r = rpvt_uri.split('//', 1)[1]
         else:
             r = rpvt_uri
         if '#' in _k.rpvt_uris or r in _k.rpvt_uris: return True
@@ -509,10 +515,14 @@ def get_masterkey():
 
 
 def serialized_acl(k):
-    if not k or not k in keys: return None
+    r = {'key_id': None, 'master': True}
+    setup_on = eva.core.is_setup_mode()
+    if not k or not k in keys:
+        return r if setup_on else None
     _k = keys[k]
-    r = {'key_id': _k.key_id, 'master': _k.master or eva.core.config.setup_mode}
-    if _k.master or eva.core.config.setup_mode: return r
+    r['key_id'] = _k.key_id
+    r['master'] = _k.master or setup_on
+    if _k.master or setup_on: return r
     r['sysfunc'] = _k.sysfunc
     r['items'] = _k.item_ids
     r['groups'] = _k.groups
@@ -529,7 +539,7 @@ def serialized_acl(k):
 def add_api_key(key_id=None, save=False):
     if key_id is None: raise FunctionFailed
     if key_id in keys_by_id: raise ResourceAlreadyExists
-    key_hash = gen_random_hash()
+    key_hash = gen_random_str()
     key = APIKey(key_hash, key_id)
     key.master = False
     key.dynamic = True
@@ -568,7 +578,7 @@ def regenerate_key(key_id, k=None, save=False):
         raise FunctionFailed('Master and static keys can not be changed')
     key = keys_by_id[key_id]
     old_key = key.key
-    key.set_key(gen_random_hash() if k is None else k)
+    key.set_key(gen_random_str() if k is None else k)
     keys[key.key] = keys.pop(old_key)
     key.set_modified(save)
     return key.key
@@ -648,11 +658,3 @@ def save():
 
 def init():
     pass
-
-
-def gen_random_hash():
-    s = hashlib.sha256()
-    s.update(os.urandom(1024))
-    s.update(str(uuid.uuid4()).encode())
-    s.update(os.urandom(1024))
-    return s.hexdigest()

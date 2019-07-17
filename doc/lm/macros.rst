@@ -266,6 +266,35 @@ Raises:
 * **ResourceNotFound** command script or controller is not found
 
 
+.. _macro_api_date:
+
+date - date/time
+----------------
+
+
+
+.. code-block:: python
+
+    r = date()
+
+Returns:
+
+Serialized date/time object (dict)
+
+.. code-block:: json
+
+    {
+        "day": 14,
+        "hour": 0,
+        "minute": 47,
+        "month": 5,
+        "second": 16,
+        "timestamp": 1557787636.680612,
+        "weekday": 1,
+        "year": 2019
+    }
+
+
 .. _macro_api_decrement_shared:
 
 decrement_shared - decrement value of the shared variable
@@ -493,6 +522,8 @@ Serialized macro action object (dict)
         "args": [],
         "err": "",
         "exitcode": 0,
+        "finished": true,
+        "finished_in": 0.0047829,
         "item_group": "tests",
         "item_id": "test1",
         "item_oid": "lmacro:tests/test1",
@@ -501,17 +532,17 @@ Serialized macro action object (dict)
             "v1": "test",
             "v2": 999
         },
-        "out": "i am macro 1",
+        "out": "",
         "priority": 100,
         "status": "completed",
         "time": {
-            "completed": 1553466277.50619,
-            "created": 1553466277.5015311,
-            "pending": 1553466277.502084,
-            "queued": 1553466277.5031419,
-            "running": 1553466277.5042534
+            "completed": 1559869087.3697698,
+            "created": 1559869087.364987,
+            "pending": 1559869087.3653126,
+            "queued": 1559869087.3661342,
+            "running": 1559869087.3669574
         },
-        "uuid": "f8dc24bf-bd50-4c2e-9728-9939807329f6"
+        "uuid": "fc0e8c8e-9c93-49c4-bb30-e7905fedc33f"
     }
 
 Raises:
@@ -789,6 +820,37 @@ sensor value
 Raises:
 
 * **ResourceNotFound** sensor is not found
+
+
+.. _macro_api_state:
+
+state - get item state
+----------------------
+
+
+
+.. code-block:: python
+
+    r = state('sensor:env/temp1')
+
+Parameters:
+
+* **item_id** item id (oid required)
+
+Returns:
+
+item status/value dict
+
+.. code-block:: json
+
+    {
+        "status": 1,
+        "value": 55.0
+    }
+
+Raises:
+
+* **ResourceNotFound** item is not found
 
 
 .. _macro_api_status:
@@ -1195,6 +1257,8 @@ Serialized action object (dict)
     {
         "err": "",
         "exitcode": 0,
+        "finished": true,
+        "finished_in": 0.0149484,
         "item_group": "tests",
         "item_id": "unit1",
         "item_oid": "unit:tests/unit1",
@@ -1205,13 +1269,13 @@ Serialized action object (dict)
         "priority": 100,
         "status": "completed",
         "time": {
-            "completed": 1553465690.0686338,
-            "created": 1553465690.0547004,
-            "pending": 1553465690.0549927,
-            "queued": 1553465690.0553339,
-            "running": 1553465690.0556705
+            "completed": 1559869105.9634602,
+            "created": 1559869105.9485118,
+            "pending": 1559869105.9487257,
+            "queued": 1559869105.9491074,
+            "running": 1559869105.949467
         },
-        "uuid": "17fc6650-4434-4605-974e-53591176b6ac"
+        "uuid": "4bce26a6-7203-4a3c-a123-14c144dcc613"
     }
 
 Raises:
@@ -1374,6 +1438,31 @@ list or single serialized action object
         {
             "err": "",
             "exitcode": 0,
+            "finished": true,
+            "finished_in": 0.0147429,
+            "item_group": "tests",
+            "item_id": "unit1",
+            "item_oid": "unit:tests/unit1",
+            "item_type": "unit",
+            "nstatus": 0,
+            "nvalue": null,
+            "out": "",
+            "priority": 100,
+            "status": "completed",
+            "time": {
+                "completed": 1559869099.8924437,
+                "created": 1559869099.8777008,
+                "pending": 1559869099.8778677,
+                "queued": 1559869099.8782423,
+                "running": 1559869099.8786528
+            },
+            "uuid": "d5b82c8c-9a95-482a-9063-e3048addc741"
+        },
+        {
+            "err": "",
+            "exitcode": 0,
+            "finished": true,
+            "finished_in": 0.0149484,
             "item_group": "tests",
             "item_id": "unit1",
             "item_oid": "unit:tests/unit1",
@@ -1384,39 +1473,19 @@ list or single serialized action object
             "priority": 100,
             "status": "completed",
             "time": {
-                "completed": 1553441469.549005,
-                "created": 1553441469.5324786,
-                "pending": 1553441469.5328996,
-                "queued": 1553441469.5334597,
-                "running": 1553441469.533866
+                "completed": 1559869105.9634602,
+                "created": 1559869105.9485118,
+                "pending": 1559869105.9487257,
+                "queued": 1559869105.9491074,
+                "running": 1559869105.949467
             },
-            "uuid": "fbfd9426-911e-4c40-9d59-4fd835723c98"
-        },
-        {
-            "err": "",
-            "exitcode": null,
-            "item_group": "tests",
-            "item_id": "unit1",
-            "item_oid": "unit:tests/unit1",
-            "item_type": "unit",
-            "nstatus": 1,
-            "nvalue": null,
-            "out": "",
-            "priority": 100,
-            "status": "ignored",
-            "time": {
-                "created": 1553441793.621345,
-                "ignored": 1553441793.623007,
-                "pending": 1553441793.6215,
-                "queued": 1553441793.622087
-            },
-            "uuid": "d62241b7-0c28-4f7a-80c4-07d40a876213"
+            "uuid": "4bce26a6-7203-4a3c-a123-14c144dcc613"
         }
     ]
 
 Raises:
 
-* **ResourceNotFound** unit is not found
+* **ResourceNotFound** unit or action is not found
 
 
 .. _macro_api_start:
@@ -1450,6 +1519,8 @@ Serialized action object (dict)
     {
         "err": "",
         "exitcode": 0,
+        "finished": true,
+        "finished_in": 0.0179181,
         "item_group": "tests",
         "item_id": "unit1",
         "item_oid": "unit:tests/unit1",
@@ -1460,13 +1531,13 @@ Serialized action object (dict)
         "priority": 100,
         "status": "completed",
         "time": {
-            "completed": 1553460599.3041146,
-            "created": 1553460599.2887182,
-            "pending": 1553460599.2889755,
-            "queued": 1553460599.289449,
-            "running": 1553460599.2897608
+            "completed": 1559869092.8558156,
+            "created": 1559869092.8378975,
+            "pending": 1559869092.838309,
+            "queued": 1559869092.8390505,
+            "running": 1559869092.8402033
         },
-        "uuid": "50e1d476-dd3e-4d8f-8316-2f2248e82676"
+        "uuid": "bf74b19c-2af1-40f6-9ec6-5f74bb572558"
     }
 
 Raises:
@@ -1506,6 +1577,8 @@ Serialized action object (dict)
     {
         "err": "",
         "exitcode": 0,
+        "finished": true,
+        "finished_in": 0.0147429,
         "item_group": "tests",
         "item_id": "unit1",
         "item_oid": "unit:tests/unit1",
@@ -1516,13 +1589,13 @@ Serialized action object (dict)
         "priority": 100,
         "status": "completed",
         "time": {
-            "completed": 1553460599.346349,
-            "created": 1553460599.3321738,
-            "pending": 1553460599.3323255,
-            "queued": 1553460599.332741,
-            "running": 1553460599.3330808
+            "completed": 1559869099.8924437,
+            "created": 1559869099.8777008,
+            "pending": 1559869099.8778677,
+            "queued": 1559869099.8782423,
+            "running": 1559869099.8786528
         },
-        "uuid": "aff93ac7-78d6-497f-aa31-4eb45823c1f7"
+        "uuid": "d5b82c8c-9a95-482a-9063-e3048addc741"
     }
 
 Raises:
@@ -1587,6 +1660,40 @@ Optionally:
 Raises:
 
 * **ResourceNotFound** rule is not found
+
+
+
+.. _macro_api_cat_job:
+
+Scheduled job management
+========================
+
+
+
+.. _macro_api_set_job_prop:
+
+set_job_prop - set job prop
+---------------------------
+
+
+
+.. code-block:: python
+
+    set_job_prop('6970e296-5cb4-4448-9f2a-1ab2a14ed7f1', 'enabled', True)
+
+Parameters:
+
+* **job_id** job id (uuid)
+* **prop** property to set
+* **value** value to set
+
+Optionally:
+
+* **save** save job config after the operation
+
+Raises:
+
+* **ResourceNotFound** job is not found
 
 
 

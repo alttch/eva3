@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import logging
 import eva.core
@@ -38,8 +38,8 @@ notifier_client_clean_delay = 30
 
 default_mqtt_qos = 1
 
-sqlite_default_keep = 86400
-sqlite_default_id = 'db_1'
+db_default_keep = 86400
+default_stats_notifier_id = 'db_1'
 
 default_notifier_id = 'eva_1'
 
@@ -192,6 +192,7 @@ class GenericNotifier(object):
         self.lse_lock = threading.RLock()
         self.notifier_worker = self.NotifierWorker(
             o=self, name='notifier_' + self.notifier_id)
+        self.state_storage = None
 
     def subscribe(self,
                   subject,
@@ -521,9 +522,10 @@ class GenericNotifier_Client(GenericNotifier):
                 if apikey.check(self.apikey, d, ro_op=True):
                     fdata.append(d)
         elif subject == 'action':
-            for d in data_in:
+            for din in data_in:
+                d, dts = din
                 if apikey.check(self.apikey, d.item, ro_op=True):
-                    fdata.append(d)
+                    fdata.append(dts)
         return super().format_data(subject, fdata)
 
     def is_client_dead(self):
@@ -585,8 +587,9 @@ class SQLANotifier(GenericNotifier):
         notifier_type = 'db'
         super().__init__(
             notifier_id=notifier_id, notifier_type=notifier_type, space=space)
+        self.state_storage = 'sql'
         self.keep = keep if keep else \
-            sqlite_default_keep
+            db_default_keep
         self._keep = keep
         self.history_cleaner = self.HistoryCleaner(
             name=self.notifier_id + '_cleaner', o=self)
@@ -596,7 +599,11 @@ class SQLANotifier(GenericNotifier):
     def set_db(self, db_uri=None):
         self._db = db_uri
         self.db_uri = eva.core.format_db_uri(db_uri)
-        self.db_engine = eva.core.create_db_engine(self.db_uri)
+        self.init_db_engine()
+
+    def init_db_engine(self):
+        self.db_engine = eva.core.create_db_engine(
+            self.db_uri, timeout=self.timeout)
 
     def test(self):
         if self.connected: return True
@@ -607,20 +614,35 @@ class SQLANotifier(GenericNotifier):
         n = 'notifier_{}_db'.format(self.notifier_id)
         with self.db_lock:
             if not g.has(n):
-                g.set(n, self.db_engine.connect())
-            return g.get(n)
+                c = self.db_engine.connect()
+                g.set(n, c)
+            else:
+                c = g.get(n)
+                try:
+                    c.execute('select 1')
+                except:
+                    try:
+                        c.close()
+                    except:
+                        pass
+                    c = self.db_engine.connect()
+                    g.set(n, c)
+            return c
 
     def get_state(self,
                   oid,
                   t_start=None,
                   t_end=None,
+                  fill=None,
                   limit=None,
                   prop=None,
-                  time_format=None):
+                  time_format=None,
+                  xopts=None,
+                  **kwargs):
         import pytz
         import dateutil.parser
         from datetime import datetime
-        l = int(limit) if limit else None
+        l = int(limit) if limit and not fill else None
         if t_start:
             try:
                 t_s = float(t_start)
@@ -663,8 +685,7 @@ class SQLANotifier(GenericNotifier):
         dbconn = self.db()
         result = []
         space = self.space if self.space is not None else ''
-        if time_format == 'iso':
-            tz = pytz.timezone(time.tzname[0])
+        tz = pytz.timezone(time.tzname[0])
         data = []
         # if we have start time - fetch newest record before it
         if t_s:
@@ -685,10 +706,14 @@ class SQLANotifier(GenericNotifier):
                     q),
                 space=space,
                 oid=oid).fetchall())
+        if l and len(data) > l:
+            data = data[:l]
         for d in data:
             h = {}
             if time_format == 'iso':
                 h['t'] = datetime.fromtimestamp(float(d[0]), tz).isoformat()
+            elif time_format == 'dt_utc':
+                h['t'] = datetime.fromtimestamp(float(d[0]), tz)
             else:
                 h['t'] = float(d[0])
             if req_status:
@@ -701,7 +726,7 @@ class SQLANotifier(GenericNotifier):
                 try:
                     h['value'] = float(v)
                 except:
-                    h['value'] = v
+                    h['value'] = v if v else None
             result.append(h)
         return sorted(result, key=lambda k: k['t'])
 
@@ -760,11 +785,11 @@ class SQLANotifier(GenericNotifier):
     def set_prop(self, prop, value):
         if prop == 'db':
             if value is None or value == '': return False
-            self.set_db(db_uri)
+            self.set_db(value)
             return True
         elif prop == 'keep':
             if value is None:
-                self.keep = sqlite_default_keep
+                self.keep = db_default_keep
                 self._keep = None
                 return True
             try:
@@ -773,15 +798,16 @@ class SQLANotifier(GenericNotifier):
                 return False
             self._keep = self.keep
             return True
+        elif prop == 'timeout':
+            if super().set_prop(prop, value):
+                self.init_db_engine()
+                return True
+            else:
+                return False
         return super().set_prop(prop, value)
 
     def serialize(self, props=False):
         d = super().serialize(props)
-        # sqla has no timeout
-        try:
-            del d['timeout']
-        except:
-            pass
         if self._keep or props: d['keep'] = self._keep
         if self._db or props: d['db'] = self._db
         return d
@@ -796,7 +822,8 @@ class GenericHTTPNotifier(GenericNotifier):
                  notifier_id,
                  notifier_subtype=None,
                  uri=None,
-                 notify_key=None,
+                 username=None,
+                 password=None,
                  space=None,
                  timeout=None,
                  ssl_verify=True):
@@ -809,9 +836,24 @@ class GenericHTTPNotifier(GenericNotifier):
             timeout=timeout)
         self.ssl_verify = ssl_verify
         self.uri = uri
-        self.notify_key = notify_key
-        self.uri = uri
+        self.rs_lock = threading.RLock()
+        self.username = username
+        self.password = password
+        self.xrargs = {'verify': self.ssl_verify}
+        if self.username is not None and self.password is not None:
+            self.xrargs['auth'] = requests.auth.HTTPBasicAuth(
+                self.username, self.password)
         self.connected = True
+
+    def rsession(self):
+        n = 'notifier_{}_rsession'.format(self.notifier_id)
+        with self.rs_lock:
+            if not g.has(n):
+                c = requests.Session()
+                g.set(n, c)
+            else:
+                c = g.get(n)
+            return c
 
     def log_notify(self):
         logging.debug('.sending data notification to ' + \
@@ -827,7 +869,8 @@ class GenericHTTPNotifier(GenericNotifier):
         if (self.ssl_verify is not None and \
                 self.ssl_verify is not True) or props:
             d['ssl_verify'] = self.ssl_verify
-        if self.notify_key or props: d['notify_key'] = self.notify_key
+        if self.username or props: d['username'] = self.username
+        if self.password or props: d['password'] = self.password
         d.update(super().serialize(props=props))
         return d
 
@@ -835,6 +878,12 @@ class GenericHTTPNotifier(GenericNotifier):
         if prop == 'uri':
             if value is None: return False
             self.uri = value
+            return True
+        if prop == 'username':
+            self.username = value
+            return True
+        if prop == 'password':
+            self.password = value
             return True
         elif prop == 'ssl_verify':
             if value is None:
@@ -844,9 +893,6 @@ class GenericHTTPNotifier(GenericNotifier):
             if val is None: return False
             self.ssl_verify = val
             return True
-        elif prop == 'notify_key':
-            self.notify_key = value
-            return True
         return super().set_prop(prop, value)
 
 
@@ -855,20 +901,24 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
     def __init__(self,
                  notifier_id,
                  uri,
+                 username=None,
+                 password=None,
                  method=None,
                  notify_key=None,
                  space=None,
                  timeout=None,
                  ssl_verify=True):
-        self.method = method
         super().__init__(
             notifier_id=notifier_id,
             notifier_subtype='json',
             ssl_verify=ssl_verify,
             uri=uri,
-            notify_key=notify_key,
+            username=username,
+            password=password,
             space=space,
             timeout=timeout)
+        self.method = method
+        self.notify_key = notify_key
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
         from eva import apikey
@@ -876,7 +926,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         key = apikey.format_key(self.notify_key)
         if key: d['k'] = key
         if self.space: d['space'] = self.space
-        if self.method:
+        if self.method == 'jsonrpc':
             data_ts = []
             for dd in data:
                 dts = {'jsonrpc': '2.0', 'method': self.method}
@@ -890,12 +940,9 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         else:
             data_ts = d
             data_ts['data'] = data
-        r = requests.post(
-            self.uri,
-            json=data_ts,
-            timeout=self.get_timeout(),
-            verify=self.ssl_verify)
-        if self.method:
+        r = self.rsession().post(
+            self.uri, json=data_ts, timeout=self.get_timeout(), **self.xrargs)
+        if self.method == 'jsonrpc':
             if r.ok:
                 return True
             else:
@@ -926,7 +973,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
             d = {'subject': 'test'}
             if self.notify_key:
                 d['k'] = self.notify_key
-            if self.method:
+            if self.method == 'jsonrpc':
                 req_id = str(uuid.uuid4())
                 data_ts = {
                     'jsonrpc': '2.0',
@@ -936,14 +983,14 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                 }
             else:
                 data_ts = d
-            r = requests.post(
+            r = self.rsession().post(
                 self.uri,
                 json=data_ts,
                 timeout=self.get_timeout(),
-                verify=self.ssl_verify)
+                **self.xrargs)
             if not r.ok: return False
             result = r.json()
-            if self.method:
+            if self.method == 'jsonrpc':
                 if result.get('jsonrpc') != '2.0' or \
                         result.get('id') != req_id or 'error' in result:
                     return False
@@ -956,16 +1003,216 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
 
     def serialize(self, props=False):
         d = {}
-        if props:
-            d['method'] = self.method
-        elif self.method:
-            d['method'] = self.method
+        if self.method or props: d['method'] = self.method
+        if self.notify_key or props: d['notify_key'] = self.notify_key
         d.update(super().serialize(props=props))
         return d
 
     def set_prop(self, prop, value):
         if prop == 'method':
-            self.method = value
+            if value is not None and value not in ['jsonrpc']:
+                return False
+            else:
+                self.method = value
+                return True
+        elif prop == 'notify_key':
+            self.notify_key = value
+            return True
+        else:
+            return super().set_prop(prop, value)
+
+
+class InfluxDB_Notifier(GenericHTTPNotifier):
+
+    def __init__(self,
+                 notifier_id,
+                 uri,
+                 db=None,
+                 username=None,
+                 password=None,
+                 method=None,
+                 notify_key=None,
+                 space=None,
+                 timeout=None,
+                 ssl_verify=True):
+        super().__init__(
+            notifier_id=notifier_id,
+            ssl_verify=ssl_verify,
+            uri=uri,
+            username=username,
+            password=password,
+            space=space,
+            timeout=timeout)
+        self.method = method
+        self.notify_key = notify_key
+        self.notifier_type = 'influxdb'
+        self.db = db
+        self.state_storage = 'tsdb'
+
+    __fills = {'S': 's', 'T': 'm', 'H': 'h', 'D': 'd', 'w': 'w'}
+
+    def get_state(self,
+                  oid,
+                  t_start=None,
+                  t_end=None,
+                  fill=None,
+                  limit=None,
+                  prop=None,
+                  time_format=None,
+                  xopts=None,
+                  **kwargs):
+        import pytz
+        import dateutil.parser
+        import eva.item
+        from datetime import datetime
+        l = int(limit) if limit else None
+        sfr = False
+        if t_start:
+            try:
+                t_s = float(t_start)
+            except:
+                try:
+                    t_s = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    t_s = None
+            if t_s and fill:
+                t_s -= int(fill[:-1]) * eva.item._p_periods[fill[-1].upper()]
+                sfr = True
+        else:
+            t_s = None
+        if t_end:
+            try:
+                t_e = float(t_end)
+            except:
+                try:
+                    t_e = dateutil.parser.parse(t_end).timestamp()
+                except:
+                    t_e = None
+        else:
+            t_e = None
+        q = ''
+        rp = ''
+        if xopts and 'rp' in xopts:
+            rp = '"{}".'.format(xopts['rp'])
+        if t_s:
+            q += 'where time>%u' % (t_s * 1000000000)
+        if t_e:
+            q += ' and' if q else 'where'
+            q += ' time<=%u' % (t_e * 1000000000)
+        if prop in ['status', 'S']:
+            props = 'status' if not fill else 'mode(status)'
+        elif prop in ['value', 'V']:
+            props = 'value' if not fill else 'mean(value)'
+        else:
+            props = 'status,value' if not fill else 'mode(status),mean(value)'
+        data = []
+        space = (self.space + '/') if self.space is not None else ''
+        if time_format == 'iso':
+            tz = pytz.timezone(time.tzname[0])
+        q = 'select {} from {}"{}" {}'.format(props, rp, oid, q)
+        try:
+            if fill:
+                q += ' group by time({}{}) fill(previous)'.format(
+                    fill[:-1], self.__fills[fill[-1].upper()])
+            if l:
+                q += ' limit %u' % l
+            r = self.rsession().post(
+                url=self.uri + '/query?db={}'.format(self.db),
+                data={
+                    'q': q,
+                    'epoch': 'ms'
+                },
+                timeout=self.get_timeout(),
+                **self.xrargs)
+            if not r.ok:
+                raise Exception('influxdb server error HTTP code {}'.format(
+                    r.status_code))
+            data = r.json()
+            if 'error' in data['results'][0]:
+                self.log_error(message=data['results'][0]['error'])
+                raise Exception
+            if not data['results'][0] or 'series' not in data['results'][0]:
+                return []
+            else:
+                data = data['results'][0]['series'][0]['values']
+        except:
+            eva.core.log_traceback()
+            self.log_error(message='unable to get state for {}'.format(oid))
+            raise
+        for d in data[1:] if sfr else data:
+            if time_format == 'iso':
+                d[0] = datetime.fromtimestamp(d[0] / 1000, tz).isoformat()
+            else:
+                d[0] = d[0] / 1000
+        return data[1:] if sfr else data
+
+    def send_notification(self, subject, data, retain=None, unpicklable=False):
+        space = (self.space + '/') if self.space is not None else ''
+        if subject == 'state':
+            t = int(time.time() * 1000000000)
+            for d in data:
+                q = space + '{} status={}i'.format(d['oid'], d['status'])
+                if d['value'] is not None and d['value'] != '':
+                    try:
+                        value = float(d['value'])
+                        q += ',value={}'.format(value)
+                    except:
+                        q += ',value="{}"'.format(d['value'])
+                q += ' {}'.format(t)
+                r = self.rsession().post(
+                    url=self.uri + '/write?db={}'.format(self.db),
+                    data=q,
+                    headers={'Content-Type': 'application/octet-stream'},
+                    timeout=self.get_timeout(),
+                    **self.xrargs)
+                if not r.ok:
+                    self.log_error(code=r.status_code)
+                    return False
+            return True
+
+    def log_notify(self):
+        logging.debug('.sending data notification to ' + \
+                '%s method = %s, uri: %s, db: %s' % (self.notifier_id,
+                                    self.notifier_type, self.uri, self.db))
+
+    def test(self):
+        self.connect()
+        if self.db is None: return False
+        space = self.space if self.space is not None else ''
+        try:
+            logging.debug('.Testing influxdb notifier %s (%s)' % \
+                    (self.notifier_id,self.uri))
+            r = self.rsession().post(
+                url=self.uri + '/write?db={}'.format(self.db),
+                data=space + ':eva_test test="passed"',
+                headers={'Content-Type': 'application/octet-stream'},
+                timeout=self.get_timeout(),
+                **self.xrargs)
+            return r.ok
+        except:
+            eva.core.log_traceback(notifier=True)
+            return False
+
+    def serialize(self, props=False):
+        d = {}
+        if self.method or props: d['method'] = self.method
+        if self.notify_key or props: d['notify_key'] = self.notify_key
+        d['db'] = self.db
+        d.update(super().serialize(props=props))
+        return d
+
+    def set_prop(self, prop, value):
+        if prop == 'method':
+            if value is not None and value not in ['jsonrpc']:
+                return False
+            else:
+                self.method = value
+                return True
+        elif prop == 'notify_key':
+            self.notify_key = value
+            return True
+        elif prop == 'db':
+            self.db = value
             return True
         else:
             return super().set_prop(prop, value)
@@ -983,6 +1230,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 **kwargs)
 
         def run(self, o, **kwargs):
+            if eva.core.is_shutdown_requested():
+                return False
+            if not eva.core.is_started():
+                eva.core.wait_for(eva.core.is_started, 30)
             o.send_message(
                 o.announce_topic,
                 o.announce_msg,
@@ -1147,7 +1398,6 @@ class GenericMQTTNotifier(GenericNotifier):
                 logging.debug('%s subscribed to %s' % \
                         (self.notifier_id, self.announce_topic))
         except:
-            print(self.api_callback)
             eva.core.log_traceback(notifier=True)
         finally:
             self.api_callback_lock.release()
@@ -1262,7 +1512,8 @@ class GenericMQTTNotifier(GenericNotifier):
             return
         if t == self.announce_topic and \
                 d != self.announce_msg and \
-                self.discovery_handler:
+                self.discovery_handler and \
+                not eva.core.is_setup_mode() and eva.core.is_started():
             background_job(
                 self.discovery_handler, daemon=True)(self.notifier_id, d)
             return
@@ -1326,7 +1577,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 if i.get('destroyed'):
                     dts = ''
                 else:
-                    dts = {'t': time.time()}
+                    dts = {
+                        't': time.time(),
+                        'c': eva.core.config.controller_name
+                    }
                     for k in i:
                         if not k in ['id', 'group', 'type', 'full_id', 'oid']:
                             dts[k] = i[k]
@@ -1341,6 +1595,7 @@ class GenericMQTTNotifier(GenericNotifier):
             else: _retain = False
             for i in data:
                 i['t'] = time.time()
+                i['c'] = eva.core.config.controller_name
                 self.mq.publish(self.pfx + i['item_type'] + '/' + \
                         i['item_group'] + '/' + i['item_id'] + '/action',
                     jsonpickle.encode(i, unpicklable=unpicklable),
@@ -1349,6 +1604,8 @@ class GenericMQTTNotifier(GenericNotifier):
             if retain is not None and self.retain_enabled: _retain = retain
             else: _retain = False
             for i in data:
+                i['t'] = time.time()
+                i['c'] = eva.core.config.controller_name
                 self.mq.publish(
                     self.log_topic,
                     jsonpickle.encode(i, unpicklable=False),
@@ -1800,12 +2057,35 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         notify_key = ncfg.get('notify_key')
         timeout = ncfg.get('timeout')
         method = ncfg.get('method')
+        username = ncfg.get('username')
+        password = ncfg.get('password')
         n = HTTP_JSONNotifier(
             _notifier_id,
             ssl_verify=ssl_verify,
             uri=uri,
+            username=username,
+            password=password,
             method=method,
             notify_key=notify_key,
+            space=space,
+            timeout=timeout)
+    elif ncfg['type'] == 'influxdb':
+        space = ncfg.get('space')
+        db = ncfg.get('db')
+        ssl_verify = ncfg.get('ssl_verify')
+        uri = ncfg.get('uri')
+        timeout = ncfg.get('timeout')
+        method = ncfg.get('method')
+        username = ncfg.get('username')
+        password = ncfg.get('password')
+        n = InfluxDB_Notifier(
+            _notifier_id,
+            ssl_verify=ssl_verify,
+            uri=uri,
+            db=db,
+            username=username,
+            password=password,
+            method=method,
             space=space,
             timeout=timeout)
     else:
@@ -1946,15 +2226,18 @@ def notify(subject,
         except:
             eva.core.log_traceback(notifier=True)
     else:
-        for i in notifiers:
-            if notifiers[i].can_notify():
-                notify(
-                    subject=subject,
-                    data=data,
-                    notifier_id=i,
-                    retain=retain,
-                    skip_subscribed_mqtt_item=skip_subscribed_mqtt_item,
-                    skip_mqtt=skip_mqtt)
+        for i in list(notifiers):
+            try:
+                if notifiers[i].can_notify():
+                    notify(
+                        subject=subject,
+                        data=data,
+                        notifier_id=i,
+                        retain=retain,
+                        skip_subscribed_mqtt_item=skip_subscribed_mqtt_item,
+                        skip_mqtt=skip_mqtt)
+            except KeyError:
+                pass
 
 
 def get_notifier(notifier_id=None):
@@ -1966,10 +2249,10 @@ def get_default_notifier():
     return notifiers.get(default_notifier_id)
 
 
-def get_db_notifier(notifier_id):
-    if notifier_id is None: return get_notifier(sqlite_default_id)
+def get_stats_notifier(notifier_id):
+    if notifier_id is None: return get_notifier(default_stats_notifier_id)
     n = get_notifier(notifier_id)
-    return n if n and n.notifier_type == 'db' else None
+    return n if n and n.state_storage else None
 
 
 def get_notifiers():
@@ -2010,7 +2293,6 @@ def start():
 
 @eva.core.stop
 def stop():
-    notify_restart()
     for i, n in notifiers.copy().items():
         n.stop()
     notifier_client_cleaner.stop()
@@ -2026,6 +2308,7 @@ def reload_clients():
         if n.nt_client: n.send_reload()
 
 
+@eva.core.shutdown
 def notify_restart():
     logging.warning('sending server restart event to clients')
     for k, n in notifiers.copy().items():

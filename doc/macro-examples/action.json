@@ -1,6 +1,8 @@
 {
     "err": "",
     "exitcode": 0,
+    "finished": true,
+    "finished_in": 0.0149484,
     "item_group": "tests",
     "item_id": "unit1",
     "item_oid": "unit:tests/unit1",
@@ -11,11 +13,11 @@
     "priority": 100,
     "status": "completed",
     "time": {
-        "completed": 1553465690.0686338,
-        "created": 1553465690.0547004,
-        "pending": 1553465690.0549927,
-        "queued": 1553465690.0553339,
-        "running": 1553465690.0556705
+        "completed": 1559869105.9634602,
+        "created": 1559869105.9485118,
+        "pending": 1559869105.9487257,
+        "queued": 1559869105.9491074,
+        "running": 1559869105.949467
     },
-    "uuid": "17fc6650-4434-4605-974e-53591176b6ac"
+    "uuid": "4bce26a6-7203-4a3c-a123-14c144dcc613"
 }

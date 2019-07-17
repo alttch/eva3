@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 default_delay = 0.05
 
@@ -18,16 +18,20 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import InvalidParameter
 from eva.exceptions import ResourceNotFound
 
+with_ports_lock = eva.core.RLocker('uc/owfs')
+
 owbus = {}
 
 # public functions
 
 
 # is onewire bus with the given ID exist
+@with_ports_lock
 def is_bus(bus_id):
     return bus_id in owbus
 
 
+@with_ports_lock
 def get_bus(bus_id, timeout=None):
     """Get OWFS bus with the choosen ID
 
@@ -56,6 +60,7 @@ def get_bus(bus_id, timeout=None):
 # private functions
 
 
+@with_ports_lock
 def serialize(bus_id=None, config=False):
     if bus_id:
         if bus_id in owbus:
@@ -73,6 +78,7 @@ def dump():
     return serialize()
 
 
+@with_ports_lock
 def create_owfs_bus(bus_id, location, **kwargs):
     """Create new owfs bus
 
@@ -103,6 +109,7 @@ def create_owfs_bus(bus_id, location, **kwargs):
         return True
 
 
+@with_ports_lock
 def destroy_owfs_bus(bus_id):
     if bus_id in owbus:
         owbus[bus_id].stop()
@@ -153,6 +160,8 @@ def start():
 def stop():
     for k, p in owbus.copy().items():
         p.stop()
+    if eva.core.config.db_update != 0:
+        save()
 
 
 class OWFSBus(object):

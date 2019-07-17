@@ -1,13 +1,14 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.0"
+__version__ = "3.2.4"
 
 import sys
 import os
 import time
 import configparser
 import platform
+import argparse
 
 nodename = platform.node()
 
@@ -40,6 +41,45 @@ import eva.client.cli
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
+
+
+class ComplSubshellCmd(ComplGeneric):
+
+    def __init__(self, cli, for_notifier=False):
+        self.for_notifier = for_notifier
+        super().__init__(cli)
+
+    def __call__(self, prefix, **kwargs):
+        shell = kwargs[
+            'parsed_args']._type if not self.for_notifier else kwargs[
+                'parsed_args'].p
+        c = kwargs['parsed_args'].subcommand
+        if shell:
+            try:
+                os.environ['_ARGCOMPLETE'] = '1'
+                os.environ['_ARGCOMPLETE_IFS'] = '\n'
+                args = c + [prefix]
+                line = 's ' + ' '.join(args)
+                os.environ['COMP_POINT'] = str(len(line))
+                os.environ['COMP_LINE'] = line
+                self.cli.subshell_extra_args = args
+                if self.for_notifier:
+                    cli.do_start_shell(
+                        'notifymanager',
+                        '.py',
+                        'product=\'{}\''.format(shell),
+                        restart_interactive=False)
+                else:
+                    cli.do_start_shell(shell, restart_interactive=False)
+                eva.client.cli.completer_stream.seek(0)
+                eva.client.cli.complete_only = True
+                compl = eva.client.cli.completer_stream.readlines()
+                result = [x.decode().strip() for x in compl]
+                return result
+            finally:
+                del os.environ['_ARGCOMPLETE']
+                eva.client.cli.complete_only = False
+        return
 
 
 class ComplBackupList(ComplGeneric):
@@ -149,6 +189,23 @@ class ManagementCLI(GenericCLI):
             dest='_func', metavar='func', help='Edit commands')
 
         sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
+
+        ap_masterkey = self.sp.add_parser(
+            'masterkey', help='Masterkey management')
+
+        sp_masterkey = ap_masterkey.add_subparsers(
+            dest='_func', metavar='func', help='Masterkey commands')
+
+        sp_masterkey_set = sp_masterkey.add_parser(
+            'set', help='Set masterkey for all controllers configured')
+        sp_masterkey_set.add_argument(
+            'a', metavar='KEY', help='New masterkey', nargs='?')
+        sp_masterkey_set.add_argument(
+            '-a',
+            '--access',
+            choices=['local-only', 'remote'],
+            metavar='ACCESS_TYPE',
+            help='Access type')
 
     def add_manager_control_functions(self):
         eva.client.cli.shells_available = []
@@ -261,7 +318,20 @@ class ManagementCLI(GenericCLI):
     def add_management_shells(self):
         for p in self.products_configured:
             ap = self.sp.add_parser(p, help='{} shell'.format(p.upper()))
+            ap.add_argument(
+                'subcommand',
+                nargs=argparse.REMAINDER).completer = ComplSubshellCmd(self)
             self.api_functions[p] = getattr(self, '{}_shell'.format(p))
+
+        ap_save = self.sp.add_parser('save', help='Save controller config')
+        ap_save.add_argument(
+            'p',
+            metavar='CONTROLLER',
+            choices=self.products_configured,
+            nargs='?',
+            help='Controller type (' + ', '.join(self.products_configured) +
+            ')')
+
         ap_ns = self.sp.add_parser('ns', help='Notifier management')
         ap_ns.add_argument(
             'p',
@@ -269,10 +339,14 @@ class ManagementCLI(GenericCLI):
             choices=self.products_configured,
             help='Controller type (' + ', '.join(self.products_configured) +
             ')')
+        ap_ns.add_argument(
+            'subcommand',
+            nargs=argparse.REMAINDER).completer = ComplSubshellCmd(
+                self, for_notifier=True)
 
-    def exec_control_script(self, product, command, collect_output=False):
-        script = 'eva-control' if not product else product + '-control'
-        cmd = '{}/{} {}'.format(dir_sbin, script, command)
+    def exec_control_script(self, command, product, collect_output=False):
+        cmd = '{}/eva-control {} {}'.format(dir_sbin, command, product
+                                            if product else '')
         if collect_output:
             with os.popen(cmd) as p:
                 result = p.readlines()
@@ -282,47 +356,74 @@ class ManagementCLI(GenericCLI):
             time.sleep(1)
 
     def uc_shell(self, params):
-        return self.local_func_result_empty if \
-            self.start_shell('uc') else self.local_func_result_failed
+        code = self.start_shell('uc')
+        return self.local_func_result_empty if not code else (code, '')
 
     def lm_shell(self, params):
-        return self.local_func_result_empty if \
-            self.start_shell('lm') else self.local_func_result_failed
+        code = self.start_shell('lm')
+        return self.local_func_result_empty if not code else (code, '')
 
     def sfa_shell(self, params):
-        return self.local_func_result_empty if \
-            self.start_shell('sfa') else self.local_func_result_failed
+        code = self.start_shell('sfa')
+        return self.local_func_result_empty if not code else (code, '')
 
     def manage_ns(self, params):
-        return self.local_func_result_empty if \
-            self.start_shell('notifymanager',
-                    '.py',
-                    'product=\'{}\''.format(params.get('p'))) else \
-            self.local_func_result_failed
+        self.subshell_extra_args = params.get('subcommand', [])
+        code = self.start_shell('notifymanager', '.py', 'product=\'{}\''.format(
+            params.get('p')))
+        return self.local_func_result_empty if not code else (code, '')
 
     def start_shell(self, p, x='-cmd.py', xp=''):
         sst = p
-        result = False
-        while sst:
-            result = self.do_start_shell(sst, x, xp)
-            if not result: break
-            sst = eva.client.cli.shell_switch_to
-        return result
-
-    def do_start_shell(self, p, x='-cmd.py', xp=''):
-        try:
-            if getattr(self, 'subshell_extra_args', None):
-                sysargs = ['{}/{}{}'.format(dir_cli, p, x)
-                          ] + self.subshell_extra_args
+        code = 10
+        old_to = None
+        old_force_interactive = False
+        while sst or old_to:
+            if not sst and old_to:
+                sst = old_to
+                force_interactive = old_force_interactive
+                old_to = None
             else:
-                sysargs = ['{}/{}{}'.format(dir_cli, p, x)]
-                if self.interactive:
+                force_interactive = False
+            result = self.do_start_shell(
+                sst, x, xp, force_interactive=force_interactive)
+            if not result:
+                code = 10
+                break
+            else:
+                code = 0
+            self.subshell_extra_args = eva.client.cli.shell_switch_to_extra_args
+            if self.subshell_extra_args:
+                old_to = sst
+                old_force_interactive = eva.client.cli.shell_back_interactive
+            sst = eva.client.cli.shell_switch_to
+            eva.client.cli.shell_switch_to = None
+            eva.client.cli.shell_switch_to_extra_args = None
+            eva.client.cli.shell_back_interactive = False
+        if eva.client.cli.subshell_exit_code:
+            code = eva.client.cli.subshell_exit_code + 100
+        return code
+
+    def do_start_shell(self,
+                       p,
+                       x='-cmd.py',
+                       xp='',
+                       force_interactive=False,
+                       restart_interactive=True):
+        _xargs = []
+        if self.in_json:
+            _xargs += ['-J']
+        if self.always_suppress_colors:
+            _xargs += ['-R']
+        try:
+            if getattr(self, 'subshell_extra_args'):
+                sysargs = ['{}/{}{}'.format(dir_cli, p, x)
+                          ] + _xargs + self.subshell_extra_args
+            else:
+                sysargs = ['{}/{}{}'.format(dir_cli, p, x)] + _xargs
+                if self.interactive or force_interactive:
                     sysargs.append('-I')
             c = open('{}/{}{}'.format(dir_cli, p, x)).read()
-            if self.in_json:
-                sysargs.append('-J')
-            if self.always_suppress_colors:
-                sysargs.append('-R')
             c = """import sys
 import eva.client.cli
 eva.client.cli.say_bye = False
@@ -332,12 +433,14 @@ sys.argv = {argv}
 {xp}
 
 """.format(nodename=self.nodename,
-            shells_available=self.products_configured if x == '-cmd.py' else [],
+            shells_available=self.products_configured if x == '-cmd.py' and
+            (len(sys.argv) < 2 or p != sys.argv[1]) else [],
             argv=sysargs,
             xp=xp) + c
             os.chdir(dir_cwd)
             if self.interactive: self.save_readline()
             try:
+                eva.client.cli.subshell_exit_code = 0
                 exec(c)
                 self.subshell_extra_args = None
             except SystemExit:
@@ -347,11 +450,13 @@ sys.argv = {argv}
             return False
         finally:
             if self.interactive:
-                self.full_reset_after_shell()
+                self.full_reset_after_shell(
+                    restart_interactive=restart_interactive)
 
-    def full_reset_after_shell(self):
+    def full_reset_after_shell(self, restart_interactive=True):
         self.setup_parser()
-        self.start_interactive(reset_sst=False)
+        if restart_interactive:
+            self.start_interactive(reset_sst=False)
         eva.client.cli.say_bye = True
         eva.client.cli.readline_processing = True if \
                 not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
@@ -362,28 +467,28 @@ sys.argv = {argv}
         c = params['p']
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
-        self.exec_control_script(c, 'start')
+        self.exec_control_script('start', c)
         return self.local_func_result_ok
 
     def stop_controller(self, params):
         c = params['p']
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
-        self.exec_control_script(c, 'stop')
+        self.exec_control_script('stop', c)
         return self.local_func_result_ok
 
     def restart_controller(self, params):
         c = params['p']
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
-        self.exec_control_script(c, 'restart')
+        self.exec_control_script('restart', c)
         return self.local_func_result_ok
 
     def status_controller(self, params):
         c = params['p']
         if c is not None and c not in self.products_configured:
             return self.local_func_result_failed
-        out = self.exec_control_script(c, 'status', collect_output=True)
+        out = self.exec_control_script('status', c, collect_output=True)
         result = {}
         if c:
             try:
@@ -493,9 +598,9 @@ sys.argv = {argv}
             self.print_err('File already exists')
             return self.local_func_result_failed
         cmd = ('tar', 'czpf', 'backup/{}.tgz'.format(fname),
-               '--exclude=etc/*-dist', '--exclude=__pycache__', 'runtime/*',
-               'xc/cmd/*', 'xc/drivers/phi/*', 'xc/extensions/*', 'etc/*',
-               'ui/*')
+               '--exclude=etc/*-dist', '--exclude=__pycache__',
+               '--exclude=*.md', '--exclude=*.rst', 'runtime', 'xc/cmd',
+               'xc/drivers/phi', 'xc/extensions', 'etc', 'ui')
         if not self.before_save() or \
                 os.system(' '.join(cmd)) or not self.after_save():
             return self.local_func_result_failed
@@ -508,7 +613,7 @@ sys.argv = {argv}
         result = []
         for f in files:
             result.append({'name': f[7:-4], 'time': os.path.getmtime(f)})
-        return 0, result
+        return 0, sorted(result, key=lambda k: k['time'], reverse=True)
 
     def backup_unlink(self, params):
         if not self.before_save(): return self.local_func_result_failed
@@ -668,7 +773,7 @@ sys.argv = {argv}
         if build == new_build:
             return self.local_func_result_empty
         if build > new_build:
-            print('Where did you get this build from? Invented a time machine?')
+            print('Your build is newer than update server has')
             return self.local_func_result_failed
         if not params.get('y'):
             if version != new_version:
@@ -681,6 +786,7 @@ sys.argv = {argv}
                 except Exception as e:
                     print('Unable to download update manifest: {}'.format(e))
                     return self.local_func_result_failed
+                print()
                 print(r.text)
             try:
                 u = input('Type ' +
@@ -745,6 +851,102 @@ sys.argv = {argv}
         if not self.after_save() or c: return self.local_func_result_failed
         return self.local_func_result_ok
 
+    def save(self, params):
+        p = params['p']
+        if p:
+            if p not in self.products_configured:
+                return self.local_func_result_failed
+            code, result = self.call('{} save'.format(p))
+            return self.local_func_result_empty if not code else (code, '')
+        else:
+            ok = True
+            for p in self.products_configured:
+                print(
+                    '{}: '.format(
+                        self.colored(p, color='blue', attrs=['bold'])),
+                    end='')
+                code, result = self.call('{} save'.format(p))
+                if code:
+                    print(self.colored('FAILED', color='red'))
+                    ok = False
+            return self.local_func_result_empty if ok else (10, '')
+
+    def set_masterkey(self, params):
+
+        def set_masterkey_for(p, a, access):
+            try:
+                in_section = False
+                key_found = False
+                nf = []
+                for st in open('{}/{}_apikeys.ini'.format(dir_etc,
+                                                          p)).readlines():
+                    st = st.strip()
+                    s = st.split(';')[0].strip()
+                    if s == '[masterkey]':
+                        in_section = True
+                    elif s.startswith('['):
+                        in_section = False
+                    elif s.find('=') != -1:
+                        i = s.split('=')[0].strip()
+                        if i == 'key' and in_section and a:
+                            key_found = True
+                            nf.append('key = {}'.format(a))
+                            continue
+                        if i == 'hosts_allow' and in_section and access:
+                            nf.append('hosts_allow = {}'.format(
+                                '127.0.0.1'
+                                if access == 'local-only' else '0.0.0.0/0'))
+                            continue
+                    nf.append(st)
+                if a and not key_found:
+                    raise Exception(
+                        'masterkey not found in {}_apikeys.ini'.format(p))
+                open('{}/{}_apikeys.ini'.format(dir_etc, p),
+                     'w').write('\n'.join(nf) + '\n')
+                return True
+            except Exception as e:
+                self.print_err(e)
+                return False
+
+        import re
+        p = params.get('p')
+        a = params.get('a')
+        access = params.get('access')
+        if a and not re.match("^[A-Za-z0-9]*$", a):
+            self.print_err('Masterkey should contain only letters and numbers')
+            return self.local_func_result_failed
+        if p:
+            if p not in self.products_configured:
+                return self.local_func_result_failed
+            result = set_masterkey_for(p, a, access)
+            if result:
+                print(
+                    self.colored(
+                        'To apply new masterkey, restart the controller',
+                        color='yellow',
+                        attrs=['bold']))
+            return self.local_func_result_ok if result \
+                    else self.local_func_result_failed
+        else:
+            ok = True
+            for p in self.products_configured:
+                print(
+                    '{}: '.format(
+                        self.colored(p, color='blue', attrs=['bold'])),
+                    end='')
+                if set_masterkey_for(p, a, access):
+                    print('OK')
+                else:
+                    print(self.colored('FAILED', color='red'))
+                    ok = False
+            if ok:
+                print(
+                    self.colored(
+                        'To apply new masterkey, restart the controllers',
+                        color='yellow',
+                        attrs=['bold']))
+            return self.local_func_result_empty if ok else (10, '')
+
 
 def make_exec_cmd_func(cmd):
 
@@ -759,7 +961,7 @@ _me = 'EVA ICS Management CLI version %s' % (__version__)
 if os.path.basename(sys.argv[0]) == 'eva-shell' and len(sys.argv) < 2:
     sys.argv = [sys.argv[0]] + ['-I']
 
-cli = ManagementCLI('eva', _me, remote_api_enabled=False)
+cli = ManagementCLI('eva', _me, remote_api_enabled=False, prog='eva')
 
 _api_functions = {
     'server:start': cli.start_controller,
@@ -774,12 +976,14 @@ _api_functions = {
     'update': cli.update,
     'system:reboot': cli.power_reboot,
     'system:poweroff': cli.power_poweroff,
+    'save': cli.save,
     'ns': cli.manage_ns,
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,
     'backup:restore': cli.backup_restore,
-    'edit:crontab': cli.edit_crontab
+    'edit:crontab': cli.edit_crontab,
+    'masterkey:set': cli.set_masterkey
 }
 
 cfg = configparser.ConfigParser(inline_comment_prefixes=';')
@@ -823,7 +1027,7 @@ except:
     pass
 
 cli.default_prompt = '# '
-cli.arg_sections += ['backup', 'server', 'edit', 'system']
+cli.arg_sections += ['backup', 'server', 'edit', 'masterkey', 'system']
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()
 cli.nodename = nodename

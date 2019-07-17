@@ -125,6 +125,8 @@ and easily receive the newest file with the following request:
 
     http(s)://<IP_address_SFA:Port>/pvt?k=APIKEY&f=cam1/*.jpg&c=newest
 
+.. _sfa_pvt_images:
+
 Image Processing
 ================
 
@@ -141,7 +143,7 @@ reinstall pillow:
 
 .. code-block:: bash
 
-    pip3 install --no-cache-dir -I pillow
+    <EVA_DIR>/python3/bin/pip3 install --no-cache-dir -I pillow
 
 If everything is installed correctly, you can receive the processed image using
 the following request:
@@ -263,6 +265,9 @@ To use remote content feature, you must follow the rules:
 
 * You can not specify http(s) port in **f** param of **/rpvt** unless it's also
   specified in **rpvt** API key param.
+
+* **ic** option is used for :ref:`image processing<sfa_pvt_images>`, same as
+  for local PVT file.
 
 * Avoid using *rpvt = #*, this will allow **/rpvt** to work as http proxy for
   any local and Internet resource and may open a security hole.

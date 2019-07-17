@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import logging
 import uuid
@@ -289,7 +289,7 @@ class DecisionRule(eva.item.Item):
             for_oid += self.for_item_group if self.for_item_group else '#'
             for_oid += '/'
             for_oid += self.for_item_id if self.for_item_id else '#'
-            for_oid += '/'
+            for_oid += '.'
             for_oid += self.for_prop if self.for_prop else '#'
             d['for_oid'] = for_oid
             condition = ''
@@ -401,7 +401,7 @@ class DecisionRule(eva.item.Item):
                 logging.error('Unable to parse condition: {}'.format(e))
                 eva.core.log_traceback()
                 return False
-        elif prop in ['o', 'oid', 'for_oid']:
+        elif prop in ['o', 'oid', 'for_oid', 'for']:
             try:
                 d = self.parse_rule_for_oid(val)
                 for k, v in d.items():
@@ -669,7 +669,13 @@ class DecisionRule(eva.item.Item):
         if tp not in ['unit', 'U', 'sensor', 'S', 'lvar', 'LV', '#']:
             raise Exception('invalid type')
         if prop not in ['status', 'value']:
-            raise Exception('invalid state prop')
+            if prop.find('.') == -1:
+                raise Exception('invalid state prop')
+            else:
+                group = group + ('/' if group else '') + item_id
+                item_id, prop = prop.rsplit('.', 1)
+                if prop not in ['status', 'value']:
+                    raise Exception('invalid state prop')
         return {
             'for_item_group': group,
             'for_item_type': tp,

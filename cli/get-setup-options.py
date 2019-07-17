@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.0"
+__version__ = "3.2.4"
 
 import sys
 import os
@@ -12,19 +12,10 @@ sys.path.append(dir_lib)
 
 os.environ['EVA_DIR'] = os.path.dirname(os.path.realpath(__file__)) + '/..'
 
-import eva.sysapi
 import eva.core
-import eva.traphandler
-import eva.udpapi
 import eva.notify
 import eva.api
 import eva.apikey
-import eva.uc.controller
-import eva.uc.ucapi
-import eva.logs
-
-import eva.runner
-import eva.wsapi
 
 try:
     product_code = sys.argv[1]
@@ -35,8 +26,12 @@ except:
 eva.core.init()
 eva.core.set_product(product_code, '-1')
 
-eva.apikey.load(load_from_db=False)
+eva.core.load(initial=True, check_pid=False)
+eva.core.start(init_db_only=True)
+
+eva.apikey.load(load_from_db=True)
 eva.notify.load(test=False, connect=False)
+
 
 print('MASTERKEY=' + (eva.apikey.get_masterkey()
                       if eva.apikey.get_masterkey() is not None else ''))

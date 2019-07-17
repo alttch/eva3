@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import glob
 import os
@@ -24,6 +24,7 @@ import eva.lm.plc
 import eva.lm.lremote
 import eva.lm.lmqueue
 import eva.lm.dmatrix
+import eva.lm.jobs
 import eva.lm.extapi
 import eva.lm.macro_api
 
@@ -43,6 +44,8 @@ from eva.core import db
 from functools import wraps
 from pyaltt import background_job
 
+import jsonpickle
+
 lvars_by_id = {}
 lvars_by_group = {}
 lvars_by_full_id = {}
@@ -50,8 +53,12 @@ lvars_by_full_id = {}
 macros_by_id = {}
 macros_by_full_id = {}
 
+macro_functions_m = {}
+
 cycles_by_id = {}
 cycles_by_full_id = {}
+
+jobs = {}
 
 dm_rules = {}
 
@@ -69,6 +76,7 @@ Q = eva.lm.lmqueue.LM_Queue('lm_queue')
 DM = eva.lm.dmatrix.DecisionMatrix()
 
 with_item_lock = eva.core.RLocker('lm/controller')
+with_macro_functions_m_lock = eva.core.RLocker('lm/controller')
 controller_lock = threading.RLock()
 
 
@@ -79,6 +87,16 @@ def format_rule_id(r_id):
     if r_id.find('/') != -1:
         g, r_id = r_id.split('/')
         if g != 'dm_rules': return None
+    return r_id
+
+
+def format_job_id(r_id):
+    if is_oid(r_id):
+        r_id = oid_to_id(r_id, required='job')
+    if not isinstance(r_id, str): return None
+    if r_id.find('/') != -1:
+        g, r_id = r_id.split('/')
+        if g != 'jobs': return None
     return r_id
 
 
@@ -96,6 +114,8 @@ def get_item(item_id):
         return get_cycle(i)
     elif tp == 'dmatrix_rule':
         return get_dm_rule(i)
+    elif tp == 'job':
+        return get_job(i)
     item = None
     if i.find('/') > -1:
         if i in items_by_full_id: item = items_by_full_id[i]
@@ -153,6 +173,14 @@ def get_dm_rule(r_id):
 
 
 @with_item_lock
+def get_job(r_id):
+    r_id = format_job_id(r_id)
+    if not r_id: return None
+    if r_id in jobs: return jobs[r_id]
+    return None
+
+
+@with_item_lock
 def get_lvar(lvar_id):
     if not lvar_id: return None
     if is_oid(lvar_id) and oid_type(lvar_id) != 'lvar': return None
@@ -187,16 +215,25 @@ def append_item(item, start=False, load=True):
 
 @eva.core.save
 def save():
-    for i, v in lvars_by_full_id.items():
-        if not save_lvar_state(v):
-            return False
-        if v.config_changed:
-            if not v.save():
+    db = eva.core.db()
+    if eva.core.config.db_update != 1:
+        db = db.connect()
+    dbt = db.begin()
+    try:
+        for i, v in lvars_by_full_id.items():
+            if not save_lvar_state(v, db):
                 return False
-        try:
-            configs_to_remove.remove(v.get_fname())
-        except:
-            pass
+            if v.config_changed:
+                if not v.save():
+                    return False
+            try:
+                configs_to_remove.remove(v.get_fname())
+            except:
+                pass
+    finally:
+        dbt.commit()
+        if eva.core.config.db_update != 1:
+            db.close()
     controller_lock.acquire()
     try:
         for i, v in remote_ucs.items():
@@ -226,6 +263,14 @@ def save():
             configs_to_remove.remove(v.get_fname())
         except:
             pass
+    for i, v in jobs.items():
+        if v.config_changed:
+            if not v.save():
+                return False
+        try:
+            configs_to_remove.remove(v.get_fname())
+        except:
+            pass
     for i, v in dm_rules.items():
         if v.config_changed:
             if not v.save():
@@ -245,8 +290,8 @@ def save():
 
 
 @with_item_lock
-def save_lvar_state(item):
-    dbconn = eva.core.db()
+def save_lvar_state(item, db=None):
+    dbconn = db if db else eva.core.db()
     try:
         _id = item.full_id if \
                 eva.core.config.enterprise_layout else item.item_id
@@ -395,8 +440,142 @@ def load_remote_ucs():
         return False
 
 
+@with_macro_functions_m_lock
+def destroy_macro_function(fname):
+    if not re.match("^[A-Za-z0-9_-]*$", fname):
+        raise InvalidParameter(
+            'Unable to destroy function: invalid symbols in ID {}'.format(
+                fname))
+    file_name = '{}/lm/functions/{}'.format(eva.core.dir_xc, fname)
+    if file_name in macro_functions_m:
+        del macro_functions_m[file_name]
+        eva.lm.plc.remove_macro_function(file_name)
+        if not eva.core.prepare_save():
+            raise FunctionFailed
+        os.unlink(file_name)
+        eva.core.finish_save()
+        return True
+    else:
+        raise ResourceNotFound
+
+
+@with_macro_functions_m_lock
+def put_macro_function(fname=None, fdescr=None, i={}, o={}, fcode=None):
+    try:
+        if isinstance(fcode, dict):
+            pcode = eva.lm.plc.compile_macro_function_fbd(fcode)
+            fn = fcode['function']
+        else:
+            if not fname:
+                raise InvalidParameter('Function name not specified')
+            pcode = eva.lm.plc.prepare_macro_function_code(
+                fcode, fname, fdescr, i, o)
+            fn = fname
+        file_name = eva.core.format_xc_fname(fname='functions/{}.py'.format(fn))
+        if not isinstance(fcode, dict):
+            compile(pcode, file_name, 'exec')
+    except Exception as e:
+        eva.core.log_traceback()
+        raise FunctionFailed('Function compile failed: {}'.format(e))
+    try:
+        eva.core.prepare_save()
+        with open(file_name, 'w') as f:
+            if isinstance(fcode, dict):
+                f.write('# FBD\n')
+                f.write('# auto generated code, do not modify\n')
+                f.write('"""\n{}\n"""\n{}\n'.format(
+                    jsonpickle.encode(fcode), pcode))
+            else:
+                f.write(pcode)
+        eva.core.finish_save()
+        if not reload_macro_function(fname=fn):
+            raise FunctionFailed
+        return fn
+    except FunctionFailed:
+        raise
+    except Exception as e:
+        eva.core.log_traceback()
+        raise FunctionFailed('Function write failed: {}'.format(e))
+
+
+@with_macro_functions_m_lock
+def reload_macro_function(file_name=None, fname=None, rebuild=True):
+    if file_name is None and fname:
+        if not re.match("^[A-Za-z0-9_-]*$", fname):
+            raise InvalidParameter(
+                'Unable to reload function: invalid symbols in ID {}'.format(
+                    fname))
+        file_name = '{}/lm/functions/{}.py'.format(eva.core.dir_xc, fname)
+    if file_name is None:
+        logging.info('Loading macro functions')
+        fncs = []
+        for f in glob.glob('{}/lm/functions/*.py'.format(eva.core.dir_xc)):
+            fncs.append(f)
+            reload_macro_function(f, rebuild=False)
+        for f in macro_functions_m.copy().keys():
+            if f not in fncs:
+                del macro_functions_m[f]
+                eva.lm.plc.remove_macro_function(f, rebuild=False)
+        if rebuild:
+            eva.lm.plc.rebuild_mfcode()
+    else:
+        logging.info('Loading macro function {}'.format(file_name if file_name
+                                                        else fname))
+        if file_name in macro_functions_m:
+            omtime = macro_functions_m[file_name]
+        else:
+            omtime = None
+        try:
+            mtime = os.path.getmtime(file_name)
+        except:
+            raise FunctionFailed('File not found: {}'.format(file_name))
+        try:
+            eva.lm.plc.append_macro_function(file_name, rebuild=rebuild)
+            macro_functions_m[file_name] = mtime
+        except:
+            eva.core.log_traceback()
+            return False
+        return True
+
+
+def get_macro_function(fname=None):
+    return eva.lm.plc.get_macro_function(fname)
+
+
+def get_macro_source(macro_id):
+    if isinstance(macro_id, str):
+        macro = get_macro(macro_id)
+    else:
+        macro = macro_id
+    if not macro:
+        return None
+    file_name = eva.core.format_xc_fname(
+        fname=macro.action_exec
+        if macro.action_exec else '{}.py'.format(macro.item_id))
+    if os.path.isfile(file_name):
+        code = open(file_name).read()
+        if code.startswith('# SFC'):
+            src_type = 'sfc-json'
+            l = code.split('\n')
+            jcode = ''
+            for i in range(3, len(l)):
+                if l[i].startswith('"""'):
+                    break
+                jcode += l[i]
+            code = jsonpickle.decode(jcode)
+            code['name'] = macro.full_id
+        else:
+            src_type = ''
+        return src_type, code
+    else:
+        return None, None
+
+
 @with_item_lock
 def load_macros():
+    reload_macro_function()
+    eva.lm.plc.load_iec_functions()
+    eva.lm.plc.load_macro_api_functions()
     logging.info('Loading macro configs')
     try:
         fnames = eva.core.format_cfg_fname(eva.core.product.code + \
@@ -454,6 +633,29 @@ def load_dm_rules():
         return True
     except:
         logging.error('DM rules load error')
+        eva.core.log_traceback()
+        return False
+
+
+@with_item_lock
+def load_jobs():
+    logging.info('Loading jobs')
+    try:
+        fnames = eva.core.format_cfg_fname(eva.core.product.code + \
+                '_job.d/*.json', runtime = True)
+        for rcfg in glob.glob(fnames):
+            r_id = os.path.splitext(os.path.basename(rcfg))[0]
+            r = eva.lm.jobs.Job(r_id)
+            if r.load():
+                jobs[r_id] = r
+                if eva.core.config.development:
+                    job_id = r_id
+                else:
+                    job_id = r_id[:14] + '...'
+                logging.debug('Job %s loaded' % job_id)
+        return True
+    except:
+        logging.error('Jobs load error')
         eva.core.log_traceback()
         return False
 
@@ -603,7 +805,47 @@ def destroy_dm_rule(r_id):
         return FunctionFailed(e)
 
 
+@with_item_lock
+def create_job(save=False, job_uuid=None):
+    if job_uuid in jobs:
+        raise ResourceAlreadyExists
+    r = eva.lm.jobs.Job(job_uuid=job_uuid)
+    jobs[r.item_id] = r
+    if save: r.save()
+    r.schedule()
+    logging.info('new job created: %s' % r.item_id)
+    return r
+
+
+@with_item_lock
+def destroy_job(r_id):
+    r_id = format_job_id(r_id)
+    if r_id not in jobs:
+        raise ResourceNotFound
+    try:
+        i = jobs[r_id]
+        i.unschedule()
+        i.destroy()
+        if eva.core.config.db_update == 1 and i.config_file_exists:
+            try:
+                os.unlink(i.get_fname())
+            except:
+                logging.error('Can not remove job %s config' % \
+                        r_id)
+                eva.core.log_traceback()
+        elif i.config_file_exists:
+            configs_to_remove.add(i.get_fname())
+        del (jobs[r_id])
+        logging.info('Job %s removed' % r_id)
+        return True
+    except Exception as e:
+        eva.core.log_traceback()
+        return FunctionFailed(e)
+
+
 def handle_discovered_controller(notifier_id, controller_id, **kwargs):
+    if eva.core.is_shutdown_requested() or not eva.core.is_started():
+        return False
     try:
         ct, c_id = controller_id.split('/')
         if ct != 'uc':
@@ -611,9 +853,16 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
         controller_lock.acquire()
         try:
             if c_id in uc_pool.controllers:
-                logging.debug('Controller ' +
-                              '{} already exists, skipped (discovered from {})'.
-                              format(controller_id, notifier_id))
+                if uc_pool.controllers[c_id].connected:
+                    logging.debug(
+                        'Controller ' +
+                        '{} already exists, skipped (discovered from {})'.
+                        format(controller_id, notifier_id))
+                else:
+                    logging.debug(
+                        'Controller ' +
+                        '{} back online, reloading'.format(controller_id))
+                    uc_pool.reload_controller(c_id, with_delay=True)
                 return True
         finally:
             controller_lock.release()
@@ -850,6 +1099,12 @@ def start():
         v.start_processors()
     for i, v in cycles_by_id.copy().items():
         v.start(autostart=True)
+    for i, r in jobs.items():
+        try:
+            r.schedule()
+        except:
+            eva.core.log_traceback()
+    eva.lm.jobs.scheduler.start()
 
 
 def connect_remote_controller(v):
@@ -866,6 +1121,7 @@ def connect_remote_controller(v):
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.config.db_update == 1: save()
+    eva.lm.jobs.scheduler.stop()
     for i, v in cycles_by_id.copy().items():
         v.stop(wait=False)
     for i, v in items_by_full_id.copy().items():
@@ -920,18 +1176,13 @@ def exec_macro(macro,
 
 
 @eva.core.dump
-def dump(item_id=None):
-    if item_id: return items_by_full_id[item_id]
+def dump():
     rcs = {}
     for i, v in remote_ucs.copy().items():
         rcs[i] = v.serialize()
-    else:
-        return {
-            'lm_items': items_by_full_id,
-            'remote_ucs': rcs,
-            'macros': macros_by_full_id,
-            'dm_rules': dm_rules
-        }
+    result = serialize()
+    result.update({'remote_ucs': rcs})
+    return result
 
 
 def init():

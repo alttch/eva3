@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import os
 import requests
@@ -23,6 +23,7 @@ result_func_failed = 10
 result_invalid_params = 11
 result_already_exists = 12  # returned by JSON RPC only, 409
 result_busy = 13  # 409
+result_not_implemented = 14  # 400
 
 
 # copy of eva.tools.parse_host_port to avoid unnecesseary imports

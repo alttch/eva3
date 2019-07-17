@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import sys
 import platform
@@ -22,6 +22,7 @@ import gzip
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
+from eva.tools import parse_host_port
 
 from eva.tools import Locker as GenericLocker
 
@@ -51,7 +52,8 @@ _flags = SimpleNamespace(
     sigterm_sent=False,
     started=False,
     shutdown_requested=False,
-    cvars_modified=False)
+    cvars_modified=False,
+    setup_mode=0)
 
 product = SimpleNamespace(name='', code='', build=None)
 
@@ -62,6 +64,7 @@ config = SimpleNamespace(
     userdb_uri=None,
     debug=False,
     system_name=platform.node(),
+    controller_name=None,
     development=False,
     show_traceback=False,
     stop_on_critical='always',
@@ -80,13 +83,15 @@ config = SimpleNamespace(
     exec_after_save=None,
     mqtt_update_default=None,
     enterprise_layout=True,
+    syslog=None,
+    syslog_format=None,
     reactor_thread_pool=15,
-    user_hook=None,
-    setup_mode=False)
+    user_hook=None)
 
 db_engine = SimpleNamespace(primary=None, user=None)
 
-log_engine = SimpleNamespace(logger=None, log_file_handler=None)
+log_engine = SimpleNamespace(
+    logger=None, log_file_handler=None, syslog_handler=None)
 
 db_pool_size = 15
 
@@ -184,24 +189,32 @@ stop = FunctionCollecton(on_error=log_traceback)
 
 def format_db_uri(db_uri):
     if not db_uri: return None
-    if db_uri.find('://') == -1:
-        if db_uri[0] == '/':
-            _uri = db_uri
+    _db_uri = db_uri
+    if _db_uri.startswith('sqlite:///'):
+        _db_uri = _db_uri[10:]
+    if _db_uri.find('://') == -1:
+        if _db_uri[0] == '/':
+            _uri = _db_uri
         else:
-            _uri = dir_eva + '/' + db_uri
+            _uri = dir_eva + '/' + _db_uri
         _uri = 'sqlite:///' + _uri
     else:
-        _uri = db_uri
+        _uri = _db_uri
     return _uri
 
 
-def create_db_engine(db_uri):
+def create_db_engine(db_uri, timeout=None):
     if not db_uri: return None
     if db_uri.startswith('sqlite:///'):
-        return sa.create_engine(db_uri)
+        return sa.create_engine(
+            db_uri,
+            connect_args={'timeout': timeout if timeout else config.timeout})
     else:
         return sa.create_engine(
-            db_uri, pool_size=db_pool_size, max_overflow=db_pool_size * 2)
+            db_uri,
+            pool_size=db_pool_size,
+            max_overflow=db_pool_size * 2,
+            isolation_level='READ UNCOMMITTED')
 
 
 def sighandler_hup(signum, frame):
@@ -298,12 +311,11 @@ def create_dump(e='request', msg=''):
         result.update({'reason': {'event': e, 'info': str(msg)}})
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
+        dmp = format_json(
+            result, minimal=not config.development, unpicklable=True).encode()
         gzip.open(filename, 'w')
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
-        gzip.open(filename, 'a').write(
-            format_json(
-                result, minimal=not config.development,
-                unpicklable=True).encode())
+        gzip.open(filename, 'a').write(dmp)
         logging.warning(
             'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
     except:
@@ -327,7 +339,8 @@ def serialize():
     d['keep_action_history'] = config.keep_action_history
     d['action_cleaner_interval'] = config.action_cleaner_interval
     d['debug'] = config.debug
-    d['setup_mode'] = config.setup_mode
+    d['setup_mode'] = _flags.setup_mode
+    d['setup_mode_on'] = is_setup_mode()
     d['development'] = config.development
     d['show_traceback'] = config.show_traceback
     d['stop_on_critical'] = config.stop_on_critical
@@ -343,6 +356,7 @@ def serialize():
     d['log_file'] = config.log_file
     d['threads'] = {}
     d['uptime'] = int(time.time() - start_time)
+    d['time'] = time.time()
     d['exceptions'] = _exceptions
     d['fd'] = proc.open_files()
     for t in threading.enumerate().copy():
@@ -359,6 +373,11 @@ def set_product(code, build):
     config.db_uri = format_db_uri('db/%s.db' % product.code)
     config.userdb_uri = config.db_uri
     set_db(config.db_uri, config.userdb_uri)
+    update_controller_name()
+
+
+def update_controller_name():
+    config.controller_name = '{}/{}'.format(product.code, config.system_name)
 
 
 def set_db(db_uri=None, userdb_uri=None):
@@ -373,6 +392,15 @@ def db():
                 g.db = db_engine.primary.connect()
             else:
                 g.db = db_engine.primary
+        elif config.db_update == 1:
+            try:
+                g.db.execute('select 1')
+            except:
+                try:
+                    g.db.close()
+                except:
+                    pass
+                g.db = db_engine.primary.connect()
         return g.db
 
 
@@ -383,6 +411,15 @@ def userdb():
                 g.userdb = db_engine.user.connect()
             else:
                 g.userdb = db_engine.user
+        elif config.db_update == 1:
+            try:
+                g.userdb.execute('select 1')
+            except:
+                try:
+                    g.userdb.close()
+                except:
+                    pass
+                g.userdb = db_engine.user.connect()
         return g.userdb
 
 
@@ -408,12 +445,32 @@ def reset_log(initial=False):
     if config.log_file:
         log_engine.log_file_handler = logging.FileHandler(config.log_file)
     else:
-        log_engine.log_file_handler = logging.StreamHandler(sys.stdout)
+        from eva.logs import StdoutHandler
+        log_engine.log_file_handler = StdoutHandler()
     log_engine.log_file_handler.setFormatter(formatter)
     log_engine.logger.addHandler(log_engine.log_file_handler)
     if initial:
         from eva.logs import MemoryLogHandler
         log_engine.logger.addHandler(MemoryLogHandler())
+        if config.syslog:
+            if config.syslog.startswith('/'):
+                syslog_addr = config.syslog
+            else:
+                addr, port = parse_host_port(config.syslog, 514)
+                if addr:
+                    syslog_addr = (addr, port)
+                else:
+                    logging.error('Invalid syslog configuration: {}'.format(
+                        config.syslog))
+                    syslog_addr = None
+            if syslog_addr:
+                log_engine.syslog_handler = logging.handlers.SysLogHandler(
+                    address=syslog_addr)
+                log_engine.syslog_handler.setFormatter(
+                    logging.Formatter(
+                        config.syslog_format.replace('%(name)s', product.code))
+                    if config.syslog_format else formatter)
+                log_engine.logger.addHandler(log_engine.syslog_handler)
 
 
 def load(fname=None, initial=False, init_log=True, check_pid=True):
@@ -446,6 +503,16 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                     config.log_file = None
             if config.log_file and config.log_file[0] != '/':
                 config.log_file = dir_eva + '/' + config.log_file
+            try:
+                config.syslog = cfg.get('server', 'syslog')
+                if config.syslog == 'yes':
+                    config.syslog = '/dev/log'
+            except:
+                pass
+            try:
+                config.syslog_format = cfg.get('server', 'syslog_format')
+            except:
+                pass
             if init_log: reset_log(initial)
             try:
                 log_level = cfg.get('server', 'logging_level')
@@ -488,6 +555,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                         log_engine.logger.setLevel(config.default_log_level)
             try:
                 config.system_name = cfg.get('server', 'name')
+                update_controller_name()
             except:
                 pass
             logging.info('Loading server config')
@@ -544,7 +612,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.userdb_uri = config.db_uri
             logging.debug('server.userdb = %s' % config.userdb_uri)
             try:
-                config.user_hook = cfg.get('server', 'user_hook').split()
+                uh = cfg.get('server', 'user_hook')
+                if not uh.startswith('/'):
+                    uh = dir_eva + '/' + uh
+                config.user_hook = uh.split()
             except:
                 pass
             _uh = ' '.join(config.user_hook) if config.user_hook else None
@@ -710,13 +781,20 @@ def debug_off():
 
 
 def setup_off():
-    config.setup_mode = False
+    _flags.setup_mode = 0
     logging.info('Setup mode OFF')
 
 
-def setup_on():
-    config.setup_mode = True
-    logging.warning('Setup mode ON')
+def setup_on(duration):
+    import datetime
+    _flags.setup_mode = time.time() + duration
+    logging.warning('Setup mode ON, ends: {}'.format(
+        datetime.datetime.fromtimestamp(
+            _flags.setup_mode).strftime('%Y-%m-%d %T')))
+
+
+def is_setup_mode():
+    return _flags.setup_mode > time.time()
 
 
 def fork():
@@ -809,8 +887,9 @@ def init():
         signal.signal(signal.SIGINT, sighandler_term)
 
 
-def start():
-    reactor.suggestThreadPoolSize(config.reactor_thread_pool)
+def start(init_db_only=False):
+    if not init_db_only:
+        reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
 
 

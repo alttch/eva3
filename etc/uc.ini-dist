@@ -7,7 +7,15 @@ polldelay = 0.01
 pid_file = var/uc.pid
 ; log file
 log_file = log/uc.log
+; logging to local syslog
+;syslog = yes
+; logging to non-standard (/dev/log) local syslog socket
+;syslog = /var/run/syslog
+; logging to remote syslog
+;syslog = hostname:514
 ; db updates - instant, manual or on_exit
+; custom syslog format (use double %)
+;syslog_format = EVA: { "loggerName":"%%(name)s", "timestamp":"%%(asctime)s", "pathName":"%%(pathname)s", "logRecordCreationTime":"%%(created)f", "functionName":"%%(funcName)s", "levelNo":"%%(levelno)s", "lineNo":"%%(lineno)d", "time":"%%(msecs)d", "levelName":"%%(levelname)s", "message":"%%(message)s"}
 db_update = instant
 ; db file, default runtime/db/uc.db
 db_file = runtime/db/uc.db
@@ -34,6 +42,8 @@ keep_logmem = 86400
 notify_on_start = yes
 ; debug mode
 debug = no
+; show error traceback
+;show_traceback = yes
 ; logging level, info, warning, error or critical
 ;logging_level = info
 ; create crash dump on critical errors

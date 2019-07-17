@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import logging
 import sys
@@ -17,6 +17,7 @@ import requests
 import json
 import threading
 import shlex
+import datetime
 
 from eva.tools import is_oid
 from eva.tools import oid_to_id
@@ -192,6 +193,7 @@ class MacroAPI(object):
             'sensor_status': self.macro_function(self.sensor_status),
             'sensor_value': self.macro_function(self.sensor_value),
             'set': self.macro_function(self.set),
+            'state': self.macro_function(self.state),
             'status': self.macro_function(self.status),
             'value': self.macro_function(self.value),
             'reset': self.macro_function(self.reset),
@@ -213,6 +215,7 @@ class MacroAPI(object):
             'history': self.macro_function(self.history),
             'system': self.macro_function(os.system),
             'time': self.macro_function(time.time),
+            'date': self.macro_function(self.date),
             'ls': self.macro_function(self.ls),
             'open_oldest': self.macro_function(self.open_oldest),
             'open_newest': self.macro_function(self.open_newest),
@@ -220,6 +223,7 @@ class MacroAPI(object):
             'update_device': self.macro_function(self.update_device),
             'undeploy_device': self.macro_function(self.undeploy_device),
             'set_rule_prop': self.macro_function(self.set_rule_prop),
+            'set_job_prop': self.macro_function(self.set_job_prop),
             'start_cycle': self.macro_function(self.start_cycle),
             'stop_cycle': self.macro_function(self.stop_cycle),
             'reset_cycle_stats': self.macro_function(self.reset_cycle_stats),
@@ -247,7 +251,7 @@ class MacroAPI(object):
         return self.__globals
 
     def history(self,
-                lvar_id,
+                item_id,
                 t_start=None,
                 t_end=None,
                 limit=None,
@@ -257,10 +261,13 @@ class MacroAPI(object):
                 fmt=None,
                 db=None):
         """
-        get lvar state history
+        get item state history
 
         Args:
-            lvar_id: lvar ID, or multiple IDs (list or comma separated)
+            item_id: item ID, or multiple IDs (list or comma separated)
+
+        To use this function, DB or TSDB notifier in LM PLC must be present.
+        (notifier can share DB with SFA in read/only mode).
 
         Optional:
             t_start: time frame start, ISO or Unix timestamp
@@ -282,7 +289,9 @@ class MacroAPI(object):
         return eva.lm.lmapi.api.state_history(
             k=eva.apikey.get_masterkey(),
             a=db,
-            i=oid_to_id(lvar_id, 'lvar'),
+            i=[ 'lvar:' + i if not is_oid(i) else i for i in item_id ] if \
+                    isinstance(item_id, list) else \
+                     item_id if is_oid(item_id) else 'lvar:' + item_id,
             s=t_start,
             e=t_end,
             l=limit,
@@ -397,6 +406,38 @@ class MacroAPI(object):
             FunctionFailed: function failed to release lock
         """
         return eva.sysapi.api.unlock(k=eva.apikey.get_masterkey(), l=lock_id)
+
+    def state(self, item_id):
+        """
+        get item state
+
+        Args:
+            item_id: item id (oid required)
+
+        Returns:
+            item status/value dict
+
+        Raises:
+            ResourceNotFound: item is not found
+
+        @var_out status
+        @var_out value
+        """
+        if is_oid(item_id):
+            tp, i = parse_oid(item_id)
+        else:
+            tp = 'lvar'
+            i = item_id
+        if tp == 'unit':
+            return {'status': self.unit_status(i), 'value': self.unit_value(i)}
+        if tp == 'sensor':
+            return {
+                'status': self.sensor_status(i),
+                'value': self.sensor_value(i)
+            }
+        if tp == 'lvar':
+            return {'status': self.lvar_status(i), 'value': self.lvar_value(i)}
+        raise ResourceNotFound
 
     def status(self, item_id):
         """
@@ -680,7 +721,7 @@ class MacroAPI(object):
             lvar_id: lvar id
 
         Optional:
-            value: lvar value (if npt specified, lvar is set to null)
+            value: lvar value (if not specified, lvar is set to null)
 
         Raises:
             FunctionFailed: lvar value set error
@@ -690,7 +731,7 @@ class MacroAPI(object):
         if not lvar:
             raise ResourceNotFound
         if value is None: v = ''
-        else: v = value
+        else: v = str(value)
         result = lvar.update_set_state(value=v)
         if not result:
             raise FunctionFailed('lvar set error: %s, value = "%s"' % \
@@ -859,6 +900,9 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: action is "dead"
             ResourceNotFound: unit is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
@@ -894,6 +938,9 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: action is "dead"
             ResourceNotFound: unit is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
@@ -925,7 +972,10 @@ class MacroAPI(object):
             list or single serialized action object
 
         Raises:
-            ResourceNotFound: unit is not found
+            ResourceNotFound: unit or action is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         if unit_id:
             unit = eva.lm.controller.uc_pool.get_unit(
@@ -962,6 +1012,9 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: action is "dead"
             ResourceNotFound: unit is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         return self.action(
             unit_id=oid_to_id(unit_id, 'unit'),
@@ -993,6 +1046,9 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: action is "dead"
             ResourceNotFound: unit is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         return self.action(
             unit_id=oid_to_id(unit_id, 'unit'),
@@ -1092,6 +1148,10 @@ class MacroAPI(object):
 
         Raises:
             ResourceNotFound: macro is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
+        @var_out out Macro "out" variable
         """
         _argv = []
         if isinstance(argv, str):
@@ -1150,6 +1210,9 @@ class MacroAPI(object):
 
         Raises:
             ResourceNotFound: command script or controller is not found
+
+        @var_out exitcode Exit code
+        @var_out status Action status
         """
         return ecall(
             eva.lm.controller.uc_pool.cmd(
@@ -1158,6 +1221,34 @@ class MacroAPI(object):
                 args=args,
                 wait=wait,
                 timeout=timeout))
+
+    def date(self):
+        """
+        get current date/time
+
+        Returns:
+            Serialized date/time object (dict)
+
+        @var_out year
+        @var_out month
+        @var_out day
+        @var_out weekday
+        @var_out hour
+        @var_out minute
+        @var_out second
+        @var_out timestamp
+        """
+        t = datetime.datetime.now()
+        return {
+            'year': t.year,
+            'month': t.month,
+            'day': t.day,
+            'weekday': t.weekday(),
+            'hour': t.hour,
+            'minute': t.minute,
+            'second': t.second,
+            'timestamp': t.timestamp()
+        }
 
     def ls(self, mask, recursive=False):
         """
@@ -1333,6 +1424,25 @@ class MacroAPI(object):
         """
         result = eva.lm.lmapi.api.set_rule_prop(
             k=eva.apikey.get_masterkey(), i=rule_id, p=prop, v=value, save=save)
+        return result
+
+    def set_job_prop(self, job_id, prop, value=None, save=False):
+        """
+        set job prop
+
+        Args:
+            job_id: job id (uuid)
+            prop: property to set
+            value: value to set
+
+        Optional:
+            save: save job config after the operation
+
+        Raises:
+            ResourceNotFound: job is not found
+        """
+        result = eva.lm.lmapi.api.set_job_prop(
+            k=eva.apikey.get_masterkey(), i=job_id, p=prop, v=value, save=save)
         return result
 
     def start_cycle(self, cycle_id):

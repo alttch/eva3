@@ -3,7 +3,7 @@ Control and monitoring items
 
 An item in EVA means any object which can be controlled or monitored.
 :doc:`/uc/uc` has 2 native item types: :ref:`unit<unit>` and
-:ref:`sensor<sensor>`, plus :ref:`multiupdates<multiupdate>`, which may
+:ref:`sensor<sensor>`, plus :ref:`multi-updates<multiupdate>`, which may
 contain multiple items at once.
 
 :doc:`/lm/lm` has one native item type :ref:`lvar<lvar>` (logic variable),
@@ -23,7 +23,7 @@ controller should be restarted to reload the configurations.
 Common item parameters
 ======================
 
-* **id** item ID, i.e. 'lamp1'. When using **simple**
+* **id** item ID, e.g. 'lamp1'. When using **simple**
   :ref:`layout<item_layout>`, must be unique within one controller, even if
   items are in different groups. This creates some complications when designing
   the whole installation architecture but allows to keep EVA configuration and
@@ -135,10 +135,6 @@ EVA does not use unit value for internal control and monitoring logic (except
 in your custom macros), that is why you can set it to any value or several
 values separating them with special characters for further processing.
 
-The blank value is "null". It is not recommended to use "" (blank) value,
-because such values cannot be transmitted via :ref:`MQTT<mqtt_>` correctly. In
-most cases, the system itself replaces the blank value with "null".
-
 Units in EVA hive
 -----------------
 
@@ -222,6 +218,13 @@ Unit parameters
   and can be used later e.g. to filter units by location or to put units on
   geographical map.
 
+* **maintenance_duration** integer, if greater than zero, item can enter
+  maintenance mode on the specified amount of seconds. During maintenance mode
+  all item updates are ignored, however actions still can be executed. If
+  *expires* property is also set, item state expire after *maintenance_end +
+  expires* seconds.
+
+
 * **mqtt_control = "notifier:qos"** item gets actions through notifications
   from a specified :ref:`MQTT server<mqtt_>`, for example "eva_1:2",
   actions should be sent to path/to/unit/control (e.g.
@@ -231,6 +234,9 @@ Unit parameters
 
 * **modbus_status**, **modbus_value** update item state from :ref`Modbus
   slave<modbus_slave>` memory space.
+
+* **notify_events** 2 (default) - send notifications about all events, 1 -
+  about state only, 0 - disable all event notifications.
 
 * **status_labels**  "labels" used to display the unit statuses by the
   interfaces.  Labels may be changed via :doc:`/uc/uc_api` or
@@ -295,7 +301,7 @@ the sensor error is an emergency situation that should affect its status even
 if it is disabled and requires an immediate attention of the user.
 
 Sensors (and sometimes units) can be placed on the same detector, controller or
-bus queried by a single command. EVA can use :ref:`multiupdates<multiupdate>`
+bus queried by a single command. EVA can use :ref:`multi-updates<multiupdate>`
 in order to update several items at once.
 
 Since the system does not control, but only monitors the sensor, it can
@@ -324,6 +330,30 @@ Sensor parameters
 
 Sensors have the same parameters as :ref:`units<unit>`, except they don't have
 action_*, auto_off, mqtt_control, modbus_status and status_labels.
+
+Validation of state value
+=========================
+
+State value of units and sensors can be validated before :doc:`/uc/uc` perform
+item update.
+
+To validate item value, the following item properties are used:
+
+* **value_in_range_max** value should be less
+* **value_in_range_max_eq**  value should be less or equal than specified max.
+* **value_in_range_min** value should be greater
+* **value_in_range_min_eq**  value should be greater or equal than specified
+  max.
+
+or virtual parameter **value_condition**, which can be set in human readable
+way, e.g. 20<x<=200.
+
+If value validation is set and item receive state value which is not numeric or
+doesn't feet the specified range, item keep previous state value and get status
+*-1* (error).
+
+Item status is set back to normal as soon as any valid state update is
+received.
 
 .. _lvar:
 
@@ -442,8 +472,8 @@ You may use lvar as a
 
 .. _multiupdate:
 
-Multiupdates
-============
+Multi-updates
+=============
 
 Multiupdates allow :doc:`/uc/uc` updating the state of several items with the
 use of one :doc:`script</item_scripts>`. This could be reasonable in case all
@@ -454,19 +484,19 @@ Multiupdate is an independent item in the system with its own configuration
 and without status and value. In turn, it updates statuses of the included
 items.
 
-Multiupdates in EVA hive
-------------------------
+Multi-updates in EVA hive
+-------------------------
 
-All multiupdates have OIDs like **mu:group/mu_id** e.g.
+All multi-updates have OIDs like **mu:group/mu_id** e.g.
 *mu:environment/mu1*
 
-Multiupdates don't have their own state, so they are not synchronized between
+Multi-updates don't have their own state, so they are not synchronized between
 servers.
 
 Multiupdate parameters
 ----------------------
 
-Multiupdates have the same parameters as :ref:`sensors<sensor>`, except that
+Multi-updates have the same parameters as :ref:`sensors<sensor>`, except that
 "expires", "mqtt_update" and "snmp_trap", plus some additional:
 
 * items = item1, item2, item3... - the list of items for updating, may be
@@ -476,17 +506,17 @@ Multiupdates have the same parameters as :ref:`sensors<sensor>`, except that
     * **-p "item-" -v "item_id"** delete item
     * **-p "items" -v "item1,item2,item3..."** replace the whole list
 
-* update_allow_check - boolean, the multiupdate will be performed only in case
+* update_allow_check - boolean, the multi-update will be performed only in case
   the passive state updates are currently allowed for all included items (i.e.
   if some of them run actions at this moment and have update_if_action=False,
-  multiupdate will be not executed)
+  multi-update will be not executed)
 
 .. _device:
 
 Device
 ======
 
-Multiple CVARs, units, sensors and multiupdates can be merged in logical groups
+Multiple CVARs, units, sensors and multi-updates can be merged in logical groups
 called **devices**. It's completely up to you how to merge items into device,
 but it's recommended to keep them in one or several separate item groups.
 
@@ -572,7 +602,7 @@ Device limitations
 ------------------
 
 * :ref:`Custom variables<uc_cvars>`, :ref:`units<unit>`, :ref:`sensors<sensor>`
-  and :ref:`multiupdates<multiupdate>` can be part of the device
+  and :ref:`multi-updates<multiupdate>` can be part of the device
 
 * :ref:`LVars<lvar>` can not be part of the device and :doc:`/lm/lm` doesn't
   have any device management functions, but devices on the connected UCs can be

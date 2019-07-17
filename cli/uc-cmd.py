@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.0"
+__version__ = "3.2.4"
 
 import sys
 import os
@@ -14,6 +14,8 @@ sys.path.append(dir_lib)
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
+
+import eva.client.cli
 
 
 class UC_CLI(GenericCLI, ControllerCLI):
@@ -103,8 +105,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('device templates')
             if code: return True
+            result = []
             for v in data:
-                yield v['name']
+                result.append(v['name'])
+            return result
 
     class ComplItemProp(ComplGeneric):
 
@@ -225,12 +229,36 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return result
 
     def prepare_result_data(self, data, api_func, itype):
+        if api_func == 'phi_discover':
+            if data:
+                for z, d in enumerate(data.copy()):
+                    if '!load' in d:
+                        d['Load'] = '-c '
+                        load = []
+                        for i, v in d['!load'].items():
+                            load.append('{}={}'.format(i, v))
+                        d['Load'] += ','.join(load)
+                        del d['!load']
+                    if '!opt' in d:
+                        if d['!opt'] == 'cols' and 'value' in d and isinstance(
+                                d['value'], list):
+                            self.pd_cols[api_func] = d['value'] + ['Load']
+                        del data[z]
+            return data
+        if api_func == 'list':
+            self.pd_cols[api_func] = ['oid']
+            x = self.last_api_call_params.get('x')
+            if x:
+                for p in x.split(','):
+                    self.pd_cols[api_func].append(p)
+            else:
+                self.pd_cols[api_func].append('description')
         if api_func == 'list_device_tpl':
             for d in data:
                 d['type'] = d['type'] + ' device template'
                 return data
             return result
-        if api_func == 'get_modbus_slave_data':
+        if api_func in ['get_modbus_slave_data', 'read_modbus_port']:
             for d in data:
                 rtps = {
                     'h': 'holding',
@@ -242,9 +270,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 addr = int(d['addr'][1:])
                 d['addr'] = addr
                 d['reg'] = rtype
-                d['addr_hex'] = hex(addr)
-                d['hex'] = hex(d['value'])
-            return data
+                if 'error' in d:
+                    d['err'] = d['error']
+                    del (d['error'])
+                else:
+                    d['addr_hex'] = hex(addr)
+                    d['hex'] = hex(d['value'])
+            return sorted(
+                sorted(data, key=lambda k: k['addr']), key=lambda k: k['reg'])
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, itype)
         result = []
@@ -281,7 +314,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
             return super().process_result(result, code, api_func, itype, a)
 
     def prepare_run(self, api_func, params, a):
-        if api_func == 'load_driver':
+        if api_func in ['set_prop', 'set_phi_prop', 'set_driver_prop']:
+            if params['p'] and params['p'].find('=') != -1 and not params['v']:
+                params['p'], params['v'] = params['p'].split('=', 1)
+        if api_func == 'state_history':
+            if params['c']:
+                params['g'] = 'chart'
+        elif api_func == 'load_driver':
             try:
                 import re
                 params['p'], params['i'] = re.split('[.:]', params['i'])
@@ -304,9 +343,16 @@ class UC_CLI(GenericCLI, ControllerCLI):
         return super().prepare_run(api_func, params, a)
 
     def prepare_result_dict(self, data, api_func, itype):
-        if api_func != 'status_controller':
+        if api_func == 'status_controller':
+            return self.prepare_controller_status_dict(data)
+        elif api_func == 'result' and 'created' in data:
+            from datetime import datetime
+            for x in data.keys():
+                data[x] = '{:.7f} | {}'.format(data[x],
+                                               datetime.fromtimestamp(data[x]))
             return super().prepare_result_dict(data, api_func, itype)
-        return self.prepare_controller_status_dict(data)
+        else:
+            return super().prepare_result_dict(data, api_func, itype)
 
     def setup_parser(self):
         super().setup_parser()
@@ -318,6 +364,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         self.add_uc_action_functions()
         self.add_uc_edit_functions()
         self.add_uc_configure_functions()
+        self.add_uc_maintenance_functions()
         self.add_uc_device_functions()
         self.add_uc_modbus_functions()
         self.add_uc_owfs_functions()
@@ -383,6 +430,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
             metavar='INTERVAL',
             dest='w')
+        sp_history.add_argument(
+            '-c',
+            '--chart-options',
+            help='Chart options',
+            metavar='OPTS',
+            dest='c')
 
         sp_update = self.sp.add_parser('update', help='Update item state')
         sp_update.add_argument(
@@ -532,6 +585,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='Template name',
             metavar='TPL').completer = self.ComplDeviceTPL(self)
 
+        self._append_edit_server_config(sp_edit)
+
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')
         sp_list.add_argument(
@@ -544,6 +599,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_list.add_argument(
             '-g', '--group', help='Filter by group', metavar='GROUP',
             dest='g').completer = self.ComplItemGroupList(self)
+        sp_list.add_argument(
+            '-x',
+            '--prop',
+            help='List specified prop(s), comma separated',
+            metavar='PROPS',
+            dest='x')
 
         ap_config = self.sp.add_parser('config', help='Item configuration')
         sp_config = ap_config.add_subparsers(
@@ -710,6 +771,24 @@ class UC_CLI(GenericCLI, ControllerCLI):
             metavar='VARS',
             dest='c')
 
+    def add_uc_maintenance_functions(self):
+        ap_maintenance = self.sp.add_parser(
+            'maintenance', help='Maintenance mode')
+        sp_maintenance = ap_maintenance.add_subparsers(
+            dest='_func', metavar='func', help='Maintenance commands')
+
+        sp_maintenance_start = sp_maintenance.add_parser(
+            'start', help='Start unit/sensor maintenance mode')
+        sp_maintenance_start.add_argument(
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
+
+        sp_maintenance_stop = sp_maintenance.add_parser(
+            'stop', help='Stop unit/sensor maintenance mode')
+        sp_maintenance_stop.add_argument(
+            'i', help='Item ID',
+            metavar='ID').completer = self.ComplItemOID(self)
+
     def add_uc_modbus_functions(self):
         ap_modbus = self.sp.add_parser('modbus', help='ModBus ports')
         sp_modbus = ap_modbus.add_subparsers(
@@ -762,6 +841,47 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_modbus_test.add_argument(
             'i', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_destroy = sp_modbus.add_parser(
+            'destroy', help='Destroy (undefine) port')
+        sp_modbus_destroy.add_argument(
+            'i', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_test = sp_modbus.add_parser('test', help='Test defined port')
+        sp_modbus_test.add_argument(
+            'i', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_read = sp_modbus.add_parser(
+            'read', help='Read registers from remote Modbus slave')
+        sp_modbus_read.add_argument(
+            'p', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_read.add_argument(
+            's', help='Modbus slave ID', metavar='Slave ID')
+        sp_modbus_read.add_argument(
+            'i',
+            help='Regiser address(es), comma ' +
+            'separated, predicated by type (h, c, i, d), range may be ' +
+            'specified. e.g. h1000-1010,c10-15',
+            metavar='REGISTERS')
+        sp_modbus_write = sp_modbus.add_parser(
+            'write', help='Write register value to remote Modbus slave')
+        sp_modbus_write.add_argument(
+            'p', help='Port ID',
+            metavar='ID').completer = self.ComplModBus(self)
+        sp_modbus_write.add_argument(
+            's', help='Modbus slave ID', metavar='Slave ID')
+        sp_modbus_write.add_argument(
+            'i',
+            help='Regiser address, predicated by type (h, c)',
+            metavar='REGISTER')
+        sp_modbus_write.add_argument('v', help='Regiser value', metavar='VALUE')
+        sp_modbus_write.add_argument(
+            '-z',
+            '--single',
+            help='Use single-write Modbus command (0x05-0x06)',
+            action='store_true',
+            dest='z')
+
         sp_modbus_destroy = sp_modbus.add_parser(
             'destroy', help='Destroy (undefine) port')
         sp_modbus_destroy.add_argument(
@@ -898,6 +1018,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         sp_phi_get = sp_phi.add_parser('get', help='Get loaded PHI info')
         sp_phi_get.add_argument(
+            'i', help='PHI ID',
+            metavar='PHI_ID').completer = self.ComplPHI(self)
+
+        sp_phi_ports = sp_phi.add_parser(
+            'ports', help='Get available ports of loaded PHI')
+        sp_phi_ports.add_argument(
             'i', help='PHI ID',
             metavar='PHI_ID').completer = self.ComplPHI(self)
 
@@ -1044,6 +1170,26 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'm', help='PHI module',
             metavar='PHI_MOD').completer = self.ComplPHIMods(self)
 
+        sp_phi_discover = sp_phi.add_parser(
+            'discover',
+            help='Discover installed equipment suppored by PHI module')
+        sp_phi_discover.add_argument(
+            'm', help='PHI module',
+            metavar='PHI_MOD').completer = self.ComplPHIMods(self)
+        sp_phi_discover.add_argument(
+            '-x',
+            '--interface',
+            help='Interface to perform discovery on',
+            metavar='INTERFACE',
+            dest='x')
+        sp_phi_discover.add_argument(
+            '-w',
+            '--wait',
+            help='Max operation timeout',
+            metavar='SEC',
+            type=float,
+            dest='w')
+
         sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
         sp_lpi_modinfo.add_argument(
             'm', help='LPI module',
@@ -1057,7 +1203,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'c',
             help='Help context (cfg, get, set)',
             metavar='CONTEXT',
-            choices=['cfg', 'get', 'set'])
+            choices=['cfg', 'discover', 'ports', 'get', 'set'])
 
         sp_lpi_modhelp = sp_lpi.add_parser('modhelp', help='LPI module help')
         sp_lpi_modhelp.add_argument(
@@ -1197,7 +1343,10 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
 _me = 'EVA ICS UC CLI version %s' % __version__
 
-cli = UC_CLI('uc', _me)
+prog = os.path.basename(__file__)[:-3]
+if prog == 'eva-shell': prog = 'eva uc'
+
+cli = UC_CLI('uc', _me, prog=prog)
 
 _api_functions = {
     'history': 'state_history',
@@ -1217,10 +1366,14 @@ _api_functions = {
     'device:deploy': 'deploy_device',
     'device:update': 'update_device',
     'device:undeploy': 'undeploy_device',
+    'maintenance:start': 'start_item_maintenance',
+    'maintenance:stop': 'stop_item_maintenance',
     'modbus:list': 'list_modbus_ports',
     'modbus:create': 'create_modbus_port',
     'modbus:destroy': 'destroy_modbus_port',
     'modbus:test': 'test_modbus_port',
+    'modbus:read': 'read_modbus_port',
+    'modbus:write': 'write_modbus_port',
     'modbus-slave:get': 'get_modbus_slave_data',
     'owfs:list': 'list_owfs_buses',
     'owfs:create': 'create_owfs_bus',
@@ -1229,6 +1382,7 @@ _api_functions = {
     'owfs:scan': 'scan_owfs_bus',
     'phi:list': 'list_phi',
     'phi:get': 'get_phi',
+    'phi:ports': 'get_phi_ports',
     'phi:set': 'set_phi_prop',
     'phi:mods': 'list_phi_mods',
     'phi:test': 'test_phi',
@@ -1238,6 +1392,7 @@ _api_functions = {
     'phi:unlink': 'unlink_phi_mod',
     'phi:download': 'put_phi_mod',
     'phi:modinfo': 'modinfo_phi',
+    'phi:discover': 'phi_discover',
     'phi:modhelp': 'modhelp_phi',
     'lpi:mods': 'list_lpi_mods',
     'lpi:modinfo': 'modinfo_lpi',
@@ -1258,14 +1413,14 @@ _pd_cols = {
     'state': ['oid', 'action_enabled', 'status', 'value', 'nstatus', 'nvalue'],
     'state_': [
         'oid', 'action_enabled', 'description', 'location', 'status', 'value',
-        'nstatus', 'nvalue'
+        'nstatus', 'nvalue', 'maintenance'
     ],
     'result': [
         'time', 'uuid', 'priority', 'item_oid', 'nstatus', 'nvalue', 'exitcode',
         'status'
     ],
-    'list': ['oid', 'description'],
     'get_modbus_slave_data': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
+    'read_modbus_port': ['reg', 'addr', 'addr_hex', 'value', 'hex', 'err'],
     'list_modbus_ports':
     ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
     'list_owfs_buses':
@@ -1275,6 +1430,7 @@ _pd_cols = {
     ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
     'list_drivers': ['id', 'mod', 'phi_id'],
     'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
+    'get_phi_ports': ['port', 'name', 'description'],
     'list_lpi_mods': ['mod', 'logic', 'description', 'version', 'api'],
     'modhelp_lpi': ['name', 'type', 'required', 'help'],
     'modhelp_phi': ['name', 'type', 'required', 'help']
@@ -1303,7 +1459,7 @@ cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'cmd']
 cli.arg_sections += [
     'action', 'config', 'clone', 'device', 'modbus', 'owfs', 'phi', 'lpi',
-    'driver', 'modbus-slave'
+    'driver', 'modbus-slave', 'maintenance'
 ]
 cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)
@@ -1311,4 +1467,5 @@ cli.set_pd_cols(_pd_cols)
 cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
+eva.client.cli.subshell_exit_code = code
 sys.exit(code)

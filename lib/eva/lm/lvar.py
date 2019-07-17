@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import eva.core
 import eva.item
@@ -63,7 +63,11 @@ class LVar(eva.item.VariableItem):
             except:
                 eva.core.log_traceback()
 
-    def update_set_state(self, status=None, value=None, from_mqtt=False):
+    def update_set_state(self,
+                         status=None,
+                         value=None,
+                         from_mqtt=False,
+                         force_notify=False):
         if not self.status and status != 1: return False
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LVar::update_set_state locking broken')
@@ -74,7 +78,10 @@ class LVar(eva.item.VariableItem):
             _status = self.status
             _value = self.value
             if super().update_set_state(
-                    status=status, value=value, from_mqtt=from_mqtt):
+                    status=status,
+                    value=value,
+                    from_mqtt=from_mqtt,
+                    force_notify=force_notify):
                 if t != self.set_time:
                     self.notify(skip_subscribed_mqtt=from_mqtt)
                 self.prv_status = _status

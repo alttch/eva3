@@ -1,13 +1,14 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import argparse
 # to be compatible with argcomplete
 import getopt
 import sys
 import os
+import io
 from eva.client import apiclient
 from eva.gcli import GCLI
 
@@ -20,6 +21,10 @@ parent_shell_name = None
 shells_available = []
 
 shell_switch_to = None
+shell_switch_to_extra_args = None
+shell_back_interactive = False
+
+completer_stream = io.BytesIO()
 
 default_errors = {
     apiclient.result_not_found: 'Object not found',
@@ -36,11 +41,15 @@ default_errors = {
     apiclient.result_busy: 'resource is in use'
 }
 
+dir_eva = os.path.realpath(
+    os.path.dirname(os.path.realpath(__file__)) + '/../../..')
+
 
 class ComplGeneric(object):
 
     def __init__(self, cli):
-        self.cli = cli if cli.interactive else None
+        # self.cli = cli if cli.interactive else None
+        self.cli = cli
 
 
 class ComplCVAR(ComplGeneric):
@@ -104,6 +113,7 @@ class GenericCLI(GCLI):
         self.ssl_verify = False
         self.say_bye = say_bye
         self.readline_processing = readline_processing
+        self._argcompleted = False
         if remote_api_enabled:
             self.always_print = ['cmd']
             self.common_api_functions = {
@@ -164,10 +174,10 @@ class GenericCLI(GCLI):
         prompt = self.default_prompt
         ppeva = '' if not parent_shell_name else \
                 self.colored(parent_shell_name,
-                        'green', attrs=['bold'], rlsafe=True) + '/'
+                        'yellow', attrs=['bold'], rlsafe=True) + '/'
         if self.product:
             product_str = self.colored(
-                self.product, 'green', attrs=['bold'], rlsafe=True)
+                self.product, 'yellow', attrs=['bold'], rlsafe=True)
             host_str = ''
             if self.nodename:
                 nodename = self.nodename
@@ -214,7 +224,7 @@ class GenericCLI(GCLI):
                         h, 'grey', attrs=['bold'], rlsafe=True)
             else:
                 product_str += self.colored(
-                    ':' + nodename, 'green', attrs=['bold'], rlsafe=True)
+                    ':' + nodename, 'yellow', attrs=['bold'], rlsafe=True)
             prompt = '[%s%s]%s' % (ppeva + product_str, host_str, prompt)
         return prompt
 
@@ -637,8 +647,8 @@ class GenericCLI(GCLI):
             'i',
             help='File name (relative to runtime, without / in the beginning)',
             metavar='REMOTE_FILE')
-        sp_file_get.add_argument(
-            '_fname', help='Local file name', metavar='LOCAL_FILE')
+        # sp_file_get.add_argument(
+        # '_fname', help='Local file name', metavar='LOCAL_FILE')
 
         sp_file_upload = sp_file.add_parser('upload', help='Upload file')
         sp_file_upload.add_argument(
@@ -846,17 +856,20 @@ class GenericCLI(GCLI):
                 for i in range(0, len(cmds)):
                     d = cmds[i]
                     if i and i < len(cmds): print()
+                    if not d: continue
                     if d[0] in ['q', 'quit', 'exit', 'bye'] or \
                             (d[0] in ['..', '/'] and parent_shell_name):
                         self.finish_interactive()
                         return 0
-
-                    if parent_shell_name and d[0] in shells_available:
-                        globals()['shell_switch_to'] = d[0]
-                        return 0
-                    if parent_shell_name and d[0].startswith(
-                            '/') and d[0][1:] in shells_available:
-                        globals()['shell_switch_to'] = d[0][1:]
+                    if parent_shell_name and (d[0] in shells_available or
+                                              (d[0].startswith('/') and
+                                               d[0][1:] in shells_available)):
+                        ss = d[0][1:] if d[0].startswith('/') else d[0]
+                        if len(d) > 1:
+                            globals()['shell_switch_to_extra_args'] = d[1:]
+                        globals()['shell_switch_to'] = ss
+                        globals()['shell_back_interactive'] = True
+                        self.finish_interactive()
                         return 0
                     if (d[0] == 'k.' or
                             d[0] == 'c.') and self.remote_api_enabled:
@@ -974,8 +987,8 @@ class GenericCLI(GCLI):
                             if self.in_json:
                                 opts += ['-J']
                             clear_screen = False
-                            if '|' in d[-1] and not d[-1].startswith('|'):
-                                cmd = d[-1].split('|')
+                            if ' |' in d[-1] and not d[-1].startswith(' |'):
+                                cmd = d[-1].split(' |')
                                 cmd[-1] = '|' + cmd[-1]
                                 d.pop(-1)
                                 d.extend(cmd)
@@ -1051,9 +1064,18 @@ class GenericCLI(GCLI):
 
     def execute_function(self, args=None, return_result=False):
         self.suppress_colors = False
-        if self.argcomplete:
+        if os.environ.get('_ARGCOMPLETE') and not self._argcompleted:
+            ostream = completer_stream
+            ostream.seek(0)
+            ostream.truncate()
+        else:
+            ostream = None
+        if self.argcomplete and not self._argcompleted:
+            self._argcompleted = True
             self.argcomplete.autocomplete(
                 self.ap,
+                exit_method=sys.exit,
+                output_stream=ostream,
                 default_completer=self.argcomplete.completers.SuppressCompleter(
                 ))
         try:
@@ -1151,7 +1173,7 @@ class GenericCLI(GCLI):
                 func in self.api_cmds_timeout_correction) and \
                 wait + 2 > self.default_timeout:
                 timeout = wait + 2
-
+        self.last_api_call_params = params
         if debug and self.remote_api_enabled:
             self.print_debug('API: %s' % api._uri)
             self.print_debug('API func: %s' % api_func)
@@ -1163,6 +1185,7 @@ class GenericCLI(GCLI):
             params['_api'] = api
             params['_timeout'] = timeout
             params['_debug'] = debug
+            params['_func'] = func
             code, result = api_func(params)
         if return_result:
             return code, result
@@ -1170,34 +1193,60 @@ class GenericCLI(GCLI):
         if code != apiclient.result_ok:
             if debug and self.remote_api_enabled:
                 self.print_debug('API result code: %u' % code)
-            if 'error' not in result:
-                self.print_err('Error: ' +
-                               default_errors.get(code, 'Operation failed'))
-            else:
-                self.print_failed_result(result)
+            if code < 100:
+                if 'error' not in result:
+                    self.print_err('Error: ' +
+                                   default_errors.get(code, 'Operation failed'))
+                else:
+                    self.print_failed_result(result)
             if code == apiclient.result_func_unknown and not debug:
                 self.ap.print_help()
+            if code > 100: code -= 100
             return code
         else:
-            if c.get('json') or a._json or api_func in self.always_json:
+            if a._output_file and code == apiclient.result_ok:
+                try:
+                    self.write_result(result, a._output_file)
+                except Exception as e:
+                    self.print_err(e)
+                    return 9
+            elif c.get('json') or a._json or api_func in self.always_json:
                 self.print_json(result)
             else:
                 return self.process_result(result, code, api_func, itype, a)
         return 0
 
+    def write_result(self, obj, out_file):
+        if not isinstance(obj, dict) or \
+                ('content_type' not in obj and 'data' not in obj):
+            open(out_file, 'w').write(self.format_json(obj))
+        else:
+            data = obj['data']
+            if obj['content_type'] in ['image/svg+xml', 'text/plain']:
+                if isinstance(out_file, str):
+                    open(out_file, 'w').write(data)
+                else:
+                    out_file.write(data)
+            else:
+                import base64
+                data = base64.b64decode(data)
+                if isinstance(out_file, str):
+                    open(out_file, 'wb').write(data)
+                else:
+                    out_file.buffer.write(data)
+
     def process_result(self, result, code, api_func, itype, a):
-        if api_func == 'file_get' and result == apiclient.result_ok:
-            try:
-                open(a._fname, 'w').write(result['data'])
-                print('OK')
-            except:
-                self.print_err('FAILED')
-                self.print_err('Unable to write to local file')
-                return 95
         if code != apiclient.result_ok:
             self.print_failed_result(result)
-        self.fancy_print_result(
-            result, api_func, itype, print_ok=code == apiclient.result_ok)
+        if isinstance(result, dict) and 'content_type' in result:
+            if sys.stdout.isatty():
+                self.print_err('File received, output file must be specified')
+                return apiclient.result_invalid_params
+            else:
+                self.write_result(result, sys.stdout)
+        else:
+            self.fancy_print_result(
+                result, api_func, itype, print_ok=code == apiclient.result_ok)
         return code
 
     def print_tdf(self, result_in, time_field):
@@ -1211,7 +1260,10 @@ class GenericCLI(GCLI):
             r = {}
             for k in result.keys():
                 if k != time_field:
-                    r[k] = result[k][i]
+                    try:
+                        r[k] = result[k][i]
+                    except:
+                        r[k] = ''
                 else:
                     from datetime import datetime
                     r[k] = datetime.fromtimestamp(result[k][i]).isoformat()
@@ -1254,6 +1306,18 @@ class ControllerCLI(object):
         self.exec_control_script('restart')
         return self.local_func_result_ok
 
+    def launch_controller(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        snl = '' if params.get('show_notifier_logs') else 'EVA_CORE_SNLSO=1 '
+        raw = '' if self.can_colorize() else 'EVA_CORE_RAW_STDOUT=1 '
+        env = '' if not snl and not raw else 'env '
+        os.system('{}{}{}{}/{}-control launch{}'.format(
+            env, snl, raw, self.dir_sbin, self._management_controller_id,
+            ' debug' if params.get('_debug') else ''))
+        return self.local_func_result_ok
+
     def status_controller(self, params):
         if self.apiuri:
             self.print_local_only()
@@ -1268,16 +1332,14 @@ class ControllerCLI(object):
         return 0, result
 
     def exec_control_script(self, command, collect_output=False):
-        script = self._management_controller_id + '-control'
-        cmd = '{}/{} {}'.format(self.dir_sbin, script, command)
+        cmd = '{}/eva-control {} {}'.format(self.dir_sbin, command,
+                                            self._management_controller_id)
         if collect_output:
             with os.popen(cmd) as p:
                 result = p.readlines()
             return result
         else:
             os.system(cmd)
-            import time
-            time.sleep(1)
 
     def prepare_controller_status_dict(self, data):
         result = {}
@@ -1297,31 +1359,124 @@ class ControllerCLI(object):
             'stop', help='Stop controller server')
         ap_restart = sp_controller.add_parser(
             'restart', help='Restart controller server')
-        ap_restart = sp_controller.add_parser(
-            'reload', help='Reload controller server')
+        if self.remote_api_enabled:
+            ap_reload = sp_controller.add_parser(
+                'reload', help='Reload controller server')
         ap_status = sp_controller.add_parser(
             'status', help='Status of the controller server')
+        ap_launch = sp_controller.add_parser(
+            'launch', help='Launch controller server in foreground')
+        ap_launch.add_argument(
+            '-n',
+            '--show-notifier-logs',
+            help='Show notifier event logs',
+            action='store_true')
 
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
+
+    def _append_edit_server_config(self, parser):
+        sp_edit_server_config = parser.add_parser(
+            'server-config', help='Edit server configuration')
+
+    def edit_server_config(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        editor = os.environ.get('EDITOR', 'vi')
+        code = os.system('{} {}/{}.ini'.format(editor, self.dir_etc,
+                                               self._management_controller_id))
+        return self.local_func_result_ok if \
+                not code else self.local_func_result_failed
 
     def enable_controller_management_functions(self, controller_id):
         if self.apiuri:
             return
         self.dir_sbin = os.path.realpath(
             os.path.dirname(os.path.realpath(__file__)) + '/../../../sbin')
+        self.dir_etc = os.path.realpath(
+            os.path.dirname(os.path.realpath(__file__)) + '/../../../etc')
         self.add_manager_control_functions()
         if controller_id:
             self._management_controller_id = controller_id
-        funcs = {
+        self.append_api_functions({
             'server:start': self.start_controller,
             'server:stop': self.stop_controller,
             'server:restart': self.restart_controller,
             'server:status': self.status_controller,
-            'server:reload': 'shutdown_core'
-        }
-        self.append_api_functions(funcs)
+            'server:reload': 'shutdown_core',
+            'server:launch': self.launch_controller,
+            'edit:server-config': self.edit_server_config
+        })
 
     @staticmethod
     def bool2yn(b):
         return 'Y' if b else 'N'
+
+
+class LECLI:
+
+    class ComplPVT(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            import glob
+            result = []
+            files = glob.glob(
+                '{}/pvt/**/*'.format(dir_eva), recursive=True) + glob.glob(
+                    '{}/pvt/.**/*'.format(dir_eva), recursive=True)
+            for f in files:
+                if os.path.isfile(f):
+                    result.append(f.split('/', dir_eva.count('/') + 2)[-1])
+            return result
+
+    class ComplUI(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            import glob
+            result = []
+            exts = [
+                'json', 'yml', 'yaml', 'js', 'html', 'js', 'j2', 'css', 'txt',
+                'htm'
+            ]
+            hidden_dirs = ['apps', 'lib']
+            files = glob.glob(
+                '{}/ui/**/*'.format(dir_eva), recursive=True) + glob.glob(
+                    '{}/ui/.**/*'.format(dir_eva), recursive=True)
+            for f in files:
+                if os.path.isfile(f):
+                    fname = f.rsplit('/', 1)[-1]
+                    d = f.split('/', 5)[4]
+                    if fname.find('.') != -1 and fname.rsplit(
+                            '.', 1)[-1] in exts and not (
+                                d in hidden_dirs and
+                                os.path.isdir('{}/ui/{}'.format(dir_eva, d))):
+                        result.append(f.split('/', dir_eva.count('/') + 2)[-1])
+            return result
+
+    def _append_edit_pvt_and_ui(self, parser):
+        ap_edit_pvt = parser.add_parser('pvt', help='Edit PVT files')
+        ap_edit_pvt.add_argument(
+            'f', help='File to edit',
+            metavar='FILE').completer = self.ComplPVT(self)
+
+        ap_edit_pvt = parser.add_parser('ui', help='Edit UI files')
+        ap_edit_pvt.add_argument(
+            'f', help='File to edit',
+            metavar='FILE').completer = self.ComplUI(self)
+
+    def edit(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        editor = os.environ.get('EDITOR', 'vi')
+        code = os.system('{} {}/{}/{}'.format(editor, dir_eva, params['_func'],
+                                              params['f']))
+        return self.local_func_result_ok if \
+                not code else self.local_func_result_failed
+
+    def enable_le_functions(self):
+        if not self.apiuri:
+            self.append_api_functions({
+                'edit:pvt': self.edit,
+                'edit:ui': self.edit,
+            })

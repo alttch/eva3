@@ -6,10 +6,10 @@ Special API methods **login** and **logout** (present in all EVA ICS APIs,
 server-generated API token instead of API key.
 
 To enable tokens, set parameter **session_timeout** greater than zero in
-*[webapi]* section of controller configuration (enabled on :doc:`SFA</sfa/sfa>`
+*[webapi]* section of controller configuration (enabled in :doc:`SFA</sfa/sfa>`
 by default).
 
-Also, API session tokens are required by :doc:`/sfa/sfa_framework`, which uses
+Also, API session tokens are required by :ref:`js_framework`, which uses
 them to handle interface sessions.
 
 Usage
@@ -21,8 +21,8 @@ earlier.
 
 :doc:`/sfa/sfa_templates` and :doc:`/sfa/sfa_pvt` methods additionally accept
 authentication tokens set in **auth** cookie. After successful login,
-:doc:`/sfa/sfa_framework` automatically set this cookie for URI paths */ui*,
-*/pvt* and */rpvt*.
+:ref:`js_framework` automatically set this cookie for URI paths */ui*, */pvt*
+and */rpvt*.
 
 Expiration
 ==========

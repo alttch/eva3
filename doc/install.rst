@@ -9,12 +9,18 @@ almost ready to use.
 
     Each EVA ICS installation (**node**) can run multiple components. Despite
     they share node resources, they still act as independent processes and
-    require :ref:`MQTT server<mqtt_>` for inter-connection.
+    require inter-connection set up.
 
 .. contents::
 
 System Requirements
 ===================
+
+.. important::
+
+    Before installation, set the proper host name. It will be used to
+    identify node controllers. Changing host name later will require manually
+    removing/appending all static links between EVA ICS controllers.
 
 * Python version 3 (3.4+)
 
@@ -33,8 +39,10 @@ System Requirements
 
 * Install system package *libow-dev* to let EVA ICS install owfs module.
 
-* To sync :doc:`item</items>` status between the components in real time -
-  :ref:`MQTT<mqtt_>`-server (e.g. `mosquitto <http://mosquitto.org/>`_)
+* To sync :doc:`item</items>` status between the controllers in different
+  networks - :ref:`MQTT<mqtt_>`-server (e.g. `mosquitto
+  <http://mosquitto.org/>`_) or to communicate with other equipment and 3rd
+  party software.
 
 .. warning::
 
@@ -56,9 +64,55 @@ Optional modules (can be disabled in :ref:`venv<install_venv>` configuration):
 * **pysnmp** required for SNMP client/server functions
 * **pillow** required for :doc:`SFA PVT</sfa/sfa_pvt>` image processing
 
+Using installer
+===============
 
-Initial setup
-=============
+Supported Linux distributions:
+
+ * Debian/Ubuntu/Raspbian
+ * Fedora
+
+Automatic and unattended
+------------------------
+
+Install required system packages, setup EVA ICS components:
+
+.. code-block:: bash
+
+    sudo -s
+    curl geteva.cc | sh /dev/stdin -a
+
+Customized
+----------
+
+Customize API keys:
+
+.. code-block:: bash
+
+    sudo -s
+    curl geteva.cc | env MASTERKEY=123 DEFAULTKEY=qwerty sh /dev/stdin -a
+
+More options, interactive setup:
+
+.. code-block:: bash
+
+    sudo -s
+    curl geteva.cc -o install.sh
+    sh install.sh --help
+
+E.g. install required system packages, setup :doc:`/uc/uc` only, use external
+MQTT server and predefined API keys:
+
+.. code-block:: bash
+
+    sudo -s
+    curl geteva.cc | \
+        env MASTERKEY=mykey DEFAULTKEY=mydefaultkey sh /dev/stdin \
+            --autostart --logrotate --bash-completion \
+            -- --auto -p uc --mqtt eva:password@192.168.1.100 --mqtt-announce --mqtt-discovery
+
+Manual installation
+===================
 
 .. note::
 
@@ -78,6 +132,17 @@ Ubuntu):
 
 Configuring MQTT broker
 -----------------------
+
+MQTT broker is used when EVA ICS controllers are located in different networks
+and can not exchange data with P2P connections.
+
+.. note::
+
+    Starting from EVA ICS 3.2.3, MQTT broker for inter-connection of
+    controllers which run on a single host/network is no longer required.
+
+If EVA ICS node is already set up without MQTT configuration, you can add it
+later with *easy-setup* or manually, using *eva ns* command.
 
 Installing local MQTT server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -209,6 +274,10 @@ To solve this:
       *apt-get install python3-pandas python3-cryptography* instead). To let
       venv use system package, *SYSTEM_SITE_PACKAGES=1* should also be present.
 
+    * **EXTRA** extra modules to install, e.g. required by :ref:`PHIs<phi>`,
+      used by :doc:`logic macros</lm/macros>` or :doc:`macro
+      extensions</lm/ext>` etc.
+
     * **PIP_EXTRA_OPTIONS** specify extra options for *pip3*, e.g. *-v* for
       verbose installation.
 
@@ -263,7 +332,7 @@ Updating
 .. warning::
 
     Before updating from the previous version, read `update
-    manifest <https://github.com/alttch/eva3/blob/3.2.1/UPDATE.rst>`_.
+    manifest <https://github.com/alttch/eva3/blob/3.2.3/UPDATE.rst>`_.
 
 Using EVA Shell
 ---------------
@@ -524,14 +593,10 @@ Then, front-end config (e.g. for NGINX) should look like:
         }
 
         location /ws {
-            auth_basic $eva_authentication;
-            auth_basic_user_file /opt/eva/etc/htpasswd;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection "upgrade";
-            proxy_buffers 16 16k;
-            proxy_buffer_size 16k;
-            proxy_busy_buffers_size 240k;
+            proxy_buffering off;
             proxy_pass http://eva-sfa;
             proxy_set_header X-Host $host;
             proxy_set_header Host $host;
@@ -542,7 +607,7 @@ Then, front-end config (e.g. for NGINX) should look like:
         }
     }
 
-With such setup, :doc:`/sfa/sfa_framework`-based interface doesn't perform any
-authentication, *eva_sfa_start()* function is called as soon as UI is loaded.
+With such setup, :ref:`js_framework`-based interface doesn't perform any
+authentication, *$eva.start()* function is called as soon as UI is loaded.
 API method *login* called by framework function will automatically log in user
 using basic authentication credentials provided to front-end server.

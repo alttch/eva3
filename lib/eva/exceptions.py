@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.1"
+__version__ = "3.2.4"
 
 import logging
 
@@ -51,6 +51,13 @@ class AccessDenied(GenericException):
         return msg if msg else 'Access to resource is denied'
 
 
+class MethodNotImplemented(GenericException):
+
+    def __str__(self):
+        msg = super().__str__()
+        return msg if msg else 'Method not implemented'
+
+
 def ecall(eresult):
     code, result = eresult
     import eva.client.apiclient as a
@@ -72,6 +79,8 @@ def ecall(eresult):
         raise ResourceBusy(err)
     elif code == a.result_invalid_params:
         raise InvalidParameter(err)
+    elif code == a.result_not_implemented:
+        raise MethodNotImplemented(err)
     elif code == a.result_forbidden:
         raise AccessDenied(err)
     else:
