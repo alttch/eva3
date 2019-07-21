@@ -107,6 +107,7 @@ case $CMD in
     trap on_exit exit
     check_installed
     [ ! $DOMAIN ] && usage
+    echo "Joining ${DOMAIN}.${EVA_CLOUD}"
     grep -E "^${DOMAIN}$" etc/iote.domains > /dev/null 2>&1
     if [ $? -eq 0 ]; then
       echo "Node already joined"
@@ -124,8 +125,12 @@ case $CMD in
           ;;
       esac
     fi
-    if [ ! $CA_CERTS ] || [ ! -f $CA_CERTS ]; then
+    if [ ! $CA_CERTS ]; then
       echo "Unable to detect ca-certs bundle. Please specify it manually"
+      exit 2
+    fi
+    if [ ! -f ${CA_CERTS} ]; then
+      echo "Unable to find ca-certs bundle ${CA_CERTS}"
       exit 2
     fi
     if [ ! $KEY ]; then
@@ -151,6 +156,7 @@ case $CMD in
     trap on_exit exit
     check_installed
     [ ! $DOMAIN ] && usage
+    echo "Leaving ${DOMAIN}.${EVA_CLOUD}"
     [ -f etc/uc.ini ] && test_controller uc
     [ -f etc/lm.ini ] && test_controller lm
     for c in "uc lm"; do
