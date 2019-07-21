@@ -7,9 +7,14 @@ CMD=$1
 DOMAIN=$2
 KEY=
 CA_CERTS=
+MQTT_PORT=8883
+MQTT_USER=eva
+
+[ ! $EVA_CLOUD ] && EVA_CLOUD=c.iote.cloud
+[ ! $EVA_CLOUD_ID ] && EVA_CLOUD_ID=iote
 
 function usage {
-    echo "Usage $0 <join|quit> <domain> [-a key] [-c ca-certs]"
+    echo "Usage $0 <join|leave> <domain> [-a key] [-c ca-certs]"
     exit 99
 }
 
@@ -35,8 +40,45 @@ function on_exit {
   fi
 }
 
+function check_mqtt {
+  ./sbin/check-mqtt --cafile ${CA_CERTS} \
+    ${MQTT_USER}:${KEY}@${DOMAIN}.${EVA_CLOUD}:${MQTT_PORT}/ > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "MQTT check failed"
+    return 1
+  fi
+}
+
 function create_notifier {
-  local T=$1
+  N="${EVA_CLOUD_ID}.${DOMAIN}"
+  BATCH="create ${N} mqtt:${MQTT_USER}:${KEY}@${DOMAIN}.${EVA_CLOUD}:${MQTT_PORT} -y"
+  BATCH="$BATCH;set ${N} ca_certs ${CA_CERTS}"
+  BATCH="$BATCH;subscribe state ${N} -p '#' -g '#'"
+  BATCH="$BATCH;subscribe log ${N}"
+  BATCH="$BATCH;set ${N} api_enabled 1"
+  BATCH="$BATCH;set ${N} announce_interval 30"
+  BATCH="$BATCH;test ${N}"
+  echo $BATCH | ./bin/$1-notifier -R --exec-batch=stdin
+  if [ $? -ne 0 ]; then
+    destroy_notifier $1 > /dev/null 2>&1
+    return 1
+  fi
+}
+
+function destroy_notifier {
+  ./bin/$1-notifier destroy ${EVA_CLOUD_ID}.${DOMAIN} || return 1
+}
+
+function destroy_apikey {
+  ./sbin/eva-tinyapi -C $1 destroy_key i=${EVA_CLOUD_ID}.${DOMAIN} || return 1
+}
+
+function create_apikey {
+  N="${EVA_CLOUD_ID}.${DOMAIN}"
+  ./sbin/eva-tinyapi -C $1 create_key i=$N || return 1
+  ./sbin/eva-tinyapi -C $1 set_key_prop i=$N p=key v=${KEY} || return 1
+  ./sbin/eva-tinyapi -C $1 set_key_prop i=$N p=groups v='#' || return 1
+  ./sbin/eva-tinyapi -C $1 set_key_prop i=$N p=hosts_allow v='0.0.0.0/0' || return 1
 }
 
 shift
@@ -93,13 +135,14 @@ case $CMD in
     fi
     [ -f etc/uc.ini ] && test_controller uc
     [ -f etc/lm.ini ] && test_controller lm
+    check_mqtt || exit 7
     for c in "uc lm"; do
       if [ -f etc/uc.ini ]; then
         destroy_notifier $c > /dev/null 2>&1
         create_notifier $c || exit 3
         ./sbin/eva-control restart $c || exit 3
         destroy_apikey $c > /dev/null 2>&1
-        create_apikey $c || exit 3
+        create_apikey $c > /dev/null || exit 3
       fi
     done
     echo $DOMAIN >> etc/iote.domains
