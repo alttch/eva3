@@ -21,6 +21,13 @@ function test_controller {
   fi
 }
 
+function check_installed {
+  if [ ! -f etc/uc.ini ] && [ ! -f etc/lm.ini ]; then
+    echo "No UC or LM PLC installed on this node"
+    exit 6
+  fi
+}
+
 function on_exit {
   local err=$?
   if [ $err -ne 0 ]; then
@@ -56,6 +63,7 @@ done
 case $CMD in
   join)
     trap on_exit exit
+    check_installed
     [ ! $DOMAIN ] && usage
     grep -E "^${DOMAIN}$" etc/iote.domains > /dev/null 2>&1
     if [ $? -eq 0 ]; then
@@ -98,6 +106,7 @@ case $CMD in
     ;;
   leave)
     trap on_exit exit
+    check_installed
     [ ! $DOMAIN ] && usage
     [ -f etc/uc.ini ] && test_controller uc
     [ -f etc/lm.ini ] && test_controller lm
@@ -108,6 +117,8 @@ case $CMD in
         destroy_apikey $c
       fi
     done
+    grep -vE "^${DOMAIN}$" etc/iote.domains > etc/iote.domains.tmp
+    mv -f etc/iote.domains.tmp etc/iote.domains
     ;;
   get)
     [ -f etc/iote.domains ] && cat etc/iote.domains
