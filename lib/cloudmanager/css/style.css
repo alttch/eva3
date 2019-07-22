@@ -32,6 +32,129 @@ body {
   padding: 0;
 }
 
+/********login window***********/
+.eva_ui_dialog_window_holder {
+  display: none;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1001;
+}
+.eva_ui_dialog_window {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+.eva_ui_dialog_window #eva_ui_login_form {
+  display: block;
+  width: 100%;
+  max-width: 370px;
+  margin: auto;
+  padding: 30px 20px;
+  border: 4px solid #fff;
+  border-radius: 3px;
+  background: rgba(230, 230, 230, 0.5);
+  background: linear-gradient(0.222turn, rgb(230, 230, 230) 0%, rgba(230, 230, 230, 0.5) 50%, rgba(230, 230, 230, 0.5) 100%)
+}
+#eva_ui_login_form .tab-content {
+  width: 100%;
+  margin-top: 20px;
+}
+#eva_ui_login_form .list-group-item {
+  background: transparent;
+}
+#eva_ui_login_form > div {
+  max-width: 224px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.eva_ui_error_message {
+  display: none;
+  position: absolute;
+  font: 14px Arial;
+  color: #c1272d;
+}
+.eva_ui_input_form {
+  margin: 20px 0 0;
+}
+.eva_ui_input_form input {
+  height: 37px;
+  margin-bottom: 10px;
+  font: 14px Arial;
+  color: #4d4d4d;
+  border-radius: 2px;
+}
+.eva_ui_input_form input:focus {
+  box-shadow: none;
+}
+.eva_ui_input_form input.error_key {
+  border-color: #c1272d;
+  border-width: 2px;
+}
+#eva_ui_login_form label {
+  font: 14px Arial;
+  color: #4d4d4d;
+}
+.eva_ui_custom_checkbox {
+  margin-bottom: 8px;
+}
+.eva_ui_custom_checkbox input[type=checkbox] {
+  opacity: 0;
+  width: 16px;
+  height: 16px;
+}
+.eva_ui_custom_checkbox input[type=checkbox] + label {
+  position: absolute;
+  margin: 2px 0 0;
+  padding-left: 30px;
+}
+.eva_ui_custom_checkbox input[type=checkbox] + label::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #000;
+  border-radius: 2px;
+  background: #fff;
+}
+.eva_ui_custom_checkbox input[type=checkbox]:checked + label::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 4px;
+  width: 10px;
+  height: 6px;
+  border: 2px solid #4d4d4d;
+  transform: rotate(-45deg);
+  border-radius: 0;
+  border-top: none;
+  border-right: none;
+}
+.eva_ui_dialog_window .btn {
+  width: 100%;
+  font: 18px Arial;
+  font-weight: bold;
+  border: none;
+  color: #000;
+  background-color: #009bac;
+  background-image: linear-gradient(100deg, #ffb715, #fb9333);
+  border-radius: 2px;
+  box-shadow: none;
+}
+.eva_ui_dialog_window .btn:hover, .btn:focus {
+  color: #000;
+  background-image: linear-gradient(100deg, #f79200, #fa5f00);
+  box-shadow: none;
+}
+.eva_ui_dialog_window .btn:active {
+  background-image: linear-gradient(100deg, #f76100, #d04600);
+  box-shadow: none;
+}
+
 /**********header**************/
 .header {
   display: flex;
@@ -279,7 +402,8 @@ a.controller_link {
   outline: none;
 
 }
-.elements_block .list-group {
+.elements_block .list-group,
+#eva_ui_login_form .list-group {
   width: 100%;
   flex-direction: row;
   border-bottom: 1px solid #666;
@@ -291,7 +415,8 @@ a.controller_link {
 .elements_block .tab-content .tab-pane{
   border-bottom: 1px solid #999;
 }
-.elements_block .list-group-item {
+.elements_block .list-group-item,
+#eva_ui_login_form .list-group-item {
   width: auto;
   margin-bottom: 0;
   padding-right: 10px;
@@ -301,7 +426,8 @@ a.controller_link {
   border: none;
   border-radius: 0;
 }
-.elements_block .list-group-item.active {
+.elements_block .list-group-item.active,
+#eva_ui_login_form .list-group-item.active {
   color: #0071bc;
   background: none;
   border-bottom: 3px solid #0071bc;
