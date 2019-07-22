@@ -372,7 +372,11 @@ class PHI(object):
             self._need_update.wait()
             self._need_update.clear()
             if self._update_processor_active:
-                self._perform_update()
+                try:
+                    self._perform_update()
+                except:
+                    self.log_error('scheduled update error')
+                    eva.core.log_traceback()
         logging.debug('%s update processor stopped' % self.oid)
 
     def _perform_update(self):
