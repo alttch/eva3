@@ -1,0 +1,569 @@
+#compdef eva
+
+_eva_system() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" poweroff reboot
+  else
+    _files
+  fi
+}
+
+_eva_sfa_server() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" launch reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_eva_sfa_cloud() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" deploy undeploy
+  else
+    _files
+  fi
+}
+
+_eva_sfa_controller() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" append disable enable list ma-test props reload remove set test
+  else
+    _files
+  fi
+}
+
+_eva_sfa_notify() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" reload restart
+  else
+    _files
+  fi
+}
+
+_eva_sfa_edit() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" pvt server-config ui
+  else
+    _files
+  fi
+}
+
+_eva_sfa_cycle() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" list
+  else
+    _files
+  fi
+}
+
+_eva_sfa_macro() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" list result run
+  else
+    _files
+  fi
+}
+
+_eva_sfa_action() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" clear disable enable exec kill result terminate toggle
+  else
+    _files
+  fi
+}
+
+_eva_sfa_user() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy key list password
+  else
+    _files
+  fi
+}
+
+_eva_sfa_key() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy list props regenerate set
+  else
+    _files
+  fi
+}
+
+_eva_sfa_file() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create get mod unlink upload
+  else
+    _files
+  fi
+}
+
+_eva_sfa_cvar() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" all delete get set
+  else
+    _files
+  fi
+}
+
+_eva_sfa_log() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" critical debug error get info rotate warning
+  else
+    _files
+  fi
+}
+
+_eva_sfa() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" action clear cloud cmd controller cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state test toggle unlock user
+  else
+    case "${words[3]}" in
+      action|cloud|controller|cvar|cycle|edit|file|key|log|macro|notify|server|user)
+        _eva_sfa_${words[3]}
+        ;;
+      *)
+        _files
+        ;;
+    esac
+  fi
+}
+
+_eva_lm_server() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" launch reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_eva_lm_controller() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" append disable enable get list props reload remove set test
+  else
+    _files
+  fi
+}
+
+_eva_lm_ext() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" get list load modhelp modinfo mods set unload
+  else
+    _files
+  fi
+}
+
+_eva_lm_job() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy disable enable get list props set
+  else
+    _files
+  fi
+}
+
+_eva_lm_rule() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy disable enable get list props set
+  else
+    _files
+  fi
+}
+
+_eva_lm_edit() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" macro server-config
+  else
+    _files
+  fi
+}
+
+_eva_lm_cycle() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy get list props reset set start stop
+  else
+    _files
+  fi
+}
+
+_eva_lm_macro() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy edit get list props result run set
+  else
+    _files
+  fi
+}
+
+_eva_lm_config() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" get props save set
+  else
+    _files
+  fi
+}
+
+_eva_lm_user() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy key list password
+  else
+    _files
+  fi
+}
+
+_eva_lm_key() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy list props regenerate set
+  else
+    _files
+  fi
+}
+
+_eva_lm_file() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create get mod unlink upload
+  else
+    _files
+  fi
+}
+
+_eva_lm_cvar() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" all delete get set
+  else
+    _files
+  fi
+}
+
+_eva_lm_log() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" critical debug error get info rotate warning
+  else
+    _files
+  fi
+}
+
+_eva_lm() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" clear cmd config controller create cvar cycle debug destroy dump edit ext file history job key list lock log macro remote reset rule save server set state test toggle unlock user
+  else
+    case "${words[3]}" in
+      config|controller|cvar|cycle|edit|ext|file|job|key|log|macro|rule|server|user)
+        _eva_lm_${words[3]}
+        ;;
+      *)
+        _files
+        ;;
+    esac
+  fi
+}
+
+_eva_uc_server() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" launch reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_eva_uc_driver() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" assign get list load set unassign unload
+  else
+    _files
+  fi
+}
+
+_eva_uc_lpi() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" modhelp modinfo mods
+  else
+    _files
+  fi
+}
+
+_eva_uc_phi() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" discover download exec get list load modhelp modinfo mods ports set test unlink unload
+  else
+    _files
+  fi
+}
+
+_eva_uc_owfs() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy list scan test
+  else
+    _files
+  fi
+}
+
+_eva_uc_modbus-slave() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" get
+  else
+    _files
+  fi
+}
+
+_eva_uc_modbus() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy list read test write
+  else
+    _files
+  fi
+}
+
+_eva_uc_device() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" deploy templates undeploy update
+  else
+    _files
+  fi
+}
+
+_eva_uc_maintenance() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" start stop
+  else
+    _files
+  fi
+}
+
+_eva_uc_clone() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" group item
+  else
+    _files
+  fi
+}
+
+_eva_uc_config() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" get props save set
+  else
+    _files
+  fi
+}
+
+_eva_uc_edit() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" action server-config template update
+  else
+    _files
+  fi
+}
+
+_eva_uc_action() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" clear disable enable exec kill result terminate toggle
+  else
+    _files
+  fi
+}
+
+_eva_uc_user() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy key list password
+  else
+    _files
+  fi
+}
+
+_eva_uc_key() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create destroy list props regenerate set
+  else
+    _files
+  fi
+}
+
+_eva_uc_file() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" create get mod unlink upload
+  else
+    _files
+  fi
+}
+
+_eva_uc_cvar() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" all delete get set
+  else
+    _files
+  fi
+}
+
+_eva_uc_log() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 3 ]]; then
+    compadd "$@" critical debug error get info rotate warning
+  else
+    _files
+  fi
+}
+
+_eva_uc() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user
+  else
+    case "${words[3]}" in
+      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+        _eva_uc_${words[3]}
+        ;;
+      *)
+        _files
+        ;;
+    esac
+  fi
+}
+
+_eva_masterkey() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" set
+  else
+    _files
+  fi
+}
+
+_eva_edit() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" crontab
+  else
+    _files
+  fi
+}
+
+_eva_backup() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" list restore save unlink
+  else
+    _files
+  fi
+}
+
+_eva_server() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" disable enable restart start status stop
+  else
+    _files
+  fi
+}
+
+_eva() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 1 ]]; then
+    compadd "$@" backup edit lm masterkey ns save server sfa system uc update version
+  else
+    case "${words[2]}" in
+      backup|edit|lm|masterkey|server|sfa|system|uc)
+        _eva_${words[2]}
+        ;;
+      *)
+        _files
+        ;;
+    esac
+  fi
+}
