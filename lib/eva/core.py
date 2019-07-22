@@ -65,6 +65,7 @@ config = SimpleNamespace(
     debug=False,
     system_name=platform.node(),
     controller_name=None,
+    default_cloud_key='default',
     development=False,
     show_traceback=False,
     stop_on_critical='always',
@@ -691,6 +692,11 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             pass
         logging.debug(
             'server.mqtt_update_default = %s' % config.mqtt_update_default)
+        try:
+            config.default_cloud_key = cfg.get('cloud', 'default_key')
+        except:
+            pass
+        logging.debug('cloud.default_key = %s' % config.default_cloud_key)
         return cfg
     except:
         print('Can not read primary config %s' % fname_full)

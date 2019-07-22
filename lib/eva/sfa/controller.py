@@ -217,11 +217,12 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
                 return True
         finally:
             controller_lock.release()
-        key = eva.apikey.key_by_id('default')
+        key = eva.apikey.key_by_id(eva.core.config.default_cloud_key)
         if not key:
             logging.debug('Controller {} discovered, (discovered from {}), '.
                           format(controller_id, notifier_id) +
-                          'but no API key with ID=default')
+                          'but no API key with ID={}'.format(
+                              eva.core.config.default_cloud_key))
             return False
         logging.info(
             'Controller {} discovered, appending (discovered from {})'.format(
@@ -234,7 +235,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
             return False
         return _append_controller(
             'mqtt:{}:{}'.format(notifier_id, controller_id),
-            key="$default",
+            key='${}'.format(eva.core.config.default_cloud_key),
             mqtt_update=notifier_id,
             static=False)
     except:
