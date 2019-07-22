@@ -641,6 +641,9 @@ def load_keys_from_db():
         eva.core.report_userdb_error(raise_exeption=False)
     return _keys, _keys_by_id
 
+@eva.core.stop
+def stop():
+    save()
 
 @eva.core.save
 def save():
