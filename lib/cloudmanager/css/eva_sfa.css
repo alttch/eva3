@@ -45,7 +45,7 @@
 
 .eva_sfa_popup_window_big {
   position: relative;
-  width: 500px;
+  width: 480px;
   min-height: 275px;
   margin: 0 auto;
   padding-bottom: 80px;
@@ -82,7 +82,7 @@
 .eva_sfa_popup_content {
   display: flex;
   min-height: 70px;
-  margin: 20px;
+  margin: 20px 30px;
   text-align: left;
   font: 14px 'Roboto Regular';
   color: #4d4d4d;
@@ -98,11 +98,12 @@
   width: 100%;
 }
 .eva_sfa_popup_content > form.rule_dialog {
-  margin: 0 20px;
+  margin: 0;
   max-width: 100%;
 }
 .eva_sfa_popup_content > form.rule_dialog > .form-group {
   width: 100%;
+  margin-bottom: 10px;
 }
 .eva_sfa_popup_content > form.rule_dialog > .form-group:last-child {
   margin-bottom: 0;
@@ -113,6 +114,9 @@
 }
 .eva_sfa_popup_content label {
   margin-bottom: 3px;
+}
+#l_rule_chillout {
+  margin-top: 10px;
 }
 
 .eva_sfa_popup_content .form-control {
@@ -128,6 +132,12 @@
   box-shadow: none;
   margin-top: -1px;
   margin-bottom: -1px;
+}
+
+.form_delimiter {
+  width: 100%;
+  margin: 10px 15px 20px;
+  border-bottom: 1px solid #ccc;
 }
 
 .custom_chbox_holder {
@@ -299,11 +309,18 @@
 .eva_sfa_popup_btn_holder {
   position: absolute;
   bottom: 10px;
-  left: 0;
+  left: 50%;
+  transform: translate(-50%, 0);
   width: 100%;
+  max-width: 340px;
   display: flex;
-  justify-content: center;
-  padding: 20px;
+  justify-content: flex-end;
+  padding: 20px 8px;
+}
+
+.eva_sfa_popup_window_big .eva_sfa_popup_btn_holder {
+  max-width: 480px;
+  padding: 20px 33px;
 }
 
 .eva_sfa_popup_btn {
@@ -348,8 +365,8 @@
 }
 
 .eva_sfa_popup_btn_error:hover {
-  background: #d04040;
-  border-color: #d04040;
+  background: #ff8282;
+  border-color: #ff8282;
 }
 
 .eva_sfa_popup_btn_info:hover {
@@ -378,8 +395,8 @@
 }
 
 .eva_sfa_popup_btn_error:active {
-  border: 2px solid #ff5353;
-  background: #ff5353;
+  border: 2px solid #ff9e8c;
+  background: #ff9e8c;
 }
 
 .eva_sfa_popup_btn_info:active {
@@ -398,10 +415,6 @@
 }
 
 @media(max-width: 767px){
-  .eva_sfa_popup_window_big {
-    width: 100%;
-    max-width: 500px;
-  }
   .eva_sfa_popup_content {
     padding-bottom: 0;
   }
@@ -411,20 +424,30 @@
 }
 
 @media(max-width:575px) {
+  .eva_sfa_popup_window_big .eva_sfa_popup_btn_holder {
+    padding: 20px 18px;
+  }
+  .eva_sfa_popup_window_big {
+    width: 100%;
+    max-width: 440px;
+  }
+  .eva_sfa_popup_window_big .eva_sfa_popup_content{
+    margin: 20px 15px;
+  }
   .eva_sfa_popup_window {
     width: 100%;
   }
+  .form_delimiter {
+    display: none;
+  }
 }
 
-@media (max-width: 450px), (max-height: 450px){
+/*@media (max-width: 450px), (max-height: 450px){
   .eva_sfa_popup_window {
     width: 90%;
     min-height: 200px;
   }
-  .eva_sfa_popup_content > form.rule_dialog {
-    margin: 0;
-  }
-}
+}*/
 
 @media (max-height: 415px){
   .eva_sfa_popup_window {

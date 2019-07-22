@@ -574,6 +574,13 @@ a.controller_link {
   margin-bottom: 10px;
   word-break: break-word;
 }
+#mng_lvars .descr_block,
+#mng_sensors .descr_block {
+  margin-bottom: 0;
+}
+#mng_lvars .descr_block:first-child {
+  margin-bottom: 10px;
+}
 .item_name, .item_priority {
   font-family: 'TTNorms Medium';
   color: #4d4d4d; 
@@ -699,7 +706,7 @@ input.device-error:focus {
   .row-schf,
   #d_rule_cond_eq,
   #d_rule_cond_range {
-    margin-top: 1rem;
+    margin-top: 10px;
   }
 }
 
@@ -757,31 +764,41 @@ input.device-error:focus {
     margin-right: 20px;
   }
   #mng_lvars .descr_block:first-child {
+    margin-bottom: 0;
+  }
+  #mng_lvars .descr_block:first-child {
     width: 60%;
+  }
+  #mng_macros .descr_block {
+    margin-bottom: 0;
   }
   #mng_macros .descr_block:first-child {
     width: calc(100% - 230px);
   }
-  #mng_units .buttons_block,
-  #mng_macros .buttons_block,
-  #mng_rules .buttons_block {
-    margin-right: 0;
-  }
   #mng_cycles .descr_block {
     width: calc(55% - 20px);
+    margin-bottom: 0;
   }
   #mng_cycles .descr_block:first-child{
     width: 45%;
   }
   #mng_rules .descr_block {
     width: calc(100% - 230px);
+    margin-bottom: 0;
   }
   #mng_rules .descr_block:first-child {
     width: 100%;
+    margin-bottom: 10px;
   }
   #mng_units .descr_block {
     width: calc(100% - 315px);
     margin-right: 20px;
+    margin-bottom: 0;
+  }
+  #mng_units .buttons_block,
+  #mng_macros .buttons_block,
+  #mng_rules .buttons_block {
+    margin-right: 0;
   }
   
 }
@@ -873,6 +890,7 @@ input.device-error:focus {
   }
   #mng_rules .descr_block:first-child {
     width: 40%;
+    margin-bottom: 0;
   }
 
 }
