@@ -150,7 +150,9 @@ case $CMD in
         create_apikey $c > /dev/null || exit 3
       fi
     done
-    echo $DOMAIN >> etc/iote.domains
+    echo $DOMAIN $EVA_CLOUD $EVA_CLOUD_ID >> etc/iote.domains
+    echo
+    echo "Node joined ${DOMAIN}.${EVA_CLOUD}"
     ;;
   leave)
     trap on_exit exit
@@ -168,6 +170,8 @@ case $CMD in
     done
     grep -vE "^${DOMAIN}$" etc/iote.domains > etc/iote.domains.tmp
     mv -f etc/iote.domains.tmp etc/iote.domains
+    echo
+    echo "Node left ${DOMAIN}.${EVA_CLOUD}"
     ;;
   get)
     [ -f etc/iote.domains ] && cat etc/iote.domains
