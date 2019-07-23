@@ -92,6 +92,7 @@ class ComplBackupList(ComplGeneric):
             result.append(v['name'])
         return result
 
+
 class ComplIOTE(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
@@ -101,6 +102,7 @@ class ComplIOTE(ComplGeneric):
         for v in data:
             result.append(v['account'])
         return result
+
 
 class ManagementCLI(GenericCLI):
 
@@ -1093,7 +1095,7 @@ except:
     pass
 
 cli.default_prompt = '# '
-cli.arg_sections += ['backup', 'server', 'edit', 'masterkey', 'system']
+cli.arg_sections += ['backup', 'server', 'edit', 'masterkey', 'system', 'iote']
 cli.set_api_functions(_api_functions)
 cli.add_user_defined_functions()
 cli.nodename = nodename
