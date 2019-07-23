@@ -428,7 +428,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 'set_prop', 'set_cycle_prop', 'set_macro_prop', 'set_rule_prop',
                 'set_job_prop', 'set_controller_prop', 'set_ext_prop'
         ]:
-            if params['p'] and params['p'].find('=') != -1:
+            if params.get('p') and params['p'].find('=') != -1:
                 params['p'], v = params['p'].split('=', 1)
                 if isinstance(params['v'], list):
                     params['v'] = [v] + params['v']
