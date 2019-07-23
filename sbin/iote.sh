@@ -9,12 +9,13 @@ KEY=
 CA_CERTS=
 MQTT_PORT=8883
 MQTT_USER=eva
+FORCE=0
 
 [ ! $EVA_CLOUD ] && EVA_CLOUD=c.iote.cloud
 [ ! $EVA_CLOUD_ID ] && EVA_CLOUD_ID=iote
 
 function usage {
-    echo "Usage $0 <join|leave> <domain> [-a key] [-c ca-certs]"
+    echo "Usage $0 <join|leave> <domain> [-a key] [-c ca-certs] [-y]"
     exit 99
 }
 
@@ -24,6 +25,13 @@ function test_controller {
     echo "Controller ${1^^} test failed"
     exit 5
   fi
+}
+
+function test_node {
+  for c in uc lm sfa; do
+    CN=${c^^}
+    [ "x$(eval "echo \$${CN}_ENABLED")" != "xyes" ] && test_controller $c
+  done
 }
 
 function check_installed {
@@ -96,11 +104,16 @@ while [ $1 ]; do
       CA_CERTS=$1
       shift
       ;;
+    -y)
+      shift
+      FORCE=1
     *)
       usage
       ;;
   esac
 done
+
+source ./etc/eva_servers
 
 case $CMD in
   join)
@@ -108,10 +121,12 @@ case $CMD in
     check_installed
     [ ! $DOMAIN ] && usage
     echo "Joining ${DOMAIN}.${EVA_CLOUD}"
-    grep -E "^${DOMAIN}$" etc/iote.domains > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-      echo "Node already joined"
-      exit 4
+    if [ $FORCE -ne 1 ]; then
+      grep -E "^${DOMAIN} ${EVA_CLOUD} " etc/iote.domains > /dev/null 2>&1
+      if [ $? -eq 0 ]; then
+        echo "Node already joined"
+        exit 4
+      fi
     fi
     if [ ! $CA_CERTS ]; then
       source /etc/os-release
@@ -138,11 +153,11 @@ case $CMD in
       read -s KEY
       echo
     fi
-    [ -f etc/uc.ini ] && test_controller uc
-    [ -f etc/lm.ini ] && test_controller lm
+    test_node
     check_mqtt || exit 7
-    for c in uc lm; do
-      if [ -f etc/uc.ini ]; then
+    for c in uc lm sfa; do
+      CN=${c^^}
+      if [ "x$(eval "echo \$${CN}_ENABLED")" != "xyes" ]; then
         destroy_notifier $c > /dev/null 2>&1
         create_notifier $c || exit 3
         ./sbin/eva-control restart $c || exit 3
@@ -159,10 +174,17 @@ case $CMD in
     check_installed
     [ ! $DOMAIN ] && usage
     echo "Leaving ${DOMAIN}.${EVA_CLOUD}"
-    [ -f etc/uc.ini ] && test_controller uc
-    [ -f etc/lm.ini ] && test_controller lm
-    for c in uc lm; do
-      if [ -f etc/uc.ini ]; then
+    if [ $FORCE -ne 1 ]; then
+      grep -E "^${DOMAIN} ${EVA_CLOUD} " etc/iote.domains > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "Node not in cloud"
+        exit 4
+      fi
+    fi
+    test_node
+    for c in uc lm sfa; do
+      CN=${c^^}
+      if [ "x$(eval "echo \$${CN}_ENABLED")" != "xyes" ]; then
         destroy_notifier $c > /dev/null 2>&1
         ./sbin/eva-control restart $c || exit 3
         destroy_apikey $c > /dev/null 2>&1
