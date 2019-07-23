@@ -263,11 +263,11 @@ class MacroAPI(object):
         """
         get item state history
 
-        Args:
-            item_id: item ID, or multiple IDs (list or comma separated)
-
         To use this function, DB or TSDB notifier in LM PLC must be present.
         (notifier can share DB with SFA in read/only mode).
+
+        Args:
+            item_id: item ID, or multiple IDs (list or comma separated)
 
         Optional:
             t_start: time frame start, ISO or Unix timestamp
@@ -305,7 +305,7 @@ class MacroAPI(object):
         put debug message to log file
         
         Args:
-            m: message text
+            msg: message text
         """
         logging.debug(msg)
         return True
@@ -317,7 +317,7 @@ class MacroAPI(object):
         Additionally, print() function is alias to info()
         
         Args:
-            m: message text
+            msg: message text
         """
         logging.info(msg)
         return True
@@ -327,7 +327,7 @@ class MacroAPI(object):
         put warning message to log file
         
         Args:
-            m: message text
+            msg: message text
         """
         logging.warning(msg)
         return True
@@ -337,7 +337,7 @@ class MacroAPI(object):
         put error message to log file
         
         Args:
-            m: message text
+            msg: message text
         """
         logging.error(msg)
         return True
@@ -347,7 +347,7 @@ class MacroAPI(object):
         put critical message to log file
         
         Args:
-            m: message text
+            msg: message text
 
         Optional:
             send_event: if True, critical event to core is sent (requires
@@ -373,7 +373,7 @@ class MacroAPI(object):
         acquire lock
 
         Args:
-            l: lock id
+            lock_id: lock id
 
         Optional:
             timeout: max timeout to wait

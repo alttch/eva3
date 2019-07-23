@@ -662,10 +662,10 @@ Item functions
 
 .. _macro_api_history:
 
-history - get lvar state history
+history - get item state history
 --------------------------------
 
-
+To use this function, DB or TSDB notifier in LM PLC must be present. (notifier can share DB with SFA in read/only mode).
 
 .. code-block:: python
 
@@ -673,7 +673,7 @@ history - get lvar state history
 
 Parameters:
 
-* **lvar_id** lvar ID, or multiple IDs (list or comma separated)
+* **item_id** item ID, or multiple IDs (list or comma separated)
 
 Optionally:
 
@@ -1188,7 +1188,7 @@ Parameters:
 
 Optionally:
 
-* **value** lvar value (if npt specified, lvar is set to null)
+* **value** lvar value (if not specified, lvar is set to null)
 
 Raises:
 
@@ -2007,7 +2007,7 @@ lock - acquire lock
 
 Parameters:
 
-* **l** lock id
+* **lock_id** lock id
 
 Optionally:
 
@@ -2069,7 +2069,7 @@ debug - put debug message to log file
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 
 .. _macro_api_info:
@@ -2085,7 +2085,7 @@ Additionally, print() function is alias to info()
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 
 .. _macro_api_warning:
@@ -2101,7 +2101,7 @@ warning - put warning message to log file
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 
 .. _macro_api_error:
@@ -2117,7 +2117,7 @@ error - put error message to log file
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 
 .. _macro_api_critical:
@@ -2133,7 +2133,7 @@ critical - put critical message to log file
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 Optionally:
 
