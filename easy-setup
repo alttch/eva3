@@ -2,6 +2,8 @@
 
 [ ${debug} ] && set -o xtrace
 
+PYTHON3_MIN=4
+
 UC_ENABLED=
 LM_ENABLED=
 SFA_ENABLED=
@@ -584,6 +586,12 @@ if [ ! $SKIP_CHECK ]; then
         check_required_exec $r || e=1
     done
     [ $e -ne 0 ] && exit 1
+fi
+
+PYTHON_MINOR=`python3 --version|cut -d. -f2`
+if [ $PYTHON_MINOR -lt $PYTHON3_MIN ]; then
+  echo "Python 3.$PYTHON3_MIN is required"
+  exit 1
 fi
 
 D=`realpath $0`
