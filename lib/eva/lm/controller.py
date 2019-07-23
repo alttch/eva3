@@ -858,8 +858,9 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
             return True
         controller_lock.acquire()
         try:
-            if c_id in uc_pool.controllers:
-                if uc_pool.controllers[c_id].connected:
+            c = uc_pool.controllers.get(c_id)
+            if c:
+                if c.connected or not c.enabled:
                     logging.debug(
                         'Controller ' +
                         '{} already exists, skipped (discovered from {})'.

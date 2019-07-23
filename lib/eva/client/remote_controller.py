@@ -310,6 +310,8 @@ class RemoteController(eva.item.Item):
         return True
 
     def load_remote(self, need_type=None):
+        if not self.enabled:
+            return False
         result = self.test()
         if not result:
             if not self.static and self.pool and not self.wait_for_autoremove:
@@ -372,8 +374,9 @@ class RemoteController(eva.item.Item):
     def set_modified(self, save):
         super().set_modified(save)
         self.connected = False
-        t = threading.Thread(target=self.test)
-        t.start()
+        if self.enabled:
+            t = threading.Thread(target=self.test)
+            t.start()
 
     def get_reload_interval(self):
         return self.reload_interval
