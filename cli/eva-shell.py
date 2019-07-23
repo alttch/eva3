@@ -92,6 +92,15 @@ class ComplBackupList(ComplGeneric):
             result.append(v['name'])
         return result
 
+class ComplIOTE(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        code, data = self.cli.call('iote list')
+        result = []
+        if code: return result
+        for v in data:
+            result.append(v['account'])
+        return result
 
 class ManagementCLI(GenericCLI):
 
@@ -311,7 +320,9 @@ class ManagementCLI(GenericCLI):
         ap_get = sp_iote.add_parser('list', help='List IOTE Cloud connections')
 
         ap_leave = sp_iote.add_parser('leave', help='Leave IOTE Cloud')
-        ap_leave.add_argument('i', metavar='ACCOUNT', help='IOTE account')
+        ap_leave.add_argument(
+            'i', metavar='ACCOUNT',
+            help='IOTE account').completer = ComplIOTE(self)
         ap_leave.add_argument(
             '-y', '--force', help='Force leave', action='store_true')
 
@@ -503,12 +514,17 @@ sys.argv = {argv}
             return self.local_func_result_empty
 
     def iote_leave(self, params):
-        code = os.system(dir_sbin + '/iote.sh leave {} {}'.format(params.get('i'), '-y' if params.get('force') else ''))
-        return self.local_func_result_ok if not code else self.local_func_result_failed
+        code = os.system(dir_sbin + '/iote.sh leave {} {}'.format(
+            params.get('i'), '-y' if params.get('force') else ''))
+        return self.local_func_result_ok if \
+                not code else self.local_func_result_failed
 
     def iote_join(self, params):
-        code = os.system(dir_sbin + '/iote.sh join {} -a {} {}'.format(params.get('i'), params.get('a'), '-y' if params.get('force') else ''))
-        return self.local_func_result_ok if not code else self.local_func_result_failed
+        code = os.system(dir_sbin + '/iote.sh join {} -a {} {}'.format(
+            params.get('i'), params.get('a'), '-y'
+            if params.get('force') else ''))
+        return self.local_func_result_ok if \
+                not code else self.local_func_result_failed
 
     def start_controller(self, params):
         c = params['p']
