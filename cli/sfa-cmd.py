@@ -178,7 +178,7 @@ class SFA_CLI(GenericCLI, ControllerCLI):
 
     def prepare_run(self, api_func, params, a):
         if api_func in ['set_controller_prop']:
-            if params['p'] and params['p'].find('=') != -1 and not params['v']:
+            if params.get('p') and params['p'].find('=') != -1:
                 params['p'], params['v'] = params['p'].split('=', 1)
         if api_func == 'state_history':
             if params['c']:
