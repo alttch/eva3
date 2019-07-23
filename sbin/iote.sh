@@ -197,7 +197,7 @@ case $CMD in
     echo
     echo "Node left ${DOMAIN}.${EVA_CLOUD}"
     ;;
-  get)
+  list)
     [ -f etc/iote.domains ] && cat etc/iote.domains
     ;;
   *)

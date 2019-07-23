@@ -308,7 +308,7 @@ class ManagementCLI(GenericCLI):
         ap_join.add_argument(
             '-y', '--force', help='Force join/rejoin', action='store_true')
 
-        ap_get = sp_iote.add_parser('get', help='Get IOTE Cloud connections')
+        ap_get = sp_iote.add_parser('list', help='List IOTE Cloud connections')
 
         ap_leave = sp_iote.add_parser('leave', help='Leave IOTE Cloud')
         ap_leave.add_argument('i', metavar='ACCOUNT', help='IOTE account')
@@ -483,9 +483,11 @@ sys.argv = {argv}
         eva.client.cli.parent_shell_name = None
         os.chdir(dir_eva)
 
-    def iote_get(self, params):
-        with os.popen(dir_sbin + '/iote.sh get') as p:
-            clouds = p.readlines()
+    def iote_list(self, params):
+        if not os.path.isfile(dir_etc + '/iote.domains'):
+            return self.local_func_result_empty
+        with open(dir_etc + '/iote.domains') as f:
+            clouds = f.readlines()
         if clouds:
             result = []
             for c in clouds:
@@ -1023,7 +1025,7 @@ _api_functions = {
     'system:poweroff': cli.power_poweroff,
     'save': cli.save,
     'ns': cli.manage_ns,
-    'iote:get': cli.iote_get,
+    'iote:list': cli.iote_list,
     'iote:join': cli.iote_join,
     'iote:leave': cli.iote_leave,
     'backup:save': cli.backup_save,
