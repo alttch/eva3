@@ -143,7 +143,13 @@ def get_controller(controller_id):
 
 
 @with_item_lock
-def get_macro(macro_id):
+def get_macro(macro_id, pfm=False):
+    if pfm and macro_id and macro_id.startswith('@'):
+        f = macro_id[1:]
+        m = eva.lm.plc.pf_macros.get(f)
+        if not m:
+            m = eva.lm.plc.VFMacro(f)
+        return m
     _macro_id = oid_to_id(macro_id, 'lmacro')
     if not _macro_id: return None
     if _macro_id.find('/') > -1:
@@ -1144,7 +1150,7 @@ def exec_macro(macro,
                source=None,
                is_shutdown_func=None):
     if isinstance(macro, str):
-        m = get_macro(macro)
+        m = get_macro(macro, pfm=True)
     else:
         m = macro
     if not m: return None

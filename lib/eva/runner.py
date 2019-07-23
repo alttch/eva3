@@ -281,11 +281,16 @@ class PyThread(object):
                  env_globals=None,
                  bcode=None,
                  mfcode=None):
+        self.pfcode = None
         if item:
             if item.action_exec:
                 sfile = item.action_exec
             else:
                 sfile = item.item_id + '.py'
+            try:
+                self.pfcode = item.pfcode
+            except:
+                pass
         else:
             sfile = script
         self.script = sfile
@@ -306,11 +311,11 @@ class PyThread(object):
             eva.core.critical()
             return False
         try:
-            if self.script_file in code_cache:
-                omtime = code_cache_m[self.script_file]
+            omtime = code_cache_m.get(self.script_file)
+            if not self.pfcode:
+                mtime = os.path.getmtime(self.script_file)
             else:
-                omtime = None
-            mtime = os.path.getmtime(self.script_file)
+                mtime = 0
             try:
                 mtime_c = os.path.getmtime(self.common_file)
             except:
@@ -320,7 +325,10 @@ class PyThread(object):
             if self.mfcode and self.mfcode.build_time > mtime:
                 mtime = self.mfcode.build_time
             if not omtime or mtime > omtime:
-                raw = ''.join(open(self.script_file).readlines())
+                if self.pfcode:
+                    raw = self.pfcode
+                else:
+                    raw = ''.join(open(self.script_file).readlines())
                 try:
                     raw_c = ''.join(open(self.common_file).readlines())
                 except:

@@ -272,7 +272,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i, a, kw, w, u, p, q = parse_function_params(kwargs, 'kiaKwupq',
                                                         '.s..nsin')
-        macro = eva.lm.controller.get_macro(i)
+        macro = eva.lm.controller.get_macro(i, pfm=True)
         if not macro or not eva.apikey.check(k, macro): raise ResourceNotFound
         if a is None:
             a = []
