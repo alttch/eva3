@@ -53,10 +53,10 @@ body {
   max-width: 370px;
   margin: auto;
   padding: 30px 20px;
-  border: 4px solid #fff;
-  border-radius: 3px;
-  background: rgba(230, 230, 230, 0.5);
-  background: linear-gradient(0.222turn, rgb(230, 230, 230) 0%, rgba(230, 230, 230, 0.5) 50%, rgba(230, 230, 230, 0.5) 100%)
+  border: 2px solid #ccc;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 7px 7px 11px rgba(0, 0, 0, 0.2);
 }
 #eva_ui_login_form .tab-content {
   width: 100%;
@@ -94,8 +94,8 @@ body {
   border-width: 2px;
 }
 #eva_ui_login_form label {
-  font: 14px Arial;
-  color: #4d4d4d;
+  font: 12px 'Roboto Regular';
+  color: #808091;
 }
 .eva_ui_custom_checkbox {
   margin-bottom: 8px;
@@ -135,23 +135,21 @@ body {
   border-right: none;
 }
 .eva_ui_dialog_window .btn {
-  width: 100%;
-  font: 18px Arial;
-  font-weight: bold;
-  border: none;
-  color: #000;
-  background-color: #009bac;
-  background-image: linear-gradient(100deg, #ffb715, #fb9333);
-  border-radius: 2px;
+  margin: 10px auto 0;
+  padding: 5px 50px;
+  font: 16px 'Roboto Regular';
+  text-transform: uppercase;
+  color: #fff;
+  background-color: #6BC45F;
+  border-radius: 20px;
   box-shadow: none;
 }
 .eva_ui_dialog_window .btn:hover, .btn:focus {
-  color: #000;
-  background-image: linear-gradient(100deg, #f79200, #fa5f00);
+  background: #82d150;
   box-shadow: none;
 }
 .eva_ui_dialog_window .btn:active {
-  background-image: linear-gradient(100deg, #f76100, #d04600);
+  background: #91dd77;
   box-shadow: none;
 }
 
