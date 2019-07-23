@@ -23,8 +23,14 @@ files of the controller.
 Executing macros
 ================
 
-To execute a macro, use **macro run** command of :doc:`lm-cmd</cli>` or LM API
+To execute a macro, use **macro run** command of :doc:`eva lm</cli>` or LM API
 :ref:`run<lmapi_run>` function.
+
+.. note::
+
+    If you need to execute or use a single macro function, you may do this
+    directly, adding "@" symbol to function name, e.g. *@action_toggle*,
+    *@start*, etc.
 
 Debugging macros
 ================
@@ -37,14 +43,14 @@ To receive information about errors you may run the following command:
 
 .. code-block:: bash
 
-    lm-cmd -J run <macro_id> -w 3600 | jq -r .err
+    eva lm -J run <macro_id> -w 3600 | jq -r .err
 
 Macros configuration
 ====================
 
 After the macro code is placed into *xc/lm/<macro_id>.py* file, it should be
 appended to the controller using :ref:`create_macro<lmapi_create_macro>` LM API
-function or with **lm-cmd**.
+function or with **eva lm**.
 
 After the macro configuration is created, you may view its params using
 :ref:`list_macro_props<lmapi_list_macro_props>` and change them with
