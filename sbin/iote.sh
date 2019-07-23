@@ -70,15 +70,15 @@ function destroy_notifier {
 }
 
 function destroy_apikey {
-  ./sbin/eva-tinyapi -C $1 destroy_key i=${EVA_CLOUD_ID}.${DOMAIN} || return 1
+  ./sbin/eva-tinyapi -C $1 -F destroy_key i=${EVA_CLOUD_ID}.${DOMAIN} || return 1
 }
 
 function create_apikey {
   N="${EVA_CLOUD_ID}.${DOMAIN}"
-  ./sbin/eva-tinyapi -C $1 create_key i=$N || return 1
-  ./sbin/eva-tinyapi -C $1 set_key_prop i=$N p=key v=${KEY} || return 1
-  ./sbin/eva-tinyapi -C $1 set_key_prop i=$N p=groups v='#' || return 1
-  ./sbin/eva-tinyapi -C $1 set_key_prop i=$N p=hosts_allow v='0.0.0.0/0' || return 1
+  ./sbin/eva-tinyapi -C $1 -F create_key i=$N || return 1
+  ./sbin/eva-tinyapi -C $1 -F set_key_prop i=$N p=key v=${KEY} || return 1
+  ./sbin/eva-tinyapi -C $1 -F set_key_prop i=$N p=groups v='#' || return 1
+  ./sbin/eva-tinyapi -C $1 -F set_key_prop i=$N p=hosts_allow v='0.0.0.0/0' || return 1
 }
 
 shift
@@ -141,7 +141,7 @@ case $CMD in
     [ -f etc/uc.ini ] && test_controller uc
     [ -f etc/lm.ini ] && test_controller lm
     check_mqtt || exit 7
-    for c in "uc lm"; do
+    for c in uc lm; do
       if [ -f etc/uc.ini ]; then
         destroy_notifier $c > /dev/null 2>&1
         create_notifier $c || exit 3
@@ -159,11 +159,11 @@ case $CMD in
     echo "Leaving ${DOMAIN}.${EVA_CLOUD}"
     [ -f etc/uc.ini ] && test_controller uc
     [ -f etc/lm.ini ] && test_controller lm
-    for c in "uc lm"; do
+    for c in uc lm; do
       if [ -f etc/uc.ini ]; then
-        destroy_notifier $c
+        destroy_notifier $c > /dev/null 2>&1
         ./sbin/eva-control restart $c || exit 3
-        destroy_apikey $c
+        destroy_apikey $c > /dev/null 2>&1
       fi
     done
     grep -vE "^${DOMAIN}$" etc/iote.domains > etc/iote.domains.tmp
