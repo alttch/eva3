@@ -1,6 +1,32 @@
 EVA ICS CHANGELOG
 *****************
 
+3.2.4 (TBA)
+===========
+
+Common
+------
+
+    * Core and controller interconnect stability improvements
+    * IOTE cloud support
+    * InfluxDB integration
+    * Logging to syslog
+    * Autocompletion files for ZSH
+
+UC
+--
+    * Driver API 7: shared namespaces
+
+LM PLC
+------
+
+    * Direct use of macro functions (as @function)
+
+SFA
+---
+
+    * edit ui / edit pvt commands in EVA shell
+
 3.2.3 (2019-06-24)
 ==================
 
