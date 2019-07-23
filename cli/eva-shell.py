@@ -120,6 +120,7 @@ class ManagementCLI(GenericCLI):
         self.add_manager_backup_functions()
         self.add_manager_edit_functions()
         self.add_management_shells()
+        self.add_manager_iote_functions()
         self.add_manager_power_functions()
         self.add_user_defined_functions()
 
@@ -295,6 +296,25 @@ class ManagementCLI(GenericCLI):
             help='Check for a new version without upgrading',
             action='store_true')
 
+    def add_manager_iote_functions(self):
+        ap_iote = self.sp.add_parser(
+            'iote', help='IOTE Cloud management functions')
+        sp_iote = ap_iote.add_subparsers(
+            dest='_func', metavar='func', help='Management commands')
+
+        ap_join = sp_iote.add_parser('join', help='Join node to IOTE Cloud')
+        ap_join.add_argument('i', metavar='ACCOUNT', help='IOTE account')
+        ap_join.add_argument('a', metavar='KEY', help='Cloud key')
+        ap_join.add_argument(
+            '-y', '--force', help='Force join/rejoin', action='store_true')
+
+        ap_get = sp_iote.add_parser('get', help='Get IOTE Cloud connections')
+
+        ap_leave = sp_iote.add_parser('leave', help='Leave IOTE Cloud')
+        ap_leave.add_argument('i', metavar='ACCOUNT', help='IOTE account')
+        ap_leave.add_argument(
+            '-y', '--force', help='Force leave', action='store_true')
+
     def add_manager_power_functions(self):
         ap_system = self.sp.add_parser('system', help='System functions')
         sp_system = ap_system.add_subparsers(
@@ -462,6 +482,31 @@ sys.argv = {argv}
                 not os.environ.get('EVA_CLI_DISABLE_HISTORY') else False
         eva.client.cli.parent_shell_name = None
         os.chdir(dir_eva)
+
+    def iote_get(self, params):
+        with os.popen(dir_sbin + '/iote.sh get') as p:
+            clouds = p.readlines()
+        if clouds:
+            result = []
+            for c in clouds:
+                if c:
+                    acc, dcloud, cid = c.strip().split(' ', 2)
+                    result.append({
+                        'account': acc,
+                        'domain': '{}.{}'.format(acc, dcloud),
+                        'cloud': cid
+                    })
+            return 0, result
+        else:
+            return self.local_func_result_empty
+
+    def iote_leave(self, params):
+        code = os.system(dir_sbin + '/iote.sh leave {} {}'.format(params.get('i'), '-y' if params.get('force') else ''))
+        return self.local_func_result_ok if not code else self.local_func_result_failed
+
+    def iote_join(self, params):
+        code = os.system(dir_sbin + '/iote.sh join {} -a {} {}'.format(params.get('i'), params.get('a'), '-y' if params.get('force') else ''))
+        return self.local_func_result_ok if not code else self.local_func_result_failed
 
     def start_controller(self, params):
         c = params['p']
@@ -978,6 +1023,9 @@ _api_functions = {
     'system:poweroff': cli.power_poweroff,
     'save': cli.save,
     'ns': cli.manage_ns,
+    'iote:get': cli.iote_get,
+    'iote:join': cli.iote_join,
+    'iote:leave': cli.iote_leave,
     'backup:save': cli.backup_save,
     'backup:list': cli.backup_list,
     'backup:unlink': cli.backup_unlink,

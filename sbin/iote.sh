@@ -28,7 +28,7 @@ function test_controller {
 }
 
 function test_node {
-  for c in uc lm sfa; do
+  for c in uc lm; do
     CN=${c^^}
     [ "x$(eval "echo \$${CN}_ENABLED")" == "xyes" ] && test_controller $c
   done
@@ -156,7 +156,7 @@ case $CMD in
     fi
     test_node
     check_mqtt || exit 7
-    for c in uc lm sfa; do
+    for c in uc lm; do
       CN=${c^^}
       if [ "x$(eval "echo \$${CN}_ENABLED")" == "xyes" ]; then
         destroy_notifier $c > /dev/null 2>&1
@@ -184,7 +184,7 @@ case $CMD in
       fi
     fi
     test_node
-    for c in uc lm sfa; do
+    for c in uc lm; do
       CN=${c^^}
       if [ "x$(eval "echo \$${CN}_ENABLED")" == "xyes" ]; then
         destroy_notifier $c > /dev/null 2>&1
