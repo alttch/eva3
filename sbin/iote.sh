@@ -30,7 +30,7 @@ function test_controller {
 function test_node {
   for c in uc lm sfa; do
     CN=${c^^}
-    [ "x$(eval "echo \$${CN}_ENABLED")" != "xyes" ] && test_controller $c
+    [ "x$(eval "echo \$${CN}_ENABLED")" == "xyes" ] && test_controller $c
   done
 }
 
@@ -107,6 +107,7 @@ while [ $1 ]; do
     -y)
       shift
       FORCE=1
+      ;;
     *)
       usage
       ;;
@@ -157,7 +158,7 @@ case $CMD in
     check_mqtt || exit 7
     for c in uc lm sfa; do
       CN=${c^^}
-      if [ "x$(eval "echo \$${CN}_ENABLED")" != "xyes" ]; then
+      if [ "x$(eval "echo \$${CN}_ENABLED")" == "xyes" ]; then
         destroy_notifier $c > /dev/null 2>&1
         create_notifier $c || exit 3
         ./sbin/eva-control restart $c || exit 3
@@ -165,7 +166,8 @@ case $CMD in
         create_apikey $c > /dev/null || exit 3
       fi
     done
-    echo $DOMAIN $EVA_CLOUD $EVA_CLOUD_ID >> etc/iote.domains
+    grep -E "^${DOMAIN} ${EVA_CLOUD} " etc/iote.domains > /dev/null 2>&1 || \
+      echo $DOMAIN $EVA_CLOUD $EVA_CLOUD_ID >> etc/iote.domains
     echo
     echo "Node joined ${DOMAIN}.${EVA_CLOUD}"
     ;;
@@ -184,13 +186,13 @@ case $CMD in
     test_node
     for c in uc lm sfa; do
       CN=${c^^}
-      if [ "x$(eval "echo \$${CN}_ENABLED")" != "xyes" ]; then
+      if [ "x$(eval "echo \$${CN}_ENABLED")" == "xyes" ]; then
         destroy_notifier $c > /dev/null 2>&1
         ./sbin/eva-control restart $c || exit 3
         destroy_apikey $c > /dev/null 2>&1
       fi
     done
-    grep -vE "^${DOMAIN}$" etc/iote.domains > etc/iote.domains.tmp
+    grep -vE "^${DOMAIN} ${EVA_CLOUD} " etc/iote.domains > etc/iote.domains.tmp
     mv -f etc/iote.domains.tmp etc/iote.domains
     echo
     echo "Node left ${DOMAIN}.${EVA_CLOUD}"
