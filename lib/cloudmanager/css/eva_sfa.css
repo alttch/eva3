@@ -164,7 +164,7 @@
 }
 .custom_chbox:not(checked) + label {
   position: relative;
-  padding: 0 0 0 92px;
+  padding: 0 0 0 90px;
   line-height: 20px;
 }
 .custom_chbox:not(checked) + label:before {
