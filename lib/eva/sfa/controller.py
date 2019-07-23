@@ -277,7 +277,7 @@ def append_uc(uri,
     u = eva.client.remote_controller.RemoteUC(
         None, api=api, mqtt_update=mqu, static=static)
     u._key = key
-    u.set_prop('masterkey', makey)
+    if makey: u.set_prop('masterkey', makey)
     if not uc_pool.append(u): return False
     controller_lock.acquire()
     try:
@@ -347,7 +347,7 @@ def append_lm(uri,
     u = eva.client.remote_controller.RemoteLM(
         None, api=api, mqtt_update=mqu, static=static)
     u._key = key
-    u.set_prop('masterkey', makey)
+    if makey: u.set_prop('masterkey', makey)
     if not lm_pool.append(u): return False
     controller_lock.acquire()
     try:
