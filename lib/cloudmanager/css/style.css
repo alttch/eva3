@@ -1025,7 +1025,7 @@ input.device-error:focus {
     margin: 0 40px;
   }
   #mng_cycles .descr_block {
-    width: calc(70% - 300px);
+    width: calc(70% - 310px);
     margin-right: 20px;
   }
   #mng_cycles .descr_block:first-child {
