@@ -427,6 +427,8 @@ class DecisionRule(eva.item.Item):
                 raise FunctionFailed('Unable to set rule macro args')
             if not self.set_prop('macro_kwargs', kwargs):
                 raise FunctionFailed('Unable to set rule macro kwargs')
+        if save:
+            self.save()
         return True
 
     def set_prop(self, prop, val=None, save=False):

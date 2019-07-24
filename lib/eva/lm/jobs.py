@@ -14,12 +14,14 @@ from pyaltt import background_worker
 
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
+from eva.tools import parse_func_str
 
 from eva.exceptions import FunctionFailed
 
 with_scheduler_lock = eva.core.RLocker('lm/jobs')
 
 schedule.logger.setLevel(logging.WARNING)
+
 
 class Job(eva.item.Item):
 
@@ -149,6 +151,45 @@ class Job(eva.item.Item):
             self.macro_kwargs = dict_from_str(data['macro_kwargs'])
         super().update_config(data)
 
+    def set_hri(self, v, save=False):
+
+        def parse_str(s):
+            d = s if isinstance(s, list) else s.strip().split()
+            every = None
+            f = None
+            for i, x in enumerate(d):
+                if x == 'every':
+                    f = ' '.join(d[:i])
+                    every = ' '.join(d[i + 1:])
+                    break
+            if not f:
+                f = ' '.join(s) if isinstance(s, list) else s
+            return every, f
+
+        try:
+            every, f = parse_str(v)
+        except Exception as e:
+            raise FunctionFailed(e)
+        if every:
+            try:
+                if not self.set_prop('every', every):
+                    raise Exception
+            except:
+                raise FunctionFailed('Unable to set job schedule')
+        try:
+            name, args, kwargs = parse_func_str(f)
+        except Exception as e:
+            raise FunctionFailed(e)
+        if not self.set_prop('macro', name):
+            raise FunctionFailed('Unable to set rule macro')
+        if not self.set_prop('macro_args', args):
+            raise FunctionFailed('Unable to set rule macro args')
+        if not self.set_prop('macro_kwargs', kwargs):
+            raise FunctionFailed('Unable to set rule macro kwargs')
+        if save:
+            self.save()
+        return True
+
     def set_prop(self, prop, val=None, save=False):
         if prop == 'enabled':
             v = val_to_boolean(val)
@@ -175,10 +216,13 @@ class Job(eva.item.Item):
             return True
         elif prop == 'macro_args':
             if val is not None:
-                try:
-                    v = shlex.split(val)
-                except:
-                    v = val.split(' ')
+                if isinstance(val, list):
+                    v = val
+                else:
+                    try:
+                        v = shlex.split(val)
+                    except:
+                        v = val.split(' ')
             else:
                 v = []
             self.macro_args = v

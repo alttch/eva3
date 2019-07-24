@@ -10,6 +10,43 @@ interface section.
 
 Jobs configuration is stored in **runtime/lm_job.d/** folder.
 
+Job creation
+============
+
+Jobs can be created with either LM API :ref:`create_job<lmapi_create_job>`
+function or with :doc:`EVA shell</cli>`.
+
+To configure job you may specify action and schedule, or you may set job
+parameters one-by-one after the job is created.
+
+To specify action and schedule during job creation, use the following format.
+Note that controller doesn't check does condition item and/or macro exist on
+the moment of job creation:
+
+.. code:: bash
+
+    job create [action] [every <schedule>]
+
+Example, start unit *unit:ventilation/v1* (call *start* macro function) every 5
+minutes.
+
+.. code:: bash
+
+    job create @start('unit:ventilation/v1') every 5 minutes
+
+Another example, run macro *macro1* every hour
+minutes.
+
+.. code:: bash
+
+    job create macro1(1, 2, x=test) every hour
+
+.. note::
+
+    New job is always created as "disabled" and you must enable it with "job
+    enable" CLI command or call LM API function
+    :ref:`set_job_prop<lmapi_set_job_prop>`, setting *enabled=True*.
+
 Job configuration
 =================
 

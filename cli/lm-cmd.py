@@ -5,6 +5,8 @@ __version__ = "3.2.4"
 
 import sys
 import os
+import argparse
+import textwrap
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 dir_runtime = os.path.realpath(
@@ -844,8 +846,18 @@ class LM_CLI(GenericCLI, ControllerCLI):
             '-g', '--group', help='Filter by group', metavar='GROUP',
             dest='g').completer = self.ComplCycleGroup(self)
 
-        ap_cycle_create = sp_cycle.add_parser('create', help='Create new cycle')
+        ap_cycle_create = sp_cycle.add_parser(
+            'create',
+            help='Create new cycle',
+            formatter_class=argparse.RawTextHelpFormatter)
         ap_cycle_create.add_argument('i', help='Cycle ID', metavar='ID')
+        ap_cycle_create.add_argument(
+            'v',
+            metavar='CYCLE',
+            nargs='*',
+            help=textwrap.dedent('''
+                cycle action and interval, example:
+                test(1, 2, x=3) interval 0.5'''))
         ap_cycle_create.add_argument(
             '-g', '--group', help='Cycle group', metavar='GROUP',
             dest='g').completer = self.ComplCycleGroup(self)
@@ -926,7 +938,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_rule_get.add_argument(
             'i', help='Rule ID', metavar='ID').completer = self.ComplRule(self)
 
-        sp_rule_create = sp_rule.add_parser('create', help='Create new rule')
+        sp_rule_create = sp_rule.add_parser(
+            'create',
+            help='Create new rule',
+            formatter_class=argparse.RawTextHelpFormatter)
         sp_rule_create.add_argument(
             '-u',
             '--uuid',
@@ -934,7 +949,12 @@ class LM_CLI(GenericCLI, ControllerCLI):
             dest='u',
             metavar='UUID')
         sp_rule_create.add_argument(
-            'v', metavar='RULE', nargs='*', help='Rule condition and action')
+            'v',
+            metavar='RULE',
+            nargs='*',
+            help=textwrap.dedent('''
+                Rule condition and action, example:
+                if sensor:env/temp > 25 then macro1(1, 2, x=3)'''))
         sp_rule_create.add_argument(
             '-y',
             '--save',
@@ -990,6 +1010,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
 
     def add_lm_job_functions(self):
         ap_job = self.sp.add_parser('job', help='Scheduled jobs')
+
         sp_job = ap_job.add_subparsers(
             dest='_func', metavar='func', help='Jobs commands')
 
@@ -999,7 +1020,17 @@ class LM_CLI(GenericCLI, ControllerCLI):
         sp_job_get.add_argument(
             'i', help='Job ID', metavar='ID').completer = self.ComplJob(self)
 
-        sp_job_create = sp_job.add_parser('create', help='Create new job')
+        sp_job_create = sp_job.add_parser(
+            'create',
+            help='Create new job',
+            formatter_class=argparse.RawTextHelpFormatter)
+        sp_job_create.add_argument(
+            'v',
+            metavar='JOB',
+            nargs='*',
+            help=textwrap.dedent('''
+                job action and schedule, example:
+                test(1, 2, x=3) every 2 seconds'''))
         sp_job_create.add_argument(
             '-u',
             '--uuid',

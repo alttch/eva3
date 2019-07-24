@@ -514,13 +514,21 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Optional:
             .u: job UUID to set
-            .v: job properties (dict)
+            .v: job properties (dict) or human-readable input
             save: save unit configuration immediately
         """
         u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
         job = eva.lm.controller.create_job(save=save, job_uuid=u)
-        if v and isinstance(v, dict):
-            self._set_prop(job, v=v, save=save)
+        try:
+            if v:
+                if isinstance(v, dict):
+                    self._set_prop(job, v=v, save=save)
+                else:
+                    job.set_hri(v, save=save)
+        except:
+            eva.core.log_traceback()
+            eva.lm.controller.destroy_job(job.item_id)
+            raise
         return job.serialize(info=True)
 
     @log_w

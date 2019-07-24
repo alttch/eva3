@@ -1399,7 +1399,7 @@ Parameters:
 Optionally:
 
 * **u** job UUID to set
-* **v** job properties (dict)
+* **v** job properties (dict) or human-readable input
 * **save** save unit configuration immediately
 
 .. _lmapi_destroy_job:
