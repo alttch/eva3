@@ -299,7 +299,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             args = []
             kwargs = []
             for o in r['macro_args']:
-                args.append('\'' + o + '\'')
+                args.append('\'' + str(o) + '\'')
             if r.get('macro_kwargs'):
                 for i, v in r['macro_kwargs'].items():
                     kwargs.append('{}=\'{}\''.format(i, v))
@@ -933,6 +933,8 @@ class LM_CLI(GenericCLI, ControllerCLI):
             help='Rule UUID (generated if not specified)',
             dest='u',
             metavar='UUID')
+        sp_rule_create.add_argument(
+            'v', metavar='RULE', nargs='*', help='Rule condition and action')
         sp_rule_create.add_argument(
             '-y',
             '--save',

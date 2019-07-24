@@ -51,6 +51,43 @@ analyzed and processed in the following way:
     * If chillout_time > 0 in the configuration, the rule is ignored after the
       match for the specified time.
 
+Rule creation
+=============
+
+Rules can be created with either LM API :ref:`create_rule<lmapi_create_rule>`
+function or with :doc:`EVA shell</cli>`.
+
+To configure rule you may specify condition and action, or you may set rule
+parameters one-by-one after the rule is created.
+
+To specify condition and action during rule creation, use the following format.
+Note that controller doesn't check does condition item and/or macro exist on
+the moment of rule creation:
+
+.. code:: bash
+
+    rule create if <condition> [then <action>]
+
+Example, start unit *unit:ventilation/v1* (call *start* macro function) if
+value of *sensor:env/temp* is more than 25:
+
+.. code:: bash
+
+    rule create if sensor:env/temp.value > 25 then @start('unit:ventilation/v1')
+
+Another example. Run macro *macro1* if value of lvar *lvar:tests/lvar1* is more
+than 25 but less than 35:
+
+.. code:: bash
+
+    rule create if 35 > lvar:tests/lvar1 > 25 then macro1()
+
+.. note::
+
+    New rule is always created as "disabled" and you must enable it with "rule
+    enable" CLI command or call LM API function
+    :ref:`set_rule_prop<lmapi_set_rule_prop>`, setting *enabled=True*.
+
 Rule configuration
 ==================
 

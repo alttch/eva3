@@ -549,7 +549,7 @@ Parameters:
 Optionally:
 
 * **u** rule UUID to set
-* **v** rule properties (dict)
+* **v** rule properties (dict) or human-readable input
 * **save** save rule configuration immediately
 
 .. _lmapi_destroy_rule:

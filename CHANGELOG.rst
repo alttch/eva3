@@ -21,6 +21,7 @@ LM PLC
 ------
 
     * Direct use of macro functions (as @function)
+    * rule creation with human readable input
 
 SFA
 ---

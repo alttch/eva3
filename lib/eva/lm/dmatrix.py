@@ -14,6 +14,9 @@ import re
 
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
+from eva.tools import parse_func_str
+
+from eva.exceptions import FunctionFailed
 
 
 class DecisionMatrix(object):
@@ -375,6 +378,57 @@ class DecisionRule(eva.item.Item):
             self.chillout_time = data['chillout_time']
         super().update_config(data)
 
+    def set_hri(self, v, save=False):
+
+        def parse_str(s):
+            item_oids = ['unit', 'sensor', 'lvar']
+            if isinstance(s, str):
+                d = s.strip().split()
+            else:
+                d = s.copy()
+            if len(d) < 2 or d[0] != 'if':
+                raise ValueError('Invalid string')
+            c_oid = None
+            condition = None
+            run = None
+            for a, z in enumerate(d[1:]):
+                if z == 'then':
+                    condition = ' '.join(d[1:a + 1])
+                    run = ' '.join(d[a + 2:])
+                    break
+                else:
+                    for i in item_oids:
+                        if z.startswith(i + ':'):
+                            c_oid = z
+                            d[a + 1] = 'x'
+                            break
+            if not c_oid:
+                raise ValueError('Condition not found')
+            if not condition:
+                condition = ' '.join(d[1:])
+            return c_oid, condition, run
+
+        try:
+            o, c, r = parse_str(v)
+        except Exception as e:
+            raise FunctionFailed(e)
+        if not self.set_prop('oid', o):
+            raise FunctionFailed('Unable to set rule oid')
+        if not self.set_prop('condition', c):
+            raise FunctionFailed('Unable to set rule condition')
+        if r:
+            try:
+                name, args, kwargs = parse_func_str(r)
+            except Exception as e:
+                raise FunctionFailed(e)
+            if not self.set_prop('macro', name):
+                raise FunctionFailed('Unable to set rule macro')
+            if not self.set_prop('macro_args', args):
+                raise FunctionFailed('Unable to set rule macro args')
+            if not self.set_prop('macro_kwargs', kwargs):
+                raise FunctionFailed('Unable to set rule macro kwargs')
+        return True
+
     def set_prop(self, prop, val=None, save=False):
         if prop == 'enabled':
             v = val_to_boolean(val)
@@ -560,10 +614,13 @@ class DecisionRule(eva.item.Item):
             return True
         elif prop == 'macro_args':
             if val is not None:
-                try:
-                    v = shlex.split(val)
-                except:
-                    v = val.split(' ')
+                if isinstance(val, list):
+                    v = val
+                else:
+                    try:
+                        v = shlex.split(val)
+                    except:
+                        v = val.split(' ')
             else:
                 v = []
             self.macro_args = v
@@ -574,7 +631,10 @@ class DecisionRule(eva.item.Item):
             if val is None:
                 self.macro_kwargs = {}
             else:
-                self.macro_kwargs = dict_from_str(val)
+                try:
+                    self.macro_kwargs = dict_from_str(val)
+                except:
+                    return False
             self.log_set(prop, val)
             self.set_modified(save)
             return True

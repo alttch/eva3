@@ -345,13 +345,21 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Optional:
             .u: rule UUID to set
-            .v: rule properties (dict)
+            .v: rule properties (dict) or human-readable input
             save: save rule configuration immediately
         """
         u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
         rule = eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
-        if v and isinstance(v, dict):
-            self._set_prop(rule, v=v, save=save)
+        try:
+            if v:
+                if isinstance(v, dict):
+                    self._set_prop(rule, v=v, save=save)
+                else:
+                    rule.set_hri(v, save=save)
+        except:
+            eva.core.log_traceback()
+            eva.lm.controller.destroy_dm_rule(rule.item_id)
+            raise
         return rule.serialize(info=True)
 
     @log_w
