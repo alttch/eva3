@@ -1086,5 +1086,22 @@ input.device-error:focus {
 
 }
 
-
-
+@media (min-width: 1300px) {
+  /**********header**************/
+  .header {
+    max-width: 1300px;
+  }
+  /**********footer**************/
+  
+  /***********content*************/
+  .containers {
+    max-width: 1300px;
+    padding: 0 40px;
+  }
+  .controllers_block {
+    width: 560px;
+  }
+  .elements_block {
+    width: 660px;
+  }
+}
