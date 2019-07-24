@@ -63,7 +63,15 @@ body {
   margin-top: 20px;
 }
 #eva_ui_login_form .list-group-item {
+  width: auto;
+  margin-bottom: 0;
+  padding-right: 10px;
+  padding-left: 10px;
+  font: 16px 'TTNorms Medium';
+  color: #808080;
   background: transparent;
+  border: none;
+  border-radius: 0;
 }
 #eva_ui_login_form > div {
   max-width: 224px;
@@ -94,7 +102,7 @@ body {
   border-width: 2px;
 }
 #eva_ui_login_form label {
-  font: 12px 'Roboto Regular';
+  font: 14px 'Roboto Regular';
   color: #808091;
 }
 .eva_ui_custom_checkbox {
@@ -102,8 +110,8 @@ body {
 }
 .eva_ui_custom_checkbox input[type=checkbox] {
   opacity: 0;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
 }
 .eva_ui_custom_checkbox input[type=checkbox] + label {
   position: absolute;
@@ -115,8 +123,8 @@ body {
   position: absolute;
   left: 0;
   top: 0;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border: 1px solid #000;
   border-radius: 2px;
   background: #fff;
@@ -126,8 +134,8 @@ body {
   position: absolute;
   left: 3px;
   top: 4px;
-  width: 10px;
-  height: 6px;
+  width: 12px;
+  height: 7px;
   border: 2px solid #4d4d4d;
   transform: rotate(-45deg);
   border-radius: 0;
@@ -174,7 +182,7 @@ body {
 }
 .header_menu > a {
   margin-right: 20px;
-  font: 14px 'TTNorms Medium';
+  font: 16px 'TTNorms Medium';
   color: #054a77;
   text-decoration: none;
 }
@@ -192,7 +200,7 @@ body {
 }
 .footer .containers div {
   text-align: center;
-  font: 12px 'TTNorms Regular';
+  font: 14px 'TTNorms Regular';
   color: #808080;
 }
 .footer .containers a {
@@ -219,9 +227,10 @@ body {
 }
 .controllers_holder {
   width: 100%;
-  max-width: 475px;
+  max-width: 500px;
   margin: auto;
-  padding: 20px 15px 0 0;
+  /*padding: 20px 15px 0 0;*/
+  padding-top: 20px;
 }
 .controllers_holder .nano-content {
   max-height: 329px;
@@ -235,7 +244,7 @@ body {
   text-align: left;
   border-bottom: 1px solid #999;
   border-radius: 0;
-  font: 14px 'TTNorms Medium';
+  font: 16px 'TTNorms Medium';
   color: #4d4d4d;
 }
 .controllers_block .collapse_btn::before {
@@ -254,24 +263,25 @@ body {
 }
 .controller_item {
   width: 100%;
-  display:flex;
+  display: flex;
+  flex-wrap: wrap;
   padding: 8px 0 7px;
   border-bottom: 1px solid #dbdbdb;
 }
 a.controller_link {
   margin: auto auto 10px 0;
-  max-width: 100px;
-  font: 12px 'TTNorms Regular';
+  width: 100%;
+  font: 14px 'TTNorms Regular';
   color: #0071bc;
   text-decoration: underline;
   word-break: break-word;
 }
 .controller_btn {
-  width: 40px;
+  width: 50px;
   height: 45px;
-  margin-left: auto;
+  margin: auto;
   padding: 30px 0 0; 
-  font: 10px 'TTNorms Regular';
+  font: 12px 'TTNorms Regular';
   color: #999;
   text-align: center;
   border: none;
@@ -284,6 +294,10 @@ a.controller_link {
 }
 .controller_btn:focus {
   outline: none;
+}
+.controller_btn:disabled {
+  background-color: #ececec;
+  cursor: not-allowed;
 }
 .controller_btn.test_btn {
   background-image: url('../images/rocket.svg');
@@ -383,18 +397,18 @@ a.controller_link {
 }
 .dataTables_wrapper .dataTables_filter {
   position: absolute;
-  top: -70px;
+  top: -75px;
   right: -15px;
-  font: 12px 'TTNorms Regular';
+  font: 14px 'TTNorms Regular';
   color: #b3b3b3;
 }
 .dataTables_wrapper .dataTables_filter input {
   padding-right: 25px;
   padding-bottom: 2px;
-  font: 12px 'TTNorms Regular';
+  font: 14px 'TTNorms Regular';
   color: #b3b3b3;
   background: url('../images/search.svg') 100% 0 no-repeat;
-  background-size: 15px;
+  background-size: 16px;
   border: none;
   border-bottom: 1px solid #0071bc;
   outline: none;
@@ -413,13 +427,12 @@ a.controller_link {
 .elements_block .tab-content .tab-pane{
   border-bottom: 1px solid #999;
 }
-.elements_block .list-group-item,
-#eva_ui_login_form .list-group-item {
+.elements_block .list-group-item {
   width: auto;
   margin-bottom: 0;
-  padding-right: 10px;
-  padding-left: 10px;
-  font: 14px 'TTNorms Medium';
+  padding-right: 7px;
+  padding-left: 7px;
+  font: 16px 'TTNorms Medium';
   color: #808080;
   border: none;
   border-radius: 0;
@@ -442,7 +455,7 @@ a.controller_link {
   margin-left: 0;
   margin-right: -17px;
   padding: 12px 10px;
-  font: 14px 'TTNorms Medium';
+  font: 16px 'TTNorms Medium';
   color: #4d4d4d;
   border-top: none;
   border-bottom: 1px solid #999;
@@ -453,7 +466,7 @@ a.controller_link {
 .dataTables_scrollHeadInner table thead th.sorting_desc {
   padding-right: 24px;
   background: url('../images/arrange.svg') no-repeat #fff;
-  background-size: 14px;
+  background-size: 16px;
   background-position: calc(100% - 3px) 50%;
   cursor: pointer;
 }
@@ -466,7 +479,7 @@ a.controller_link {
 .elements_block .table tbody td {
   padding: 5px 10px;
   vertical-align: middle;
-  font: 12px 'TTNorms Regular';
+  font: 14px 'TTNorms Regular';
   color: #808080;
   border-top: none;
   border-bottom: 1px solid #dbdbdb;
@@ -552,7 +565,7 @@ a.controller_link {
   max-height: 300px;
 }
 #logr div {
-  font: 12px 'TTNorms Regular';
+  font: 14px 'TTNorms Regular';
   color: #808080;
   margin-bottom: 10px;
 }
@@ -845,9 +858,19 @@ input.device-error:focus {
   /**********footer**************/
 
   /***********content*************/
+  .controller_item {
+    flex-wrap: nowrap;
+  }
   a.controller_link {
     margin-right: 20px;
-    max-width: 140px;
+    max-width: calc(100% - 290px);
+  }
+  .controller_btn {
+    margin-right: 0;
+  }
+  .elements_block .list-group-item {
+    padding-left: 10px;
+    padding-right: 10px;
   }
   /*.elements_block table > thead,
   .elements_block table > tbody {
@@ -946,9 +969,6 @@ input.device-error:focus {
   .containers {
     max-width: 600px;
     margin: auto;
-  }
-  a.controller_link {
-    max-width: 200px;
   }
   .elements_block {
     margin-top: 45px;
