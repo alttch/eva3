@@ -6,7 +6,14 @@
 #fi
 
 VERSION=3.2.4
-BUILD=2019071101
+BUILD=2019072302
+
+PYTHON3_MIN=4
+PYTHON_MINOR=`./python3/bin/python3 --version|cut -d. -f2`
+if [ $PYTHON_MINOR -lt $PYTHON3_MIN ]; then
+  echo "Python 3.$PYTHON3_MIN is required"
+  exit 1
+fi
 
 [ "x${EVA_REPOSITORY_URL}" = "x" ] && EVA_REPOSITORY_URL=https://get.eva-ics.com
 

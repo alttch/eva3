@@ -93,4 +93,4 @@ session_timeout = 3600
 [cloud]
 ; enable cloud manager services
 ;cloud_manager = yes
-default_key = default
+;default_key = default

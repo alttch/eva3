@@ -310,6 +310,8 @@ class RemoteController(eva.item.Item):
         return True
 
     def load_remote(self, need_type=None):
+        if not self.enabled:
+            return False
         result = self.test()
         if not result:
             if not self.static and self.pool and not self.wait_for_autoremove:
@@ -372,8 +374,9 @@ class RemoteController(eva.item.Item):
     def set_modified(self, save):
         super().set_modified(save)
         self.connected = False
-        t = threading.Thread(target=self.test)
-        t.start()
+        if self.enabled:
+            t = threading.Thread(target=self.test)
+            t.start()
 
     def get_reload_interval(self):
         return self.reload_interval
@@ -678,18 +681,19 @@ class RemoteControllerPool(object):
                 logging.critical('RemoteControllerPool::append locking broken')
                 eva.core.critical()
                 return False
-            if controller.item_id in self.controllers:
+            try:
+                if controller.item_id in self.controllers:
+                    logging.error(
+                        'Unable to append controller {}, already exists'.format(
+                            controller.full_id))
+                    return False
+                self.controllers[controller.item_id] = controller
+                controller.pool = self
+                if controller.enabled:
+                    self.start_controller_reload_thread(controller)
+                return True
+            finally:
                 self.management_lock.release()
-                logging.error(
-                    'Unable to append controller {}, already exists'.format(
-                        controller.full_id))
-                return False
-            self.controllers[controller.item_id] = controller
-            controller.pool = self
-            if controller.enabled:
-                self.start_controller_reload_thread(controller)
-            self.management_lock.release()
-            return True
         return False
 
     def remove(self, controller_id):
@@ -697,13 +701,15 @@ class RemoteControllerPool(object):
             logging.critical('RemoteControllerPool::remove locking broken')
             eva.core.critical()
             return False
-        if controller_id in self.controllers:
-            self.stop_controller_reload_thread(controller_id, lock=False)
-            del (self.controllers[controller_id])
+        try:
+            if controller_id in self.controllers:
+                self.stop_controller_reload_thread(controller_id, lock=False)
+                del (self.controllers[controller_id])
+                return True
+            else:
+                return False
+        finally:
             self.management_lock.release()
-            return True
-        self.management_lock.release()
-        return False
 
     def enable(self, controller):
         controller_id = controller.item_id
@@ -763,21 +769,22 @@ class RemoteControllerPool(object):
                         'thread locking broken')
             eva.core.critical()
             return False
-        if controller_id in self.websocket_threads:
+        try:
+            if controller_id in self.websocket_threads:
+                try:
+                    self.websocket_threads[controller_id].stop(wait=False)
+                    del self.websocket_threads[controller_id]
+                except:
+                    eva.core.log_traceback()
             try:
-                self.websocket_threads[controller_id].stop(wait=False)
-                del self.websocket_threads[controller_id]
+                if controller_id in self.reload_threads:
+                    if self.reload_threads[controller_id].is_alive():
+                        self.reload_thread_flags[controller_id] = False
+                        self.reload_threads[controller_id].join()
+                    del (self.reload_thread_flags[controller_id])
+                    del (self.reload_threads[controller_id])
             except:
                 eva.core.log_traceback()
-        try:
-            if controller_id in self.reload_threads:
-                if self.reload_threads[controller_id].is_alive():
-                    self.reload_thread_flags[controller_id] = False
-                    self.reload_threads[controller_id].join()
-                del (self.reload_thread_flags[controller_id])
-                del (self.reload_threads[controller_id])
-        except:
-            eva.core.log_traceback()
         finally:
             if lock: self.management_lock.release()
 

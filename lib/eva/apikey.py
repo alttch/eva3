@@ -95,6 +95,8 @@ class APIKey(object):
                     ':') != -1 or value.find('|') != -1:
                 return False
             if self.key != value:
+                if value in keys:
+                    raise ResourceAlreadyExists('API key')
                 regenerate_key(self.key_id, k=value, save=False)
                 self.set_modified(save)
             return True
@@ -640,6 +642,11 @@ def load_keys_from_db():
     except:
         eva.core.report_userdb_error(raise_exeption=False)
     return _keys, _keys_by_id
+
+
+@eva.core.stop
+def stop():
+    save()
 
 
 @eva.core.save

@@ -1,0 +1,148 @@
+#compdef sfa-cmd
+
+_sfa-cmd_server() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" launch reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_cloud() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" deploy undeploy
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_controller() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" append disable enable list ma-test props reload remove set test
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_notify() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" reload restart
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_edit() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" pvt server-config ui
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_cycle() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" list
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_macro() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" list result run
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_action() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" clear disable enable exec kill result terminate toggle
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_user() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" create destroy key list password
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_key() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" create destroy list props regenerate set
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_file() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" create get mod unlink upload
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_cvar() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" all delete get set
+  else
+    _files
+  fi
+}
+
+_sfa-cmd_log() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" critical debug error get info rotate warning
+  else
+    _files
+  fi
+}
+
+_sfa-cmd() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 1 ]]; then
+    compadd "$@" action clear cloud cmd controller cvar cycle debug dump edit file history key lock log macro notify remote reset save server set state test toggle unlock user
+  else
+    case "${words[2]}" in
+      action|cloud|controller|cvar|cycle|edit|file|key|log|macro|notify|server|user)
+        _sfa-cmd_${words[2]}
+        ;;
+      *)
+        _files
+        ;;
+    esac
+  fi
+}

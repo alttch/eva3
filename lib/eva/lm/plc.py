@@ -31,6 +31,8 @@ macro_api_functions = {}
 
 mfcode = SimpleNamespace(code='', build_time=0)
 
+pf_macros = {}
+
 with_macro_functions_lock = eva.core.RLocker('lm/plc')
 
 
@@ -46,6 +48,9 @@ def load_macro_api_functions():
     macro_api_functions.update(
         json.loads(
             open(eva.core.dir_lib + '/eva/lm/macro_api_functions.json').read()))
+    pf_macros.clear()
+    for f in macro_api_functions:
+        pf_macros[f] = VFMacro(f)
 
 
 def rebuild_mfcode():
@@ -390,6 +395,7 @@ class Macro(eva.item.ActiveItem):
         self.respect_layout = False
         self.api = eva.lm.macro_api.MacroAPI(
             pass_errors=False, send_critical=False)
+        self.pfcode = None
 
     def update_config(self, data):
         if 'pass_errors' in data:
@@ -487,6 +493,18 @@ class Macro(eva.item.ActiveItem):
         if props:
             d['src'] = ''
         return d
+
+
+class VFMacro(Macro):
+
+    def __init__(self, f):
+        super().__init__(f)
+        self.pfcode = 'out = ' + f + '(*args, **kwargs)'
+        self.update_config({
+            'group': '@func',
+            'action_enabled': True,
+            'action_exec': '@___vfm___' + f
+        })
 
 
 class Cycle(eva.item.Item):

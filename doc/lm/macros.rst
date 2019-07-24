@@ -23,8 +23,14 @@ files of the controller.
 Executing macros
 ================
 
-To execute a macro, use **macro run** command of :doc:`lm-cmd</cli>` or LM API
+To execute a macro, use **macro run** command of :doc:`eva lm</cli>` or LM API
 :ref:`run<lmapi_run>` function.
+
+.. note::
+
+    If you need to execute or use a single macro function, you may do this
+    directly, adding "@" symbol to function name, e.g. *@action_toggle*,
+    *@start*, etc.
 
 Debugging macros
 ================
@@ -37,14 +43,14 @@ To receive information about errors you may run the following command:
 
 .. code-block:: bash
 
-    lm-cmd -J run <macro_id> -w 3600 | jq -r .err
+    eva lm -J run <macro_id> -w 3600 | jq -r .err
 
 Macros configuration
 ====================
 
 After the macro code is placed into *xc/lm/<macro_id>.py* file, it should be
 appended to the controller using :ref:`create_macro<lmapi_create_macro>` LM API
-function or with **lm-cmd**.
+function or with **eva lm**.
 
 After the macro configuration is created, you may view its params using
 :ref:`list_macro_props<lmapi_list_macro_props>` and change them with
@@ -662,10 +668,10 @@ Item functions
 
 .. _macro_api_history:
 
-history - get lvar state history
+history - get item state history
 --------------------------------
 
-
+To use this function, DB or TSDB notifier in LM PLC must be present. (notifier can share DB with SFA in read/only mode).
 
 .. code-block:: python
 
@@ -673,7 +679,7 @@ history - get lvar state history
 
 Parameters:
 
-* **lvar_id** lvar ID, or multiple IDs (list or comma separated)
+* **item_id** item ID, or multiple IDs (list or comma separated)
 
 Optionally:
 
@@ -1188,7 +1194,7 @@ Parameters:
 
 Optionally:
 
-* **value** lvar value (if npt specified, lvar is set to null)
+* **value** lvar value (if not specified, lvar is set to null)
 
 Raises:
 
@@ -2007,7 +2013,7 @@ lock - acquire lock
 
 Parameters:
 
-* **l** lock id
+* **lock_id** lock id
 
 Optionally:
 
@@ -2069,7 +2075,7 @@ debug - put debug message to log file
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 
 .. _macro_api_info:
@@ -2085,7 +2091,7 @@ Additionally, print() function is alias to info()
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 
 .. _macro_api_warning:
@@ -2101,7 +2107,7 @@ warning - put warning message to log file
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 
 .. _macro_api_error:
@@ -2117,7 +2123,7 @@ error - put error message to log file
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 
 .. _macro_api_critical:
@@ -2133,7 +2139,7 @@ critical - put critical message to log file
 
 Parameters:
 
-* **m** message text
+* **msg** message text
 
 Optionally:
 

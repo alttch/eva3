@@ -8,6 +8,16 @@ _eva_system() {
   fi
 }
 
+_eva_iote() {
+  local cur prev words cword
+  _init_completion || return
+  if [[ $cword -eq 2 ]]; then
+    COMPREPLY=( $( compgen -W 'join leave list' -- "$cur" ))
+  else
+    COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
+  fi
+}
+
 _eva_sfa_server() {
   local cur prev words cword
   _init_completion || return
@@ -523,7 +533,7 @@ _eva_edit() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 2 ]]; then
-    COMPREPLY=( $( compgen -W 'crontab pvt ui' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'crontab' -- "$cur" ))
   else
     COMPREPLY=( $( compgen -W '$(ls)' -- $cur ))
   fi
@@ -553,10 +563,10 @@ _eva() {
   local cur prev words cword
   _init_completion || return
   if [[ $cword -eq 1 ]]; then
-    COMPREPLY=( $( compgen -W 'backup edit lm masterkey ns save server sfa system uc update version' -- "$cur" ))
+    COMPREPLY=( $( compgen -W 'backup edit iote lm masterkey ns save server sfa system uc update version' -- "$cur" ))
   else
     case "${words[1]}" in
-      backup|edit|lm|masterkey|server|sfa|system|uc)
+      backup|edit|iote|lm|masterkey|server|sfa|system|uc)
         _eva_${words[1]}
         ;;
       *)

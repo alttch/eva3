@@ -1,0 +1,198 @@
+#compdef uc-cmd
+
+_uc-cmd_server() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" launch reload restart start status stop
+  else
+    _files
+  fi
+}
+
+_uc-cmd_driver() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" assign get list load set unassign unload
+  else
+    _files
+  fi
+}
+
+_uc-cmd_lpi() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" modhelp modinfo mods
+  else
+    _files
+  fi
+}
+
+_uc-cmd_phi() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" discover download exec get list load modhelp modinfo mods ports set test unlink unload
+  else
+    _files
+  fi
+}
+
+_uc-cmd_owfs() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" create destroy list scan test
+  else
+    _files
+  fi
+}
+
+_uc-cmd_modbus-slave() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" get
+  else
+    _files
+  fi
+}
+
+_uc-cmd_modbus() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" create destroy list read test write
+  else
+    _files
+  fi
+}
+
+_uc-cmd_device() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" deploy templates undeploy update
+  else
+    _files
+  fi
+}
+
+_uc-cmd_maintenance() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" start stop
+  else
+    _files
+  fi
+}
+
+_uc-cmd_clone() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" group item
+  else
+    _files
+  fi
+}
+
+_uc-cmd_config() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" get props save set
+  else
+    _files
+  fi
+}
+
+_uc-cmd_edit() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" action server-config template update
+  else
+    _files
+  fi
+}
+
+_uc-cmd_action() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" clear disable enable exec kill result terminate toggle
+  else
+    _files
+  fi
+}
+
+_uc-cmd_user() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" create destroy key list password
+  else
+    _files
+  fi
+}
+
+_uc-cmd_key() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" create destroy list props regenerate set
+  else
+    _files
+  fi
+}
+
+_uc-cmd_file() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" create get mod unlink upload
+  else
+    _files
+  fi
+}
+
+_uc-cmd_cvar() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" all delete get set
+  else
+    _files
+  fi
+}
+
+_uc-cmd_log() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 2 ]]; then
+    compadd "$@" critical debug error get info rotate warning
+  else
+    _files
+  fi
+}
+
+_uc-cmd() {
+  local cword
+  let cword=CURRENT-1
+  if [[ $cword -eq 1 ]]; then
+    compadd "$@" action clone cmd config create cvar debug destroy device driver dump edit file history key list lock log lpi maintenance modbus modbus-slave owfs phi save server state test unlock update user
+  else
+    case "${words[2]}" in
+      action|clone|config|cvar|device|driver|edit|file|key|log|lpi|maintenance|modbus|modbus-slave|owfs|phi|server|user)
+        _uc-cmd_${words[2]}
+        ;;
+      *)
+        _files
+        ;;
+    esac
+  fi
+}
