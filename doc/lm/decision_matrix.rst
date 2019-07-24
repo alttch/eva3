@@ -61,8 +61,8 @@ To configure rule you may specify condition and action, or you may set rule
 parameters one-by-one after the rule is created.
 
 To specify condition and action during rule creation, use the following format.
-Note that controller doesn't check does condition item and/or macro exist on
-the moment of rule creation:
+Note that controller doesn't check is condition item and/or macro exists on the
+moment of rule creation:
 
 .. code:: bash
 

@@ -20,8 +20,8 @@ To configure job you may specify action and schedule, or you may set job
 parameters one-by-one after the job is created.
 
 To specify action and schedule during job creation, use the following format.
-Note that controller doesn't check does condition item and/or macro exist on
-the moment of job creation:
+Note that controller doesn't check is macro exists on the moment of job
+creation:
 
 .. code:: bash
 
@@ -34,8 +34,7 @@ minutes.
 
     job create @start('unit:ventilation/v1') every 5 minutes
 
-Another example, run macro *macro1* every hour
-minutes.
+Another example, run macro *macro1* every hour:
 
 .. code:: bash
 

@@ -875,9 +875,21 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Optional:
             .g: cycle group
+            .v: cycle properties (dict) or human-readable input
         """
-        k, i, g, save = parse_function_params(kwargs, 'kigS', '.Ssb')
-        return eva.lm.controller.create_cycle(i, g, save).serialize()
+        k, i, g, v, save = parse_function_params(kwargs, 'kigvS', '.Ss.b')
+        cycle = eva.lm.controller.create_cycle(i, g, save)
+        try:
+            if v:
+                if isinstance(v, dict):
+                    self._set_prop(cycle, v=v, save=save)
+                else:
+                    cycle.set_hri(v, save=save)
+        except:
+            eva.core.log_traceback()
+            eva.lm.controller.destroy_cycle(cycle.item_id)
+            raise
+        return cycle.serialize(info=True)
 
     @log_w
     @api_need_master

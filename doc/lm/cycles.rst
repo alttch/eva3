@@ -18,8 +18,41 @@ to manage cycles.
     hardware production cycle controllers and control/monitor them using EVA
     ICS as a supervisor only.
 
-Parameters
-==========
+Cycle creation
+==============
+
+Cycles can be created with either LM API
+:ref:`create_cycle<lmapi_create_cycle>` function or with :doc:`EVA
+shell</cli>`.
+
+To configure cycle you may specify action and interval, or you may set cycle
+parameters one-by-one after the cycle is created.
+
+To specify action and interval during cycle creation, use the following format:
+
+.. code:: bash
+
+    cycle create <cycle_id> [action] [interval <seconds>]
+
+Example, start unit *unit:lamp/lamp1* (call *start* macro function) with
+interval 0.5 seconds.
+
+.. code:: bash
+
+    cycle create cycle1 @start('unit:lamp/lamp1') interval 0.5
+
+Another example, run macro *macro1* every 100 milliseconds:
+
+.. code:: bash
+
+    cycle create cycle2 macro1(1, 2, x=test) interval 0.1
+
+.. note::
+
+    Cycle ID must be unique within a :doc:`/lm/lm`.
+
+Cycle configuration
+===================
 
 Each lcycle object has the following parameters:
 
@@ -108,4 +141,28 @@ strongly recommended for the low-interval cycles:
 
 * read :doc:`common recommendations about using EVA ICS in high-load
   environments</highload>`.
+
+
+Cycles vs jobs
+==============
+
+Both cycles and :doc:`</lm/jobs>` do similar functions: start macros with the
+specified interval.
+
+**When you should use cycles**
+
+* you need to have complete control and monitoring on the interval loop
+* you need to periodically stop / start interval loop manually
+* interval is in seconds or milliseconds
+
+usage example: automation loops.
+
+**When jobs are better**
+
+* you need a simple instrument to run the task periodically
+* you need to start a task with the specified time schedule, e.g. every day at
+  9:00
+* interval is in seconds, minutes or hours, precision is not important
+
+usage examples: statistic tasks, cleaners, system checkers.
 

@@ -19,6 +19,8 @@ import json
 
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
+from eva.tools import parse_func_str
+
 from eva.exceptions import FunctionFailed
 
 from types import SimpleNamespace
@@ -529,7 +531,7 @@ class Cycle(eva.item.Item):
 
     def update_config(self, data):
         if 'macro' in data:
-            self.macro = eva.lm.controller.get_macro(data['macro'])
+            self.macro = eva.lm.controller.get_macro(data['macro'], pfm=True)
         if 'macro_args' in data:
             m = data['macro_args']
             if isinstance(m, str):
@@ -543,7 +545,7 @@ class Cycle(eva.item.Item):
         if 'macro_kwargs' in data:
             self.macro_kwargs = dict_from_str(data['macro_kwargs'])
         if 'on_error' in data:
-            self.on_error = eva.lm.controller.get_macro(data['on_error'])
+            self.on_error = eva.lm.controller.get_macro(data['on_error'], pfm=True)
         if 'interval' in data:
             self.interval = data['interval']
         if 'ict' in data:
@@ -551,6 +553,50 @@ class Cycle(eva.item.Item):
         if 'autostart' in data:
             self.autostart = data['autostart']
         super().update_config(data)
+
+    def set_hri(self, v, save=False):
+
+        def parse_str(s):
+            d = s if isinstance(s, list) else s.strip().split()
+            interval = None
+            f = None
+            for i, x in enumerate(d):
+                if x == 'interval':
+                    try:
+                        interval = float(d[i + 1])
+                        if len(d) > i + 2:
+                            raise Exception
+                    except:
+                        raise ValueError('Invalid interval')
+                    f = ' '.join(d[:i])
+                    break
+            if not f:
+                f = ' '.join(s) if isinstance(s, list) else s
+            return interval, f
+
+        try:
+            interval, f = parse_str(v)
+        except Exception as e:
+            raise FunctionFailed(e)
+        if interval:
+            try:
+                if not self.set_prop('interval', interval):
+                    raise Exception
+            except:
+                raise FunctionFailed('Unable to set cycle interval')
+        try:
+            name, args, kwargs = parse_func_str(f)
+        except Exception as e:
+            raise FunctionFailed(e)
+        if not self.set_prop('macro', name):
+            raise FunctionFailed('Unable to set cycle macro')
+        if not self.set_prop('macro_args', args):
+            raise FunctionFailed('Unable to set cycle macro args')
+        if not self.set_prop('macro_kwargs', kwargs):
+            raise FunctionFailed('Unable to set cycle macro kwargs')
+        if save:
+            self.save()
+        return True
 
     def set_prop(self, prop, val=None, save=False):
         if prop == 'macro':
@@ -562,7 +608,7 @@ class Cycle(eva.item.Item):
                     self.log_set(prop, val)
                     self.set_modified(save)
                 return True
-            macro = eva.lm.controller.get_macro(val)
+            macro = eva.lm.controller.get_macro(val, pfm=True)
             if macro:
                 if not self.macro or self.macro.oid != macro.oid:
                     self.macro = macro
@@ -573,10 +619,13 @@ class Cycle(eva.item.Item):
                 return False
         elif prop == 'macro_args':
             if val is not None:
-                try:
-                    v = shlex.split(val)
-                except:
-                    v = val.split(' ')
+                if isinstance(val, list):
+                    v = val
+                else:
+                    try:
+                        v = shlex.split(val)
+                    except:
+                        v = val.split(' ')
             else:
                 v = []
             self.macro_args = v
@@ -598,7 +647,7 @@ class Cycle(eva.item.Item):
                     self.log_set(prop, val)
                     self.set_modified(save)
                 return True
-            macro = eva.lm.controller.get_macro(val)
+            macro = eva.lm.controller.get_macro(val, pfm=True)
             if macro:
                 if not self.on_error or self.on_error.oid != macro.oid:
                     self.on_error = macro

@@ -851,6 +851,7 @@ Parameters:
 Optionally:
 
 * **g** cycle group
+* **v** cycle properties (dict) or human-readable input
 
 .. _lmapi_destroy_cycle:
 

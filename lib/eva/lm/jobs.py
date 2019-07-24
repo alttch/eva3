@@ -181,11 +181,11 @@ class Job(eva.item.Item):
         except Exception as e:
             raise FunctionFailed(e)
         if not self.set_prop('macro', name):
-            raise FunctionFailed('Unable to set rule macro')
+            raise FunctionFailed('Unable to set job macro')
         if not self.set_prop('macro_args', args):
-            raise FunctionFailed('Unable to set rule macro args')
+            raise FunctionFailed('Unable to set job macro args')
         if not self.set_prop('macro_kwargs', kwargs):
-            raise FunctionFailed('Unable to set rule macro kwargs')
+            raise FunctionFailed('Unable to set job macro kwargs')
         if save:
             self.save()
         return True
