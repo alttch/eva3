@@ -12,6 +12,7 @@ Common
     * InfluxDB integration
     * Logging to syslog
     * Autocompletion files for ZSH
+    * server events
 
 UC
 --
