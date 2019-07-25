@@ -52,6 +52,10 @@ _flags = SimpleNamespace(action_subscribed=False)
 
 _ne_kw = {'notifier': True}
 
+notify_leave_data = set()
+
+with_notify_lock = eva.core.RLocker('notify')
+
 
 class Event(object):
 
@@ -1420,7 +1424,8 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def handler_append(self, topic, func, qos=None):
         if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical('GenericMQTTNotifier::handler_append locking broken')
+            logging.critical(
+                'GenericMQTTNotifier::handler_append locking broken')
             eva.core.critical()
             return False
         try:
@@ -1431,8 +1436,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 self.custom_handlers[_topic] = set()
                 self.custom_handlers_qos[_topic] = qos
                 self.mq.subscribe(_topic, qos=qos)
-                logging.debug(
-                    '%s subscribed to %s for handler' % (self.notifier_id, _topic))
+                logging.debug('%s subscribed to %s for handler' %
+                              (self.notifier_id, _topic))
             self.custom_handlers[_topic].add(func)
             logging.debug('%s new handler for topic %s: %s' % (self.notifier_id,
                                                                _topic, func))
@@ -1441,7 +1446,8 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def handler_remove(self, topic, func):
         if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical('GenericMQTTNotifier::handler_remove locking broken')
+            logging.critical(
+                'GenericMQTTNotifier::handler_remove locking broken')
             eva.core.critical()
             return False
         try:
@@ -2291,9 +2297,10 @@ def notify(subject,
                 pass
 
 
-def get_notifier(notifier_id=None):
+def get_notifier(notifier_id=None, get_default=True):
     return notifiers.get(notifier_id) if \
-        notifier_id is not None else get_default_notifier()
+        notifier_id is not None else \
+            (get_default_notifier() if get_default else None)
 
 
 def get_default_notifier():
@@ -2365,6 +2372,22 @@ def notify_restart():
     notify('server', 'restart')
     # make sure event is queued
     if eva.core.is_shutdown_requested(): time.sleep(0.2)
+
+
+@eva.core.shutdown
+def notify_leaving():
+    if not notify_leave_data:
+        return
+    for n in notify_leave_data:
+        logging.warning('Sending leaving event to {}'.format(n.notifier_id))
+        n.notify('server', 'leaving')
+    # make sure event is queued
+    time.sleep(0.2)
+
+
+@with_notify_lock
+def mark_leaving(n):
+    notify_leave_data.add(n)
 
 
 @background_worker(

@@ -254,8 +254,16 @@ class RemoteController(eva.item.Item):
             logging.warning(self.oid + ' invalid server event data')
             return False
         try:
-            if j.get('e') == 'restart':
+            event = j.get('e')
+            if event == 'restart':
                 self.set_connected(False, graceful_shutdown=True)
+            elif event == 'leaving':
+                logging.warning(self.oid + ' requested to leave the pool')
+                if self.pool and not self.wait_for_autoremove:
+                    self.wait_for_autoremove = True
+                    t = threading.Thread(
+                        target=eva.api.remove_controller, args=(self.full_id,))
+                    t.start()
         except:
             eva.core.log_traceback()
 

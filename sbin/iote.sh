@@ -188,6 +188,7 @@ case $CMD in
     for c in uc lm; do
       CN=${c^^}
       if [ "x$(eval "echo \$${CN}_ENABLED")" == "xyes" ]; then
+        ./sbin/eva-tinyapi -C $c -F notify_leaving i=${EVA_CLOUD_ID}.${DOMAIN} > /dev/null 2>&1
         destroy_notifier $c > /dev/null 2>&1
         ./sbin/eva-control restart $c || exit 3
         destroy_apikey $c > /dev/null 2>&1
