@@ -63,6 +63,7 @@ function create_notifier {
   BATCH="$BATCH;set ${N} ca_certs ${CA_CERTS}"
   BATCH="$BATCH;subscribe state ${N} -p '#' -g '#'"
   BATCH="$BATCH;subscribe log ${N}"
+  BATCH="$BATCH;subscribe server ${N}"
   BATCH="$BATCH;set ${N} api_enabled 1"
   BATCH="$BATCH;set ${N} announce_interval 30"
   BATCH="$BATCH;test ${N}"

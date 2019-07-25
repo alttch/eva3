@@ -215,6 +215,7 @@ function create_notifier {
         fi
         BATCH="$BATCH;subscribe state eva_1 -p '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
+        BATCH="$BATCH;subscribe server eva_1"
         if [ "x$MQTT_ANNOUNCE_ENABLED" == "x1" ]; then
             BATCH="$BATCH;set eva_1 api_enabled 1"
             BATCH="$BATCH;set eva_1 announce_interval 30"
