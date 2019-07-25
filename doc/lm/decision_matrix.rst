@@ -129,10 +129,6 @@ Tips for rule configuration
   configure the rule to check for the :ref:`lvar<lvar>` timers reset as well as
   working with a logical flags
 
-* to delete **in_range_min** and **in_range_max** conditions, use null or none
-  in **lm-rules** or blank value in LM API
-  :ref:`set_rule_prop<lmapi_set_rule_prop>`
-
 * if the rule has no **in_range_min** and **in_range_max conditions**, it will
   match each time when the item changes its status (for_prop == status) or
   value (for_prop == value)

@@ -288,21 +288,34 @@ activates the delayed start timer:
 
 .. code-block:: bash
 
-    lm-rules add -E -y -x value --type sensor --group env --item temp1 --ge 25 --initial any -m vi_control -a "1 event"
+    eva lm -I
+    rule create
+    rule set <rule_uuid> oid sensor:env/temp1.value
+    rule set <rule_uuid> condition x >= 25
+    rule set <rule_uuid> macro vi_control
+    rule set <rule_uuid> macro_args "1 event"
 
 The second one will match if the temperature is below 25 degrees and switches
 the ventilation off (if it's allowed):
 
 .. code-block:: bash
 
-    lm-rules add -E -y -x value --type sensor --group env --item temp1 --lt 25 --initial any -m vi_control -a "0 event"
+    rule create
+    rule set <rule_uuid> oid sensor:env/temp1.value
+    rule set <rule_uuid> condition x < 25
+    rule set <rule_uuid> macro vi_control
+    rule set <rule_uuid> macro_args "0 event"
 
 The third rule will run the macro to turn the ventilation on as soon as the
 delayed start timer finishes the countdown:
 
 .. code-block:: bash
 
-    lm-rules add -E -y --type lvar --group ventilation --item vi_timer --exp -m vi_control -a "1 timer"
+    rule create
+    rule set <rule_uuid> oid lvar:ventilation/vi_timer.status
+    rule set <rule_uuid> condition x == -1
+    rule set <rule_uuid> macro vi_control
+    rule set <rule_uuid> macro_args "1 timer"
 
 Motion sensor logic
 -------------------
