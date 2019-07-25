@@ -284,25 +284,30 @@ Put a macro code in **xc/lm/vi_control.py** file
 The macro requires 3 :doc:`rules</lm/decision_matrix>`:
 
 The first one will match if the temperature is above or equal to 25 degrees and
-activates the delayed start timer:
+activates the delayed start timer (we'll run this command in EVA shell
+interactive mode, to avoid screening of special symbols):
 
 .. code-block:: bash
 
-    lm-rules add -E -y -x value --type sensor --group env --item temp1 --ge 25 --initial any -m vi_control -a "1 event"
+    eva lm -I
+    rule create if sensor:env/temp1.value >= 25 then v1_control(1, event)
+    rule enable <rule_uuid>
 
 The second one will match if the temperature is below 25 degrees and switches
 the ventilation off (if it's allowed):
 
 .. code-block:: bash
 
-    lm-rules add -E -y -x value --type sensor --group env --item temp1 --lt 25 --initial any -m vi_control -a "0 event"
+    rule create if sensor:env/temp1.value < 25 then vi_control(0, event)
+    rule enable <rule_uuid>
 
 The third rule will run the macro to turn the ventilation on as soon as the
 delayed start timer finishes the countdown:
 
 .. code-block:: bash
 
-    lm-rules add -E -y --type lvar --group ventilation --item vi_timer --exp -m vi_control -a "1 timer"
+    rule create if lvar:ventilation/vi.status == -1 then vi_control(1, timer)
+    rule enable <rule_uuid>
 
 Motion sensor logic
 -------------------

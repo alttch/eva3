@@ -454,3 +454,51 @@ def format_modbus_value(val):
         return val[0], addr, multiplier, signed
     except:
         return None, None, None, None
+
+
+def parse_func_str(s):
+    """
+    Raises:
+        ValueError
+    """
+    s = s.strip()
+    import re
+    wrong = re.compile(r"[<>/{}[\]~`]")
+    r = s.replace(')', '').split('(')
+    name = r.pop(0)
+    if wrong.search(name) or name.find(' ') != -1:
+        raise ValueError
+    args = []
+    kw = {}
+    for a in r:
+        w = [x.strip() for x in a.split(',')]
+        for t in w:
+            if '=' not in t:
+                if t.startswith('\'') or t.startswith('"'):
+                    args.append(t)
+                else:
+                    try:
+                        if int(t) or float(t):
+                            if '.' not in t:
+                                args.append(int(t))
+                            else:
+                                args.append(float(t))
+                    except ValueError:
+                        args.append(t)
+            else:
+                k, v = t.split('=')
+                if wrong.search(k) or k.find(' ') != -1:
+                    raise ValueError('Invalid kwargs param')
+                try:
+                    if int(v) or float(v):
+                        kw.update({
+                            k: int(v)
+                        } if '.' not in v else {k: float(v)})
+                except ValueError:
+                    kw.update({
+                        k:
+                        ''.join(list(v)[1:-1])
+                        if ((v.__contains__('\'') or v.__contains__('"')) and
+                            list(v)[0] == list(v)[-1]) else v
+                    })
+    return name, args if args else None, kw if kw else None

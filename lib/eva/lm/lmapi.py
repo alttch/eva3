@@ -345,13 +345,21 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Optional:
             .u: rule UUID to set
-            .v: rule properties (dict)
+            .v: rule properties (dict) or human-readable input
             save: save rule configuration immediately
         """
         u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
         rule = eva.lm.controller.create_dm_rule(save=save, rule_uuid=u)
-        if v and isinstance(v, dict):
-            self._set_prop(rule, v=v, save=save)
+        try:
+            if v:
+                if isinstance(v, dict):
+                    self._set_prop(rule, v=v, save=save)
+                else:
+                    rule.set_hri(v, save=save)
+        except:
+            eva.core.log_traceback()
+            eva.lm.controller.destroy_dm_rule(rule.item_id)
+            raise
         return rule.serialize(info=True)
 
     @log_w
@@ -506,13 +514,21 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Optional:
             .u: job UUID to set
-            .v: job properties (dict)
+            .v: job properties (dict) or human-readable input
             save: save unit configuration immediately
         """
         u, v, save = parse_api_params(kwargs, 'uvS', 's.b')
         job = eva.lm.controller.create_job(save=save, job_uuid=u)
-        if v and isinstance(v, dict):
-            self._set_prop(job, v=v, save=save)
+        try:
+            if v:
+                if isinstance(v, dict):
+                    self._set_prop(job, v=v, save=save)
+                else:
+                    job.set_hri(v, save=save)
+        except:
+            eva.core.log_traceback()
+            eva.lm.controller.destroy_job(job.item_id)
+            raise
         return job.serialize(info=True)
 
     @log_w
@@ -859,9 +875,21 @@ class LM_API(GenericAPI, GenericCloudAPI):
 
         Optional:
             .g: cycle group
+            .v: cycle properties (dict) or human-readable input
         """
-        k, i, g, save = parse_function_params(kwargs, 'kigS', '.Ssb')
-        return eva.lm.controller.create_cycle(i, g, save).serialize()
+        k, i, g, v, save = parse_function_params(kwargs, 'kigvS', '.Ss.b')
+        cycle = eva.lm.controller.create_cycle(i, g, save)
+        try:
+            if v:
+                if isinstance(v, dict):
+                    self._set_prop(cycle, v=v, save=save)
+                else:
+                    cycle.set_hri(v, save=save)
+        except:
+            eva.core.log_traceback()
+            eva.lm.controller.destroy_cycle(cycle.item_id)
+            raise
+        return cycle.serialize(info=True)
 
     @log_w
     @api_need_master

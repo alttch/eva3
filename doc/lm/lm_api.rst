@@ -549,7 +549,7 @@ Parameters:
 Optionally:
 
 * **u** rule UUID to set
-* **v** rule properties (dict)
+* **v** rule properties (dict) or human-readable input
 * **save** save rule configuration immediately
 
 .. _lmapi_destroy_rule:
@@ -851,6 +851,7 @@ Parameters:
 Optionally:
 
 * **g** cycle group
+* **v** cycle properties (dict) or human-readable input
 
 .. _lmapi_destroy_cycle:
 
@@ -1399,7 +1400,7 @@ Parameters:
 Optionally:
 
 * **u** job UUID to set
-* **v** job properties (dict)
+* **v** job properties (dict) or human-readable input
 * **save** save unit configuration immediately
 
 .. _lmapi_destroy_job:
