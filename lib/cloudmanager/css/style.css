@@ -759,7 +759,7 @@ a.controller_link {
   margin-right: 0;
 }
 #mng_lvars .descr_block {
-  width: calc(100% - 65px);
+  width: calc(100% - 145px);
 }
 #mng_sensors .descr_block {
  width: calc(100% - 210px); 
@@ -912,14 +912,14 @@ input.device-error:focus {
     margin-right: 20px;
   }
   #mng_lvars .descr_block {
-    width: calc(40% - 90px);
+    width: calc(65% - 170px);
     margin-right: 20px;
   }
   #mng_lvars .descr_block:first-child {
     margin-bottom: 0;
   }
   #mng_lvars .descr_block:first-child {
-    width: 60%;
+    width: 35%;
   }
   #mng_macros .descr_block {
     margin-bottom: 0;
@@ -1023,6 +1023,12 @@ input.device-error:focus {
 
   .ctrl_block {
     margin: 0 40px;
+  }
+  #mng_lvars .descr_block {
+    width: calc(45% - 170px);
+  }
+  #mng_lvars .descr_block:first-child {
+    width: 55%;
   }
   #mng_cycles .descr_block {
     width: calc(70% - 310px);
