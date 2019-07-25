@@ -545,7 +545,8 @@ class Cycle(eva.item.Item):
         if 'macro_kwargs' in data:
             self.macro_kwargs = dict_from_str(data['macro_kwargs'])
         if 'on_error' in data:
-            self.on_error = eva.lm.controller.get_macro(data['on_error'], pfm=True)
+            self.on_error = eva.lm.controller.get_macro(
+                data['on_error'], pfm=True)
         if 'interval' in data:
             self.interval = data['interval']
         if 'ict' in data:
