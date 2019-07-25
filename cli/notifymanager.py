@@ -140,6 +140,12 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             metavar='LEVEL',
             default=20)
 
+        sp_subscribe_server = sp_subscribe.add_parser(
+            'server', help='Subscribe to server events')
+        sp_subscribe_server.add_argument(
+            'i', help='Notifier ID',
+            metavar='NOTIFIER_ID').completer = self.ComplN(self)
+
         sp_subscribe_state = sp_subscribe.add_parser(
             'state', help='Subscribe to state updates')
         sp_subscribe_state.add_argument(
@@ -211,7 +217,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             help='Notification subject (if empty - unsubscribe from all)',
             metavar='SUBJECT',
             nargs='?',
-            choices=['log', 'state', 'action'])
+            choices=['log', 'state', 'action', 'server'])
         ap_unsubscribe.add_argument(
             'i', help='Notifier ID',
             metavar='NOTIFIER_ID').completer = self.ComplN(self)
@@ -253,7 +259,7 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 notify_key=notify_key,
                 space=space,
                 timeout=timeout)
-        if p[0] == 'influxdb':
+        elif p[0] == 'influxdb':
             u = (':'.join(p[1:])).split('/')
             if len(u) < 3: return self.local_func_result_failed
             uri = '/'.join(u)
@@ -436,6 +442,17 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 return 0, d
         return self.local_func_result_failed
 
+    def subscribe_notifier_server(self, params):
+        n = self.get_notifier(params['i'])
+        if not n or not n.subscribe(subject='server'):
+            return self.local_func_result_failed
+        eva.notify.append_notifier(n)
+        eva.notify.save_notifier(params['i'])
+        for d in n.serialize()['events']:
+            if d['subject'] == 'server':
+                return 0, d
+        return self.local_func_result_failed
+
     def subscribe_notifier_state(self, params):
         n = self.get_notifier(params['i'])
         if not n or not n.subscribe(
@@ -507,6 +524,7 @@ _api_functions = {
     'set': cli.set_notifier_prop,
     'unsubscribe': cli.unsubscribe_notifier,
     'subscribe:log': cli.subscribe_notifier_log,
+    'subscribe:server': cli.subscribe_notifier_server,
     'subscribe:state': cli.subscribe_notifier_state,
     'subscribe:action': cli.subscribe_notifier_action
 }
