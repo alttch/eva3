@@ -230,20 +230,10 @@ class RemoteController(eva.item.Item):
         self.set_mqtt_notifier()
 
     def set_connected(self, state, graceful_shutdown=False):
-        if not self.pool.management_lock.acquire(
-                timeout=eva.core.config.timeout):
-            logging.critical(
-                'RemoteController::set_controller_connected ' + \
-                        'locking broken')
-            eva.core.critical()
-            return False
-        try:
-            self.connected = state
-            if graceful_shutdown:
-                logging.debug(self.oid + ' marked down')
-                self.last_reload_time = time.time()
-        finally:
-            self.pool.management_lock.release()
+        self.last_reload_time = time.time()
+        self.connected = state
+        if graceful_shutdown:
+            logging.debug(self.oid + ' marked down')
 
     def server_event_handler(self, data, topic, qos, retain):
         if not data:
