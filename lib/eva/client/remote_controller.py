@@ -16,6 +16,7 @@ import time
 import threading
 import websocket
 import json
+import jsonpickle
 import uuid
 import random
 from pyaltt import BackgroundWorker
@@ -100,17 +101,8 @@ class WebSocketWorker(BackgroundWorker):
     def set_controller_connected(self, state, graceful_shutdown=False):
         if not self.is_active():
             return
-        if not self.pool.management_lock.acquire(
-                timeout=eva.core.config.timeout):
-            logging.critical(
-                'WebSocketWorker::set_controller_connected ' + \
-                        'locking broken')
-            eva.core.critical()
-            return False
-        self.controller.connected = state
-        if graceful_shutdown:
-            self.controller.last_reload_time = time.time()
-        self.pool.management_lock.release()
+        self.controller.set_connected(
+            state, graceful_shutdown=graceful_shutdown)
 
     def run(self, *args, **kwargs):
 
@@ -235,6 +227,73 @@ class RemoteController(eva.item.Item):
         self.enabled = enabled
         self.wait_for_autoremove = False
         self.last_reload_time = 0
+        self.set_mqtt_notifier()
+
+    def set_connected(self, state, graceful_shutdown=False):
+        if not self.pool.management_lock.acquire(
+                timeout=eva.core.config.timeout):
+            logging.critical(
+                'RemoteController::set_controller_connected ' + \
+                        'locking broken')
+            eva.core.critical()
+            return False
+        try:
+            self.connected = state
+            if graceful_shutdown:
+                logging.debug(self.oid + ' marked down')
+                self.last_reload_time = time.time()
+        finally:
+            self.pool.management_lock.release()
+
+    def server_event_handler(self, data, topic, qos, retain):
+        if not data:
+            return True
+        try:
+            j = jsonpickle.decode(data)
+        except:
+            logging.warning(self.oid + ' invalid server event data')
+            return False
+        try:
+            if j.get('e') == 'restart':
+                self.set_connected(False, graceful_shutdown=True)
+        except:
+            eva.core.log_traceback()
+
+    def register_mqtt(self):
+        if self.mqtt_notifier:
+            self.mqtt_notifier.handler_append(
+                'controller/{}/{}/events'.format(self.group, self.item_id),
+                self.server_event_handler,
+                qos=self.mqtt_notifier_qos)
+
+    def unregister_mqtt(self):
+        if self.mqtt_notifier:
+            self.mqtt_notifier.handler_remove(
+                'controller/{}/{}/events'.format(self.group, self.item_id),
+                self.server_event_handler)
+
+    def set_mqtt_notifier(self):
+        self.mqtt_notifier = None
+        self.mqtt_notifier_qos = None
+        if self.mqtt_update:
+            try:
+                params = self.mqtt_update.split(':')
+                n = params[0]
+                notifier = eva.notify.get_notifier(n)
+                if not notifier or notifier.notifier_type != 'mqtt':
+                    logging.error('%s: invalid mqtt notifier %s' % \
+                            (self.oid, n))
+                else:
+                    self.mqtt_notifier = notifier
+                    if len(params) > 1:
+                        try:
+                            self.mqtt_notifier_qos = int(params[1])
+                        except:
+                            logging.error('%s invalid mqtt notifier qos' % \
+                                    self.oid)
+                            eva.core.log_traceback()
+            except:
+                eva.core.log_traceback()
 
     def api_call(self, func, params=None, timeout=None):
         if not self.api or not self.enabled:
@@ -365,6 +424,7 @@ class RemoteController(eva.item.Item):
             self.api.ssl_verify(data['ssl_verify'])
         if 'mqtt_update' in data:
             self.mqtt_update = data['mqtt_update']
+            self.set_mqtt_notifier()
         if 'reload_interval' in data:
             self.reload_interval = data['reload_interval']
         if 'enabled' in data:
@@ -486,6 +546,7 @@ class RemoteController(eva.item.Item):
                 if self.pool:
                     self.pool.remove(self.item_id)
                     self.pool.append(self)
+                self.set_mqtt_notifier()
                 self.log_set(prop, val)
                 self.set_modified(save)
             return True
@@ -752,6 +813,8 @@ class RemoteControllerPool(object):
                 self.websocket_threads[controller.item_id] = worker
                 worker.start(
                     controller=controller, controller_id=controller.item_id)
+            else:
+                controller.register_mqtt()
         except:
             eva.core.log_traceback()
         finally:
@@ -776,6 +839,8 @@ class RemoteControllerPool(object):
                     del self.websocket_threads[controller_id]
                 except:
                     eva.core.log_traceback()
+            else:
+                self.controllers[controller_id].unregister_mqtt()
             try:
                 if controller_id in self.reload_threads:
                     if self.reload_threads[controller_id].is_alive():
