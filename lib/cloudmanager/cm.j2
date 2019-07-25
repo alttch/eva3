@@ -28,12 +28,14 @@
         <form id="eva_ui_login_form" onsubmit="do_login(); return false">
           <div class="list-group" role="tablist" id="login_type">
             <a href="#username_enter" data-toggle="list" aria-selected="true" 
-              role="tab" onclick="$('#enter_type').val('username')" 
+              role="tab" onclick="$('#enter_type').val('username');
+                setTimeout(function(){$('#f_login').focus()},50)" 
               class="list-group-item list-group-item-action show active">
               User login
             </a>
             <a href="#masterkey_enter" data-toggle="list" aria-selected="false" 
-              role="tab"  onclick="$('#enter_type').val('masterkey')" 
+              role="tab" onclick="$('#enter_type').val('masterkey');
+                setTimeout(function(){$('#f_masterkey').focus()},50)" 
               class="list-group-item list-group-item-action">
               Masterkey
             </a>
