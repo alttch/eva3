@@ -1362,6 +1362,7 @@ class GenericMQTTNotifier(GenericNotifier):
             name=self.notifier_id + '_announcer',
             o=self,
             interval=self.announce_interval)
+        self.handler_lock = threading.RLock()
 
     def connect(self):
         self.connected = True
@@ -1417,32 +1418,53 @@ class GenericMQTTNotifier(GenericNotifier):
         finally:
             self.api_callback_lock.release()
 
-    def handler_append(self, topic, func, qos=1):
-        _topic = self.space + '/' + topic if \
-                self.space is not None else topic
-        if not self.custom_handlers.get(_topic):
-            self.custom_handlers[_topic] = set()
-            self.custom_handlers_qos[_topic] = qos
-            self.mq.subscribe(_topic, qos=qos)
-            logging.debug(
-                '%s subscribed to %s for handler' % (self.notifier_id, _topic))
-        self.custom_handlers[_topic].add(func)
-        logging.debug('%s new handler for topic %s: %s' % (self.notifier_id,
-                                                           _topic, func))
+    def handler_append(self, topic, func, qos=None):
+        if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('GenericMQTTNotifier::handler_append locking broken')
+            eva.core.critical()
+            return False
+        try:
+            if qos is None: qos = 1
+            _topic = self.space + '/' + topic if \
+                    self.space is not None else topic
+            if not self.custom_handlers.get(_topic):
+                self.custom_handlers[_topic] = set()
+                self.custom_handlers_qos[_topic] = qos
+                self.mq.subscribe(_topic, qos=qos)
+                logging.debug(
+                    '%s subscribed to %s for handler' % (self.notifier_id, _topic))
+            self.custom_handlers[_topic].add(func)
+            logging.debug('%s new handler for topic %s: %s' % (self.notifier_id,
+                                                               _topic, func))
+        finally:
+            self.handler_lock.release()
 
     def handler_remove(self, topic, func):
-        _topic = self.space + '/' + topic if \
-                self.space is not None else topic
-        if _topic in self.custom_handlers:
-            self.custom_handlers[_topic].remove(func)
-            logging.debug('%s removed handler for topic %s: %s' %
-                          (self.notifier_id, _topic, func))
-        if not self.custom_handlers.get(_topic):
-            self.mq.unsubscribe(_topic)
-            del self.custom_handlers[_topic]
-            del self.custom_handlers_qos[_topic]
-            logging.debug('%s unsubscribed from %s, last handler left' %
-                          (self.notifier_id, _topic))
+        if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical('GenericMQTTNotifier::handler_remove locking broken')
+            eva.core.critical()
+            return False
+        try:
+            _topic = self.space + '/' + topic if \
+                    self.space is not None else topic
+            if _topic in self.custom_handlers:
+                self.custom_handlers[_topic].remove(func)
+                logging.debug('%s removed handler for topic %s: %s' %
+                              (self.notifier_id, _topic, func))
+            if not self.custom_handlers.get(_topic):
+                self.mq.unsubscribe(_topic)
+                try:
+                    del self.custom_handlers[_topic]
+                except:
+                    pass
+                try:
+                    del self.custom_handlers_qos[_topic]
+                except:
+                    pass
+                logging.debug('%s unsubscribed from %s, last handler left' %
+                              (self.notifier_id, _topic))
+        finally:
+            self.handler_lock.release()
 
     def update_item_append(self, item):
         logging.debug('%s subscribing to %s updates' % \
