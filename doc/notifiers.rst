@@ -487,6 +487,54 @@ After, you can tell :ref:`state_history <sfapi_state_history>` SFA API function
 to select metrics from *daily* retention policy, specifying additional
 parameter *o={ "rp": "daily" }*.
 
+Prometheus
+----------
+
+EVA ICS can export metrics for `Prometheus <https://prometheus.io/>`_ time
+series database.
+
+To enable metrics export, create notifier for Prometheus (in the example below
+we'll secure it with user/password authentication):
+
+.. code-block:: bash
+
+    eva ns sfa create pr1 prometheus:
+    eva ns sfa test pr1
+    eva ns sfa set pr1 username prometheus
+    eva ns sfa set pr1 password 123
+    eva ns sfa subscribe state pr1 -g '#'
+    eva ns sfa enable pr1
+    eva sfa server restart
+
+After controller restart, metrics are available at URI
+*/ns/<notifier_id>/metrics*. As Prometheus collect metrics by itself, EVA ICS
+Prometheus notifier just exports subscribed item states to the specified
+metrics URI every time when it's requested.
+
+For the example above, Prometheus job config will look like:
+
+.. code-block:: yaml
+
+    scrape_configs:
+    # .....
+      - job_name: 'eva'
+        scrape_interval: 5s
+        metrics_path: /ns/pr1/metrics
+        basic_auth:
+          username: 'prometheus'
+          password: '123'
+        static_configs:
+          - targets: ['localhost:8828']
+
+Notes about using EVA ICS and Prometheus:
+
+* As Prometheus doesn't support "/" and ".*" for metrics, EVA item properties
+  are exported as e.g. *sensor:env:hum1_int:value*
+
+* Only float and null item values are exported
+
+* To enable metric help, set item description
+
 HTTP Notifiers
 ==============
 

@@ -42,6 +42,14 @@ config = SimpleNamespace(cloud_manager=False)
 controller_lock = threading.RLock()
 
 
+def _get_all_items():
+    d = {}
+    d.update(eva.sfa.controller.uc_pool.units)
+    d.update(eva.sfa.controller.uc_pool.sensors)
+    d.update(eva.sfa.controller.lm_pool.lvars)
+    return d
+
+
 def get_item(i):
     if is_oid(i):
         _tp, _i = parse_oid(i)

@@ -47,6 +47,8 @@ dir_eva_default = '/opt/eva'
 env = {}
 cvars = {}
 
+controllers = set()
+
 _flags = SimpleNamespace(
     ignore_critical=False,
     sigterm_sent=False,
@@ -897,6 +899,10 @@ def start(init_db_only=False):
     if not init_db_only:
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
+
+
+def register_controller(controller):
+    controllers.add(controller)
 
 
 #BD: 20.05.2017

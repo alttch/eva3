@@ -897,10 +897,10 @@ class GenericHTTPNotifier(GenericNotifier):
             if value is None: return False
             self.uri = value
             return True
-        if prop == 'username':
+        elif prop == 'username':
             self.username = value
             return True
-        if prop == 'password':
+        elif prop == 'password':
             self.password = value
             return True
         elif prop == 'ssl_verify':
@@ -1224,6 +1224,119 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
             return True
         else:
             return super().set_prop(prop, value)
+
+
+class PrometheusNotifier(GenericNotifier):
+
+    def __init__(self, notifier_id, space=None, username=None, password=None):
+        notifier_type = 'prometheus'
+        super().__init__(
+            notifier_id=notifier_id, notifier_type=notifier_type, space=space)
+        self.username = username
+        self.password = password
+        self._mounted = False
+
+    class Metrics():
+
+        def __init__(self, n):
+            self.n = n
+
+        def default(self):
+            import cherrypy
+            if self.n.username and self.n.password:
+                import base64
+                auth_header = cherrypy.serving.request.headers.get(
+                    'authorization')
+                try:
+                    scheme, params = auth_header.split(' ', 1)
+                    if scheme.lower() == 'basic':
+                        u, p = base64.b64decode(params).decode().split(':', 1)
+                        u = u.strip()
+                    if u != self.n.username or p != self.n.password:
+                        raise Exception
+                except:
+                    import eva.api
+                    raise eva.api.cp_forbidden_key('invalid username/password')
+            result = []
+            cherrypy.serving.response.headers[
+                'Content-Type'] = 'text/plain; charset=utf-8'
+            e = self.n.is_subscribed('state')
+            if not e:
+                return '\n'
+            import eva.core
+            for c in eva.core.controllers:
+                for i, v in c._get_all_items().items():
+                    if e.item_types and ('#' in e.item_types
+                                    or v.item_type in e.item_types) \
+                                    and eva.item.item_match(v, e.item_ids,
+                                            e.groups):
+                        d = v.serialize(full=True)
+                        oid = d.get('oid')
+                        descr = d.get('description')
+                        if oid:
+                            oid = oid.replace('/', ':')
+                            if 'status' in d:
+                                try:
+                                    val = int(d['status'])
+                                    if descr:
+                                        result.append(
+                                            '# HELP {}:status {} status'.format(
+                                                oid, descr))
+                                    result.append('{}:status {}'.format(
+                                        oid, val))
+                                except:
+                                    pass
+                            if 'value' in d:
+                                try:
+                                    val = d['value']
+                                    if val is None or val == '':
+                                        val = 'NaN'
+                                    else:
+                                        val = float(val)
+                                    if descr:
+                                        result.append(
+                                            '# HELP {}:value {} value'.format(
+                                                oid, descr))
+                                    result.append('{}:value {}'.format(
+                                        oid, val))
+                                except:
+                                    pass
+            return '\n'.join(result) + '\n'
+
+        default.exposed = True
+
+    def set_prop(self, prop, value):
+        if prop == 'username':
+            self.username = value
+            return True
+        elif prop == 'password':
+            self.password = value
+            return True
+        return super().set_prop(prop, value)
+
+    def serialize(self, props=False):
+        d = super().serialize(props=False)
+        if 'timeout' in d:
+            del d['timeout']
+        d['username'] = self.username
+        d['password'] = self.password
+        return d
+
+    def can_notify(self):
+        return False
+
+    def start(self):
+        if self.test_only_mode or self._mounted or not self.enabled:
+            return
+        import cherrypy
+        cherrypy.tree.mount(
+            self.Metrics(self), '/ns/{}/metrics'.format(self.notifier_id))
+
+    def stop(self):
+        pass
+
+    def test(self):
+        return True
 
 
 class GenericMQTTNotifier(GenericNotifier):
@@ -2135,6 +2248,12 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             method=method,
             space=space,
             timeout=timeout)
+    elif ncfg['type'] == 'prometheus':
+        space = ncfg.get('space')
+        username = ncfg.get('username')
+        password = ncfg.get('password')
+        n = PrometheusNotifier(
+            _notifier_id, username=username, password=password)
     else:
         logging.error('Invalid notifier type = %s' % ncfg['type'])
         return None

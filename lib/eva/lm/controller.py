@@ -101,6 +101,11 @@ def format_job_id(r_id):
 
 
 @with_item_lock
+def _get_all_items():
+    return items_by_full_id.copy()
+
+
+@with_item_lock
 def get_item(item_id):
     if not item_id: return None
     if is_oid(item_id):

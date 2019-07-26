@@ -82,6 +82,7 @@ eva.sysapi.update_config(cfg)
 eva.mailer.update_config(cfg)
 
 eva.core.start()
+eva.core.register_controller(eva.lm.controller)
 eva.core.load_cvars()
 
 eva.apikey.allows = ['cmd', 'lock']

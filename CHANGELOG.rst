@@ -10,9 +10,11 @@ Common
     * Core and controller interconnect stability improvements
     * IOTE cloud support
     * InfluxDB integration
+    * Prometheus integration
     * Logging to syslog
     * Autocompletion files for ZSH
     * server events
+    * CLI edit command for controller server config
 
 UC
 --

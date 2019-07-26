@@ -66,7 +66,6 @@ benchmark_lock = threading.Lock()
 with_event_handler_lock = eva.core.RLocker('uc/controller')
 with_item_lock = eva.core.RLocker('uc/controller')
 
-
 @with_event_handler_lock
 def handle_event(item):
     oid = item.oid
@@ -137,6 +136,9 @@ def benchmark_handler(item):
     finally:
         benchmark_lock.release()
 
+@with_item_lock
+def _get_all_items():
+    return items_by_full_id.copy()
 
 @with_item_lock
 def get_item(item_id):

@@ -86,6 +86,7 @@ eva.sysapi.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
 
 eva.core.start()
+eva.core.register_controller(eva.uc.controller)
 eva.core.load_cvars()
 
 eva.apikey.allows = ['cmd', 'lock', 'device']
