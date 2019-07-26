@@ -272,7 +272,7 @@ body {
   background-color: #ececec;
 }
 a.controller_link {
-  margin: auto auto 10px 0;
+  margin: auto auto auto 5px;
   width: 100%;
   font: 14px 'TTNorms Regular';
   color: #0071bc;
@@ -284,10 +284,10 @@ a.controller_link {
   cursor: not-allowed;
 }
 .controller_btn {
-  width: 50px;
-  height: 45px;
+  min-width: 50px;
+  height: 50px;
   margin: auto;
-  padding: 30px 0 0; 
+  padding: 30px 5px 0; 
   font: 12px 'TTNorms Regular';
   color: #999;
   text-align: center;
@@ -295,9 +295,14 @@ a.controller_link {
   border-radius: 7px;
   background-color: transparent;
   background-position: 50% 0;
-  background-size: 30px;
+  background-size: 33px;
   background-repeat: no-repeat;
   cursor: pointer;
+}
+.controller-disconnected .controller_btn:enabled {
+  background-color: #fff;
+  color: #bdbdbd;
+  border: 1px solid #dbdbdb;
 }
 .controller_btn:focus {
   outline: none;
@@ -366,6 +371,8 @@ a.controller_link {
 }
 .controller-disconnected .controller_btn:enabled:hover {
   background-color: #fff;
+  border: 1px solid #999;
+  color: #999;
 }
 .controller_btn.test_btn:not([disabled]):hover {
   background-image: url('../images/rocket_hover.svg');
