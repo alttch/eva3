@@ -740,9 +740,7 @@ a.controller_link {
   margin-bottom: 10px;
 }
 #mng_units .descr_block {
-  width: calc(100% - 110px);
-  margin-right: 20px;
-  margin-bottom: 20px;
+  width: 100%;
 }
 .item_name, .item_priority {
   font-family: 'TTNorms Medium';
@@ -925,6 +923,12 @@ input.device-error:focus {
   .descr_block:first-child {
     margin-right: 20px;
   }
+  #mng_units .descr_block {
+    width: calc(100% - 290px);
+  }
+  #mng_units .buttons_block {
+    margin-right: 0;
+  }
   #mng_lvars .descr_block {
     width: calc(65% - 170px);
     margin-right: 20px;
@@ -998,13 +1002,6 @@ input.device-error:focus {
   .log_block {
     margin-right: 20px;
     margin-left: 20px;
-  }
-  #mng_units .buttons_block {
-    margin-right: 0;
-  }
-  #mng_units .descr_block {
-    width: calc(100% - 395px);
-    margin-bottom: 0;
   }
 
 }
