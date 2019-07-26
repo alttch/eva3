@@ -392,6 +392,9 @@ notifiers.
 DB Notifiers
 ============
 
+RDBMS (MySQL, PosgreSQL)
+------------------------
+
 EVA ICS has a special notifier type: **db**, which is used to store items'
 state history. State history can be obtained later via API calls or
 :ref:`js_framework` for analysis and e.g. to build graphical charts.
@@ -439,6 +442,50 @@ setting:
     set global innodb_default_row_format=dynamic;
 
 or put these options to database server configuration file.
+
+InfluxDB
+--------
+
+Item state metrics can be stored to `InfluxDB <https://www.influxdata.com/>`_
+time series database.
+
+Consider InfluxDB is installed on local host, without password authentication.
+Firstly, create database for EVA ICS:
+
+.. code-block:: sql
+
+    influx
+    > create database eva
+
+Then create InfluxDB notifier, e.g. for :doc:`/sfa/sfa`:
+
+.. code-block:: bash
+
+    eva ns sfa create influx_local 'influxdb:http://127.0.0.1:8086#eva'
+    eva ns sfa test influx_local
+    eva ns sfa subscribe state influx_local -g '#'
+    eva ns sfa enable influx_local
+    eva sfa server restart
+
+That's it. After restart, :doc:`/sfa/sfa` immediately starts sending metrics to
+the specified InfluxDB.
+
+Then you can downsample metrics of the required item, e.g. let's downsample
+*sensor:env/temp1* to 30 minutes:
+
+.. code-block:: sql
+
+    CREATE RETENTION POLICY "daily" ON "eva" DURATION 1D REPLICATION 1
+    CREATE CONTINUOUS QUERY "downsampled_env_temp1_30m" ON "eva" BEGIN
+      SELECT mode(status) as "status",mean(value) as value
+      INTO "downsampled"."sensor:env/temp1"
+      FROM "sensor:env/temp1"
+      GROUP BY time(30m)
+    END
+
+After, you can tell :ref:`state_history <sfapi_state_history>` SFA API function
+to select metrics from *daily* retention policy, specifying additional
+parameter *o={ "rp": "daily" }*.
 
 HTTP Notifiers
 ==============

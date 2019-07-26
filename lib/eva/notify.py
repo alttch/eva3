@@ -1214,22 +1214,12 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
     def serialize(self, props=False):
         d = {}
         if self.method or props: d['method'] = self.method
-        if self.notify_key or props: d['notify_key'] = self.notify_key
         d['db'] = self.db
         d.update(super().serialize(props=props))
         return d
 
     def set_prop(self, prop, value):
-        if prop == 'method':
-            if value is not None and value not in ['jsonrpc']:
-                return False
-            else:
-                self.method = value
-                return True
-        elif prop == 'notify_key':
-            self.notify_key = value
-            return True
-        elif prop == 'db':
+        if prop == 'db':
             self.db = value
             return True
         else:
