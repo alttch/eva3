@@ -781,7 +781,7 @@ a.controller_link {
   width: calc(100% - 145px);
 }
 #mng_sensors .descr_block {
- width: calc(100% - 210px); 
+ width: calc(100% - 190px); 
 }
 #mng_lvars .descr_block:first-child {
   width: 100%;
