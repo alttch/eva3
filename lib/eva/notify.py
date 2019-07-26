@@ -52,6 +52,10 @@ _flags = SimpleNamespace(action_subscribed=False)
 
 _ne_kw = {'notifier': True}
 
+notify_leave_data = set()
+
+with_notify_lock = eva.core.RLocker('notify')
+
 
 class Event(object):
 
@@ -155,6 +159,12 @@ class EventLog(Event):
         return d
 
 
+class EventServer(Event):
+
+    def __init__(self):
+        super().__init__(subject='server')
+
+
 class GenericNotifier(object):
 
     class NotifierWorker(BackgroundQueueWorker):
@@ -227,6 +237,9 @@ class GenericNotifier(object):
                 self.events.add(e)
             else:
                 _e.log_level = log_level
+        elif subject == 'server':
+            e = EventServer()
+            self.events.add(e)
         else:
             return False
         return True
@@ -295,6 +308,8 @@ class GenericNotifier(object):
                     if d['l'] >= e.get_log_level() and 'msg' in d \
                                     and d['msg'][0] != '.':
                         fdata.append(d)
+            elif subject == 'server':
+                return data_in
             elif subject == 'state':
                 fdata = []
                 for din in data_in:
@@ -503,6 +518,7 @@ class GenericNotifier_Client(GenericNotifier):
         self.enabled = True
         self.apikey = apikey
         self.token = token
+        self.subscribe('server')
 
     def format_data(self, subject, data):
         if not subject or not data: return None
@@ -526,6 +542,8 @@ class GenericNotifier_Client(GenericNotifier):
                 d, dts = din
                 if apikey.check(self.apikey, d.item, ro_op=True):
                     fdata.append(dts)
+        elif subject == 'server':
+            fdata = data
         return super().format_data(subject, fdata)
 
     def is_client_dead(self):
@@ -1335,6 +1353,7 @@ class GenericMQTTNotifier(GenericNotifier):
             pfx, eva.core.product.code, eva.core.config.system_name)
         self.api_request_topic = self.controller_topic + 'api/request'
         self.api_response_topic = self.controller_topic + 'api/response'
+        self.server_events_topic = self.controller_topic + 'events'
         self.announce_topic = self.pfx + 'controller/discovery'
         self.announce_msg = eva.core.product.code + \
                             '/' + eva.core.config.system_name
@@ -1347,6 +1366,7 @@ class GenericMQTTNotifier(GenericNotifier):
             name=self.notifier_id + '_announcer',
             o=self,
             interval=self.announce_interval)
+        self.handler_lock = threading.RLock()
 
     def connect(self):
         self.connected = True
@@ -1402,32 +1422,55 @@ class GenericMQTTNotifier(GenericNotifier):
         finally:
             self.api_callback_lock.release()
 
-    def handler_append(self, topic, func, qos=1):
-        _topic = self.space + '/' + topic if \
-                self.space is not None else topic
-        if not self.custom_handlers.get(_topic):
-            self.custom_handlers[_topic] = set()
-            self.custom_handlers_qos[_topic] = qos
-            self.mq.subscribe(_topic, qos=qos)
-            logging.debug(
-                '%s subscribed to %s for handler' % (self.notifier_id, _topic))
-        self.custom_handlers[_topic].add(func)
-        logging.debug('%s new handler for topic %s: %s' % (self.notifier_id,
-                                                           _topic, func))
+    def handler_append(self, topic, func, qos=None):
+        if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical(
+                'GenericMQTTNotifier::handler_append locking broken')
+            eva.core.critical()
+            return False
+        try:
+            if qos is None: qos = 1
+            _topic = self.space + '/' + topic if \
+                    self.space is not None else topic
+            if not self.custom_handlers.get(_topic):
+                self.custom_handlers[_topic] = set()
+                self.custom_handlers_qos[_topic] = qos
+                self.mq.subscribe(_topic, qos=qos)
+                logging.debug('%s subscribed to %s for handler' %
+                              (self.notifier_id, _topic))
+            self.custom_handlers[_topic].add(func)
+            logging.debug('%s new handler for topic %s: %s' % (self.notifier_id,
+                                                               _topic, func))
+        finally:
+            self.handler_lock.release()
 
     def handler_remove(self, topic, func):
-        _topic = self.space + '/' + topic if \
-                self.space is not None else topic
-        if _topic in self.custom_handlers:
-            self.custom_handlers[_topic].remove(func)
-            logging.debug('%s removed handler for topic %s: %s' %
-                          (self.notifier_id, _topic, func))
-        if not self.custom_handlers.get(_topic):
-            self.mq.unsubscribe(_topic)
-            del self.custom_handlers[_topic]
-            del self.custom_handlers_qos[_topic]
-            logging.debug('%s unsubscribed from %s, last handler left' %
-                          (self.notifier_id, _topic))
+        if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
+            logging.critical(
+                'GenericMQTTNotifier::handler_remove locking broken')
+            eva.core.critical()
+            return False
+        try:
+            _topic = self.space + '/' + topic if \
+                    self.space is not None else topic
+            if _topic in self.custom_handlers:
+                self.custom_handlers[_topic].remove(func)
+                logging.debug('%s removed handler for topic %s: %s' %
+                              (self.notifier_id, _topic, func))
+            if not self.custom_handlers.get(_topic):
+                self.mq.unsubscribe(_topic)
+                try:
+                    del self.custom_handlers[_topic]
+                except:
+                    pass
+                try:
+                    del self.custom_handlers_qos[_topic]
+                except:
+                    pass
+                logging.debug('%s unsubscribed from %s, last handler left' %
+                              (self.notifier_id, _topic))
+        finally:
+            self.handler_lock.release()
 
     def update_item_append(self, item):
         logging.debug('%s subscribing to %s updates' % \
@@ -1568,8 +1611,12 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
         self.check_connection()
-        if self.qos and subject in self.qos: qos = self.qos[subject]
-        else: qos = 1
+        if self.qos and subject == 'server' and 'system' in self.qos:
+            qos = self.qos['system']
+        elif self.qos and subject in self.qos:
+            qos = self.qos[subject]
+        else:
+            qos = 1
         if subject == 'state':
             if retain is not None and self.retain_enabled: _retain = retain
             else: _retain = True if self.retain_enabled else False
@@ -1608,6 +1655,19 @@ class GenericMQTTNotifier(GenericNotifier):
                 i['c'] = eva.core.config.controller_name
                 self.mq.publish(
                     self.log_topic,
+                    jsonpickle.encode(i, unpicklable=False),
+                    qos,
+                    retain=_retain)
+        elif subject == 'server':
+            if retain is not None and self.retain_enabled: _retain = retain
+            else: _retain = False
+            for i in data:
+                if not isinstance(i, dict):
+                    i = {'e': i}
+                i['t'] = time.time()
+                i['c'] = eva.core.config.controller_name
+                self.mq.publish(
+                    self.server_events_topic,
                     jsonpickle.encode(i, unpicklable=False),
                     qos,
                     retain=_retain)
@@ -1897,9 +1957,6 @@ class WSNotifier_Client(GenericNotifier_Client):
 
     def send_reload(self):
         self.send_notification('reload', 'asap')
-
-    def send_server_event(self, event):
-        self.send_notification('server', event)
 
     def is_client_dead(self):
         if self.ws:
@@ -2240,9 +2297,10 @@ def notify(subject,
                 pass
 
 
-def get_notifier(notifier_id=None):
+def get_notifier(notifier_id=None, get_default=True):
     return notifiers.get(notifier_id) if \
-        notifier_id is not None else get_default_notifier()
+        notifier_id is not None else \
+            (get_default_notifier() if get_default else None)
 
 
 def get_default_notifier():
@@ -2310,9 +2368,26 @@ def reload_clients():
 
 @eva.core.shutdown
 def notify_restart():
-    logging.warning('sending server restart event to clients')
-    for k, n in notifiers.copy().items():
-        if n.nt_client: n.send_server_event('restart')
+    logging.warning('sending server restart event')
+    notify('server', 'restart')
+    # make sure event is queued
+    if eva.core.is_shutdown_requested(): time.sleep(0.2)
+
+
+@eva.core.shutdown
+def notify_leaving():
+    if not notify_leave_data:
+        return
+    for n in notify_leave_data:
+        logging.warning('Sending leaving event to {}'.format(n.notifier_id))
+        n.notify('server', 'leaving')
+    # make sure event is queued
+    time.sleep(0.2)
+
+
+@with_notify_lock
+def mark_leaving(n):
+    notify_leave_data.add(n)
 
 
 @background_worker(

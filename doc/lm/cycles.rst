@@ -146,7 +146,7 @@ strongly recommended for the low-interval cycles:
 Cycles vs jobs
 ==============
 
-Both cycles and :doc:`</lm/jobs>` do similar functions: start macros with the
+Both cycles and :doc:`/lm/jobs` do similar functions: start macros with the
 specified interval.
 
 **When you should use cycles**

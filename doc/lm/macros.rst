@@ -617,6 +617,9 @@ Unlike standard time.sleep(...), breaks pause when controller shutdown event is 
 Parameters:
 
 * **t** number of seconds to sleep
+
+Optionally:
+
 * **safe** break on shutdown event (default is True)
 
 Returns:

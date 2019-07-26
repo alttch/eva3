@@ -27,6 +27,8 @@ def sleep(t, safe=True):
 
     Args:
         t: number of seconds to sleep
+
+    Optional:
         safe: break on shutdown event (default is True)
 
     Returns:

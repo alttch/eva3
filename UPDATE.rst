@@ -11,7 +11,14 @@ Complete change log: https://get.eva-ics.com/3.2.4/stable/CHANGELOG.html
 Update instructions
 ===================
 
-update and enjoy
+If you use MQTT for controller interconnection, it's recommended to subscribe
+notifiers to server events:
+
+```shell
+eva -I
+ns <uc|lm|sfa>
+subscribe server <notifier_id>
+```
 
 Note
 ====

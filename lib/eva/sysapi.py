@@ -974,7 +974,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         try:
-            return eva.notify.get_notifier(i).serialize()
+            return eva.notify.get_notifier(i, get_default=False).serialize()
         except:
             raise ResourceNotFound
 
@@ -1073,6 +1073,23 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
                                               eva.core.product.code))
         background_job(eva.core.sighandler_term)()
         return True, api_result_accepted
+
+    @log_w
+    @api_need_master
+    def notify_leaving(self, **kwargs):
+        """
+        notify cloud about leaving. event will be sent at server restart
+
+        Args:
+            k: .master
+            .i: notifier ID
+        """
+        i = parse_api_params(kwargs, 'i', 's')
+        n = eva.notify.get_notifier(i)
+        if not n:
+            raise ResourceNotFound
+        eva.notify.mark_leaving(n)
+        return True
 
 
 class SysHTTP_API_abstract(SysAPI):
@@ -1254,8 +1271,7 @@ def update_config(cfg):
     except:
         pass
     try:
-        config.api_rpvt_allowed = (cfg.get(
-            'sysapi', 'rpvt') == 'yes')
+        config.api_rpvt_allowed = (cfg.get('sysapi', 'rpvt') == 'yes')
     except:
         pass
     logging.debug('sysapi.file_management = %s' % ('yes' \

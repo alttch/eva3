@@ -78,6 +78,31 @@ system itself. They are not visible via EI interfaces and are written
 only into the local log files. This was done for the notification system not to
 send the records in cycles.
 
+server - server events
+----------------------
+
+Server events are used to notify controllers and clients about system events.
+Event format is simple:
+
+.. code-block:: text
+
+    {
+      "s": "server",
+      "d": "<event>"
+    }
+
+Event data for MQTT notifiers is packed as dict:
+
+.. code-block:: text
+
+    {
+      "s": "server",
+      "d": {
+        ... system data ...
+        e: "<event>"
+        }
+    }
+
 Configuring the notification endpoints
 ======================================
 

@@ -1925,5 +1925,5 @@ def get_state_history(a=None,
     elif fmt == 'dict':
         pass
     else:
-        return InvalidParameter('Invalid result format {}'.format(fmt))
+        raise InvalidParameter('Invalid result format {}'.format(fmt))
     return result
