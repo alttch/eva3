@@ -200,13 +200,13 @@ body {
 }
 .footer .containers div {
   text-align: center;
-  font: 14px 'TTNorms Regular';
+  font: 12px 'TTNorms Regular';
   color: #808080;
 }
 .footer .containers a {
   font: 12px 'TTNorms Regular';
   color: #4d4d4d;
-  text-decoration: none;
+  text-decoration: underline;
 }
 
 /***********content*************/
