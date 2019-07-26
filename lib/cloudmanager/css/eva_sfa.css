@@ -225,6 +225,7 @@
 .form_radio_holder {
   width: 100%;
   display: flex;
+  margin-top: 2px;
 }
 .form_radio_holder > div {
   position: relative;

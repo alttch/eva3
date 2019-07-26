@@ -854,13 +854,6 @@ input.device-error:focus {
   border-right: none;
 }
 
-.used_symbols {
-  font: 10px 'Roboto Regular';
-  color: #999;
-}
-#rule_description .used_symbols {
-  margin-bottom: 16px;
-}
 #d_rule_cond_eq,
 #d_rule_cond_range {
   margin-top: auto;
