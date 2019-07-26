@@ -268,6 +268,9 @@ body {
   padding: 8px 0 7px;
   border-bottom: 1px solid #dbdbdb;
 }
+.controller-disconnected {
+  background-color: #ececec;
+}
 a.controller_link {
   margin: auto auto 10px 0;
   width: 100%;
@@ -275,6 +278,10 @@ a.controller_link {
   color: #0071bc;
   text-decoration: underline;
   word-break: break-word;
+}
+.controller-disconnected a.controller_link {
+  color: #808080;
+  cursor: not-allowed;
 }
 .controller_btn {
   width: 50px;
@@ -356,6 +363,9 @@ a.controller_link {
 }
 .controller_btn:not([disabled]):hover {
   background-color: #f2f2f2;
+}
+.controller-disconnected .controller_btn:enabled:hover {
+  background-color: #fff;
 }
 .controller_btn.test_btn:not([disabled]):hover {
   background-image: url('../images/rocket_hover.svg');
@@ -565,9 +575,20 @@ a.controller_link {
   max-height: 300px;
 }
 #logr div {
-  font: 14px 'TTNorms Regular';
-  color: #808080;
+  font: 12px 'TTNorms Regular';
   margin-bottom: 10px;
+}
+.logentry_color_10 {
+  color: #999;
+}
+.logentry_color_20 {
+  color: #0071bc;
+}
+.logentry_color_30 {
+  color: #f7931e;
+}
+.logentry_color_40 {
+  color: #ff5353;
 }
 
 /** initial setup **/
