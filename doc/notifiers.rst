@@ -392,8 +392,8 @@ notifiers.
 DB Notifiers
 ============
 
-RDBMS (MySQL, PosgreSQL)
-------------------------
+RDBMS (SQLite, MySQL, PosgreSQL)
+--------------------------------
 
 EVA ICS has a special notifier type: **db**, which is used to store items'
 state history. State history can be obtained later via API calls or
@@ -408,8 +408,7 @@ After creating db notifier, don't forget to subscribe it to **state** events.
 Events **action** and **log** are ignored.
 
 If **easy-setup** is used for EVA :doc:`installation</install>`, notifier
-called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically.
-
+called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically, default
 History database format is `sqlite3 <https://www.sqlite.org/index.html>`_.
 
 .. note::
