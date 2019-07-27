@@ -246,7 +246,8 @@ class UC_API(GenericAPI):
                                                        '.sR.nsin')
         if v is not None: v = str(v)
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         if s == 'toggle':
             s = 0 if item.status else 1
         return self._process_action_result(
@@ -282,7 +283,8 @@ class UC_API(GenericAPI):
         """
         k, i, w, u, p, q = parse_function_params(kwargs, 'kiwupq', '.snsin')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         s = 0 if item.status else 1
         return self._process_action_result(
             eva.uc.controller.exec_unit_action(
@@ -306,7 +308,8 @@ class UC_API(GenericAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         return item.disable_actions()
 
     @log_i
@@ -322,7 +325,8 @@ class UC_API(GenericAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         return item.enable_actions()
 
     @log_i
@@ -408,7 +412,8 @@ class UC_API(GenericAPI):
         k, i, s, v = parse_function_params(kwargs, 'kisv', '.si.')
         if v is not None: v = str(v)
         item = eva.uc.controller.get_item(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         if s is not None or v is not None:
             return item.update_set_state(status=s, value=v)
         else:
@@ -434,7 +439,8 @@ class UC_API(GenericAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         result = item.kill()
         if not result: raise FunctionFailed
         return True, api_result_accepted if item.action_allow_termination else {
@@ -454,7 +460,8 @@ class UC_API(GenericAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.uc.controller.get_unit(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         return item.q_clean()
 
     @log_w
@@ -478,11 +485,13 @@ class UC_API(GenericAPI):
         k, u, i = parse_function_params(kwargs, 'kui', '.ss')
         if u:
             a = eva.uc.controller.Q.history_get(u)
-            if not a or not apikey.check(k, a.item): raise ResourceNotFound
+            if not a: raise ResourceNotFound
+            elif not apikey.check(k, a.item): raise AccessDenied
             return a.kill(), api_result_accepted
         elif i:
             item = eva.uc.controller.get_unit(i)
-            if not item or not apikey.check(k, item): raise ResourceNotFound
+            if not item: raise ResourceNotFound
+            elif not apikey.check(k, item): raise AccessDenied
             return item.terminate(), api_result_accepted
         raise InvalidParameter('Either "u" or "i" must be specified')
 

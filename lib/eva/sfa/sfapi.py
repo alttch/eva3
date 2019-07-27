@@ -228,7 +228,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                                                        '.sR.nsin')
         if v is not None: v = str(v)
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        if not unit: raise ResourceNotFound
+        elif not apikey.check(k, unit): raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.action(
                 unit_id=oid_to_id(i, 'unit'),
@@ -262,7 +263,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i, w, u, p, q = parse_function_params(kwargs, 'kiwupq', '.snsin')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        if not unit: raise ResourceNotFound
+        elif not apikey.check(k, unit): raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.action_toggle(
                 unit_id=oid_to_id(i, 'unit'), wait=w, uuid=u, priority=p, q=q))
@@ -333,7 +335,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        if not unit: raise ResourceNotFound
+        elif not apikey.check(k, unit): raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.disable_actions(
                 unit_id=oid_to_id(i, 'unit')))
@@ -351,7 +354,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        if not unit: raise ResourceNotFound
+        elif not apikey.check(k, unit): raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.enable_actions(
                 unit_id=oid_to_id(i, 'unit')))
@@ -384,7 +388,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             unit = eva.sfa.controller.uc_pool.get_unit(a['i'])
         else:
             raise ResourceNotFound
-        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        if not unit: raise ResourceNotFound
+        elif not apikey.check(k, unit): raise AccessDenied
         result = ecall(
             eva.sfa.controller.uc_pool.terminate(
                 unit_id=oid_to_id(i, 'unit'), uuid=u))
@@ -412,7 +417,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        if not unit: raise ResourceNotFound
+        elif not apikey.check(k, unit): raise AccessDenied
         result = ecall(
             eva.sfa.controller.uc_pool.kill(unit_id=oid_to_id(i, 'unit')))
         if result is True:
@@ -434,7 +440,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit or not apikey.check(k, unit): raise ResourceNotFound
+        if not unit: raise ResourceNotFound
+        elif not apikey.check(k, unit): raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.q_clean(unit_id=oid_to_id(i, 'unit')))
 
@@ -456,7 +463,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k, i, s, v, = parse_function_params(kwargs, 'kisv', '.si.')
         if v is not None: v = str(v)
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        if not lvar: raise ResourceNotFound
+        elif not apikey.check(k, lvar): raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.set(
                 lvar_id=oid_to_id(i, 'lvar'), status=s, value=v))
@@ -476,7 +484,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        if not lvar: raise ResourceNotFound
+        elif not apikey.check(k, lvar): raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.reset(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -495,7 +504,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        if not lvar: raise ResourceNotFound
+        elif not apikey.check(k, lvar): raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -514,7 +524,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        if not lvar: raise ResourceNotFound
+        elif not apikey.check(k, lvar): raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.toggle(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -532,7 +543,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        if not lvar: raise ResourceNotFound
+        elif not apikey.check(k, lvar): raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.increment(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -550,7 +562,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar or not apikey.check(k, lvar): raise ResourceNotFound
+        if not lvar: raise ResourceNotFound
+        elif not apikey.check(k, lvar): raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.decrement(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -636,7 +649,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k, i, a, kw, w, u, p, q = parse_function_params(kwargs, 'kiaKwupq',
                                                         '.s..nsin')
         macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
-        if not macro or not apikey.check(k, macro): raise ResourceNotFound
+        if not macro: raise ResourceNotFound
+        elif not apikey.check(k, macro): raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.run(
                 macro=oid_to_id(i, 'lmacro'),
