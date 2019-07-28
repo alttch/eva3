@@ -954,7 +954,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             nargs='*',
             help=textwrap.dedent('''
                 Rule condition and action, example:
-                if sensor:env/temp > 25 then macro1(1, 2, x=3)'''))
+                if sensor:env/temp.value > 25 then macro1(1, 2, x=3)'''))
         sp_rule_create.add_argument(
             '-y',
             '--save',
