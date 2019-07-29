@@ -477,7 +477,7 @@ Then you can downsample metrics of the required item, e.g. let's downsample
     CREATE RETENTION POLICY "daily" ON "eva" DURATION 1D REPLICATION 1
     CREATE CONTINUOUS QUERY "downsampled_env_temp1_30m" ON "eva" BEGIN
       SELECT mode(status) as "status",mean(value) as value
-      INTO "downsampled"."sensor:env/temp1"
+      INTO "daily"."sensor:env/temp1"
       FROM "sensor:env/temp1"
       GROUP BY time(30m)
     END
