@@ -119,7 +119,7 @@ On shutdown
 -----------
 
 If defined, macro named **system/shutdown** is launched automatically at the
-controller startup. This macro can, for example, gracefully stop cycles and
+controller shutdown. This macro can, for example, gracefully stop cycles and
 set/reset required :ref:`logic variables<lvar>`. The macro should end its work
 in default controller timeout.
 
