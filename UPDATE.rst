@@ -6,6 +6,11 @@ What's new
 
 New features:
 
+- InfluxDB and Prometheus integration
+- Logging to syslog
+- server events
+- CLI improvements
+
 Complete change log: https://get.eva-ics.com/3.2.4/stable/CHANGELOG.html
 
 Update instructions
