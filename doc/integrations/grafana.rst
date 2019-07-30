@@ -4,7 +4,7 @@ Grafana
 `Grafana <https://grafana.com/>`_ is well-known open platform for beautiful
 analytics and monitoring.
 
-.. figure:: grafana-hmi.jpg
+.. figure:: grafana_hmi.jpg
     :scale: 30%
     :alt: Grafana dashboard
 

@@ -124,8 +124,8 @@ What you get with EVA
     :caption:  Integrations
     :maxdepth: 1
 
-    integrations/grafana
     integrations/cctv
+    integrations/grafana
 
 .. toctree::
     :caption:  Extension development

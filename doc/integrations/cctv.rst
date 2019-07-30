@@ -87,6 +87,10 @@ to :doc:`/sfa/sfa`, we can ask controller in network **B** to be our agent and
 provide camera image (as well as any other resource from network **B**) for
 SFA.
 
+.. figure:: cctv_agent_schema.png
+    :scale: 30%
+    :alt: CCTV agent schema
+
 The task we are going to solve is pretty complex but it allows to transfer
 image from camera without VPN, port-forwarding. But keep resources in network
 **B** secure and avoid any unauthorized access.
