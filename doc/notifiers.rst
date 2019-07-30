@@ -444,6 +444,8 @@ setting:
 
 or put these options to database server configuration file.
 
+.. _influxdb_:
+
 InfluxDB
 --------
 
@@ -487,6 +489,8 @@ Then you can downsample metrics of the required item, e.g. let's downsample
 After, you can tell :ref:`state_history <sfapi_state_history>` SFA API function
 to select metrics from *daily* retention policy, specifying additional
 parameter *o={ "rp": "daily" }*.
+
+.. _prometheus_:
 
 Prometheus
 ----------

@@ -120,6 +120,12 @@ What you get with EVA
     evahi
 
 .. toctree::
+    :caption:  Integrations
+    :maxdepth: 1
+
+    integrations/grafana
+
+.. toctree::
     :caption:  Extension development
     :maxdepth: 1
 
@@ -134,4 +140,3 @@ What you get with EVA
     api_clients
     Physical interfaces for drivers <phi_development>
     Logic macro extensions <lm/ext>
-
