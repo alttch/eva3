@@ -227,7 +227,7 @@ Create a sensor in UC:
 
     eva uc create sensor:security/motion1 -y
 
-and configure the sensors controller to send :doc:`/snmp_traps` to our server
+and configure the sensors controller to send :ref:`snmp_traps` to our server
 IP.
 
 Method 1: with SNMP trap parser

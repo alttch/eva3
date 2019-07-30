@@ -165,7 +165,7 @@ Unit parameters
   Example: "eva_1:2".
 
 * **snmp_trap** if set, the item may receive active state updates via
-  :doc:`/snmp_traps`.
+  :ref:`snmp_traps`.
 
 * **update_exec** a :doc:`script</item_scripts>` for passive update of the item
   state, "xc/uc/ITEMID_update" by default.
