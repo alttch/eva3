@@ -49,8 +49,8 @@ What you get with EVA
 * use pre-made :doc:`drivers</drivers>` or write simple
   :doc:`scripts</item_scripts>` for your automation hardware and keep them
   organized, queued and safely executed with :doc:`/uc/uc`
-* easily collect data from the hardware using :ref:`MQTT<mqtt_>` or :doc:`SNMP
-  traps</snmp_traps>` with the built-in SNMP trap handler server
+* easily collect data from the hardware using :ref:`MQTT<mqtt_>` or
+  :ref:`snmp_traps` with the built-in SNMP trap handler server
 * collect data from your microcontrollers with a simple :doc:`UDP
   API</uc/uc_udp_api>`
 * test and monitor the initial setup with controllers' EI web interfaces
@@ -98,7 +98,7 @@ What you get with EVA
     item_scripts
     modbus
     owfs
-    snmp_traps
+    snmp
     virtual
 
 .. toctree::
