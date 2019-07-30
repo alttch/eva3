@@ -2,7 +2,7 @@ OWFS (1-Wire)
 *************
 
 :doc:`/uc/uc` provides native support of `1-Wire
-<https://en.wikipedia.org/wiki/1-Wire/>`_ technology for OWFS :doc:`physical
+<https://en.wikipedia.org/wiki/1-Wire>`_ technology for OWFS :doc:`physical
 interfaces (PHIs)</drivers>`. Core support is provided with `OWFS
 <http://owfs.org/>`_.
 
