@@ -25,6 +25,8 @@ authentication to let all application features work properly.
 :ref:`js_framework` function *$eva.hiQR* can be used to generate configuration
 QR code for the current authenticated user.
 
+.. youtube:: 1yU3oEUMQpQ
+
 Building own client
 -------------------
 

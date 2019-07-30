@@ -87,6 +87,8 @@ If you need to change OWFS bus params or options, you can always define new
 OWFS bus with the same ID, without deleting the previous one. Bus configuration
 and options will be overwritten.
 
+.. youtube:: ejjhTBVclpI
+
 Scanning OWFS for devices
 =========================
 
