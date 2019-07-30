@@ -5,6 +5,8 @@ The Notification System is embedded in all EVA subsystems. All the events of
 these subsystems are sent to the notification servers via objects called
 "notifiers" which contain the configuration of the notification endpoints.
 
+.. contents::
+
 Event structure
 ===============
 
