@@ -25,6 +25,8 @@ creation:
 
 .. code:: bash
 
+    eva -I
+    lm
     job create [action] [every <schedule>]
 
 Example, start unit *unit:ventilation/v1* (call *start* macro function) every 5

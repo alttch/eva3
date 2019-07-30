@@ -66,6 +66,9 @@ As soon as the bus is defined, it can be used by PHI.
 
     eva uc owfs scan local1 -a PIO
     # 05.4AEC29CDBAAB  DS2405
+    # download PHI if not installed yet
+    eva uc phi download https://get.eva-ics.com/phi/relays/ow_ds2405.py
+    # load PHI
     eva uc phi load relay1 ow_ds2405 -c owfs=local1,path=05.4AEC29CDBAAB -y
 
 As the result, controller creates a :doc:`driver</drivers>` *relay.default*
