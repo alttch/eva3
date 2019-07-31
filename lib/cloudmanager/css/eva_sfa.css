@@ -168,7 +168,7 @@
   line-height: 20px;
 }
 .custom_chbox:not(checked) + label:before {
-  content: 'ON';
+  content: attr(data-on);
   text-align: right;
   color: #fff;
   padding: 3px 10px;
@@ -191,7 +191,7 @@
   background: #666;
 }
 .custom_chbox:not(checked) + label:after {
-  content: 'OFF';
+  content: attr(data-off);
   text-align: center;
   position: absolute;
   top: 3px;
@@ -207,7 +207,7 @@
   border-radius: 20px;
 }
 .custom_chbox:checked + label:before {
-  content: 'OFF';
+  content: attr(data-off);
   text-align: left;
   background: #6BC45F;
 }
@@ -216,7 +216,7 @@
   cursor: ;
 }
 .custom_chbox:checked + label:after {
-  content: 'ON';
+  content: attr(data-on);
   width: 40px;
   left: 47px;
   color: #6BC45F;
@@ -233,6 +233,7 @@
   padding: 3px;
   border-radius: 2px;
   overflow: hidden;
+  background-color: #ccc;
 }
 .form_radio {
   display: none;
@@ -259,10 +260,12 @@
   background: transparent;
   z-index: -1;
 }
+.form_radio + label::before,
 #radio_NO:checked + label:before,
 #radio_0:checked + label:before {
   background: #fff;
 }
+.form_radio:checked + label::before,
 #radio_YES:checked + label:before,
 #radio_1:checked + label:before {
   background: #fff;
@@ -282,6 +285,7 @@
 #radio_0:checked + label {
   color: #808080;
 }
+.form_radio:checked + label,
 #radio_YES:checked + label,
 #radio_1:checked + label {
   color: #6BC45F;
@@ -293,6 +297,7 @@
 #radio_0:checked + label + .bg_col {
   background: #B3B3B3;
 }
+.form_radio:checked + label + .bg_col,
 #radio_YES:checked + label + .bg_col,
 #radio_1:checked + label + .bg_col {
   background: #6BC45F;
