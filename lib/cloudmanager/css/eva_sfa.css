@@ -97,6 +97,7 @@
 .eva_sfa_popup_content form {
   width: 100%;
 }
+.eva_sfa_popup_content > form.edit_unit_dialog,
 .eva_sfa_popup_content > form.rule_dialog {
   margin: 0;
   max-width: 100%;
@@ -105,6 +106,7 @@
   width: 100%;
   margin-bottom: 10px;
 }
+.eva_sfa_popup_content > form.edit_unit_dialog > .form-group:last-child,
 .eva_sfa_popup_content > form.rule_dialog > .form-group:last-child {
   margin-bottom: 0;
 }

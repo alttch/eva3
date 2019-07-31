@@ -517,6 +517,10 @@ a.controller_link {
 .elements_block .table tbody td:nth-child(1) {
   padding-left: 32px;
 }
+.elements_block #tbar-remote-cycles .table thead th:nth-child(1),
+.elements_block #tbar-remote-cycles .table tbody td:nth-child(1) {
+  padding-left: 5px;
+}
 .elements_block .table tbody .unit-status-1 td:nth-child(1),
 .elements_block .table tbody .sensor-status-1 td:nth-child(1),
 .elements_block .table tbody .lvar-status-1 td:nth-child(1),
@@ -596,6 +600,10 @@ a.controller_link {
 }
 .logentry_color_40 {
   color: #ff5353;
+}
+.logentry_color_50 {
+  color: #ff5353;
+  font-size: 14px;
 }
 
 /** initial setup **/
@@ -747,7 +755,8 @@ a.controller_link {
   margin-bottom: 10px;
 }
 #mng_units .descr_block {
-  width: 100%;
+  width: calc(100% - 90px);
+  min-height: 25px;
 }
 .item_name, .item_priority {
   font-family: 'TTNorms Medium';
@@ -849,10 +858,12 @@ input.device-error:focus {
 #rule_in_range_max_eq {
   max-width: 50px;
 }
+#l_unit_cond_eq,
 #l_rule_cond_eq {
   padding: 2px 8px;
   font-size: 14px;
 }
+#d_rule_cond_range #l_unit_cond_eq,
 #d_rule_cond_range #l_rule_cond_eq {
   border-radius: 0;
   border-left: none;
@@ -863,11 +874,15 @@ input.device-error:focus {
 #d_rule_cond_range {
   margin-top: auto;
 }
+
+#edit_unit_form label[for=expires] {
+  margin-top: 10px;
+}
 @media (max-width: 575px) {
   .row-schf,
   #d_rule_cond_eq,
   #d_rule_cond_range {
-    margin-top: 10px;
+    margin-top: 1rem;
   }
 }
 
@@ -931,7 +946,7 @@ input.device-error:focus {
     margin-right: 20px;
   }
   #mng_units .descr_block {
-    width: calc(100% - 290px);
+    width: calc(100% - 110px);
   }
   #mng_units .buttons_block {
     margin-right: 0;
@@ -1009,6 +1024,10 @@ input.device-error:focus {
   .log_block {
     margin-right: 20px;
     margin-left: 20px;
+  }
+  #mng_units .descr_block {
+    width: calc(100% - 365px);
+    min-height: auto;
   }
 
 }
