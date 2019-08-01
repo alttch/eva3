@@ -124,6 +124,7 @@ What you get with EVA
     :caption:  Integrations
     :maxdepth: 1
 
+    integrations/aws
     integrations/cctv
     integrations/grafana
     integrations/tts

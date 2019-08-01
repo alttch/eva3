@@ -171,11 +171,12 @@ Options for EVA ICS:
 * MQTT space: leave empty
 * MQTT SSL: leave empty (answer 'n' if using *easy-setup*)
 
-Using AWS IoT as MQTT broker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cloud service provider as MQTT broker
+-------------------------------------
 
-Instead of setting up dedicated MQTT server, you can use cloud-based service,
-e.g. AWS IoT.
+* :doc:`/integrations/aws`
+* Google Cloud Engine
+* Microsoft Azure
 
 .. note::
 
@@ -183,40 +184,6 @@ e.g. AWS IoT.
     guarantee event/message ordering. This means some *state* messages between
     controllers may be lost (discarded by controller core if newer message with
     the same topic is already received).
-
-* Create AWS IoT Core "thing"
-* Apply the following policy:
-
-.. code-block:: json
-
-    {
-        "Version": "2012-10-17",
-        "Statement": [{
-            "Effect": "Allow",
-            "Action":["iot:*"],
-            "Resource": ["*"]
-        }]
-    }
-
-Options for EVA ICS:
-
-* MQTT host: AWS IoT endpoint host (XXXXXXXXX.iot.XXXXXXXXX.amazonaws.com)
-* MQTT port: 8883
-* MQTT user, password: leave empty
-* MQTT space: leave empty
-* MQTT SSL: should be enabled (answer 'y' if using *easy-setup*; when notifier
-  is configured later, SSL is automatically enabled as soon as *ca_certs*
-  property is set)
-* MQTT CA file, cert file, key file: provided by AWS (use private key file as
-  key file)
-* Disable MQTT retain (answer 'y' in *easy-setup*) to make sure no topics with
-  retain flag will be sent to MQTT broker (otherwise EVA ICS controller will be
-  instantly disconnected)
-* Use MQTT QoS *0* or *1* (default)
-* It's recommended to create "things" for each EVA ICS controller. After setup,
-  MQTT cert file and key file can be changed with CLI (*eva ns
-  [controller_type]...*). Don't forget to restart the controller to apply
-  notifier configuration.
 
 Downloading and extracting EVA ICS distribution
 -----------------------------------------------
