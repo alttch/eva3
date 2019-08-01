@@ -87,7 +87,7 @@ function usage {
     echo " --mqtt-key FILE          MQTT authorization key"
     echo " --mqtt-announce          Enable MQTT announces and API calls via MQTT"
     echo " --mqtt-discovery         Enable autodiscovery of other nodes via MQTT"
-    echo " --mqtt-disable-retain    Disable MQTT retain (to work with AWS and Azure IoT)"
+    echo " --mqtt-disable-retain    Disable MQTT retain (to work with Amazon IoT)"
     echo
     echo " -p {uc|lm|sfa|all}       specify which controller to set up or all, may be used"
     echo "                          several times"
@@ -386,7 +386,7 @@ function askMQTT {
                 MQTT_ANNOUNCE_ENABLED=$VALUE
                 askYN "Enable autodiscovery of other nodes via MQTT"
                 MQTT_DISCOVERY_ENABLED=$VALUE
-                askYN "Disable MQTT retain topics (to work with AWS and Azure IoT)" N
+                askYN "Disable MQTT retain topics (to work with Amazon IoT)" N
                 MQTT_NO_RETAIN=$VALUE
             fi
             return
