@@ -712,7 +712,7 @@ a.controller_link {
   margin-bottom: 5px;
   padding: 5px;
 }
-.ctrl_reload_btn, .add_rule_btn {
+.ctrl_reload_btn {
   margin-right: 5px;
   padding: 5px;
   background: #fff;
@@ -720,11 +720,13 @@ a.controller_link {
   border-radius: 3px;
   color: #4d4d4d;
 }
-.ctrl_reload_btn:last-child, .add_rule_btn {
+.ctrl_reload_btn:last-child {
   margin: 0;
 }
-.ctrl_reload_btn:enabled:hover, 
-.add_rule_btn:enabled:hover {
+.group_ctrl_holder > .ctrl_reload_btn {
+  margin-bottom: 5px;
+}
+.ctrl_reload_btn:enabled:hover {
   background: #ccc;
 }
 .mng_items_holder {
@@ -878,6 +880,19 @@ input.device-error:focus {
 #edit_unit_form label[for=expires] {
   margin-top: 10px;
 }
+
+.input_helper {
+  font: 10px 'Roboto Regular';
+  color: #999;
+}
+.error_input_msg {
+  display: none;
+  font: 10px 'Roboto Regular';
+  color: #ff5353;
+}
+.device-error + .error_input_msg {
+  display: block;
+}
 @media (max-width: 575px) {
   .row-schf,
   #d_rule_cond_eq,
@@ -974,13 +989,16 @@ input.device-error:focus {
   #mng_cycles .descr_block:first-child{
     width: 45%;
   }
+  #mng_jobs .descr_block,
   #mng_rules .descr_block {
     width: calc(100% - 230px);
     margin-bottom: 0;
   }
+  #mng_jobs .descr_block:first-child,
   #mng_rules .descr_block:first-child {
     width: 100%;
     margin-bottom: 10px;
+    margin-right: 0;
   }
   #mng_macros .buttons_block,
   #mng_rules .buttons_block {
@@ -1077,12 +1095,15 @@ input.device-error:focus {
   #mng_cycles .buttons_block {
     margin-right: 0;
   }
+  #mng_jobs .descr_block,
   #mng_rules .descr_block {
     width: calc(60% - 265px);
     margin-right: 20px;
   }
+  #mng_jobs .descr_block:first-child,
   #mng_rules .descr_block:first-child {
     width: 40%;
+    margin-right: 20px;
     margin-bottom: 0;
   }
 
@@ -1125,6 +1146,14 @@ input.device-error:focus {
   .log_block {
     margin-right: 0;
     margin-left: 0;
+  }
+  #mng_jobs .descr_block,
+  #mng_rules .descr_block {
+    width: calc(67% - 265px);
+  }
+  #mng_jobs .descr_block:first-child,
+  #mng_rules .descr_block:first-child {
+    width: 33%;
   }
 
 }
