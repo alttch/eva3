@@ -97,7 +97,7 @@ Common
 
     * EVA ICS now loads 3rd party libraries from virtualenv which increases
       system stability as only tested version of libraries are used.
-    * Support for AWS IoT and Azure IoT
+    * Support for AWS IoT
     * Modbus slave register monitoring functions
     * increment/decrement functions for lvars and shared macro variables
     * read-only permissions for API keys

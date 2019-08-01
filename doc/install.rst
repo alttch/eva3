@@ -175,7 +175,6 @@ Cloud service provider as MQTT broker
 -------------------------------------
 
 * :doc:`/integrations/aws`
-* Microsoft Azure
 
 .. note::
 
