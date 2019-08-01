@@ -133,8 +133,8 @@ Ubuntu):
 Configuring MQTT broker
 -----------------------
 
-MQTT broker is used when EVA ICS controllers are located in different networks
-and can not exchange data with P2P connections.
+:ref:`MQTT<mqtt_>` broker is used when EVA ICS controllers are located in
+different networks and can not exchange data with P2P connections.
 
 .. note::
 
