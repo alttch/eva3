@@ -4,8 +4,8 @@ Amazon Web Services
 AWS IoT as MQTT broker
 ======================
 
-MQTT broker is used when EVA ICS controllers are located in different networks
-and can not exchange data with P2P connections.
+:ref:`MQTT<mqtt_>` broker is used when EVA ICS controllers are located in
+different networks and can not exchange data with P2P connections.
 
 Instead of setting up dedicated MQTT server, you can use cloud-based service,
 e.g. AWS IoT.
