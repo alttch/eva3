@@ -1,4 +1,4 @@
-Text-to-speech
+Text-to-Speech
 **************
 
 EVA ICS can talk. This is perfect feature to provide e.g. action feedbacks or
