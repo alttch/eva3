@@ -126,6 +126,7 @@ What you get with EVA
 
     integrations/aws
     integrations/cctv
+    integrations/gcp
     integrations/grafana
     integrations/tts
 
