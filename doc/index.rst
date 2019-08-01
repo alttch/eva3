@@ -126,6 +126,7 @@ What you get with EVA
 
     integrations/cctv
     integrations/grafana
+    integrations/tts
 
 .. toctree::
     :caption:  Extension development
