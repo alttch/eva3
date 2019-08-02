@@ -591,7 +591,7 @@ Configure EVA ICS, e.g. let's create notifier for :doc:`/uc/uc`:
 
     eva -I
     ns uc
-    create gcpiot gcpiot:PROJECT_ID/REGION/REGISTRY 
+    create gcpiot gcpiot:PROJECT_ID/REGION/REGISTRY
     # set CA certificate file
     set gcpiot ca_certs /etc/ssl/certs/ca-certificates.crt
     # set generated private RSA256 key file for auth
