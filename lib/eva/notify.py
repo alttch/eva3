@@ -2095,7 +2095,6 @@ class GCP_IoT(GenericNotifier):
         self.lock = threading.Lock()
         self.mq = None
         self.mq_connected = threading.Event()
-        self.map = None
         self.map_rev = {}
         try:
             self.map = yaml.load(open(self.mapfile).read())
@@ -2103,7 +2102,6 @@ class GCP_IoT(GenericNotifier):
                 self.map_rev[v] = k
         except:
             self.map = None
-            self.log_error(message='Invalid map file')
         self.error_topic = '/devices/{}/errors'.format(self.notifier_id)
         self.command_topic = '/devices/{}/commands/#'.format(self.notifier_id)
 
@@ -2118,6 +2116,8 @@ class GCP_IoT(GenericNotifier):
     def start(self):
         super().start()
         if not self.test_only_mode:
+            if self.map is None:
+                self.log_error(message='map file not specified or invalid')
             self.reset_connection.start(
                 _delay_before=self.token_expire - self.get_timeout(), o=self)
 
