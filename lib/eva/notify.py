@@ -13,11 +13,18 @@ from queue import Queue
 import glob
 import os
 import sys
+import ssl
 import uuid
 import threading
 import sqlalchemy as sa
 
 from sqlalchemy import text as sql
+
+import yaml
+try:
+    yaml.warnings({'YAMLLoadWarning': False})
+except:
+    pass
 
 from pyaltt import BackgroundWorker
 from pyaltt import BackgroundQueueWorker
@@ -1482,7 +1489,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.announcer.stop()
 
     def on_connect(self, client, userdata, flags, rc):
-        logging.debug('%s mqtt reconnect' % self.notifier_id)
+        logging.debug('.%s mqtt reconnect' % self.notifier_id)
         if self.announce_interval and not self.test_only_mode:
             self.announcer.start(_name=self.notifier_id + '_announcer')
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
@@ -1652,7 +1659,7 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             d = msg.payload.decode()
         except:
-            logging.warning('Invalid message from MQTT server: {}'.format(
+            logging.warning('.Invalid message from MQTT server: {}'.format(
                 msg.payload))
             eva.core.log_traceback()
             return
@@ -1704,6 +1711,7 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             if self.mq._state != mqtt.mqtt_cs_connected:
                 self.mq.loop_stop()
+                if self.test_only_mode: self.mq.enable_logger()
                 self.mq.connect(
                     host=self.host, port=self.port, keepalive=self.keepalive)
                 self.mq.loop_start()
@@ -1853,7 +1861,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 return False
             result = self.mq.publish(
                 self.pfx + 'test', 1, qos=self.qos['system'], retain=False)
-            return eva.core.wait_for(result.is_published, self.get_timeout())
+            result = eva.core.wait_for(result.is_published, self.get_timeout())
+            if self.test_only_mode:
+                self.disconnect()
+            return result
         except:
             eva.core.log_traceback(notifier=True)
             return False
@@ -2040,6 +2051,345 @@ class MQTTNotifier(GenericMQTTNotifier):
             keyfile=keyfile)
 
 
+class GCP_IoT(GenericNotifier):
+
+    def __init__(self,
+                 notifier_id,
+                 keepalive=None,
+                 timeout=None,
+                 apikey=None,
+                 ca_certs=None,
+                 keyfile=None,
+                 mapfile=None,
+                 project=None,
+                 region=None,
+                 registry=None,
+                 token_expire=None):
+
+        notifier_type = 'gcpiot'
+        super().__init__(
+            notifier_id=notifier_id,
+            notifier_type=notifier_type,
+            timeout=timeout)
+        try:
+            self.keepalive = int(keepalive)
+        except:
+            self.keepalive = 60
+        self._keepalive = keepalive
+        self.apikey = apikey
+        self.ca_certs = ca_certs
+        self.keyfile = keyfile
+        self.mapfile = mapfile
+        self.project = project
+        self.region = region
+        self.registry = registry
+        self.host = 'mqtt.googleapis.com'
+        self.port = 8883
+        try:
+            self.token_expire = int(token_expire)
+            if self.token_expire > 300:
+                self.token_expire = 300
+        except:
+            self.token_expire = 300
+        self._token_expire = token_expire
+        self.lock = threading.Lock()
+        self.mq = None
+        self.mq_connected = threading.Event()
+        self.map = None
+        self.map_rev = {}
+        try:
+            self.map = yaml.load(open(self.mapfile).read())
+            for k, v in self.map.items():
+                self.map_rev[v] = k
+        except:
+            self.map = None
+            self.log_error(message='Invalid map file')
+        self.error_topic = '/devices/{}/errors'.format(self.notifier_id)
+        self.command_topic = '/devices/{}/commands/#'.format(self.notifier_id)
+
+    @background_worker
+    def reset_connection(o, **kwargs):
+        o.check_connection(reconnect=True)
+
+    def connect(self):
+        self.connected = True
+        self.check_connection()
+
+    def start(self):
+        super().start()
+        if not self.test_only_mode:
+            self.reset_connection.start(
+                _delay_before=self.token_expire - self.get_timeout(), o=self)
+
+    def stop(self):
+        if not self.test_only_mode: self.reset_connection.stop()
+        super().stop()
+
+    def disconnect(self, full=True, lock=True):
+        if lock:
+            if not self.lock.acquire(timeout=self.get_timeout()):
+                self.log_error(message='disconnect failed')
+                return False
+        try:
+            if full: super().disconnect()
+            if self.mq:
+                self.mq.loop_stop()
+                self.mq.disconnect()
+        finally:
+            if lock: self.lock.release()
+
+    def create_jwt(self):
+        token = {
+            'iat': time.time(),
+            'exp': time.time() + self.token_expire,
+            'aud': self.project
+        }
+        try:
+            import jwt
+            with open(self.keyfile, 'r') as f:
+                private_key = f.read()
+            return jwt.encode(token, private_key, algorithm='RS256')
+        except:
+            self.log_error(message='unable to encode token, key file: {}'.
+                           format(self.keyfile))
+
+    def on_message(self, client, userdata, msg):
+        t = msg.topic
+        try:
+            d = msg.payload.decode()
+        except:
+            logging.warning('.Invalid message from MQTT server: {}'.format(
+                msg.payload))
+            import eva.core
+            eva.core.log_traceback()
+            return
+        if t == self.error_topic:
+            self.log_error(message=d)
+            return
+        if not self.enabled: return
+        x = t.split('/')
+        if 'commands' in x:
+            dev = x[2]
+            try:
+                payload = jsonpickle.decode(d)
+                if 'params' not in payload or not isinstance(
+                        payload['params'], dict):
+                    payload['params'] = {}
+                if dev != self.notifier_id:
+                    i = payload['params'].get('i')
+                    if i is not None:
+                        if i != dev:
+                            raise Exception(
+                                'item ID should not be specified for item cmd')
+                    else:
+                        payload['params']['i'] = dev
+                    item = self.map.get(payload['params']['i'])
+                    if not item:
+                        logging.warning('.{}: item not mapped {}'.format(
+                            self.notifier_id, payload['params']['i']))
+                        raise Exception('Item not mapped')
+                    payload['params']['i'] = item
+                if 'k' not in payload['params']:
+                    import eva.apikey
+                    payload['params']['k'] = eva.apikey.format_key(self.apikey)
+                import eva.api
+                g.set('eva_ics_gw', 'gcpiot:' + self.notifier_id)
+                background_job(eva.api.jrpc)(p=payload)
+            except:
+                logging.warning(
+                    '.Invalid command message from MQTT server: {}'.format(
+                        msg.payload))
+                import eva.core
+                eva.core.log_traceback()
+                return
+
+    def check_connection(self, reconnect=False):
+        if self.map is None:
+            self.log_error(message='No map file provided')
+            return False
+        if not self.lock.acquire(timeout=self.get_timeout()):
+            self.log_error(message='Locking failed')
+            return False
+        try:
+            if self.mq and not reconnect:
+                mq = self.mq
+                first_connect = False
+            else:
+                first_connect = True
+                self.mq_connected.clear()
+                if reconnect: self.disconnect(full=False, lock=False)
+                mq = mqtt.Client(
+                    client_id=(
+                        'projects/{}/locations/{}/registries/{}/devices/{}'
+                        .format(self.project, self.region, self.registry,
+                                self.notifier_id)))
+                mq.tls_set(
+                    ca_certs=self.ca_certs, tls_version=ssl.PROTOCOL_TLSv1_2)
+                mq.username_pw_set(
+                    username='unused', password=self.create_jwt())
+                mq.on_connect = self.on_connect
+                mq.on_message = self.on_message
+                if self.test_only_mode: mq.enable_logger()
+            if first_connect or mq._state != mqtt.mqtt_cs_connected:
+                if not first_connect:
+                    mq.loop_stop()
+                mq.connect(
+                    host=self.host, port=self.port, keepalive=self.keepalive)
+                mq.loop_start()
+                if not self.mq_connected.wait(timeout=self.get_timeout()):
+                    raise Exception('Connection timeout')
+                # sleep until attached
+                time.sleep(3)
+                for i in self.map:
+                    mq.subscribe('/devices/{}/commands/#'.format(i))
+                self.mq = mq
+            return True
+        except:
+            eva.core.log_traceback(notifier=True)
+            return False
+        finally:
+            self.lock.release()
+
+    def send_notification(self, subject, data, retain=None, unpicklable=False):
+        if not self.check_connection():
+            self.log_error(message='connection failed')
+            return
+        if subject == 'state':
+            for d in data:
+                if not d.get('destroyed'):
+                    oid = d.get('oid')
+                    dev = self.map_rev.get(oid)
+                    if not dev:
+                        logging.warning('.{}: no mapping for {}'.format(
+                            self.notifier_id, oid))
+                        continue
+                    payload = {}
+                    try:
+                        status = int(d.get('status'))
+                    except:
+                        eva.core.log_traceback()
+                        return
+                    value = d.get('value')
+                    if value:
+                        try:
+                            value = float(value)
+                        except:
+                            try:
+                                value = jsonpikcle.decode(value)
+                            except:
+                                pass
+                    elif value == '':
+                        value = None
+                    payload['status'] = status
+                    payload['value'] = value
+                    if not self.lock.acquire(timeout=self.get_timeout()):
+                        self.log_error(message='Unable to get MQTT lock')
+                        return
+                    try:
+                        if not self.mq:
+                            self.log_error(message='not connected')
+                        else:
+                            self.mq.publish('/devices/{}/events'.format(dev),
+                                            jsonpickle.encode(payload))
+                    finally:
+                        self.lock.release()
+
+    def on_connect(self, client, userdata, flags, rc):
+        logging.debug('.%s mqtt reconnect' % self.notifier_id)
+        self.mq_connected.set()
+        client.subscribe(self.error_topic)
+        client.subscribe(self.command_topic)
+        if self.map:
+            for i in self.map:
+                client.publish('/devices/{}/attach'.format(i),
+                               jsonpickle.encode({
+                                   'authorization': ''
+                               }))
+
+    def test(self):
+        result = self.check_connection()
+        if self.test_only_mode:
+            self.disconnect()
+        return result
+
+    def serialize(self, props=False):
+        d = {}
+        if self._keepalive or props: d['keepalive'] = self._keepalive
+        if self.apikey or props: d['apikey'] = self.apikey
+        if self.ca_certs or props: d['ca_certs'] = self.ca_certs
+        if self.keyfile or props: d['keyfile'] = self.keyfile
+        if self.mapfile or props: d['mapfile'] = self.mapfile
+        if self.project or props: d['project'] = self.project
+        if self.region or props: d['region'] = self.region
+        if self.registry or props: d['registry'] = self.registry
+        if self._token_expire or props: d['token_expire'] = self._token_expire
+        d.update(super().serialize(props=props))
+        if 'space' in d:
+            del d['space']
+        return d
+
+    def set_prop(self, prop, value):
+        if prop == 'keepalive':
+            if not value:
+                self._keepalive = None
+                return True
+            try:
+                self._keepalive = int(value)
+            except:
+                return False
+            return True
+        elif prop == 'apikey':
+            self.apikey = value
+            return True
+        elif prop == 'ca_certs':
+            if value is None:
+                self.ca_certs = None
+            elif os.path.isfile(value):
+                self.ca_certs = value
+            else:
+                self.log_error(message='unable to open ' + value)
+                return False
+            return True
+        elif prop == 'keyfile':
+            if value is None:
+                self.keyfile = None
+            elif os.path.isfile(value):
+                self.keyfile = value
+            else:
+                self.log_error(message='unable to open ' + value)
+                return False
+            return True
+        elif prop == 'mapfile':
+            if value is None:
+                self.mapfile = None
+            elif os.path.isfile(value):
+                self.mapfile = value
+            else:
+                self.log_error(message='unable to open ' + value)
+                return False
+            return True
+        elif prop == 'project':
+            self.project = value
+            return True
+        elif prop == 'region':
+            self.region = value
+            return True
+        elif prop == 'registry':
+            self.registry = value
+            return True
+        if prop == 'token_expire':
+            if not value:
+                self._token_expire = None
+                return True
+            try:
+                self._token_expire = int(value)
+            except:
+                return False
+            return True
+        else:
+            return super().set_prop(prop, value)
+
+
 class WSNotifier_Client(GenericNotifier_Client):
 
     def __init__(self, notifier_id=None, apikey=None, token=None, ws=None):
@@ -2205,6 +2555,29 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
             ca_certs=ca_certs,
             certfile=certfile,
             keyfile=keyfile)
+    elif ncfg['type'] == 'gcpiot':
+        keepalive = ncfg.get('keepalive')
+        timeout = ncfg.get('timeout')
+        token_expire = ncfg.get('token_expire')
+        ca_certs = ncfg.get('ca_certs')
+        keyfile = ncfg.get('keyfile')
+        mapfile = ncfg.get('mapfile')
+        project = ncfg.get('project')
+        region = ncfg.get('region')
+        registry = ncfg.get('registry')
+        apikey = ncfg.get('apikey')
+        n = GCP_IoT(
+            _notifier_id,
+            keepalive=keepalive,
+            timeout=timeout,
+            apikey=apikey,
+            ca_certs=ca_certs,
+            keyfile=keyfile,
+            mapfile=mapfile,
+            project=project,
+            region=region,
+            registry=registry,
+            token_expire=token_expire)
     elif ncfg['type'] == 'db':
         db = ncfg.get('db')
         keep = ncfg.get('keep')
