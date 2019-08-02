@@ -44,8 +44,9 @@ done
 PIP=${EVA_DIR}/python3/bin/pip3
 
 if [ "$PTS" ] || [ "$ETS" ]; then
+  [ ! $PTS ] && PTS=__undefined__
   TMPFILE=$(mktemp /tmp/eva-venv.XXXXXX)
-  cat ${MY_DIR}/mods.list | grep -vE "$PTS" > ${TMPFILE}
+  grep -vE "$PTS" ${MY_DIR}/mods.list > ${TMPFILE}
   echo -e "\n`echo $ETS | tr '|' '\n'`" >> ${TMPFILE}
   PKGLIST=${TMPFILE}
 else
