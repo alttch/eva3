@@ -1,6 +1,13 @@
 EVA ICS CHANGELOG
 *****************
 
+3.2.5 (TBA)
+===========
+
+Common
+
+    * Google Cloud IoT Core support
+
 3.2.4 (2019-07-30)
 ==================
 
