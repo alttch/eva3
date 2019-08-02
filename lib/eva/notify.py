@@ -2217,7 +2217,6 @@ class GCP_IoT(GenericNotifier):
             else:
                 first_connect = True
                 self.mq_connected.clear()
-                if reconnect: self.disconnect(full=False, lock=False)
                 mq = mqtt.Client(
                     client_id=(
                         'projects/{}/locations/{}/registries/{}/devices/{}'
@@ -2242,6 +2241,7 @@ class GCP_IoT(GenericNotifier):
                 time.sleep(3)
                 for i in self.map:
                     mq.subscribe('/devices/{}/commands/#'.format(i))
+                if reconnect: self.disconnect(full=False, lock=False)
                 self.mq = mq
             return True
         except:
