@@ -25,8 +25,10 @@ class NotifierCLI(GenericCLI, ControllerCLI):
     class ComplNProto(object):
 
         def __call__(self, prefix, **kwargs):
-            return ['mqtt:', 'json:', 'db:', 'influxdb:', 'prometheus:'] if \
-                    prefix.find(':') == -1 else True
+            return [
+                    'mqtt:', 'gcpiot:', 'json:',
+                    'db:', 'influxdb:', 'prometheus:'] if \
+                    prefix and prefix.find(':') == -1 else True
 
     class ComplN(ComplGeneric):
 
@@ -64,17 +66,22 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
     def add_notifier_common_functions(self):
         ap_list = self.sp.add_parser('list', help='List notifiers')
-        ap_create = self.sp.add_parser('create', help='Create notifier',
+        ap_create = self.sp.add_parser(
+            'create',
+            help='Create notifier',
             formatter_class=argparse.RawTextHelpFormatter)
         ap_create.add_argument('i', help='Notifier ID', metavar='ID')
-        ap_create.add_argument('p', help=textwrap.dedent('''
+        ap_create.add_argument(
+            'p',
+            help=textwrap.dedent('''
         Notifier properties:
             json:http(s)://[key]@uri[#jsonrpc]
             mqtt:[username:password]@host:[port]
+            gcpiot:project_id/region/registry
             db:db_uri
             influxdb:http(s)://uri#database
             prometheus:'''),
-                metavar='PROPS').completer = self.ComplNProto()
+            metavar='PROPS').completer = self.ComplNProto()
         ap_create.add_argument(
             '-s',
             '--space',
@@ -307,8 +314,19 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             db_uri = ':'.join(p[1:])
             n = eva.notify.SQLANotifier(
                 notifier_id=notifier_id, db_uri=db_uri, keep=None, space=space)
+        elif p[0] == 'gcpiot':
+            try:
+                project, region, registry = ':'.join(p[1:]).split('/')
+            except:
+                return self.local_func_result_failed
+            n = eva.notify.GCP_IoT(
+                notifier_id=notifier_id,
+                project=project,
+                region=region,
+                registry=registry,
+                timeout=timeout)
         elif p[0] == 'prometheus':
-            n = eva.notify.PrometheusNotifier(notifier_id = notifier_id)
+            n = eva.notify.PrometheusNotifier(notifier_id=notifier_id)
         else:
             self.print_err('notifier type unknown %s' % p[0])
             return self.local_func_result_failed

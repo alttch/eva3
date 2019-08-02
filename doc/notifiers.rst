@@ -540,6 +540,99 @@ Notes about using EVA ICS and Prometheus:
 
 * To enable metric help, set item description
 
+3rd party Clouds
+================
+
+.. _gcpcoreiot_:
+
+Google Cloud Platform IoT Core
+------------------------------
+
+Controllers can communicate with GCP IoT Core using *gcpiot* notifiers:
+
+* Send telemetry of EVA ICS items to GCP devices
+* Receive commands from GCP
+
+Configuration
+~~~~~~~~~~~~~
+
+To enable this functionality, firstly you must `generate RSA256 key pair
+<https://cloud.google.com/iot/docs/how-tos/credentials/keys>`_.
+
+As GCP IoT Core doesn't support groups, create YAML key-value map file which
+looks like:
+
+.. code:: yaml
+
+    env.pressure: sensor:env/air_pressure
+    env.temperature: sensor:env/temperature
+    cctv1: unit:equipment/cctv
+    lamp1: unit:lights/lamp1
+
+Then configure GCP IoT:
+
+* Create IoT registry in your project. Specify default telemetry topic from
+  which you can obtain data via Pub/Sub. Make sure *MQTT* option is checked.
+
+* Create IoT gateway:
+
+    * gateway name should match EVA ICS notifier id (e.g. *gcpiot*)
+    * set *Device authentication method* to *Association only*
+    * paste public key you've generated, make sure *RSA256* is selected.
+
+* Create corresponding IoT devices. Enter *Device ID* only, leave other fields
+  blank.
+
+* Go back to IoT gateway and bind all created devices.
+
+Configure EVA ICS, e.g. let's create notifier for :doc:`/uc/uc`:
+
+.. code:: shell
+
+    eva -I
+    ns uc
+    create gcpiot gcpiot:PROJECT_ID/REGION/REGISTRY 
+    # set CA certificate file
+    set gcpiot ca_certs /etc/ssl/certs/ca-certificates.crt
+    # set generated private RSA256 key file for auth
+    set gcpiot keyfile /path/to/private.pem
+    # set mapping file
+    set gcpiot mapfile /path/to/mapfile.yml
+    # test it
+    test gcpiot
+    # subscribe notifier to items
+    subscribe state gcpiot -g '#'
+    # set API key if you plan to execute commands
+    # you may use use $key_id to specify key id instead of API key itself
+    set gcpiot apikey $default
+    # restart controller
+    server restart
+
+Commands
+~~~~~~~~
+
+You may send commands as to EVA ICS controller (Gateway->Send command) as for
+the individual devices.
+
+* All commands must be sent in `JSON RPC 2.0 <https://www.jsonrpc.org>`_
+  format.
+
+* You may send any API command, e.g. for the above example: for :doc:`/sysapi`
+  and for :doc:`/uc/uc_api`.
+
+* API key in params is not required if set in notifier configuration, but
+  may be overriden if specified.
+
+* If you send command to the individual IoT device (EVA ICS item), parameter
+  *"i"* (item oid) is automatically added to the request.
+
+E.g., let's toggle *unit:equipment/cctv*:
+
+.. code:: json
+
+    {"jsonrpc": "2.0", "method": "action_toggle" }
+
+
 HTTP Notifiers
 ==============
 
