@@ -428,10 +428,10 @@ def start():
 def connect_remote_controller(pool, v):
     if pool.append(v):
         logging.info('%s added to the controller pool' % \
-                v.item_id)
+                v.full_id)
     else:
         logging.error('Failed to add %s to the controller pool' % \
-                v.item_id)
+                v.full_id)
 
 
 @eva.core.stop
