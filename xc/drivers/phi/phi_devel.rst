@@ -74,7 +74,7 @@ Each PHI module should contain 4 help variables:
   with **get** command
 * **__set_help__** additional configuration params possible for LPI to send
   with **set** command
-* **__discover_help** help for "discover" method
+* **__discover_help__** help for "discover" method
 
 First variable should be human readable, others may copy, join or process the
 first one or each other in any way.

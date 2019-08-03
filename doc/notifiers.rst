@@ -611,7 +611,7 @@ Configure EVA ICS, e.g. let's create notifier for :doc:`/uc/uc`:
 Commands
 ~~~~~~~~
 
-You may send commands as to EVA ICS controller (Gateway->Send command) as for
+You may send commands as to EVA ICS controller (Gateway->Send command) as to
 the individual devices.
 
 * All commands must be sent in `JSON RPC 2.0 <https://www.jsonrpc.org>`_
@@ -623,7 +623,7 @@ the individual devices.
 * API key in params is not required if set in notifier configuration, but
   may be overriden if specified.
 
-* If you send command to the individual IoT device (EVA ICS item), parameter
+* If you send command to the particular IoT device (EVA ICS item), parameter
   *"i"* (item oid) is automatically added to the request.
 
 E.g., let's toggle *unit:equipment/cctv*:
@@ -639,8 +639,8 @@ HTTP Notifiers
 JSON
 ----
 
-HTTP notifications (aka web hooks) can be transferred to servers which, for
-some reasons, cannot work with MQTT in real time, e.g. servers containing
+HTTP notifications (aka web hooks) are used by applications, which, for some
+reasons, cannot work with MQTT in real time, e.g. servers containing
 third-party or your own web applications.
 
 JSON notifier send POST request to specified URI with data:
