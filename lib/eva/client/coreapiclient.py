@@ -9,6 +9,7 @@ import eva.notify
 import base64
 import hashlib
 import uuid
+import threading
 import jsonpickle
 from cryptography.fernet import Fernet
 
@@ -24,15 +25,12 @@ class CoreAPIClient(APIClient):
     class MQTTCallback(object):
 
         def __init__(self):
-            self._completed = False
+            self.completed = threading.Event()
             self.body = ''
             self.code = None
 
-        def is_completed(self):
-            return self._completed
-
         def data_handler(self, data):
-            self._completed = True
+            self.completed.set()
             try:
                 self.code, self.body = data.split('|', 1)
                 self.code = int(self.code)
@@ -131,7 +129,7 @@ class CoreAPIClient(APIClient):
             request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(
                 self._key_id,
                 self.ce.encrypt(data.encode()).decode()), cb.data_handler)
-        if not eva.core.wait_for(cb.is_completed, self._timeout):
+        if not cb.completed.wait(self._timeout):
             n.finish_api_request(request_id)
             raise requests.Timeout()
         if cb.code:
