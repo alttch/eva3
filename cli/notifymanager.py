@@ -354,6 +354,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 n['params'] = 'db: %s' % i.db_uri
             elif isinstance(i, eva.notify.InfluxDB_Notifier):
                 n['params'] = 'uri: {}, db: {}'.format(i.uri, i.db)
+            elif isinstance(i, eva.notify.GCP_IoT):
+                n['params'] = '{}/{}/{}'.format(i.project, i.region, i.registry)
             elif isinstance(i, eva.notify.MQTTNotifier):
                 if i.username is not None:
                     n['params'] = '%s%s@' % (i.username, ':*'
