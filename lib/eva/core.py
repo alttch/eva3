@@ -52,7 +52,7 @@ controllers = set()
 _flags = SimpleNamespace(
     ignore_critical=False,
     sigterm_sent=False,
-    started=False,
+    started=threading.Event(),
     shutdown_requested=False,
     cvars_modified=False,
     setup_mode=0)
@@ -289,7 +289,7 @@ def do_save():
 
 
 def block():
-    _flags.started = True
+    _flags.started.set()
     reactor.run(installSignalHandlers=False)
 
 
@@ -298,7 +298,7 @@ def is_shutdown_requested():
 
 
 def is_started():
-    return _flags.started
+    return _flags.started.is_set()
 
 
 def core_shutdown():

@@ -15,27 +15,35 @@ ia_status_failed = 8  # failed to run
 ia_status_terminated = 9  # executed but terminated
 ia_status_completed = 10  # executed and finished successfully
 
+import threading
+
+
 class GenericAction(object):
 
     def __init__(self):
         self._status = ia_status_created
+        self.processed = threading.Event()
+        self.finished = threading.Event()
 
     def get_status(self):
         return self._status
 
     def set_status(self, status):
         self._status = status
+        if status not in [ia_status_created, ia_status_pending]:
+            self.processed.set()
+        if status in [
+                ia_status_refused, ia_status_dead, ia_status_canceled,
+                ia_status_ignored, ia_status_failed, ia_status_terminated,
+                ia_status_completed
+        ]:
+            self.finished.set()
 
     def is_processed(self):
-        return not self._status in [ia_status_created, ia_status_pending]
+        return self.processed.is_set()
 
     def is_finished(self):
-        return self._status in [
-            ia_status_refused, ia_status_dead,
-            ia_status_canceled, ia_status_ignored,
-            ia_status_failed, ia_status_terminated,
-            ia_status_completed
-        ]
+        return self.finished.is_set()
 
     def is_status_created(self):
         return self._status == ia_status_created
@@ -69,4 +77,3 @@ class GenericAction(object):
 
     def is_status_completed(self):
         return self._status == ia_status_completed
-

@@ -1181,10 +1181,10 @@ def exec_macro(macro,
         source=source,
         is_shutdown_func=is_shutdown_func)
     Q.put_task(a)
-    if not eva.core.wait_for(a.is_processed, q_timeout):
+    if not a.processed.wait(timeout=qt):
         if a.set_dead():
             return a
-    if wait: eva.core.wait_for(a.is_finished, wait)
+    if wait: a.finished.wait(timeout=wait)
     return a
 
 
