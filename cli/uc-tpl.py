@@ -177,7 +177,8 @@ for i in c:
 
 if func == 'validate':
     try:
-        template = jinja2.Template(open(tpl_file).read())
+        with open(tpl_file) as fd:
+            template = jinja2.Template(fd.read())
     except:
         print('No such template file: %s' % tpl_file)
         usage()
@@ -259,7 +260,8 @@ elif func == 'generate':
         print_debug(' - OK')
     if (tpl_file):
         try:
-            open(tpl_file, 'w').write(formatter(tpl))
+            with open(tpl_file, 'w') as fd:
+                fd.write(formatter(tpl))
             print('Template saved to %s' % tpl_file)
         except:
             print('Error: can not save template to %s' % tpl_file)

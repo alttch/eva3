@@ -196,7 +196,8 @@ d['nodebug'] = tester.nodebug
 d['sleep'] = time.sleep
 
 try:
-    code = open(a.fname).readlines()
+    with open(a.fname) as fd:
+        code = fd.readlines()
 except:
     print('Unable to open file: ' + a.fname)
     da.stop()

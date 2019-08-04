@@ -316,9 +316,11 @@ def create_dump(e='request', msg=''):
                 '.dump.gz'
         dmp = format_json(
             result, minimal=not config.development, unpicklable=True).encode()
-        gzip.open(filename, 'w')
+        with gzip.open(filename, 'w') as fd:
+            pass
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
-        gzip.open(filename, 'a').write(dmp)
+        with gzip.open(filename, 'a') as fd:
+            fd.write(dmp)
         logging.warning(
             'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
     except:
@@ -491,7 +493,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 pass
             try:
                 if not check_pid: raise Exception('no check required')
-                pid = int(open(config.pid_file).readline().strip())
+                with open(config.pid_file) as fd:
+                    pid = int(fd.readline().strip())
                 p = psutil.Process(pid)
                 print('Can not start %s with config %s. ' % \
                         (product.name, fname_full), end = '')
@@ -720,7 +723,8 @@ def load_cvars(fname=None):
     env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + env['PATH']
     logging.info('Loading custom vars from %s' % fname_full)
     try:
-        raw = ''.join(open(fname_full).readlines())
+        with open(fname_full) as fd:
+            raw = fd.read()
         cvars.update(jsonpickle.decode(raw))
     except:
         logging.error('can not load custom vars from %s' % fname_full)
@@ -737,7 +741,8 @@ def save_cvars(fname=None):
     fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
     logging.info('Saving custom vars to %s' % fname_full)
     try:
-        open(fname_full, 'w').write(format_json(cvars, minimal=False))
+        with open(fname_full, 'w') as fd:
+            fd.write(format_json(cvars, minimal=False))
     except:
         logging.error('can not save custom vars into %s' % fname_full)
         log_traceback()
@@ -813,7 +818,8 @@ def fork():
 
 def write_pid_file():
     try:
-        open(config.pid_file, 'w').write(str(os.getpid()))
+        with open(config.pid_file, 'w') as fd:
+            fd.write(str(os.getpid()))
     except:
         log_traceback()
 

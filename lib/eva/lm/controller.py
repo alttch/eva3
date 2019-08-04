@@ -564,7 +564,8 @@ def get_macro_source(macro_id):
         fname=macro.action_exec
         if macro.action_exec else '{}.py'.format(macro.item_id))
     if os.path.isfile(file_name):
-        code = open(file_name).read()
+        with open(file_name) as fd:
+            code = fd.read()
         if code.startswith('# SFC'):
             src_type = 'sfc-json'
             l = code.split('\n')

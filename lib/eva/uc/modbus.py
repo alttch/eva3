@@ -222,8 +222,8 @@ def destroy_modbus_port(port_id):
 
 def load():
     try:
-        data = jsonpickle.decode(
-            open(eva.core.dir_runtime + '/uc_modbus.json').read())
+        with open(eva.core.dir_runtime + '/uc_modbus.json') as fd:
+            data = jsonpickle.decode(fd.read())
         for p in data:
             d = p.copy()
             del d['id']
@@ -242,8 +242,8 @@ def load():
 @eva.core.save
 def save():
     try:
-        open(eva.core.dir_runtime + '/uc_modbus.json', 'w').write(
-            format_json(serialize(config=True)))
+        with open(eva.core.dir_runtime + '/uc_modbus.json', 'w') as fd:
+            fd.write(format_json(serialize(config=True)))
     except:
         logging.error('unable to save modbus ports config')
         eva.core.log_traceback()

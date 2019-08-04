@@ -170,7 +170,8 @@ class Item(object):
     def load(self, fname=None):
         fname_full = self.get_fname(fname)
         try:
-            raw = ''.join(open(fname_full).readlines())
+            with open(fname_full) as fd:
+                raw = fd.read()
         except:
             logging.error('can not load %s config from %s' % \
                                     (self.oid,fname_full))
@@ -199,7 +200,8 @@ class Item(object):
         data = self.serialize(config=True)
         logging.debug('Saving %s configuration' % self.oid)
         try:
-            open(fname_full, 'w').write(format_json(data, minimal=False))
+            with open(fname_full, 'w') as fd:
+                fd.write(format_json(data, minimal=False))
             self.config_changed = False
         except:
             logging.error('can not save %s config into %s' % \

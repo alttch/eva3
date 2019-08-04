@@ -328,9 +328,11 @@ class PyThread(object):
                 if self.pfcode:
                     raw = self.pfcode
                 else:
-                    raw = ''.join(open(self.script_file).readlines())
+                    with open(self.script_file) as fd:
+                        raw = fd.read()
                 try:
-                    raw_c = ''.join(open(self.common_file).readlines())
+                    with open(self.common_file) as fd:
+                        raw_c = fd.read()
                 except:
                     raw_c = ''
                 self.code = compile(

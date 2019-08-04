@@ -801,7 +801,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 raise Exception('http code {}'.format(result.status_code))
             return result.text
         else:
-            return open(target).read()
+            with open(target) as fd:
+                return fd.read()
 
     def _deploy_undeploy(self, props, und=False, del_files=False):
         import yaml

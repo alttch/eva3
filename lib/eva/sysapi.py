@@ -525,7 +525,8 @@ class FileAPI(object):
             raise self._file_not_found(i)
         try:
             i = eva.core.dir_runtime + '/' + i
-            data = ''.join(open(i).readlines())
+            with open(i) as fd:
+                data = fd.read()
             return data, os.access(i, os.X_OK)
         except:
             eva.core.log_traceback()
@@ -553,7 +554,8 @@ class FileAPI(object):
             raw = '' if m is None else m
             eva.core.prepare_save()
             try:
-                open(eva.core.dir_runtime + '/' + i, 'w').write(raw)
+                with open(eva.core.dir_runtime + '/' + i, 'w') as fd:
+                    fd.write(raw)
                 return True
             finally:
                 eva.core.finish_save()
