@@ -457,7 +457,8 @@ class ManagementCLI(GenericCLI):
                 sysargs = ['{}/{}{}'.format(dir_cli, p, x)] + _xargs
                 if self.interactive or force_interactive:
                     sysargs.append('-I')
-            c = open('{}/{}{}'.format(dir_cli, p, x)).read()
+            with open('{}/{}{}'.format(dir_cli, p, x)) as fd:
+                c = fd.read()
             c = """import sys
 import eva.client.cli
 eva.client.cli.say_bye = False

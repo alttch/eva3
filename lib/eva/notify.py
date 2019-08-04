@@ -2096,7 +2096,8 @@ class GCP_IoT(GenericNotifier):
         self.mq_connected = threading.Event()
         self.map_rev = {}
         try:
-            self.map = yaml.load(open(self.mapfile).read())
+            with open(self.mapfile) as fd:
+                self.map = yaml.load(fd.read())
             for k, v in self.map.items():
                 self.map_rev[v] = k
         except:
@@ -2514,8 +2515,8 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         _notifier_id = os.path.splitext(os.path.basename(notifier_fname))[0]
     else:
         _notifier_id = notifier_id
-    raw = ''.join(open(notifier_fname).readlines())
-    ncfg = jsonpickle.decode(raw)
+    with open(notifier_fname) as fd:
+        ncfg = jsonpickle.decode(fd.read())
     if ncfg['id'] != _notifier_id:
         raise Exception('notifier id mismatch, file %s' % \
                 notifier_fname)
@@ -2710,7 +2711,8 @@ def save_notifier(notifier_id):
             '_notify.d/%s.json' % notifier_id, runtime = True)
     try:
         data = notifiers[notifier_id].serialize()
-        open(fname_full, 'w').write(format_json(data, minimal=False))
+        with open(fname_full, 'w') as fd:
+            fd.write(format_json(data, minimal=False))
     except:
         logging.error('can not save notifiers config into %s' % fname_full)
         eva.core.log_traceback(notifier=True)

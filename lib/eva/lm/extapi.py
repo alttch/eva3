@@ -51,6 +51,7 @@ def critical():
 def log_traceback():
     return eva.core.log_traceback()
 
+
 def ext_constructor(f):
     from eva.lm.generic.generic_ext import LMExt as GenericExt
 
@@ -62,6 +63,7 @@ def ext_constructor(f):
         f(self, *args, **kwargs)
 
     return do
+
 
 # internal functions
 
@@ -87,15 +89,15 @@ def rebuild_env():
         for f, v in e.get_iec_functions().items():
             if '{}_{}'.format(e.ext_id, f) in _env:
                 _iec_functions['{}_{}'.format(e.ext_id, f)] = {
-                        'name': '{}_{}'.format(e.ext_id, f),
-                        'description': v.get('description', ''),
-                        'editable': False,
-                        'src': None,
-                        'type': 'extension',
-                        'group': 'extensions/{}'.format(e.ext_id),
-                        'var_in': v.get('var_in', []),
-                        'var_out': v.get('var_out', []),
-                        }
+                    'name': '{}_{}'.format(e.ext_id, f),
+                    'description': v.get('description', ''),
+                    'editable': False,
+                    'src': None,
+                    'type': 'extension',
+                    'group': 'extensions/{}'.format(e.ext_id),
+                    'var_in': v.get('var_in', []),
+                    'var_out': v.get('var_out', []),
+                }
     env = _env
     iec_functions = _iec_functions
 
@@ -248,8 +250,8 @@ def dump():
 
 def load():
     try:
-        data = jsonpickle.decode(
-            open(eva.core.dir_runtime + '/lm_extensions.json').read())
+        with open(eva.core.dir_runtime + '/lm_extensions.json') as fd:
+            data = jsonpickle.decode(fd.read())
         for p in data:
             try:
                 load_ext(
@@ -268,8 +270,8 @@ def load():
 @eva.core.save
 def save():
     try:
-        open(eva.core.dir_runtime + '/lm_extensions.json', 'w').write(
-            format_json(serialize(config=True), minimal=False))
+        with open(eva.core.dir_runtime + '/lm_extensions.json', 'w') as fd:
+            fd.write(format_json(serialize(config=True), minimal=False))
         return True
     except Exception as e:
         logging.error('unable to save ext config: {}'.format(e))

@@ -1311,7 +1311,8 @@ def serve_json_yml(fname, dts='ui'):
     infile = '{}/{}/{}'.format(eva.core.dir_eva, dts, fname).replace('..', '')
     if not os.path.isfile(infile):
         raise cp_api_404()
-    data = open(infile).read()
+    with open(infile) as fd:
+        data = fd.read()
     cas = cherrypy.serving.request.params.get('as')
     if cas:
         try:

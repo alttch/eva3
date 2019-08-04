@@ -1332,8 +1332,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if os.system(editor + ' ' + fname):
             return self.local_func_result_failed
         try:
-            t = jinja2.Environment(loader=jinja2.BaseLoader).from_string(
-                open(fname).read())
+            with open(fname) as fd:
+                t = jinja2.Environment(loader=jinja2.BaseLoader).from_string(
+                    fd.read())
             tpl_decoder.get(ext)(t.render())
         except Exception as e:
             self.print_err('Unable to validate template. ' + str(e))

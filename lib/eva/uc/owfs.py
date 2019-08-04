@@ -124,8 +124,8 @@ def destroy_owfs_bus(bus_id):
 
 def load():
     try:
-        data = jsonpickle.decode(
-            open(eva.core.dir_runtime + '/uc_owfs.json').read())
+        with open(eva.core.dir_runtime + '/uc_owfs.json') as fd:
+            data = jsonpickle.decode(fd.read())
         for p in data:
             d = p.copy()
             del d['id']
@@ -144,8 +144,8 @@ def load():
 @eva.core.save
 def save():
     try:
-        open(eva.core.dir_runtime + '/uc_owfs.json', 'w').write(
-            format_json(serialize(config=True)))
+        with open(eva.core.dir_runtime + '/uc_owfs.json', 'w') as fd:
+            fd.write(format_json(serialize(config=True)))
     except:
         logging.error('unable to save owfs bus config')
         eva.core.log_traceback()

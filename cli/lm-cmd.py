@@ -1304,7 +1304,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
         if os.system(editor + ' ' + fname):
             return self.local_func_result_failed
         try:
-            compile(open(fname).read(), fname, 'exec')
+            with open(fname) as fd:
+                code = fd.read()
+            compile(code, fname, 'exec')
         except Exception as e:
             self.print_err('Macro code error: ' + str(e))
             return self.local_func_result_failed

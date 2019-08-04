@@ -778,7 +778,8 @@ class GenericCLI(GCLI):
     def prepare_run(self, api_func, params, a):
         if api_func == 'file_put' and a._func == 'upload':
             try:
-                params['m'] = ''.join(open(a._fname).readlines())
+                with open(a._fname) as fd:
+                    params['m'] = fd.read()
             except:
                 print('Unable to open %s' % a._fname)
                 return 97
@@ -792,9 +793,8 @@ class GenericCLI(GCLI):
         if self.batch_file is not None:
             try:
                 if self.batch_file and self.batch_file != 'stdin':
-                    cmds = [
-                        x.strip() for x in open(self.batch_file).readlines()
-                    ]
+                    with open(self.batch_file) as fd:
+                        cmds = [x.strip() for x in fd.readlines()]
                 else:
                     cmds = [x.strip() for x in ';'.join(sys.stdin).split(';')]
                 for c in cmds:
@@ -1219,19 +1219,22 @@ class GenericCLI(GCLI):
     def write_result(self, obj, out_file):
         if not isinstance(obj, dict) or \
                 ('content_type' not in obj and 'data' not in obj):
-            open(out_file, 'w').write(self.format_json(obj))
+            with open(out_file, 'w') as fd:
+                fd.write(self.format_json(obj))
         else:
             data = obj['data']
             if obj['content_type'] in ['image/svg+xml', 'text/plain']:
                 if isinstance(out_file, str):
-                    open(out_file, 'w').write(data)
+                    with open(out_file, 'w') as fd:
+                        fd.write(data)
                 else:
                     out_file.write(data)
             else:
                 import base64
                 data = base64.b64decode(data)
                 if isinstance(out_file, str):
-                    open(out_file, 'wb').write(data)
+                    with open(out_file, 'wb') as fd:
+                        fd.write(data)
                 else:
                     out_file.buffer.write(data)
 

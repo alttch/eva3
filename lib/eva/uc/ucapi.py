@@ -113,7 +113,8 @@ class UC_API(GenericAPI):
                     break
                 fname = None
             if not fname: raise ResourceNotFound
-            tpl = jinja2.Template(open(fname).read())
+            with open(fname) as fd:
+                tpl = jinja2.Template(fd.read())
             cfg = tpl_decoder.get(ext)(tpl.render(tpl_config))
             return cfg
         except ResourceNotFound:

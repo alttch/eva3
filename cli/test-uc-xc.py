@@ -31,7 +31,8 @@ if len(sys.argv) < 2: usage()
 print('Reading custom vars from %s' % cvars_fname)
 print()
 
-raw = ''.join(open(cvars_fname).readlines())
+with open(cvars_fname) as fd:
+    raw = fd.read()
 cvars = jsonpickle.decode(raw)
 
 for x in sorted(cvars.keys()):

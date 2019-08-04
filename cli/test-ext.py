@@ -32,8 +32,7 @@ ap.add_argument(
 ap.add_argument('e', metavar='EXTENSION', help='Extension to test')
 ap.add_argument(
     'fname', metavar='TEST_FILE', help='Test scenario file (call __FUNCTION)')
-ap.add_argument(
-    '-c', metavar='PARAMS', help='Extension configuration params')
+ap.add_argument('-c', metavar='PARAMS', help='Extension configuration params')
 
 try:
     import argcomplete
@@ -50,7 +49,8 @@ if not ea.load_ext('_', a.e, cfg=dict_from_str(a.c)):
     sys.exit(2)
 
 try:
-    code = open(a.fname).read()
+    with open(a.fname) as fd:
+        code = fd.read()
 except:
     print('Unable to open file: ' + a.fname)
     ea.stop()
