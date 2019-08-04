@@ -84,12 +84,16 @@ All available options:
 Install TTSBroker Python module
 ===============================
 
-Put *EXTRA="soundfile sounddevice ttsbroker"* to */opt/eva/etc/venv* and rebuild
-Python venv:
+Put *EXTRA="soundfile sounddevice ttsbroker oauth2client"* to
+*/opt/eva/etc/venv* and rebuild Python venv:
 
 .. code:: shell
 
     /opt/eva/install/build-venv
+
+Module *oauth2client* is required by *gcloud* provider. If you want to use
+*polly* provider (AWS), add *boto3* module. For IBM *watson* no extra modules
+are required.
 
 .. note::
 
