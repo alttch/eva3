@@ -55,6 +55,7 @@ class WebSocketWorker(BackgroundWorker):
 
     def wait(self):
         self.need_reload_flag = False
+        # don't use threading.event, reload interval can be changed during wait
         eva.core.wait_for(
             self.need_reload,
             self.controller.get_reload_interval,

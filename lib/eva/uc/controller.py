@@ -66,6 +66,7 @@ benchmark_lock = threading.Lock()
 with_event_handler_lock = eva.core.RLocker('uc/controller')
 with_item_lock = eva.core.RLocker('uc/controller')
 
+
 @with_event_handler_lock
 def handle_event(item):
     oid = item.oid
@@ -136,9 +137,11 @@ def benchmark_handler(item):
     finally:
         benchmark_lock.release()
 
+
 @with_item_lock
 def _get_all_items():
     return items_by_full_id.copy()
+
 
 @with_item_lock
 def get_item(item_id):
@@ -765,10 +768,10 @@ def exec_unit_action(unit,
     else: qt = eva.core.config.timeout
     a = u.create_action(_s, nvalue, priority, action_uuid)
     Q.put_task(a)
-    if not eva.core.wait_for(a.is_processed, qt):
+    if not a.processed.wait(timeout=qt):
         if a.set_dead():
             return a
-    if wait: eva.core.wait_for(a.is_finished, wait)
+    if wait: a.finished.wait(timeout=wait)
     return a
 
 

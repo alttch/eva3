@@ -1360,8 +1360,7 @@ class GenericMQTTNotifier(GenericNotifier):
         def run(self, o, **kwargs):
             if eva.core.is_shutdown_requested():
                 return False
-            if not eva.core.is_started():
-                eva.core.wait_for(eva.core.is_started, 30)
+            eva.core._flags.started.wait(timeout=60)
             o.send_message(
                 o.announce_topic,
                 o.announce_msg,
