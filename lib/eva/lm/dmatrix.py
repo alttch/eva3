@@ -730,13 +730,13 @@ class DecisionRule(eva.item.Item):
             group = '/'.join(i[:-2])
         if tp not in ['unit', 'U', 'sensor', 'S', 'lvar', 'LV', '#']:
             raise Exception('invalid type')
-        if prop not in ['status', 'value']:
+        if prop not in ['status', 'value', 'nstatus', 'nvalue']:
             if prop.find('.') == -1:
                 raise Exception('invalid state prop')
             else:
                 group = group + ('/' if group else '') + item_id
                 item_id, prop = prop.rsplit('.', 1)
-                if prop not in ['status', 'value']:
+                if prop not in ['status', 'value', 'nstatus', 'nvalue']:
                     raise Exception('invalid state prop')
         return {
             'for_item_group': group,
