@@ -4,7 +4,6 @@ __license__ = "Apache License 2.0"
 __version__ = "3.2.4"
 
 import cherrypy
-import jsonpickle
 import shlex
 import eva.core
 
@@ -55,7 +54,6 @@ import eva.lm.controller
 import eva.lm.extapi
 import eva.ei
 import jinja2
-import jsonpickle
 import logging
 
 

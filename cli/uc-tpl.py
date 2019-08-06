@@ -6,7 +6,7 @@ __version__ = "3.2.4"
 import os
 import sys
 import getopt
-import jsonpickle
+import rapidjson
 import yaml
 import jinja2
 
@@ -131,7 +131,7 @@ config_rev = {}
 
 try:
     func = sys.argv[1]
-    o, a = getopt.getopt(sys.argv[2:], 'K:T:U:t:c:i:g:v:D')
+    o, a = getopt.getopt(sys.argv[2:], 'K:T:U:t:c:i:g:v:DJ')
 except:
     usage()
     sys.exit(99)
@@ -148,8 +148,8 @@ for i, v in o:
     elif i == '-v':
         cvars = v.split(',')
     elif i == '-J':
-        encoder = jsonpickle.encode
-        decoder = jsonpickle.decode
+        encoder = rapidjson.dumps
+        decoder = rapidjson.loads
         formatter = format_json
         printer = print_json
     elif i == '-T':

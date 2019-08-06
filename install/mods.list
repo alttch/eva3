@@ -23,6 +23,7 @@ schedule==0.6.0
 pymodbus==2.2.0
 pysnmp==4.4.4
 pygments==2.2.0
+python-rapidjson==0.7.2
 pytz==2018.9
 termcolor==1.1.0
 cherrypy==17.4.1

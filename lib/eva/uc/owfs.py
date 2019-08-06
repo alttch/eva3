@@ -8,7 +8,7 @@ default_delay = 0.05
 import importlib
 import eva.core
 import logging
-import jsonpickle
+import rapidjson
 import threading
 import time
 
@@ -125,7 +125,7 @@ def destroy_owfs_bus(bus_id):
 def load():
     try:
         with open(eva.core.dir_runtime + '/uc_owfs.json') as fd:
-            data = jsonpickle.decode(fd.read())
+            data = rapidjson.loads(fd.read())
         for p in data:
             d = p.copy()
             del d['id']

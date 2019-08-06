@@ -1302,7 +1302,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def edit_tpl(self, props):
         import jinja2
-        import jsonpickle
+        import rapidjson
         import yaml
         try:
             yaml.warnings({'YAMLLoadWarning': False})
@@ -1310,7 +1310,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             pass
 
         tpl_decoder = {
-            'json': jsonpickle.decode,
+            'json': rapidjson.loads,
             'yml': yaml.load,
             'yaml': yaml.load
         }

@@ -3,7 +3,7 @@ __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.2.4"
 
-import json
+import rapidjson
 import jsonpickle
 import time
 import socket
@@ -42,9 +42,14 @@ def config_error(fname, section, key, value):
 
 
 def format_json(obj, minimal=False, unpicklable=False):
-    return json.dumps(json.loads(jsonpickle.encode(obj,
-            unpicklable = unpicklable)), indent=4, sort_keys=True) \
-                if not minimal else jsonpickle.encode(obj, unpicklable = False)
+    if unpicklable:
+        return rapidjson.dumps(rapidjson.loads(jsonpickle.encode(obj,
+                unpicklable = unpicklable)), indent=4, sort_keys=True) \
+                    if not minimal else \
+                    jsonpickle.encode(obj, unpicklable = unpicklable)
+    else:
+        return rapidjson.dumps(obj, indent=4, sort_keys=True) \
+            if not minimal else rapidjson.dumps(obj)
 
 
 def fname_remove_unsafe(fname):

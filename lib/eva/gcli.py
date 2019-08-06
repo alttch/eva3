@@ -6,7 +6,7 @@ import importlib
 import termcolor
 import readline
 import argparse
-import json
+import rapidjson
 import shlex
 import threading
 from pygments import highlight, lexers, formatters
@@ -152,9 +152,9 @@ class GCLI(object):
         print(j)
 
     def format_json(self, obj, minimal=False):
-        return json.dumps(obj, indent=4, sort_keys=True) \
+        return rapidjson.dumps(obj, indent=4, sort_keys=True) \
                     if not minimal else \
-                    json.dumps(obj)
+                    rapidjson.dumps(obj)
 
     def print_err(self, *args):
         for s in args:

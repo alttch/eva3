@@ -11,7 +11,7 @@ import logging
 import configparser
 import traceback
 import time
-import jsonpickle
+import rapidjson
 import signal
 import psutil
 import threading
@@ -724,8 +724,7 @@ def load_cvars(fname=None):
     logging.info('Loading custom vars from %s' % fname_full)
     try:
         with open(fname_full) as fd:
-            raw = fd.read()
-        cvars.update(jsonpickle.decode(raw))
+            cvars.update(rapidjson.loads(fd.read()))
     except:
         logging.error('can not load custom vars from %s' % fname_full)
         log_traceback()

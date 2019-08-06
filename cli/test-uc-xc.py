@@ -8,7 +8,7 @@ import getopt
 import sys
 import subprocess
 import time
-import jsonpickle
+import rapidjson
 
 dir_eva = '/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1])
 dir_runtime = dir_eva + '/runtime'
@@ -33,7 +33,7 @@ print()
 
 with open(cvars_fname) as fd:
     raw = fd.read()
-cvars = jsonpickle.decode(raw)
+cvars = rapidjson.loads(raw)
 
 for x in sorted(cvars.keys()):
     print('%s = "%s"' % (x, cvars[x]))

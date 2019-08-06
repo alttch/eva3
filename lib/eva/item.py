@@ -10,7 +10,7 @@ import time
 import uuid
 import queue
 import logging
-import jsonpickle
+import rapidjson
 
 import eva.core
 import eva.notify
@@ -178,7 +178,7 @@ class Item(object):
             eva.core.log_traceback()
             return False
         try:
-            data = jsonpickle.decode(raw)
+            data = rapidjson.loads(raw)
             if data['id'] != self.item_id:
                 raise Exception('id mismatch, file %s' % \
                             fname_full)
@@ -713,7 +713,7 @@ class UpdatableItem(Item):
             elif topic == self.item_type + '/' + self.full_id:
                 if not data:
                     return
-                j = jsonpickle.decode(data)
+                j = rapidjson.loads(data)
                 t = j['t']
                 remote_controller = j.get('c')
                 if (

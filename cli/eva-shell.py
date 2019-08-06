@@ -795,7 +795,7 @@ sys.argv = {argv}
 
     def update(self, params):
         import requests
-        import jsonpickle
+        import rapidjson
         _update_repo = params.get('u')
         if not _update_repo:
             _update_repo = update_repo
@@ -817,7 +817,7 @@ sys.argv = {argv}
             r = requests.get(_update_repo + '/update_info.json', timeout=5)
             if r.status_code != 200:
                 raise Exception('HTTP ERROR')
-            result = jsonpickle.decode(r.text)
+            result = rapidjson.loads(r.text)
             new_build = int(result['build'])
             new_version = result['version']
         except:

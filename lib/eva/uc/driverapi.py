@@ -6,7 +6,7 @@ __api__ = 7
 
 import importlib
 import logging
-import jsonpickle
+import rapidjson
 import re
 import glob
 import os
@@ -665,7 +665,7 @@ def dump():
 def load():
     try:
         with open(eva.core.dir_runtime + '/uc_drivers.json') as fd:
-            data = jsonpickle.decode(fd.read())
+            data = rapidjson.loads(fd.read())
         _phi = data.get('phi')
         if _phi:
             for p in _phi:

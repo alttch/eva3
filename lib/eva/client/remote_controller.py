@@ -15,8 +15,7 @@ import logging
 import time
 import threading
 import websocket
-import json
-import jsonpickle
+import rapidjson
 import uuid
 import random
 from pyaltt import BackgroundWorker
@@ -34,7 +33,7 @@ class WebSocketPingerWorker(BackgroundWorker):
         controller = kwargs.get('controller')
         try:
             logging.debug('WS {}: PING'.format(controller.oid))
-            kwargs.get('o').send(json.dumps({'s': 'ping'}))
+            kwargs.get('o').send('{"s":"ping"}')
         except:
             eva.core.log_traceback()
 
@@ -118,7 +117,7 @@ class WebSocketWorker(BackgroundWorker):
                 if not controller.api._ssl_verify else None)
             ws.settimeout(5 + eva.core.config.timeout)
             try:
-                ws.send(json.dumps({'s': 'state'}))
+                ws.send(rapidjson.dumps({'s': 'state'}))
             except:
                 try:
                     ws.close()
@@ -168,7 +167,7 @@ class WebSocketWorker(BackgroundWorker):
                 self.wait()
             else:
                 try:
-                    data = json.loads(frame.data.decode())
+                    data = rapidjson.loads(frame.data.decode())
                     if data.get('s') == 'server' and data.get('d') == 'restart':
                         self.stop_ping()
                         if eva.core.is_shutdown_requested():
@@ -240,7 +239,7 @@ class RemoteController(eva.item.Item):
         if not data:
             return True
         try:
-            j = jsonpickle.decode(data)
+            j = rapidjson.loads(data)
         except:
             logging.warning(self.oid + ' invalid server event data')
             return False

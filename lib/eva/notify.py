@@ -5,7 +5,7 @@ __version__ = "3.2.4"
 
 import logging
 import eva.core
-import jsonpickle
+import rapidjson
 import requests
 import paho.mqtt.client as mqtt
 import time
@@ -1688,7 +1688,7 @@ class GenericMQTTNotifier(GenericNotifier):
                                                            msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
-                r = jsonpickle.decode(d)
+                r = rapidjson.loads(d)
                 if r['h'] != eva.core.config.system_name or \
                         r['p'] != eva.core.product.code:
                     eva.logs.log_append(rd=r, skip_mqtt=True)
@@ -1741,7 +1741,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     for k in i:
                         if not k in ['id', 'group', 'type', 'full_id', 'oid']:
                             dts[k] = i[k]
-                    dts = jsonpickle.encode(dts)
+                    dts = format_json(dts)
                 self.mq.publish(
                     self.pfx + i['type'] + '/' + i['group'] + '/' + i['id'],
                     dts,
@@ -1755,7 +1755,7 @@ class GenericMQTTNotifier(GenericNotifier):
                 i['c'] = eva.core.config.controller_name
                 self.mq.publish(self.pfx + i['item_type'] + '/' + \
                         i['item_group'] + '/' + i['item_id'] + '/action',
-                    jsonpickle.encode(i, unpicklable=unpicklable),
+                    format_json(i, unpicklable=unpicklable),
                     qos, retain = _retain)
         elif subject == 'log':
             if retain is not None and self.retain_enabled: _retain = retain
@@ -1765,7 +1765,7 @@ class GenericMQTTNotifier(GenericNotifier):
                 i['c'] = eva.core.config.controller_name
                 self.mq.publish(
                     self.log_topic,
-                    jsonpickle.encode(i, unpicklable=False),
+                    format_json(i, unpicklable=False),
                     qos,
                     retain=_retain)
         elif subject == 'server':
@@ -1778,7 +1778,7 @@ class GenericMQTTNotifier(GenericNotifier):
                 i['c'] = eva.core.config.controller_name
                 self.mq.publish(
                     self.server_events_topic,
-                    jsonpickle.encode(i, unpicklable=False),
+                    format_json(i, unpicklable=False),
                     qos,
                     retain=_retain)
 
@@ -1792,7 +1792,7 @@ class GenericMQTTNotifier(GenericNotifier):
         else: _retain = False
         for d in _data:
             if isinstance(d, dict):
-                _d = jsonpickle.encode(data, unpicklable=False)
+                _d = format_json(data, unpicklable=False)
             else:
                 _d = d
             if use_space and self.space is not None:
@@ -2171,7 +2171,7 @@ class GCP_IoT(GenericNotifier):
         if 'commands' in x:
             dev = x[2]
             try:
-                payload = jsonpickle.decode(d)
+                payload = rapidjson.loads(d)
                 if 'params' not in payload or not isinstance(
                         payload['params'], dict):
                     payload['params'] = {}
@@ -2290,7 +2290,7 @@ class GCP_IoT(GenericNotifier):
                             self.log_error(message='not connected')
                         else:
                             self.mq.publish('/devices/{}/events'.format(dev),
-                                            jsonpickle.encode(payload))
+                                            format_json(payload))
                     finally:
                         self.lock.release()
 
@@ -2302,7 +2302,7 @@ class GCP_IoT(GenericNotifier):
         if self.map:
             for i in self.map:
                 client.publish('/devices/{}/attach'.format(i),
-                               jsonpickle.encode({
+                               format_json({
                                    'authorization': ''
                                }))
 
@@ -2404,7 +2404,7 @@ class WSNotifier_Client(GenericNotifier_Client):
             try:
                 msg = {'s': subject, 'd': data}
                 logging.debug('.notifying WS %s' % self.notifier_id)
-                self.ws.send(jsonpickle.encode(msg, unpicklable=unpicklable))
+                self.ws.send(format_json(msg, unpicklable=unpicklable))
             except:
                 eva.core.log_traceback(notifier=True)
 
@@ -2444,14 +2444,13 @@ class NWebSocket(WebSocket):
     def received_message(self, message):
         s_all = ['#']
         try:
-            data = jsonpickle.decode(message.data.decode())
+            data = rapidjson.loads(message.data.decode())
             subject = data['s']
             if subject == 'bye':
                 self.close()
                 return
             elif subject == 'ping':
-                msg = {'s': 'pong'}
-                self.send(jsonpickle.encode(msg, unpicklable=True))
+                self.send('{"s":"pong"}')
             elif subject == 'u' and self.notifier:
                 topic = data['t']
                 if isinstance(topic, list):
@@ -2516,7 +2515,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
     else:
         _notifier_id = notifier_id
     with open(notifier_fname) as fd:
-        ncfg = jsonpickle.decode(fd.read())
+        ncfg = rapidjson.loads(fd.read())
     if ncfg['id'] != _notifier_id:
         raise Exception('notifier id mismatch, file %s' % \
                 notifier_fname)
