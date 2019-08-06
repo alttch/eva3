@@ -468,7 +468,7 @@ def parse_func_str(s):
     """
     s = s.strip()
     import re
-    wrong = re.compile(r"[<>/{}[\]~`]")
+    wrong = re.compile(r"[<>{}[\]~`]")
     r = s.replace(')', '').split('(')
     name = r.pop(0)
     if wrong.search(name) or name.find(' ') != -1:
