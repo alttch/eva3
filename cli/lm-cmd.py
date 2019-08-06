@@ -340,7 +340,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                 'Initial':
                 r['for_initial'] if r['for_initial'] else 'any',
                 'Chillout':
-                '%.2f/%.2f' % (r['chillout_time'], r['chillout_ends_in']),
+                '%.2f/%.2f' % (r['chillout_ends_in'], r['chillout_time']),
                 'Brk':
                 self.bool2yn(r['break_after_exec']),
                 'Description':

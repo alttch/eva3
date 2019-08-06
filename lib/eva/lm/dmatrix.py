@@ -23,6 +23,7 @@ class DecisionMatrix(object):
 
     def __init__(self):
         self.rules = []
+        self.rules_locker = threading.Lock()
 
     def process(self, item, ns=False):
         if not ns and item.prv_status == item.status and \
@@ -44,79 +45,117 @@ class DecisionMatrix(object):
                 'nstatus = %s -> %s, ' % (item.prv_nstatus, item.nstatus) + \
                 'nvalue = "%s" -> "%s" ' % (item.prv_nvalue, item.nvalue) + \
                 'assigned code = %s' % event_code)
-        for rule in self.rules.copy():
+        with self.rules_locker:
+            rules = self.rules.copy()
+        for rule in rules:
             if not rule.enabled: continue
-            if rule.for_item_type and rule.for_item_type != '#' and \
-                    rule.for_item_type != item.item_type:
-                continue
-            if rule.for_item_id and rule.for_item_id != '#' and \
-                rule.for_item_id != item.item_id and \
-                not (rule.for_item_id[0] == '*' and \
-                    rule.for_item_id[1:] == \
-                        item.item_id[-len(rule.for_item_id)+1:]) and \
-                not (rule.for_item_id[-1] == '*' and \
-                    rule.for_item_id[:-1] == \
-                        item.item_id[:len(rule.for_item_id)-1]) and \
-                not (rule.for_item_id[0] == '*' and \
-                    rule.for_item_id[-1] == '*' and \
-                    item.item_id.find(rule.for_item_id[1:-1]) > -1
-                    ):
-                continue
-            if rule.for_item_group is not None and \
-                    not eva.item.item_match(item, [], [ rule.for_item_group ]):
-                continue
-            pv = None
-            v = None
-            if rule.for_prop == 'status' and not ns:
-                try:
-                    pv = float(item.prv_status)
-                except:
-                    pv = None
-                try:
-                    v = float(item.status)
-                except:
-                    v = None
-            elif rule.for_prop == 'value' and not ns:
-                if item.prv_value is not None:
+            with rule.processing_lock:
+                if rule.for_item_type and rule.for_item_type != '#' and \
+                        rule.for_item_type != item.item_type:
+                    continue
+                if rule.for_item_id and rule.for_item_id != '#' and \
+                    rule.for_item_id != item.item_id and \
+                    not (rule.for_item_id[0] == '*' and \
+                        rule.for_item_id[1:] == \
+                            item.item_id[-len(rule.for_item_id)+1:]) and \
+                    not (rule.for_item_id[-1] == '*' and \
+                        rule.for_item_id[:-1] == \
+                            item.item_id[:len(rule.for_item_id)-1]) and \
+                    not (rule.for_item_id[0] == '*' and \
+                        rule.for_item_id[-1] == '*' and \
+                        item.item_id.find(rule.for_item_id[1:-1]) > -1
+                        ):
+                    continue
+                if rule.for_item_group is not \
+                        None and not \
+                        eva.item.item_match(item, [], [ rule.for_item_group ]):
+                    continue
+                pv = None
+                v = None
+                if rule.for_prop == 'status' and not ns:
                     try:
-                        pv = float(item.prv_value)
+                        pv = float(item.prv_status)
                     except:
-                        pv = item.prv_value
-                try:
-                    v = float(item.value)
-                except:
-                    v = item.value
-            elif rule.for_prop == 'nstatus' and ns:
-                try:
-                    pv = float(item.prv_nstatus)
-                except:
-                    pv = None
-                try:
-                    v = float(item.nstatus)
-                except:
-                    v = None
-            elif rule.for_prop == 'nvalue' and ns:
-                if item.prv_nvalue is not None:
+                        pv = None
                     try:
-                        pv = float(item.prv_nvalue)
+                        v = float(item.status)
                     except:
-                        pv = item.prv_nvalue
-                try:
-                    v = float(item.nvalue)
-                except:
-                    v = item.value
-            else:
-                continue
-            if (pv is None and rule.for_initial == 'skip') or \
-                    (pv is not None and \
-                        rule.for_initial == 'only') or \
-                    v is None or \
-                    pv == v:
-                continue
-            if pv is not None:
-                if not isinstance(pv, float):
+                        v = None
+                elif rule.for_prop == 'value' and not ns:
+                    if item.prv_value is not None:
+                        try:
+                            pv = float(item.prv_value)
+                        except:
+                            pv = item.prv_value
+                    try:
+                        v = float(item.value)
+                    except:
+                        v = item.value
+                elif rule.for_prop == 'nstatus' and ns:
+                    try:
+                        pv = float(item.prv_nstatus)
+                    except:
+                        pv = None
+                    try:
+                        v = float(item.nstatus)
+                    except:
+                        v = None
+                elif rule.for_prop == 'nvalue' and ns:
+                    if item.prv_nvalue is not None:
+                        try:
+                            pv = float(item.prv_nvalue)
+                        except:
+                            pv = item.prv_nvalue
+                    try:
+                        v = float(item.nvalue)
+                    except:
+                        v = item.value
+                else:
+                    continue
+                rule.chillout_event = None
+                if (pv is None and rule.for_initial == 'skip') or \
+                        (pv is not None and \
+                            rule.for_initial == 'only') or \
+                        v is None or \
+                        pv == v:
+                    continue
+                if pv is not None:
+                    if not isinstance(pv, float):
+                        if rule.in_range_min is not None and \
+                                pv == rule.in_range_min:
+                            continue
+                    else:
+                        if (rule.in_range_min is not None and \
+                                not isinstance(rule.in_range_min, float)) or \
+                            (rule.in_range_max is not None and \
+                                not isinstance(rule.in_range_max, float)):
+                            continue
+                        if rule.in_range_min is not None and \
+                                rule.in_range_max is not None:
+                            if ((rule.in_range_min_eq and \
+                                        pv >= rule.in_range_min) or \
+                                (not rule.in_range_min_eq and \
+                                        pv > rule.in_range_min)) and \
+                                ((rule.in_range_max_eq and \
+                                        pv <= rule.in_range_max) or \
+                                (not rule.in_range_max_eq and \
+                                    pv < rule.in_range_max)):
+                                continue
+                        elif rule.in_range_min is not None:
+                            if (rule.in_range_min_eq and \
+                                        pv >= rule.in_range_min) or \
+                                (not rule.in_range_min_eq and \
+                                    pv > rule.in_range_min):
+                                continue
+                        elif rule.in_range_max is not None:
+                            if ((rule.in_range_max_eq and \
+                                    pv <= rule.in_range_max) or \
+                            (not rule.in_range_max_eq and \
+                                pv < rule.in_range_max)):
+                                continue
+                if not isinstance(v, float):
                     if rule.in_range_min is not None and \
-                            pv == rule.in_range_min:
+                            v != rule.in_range_min:
                         continue
                 else:
                     if (rule.in_range_min is not None and \
@@ -124,80 +163,74 @@ class DecisionMatrix(object):
                         (rule.in_range_max is not None and \
                             not isinstance(rule.in_range_max, float)):
                         continue
-                    if rule.in_range_min is not None and \
-                            rule.in_range_max is not None:
-                        if ((rule.in_range_min_eq and \
-                                    pv >= rule.in_range_min) or \
-                            (not rule.in_range_min_eq and \
-                                    pv > rule.in_range_min)) and \
-                            ((rule.in_range_max_eq and \
-                                    pv <= rule.in_range_max) or \
-                            (not rule.in_range_max_eq and \
-                                pv < rule.in_range_max)):
-                            continue
-                    elif rule.in_range_min is not None:
-                        if (rule.in_range_min_eq and \
-                                    pv >= rule.in_range_min) or \
-                            (not rule.in_range_min_eq and \
-                                pv > rule.in_range_min):
-                            continue
-                    elif rule.in_range_max is not None:
-                        if ((rule.in_range_max_eq and \
-                                pv <= rule.in_range_max) or \
-                        (not rule.in_range_max_eq and \
-                            pv < rule.in_range_max)):
-                            continue
-            if not isinstance(v, float):
-                if rule.in_range_min is not None and \
-                        v != rule.in_range_min:
-                    continue
-            else:
-                if (rule.in_range_min is not None and \
-                        not isinstance(rule.in_range_min, float)) or \
-                    (rule.in_range_max is not None and \
-                        not isinstance(rule.in_range_max, float)):
-                    continue
-                if rule.in_range_min is not None:
-                    if rule.in_range_min_eq:
-                        if v < rule.in_range_min:
-                            continue
-                    else:
-                        if v <= rule.in_range_min:
-                            continue
-                if rule.in_range_max is not None:
-                    if rule.in_range_max_eq:
-                        if v > rule.in_range_max:
-                            continue
-                    else:
-                        if v >= rule.in_range_max:
-                            continue
-            if eva.core.config.development:
-                rule_id = rule.item_id
-            else:
-                rule_id = rule.item_id[:14] + '...'
-            logging.debug('Decision matrix rule %s match event %s' % \
-                    (rule_id, event_code))
-            if rule.chillout_time and \
-                    (time.time() - rule.last_matched) < rule.chillout_time:
-                logging.debug(
-                    'Decision matrix rule ' + \
-                            '%s event %s skipped due to chillout time' % \
-                            (rule_id, event_code) + \
-                            ', chillot ending in %f sec' % \
-                            (rule.chillout_time + rule.last_matched - \
-                                time.time()))
-                continue
-            rule.last_matched = time.time()
-            if rule.macro:
-                t = threading.Thread(
-                    target=self.run_macro, args=(event_code, rule, item))
-                t.start()
-            if rule.break_after_exec:
-                logging.debug('Decision matrix rule ' + \
-                        '%s is an event %s breaker, stopping event' % \
+                    if rule.in_range_min is not None:
+                        if rule.in_range_min_eq:
+                            if v < rule.in_range_min:
+                                continue
+                        else:
+                            if v <= rule.in_range_min:
+                                continue
+                    if rule.in_range_max is not None:
+                        if rule.in_range_max_eq:
+                            if v > rule.in_range_max:
+                                continue
+                        else:
+                            if v >= rule.in_range_max:
+                                continue
+                if eva.core.config.development:
+                    rule_id = rule.item_id
+                else:
+                    rule_id = rule.item_id[:14] + '...'
+                logging.debug('Decision matrix rule %s match event %s' % \
                         (rule_id, event_code))
-                break
+                if rule.chillout_active:
+                    logging.debug(
+                        'Decision matrix rule ' + \
+                                '%s event %s skipped due to chillout time' % \
+                                (rule_id, event_code) + \
+                                ', chillot ending in %f sec' % \
+                                (rule.chillout_time + rule.last_matched - \
+                                    time.time()))
+                    rule.chillout_event = event_code
+                    continue
+                self.exec_rule_action(event_code, rule, item)
+                if rule.break_after_exec:
+                    logging.debug('Decision matrix rule ' + \
+                            '%s is an event %s breaker, stopping event' % \
+                            (rule_id, event_code))
+                    break
         return True
+
+    def process_chillout(self, rule, item):
+        # don't use Timer - chillout_time can be changed during wait
+        while rule.last_matched + rule.chillout_time > time.time():
+            time.sleep(eva.core.config.polldelay)
+            if eva.core.is_shutdown_requested():
+                return
+        with rule.processing_lock:
+            rule.chillout_active = False
+            if rule.chillout_event:
+                if eva.core.config.development:
+                    rule_id = rule.item_id
+                else:
+                    rule_id = rule.item_id[:14] + '...'
+                logging.debug(
+                    'Decision matrix rule {} matched event {} during chillout'.
+                    format(rule_id, rule.chillout_event))
+                self.exec_rule_action(rule.chillout_event, rule, item)
+                rule.chillout_event = None
+
+    def exec_rule_action(self, event_code, rule, item):
+        rule.last_matched = time.time()
+        if rule.macro:
+            t = threading.Thread(
+                target=self.run_macro, args=(event_code, rule, item))
+            t.start()
+        if rule.chillout_time:
+            t = threading.Thread(target=self.process_chillout, args=(rule, item))
+            t.setDaemon(True)
+            rule.chillout_active = True
+            t.start()
 
     def run_macro(self, event_code, rule, item):
         if not eva.lm.controller.exec_macro(
@@ -254,7 +287,10 @@ class DecisionRule(eva.item.Item):
         self.macro_kwargs = {}
         self.break_after_exec = False
         self.chillout_time = 0
+        self.chillout_event = None
+        self.chillout_active = False
         self.last_matched = 0
+        self.processing_lock = threading.Lock()
         super().__init__(_uuid, 'dmatrix_rule')
         self.respect_layout = False
         super().update_config({'group': 'dm_rules'})
