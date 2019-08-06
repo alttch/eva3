@@ -386,8 +386,9 @@ class RemoteController(eva.item.Item):
             return False
         time_diff = abs(time.time() - float(result['time']))
         if eva.core.version != result['version']:
-            logging.warning('Remote controller EVA version is %s, my: %s' % \
-                    (result['version'], eva.core.version))
+            logging.warning(
+                'Remote controller {} EVA version is {}, my: {}'.format(
+                    self.full_id, result['version'], eva.core.version))
         self.item_id = result['system']
         self.config_changed = True
         self.set_group(result['product_code'])
