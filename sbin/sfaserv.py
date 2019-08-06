@@ -42,7 +42,7 @@ for production use sfa-control only to start/stop SFA
 """)
 
 
-product_build = 2019080603
+product_build = 2019080604
 
 product_code = 'sfa'
 
