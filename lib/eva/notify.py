@@ -1458,6 +1458,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.api_enabled = api_enabled
         self.discovery_enabled = discovery_enabled
         self.announce_interval = announce_interval
+        import eva.core
         self.controller_topic = '{}controller/{}/{}/'.format(
             pfx, eva.core.product.code, eva.core.config.system_name)
         self.api_request_topic = self.controller_topic + 'api/request'
@@ -1466,6 +1467,7 @@ class GenericMQTTNotifier(GenericNotifier):
         self.announce_topic = self.pfx + 'controller/discovery'
         self.announce_msg = eva.core.product.code + \
                             '/' + eva.core.config.system_name
+        import eva.api
         self.api_handler = eva.api.mqtt_api_handler
         self.discovery_handler = eva.api.mqtt_discovery_handler
         # dict of tuples (topic, handler)
