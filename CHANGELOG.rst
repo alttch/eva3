@@ -5,8 +5,14 @@ EVA ICS CHANGELOG
 ===========
 
 Common
+------
 
     * Google Cloud IoT Core support
+
+LM PLC
+------
+
+    * Rule chill-out logic corrected
 
 3.2.4 (2019-07-30)
 ==================
