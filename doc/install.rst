@@ -291,6 +291,18 @@ systems with *systemd* (all modern Linux distributions):
     cp ./etc/systemd/eva-ics.service /etc/systemd/system/
     systemctl enable eva-ics
 
+Unicode
+-------
+
+EVA ICS supports unicode out-of-the-box. If your system has problems, rebuild
+locales and then restart EVA ICS controllers:
+
+.. code-block:: bash
+
+    sudo dpkg-reconfigure locales
+    sudo eva server restart
+
+
 Updating
 ========
 
