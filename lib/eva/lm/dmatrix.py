@@ -227,7 +227,8 @@ class DecisionMatrix(object):
                 target=self.run_macro, args=(event_code, rule, item))
             t.start()
         if rule.chillout_time:
-            t = threading.Thread(target=self.process_chillout, args=(rule, item))
+            t = threading.Thread(
+                target=self.process_chillout, args=(rule, item))
             t.setDaemon(True)
             rule.chillout_active = True
             t.start()
