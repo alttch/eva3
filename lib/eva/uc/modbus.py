@@ -10,7 +10,7 @@ import eva.core
 import threading
 import time
 import logging
-import jsonpickle
+import rapidjson
 
 from eva.exceptions import InvalidParameter
 from eva.exceptions import FunctionFailed
@@ -223,7 +223,7 @@ def destroy_modbus_port(port_id):
 def load():
     try:
         with open(eva.core.dir_runtime + '/uc_modbus.json') as fd:
-            data = jsonpickle.decode(fd.read())
+            data = rapidjson.loads(fd.read())
         for p in data:
             d = p.copy()
             del d['id']

@@ -10,7 +10,7 @@ import base64
 import hashlib
 import uuid
 import threading
-import jsonpickle
+import rapidjson
 from cryptography.fernet import Fernet
 
 import eva.notify
@@ -43,7 +43,7 @@ class CoreAPIClient(APIClient):
         ok = False
 
         def json(self):
-            return jsonpickle.decode(self.text)
+            return rapidjson.loads(self.text)
 
     def __init__(self):
         super().__init__()
@@ -123,7 +123,7 @@ class CoreAPIClient(APIClient):
             request_id = payload['id']
         else:
             request_id = str(uuid.uuid4())
-        data = '{}|{}'.format(request_id, jsonpickle.encode(payload))
+        data = '{}|{}'.format(request_id, rapidjson.dumps(payload))
         cb = self.MQTTCallback()
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(

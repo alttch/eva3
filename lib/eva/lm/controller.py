@@ -44,7 +44,7 @@ from eva.core import db
 from functools import wraps
 from pyaltt import background_job
 
-import jsonpickle
+import rapidjson
 
 lvars_by_id = {}
 lvars_by_group = {}
@@ -495,7 +495,7 @@ def put_macro_function(fname=None, fdescr=None, i={}, o={}, fcode=None):
                 f.write('# FBD\n')
                 f.write('# auto generated code, do not modify\n')
                 f.write('"""\n{}\n"""\n{}\n'.format(
-                    jsonpickle.encode(fcode), pcode))
+                    rapidjson.dumps(fcode), pcode))
             else:
                 f.write(pcode)
         eva.core.finish_save()
@@ -574,7 +574,7 @@ def get_macro_source(macro_id):
                 if l[i].startswith('"""'):
                     break
                 jcode += l[i]
-            code = jsonpickle.decode(jcode)
+            code = rapidjson.loads(jcode)
             code['name'] = macro.full_id
         else:
             src_type = ''

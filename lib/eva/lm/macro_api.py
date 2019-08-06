@@ -14,7 +14,7 @@ import eva.mailer
 import eva.lm.controller
 import time
 import requests
-import json
+import rapidjson
 import threading
 import shlex
 import datetime
@@ -158,7 +158,7 @@ class MacroAPI(object):
             'AccessDenied': AccessDenied,
             'InvalidParameter': InvalidParameter,
             'requests': requests,
-            'json': json,
+            'json': rapidjson,
             'os': os,
             'sys': sys,
             'on': 1,

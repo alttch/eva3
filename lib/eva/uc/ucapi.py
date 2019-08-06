@@ -57,7 +57,7 @@ import eva.uc.modbus
 import eva.uc.owfs
 import eva.ei
 import jinja2
-import jsonpickle
+import rapidjson
 import logging
 
 try:
@@ -86,7 +86,7 @@ class UC_API(GenericAPI):
     @staticmethod
     def _load_device_config(tpl_config=None, device_tpl=None):
         tpl_decoder = {
-            'json': jsonpickle.decode,
+            'json': rapidjson.loads,
             'yml': yaml.load,
             'yaml': yaml.load
         }

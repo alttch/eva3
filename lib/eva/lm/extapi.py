@@ -6,7 +6,7 @@ __api__ = 5
 
 import importlib
 import logging
-import jsonpickle
+import rapidjson
 import re
 import glob
 import os
@@ -251,7 +251,7 @@ def dump():
 def load():
     try:
         with open(eva.core.dir_runtime + '/lm_extensions.json') as fd:
-            data = jsonpickle.decode(fd.read())
+            data = rapidjson.loads(fd.read())
         for p in data:
             try:
                 load_ext(
