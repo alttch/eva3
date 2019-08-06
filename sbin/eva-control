@@ -52,8 +52,19 @@ function controller_cmd() {
   fi
 }
 
-CS="uc lm sfa"
-CSTOP="sfa lm uc"
+CS_LIST="uc lm sfa"
+CSTOP_LIST="sfa lm uc"
+
+CS=""
+CSTOP=""
+
+for c in ${CS_LIST}; do
+  [ -f etc/${c}.ini ] && CS="${CS} ${c}"
+done
+
+for c in ${CSTOP_LIST}; do
+  [ -f etc/${c}.ini ] && CSTOP="${CSTOP} ${c}"
+done
 
 case $1 in
 start)
