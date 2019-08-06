@@ -32,8 +32,6 @@ from pyaltt import g
 from pyaltt import FunctionCollecton
 from pyaltt import background_job
 
-from twisted.internet import reactor
-
 from types import SimpleNamespace
 
 version = __version__
@@ -290,6 +288,7 @@ def do_save():
 
 def block():
     _flags.started.set()
+    from twisted.internet import reactor
     reactor.run(installSignalHandlers=False)
 
 
@@ -305,6 +304,7 @@ def core_shutdown():
     _flags.shutdown_requested = True
     shutdown()
     stop()
+    from twisted.internet import reactor
     reactor.callFromThread(reactor.stop)
 
 
@@ -902,6 +902,7 @@ def init():
 
 def start(init_db_only=False):
     if not init_db_only:
+        from twisted.internet import reactor
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
 
