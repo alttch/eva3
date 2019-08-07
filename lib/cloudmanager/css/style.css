@@ -590,10 +590,10 @@ a.controller_link {
   margin-bottom: 10px;
 }
 .logentry_color_10 {
-  color: #999;
+  color: #6bc45f;
 }
 .logentry_color_20 {
-  color: #0071bc;
+  color: #999;
 }
 .logentry_color_30 {
   color: #f7931e;
@@ -603,7 +603,7 @@ a.controller_link {
 }
 .logentry_color_50 {
   color: #ff5353;
-  font-size: 14px;
+  font-size: 14px!important;
 }
 
 /** initial setup **/
