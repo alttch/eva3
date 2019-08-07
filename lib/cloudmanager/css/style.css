@@ -785,8 +785,9 @@ a.controller_link {
   outline: none;
 }
 .buttons_block > button:disabled {
-  background: #ececec;
-  border-color: #ececec;
+/*  background: #ececec;
+  border-color: #ececec;*/
+  opacity: 0.5;
   cursor: not-allowed;
 }
 .buttons_block > button:enabled:hover {
@@ -799,6 +800,12 @@ a.controller_link {
 }
 .buttons_block > button:last-child {
   margin-right: 0;
+}
+.action_btn_block {
+  padding-bottom: 10px;
+}
+.action_btn_block > button.active {
+  pointer-events: none;
 }
 #mng_lvars .descr_block {
   width: calc(100% - 145px);
