@@ -850,9 +850,11 @@ a.controller_link {
 label.device-error {
   color: red;
 }
+select.device-error,
 input.device-error {
   border-color: red!important;
 }
+select.device-error:focus,
 input.device-error:focus {
   box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.25);
 }
@@ -860,11 +862,13 @@ input.device-error:focus {
 #rule_in_range_max_eq {
   max-width: 50px;
 }
+#l_job_at,
 #l_unit_cond_eq,
 #l_rule_cond_eq {
   padding: 2px 8px;
   font-size: 14px;
 }
+#l_job_at,
 #d_rule_cond_range #l_unit_cond_eq,
 #d_rule_cond_range #l_rule_cond_eq {
   border-radius: 0;
@@ -879,6 +883,10 @@ input.device-error:focus {
 
 #edit_unit_form label[for=expires] {
   margin-top: 10px;
+}
+
+#job_every_period {
+  min-width: 110px;
 }
 
 .input_helper {
