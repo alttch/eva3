@@ -481,10 +481,10 @@ a.controller_link {
 .dataTables_scrollHeadInner .table thead th.sorting,
 .dataTables_scrollHeadInner table thead th.sorting_asc,
 .dataTables_scrollHeadInner table thead th.sorting_desc {
-  padding-right: 24px;
+  padding-left: 24px;
   background: url('../images/arrange.svg') no-repeat #fff;
   background-size: 16px;
-  background-position: calc(100% - 3px) 50%;
+  background-position: 5px 50%;
   cursor: pointer;
 }
 .dataTables_scrollHeadInner table thead th.sorting_asc {
@@ -517,7 +517,6 @@ a.controller_link {
 .elements_block .table tbody td:nth-child(1) {
   padding-left: 32px;
 }
-.elements_block #tbar-remote-cycles .table thead th:nth-child(1),
 .elements_block #tbar-remote-cycles .table tbody td:nth-child(1) {
   padding-left: 5px;
 }
@@ -544,6 +543,12 @@ a.controller_link {
   border-left-color: #e56555;
   background-image: url('../images/alert.svg');
 }
+.elements_block #tbar-remote-units thead th:nth-child(4),
+.elements_block #tbar-remote-units thead th:nth-child(5),
+.elements_block #tbar-remote-sensors thead th:nth-child(3),
+.elements_block #tbar-remote-sensors thead th:nth-child(4),
+.elements_block #tbar-remote-lvars thead th:nth-child(3),
+.elements_block #tbar-remote-lvars thead th:nth-child(4),
 .elements_block .table tbody .tbl_s,
 .elements_block .table tbody .tbl_v {
   text-align: right;
