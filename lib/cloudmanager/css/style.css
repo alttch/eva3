@@ -769,8 +769,8 @@ a.controller_link {
   margin: 0 auto;
 }
 .buttons_block > button {
-  margin: auto 2px;
-  padding: 2px 10px;
+  margin: auto 1px;
+  padding: 2px 6px;
   font: 14px 'Roboto Regular';
   color: #fff;
   border-radius: 20px;
@@ -980,7 +980,7 @@ input.device-error:focus {
     margin-bottom: 0;
   }
   #mng_macros .descr_block:first-child {
-    width: calc(100% - 240px);
+    width: calc(100% - 310px);
   }
   #mng_cycles .descr_block {
     width: calc(55% - 20px);
@@ -1047,6 +1047,10 @@ input.device-error:focus {
     width: calc(100% - 365px);
     min-height: auto;
   }
+  .buttons_block > button {
+    margin: auto 2px;
+    padding: 2px 10px;
+  }
 
 }
 
@@ -1086,7 +1090,7 @@ input.device-error:focus {
     width: 55%;
   }
   #mng_cycles .descr_block {
-    width: calc(70% - 310px);
+    width: calc(70% - 380px);
     margin-right: 20px;
   }
   #mng_cycles .descr_block:first-child {
