@@ -731,6 +731,28 @@ a.controller_link {
 .group_ctrl_holder > .ctrl_reload_btn {
   margin-bottom: 5px;
 }
+.ctrl_reload_btn.ctrl_restart_btn {
+  position: relative;
+  margin-left: 20px;
+}
+.ctrl_reload_btn.ctrl_restart_btn::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 7px;
+  width: 14px;
+  height: 14px;
+  background-color: #6bc45f;
+  border-radius: 100%;
+  pointer-events: none;
+}
+.ctrl_reload_btn.ctrl_restart_btn.ctrl_disabled::before {
+  background-color: #ff5353;
+}
+.ctrl_reload_btn.ctrl_restart_btn:focus,
+.ctrl_reload_btn.ctrl_restart_btn:active {
+  outline: none;  
+}
 .ctrl_reload_btn:enabled:hover {
   background: #ccc;
 }
