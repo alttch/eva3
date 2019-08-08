@@ -1320,7 +1320,11 @@ def serve_json_yml(fname, dts='ui'):
         except Exception as e:
             return _tool_error_response(e)
         if cas == 'json':
-            data = format_json(data, minimal=not eva.core.config.development)
+            try:
+                data = format_json(
+                    data, minimal=not eva.core.config.development)
+            except:
+                return _tool_error_response(e)
             cherrypy.serving.response.headers[
                 'Content-Type'] = 'application/json'
         elif cas in ['yml', 'yaml']:
