@@ -381,6 +381,8 @@ class PHI(object):
 
     def _perform_update(self):
         state = self.get(timeout=get_timeout())
+        if not state:
+            return
         if self._last_update_state:
             stu = {}
             for x, v in state.items():
