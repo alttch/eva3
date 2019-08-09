@@ -335,10 +335,10 @@ a.controller_link {
 .controller_btn.reload_btn {
   background-image: url('../images/refresh.svg');
 }
-.controller_btn.disable_btn {
+.controller_btn.remove_btn {
   background-image: url('../images/cross.svg');
 }
-.controller_btn.remove_btn {
+.controller_btn.disable_btn {
   background-image: url('../images/check.svg');
 }
 .controller_btn.test_btn::before {
@@ -353,11 +353,11 @@ a.controller_link {
   content: "";
   background-image: url('../images/refresh_hover.svg');
 }
-.controller_btn.disable_btn::before {
+.controller_btn.remove_btn::before {
   content: "";
   background-image: url('../images/cross_hover.svg');
 }
-.controller_btn.remove_btn::before {
+.controller_btn.disable_btn::before {
   content: "";
   background-image: url('../images/check_hover.svg');
 }
@@ -373,11 +373,11 @@ a.controller_link {
   content: "";
   background-image: url('../images/refresh_active.svg');
 }
-.controller_btn.disable_btn::after {
+.controller_btn.remove_btn::after {
   content: "";
   background-image: url('../images/cross_active.svg');
 }
-.controller_btn.remove_btn::after {
+.controller_btn.disable_btn::after {
   content: "";
   background-image: url('../images/check_active.svg');
 }
@@ -398,10 +398,10 @@ a.controller_link {
 .controller_btn.reload_btn:not([disabled]):hover {
   background-image: url('../images/refresh_hover.svg');
 }
-.controller_btn.disable_btn:not([disabled]):hover {
+.controller_btn.remove_btn:not([disabled]):hover {
   background-image: url('../images/cross_hover.svg');
 }
-.controller_btn.remove_btn:not([disabled]):hover {
+.controller_btn.disable_btn:not([disabled]):hover {
   background-image: url('../images/check_hover.svg');
 }
 .controller_btn.test_btn:not([disabled]):active {
@@ -413,10 +413,10 @@ a.controller_link {
 .controller_btn.reload_btn:not([disabled]):active {
   background-image: url('../images/refresh_active.svg');
 }
-.controller_btn.disable_btn:not([disabled]):active {
+.controller_btn.remove_btn:not([disabled]):active {
   background-image: url('../images/cross_active.svg');
 }
-.controller_btn.remove_btn:not([disabled]):active {
+.controller_btn.disable_btn:not([disabled]):active {
   background-image: url('../images/check_active.svg');
 }
 .elements_block {
