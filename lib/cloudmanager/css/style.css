@@ -236,6 +236,7 @@ body {
   max-height: 329px;
   overflow-y: auto;
 }
+.collapse_btn[data-target="#lv_adv"],
 .controllers_block .collapse_btn {
   position: relative;
   width: 100%;
@@ -247,6 +248,13 @@ body {
   font: 16px 'TTNorms Medium';
   color: #4d4d4d;
 }
+.collapse_btn[data-target="#lv_adv"] {
+  margin-top: 0;
+  padding: 0 0 10px;
+  font-size: 14px;
+  border-bottom: none;
+}
+.collapse_btn[data-target="#lv_adv"]::before,
 .controllers_block .collapse_btn::before {
   content: "";
   position: absolute;
@@ -258,6 +266,13 @@ body {
   transform: rotate(-90deg);
   transition: 0.2s;
 }
+.collapse_btn[data-target="#lv_adv"]::before {
+  bottom: 12px;
+  width: 12px;
+  height: 8px;
+  right: 2px;
+}
+.collapse_btn[data-target="#lv_adv"][aria-expanded="true"]::before,
 .controllers_block .collapse_btn[aria-expanded="true"]::before {
   transform: rotate(0);
 }
@@ -776,12 +791,11 @@ a.controller_link {
   margin-bottom: 10px;
   word-break: break-word;
 }
-#mng_lvars .descr_block,
 #mng_sensors .descr_block {
   margin-bottom: 0;
 }
-#mng_lvars .descr_block:first-child {
-  margin-bottom: 10px;
+#mng_lvars .btn_toggle {
+  display: none;
 }
 #mng_units .descr_block {
   width: calc(100% - 90px);
@@ -829,16 +843,9 @@ a.controller_link {
 .action_btn_block > button.active {
   pointer-events: none;
 }
-#mng_lvars .descr_block {
-  width: calc(100% - 145px);
-}
 #mng_sensors .descr_block {
- width: calc(100% - 190px); 
+  width: calc(100% - 190px); 
 }
-#mng_lvars .descr_block:first-child {
-  width: 100%;
-}
-#mng_lvars .buttons_block,
 #mng_sensors .buttons_block  {
   margin-right: 0;
 }
@@ -1009,14 +1016,13 @@ input.device-error:focus {
     margin-right: 0;
   }
   #mng_lvars .descr_block {
-    width: calc(65% - 170px);
-    margin-right: 20px;
+    width: calc(50% - 20px);
   }
   #mng_lvars .descr_block:first-child {
-    margin-bottom: 0;
+    width: 50%;
   }
-  #mng_lvars .descr_block:first-child {
-    width: 35%;
+  #mng_lvars .btn_toggle {
+    display: block;
   }
   #mng_macros .descr_block {
     margin-bottom: 0;
@@ -1126,10 +1132,14 @@ input.device-error:focus {
     margin: 0 40px;
   }
   #mng_lvars .descr_block {
-    width: calc(45% - 170px);
+    width: calc(75% - 440px);
+    margin-bottom: 0;
   }
   #mng_lvars .descr_block:first-child {
-    width: 55%;
+    width: 25%;
+  }
+  #mng_lvars .buttons_block {
+    margin-right: 0;
   }
   #mng_cycles .descr_block {
     width: calc(70% - 380px);
@@ -1192,6 +1202,13 @@ input.device-error:focus {
   .log_block {
     margin-right: 0;
     margin-left: 0;
+  }
+  #mng_lvars .descr_block {
+    width: calc(60% - 440px);
+    margin-bottom: 0;
+  }
+  #mng_lvars .descr_block:first-child {
+    width: 40%;
   }
   #mng_jobs .descr_block,
   #mng_rules .descr_block {

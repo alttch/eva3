@@ -445,6 +445,7 @@
   }
   .eva_sfa_popup_window {
     width: 100%;
+    max-width: 390px;
   }
   .form_delimiter {
     display: none;
