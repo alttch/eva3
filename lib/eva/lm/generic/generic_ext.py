@@ -37,7 +37,7 @@ class LMExt(object):
         else:
             self.cfg = {}
         mod = sys.modules[self.__module__]
-        self.mod_id = mod.__name__.split('.')[-1]
+        self.mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
         self.__description = mod.__description__

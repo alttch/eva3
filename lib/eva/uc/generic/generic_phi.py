@@ -54,7 +54,7 @@ class PHI(object):
         else:
             self.phi_cfg = {}
         mod = sys.modules[self.__module__]
-        self.phi_mod_id = mod.__name__.split('.')[-1]
+        self.phi_mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
         self.__description = mod.__description__
