@@ -942,6 +942,19 @@ input.device-error:focus {
 .device-error + .error_input_msg {
   display: block;
 }
+.drivers_table, .modules_table {
+  width: 100%;
+  margin: 5px;
+}
+.empty_table_msg {
+  width: 100%;
+  padding: 10px 5px;
+  text-align: center;
+  font: 16px 'Roboto Regular';
+}
+
+
+
 @media (max-width: 575px) {
   .row-schf,
   #d_rule_cond_eq,
