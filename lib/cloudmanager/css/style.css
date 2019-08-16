@@ -952,7 +952,13 @@ input.device-error:focus {
   text-align: center;
   font: 16px 'Roboto Regular';
 }
-
+#modules_phi .descr_block {
+  width: calc(100% - 125px);
+  margin-bottom: 0;
+}
+#modules_phi .buttons_block {
+  margin-right: 0;
+}
 
 
 @media (max-width: 575px) {
@@ -1111,6 +1117,9 @@ input.device-error:focus {
   .buttons_block > button {
     margin: auto 2px;
     padding: 2px 10px;
+  }
+  #modules_phi .descr_block {
+    width: calc(100% - 150px);
   }
 
 }
