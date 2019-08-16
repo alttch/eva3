@@ -427,6 +427,9 @@ a.controller_link {
   margin-top: 50px;
   padding: 0 5px;
 }
+.clickable_row {
+  cursor: pointer;
+}
 .dataTables_wrapper .dataTables_filter {
   position: absolute;
   top: -75px;
@@ -700,7 +703,13 @@ a.controller_link {
 }
 .debug_info {
   display: inline-block;
-  margin: 0 5px 10px;
+  margin: 0 0 10px 20px;
+  font: 14px 'TTNorms Medium';
+  color: #b3b3b3;
+  line-height: 28px;
+}
+.debug_active {
+  color: #4d4d4d;
 }
 .mng_btn_holder {
   margin-top: 20px;
@@ -734,11 +743,14 @@ a.controller_link {
 }
 .ctrl_reload_btn {
   margin-right: 5px;
-  padding: 5px;
+  padding: 5px 16px;
   background: #fff;
-  border: 1px solid #999;
-  border-radius: 3px;
+  font: 14px 'TTNorms Medium';
+  border: 1px solid #4d4d4d;
+  border-radius: 15px;
   color: #4d4d4d;
+  cursor: pointer;
+  transition: .2s
 }
 .ctrl_reload_btn:last-child {
   margin: 0;
@@ -755,21 +767,22 @@ a.controller_link {
   position: absolute;
   left: -20px;
   top: 7px;
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   background-color: #6bc45f;
   border-radius: 100%;
   pointer-events: none;
 }
 .ctrl_reload_btn.ctrl_restart_btn.ctrl_disabled::before {
-  background-color: #ff5353;
+  background-color: #808080;
 }
 .ctrl_reload_btn.ctrl_restart_btn:focus,
 .ctrl_reload_btn.ctrl_restart_btn:active {
   outline: none;  
 }
 .ctrl_reload_btn:enabled:hover {
-  background: #ccc;
+  background: #4d4d4d;
+  color: #fff;
 }
 .mng_items_holder {
 	display: flex;
@@ -1024,6 +1037,9 @@ input.device-error:focus {
   .elements_block .table tbody td:nth-of-type(2) {
     max-width: 100%;
     word-break: break-word;
+  }
+  .debug_info {
+    margin-left: 30px;
   }
   .descr_block:first-child {
     margin-right: 20px;
