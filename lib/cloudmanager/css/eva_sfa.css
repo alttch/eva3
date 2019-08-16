@@ -110,6 +110,25 @@
 .eva_sfa_popup_content > form.rule_dialog > .form-group:last-child {
   margin-bottom: 0;
 }
+.eva_sfa_popup_content > button {
+  height: 30px;
+  margin: auto;
+  padding: 5px 10px;
+  background: #fff;
+  border: 1px solid #4d4d4d;
+  border-radius: 15px;
+  font: 14px 'TTNorms Medium';
+  color: #4d4d4d;
+  cursor: pointer;
+}
+.eva_sfa_popup_content > button:hover {
+  background: #4d4d4d;
+  border-color: #fff;
+  color: #fff;
+}
+.eva_sfa_popup_content > button:focus {
+  outline: none;
+}
 .content_msg {
   font-family: 'Roboto Bold';
   margin: auto;
