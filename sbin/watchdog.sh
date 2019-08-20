@@ -34,5 +34,6 @@ while [ 1 ]; do
         fi
         rm -f ${PIDFILE}
         ./sbin/${CONTROLLER}-control restart
+        exit
     fi
 done
