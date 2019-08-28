@@ -972,6 +972,11 @@ input.device-error:focus {
 #modules_phi .buttons_block {
   margin-right: 0;
 }
+#macro_editor {
+  width: 100%;
+  height: 250px;
+  border: 1px solid #dcdcdc;
+}
 
 
 @media (max-width: 575px) {
