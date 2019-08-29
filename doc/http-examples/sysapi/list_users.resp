@@ -7,15 +7,15 @@ Pragma: no-cache
 
 [
     {
-        "key": "test",
+        "key_id": "test",
         "user": "divisor"
     },
     {
-        "key": "testkey",
+        "key_id": "testkey",
         "user": "test"
     },
     {
-        "key": "testkey",
+        "key_id": "testkey",
         "user": "test2"
     }
 ]
