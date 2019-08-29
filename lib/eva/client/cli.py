@@ -142,9 +142,7 @@ class GenericCLI(GCLI):
                 'list_keys': [
                     'key_id', 'dynamic', 'master', 'sysfunc', 'allow'
                 ],
-                'list_users': [
-                    'user', 'key_id'
-                ],
+                'list_users': ['user', 'key_id'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
                 'log_get_': [
                     'time', 'host', 'p', 'level', 'mod', 'thread', 'message'
@@ -1252,7 +1250,8 @@ class GenericCLI(GCLI):
         # convert list to dict
         res = []
         for i in range(len(result[time_field])):
-            r = {}
+            r = OrderedDict()
+            k = result.get(time_field)
             for k in result.keys():
                 if k != time_field:
                     try:
@@ -1261,15 +1260,25 @@ class GenericCLI(GCLI):
                         r[k] = ''
                 else:
                     from datetime import datetime
-                    r[k] = datetime.fromtimestamp(result[k][i]).isoformat()
-            res.append(r)
-        df = self.pd.DataFrame(res)
-        df = df.set_index(time_field)
-        df.index = self.pd.to_datetime(df.index, utc=False)
-        out = df.to_string().split('\n')
-        print(self.colored('time' + out[0][4:], color='blue', attrs=[]))
-        print(self.colored('-' * len(out[0]), color='grey'))
-        [print(o) for o in out[2:]]
+                    t = datetime.strftime(datetime.fromtimestamp(result[k][i]),
+                                          '%Y-%m-%d %T.%f')[:-3]
+            rt = OrderedDict()
+            rt['time'] = t
+            rt.update(r)
+            res.append(rt)
+        if res:
+            header, rows = rapidtables.format_table(
+                res, fmt=rapidtables.FORMAT_GENERATOR_COLS)
+            print(self.colored('  '.join(header), color='blue'))
+            print(
+                self.colored('-' * sum([(len(x) + 2) for x in header]),
+                             color='grey'))
+            for cols in rows:
+                for i, c in enumerate(cols):
+                    print(self.colored(c, color='yellow' if not i else 'cyan') +
+                          ('  ' if i < len(cols) - 1 else ''),
+                          end='')
+                print()
 
     def print_local_only(self):
         self.print_err('This function is available for local controller only')
