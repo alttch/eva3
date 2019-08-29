@@ -1261,7 +1261,7 @@ class GenericCLI(GCLI):
                 else:
                     from datetime import datetime
                     t = datetime.strftime(datetime.fromtimestamp(result[k][i]),
-                                          '%Y-%m-%d %T.%f')[:-3]
+                                          '%Y-%m-%d %T,%f')[:-3]
             rt = OrderedDict()
             rt['time'] = t
             rt.update(r)
