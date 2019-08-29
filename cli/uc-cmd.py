@@ -256,8 +256,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if api_func == 'list_device_tpl':
             for d in data:
                 d['type'] = d['type'] + ' device template'
-                return data
-            return result
+            return data
         if api_func in ['get_modbus_slave_data', 'read_modbus_port']:
             for d in data:
                 rtps = {
@@ -1437,15 +1436,6 @@ _pd_cols = {
     'modhelp_phi': ['name', 'type', 'required', 'help']
 }
 
-_pd_idx = {
-    'state': 'oid',
-    'list': 'oid',
-    'list_device_tpl': 'name',
-    'result': 'time',
-    'list_phi_mods': 'mod',
-    'list_lpi_mods': 'mod'
-}
-
 _fancy_indentsp = {
     'list_props': 26,
     'get_phi': 14,
@@ -1465,7 +1455,6 @@ cli.arg_sections += [
 cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
-cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
 eva.client.cli.subshell_exit_code = code

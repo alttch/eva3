@@ -1497,7 +1497,6 @@ cli.arg_sections += [
 cli.api_cmds_timeout_correction = ['cmd', 'action', 'run']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
-cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
 eva.client.cli.subshell_exit_code = code
