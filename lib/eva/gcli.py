@@ -296,7 +296,8 @@ class GCLI(object):
             print('OK')
 
     def list_to_str(self, l):
-        return ', '.join(l) if isinstance(l, list) else str(l)
+        return ', '.join(l) if isinstance(
+            l, list) else (str(l) if l is not None else '')
 
     def fancy_print_list(self, result, func, itype):
         table = []
