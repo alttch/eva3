@@ -115,10 +115,10 @@ script requires more action_timeout in unit config):
     
     case $2 in
     0)
-		ssh eva@${SERVER_IP} "sudo /sbin/poweroff"
+      ssh eva@${SERVER_IP} "sudo /sbin/poweroff"
        ;;
     1)
-       wakeonlan ${SERVER_MAC}
+      wakeonlan ${SERVER_MAC}
        ;;
     esac
 
