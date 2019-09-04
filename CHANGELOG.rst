@@ -9,6 +9,8 @@ Common
 
     * Google Cloud IoT Core support
 
+    * fix: startup timeouts
+
 LM PLC
 ------
 
