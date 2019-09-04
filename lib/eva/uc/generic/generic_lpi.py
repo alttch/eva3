@@ -56,8 +56,8 @@ class LPI(object):
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
         self.log_error('action function not implemented')
-        return self.action_result_error(
-            _uuid, msg='action function not implemented')
+        return self.action_result_error(_uuid,
+                                        msg='action function not implemented')
 
     """
     Starts LPI threads
@@ -146,7 +146,7 @@ class LPI(object):
         e = self.__terminate.get(_uuid)
         if not e:
             self.critical('termination engine broken')
-        return e.isSet()
+        return e.is_set()
 
     """
     Performs a delay in action execution. If the controller requested action

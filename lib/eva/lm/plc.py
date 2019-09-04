@@ -789,7 +789,7 @@ class Cycle(eva.item.Item):
         return True
 
     def stop(self, wait=True):
-        if self.cycle_thread and self.cycle_thread.isAlive():
+        if self.cycle_thread and self.cycle_thread.is_alive():
             self.cycle_status = 2
             self.notify()
             self.cycle_enabled = False

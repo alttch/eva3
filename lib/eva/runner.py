@@ -109,14 +109,14 @@ class DriverCommand(GenericRunner):
         if self.run_thread:
             self.run_thread.start()
             self.run_thread.join(self.timeout)
-            if self.run_thread.isAlive():
+            if self.run_thread.is_alive():
                 cmd = 'state' if self.update else 'action'
                 logging.warning('driver ' + \
                     '%s %s command timeout, sending termination signal'
                     % (self.driver.driver_id, cmd))
                 self.driver.terminate(self._uuid)
                 self.run_thread.join(self.term_kill_interval)
-                if self.run_thread.isAlive():
+                if self.run_thread.is_alive():
                     logging.critical('driver %s %s command timeout' %
                                      (self.driver.driver_id, cmd))
                     eva.core.critical(from_driver=True)

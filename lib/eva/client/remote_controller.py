@@ -779,7 +779,7 @@ class RemoteControllerPool(object):
 
     def disable(self, controller_id):
         if controller_id in self.reload_threads and \
-                self.reload_threads[controller_id].isAlive():
+                self.reload_threads[controller_id].is_alive():
             self.stop_controller_reload_thread(controller_id)
 
     def start_controller_reload_thread(self, controller, lock=False):
