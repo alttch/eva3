@@ -170,18 +170,16 @@ class GenericNotifier(object):
     class NotifierWorker(BackgroundQueueWorker):
 
         def __init__(self, name=None, **kwargs):
-            super().__init__(
-                name=name,
-                on_error=eva.core.log_traceback,
-                on_error_kwargs=_ne_kw,
-                **kwargs)
+            super().__init__(name=name,
+                             on_error=eva.core.log_traceback,
+                             on_error_kwargs=_ne_kw,
+                             **kwargs)
 
         def run(self, event, o, **kwargs):
-            o.send_notification(
-                subject=event[0],
-                data=event[1],
-                retain=event[2],
-                unpicklable=event[3])
+            o.send_notification(subject=event[0],
+                                data=event[1],
+                                retain=event[2],
+                                unpicklable=event[3])
 
     def __init__(self,
                  notifier_id,
@@ -200,8 +198,9 @@ class GenericNotifier(object):
         self._skip_test = None
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
-        self.notifier_worker = self.NotifierWorker(
-            o=self, name='notifier_' + self.notifier_id)
+        self.notifier_worker = self.NotifierWorker(o=self,
+                                                   name='notifier_' +
+                                                   self.notifier_id)
         self.state_storage = None
 
     def subscribe(self,
@@ -218,11 +217,10 @@ class GenericNotifier(object):
             self.events.add(e)
         elif subject == 'action':
             if _e: self.events.remove(_e)
-            e = EventAction(
-                items=items,
-                groups=groups,
-                item_types=item_types,
-                action_status=action_status)
+            e = EventAction(items=items,
+                            groups=groups,
+                            item_types=item_types,
+                            action_status=action_status)
             self.events.add(e)
             if self.enabled:
                 _flags.action_subscribed = True
@@ -577,12 +575,11 @@ class SQLANotifier(GenericNotifier):
     class HistoryCleaner(BackgroundWorker):
 
         def __init__(self, name=None, **kwargs):
-            super().__init__(
-                name=name,
-                interval=60,
-                on_error=eva.core.log_traceback,
-                on_error_kwargs=_ne_kw,
-                **kwargs)
+            super().__init__(name=name,
+                             interval=60,
+                             on_error=eva.core.log_traceback,
+                             on_error_kwargs=_ne_kw,
+                             **kwargs)
 
         def run(self, o, **kwargs):
             dbconn = o.db()
@@ -603,14 +600,16 @@ class SQLANotifier(GenericNotifier):
 
     def __init__(self, notifier_id, db_uri=None, keep=None, space=None):
         notifier_type = 'db'
-        super().__init__(
-            notifier_id=notifier_id, notifier_type=notifier_type, space=space)
+        super().__init__(notifier_id=notifier_id,
+                         notifier_type=notifier_type,
+                         space=space)
         self.state_storage = 'sql'
         self.keep = keep if keep else \
             db_default_keep
         self._keep = keep
-        self.history_cleaner = self.HistoryCleaner(
-            name=self.notifier_id + '_cleaner', o=self)
+        self.history_cleaner = self.HistoryCleaner(name=self.notifier_id +
+                                                   '_cleaner',
+                                                   o=self)
         self.db_lock = threading.RLock()
         self.set_db(db_uri)
 
@@ -620,8 +619,8 @@ class SQLANotifier(GenericNotifier):
         self.init_db_engine()
 
     def init_db_engine(self):
-        self.db_engine = eva.core.create_db_engine(
-            self.db_uri, timeout=self.timeout)
+        self.db_engine = eva.core.create_db_engine(self.db_uri,
+                                                   timeout=self.timeout)
 
     def test(self):
         if self.connected: return True
@@ -847,11 +846,10 @@ class GenericHTTPNotifier(GenericNotifier):
                  ssl_verify=True):
         notifier_type = 'http'
         if notifier_subtype: notifier_type += '-' + notifier_subtype
-        super().__init__(
-            notifier_id=notifier_id,
-            notifier_type=notifier_type,
-            space=space,
-            timeout=timeout)
+        super().__init__(notifier_id=notifier_id,
+                         notifier_type=notifier_type,
+                         space=space,
+                         timeout=timeout)
         self.ssl_verify = ssl_verify
         self.uri = uri
         self.rs_lock = threading.RLock()
@@ -926,15 +924,14 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                  space=None,
                  timeout=None,
                  ssl_verify=True):
-        super().__init__(
-            notifier_id=notifier_id,
-            notifier_subtype='json',
-            ssl_verify=ssl_verify,
-            uri=uri,
-            username=username,
-            password=password,
-            space=space,
-            timeout=timeout)
+        super().__init__(notifier_id=notifier_id,
+                         notifier_subtype='json',
+                         ssl_verify=ssl_verify,
+                         uri=uri,
+                         username=username,
+                         password=password,
+                         space=space,
+                         timeout=timeout)
         self.method = method
         self.notify_key = notify_key
 
@@ -958,8 +955,10 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         else:
             data_ts = d
             data_ts['data'] = data
-        r = self.rsession().post(
-            self.uri, json=data_ts, timeout=self.get_timeout(), **self.xrargs)
+        r = self.rsession().post(self.uri,
+                                 json=data_ts,
+                                 timeout=self.get_timeout(),
+                                 **self.xrargs)
         if self.method == 'jsonrpc':
             if r.ok:
                 return True
@@ -1001,11 +1000,10 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                 }
             else:
                 data_ts = d
-            r = self.rsession().post(
-                self.uri,
-                json=data_ts,
-                timeout=self.get_timeout(),
-                **self.xrargs)
+            r = self.rsession().post(self.uri,
+                                     json=data_ts,
+                                     timeout=self.get_timeout(),
+                                     **self.xrargs)
             if not r.ok: return False
             result = r.json()
             if self.method == 'jsonrpc':
@@ -1053,14 +1051,13 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                  space=None,
                  timeout=None,
                  ssl_verify=True):
-        super().__init__(
-            notifier_id=notifier_id,
-            ssl_verify=ssl_verify,
-            uri=uri,
-            username=username,
-            password=password,
-            space=space,
-            timeout=timeout)
+        super().__init__(notifier_id=notifier_id,
+                         ssl_verify=ssl_verify,
+                         uri=uri,
+                         username=username,
+                         password=password,
+                         space=space,
+                         timeout=timeout)
         self.method = method
         self.notify_key = notify_key
         self.notifier_type = 'influxdb'
@@ -1134,14 +1131,14 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                     fill[:-1], self.__fills[fill[-1].upper()])
             if l:
                 q += ' limit %u' % l
-            r = self.rsession().post(
-                url=self.uri + '/query?db={}'.format(self.db),
-                data={
-                    'q': q,
-                    'epoch': 'ms'
-                },
-                timeout=self.get_timeout(),
-                **self.xrargs)
+            r = self.rsession().post(url=self.uri +
+                                     '/query?db={}'.format(self.db),
+                                     data={
+                                         'q': q,
+                                         'epoch': 'ms'
+                                     },
+                                     timeout=self.get_timeout(),
+                                     **self.xrargs)
             if not r.ok:
                 raise Exception('influxdb server error HTTP code {}'.format(
                     r.status_code))
@@ -1241,22 +1238,20 @@ class GenericMQTTNotifier(GenericNotifier):
     class Announcer(BackgroundWorker):
 
         def __init__(self, name=None, **kwargs):
-            super().__init__(
-                name=name,
-                on_error=eva.core.log_traceback,
-                on_error_kwargs=_ne_kw,
-                **kwargs)
+            super().__init__(name=name,
+                             on_error=eva.core.log_traceback,
+                             on_error_kwargs=_ne_kw,
+                             **kwargs)
 
         def run(self, o, **kwargs):
             if eva.core.is_shutdown_requested():
                 return False
             if not eva.core.is_started():
                 eva.core.wait_for(eva.core.is_started, 30)
-            o.send_message(
-                o.announce_topic,
-                o.announce_msg,
-                qos=o.qos['system'],
-                use_space=False)
+            o.send_message(o.announce_topic,
+                           o.announce_msg,
+                           qos=o.qos['system'],
+                           use_space=False)
 
     def __init__(self,
                  notifier_id,
@@ -1277,11 +1272,10 @@ class GenericMQTTNotifier(GenericNotifier):
                  certfile=None,
                  keyfile=None):
         notifier_type = 'mqtt'
-        super().__init__(
-            notifier_id=notifier_id,
-            notifier_type=notifier_type,
-            space=space,
-            timeout=timeout)
+        super().__init__(notifier_id=notifier_id,
+                         notifier_type=notifier_type,
+                         space=space,
+                         timeout=timeout)
         self.host = host
         if port: self.port = port
         else: self.port = 1883
@@ -1362,10 +1356,9 @@ class GenericMQTTNotifier(GenericNotifier):
         # dict of tuples (topic, handler)
         self.api_callback = {}
         self.api_callback_lock = threading.RLock()
-        self.announcer = self.Announcer(
-            name=self.notifier_id + '_announcer',
-            o=self,
-            interval=self.announce_interval)
+        self.announcer = self.Announcer(name=self.notifier_id + '_announcer',
+                                        o=self,
+                                        interval=self.announce_interval)
         self.handler_lock = threading.RLock()
 
     def connect(self):
@@ -1439,8 +1432,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 logging.debug('%s subscribed to %s for handler' %
                               (self.notifier_id, _topic))
             self.custom_handlers[_topic].add(func)
-            logging.debug('%s new handler for topic %s: %s' % (self.notifier_id,
-                                                               _topic, func))
+            logging.debug('%s new handler for topic %s: %s' %
+                          (self.notifier_id, _topic, func))
         finally:
             self.handler_lock.release()
 
@@ -1557,26 +1550,25 @@ class GenericMQTTNotifier(GenericNotifier):
                 d != self.announce_msg and \
                 self.discovery_handler and \
                 not eva.core.is_setup_mode() and eva.core.is_started():
-            background_job(
-                self.discovery_handler, daemon=True)(self.notifier_id, d)
+            background_job(self.discovery_handler,
+                           daemon=True)(self.notifier_id, d)
             return
         if t == self.api_request_topic and self.api_handler:
-            background_job(
-                self.api_handler, daemon=True)(self.notifier_id, d,
-                                               self.send_api_response)
+            background_job(self.api_handler,
+                           daemon=True)(self.notifier_id, d,
+                                        self.send_api_response)
             return
         if t.startswith(self.pfx_api_response):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
-                background_job(
-                    self.api_callback[response_id][1], daemon=True)(d)
+                background_job(self.api_callback[response_id][1],
+                               daemon=True)(d)
                 self.finish_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
-                background_job(
-                    self.exec_custom_handler, daemon=True)(h, d, t, msg.qos,
-                                                           msg.retain)
+                background_job(self.exec_custom_handler,
+                               daemon=True)(h, d, t, msg.qos, msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
                 r = jsonpickle.decode(d)
@@ -1601,8 +1593,9 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             if self.mq._state != mqtt.mqtt_cs_connected:
                 self.mq.loop_stop()
-                self.mq.connect(
-                    host=self.host, port=self.port, keepalive=self.keepalive)
+                self.mq.connect(host=self.host,
+                                port=self.port,
+                                keepalive=self.keepalive)
                 self.mq.loop_start()
             return True
         except:
@@ -1632,11 +1625,11 @@ class GenericMQTTNotifier(GenericNotifier):
                         if not k in ['id', 'group', 'type', 'full_id', 'oid']:
                             dts[k] = i[k]
                     dts = jsonpickle.encode(dts)
-                self.mq.publish(
-                    self.pfx + i['type'] + '/' + i['group'] + '/' + i['id'],
-                    dts,
-                    qos,
-                    retain=_retain)
+                self.mq.publish(self.pfx + i['type'] + '/' + i['group'] + '/' +
+                                i['id'],
+                                dts,
+                                qos,
+                                retain=_retain)
         elif subject == 'action':
             if retain is not None and self.retain_enabled: _retain = retain
             else: _retain = False
@@ -1653,11 +1646,10 @@ class GenericMQTTNotifier(GenericNotifier):
             for i in data:
                 i['t'] = time.time()
                 i['c'] = eva.core.config.controller_name
-                self.mq.publish(
-                    self.log_topic,
-                    jsonpickle.encode(i, unpicklable=False),
-                    qos,
-                    retain=_retain)
+                self.mq.publish(self.log_topic,
+                                jsonpickle.encode(i, unpicklable=False),
+                                qos,
+                                retain=_retain)
         elif subject == 'server':
             if retain is not None and self.retain_enabled: _retain = retain
             else: _retain = False
@@ -1666,11 +1658,10 @@ class GenericMQTTNotifier(GenericNotifier):
                     i = {'e': i}
                 i['t'] = time.time()
                 i['c'] = eva.core.config.controller_name
-                self.mq.publish(
-                    self.server_events_topic,
-                    jsonpickle.encode(i, unpicklable=False),
-                    qos,
-                    retain=_retain)
+                self.mq.publish(self.server_events_topic,
+                                jsonpickle.encode(i, unpicklable=False),
+                                qos,
+                                retain=_retain)
 
     def send_message(self, topic, data, retain=None, qos=1, use_space=True):
         self.check_connection()
@@ -1698,11 +1689,10 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def send_api_response(self, call_id, data):
         if not self.api_enabled: return False
-        self.mq.publish(
-            self.api_response_topic + '/' + call_id,
-            data,
-            self.qos['system'],
-            retain=False)
+        self.mq.publish(self.api_response_topic + '/' + call_id,
+                        data,
+                        self.qos['system'],
+                        retain=False)
         return True
 
     def send_api_request(self, request_id, controller_id, data, callback):
@@ -1721,10 +1711,9 @@ class GenericMQTTNotifier(GenericNotifier):
         finally:
             self.api_callback_lock.release()
         self.mq.subscribe(t, qos=self.qos['system'])
-        return self.send_message(
-            'controller/' + controller_id + '/api/request',
-            data,
-            qos=self.qos['system'])
+        return self.send_message('controller/' + controller_id + '/api/request',
+                                 data,
+                                 qos=self.qos['system'])
 
     def finish_api_request(self, request_id):
         if request_id not in self.api_callback:
@@ -1748,8 +1737,10 @@ class GenericMQTTNotifier(GenericNotifier):
                     (self.notifier_id,self.host, self.port))
             if not self.check_connection():
                 return False
-            result = self.mq.publish(
-                self.pfx + 'test', 1, qos=self.qos['system'], retain=False)
+            result = self.mq.publish(self.pfx + 'test',
+                                     1,
+                                     qos=self.qos['system'],
+                                     retain=False)
             return eva.core.wait_for(result.is_published, self.get_timeout())
         except:
             eva.core.log_traceback(notifier=True)
@@ -1917,24 +1908,23 @@ class MQTTNotifier(GenericMQTTNotifier):
                  ca_certs=None,
                  certfile=None,
                  keyfile=None):
-        super().__init__(
-            notifier_id=notifier_id,
-            host=host,
-            port=port,
-            space=space,
-            username=username,
-            password=password,
-            qos=qos,
-            keepalive=keepalive,
-            timeout=timeout,
-            collect_logs=collect_logs,
-            api_enabled=api_enabled,
-            discovery_enabled=discovery_enabled,
-            announce_interval=announce_interval,
-            retain_enabled=retain_enabled,
-            ca_certs=ca_certs,
-            certfile=certfile,
-            keyfile=keyfile)
+        super().__init__(notifier_id=notifier_id,
+                         host=host,
+                         port=port,
+                         space=space,
+                         username=username,
+                         password=password,
+                         qos=qos,
+                         keepalive=keepalive,
+                         timeout=timeout,
+                         collect_logs=collect_logs,
+                         api_enabled=api_enabled,
+                         discovery_enabled=discovery_enabled,
+                         announce_interval=announce_interval,
+                         retain_enabled=retain_enabled,
+                         ca_certs=ca_certs,
+                         certfile=certfile,
+                         keyfile=keyfile)
 
 
 class WSNotifier_Client(GenericNotifier_Client):
@@ -2018,13 +2008,12 @@ class NWebSocket(WebSocket):
                 else: item_types = s_all
                 if 'a' in data: action_status = data['a']
                 else: action_status = s_all
-                self.notifier.subscribe(
-                    subject,
-                    items=items,
-                    groups=groups,
-                    item_types=item_types,
-                    action_status=action_status,
-                    log_level=log_level)
+                self.notifier.subscribe(subject,
+                                        items=items,
+                                        groups=groups,
+                                        item_types=item_types,
+                                        action_status=action_status,
+                                        log_level=log_level)
         except:
             logging.debug('.WS %s:%u got invalid JSON data: %s' % \
                     (self.peer_address[0], self.peer_address[1],
@@ -2084,24 +2073,23 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         discovery_enabled = ncfg.get('discovery_enabled', False)
         announce_interval = ncfg.get('announce_interval', 0)
         retain_enabled = ncfg.get('retain_enabled', True)
-        n = MQTTNotifier(
-            _notifier_id,
-            host=host,
-            port=port,
-            space=space,
-            username=username,
-            password=password,
-            qos=qos,
-            keepalive=keepalive,
-            timeout=timeout,
-            collect_logs=collect_logs,
-            api_enabled=api_enabled,
-            discovery_enabled=discovery_enabled,
-            announce_interval=announce_interval,
-            retain_enabled=retain_enabled,
-            ca_certs=ca_certs,
-            certfile=certfile,
-            keyfile=keyfile)
+        n = MQTTNotifier(_notifier_id,
+                         host=host,
+                         port=port,
+                         space=space,
+                         username=username,
+                         password=password,
+                         qos=qos,
+                         keepalive=keepalive,
+                         timeout=timeout,
+                         collect_logs=collect_logs,
+                         api_enabled=api_enabled,
+                         discovery_enabled=discovery_enabled,
+                         announce_interval=announce_interval,
+                         retain_enabled=retain_enabled,
+                         ca_certs=ca_certs,
+                         certfile=certfile,
+                         keyfile=keyfile)
     elif ncfg['type'] == 'db':
         db = ncfg.get('db')
         keep = ncfg.get('keep')
@@ -2116,16 +2104,15 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         method = ncfg.get('method')
         username = ncfg.get('username')
         password = ncfg.get('password')
-        n = HTTP_JSONNotifier(
-            _notifier_id,
-            ssl_verify=ssl_verify,
-            uri=uri,
-            username=username,
-            password=password,
-            method=method,
-            notify_key=notify_key,
-            space=space,
-            timeout=timeout)
+        n = HTTP_JSONNotifier(_notifier_id,
+                              ssl_verify=ssl_verify,
+                              uri=uri,
+                              username=username,
+                              password=password,
+                              method=method,
+                              notify_key=notify_key,
+                              space=space,
+                              timeout=timeout)
     elif ncfg['type'] == 'influxdb':
         space = ncfg.get('space')
         db = ncfg.get('db')
@@ -2135,16 +2122,15 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         method = ncfg.get('method')
         username = ncfg.get('username')
         password = ncfg.get('password')
-        n = InfluxDB_Notifier(
-            _notifier_id,
-            ssl_verify=ssl_verify,
-            uri=uri,
-            db=db,
-            username=username,
-            password=password,
-            method=method,
-            space=space,
-            timeout=timeout)
+        n = InfluxDB_Notifier(_notifier_id,
+                              ssl_verify=ssl_verify,
+                              uri=uri,
+                              db=db,
+                              username=username,
+                              password=password,
+                              method=method,
+                              space=space,
+                              timeout=timeout)
     else:
         logging.error('Invalid notifier type = %s' % ncfg['type'])
         return None
@@ -2170,13 +2156,12 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         groups = e.get('groups', [])
         item_types = e.get('types', [])
         action_status = e.get('action_status', [])
-        n.subscribe(
-            subject,
-            items=items,
-            groups=groups,
-            item_types=item_types,
-            action_status=action_status,
-            log_level=log_level)
+        n.subscribe(subject,
+                    items=items,
+                    groups=groups,
+                    item_types=item_types,
+                    action_status=action_status,
+                    log_level=log_level)
     return n
 
 
@@ -2192,11 +2177,10 @@ def load(test=True, connect=True):
     try:
         for notifier_fname in get_notifier_fnames():
             try:
-                n = load_notifier(
-                    notifier_id=None,
-                    fname=notifier_fname,
-                    test=test,
-                    connect=connect)
+                n = load_notifier(notifier_id=None,
+                                  fname=notifier_fname,
+                                  test=test,
+                                  connect=connect)
                 if not n: raise Exception('Notifier load error')
                 notifiers[n.notifier_id] = n
                 logging.debug('+ notifier %s' % n.notifier_id)
@@ -2286,13 +2270,12 @@ def notify(subject,
         for i in list(notifiers):
             try:
                 if notifiers[i].can_notify():
-                    notify(
-                        subject=subject,
-                        data=data,
-                        notifier_id=i,
-                        retain=retain,
-                        skip_subscribed_mqtt_item=skip_subscribed_mqtt_item,
-                        skip_mqtt=skip_mqtt)
+                    notify(subject=subject,
+                           data=data,
+                           notifier_id=i,
+                           retain=retain,
+                           skip_subscribed_mqtt_item=skip_subscribed_mqtt_item,
+                           skip_mqtt=skip_mqtt)
             except KeyError:
                 pass
 
@@ -2345,8 +2328,20 @@ def dump(notifier_id=None):
 
 def start():
     notifier_client_cleaner.start()
+    th = []
     for i, n in notifiers.copy().items():
         if n.enabled: n.start()
+        th.append(threading.Thread(target=n.start, daemon=True))
+    time_start = time.time()
+    [ t.start() for t in th ]
+    while time_start + eva.core.config.timeout > time.time():
+        can_break = True
+        for t in th:
+            if t.is_alive():
+                can_break = False
+                break
+        if can_break: break
+        time.sleep(eva.core.sleep_step)
 
 
 @eva.core.stop
@@ -2390,8 +2385,8 @@ def mark_leaving(n):
     notify_leave_data.add(n)
 
 
-@background_worker(
-    delay=notifier_client_clean_delay, on_error=eva.core.log_traceback)
+@background_worker(delay=notifier_client_clean_delay,
+                   on_error=eva.core.log_traceback)
 def notifier_client_cleaner(**kwargs):
     for k, n in notifiers.copy().items():
         if n.nt_client: n.cleanup()
