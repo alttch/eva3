@@ -960,16 +960,17 @@ input.device-error:focus {
   margin: 5px;
 }
 .empty_table_msg {
+  display: none;
   width: 100%;
   padding: 10px 5px;
   text-align: center;
   font: 16px 'Roboto Regular';
 }
-#modules_phi .descr_block {
+#modules_sys .descr_block {
   width: calc(100% - 125px);
   margin-bottom: 0;
 }
-#modules_phi .buttons_block {
+#modules_sys .buttons_block {
   margin-right: 0;
 }
 #macro_editor {
@@ -1139,7 +1140,7 @@ input.device-error:focus {
     margin: auto 2px;
     padding: 2px 10px;
   }
-  #modules_phi .descr_block {
+  #modules_sys .descr_block {
     width: calc(100% - 150px);
   }
 
