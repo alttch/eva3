@@ -52,6 +52,7 @@ class GCLI(object):
         self.always_print = []
         self.common_api_functions = {}
         self.common_pd_cols = {}
+        self.pd_cols = {}
         self.arg_sections = []
         self.say_bye = True
         self.readline_processing = True
