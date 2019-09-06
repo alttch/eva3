@@ -264,6 +264,12 @@
   cursor: pointer;
   margin: 0;
 }
+.form_radio[disabled] + label {
+  cursor: not-allowed;
+}
+.form_radio[disabled] + label {
+  opacity: 0.5;
+}
 .form_radio:not(checked) + label {
   color: #fff;
   position: relative;
@@ -284,15 +290,18 @@
 }
 .form_radio + label::before,
 #radio_NO:checked + label:before,
-#radio_0:checked + label:before {
+#radio_0:checked + label:before,
+[id*="radio_"][value="0"]:checked + label:before {
   background: #fff;
 }
 .form_radio:checked + label::before,
 #radio_YES:checked + label:before,
-#radio_1:checked + label:before {
+#radio_1:checked + label:before,
+[id*="radio_"][value="1"]:checked + label:before {
   background: #fff;
 }
-#radio_-1:checked + label:before {
+#radio_-1:checked + label:before,
+[id*="radio_"][value="-1"]:checked + label:before {
   background: #fff;
 }
 .form_radio + label + .bg_col {
@@ -304,27 +313,33 @@
   z-index: 1;
 }
 #radio_NO:checked + label,
-#radio_0:checked + label {
+#radio_0:checked + label,
+[id*="radio_"][value="0"]:checked + label {
   color: #808080;
 }
 .form_radio:checked + label,
 #radio_YES:checked + label,
-#radio_1:checked + label {
+#radio_1:checked + label,
+[id*="radio_"][value="1"]:checked + label {
   color: #6BC45F;
 }
-#radio_-1:checked + label {
+#radio_-1:checked + label,
+[id*="radio_"][value="-1"]:checked + label {
   color: #000;
 }
 #radio_NO:checked + label + .bg_col,
-#radio_0:checked + label + .bg_col {
+#radio_0:checked + label + .bg_col,
+[id*="radio_"][value="0"]:checked + label + .bg_col {
   background: #B3B3B3;
 }
 .form_radio:checked + label + .bg_col,
 #radio_YES:checked + label + .bg_col,
-#radio_1:checked + label + .bg_col {
+#radio_1:checked + label + .bg_col,
+[id*="radio_"][value="1"]:checked + label + .bg_col {
   background: #6BC45F;
 }
-#radio_-1:checked + label + .bg_col {
+#radio_-1:checked + label + .bg_col,
+[id*="radio_"][value="-1"]:checked + label + .bg_col {
   background: #000;
 }
 

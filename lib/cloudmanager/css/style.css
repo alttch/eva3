@@ -545,9 +545,6 @@ a.controller_link {
 .elements_block .table tbody td:nth-child(1) {
   padding-left: 32px;
 }
-.elements_block #tbar-remote-cycles .table tbody td:nth-child(1) {
-  padding-left: 5px;
-}
 .elements_block .table tbody .unit-status-1 td:nth-child(1),
 .elements_block .table tbody .sensor-status-1 td:nth-child(1),
 .elements_block .table tbody .lvar-status-1 td:nth-child(1),
@@ -605,6 +602,31 @@ a.controller_link {
 .elements_block .table tbody .cycle-status--1 td:nth-child(1) .tbl_v {
   color: #e56555;
 }
+#tbar-remote-lvars th.sorting:last-child {
+  width: 165px;
+}
+#tbar-remote-units th.sorting:last-child {
+  width: 150px;
+}
+#tbar-remote-macros th.sorting:last-child {
+  width: 50px;
+}
+.tbl_btn {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #fff;
+  border: 1px solid #4d4d4d;
+  border-radius: 15px;
+  font: 12px 'TTNorms Medium';
+  color: #4d4d4d;
+  cursor: pointer;
+}
+.tbl_btn:hover {
+  background: #4d4d4d;
+  border-color: #fff;
+  color: #fff;
+}
+
 .log_block {
   
   margin: 60px 5px 40px;
