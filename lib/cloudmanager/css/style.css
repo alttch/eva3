@@ -602,6 +602,9 @@ a.controller_link {
 .elements_block .table tbody .cycle-status--1 td:nth-child(1) .tbl_v {
   color: #e56555;
 }
+#tbar-remote-lvars th.sorting:nth-child(2) {
+  width: 55px;
+}
 #tbar-remote-lvars th.sorting:last-child {
   width: 165px;
 }
@@ -1034,6 +1037,25 @@ input.device-error:focus {
   font-size: 32px;
   line-height: 15px;
   cursor: pointer;
+}
+.info_block_btn {
+  position:absolute;
+  top:8px;
+  right:8px;
+  width:20px;
+  height:20px;
+  font-size:17px;
+  line-height:16px;
+  cursor:pointer;
+  border:1px solid #fff;
+  border-radius:100%;
+}
+.tooltip th, .tooltip td {
+  padding: 0 10px;
+  color: #fff;
+}
+.tooltip-inner {
+  max-width: 500px;
 }
 
 
