@@ -176,6 +176,17 @@ body {
   margin: 0 20px;
   background: url('../images/logo.svg') 50% 50% no-repeat;
 }
+.logo:hover {
+  text-decoration: none;
+}
+a.logo::before {
+  content: 'beta';
+  display: block;
+  margin-left: 87%;
+  margin-top: 6px;
+  font: 12px 'TTNorms Medium';
+  color: #054a77;
+}
 .header_menu {
   display: block;
   margin: 20px 0 auto auto;
@@ -1187,6 +1198,9 @@ input.device-error:focus {
     margin-left: 0;
     width: 70px;
   }
+  a.logo::before {
+    margin-top: 9px;
+  }
   .header_menu > a:last-child {
     margin-right: 0;
   }
@@ -1237,6 +1251,10 @@ input.device-error:focus {
   }
   .logo {
     width: 90px;
+  }
+  a.logo::before {
+    font-size: 16px;
+    margin-top: 18px;
   }
   /**********footer**************/
   .footer .containers {
