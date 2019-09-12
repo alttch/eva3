@@ -626,6 +626,7 @@ a.controller_link {
   width: 50px;
 }
 .tbl_btn {
+  position: relative;
   display: inline-block;
   padding: 2px 8px;
   background: #fff;
@@ -635,10 +636,28 @@ a.controller_link {
   color: #4d4d4d;
   cursor: pointer;
 }
-.tbl_btn:hover {
+.tbl_btn:enabled:hover {
   background: #4d4d4d;
   border-color: #fff;
   color: #fff;
+}
+.tbl_btn:focus {
+  outline: none;
+}
+.tbl_btn.btn_busy::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 5px;
+  width: 8px;
+  height: 8px;
+  background: #000;
+  border-radius: 100%;
+  animation: busyBtn 1s infinite;
+}
+@keyframes busyBtn {
+  0%, 100% {left: 5px;}
+  50% {left:calc(100% - 13px);}
 }
 
 .log_block {
@@ -879,6 +898,7 @@ a.controller_link {
   cursor: pointer;
   outline: none;
 }
+.tbl_btn:disabled,
 .buttons_block > button:disabled {
 /*  background: #ececec;
   border-color: #ececec;*/
