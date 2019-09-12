@@ -16,6 +16,11 @@ LM PLC
 
     * Rule chill-out logic corrected
 
+Cloud manager
+-------------
+
+    * First public beta
+
 3.2.4 (2019-07-30)
 ==================
 
