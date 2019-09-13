@@ -247,7 +247,6 @@ a.logo::before {
   max-height: 329px;
   overflow-y: auto;
 }
-.collapse_btn.edit_macro_btn,
 .collapse_btn[data-target="#lv_adv"],
 .controllers_block .collapse_btn {
   position: relative;
@@ -266,14 +265,6 @@ a.logo::before {
   font-size: 14px;
   border-bottom: none;
 }
-.collapse_btn.edit_macro_btn {
-  width: auto;
-  margin: 0;
-  padding: 0 20px 10px 0;
-  font-size: 14px;
-  border-bottom: none;
-}
-.collapse_btn.edit_macro_btn::before,
 .collapse_btn[data-target="#lv_adv"]::before,
 .controllers_block .collapse_btn::before {
   content: "";
@@ -286,7 +277,6 @@ a.logo::before {
   transform: rotate(-90deg);
   transition: 0.2s;
 }
-.collapse_btn.edit_macro_btn::before,
 .collapse_btn[data-target="#lv_adv"]::before {
   bottom: 12px;
   width: 12px;
@@ -1061,36 +1051,29 @@ input.device-error:focus {
 #modules_sys .buttons_block {
   margin-right: 0;
 }
-#macro_editor_holder {
-  display: none;
-  position: relative;
+.macro_editor {
   width: 100%;
-  max-width: 500px;
-  height: 80%;
-  max-height: 300px;
-  padding: 20px;
-  margin: auto;
-  background: #fff;
+  max-width: 1100px;
+  height: 90%;
+  min-height: 300px;
 }
-#macro_editor_holder.editing {
+.macro_editor .eva_sfa_popup_content {
   display: block;
-}
-#macro_editor_holder.editing + .eva_sfa_popup_window {
-  display: none;
+  margin: 0;
+  height: 100%;
+  padding-bottom: 80px;
 }
 #macro_editor {
   width: 100%;
+  max-width: 100%;
   height: 100%;
   border: 1px solid #dcdcdc;
 }
-.macro_editor_close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  font-size: 32px;
-  line-height: 15px;
-  cursor: pointer;
+.macro_editor .eva_sfa_popup_btn_holder {
+  max-width: 100%;
 }
+
+
 .form_field_required {
   color: #f00;
   line-height: 10px;
