@@ -998,12 +998,14 @@ input.device-error:focus {
 #rule_in_range_max_eq {
   max-width: 50px;
 }
+#id_drv_dot,
 #l_job_at,
 #l_unit_cond_eq,
 #l_rule_cond_eq {
   padding: 2px 8px;
   font-size: 14px;
 }
+#id_drv_dot,
 #l_job_at,
 #d_rule_cond_range #l_unit_cond_eq,
 #d_rule_cond_range #l_rule_cond_eq {
@@ -1084,6 +1086,11 @@ input.device-error:focus {
   font-size: 32px;
   line-height: 15px;
   cursor: pointer;
+}
+.form_field_required {
+  color: #f00;
+  line-height: 10px;
+  padding-left: 2px;
 }
 .info_block_btn {
   position:absolute;
