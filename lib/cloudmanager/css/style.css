@@ -886,7 +886,7 @@ a.controller_link {
   word-break: break-word;
 }
 #mng_sensors .descr_block {
-  margin-bottom: 0;
+  margin: 0;
 }
 #mng_lvars .btn_toggle {
   display: none;
@@ -898,6 +898,10 @@ a.controller_link {
 .item_name, .item_priority {
   font-family: 'TTNorms Medium';
   color: #4d4d4d; 
+}
+.item_val {
+  color: #008000;
+  font: 14px 'TTNorms Medium';
 }
 .buttons_block {
   display: flex;
@@ -939,7 +943,7 @@ a.controller_link {
   pointer-events: none;
 }
 #mng_sensors .descr_block {
-  width: calc(100% - 190px); 
+  width: calc(100% - 200px); 
 }
 #mng_sensors .buttons_block  {
   margin-right: 0;
@@ -1273,6 +1277,9 @@ input.device-error:focus {
   #mng_units .descr_block {
     width: calc(100% - 365px);
     min-height: auto;
+  }
+  #mng_sensors .descr_block {
+    width: calc(100% - 240px); 
   }
   .buttons_block > button {
     margin: auto 2px;
