@@ -1098,12 +1098,13 @@ input.device-error:focus {
   border: 1px solid #4d4d4d;
   border-radius:100%;
 }
-.tooltip th, .tooltip td {
-  padding: 0 10px;
-  color: #fff;
+#vanillatoasts-container {
+  width: 100%;
+  max-width: 400px;
+  z-index: 101;
 }
-.tooltip-inner {
-  max-width: 500px;
+.vanillatoasts-text th, .vanillatoasts-text td {
+  padding: 3px 5px;
 }
 
 
