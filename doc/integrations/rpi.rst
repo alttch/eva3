@@ -38,11 +38,13 @@ GPIO
 
 Raspberry Pi GPIO can be used with ready-to-use `EVA ICS PHIs
 <https://www.eva-ics.com/phi>`_. All GPIO PHIs require *gpiozero* Python
-module, so instal it first:
+module, so instal it first.
+
+Put *gpiozero* to *EXTRA* var in /opt/eva/etc/venv, then run
 
 .. code:: shell
 
-   /opt/eva/python3/bin/pip3 install -U gpiozero
+   /opt/eva/install/build-venv
 
 There are 3 primary PHIs for GPIO bus:
 
