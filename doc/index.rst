@@ -128,6 +128,7 @@ What you get with EVA
     integrations/cctv
     integrations/gcp
     integrations/grafana
+    integrations/rpi
     integrations/tts
 
 .. toctree::
