@@ -132,6 +132,8 @@ What you get with EVA
     integrations/energenie
     integrations/gcp
     integrations/grafana
+    integrations/hue
+    integrations/nanoleaf
     integrations/rpi
     integrations/sonoff
     integrations/tts
