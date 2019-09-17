@@ -132,6 +132,7 @@ What you get with EVA
     integrations/grafana
     integrations/rpi
     integrations/tts
+    integrations/yeelight
 
 .. toctree::
     :caption:  Extension development
