@@ -120,6 +120,8 @@ What you get with EVA
     evahi
     EVA JS Framework <https://github.com/alttch/eva-js-framework>
 
+.. _integrations:
+
 .. toctree::
     :caption:  Integrations
     :maxdepth: 1
@@ -131,6 +133,7 @@ What you get with EVA
     integrations/gcp
     integrations/grafana
     integrations/rpi
+    integrations/sonoff
     integrations/tts
     integrations/yeelight
 

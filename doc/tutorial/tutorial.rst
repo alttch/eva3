@@ -4,6 +4,11 @@ Tutorial
 In this section, we will focus on EVA configuration which is illustrated by the
 following example.
 
+.. note::
+
+   Examples for the particular equipment can be also found in
+   :ref:`integrations <integrations>` section of EVA ICS documentation.
+
 There is a room and some equipment:
 
 * Internal ventilation system, powered via SR-201 controlled relay, port 1
