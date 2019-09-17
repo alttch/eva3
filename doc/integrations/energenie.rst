@@ -30,7 +30,7 @@ and states may differ only if switch reboot has been occurred.
 .. code:: shell
 
    eva uc phi download https://get.eva-ics.com/phi/relays/eg_pm2lan.py
-   eva uc phi load eg1 eg_pm2lan -c host=192.168.1,100,pw=123,skip_logout=1,update=60 -y
+   eva uc phi load eg1 eg_pm2lan -c host=192.168.1.100,pw=123,skip_logout=1,update=60 -y
    # create unit for port 1
    eva uc create unit:control/u1 -y
    # assign driver to unit 1
