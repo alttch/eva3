@@ -129,6 +129,7 @@ What you get with EVA
     integrations/akcp
     integrations/aws
     integrations/cctv
+    integrations/denkovi
     integrations/energenie
     integrations/gcp
     integrations/grafana
