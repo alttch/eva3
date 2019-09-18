@@ -2,7 +2,8 @@ Arduino
 *******
 
 You may connect Arduino or similar boards to :doc:`/uc/uc` to handle events
-from connected sensors.
+from connected sensors or receive commands for locally connected relays, motors
+etc.
 
 Receiving commands from EVA ICS
 ===============================
