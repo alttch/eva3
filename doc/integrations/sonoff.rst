@@ -54,3 +54,5 @@ Let's connect the single-port Sonoff to :doc:`/uc/uc`:
    # note: if sonoff_mch module is used, you must also specify "-c port=N"
    # param, where N is port number
    eva uc driver assign unit:lights/lamp1 sonoff1.default -y
+   # enable unit actions
+   eva uc action enable unit:lights/lamp1

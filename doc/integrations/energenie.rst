@@ -39,4 +39,7 @@ and states may differ only if switch reboot has been occurred.
    eva uc create unit:control/u2 -y
    # assign driver to unit 2
    eva uc driver assign unit:control/u2 eg1.default -c port=2 -y
+   # enable unit actions
+   eva uc action enable unit:control/u1
+   eva uc action enable unit:control/u2
    # ... repeat the steps for ports 3 and 4 if required ...
