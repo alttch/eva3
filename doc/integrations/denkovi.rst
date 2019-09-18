@@ -30,6 +30,9 @@ address 192.168.1.100, SNMP community is default (*private*):
    # assign driver. consider lamp1 is on port 1, lamp 2 on port 2
    eva uc driver assign unit:lights/lamp1 relay1.default -c port=1 -y
    eva uc driver assign unit:lights/lamp2 relay1.default -c port=2 -y
+   # enable unit actions
+   eva uc action enable unit:lights/lamp1
+   eva uc action enable unit:lights/lamp2
 
 Performance tuning
 ==================

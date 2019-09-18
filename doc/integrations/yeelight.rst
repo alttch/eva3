@@ -36,6 +36,8 @@ Let's connect the bulb to :doc:`/uc/uc`:
    eva uc create unit:lights/lamp1 -y
    # assign driver
    eva uc driver assign unit:lights/lamp1 ye1.default -y
+   # enable unit actions
+   eva uc action enable unit:lights/lamp1
    # turn the bulb on and set it to, e.g. red:
    eva uc action exec unit:lights/lamp1 -s1 -v "#FF0000" -w 5
 
