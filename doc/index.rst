@@ -127,6 +127,7 @@ What you get with EVA
     :maxdepth: 1
 
     integrations/akcp
+    integrations/arduino
     integrations/aws
     integrations/cctv
     integrations/denkovi
