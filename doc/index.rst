@@ -138,6 +138,7 @@ What you get with EVA
     integrations/rpi
     integrations/sonoff
     integrations/tts
+    integrations/unipi
     integrations/yeelight
 
 .. toctree::
