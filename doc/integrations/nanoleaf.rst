@@ -36,11 +36,11 @@ Let's connect Nanoleaf to :doc:`/uc/uc`:
    # assign driver
    eva uc driver assign unit:lights/nl1 nano1.default -y
    # turn Nanoleaf on and set it to, e.g. red:
-   eva uc action exec unit:lights/nl1 -s1 -v "#FF0000" -w 5
+   eva uc action exec unit:lights/nl1 1 -v "#FF0000" -w 5
    # enable unit actions
    eva uc action enable unit:lights/n1
    # change Nanoleaf color profile to Snowfall with 50% brighness.
-   eva uc action exec unit:lights/nl1 -s1 -v "Snowfall,50" -w 5
+   eva uc action exec unit:lights/nl1 1 -v "Snowfall,50" -w 5
 
 .. note::
 
