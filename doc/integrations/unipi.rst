@@ -52,7 +52,14 @@ then restart UniPi Modbus daemon:
 ======
 
 If installed locally, EVA ICS can use UniPi :doc:`1-Wire </owfs>` bus directly.
-For Axon series, owfs bus in :doc:`/uc/uc` must be created as:
+
+For Neuron series, owfs virtual bus for :doc:`/uc/uc` must be created as:
+
+.. code:: shell
+
+   eva uc owfs create local1 "i2c=/dev/i2c-1:ALL" -y
+
+For Axon series:
 
 .. code:: shell
 
