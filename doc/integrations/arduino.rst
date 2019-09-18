@@ -22,9 +22,9 @@ To enable UDP API, you must firstly configure *listen* and *hosts_allow*
 options in *etc/uc.ini* (don't forget to restart :doc:`/uc/uc` after
 configuration is modified).
 
-Example. Consider there are 2 motions sensors connected with Arduino board on
-pins #2 and #3, the board has Ethernet shield to send events via UDP protocol,
-there is also a signal LED connected to board pin #7.
+Example. Consider there are 2 motion (PIR) sensors connected with Arduino board
+on pins #2 and #3, the board has Ethernet shield to send events via UDP
+protocol, there is also a signal LED connected to board pin #7.
 
 On events, the board updates states of EVA ICS sensors
 *sensor:security/motion1* and *sensor:security/motion2*. We'll use plain
