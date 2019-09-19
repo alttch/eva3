@@ -32,5 +32,26 @@ On events, the board updates states of EVA ICS sensors
 (unencrypted) UDP API and :doc:`/uc/uc` will receive state updates without API
 key.
 
+Setup EVA ICS UC
+----------------
+
+Create 2 sensors:
+
+.. code:: shell
+
+   # create sensors
+   eva uc create sensor:security/motion1 -y
+   eva uc create sensor:security/motion2 -y
+
+   # enable sensors (set status to 1)
+   eva uc update sensor:security/motion1 -s1
+   eva uc update sensor:security/motion2 -s1
+
+Sensors will get value "1" when motion is detected by PIR and "0" when motion
+is over.
+
+Setup Arduino
+-------------
+
 .. literalinclude:: ../code-examples/arduino-alarm-example.ino
    :language: c
