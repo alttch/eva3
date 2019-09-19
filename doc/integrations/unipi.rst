@@ -70,8 +70,9 @@ Inputs/outputs
 ==============
 
 EVA ICS has 4 pre-built PHI modules for UniPi (model Axon S115), which can be
-also used as a templates for other UniPi models. As all models use very similar
-Modbus register maps, PHIs are compatible or require only slight modifications.
+also used as the templates for other UniPi models. As all models use very
+similar Modbus register maps, PHIs are compatible or require only slight
+modifications.
 
 * **unipi_axon_s115_ain** analog input
 * **unipi_axon_s115_aout** analog output
