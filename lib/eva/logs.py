@@ -14,7 +14,7 @@ from pyaltt import background_worker
 from eva.exceptions import InvalidParameter
 
 from types import SimpleNamespace
-from termcolor import colored
+from neotermcolor import colored
 
 from functools import partial
 

@@ -3,7 +3,7 @@ import sys
 import getopt
 import importlib
 
-import termcolor
+import neotermcolor
 import readline
 import argparse
 import rapidjson
@@ -11,29 +11,6 @@ import shlex
 import threading
 from pygments import highlight, lexers, formatters
 from collections import OrderedDict
-
-
-def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
-    if os.getenv('ANSI_COLORS_DISABLED') is None:
-        fmt_str = '\033[%dm'
-        if rlsafe:
-            fmt_str = '\001' + fmt_str + '\002'
-        fmt_str += '%s'
-        if color is not None:
-            text = fmt_str % (termcolor.COLORS[color], text)
-
-        if on_color is not None:
-            text = fmt_str % (termcolor.HIGHLIGHTS[on_color], text)
-
-        if attrs is not None:
-            for attr in attrs:
-                text = fmt_str % (termcolor.ATTRIBUTES[attr], text)
-
-        if rlsafe:
-            text += '\001' + termcolor.RESET + '\002'
-        else:
-            text += termcolor.RESET
-    return text
 
 
 class GCLI(object):
@@ -72,11 +49,11 @@ class GCLI(object):
                 rlsafe=False):
         if not self.can_colorize():
             return str(text)
-        return safe_colored(text,
+        return neotermcolor.colored(text,
                             color=color,
                             on_color=on_color,
                             attrs=attrs,
-                            rlsafe=rlsafe)
+                            readline_safe=rlsafe)
 
     def start_interactive(self):
         self.reset_argcomplete()
