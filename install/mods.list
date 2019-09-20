@@ -26,7 +26,7 @@ pysnmp==4.4.4
 pygments==2.2.0
 python-rapidjson==0.7.2
 pytz==2018.9
-neotermcolor==2.0.1
+neotermcolor==2.0.2
 cherrypy==17.4.1
 twisted==18.7.0
 ws4py==0.5.1
