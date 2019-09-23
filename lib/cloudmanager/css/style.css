@@ -1191,7 +1191,7 @@ input.device-error:focus {
     margin-bottom: 0;
   }
   #mng_macros .descr_block:first-child {
-    width: calc(100% - 310px);
+    width: calc(100% - 330px);
   }
   #mng_cycles .descr_block {
     width: calc(55% - 20px);
@@ -1270,6 +1270,9 @@ input.device-error:focus {
   }
   #modules_sys .descr_block {
     width: calc(100% - 150px);
+  }
+  #mng_macros .descr_block:first-child {
+    width: calc(100% - 370px);
   }
 
 }
