@@ -807,13 +807,17 @@ a.controller_link {
   order: -1;
   padding: 0 5px;
 }
+.ctrl_cur,
+.select_ctrl {
+  border-radius: 3px;
+}
 .group_ctrl_holder > select {
   margin-right: 10px;
   margin-bottom: 5px;
   padding: 5px;
 }
-.ctrl_reload_btn {
-  margin-right: 5px;
+.ctrl_btn {
+  margin-right: 10px;
   padding: 5px 16px;
   background: #fff;
   font: 14px 'TTNorms Medium';
@@ -823,17 +827,17 @@ a.controller_link {
   cursor: pointer;
   transition: .2s
 }
-.ctrl_reload_btn:last-child {
+.ctrl_btn:last-child {
   margin: 0;
 }
-.group_ctrl_holder > .ctrl_reload_btn {
+.group_ctrl_holder > .ctrl_btn {
   margin-bottom: 5px;
 }
-.ctrl_reload_btn.ctrl_restart_btn {
+.ctrl_btn.ctrl_restart_btn {
   position: relative;
   margin-left: 20px;
 }
-.ctrl_reload_btn.ctrl_restart_btn::before {
+.ctrl_btn.ctrl_restart_btn::before {
   content: "";
   position: absolute;
   left: -20px;
@@ -844,16 +848,31 @@ a.controller_link {
   border-radius: 100%;
   pointer-events: none;
 }
-.ctrl_reload_btn.ctrl_restart_btn.ctrl_disabled::before {
+.ctrl_btn.ctrl_restart_btn.ctrl_disabled::before {
   background-color: #808080;
 }
-.ctrl_reload_btn.ctrl_restart_btn:focus,
-.ctrl_reload_btn.ctrl_restart_btn:active {
+.ctrl_btn:focus,
+.ctrl_btn:active {
   outline: none;  
 }
-.ctrl_reload_btn:enabled:hover {
+.ctrl_btn:enabled:hover {
   background: #4d4d4d;
   color: #fff;
+}
+.ctrl_btn.ctrl_reload_btn {
+  width: 28px;
+  height: 28px;
+  padding: 9px;
+  border: none;
+  background-image: url('../images/refresh_1.svg');
+  background-repeat: no-repeat !important;
+}
+.ctrl_btn.ctrl_reload_btn:enabled:hover {
+  background-image: url('../images/refresh_active_1.svg');
+}
+.ctrl_btn.ctrl_reload_btn::after {
+  content: "";
+  background-image: url('../images/refresh_active_1.svg');
 }
 .mng_items_holder {
 	display: flex;
@@ -863,6 +882,7 @@ a.controller_link {
   display: flex;
   flex-wrap: wrap;
   padding: 5px;
+  border-bottom: 2px solid #fafafa;
 }
 .mng_item_holder:hover {
   background-color: rgba(236, 236, 236, 0.5);
@@ -1167,7 +1187,7 @@ input.device-error:focus {
     word-break: break-word;
   }
   .debug_info {
-    margin-left: 30px;
+    margin-left: 20px;
   }
   .descr_block:first-child {
     margin-right: 20px;
