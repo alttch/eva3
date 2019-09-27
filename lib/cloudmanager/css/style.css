@@ -659,7 +659,7 @@ a.controller_link {
   z-index: 3;
 }
 .form_radio_holder > .btn_busy::before {
-  top: 7px;
+  top: 10px;
 }
 @keyframes busyBtn {
   0%, 100% {left: 5px;}
