@@ -569,12 +569,6 @@ a.controller_link {
   border-left-color: #e56555;
   background-image: url('../images/alert.svg');
 }
-.elements_block #tbar-remote-units thead th:nth-child(4),
-.elements_block #tbar-remote-units thead th:nth-child(5),
-.elements_block #tbar-remote-sensors thead th:nth-child(3),
-.elements_block #tbar-remote-sensors thead th:nth-child(4),
-.elements_block #tbar-remote-lvars thead th:nth-child(3),
-.elements_block #tbar-remote-lvars thead th:nth-child(4),
 .elements_block .table tbody .tbl_s,
 .elements_block .table tbody .tbl_v {
   text-align: right;
@@ -603,11 +597,15 @@ a.controller_link {
 .elements_block .table tbody .cycle-status--1 td:nth-child(1) .tbl_v {
   color: #e56555;
 }
-#tbar-remote-lvars th.sorting:nth-child(2) {
+#tbar-remote-lvars th.sorting:nth-child(2),
+#tbar-remote-lvars th.sorting_asc:nth-child(2),
+#tbar-remote-lvars th.sorting_desc:nth-child(2) {
   width: 55px;
 }
-#tbar-remote-lvars th.sorting:last-child {
-  width: 165px;
+#tbar-remote-lvars th.sorting:last-child,
+#tbar-remote-lvars th.sorting_asc:last-child,
+#tbar-remote-lvars th.sorting_desc:last-child {
+  width: 175px;
 }
 #tbar-remote-units th.sorting:last-child {
   width: 150px;
@@ -617,14 +615,20 @@ a.controller_link {
 }
 .tbl_btn {
   position: relative;
-  display: inline-block;
-  padding: 2px 8px;
+  margin: auto;
+  padding: 2px 6px;
   background: #fff;
   border: 1px solid #4d4d4d;
   border-radius: 15px;
   font: 12px 'TTNorms Medium';
   color: #4d4d4d;
   cursor: pointer;
+}
+.tbl_btn:first-child {
+  margin-left: 0;
+}
+.tbl_btn:last-child {
+  margin-right: 0;
 }
 .tbl_btn:enabled:hover {
   background: #4d4d4d;
