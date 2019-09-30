@@ -94,6 +94,7 @@ What you get with EVA
     :caption:  Equipment management
     :maxdepth: 1
 
+    cloudmanager/cloudmanager
     drivers
     item_scripts
     modbus
