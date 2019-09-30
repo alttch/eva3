@@ -153,8 +153,8 @@ The system considers the script was executed successfully if its exit code is
 
 Passive update scripts get the following parameters:
 
-* **param1** "update"
-* **param2** item ID
+* **param1** item ID
+* **param2** "update"
 
 Script should print on stdout only the new status and (optionally) value,
 separated by space, e.g.
