@@ -49,7 +49,8 @@ analyzed and processed in the following way:
     * If the rule matches, a :doc:`macro<macros>` (if specified) with the
       specified arguments is executed.
     * If chillout_time > 0 in the configuration, the rule is ignored after the
-      match for the specified time.
+      match for the specified time. If rule matched during chill-out, macro is
+      executed once, after chill-out period ends.
 
 Rule creation
 =============

@@ -144,10 +144,8 @@ If we solve this problem by creating the following two rules:
 
 the following problem may occur: if the temperature will hover around 25
 degrees, the ventilation system will constantly switch on and off. Therefore, a
-breakdown is highly possible. We cannot simply set up **chillout_time** in the
-:doc:`rule</lm/decision_matrix>`, it completely disables the rule, so it
-doesn't match after the chillout is over, if both previous and current state
-are in the range.
+breakdown is highly possible. We can also simply set up **chillout_time** in the
+:doc:`rule</lm/decision_matrix>`.
 
 Due to the flexibility of EVA there is a number of solutions of this problem:
 
