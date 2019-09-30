@@ -21,6 +21,8 @@ You design IoT setup. EVA ICS builds it for you.
 ![EVA shell - best IoT CLI tool](doc/eva-shell.png?raw=true "EVA
 shell - best IoT CLI tool")
 
+![Cloud Manager](doc/cloudmanager/cloudmanager.png?raw=true "Cloud Manager")
+
 Note: code in master branch can be unstable or even broken. Please use version
 branches, [stable builds or installer](https://www.eva-ics.com/download).
 
