@@ -1202,6 +1202,7 @@ input.device-error:focus {
   max-width: 100%;
   height: 100%;
   border: 1px solid #dcdcdc;
+  font-size: 14px;
 }
 .macro_editor .eva_sfa_popup_btn_holder {
   max-width: 100%;
