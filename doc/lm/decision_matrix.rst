@@ -80,7 +80,7 @@ than 25 but less than 35:
 
 .. code:: bash
 
-    rule create if 35 > lvar:tests/lvar1 > 25 then macro1()
+    rule create if 35 > lvar:tests/lvar1.value > 25 then macro1()
 
 .. note::
 

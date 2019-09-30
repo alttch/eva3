@@ -49,8 +49,8 @@ What you get with EVA
 * use pre-made :doc:`drivers</drivers>` or write simple
   :doc:`scripts</item_scripts>` for your automation hardware and keep them
   organized, queued and safely executed with :doc:`/uc/uc`
-* easily collect data from the hardware using :ref:`MQTT<mqtt_>` or :doc:`SNMP
-  traps</snmp_traps>` with the built-in SNMP trap handler server
+* easily collect data from the hardware using :ref:`MQTT<mqtt_>` or
+  :ref:`snmp_traps` with the built-in SNMP trap handler server
 * collect data from your microcontrollers with a simple :doc:`UDP
   API</uc/uc_udp_api>`
 * test and monitor the initial setup with controllers' EI web interfaces
@@ -98,7 +98,7 @@ What you get with EVA
     item_scripts
     modbus
     owfs
-    snmp_traps
+    snmp
     virtual
 
 .. toctree::
@@ -118,6 +118,29 @@ What you get with EVA
     sfa/sfa_pvt
     api_tokens
     evahi
+    EVA JS Framework <https://github.com/alttch/eva-js-framework>
+
+.. _integrations:
+
+.. toctree::
+    :caption:  Integrations
+    :maxdepth: 1
+
+    integrations/akcp
+    integrations/arduino
+    integrations/aws
+    integrations/cctv
+    integrations/denkovi
+    integrations/energenie
+    integrations/gcp
+    integrations/grafana
+    integrations/hue
+    integrations/nanoleaf
+    integrations/rpi
+    integrations/sonoff
+    integrations/tts
+    integrations/unipi
+    integrations/yeelight
 
 .. toctree::
     :caption:  Extension development
@@ -134,4 +157,3 @@ What you get with EVA
     api_clients
     Physical interfaces for drivers <phi_development>
     Logic macro extensions <lm/ext>
-

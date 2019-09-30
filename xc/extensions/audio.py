@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.5"
+__version__ = "1.2.6"
 __description__ = "Play audio file"
 __api__ = 5
 __mods_required__ = []
@@ -59,7 +59,6 @@ no %f is specified, file name is automatically added to the end.
 """
 
 import importlib
-import json
 
 from eva.lm.extensions.generic import LMExt as GenericExt
 from eva.lm.extapi import log_traceback

@@ -1,17 +1,18 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import sys
 import os
+import argparse
+import textwrap
 from datetime import datetime
 
 dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
 sys.path.append(dir_lib)
 
 import eva.core
-import eva.sysapi
 import eva.notify
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
@@ -23,8 +24,10 @@ class NotifierCLI(GenericCLI, ControllerCLI):
     class ComplNProto(object):
 
         def __call__(self, prefix, **kwargs):
-            return ['mqtt:', 'json:', 'db:', 'influxdb:'] if \
-                    prefix.find(':') == -1 else True
+            return [
+                    'mqtt:', 'gcpiot:', 'json:',
+                    'db:', 'influxdb:', 'prometheus:'] if \
+                    prefix and prefix.find(':') == -1 else True
 
     class ComplN(ComplGeneric):
 
@@ -55,21 +58,28 @@ class NotifierCLI(GenericCLI, ControllerCLI):
 
     def add_functions(self):
         import eva.core
-        import eva.sysapi
         import eva.notify
         super().add_functions()
         self.add_notifier_common_functions()
 
     def add_notifier_common_functions(self):
         ap_list = self.sp.add_parser('list', help='List notifiers')
-        ap_create = self.sp.add_parser('create', help='Create notifier')
+        ap_create = self.sp.add_parser(
+            'create',
+            help='Create notifier',
+            formatter_class=argparse.RawTextHelpFormatter)
         ap_create.add_argument('i', help='Notifier ID', metavar='ID')
-        ap_create.add_argument('p', help='Notifier properties: ' + \
-                'json:http(s)://[key]@uri[#jsonrpc] or ' + \
-                'mqtt:[username:password]@host:[port] or ' + \
-                'db:db_uri or ' + \
-                'influxdb:http(s)://uri#database',
-                metavar='PROPS').completer = self.ComplNProto()
+        ap_create.add_argument(
+            'p',
+            help=textwrap.dedent('''
+        Notifier properties:
+            json:http(s)://[key]@uri[#jsonrpc]
+            mqtt:[username:password]@host:[port]
+            gcpiot:project_id/region/registry
+            db:db_uri
+            influxdb:http(s)://uri#database
+            prometheus:'''),
+            metavar='PROPS').completer = self.ComplNProto()
         ap_create.add_argument(
             '-s',
             '--space',
@@ -302,6 +312,19 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             db_uri = ':'.join(p[1:])
             n = eva.notify.SQLANotifier(
                 notifier_id=notifier_id, db_uri=db_uri, keep=None, space=space)
+        elif p[0] == 'gcpiot':
+            try:
+                project, region, registry = ':'.join(p[1:]).split('/')
+            except:
+                return self.local_func_result_failed
+            n = eva.notify.GCP_IoT(
+                notifier_id=notifier_id,
+                project=project,
+                region=region,
+                registry=registry,
+                timeout=timeout)
+        elif p[0] == 'prometheus':
+            n = eva.notify.PrometheusNotifier(notifier_id=notifier_id)
         else:
             self.print_err('notifier type unknown %s' % p[0])
             return self.local_func_result_failed
@@ -329,6 +352,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 n['params'] = 'db: %s' % i.db_uri
             elif isinstance(i, eva.notify.InfluxDB_Notifier):
                 n['params'] = 'uri: {}, db: {}'.format(i.uri, i.db)
+            elif isinstance(i, eva.notify.GCP_IoT):
+                n['params'] = '{}/{}/{}'.format(i.project, i.region, i.registry)
             elif isinstance(i, eva.notify.MQTTNotifier):
                 if i.username is not None:
                     n['params'] = '%s%s@' % (i.username, ':*'
@@ -542,7 +567,6 @@ cli.always_json += _always_json
 cli.arg_sections += ['subscribe']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
-cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
 eva.client.cli.subshell_exit_code = code

@@ -74,7 +74,7 @@ Each PHI module should contain 4 help variables:
   with **get** command
 * **__set_help__** additional configuration params possible for LPI to send
   with **set** command
-* **__discover_help** help for "discover" method
+* **__discover_help__** help for "discover" method
 
 First variable should be human readable, others may copy, join or process the
 first one or each other in any way.
@@ -557,6 +557,67 @@ port type (tcp, udp, rtu, ascii or binary). This can be used to make PHI
 work with the equipment of the same type which uses e.g. different registers
 for different connection types.
 
+
+Working with Modbus slave memory space
+======================================
+
+Universal Controller can perform basic data processing as Modbus slave, custom
+PHI can do this more flexible. E.g. there's temperature sensor, which reports
+its value multiplied by 100. As Modbus registers don't support floats, custom
+PHI module can listen to the register and automatically divide value by 100
+before sending update to UC item.
+
+Multiple items and PHIs can watch the same register and perform data processing
+independently.
+
+.. code-block:: python
+
+    import eva.uc.modbus as modbus
+
+    @phi_constructor
+    def __init__(self, **kwargs):
+    # ....
+
+    def start(self):
+        # watch changes of Modbus slave register
+        # addr - value from 0 to 9999
+        # self.process_modbus - function to process Modbus data
+        # register - 'h' for holding (default), 'i' for input,
+        #            'c' for coil and 'd' for discrete input
+        modbus.register_handler(addr, self.process_modbus, register='h')
+
+    def stop(self):
+        # don't forget to unregister handler when PHI is unloaded
+        modbus.unregister_handler(addr, self.process_modbus, register='h')
+
+    def process_modbus(self, addr, values):
+        # the function is called as soon as watched Modbus register is changed
+        # parameters: addr - memory address, values - values written (list)
+        #
+        # values of holding and input registers are arrays of 2-byte integers
+        # values of coils and discrete inputs - arrays of booleans (True/False)
+        #
+        # as input registers and discrete inputs are read-only for external
+        # devices, they can be changed only by another local PHI module or UC
+        # itself
+        #
+        _data = values[0]
+        self.log_debug('got data: {} from {}'.format(_data, addr))
+        # process the data
+        # ...
+
+PHI can also manipulate data in Modbus slave memory blocks manually, to do this
+use functions:
+
+.. code-block:: python
+
+    get_data(addr, register='h', count=1)
+    # and
+    set_data(addr, values, register='h')
+    # ("values" should be a list (of unsigned integers or booleans, depending
+    # on memory block type)
+
+
 Working with 1-Wire via OWFS
 ============================
 
@@ -729,66 +790,6 @@ Let's deal with an equipment which has MQTT topic *topic/POWER* with values
         self.current_status['1'] = 1 if data == 'ON' else 0
         # then handle PHI event
         handle_phi_event(self, 1, self.get())
-
-Working with Modbus slave memory space
-======================================
-
-Universal Controller can perform basic data processing as Modbus slave, custom
-PHI can do this more flexible. E.g. there's temperature sensor, which reports
-its value multiplied by 100. As Modbus registers don't support floats, custom
-PHI module can listen to the register and automatically divide value by 100
-before sending update to UC item.
-
-Multiple items and PHIs can watch the same register and perform data processing
-independently.
-
-.. code-block:: python
-
-    import eva.uc.modbus as modbus
-
-    @phi_constructor
-    def __init__(self, **kwargs):
-    # ....
-
-    def start(self):
-        # watch changes of Modbus slave register
-        # addr - value from 0 to 9999
-        # self.process_modbus - function to process Modbus data
-        # register - 'h' for holding (default), 'i' for input,
-        #            'c' for coil and 'd' for discrete input
-        modbus.register_handler(addr, self.process_modbus, register='h')
-
-    def stop(self):
-        # don't forget to unregister handler when PHI is unloaded
-        modbus.unregister_handler(addr, self.process_modbus, register='h')
-
-    def process_modbus(self, addr, values):
-        # the function is called as soon as watched Modbus register is changed
-        # parameters: addr - memory address, values - values written (list)
-        #
-        # values of holding and input registers are arrays of 2-byte integers
-        # values of coils and discrete inputs - arrays of booleans (True/False)
-        #
-        # as input registers and discrete inputs are read-only for external
-        # devices, they can be changed only by another local PHI module or UC
-        # itself
-        #
-        _data = values[0]
-        self.log_debug('got data: {} from {}'.format(_data, addr))
-        # process the data
-        # ...
-
-PHI can also manipulate data in Modbus slave memory blocks manually, to do this
-use functions:
-
-.. code-block:: python
-
-    get_data(addr, register='h', count=1)
-    # and
-    set_data(addr, values, register='h')
-    # ("values" should be a list (of unsigned integers or booleans, depending
-    # on memory block type)
-
 
 Working with UDP API
 ====================

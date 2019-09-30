@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import sys
 import os
@@ -14,7 +14,7 @@ import eva.core
 import eva.uc.driverapi as da
 import logging
 
-import json
+import rapidjson
 import jsonpickle
 import termcolor
 import time
@@ -33,10 +33,14 @@ def colored(text, color=None, on_color=None, attrs=None):
 
 
 def format_json(obj, minimal=False, unpicklable=False):
-    return json.dumps(json.loads(jsonpickle.encode(obj,
-            unpicklable = unpicklable)), indent=4, sort_keys=True) \
-                if not minimal else \
-                jsonpickle.encode(obj, unpicklable = False)
+    if unpicklable:
+        return rapidjson.dumps(rapidjson.loads(jsonpickle.encode(obj,
+                unpicklable = unpicklable)), indent=4, sort_keys=True) \
+                    if not minimal else \
+                    jsonpickle.encode(obj, unpicklable = unpicklable)
+    else:
+        return rapidjson.dumps(obj, indent=4, sort_keys=True) \
+            if not minimal else rapidjson.dumps(obj)
 
 
 def print_result(result):
@@ -196,7 +200,8 @@ d['nodebug'] = tester.nodebug
 d['sleep'] = time.sleep
 
 try:
-    code = open(a.fname).readlines()
+    with open(a.fname) as fd:
+        code = fd.readlines()
 except:
     print('Unable to open file: ' + a.fname)
     da.stop()

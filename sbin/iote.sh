@@ -61,6 +61,7 @@ function create_notifier {
   N="${EVA_CLOUD_ID}.${DOMAIN}"
   BATCH="create ${N} mqtt:${MQTT_USER}:${KEY}@${DOMAIN}.${EVA_CLOUD}:${MQTT_PORT} -y"
   BATCH="$BATCH;set ${N} ca_certs ${CA_CERTS}"
+  BATCH="$BATCH;set ${N} skip_test 1"
   BATCH="$BATCH;subscribe state ${N} -p '#' -g '#'"
   BATCH="$BATCH;subscribe log ${N}"
   BATCH="$BATCH;subscribe server ${N}"

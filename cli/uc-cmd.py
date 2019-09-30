@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import sys
 import os
@@ -256,8 +256,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if api_func == 'list_device_tpl':
             for d in data:
                 d['type'] = d['type'] + ' device template'
-                return data
-            return result
+            return data
         if api_func in ['get_modbus_slave_data', 'read_modbus_port']:
             for d in data:
                 rtps = {
@@ -1302,7 +1301,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def edit_tpl(self, props):
         import jinja2
-        import jsonpickle
+        import rapidjson
         import yaml
         try:
             yaml.warnings({'YAMLLoadWarning': False})
@@ -1310,7 +1309,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             pass
 
         tpl_decoder = {
-            'json': jsonpickle.decode,
+            'json': rapidjson.loads,
             'yml': yaml.load,
             'yaml': yaml.load
         }
@@ -1332,8 +1331,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         if os.system(editor + ' ' + fname):
             return self.local_func_result_failed
         try:
-            t = jinja2.Environment(loader=jinja2.BaseLoader).from_string(
-                open(fname).read())
+            with open(fname) as fd:
+                t = jinja2.Environment(loader=jinja2.BaseLoader).from_string(
+                    fd.read())
             tpl_decoder.get(ext)(t.render())
         except Exception as e:
             self.print_err('Unable to validate template. ' + str(e))
@@ -1436,15 +1436,6 @@ _pd_cols = {
     'modhelp_phi': ['name', 'type', 'required', 'help']
 }
 
-_pd_idx = {
-    'state': 'oid',
-    'list': 'oid',
-    'list_device_tpl': 'name',
-    'result': 'time',
-    'list_phi_mods': 'mod',
-    'list_lpi_mods': 'mod'
-}
-
 _fancy_indentsp = {
     'list_props': 26,
     'get_phi': 14,
@@ -1464,7 +1455,6 @@ cli.arg_sections += [
 cli.api_cmds_timeout_correction = ['cmd', 'action']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
-cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
 eva.client.cli.subshell_exit_code = code

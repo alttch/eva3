@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import glob
 import os
@@ -136,6 +136,11 @@ def benchmark_handler(item):
                                  int(value))
     finally:
         benchmark_lock.release()
+
+
+@with_item_lock
+def _get_all_items():
+    return items_by_full_id.copy()
 
 
 @with_item_lock
@@ -763,10 +768,10 @@ def exec_unit_action(unit,
     else: qt = eva.core.config.timeout
     a = u.create_action(_s, nvalue, priority, action_uuid)
     Q.put_task(a)
-    if not eva.core.wait_for(a.is_processed, qt):
+    if not a.processed.wait(timeout=qt):
         if a.set_dead():
             return a
-    if wait: eva.core.wait_for(a.is_finished, wait)
+    if wait: a.finished.wait(timeout=wait)
     return a
 
 

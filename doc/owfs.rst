@@ -2,7 +2,7 @@ OWFS (1-Wire)
 *************
 
 :doc:`/uc/uc` provides native support of `1-Wire
-<https://en.wikipedia.org/wiki/1-Wire/>`_ technology for OWFS :doc:`physical
+<https://en.wikipedia.org/wiki/1-Wire>`_ technology for OWFS :doc:`physical
 interfaces (PHIs)</drivers>`. Core support is provided with `OWFS
 <http://owfs.org/>`_.
 
@@ -66,6 +66,9 @@ As soon as the bus is defined, it can be used by PHI.
 
     eva uc owfs scan local1 -a PIO
     # 05.4AEC29CDBAAB  DS2405
+    # download PHI if not installed yet
+    eva uc phi download https://get.eva-ics.com/phi/relays/ow_ds2405.py
+    # load PHI
     eva uc phi load relay1 ow_ds2405 -c owfs=local1,path=05.4AEC29CDBAAB -y
 
 As the result, controller creates a :doc:`driver</drivers>` *relay.default*
@@ -83,6 +86,8 @@ which can be set to :doc:`item</items>`.
 If you need to change OWFS bus params or options, you can always define new
 OWFS bus with the same ID, without deleting the previous one. Bus configuration
 and options will be overwritten.
+
+.. youtube:: ejjhTBVclpI
 
 Scanning OWFS for devices
 =========================

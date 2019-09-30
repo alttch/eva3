@@ -1,9 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
-import json
+import rapidjson
 import jsonpickle
 import time
 import socket
@@ -42,9 +42,14 @@ def config_error(fname, section, key, value):
 
 
 def format_json(obj, minimal=False, unpicklable=False):
-    return json.dumps(json.loads(jsonpickle.encode(obj,
-            unpicklable = unpicklable)), indent=4, sort_keys=True) \
-                if not minimal else jsonpickle.encode(obj, unpicklable = False)
+    if unpicklable:
+        return rapidjson.dumps(rapidjson.loads(jsonpickle.encode(obj,
+                unpicklable = unpicklable)), indent=4, sort_keys=True) \
+                    if not minimal else \
+                    jsonpickle.encode(obj, unpicklable = unpicklable)
+    else:
+        return rapidjson.dumps(obj, indent=4, sort_keys=True) \
+            if not minimal else rapidjson.dumps(obj)
 
 
 def fname_remove_unsafe(fname):
@@ -462,43 +467,64 @@ def parse_func_str(s):
         ValueError
     """
     s = s.strip()
+    if not s.endswith(')'):
+        return 'ERROR: argument have to last symbol ")"'
     import re
-    wrong = re.compile(r"[<>/{}[\]~`]")
+    wrong = re.compile(r"[<>{}[\]~`]")
     r = s.replace(')', '').split('(')
-    name = r.pop(0)
+    name = r.pop(0).strip()
     if wrong.search(name) or name.find(' ') != -1:
         raise ValueError
     args = []
+    list_args = []
+    list_kw = []
     kw = {}
-    for a in r:
-        w = [x.strip() for x in a.split(',')]
-        for t in w:
-            if '=' not in t:
-                if t.startswith('\'') or t.startswith('"'):
-                    args.append(t)
-                else:
-                    try:
-                        if int(t) or float(t):
-                            if '.' not in t:
-                                args.append(int(t))
-                            else:
-                                args.append(float(t))
-                    except ValueError:
-                        args.append(t)
+    check = re.compile(r'(,*\s*\'*\w+\'*\s*[=]\s*[\'\"]*.*[\'|\"]*)')
+    argum = [i.strip() for i in check.split(r[0]) if i]
+    for a in argum:
+        a = a.replace(',', '', 1).strip() if a.startswith(',') else a
+        if not a.__contains__('='):
+            list_args = a
+        elif a.__contains__('='):
+            if a.startswith('\'') or a.startswith('\"'):
+                list_args = a
             else:
-                k, v = t.split('=')
-                if wrong.search(k) or k.find(' ') != -1:
-                    raise ValueError('Invalid kwargs param')
+                list_kw = a
+    if list_args:
+        clear_arg = [a.strip() for a in re.split(
+            r'(,*\s*\w*\s*),|(\s*[\"|\'][\w\s,]*[\s\w]*[\"|\'])', list_args) if
+                     a]
+        for t in clear_arg:
+            t = t.replace(',', '').strip() if (
+                    t.startswith(',') or t.endswith(',')) else t
+            if t.startswith('\'') or t.startswith('"'):
+                args.append(t)
+            else:
                 try:
-                    if int(v) or float(v):
-                        kw.update({
-                            k: int(v)
-                        } if '.' not in v else {k: float(v)})
+                    if int(t) or float(t):
+                        if '.' not in t:
+                            args.append(int(t))
+                        else:
+                            args.append(float(t))
                 except ValueError:
-                    kw.update({
-                        k:
-                        ''.join(list(v)[1:-1])
-                        if ((v.__contains__('\'') or v.__contains__('"')) and
-                            list(v)[0] == list(v)[-1]) else v
-                    })
+                    args.append(t)
+    if list_kw:
+        clear_kw = [k.strip() for k in re.split(
+            r'([,*\s\w]*[=]\s*[\'|\"]*[\w\s=\'\"%]*[,\s\w]*[\'|\",])', list_kw)
+                    if k]
+        for t in clear_kw:
+            t = t.replace(',', '').strip() if (
+                        t.startswith(',') or t.endswith(',')) else t
+            if not t:
+                continue
+            k, v = [x.strip() for x in t.split('=', 1) if t]
+            if wrong.search(k) or k.find(' ') != -1:
+                raise ValueError('Invalid kwargs param')
+            try:
+                if int(v) or float(v):
+                    kw.update({k: int(v)} if '.' not in v else {k: float(v)})
+            except ValueError:
+                kw.update({k: ''.join(list(v)[1:-1]) if (
+                            (v.__contains__('\'') or v.__contains__('"')) and
+                            list(v)[0] == list(v)[-1]) else v})
     return name, args if args else None, kw if kw else None

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 # -*- coding: utf-8 -*-
 #
@@ -35,7 +35,10 @@ import os
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 # extensions = []
-extensions = ['sphinxcontrib.httpdomain', 'sphinxcontrib.httpexmpl']
+extensions = [
+    'sphinxcontrib.httpdomain', 'sphinxcontrib.httpexmpl',
+    'sphinxcontrib.yt'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

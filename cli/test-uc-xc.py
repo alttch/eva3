@@ -1,14 +1,14 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import os
 import getopt
 import sys
 import subprocess
 import time
-import jsonpickle
+import rapidjson
 
 dir_eva = '/'.join(os.path.dirname(os.path.realpath(__file__)).split('/')[:-1])
 dir_runtime = dir_eva + '/runtime'
@@ -31,8 +31,9 @@ if len(sys.argv) < 2: usage()
 print('Reading custom vars from %s' % cvars_fname)
 print()
 
-raw = ''.join(open(cvars_fname).readlines())
-cvars = jsonpickle.decode(raw)
+with open(cvars_fname) as fd:
+    raw = fd.read()
+cvars = rapidjson.loads(raw)
 
 for x in sorted(cvars.keys()):
     print('%s = "%s"' % (x, cvars[x]))

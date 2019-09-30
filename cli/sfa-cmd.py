@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import sys
 import os
@@ -801,7 +801,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 raise Exception('http code {}'.format(result.status_code))
             return result.text
         else:
-            return open(target).read()
+            with open(target) as fd:
+                return fd.read()
 
     def _deploy_undeploy(self, props, und=False, del_files=False):
         import yaml
@@ -1496,7 +1497,6 @@ cli.arg_sections += [
 cli.api_cmds_timeout_correction = ['cmd', 'action', 'run']
 cli.set_api_functions(_api_functions)
 cli.set_pd_cols(_pd_cols)
-cli.set_pd_idx(_pd_idx)
 cli.set_fancy_indentsp(_fancy_indentsp)
 code = cli.run()
 eva.client.cli.subshell_exit_code = code

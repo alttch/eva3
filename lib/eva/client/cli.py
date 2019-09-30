@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import argparse
 # to be compatible with argcomplete
@@ -9,10 +9,11 @@ import getopt
 import sys
 import os
 import io
+import rapidtables
 from eva.client import apiclient
 from eva.gcli import GCLI
 
-from pyaltt import background_job
+from collections import OrderedDict
 
 say_bye = True
 readline_processing = True if \
@@ -138,21 +139,14 @@ class GenericCLI(GCLI):
                 'user:destroy': 'destroy_user'
             }
             self.common_pd_cols = {
-                'list_keys':
-                ['key_id', 'dynamic', 'master', 'sysfunc', 'allow'],
+                'list_keys': [
+                    'key_id', 'dynamic', 'master', 'sysfunc', 'allow'
+                ],
+                'list_users': ['user', 'key_id'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
-                'log_get_':
-                ['time', 'host', 'p', 'level', 'mod', 'thread', 'message']
-            }
-            self.common_pd_idx = {
-                'list_keys': 'key_id',
-                'list_users': 'user',
-                'state': 'oid',
-                'list': 'oid',
-                'log_get': 'time',
-                'result': 'time',
-                'list_phi_mods': 'mod',
-                'list_lpi_mods': 'mod'
+                'log_get_': [
+                    'time', 'host', 'p', 'level', 'mod', 'thread', 'message'
+                ]
             }
             self.arg_sections = ['log', 'cvar', 'file', 'key', 'user']
             self.common_fancy_indentsp = {'test': 14}
@@ -165,7 +159,6 @@ class GenericCLI(GCLI):
             50: 'CRITICAL'
         }
         self.api_functions = self.common_api_functions
-        self.pd_idx = self.common_pd_idx
         self.api_cmds_timeout_correction = []
         self.setup_parser()
 
@@ -176,8 +169,10 @@ class GenericCLI(GCLI):
                 self.colored(parent_shell_name,
                         'yellow', attrs=['bold'], rlsafe=True) + '/'
         if self.product:
-            product_str = self.colored(
-                self.product, 'yellow', attrs=['bold'], rlsafe=True)
+            product_str = self.colored(self.product,
+                                       'yellow',
+                                       attrs=['bold'],
+                                       rlsafe=True)
             host_str = ''
             if self.nodename:
                 nodename = self.nodename
@@ -199,8 +194,8 @@ class GenericCLI(GCLI):
                         cmd.append('-K')
                         cmd.append(self.apikey)
                     cmd.append('test')
-                    code, result = self.execute_function(
-                        cmd, return_result=True)
+                    code, result = self.execute_function(cmd,
+                                                         return_result=True)
                     if code != apiclient.result_ok or \
                             not 'key_id' in result['acl']:
                         raise Exception('test failed')
@@ -215,16 +210,19 @@ class GenericCLI(GCLI):
                             'http://', '')
                     else:
                         h = ''
-                    product_str = self.colored(
-                        self.product + ':' + nodename,
-                        'grey',
-                        attrs=['bold'],
-                        rlsafe=True)
-                    host_str = self.colored(
-                        h, 'grey', attrs=['bold'], rlsafe=True)
+                    product_str = self.colored(self.product + ':' + nodename,
+                                               'grey',
+                                               attrs=['bold'],
+                                               rlsafe=True)
+                    host_str = self.colored(h,
+                                            'grey',
+                                            attrs=['bold'],
+                                            rlsafe=True)
             else:
-                product_str += self.colored(
-                    ':' + nodename, 'yellow', attrs=['bold'], rlsafe=True)
+                product_str += self.colored(':' + nodename,
+                                            'yellow',
+                                            attrs=['bold'],
+                                            rlsafe=True)
             prompt = '[%s%s]%s' % (ppeva + product_str, host_str, prompt)
         return prompt
 
@@ -322,16 +320,17 @@ class GenericCLI(GCLI):
             if n[0] == v[0]: return l
         return name
 
-    def format_log_str(self, s):
-        if s.find(' DEBUG ') != -1:
-            return self.colored(s, color='grey', attrs=['bold'])
-        if s.find(' WARNING ') != -1:
-            return self.colored(s, color='yellow', attrs=[])
-        if s.find(' ERROR ') != -1:
-            return self.colored(s, color='red', attrs=[])
-        if s.find(' CRITICAL ') != -1:
-            return self.colored(s, color='red', attrs=['bold'])
-        return s
+    def format_log_str(self, r, res):
+        if res['level'] == 'DEBUG':
+            return self.colored(r, color='grey', attrs=['bold'])
+        elif res['level'] == 'WARNING':
+            return self.colored(r, color='yellow', attrs=[])
+        elif res['level'] == 'ERROR':
+            return self.colored(r, color='red', attrs=[])
+        elif res['level'] == 'CRITICAL':
+            return self.colored(r, color='red', attrs=['bold'])
+        else:
+            return r
 
     def add_primary_options(self):
         if self.remote_api_enabled:
@@ -341,26 +340,23 @@ class GenericCLI(GCLI):
                 help='API key, if no key specified, local master key is used',
                 dest='_api_key',
                 metavar='KEY')
-            self.ap.add_argument(
-                '-U',
-                '--api-url',
-                help='API URL',
-                dest='_api_uri',
-                metavar='URL')
-            self.ap.add_argument(
-                '-T',
-                '--api-timeout',
-                help='API request timeout (in seconds)',
-                type=float,
-                dest='_timeout',
-                metavar='TIMEOUT')
-            self.ap.add_argument(
-                '-D',
-                '--debug',
-                help='Enable debug messages',
-                action='store_true',
-                dest='_debug',
-                default=False)
+            self.ap.add_argument('-U',
+                                 '--api-url',
+                                 help='API URL',
+                                 dest='_api_uri',
+                                 metavar='URL')
+            self.ap.add_argument('-T',
+                                 '--api-timeout',
+                                 help='API request timeout (in seconds)',
+                                 type=float,
+                                 dest='_timeout',
+                                 metavar='TIMEOUT')
+            self.ap.add_argument('-D',
+                                 '--debug',
+                                 help='Enable debug messages',
+                                 action='store_true',
+                                 dest='_debug',
+                                 default=False)
             self.ap.add_argument(
                 '-F',
                 '--client-ini-file',
@@ -380,10 +376,6 @@ class GenericCLI(GCLI):
         self.pd_cols = self.common_pd_cols.copy()
         self.pd_cols.update(pd_cols)
 
-    def set_pd_idx(self, pd_idx={}):
-        self.pd_idx = self.common_pd_idx.copy()
-        self.pd_idx.update(pd_idx)
-
     def set_fancy_indentsp(self, fancy_indentsp={}):
         self.fancy_indentsp = self.common_fancy_indentsp.copy()
         self.fancy_indentsp.update(fancy_indentsp)
@@ -397,7 +389,8 @@ class GenericCLI(GCLI):
                 d['thread'] = d.pop('th')
                 d['message'] = d.pop('msg')
                 d['level'] = self.get_log_level_name(d.pop('l'))
-                d['time'] = datetime.fromtimestamp(d.pop('t')).isoformat()
+                d['time'] = datetime.strftime(
+                    datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
                 result.append(d)
             return result
         else:
@@ -434,21 +427,19 @@ class GenericCLI(GCLI):
                 elif v != '_result':
                     if isinstance(_result[v], dict):
                         if indent:
-                            print(
-                                ' ' * (indent * indentsp),
-                                end=self.colored('>' * indent) + ' ')
+                            print(' ' * (indent * indentsp),
+                                  end=self.colored('>' * indent) + ' ')
                         print(((self.colored(
                             '{:>%u} ', color='blue', attrs=['bold']) +
-                                self.colored(':') + self.colored(
-                                    '  {}', color='yellow')) % max(
-                                        map(len, _result))).format(v, ''))
+                                self.colored(':') +
+                                self.colored('  {}', color='yellow')) %
+                               max(map(len, _result))).format(v, ''))
                         self.fancy_print_result(_result[v], api_func, itype,
                                                 indent + 1)
                     else:
                         if indent:
-                            print(
-                                ' ' * (indent * indentsp),
-                                end=self.colored('>' * indent) + ' ')
+                            print(' ' * (indent * indentsp),
+                                  end=self.colored('>' * indent) + ' ')
                         if isinstance(_result[v], list):
                             _r = []
                             for vv in _result[v]:
@@ -458,9 +449,9 @@ class GenericCLI(GCLI):
                             _v = _result[v]
                         print(((self.colored(
                             '{:>%u} ', color='blue', attrs=['bold']) +
-                                self.colored(':') + self.colored(
-                                    ' {}', color='yellow')) % max(
-                                        map(len, _result))).format(v, _v))
+                                self.colored(':') +
+                                self.colored(' {}', color='yellow')) %
+                               max(map(len, _result))).format(v, _v))
                     rprinted = True
             if h:
                 print(self.colored('-' * 81, color='grey'))
@@ -485,38 +476,30 @@ class GenericCLI(GCLI):
             if not rprinted and not indent and print_ok:
                 print('OK')
         elif result and isinstance(result, list):
-            self.import_pandas()
-            df = self.pd.DataFrame(
-                data=self.prepare_result_data(result, api_func, itype))
-            if api_func + self.cur_api_func_is_full in self.pd_cols:
-                cols = self.pd_cols[api_func + self.cur_api_func_is_full]
-            else:
-                cols = list(df)
-            df = df.ix[:, cols]
-            try:
-                idxcol = self.pd_idx.get(api_func)
-                if idxcol is None: idxcol = 'id'
-                if idxcol in list(df):
-                    df.set_index(idxcol, inplace=True)
+            table = []
+            func = api_func + self.cur_api_func_is_full
+            for r in self.prepare_result_data(result, api_func, itype):
+                t = OrderedDict()
+                if func in self.pd_cols:
+                    for c in self.pd_cols[func]:
+                        t[c] = self.list_to_str(r.get(c)).replace('\n', ' ')
                 else:
-                    idxcol = list(df)[0]
-                    df.set_index(list(df)[0], inplace=True)
-                if idxcol == 'time':
-                    df.index = self.pd.to_datetime(df.index, utc=False)
-                out = df.fillna(' ').to_string().split('\n')
-                print(
-                    self.colored(
-                        idxcol + out[0][len(idxcol):], color='blue', attrs=[]))
-                print(self.colored('-' * len(out[0]), color='grey'))
-                # dirty hack for old pandas ver
-                x = 2 if out[1].startswith(idxcol + ' ') else 1
-                for o in out[x:]:
-                    import re
-                    s = re.sub('^NaN', '   ', o)
-                    if api_func == 'log_get': s = self.format_log_str(s)
-                    print(s)
-            except:
-                raise
+                    for i, c in r.items():
+                        t[i] = self.list_to_str(c).replace('\n', ' ')
+                table.append(t)
+            if table:
+                header, rows = rapidtables.format_table(
+                    table,
+                    rapidtables.FORMAT_GENERATOR,
+                    max_column_width=120 if api_func == 'log_get' else None)
+                print(self.colored(header, color='blue', attrs=[]))
+                print(self.colored('-' * len(header), color='grey', attrs=[]))
+                for r, res in zip(rows, table):
+                    r = self.format_log_str(r,
+                                            res) if api_func == 'log_get' else r
+                    print(r)
+            else:
+                print('no data')
         elif result:
             print(result)
 
@@ -539,108 +522,112 @@ class GenericCLI(GCLI):
     def _add_cmd_functions(self):
         ap_cmd = self.sp.add_parser('cmd', help='Execute remote command')
         ap_cmd.add_argument('c', help='Command to execute', metavar='CMD')
-        ap_cmd.add_argument(
-            '-a', '--args', help='Command arguments', metavar='ARGS', dest='a')
-        ap_cmd.add_argument(
-            '-w',
-            '--wait',
-            help='Wait for command finish',
-            metavar='SEC',
-            type=float,
-            dest='w')
-        ap_cmd.add_argument(
-            '-t',
-            '--timeout',
-            help='Command timeout',
-            metavar='SEC',
-            type=float,
-            dest='t')
+        ap_cmd.add_argument('-a',
+                            '--args',
+                            help='Command arguments',
+                            metavar='ARGS',
+                            dest='a')
+        ap_cmd.add_argument('-w',
+                            '--wait',
+                            help='Wait for command finish',
+                            metavar='SEC',
+                            type=float,
+                            dest='w')
+        ap_cmd.add_argument('-t',
+                            '--timeout',
+                            help='Command timeout',
+                            metavar='SEC',
+                            type=float,
+                            dest='t')
 
     def _add_lock_functions(self):
         ap_lock = self.sp.add_parser('lock', help='acquire lock')
         ap_lock.add_argument('l', help='Lock ID', metavar='ID')
-        ap_lock.add_argument(
-            '-t',
-            '--timeout',
-            help='Max acquire wait time',
-            metavar='SEC',
-            type=float,
-            dest='t')
-        ap_lock.add_argument(
-            '-e',
-            '--expires',
-            help='Lock expire time',
-            metavar='SEC',
-            type=float,
-            dest='e')
+        ap_lock.add_argument('-t',
+                             '--timeout',
+                             help='Max acquire wait time',
+                             metavar='SEC',
+                             type=float,
+                             dest='t')
+        ap_lock.add_argument('-e',
+                             '--expires',
+                             help='Lock expire time',
+                             metavar='SEC',
+                             type=float,
+                             dest='e')
         ap_unlock = self.sp.add_parser('unlock', help='release lock')
         ap_unlock.add_argument('l', help='Lock ID', metavar='ID')
 
     def _add_log_functions(self):
         ap_log = self.sp.add_parser('log', help='Log functions')
-        sp_log = ap_log.add_subparsers(
-            dest='_func', metavar='func', help='Log commands')
+        sp_log = ap_log.add_subparsers(dest='_func',
+                                       metavar='func',
+                                       help='Log commands')
         sp_log_rotate = sp_log.add_parser('rotate', help='Rotate logs')
         sp_log_debug = sp_log.add_parser('debug', help='Send debug message')
         sp_log_debug.add_argument('m', help='Message', metavar='MSG')
         ap_dump = self.sp.add_parser('dump', help='Dump memory (for debugging)')
         sp_log_info = sp_log.add_parser('info', help='Send info message')
         sp_log_info.add_argument('m', help='Message', metavar='MSG')
-        sp_log_warning = sp_log.add_parser(
-            'warning', help='Send warning message')
+        sp_log_warning = sp_log.add_parser('warning',
+                                           help='Send warning message')
         sp_log_warning.add_argument('m', help='Message', metavar='MSG')
         sp_log_error = sp_log.add_parser('error', help='Send error message')
         sp_log_error.add_argument('m', help='Message', metavar='MSG')
-        sp_log_critical = sp_log.add_parser(
-            'critical', help='Send critical message')
+        sp_log_critical = sp_log.add_parser('critical',
+                                            help='Send critical message')
         sp_log_critical.add_argument('m', help='Message', metavar='MSG')
         sp_log_get = sp_log.add_parser('get', help='Get system log messages')
-        sp_log_get.add_argument(
-            'l', help='Log level', metavar='LEVEL', nargs='?')
-        sp_log_get.add_argument(
-            '-t',
-            '--seconds',
-            help='Get records for the last SEC seconds',
-            metavar='SEC',
-            dest='t')
-        sp_log_get.add_argument(
-            '-n', '--limit', help='Limit records to', metavar='LIMIT', dest='n')
-        sp_log_get.add_argument(
-            '-y',
-            '--full',
-            help='Display full log records',
-            dest='_full_display',
-            action='store_true')
+        sp_log_get.add_argument('l',
+                                help='Log level',
+                                metavar='LEVEL',
+                                nargs='?')
+        sp_log_get.add_argument('-t',
+                                '--seconds',
+                                help='Get records for the last SEC seconds',
+                                metavar='SEC',
+                                dest='t')
+        sp_log_get.add_argument('-n',
+                                '--limit',
+                                help='Limit records to',
+                                metavar='LIMIT',
+                                dest='n')
+        sp_log_get.add_argument('-y',
+                                '--full',
+                                help='Display full log records',
+                                dest='_full_display',
+                                action='store_true')
 
     def _add_cvar_functions(self):
         ap_cvar = self.sp.add_parser('cvar', help='CVAR functions')
-        sp_cvar = ap_cvar.add_subparsers(
-            dest='_func', metavar='func', help='CVAR commands')
+        sp_cvar = ap_cvar.add_subparsers(dest='_func',
+                                         metavar='func',
+                                         help='CVAR commands')
         sp_cvar_all = sp_cvar.add_parser('all', help='Get all CVARS')
         sp_cvar_get = sp_cvar.add_parser('get', help='Get CVAR value')
-        sp_cvar_get.add_argument(
-            'i', help='CVAR ID', metavar='ID').completer = ComplCVAR(self)
+        sp_cvar_get.add_argument('i', help='CVAR ID',
+                                 metavar='ID').completer = ComplCVAR(self)
         sp_cvar_set = sp_cvar.add_parser('set', help='Set CVAR value')
-        sp_cvar_set.add_argument(
-            'i', help='CVAR ID', metavar='ID').completer = ComplCVAR(self)
+        sp_cvar_set.add_argument('i', help='CVAR ID',
+                                 metavar='ID').completer = ComplCVAR(self)
         sp_cvar_set.add_argument('v', help='Value', metavar='VALUE')
         sp_cvar_delete = sp_cvar.add_parser('delete', help='Delete CVAR')
-        sp_cvar_delete.add_argument(
-            'i', help='CVAR ID', metavar='ID').completer = ComplCVAR(self)
+        sp_cvar_delete.add_argument('i', help='CVAR ID',
+                                    metavar='ID').completer = ComplCVAR(self)
 
     def _add_debug_functions(self):
         ap_debug = self.sp.add_parser('debug', help='Debug control')
-        ap_debug.add_argument(
-            'debug',
-            help='Debug mode (on/off)',
-            metavar='MODE',
-            choices=['on', 'off'])
+        ap_debug.add_argument('debug',
+                              help='Debug mode (on/off)',
+                              metavar='MODE',
+                              choices=['on', 'off'])
 
     def _add_file_functions(self):
-        ap_file = self.sp.add_parser(
-            'file', help='File management in runtime folder')
-        sp_file = ap_file.add_subparsers(
-            dest='_func', metavar='func', help='File commands')
+        ap_file = self.sp.add_parser('file',
+                                     help='File management in runtime folder')
+        sp_file = ap_file.add_subparsers(dest='_func',
+                                         metavar='func',
+                                         help='File commands')
 
         sp_file_get = sp_file.add_parser('get', help='Download file')
         sp_file_get.add_argument(
@@ -651,8 +638,9 @@ class GenericCLI(GCLI):
         # '_fname', help='Local file name', metavar='LOCAL_FILE')
 
         sp_file_upload = sp_file.add_parser('upload', help='Upload file')
-        sp_file_upload.add_argument(
-            '_fname', help='Local file name', metavar='LOCAL_FILE')
+        sp_file_upload.add_argument('_fname',
+                                    help='Local file name',
+                                    metavar='LOCAL_FILE')
         sp_file_upload.add_argument(
             'i',
             help='File name (relative to runtime, without / in the beginning)',
@@ -685,19 +673,19 @@ class GenericCLI(GCLI):
     def _add_key_functions(self):
         ap_key = self.sp.add_parser(
             'key', help='API key management (dynamic keys only)')
-        sp_key = ap_key.add_subparsers(
-            dest='_func', metavar='func', help='API key commands')
+        sp_key = ap_key.add_subparsers(dest='_func',
+                                       metavar='func',
+                                       help='API key commands')
 
         sp_key_list = sp_key.add_parser('list', help='List API keys')
 
         sp_key_create = sp_key.add_parser('create', help='Create new API key')
         sp_key_create.add_argument('i', help='API key ID', metavar='ID')
-        sp_key_create.add_argument(
-            '-y',
-            '--save',
-            help='Save key after creation',
-            dest='_save',
-            action='store_true')
+        sp_key_create.add_argument('-y',
+                                   '--save',
+                                   help='Save key after creation',
+                                   dest='_save',
+                                   action='store_true')
 
         sp_key_props = sp_key.add_parser('props', help='List API key props')
         sp_key_props.add_argument(
@@ -711,26 +699,26 @@ class GenericCLI(GCLI):
         sp_key_set_prop.add_argument(
             'p', help='Config property',
             metavar='PROP').completer = ComplKeyProp(self)
-        sp_key_set_prop.add_argument(
-            'v', help='Value', metavar='VAL', nargs='?')
-        sp_key_set_prop.add_argument(
-            '-y',
-            '--save',
-            help='Save key config after set',
-            dest='_save',
-            action='store_true')
+        sp_key_set_prop.add_argument('v',
+                                     help='Value',
+                                     metavar='VAL',
+                                     nargs='?')
+        sp_key_set_prop.add_argument('-y',
+                                     '--save',
+                                     help='Save key config after set',
+                                     dest='_save',
+                                     action='store_true')
 
-        sp_key_regenerate = sp_key.add_parser(
-            'regenerate', help='Regenerate API key')
+        sp_key_regenerate = sp_key.add_parser('regenerate',
+                                              help='Regenerate API key')
         sp_key_regenerate.add_argument(
             'i', help='API key ID',
             metavar='ID').completer = ComplKeyDynamic(self)
-        sp_key_regenerate.add_argument(
-            '-y',
-            '--save',
-            help='Save key after regeneration',
-            dest='_save',
-            action='store_true')
+        sp_key_regenerate.add_argument('-y',
+                                       '--save',
+                                       help='Save key after regeneration',
+                                       dest='_save',
+                                       action='store_true')
 
         sp_key_delete = sp_key.add_parser('destroy', help='Delete API key')
         sp_key_delete.add_argument(
@@ -739,46 +727,48 @@ class GenericCLI(GCLI):
 
     def _add_user_functions(self):
         ap_user = self.sp.add_parser('user', help='user management')
-        sp_user = ap_user.add_subparsers(
-            dest='_func', metavar='func', help='user commands')
+        sp_user = ap_user.add_subparsers(dest='_func',
+                                         metavar='func',
+                                         help='user commands')
 
         sp_user_list = sp_user.add_parser('list', help='List users')
 
         sp_user_create = sp_user.add_parser('create', help='Create new user')
         sp_user_create.add_argument('u', help='User login', metavar='LOGIN')
-        sp_user_create.add_argument(
-            'p', help='User password', metavar='PASSWORD')
+        sp_user_create.add_argument('p',
+                                    help='User password',
+                                    metavar='PASSWORD')
         sp_user_create.add_argument(
             'a', help='API key ID',
             metavar='APIKEY_ID').completer = ComplKey(self)
 
-        sp_user_password = sp_user.add_parser(
-            'password', help='Change password for user')
+        sp_user_password = sp_user.add_parser('password',
+                                              help='Change password for user')
         sp_user_password.add_argument(
             'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
-        sp_user_password.add_argument(
-            'p', help='User password', metavar='PASSWORD')
+        sp_user_password.add_argument('p',
+                                      help='User password',
+                                      metavar='PASSWORD')
 
         sp_user_key = sp_user.add_parser('key', help='Change API key for user')
-        sp_user_key.add_argument(
-            'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
-        sp_user_key.add_argument(
-            'a', help='API key ID',
-            metavar='APIKEY_ID').completer = ComplKey(self)
+        sp_user_key.add_argument('u', help='User login',
+                                 metavar='LOGIN').completer = ComplUser(self)
+        sp_user_key.add_argument('a', help='API key ID',
+                                 metavar='APIKEY_ID').completer = ComplKey(self)
 
         sp_user_destroy = sp_user.add_parser('destroy', help='Delete user')
         sp_user_destroy.add_argument(
             'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
 
     def start_interactive(self, reset_sst=True):
-        background_job(self.import_pandas, daemon=True)()
         if reset_sst: globals()['shell_switch_to'] = None
         super().start_interactive()
 
     def prepare_run(self, api_func, params, a):
         if api_func == 'file_put' and a._func == 'upload':
             try:
-                params['m'] = ''.join(open(a._fname).readlines())
+                with open(a._fname) as fd:
+                    params['m'] = fd.read()
             except:
                 print('Unable to open %s' % a._fname)
                 return 97
@@ -792,9 +782,8 @@ class GenericCLI(GCLI):
         if self.batch_file is not None:
             try:
                 if self.batch_file and self.batch_file != 'stdin':
-                    cmds = [
-                        x.strip() for x in open(self.batch_file).readlines()
-                    ]
+                    with open(self.batch_file) as fd:
+                        cmds = [x.strip() for x in fd.readlines()]
                 else:
                     cmds = [x.strip() for x in ';'.join(sys.stdin).split(';')]
                 for c in cmds:
@@ -904,12 +893,12 @@ class GenericCLI(GCLI):
                             pass
                         print('timeout: %.2f' % self.timeout)
                     elif d[0] == 'a' and self.remote_api_enabled:
-                        print('API uri: %s' % (self.apiuri
-                                               if self.apiuri is not None else
-                                               '<default>'))
-                        print('key: %s' % (self.apikey
-                                           if self.apikey is not None else
-                                           '<default>'))
+                        print('API uri: %s' %
+                              (self.apiuri
+                               if self.apiuri is not None else '<default>'))
+                        print('key: %s' %
+                              (self.apikey
+                               if self.apikey is not None else '<default>'))
                         print('JSON mode ' + ('on' if self.in_json else 'off'))
                         print('Client debug mode ' +
                               ('on' if self.debug else 'off'))
@@ -933,8 +922,8 @@ class GenericCLI(GCLI):
                             if not top: top = 'top'
                             if os.system(top): raise Exception('exec error')
                         except:
-                            self.print_err(
-                                'Failed to run system "%s" command' % top)
+                            self.print_err('Failed to run system "%s" command' %
+                                           top)
                     elif d[0] == 'w':
                         try:
                             if os.system('w'): raise Exception('exec error')
@@ -961,8 +950,8 @@ class GenericCLI(GCLI):
                         try:
                             os.system(shell)
                         except:
-                            self.print_err(
-                                'Failed to run system shell "%s"' % shell)
+                            self.print_err('Failed to run system shell "%s"' %
+                                           shell)
                     elif d[0] in ['?', 'h', 'help']:
                         self.print_interactive_help()
                         try:
@@ -1072,12 +1061,11 @@ class GenericCLI(GCLI):
             ostream = None
         if self.argcomplete and not self._argcompleted:
             self._argcompleted = True
-            self.argcomplete.autocomplete(
-                self.ap,
-                exit_method=sys.exit,
-                output_stream=ostream,
-                default_completer=self.argcomplete.completers.SuppressCompleter(
-                ))
+            self.argcomplete.autocomplete(self.ap,
+                                          exit_method=sys.exit,
+                                          output_stream=ostream,
+                                          default_completer=self.argcomplete.
+                                          completers.SuppressCompleter())
         try:
             p = args if args else (sys.argv[1:] if len(sys.argv) > 1 else [])
             if p and p[0] in shells_available:
@@ -1134,8 +1122,9 @@ class GenericCLI(GCLI):
                 try:
                     api = apiclient.APIClientLocal(self.product)
                 except:
-                    print('Can not init API, %s.ini or %s_apikeys.ini missing?'
-                          % (self.product, self.product))
+                    print(
+                        'Can not init API, %s.ini or %s_apikeys.ini missing?' %
+                        (self.product, self.product))
                     return 98
             else:
                 api = apiclient.APIClient()
@@ -1219,19 +1208,22 @@ class GenericCLI(GCLI):
     def write_result(self, obj, out_file):
         if not isinstance(obj, dict) or \
                 ('content_type' not in obj and 'data' not in obj):
-            open(out_file, 'w').write(self.format_json(obj))
+            with open(out_file, 'w') as fd:
+                fd.write(self.format_json(obj))
         else:
             data = obj['data']
             if obj['content_type'] in ['image/svg+xml', 'text/plain']:
                 if isinstance(out_file, str):
-                    open(out_file, 'w').write(data)
+                    with open(out_file, 'w') as fd:
+                        fd.write(data)
                 else:
                     out_file.write(data)
             else:
                 import base64
                 data = base64.b64decode(data)
                 if isinstance(out_file, str):
-                    open(out_file, 'wb').write(data)
+                    with open(out_file, 'wb') as fd:
+                        fd.write(data)
                 else:
                     out_file.buffer.write(data)
 
@@ -1245,19 +1237,21 @@ class GenericCLI(GCLI):
             else:
                 self.write_result(result, sys.stdout)
         else:
-            self.fancy_print_result(
-                result, api_func, itype, print_ok=code == apiclient.result_ok)
+            self.fancy_print_result(result,
+                                    api_func,
+                                    itype,
+                                    print_ok=code == apiclient.result_ok)
         return code
 
     def print_tdf(self, result_in, time_field):
         if not result_in.get(time_field):
             return
-        self.import_pandas()
         result = result_in.copy()
         # convert list to dict
         res = []
         for i in range(len(result[time_field])):
-            r = {}
+            r = OrderedDict()
+            k = result.get(time_field)
             for k in result.keys():
                 if k != time_field:
                     try:
@@ -1266,15 +1260,25 @@ class GenericCLI(GCLI):
                         r[k] = ''
                 else:
                     from datetime import datetime
-                    r[k] = datetime.fromtimestamp(result[k][i]).isoformat()
-            res.append(r)
-        df = self.pd.DataFrame(res)
-        df = df.set_index(time_field)
-        df.index = self.pd.to_datetime(df.index, utc=False)
-        out = df.to_string().split('\n')
-        print(self.colored('time' + out[0][4:], color='blue', attrs=[]))
-        print(self.colored('-' * len(out[0]), color='grey'))
-        [print(o) for o in out[2:]]
+                    t = datetime.strftime(datetime.fromtimestamp(result[k][i]),
+                                          '%Y-%m-%d %T,%f')[:-3]
+            rt = OrderedDict()
+            rt['time'] = t
+            rt.update(r)
+            res.append(rt)
+        if res:
+            header, rows = rapidtables.format_table(
+                res, fmt=rapidtables.FORMAT_GENERATOR_COLS)
+            print(self.colored('  '.join(header), color='blue'))
+            print(
+                self.colored('-' * sum([(len(x) + 2) for x in header]),
+                             color='grey'))
+            for cols in rows:
+                for i, c in enumerate(cols):
+                    print(self.colored(c, color='yellow' if not i else 'cyan') +
+                          ('  ' if i < len(cols) - 1 else ''),
+                          end='')
+                print()
 
     def print_local_only(self):
         self.print_err('This function is available for local controller only')
@@ -1350,15 +1354,16 @@ class ControllerCLI(object):
     def add_manager_control_functions(self):
         ap_controller = self.sp.add_parser(
             'server', help='Controller server management functions')
-        sp_controller = ap_controller.add_subparsers(
-            dest='_func', metavar='func', help='Management commands')
+        sp_controller = ap_controller.add_subparsers(dest='_func',
+                                                     metavar='func',
+                                                     help='Management commands')
 
-        ap_start = sp_controller.add_parser(
-            'start', help='Start controller server')
-        ap_stop = sp_controller.add_parser(
-            'stop', help='Stop controller server')
-        ap_restart = sp_controller.add_parser(
-            'restart', help='Restart controller server')
+        ap_start = sp_controller.add_parser('start',
+                                            help='Start controller server')
+        ap_stop = sp_controller.add_parser('stop',
+                                           help='Stop controller server')
+        ap_restart = sp_controller.add_parser('restart',
+                                              help='Restart controller server')
         if self.remote_api_enabled:
             ap_reload = sp_controller.add_parser(
                 'reload', help='Reload controller server')
@@ -1366,11 +1371,10 @@ class ControllerCLI(object):
             'status', help='Status of the controller server')
         ap_launch = sp_controller.add_parser(
             'launch', help='Launch controller server in foreground')
-        ap_launch.add_argument(
-            '-n',
-            '--show-notifier-logs',
-            help='Show notifier event logs',
-            action='store_true')
+        ap_launch.add_argument('-n',
+                               '--show-notifier-logs',
+                               help='Show notifier event logs',
+                               action='store_true')
 
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
@@ -1439,9 +1443,9 @@ class LECLI:
                 'htm'
             ]
             hidden_dirs = ['apps', 'lib']
-            files = glob.glob(
-                '{}/ui/**/*'.format(dir_eva), recursive=True) + glob.glob(
-                    '{}/ui/.**/*'.format(dir_eva), recursive=True)
+            files = glob.glob('{}/ui/**/*'.format(dir_eva),
+                              recursive=True) + glob.glob(
+                                  '{}/ui/.**/*'.format(dir_eva), recursive=True)
             for f in files:
                 if os.path.isfile(f):
                     fname = f.rsplit('/', 1)[-1]
@@ -1455,14 +1459,12 @@ class LECLI:
 
     def _append_edit_pvt_and_ui(self, parser):
         ap_edit_pvt = parser.add_parser('pvt', help='Edit PVT files')
-        ap_edit_pvt.add_argument(
-            'f', help='File to edit',
-            metavar='FILE').completer = self.ComplPVT(self)
+        ap_edit_pvt.add_argument('f', help='File to edit',
+                                 metavar='FILE').completer = self.ComplPVT(self)
 
         ap_edit_pvt = parser.add_parser('ui', help='Edit UI files')
-        ap_edit_pvt.add_argument(
-            'f', help='File to edit',
-            metavar='FILE').completer = self.ComplUI(self)
+        ap_edit_pvt.add_argument('f', help='File to edit',
+                                 metavar='FILE').completer = self.ComplUI(self)
 
     def edit(self, params):
         if self.apiuri:

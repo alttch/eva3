@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import eva.core
 import eva.api
@@ -15,8 +15,7 @@ import logging
 import time
 import threading
 import websocket
-import json
-import jsonpickle
+import rapidjson
 import uuid
 import random
 from pyaltt import BackgroundWorker
@@ -34,7 +33,7 @@ class WebSocketPingerWorker(BackgroundWorker):
         controller = kwargs.get('controller')
         try:
             logging.debug('WS {}: PING'.format(controller.oid))
-            kwargs.get('o').send(json.dumps({'s': 'ping'}))
+            kwargs.get('o').send('{"s":"ping"}')
         except:
             eva.core.log_traceback()
 
@@ -55,10 +54,10 @@ class WebSocketWorker(BackgroundWorker):
 
     def wait(self):
         self.need_reload_flag = False
-        eva.core.wait_for(
-            self.need_reload,
-            self.controller.get_reload_interval,
-            delay=eva.core.sleep_step)
+        # don't use threading.event, reload interval can be changed during wait
+        eva.core.wait_for(self.need_reload,
+                          self.controller.get_reload_interval,
+                          delay=eva.core.sleep_step)
 
     def clear_ws(self):
         try:
@@ -80,11 +79,11 @@ class WebSocketWorker(BackgroundWorker):
             eva.core.critical()
             return False
         try:
-            self.pinger = WebSocketPingerWorker(
-                daemon=True,
-                name='ws_pinger_' + self.controller.oid,
-                interval=5,
-                o=self.ws)
+            self.pinger = WebSocketPingerWorker(daemon=True,
+                                                name='ws_pinger_' +
+                                                self.controller.oid,
+                                                interval=5,
+                                                o=self.ws)
             self.pinger.start(controller=self.controller)
         finally:
             self.pool.management_lock.release()
@@ -101,8 +100,8 @@ class WebSocketWorker(BackgroundWorker):
     def set_controller_connected(self, state, graceful_shutdown=False):
         if not self.is_active():
             return
-        self.controller.set_connected(
-            state, graceful_shutdown=graceful_shutdown)
+        self.controller.set_connected(state,
+                                      graceful_shutdown=graceful_shutdown)
 
     def run(self, *args, **kwargs):
 
@@ -117,7 +116,7 @@ class WebSocketWorker(BackgroundWorker):
                 if not controller.api._ssl_verify else None)
             ws.settimeout(5 + eva.core.config.timeout)
             try:
-                ws.send(json.dumps({'s': 'state'}))
+                ws.send(rapidjson.dumps({'s': 'state'}))
             except:
                 try:
                     ws.close()
@@ -167,7 +166,7 @@ class WebSocketWorker(BackgroundWorker):
                 self.wait()
             else:
                 try:
-                    data = json.loads(frame.data.decode())
+                    data = rapidjson.loads(frame.data.decode())
                     if data.get('s') == 'server' and data.get('d') == 'restart':
                         self.stop_ping()
                         if eva.core.is_shutdown_requested():
@@ -175,8 +174,8 @@ class WebSocketWorker(BackgroundWorker):
                         logging.warning(
                             'Remote controller {} is being restarting'.format(
                                 self.controller.oid))
-                        self.set_controller_connected(
-                            False, graceful_shutdown=True)
+                        self.set_controller_connected(False,
+                                                      graceful_shutdown=True)
                         self.clear_ws()
                         self.wait()
                     else:
@@ -230,7 +229,8 @@ class RemoteController(eva.item.Item):
         self.set_mqtt_notifier()
 
     def set_connected(self, state, graceful_shutdown=False):
-        self.last_reload_time = time.time()
+        if graceful_shutdown:
+            self.last_reload_time = time.time()
         self.connected = state
         if graceful_shutdown:
             logging.debug(self.oid + ' marked down')
@@ -239,7 +239,7 @@ class RemoteController(eva.item.Item):
         if not data:
             return True
         try:
-            j = jsonpickle.decode(data)
+            j = rapidjson.loads(data)
         except:
             logging.warning(self.oid + ' invalid server event data')
             return False
@@ -251,18 +251,18 @@ class RemoteController(eva.item.Item):
                 logging.warning(self.oid + ' requested to leave the pool')
                 if self.pool and not self.wait_for_autoremove:
                     self.wait_for_autoremove = True
-                    t = threading.Thread(
-                        target=eva.api.remove_controller, args=(self.full_id,))
+                    t = threading.Thread(target=eva.api.remove_controller,
+                                         args=(self.full_id,))
                     t.start()
         except:
             eva.core.log_traceback()
 
     def register_mqtt(self):
         if self.mqtt_notifier:
-            self.mqtt_notifier.handler_append(
-                'controller/{}/{}/events'.format(self.group, self.item_id),
-                self.server_event_handler,
-                qos=self.mqtt_notifier_qos)
+            self.mqtt_notifier.handler_append('controller/{}/{}/events'.format(
+                self.group, self.item_id),
+                                              self.server_event_handler,
+                                              qos=self.mqtt_notifier_qos)
 
     def unregister_mqtt(self):
         if self.mqtt_notifier:
@@ -297,8 +297,10 @@ class RemoteController(eva.item.Item):
         if not self.api or not self.enabled:
             return eva.client.apiclient.result_not_ready, None
         for tries in range(self.retries + 1):
-            (code, result) = self.api.call(
-                func, params, timeout, _debug=eva.core.config.debug)
+            (code, result) = self.api.call(func,
+                                           params,
+                                           timeout,
+                                           _debug=eva.core.config.debug)
             if code not in [
                     eva.client.apiclient.result_server_error,
                     eva.client.apiclient.result_server_timeout
@@ -325,8 +327,10 @@ class RemoteController(eva.item.Item):
         p = params.copy() if isinstance(params, dict) else {}
         p['k'] = self.masterkey
         for tries in range(self.retries + 1):
-            (code, result) = self.api.call(
-                func, p, timeout, _debug=eva.core.config.debug)
+            (code, result) = self.api.call(func,
+                                           p,
+                                           timeout,
+                                           _debug=eva.core.config.debug)
             if code not in [
                     eva.client.apiclient.result_server_error,
                     eva.client.apiclient.result_server_timeout
@@ -361,8 +365,8 @@ class RemoteController(eva.item.Item):
             logging.error('Remote controller access error %s' % self.api._uri)
             return False
         if result.get('acl', {}).get('master') != True:
-            logging.error(
-                'Remote controller API %s has no master access' % self.api._uri)
+            logging.error('Remote controller API %s has no master access' %
+                          self.api._uri)
             return False
         return True
 
@@ -373,8 +377,8 @@ class RemoteController(eva.item.Item):
         if not result:
             if not self.static and self.pool and not self.wait_for_autoremove:
                 self.wait_for_autoremove = True
-                t = threading.Thread(
-                    target=eva.api.remove_controller, args=(self.full_id,))
+                t = threading.Thread(target=eva.api.remove_controller,
+                                     args=(self.full_id,))
                 t.start()
             return False
         if not result.get('ok'):
@@ -386,8 +390,9 @@ class RemoteController(eva.item.Item):
             return False
         time_diff = abs(time.time() - float(result['time']))
         if eva.core.version != result['version']:
-            logging.warning('Remote controller EVA version is %s, my: %s' % \
-                    (result['version'], eva.core.version))
+            logging.warning(
+                'Remote controller {} EVA version is {}, my: {}'.format(
+                    self.full_id, result['version'], eva.core.version))
         self.item_id = result['system']
         self.config_changed = True
         self.set_group(result['product_code'])
@@ -598,8 +603,11 @@ class RemoteController(eva.item.Item):
             d['version'] = self.version
             d['build'] = str(self.product_build)
             d['mqtt_update'] = self.mqtt_update
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         return d
 
     def destroy(self):
@@ -778,15 +786,14 @@ class RemoteControllerPool(object):
 
     def disable(self, controller_id):
         if controller_id in self.reload_threads and \
-                self.reload_threads[controller_id].isAlive():
+                self.reload_threads[controller_id].is_alive():
             self.stop_controller_reload_thread(controller_id)
 
     def start_controller_reload_thread(self, controller, lock=False):
-        t = threading.Thread(
-            target=self._t_reload_controller,
-            name='_t_reload_controller_' + controller.item_type + '_' +
-            controller.item_id,
-            args=(controller.item_id,))
+        t = threading.Thread(target=self._t_reload_controller,
+                             name='_t_reload_controller_' +
+                             controller.item_type + '_' + controller.item_id,
+                             args=(controller.item_id,))
         if lock and \
                 not self.management_lock.acquire(
                         timeout=eva.core.config.timeout):
@@ -802,15 +809,15 @@ class RemoteControllerPool(object):
             t.start()
             if not controller.mqtt_update and controller.api._uri.startswith(
                     'http'):
-                worker = WebSocketWorker(
-                    daemon=True,
-                    name='pool_ws_worker_{}'.format(uuid.uuid4()),
-                    controller=controller,
-                    pool=self,
-                    o=self)
+                worker = WebSocketWorker(daemon=True,
+                                         name='pool_ws_worker_{}'.format(
+                                             uuid.uuid4()),
+                                         controller=controller,
+                                         pool=self,
+                                         o=self)
                 self.websocket_threads[controller.item_id] = worker
-                worker.start(
-                    controller=controller, controller_id=controller.item_id)
+                worker.start(controller=controller,
+                             controller_id=controller.item_id)
             else:
                 controller.register_mqtt()
         except:
@@ -1013,8 +1020,8 @@ class RemoteUCPool(RemoteControllerPool):
                             status=s['status'], value=s['value'])
                         self.units[s['full_id']].update_nstate(
                             nstatus=s['nstatus'], nvalue=s['nvalue'])
-                        self.units[s['full_id']].action_enabled = s[
-                            'action_enabled']
+                        self.units[
+                            s['full_id']].action_enabled = s['action_enabled']
                     else:
                         logging.debug(
                             'WS state for {} skipped, not found'.format(
@@ -1222,17 +1229,17 @@ class RemoteUCPool(RemoteControllerPool):
                         self.controllers_by_unit[u.full_id] = uc
                         u.start_processors()
                     else:
-                        self.units[u.full_id].update_set_state(
-                            status=u.status, value=u.value)
-                        self.units[u.full_id].update_nstate(
-                            nstatus=u.nstatus, nvalue=u.nvalue)
+                        self.units[u.full_id].update_set_state(status=u.status,
+                                                               value=u.value)
+                        self.units[u.full_id].update_nstate(nstatus=u.nstatus,
+                                                            nvalue=u.nvalue)
                         self.units[u.full_id].action_enabled = u.action_enabled
                     p[u.full_id] = u
                     _u = self.get_unit(u.full_id)
                     if _u: _u.update_config(u.serialize(config=True))
                 if controller_id in self.units_by_controller:
-                    for i in self.units_by_controller[
-                            controller_id].copy().keys():
+                    for i in self.units_by_controller[controller_id].copy(
+                    ).keys():
                         if i not in p:
                             self.units[i].destroy()
                             try:
@@ -1248,8 +1255,8 @@ class RemoteUCPool(RemoteControllerPool):
                                 u.full_id] = u
                 else:
                     self.units_by_controller[controller_id] = p
-                logging.debug(
-                    'Loaded %u units from %s' % (len(p), controller_id))
+                logging.debug('Loaded %u units from %s' %
+                              (len(p), controller_id))
             else:
                 logging.error('Failed to reload units from %s' % controller_id)
                 return False
@@ -1270,14 +1277,14 @@ class RemoteUCPool(RemoteControllerPool):
                     _u = self.get_sensor(u.full_id)
                     if _u: _u.update_config(u.serialize(config=True))
                 if controller_id in self.sensors_by_controller:
-                    for i in self.sensors_by_controller[
-                            controller_id].copy().keys():
+                    for i in self.sensors_by_controller[controller_id].copy(
+                    ).keys():
                         if i not in p:
                             self.sensors[i].destroy()
                             try:
                                 del (self.sensors[i])
-                                del (self.sensors_by_controller[controller_id][
-                                    i])
+                                del (self.sensors_by_controller[controller_id]
+                                     [i])
                             except:
                                 eva.core.log_traceback()
                     for u in sensors:
@@ -1290,8 +1297,8 @@ class RemoteUCPool(RemoteControllerPool):
                 logging.debug('Loaded %u sensors from %s' % \
                         (len(p), controller_id))
             else:
-                logging.error(
-                    'Failed to reload sensors from %s' % controller_id)
+                logging.error('Failed to reload sensors from %s' %
+                              controller_id)
                 return False
         except:
             logging.error('failed to reload controller ' + controller_id)
@@ -1310,12 +1317,11 @@ class RemoteUCPool(RemoteControllerPool):
                 if t != 'uc': return None
             except:
                 return None
-        return super().cmd(
-            controller_id=_controller_id,
-            command=command,
-            args=args,
-            wait=wait,
-            timeout=timeout)
+        return super().cmd(controller_id=_controller_id,
+                           command=command,
+                           args=args,
+                           wait=wait,
+                           timeout=timeout)
 
     def manage_device(self,
                       controller_id,
@@ -1348,27 +1354,24 @@ class RemoteUCPool(RemoteControllerPool):
         return c.api_call(device_func, p)
 
     def deploy_device(self, controller_id, device_tpl, cfg=None, save=None):
-        return self.manage_device(
-            controller_id=controller_id,
-            device_func='deploy_device',
-            device_tpl=device_tpl,
-            cfg=cfg,
-            save=save)
+        return self.manage_device(controller_id=controller_id,
+                                  device_func='deploy_device',
+                                  device_tpl=device_tpl,
+                                  cfg=cfg,
+                                  save=save)
 
     def update_device(self, controller_id, device_tpl, cfg=None, save=None):
-        return self.manage_device(
-            controller_id=controller_id,
-            device_func='update_device',
-            device_tpl=device_tpl,
-            cfg=cfg,
-            save=save)
+        return self.manage_device(controller_id=controller_id,
+                                  device_func='update_device',
+                                  device_tpl=device_tpl,
+                                  cfg=cfg,
+                                  save=save)
 
     def undeploy_device(self, controller_id, device_tpl, cfg=None):
-        return self.manage_device(
-            controller_id=controller_id,
-            device_func='undeploy_device',
-            device_tpl=device_tpl,
-            cfg=cfg)
+        return self.manage_device(controller_id=controller_id,
+                                  device_func='undeploy_device',
+                                  device_tpl=device_tpl,
+                                  cfg=cfg)
 
 
 class RemoteLMPool(RemoteControllerPool):
@@ -1607,8 +1610,8 @@ class RemoteLMPool(RemoteControllerPool):
                         _u.update_config(u.serialize(config=True))
                         _u.set_state_from_serialized(u.serialize())
                 if controller_id in self.lvars_by_controller:
-                    for i in self.lvars_by_controller[
-                            controller_id].copy().keys():
+                    for i in self.lvars_by_controller[controller_id].copy(
+                    ).keys():
                         if i not in p:
                             self.lvars[i].destroy()
                             try:
@@ -1624,8 +1627,8 @@ class RemoteLMPool(RemoteControllerPool):
                                 u.full_id] = u
                 else:
                     self.lvars_by_controller[controller_id] = p
-                logging.debug(
-                    'Loaded %u lvars from %s' % (len(p), controller_id))
+                logging.debug('Loaded %u lvars from %s' %
+                              (len(p), controller_id))
             else:
                 logging.error('Failed to reload lvars from %s' % controller_id)
                 return False
@@ -1644,8 +1647,8 @@ class RemoteLMPool(RemoteControllerPool):
                     _u = self.get_macro(u.full_id)
                     if _u: _u.update_config(u.serialize(config=True))
                 if controller_id in self.macros_by_controller:
-                    for i in self.macros_by_controller[
-                            controller_id].copy().keys():
+                    for i in self.macros_by_controller[controller_id].copy(
+                    ).keys():
                         if i not in p:
                             self.macros[i].destroy()
                             try:
@@ -1662,8 +1665,8 @@ class RemoteLMPool(RemoteControllerPool):
                                 u.full_id] = u
                 else:
                     self.macros_by_controller[controller_id] = p
-                logging.debug(
-                    'Loaded %u macros from %s' % (len(p), controller_id))
+                logging.debug('Loaded %u macros from %s' %
+                              (len(p), controller_id))
             else:
                 logging.error('Failed to reload macros from %s' % controller_id)
                 return False
@@ -1684,8 +1687,8 @@ class RemoteLMPool(RemoteControllerPool):
                         _u.update_config(u.serialize(config=True))
                         _u.set_state_from_serialized(u.serialize())
                 if controller_id in self.cycles_by_controller:
-                    for i in self.cycles_by_controller[
-                            controller_id].copy().keys():
+                    for i in self.cycles_by_controller[controller_id].copy(
+                    ).keys():
                         if i not in p:
                             self.cycles[i].destroy()
                             try:
@@ -1702,8 +1705,8 @@ class RemoteLMPool(RemoteControllerPool):
                                 u.full_id] = u
                 else:
                     self.cycles_by_controller[controller_id] = p
-                logging.debug(
-                    'Loaded %u cycles from %s' % (len(p), controller_id))
+                logging.debug('Loaded %u cycles from %s' %
+                              (len(p), controller_id))
             else:
                 logging.error('Failed to reload cycles from %s' % controller_id)
                 return False

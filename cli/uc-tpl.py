@@ -1,12 +1,12 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import os
 import sys
 import getopt
-import jsonpickle
+import rapidjson
 import yaml
 import jinja2
 
@@ -131,7 +131,7 @@ config_rev = {}
 
 try:
     func = sys.argv[1]
-    o, a = getopt.getopt(sys.argv[2:], 'K:T:U:t:c:i:g:v:D')
+    o, a = getopt.getopt(sys.argv[2:], 'K:T:U:t:c:i:g:v:DJ')
 except:
     usage()
     sys.exit(99)
@@ -148,8 +148,8 @@ for i, v in o:
     elif i == '-v':
         cvars = v.split(',')
     elif i == '-J':
-        encoder = jsonpickle.encode
-        decoder = jsonpickle.decode
+        encoder = rapidjson.dumps
+        decoder = rapidjson.loads
         formatter = format_json
         printer = print_json
     elif i == '-T':
@@ -177,7 +177,8 @@ for i in c:
 
 if func == 'validate':
     try:
-        template = jinja2.Template(open(tpl_file).read())
+        with open(tpl_file) as fd:
+            template = jinja2.Template(fd.read())
     except:
         print('No such template file: %s' % tpl_file)
         usage()
@@ -259,7 +260,8 @@ elif func == 'generate':
         print_debug(' - OK')
     if (tpl_file):
         try:
-            open(tpl_file, 'w').write(formatter(tpl))
+            with open(tpl_file, 'w') as fd:
+                fd.write(formatter(tpl))
             print('Template saved to %s' % tpl_file)
         except:
             print('Error: can not save template to %s' % tpl_file)

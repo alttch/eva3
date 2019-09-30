@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import sys
 import os
@@ -457,7 +457,8 @@ class ManagementCLI(GenericCLI):
                 sysargs = ['{}/{}{}'.format(dir_cli, p, x)] + _xargs
                 if self.interactive or force_interactive:
                     sysargs.append('-I')
-            c = open('{}/{}{}'.format(dir_cli, p, x)).read()
+            with open('{}/{}{}'.format(dir_cli, p, x)) as fd:
+                c = fd.read()
             c = """import sys
 import eva.client.cli
 eva.client.cli.say_bye = False
@@ -794,7 +795,7 @@ sys.argv = {argv}
 
     def update(self, params):
         import requests
-        import jsonpickle
+        import rapidjson
         _update_repo = params.get('u')
         if not _update_repo:
             _update_repo = update_repo
@@ -816,7 +817,7 @@ sys.argv = {argv}
             r = requests.get(_update_repo + '/update_info.json', timeout=5)
             if r.status_code != 200:
                 raise Exception('HTTP ERROR')
-            result = jsonpickle.decode(r.text)
+            result = rapidjson.loads(r.text)
             new_build = int(result['build'])
             new_version = result['version']
         except:

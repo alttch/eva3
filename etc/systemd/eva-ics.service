@@ -8,6 +8,7 @@ User=root
 WorkingDirectory=/opt/eva
 ExecStart=/opt/eva/sbin/eva-control start
 Restart=no
+TimeoutStartSec=180
 
 [Install]
 WantedBy=multi-user.target

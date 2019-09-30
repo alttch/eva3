@@ -1,14 +1,14 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 default_delay = 0.05
 
 import importlib
 import eva.core
 import logging
-import jsonpickle
+import rapidjson
 import threading
 import time
 
@@ -124,8 +124,8 @@ def destroy_owfs_bus(bus_id):
 
 def load():
     try:
-        data = jsonpickle.decode(
-            open(eva.core.dir_runtime + '/uc_owfs.json').read())
+        with open(eva.core.dir_runtime + '/uc_owfs.json') as fd:
+            data = rapidjson.loads(fd.read())
         for p in data:
             d = p.copy()
             del d['id']
@@ -144,8 +144,8 @@ def load():
 @eva.core.save
 def save():
     try:
-        open(eva.core.dir_runtime + '/uc_owfs.json', 'w').write(
-            format_json(serialize(config=True)))
+        with open(eva.core.dir_runtime + '/uc_owfs.json', 'w') as fd:
+            fd.write(format_json(serialize(config=True)))
     except:
         logging.error('unable to save owfs bus config')
         eva.core.log_traceback()

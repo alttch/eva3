@@ -133,8 +133,8 @@ Ubuntu):
 Configuring MQTT broker
 -----------------------
 
-MQTT broker is used when EVA ICS controllers are located in different networks
-and can not exchange data with P2P connections.
+:ref:`MQTT<mqtt_>` broker is used when EVA ICS controllers are located in
+different networks and can not exchange data with P2P connections.
 
 .. note::
 
@@ -171,11 +171,10 @@ Options for EVA ICS:
 * MQTT space: leave empty
 * MQTT SSL: leave empty (answer 'n' if using *easy-setup*)
 
-Using AWS IoT as MQTT broker
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Cloud service provider as MQTT broker
+-------------------------------------
 
-Instead of setting up dedicated MQTT server, you can use cloud-based service,
-e.g. AWS IoT.
+* :doc:`/integrations/aws`
 
 .. note::
 
@@ -183,40 +182,6 @@ e.g. AWS IoT.
     guarantee event/message ordering. This means some *state* messages between
     controllers may be lost (discarded by controller core if newer message with
     the same topic is already received).
-
-* Create AWS IoT Core "thing"
-* Apply the following policy:
-
-.. code-block:: json
-
-    {
-        "Version": "2012-10-17",
-        "Statement": [{
-            "Effect": "Allow",
-            "Action":["iot:*"],
-            "Resource": ["*"]
-        }]
-    }
-
-Options for EVA ICS:
-
-* MQTT host: AWS IoT endpoint host (XXXXXXXXX.iot.XXXXXXXXX.amazonaws.com)
-* MQTT port: 8883
-* MQTT user, password: leave empty
-* MQTT space: leave empty
-* MQTT SSL: should be enabled (answer 'y' if using *easy-setup*; when notifier
-  is configured later, SSL is automatically enabled as soon as *ca_certs*
-  property is set)
-* MQTT CA file, cert file, key file: provided by AWS (use private key file as
-  key file)
-* Disable MQTT retain (answer 'y' in *easy-setup*) to make sure no topics with
-  retain flag will be sent to MQTT broker (otherwise EVA ICS controller will be
-  instantly disconnected)
-* Use MQTT QoS *0* or *1* (default)
-* It's recommended to create "things" for each EVA ICS controller. After setup,
-  MQTT cert file and key file can be changed with CLI (*eva ns
-  [controller_type]...*). Don't forget to restart the controller to apply
-  notifier configuration.
 
 Downloading and extracting EVA ICS distribution
 -----------------------------------------------
@@ -326,13 +291,25 @@ systems with *systemd* (all modern Linux distributions):
     cp ./etc/systemd/eva-ics.service /etc/systemd/system/
     systemctl enable eva-ics
 
+Unicode
+-------
+
+EVA ICS supports unicode out-of-the-box. If your system has problems, rebuild
+locales and then restart EVA ICS controllers:
+
+.. code-block:: bash
+
+    sudo dpkg-reconfigure locales
+    sudo eva server restart
+
+
 Updating
 ========
 
 .. warning::
 
     Before updating from the previous version, read `update
-    manifest <https://github.com/alttch/eva3/blob/3.2.3/UPDATE.rst>`_.
+    manifest <https://github.com/alttch/eva3/blob/3.2.4/UPDATE.rst>`_.
 
 Using EVA Shell
 ---------------
@@ -364,7 +341,7 @@ Using system shell
 
     curl -s <UPDATE_SCRIPT_URL> | bash /dev/stdin
     #e.g.
-    #curl -s https://get.eva-ics.com/3.2.0/stable/update.sh | bash /dev/stdin
+    #curl -s https://get.eva-ics.com/3.2.4/stable/update.sh | bash /dev/stdin
 
 * If updating from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if

@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import hashlib
 import eva.core
@@ -50,7 +50,7 @@ def list_users():
             if not row: break
             u = {}
             u['user'] = row.u
-            u['key'] = row.k
+            u['key_id'] = row.k
             result.append(u)
         return sorted(result, key=lambda k: k['user'])
     except:
@@ -67,7 +67,7 @@ def get_user(user=None):
     except:
         eva.core.report_userdb_error()
     if not row: raise ResourceNotFound
-    return {'user': row.u, 'key': row.k}
+    return {'user': row.u, 'key_id': row.k}
 
 
 def create_user(user=None, password=None, key=None):
@@ -93,7 +93,7 @@ def create_user(user=None, password=None, key=None):
         eva.core.report_userdb_error()
         return None
     run_hook('create', user, password)
-    return {'user': user, 'key': key}
+    return {'user': user, 'key_id': key}
 
 
 def set_user_password(user=None, password=None):

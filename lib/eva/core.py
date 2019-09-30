@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import sys
 import platform
@@ -11,7 +11,7 @@ import logging
 import configparser
 import traceback
 import time
-import jsonpickle
+import rapidjson
 import signal
 import psutil
 import threading
@@ -32,8 +32,6 @@ from pyaltt import g
 from pyaltt import FunctionCollecton
 from pyaltt import background_job
 
-from twisted.internet import reactor
-
 from types import SimpleNamespace
 
 version = __version__
@@ -47,10 +45,12 @@ dir_eva_default = '/opt/eva'
 env = {}
 cvars = {}
 
+controllers = set()
+
 _flags = SimpleNamespace(
     ignore_critical=False,
     sigterm_sent=False,
-    started=False,
+    started=threading.Event(),
     shutdown_requested=False,
     cvars_modified=False,
     setup_mode=0)
@@ -287,7 +287,8 @@ def do_save():
 
 
 def block():
-    _flags.started = True
+    _flags.started.set()
+    from twisted.internet import reactor
     reactor.run(installSignalHandlers=False)
 
 
@@ -296,13 +297,14 @@ def is_shutdown_requested():
 
 
 def is_started():
-    return _flags.started
+    return _flags.started.is_set()
 
 
 def core_shutdown():
     _flags.shutdown_requested = True
     shutdown()
     stop()
+    from twisted.internet import reactor
     reactor.callFromThread(reactor.stop)
 
 
@@ -314,9 +316,11 @@ def create_dump(e='request', msg=''):
                 '.dump.gz'
         dmp = format_json(
             result, minimal=not config.development, unpicklable=True).encode()
-        gzip.open(filename, 'w')
+        with gzip.open(filename, 'w') as fd:
+            pass
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
-        gzip.open(filename, 'a').write(dmp)
+        with gzip.open(filename, 'a') as fd:
+            fd.write(dmp)
         logging.warning(
             'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
     except:
@@ -489,7 +493,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 pass
             try:
                 if not check_pid: raise Exception('no check required')
-                pid = int(open(config.pid_file).readline().strip())
+                with open(config.pid_file) as fd:
+                    pid = int(fd.readline().strip())
                 p = psutil.Process(pid)
                 print('Can not start %s with config %s. ' % \
                         (product.name, fname_full), end = '')
@@ -718,8 +723,8 @@ def load_cvars(fname=None):
     env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + env['PATH']
     logging.info('Loading custom vars from %s' % fname_full)
     try:
-        raw = ''.join(open(fname_full).readlines())
-        cvars.update(jsonpickle.decode(raw))
+        with open(fname_full) as fd:
+            cvars.update(rapidjson.loads(fd.read()))
     except:
         logging.error('can not load custom vars from %s' % fname_full)
         log_traceback()
@@ -735,7 +740,8 @@ def save_cvars(fname=None):
     fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
     logging.info('Saving custom vars to %s' % fname_full)
     try:
-        open(fname_full, 'w').write(format_json(cvars, minimal=False))
+        with open(fname_full, 'w') as fd:
+            fd.write(format_json(cvars, minimal=False))
     except:
         logging.error('can not save custom vars into %s' % fname_full)
         log_traceback()
@@ -811,7 +817,8 @@ def fork():
 
 def write_pid_file():
     try:
-        open(config.pid_file, 'w').write(str(os.getpid()))
+        with open(config.pid_file, 'w') as fd:
+            fd.write(str(os.getpid()))
     except:
         log_traceback()
 
@@ -895,8 +902,13 @@ def init():
 
 def start(init_db_only=False):
     if not init_db_only:
+        from twisted.internet import reactor
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
+
+
+def register_controller(controller):
+    controllers.add(controller)
 
 
 #BD: 20.05.2017

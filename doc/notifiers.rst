@@ -5,6 +5,8 @@ The Notification System is embedded in all EVA subsystems. All the events of
 these subsystems are sent to the notification servers via objects called
 "notifiers" which contain the configuration of the notification endpoints.
 
+.. contents::
+
 Event structure
 ===============
 
@@ -392,6 +394,9 @@ notifiers.
 DB Notifiers
 ============
 
+RDBMS (SQLite, MySQL, PosgreSQL)
+--------------------------------
+
 EVA ICS has a special notifier type: **db**, which is used to store items'
 state history. State history can be obtained later via API calls or
 :ref:`js_framework` for analysis and e.g. to build graphical charts.
@@ -405,8 +410,7 @@ After creating db notifier, don't forget to subscribe it to **state** events.
 Events **action** and **log** are ignored.
 
 If **easy-setup** is used for EVA :doc:`installation</install>`, notifier
-called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically.
-
+called **db_1** for :doc:`SFA</sfa/sfa>` is created automatically, default
 History database format is `sqlite3 <https://www.sqlite.org/index.html>`_.
 
 .. note::
@@ -440,14 +444,203 @@ setting:
 
 or put these options to database server configuration file.
 
+.. _influxdb_:
+
+InfluxDB
+--------
+
+Item state metrics can be stored to `InfluxDB <https://www.influxdata.com/>`_
+time series database.
+
+Consider InfluxDB is installed on local host, without password authentication.
+Firstly, create database for EVA ICS:
+
+.. code-block:: sql
+
+    influx
+    > create database eva
+
+Then create InfluxDB notifier, e.g. for :doc:`/sfa/sfa`:
+
+.. code-block:: bash
+
+    eva ns sfa create influx_local 'influxdb:http://127.0.0.1:8086#eva'
+    eva ns sfa test influx_local
+    eva ns sfa subscribe state influx_local -g '#'
+    eva ns sfa enable influx_local
+    eva sfa server restart
+
+That's it. After restart, :doc:`/sfa/sfa` immediately starts sending metrics to
+the specified InfluxDB.
+
+Then you can downsample metrics of the required item, e.g. let's downsample
+*sensor:env/temp1* to 30 minutes:
+
+.. code-block:: sql
+
+    CREATE RETENTION POLICY "daily" ON "eva" DURATION 1D REPLICATION 1
+    CREATE CONTINUOUS QUERY "downsampled_env_temp1_30m" ON "eva" BEGIN
+      SELECT mode(status) as "status",mean(value) as value
+      INTO "daily"."sensor:env/temp1"
+      FROM "sensor:env/temp1"
+      GROUP BY time(30m)
+    END
+
+After, you can tell :ref:`state_history <sfapi_state_history>` SFA API function
+to select metrics from *daily* retention policy, specifying additional
+parameter *o={ "rp": "daily" }*.
+
+.. _prometheus_:
+
+Prometheus
+----------
+
+EVA ICS can export metrics for `Prometheus <https://prometheus.io/>`_ time
+series database.
+
+To enable metrics export, create notifier for Prometheus (in the example below
+we'll secure it with user/password authentication):
+
+.. code-block:: bash
+
+    eva ns sfa create pr1 prometheus:
+    eva ns sfa test pr1
+    eva ns sfa set pr1 username prometheus
+    eva ns sfa set pr1 password 123
+    eva ns sfa subscribe state pr1 -g '#'
+    eva ns sfa enable pr1
+    eva sfa server restart
+
+After controller restart, metrics are available at URI
+*/ns/<notifier_id>/metrics*. As Prometheus collect metrics by itself, EVA ICS
+Prometheus notifier just exports subscribed item states to the specified
+metrics URI every time when it's requested.
+
+For the example above, Prometheus job config will look like:
+
+.. code-block:: yaml
+
+    scrape_configs:
+    # .....
+      - job_name: 'eva'
+        scrape_interval: 5s
+        metrics_path: /ns/pr1/metrics
+        basic_auth:
+          username: 'prometheus'
+          password: '123'
+        static_configs:
+          - targets: ['localhost:8828']
+
+Notes about using EVA ICS and Prometheus:
+
+* As Prometheus doesn't support "/" and ".*" for metrics, EVA item properties
+  are exported as e.g. *sensor:env:hum1_int:value*
+
+* Only float and null item values are exported
+
+* To enable metric help, set item description
+
+3rd party Clouds
+================
+
+.. _gcpcoreiot_:
+
+Google Cloud Platform IoT Core
+------------------------------
+
+Controllers can communicate with GCP IoT Core using *gcpiot* notifiers:
+
+* Send telemetry of EVA ICS items to GCP devices
+* Receive commands from GCP
+
+Configuration
+~~~~~~~~~~~~~
+
+To enable this functionality, firstly you must `generate RSA256 key pair
+<https://cloud.google.com/iot/docs/how-tos/credentials/keys>`_.
+
+As GCP IoT Core doesn't support groups, create YAML key-value map file which
+looks like:
+
+.. code:: yaml
+
+    env.pressure: sensor:env/air_pressure
+    env.temperature: sensor:env/temperature
+    cctv1: unit:equipment/cctv
+    lamp1: unit:lights/lamp1
+
+Then configure GCP IoT:
+
+* Create IoT registry in your project. Specify default telemetry topic from
+  which you can obtain data via Pub/Sub. Make sure *MQTT* option is checked.
+
+* Create IoT gateway:
+
+    * gateway name should match EVA ICS notifier id (e.g. *gcpiot*)
+    * set *Device authentication method* to *Association only*
+    * paste public key you've generated, make sure *RSA256* is selected.
+
+* Create corresponding IoT devices. Enter *Device ID* only, leave other fields
+  blank.
+
+* Go back to IoT gateway and bind all created devices.
+
+Configure EVA ICS, e.g. let's create notifier for :doc:`/uc/uc`:
+
+.. code:: shell
+
+    eva -I
+    ns uc
+    create gcpiot gcpiot:PROJECT_ID/REGION/REGISTRY
+    # set CA certificate file
+    set gcpiot ca_certs /etc/ssl/certs/ca-certificates.crt
+    # set generated private RSA256 key file for auth
+    set gcpiot keyfile /path/to/private.pem
+    # set mapping file
+    set gcpiot mapfile /path/to/mapfile.yml
+    # test it
+    test gcpiot
+    # subscribe notifier to items
+    subscribe state gcpiot -g '#'
+    # set API key if you plan to execute commands
+    # you may use use $key_id to specify key id instead of API key itself
+    set gcpiot apikey $default
+    # restart controller
+    server restart
+
+Commands
+~~~~~~~~
+
+You may send commands as to EVA ICS controller (Gateway->Send command) as to
+the individual devices.
+
+* All commands must be sent in `JSON RPC 2.0 <https://www.jsonrpc.org>`_
+  format.
+
+* You may send any API command, e.g. for the above example: for :doc:`/sysapi`
+  and for :doc:`/uc/uc_api`.
+
+* API key in params is not required if set in notifier configuration, but
+  may be overriden if specified.
+
+* If you send command to the particular IoT device (EVA ICS item), parameter
+  *"i"* (item oid) is automatically added to the request.
+
+E.g., let's toggle *unit:equipment/cctv*:
+
+.. code:: json
+
+    {"jsonrpc": "2.0", "method": "action_toggle" }
+
+
 HTTP Notifiers
 ==============
 
 JSON
 ----
 
-HTTP notifications (aka web hooks) can be transferred to servers which, for
-some reasons, cannot work with MQTT in real time, e.g. servers containing
+HTTP notifications (aka web hooks) are used by applications, which, for some
+reasons, cannot work with MQTT in real time, e.g. servers containing
 third-party or your own web applications.
 
 JSON notifier send POST request to specified URI with data:

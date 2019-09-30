@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import subprocess
 import threading
@@ -109,14 +109,14 @@ class DriverCommand(GenericRunner):
         if self.run_thread:
             self.run_thread.start()
             self.run_thread.join(self.timeout)
-            if self.run_thread.isAlive():
+            if self.run_thread.is_alive():
                 cmd = 'state' if self.update else 'action'
                 logging.warning('driver ' + \
                     '%s %s command timeout, sending termination signal'
                     % (self.driver.driver_id, cmd))
                 self.driver.terminate(self._uuid)
                 self.run_thread.join(self.term_kill_interval)
-                if self.run_thread.isAlive():
+                if self.run_thread.is_alive():
                     logging.critical('driver %s %s command timeout' %
                                      (self.driver.driver_id, cmd))
                     eva.core.critical(from_driver=True)
@@ -328,9 +328,11 @@ class PyThread(object):
                 if self.pfcode:
                     raw = self.pfcode
                 else:
-                    raw = ''.join(open(self.script_file).readlines())
+                    with open(self.script_file) as fd:
+                        raw = fd.read()
                 try:
-                    raw_c = ''.join(open(self.common_file).readlines())
+                    with open(self.common_file) as fd:
+                        raw_c = fd.read()
                 except:
                     raw_c = ''
                 self.code = compile(

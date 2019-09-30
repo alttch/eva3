@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import logging
 import eva.core
@@ -14,7 +14,7 @@ from pyaltt import background_worker
 from eva.exceptions import InvalidParameter
 
 from types import SimpleNamespace
-from termcolor import colored
+from neotermcolor import colored
 
 from functools import partial
 

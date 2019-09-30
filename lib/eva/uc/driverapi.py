@@ -1,12 +1,12 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 __api__ = 7
 
 import importlib
 import logging
-import jsonpickle
+import rapidjson
 import re
 import glob
 import os
@@ -211,14 +211,14 @@ def put_phi_mod(mod, content, force=False):
         raise ResourceAlreadyExists('generic PHI can not be overriden')
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
     if os.path.isfile(fname) and not force:
-        raise ResourceAlreadyExists(
-            'PHI module {}'.format(fname))
+        raise ResourceAlreadyExists('PHI module {}'.format(fname))
     valid = False
     try:
         compile(content, fname, 'exec')
         try:
             eva.core.prepare_save()
-            open(fname, 'w').write(content)
+            with open(fname, 'w') as fd:
+                fd.write(content)
             eva.core.finish_save()
         except Exception as e:
             raise FunctionFailed('Unable to put PHI module {}: {}'.format(
@@ -664,8 +664,8 @@ def dump():
 
 def load():
     try:
-        data = jsonpickle.decode(
-            open(eva.core.dir_runtime + '/uc_drivers.json').read())
+        with open(eva.core.dir_runtime + '/uc_drivers.json') as fd:
+            data = rapidjson.loads(fd.read())
         _phi = data.get('phi')
         if _phi:
             for p in _phi:
@@ -697,8 +697,8 @@ def load():
 @eva.core.save
 def save():
     try:
-        open(eva.core.dir_runtime + '/uc_drivers.json', 'w').write(
-            format_json(serialize(config=True), minimal=False))
+        with open(eva.core.dir_runtime + '/uc_drivers.json', 'w') as fd:
+            fd.write(format_json(serialize(config=True), minimal=False))
         return True
     except Exception as e:
         logging.error('unable to save drivers config: {}'.format(e))

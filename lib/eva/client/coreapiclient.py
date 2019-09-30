@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 version = __version__
 
@@ -9,7 +9,8 @@ import eva.notify
 import base64
 import hashlib
 import uuid
-import jsonpickle
+import threading
+import rapidjson
 from cryptography.fernet import Fernet
 
 import eva.notify
@@ -24,15 +25,12 @@ class CoreAPIClient(APIClient):
     class MQTTCallback(object):
 
         def __init__(self):
-            self._completed = False
+            self.completed = threading.Event()
             self.body = ''
             self.code = None
 
-        def is_completed(self):
-            return self._completed
-
         def data_handler(self, data):
-            self._completed = True
+            self.completed.set()
             try:
                 self.code, self.body = data.split('|', 1)
                 self.code = int(self.code)
@@ -45,7 +43,7 @@ class CoreAPIClient(APIClient):
         ok = False
 
         def json(self):
-            return jsonpickle.decode(self.text)
+            return rapidjson.loads(self.text)
 
     def __init__(self):
         super().__init__()
@@ -125,13 +123,13 @@ class CoreAPIClient(APIClient):
             request_id = payload['id']
         else:
             request_id = str(uuid.uuid4())
-        data = '{}|{}'.format(request_id, jsonpickle.encode(payload))
+        data = '{}|{}'.format(request_id, rapidjson.dumps(payload))
         cb = self.MQTTCallback()
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(
                 self._key_id,
                 self.ce.encrypt(data.encode()).decode()), cb.data_handler)
-        if not eva.core.wait_for(cb.is_completed, self._timeout):
+        if not cb.completed.wait(self._timeout):
             n.finish_api_request(request_id)
             raise requests.Timeout()
         if cb.code:

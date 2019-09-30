@@ -32,6 +32,8 @@ To specify action and interval during cycle creation, use the following format:
 
 .. code:: bash
 
+    eva -I
+    lm
     cycle create <cycle_id> [action] [interval <seconds>]
 
 Example, start unit *unit:lamp/lamp1* (call *start* macro function) with

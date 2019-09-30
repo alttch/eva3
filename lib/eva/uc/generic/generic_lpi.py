@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 __description__ = "Generic LPI, don't use"
 __api__ = 4
 
@@ -56,8 +56,8 @@ class LPI(object):
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
         self.log_error('action function not implemented')
-        return self.action_result_error(
-            _uuid, msg='action function not implemented')
+        return self.action_result_error(_uuid,
+                                        msg='action function not implemented')
 
     """
     Starts LPI threads
@@ -146,7 +146,7 @@ class LPI(object):
         e = self.__terminate.get(_uuid)
         if not e:
             self.critical('termination engine broken')
-        return e.isSet()
+        return e.is_set()
 
     """
     Performs a delay in action execution. If the controller requested action
@@ -243,7 +243,7 @@ class LPI(object):
         self.__results_lock = threading.Lock()
 
         mod = sys.modules[self.__module__]
-        self.lpi_mod_id = mod.__name__.split('.')[-1]
+        self.lpi_mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
         self.__description = mod.__description__

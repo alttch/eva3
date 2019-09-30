@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.5"
+__version__ = "1.2.6"
 __description__ = "Text-to-speech via ttsbroker"
 __api__ = 5
 __mods_required__ = ['ttsbroker']
@@ -90,7 +90,7 @@ automatically added to the end.
 """
 
 import importlib
-import json
+import rapidjson
 
 from eva.lm.extensions.generic import LMExt as GenericExt
 from eva.lm.extapi import log_traceback
@@ -126,7 +126,8 @@ class LMExt(GenericExt):
                 raise
             try:
                 if 'o' in self.cfg:
-                    opts = json.load(open(self.cfg.get('o')))
+                    with open(self.cfg.get('o')) as fd:
+                        opts = rapidjson.loads(fd.read())
                 else:
                     opts = {}
             except:

@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 __description__ = "Generic PHI, don't use"
 
 __equipment__ = 'abstract'
@@ -54,7 +54,7 @@ class PHI(object):
         else:
             self.phi_cfg = {}
         mod = sys.modules[self.__module__]
-        self.phi_mod_id = mod.__name__.split('.')[-1]
+        self.phi_mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
         self.__description = mod.__description__
@@ -381,6 +381,8 @@ class PHI(object):
 
     def _perform_update(self):
         state = self.get(timeout=get_timeout())
+        if not state:
+            return
         if self._last_update_state:
             stu = {}
             for x, v in state.items():

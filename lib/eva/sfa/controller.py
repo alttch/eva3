@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import glob
 import os
@@ -40,6 +40,14 @@ lm_pool = eva.client.remote_controller.RemoteLMPool()
 config = SimpleNamespace(cloud_manager=False)
 
 controller_lock = threading.RLock()
+
+
+def _get_all_items():
+    d = {}
+    d.update(eva.sfa.controller.uc_pool.units)
+    d.update(eva.sfa.controller.uc_pool.sensors)
+    d.update(eva.sfa.controller.lm_pool.lvars)
+    return d
 
 
 def get_item(i):
@@ -420,10 +428,10 @@ def start():
 def connect_remote_controller(pool, v):
     if pool.append(v):
         logging.info('%s added to the controller pool' % \
-                v.item_id)
+                v.full_id)
     else:
         logging.error('Failed to add %s to the controller pool' % \
-                v.item_id)
+                v.full_id)
 
 
 @eva.core.stop

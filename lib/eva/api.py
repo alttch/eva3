@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import cherrypy
 import logging
@@ -9,7 +9,7 @@ import threading
 import time
 import math
 import importlib
-import jsonpickle
+import rapidjson
 import eva.tokens as tokens
 
 import eva.core
@@ -469,8 +469,8 @@ def cp_json_pre():
         else:
             return
         if raw:
-            data = jsonpickle.decode(raw)
-            cherrypy.serving.request.params.update(jsonpickle.decode(raw))
+            data = rapidjson.loads(raw)
+            cherrypy.serving.request.params.update(rapidjson.loads(raw))
     except:
         raise cp_bad_request('invalid JSON data')
     return
@@ -484,7 +484,7 @@ def get_json_payload():
         raw = cherrypy.request.headers.get('X-JSON')
     else:
         return None
-    return jsonpickle.decode(raw) if raw else None
+    return rapidjson.loads(raw) if raw else None
 
 
 def cp_jsonrpc_pre():
@@ -1213,7 +1213,7 @@ class GenericHTTP_API_abstract:
 
     def expose_api_methods(self, api_id, set_api_uri=True):
         try:
-            data = jsonpickle.decode(
+            data = rapidjson.loads(
                 open('{}/eva/apidata/{}_data.json'.format(
                     eva.core.dir_lib, api_id)).read())
             self._expose(data['functions'])
@@ -1388,7 +1388,7 @@ def mqtt_api_handler(notifier_id, data, callback):
                 notifier_id)
             raise
         try:
-            payload = jsonpickle.decode(payload)
+            payload = rapidjson.loads(payload)
         except:
             eva.core.log_traceback()
             raise FunctionFailed('Invalid JSON data')
@@ -1399,7 +1399,7 @@ def mqtt_api_handler(notifier_id, data, callback):
             eva.core.log_traceback()
             callback(call_id, '500|')
             raise FunctionFailed('API error')
-        response = ce.encrypt(jsonpickle.encode(response).encode())
+        response = ce.encrypt(rapidjson.dumps(response).encode())
         callback(call_id, '200|' + response.decode())
     except Exception as e:
         logging.warning('MQTT API: API call failed from {}: {}'.format(

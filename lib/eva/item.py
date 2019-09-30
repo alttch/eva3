@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import copy
 import os
@@ -10,7 +10,7 @@ import time
 import uuid
 import queue
 import logging
-import jsonpickle
+import rapidjson
 
 import eva.core
 import eva.notify
@@ -170,14 +170,15 @@ class Item(object):
     def load(self, fname=None):
         fname_full = self.get_fname(fname)
         try:
-            raw = ''.join(open(fname_full).readlines())
+            with open(fname_full) as fd:
+                raw = fd.read()
         except:
             logging.error('can not load %s config from %s' % \
                                     (self.oid,fname_full))
             eva.core.log_traceback()
             return False
         try:
-            data = jsonpickle.decode(raw)
+            data = rapidjson.loads(raw)
             if data['id'] != self.item_id:
                 raise Exception('id mismatch, file %s' % \
                             fname_full)
@@ -199,7 +200,8 @@ class Item(object):
         data = self.serialize(config=True)
         logging.debug('Saving %s configuration' % self.oid)
         try:
-            open(fname_full, 'w').write(format_json(data, minimal=False))
+            with open(fname_full, 'w') as fd:
+                fd.write(format_json(data, minimal=False))
             self.config_changed = False
         except:
             logging.error('can not save %s config into %s' % \
@@ -711,7 +713,7 @@ class UpdatableItem(Item):
             elif topic == self.item_type + '/' + self.full_id:
                 if not data:
                     return
-                j = jsonpickle.decode(data)
+                j = rapidjson.loads(data)
                 t = j['t']
                 remote_controller = j.get('c')
                 if (

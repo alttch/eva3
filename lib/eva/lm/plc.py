@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import eva.core
 import eva.item
@@ -15,7 +15,7 @@ import time
 import os
 import re
 import logging
-import json
+import rapidjson
 
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
@@ -40,16 +40,14 @@ with_macro_functions_lock = eva.core.RLocker('lm/plc')
 
 def load_iec_functions():
     macro_iec_functions.clear()
-    macro_iec_functions.update(
-        json.loads(
-            open(eva.core.dir_lib + '/eva/lm/iec_functions.json').read()))
+    with open(eva.core.dir_lib + '/eva/lm/iec_functions.json') as fd:
+        macro_iec_functions.update(rapidjson.loads(fd.read()))
 
 
 def load_macro_api_functions():
     macro_api_functions.clear()
-    macro_api_functions.update(
-        json.loads(
-            open(eva.core.dir_lib + '/eva/lm/macro_api_functions.json').read()))
+    with open(eva.core.dir_lib + '/eva/lm/macro_api_functions.json') as fd:
+        macro_api_functions.update(rapidjson.loads(fd.read()))
     pf_macros.clear()
     for f in macro_api_functions:
         pf_macros[f] = VFMacro(f)
@@ -125,7 +123,8 @@ def append_macro_function(file_name, rebuild=True):
         return result
 
     try:
-        raw = open(file_name).read()
+        with open(file_name) as fd:
+            raw = fd.read()
         fname = os.path.basename(file_name[:-3])
         if raw.startswith('# FBD'):
             l = raw.split('\n')
@@ -134,7 +133,7 @@ def append_macro_function(file_name, rebuild=True):
                 if l[i].startswith('"""'):
                     break
                 jcode += l[i]
-            j = json.loads(jcode)
+            j = rapidjson.loads(jcode)
             tp = 'fbd-json'
         else:
             tp = 'py'
@@ -437,7 +436,7 @@ class Macro(eva.item.ActiveItem):
                         del v['name']
                     code = '# SFC\n# auto generated code, ' + \
                             'do not modify\n"""\n{}\n"""\n'.format(
-                        json.dumps(v)) + compile_macro_sfc(val)
+                        rapidjson.dumps(v)) + compile_macro_sfc(val)
                 except Exception as e:
                     logging.error(
                         'Unable to compile macro source for {}: {}'.format(
@@ -450,7 +449,8 @@ class Macro(eva.item.ActiveItem):
                     fname=self.action_exec
                     if self.action_exec else '{}.py'.format(self.item_id))
                 eva.core.prepare_save()
-                open(file_name, 'w').write(code)
+                with open(file_name, 'w') as fd:
+                    fd.write(code)
                 eva.core.finish_save()
                 return True
             except FunctionFailed:
@@ -789,7 +789,7 @@ class Cycle(eva.item.Item):
         return True
 
     def stop(self, wait=True):
-        if self.cycle_thread and self.cycle_thread.isAlive():
+        if self.cycle_thread and self.cycle_thread.is_alive():
             self.cycle_status = 2
             self.notify()
             self.cycle_enabled = False

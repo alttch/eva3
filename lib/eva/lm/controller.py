@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import glob
 import os
@@ -44,7 +44,7 @@ from eva.core import db
 from functools import wraps
 from pyaltt import background_job
 
-import jsonpickle
+import rapidjson
 
 lvars_by_id = {}
 lvars_by_group = {}
@@ -98,6 +98,11 @@ def format_job_id(r_id):
         g, r_id = r_id.split('/')
         if g != 'jobs': return None
     return r_id
+
+
+@with_item_lock
+def _get_all_items():
+    return items_by_full_id.copy()
 
 
 @with_item_lock
@@ -490,7 +495,7 @@ def put_macro_function(fname=None, fdescr=None, i={}, o={}, fcode=None):
                 f.write('# FBD\n')
                 f.write('# auto generated code, do not modify\n')
                 f.write('"""\n{}\n"""\n{}\n'.format(
-                    jsonpickle.encode(fcode), pcode))
+                    rapidjson.dumps(fcode), pcode))
             else:
                 f.write(pcode)
         eva.core.finish_save()
@@ -559,7 +564,8 @@ def get_macro_source(macro_id):
         fname=macro.action_exec
         if macro.action_exec else '{}.py'.format(macro.item_id))
     if os.path.isfile(file_name):
-        code = open(file_name).read()
+        with open(file_name) as fd:
+            code = fd.read()
         if code.startswith('# SFC'):
             src_type = 'sfc-json'
             l = code.split('\n')
@@ -568,7 +574,7 @@ def get_macro_source(macro_id):
                 if l[i].startswith('"""'):
                     break
                 jcode += l[i]
-            code = jsonpickle.decode(jcode)
+            code = rapidjson.loads(jcode)
             code['name'] = macro.full_id
         else:
             src_type = ''
@@ -1176,10 +1182,10 @@ def exec_macro(macro,
         source=source,
         is_shutdown_func=is_shutdown_func)
     Q.put_task(a)
-    if not eva.core.wait_for(a.is_processed, q_timeout):
+    if not a.processed.wait(timeout=qt):
         if a.set_dead():
             return a
-    if wait: eva.core.wait_for(a.is_finished, wait)
+    if wait: a.finished.wait(timeout=wait)
     return a
 
 

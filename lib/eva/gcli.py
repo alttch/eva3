@@ -3,37 +3,14 @@ import sys
 import getopt
 import importlib
 
-import termcolor
+import neotermcolor
 import readline
 import argparse
-import json
+import rapidjson
 import shlex
 import threading
 from pygments import highlight, lexers, formatters
-from pyaltt import background_job
-
-
-def safe_colored(text, color=None, on_color=None, attrs=None, rlsafe=False):
-    if os.getenv('ANSI_COLORS_DISABLED') is None:
-        fmt_str = '\033[%dm'
-        if rlsafe:
-            fmt_str = '\001' + fmt_str + '\002'
-        fmt_str += '%s'
-        if color is not None:
-            text = fmt_str % (termcolor.COLORS[color], text)
-
-        if on_color is not None:
-            text = fmt_str % (termcolor.HIGHLIGHTS[on_color], text)
-
-        if attrs is not None:
-            for attr in attrs:
-                text = fmt_str % (termcolor.ATTRIBUTES[attr], text)
-
-        if rlsafe:
-            text += '\001' + termcolor.RESET + '\002'
-        else:
-            text += termcolor.RESET
-    return text
+from collections import OrderedDict
 
 
 class GCLI(object):
@@ -52,13 +29,12 @@ class GCLI(object):
         self.always_print = []
         self.common_api_functions = {}
         self.common_pd_cols = {}
-        self.common_pd_idx = {}
+        self.pd_cols = {}
         self.arg_sections = []
         self.say_bye = True
         self.readline_processing = True
         self.history_length = 300
         self.history_file = os.path.expanduser('~') + '/.eva_history'
-        self.pd_cols = self.common_pd_cols
         self.api_functions = {}
         self.fancy_indentsp = {}
         self.common_fancy_indentsp = {}
@@ -66,9 +42,6 @@ class GCLI(object):
         self.batch_stop_on_err = True
         self.prog_name = prog
         self.interactive = False
-        self.pd = None
-        self.pd_lock = threading.Lock()
-        self.ac_lock = threading.Lock()
         self.argcomplete = None
         self.parse_primary_args()
 
@@ -76,8 +49,11 @@ class GCLI(object):
                 rlsafe=False):
         if not self.can_colorize():
             return str(text)
-        return safe_colored(
-            text, color=color, on_color=on_color, attrs=attrs, rlsafe=rlsafe)
+        return neotermcolor.colored(text,
+                            color=color,
+                            on_color=on_color,
+                            attrs=attrs,
+                            readline_safe=rlsafe)
 
     def start_interactive(self):
         self.reset_argcomplete()
@@ -117,8 +93,8 @@ class GCLI(object):
 
     def setup_parser(self):
         if not self.interactive and not self.batch_file:
-            self.ap = argparse.ArgumentParser(
-                description=self.name, prog=self.prog_name)
+            self.ap = argparse.ArgumentParser(description=self.name,
+                                              prog=self.prog_name)
         else:
             self.ap = argparse.ArgumentParser(usage=argparse.SUPPRESS, prog='')
         self.add_primary_options()
@@ -127,13 +103,10 @@ class GCLI(object):
         self.load_argcomplete()
 
     def load_argcomplete(self):
-        self.ac_lock.acquire()
         try:
             self.argcomplete = importlib.import_module('argcomplete')
         except:
             pass
-        finally:
-            self.ac_lock.release()
 
     def reset_argcomplete(self):
         if self.argcomplete:
@@ -152,9 +125,9 @@ class GCLI(object):
         print(j)
 
     def format_json(self, obj, minimal=False):
-        return json.dumps(obj, indent=4, sort_keys=True) \
+        return rapidjson.dumps(obj, indent=4, sort_keys=True) \
                     if not minimal else \
-                    json.dumps(obj)
+                    rapidjson.dumps(obj)
 
     def print_err(self, *args):
         for s in args:
@@ -162,8 +135,9 @@ class GCLI(object):
 
     def print_warn(self, s, w=True):
         print(
-            self.colored(
-                ('WARNING: ' if w else '') + s, color='yellow', attrs=['bold']))
+            self.colored(('WARNING: ' if w else '') + s,
+                         color='yellow',
+                         attrs=['bold']))
 
     def print_debug(self, s):
         print(self.colored(s, color='grey', attrs=['bold']))
@@ -187,13 +161,12 @@ class GCLI(object):
         print()
 
     def add_primary_options(self):
-        self.ap.add_argument(
-            '-J',
-            '--json',
-            help='Print result as JSON',
-            action='store_true',
-            dest='_json',
-            default=False)
+        self.ap.add_argument('-J',
+                             '--json',
+                             help='Print result as JSON',
+                             action='store_true',
+                             dest='_json',
+                             default=False)
         self.ap.add_argument(
             '-R',
             '--raw-output',
@@ -201,20 +174,18 @@ class GCLI(object):
             action='store_true',
             dest='_raw',
             default=False)
-        self.ap.add_argument(
-            '-O',
-            '--output-file',
-            help='Store output to local file',
-            dest='_output_file',
-            metavar='FILE')
+        self.ap.add_argument('-O',
+                             '--output-file',
+                             help='Store output to local file',
+                             dest='_output_file',
+                             metavar='FILE')
         if not self.interactive:
-            self.ap.add_argument(
-                '-I',
-                '--interactive',
-                help='Enter interactive (command prompt) mode',
-                action='store_true',
-                dest='__interactive',
-                default=False)
+            self.ap.add_argument('-I',
+                                 '--interactive',
+                                 help='Enter interactive (command prompt) mode',
+                                 action='store_true',
+                                 dest='__interactive',
+                                 default=False)
 
     def parse_primary_args(self):
         try:
@@ -241,8 +212,9 @@ class GCLI(object):
         pass
 
     def add_primary_subparser(self):
-        self.sp = self.ap.add_subparsers(
-            dest='_type', metavar='command', help='command or type')
+        self.sp = self.ap.add_subparsers(dest='_type',
+                                         metavar='command',
+                                         help='command or type')
 
     def prepare_result_data(self, data, func, itype):
         return data
@@ -252,8 +224,11 @@ class GCLI(object):
 
     def fancy_print_result(self, result, func, itype, indent=0, print_ok=True):
         if result and isinstance(result, dict):
-            self.fancy_print_dict(
-                result, func, itype, indent=indent, print_ok=print_ok)
+            self.fancy_print_dict(result,
+                                  func,
+                                  itype,
+                                  indent=indent,
+                                  print_ok=print_ok)
         elif result and isinstance(result, list):
             self.fancy_print_list(result, func, itype)
         elif result:
@@ -272,19 +247,17 @@ class GCLI(object):
         for v in sorted(_result.keys()):
             if isinstance(_result[v], dict):
                 if indent:
-                    print(
-                        ' ' * (indent * indentsp),
-                        end=self.colored('>' * indent) + ' ')
-                print(
-                    ((self.colored('{:>%u} ', color='blue', attrs=['bold']) +
-                      self.colored(':') + self.colored('  {}', color='yellow'))
-                     % max(map(len, _result))).format(v, ''))
+                    print(' ' * (indent * indentsp),
+                          end=self.colored('>' * indent) + ' ')
+                print((
+                    (self.colored('{:>%u} ', color='blue', attrs=['bold']) +
+                     self.colored(':') + self.colored('  {}', color='yellow')) %
+                    max(map(len, _result))).format(v, ''))
                 self.fancy_print_result(_result[v], func, itype, indent + 1)
             else:
                 if indent:
-                    print(
-                        ' ' * (indent * indentsp),
-                        end=self.colored('>' * indent) + ' ')
+                    print(' ' * (indent * indentsp),
+                          end=self.colored('>' * indent) + ' ')
                 if isinstance(_result[v], list):
                     _r = []
                     for vv in _result[v]:
@@ -292,50 +265,36 @@ class GCLI(object):
                     _v = ', '.join(_r)
                 else:
                     _v = _result[v]
-                print(((self.colored('{:>%u} ', color='blue', attrs=['bold']) +
-                        self.colored(':') + self.colored(' {}', color='yellow'))
-                       % max(map(len, _result))).format(v, _v))
+                print(
+                    ((self.colored('{:>%u} ', color='blue', attrs=['bold']) +
+                      self.colored(':') + self.colored(' {}', color='yellow')) %
+                     max(map(len, _result))).format(v, _v))
             rprinted = True
         if not rprinted and not indent and print_ok:
             print('OK')
 
-    def fancy_print_list(self, result, func, itype):
-        self.import_pandas()
-        df = self.pd.DataFrame(
-            data=self.prepare_result_data(result, func, itype))
-        if func in self.pd_cols:
-            cols = self.pd_cols[func]
-        else:
-            cols = list(df)
-        df = df.ix[:, cols]
-        try:
-            idxcol = self.pd_idx.get(func)
-            if idxcol is None: idxcol = 'id'
-            if idxcol in list(df):
-                df.set_index(idxcol, inplace=True)
-            else:
-                idxcol = list(df)[0]
-                df.set_index(list(df)[0], inplace=True)
-            out = df.fillna(' ').to_string().split('\n')
-            print(
-                self.colored(
-                    idxcol + out[0][len(idxcol):], color='blue', attrs=[]))
-            print(self.colored('-' * len(out[0]), color='grey'))
-            # dirty hack for old pandas ver
-            x = 2 if out[1].startswith(idxcol + ' ') else 1
-            for o in out[x:]:
-                s = re.sub('^NaN', '   ', o)
-                print(s)
-        except:
-            raise
+    def list_to_str(self, l):
+        return ', '.join(l) if isinstance(
+            l, list) else (str(l) if l is not None else '')
 
-    def import_pandas(self):
-        if not self.pd:
-            self.pd_lock.acquire()
-            self.pd = importlib.import_module('pandas')
-            self.pd.set_option('display.expand_frame_repr', False)
-            self.pd.options.display.max_colwidth = 100
-            self.pd_lock.release()
+    def fancy_print_list(self, result, func, itype):
+        table = []
+        for r in self.prepare_result_data(result, func, itype):
+            t = OrderedDict()
+            if func in self.pd_cols:
+                for c in self.pd_cols[func]:
+                    t[c] = self.list_to_str(r[c])
+            else:
+                for i, c in r.items():
+                    t[i] = self.list_to_str(c)
+            table.append(t)
+        header, rows = rapidtables.format_table(table,
+                                                rapidtables.FORMAT_GENERATOR)
+        header = header[:w]
+        print(self.colored(header, color='blue', attrs=[]))
+        print(self.colored('-' * len(header), color='grey', attrs=[]))
+        for r in rows:
+            print(r)
 
     def call(self, args=[]):
         _args = args if isinstance(args, list) else shlex.split(args)

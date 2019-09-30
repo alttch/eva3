@@ -1,8 +1,28 @@
 EVA ICS CHANGELOG
 *****************
 
-3.2.4 (TBA)
+3.2.5 (TBA)
 ===========
+
+Common
+------
+
+    * Google Cloud IoT Core support
+
+    * fix: startup timeouts
+
+LM PLC
+------
+
+    * Rule chill-out logic corrected
+
+Cloud manager
+-------------
+
+    * First public beta
+
+3.2.4 (2019-07-30)
+==================
 
 Common
 ------
@@ -10,9 +30,11 @@ Common
     * Core and controller interconnect stability improvements
     * IOTE cloud support
     * InfluxDB integration
+    * Prometheus integration
     * Logging to syslog
     * Autocompletion files for ZSH
     * server events
+    * CLI edit command for controller server config
 
 UC
 --
@@ -28,6 +50,7 @@ SFA
 ---
 
     * edit ui / edit pvt commands in EVA shell
+
 
 3.2.3 (2019-06-24)
 ==================
@@ -94,7 +117,7 @@ Common
 
     * EVA ICS now loads 3rd party libraries from virtualenv which increases
       system stability as only tested version of libraries are used.
-    * Support for AWS IoT and Azure IoT
+    * Support for AWS IoT
     * Modbus slave register monitoring functions
     * increment/decrement functions for lvars and shared macro variables
     * read-only permissions for API keys

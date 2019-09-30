@@ -1,10 +1,9 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import cherrypy
-import jsonpickle
 import shlex
 import eva.core
 
@@ -55,7 +54,6 @@ import eva.lm.controller
 import eva.lm.extapi
 import eva.ei
 import jinja2
-import jsonpickle
 import logging
 
 
@@ -154,7 +152,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i, s, v = parse_function_params(kwargs, 'kisv', '.si.')
         item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         if s and not -1 <= s <= 1:
             raise InvalidParameter('status should be -1, 0 or 1')
         if v is None: v = ''
@@ -192,7 +191,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         return self.set(k=k, i=i, s=0 if item.expires > 0 else 1, v='0')
 
     @log_i
@@ -210,7 +210,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         v = item.value
         if v != '0':
             return self.clear(k=k, i=i)
@@ -230,8 +231,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .i: lvar id
         """
         k, i, = parse_function_params(kwargs, 'ki', '.s')
-        item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         return item.increment()
 
     @log_i
@@ -248,7 +249,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i, = parse_function_params(kwargs, 'ki', '.s')
         item = eva.lm.controller.get_lvar(i)
-        if not item or not apikey.check(k, item): raise ResourceNotFound
+        if not item: raise ResourceNotFound
+        elif not apikey.check(k, item): raise AccessDenied
         return item.decrement()
 
     @log_i
@@ -273,7 +275,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         k, i, a, kw, w, u, p, q = parse_function_params(kwargs, 'kiaKwupq',
                                                         '.s..nsin')
         macro = eva.lm.controller.get_macro(i, pfm=True)
-        if not macro or not eva.apikey.check(k, macro): raise ResourceNotFound
+        if not macro: raise ResourceNotFound
+        elif not eva.apikey.check(k, macro): raise AccessDenied
         if a is None:
             a = []
         else:
@@ -978,7 +981,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.S')
         cycle = eva.lm.controller.get_cycle(i)
-        if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
+        if not cycle: raise ResourceNotFound
+        elif not apikey.check(k, cycle): raise AccessDenied
         if cycle.cycle_status:
             raise ResourceBusy('cycle is already started')
         return cycle.start()
@@ -997,7 +1001,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i, wait = parse_function_params(kwargs, 'kiW', '.Sb')
         cycle = eva.lm.controller.get_cycle(i)
-        if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
+        if not cycle: raise ResourceNotFound
+        elif not apikey.check(k, cycle): raise AccessDenied
         cycle.stop(wait=wait)
         return (True, api_result_accepted) if not wait else True
 
@@ -1012,7 +1017,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.S')
         cycle = eva.lm.controller.get_cycle(i)
-        if not cycle or not apikey.check(k, cycle): raise ResourceNotFound
+        if not cycle: raise ResourceNotFound
+        elif not apikey.check(k, cycle): raise AccessDenied
         cycle.reset_stats()
         return True
 

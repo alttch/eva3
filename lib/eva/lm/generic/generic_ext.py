@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 __description__ = "Generic macro extension, don't use"
 __api__ = 4
 __mods_required__ = []
@@ -37,7 +37,7 @@ class LMExt(object):
         else:
             self.cfg = {}
         mod = sys.modules[self.__module__]
-        self.mod_id = mod.__name__.split('.')[-1]
+        self.mod_id = mod.__name__.rsplit('.', 1)[-1]
         self.__author = mod.__author__
         self.__license = mod.__license__
         self.__description = mod.__description__

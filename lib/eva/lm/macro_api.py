@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.4"
+__version__ = "3.2.5"
 
 import logging
 import sys
@@ -14,7 +14,7 @@ import eva.mailer
 import eva.lm.controller
 import time
 import requests
-import json
+import rapidjson
 import threading
 import shlex
 import datetime
@@ -158,7 +158,7 @@ class MacroAPI(object):
             'AccessDenied': AccessDenied,
             'InvalidParameter': InvalidParameter,
             'requests': requests,
-            'json': json,
+            'json': rapidjson,
             'os': os,
             'sys': sys,
             'on': 1,
