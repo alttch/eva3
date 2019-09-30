@@ -495,6 +495,28 @@ Raises:
 * **Exception** exceptions equal to Python "open" function
 
 
+.. _macro_api_ping:
+
+ping - ping remote host
+-----------------------
+
+Requires fping tool
+
+.. code-block:: python
+
+    ping('8.8.8.8')
+
+Parameters:
+
+* **host** host name or IP to ping
+* **timeout** ping timeout in milliseconds (default: 1000)
+* **count** number of packets to send (default: 1)
+
+Returns:
+
+True if host is alive, False if not
+
+
 .. _macro_api_run:
 
 run - execute another macro

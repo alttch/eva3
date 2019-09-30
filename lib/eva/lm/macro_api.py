@@ -145,6 +145,23 @@ def decrement_shared(name):
         _shared_lock.release()
 
 
+def ping(host, timeout=1000, count=1):
+    """
+    ping remote host
+
+    Requires fping tool
+
+    Args:
+        host: host name or IP to ping
+        timeout: ping timeout in milliseconds (default: 1000)
+        count: number of packets to send (default: 1)
+
+    Returns:
+        True if host is alive, False if not
+    """
+    return os.system('fping -t {} -c {} {}'.format(timeout, count, host)) == 0
+
+
 class MacroAPI(object):
 
     def __init__(self, pass_errors=False, send_critical=False):
@@ -214,6 +231,7 @@ class MacroAPI(object):
             'cmd': self.macro_function(self.cmd),
             'history': self.macro_function(self.history),
             'system': self.macro_function(os.system),
+            'ping': self.macro_function(ping),
             'time': self.macro_function(time.time),
             'date': self.macro_function(self.date),
             'ls': self.macro_function(self.ls),
@@ -386,8 +404,10 @@ class MacroAPI(object):
         Raises:
             FunctionFailed: function failed to acquire lock
         """
-        return eva.sysapi.api.lock(
-            k=eva.apikey.get_masterkey(), l=lock_id, t=timeout, e=expires)
+        return eva.sysapi.api.lock(k=eva.apikey.get_masterkey(),
+                                   l=lock_id,
+                                   t=timeout,
+                                   e=expires)
 
     def unlock(self, lock_id):
         """
@@ -795,8 +815,10 @@ class MacroAPI(object):
             ResourceNotFound: lvar is not found
         """
         if is_oid(item_id) and oid_type(item_id) == 'unit':
-            return self.action_toggle(
-                unit_id=item_id, wait=wait, uuid=uuid, priority=priority)
+            return self.action_toggle(unit_id=item_id,
+                                      wait=wait,
+                                      uuid=uuid,
+                                      priority=priority)
         v = self.lvar_value(item_id)
         if v is None:
             raise FunctionFailed('lvar value is null')
@@ -908,13 +930,12 @@ class MacroAPI(object):
         if not unit:
             raise ResourceNotFound
         return ecall(
-            eva.lm.controller.uc_pool.action(
-                unit_id=oid_to_id(unit_id, 'unit'),
-                status=status,
-                value=value,
-                wait=wait,
-                uuid=uuid,
-                priority=priority))
+            eva.lm.controller.uc_pool.action(unit_id=oid_to_id(unit_id, 'unit'),
+                                             status=status,
+                                             value=value,
+                                             wait=wait,
+                                             uuid=uuid,
+                                             priority=priority))
 
     def action_toggle(self, unit_id, wait=0, uuid=None, priority=None):
         """
@@ -946,11 +967,10 @@ class MacroAPI(object):
         if not unit:
             raise ResourceNotFound
         return ecall(
-            eva.lm.controller.uc_pool.action_toggle(
-                unit_id=oid_to_id(unit_id),
-                wait=wait,
-                uuid=uuid,
-                priority=priority))
+            eva.lm.controller.uc_pool.action_toggle(unit_id=oid_to_id(unit_id),
+                                                    wait=wait,
+                                                    uuid=uuid,
+                                                    priority=priority))
 
     def result(self, unit_id=None, uuid=None, group=None, status=None):
         """
@@ -978,13 +998,13 @@ class MacroAPI(object):
         @var_out status Action status
         """
         if unit_id:
-            unit = eva.lm.controller.uc_pool.get_unit(
-                oid_to_id(unit_id, 'unit'))
+            unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(
+                unit_id, 'unit'))
             if not unit:
                 raise ResourceNotFound
         return ecall(
-            eva.lm.controller.uc_pool.result(
-                oid_to_id(unit_id, 'unit'), uuid, group, status))
+            eva.lm.controller.uc_pool.result(oid_to_id(unit_id, 'unit'), uuid,
+                                             group, status))
 
     def action_start(self,
                      unit_id,
@@ -1016,13 +1036,12 @@ class MacroAPI(object):
         @var_out exitcode Exit code
         @var_out status Action status
         """
-        return self.action(
-            unit_id=oid_to_id(unit_id, 'unit'),
-            status=1,
-            value=value,
-            wait=wait,
-            uuid=uuid,
-            priority=priority)
+        return self.action(unit_id=oid_to_id(unit_id, 'unit'),
+                           status=1,
+                           value=value,
+                           wait=wait,
+                           uuid=uuid,
+                           priority=priority)
 
     def action_stop(self, unit_id, value=None, wait=0, uuid=None,
                     priority=None):
@@ -1050,13 +1069,12 @@ class MacroAPI(object):
         @var_out exitcode Exit code
         @var_out status Action status
         """
-        return self.action(
-            unit_id=oid_to_id(unit_id, 'unit'),
-            status=0,
-            value=value,
-            wait=wait,
-            uuid=uuid,
-            priority=priority)
+        return self.action(unit_id=oid_to_id(unit_id, 'unit'),
+                           status=0,
+                           value=value,
+                           wait=wait,
+                           uuid=uuid,
+                           priority=priority)
 
     def terminate(self, unit_id=None, uuid=None):
         """
@@ -1075,13 +1093,13 @@ class MacroAPI(object):
                 finished
         """
         if unit_id:
-            unit = eva.lm.controller.uc_pool.get_unit(
-                oid_to_id(unit_id, 'unit'))
+            unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(
+                unit_id, 'unit'))
             if not unit:
                 raise ResourceNotFound
         return ecall(
-            eva.lm.controller.uc_pool.terminate(
-                oid_to_id(unit_id, 'unit'), uuid))
+            eva.lm.controller.uc_pool.terminate(oid_to_id(unit_id, 'unit'),
+                                                uuid))
 
     def q_clean(self, unit_id):
         """
@@ -1172,13 +1190,12 @@ class MacroAPI(object):
             kw = kwargs
         else:
             kw = {}
-        a = eva.lm.controller.exec_macro(
-            macro=oid_to_id(macro, 'lmacro'),
-            argv=_argv,
-            kwargs=kw,
-            priority=priority,
-            action_uuid=uuid,
-            wait=wait)
+        a = eva.lm.controller.exec_macro(macro=oid_to_id(macro, 'lmacro'),
+                                         argv=_argv,
+                                         kwargs=kw,
+                                         priority=priority,
+                                         action_uuid=uuid,
+                                         wait=wait)
         if not a:
             raise ResourceNotFound
         elif a.is_status_dead():
@@ -1215,12 +1232,11 @@ class MacroAPI(object):
         @var_out status Action status
         """
         return ecall(
-            eva.lm.controller.uc_pool.cmd(
-                controller_id=controller_id,
-                command=command,
-                args=args,
-                wait=wait,
-                timeout=timeout))
+            eva.lm.controller.uc_pool.cmd(controller_id=controller_id,
+                                          command=command,
+                                          args=args,
+                                          wait=wait,
+                                          timeout=timeout))
 
     def date(self):
         """
@@ -1357,11 +1373,10 @@ class MacroAPI(object):
             FunctionFailed: device deploy error
         """
         return ecall(
-            eva.lm.controller.uc_pool.deploy_device(
-                controller_id=controller_id,
-                device_tpl=device_tpl,
-                cfg=cfg,
-                save=save))
+            eva.lm.controller.uc_pool.deploy_device(controller_id=controller_id,
+                                                    device_tpl=device_tpl,
+                                                    cfg=cfg,
+                                                    save=save))
 
     def update_device(self, controller_id, device_tpl, cfg=None, save=None):
         """
@@ -1382,11 +1397,10 @@ class MacroAPI(object):
             FunctionFailed: device update error
         """
         return ecall(
-            eva.lm.controller.uc_pool.update_device(
-                controller_id=controller_id,
-                device_tpl=device_tpl,
-                cfg=cfg,
-                save=save))
+            eva.lm.controller.uc_pool.update_device(controller_id=controller_id,
+                                                    device_tpl=device_tpl,
+                                                    cfg=cfg,
+                                                    save=save))
 
     def undeploy_device(self, controller_id, device_tpl, cfg=None):
         """
@@ -1422,8 +1436,11 @@ class MacroAPI(object):
         Raises:
             ResourceNotFound: rule is not found
         """
-        result = eva.lm.lmapi.api.set_rule_prop(
-            k=eva.apikey.get_masterkey(), i=rule_id, p=prop, v=value, save=save)
+        result = eva.lm.lmapi.api.set_rule_prop(k=eva.apikey.get_masterkey(),
+                                                i=rule_id,
+                                                p=prop,
+                                                v=value,
+                                                save=save)
         return result
 
     def set_job_prop(self, job_id, prop, value=None, save=False):
@@ -1441,8 +1458,11 @@ class MacroAPI(object):
         Raises:
             ResourceNotFound: job is not found
         """
-        result = eva.lm.lmapi.api.set_job_prop(
-            k=eva.apikey.get_masterkey(), i=job_id, p=prop, v=value, save=save)
+        result = eva.lm.lmapi.api.set_job_prop(k=eva.apikey.get_masterkey(),
+                                               i=job_id,
+                                               p=prop,
+                                               v=value,
+                                               save=save)
         return result
 
     def start_cycle(self, cycle_id):
@@ -1576,5 +1596,6 @@ def init():
 
 @eva.core.shutdown
 def shutdown():
-    eva.lm.controller.exec_macro(
-        'system/shutdown', priority=1, wait=eva.core.config.timeout)
+    eva.lm.controller.exec_macro('system/shutdown',
+                                 priority=1,
+                                 wait=eva.core.config.timeout)
