@@ -987,12 +987,12 @@ a.controller_link {
   border-color: #1eaa00;
   color: #1eaa00;
 }
+.item_btn.btn_reset,
 .item_btn.btn_toggle,
 .item_btn.btn_clear,
 .item_btn.btn_set {
   padding-left: 26px;
 }
-.item_btn.btn_reset,
 .item_btn.btn_props,
 .item_btn.btn_remove,
 .item_btn.btn_start,
@@ -1439,14 +1439,14 @@ input.device-error:focus {
     margin: 0 40px;
   }
   #mng_lvars .descr_block {
-    width: calc(75% - 390px);
+    width: calc(75% - 440px);
     margin-bottom: 0;
   }
   #mng_lvars .descr_block:first-child {
     width: 25%;
   }
   #mng_cycles .descr_block {
-    width: calc(70% - 180px);
+    width: calc(70% - 225px);
     margin-right: 20px;
   }
   #mng_cycles .descr_block:first-child {
