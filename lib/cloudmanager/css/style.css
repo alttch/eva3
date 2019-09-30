@@ -683,7 +683,7 @@ a.controller_link {
 .log_block .nano-content {
   max-height: 300px;
 }
-#logr div {
+.logentry {
   font: 12px 'TTNorms Regular';
   margin-bottom: 10px;
 }
@@ -695,13 +695,19 @@ a.controller_link {
 }
 .logentry_color_30 {
   color: #f7931e;
+  font-family: 'TTNorms Medium';
 }
-.logentry_color_40 {
+.logentry_color_40,
+.logentry_color_50 {
+  font: 14px 'TTNorms Medium';
   color: #ff5353;
 }
 .logentry_color_50 {
-  color: #ff5353;
-  font-size: 14px!important;
+  animation: blink 1.5s infinite;
+}
+@keyframes blink {
+  0%, 100% {opacity: 1;}
+  50% {opacity: 0;}
 }
 
 /** initial setup **/
@@ -867,6 +873,8 @@ a.controller_link {
   color: #fff;
 }
 .ctrl_btn.ctrl_reload_btn {
+  margin-bottom: -9px;
+  margin-top: -24px;
   width: 28px;
   height: 28px;
   padding: 9px;
@@ -979,12 +987,12 @@ a.controller_link {
   border-color: #1eaa00;
   color: #1eaa00;
 }
+.item_btn.btn_reset,
 .item_btn.btn_toggle,
 .item_btn.btn_clear,
 .item_btn.btn_set {
   padding-left: 26px;
 }
-.item_btn.btn_reset,
 .item_btn.btn_props,
 .item_btn.btn_remove,
 .item_btn.btn_start,
@@ -1196,6 +1204,7 @@ input.device-error:focus {
   max-width: 100%;
   height: 100%;
   border: 1px solid #dcdcdc;
+  font-size: 14px;
 }
 .macro_editor .eva_sfa_popup_btn_holder {
   max-width: 100%;
@@ -1430,14 +1439,14 @@ input.device-error:focus {
     margin: 0 40px;
   }
   #mng_lvars .descr_block {
-    width: calc(75% - 390px);
+    width: calc(75% - 440px);
     margin-bottom: 0;
   }
   #mng_lvars .descr_block:first-child {
     width: 25%;
   }
   #mng_cycles .descr_block {
-    width: calc(70% - 180px);
+    width: calc(70% - 225px);
     margin-right: 20px;
   }
   #mng_cycles .descr_block:first-child {
