@@ -773,12 +773,12 @@ a.controller_link {
   display: none;
 }
 .ctrl_cur {
-  margin: 0 5px;
+  margin: 0 0 5px;
   padding: 5px;
 }
 .debug_info {
   display: inline-block;
-  margin: 0 0 10px 20px;
+  margin: 0 0 10px 10px;
   font: 14px 'TTNorms Medium';
   color: #b3b3b3;
   line-height: 28px;
@@ -834,6 +834,9 @@ a.controller_link {
 .ctrl_btn:last-child {
   margin: 0;
 }
+.ctrl_btn.btn_save {
+  margin: 0;
+}
 .group_ctrl_holder > .ctrl_btn {
   margin-bottom: 5px;
 }
@@ -886,7 +889,7 @@ a.controller_link {
   display: flex;
   flex-wrap: wrap;
   padding: 5px;
-  border-bottom: 2px solid #fafafa;
+  border-bottom: 2px solid #f0f0f0;
 }
 .mng_item_holder:hover {
   background-color: rgba(236, 236, 236, 0.5);
