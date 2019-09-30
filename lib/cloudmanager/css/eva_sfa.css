@@ -242,6 +242,32 @@
   left: 47px;
   color: #6BC45F;
 }
+.debug_chbox {
+  display: inline;
+  margin-left: 5px;
+}
+.debug_chbox .custom_chbox + label {
+  padding-left: 73px;
+  font-size: 12px;
+  line-height: 16px;
+}
+.debug_chbox .custom_chbox:not(checked) + label::before {
+  top: -6px;
+  width: 73px;
+  height: 19px;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+.debug_chbox .custom_chbox:not(checked) + label::after {
+  top: -4px;
+  left: 2px;
+  width: 33px;
+  height: 15px;
+  border-radius: 10px;
+}
+.debug_chbox .custom_chbox:checked + label::after {
+  left: 38px;
+}
 
 .form_radio_holder {
   width: 100%;
