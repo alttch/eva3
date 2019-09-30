@@ -683,7 +683,7 @@ a.controller_link {
 .log_block .nano-content {
   max-height: 300px;
 }
-#logr div {
+.logentry {
   font: 12px 'TTNorms Regular';
   margin-bottom: 10px;
 }
@@ -695,13 +695,19 @@ a.controller_link {
 }
 .logentry_color_30 {
   color: #f7931e;
+  font-family: 'TTNorms Medium';
 }
-.logentry_color_40 {
+.logentry_color_40,
+.logentry_color_50 {
+  font: 14px 'TTNorms Medium';
   color: #ff5353;
 }
 .logentry_color_50 {
-  color: #ff5353;
-  font-size: 14px!important;
+  animation: blink 1.5s infinite;
+}
+@keyframes blink {
+  0%, 100% {opacity: 1;}
+  50% {opacity: 0;}
 }
 
 /** initial setup **/
