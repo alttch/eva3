@@ -249,7 +249,7 @@
 .debug_chbox .custom_chbox + label {
   padding-left: 73px;
   font-size: 12px;
-  line-height: 16px;
+  line-height: 15px;
 }
 .debug_chbox .custom_chbox:not(checked) + label::before {
   top: -6px;

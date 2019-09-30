@@ -873,6 +873,8 @@ a.controller_link {
   color: #fff;
 }
 .ctrl_btn.ctrl_reload_btn {
+  margin-bottom: -9px;
+  margin-top: -24px;
   width: 28px;
   height: 28px;
   padding: 9px;
