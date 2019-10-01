@@ -1438,6 +1438,7 @@ input.device-error:focus {
 
   .ctrl_block {
     margin: 0 40px;
+    min-height: 550px;
   }
   #mng_lvars .descr_block {
     width: calc(75% - 440px);
