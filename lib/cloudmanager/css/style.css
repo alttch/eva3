@@ -779,10 +779,6 @@ a.controller_link {
 .ctrl_holder {
   display: none;
 }
-.ctrl_cur {
-  margin: 0 0 5px;
-  padding: 5px;
-}
 .debug_info {
   display: inline-block;
   margin: 0 0 10px 10px;
@@ -822,10 +818,19 @@ a.controller_link {
 .select_ctrl {
   border-radius: 3px;
 }
+.ctrl_cur,
 .group_ctrl_holder > select {
+  width: auto;
   margin-right: 10px;
-  margin-bottom: 5px;
-  padding: 5px;
+  margin-bottom: 4px;
+  padding: 2px 25px 1px 5px;
+  height: auto;
+  border-color: #4d4d4d;
+}
+.ctrl_cur:focus,
+.group_ctrl_holder > select:focus {
+  box-shadow: none;
+  border-color: #4d4d4d;
 }
 .ctrl_btn {
   margin-right: 10px;
@@ -1237,6 +1242,9 @@ input.device-error:focus {
 }
 .vanillatoasts-text th, .vanillatoasts-text td {
   padding: 3px 5px;
+}
+.custom-select {
+  background-position: right 0.5rem center; 
 }
 
 

@@ -186,7 +186,7 @@
 .custom_chbox:not(checked) + label {
   position: relative;
   padding: 0 0 0 90px;
-  line-height: 20px;
+  line-height: 19px;
 }
 .custom_chbox:not(checked) + label:before {
   content: attr(data-on);
