@@ -1304,9 +1304,6 @@ input.device-error:focus {
     max-width: 100%;
     word-break: break-word;
   }
-  .debug_info {
-    margin-left: 20px;
-  }
   .descr_block:first-child {
     margin-right: 20px;
   }
