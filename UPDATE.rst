@@ -1,10 +1,11 @@
-EVA ICS 3.2.4
+EVA ICS 3.2.5
 *************
 
 What's new
 ==========
 
-New features:
+- Cloud Manager web ui
+- various bug fixes
 
 Complete change log: https://get.eva-ics.com/3.2.5/stable/CHANGELOG.html
 
