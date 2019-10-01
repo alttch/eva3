@@ -444,7 +444,7 @@ a.controller_link {
 .dataTables_wrapper .dataTables_filter {
   position: absolute;
   top: -75px;
-  right: -15px;
+  right: 0;
   font: 14px 'TTNorms Regular';
   color: #b3b3b3;
 }
@@ -468,7 +468,6 @@ a.controller_link {
 }
 .elements_block .tab-content {
   width: 100%;
-  padding-right: 15px;
 }
 .elements_block .tab-content .tab-pane{
   border-bottom: 1px solid #999;
@@ -682,6 +681,7 @@ a.controller_link {
 }
 .log_block .nano-content {
   max-height: 300px;
+  margin-right: -21px!important;
 }
 .logentry {
   font: 12px 'TTNorms Regular';
@@ -754,6 +754,7 @@ a.controller_link {
 }
 .elements_block .nano > .nano-pane {
   top: 40px;
+  right: 0;
 }
 .nano > .nano-pane > .nano-slider {
   background: #0071bc;
