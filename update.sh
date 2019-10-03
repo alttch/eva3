@@ -6,7 +6,7 @@
 #fi
 
 VERSION=3.2.5
-BUILD=2019100201
+BUILD=2019100301
 
 PYTHON3_MIN=4
 PYTHON_MINOR=`./python3/bin/python3 --version|cut -d. -f2`
