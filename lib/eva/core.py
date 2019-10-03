@@ -599,6 +599,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 pass
             logging.debug('server.dump_on_critical = %s' % ('yes' \
                                         if config.dump_on_critical else 'no'))
+            prepare_save()
             try:
                 db_file = cfg.get('server', 'db_file')
                 secure_file(db_file)
@@ -615,6 +616,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 secure_file(userdb_file)
             except:
                 userdb_file = None
+            finish_save()
             try:
                 userdb_uri = cfg.get('server', 'userdb')
             except:
