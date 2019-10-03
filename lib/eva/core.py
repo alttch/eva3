@@ -47,52 +47,51 @@ cvars = {}
 
 controllers = set()
 
-_flags = SimpleNamespace(
-    ignore_critical=False,
-    sigterm_sent=False,
-    started=threading.Event(),
-    shutdown_requested=False,
-    cvars_modified=False,
-    setup_mode=0)
+_flags = SimpleNamespace(ignore_critical=False,
+                         sigterm_sent=False,
+                         started=threading.Event(),
+                         shutdown_requested=False,
+                         cvars_modified=False,
+                         setup_mode=0)
 
 product = SimpleNamespace(name='', code='', build=None)
 
-config = SimpleNamespace(
-    pid_file=None,
-    log_file=None,
-    db_uri=None,
-    userdb_uri=None,
-    debug=False,
-    system_name=platform.node(),
-    controller_name=None,
-    default_cloud_key='default',
-    development=False,
-    show_traceback=False,
-    stop_on_critical='always',
-    dump_on_critical=True,
-    polldelay=0.01,
-    db_update=0,
-    keep_action_history=3600,
-    action_cleaner_interval=60,
-    notify_on_start=True,
-    keep_logmem=3600,
-    default_log_level_name='info',
-    default_log_level_id=20,
-    default_log_level=logging.INFO,
-    timeout=5,
-    exec_before_save=None,
-    exec_after_save=None,
-    mqtt_update_default=None,
-    enterprise_layout=True,
-    syslog=None,
-    syslog_format=None,
-    reactor_thread_pool=15,
-    user_hook=None)
+config = SimpleNamespace(pid_file=None,
+                         log_file=None,
+                         db_uri=None,
+                         userdb_uri=None,
+                         debug=False,
+                         system_name=platform.node(),
+                         controller_name=None,
+                         default_cloud_key='default',
+                         development=False,
+                         show_traceback=False,
+                         stop_on_critical='always',
+                         dump_on_critical=True,
+                         polldelay=0.01,
+                         db_update=0,
+                         keep_action_history=3600,
+                         action_cleaner_interval=60,
+                         notify_on_start=True,
+                         keep_logmem=3600,
+                         default_log_level_name='info',
+                         default_log_level_id=20,
+                         default_log_level=logging.INFO,
+                         timeout=5,
+                         exec_before_save=None,
+                         exec_after_save=None,
+                         mqtt_update_default=None,
+                         enterprise_layout=True,
+                         syslog=None,
+                         syslog_format=None,
+                         reactor_thread_pool=15,
+                         user_hook=None)
 
 db_engine = SimpleNamespace(primary=None, user=None)
 
-log_engine = SimpleNamespace(
-    logger=None, log_file_handler=None, syslog_handler=None)
+log_engine = SimpleNamespace(logger=None,
+                             log_file_handler=None,
+                             syslog_handler=None)
 
 db_pool_size = 15
 
@@ -133,8 +132,8 @@ def critical(log=True, from_driver=False):
     if log: log_traceback(force=True)
     if config.dump_on_critical:
         _flags.ignore_critical = True
-        logging.critical('critical exception. dump file: %s' % create_dump(
-            'critical', caller_info))
+        logging.critical('critical exception. dump file: %s' %
+                         create_dump('critical', caller_info))
         _flags.ignore_critical = False
     if config.stop_on_critical in [
             'always', 'yes'
@@ -211,11 +210,10 @@ def create_db_engine(db_uri, timeout=None):
             db_uri,
             connect_args={'timeout': timeout if timeout else config.timeout})
     else:
-        return sa.create_engine(
-            db_uri,
-            pool_size=db_pool_size,
-            max_overflow=db_pool_size * 2,
-            isolation_level='READ UNCOMMITTED')
+        return sa.create_engine(db_uri,
+                                pool_size=db_pool_size,
+                                max_overflow=db_pool_size * 2,
+                                isolation_level='READ UNCOMMITTED')
 
 
 def sighandler_hup(signum, frame):
@@ -314,15 +312,16 @@ def create_dump(e='request', msg=''):
         result.update({'reason': {'event': e, 'info': str(msg)}})
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
-        dmp = format_json(
-            result, minimal=not config.development, unpicklable=True).encode()
+        dmp = format_json(result,
+                          minimal=not config.development,
+                          unpicklable=True).encode()
         with gzip.open(filename, 'w') as fd:
             pass
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
         with gzip.open(filename, 'a') as fd:
             fd.write(dmp)
-        logging.warning(
-            'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
+        logging.warning('dump created, file: %s, event: %s (%s)' %
+                        (filename, e, msg))
     except:
         log_traceback()
         return None
@@ -473,12 +472,19 @@ def reset_log(initial=False):
                     address=syslog_addr)
                 log_engine.syslog_handler.setFormatter(
                     logging.Formatter(
-                        config.syslog_format.replace('%(name)s', product.code))
-                    if config.syslog_format else formatter)
+                        config.syslog_format.replace('%(name)s', product.code)
+                    ) if config.syslog_format else formatter)
                 log_engine.logger.addHandler(log_engine.syslog_handler)
 
 
 def load(fname=None, initial=False, init_log=True, check_pid=True):
+
+    def secure_file(f):
+        fn = dir_eva + '/' + f
+        with open(fn, 'a'):
+            pass
+        os.chmod(fn, mode=0o600)
+
     from eva.logs import log_levels_by_name
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
@@ -566,8 +572,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 pass
             logging.info('Loading server config')
             logging.debug('server.pid_file = %s' % config.pid_file)
-            logging.debug(
-                'server.logging_level = %s' % config.default_log_level_name)
+            logging.debug('server.logging_level = %s' %
+                          config.default_log_level_name)
             try:
                 config.notify_on_start = (cfg.get('server',
                                                   'notify_on_start') == 'yes')
@@ -584,8 +590,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.stop_on_critical = 'always'
             elif config.stop_on_critical not in ['no', 'always', 'core']:
                 stop_on_critical = 'no'
-            logging.debug(
-                'server.stop_on_critical = %s' % config.stop_on_critical)
+            logging.debug('server.stop_on_critical = %s' %
+                          config.stop_on_critical)
             try:
                 config.dump_on_critical = (cfg.get('server',
                                                    'dump_on_critical') == 'yes')
@@ -595,6 +601,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                                         if config.dump_on_critical else 'no'))
             try:
                 db_file = cfg.get('server', 'db_file')
+                secure_file(db_file)
             except:
                 db_file = None
             try:
@@ -605,6 +612,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             logging.debug('server.db = %s' % config.db_uri)
             try:
                 userdb_file = cfg.get('server', 'userdb_file')
+                secure_file(userdb_file)
             except:
                 userdb_file = None
             try:
@@ -650,15 +658,15 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 cfg.get('server', 'reactor_thread_pool'))
         except:
             pass
-        logging.debug(
-            'server.reactor_thread_pool = %s' % config.reactor_thread_pool)
+        logging.debug('server.reactor_thread_pool = %s' %
+                      config.reactor_thread_pool)
         try:
             config.db_update = db_update_codes.index(
                 cfg.get('server', 'db_update'))
         except:
             pass
-        logging.debug(
-            'server.db_update = %s' % db_update_codes[config.db_update])
+        logging.debug('server.db_update = %s' %
+                      db_update_codes[config.db_update])
         try:
             config.keep_action_history = int(
                 cfg.get('server', 'keep_action_history'))
@@ -695,8 +703,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                                                  'mqtt_update_default')
         except:
             pass
-        logging.debug(
-            'server.mqtt_update_default = %s' % config.mqtt_update_default)
+        logging.debug('server.mqtt_update_default = %s' %
+                      config.mqtt_update_default)
         try:
             config.default_cloud_key = cfg.get('cloud', 'default_key')
         except:
