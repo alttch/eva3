@@ -51,9 +51,8 @@ class ComplSubshellCmd(ComplGeneric):
         super().__init__(cli)
 
     def __call__(self, prefix, **kwargs):
-        shell = kwargs[
-            'parsed_args']._type if not self.for_notifier else kwargs[
-                'parsed_args'].p
+        shell = kwargs['parsed_args']._type if not self.for_notifier else kwargs[
+            'parsed_args'].p
         c = kwargs['parsed_args'].subcommand
         if shell:
             try:
@@ -65,11 +64,10 @@ class ComplSubshellCmd(ComplGeneric):
                 os.environ['COMP_LINE'] = line
                 self.cli.subshell_extra_args = args
                 if self.for_notifier:
-                    cli.do_start_shell(
-                        'notifymanager',
-                        '.py',
-                        'product=\'{}\''.format(shell),
-                        restart_interactive=False)
+                    cli.do_start_shell('notifymanager',
+                                       '.py',
+                                       'product=\'{}\''.format(shell),
+                                       restart_interactive=False)
                 else:
                     cli.do_start_shell(shell, restart_interactive=False)
                 eva.client.cli.completer_stream.seek(0)
@@ -147,27 +145,29 @@ class ManagementCLI(GenericCLI):
     def add_manager_backup_functions(self):
         ap_backup = self.sp.add_parser('backup', help='Backup management')
 
-        sp_backup = ap_backup.add_subparsers(
-            dest='_func', metavar='func', help='Backup commands')
+        sp_backup = ap_backup.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='Backup commands')
 
-        sp_backup_save = sp_backup.add_parser(
-            'save', help='Backup system state')
-        sp_backup_save.add_argument(
-            'f', help='Backup name', metavar='NAME', nargs='?')
+        sp_backup_save = sp_backup.add_parser('save',
+                                              help='Backup system state')
+        sp_backup_save.add_argument('f',
+                                    help='Backup name',
+                                    metavar='NAME',
+                                    nargs='?')
 
-        sp_backup_restore = sp_backup.add_parser(
-            'restore', help='Restore system state')
+        sp_backup_restore = sp_backup.add_parser('restore',
+                                                 help='Restore system state')
         sp_backup_restore.add_argument(
             'f', help='Backup name',
             metavar='NAME').completer = ComplBackupList(self)
-        sp_backup_restore.add_argument(
-            '-i',
-            '--file',
-            dest='file',
-            action='append',
-            nargs='?',
-            help='Restore single file',
-            metavar='FILE')
+        sp_backup_restore.add_argument('-i',
+                                       '--file',
+                                       dest='file',
+                                       action='append',
+                                       nargs='?',
+                                       help='Restore single file',
+                                       metavar='FILE')
         sp_backup_restore.add_argument(
             '-r',
             '--runtime',
@@ -179,14 +179,15 @@ class ManagementCLI(GenericCLI):
             dest='xc',
             help='Restore xc (cmd, drivers and macro extensions)',
             action='store_true')
-        sp_backup_restore.add_argument(
-            '--ui', dest='ui', help='Restore ui folder', action='store_true')
-        sp_backup_restore.add_argument(
-            '-a',
-            '--full',
-            dest='full',
-            help='Restore everything',
-            action='store_true')
+        sp_backup_restore.add_argument('--ui',
+                                       dest='ui',
+                                       help='Restore ui folder',
+                                       action='store_true')
+        sp_backup_restore.add_argument('-a',
+                                       '--full',
+                                       dest='full',
+                                       help='Restore everything',
+                                       action='store_true')
 
         sp_backup_list = sp_backup.add_parser('list', help='List backups')
 
@@ -198,27 +199,30 @@ class ManagementCLI(GenericCLI):
     def add_manager_edit_functions(self):
         ap_edit = self.sp.add_parser('edit', help='Edit configs')
 
-        sp_edit = ap_edit.add_subparsers(
-            dest='_func', metavar='func', help='Edit commands')
+        sp_edit = ap_edit.add_subparsers(dest='_func',
+                                         metavar='func',
+                                         help='Edit commands')
 
         sp_edit_crontab = sp_edit.add_parser('crontab', help='Edit crontab')
 
-        ap_masterkey = self.sp.add_parser(
-            'masterkey', help='Masterkey management')
+        ap_masterkey = self.sp.add_parser('masterkey',
+                                          help='Masterkey management')
 
-        sp_masterkey = ap_masterkey.add_subparsers(
-            dest='_func', metavar='func', help='Masterkey commands')
+        sp_masterkey = ap_masterkey.add_subparsers(dest='_func',
+                                                   metavar='func',
+                                                   help='Masterkey commands')
 
         sp_masterkey_set = sp_masterkey.add_parser(
             'set', help='Set masterkey for all controllers configured')
-        sp_masterkey_set.add_argument(
-            'a', metavar='KEY', help='New masterkey', nargs='?')
-        sp_masterkey_set.add_argument(
-            '-a',
-            '--access',
-            choices=['local-only', 'remote'],
-            metavar='ACCESS_TYPE',
-            help='Access type')
+        sp_masterkey_set.add_argument('a',
+                                      metavar='KEY',
+                                      help='New masterkey',
+                                      nargs='?')
+        sp_masterkey_set.add_argument('-a',
+                                      '--access',
+                                      choices=['local-only', 'remote'],
+                                      metavar='ACCESS_TYPE',
+                                      help='Access type')
 
     def add_manager_control_functions(self):
         eva.client.cli.shells_available = []
@@ -227,127 +231,122 @@ class ManagementCLI(GenericCLI):
         eva.client.cli.shells_available = self.products_configured
         ap_controller = self.sp.add_parser(
             'server', help='Controllers server management functions')
-        sp_controller = ap_controller.add_subparsers(
-            dest='_func', metavar='func', help='Management commands')
+        sp_controller = ap_controller.add_subparsers(dest='_func',
+                                                     metavar='func',
+                                                     help='Management commands')
 
-        ap_start = sp_controller.add_parser(
-            'start', help='Start controller server(s)')
-        ap_start.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')',
-            choices=self.products_configured,
-            nargs='?')
-        ap_stop = sp_controller.add_parser(
-            'stop', help='Stop controller server(s)')
-        ap_stop.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')',
-            choices=self.products_configured,
-            nargs='?')
+        ap_start = sp_controller.add_parser('start',
+                                            help='Start controller server(s)')
+        ap_start.add_argument('p',
+                              metavar='CONTROLLER',
+                              help='Controller type (' +
+                              ', '.join(self.products_configured) + ')',
+                              choices=self.products_configured,
+                              nargs='?')
+        ap_stop = sp_controller.add_parser('stop',
+                                           help='Stop controller server(s)')
+        ap_stop.add_argument('p',
+                             metavar='CONTROLLER',
+                             help='Controller type (' +
+                             ', '.join(self.products_configured) + ')',
+                             choices=self.products_configured,
+                             nargs='?')
         ap_restart = sp_controller.add_parser(
             'restart', help='Restart controller server(s)')
-        ap_restart.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')',
-            choices=self.products_configured,
-            nargs='?')
+        ap_restart.add_argument('p',
+                                metavar='CONTROLLER',
+                                help='Controller type (' +
+                                ', '.join(self.products_configured) + ')',
+                                choices=self.products_configured,
+                                nargs='?')
         ap_status = sp_controller.add_parser(
             'status', help='Status of the controller server(s)')
-        ap_status.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')',
-            choices=self.products_configured,
-            nargs='?')
+        ap_status.add_argument('p',
+                               metavar='CONTROLLER',
+                               help='Controller type (' +
+                               ', '.join(self.products_configured) + ')',
+                               choices=self.products_configured,
+                               nargs='?')
 
-        ap_enable = sp_controller.add_parser(
-            'enable', help='Enable controller server')
-        ap_enable.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')',
-            choices=self.products_configured)
+        ap_enable = sp_controller.add_parser('enable',
+                                             help='Enable controller server')
+        ap_enable.add_argument('p',
+                               metavar='CONTROLLER',
+                               help='Controller type (' +
+                               ', '.join(self.products_configured) + ')',
+                               choices=self.products_configured)
 
-        ap_disable = sp_controller.add_parser(
-            'disable', help='Disable controller server')
-        ap_disable.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')',
-            choices=self.products_configured)
+        ap_disable = sp_controller.add_parser('disable',
+                                              help='Disable controller server')
+        ap_disable.add_argument('p',
+                                metavar='CONTROLLER',
+                                help='Controller type (' +
+                                ', '.join(self.products_configured) + ')',
+                                choices=self.products_configured)
 
     def add_manager_common_functions(self):
-        ap_version = self.sp.add_parser(
-            'version', help='Display version and build')
+        ap_version = self.sp.add_parser('version',
+                                        help='Display version and build')
         ap_update = self.sp.add_parser(
             'update', help='Check and update to new version if exists')
-        ap_update.add_argument(
-            '--YES',
-            dest='y',
-            help='Update without any prompts',
-            action='store_true')
-        ap_update.add_argument(
-            '-u',
-            '--repository-url',
-            dest='u',
-            metavar='URL',
-            help='update repository url')
-        ap_update.add_argument(
-            '-i',
-            '--info-only',
-            dest='i',
-            help='Check for a new version without upgrading',
-            action='store_true')
+        ap_update.add_argument('--YES',
+                               dest='y',
+                               help='Update without any prompts',
+                               action='store_true')
+        ap_update.add_argument('-u',
+                               '--repository-url',
+                               dest='u',
+                               metavar='URL',
+                               help='update repository url')
+        ap_update.add_argument('-i',
+                               '--info-only',
+                               dest='i',
+                               help='Check for a new version without upgrading',
+                               action='store_true')
 
     def add_manager_iote_functions(self):
-        ap_iote = self.sp.add_parser(
-            'iote', help='IOTE Cloud management functions')
-        sp_iote = ap_iote.add_subparsers(
-            dest='_func', metavar='func', help='Management commands')
+        ap_iote = self.sp.add_parser('iote',
+                                     help='IOTE Cloud management functions')
+        sp_iote = ap_iote.add_subparsers(dest='_func',
+                                         metavar='func',
+                                         help='Management commands')
 
         ap_join = sp_iote.add_parser('join', help='Join node to IOTE Cloud')
         ap_join.add_argument('i', metavar='ACCOUNT', help='IOTE account')
         ap_join.add_argument('a', metavar='KEY', help='Cloud key')
-        ap_join.add_argument(
-            '-y', '--force', help='Force join/rejoin', action='store_true')
+        ap_join.add_argument('-y',
+                             '--force',
+                             help='Force join/rejoin',
+                             action='store_true')
 
         ap_get = sp_iote.add_parser('list', help='List IOTE Cloud connections')
 
         ap_leave = sp_iote.add_parser('leave', help='Leave IOTE Cloud')
-        ap_leave.add_argument(
-            'i', metavar='ACCOUNT',
-            help='IOTE account').completer = ComplIOTE(self)
-        ap_leave.add_argument(
-            '-y', '--force', help='Force leave', action='store_true')
+        ap_leave.add_argument('i', metavar='ACCOUNT',
+                              help='IOTE account').completer = ComplIOTE(self)
+        ap_leave.add_argument('-y',
+                              '--force',
+                              help='Force leave',
+                              action='store_true')
 
     def add_manager_power_functions(self):
         ap_system = self.sp.add_parser('system', help='System functions')
-        sp_system = ap_system.add_subparsers(
-            dest='_func', metavar='func', help='System commands')
+        sp_system = ap_system.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='System commands')
 
         ap_reboot = sp_system.add_parser('reboot', help='Reboot the system')
-        ap_reboot.add_argument(
-            '--YES',
-            dest='y',
-            help='Reboot without any prompts',
-            action='store_true')
+        ap_reboot.add_argument('--YES',
+                               dest='y',
+                               help='Reboot without any prompts',
+                               action='store_true')
 
-        ap_poweroff = sp_system.add_parser(
-            'poweroff', help='Power off the system')
-        ap_poweroff.add_argument(
-            '--YES',
-            dest='y',
-            help='Power off without any prompts',
-            action='store_true')
+        ap_poweroff = sp_system.add_parser('poweroff',
+                                           help='Power off the system')
+        ap_poweroff.add_argument('--YES',
+                                 dest='y',
+                                 help='Power off without any prompts',
+                                 action='store_true')
 
     def add_management_shells(self):
         for p in self.products_configured:
@@ -358,29 +357,27 @@ class ManagementCLI(GenericCLI):
             self.api_functions[p] = getattr(self, '{}_shell'.format(p))
 
         ap_save = self.sp.add_parser('save', help='Save controller config')
-        ap_save.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            choices=self.products_configured,
-            nargs='?',
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')')
+        ap_save.add_argument('p',
+                             metavar='CONTROLLER',
+                             choices=self.products_configured,
+                             nargs='?',
+                             help='Controller type (' +
+                             ', '.join(self.products_configured) + ')')
 
         ap_ns = self.sp.add_parser('ns', help='Notifier management')
-        ap_ns.add_argument(
-            'p',
-            metavar='CONTROLLER',
-            choices=self.products_configured,
-            help='Controller type (' + ', '.join(self.products_configured) +
-            ')')
+        ap_ns.add_argument('p',
+                           metavar='CONTROLLER',
+                           choices=self.products_configured,
+                           help='Controller type (' +
+                           ', '.join(self.products_configured) + ')')
         ap_ns.add_argument(
             'subcommand',
             nargs=argparse.REMAINDER).completer = ComplSubshellCmd(
                 self, for_notifier=True)
 
     def exec_control_script(self, command, product, collect_output=False):
-        cmd = '{}/eva-control {} {}'.format(dir_sbin, command, product
-                                            if product else '')
+        cmd = '{}/eva-control {} {}'.format(dir_sbin, command,
+                                            product if product else '')
         if collect_output:
             with os.popen(cmd) as p:
                 result = p.readlines()
@@ -403,8 +400,8 @@ class ManagementCLI(GenericCLI):
 
     def manage_ns(self, params):
         self.subshell_extra_args = params.get('subcommand', [])
-        code = self.start_shell('notifymanager', '.py', 'product=\'{}\''.format(
-            params.get('p')))
+        code = self.start_shell('notifymanager', '.py',
+                                'product=\'{}\''.format(params.get('p')))
         return self.local_func_result_empty if not code else (code, '')
 
     def start_shell(self, p, x='-cmd.py', xp=''):
@@ -419,8 +416,10 @@ class ManagementCLI(GenericCLI):
                 old_to = None
             else:
                 force_interactive = False
-            result = self.do_start_shell(
-                sst, x, xp, force_interactive=force_interactive)
+            result = self.do_start_shell(sst,
+                                         x,
+                                         xp,
+                                         force_interactive=force_interactive)
             if not result:
                 code = 10
                 break
@@ -525,8 +524,8 @@ sys.argv = {argv}
 
     def iote_join(self, params):
         code = os.system(dir_sbin + '/iote.sh join {} -a {} {}'.format(
-            params.get('i'), params.get('a'), '-y'
-            if params.get('force') else ''))
+            params.get('i'), params.get('a'),
+            '-y' if params.get('force') else ''))
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
 
@@ -579,7 +578,8 @@ sys.argv = {argv}
             new_lines = []
             new_lines.append("{}_ENABLED=yes\n".format(params['p'].upper()))
             for line in lines:
-                if "{}_SUPERVISORD".format(params['p'].upper()) in line:
+                if line.startswith("{}_SUPERVISORD".format(
+                        params['p'].upper())):
                     self.print_err('Server is controlled by supervisord')
                     return self.local_func_result_failed
                 if "{}_ENABLED".format(params['p'].upper()) not in line:
@@ -781,15 +781,17 @@ sys.argv = {argv}
 
     def backup_restore_dir(self, fname, dirname):
         print(
-            self.colored(
-                'Restoring {}...'.format(dirname), color='green', attrs=[]))
+            self.colored('Restoring {}...'.format(dirname),
+                         color='green',
+                         attrs=[]))
         cmd = ('tar', 'xpf', fname, dirname)
         return False if os.system(' '.join(cmd)) else True
 
     def backup_restore_file(self, fname, frestore):
         print(
-            self.colored(
-                'Restoring {}...'.format(frestore), color='green', attrs=[]))
+            self.colored('Restoring {}...'.format(frestore),
+                         color='green',
+                         attrs=[]))
         cmd = ('tar', 'xpf', fname, frestore)
         return False if os.system(' '.join(cmd)) else True
 
@@ -833,10 +835,9 @@ sys.argv = {argv}
             self.colored('Current build', color='blue', attrs=['bold']) +
             ' : ' + self.colored(build, color='yellow'))
         print(
-            self.colored(
-                'Latest available build', color='blue', attrs=['bold']) +
-            ' : ' + self.colored(
-                '{} (v{})'.format(new_build, new_version), color='yellow'))
+            self.colored('Latest available build', color='blue', attrs=['bold'])
+            + ' : ' + self.colored('{} (v{})'.format(new_build, new_version),
+                                   color='yellow'))
         if build == new_build:
             return self.local_func_result_empty
         if build > new_build:
@@ -927,15 +928,21 @@ sys.argv = {argv}
             return self.local_func_result_empty if not code else (code, '')
         else:
             ok = True
+            products_enabled = []
+            with open('{}/eva_servers'.format(dir_etc)) as fh:
+                for l in fh.readlines():
+                    k, v = l.strip().split('=')
+                    if k.endswith('_ENABLED') and v == 'yes':
+                        products_enabled.append(k.split('_')[0].lower())
             for p in self.products_configured:
-                print(
-                    '{}: '.format(
+                if p in products_enabled:
+                    print('{}: '.format(
                         self.colored(p, color='blue', attrs=['bold'])),
-                    end='')
-                code, result = self.call('{} save'.format(p))
-                if code:
-                    print(self.colored('FAILED', color='red'))
-                    ok = False
+                          end='')
+                    code, result = self.call('{} save'.format(p))
+                    if code:
+                        print(self.colored('FAILED', color='red'))
+                        ok = False
             return self.local_func_result_empty if ok else (10, '')
 
     def set_masterkey(self, params):
@@ -961,8 +968,8 @@ sys.argv = {argv}
                             continue
                         if i == 'hosts_allow' and in_section and access:
                             nf.append('hosts_allow = {}'.format(
-                                '127.0.0.1'
-                                if access == 'local-only' else '0.0.0.0/0'))
+                                '127.0.0.1' if access ==
+                                'local-only' else '0.0.0.0/0'))
                             continue
                     nf.append(st)
                 if a and not key_found:
@@ -997,10 +1004,9 @@ sys.argv = {argv}
         else:
             ok = True
             for p in self.products_configured:
-                print(
-                    '{}: '.format(
-                        self.colored(p, color='blue', attrs=['bold'])),
-                    end='')
+                print('{}: '.format(
+                    self.colored(p, color='blue', attrs=['bold'])),
+                      end='')
                 if set_masterkey_for(p, a, access):
                     print('OK')
                 else:
