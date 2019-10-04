@@ -123,8 +123,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
     class ComplModBusProto(object):
 
         def __call__(self, prefix, **kwargs):
-            return ['tcp:', 'udp:', 'rtu:', 'ascii:',
-                    'binary:'] if prefix.find(':') == -1 else True
+            return ['tcp:', 'udp:', 'rtu:', 'ascii:', 'binary:'
+                   ] if prefix.find(':') == -1 else True
 
     class ComplModBus(ComplGeneric):
 
@@ -275,8 +275,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 else:
                     d['addr_hex'] = hex(addr)
                     d['hex'] = hex(d['value'])
-            return sorted(
-                sorted(data, key=lambda k: k['addr']), key=lambda k: k['reg'])
+            return sorted(sorted(data, key=lambda k: k['addr']),
+                          key=lambda k: k['reg'])
         if itype not in ['owfs', 'action', 'driver', 'phi', 'lpi']:
             return super().prepare_result_data(data, api_func, itype)
         result = []
@@ -371,30 +371,29 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def add_uc_common_functions(self):
         sp_state = self.sp.add_parser('state', help='Get item state')
-        sp_state.add_argument(
-            'i',
-            help='Item ID (specify either ID or item type)',
-            metavar='ID',
-            nargs='?').completer = self.ComplItemOID(self)
-        sp_state.add_argument(
-            '-p',
-            '--type',
-            help='Item type',
-            metavar='TYPE',
-            dest='p',
-            choices=['unit', 'sensor', 'U', 'S'])
-        sp_state.add_argument(
-            '-g', '--group', help='Item group', metavar='GROUP',
-            dest='g').completer = self.ComplItemGroup(self)
-        sp_state.add_argument(
-            '-y',
-            '--full',
-            help='Full information about item',
-            dest='_full',
-            action='store_true')
+        sp_state.add_argument('i',
+                              help='Item ID (specify either ID or item type)',
+                              metavar='ID',
+                              nargs='?').completer = self.ComplItemOID(self)
+        sp_state.add_argument('-p',
+                              '--type',
+                              help='Item type',
+                              metavar='TYPE',
+                              dest='p',
+                              choices=['unit', 'sensor', 'U', 'S'])
+        sp_state.add_argument('-g',
+                              '--group',
+                              help='Item group',
+                              metavar='GROUP',
+                              dest='g').completer = self.ComplItemGroup(self)
+        sp_state.add_argument('-y',
+                              '--full',
+                              help='Full information about item',
+                              dest='_full',
+                              action='store_true')
 
-        sp_history = self.sp.add_parser(
-            'history', help='Get item state history')
+        sp_history = self.sp.add_parser('history',
+                                        help='Get item state history')
         sp_history.add_argument(
             'i',
             help=
@@ -406,132 +405,143 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help='Notifier to get history from (default: db_1)',
             metavar='NOTIFIER',
             dest='a')
-        sp_history.add_argument(
-            '-s', '--time-start', help='Start time', metavar='TIME', dest='s')
-        sp_history.add_argument(
-            '-e', '--time-end', help='End time', metavar='TIME', dest='e')
-        sp_history.add_argument(
-            '-l',
-            '--limit',
-            help='Records limit (doesn\'t work with fill)',
-            metavar='N',
-            dest='l')
-        sp_history.add_argument(
-            '-x',
-            '--prop',
-            help='Item state prop (status or value)',
-            metavar='PROP',
-            dest='x',
-            choices=['status', 'value', 'S', 'V'])
+        sp_history.add_argument('-s',
+                                '--time-start',
+                                help='Start time',
+                                metavar='TIME',
+                                dest='s')
+        sp_history.add_argument('-e',
+                                '--time-end',
+                                help='End time',
+                                metavar='TIME',
+                                dest='e')
+        sp_history.add_argument('-l',
+                                '--limit',
+                                help='Records limit (doesn\'t work with fill)',
+                                metavar='N',
+                                dest='l')
+        sp_history.add_argument('-x',
+                                '--prop',
+                                help='Item state prop (status or value)',
+                                metavar='PROP',
+                                dest='x',
+                                choices=['status', 'value', 'S', 'V'])
         sp_history.add_argument(
             '-w',
             '--fill',
             help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
             metavar='INTERVAL',
             dest='w')
-        sp_history.add_argument(
-            '-c',
-            '--chart-options',
-            help='Chart options',
-            metavar='OPTS',
-            dest='c')
+        sp_history.add_argument('-c',
+                                '--chart-options',
+                                help='Chart options',
+                                metavar='OPTS',
+                                dest='c')
 
         sp_update = self.sp.add_parser('update', help='Update item state')
-        sp_update.add_argument(
-            'i', help='Item ID',
-            metavar='ID').completer = self.ComplItemOID(self)
-        sp_update.add_argument(
-            '-s',
-            '--status',
-            help='Item status',
-            metavar='STATUS',
-            type=int,
-            dest='s')
-        sp_update.add_argument(
-            '-v', '--value', help='Item value', metavar='VALUE', dest='v')
+        sp_update.add_argument('i', help='Item ID',
+                               metavar='ID').completer = self.ComplItemOID(self)
+        sp_update.add_argument('-s',
+                               '--status',
+                               help='Item status',
+                               metavar='STATUS',
+                               type=int,
+                               dest='s')
+        sp_update.add_argument('-v',
+                               '--value',
+                               help='Item value',
+                               metavar='VALUE',
+                               dest='v')
 
     def add_uc_action_functions(self):
         ap_action = self.sp.add_parser('action', help='Unit actions')
 
-        sp_action = ap_action.add_subparsers(
-            dest='_func', metavar='func', help='Action commands')
+        sp_action = ap_action.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='Action commands')
 
-        sp_action_enable = sp_action.add_parser(
-            'enable', help='Enable unit actions')
+        sp_action_enable = sp_action.add_parser('enable',
+                                                help='Enable unit actions')
         sp_action_enable.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
-        sp_action_disable = sp_action.add_parser(
-            'disable', help='Disable unit actions')
+        sp_action_disable = sp_action.add_parser('disable',
+                                                 help='Disable unit actions')
         sp_action_disable.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
-        sp_action_exec = sp_action.add_parser(
-            'exec', help='Execute unit action')
+        sp_action_exec = sp_action.add_parser('exec',
+                                              help='Execute unit action')
         sp_action_exec.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
         sp_action_exec.add_argument('s', help='New status', metavar='STATUS')
-        sp_action_exec.add_argument(
-            '-v', '--value', help='New value', metavar='VALUE', dest='v')
-        sp_action_exec.add_argument(
-            '-p',
-            '--priority',
-            help='Action priority',
-            metavar='PRIORITY',
-            type=int,
-            dest='p')
-        sp_action_exec.add_argument(
-            '-w',
-            '--wait',
-            help='Wait for complete',
-            metavar='SEC',
-            type=float,
-            dest='w')
-        sp_action_exec.add_argument(
-            '-q',
-            '--queue-timeout',
-            help='Max queue timeout',
-            metavar='SEC',
-            type=float,
-            dest='q')
-        sp_action_exec.add_argument(
-            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+        sp_action_exec.add_argument('-v',
+                                    '--value',
+                                    help='New value',
+                                    metavar='VALUE',
+                                    dest='v')
+        sp_action_exec.add_argument('-p',
+                                    '--priority',
+                                    help='Action priority',
+                                    metavar='PRIORITY',
+                                    type=int,
+                                    dest='p')
+        sp_action_exec.add_argument('-w',
+                                    '--wait',
+                                    help='Wait for complete',
+                                    metavar='SEC',
+                                    type=float,
+                                    dest='w')
+        sp_action_exec.add_argument('-q',
+                                    '--queue-timeout',
+                                    help='Max queue timeout',
+                                    metavar='SEC',
+                                    type=float,
+                                    dest='q')
+        sp_action_exec.add_argument('-u',
+                                    '--uuid',
+                                    help='Custom action uuid',
+                                    metavar='UUID',
+                                    dest='u')
 
         sp_action_toggle = sp_action.add_parser(
             'toggle', help='Execute unit toggle action')
         sp_action_toggle.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
-        sp_action_toggle.add_argument(
-            '-p',
-            '--priority',
-            help='Action priority',
-            metavar='PRIORITY',
-            type=int,
-            dest='p')
-        sp_action_toggle.add_argument(
-            '-w',
-            '--wait',
-            help='Wait for complete',
-            metavar='SEC',
-            type=float,
-            dest='w')
-        sp_action_toggle.add_argument(
-            '-q',
-            '--queue-timeout',
-            help='Max queue timeout',
-            metavar='SEC',
-            type=float,
-            dest='q')
-        sp_action_toggle.add_argument(
-            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+        sp_action_toggle.add_argument('-p',
+                                      '--priority',
+                                      help='Action priority',
+                                      metavar='PRIORITY',
+                                      type=int,
+                                      dest='p')
+        sp_action_toggle.add_argument('-w',
+                                      '--wait',
+                                      help='Wait for complete',
+                                      metavar='SEC',
+                                      type=float,
+                                      dest='w')
+        sp_action_toggle.add_argument('-q',
+                                      '--queue-timeout',
+                                      help='Max queue timeout',
+                                      metavar='SEC',
+                                      type=float,
+                                      dest='q')
+        sp_action_toggle.add_argument('-u',
+                                      '--uuid',
+                                      help='Custom action uuid',
+                                      metavar='UUID',
+                                      dest='u')
 
-        sp_action_terminate = sp_action.add_parser(
-            'terminate', help='Terminate unit action')
+        sp_action_terminate = sp_action.add_parser('terminate',
+                                                   help='Terminate unit action')
         sp_action_terminate.add_argument(
             'i', help='Unit ID', metavar='ID',
             nargs='?').completer = self.ComplUnit(self)
-        sp_action_terminate.add_argument(
-            '-u', '--uuid', help='Action uuid', metavar='UUID', dest='u')
+        sp_action_terminate.add_argument('-u',
+                                         '--uuid',
+                                         help='Action uuid',
+                                         metavar='UUID',
+                                         dest='u')
 
         sp_action_qclean = sp_action.add_parser(
             'clear', help='Clean up unit action queue')
@@ -543,13 +553,18 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_action_kill.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
-        sp_action_result = sp_action.add_parser(
-            'result', help='Get unit action results')
-        sp_action_result.add_argument(
-            '-i', '--id', help='Unit ID', metavar='ID',
-            dest='i').completer = self.ComplUnit(self)
-        sp_action_result.add_argument(
-            '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
+        sp_action_result = sp_action.add_parser('result',
+                                                help='Get unit action results')
+        sp_action_result.add_argument('-i',
+                                      '--id',
+                                      help='Unit ID',
+                                      metavar='ID',
+                                      dest='i').completer = self.ComplUnit(self)
+        sp_action_result.add_argument('-u',
+                                      '--uuid',
+                                      help='Action UUID',
+                                      metavar='UUID',
+                                      dest='u')
         sp_action_result.add_argument(
             '-g', '--group', help='Unit group', metavar='GROUP',
             dest='g').completer = self.ComplUnitGroup(self)
@@ -564,22 +579,23 @@ class UC_CLI(GenericCLI, ControllerCLI):
     def add_uc_edit_functions(self):
         ap_edit = self.sp.add_parser('edit', help='Edit scripts and templates')
 
-        sp_edit = ap_edit.add_subparsers(
-            dest='_func', metavar='func', help='Edit commands')
+        sp_edit = ap_edit.add_subparsers(dest='_func',
+                                         metavar='func',
+                                         help='Edit commands')
 
-        sp_edit_action = sp_edit.add_parser(
-            'action', help='Edit item action script')
+        sp_edit_action = sp_edit.add_parser('action',
+                                            help='Edit item action script')
         sp_edit_action.add_argument(
             'i', help='Item ID', metavar='ID').completer = self.ComplUnit(self)
 
-        sp_edit_update = sp_edit.add_parser(
-            'update', help='Edit item update script')
+        sp_edit_update = sp_edit.add_parser('update',
+                                            help='Edit item update script')
         sp_edit_update.add_argument(
             'i', help='Item ID',
             metavar='ID').completer = self.ComplItemOID(self)
 
-        sp_edit_tpl = sp_edit.add_parser(
-            'template', help='Edit device template')
+        sp_edit_tpl = sp_edit.add_parser('template',
+                                         help='Edit device template')
         sp_edit_tpl.add_argument(
             'i', help='Template name',
             metavar='TPL').completer = self.ComplDeviceTPL(self)
@@ -588,26 +604,27 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')
-        sp_list.add_argument(
-            '-p',
-            '--type',
-            help='Filter by type',
-            metavar='TYPE',
-            dest='p',
-            choices=['unit', 'sensor', 'mu', 'U', 'S'])
-        sp_list.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP',
-            dest='g').completer = self.ComplItemGroupList(self)
-        sp_list.add_argument(
-            '-x',
-            '--prop',
-            help='List specified prop(s), comma separated',
-            metavar='PROPS',
-            dest='x')
+        sp_list.add_argument('-p',
+                             '--type',
+                             help='Filter by type',
+                             metavar='TYPE',
+                             dest='p',
+                             choices=['unit', 'sensor', 'mu', 'U', 'S'])
+        sp_list.add_argument('-g',
+                             '--group',
+                             help='Filter by group',
+                             metavar='GROUP',
+                             dest='g').completer = self.ComplItemGroupList(self)
+        sp_list.add_argument('-x',
+                             '--prop',
+                             help='List specified prop(s), comma separated',
+                             metavar='PROPS',
+                             dest='x')
 
         ap_config = self.sp.add_parser('config', help='Item configuration')
-        sp_config = ap_config.add_subparsers(
-            dest='_func', metavar='func', help='Configuration commands')
+        sp_config = ap_config.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='Configuration commands')
 
         sp_config_get = sp_config.add_parser('get', help='Get item config')
         sp_config_get.add_argument(
@@ -619,8 +636,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='Item ID',
             metavar='ID').completer = self.ComplItemOID(self)
 
-        sp_list_props = sp_config.add_parser(
-            'props', help='List item config props')
+        sp_list_props = sp_config.add_parser('props',
+                                             help='List item config props')
         sp_list_props.add_argument(
             'i', help='Item ID',
             metavar='ID').completer = self.ComplItemOID(self)
@@ -633,77 +650,72 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'p', help='Config property',
             metavar='PROP').completer = self.ComplItemProp(self)
         sp_set_prop.add_argument('v', help='Value', metavar='VAL', nargs='?')
-        sp_set_prop.add_argument(
-            '-y',
-            '--save',
-            help='Save item config after set',
-            dest='_save',
-            action='store_true')
+        sp_set_prop.add_argument('-y',
+                                 '--save',
+                                 help='Save item config after set',
+                                 dest='_save',
+                                 action='store_true')
 
         ap_create = self.sp.add_parser('create', help='Create new item')
         ap_create.add_argument(
             'i', help='Item OID (type:group/id)',
             metavar='OID').completer = self.ComplItemOIDType()
-        ap_create.add_argument(
-            '-y',
-            '--save',
-            help='Save item config after creation',
-            dest='_save',
-            action='store_true')
+        ap_create.add_argument('-y',
+                               '--save',
+                               help='Save item config after creation',
+                               dest='_save',
+                               action='store_true')
 
         ap_clone = self.sp.add_parser('clone', help='Clone items')
-        sp_clone = ap_clone.add_subparsers(
-            dest='_func', metavar='func', help='Cloning commands')
+        sp_clone = ap_clone.add_subparsers(dest='_func',
+                                           metavar='func',
+                                           help='Cloning commands')
 
         sp_clone_item = sp_clone.add_parser('item', help='Clone single item')
         sp_clone_item.add_argument(
             'i', help='Item ID',
             metavar='ID').completer = self.ComplItemOID(self)
-        sp_clone_item.add_argument(
-            'n', help='New item ID (short)', metavar='ID')
-        sp_clone_item.add_argument(
-            '-g',
-            '--group',
-            help='Group for new item',
-            metavar='GROUP',
-            dest='g')
-        sp_clone_item.add_argument(
-            '-y',
-            '--save',
-            help='Save item config after cloning',
-            dest='_save',
-            action='store_true')
+        sp_clone_item.add_argument('n',
+                                   help='New item ID (short)',
+                                   metavar='ID')
+        sp_clone_item.add_argument('-g',
+                                   '--group',
+                                   help='Group for new item',
+                                   metavar='GROUP',
+                                   dest='g')
+        sp_clone_item.add_argument('-y',
+                                   '--save',
+                                   help='Save item config after cloning',
+                                   dest='_save',
+                                   action='store_true')
 
-        sp_clone_group = sp_clone.add_parser(
-            'group', help='Clone group of the items')
+        sp_clone_group = sp_clone.add_parser('group',
+                                             help='Clone group of the items')
         sp_clone_group.add_argument(
             'g', help='Source group',
             metavar='SRC_GROUP').completer = self.ComplItemGroupList(self)
-        sp_clone_group.add_argument(
-            'n', help='Target group', metavar='TGT_GROUP')
-        sp_clone_group.add_argument(
-            '-p',
-            '--source-prefix',
-            help='Source items prefix',
-            dest='p',
-            metavar='SRC_PFX')
-        sp_clone_group.add_argument(
-            '-r',
-            '--target-prefix',
-            help='Target items prefix',
-            dest='r',
-            metavar='TGT_PFX')
-        sp_clone_group.add_argument(
-            '-y',
-            '--save',
-            help='Save items config after cloning',
-            dest='_save',
-            action='store_true')
+        sp_clone_group.add_argument('n',
+                                    help='Target group',
+                                    metavar='TGT_GROUP')
+        sp_clone_group.add_argument('-p',
+                                    '--source-prefix',
+                                    help='Source items prefix',
+                                    dest='p',
+                                    metavar='SRC_PFX')
+        sp_clone_group.add_argument('-r',
+                                    '--target-prefix',
+                                    help='Target items prefix',
+                                    dest='r',
+                                    metavar='TGT_PFX')
+        sp_clone_group.add_argument('-y',
+                                    '--save',
+                                    help='Save items config after cloning',
+                                    dest='_save',
+                                    action='store_true')
 
         ap_destroy = self.sp.add_parser('destroy', help='Delete item')
-        ap_destroy.add_argument(
-            'i', help='Item ID', metavar='ID',
-            nargs='?').completer = self.ComplItemOID(self)
+        ap_destroy.add_argument('i', help='Item ID', metavar='ID',
+                                nargs='?').completer = self.ComplItemOID(self)
         ap_destroy.add_argument(
             '-g',
             '--group',
@@ -713,11 +725,12 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def add_uc_device_functions(self):
         ap_device = self.sp.add_parser('device', help='Device management')
-        sp_device = ap_device.add_subparsers(
-            dest='_func', metavar='func', help='Device commands')
+        sp_device = ap_device.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='Device commands')
 
-        sp_device_templates = sp_device.add_parser(
-            'templates', help='List device templates')
+        sp_device_templates = sp_device.add_parser('templates',
+                                                   help='List device templates')
 
         sp_device_create = sp_device.add_parser(
             'deploy', help='Deploy device with a template')
@@ -725,18 +738,16 @@ class UC_CLI(GenericCLI, ControllerCLI):
             't',
             help='Template name (file=runtime/tpl/<TPL>.yml|json)',
             metavar='TPL').completer = self.ComplDeviceTPL(self)
-        sp_device_create.add_argument(
-            '-c',
-            '--config',
-            help='Template vars, comma separated',
-            metavar='VARS',
-            dest='c')
-        sp_device_create.add_argument(
-            '-y',
-            '--save',
-            help='Save items config after creation',
-            dest='_save',
-            action='store_true')
+        sp_device_create.add_argument('-c',
+                                      '--config',
+                                      help='Template vars, comma separated',
+                                      metavar='VARS',
+                                      dest='c')
+        sp_device_create.add_argument('-y',
+                                      '--save',
+                                      help='Save items config after creation',
+                                      dest='_save',
+                                      action='store_true')
 
         sp_device_update = sp_device.add_parser(
             'update', help='Update device item props with a template')
@@ -744,18 +755,16 @@ class UC_CLI(GenericCLI, ControllerCLI):
             't',
             help='Template name (file=runtime/tpl/<TPL>.yml|json)',
             metavar='TPL').completer = self.ComplDeviceTPL(self)
-        sp_device_update.add_argument(
-            '-c',
-            '--config',
-            help='Template vars, comma separated',
-            metavar='VARS',
-            dest='c')
-        sp_device_update.add_argument(
-            '-y',
-            '--save',
-            help='Save items config after creation',
-            dest='_save',
-            action='store_true')
+        sp_device_update.add_argument('-c',
+                                      '--config',
+                                      help='Template vars, comma separated',
+                                      metavar='VARS',
+                                      dest='c')
+        sp_device_update.add_argument('-y',
+                                      '--save',
+                                      help='Save items config after creation',
+                                      dest='_save',
+                                      action='store_true')
 
         sp_device_destroy = sp_device.add_parser(
             'undeploy', help='Undeploy device with a template')
@@ -763,16 +772,15 @@ class UC_CLI(GenericCLI, ControllerCLI):
             't',
             help='Template name (file=runtime/tpl/<TPL>.yml|json)',
             metavar='TPL').completer = self.ComplDeviceTPL(self)
-        sp_device_destroy.add_argument(
-            '-c',
-            '--config',
-            help='Template vars, comma separated',
-            metavar='VARS',
-            dest='c')
+        sp_device_destroy.add_argument('-c',
+                                       '--config',
+                                       help='Template vars, comma separated',
+                                       metavar='VARS',
+                                       dest='c')
 
     def add_uc_maintenance_functions(self):
-        ap_maintenance = self.sp.add_parser(
-            'maintenance', help='Maintenance mode')
+        ap_maintenance = self.sp.add_parser('maintenance',
+                                            help='Maintenance mode')
         sp_maintenance = ap_maintenance.add_subparsers(
             dest='_func', metavar='func', help='Maintenance commands')
 
@@ -790,12 +798,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def add_uc_modbus_functions(self):
         ap_modbus = self.sp.add_parser('modbus', help='ModBus ports')
-        sp_modbus = ap_modbus.add_subparsers(
-            dest='_func', metavar='func', help='ModBus port commands')
+        sp_modbus = ap_modbus.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='ModBus port commands')
 
         sp_modbus_list = sp_modbus.add_parser('list', help='List defined ports')
-        sp_modbus_create = sp_modbus.add_parser(
-            'create', help='Create (define) new port')
+        sp_modbus_create = sp_modbus.add_parser('create',
+                                                help='Create (define) new port')
         sp_modbus_create.add_argument('i', help='Port ID', metavar='ID')
         sp_modbus_create.add_argument(
             'p',
@@ -803,45 +812,40 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'Port parameters (proto:port/host:params, ' + \
                     'e.g. tcp:192.168.11.11:502 or rtu:/dev/ttyS0:9600:8:E:1)',
             metavar='PARAMS').completer = self.ComplModBusProto()
-        sp_modbus_create.add_argument(
-            '-l',
-            '--lock',
-            help='Lock port on operations',
-            action='store_true',
-            dest='l')
-        sp_modbus_create.add_argument(
-            '-t',
-            '--timeout',
-            help='Port timeout',
-            metavar='SEC',
-            type=float,
-            dest='t')
-        sp_modbus_create.add_argument(
-            '-r',
-            '--retries',
-            help='Operation retry attempts',
-            metavar='RETRIES',
-            type=int,
-            dest='r')
-        sp_modbus_create.add_argument(
-            '-d',
-            '--delay',
-            help='Delay between operations',
-            metavar='SEC',
-            type=float,
-            dest='d')
-        sp_modbus_create.add_argument(
-            '-y',
-            '--save',
-            help='save configuration on success load',
-            dest='_save',
-            action='store_true')
+        sp_modbus_create.add_argument('-l',
+                                      '--lock',
+                                      help='Lock port on operations',
+                                      action='store_true',
+                                      dest='l')
+        sp_modbus_create.add_argument('-t',
+                                      '--timeout',
+                                      help='Port timeout',
+                                      metavar='SEC',
+                                      type=float,
+                                      dest='t')
+        sp_modbus_create.add_argument('-r',
+                                      '--retries',
+                                      help='Operation retry attempts',
+                                      metavar='RETRIES',
+                                      type=int,
+                                      dest='r')
+        sp_modbus_create.add_argument('-d',
+                                      '--delay',
+                                      help='Delay between operations',
+                                      metavar='SEC',
+                                      type=float,
+                                      dest='d')
+        sp_modbus_create.add_argument('-y',
+                                      '--save',
+                                      help='save configuration on success load',
+                                      dest='_save',
+                                      action='store_true')
         sp_modbus_test = sp_modbus.add_parser('test', help='Test defined port')
         sp_modbus_test.add_argument(
             'i', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
-        sp_modbus_destroy = sp_modbus.add_parser(
-            'destroy', help='Destroy (undefine) port')
+        sp_modbus_destroy = sp_modbus.add_parser('destroy',
+                                                 help='Destroy (undefine) port')
         sp_modbus_destroy.add_argument(
             'i', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
@@ -854,8 +858,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_modbus_read.add_argument(
             'p', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
-        sp_modbus_read.add_argument(
-            's', help='Modbus slave ID', metavar='Slave ID')
+        sp_modbus_read.add_argument('s',
+                                    help='Modbus slave ID',
+                                    metavar='Slave ID')
         sp_modbus_read.add_argument(
             'i',
             help='Regiser address(es), comma ' +
@@ -867,8 +872,9 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_modbus_write.add_argument(
             'p', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
-        sp_modbus_write.add_argument(
-            's', help='Modbus slave ID', metavar='Slave ID')
+        sp_modbus_write.add_argument('s',
+                                     help='Modbus slave ID',
+                                     metavar='Slave ID')
         sp_modbus_write.add_argument(
             'i',
             help='Regiser address, predicated by type (h, c)',
@@ -881,14 +887,14 @@ class UC_CLI(GenericCLI, ControllerCLI):
             action='store_true',
             dest='z')
 
-        sp_modbus_destroy = sp_modbus.add_parser(
-            'destroy', help='Destroy (undefine) port')
+        sp_modbus_destroy = sp_modbus.add_parser('destroy',
+                                                 help='Destroy (undefine) port')
         sp_modbus_destroy.add_argument(
             'i', help='Port ID',
             metavar='ID').completer = self.ComplModBus(self)
 
-        ap_modbus_slave = self.sp.add_parser(
-            'modbus-slave', help='ModBus slave')
+        ap_modbus_slave = self.sp.add_parser('modbus-slave',
+                                             help='ModBus slave')
         sp_modbus_slave = ap_modbus_slave.add_subparsers(
             dest='_func', metavar='func', help='ModBus slave commands')
         sp_modbus_slave_get = sp_modbus_slave.add_parser(
@@ -902,58 +908,57 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def add_uc_owfs_functions(self):
         ap_owfs = self.sp.add_parser('owfs', help='OWFS buses')
-        sp_owfs = ap_owfs.add_subparsers(
-            dest='_func', metavar='func', help='OWFS bus commands')
+        sp_owfs = ap_owfs.add_subparsers(dest='_func',
+                                         metavar='func',
+                                         help='OWFS bus commands')
 
         sp_owfs_list = sp_owfs.add_parser('list', help='List defined buses')
-        sp_owfs_create = sp_owfs.add_parser(
-            'create', help='Create (define) new bus')
+        sp_owfs_create = sp_owfs.add_parser('create',
+                                            help='Create (define) new bus')
         sp_owfs_create.add_argument('i', help='Bus ID', metavar='ID')
         sp_owfs_create.add_argument(
             'n',
             help='Bus location (e.g. i2c=/dev/i2c-1:ALL or localhost:4304)',
             metavar='LOCATION')
-        sp_owfs_create.add_argument(
-            '-l',
-            '--lock',
-            help='Lock bus on operations',
-            action='store_true',
-            dest='l')
-        sp_owfs_create.add_argument(
-            '-t',
-            '--timeout',
-            help='Bus timeout',
-            metavar='SEC',
-            type=float,
-            dest='t')
-        sp_owfs_create.add_argument(
-            '-r',
-            '--retries',
-            help='Operation retry attempts',
-            metavar='RETRIES',
-            type=int,
-            dest='r')
-        sp_owfs_create.add_argument(
-            '-d',
-            '--delay',
-            help='Delay between operations',
-            metavar='SEC',
-            type=float,
-            dest='d')
-        sp_owfs_create.add_argument(
-            '-y',
-            '--save',
-            help='save configuration on success load',
-            dest='_save',
-            action='store_true')
+        sp_owfs_create.add_argument('-l',
+                                    '--lock',
+                                    help='Lock bus on operations',
+                                    action='store_true',
+                                    dest='l')
+        sp_owfs_create.add_argument('-t',
+                                    '--timeout',
+                                    help='Bus timeout',
+                                    metavar='SEC',
+                                    type=float,
+                                    dest='t')
+        sp_owfs_create.add_argument('-r',
+                                    '--retries',
+                                    help='Operation retry attempts',
+                                    metavar='RETRIES',
+                                    type=int,
+                                    dest='r')
+        sp_owfs_create.add_argument('-d',
+                                    '--delay',
+                                    help='Delay between operations',
+                                    metavar='SEC',
+                                    type=float,
+                                    dest='d')
+        sp_owfs_create.add_argument('-y',
+                                    '--save',
+                                    help='save configuration on success load',
+                                    dest='_save',
+                                    action='store_true')
         sp_owfs_test = sp_owfs.add_parser('test', help='Test defined bus')
-        sp_owfs_test.add_argument(
-            'i', help='Bus ID', metavar='ID').completer = self.ComplOWFS(self)
+        sp_owfs_test.add_argument('i', help='Bus ID',
+                                  metavar='ID').completer = self.ComplOWFS(self)
         sp_owfs_scan = sp_owfs.add_parser('scan', help='Scan defined bus')
-        sp_owfs_scan.add_argument(
-            'i', help='Bus ID', metavar='ID').completer = self.ComplOWFS(self)
-        sp_owfs_scan.add_argument(
-            '-n', '--path', help='Equipment path', metavar='PATH', dest='n')
+        sp_owfs_scan.add_argument('i', help='Bus ID',
+                                  metavar='ID').completer = self.ComplOWFS(self)
+        sp_owfs_scan.add_argument('-n',
+                                  '--path',
+                                  help='Equipment path',
+                                  metavar='PATH',
+                                  dest='n')
         sp_owfs_scan.add_argument(
             '-p',
             '--type',
@@ -967,18 +972,16 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'comma separated)',
             metavar='ATTRIBUTES',
             dest='a')
-        sp_owfs_scan.add_argument(
-            '-A',
-            '--has-all',
-            help='Equipment should have all attributes',
-            action='store_true',
-            dest='_has_all')
-        sp_owfs_scan.add_argument(
-            '-y',
-            '--full',
-            help='Get attribute values',
-            action='store_true',
-            dest='_full')
+        sp_owfs_scan.add_argument('-A',
+                                  '--has-all',
+                                  help='Equipment should have all attributes',
+                                  action='store_true',
+                                  dest='_has_all')
+        sp_owfs_scan.add_argument('-y',
+                                  '--full',
+                                  help='Get attribute values',
+                                  action='store_true',
+                                  dest='_full')
         sp_owfs_destroy = sp_owfs.add_parser(
             'destroy',
             help='Destroy (undefine) bus. Warning: if I2C bus is destroyed, ' +
@@ -988,32 +991,33 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
     def add_uc_driver_functions(self):
         ap_phi = self.sp.add_parser('phi', help='PHI (Physical interface)')
-        ap_lpi = self.sp.add_parser(
-            'lpi', help='LPI (Logical to physical interface)')
+        ap_lpi = self.sp.add_parser('lpi',
+                                    help='LPI (Logical to physical interface)')
         ap_driver = self.sp.add_parser('driver', help='Drivers ( PHI + LPI )')
 
-        sp_phi = ap_phi.add_subparsers(
-            dest='_func', metavar='func', help='PHI commands')
-        sp_lpi = ap_lpi.add_subparsers(
-            dest='_func', metavar='func', help='LPI commands')
-        sp_driver = ap_driver.add_subparsers(
-            dest='_func', metavar='func', help='Driver commands')
+        sp_phi = ap_phi.add_subparsers(dest='_func',
+                                       metavar='func',
+                                       help='PHI commands')
+        sp_lpi = ap_lpi.add_subparsers(dest='_func',
+                                       metavar='func',
+                                       help='LPI commands')
+        sp_driver = ap_driver.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='Driver commands')
 
         sp_phi_list = sp_phi.add_parser('list', help='List loaded PHIs')
-        sp_phi_list.add_argument(
-            '-y',
-            '--full',
-            help='Full information about PHI',
-            dest='_full',
-            action='store_true')
-        sp_driver_list = sp_driver.add_parser(
-            'list', help='List loaded drivers')
-        sp_driver_list.add_argument(
-            '-y',
-            '--full',
-            help='Full information about driver',
-            dest='_full',
-            action='store_true')
+        sp_phi_list.add_argument('-y',
+                                 '--full',
+                                 help='Full information about PHI',
+                                 dest='_full',
+                                 action='store_true')
+        sp_driver_list = sp_driver.add_parser('list',
+                                              help='List loaded drivers')
+        sp_driver_list.add_argument('-y',
+                                    '--full',
+                                    help='Full information about driver',
+                                    dest='_full',
+                                    action='store_true')
 
         sp_phi_get = sp_phi.add_parser('get', help='Get loaded PHI info')
         sp_phi_get.add_argument(
@@ -1032,12 +1036,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
             metavar='PHI ID').completer = self.ComplPHI(self)
         sp_phi_set.add_argument('p', help='Config property', metavar='PROP')
         sp_phi_set.add_argument('v', help='Value', nargs='?', metavar='VAL')
-        sp_phi_set.add_argument(
-            '-y',
-            '--save',
-            help='Save PHI config after set',
-            dest='_save',
-            action='store_true')
+        sp_phi_set.add_argument('-y',
+                                '--save',
+                                help='Save PHI config after set',
+                                dest='_save',
+                                action='store_true')
 
         sp_phi_mods = sp_phi.add_parser('mods', help='List available PHI mods')
         sp_lpi_mods = sp_lpi.add_parser('mods', help='List available LPI mods')
@@ -1057,11 +1060,13 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_phi_exec.add_argument(
             'c', help='PHI exec command',
             metavar='CMD').completer = self.ComplPHIExecCMD(self)
-        sp_phi_exec.add_argument(
-            'a', help='Command arguments', metavar='ARGS', nargs='?')
+        sp_phi_exec.add_argument('a',
+                                 help='Command arguments',
+                                 metavar='ARGS',
+                                 nargs='?')
 
-        sp_driver_get = sp_driver.add_parser(
-            'get', help='Get loaded driver info')
+        sp_driver_get = sp_driver.add_parser('get',
+                                             help='Get loaded driver info')
         sp_driver_get.add_argument(
             'i', help='Driver ID',
             metavar='DRIVER_ID').completer = self.ComplDriver(self)
@@ -1073,12 +1078,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
             metavar='DRIVER ID').completer = self.ComplDriver(self)
         sp_driver_set.add_argument('p', help='Config property', metavar='PROP')
         sp_driver_set.add_argument('v', help='Value', nargs='?', metavar='VAL')
-        sp_driver_set.add_argument(
-            '-y',
-            '--save',
-            help='Save driver config after set',
-            dest='_save',
-            action='store_true')
+        sp_driver_set.add_argument('-y',
+                                   '--save',
+                                   help='Save driver config after set',
+                                   dest='_save',
+                                   action='store_true')
 
         sp_phi_load = sp_phi.add_parser('load', help='Load PHI')
         sp_phi_load.add_argument('i', help='PHI ID', metavar='PHI_ID')
@@ -1091,18 +1095,17 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help='PHI configuration values, comma separated',
             dest='c',
             metavar='CONFIG')
-        sp_phi_load.add_argument(
-            '-y',
-            '--save',
-            help='save configuration on success load',
-            dest='_save',
-            action='store_true')
+        sp_phi_load.add_argument('-y',
+                                 '--save',
+                                 help='save configuration on success load',
+                                 dest='_save',
+                                 action='store_true')
 
         sp_driver_load = sp_driver.add_parser('load', help='Load driver')
         sp_driver_load.add_argument(
             'i', help='Driver ID (PHI_ID.LPI_ID)',
-            metavar='PHI_ID.LPI_ID').completer = self.ComplPHI(
-                self, for_driver=True)
+            metavar='PHI_ID.LPI_ID').completer = self.ComplPHI(self,
+                                                               for_driver=True)
         sp_driver_load.add_argument(
             'm', help='LPI module',
             metavar='LPI_MOD').completer = self.ComplLPIMods(self)
@@ -1112,12 +1115,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
             help='driver configuration values, comma separated',
             dest='c',
             metavar='CONFIG')
-        sp_driver_load.add_argument(
-            '-y',
-            '--save',
-            help='save configuration on success load',
-            dest='_save',
-            action='store_true')
+        sp_driver_load.add_argument('-y',
+                                    '--save',
+                                    help='save configuration on success load',
+                                    dest='_save',
+                                    action='store_true')
 
         sp_phi_unload = sp_phi.add_parser('unload', help='Unload PHI')
         sp_phi_unload.add_argument(
@@ -1137,18 +1139,16 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_driver_assign.add_argument(
             'd', help='Driver ID',
             metavar='DRIVER_ID').completer = self.ComplDriver(self)
-        sp_driver_assign.add_argument(
-            '-c',
-            '--config',
-            help='item driver config (ports etc.)',
-            dest='c',
-            metavar='CONFIG')
-        sp_driver_assign.add_argument(
-            '-y',
-            '--save',
-            help='save configuration',
-            dest='_save',
-            action='store_true')
+        sp_driver_assign.add_argument('-c',
+                                      '--config',
+                                      help='item driver config (ports etc.)',
+                                      dest='c',
+                                      metavar='CONFIG')
+        sp_driver_assign.add_argument('-y',
+                                      '--save',
+                                      help='save configuration',
+                                      dest='_save',
+                                      action='store_true')
 
         sp_driver_unassign = sp_driver.add_parser(
             'unassign',
@@ -1157,12 +1157,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_driver_unassign.add_argument(
             'i', help='Item ID',
             metavar='ID').completer = self.ComplItemOID(self)
-        sp_driver_unassign.add_argument(
-            '-y',
-            '--save',
-            help='save configuration',
-            dest='_save',
-            action='store_true')
+        sp_driver_unassign.add_argument('-y',
+                                        '--save',
+                                        help='save configuration',
+                                        dest='_save',
+                                        action='store_true')
 
         sp_phi_modinfo = sp_phi.add_parser('modinfo', help='PHI module info')
         sp_phi_modinfo.add_argument(
@@ -1175,19 +1174,17 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_phi_discover.add_argument(
             'm', help='PHI module',
             metavar='PHI_MOD').completer = self.ComplPHIMods(self)
-        sp_phi_discover.add_argument(
-            '-x',
-            '--interface',
-            help='Interface to perform discovery on',
-            metavar='INTERFACE',
-            dest='x')
-        sp_phi_discover.add_argument(
-            '-w',
-            '--wait',
-            help='Max operation timeout',
-            metavar='SEC',
-            type=float,
-            dest='w')
+        sp_phi_discover.add_argument('-x',
+                                     '--interface',
+                                     help='Interface to perform discovery on',
+                                     metavar='INTERFACE',
+                                     dest='x')
+        sp_phi_discover.add_argument('-w',
+                                     '--wait',
+                                     help='Max operation timeout',
+                                     metavar='SEC',
+                                     type=float,
+                                     dest='w')
 
         sp_lpi_modinfo = sp_lpi.add_parser('modinfo', help='LPI module info')
         sp_lpi_modinfo.add_argument(
@@ -1208,16 +1205,16 @@ class UC_CLI(GenericCLI, ControllerCLI):
         sp_lpi_modhelp.add_argument(
             'm', help='LPI module',
             metavar='LPI_MOD').completer = self.ComplLPIMods(self)
-        sp_lpi_modhelp.add_argument(
-            'c',
-            help='Help context (cfg, action, update)',
-            metavar='CONTEXT',
-            choices=['cfg', 'action', 'update'])
+        sp_lpi_modhelp.add_argument('c',
+                                    help='Help context (cfg, action, update)',
+                                    metavar='CONTEXT',
+                                    choices=['cfg', 'action', 'update'])
 
-        sp_phi_download = sp_phi.add_parser(
-            'download', help='Download and put PHI')
-        sp_phi_download.add_argument(
-            '_uri', help='Module HTTP URI', metavar='URI')
+        sp_phi_download = sp_phi.add_parser('download',
+                                            help='Download and put PHI')
+        sp_phi_download.add_argument('_uri',
+                                     help='Module HTTP URI',
+                                     metavar='URI')
         sp_phi_download.add_argument(
             '-y',
             '--force',
@@ -1225,8 +1222,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             dest='_force',
             action='store_true')
 
-        sp_phi_unlink = sp_phi.add_parser(
-            'unlink', help='Unlink PHI (delete mod file)')
+        sp_phi_unlink = sp_phi.add_parser('unlink',
+                                          help='Unlink PHI (delete mod file)')
         sp_phi_unlink.add_argument(
             'm', help='PHI module',
             metavar='PHI_MOD').completer = self.ComplPHIMods(self)
@@ -1421,13 +1418,18 @@ _pd_cols = {
     ],
     'get_modbus_slave_data': ['reg', 'addr', 'addr_hex', 'value', 'hex'],
     'read_modbus_port': ['reg', 'addr', 'addr_hex', 'value', 'hex', 'err'],
-    'list_modbus_ports':
-    ['id', 'params', 'lock', 'timeout', 'retries', 'delay'],
-    'list_owfs_buses':
-    ['id', 'location', 'lock', 'timeout', 'retries', 'delay'],
+    'list_modbus_ports': [
+        'id', 'params', 'lock', 'timeout', 'retries', 'delay'
+    ],
+    'list_owfs_buses': [
+        'id', 'location', 'lock', 'timeout', 'retries', 'delay'
+    ],
+    'list_phi': ['id', 'mod'],
     'list_phi_': ['id', 'mod', 'description', 'version'],
-    'list_drivers_':
-    ['id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'],
+    'list_drivers': ['id', 'mod', 'phi_id'],
+    'list_drivers_': [
+        'id', 'mod', 'phi_id', 'phi_mod', 'description', 'version'
+    ],
     'list_drivers': ['id', 'mod', 'phi_id'],
     'list_phi_mods': ['mod', 'equipment', 'description', 'version', 'api'],
     'get_phi_ports': ['port', 'name', 'description'],
