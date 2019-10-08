@@ -946,12 +946,20 @@ a.controller_link {
   width: calc(100% - 90px);
   min-height: 25px;
 }
+#mng_modbus .descr_block:nth-child(2) {
+  width: calc(100% - 50px);
+}
 .item_name, .item_priority {
   font-family: 'TTNorms Medium';
   color: #4d4d4d; 
 }
 .item_val {
   color: #008000;
+  font: 14px 'TTNorms Medium';
+}
+.item_lock, .item_retries,
+.item_delay, .item_timeout {
+  color: #4d4d4d;
   font: 14px 'TTNorms Medium';
 }
 .buttons_block {
@@ -1428,7 +1436,10 @@ input.device-error:focus {
   #mng_macros .descr_block:first-child {
     width: calc(100% - 300px);
   }
-
+  #mng_modbus .descr_block,
+  #mng_modbus .descr_block:nth-child(2) {
+    width: calc(50% - 40px);
+  }
 }
 
 @media (min-width: 801px) {
