@@ -672,8 +672,23 @@ a.controller_link {
 .log_block {
   
   margin: 60px 5px 40px;
-  padding-right: 15px;
   overflow: hidden;
+}
+.log_config {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 0 5px;
+  font: 14px 'TTNorms Regular';
+  color: #4d4d4d;
+}
+.log_pause, .log_resume {
+  margin-bottom: auto;
+  padding: 4px 12px;
+  background-color: #fff;
+  border: 1px solid #4d4d4d;
+  border-radius: 15px;
+  cursor: pointer;
 }
 .log_block .nano {
   border-top: 1px solid #999;
@@ -683,9 +698,13 @@ a.controller_link {
   max-height: 300px;
   margin-right: -21px!important;
 }
+.log_block .nano-pane {
+  right: 0!important;
+}
 .logentry {
   font: 12px 'TTNorms Regular';
   margin-bottom: 10px;
+  padding-right: 20px;
 }
 .logentry_color_10 {
   color: #999;
@@ -818,6 +837,7 @@ a.controller_link {
 .select_ctrl {
   border-radius: 3px;
 }
+.log_count, .log_level,
 .ctrl_cur,
 .group_ctrl_holder > select {
   width: auto;
