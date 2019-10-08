@@ -2653,7 +2653,7 @@ def get_notifier_fnames():
     return glob.glob(fnames)
 
 
-def load(test=True, connect=True):
+def load(test=True, connect=False):
     logging.info('Loading notifiers')
     notifiers.clear()
     try:
@@ -2813,8 +2813,8 @@ def start():
     notifier_client_cleaner.start()
     th = []
     for i, n in notifiers.copy().items():
-        if n.enabled: n.start()
-        th.append(threading.Thread(target=n.start, daemon=True))
+        if n.enabled:
+            th.append(threading.Thread(target=n.start, daemon=True))
     time_start = time.time()
     [t.start() for t in th]
     while time_start + eva.core.config.timeout > time.time():
