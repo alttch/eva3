@@ -1331,6 +1331,7 @@ _pd_cols = {
         'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
         'description'
     ],
+    'list_ext': ['id', 'mod'],
     'list_ext_': ['id', 'mod', 'description', 'version'],
     'list_ext_mods': ['mod', 'description', 'version', 'api'],
     'modhelp_ext': ['name', 'type', 'required', 'help']
