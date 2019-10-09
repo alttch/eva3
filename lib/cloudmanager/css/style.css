@@ -946,6 +946,7 @@ a.controller_link {
   width: calc(100% - 90px);
   min-height: 25px;
 }
+#mng_owfs .descr_block:nth-child(2),
 #mng_modbus .descr_block:nth-child(2) {
   width: calc(100% - 50px);
 }
@@ -1436,7 +1437,9 @@ input.device-error:focus {
   #mng_macros .descr_block:first-child {
     width: calc(100% - 300px);
   }
+  #mng_owfs .descr_block,
   #mng_modbus .descr_block,
+  #mng_owfs .descr_block:nth-child(2),
   #mng_modbus .descr_block:nth-child(2) {
     width: calc(50% - 40px);
   }
