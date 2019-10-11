@@ -49,8 +49,8 @@ configuration is required. Just type:
 
 and it's ready to use.
 
-Using function in macros
-------------------------
+Using in macros
+===============
 
 After the extension is loaded, function *roboger_push* becomes available in all
 :doc:`logic control macros </lm/macros>`:
