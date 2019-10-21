@@ -948,7 +948,7 @@ a.controller_link {
 }
 #mng_owfs .descr_block:nth-child(2),
 #mng_modbus .descr_block:nth-child(2) {
-  width: calc(100% - 50px);
+  width: calc(100% - 70px);
 }
 .item_name, .item_priority {
   font-family: 'TTNorms Medium';
@@ -1441,7 +1441,7 @@ input.device-error:focus {
   #mng_modbus .descr_block,
   #mng_owfs .descr_block:nth-child(2),
   #mng_modbus .descr_block:nth-child(2) {
-    width: calc(50% - 40px);
+    width: calc(50% - 50px);
   }
 }
 
