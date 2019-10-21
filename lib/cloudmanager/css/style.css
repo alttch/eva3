@@ -1219,7 +1219,7 @@ input.device-error:focus {
   font: 16px 'Roboto Regular';
 }
 #modules_sys .descr_block {
-  width: calc(100% - 150px);
+  width: calc(100% - 200px);
   margin-bottom: 0;
 }
 .macro_editor {
@@ -1348,7 +1348,7 @@ input.device-error:focus {
     width: calc(100% - 110px);
   }
   #modules_sys .descr_block {
-    width: calc(100% - 160px);
+    width: calc(100% - 220px);
   }
   #mng_lvars .descr_block {
     width: calc(50% - 20px);
@@ -1432,7 +1432,7 @@ input.device-error:focus {
     padding: 3px 10px;
   }
   #modules_sys .descr_block {
-    width: calc(100% - 170px);
+    width: calc(100% - 240px);
   }
   #mng_macros .descr_block:first-child {
     width: calc(100% - 300px);
