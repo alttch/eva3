@@ -9,6 +9,7 @@ LoRa server implementation
 import logging
 import threading
 import socket
+import base64
 
 import eva.core
 import eva.uc.controller
@@ -52,9 +53,9 @@ def unsubscribe(handler_id, func):
     return True
 
 
-def exec_custom_handler(func, data, address):
+def exec_custom_handler(func, pk, data, text, address):
     try:
-        func(data, address)
+        func(pk, data, text, address)
     except:
         logging.error('LoRa: failed to exec custom handler %s' % func)
         eva.core.log_traceback()
@@ -141,19 +142,30 @@ def _t_dispatcher(host, port):
                     format(addres, data[3]))
                 continue
             try:
-                dt = rapidjson.loads(data[12:].decode())
+                rxpk = rapidjson.loads(data[12:].decode())['rxpk']
             except:
                 logging.warning('LoRa invalid JSON from {}'.format(address))
-                eva.core.log_traceback()
+                continue
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.sendto(b'\x02' + data[1:3] + b'\x01', addr)
-            for i, h in custom_handlers:
+            for pk in rxpk:
                 try:
-                    t = threading.Thread(target=exec_custom_handler,
-                                         args=(h, dt, address))
-                    t.start()
+                    dt = base64.b64decode(pk['data'])
                 except:
-                    eva.core.log_traceback()
+                    logging.warning('LoRa invalid pk from {}'.format(address))
+                    continue
+                try:
+                    txt = dt.decode('utf-8')
+                except:
+                    txt = None
+                for i, hs in custom_handlers.items():
+                    for h in hs:
+                        try:
+                            t = threading.Thread(target=exec_custom_handler,
+                                                 args=(h, pk, dt, txt, address))
+                            t.start()
+                        except:
+                            eva.core.log_traceback()
         except:
             logging.critical('LoRa dispatcher crashed, restarting')
             eva.core.log_traceback()
