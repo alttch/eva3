@@ -14,6 +14,7 @@ import eva.core
 import eva.sysapi
 import eva.traphandler
 import eva.udpapi
+import eva.lora
 import eva.notify
 import eva.api
 import eva.apikey
@@ -81,6 +82,7 @@ eva.logs.start()
 
 eva.traphandler.update_config(cfg)
 eva.udpapi.update_config(cfg)
+eva.lora.update_config(cfg)
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
@@ -110,6 +112,7 @@ eva.sysapi.start()
 eva.wsapi.start()
 eva.traphandler.start()
 eva.udpapi.start()
+eva.lora.start()
 eva.uc.ucapi.start()
 eva.uc.controller.start()
 
