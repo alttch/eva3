@@ -13,7 +13,7 @@ be enabled *etc/uc.ini* configuration file: you should uncomment/change
 *listen* and *hosts_allow* options in **[lora]** section.
 
 After :doc:`/uc/uc` restart (*eva uc server restart*), loaded LoRa PHIs
-immediately start receiving packets from the equipment.
+immediately start receiving packets from the gateways.
 
 .. note::
 
