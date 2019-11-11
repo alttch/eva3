@@ -791,6 +791,51 @@ Let's deal with an equipment which has MQTT topic *topic/POWER* with values
         # then handle PHI event
         handle_phi_event(self, 1, self.get())
 
+Working with LoRa
+=================
+
+You may use EVA built-in LoRa network server to receive forwarded UDP packets
+from LoRa gateways and then parse them in PHI.
+
+.. warning::
+
+    LoRa custom handlers may be started in different threads. Don't forget to
+    use locking mechanisms if required.
+
+.. code-block:: python
+
+    import eva.lora as lora
+
+    @phi_constructor
+    def __init__(self, **kwargs):
+    # ....
+
+    def start(self):
+        # subscribe to LoRa server using PHI ID as handler ID
+        lora.subscribe(__name__, self.lora_handler)
+
+    def stop(self):
+        # don't forget to unsubscribe when PHI is unloaded
+        lora.unsubscribe(__name__, self.lora_handler)
+
+    def lora_handler(self, pk, data, text, address):
+        """
+        The handler gets all LoRa packet, sent to UC
+
+        Args:
+            pk: full packet payload (dict, decoded from JSON)
+            data: payload "data" field in binary format
+            text: payload "data" field in text format (if conversion to text
+               is possible)
+            address: IP address the packet is from
+        """
+        self.log_debug('got data: {} from {}'.format(data, address))
+        # process the data
+        # ...
+
+It's not necessary to send *PUSH_ACK* packets back to LoRa equipment, EVA ICS
+UC handles this by itself.
+
 Working with UDP API
 ====================
 
@@ -833,51 +878,6 @@ managed by handler).
         self.log_debug('got data: {} from {}'.format(_data, address))
         # process the data
         # ...
-
-Working with LoRa packets
-=========================
-
-You may use EVA built-in LoRa network server to receive forwarded UDP packets
-from LoRa gateways and then parse them in PHI.
-
-.. warning::
-
-    LoRa custom handlers may be started in different threads. Don't forget to
-    use locking mechanisms if required.
-
-.. code-block:: python
-
-    import eva.lora as lora
-
-    @phi_constructor
-    def __init__(self, **kwargs):
-    # ....
-
-    def start(self):
-        # subscribe to LoRa server using PHI ID as handler ID
-        udp.subscribe(__name__, self.lora_handler)
-
-    def stop(self):
-        # don't forget to unsubscribe when PHI is unloaded
-        udp.unsubscribe(__name__, self.lora_handler)
-
-    def lora_handler(self, pk, data, text, address):
-        """
-        The handler gets all LoRa packet, sent to UC
-
-        Args:
-            pk: full packet payload (dict, decoded from JSON)
-            data: payload "data" field in binary format
-            text: payload "data" field in text format (if conversion to text
-               is possible)
-            address: IP address the packet is from
-        """
-        self.log_debug('got data: {} from {}'.format(data, address))
-        # process the data
-        # ...
-
-It's not necessary to send *PUSH_ACK* packets back to LoRa equipment, EVA ICS
-UC handles this by itself.
 
 Discovering SSDP hardware
 =========================
