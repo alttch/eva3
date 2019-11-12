@@ -53,9 +53,9 @@ def unsubscribe(handler_id, func):
     return True
 
 
-def exec_custom_handler(func, pk, data, text, address):
+def exec_custom_handler(func, pk, payload, address):
     try:
-        func(pk, data, text, address)
+        func(pk, payload, address)
     except:
         logging.error('LoRa: failed to exec custom handler %s' % func)
         eva.core.log_traceback()
@@ -63,13 +63,13 @@ def exec_custom_handler(func, pk, data, text, address):
 
 def update_config(cfg):
     try:
-        config.host, config.port = parse_host_port(cfg.get('lora', 'listen'),
+        config.host, config.port = parse_host_port(cfg.get('lorawan', 'listen'),
                                                    default_port)
-        logging.debug('lora.listen = %s:%u' % (config.host, config.port))
+        logging.debug('lorawan.listen = %s:%u' % (config.host, config.port))
     except:
         return False
     try:
-        _ha = cfg.get('lora', 'hosts_allow')
+        _ha = cfg.get('lorawan', 'hosts_allow')
     except:
         _ha = None
     if _ha:
@@ -83,7 +83,7 @@ def update_config(cfg):
             eva.core.log_traceback()
             return False
     if config.hosts_allow:
-        logging.debug('LoRa.hosts_allow = %s' % \
+        logging.debug('lorawan.hosts_allow = %s' % \
                 ', '.join([ str(h) for h in config.hosts_allow ]))
     else:
         logging.debug('LoRa.hosts_allow = none')
@@ -149,19 +149,15 @@ def _t_dispatcher(host, port):
             server_socket.sendto(b'\x02' + data[1:3] + b'\x01', addr)
             for pk in rxpk:
                 try:
-                    dt = base64.b64decode(pk['data'])
+                    payload = base64.b64decode(pk['data'])
                 except:
                     logging.warning('LoRa invalid pk from {}'.format(address))
                     continue
-                try:
-                    txt = dt.decode('utf-8')
-                except:
-                    txt = None
                 for i, hs in custom_handlers.items():
                     for h in hs:
                         try:
                             t = threading.Thread(target=exec_custom_handler,
-                                                 args=(h, pk, dt, txt, address))
+                                                 args=(h, pk, payload, address))
                             t.start()
                         except:
                             eva.core.log_traceback()

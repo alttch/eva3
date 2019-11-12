@@ -791,11 +791,11 @@ Let's deal with an equipment which has MQTT topic *topic/POWER* with values
         # then handle PHI event
         handle_phi_event(self, 1, self.get())
 
-Working with LoRa
-=================
+Working with LoRaWAN
+====================
 
-You may use EVA built-in LoRa network server to receive forwarded UDP packets
-from LoRa gateways and then parse them in PHI.
+You may use EVA built-in LoRaWAN network server to receive forwarded UDP
+packets from LoRa gateways and then parse them in PHI.
 
 .. warning::
 
@@ -818,16 +818,14 @@ from LoRa gateways and then parse them in PHI.
         # don't forget to unsubscribe when PHI is unloaded
         lora.unsubscribe(__name__, self.lora_handler)
 
-    def lora_handler(self, pk, data, text, address):
+    def lora_handler(self, pk, payload, address):
         """
         The handler gets all LoRa packet, sent to UC
 
         Args:
             pk: full packet payload (dict, decoded from JSON)
-            data: payload "data" field in binary format
-            text: payload "data" field in text format (if conversion to text
-               is possible)
-            address: IP address the packet is from
+            payload: RF packet payload
+            address: IP address of the gateway the packet is from
         """
         self.log_debug('got data: {} from {}'.format(data, address))
         # process the data
