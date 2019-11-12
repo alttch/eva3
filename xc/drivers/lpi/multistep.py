@@ -93,6 +93,8 @@ port state. This works both for power and direction ports.
 """
 
 from time import time
+import timeouter
+
 from eva.uc.drivers.lpi.basic import LPI as BasicLPI
 from eva.uc.driverapi import log_traceback
 from eva.tools import val_to_boolean
@@ -145,7 +147,6 @@ class LPI(BasicLPI):
         return _delay
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
-        time_start = time()
         if cfg is None:
             return self.action_result_error(_uuid, 1, 'no config provided')
         phi_cfg = self.prepare_phi_cfg(cfg)
@@ -179,8 +180,9 @@ class LPI(BasicLPI):
                 return self.action_result_error(
                     _uuid, msg='steps should be float numbers')
         if nstatus < 0 or nstatus > len(steps):
-            return self.action_result_error(
-                _uuid, msg='status is not in range 0..%u' % len(steps))
+            return self.action_result_error(_uuid,
+                                            msg='status is not in range 0..%u' %
+                                            len(steps))
         pstatus = cfg.get('EVA_ITEM_STATUS')
         try:
             pstatus = int(pstatus)
@@ -192,8 +194,9 @@ class LPI(BasicLPI):
                     _uuid, msg='current status is an error')
             pstatus = 0
         if pstatus > len(steps):
-            self.log_warning('current status is %s while only %s steps are set'
-                             % (pstatus, len(steps)))
+            self.log_warning(
+                'current status is %s while only %s steps are set' %
+                (pstatus, len(steps)))
         if pstatus == nstatus:
             return self.action_result_ok(_uuid)
         warmup = cfg.get('warmup')
@@ -231,7 +234,7 @@ class LPI(BasicLPI):
                 # we need to go to start then to nstatus
                 _delay = self._calc_delay(pstatus, 0, steps, warmup, tuning)
                 _delay += self._calc_delay(0, nstatus, steps, warmup, tuning)
-                if _delay > time_start - time() + timeout:
+                if _delay > timeouter.get():
                     raise PredictedTimeoutException
                 _pstatus = [pstatus, 0]
                 _nstatus = [0, nstatus]
@@ -239,16 +242,16 @@ class LPI(BasicLPI):
                 # we need to go to the end then to nstatus
                 _delay = self._calc_delay(pstatus, len(steps), steps, warmup,
                                           tuning)
-                _delay += self._calc_delay(
-                    len(steps), nstatus, steps, warmup, tuning)
-                if _delay > time_start - time() + timeout:
+                _delay += self._calc_delay(len(steps), nstatus, steps, warmup,
+                                           tuning)
+                if _delay > timeouter.get():
                     raise PredictedTimeoutException
                 _pstatus = [pstatus, len(steps)]
                 _nstatus = [len(steps), nstatus]
             else:
                 _delay = self._calc_delay(pstatus, nstatus, steps, warmup,
                                           tuning)
-                if _delay > time_start - time() + timeout:
+                if _delay > timeouter.get():
                     raise PredictedTimeoutException
                 _pstatus = [pstatus]
                 _nstatus = [nstatus]
@@ -273,47 +276,46 @@ class LPI(BasicLPI):
             # no delay - nothing to do
             if not _delay:
                 continue
-            if _delay > time_start - time() + timeout:
+            if _delay > timeouter.get():
                 return self.action_result_error(
                     _uuid, 4,
                     'can not perform action. requires: %s sec, timeout: %s sec'
-                    % (_delay, time_start - time() + timeout))
+                    % (_delay, timeouter.get()))
             _c = {self.io_label: port}
             _cd = {self.io_label: dport}
             # direction or open/close minus for rdc
             r = self.exec_super_subaction(
                 direction if not self.logic_rdc else abs(direction - 1), _cd,
-                time_start - time() + timeout, tki)
+                timeouter.get(), tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
                 return self.action_result_error(
-                    _uuid, 4,
-                    'direction set error: %s, %s' % (r.get('exitcode'),
-                                                     r.get('err')))
+                    _uuid, 4, 'direction set error: %s, %s' %
+                    (r.get('exitcode'), r.get('err')))
             # power on or open/close plus for rdc
             r = self.exec_super_subaction(
-                1 if not self.logic_rdc else direction, _c,
-                time_start - time() + timeout, tki)
+                1 if not self.logic_rdc else direction, _c, timeouter.get(),
+                tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
                 return self.action_result_error(
-                    _uuid, 4, 'power on error: %s, %s' % (r.get('exitcode'),
-                                                          r.get('err')))
+                    _uuid, 4, 'power on error: %s, %s' %
+                    (r.get('exitcode'), r.get('err')))
             # delay
             dr = self.delay(_uuid, _delay)
             # power off or open plus/minus for rdc
             r = self.exec_super_subaction(
                 0, _c if not self.logic_rdc else (_c if direction else _cd),
-                time_start - time() + timeout, tki)
+                timeouter.get(), tki)
             if not r or r.get('exitcode') != 0:
                 if not r:
                     r = {}
                 self.critical('power off error!')
                 return self.action_result_error(
-                    _uuid, 4, 'power off error: %s, %s' % (r.get('exitcode'),
-                                                           r.get('err')))
+                    _uuid, 4, 'power off error: %s, %s' %
+                    (r.get('exitcode'), r.get('err')))
             if not dr:
                 # we are terminated
                 return self.action_result_terminated(_uuid)

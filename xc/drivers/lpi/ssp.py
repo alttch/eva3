@@ -23,6 +23,7 @@ LPI to work with sensor PHIs which provide state for single sensor only
 as-is. """
 
 from time import time
+import timeouter
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
@@ -32,7 +33,6 @@ from eva.tools import val_to_boolean
 class LPI(GenericLPI):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
-        time_start = time()
         _state_in = state_in
         if _state_in: evh = True
         else: evh = False
@@ -41,7 +41,7 @@ class LPI(GenericLPI):
             value = _state_in.get(list(_state_in)[0])
         else:
             value = self.phi.get(
-                cfg=phi_cfg, timeout=timeout + time_start - time())
+                cfg=phi_cfg, timeout=timeouter.get())
             if isinstance(value, dict):
                 value = value.get(list(value)[0])
         if value is None and evh:

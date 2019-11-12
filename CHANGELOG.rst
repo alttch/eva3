@@ -1,6 +1,15 @@
 EVA ICS CHANGELOG
 *****************
 
+3.2.6 (TBA)
+===========
+
+UC
+--
+
+   * LoRaWAN support
+   * Driver API 8: LoraWAN handlers, timeout helper
+
 3.2.5 (2019-10-03)
 ==================
 

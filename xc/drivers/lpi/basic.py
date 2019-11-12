@@ -45,12 +45,12 @@ from time import time
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
 import eva.benchmark
+import timeouter
 
 
 class LPI(GenericLPI):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
-        time_start = time()
         _state_in = state_in
         if _state_in: evh = True
         else: evh = False
@@ -58,8 +58,7 @@ class LPI(GenericLPI):
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi._is_required.aao_get and not _state_in:
-            _state_in = self.phi.get(
-                cfg=phi_cfg, timeout=(timeout + time_start - time()))
+            _state_in = self.phi.get(cfg=phi_cfg, timeout=timeouter.get())
             if not _state_in: return self.state_result_error(_uuid)
         port = cfg.get(self.io_label)
         if not isinstance(port, list):
@@ -87,8 +86,9 @@ class LPI(GenericLPI):
                 if _state_in:
                     status = _state_in.get(str(_p))
                 else:
-                    status = self.phi.get(
-                        str(_p), phi_cfg, timeout + time_start - time())
+                    status = self.phi.get(str(_p),
+                                          phi_cfg,
+                                          timeout=timeouter.get())
                 if isinstance(status, tuple):
                     status, value = status
                 else:
@@ -135,7 +135,6 @@ class LPI(GenericLPI):
         return
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
-        time_start = time()
         if cfg is None:
             return self.action_result_error(_uuid, 1, 'no config provided')
         phi_cfg = self.prepare_phi_cfg(cfg)
@@ -170,17 +169,18 @@ class LPI(GenericLPI):
                 ports_to_set.append(_port)
                 data_to_set.append(state)
             else:
-                set_result = self.phi.set(
-                    _port,
-                    state,
-                    phi_cfg,
-                    timeout=(timeout + time_start - time()))
+                set_result = self.phi.set(_port,
+                                          state,
+                                          phi_cfg,
+                                          timeout=timeouter.get())
                 if set_result is False or set_result is None:
-                    return self.action_result_error(
-                        _uuid, msg='port %s set error' % _port)
+                    return self.action_result_error(_uuid,
+                                                    msg='port %s set error' %
+                                                    _port)
         if self.phi._has_feature.aao_set:
-            set_result = self.phi.set(
-                ports_to_set, data_to_set, timeout=timeout)
+            set_result = self.phi.set(ports_to_set,
+                                      data_to_set,
+                                      timeout=timeouter.get())
             if set_result is False or set_result is None:
                 return self.action_result_error(_uuid, msg='ports set error')
         return self.action_result_ok(_uuid)

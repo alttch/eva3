@@ -54,6 +54,7 @@ single sensor event processing.
 """
 
 from time import time
+import timeouter
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
@@ -91,12 +92,11 @@ class LPI(GenericLPI):
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
         # we don't handle events
         if state_in: return self.state_result_error(_uuid)
-        time_start = time()
         if cfg is None or cfg.get(self.io_label) is None:
             return self.state_result_error(_uuid)
         phi_cfg = self.prepare_phi_cfg(cfg)
         if self.phi._is_required.aao_get:
-            _state_in = self.phi.get(cfg=phi_cfg, timeout=timeout)
+            _state_in = self.phi.get(cfg=phi_cfg, timeout=timeouter.get())
             if not _state_in: return self.state_result_error(_uuid)
         else:
             _state_in = {}
@@ -138,8 +138,9 @@ class LPI(GenericLPI):
                 if _state_in and str(p) in _state_in:
                     value = _state_in.get(str(p))
                 else:
-                    value = self.phi.get(
-                        str(p), phi_cfg, timeout + time_start - time())
+                    value = self.phi.get(str(p),
+                                         phi_cfg,
+                                         timeout=timeouter.get())
                 try:
                     value = float(value)
                 except:
@@ -149,8 +150,8 @@ class LPI(GenericLPI):
                         _status = -1
                         break
                     else:
-                        self.log_error(
-                            '%s %s failed to get value' % (self.io_label, p))
+                        self.log_error('%s %s failed to get value' %
+                                       (self.io_label, p))
                 else:
                     st_arr.append(value)
                     st_ports.append(str(p))

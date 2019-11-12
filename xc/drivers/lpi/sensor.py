@@ -27,6 +27,7 @@ Basic LPI to work with sensors, doesn't process sensor value in any way,
 returning it to controller as-is. """
 
 from time import time
+import timeouter
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
@@ -36,7 +37,6 @@ from eva.tools import val_to_boolean
 class LPI(GenericLPI):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
-        time_start = time()
         _state_in = state_in
         # for events - skip update if PHI not provided any value
         if _state_in: evh = True
@@ -59,8 +59,7 @@ class LPI(GenericLPI):
             if _state_in:
                 value = _state_in.get(str(p))
             else:
-                value = self.phi.get(
-                    str(p), phi_cfg, timeout + time_start - time())
+                value = self.phi.get(str(p), phi_cfg, timeouter.get())
             if value is None and evh:
                 if multi:
                     st.append(False)

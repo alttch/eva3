@@ -26,6 +26,7 @@ import logging
 import time
 import uuid
 import sys
+import timeouter
 
 from eva.uc.driverapi import get_polldelay
 from eva.uc.driverapi import get_timeout
@@ -269,6 +270,7 @@ class LPI(object):
             _timeout = timeout
         else:
             _timeout = get_timeout()
+        timeouter.init(_timeout)
         if tki:
             _tki = tki
         else:
@@ -290,6 +292,7 @@ class LPI(object):
             _timeout = timeout
         else:
             _timeout = get_timeout()
+        timeouter.init(_timeout)
         if tki:
             _tki = tki
         else:

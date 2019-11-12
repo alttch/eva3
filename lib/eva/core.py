@@ -19,6 +19,7 @@ import inspect
 import sqlalchemy as sa
 import faulthandler
 import gzip
+import timeouter
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -27,6 +28,7 @@ from eva.tools import parse_host_port
 from eva.tools import Locker as GenericLocker
 
 from eva.exceptions import FunctionFailed
+from eva.exceptions import TimeoutException
 
 from pyaltt import g
 from pyaltt import FunctionCollecton
@@ -920,5 +922,7 @@ def start(init_db_only=False):
 def register_controller(controller):
     controllers.add(controller)
 
+
+timeouter.set_default_exception_class(TimeoutException)
 
 #BD: 20.05.2017

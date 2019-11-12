@@ -58,6 +58,10 @@ class MethodNotImplemented(GenericException):
         return msg if msg else 'Method not implemented'
 
 
+class TimeoutException(GenericException):
+    pass
+
+
 def ecall(eresult):
     code, result = eresult
     import eva.client.apiclient as a

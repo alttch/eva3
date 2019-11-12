@@ -379,6 +379,47 @@ list of integers only. To accept extended state (*status, value* tuple or a
 list of tuples) for **set**, **value** string must be specified in
 **__required__** header list variable.
 
+Handling timeouts
+=================
+
+Starting from DriverAPI v8, timeout handling can be easily performed with
+**timeouter** library (https://github.com/alttch/timeouter). The library is
+included into EVA ICS by default and can be imported by any PHI module.
+
+When PHI is executed, timeouter library is already initialized for the running
+thread, and you may use its methods:
+
+.. code-block:: python
+
+   import timeouter as to
+   from eva.uc.driverapi import log_traceback
+
+   # .........
+
+      def get(self, port=None, cfg=None, timeout=0):
+         # Some call requires 3 seconds, abort if we will be out of time
+         if not to.has(3): return None
+         # does the same
+         if to.get() < 3: return None
+         try:
+            # .... perform some calls
+
+            # raises eva.exceptions.TimeoutException
+            # if timeout is expired
+            to.check()
+         except:
+            log_traceback()
+            return None
+
+Parameter **timeout** for *get*/*set* functions is filled for the backward
+compatibility.
+
+.. note::
+
+   Allowed timeout is always slightly lower than specified in
+   *action_timeout*/*update_timeout*, as some part of time is used to execute
+   driver LPI code.
+
 Handling events
 ===============
 
