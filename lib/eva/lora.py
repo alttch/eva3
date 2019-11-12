@@ -147,7 +147,7 @@ def _t_dispatcher(host, port):
                 logging.warning('LoRa invalid JSON from {}'.format(address))
                 continue
             server_socket.sendto(b'\x02' + data[1:3] + b'\x01', addr)
-            for pk in rxpk:
+            for pk in rxpk if isinstance(rxpk, list) else [rxpk]:
                 try:
                     payload = base64.b64decode(pk['data'])
                 except:
