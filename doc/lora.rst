@@ -17,4 +17,4 @@ immediately start receiving packets from the gateways.
 
 .. note::
 
-   Only LoRa protocol version 2 (1.0.2+) is supported.
+   Currently EVA ICS supports only LoRa legacy Semtech UDP protocol version 2.
