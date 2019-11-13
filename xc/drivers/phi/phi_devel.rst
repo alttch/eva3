@@ -868,7 +868,7 @@ packets from LoRa gateways and then parse them in PHI.
             payload: RF packet payload
             address: IP address of the gateway the packet is from
         """
-        self.log_debug('got data: {} from {}'.format(data, address))
+        self.log_debug('got data: {} from {}'.format(payload, address))
         # process the data
         # ...
 
