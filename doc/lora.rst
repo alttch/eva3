@@ -5,7 +5,7 @@ LoRa
 network server.
 
 .. figure:: lorawan.png
-   :scale: 100%
+   :scale: 70%
    :alt: LoRa network
 
 Before loading :doc:`drivers </drivers>` for LoRa equipment, LoRaWAN support
