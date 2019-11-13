@@ -1174,7 +1174,7 @@ Parameters:
 
 Returns:
 
-True, if timer is expired
+True, if timer has expired
 
 Raises:
 

@@ -410,7 +410,7 @@ thread, and you may use its methods:
             somefunc(retries=3, timeout=to.get(laps=4))
 
             # raises eva.exceptions.TimeoutException
-            # if timeout is expired
+            # if timeout has expired
             to.check()
          except:
             log_traceback()
