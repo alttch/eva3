@@ -8,7 +8,14 @@ UC
 --
 
    * LoRaWAN support
+   * Fixed PHI update timers
    * Driver API 8: LoraWAN handlers, timeout helper
+
+LM
+--
+
+   * Fixed cycle timers
+
 
 3.2.5 (2019-10-03)
 ==================
@@ -29,6 +36,7 @@ Cloud manager
 -------------
 
     * First public beta
+
 
 3.2.4 (2019-07-30)
 ==================
