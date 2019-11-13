@@ -407,7 +407,7 @@ thread, and you may use its methods:
             # e.g. you must specify timeout for some function, which will
             # perform 3 retries (4 total attempts) to get data from the
             # equipment:
-            somefunc(retries=3, timeout=to.get(chunks=4))
+            somefunc(retries=3, timeout=to.get(laps=4))
 
             # raises eva.exceptions.TimeoutException
             # if timeout is expired
