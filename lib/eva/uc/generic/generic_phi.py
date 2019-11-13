@@ -35,7 +35,7 @@ from eva.uc.driverapi import get_shared_namespace
 
 from time import time
 from time import sleep
-from time import monotonic
+from time import perf_counter
 
 from types import SimpleNamespace
 
@@ -356,14 +356,13 @@ class PHI(object):
         sleep_step = get_sleep_step()
         while self._update_scheduler_active and self._update_interval:
             if self._update_interval >= 1:
-                t_cont = monotonic() + self._update_interval
-                while monotonic() < t_cont and self._update_scheduler_active:
+                t_cont = perf_counter() + self._update_interval
+                while perf_counter() < t_cont and self._update_scheduler_active:
                     sleep(sleep_step)
             else:
                 sleep(self._update_interval)
             if not self._update_scheduler_active or not self._update_interval:
                 break
-            logging.debug('{} update event triggered'.format(self.oid))
             self._need_update.set()
         self._update_scheduler_active = False
         logging.debug('%s update scheduler stopped' % self.oid)

@@ -707,7 +707,7 @@ class Cycle(eva.item.Item):
         c = 0
         tc = 0
         while self.cycle_enabled:
-            cycle_start = time.monotonic()
+            cycle_start = time.perf_counter()
             cycle_end = cycle_start + self.interval
             if self.macro:
                 self.iterations += 1
@@ -727,7 +727,7 @@ class Cycle(eva.item.Item):
                     if self.on_error:
                         eva.lm.controller.exec_macro(
                             self.on_error, argv=['exception', ex], source=self)
-                elif time.monotonic() > cycle_end:
+                elif time.perf_counter() > cycle_end:
                     logging.error('cycle %s timeout' % (self.full_id))
                     if self.on_error:
                         eva.lm.controller.exec_macro(
@@ -740,7 +740,7 @@ class Cycle(eva.item.Item):
                         self.on_error,
                         argv=['exec_error', result.serialize()],
                         source=self)
-            t = time.monotonic()
+            t = time.perf_counter()
             if prev is not None:
                 real_interval = t - prev
                 c += 1
@@ -763,7 +763,7 @@ class Cycle(eva.item.Item):
             prev = t
             if self.interval >= 1:
                 cycle_end -= corr
-                while time.monotonic() < cycle_end and self.cycle_enabled:
+                while time.perf_counter() < cycle_end and self.cycle_enabled:
                     time.sleep(eva.core.sleep_step)
             else:
                 try:
