@@ -16,15 +16,19 @@ import time
 import threading
 import websocket
 import rapidjson
+import msgpack
 import uuid
 import random
 from pyaltt import BackgroundWorker
+from eva.types import CT_JSON, CT_MSGPACK
 
 # websocket.enableTrace(True)
 
 _warning_time_diff = 1
 
 cloud_manager = False
+
+ws_ping_message = eva.client.apiclient.pack_msgpack({'s': 'ping'})
 
 
 class WebSocketPingerWorker(BackgroundWorker):
@@ -33,7 +37,7 @@ class WebSocketPingerWorker(BackgroundWorker):
         controller = kwargs.get('controller')
         try:
             logging.debug('WS {}: PING'.format(controller.oid))
-            kwargs.get('o').send('{"s":"ping"}')
+            kwargs.get('o').send(ws_ping_message, opcode=0x2)
         except:
             eva.core.log_traceback()
 
@@ -109,14 +113,15 @@ class WebSocketWorker(BackgroundWorker):
             uri = 'ws' + controller.api._uri[4:]
             logging.debug('WS {}: connecting'.format(controller.oid))
             ws = websocket.create_connection(
-                '{}/ws?k={}'.format(uri, controller.api._key),
+                '{}/ws?k={}&c={}'.format(uri, controller.api._key, CT_MSGPACK),
                 timeout=round(controller.api._timeout),
                 enable_multithread=True,
                 sslopt={"cert_reqs": ssl.CERT_NONE}
                 if not controller.api._ssl_verify else None)
             ws.settimeout(5 + eva.core.config.timeout)
             try:
-                ws.send(rapidjson.dumps({'s': 'state'}))
+                ws.send(eva.client.apiclient.pack_msgpack({'s': 'state'}),
+                        opcode=0x2)
             except:
                 try:
                     ws.close()
@@ -166,7 +171,10 @@ class WebSocketWorker(BackgroundWorker):
                 self.wait()
             else:
                 try:
-                    data = rapidjson.loads(frame.data.decode())
+                    try:
+                        data = msgpack.loads(frame.data, encoding='utf-8')
+                    except:
+                        data = rapidjson.loads(frame.data.decode())
                     if data.get('s') == 'server' and data.get('d') == 'restart':
                         self.stop_ping()
                         if eva.core.is_shutdown_requested():
@@ -239,7 +247,10 @@ class RemoteController(eva.item.Item):
         if not data:
             return True
         try:
-            j = rapidjson.loads(data)
+            try:
+                j = msgpack.loads(data, encoding='utf-8')
+            except:
+                j = rapidjson.loads(data)
         except:
             logging.warning(self.oid + ' invalid server event data')
             return False

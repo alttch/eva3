@@ -46,6 +46,8 @@ from functools import wraps
 
 from types import SimpleNamespace
 
+from eva.types import CT_JSON, CT_MSGPACK
+
 import base64
 
 default_port = 80
@@ -66,9 +68,6 @@ config = SimpleNamespace(host='127.0.0.1',
                          use_x_real_ip=False)
 
 api_result_accepted = 2
-
-CT_MSGPACK = 1
-CT_JSON = 2
 
 msgpack_loads = partial(msgpack.loads, encoding='utf-8')
 

@@ -6,6 +6,7 @@ __version__ = "3.2.6"
 import logging
 import eva.core
 import rapidjson
+import msgpack
 import requests
 import paho.mqtt.client as mqtt
 import time
@@ -34,6 +35,10 @@ from pyaltt import g
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
+
+from eva.types import CT_JSON, CT_MSGPACK
+
+from eva.client.apiclient import pack_msgpack
 
 from ws4py.websocket import WebSocket
 
@@ -2384,9 +2389,18 @@ class GCP_IoT(GenericNotifier):
 
 class WSNotifier_Client(GenericNotifier_Client):
 
-    def __init__(self, notifier_id=None, apikey=None, token=None, ws=None):
+    def __init__(self,
+                 notifier_id=None,
+                 apikey=None,
+                 token=None,
+                 ws=None,
+                 ct=CT_JSON):
         super().__init__(notifier_id, 'ws', apikey, token)
         self.ws = ws
+        pm = {'s': 'pong'}
+        self.ws.pong_message = rapidjson.dumps(
+            pm) if ct == CT_JSON else pack_msgpack(pm)
+        self.ct = ct
         if self.ws:
             self.ws.notifier = self
             self.connected = True
@@ -2396,7 +2410,11 @@ class WSNotifier_Client(GenericNotifier_Client):
             try:
                 msg = {'s': subject, 'd': data}
                 logging.debug('.notifying WS %s' % self.notifier_id)
-                self.ws.send(format_json(msg, unpicklable=unpicklable))
+                if self.ct == CT_JSON:
+                    data = format_json(msg, unpicklable=unpicklable)
+                else:
+                    data = pack_msgpack(msg)
+                self.ws.send(data, binary=self.ct == CT_MSGPACK)
             except:
                 eva.core.log_traceback(notifier=True)
 
@@ -2436,13 +2454,17 @@ class NWebSocket(WebSocket):
     def received_message(self, message):
         s_all = ['#']
         try:
-            data = rapidjson.loads(message.data.decode())
+            if self.notifier.ct == CT_MSGPACK:
+                data = msgpack.loads(message.data, encoding='utf-8')
+            else:
+                data = rapidjson.loads(message.data.decode())
             subject = data['s']
             if subject == 'bye':
                 self.close()
                 return
             elif subject == 'ping':
-                self.send('{"s":"pong"}')
+                self.send(self.pong_message,
+                          binary=self.notifier.ct == CT_MSGPACK)
             elif subject == 'u' and self.notifier:
                 topic = data['t']
                 if isinstance(topic, list):
