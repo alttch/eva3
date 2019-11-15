@@ -33,8 +33,9 @@ class CoreAPIClient(APIClient):
         def data_handler(self, data):
             self.completed.set()
             try:
-                self.code, self.body = data.split('|', 1)
-                self.code = int(self.code)
+                if data[0] != 0: raise ValueError
+                self.code = data[1]
+                self.body = data[2:]
             except:
                 self.code = 500
 
@@ -114,27 +115,25 @@ class CoreAPIClient(APIClient):
         self.ce = Fernet(_k)
         self._key_id = _key_id
 
-    def do_call_mqtt(self, payload, t):
+    def do_call_mqtt(self, payload, t, rid=None):
         n = eva.notify.get_notifier(self._notifier_id)
         r = self.Response()
         if not n: return r
-        if isinstance(payload, dict) and 'id' in payload:
-            request_id = payload['id']
-        else:
-            request_id = str(uuid.uuid4())
-        data = request_id.encode() + b'|' + msgpack.dumps(payload)
+        if rid is None:
+            rid = uuid.uuid4().bytes
+        request_id = rid.hex()
+        data = rid + b'\x00' + msgpack.dumps(payload)
         cb = self.MQTTCallback()
         n.send_api_request(
-            request_id, self._product_code + '/' + self._uri,
-            '|{}|{}'.format(self._key_id,
-                            self.ce.encrypt(data).decode()), cb.data_handler)
+            request_id, self._product_code + '/' + self._uri, b'\x00\x02' +
+            self._key_id.encode() + b'\x00' + self.ce.encrypt(data),
+            cb.data_handler)
         if not cb.completed.wait(self._timeout):
             n.finish_api_request(request_id)
             raise requests.Timeout()
         if cb.code:
             try:
-                # r.text = self.ce.decrypt(cb.body.encode()).decode()
-                r.content = self.ce.decrypt(cb.body.encode())
+                r.content = self.ce.decrypt(cb.body)
                 if cb.code == 200:
                     r.ok = True
                 r.status_code = cb.code

@@ -1418,28 +1418,39 @@ def mqtt_discovery_handler(notifier_id, d):
 
 def mqtt_api_handler(notifier_id, data, callback):
     try:
-        if not data or data[0] != '|':
-            raise FunctionFailed('invalid packet data')
-        pfx, api_key_id, d = data.split('|', 2)
+        if isinstance(data, str):
+            if not data or data[0] != '|':
+                raise FunctionFailed('invalid text packet data')
+            pfx, api_key_id, d = data.split('|', 2)
+            ct = CT_JSON
+            d = d.encode()
+        else:
+            if not data or data[0] != 0:
+                raise FunctionFailed('invalid binary packet data')
+            pfx, api_key_id, d = data.split(b'\x00', 2)
+            api_key_id = api_key_id[1:].decode()
+            ct = CT_MSGPACK
         try:
             ce = apikey.key_ce(api_key_id)
             if ce is None:
                 raise FunctionFailed('invalid key')
-            d = ce.decrypt(d.encode())
-            call_id, payload = d.split(b'|', 1)
-            call_id = call_id.decode()
+            d = ce.decrypt(d)
+            if ct == CT_MSGPACK:
+                rid, payload = d.split(b'\x00', 1)
+                call_id = rid.hex()
+            else:
+                d = d.decode()
+                call_id, payload = d.split('|', 1)
         except:
             logging.warning(
                 'MQTT API: invalid api key in encrypted packet from ' +
                 notifier_id)
             raise
         try:
-            try:
+            if ct == CT_MSGPACK:
                 payload = msgpack_loads(payload)
-                ct = CT_MSGPACK
-            except:
-                payload = rapidjson.loads(payload.decode())
-                ct = CT_JSON
+            else:
+                payload = rapidjson.loads(payload)
         except:
             eva.core.log_traceback()
             raise FunctionFailed('Invalid JSON data')
@@ -1452,9 +1463,12 @@ def mqtt_api_handler(notifier_id, data, callback):
             raise FunctionFailed('API error')
         if ct == CT_MSGPACK:
             response = ce.encrypt(msgpack.dumps(response))
-        elif ct == CT_JSON:
+        else:
             response = ce.encrypt(rapidjson.dumps(response).encode())
-        callback(call_id, '200|' + response.decode())
+        if ct == CT_MSGPACK:
+            callback(call_id, b'\x00\xC8' + response)
+        else:
+            callback(call_id, '200|' + response.decode())
     except Exception as e:
         logging.warning('MQTT API: API call failed from {}: {}'.format(
             notifier_id, e))

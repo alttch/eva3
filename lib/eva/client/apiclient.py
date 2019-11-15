@@ -79,7 +79,7 @@ class APIClient(object):
     def ssl_verify(self, v):
         self._ssl_verify = v
 
-    def do_call_http(self, payload, t):
+    def do_call_http(self, payload, t, rid=None):
         return requests.post(self._uri + '/jrpc',
                              data=packer.dumps(payload),
                              timeout=t,
@@ -103,10 +103,16 @@ class APIClient(object):
             p = {}
         if self._key is not None and 'k' not in p:
             p['k'] = self._key
-        cid = call_id if call_id else str(uuid.uuid4())
+        if call_id is not None:
+            cid = call_id
+            rid = str(call_id).encode()
+        else:
+            u = uuid.uuid4()
+            cid = str(u)
+            rid = u.bytes
         payload = {'jsonrpc': '2.0', 'method': func, 'params': p, 'id': cid}
         try:
-            r = self.do_call(payload, t)
+            r = self.do_call(payload, t, rid=rid)
         except requests.Timeout:
             return (result_server_timeout, {}) if \
                     not _return_raw else (-1, {})

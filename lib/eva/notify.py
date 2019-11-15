@@ -1652,7 +1652,8 @@ class GenericMQTTNotifier(GenericNotifier):
         if not self.enabled: return
         t = msg.topic
         try:
-            d = msg.payload.decode()
+            d = msg.payload if msg.payload.startswith(
+                b'\x00') else msg.payload.decode()
         except:
             logging.warning('.Invalid message from MQTT server: {}'.format(
                 msg.payload))
