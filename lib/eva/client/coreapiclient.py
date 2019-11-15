@@ -116,6 +116,23 @@ class CoreAPIClient(APIClient):
         self._key_id = _key_id
 
     def do_call_mqtt(self, payload, t, rid=None):
+        """
+        Protocol description:
+
+        API request is sent to controller MQTT API topic
+
+        Request format:
+
+        0 - 0x00, binary packet
+        1 - 0x02, protocol version
+        2 - API key ID and binary request frame (RF), combined with 0x00
+
+        RF format:
+
+        Binary hexadecimal request ID + \x00 + MessagePack request payload
+
+        API response will be sent to response_topic/{request_ID_in_hex}
+        """
         n = eva.notify.get_notifier(self._notifier_id)
         r = self.Response()
         if not n: return r
