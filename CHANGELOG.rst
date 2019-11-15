@@ -7,7 +7,7 @@ EVA ICS CHANGELOG
 Common
 ------
 
-   * msgpack support, internal API calls changed to msgpack
+   * MessagePack support, internal API calls changed to msgpack
 
 UC
 --
