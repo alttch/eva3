@@ -8,6 +8,7 @@ Common
 ------
 
    * MessagePack support, internal API calls changed to msgpack
+   * MQTT inter-connect API encryption strength increased to AES256
 
 UC
 --
