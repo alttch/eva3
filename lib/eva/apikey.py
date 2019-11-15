@@ -84,8 +84,8 @@ class APIKey(object):
 
     def set_key(self, k):
         self.key = k
-        _k = base64.b64encode(hashlib.sha256(str(k).encode()).digest())
-        self.ce = Fernet(_k)
+        self.private_key = hashlib.sha256(str(k).encode()).digest()
+        self.ce = Fernet(base64.b64encode(self.private_key))
 
     def set_prop(self, prop, value=None, save=False):
         if not self.dynamic or self.master:
@@ -242,9 +242,8 @@ class APIKey(object):
             if not self.in_db:
                 # if save on exit is set, deleted key with the same name could
                 # still be present in the database
-                dbconn.execute(
-                    sql('delete from apikeys where k_id=:k_id'),
-                    k_id=data['id'])
+                dbconn.execute(sql('delete from apikeys where k_id=:k_id'),
+                               k_id=data['id'])
                 dbconn.execute(
                     sql('insert into apikeys(k_id, k, m, s, i,' +
                         ' g, i_ro, g_ro, a,hal, has, pvt, rpvt) values ' +
@@ -422,6 +421,11 @@ def key_ce(key_id):
         keys_by_id[key_id].ce
 
 
+def key_private(key_id):
+    return None if not key_id or not key_id in keys_by_id else \
+        keys_by_id[key_id].private_key
+
+
 def key_id(k):
     return 'unknown' if not k or not k in keys else keys[k].key_id
 
@@ -564,8 +568,8 @@ def delete_api_key(key_id):
     if eva.core.config.db_update == 1:
         dbconn = userdb()
         try:
-            dbconn.execute(
-                sql('delete from apikeys where k_id=:key_id'), key_id=key_id)
+            dbconn.execute(sql('delete from apikeys where k_id=:key_id'),
+                           key_id=key_id)
         except:
             eva.core.report_userdb_error()
     else:

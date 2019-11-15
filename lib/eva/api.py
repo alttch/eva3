@@ -14,6 +14,7 @@ import msgpack
 import eva.tokens as tokens
 
 import eva.core
+import eva.crypto
 from eva import apikey
 
 from eva.tools import format_json
@@ -1337,8 +1338,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                                     data,
                                 'data':
                                     base64.b64encode(res).decode()
-                                    if g.get('ct_format') ==
-                                    CT_JSON else res
+                                    if g.get('ct_format') == CT_JSON else res
                             }
                 else:
                     data = None
@@ -1426,38 +1426,40 @@ def mqtt_api_handler(notifier_id, data, callback):
                 raise FunctionFailed('invalid text packet data')
             pfx, api_key_id, d = data.split('|', 2)
             ct = CT_JSON
-            d = d.encode()
+            ce = apikey.key_ce(api_key_id)
+            if ce is None:
+                raise FunctionFailed('invalid key')
+            try:
+                d = ce.decrypt(d.encode()).decode()
+            except:
+                logging.warning(
+                    'MQTT API: invalid API key in encrypted packet from ' +
+                    notifier_id)
+                raise
+            call_id, payload = d.split('|', 1)
+            try:
+                payload = rapidjson.loads(payload)
+            except:
+                eva.core.log_traceback()
+                raise FunctionFailed('Invalid JSON data')
         else:
             if not data or data[0] != 0:
                 raise FunctionFailed('invalid binary packet data')
             pfx, api_key_id, d = data.split(b'\x00', 2)
             api_key_id = api_key_id[1:].decode()
             ct = CT_MSGPACK
-        try:
-            ce = apikey.key_ce(api_key_id)
-            if ce is None:
+            private_key = apikey.key_private(api_key_id)
+            if private_key is None:
                 raise FunctionFailed('invalid key')
-            d = ce.decrypt(d)
-            if ct == CT_MSGPACK:
-                rid = d[:16]
-                payload = d[16:]
-                call_id = rid.hex()
-            else:
-                d = d.decode()
-                call_id, payload = d.split('|', 1)
-        except:
-            logging.warning(
-                'MQTT API: invalid api key in encrypted packet from ' +
-                notifier_id)
-            raise
-        try:
-            if ct == CT_MSGPACK:
-                payload = msgpack_loads(payload)
-            else:
-                payload = rapidjson.loads(payload)
-        except:
-            eva.core.log_traceback()
-            raise FunctionFailed('Invalid JSON data')
+            d = eva.crypto.decrypt(d, private_key)
+            rid = d[:16]
+            call_id = rid.hex()
+            try:
+                payload = msgpack_loads(d[16:])
+            except:
+                logging.warning('MQTT API: invalid JSON data or API key from ' +
+                                notifier_id)
+                raise
         g.set('eva_ics_gw', 'mqtt:' + notifier_id)
         try:
             response = jrpc(p=payload)
@@ -1467,12 +1469,10 @@ def mqtt_api_handler(notifier_id, data, callback):
             raise FunctionFailed('API error')
         if ct == CT_MSGPACK:
             packer = msgpack.Packer(use_bin_type=True)
-            response = ce.encrypt(packer.pack(response))
-        else:
-            response = ce.encrypt(rapidjson.dumps(response).encode())
-        if ct == CT_MSGPACK:
+            response = eva.crypto.encrypt(packer.pack(response), private_key)
             callback(call_id, b'\x00\xC8' + response)
         else:
+            response = ce.encrypt(rapidjson.dumps(response).encode())
             callback(call_id, '200|' + response.decode())
     except Exception as e:
         logging.warning('MQTT API: API call failed from {}: {}'.format(
