@@ -10,7 +10,6 @@ import base64
 import hashlib
 import uuid
 import threading
-import rapidjson
 import msgpack
 
 from cryptography.fernet import Fernet
@@ -44,9 +43,6 @@ class CoreAPIClient(APIClient):
         text = ''
         content = ''
         ok = False
-
-        def json(self):
-            return rapidjson.loads(self.text)
 
     def __init__(self):
         super().__init__()
@@ -126,7 +122,6 @@ class CoreAPIClient(APIClient):
             request_id = payload['id']
         else:
             request_id = str(uuid.uuid4())
-        # data = '{}|{}'.format(request_id, rapidjson.dumps(payload))
         data = request_id.encode() + b'|' + msgpack.dumps(payload)
         cb = self.MQTTCallback()
         n.send_api_request(
