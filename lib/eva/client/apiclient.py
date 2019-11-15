@@ -6,18 +6,29 @@ __version__ = "3.2.6"
 import os
 import requests
 import uuid
+import threading
+
+from functools import partial
+
+
+def pack_msgpack(data):
+    p = msgpack.Packer(use_bin_type=True)
+    return p.pack(data)
+
+
 try:
-    import msgpack as packer
-    from functools import partial
+    import msgpack
     CONTENT_TYPE = 'application/msgpack'
-    decoder = partial(packer.loads, raw=False)
+    pack = pack_msgpack
+    unpack = partial(msgpack.loads, encoding='utf-8')
 except:
     CONTENT_TYPE = 'application/json'
     try:
-        import rapidjson as packer
+        import rapidjson as json
     except:
-        import json as packer
-    decoder = packer.loads
+        import json
+    pack = json.dumps
+    unpack = json.loads
 
 version = __version__
 
@@ -81,7 +92,7 @@ class APIClient(object):
 
     def do_call_http(self, payload, t, rid=None):
         return requests.post(self._uri + '/jrpc',
-                             data=packer.dumps(payload),
+                             data=pack(payload),
                              timeout=t,
                              verify=self._ssl_verify,
                              headers={'Content-Type': CONTENT_TYPE})
@@ -126,7 +137,7 @@ class APIClient(object):
             return r.status_code, r.content
         if not r.ok:
             try:
-                result = msgpack.loads(r.content)
+                result = unpack(r.content)
             except:
                 result = {}
             if r.status_code in [400, 403, 404, 405, 409, 500]:
@@ -134,7 +145,7 @@ class APIClient(object):
             else:
                 return result_unknown_error, {}
         try:
-            result = decoder(r.content)
+            result = unpack(r.content)
             if not isinstance(result, dict) or \
                 result.get('jsonrpc' != '2.0') or \
                 result.get('id') != cid:

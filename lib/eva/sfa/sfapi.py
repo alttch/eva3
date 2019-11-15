@@ -1450,7 +1450,8 @@ class SFA_HTTP_Root:
                     'remote controller code {}'.format(code))
             cherrypy.serving.response.headers['Content-Type'] = result[
                 'content_type']
-            return base64.b64decode(result['data'])
+            # return base64.b64decode(result['data'])
+            return result['data']
         try:
             if f.find('//') == -1: _f = 'http://' + f
             else: _f = f

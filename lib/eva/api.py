@@ -48,8 +48,6 @@ from types import SimpleNamespace
 
 import base64
 
-msgpack_loads = partial(msgpack.loads, raw=False)
-
 default_port = 80
 default_ssl_port = 443
 
@@ -71,6 +69,8 @@ api_result_accepted = 2
 
 CT_MSGPACK = 1
 CT_JSON = 2
+
+msgpack_loads = partial(msgpack.loads, encoding='utf-8')
 
 
 class MethodNotFound(Exception):
@@ -466,7 +466,7 @@ def http_remote_info(k=None):
 
 
 def cp_json_pre():
-    cherrypy.serving.request.ct_format = CT_JSON
+    g.set('ct_format', CT_JSON)
     try:
         if cherrypy.request.headers.get('Content-Type') == 'application/json':
             cl = int(cherrypy.request.headers.get('Content-Length'))
@@ -485,17 +485,17 @@ def cp_json_pre():
 def get_json_payload():
     ct = cherrypy.request.headers.get('Content-Type')
     if ct == 'application/msgpack' or ct == 'application/x-msgpack':
-        cherrypy.serving.request.ct_format = CT_MSGPACK
+        g.set('ct_format', CT_MSGPACK)
         cl = int(cherrypy.request.headers.get('Content-Length'))
         raw = cherrypy.request.body.read(cl)
         decoder = msgpack_loads
     elif ct == 'application/json':
-        cherrypy.serving.request.ct_format = CT_JSON
+        g.set('ct_format', CT_JSON)
         cl = int(cherrypy.request.headers.get('Content-Length'))
         raw = cherrypy.request.body.read(cl).decode()
         decoder = rapidjson.loads
     elif 'X-JSON' in cherrypy.request.headers:
-        cherrypy.serving.request.ct_format = CT_JSON
+        g.set('ct_format', CT_JSON)
         raw = cherrypy.request.headers.get('X-JSON')
         decoder = rapidjson.loads
     else:
@@ -1151,10 +1151,10 @@ def jsonify(value):
     if isinstance(value, bytes):
         return value
     if value or value == 0 or isinstance(value, list):
-        fmt = cherrypy.serving.request.ct_format
+        fmt = g.get('ct_format')
         if fmt == CT_MSGPACK:
             response.headers['Content-Type'] = 'application/msgpack'
-            return msgpack.dumps(value)
+            return apiclient.pack_msgpack(value)
         elif fmt == CT_JSON:
             response.headers['Content-Type'] = 'application/json'
             return format_json(
@@ -1177,10 +1177,10 @@ def cp_jsonrpc_handler(*args, **kwargs):
         cherrypy.serving.response.status = 202
         return
     else:
-        fmt = cherrypy.serving.request.ct_format
+        fmt = g.get('ct_format')
         if fmt == CT_MSGPACK:
             response.headers['Content-Type'] = 'application/msgpack'
-            return msgpack.dumps(value)
+            return apiclient.pack_msgpack(value)
         elif fmt == CT_JSON:
             response.headers['Content-Type'] = 'application/json'
         return format_json(
@@ -1334,8 +1334,12 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                             }
                         except:
                             res = {
-                                'content_type': data,
-                                'data': base64.b64encode(res).decode()
+                                'content_type':
+                                    data,
+                                'data':
+                                    base64.b64encode(res).decode()
+                                    if g.get('ct_format') ==
+                                    CT_JSON else res
                             }
                 else:
                     data = None
@@ -1436,7 +1440,8 @@ def mqtt_api_handler(notifier_id, data, callback):
                 raise FunctionFailed('invalid key')
             d = ce.decrypt(d)
             if ct == CT_MSGPACK:
-                rid, payload = d.split(b'\x00', 1)
+                rid = d[:16]
+                payload = d[16:]
                 call_id = rid.hex()
             else:
                 d = d.decode()
@@ -1462,7 +1467,8 @@ def mqtt_api_handler(notifier_id, data, callback):
             callback(call_id, '500|')
             raise FunctionFailed('API error')
         if ct == CT_MSGPACK:
-            response = ce.encrypt(msgpack.dumps(response))
+            packer = msgpack.Packer(use_bin_type=True)
+            response = ce.encrypt(packer.pack(response))
         else:
             response = ce.encrypt(rapidjson.dumps(response).encode())
         if ct == CT_MSGPACK:

@@ -11,6 +11,7 @@ import hashlib
 import uuid
 import threading
 import msgpack
+import logging
 
 from cryptography.fernet import Fernet
 
@@ -18,7 +19,7 @@ import eva.notify
 import eva.core
 import requests
 
-from eva.client.apiclient import APIClient
+from eva.client.apiclient import APIClient, pack_msgpack
 
 
 class CoreAPIClient(APIClient):
@@ -129,7 +130,8 @@ class CoreAPIClient(APIClient):
 
         RF format:
 
-        Binary hexadecimal request ID + \x00 + MessagePack request payload
+        0-15    Binary hexadecimal request ID, padded
+        16-end  MessagePack request payload
 
         API response will be sent to response_topic/{request_ID_in_hex}
         """
@@ -138,8 +140,13 @@ class CoreAPIClient(APIClient):
         if not n: return r
         if rid is None:
             rid = uuid.uuid4().bytes
+        else:
+            if len(rid) > 16:
+                logging.error('request ID is longer than 16 bytes, aborting')
+                return r
+            rid.ljust(16, b'\x00')
         request_id = rid.hex()
-        data = rid + b'\x00' + msgpack.dumps(payload)
+        data = rid + pack_msgpack(payload)
         cb = self.MQTTCallback()
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri, b'\x00\x02' +
