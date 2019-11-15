@@ -4,6 +4,11 @@ EVA ICS CHANGELOG
 3.2.6 (TBA)
 ===========
 
+Common
+------
+
+   * msgpack support, internal API calls changed to msgpack
+
 UC
 --
 

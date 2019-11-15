@@ -82,6 +82,16 @@ JSON RPC API URL:
 
     **\http://<ip_address:8828>/jrpc**
 
+JSON RPC payload encoding
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+EVA ICS supports JSON RPC payloads, encoded as generic JSON and as `MessagePack
+<https://msgpack.org/>`_. MessagePack encoding works faster, requires less
+bandwidth and is highly recommended to use.
+
+To call API methods with MessagePack-encoded payloads, use *Content-Type:
+application/msgpack* HTTP request header.
+
 JSON RPC error responses
 ~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -25,6 +25,7 @@ pymodbus==2.2.0
 pysnmp==4.4.4
 pygments==2.2.0
 python-rapidjson==0.7.2
+msgpack-python==0.5.6
 pytz==2018.9
 neotermcolor==2.0.7
 cherrypy==17.4.1

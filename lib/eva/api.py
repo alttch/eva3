@@ -10,6 +10,7 @@ import time
 import math
 import importlib
 import rapidjson
+import msgpack
 import eva.tokens as tokens
 
 import eva.core
@@ -25,6 +26,7 @@ from eva.tools import parse_oid
 from eva.tools import dict_from_str
 
 from eva.client import apiclient
+from functools import partial
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -46,25 +48,29 @@ from types import SimpleNamespace
 
 import base64
 
+msgpack_loads = partial(msgpack.loads, raw=False)
+
 default_port = 80
 default_ssl_port = 443
 
-config = SimpleNamespace(
-    host='127.0.0.1',
-    port=default_port,
-    ssl_host=None,
-    ssl_port=default_ssl_port,
-    ssl_module=None,
-    ssl_cert=None,
-    ssl_key=None,
-    ssl_chain=None,
-    session_timeout=0,
-    session_no_prolong=False,
-    thread_pool=15,
-    ei_enabled=True,
-    use_x_real_ip=False)
+config = SimpleNamespace(host='127.0.0.1',
+                         port=default_port,
+                         ssl_host=None,
+                         ssl_port=default_ssl_port,
+                         ssl_module=None,
+                         ssl_cert=None,
+                         ssl_key=None,
+                         ssl_chain=None,
+                         session_timeout=0,
+                         session_no_prolong=False,
+                         thread_pool=15,
+                         ei_enabled=True,
+                         use_x_real_ip=False)
 
 api_result_accepted = 2
+
+CT_MSGPACK = 1
+CT_JSON = 2
 
 
 class MethodNotFound(Exception):
@@ -316,8 +322,8 @@ def set_restful_response_location(i, rtp, api_uri='/r'):
 
 def update_config(cfg):
     try:
-        config.host, config.port = parse_host_port(
-            cfg.get('webapi', 'listen'), default_port)
+        config.host, config.port = parse_host_port(cfg.get('webapi', 'listen'),
+                                                   default_port)
         logging.debug('webapi.listen = %s:%u' % (config.host, config.port))
     except:
         eva.core.log_traceback()
@@ -335,8 +341,8 @@ def update_config(cfg):
         ssl_key = cfg.get('webapi', 'ssl_key')
         if ssl_key[0] != '/':
             config.ssl_key = eva.core.dir_etc + '/' + config.ssl_key
-        logging.debug(
-            'webapi.ssl_listen = %s:%u' % (config.ssl_host, config.ssl_port))
+        logging.debug('webapi.ssl_listen = %s:%u' %
+                      (config.ssl_host, config.ssl_port))
         config.ssl_chain = cfg.get('webapi', 'ssl_chain')
         if config.ssl_chain[0] != '/':
             config.ssl_chain = eva.core.dir_etc + '/' + config.ssl_chain
@@ -460,6 +466,7 @@ def http_remote_info(k=None):
 
 
 def cp_json_pre():
+    cherrypy.serving.request.ct_format = CT_JSON
     try:
         if cherrypy.request.headers.get('Content-Type') == 'application/json':
             cl = int(cherrypy.request.headers.get('Content-Length'))
@@ -469,7 +476,6 @@ def cp_json_pre():
         else:
             return
         if raw:
-            data = rapidjson.loads(raw)
             cherrypy.serving.request.params.update(rapidjson.loads(raw))
     except:
         raise cp_bad_request('invalid JSON data')
@@ -477,14 +483,24 @@ def cp_json_pre():
 
 
 def get_json_payload():
-    if cherrypy.request.headers.get('Content-Type') == 'application/json':
+    ct = cherrypy.request.headers.get('Content-Type')
+    if ct == 'application/msgpack' or ct == 'application/x-msgpack':
+        cherrypy.serving.request.ct_format = CT_MSGPACK
+        cl = int(cherrypy.request.headers.get('Content-Length'))
+        raw = cherrypy.request.body.read(cl)
+        decoder = msgpack_loads
+    elif ct == 'application/json':
+        cherrypy.serving.request.ct_format = CT_JSON
         cl = int(cherrypy.request.headers.get('Content-Length'))
         raw = cherrypy.request.body.read(cl).decode()
+        decoder = rapidjson.loads
     elif 'X-JSON' in cherrypy.request.headers:
+        cherrypy.serving.request.ct_format = CT_JSON
         raw = cherrypy.request.headers.get('X-JSON')
+        decoder = rapidjson.loads
     else:
         return None
-    return rapidjson.loads(raw) if raw else None
+    return decoder(raw) if raw else None
 
 
 def cp_jsonrpc_pre():
@@ -563,17 +579,16 @@ class GenericAPI(object):
         if is_oid(i):
             _t, iid = parse_oid(i)
             if item and item.item_type != _t: raise ResourceNotFound(i)
-        return eva.item.get_state_history(
-            a=a,
-            oid=item.oid if item else i,
-            t_start=s,
-            t_end=e,
-            limit=l,
-            prop=x,
-            time_format=t,
-            fill=w,
-            fmt=g,
-            xopts=o)
+        return eva.item.get_state_history(a=a,
+                                          oid=item.oid if item else i,
+                                          t_start=s,
+                                          t_end=e,
+                                          limit=l,
+                                          prop=x,
+                                          time_format=t,
+                                          fill=w,
+                                          fmt=g,
+                                          xopts=o)
 
     def _result(self, k, u, i, g, s, rtp):
         import eva.item
@@ -860,8 +875,17 @@ class GenericAPI(object):
                     'format should be list only to process multiple items')
             result_keys = set()
             for i in items:
-                r = self._get_state_history(
-                    k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=None, o=o)
+                r = self._get_state_history(k=k,
+                                            a=a,
+                                            i=i,
+                                            s=s,
+                                            e=e,
+                                            l=l,
+                                            x=x,
+                                            t=t,
+                                            w=w,
+                                            g=None,
+                                            o=o)
                 process_status = 'status' in r
                 process_value = 'value' in r
                 for z, tt in enumerate(r['t']):
@@ -883,8 +907,17 @@ class GenericAPI(object):
                     merged_result.setdefault(rk, []).append(result[tt].get(rk))
             return format_result(merged_result, 'multiple', c)
         else:
-            result = self._get_state_history(
-                k=k, a=a, i=i, s=s, e=e, l=l, x=x, t=t, w=w, g=g, o=o)
+            result = self._get_state_history(k=k,
+                                             a=a,
+                                             i=i,
+                                             s=s,
+                                             e=e,
+                                             l=l,
+                                             x=x,
+                                             t=t,
+                                             w=w,
+                                             g=g,
+                                             o=o)
             return format_result(result, x, c)
 
     # return version for embedded hardware
@@ -1118,9 +1151,14 @@ def jsonify(value):
     if isinstance(value, bytes):
         return value
     if value or value == 0 or isinstance(value, list):
-        response.headers['Content-Type'] = 'application/json'
-        return format_json(
-            value, minimal=not eva.core.config.development).encode('utf-8')
+        fmt = cherrypy.serving.request.ct_format
+        if fmt == CT_MSGPACK:
+            response.headers['Content-Type'] = 'application/msgpack'
+            return msgpack.dumps(value)
+        elif fmt == CT_JSON:
+            response.headers['Content-Type'] = 'application/json'
+            return format_json(
+                value, minimal=not eva.core.config.development).encode('utf-8')
     else:
         try:
             del response.headers['Content-Type']
@@ -1132,12 +1170,19 @@ def jsonify(value):
 
 
 def cp_jsonrpc_handler(*args, **kwargs):
-    if cherrypy.serving.response.status == 401: return
+    response = cherrypy.serving.response
+    if response.status == 401: return
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     if value is None:
         cherrypy.serving.response.status = 202
         return
     else:
+        fmt = cherrypy.serving.request.ct_format
+        if fmt == CT_MSGPACK:
+            response.headers['Content-Type'] = 'application/msgpack'
+            return msgpack.dumps(value)
+        elif fmt == CT_JSON:
+            response.headers['Content-Type'] = 'application/json'
         return format_json(
             value, minimal=not eva.core.config.development).encode('utf-8')
 
@@ -1380,15 +1425,21 @@ def mqtt_api_handler(notifier_id, data, callback):
             ce = apikey.key_ce(api_key_id)
             if ce is None:
                 raise FunctionFailed('invalid key')
-            d = ce.decrypt(d.encode()).decode()
-            call_id, payload = d.split('|', 1)
+            d = ce.decrypt(d.encode())
+            call_id, payload = d.split(b'|', 1)
+            call_id = call_id.decode()
         except:
             logging.warning(
                 'MQTT API: invalid api key in encrypted packet from ' +
                 notifier_id)
             raise
         try:
-            payload = rapidjson.loads(payload)
+            try:
+                payload = msgpack_loads(payload)
+                ct = CT_MSGPACK
+            except:
+                payload = rapidjson.loads(payload.decode())
+                ct = CT_JSON
         except:
             eva.core.log_traceback()
             raise FunctionFailed('Invalid JSON data')
@@ -1399,7 +1450,10 @@ def mqtt_api_handler(notifier_id, data, callback):
             eva.core.log_traceback()
             callback(call_id, '500|')
             raise FunctionFailed('API error')
-        response = ce.encrypt(rapidjson.dumps(response).encode())
+        if ct == CT_MSGPACK:
+            response = ce.encrypt(msgpack.dumps(response))
+        elif ct == CT_JSON:
+            response = ce.encrypt(rapidjson.dumps(response).encode())
         callback(call_id, '200|' + response.decode())
     except Exception as e:
         logging.warning('MQTT API: API call failed from {}: {}'.format(
@@ -1448,14 +1502,18 @@ def stop():
 
 
 def init():
-    cherrypy.tools.json_pre = cherrypy.Tool(
-        'before_handler', cp_json_pre, priority=10)
-    cherrypy.tools.jsonrpc_pre = cherrypy.Tool(
-        'before_handler', cp_jsonrpc_pre, priority=10)
-    cherrypy.tools.auth = cherrypy.Tool(
-        'before_handler', cp_check_perm, priority=60)
-    cherrypy.tools.nocache = cherrypy.Tool(
-        'before_finalize', cp_nocache, priority=10)
+    cherrypy.tools.json_pre = cherrypy.Tool('before_handler',
+                                            cp_json_pre,
+                                            priority=10)
+    cherrypy.tools.jsonrpc_pre = cherrypy.Tool('before_handler',
+                                               cp_jsonrpc_pre,
+                                               priority=10)
+    cherrypy.tools.auth = cherrypy.Tool('before_handler',
+                                        cp_check_perm,
+                                        priority=60)
+    cherrypy.tools.nocache = cherrypy.Tool('before_finalize',
+                                           cp_nocache,
+                                           priority=10)
 
 
 def jsonify_error(value):

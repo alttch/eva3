@@ -11,6 +11,8 @@ import hashlib
 import uuid
 import threading
 import rapidjson
+import msgpack
+
 from cryptography.fernet import Fernet
 
 import eva.notify
@@ -40,6 +42,7 @@ class CoreAPIClient(APIClient):
     class Response(object):
         status_code = 500
         text = ''
+        content = ''
         ok = False
 
         def json(self):
@@ -123,18 +126,20 @@ class CoreAPIClient(APIClient):
             request_id = payload['id']
         else:
             request_id = str(uuid.uuid4())
-        data = '{}|{}'.format(request_id, rapidjson.dumps(payload))
+        # data = '{}|{}'.format(request_id, rapidjson.dumps(payload))
+        data = request_id.encode() + b'|' + msgpack.dumps(payload)
         cb = self.MQTTCallback()
         n.send_api_request(
-            request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(
-                self._key_id,
-                self.ce.encrypt(data.encode()).decode()), cb.data_handler)
+            request_id, self._product_code + '/' + self._uri,
+            '|{}|{}'.format(self._key_id,
+                            self.ce.encrypt(data).decode()), cb.data_handler)
         if not cb.completed.wait(self._timeout):
             n.finish_api_request(request_id)
             raise requests.Timeout()
         if cb.code:
             try:
-                r.text = self.ce.decrypt(cb.body.encode()).decode()
+                # r.text = self.ce.decrypt(cb.body.encode()).decode()
+                r.content = self.ce.decrypt(cb.body.encode())
                 if cb.code == 200:
                     r.ok = True
                 r.status_code = cb.code

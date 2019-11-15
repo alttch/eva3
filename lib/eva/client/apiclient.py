@@ -6,6 +6,18 @@ __version__ = "3.2.5"
 import os
 import requests
 import uuid
+try:
+    import msgpack as packer
+    from functools import partial
+    CONTENT_TYPE = 'application/msgpack'
+    decoder = partial(packer.loads, raw=False)
+except:
+    CONTENT_TYPE = 'application/json'
+    try:
+        import rapidjson as packer
+    except:
+        import json as packer
+    decoder = packer.loads
 
 version = __version__
 
@@ -68,11 +80,11 @@ class APIClient(object):
         self._ssl_verify = v
 
     def do_call_http(self, payload, t):
-        return requests.post(
-            self._uri + '/jrpc',
-            json=payload,
-            timeout=t,
-            verify=self._ssl_verify)
+        return requests.post(self._uri + '/jrpc',
+                             data=packer.dumps(payload),
+                             timeout=t,
+                             verify=self._ssl_verify,
+                             headers={'Content-Type': CONTENT_TYPE})
 
     def call(self,
              func,
@@ -105,10 +117,10 @@ class APIClient(object):
             return (result_server_error, {}) if \
                     not _return_raw else (-2, {})
         if _return_raw:
-            return r.status_code, r.text
+            return r.status_code, r.content
         if not r.ok:
             try:
-                result = r.json()
+                result = msgpack.loads(r.content)
             except:
                 result = {}
             if r.status_code in [400, 403, 404, 405, 409, 500]:
@@ -116,7 +128,7 @@ class APIClient(object):
             else:
                 return result_unknown_error, {}
         try:
-            result = r.json()
+            result = decoder(r.content)
             if not isinstance(result, dict) or \
                 result.get('jsonrpc' != '2.0') or \
                 result.get('id') != cid:
@@ -131,7 +143,7 @@ class APIClient(object):
                 import traceback
                 print('Result:')
                 print('-' * 80)
-                print(r.text)
+                print(r.content)
                 print('-' * 80)
                 print(traceback.format_exc())
             return (result_bad_data, r.text)
