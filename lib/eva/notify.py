@@ -2455,7 +2455,7 @@ class NWebSocket(WebSocket):
         s_all = ['#']
         try:
             if self.notifier.ct == CT_MSGPACK:
-                data = msgpack.loads(message.data, encoding='utf-8')
+                data = msgpack.loads(message.data, raw=False)
             else:
                 data = rapidjson.loads(message.data.decode())
             subject = data['s']

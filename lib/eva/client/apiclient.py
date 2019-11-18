@@ -20,7 +20,7 @@ try:
     import msgpack
     CONTENT_TYPE = 'application/msgpack'
     pack = pack_msgpack
-    unpack = partial(msgpack.loads, encoding='utf-8')
+    unpack = partial(msgpack.loads, raw=False)
 except:
     CONTENT_TYPE = 'application/json'
     try:

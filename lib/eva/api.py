@@ -70,7 +70,7 @@ config = SimpleNamespace(host='127.0.0.1',
 
 api_result_accepted = 2
 
-msgpack_loads = partial(msgpack.loads, encoding='utf-8')
+msgpack_loads = partial(msgpack.loads, raw=False)
 
 
 class MethodNotFound(Exception):

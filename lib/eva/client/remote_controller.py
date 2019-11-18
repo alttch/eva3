@@ -172,7 +172,7 @@ class WebSocketWorker(BackgroundWorker):
             else:
                 try:
                     try:
-                        data = msgpack.loads(frame.data, encoding='utf-8')
+                        data = msgpack.loads(frame.data, raw=False)
                     except:
                         data = rapidjson.loads(frame.data.decode())
                     if data.get('s') == 'server' and data.get('d') == 'restart':
@@ -248,7 +248,7 @@ class RemoteController(eva.item.Item):
             return True
         try:
             try:
-                j = msgpack.loads(data, encoding='utf-8')
+                j = msgpack.loads(data, raw=False)
             except:
                 j = rapidjson.loads(data)
         except:
