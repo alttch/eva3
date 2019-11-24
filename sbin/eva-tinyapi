@@ -8,8 +8,8 @@ DEFAULT_TIMEOUT=15
 
 shopt -s extglob
 
-D=`realpath $0`
-cd `dirname ${D}`/..
+D=$(realpath "$0")
+cd "$(dirname "${D}")/.." || exit 1
 
 _CONFIG=()
 _SECTIONS=""
@@ -23,7 +23,7 @@ FUNCTION=
 VERBOSE=0
 
 function echoV() {
-    [ ${VERBOSE} -gt 0 ] && echo $*
+    [ ${VERBOSE} -gt 0 ] && echo "$@"
 }
 
 function parseIniFile() {
@@ -34,7 +34,7 @@ function parseIniFile() {
 
     local IFS=""
 
-    while read LINE 
+    while read -r LINE
     do
         LINE=${LINE%%[;#]*}
         LINE=${LINE%%*( )}
@@ -143,10 +143,9 @@ do
             exit 0
         ;;
         *)
-            echo $1 | grep '=' > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
-                [ "x$DATA" = "x" ] || DATA="${DATA}, "
-                D=`echo $1 | sed "s/\(.*\)=\(.*\)/\"\1\" : \"\2\"/g"`
+            if [[ "$1" = *=* ]]; then
+                [ -z "$DATA" ] || DATA="${DATA}, "
+                D=$(echo "$1" | sed "s/\\(.*\\)=\\(.*\\)/\"\\1\" : \"\\2\"/g")
                 shift;
                 DATA="${DATA} ${D}"
             else
@@ -165,52 +164,41 @@ if [ "x$PRODUCT" = "x" ] || [ "x$FUNCTION" = "x" ]; then
         exit -1
 fi
 
-cat ./etc/${PRODUCT}.ini > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+if ! head -1 ./etc/"${PRODUCT}".ini > /dev/null 2>&1; then
     echo "Can't open ${PRODUCT}.ini"
     exit 9
 fi
 
-cat ./etc/${PRODUCT}_apikeys.ini > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+if ! head -1 ./etc/"${PRODUCT}"_apikeys.ini > /dev/null 2>&1; then
     echo "Can't open ${PRODUCT}_apikeys.ini"
     exit 9
 fi
 
-parseIniFile < ./etc/${PRODUCT}.ini
+parseIniFile < ./etc/"${PRODUCT}".ini
 
 getProperty webapi.listen
-U="http://"
 
-if [ "x$_PROP" = "x" ]; then
+if [ -z "$_PROP" ]; then
     getProperty webapi.ssl_listen
-    if [ "x$_PROP" = "x" ]; then
+    if [ -z "$_PROP" ]; then
         echo "Can't find API host/port in ${PRODUCT}.ini"
         exit 9
     fi
     U="https://"
 fi
 
-U="$U`echo $_PROP | sed 's/0.0.0.0/127.0.0.1/'`"
+U="http://${_PROP//0.0.0.0/127.0.0.1}/jrpc"
 
-#if [ "x$SYSAPI" = "x" ]; then
-    #U="$U/${PRODUCT}-api/"
-    #else
-    #U="$U/sys-api/"
-#fi
-
-U="${U}/jrpc"
-
-parseIniFile < ./etc/${PRODUCT}_apikeys.ini
+parseIniFile < ./etc/"${PRODUCT}"_apikeys.ini
 
 getProperty masterkey.key
 
-if [ "x$_PROP" = "x" ]; then
+if [ -z "$_PROP" ]; then
     echo "Can't find masterkey in ${PRODUCT}_apikeys.ini"
     exit 9
 fi
 
-[ "x$DATA" = "x" ] || DATA="${DATA}, "
+[ -z "$DATA" ] || DATA="${DATA}, "
 
 DATA="$DATA \"k\" : \"$_PROP\""
 
@@ -227,9 +215,10 @@ else
 fi
 
 if [ $VERB ]; then
-  echo $DATA | curl --header "Content-Type: application/json" --data @- -X POST -m ${TIMEOUT} -s ${VERB} $U
+  echo "$DATA" | \
+     curl --header "Content-Type: application/json" --data @- -X POST -m "${TIMEOUT}" -s "${VERB}" "$U"
 else
-  RESULT=`echo $DATA | curl --header "Content-Type: application/json" --data @- -X POST -m ${TIMEOUT} -s ${VERB} $U`
+  RESULT=$(echo "$DATA" | curl --header "Content-Type: application/json" --data @- -X POST -m "${TIMEOUT}" -s "${VERB}" "$U")
 fi
 _EX=$?
 echoV
@@ -242,21 +231,18 @@ if [ $_EX -ne 0 ]; then
   exit 7
 fi
 
-R=`echo $RESULT|jq .result 2>&1`
-
-if [ $? -ne 0 ] || [ "x$R" == "xnull" ]; then
-  ERROR_CODE=`echo $RESULT|jq -Mr .error.code 2>&1`
-  if [ $? -ne 0 ]; then
+if ! R=$(echo "$RESULT" | jq .result 2>&1) || [ "$R" == "null" ]; then
+  if ! ERROR_CODE=$(echo "$RESULT" | jq -Mr .error.code 2>&1); then
     exit 9
   fi
-  ERROR_MESSAGE=`echo $RESULT|jq -Mr .error.message 2>&1`
-  if [ $? -ne 0 ] || [ "x$ERROR_CODE" == "xnull" ]; then
-    exit 9
+  if ! ERROR_MESSAGE=$(echo "$RESULT" | \
+      jq -Mr .error.message 2>&1) || [ "$ERROR_CODE" == "null" ]; then
+      exit 9
   fi
-  echo ${ERROR_MESSAGE}
-  exit ${ERROR_CODE}
+  echo "${ERROR_MESSAGE}"
+  exit "${ERROR_CODE}"
 fi
 
-echo $R
+echo "$R"
 
 exit 0
