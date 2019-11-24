@@ -1,10 +1,6 @@
 #!/bin/sh
 
-D=`realpath $0`
-EVA_DIR=`dirname ${D}`/..
-EVA_DIR=`realpath ${EVA_DIR}`
-
-cd ${EVA_DIR}
+cd "$(realpath "$(dirname "$(realpath "$0")")/..")" || exit 1
 
 ln -sf eva bin/eva-shell
 
@@ -12,12 +8,17 @@ mkdir -p bin sbin tests
 ln -sf ../cli/venvl tests/benchmark-uc-crt
 
 BIN="uc-cmd lm-cmd sfa-cmd test-uc-xc test-ext test-phi uc-tpl"
+NBIN="uc-notifier lm-notifier sfa-notifier"
 SBIN="check-mqtt layout-converter get-setup-options eva-update-tables"
 
 for p in ${BIN}; do
-  ln -sf ../cli/venvl bin/${p}
+  ln -sf ../cli/venvl bin/"${p}"
+done
+
+for p in ${NBIN}; do
+  ln -sf ../cli/notifymanager.sh bin/"${p}"
 done
 
 for p in ${SBIN}; do
-  ln -sf ../cli/venvl sbin/${p}
+  ln -sf ../cli/venvl sbin/"${p}"
 done
