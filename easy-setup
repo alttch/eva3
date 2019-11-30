@@ -219,7 +219,7 @@ function create_notifier {
         fi
         [ $MQTT_DISCOVERY_ENABLED -eq 1 ] && [ "$T" != 'uc' ] && \
            BATCH="$BATCH;set eva_1 discovery_enabled 1"
-        [ $MQTT_NO_RETAIN -eq 1 ] && BATCH="$BATCH;set eva_1 retain_enabled 0"
+        [ "$MQTT_NO_RETAIN" = "1" ] && BATCH="$BATCH;set eva_1 retain_enabled 0"
         BATCH="$BATCH;test eva_1"
         if [ "$T" = "sfa" ]; then
             [ "$BATCH" ] && BATCH="$BATCH;"
