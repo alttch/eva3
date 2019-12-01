@@ -5,11 +5,14 @@ from Crypto import Random
 
 
 def _pad_key(key):
-    if len(key) < 16:
+    l = len(key)
+    if l == 16 or l == 24 or l == 32:
+        return key
+    elif l < 16:
         return key.ljust(16)
-    elif len(key) < 24:
+    elif l < 24:
         return key.ljust(24)
-    elif len(key) < 32:
+    elif l < 32:
         return key.ljust(32)
     else:
         return key[:32]
