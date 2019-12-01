@@ -468,13 +468,13 @@ def parse_func_str(s):
     """
     s = s.strip()
     if not s.endswith(')'):
-        return 'ERROR: argument have to last symbol ")"'
+        raise ValueError('ERROR: argument doesn\'t have brackets')
     import re
     wrong = re.compile(r"[<>{}[\]~`]")
     r = s.replace(')', '').split('(')
     name = r.pop(0).strip()
     if wrong.search(name) or name.find(' ') != -1:
-        raise ValueError
+        raise ValueError('Invalid symbols in argument')
     args = []
     list_args = []
     list_kw = []
@@ -491,12 +491,15 @@ def parse_func_str(s):
             else:
                 list_kw = a
     if list_args:
-        clear_arg = [a.strip() for a in re.split(
-            r'(,*\s*\w*\s*),|(\s*[\"|\'][\w\s,]*[\s\w]*[\"|\'])', list_args) if
-                     a]
+        clear_arg = [
+            a.strip()
+            for a in re.split(
+                r'(,*\s*\w*\s*),|(\s*[\"|\'][\w\s,]*[\s\w]*[\"|\'])', list_args)
+            if a
+        ]
         for t in clear_arg:
-            t = t.replace(',', '').strip() if (
-                    t.startswith(',') or t.endswith(',')) else t
+            t = t.replace(',', '').strip() if (t.startswith(',') or
+                                               t.endswith(',')) else t
             if t.startswith('\'') or t.startswith('"'):
                 args.append(t)
             else:
@@ -509,12 +512,14 @@ def parse_func_str(s):
                 except ValueError:
                     args.append(t)
     if list_kw:
-        clear_kw = [k.strip() for k in re.split(
-            r'([,*\s\w]*[=]\s*[\'|\"]*[\w\s=\'\"%]*[,\s\w]*[\'|\",])', list_kw)
-                    if k]
+        clear_kw = [
+            k.strip() for k in re.split(
+                r'([,*\s\w]*[=]\s*[\'|\"]*[\w\s=\'\"%]*[,\s\w]*[\'|\",])',
+                list_kw) if k
+        ]
         for t in clear_kw:
-            t = t.replace(',', '').strip() if (
-                        t.startswith(',') or t.endswith(',')) else t
+            t = t.replace(',', '').strip() if (t.startswith(',') or
+                                               t.endswith(',')) else t
             if not t:
                 continue
             k, v = [x.strip() for x in t.split('=', 1) if t]
@@ -524,7 +529,10 @@ def parse_func_str(s):
                 if int(v) or float(v):
                     kw.update({k: int(v)} if '.' not in v else {k: float(v)})
             except ValueError:
-                kw.update({k: ''.join(list(v)[1:-1]) if (
-                            (v.__contains__('\'') or v.__contains__('"')) and
-                            list(v)[0] == list(v)[-1]) else v})
+                kw.update({
+                    k:
+                        ''.join(list(v)[1:-1]) if
+                        ((v.__contains__('\'') or v.__contains__('"')) and
+                         list(v)[0] == list(v)[-1]) else v
+                })
     return name, args if args else None, kw if kw else None
