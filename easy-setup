@@ -619,9 +619,9 @@ if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
     APPEND=1
 fi
 
-[ "$MASTERKEY" ] || MASTERKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
-[ "$DEFAULTKEY" ] || DEFAULTKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
-[ "$OPKEY" ] || OPKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
+[ "$MASTERKEY" ] || MASTERKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c32) 2>/dev/null)
+[ "$DEFAULTKEY" ] || DEFAULTKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c32) 2>/dev/null)
+[ "$OPKEY" ] || OPKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c32) 2>/dev/null)
 [ "$OPPASSWD" ] || OPPASSWD=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c16) 2>/dev/null)
 
 if [ $INTERACTIVE -eq 1 ]; then
