@@ -19,6 +19,12 @@ from collections import OrderedDict
 
 from functools import wraps
 
+from pyaltt2.locker import Locker
+from pyaltt2.parsers import safe_int, val_to_boolean
+from pyaltt2.crypto import gen_random_str
+from pyaltt2.nlp import parse_func_str
+from pyaltt2.network import parse_host_port, netacl_match
+
 
 class MultiOrderedDict(OrderedDict):
 
@@ -102,27 +108,6 @@ def print_json(obj):
     print(format_json(obj))
 
 
-def parse_host_port(hp, default_port=None):
-    if hp is None: return (None, default_port)
-    try:
-        if hp.find(':') == -1: return (hp, default_port)
-        host, port = hp.split(':')
-        port = int(port)
-    except:
-        return (None, default_port)
-    return (host, port)
-
-
-def netacl_match(host, acl):
-    from netaddr import IPAddress
-    try:
-        for a in acl:
-            if IPAddress(host) in a: return True
-    except:
-        pass
-    return False
-
-
 def wait_for(func, wait_timeout, delay, wait_for_false=False, abort_func=None):
     a = 0
     if wait_for_false:
@@ -139,15 +124,6 @@ def wait_for(func, wait_timeout, delay, wait_for_false=False, abort_func=None):
             a += 1
             time.sleep(delay)
     return func()
-
-
-def val_to_boolean(s):
-    if isinstance(s, bool): return s
-    if s is None: return None
-    val = str(s)
-    if val.lower() in ['1', 'true', 'yes', 'on', 'y']: return True
-    if val.lower() in ['0', 'false', 'no', 'off', 'n']: return False
-    return None
 
 
 __special_param_names = {
@@ -377,43 +353,6 @@ tiny_httpe = {
 }
 
 
-class Locker:
-
-    def __init__(self, mod='', timeout=5, relative=True):
-        self.lock = threading.RLock() if relative else threading.Lock()
-        self.mod = '' if not mod else mod + '/'
-        self.relative = relative
-        self.timeout = timeout
-
-    def __call__(self, f):
-
-        @wraps(f)
-        def do(*args, **kwargs):
-            if not self.lock.acquire(timeout=self.timeout):
-                logging.critical('{}{} locking broken'.format(
-                    self.mod, f.__name__))
-                self.critical()
-                return None
-            try:
-                return f(*args, **kwargs)
-            finally:
-                self.lock.release()
-
-        return do
-
-    def critical(self):
-        pass
-
-
-def safe_int(i):
-    if isinstance(i, int):
-        return i
-    elif i.find('x') != -1:
-        return int(i, 16)
-    else:
-        return int(i)
-
-
 def dict_merge(*args):
     """
     merge dicts for compat < 3.5
@@ -422,11 +361,6 @@ def dict_merge(*args):
     for a in args:
         result.update(a)
     return result
-
-
-def gen_random_str(length=64):
-    symbols = string.ascii_letters + '0123456789'
-    return ''.join(random.choice(symbols) for i in range(length))
 
 
 def format_modbus_value(val):
@@ -459,80 +393,3 @@ def format_modbus_value(val):
         return val[0], addr, multiplier, signed
     except:
         return None, None, None, None
-
-
-def parse_func_str(s):
-    """
-    Raises:
-        ValueError
-    """
-    s = s.strip()
-    if not s.endswith(')'):
-        raise ValueError('ERROR: argument doesn\'t have brackets')
-    import re
-    wrong = re.compile(r"[<>{}[\]~`]")
-    r = s.replace(')', '').split('(')
-    name = r.pop(0).strip()
-    if wrong.search(name) or name.find(' ') != -1:
-        raise ValueError('Invalid symbols in argument')
-    args = []
-    list_args = []
-    list_kw = []
-    kw = {}
-    check = re.compile(r'(,*\s*\'*\w+\'*\s*[=]\s*[\'\"]*.*[\'|\"]*)')
-    argum = [i.strip() for i in check.split(r[0]) if i]
-    for a in argum:
-        a = a.replace(',', '', 1).strip() if a.startswith(',') else a
-        if not a.__contains__('='):
-            list_args = a
-        elif a.__contains__('='):
-            if a.startswith('\'') or a.startswith('\"'):
-                list_args = a
-            else:
-                list_kw = a
-    if list_args:
-        clear_arg = [
-            a.strip()
-            for a in re.split(
-                r'(,*\s*\w*\s*),|(\s*[\"|\'][\w\s,]*[\s\w]*[\"|\'])', list_args)
-            if a
-        ]
-        for t in clear_arg:
-            t = t.replace(',', '').strip() if (t.startswith(',') or
-                                               t.endswith(',')) else t
-            if t.startswith('\'') or t.startswith('"'):
-                args.append(t)
-            else:
-                try:
-                    if int(t) or float(t):
-                        if '.' not in t:
-                            args.append(int(t))
-                        else:
-                            args.append(float(t))
-                except ValueError:
-                    args.append(t)
-    if list_kw:
-        clear_kw = [
-            k.strip() for k in re.split(
-                r'([,*\s\w]*[=]\s*[\'|\"]*[\w\s=\'\"%]*[,\s\w]*[\'|\",])',
-                list_kw) if k
-        ]
-        for t in clear_kw:
-            t = t.replace(',', '').strip() if (t.startswith(',') or
-                                               t.endswith(',')) else t
-            if not t:
-                continue
-            k, v = [x.strip() for x in t.split('=', 1) if t]
-            if wrong.search(k) or k.find(' ') != -1:
-                raise ValueError('Invalid kwargs param')
-            try:
-                if int(v) or float(v):
-                    kw.update({k: int(v)} if '.' not in v else {k: float(v)})
-            except ValueError:
-                kw.update({
-                    k:
-                        ''.join(list(v)[1:-1]) if
-                        ((v.__contains__('\'') or v.__contains__('"')) and
-                         list(v)[0] == list(v)[-1]) else v
-                })
-    return name, args if args else None, kw if kw else None
