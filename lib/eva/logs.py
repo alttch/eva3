@@ -34,13 +34,7 @@ log_levels_by_name = {
     'critical': 50
 }
 
-log_levels_by_id = {
-    10: 'debug',
-    20: 'info',
-    30: 'warning',
-    40: 'error',
-    50: 'critical'
-}
+log_levels_by_id = {v: k for k, v in log_levels_by_name.items()}
 
 
 def get_log_level_by_name(l):
