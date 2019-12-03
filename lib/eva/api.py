@@ -1448,10 +1448,10 @@ def mqtt_api_handler(notifier_id, data, callback):
             pfx, api_key_id, d = data.split(b'\x00', 2)
             api_key_id = api_key_id[1:].decode()
             ct = CT_MSGPACK
-            private_key = apikey.key_private(api_key_id)
+            private_key = apikey.key_private512(api_key_id)
             if private_key is None:
                 raise FunctionFailed('invalid key')
-            d = eva.crypto.decrypt(d, private_key)
+            d = eva.crypto.decrypt(d, private_key, key_is_hash=True)
             rid = d[:16]
             call_id = rid.hex()
             try:
@@ -1469,7 +1469,9 @@ def mqtt_api_handler(notifier_id, data, callback):
             raise FunctionFailed('API error')
         if ct == CT_MSGPACK:
             packer = msgpack.Packer(use_bin_type=True)
-            response = eva.crypto.encrypt(packer.pack(response), private_key)
+            response = eva.crypto.encrypt(packer.pack(response),
+                                          private_key,
+                                          key_is_hash=True)
             callback(call_id, b'\x00\xC8' + response)
         else:
             response = ce.encrypt(rapidjson.dumps(response).encode())

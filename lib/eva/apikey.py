@@ -85,6 +85,7 @@ class APIKey(object):
     def set_key(self, k):
         self.key = k
         self.private_key = hashlib.sha256(str(k).encode()).digest()
+        self.private_key512 = hashlib.sha512(str(k).encode()).digest()
         self.ce = Fernet(base64.b64encode(self.private_key))
 
     def set_prop(self, prop, value=None, save=False):
@@ -425,6 +426,9 @@ def key_private(key_id):
     return None if not key_id or not key_id in keys_by_id else \
         keys_by_id[key_id].private_key
 
+def key_private512(key_id):
+    return None if not key_id or not key_id in keys_by_id else \
+        keys_by_id[key_id].private_key512
 
 def key_id(k):
     return 'unknown' if not k or not k in keys else keys[k].key_id
@@ -545,8 +549,8 @@ def serialized_acl(k):
 def add_api_key(key_id=None, save=False):
     if key_id is None: raise FunctionFailed
     if key_id in keys_by_id: raise ResourceAlreadyExists
-    key_hash = gen_random_str()
-    key = APIKey(key_hash, key_id)
+    key_value = gen_random_str(length=64)
+    key = APIKey(key_value, key_id)
     key.master = False
     key.dynamic = True
     key.set_prop('hosts_allow', '0.0.0.0/0', save)
@@ -584,7 +588,7 @@ def regenerate_key(key_id, k=None, save=False):
         raise FunctionFailed('Master and static keys can not be changed')
     key = keys_by_id[key_id]
     old_key = key.key
-    key.set_key(gen_random_str() if k is None else k)
+    key.set_key(gen_random_str(length=64) if k is None else k)
     keys[key.key] = keys.pop(old_key)
     key.set_modified(save)
     return key.key

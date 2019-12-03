@@ -112,7 +112,7 @@ class CoreAPIClient(APIClient):
             _key_id, _key = key_id, key
         super().set_key(_key)
         self._key_id = _key_id
-        self._private_key = hashlib.sha256(str(_key).encode()).digest()
+        self._private_key = hashlib.sha512(str(_key).encode()).digest()
 
     def do_call_mqtt(self, payload, t, rid=None):
         """
@@ -149,13 +149,16 @@ class CoreAPIClient(APIClient):
         n.send_api_request(
             request_id, self._product_code + '/' + self._uri,
             b'\x00\x02' + self._key_id.encode() + b'\x00' +
-            eva.crypto.encrypt(data, self._private_key), cb.data_handler)
+            eva.crypto.encrypt(data, self._private_key, key_is_hash=True),
+            cb.data_handler)
         if not cb.completed.wait(self._timeout):
             n.finish_api_request(request_id)
             raise requests.Timeout()
         if cb.code:
             try:
-                r.content = eva.crypto.decrypt(cb.body, self._private_key)
+                r.content = eva.crypto.decrypt(cb.body,
+                                               self._private_key,
+                                               key_is_hash=True)
                 if cb.code == 200:
                     r.ok = True
                 r.status_code = cb.code
