@@ -4,7 +4,7 @@ cairosvg==2.1.1
 jsonpickle==0.9.6
 requests==2.21.0
 pyaltt==0.2.4
-pyaltt2==0.0.12
+pyaltt2==0.0.13
 argcomplete==1.9.4
 jinja2==2.10
 six==1.11.0
