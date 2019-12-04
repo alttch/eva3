@@ -22,7 +22,7 @@ from functools import wraps
 from pyaltt2.locker import Locker
 from pyaltt2.converters import safe_int, val_to_boolean
 from pyaltt2.crypto import gen_random_str
-from pyaltt2.nlp import parse_func_str
+from pyaltt2.lp import parse_func_str
 from pyaltt2.network import parse_host_port, netacl_match
 
 
