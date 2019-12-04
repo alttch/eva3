@@ -223,22 +223,21 @@ class DecisionMatrix(object):
     def exec_rule_action(self, event_code, rule, item):
         rule.last_matched = time.time()
         if rule.macro:
-            t = threading.Thread(
-                target=self.run_macro, args=(event_code, rule, item))
+            t = threading.Thread(target=self.run_macro,
+                                 args=(event_code, rule, item))
             t.start()
         if rule.chillout_time:
-            t = threading.Thread(
-                target=self.process_chillout, args=(rule, item))
+            t = threading.Thread(target=self.process_chillout,
+                                 args=(rule, item))
             t.setDaemon(True)
             rule.chillout_active = True
             t.start()
 
     def run_macro(self, event_code, rule, item):
-        if not eva.lm.controller.exec_macro(
-                macro=rule.macro,
-                argv=rule.macro_args,
-                kwargs=rule.macro_kwargs,
-                source=item):
+        if not eva.lm.controller.exec_macro(macro=rule.macro,
+                                            argv=rule.macro_args,
+                                            kwargs=rule.macro_kwargs,
+                                            source=item):
             logging.error('Decision matrix can not exec macro' + \
                     ' %s for event %s' % (rule.macro, event_code))
 
@@ -366,8 +365,11 @@ class DecisionRule(eva.item.Item):
                 else: m = self.in_range_max
                 condition += ' ' + str(m)
             d['condition'] = condition
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         if 'group' in d: del d['group']
         if 'full_id' in d: del d['full_id']
         return d
@@ -655,6 +657,8 @@ class DecisionRule(eva.item.Item):
             if val is not None:
                 if isinstance(val, list):
                     v = val
+                elif isinstance(val, tuple):
+                    v = list(val)
                 else:
                     try:
                         v = shlex.split(val)
@@ -707,8 +711,11 @@ class DecisionRule(eva.item.Item):
         r_ixiq = False
         if condition:
             c = condition.replace(' ', '').replace('>=', '}').replace(
-                '=>', '}').replace('<=', '{').replace('=<', '{').replace(
-                    '===', '=').replace('==', '=')
+                '=>',
+                '}').replace('<=',
+                             '{').replace('=<',
+                                          '{').replace('===',
+                                                       '=').replace('==', '=')
             vals = re.split('[<>}{=]', c)
             if len(vals) not in [2, 3]:
                 raise Exception('invalid condition length')

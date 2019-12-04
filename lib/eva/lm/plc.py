@@ -622,6 +622,8 @@ class Cycle(eva.item.Item):
             if val is not None:
                 if isinstance(val, list):
                     v = val
+                elif isinstance(val, tuple):
+                    v = list(val)
                 else:
                     try:
                         v = shlex.split(val)
