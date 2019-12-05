@@ -825,10 +825,10 @@ EOF
     save_controller_state lm || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
-        if ! SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
+        SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
         ./sbin/eva-tinyapi -C lm -F setup_mode setup=1 > /dev/null 2>&1
         ./sbin/eva-tinyapi -C lm -F remove_controller i="${SNAME}" > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C lm -F append_controller \
+        if ! ./sbin/eva-tinyapi -C lm -F append_controller \
             u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1; then
             echo "Linking failed!"
             ./sbin/eva-control stop
