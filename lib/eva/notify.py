@@ -1693,7 +1693,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 r = rapidjson.loads(d)
                 if r['h'] != eva.core.config.system_name or \
                         r['p'] != eva.core.product.code:
-                    eva.logs.log_append(rd=r, skip_mqtt=True)
+                    import pyaltt2.logs
+                    pyaltt2.logs.append(rd=r, skip_mqtt=True)
             except:
                 eva.core.log_traceback(notifier=True)
         elif t in self.items_to_update_by_topic:

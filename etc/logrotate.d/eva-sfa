@@ -7,7 +7,4 @@
     notifempty
     create 640 root adm
     sharedscripts
-    postrotate
-        /opt/eva/sbin/sfa-control logrotate
-    endscript
 }

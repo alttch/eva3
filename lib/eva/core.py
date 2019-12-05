@@ -33,6 +33,8 @@ from eva.exceptions import TimeoutException
 from atasker import g, FunctionCollection, background_task, task_supervisor
 from atasker import TASK_CRITICAL
 
+import pyaltt2.logs
+
 from types import SimpleNamespace
 
 version = __version__
@@ -98,12 +100,6 @@ db_pool_size = 15
 
 sleep_step = 0.1
 
-keep_exceptions = 100
-
-_exceptions = []
-
-_exception_log_lock = threading.RLock()
-
 _db_lock = threading.RLock()
 _userdb_lock = threading.RLock()
 
@@ -160,27 +156,9 @@ class RLocker(GenericLocker):
         self.critical = critical
 
 
-def log_traceback(display=False, notifier=False, force=False, e=None):
-    e_msg = traceback.format_exc()
-    if (config.show_traceback or force) and not display:
-        pfx = '.' if notifier else ''
-        logging.error(pfx + e_msg)
-    elif display:
-        print(e_msg)
-    if not _exception_log_lock.acquire(timeout=config.timeout):
-        logging.critical('log_traceback locking broken')
-        critical(log=False)
-        return
-    try:
-        e = {'t': time.strftime('%Y/%m/%d %H:%M:%S %z'), 'e': e_msg}
-        _exceptions.append(e)
-        if len(_exceptions) > keep_exceptions:
-            del _exceptions[0]
-    finally:
-        _exception_log_lock.release()
-
-
 cvars_lock = RLocker('core')
+
+log_traceback = pyaltt2.logs.log_traceback
 
 dump = FunctionCollection(on_error=log_traceback, include_exceptions=True)
 save = FunctionCollection(on_error=log_traceback)
@@ -218,11 +196,7 @@ def create_db_engine(db_uri, timeout=None):
 
 
 def sighandler_hup(signum, frame):
-    logging.info('got HUP signal, rotating logs')
-    try:
-        reset_log()
-    except:
-        log_traceback()
+    logging.info('got HUP signal')
 
 
 def suicide(**kwargs):
@@ -363,12 +337,12 @@ def serialize():
     d['threads'] = {}
     d['uptime'] = int(time.time() - start_time)
     d['time'] = time.time()
-    d['exceptions'] = _exceptions
     d['fd'] = proc.open_files()
     for t in threading.enumerate().copy():
         d['threads'][t.name] = {}
         d['threads'][t.name]['daemon'] = t.daemon
         d['threads'][t.name]['alive'] = t.is_alive()
+    d.update(pyaltt2.logs.serialize())
     return d
 
 
@@ -429,56 +403,6 @@ def userdb():
         return g.userdb
 
 
-def reset_log(initial=False):
-    if log_engine.logger and not config.log_file: return
-    log_engine.logger = logging.getLogger()
-    try:
-        log_engine.log_file_handler.stream.close()
-    except:
-        pass
-    if initial:
-        for h in log_engine.logger.handlers:
-            log_engine.logger.removeHandler(h)
-    else:
-        log_engine.logger.removeHandler(log_engine.log_file_handler)
-    if not config.development:
-        formatter = logging.Formatter('%(asctime)s ' + config.system_name + \
-            '  %(levelname)s ' + product.code + ' %(threadName)s: %(message)s')
-    else:
-        formatter = logging.Formatter('%(asctime)s ' + config.system_name + \
-            ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
-            'l:%(lineno)d th:%(threadName)s :: %(message)s')
-    if config.log_file:
-        log_engine.log_file_handler = logging.FileHandler(config.log_file)
-    else:
-        from eva.logs import StdoutHandler
-        log_engine.log_file_handler = StdoutHandler()
-    log_engine.log_file_handler.setFormatter(formatter)
-    log_engine.logger.addHandler(log_engine.log_file_handler)
-    if initial:
-        from eva.logs import MemoryLogHandler
-        log_engine.logger.addHandler(MemoryLogHandler())
-        if config.syslog:
-            if config.syslog.startswith('/'):
-                syslog_addr = config.syslog
-            else:
-                addr, port = parse_host_port(config.syslog, 514)
-                if addr:
-                    syslog_addr = (addr, port)
-                else:
-                    logging.error('Invalid syslog configuration: {}'.format(
-                        config.syslog))
-                    syslog_addr = None
-            if syslog_addr:
-                log_engine.syslog_handler = logging.handlers.SysLogHandler(
-                    address=syslog_addr)
-                log_engine.syslog_handler.setFormatter(
-                    logging.Formatter(
-                        config.syslog_format.replace('%(name)s', product.code)
-                    ) if config.syslog_format else formatter)
-                log_engine.logger.addHandler(log_engine.syslog_handler)
-
-
 def load(fname=None, initial=False, init_log=True, check_pid=True):
 
     def secure_file(f):
@@ -487,7 +411,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             pass
         os.chmod(fn, mode=0o600)
 
-    from eva.logs import log_levels_by_name
+    from eva.logs import log_levels_by_name, init as init_logs
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
     try:
@@ -527,7 +451,6 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.syslog_format = cfg.get('server', 'syslog_format')
             except:
                 pass
-            if init_log: reset_log(initial)
             try:
                 log_level = cfg.get('server', 'logging_level')
                 if log_level in log_levels_by_name:
@@ -538,12 +461,14 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                                                        log_level.upper())
             except:
                 pass
+            if init_log: init_logs()
             try:
                 config.development = (cfg.get('server', 'development') == 'yes')
             except:
                 config.development = False
             if config.development:
                 config.show_traceback = True
+                pyaltt2.logs.config.tracebacks = True,
                 debug_on()
                 logging.critical('DEVELOPMENT MODE STARTED')
                 config.debug = True
@@ -717,7 +642,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         return cfg
     except:
         print('Can not read primary config %s' % fname_full)
-        log_traceback(True)
+        log_traceback(display=True)
     return False
 
 
@@ -792,15 +717,14 @@ def save_modified():
 
 
 def debug_on():
+    pyaltt2.logs.set_debug(True)
     config.debug = True
-    logging.basicConfig(level=logging.DEBUG)
-    if log_engine.logger: log_engine.logger.setLevel(logging.DEBUG)
     logging.info('Debug mode ON')
 
 
 def debug_off():
     config.debug = False
-    if log_engine.logger: log_engine.logger.setLevel(config.default_log_level)
+    pyaltt2.logs.set_debug(False)
     logging.info('Debug mode OFF')
 
 

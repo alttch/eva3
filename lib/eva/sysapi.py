@@ -303,8 +303,8 @@ class CMDAPI(object):
         _c = CMD(cmd, _args, timeout)
         logging.info('executing "%s %s", timeout = %s' % \
                 (cmd, ''.join(list(_args)), timeout))
-        t = threading.Thread(
-            target=_c.run, name='sysapi_c_run_%f' % time.time())
+        t = threading.Thread(target=_c.run,
+                             name='sysapi_c_run_%f' % time.time())
         t.start()
         if wait:
             eva.core.wait_for(_c.xc.is_finished, wait)
@@ -319,17 +319,12 @@ class LogAPI(object):
         """
         rotate log file
         
-        Equal to kill -HUP <controller_process_pid>.
+        Deprecated, not required since 3.2.6
 
         Args:
             k: .sysfunc=yes
         """
         parse_api_params(kwargs)
-        try:
-            eva.core.reset_log()
-        except:
-            eva.core.log_traceback()
-            raise FunctionFailed
         return True
 
     @log_d
@@ -435,6 +430,7 @@ class LogAPI(object):
             t: get log records not older than t seconds
             n: the maximum number of log records you want to obtain
         """
+        import pyaltt2.logs
         import eva.logs
         l, t, n = parse_api_params(kwargs, 'ltn', '.ii')
         if not l: l = 'i'
@@ -442,7 +438,7 @@ class LogAPI(object):
             l = int(l)
         except:
             l = eva.logs.get_log_level_by_name(l)
-        return eva.logs.log_get(logLevel=l, t=t, n=n)
+        return pyaltt2.logs.get(level=l, t=t, n=n)
 
     # don't wrap - calls other self functions
     def log(self, **kwargs):
@@ -718,10 +714,9 @@ class UserAPI(object):
             r = eva.apikey.serialized_acl(_k)
             r['dynamic'] = eva.apikey.keys[_k].dynamic
             result.append(r)
-        return sorted(
-            sorted(result, key=lambda k: k['key_id']),
-            key=lambda k: k['master'],
-            reverse=True)
+        return sorted(sorted(result, key=lambda k: k['key_id']),
+                      key=lambda k: k['master'],
+                      reverse=True)
 
     @log_w
     @api_need_master
@@ -829,8 +824,9 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
     @log_d
     @api_need_rpvt
     def rpvt(self, **kwargs):
-        k, f, ic, nocache = parse_function_params(
-            kwargs, ['k', 'f', 'ic', 'nocache'], '.S..')
+        k, f, ic, nocache = parse_function_params(kwargs,
+                                                  ['k', 'f', 'ic', 'nocache'],
+                                                  '.S..')
         if not eva.apikey.check(k, rpvt_uri=f):
             logging.warning('rpvt uri %s access forbidden' % (f))
             eva.core.log_traceback()
@@ -1190,8 +1186,8 @@ class SysHTTP_API_REST_abstract:
             if not SysAPI.create_key(self, k=k, i=ii, save=save):
                 raise FunctionFailed
             for i, v in props.items():
-                if not SysAPI.set_key_prop(
-                        self, k=k, i=ii, p=i, v=v, save=save):
+                if not SysAPI.set_key_prop(self, k=k, i=ii, p=i, v=v,
+                                           save=save):
                     raise FunctionFailed
             return self.list_key_props(k=k, i=ii)
         elif rtp == 'lock':
@@ -1224,17 +1220,15 @@ class SysHTTP_API_REST_abstract:
             else: raise ResourceNotFound
         elif rtp == 'key':
             for i, v in props.items():
-                if not SysAPI.set_key_prop(
-                        self, k=k, i=ii, p=i, v=v, save=save):
+                if not SysAPI.set_key_prop(self, k=k, i=ii, p=i, v=v,
+                                           save=save):
                     raise FunctionFailed
             return True
         elif rtp == 'notifier':
             if not 'enabled' in props:
                 raise FunctionFailed
-            return self.enable_notifier(
-                k=k, i=ii) if val_to_boolean(
-                    props.get('enabled')) else self.disable_notifier(
-                        k=k, i=ii)
+            return self.enable_notifier(k=k, i=ii) if val_to_boolean(
+                props.get('enabled')) else self.disable_notifier(k=k, i=ii)
         elif rtp == 'runtime':
             m, e = parse_api_params(props, 'me', '.b')
             if m is not None:
@@ -1313,7 +1307,6 @@ async def lock_processor(**kwargs):
 
 api = SysAPI()
 
-config = SimpleNamespace(
-    api_file_management_allowed=False,
-    api_setup_mode=None,
-    api_rpvt_allowed=False)
+config = SimpleNamespace(api_file_management_allowed=False,
+                         api_setup_mode=None,
+                         api_rpvt_allowed=False)

@@ -1242,7 +1242,7 @@ Optionally:
 rotate log file
 ---------------
 
-Equal to kill -HUP <controller_process_pid>.
+Deprecated, not required since 3.2.6
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/log_rotate.rest

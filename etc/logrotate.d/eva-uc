@@ -6,8 +6,4 @@
     delaycompress
     notifempty
     create 640 root adm
-    sharedscripts
-    postrotate
-        /opt/eva/sbin/uc-control logrotate
-    endscript
 }
