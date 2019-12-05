@@ -3,7 +3,7 @@ import logging
 import eva.core
 from eva.tools import gen_random_str
 from functools import wraps
-from pyaltt import background_worker
+from atasker import background_worker
 
 tokens = {}
 
@@ -92,12 +92,16 @@ def is_token_alive(token):
     return token in tokens
 
 
-@background_worker(delay=60)
-@tokens_lock
-def token_cleaner(**kwargs):
-    for token in list(tokens):
-        if tokens[token]['t'] + expire < time.time():
-            remove_token(token)
+@background_worker(delay=60, loop='cleaners')
+async def token_cleaner(**kwargs):
+
+    @tokens_lock
+    def clean_tokens():
+        for token in list(tokens):
+            if tokens[token]['t'] + expire < time.time():
+                remove_token(token)
+
+    clean_tokens()
 
 
 def start():

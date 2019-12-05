@@ -3,7 +3,7 @@
 VERSION=3.2.6
 BUILD=2019111501
 
-PYTHON3_MIN=4
+PYTHON3_MIN=6
 PYTHON_MINOR=$(./python3/bin/python3 --version|cut -d. -f2)
 if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
   echo "Python 3.$PYTHON3_MIN is required"

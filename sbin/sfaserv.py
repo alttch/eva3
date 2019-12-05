@@ -47,6 +47,7 @@ product_build = 2019111501
 product_code = 'sfa'
 
 eva.core.init()
+eva.core.start_supervisor()
 eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'EVA SCADA Final Aggregator'
 

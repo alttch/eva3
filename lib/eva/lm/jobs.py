@@ -10,7 +10,7 @@ import shlex
 import schedule
 import re
 
-from pyaltt import background_worker
+from atasker import background_worker
 
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
@@ -243,5 +243,5 @@ class Job(eva.item.Item):
 
 
 @background_worker(interval=eva.core.sleep_step)
-def scheduler(**kwargs):
+async def scheduler(**kwargs):
     schedule.run_pending()

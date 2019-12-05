@@ -19,7 +19,7 @@ import rapidjson
 import msgpack
 import uuid
 import random
-from pyaltt import BackgroundWorker
+from atasker import BackgroundIntervalWorker, BackgroundWorker
 from eva.types import CT_JSON, CT_MSGPACK
 
 # websocket.enableTrace(True)
@@ -31,7 +31,7 @@ cloud_manager = False
 ws_ping_message = eva.client.apiclient.pack_msgpack({'s': 'ping'})
 
 
-class WebSocketPingerWorker(BackgroundWorker):
+class WebSocketPingerWorker(BackgroundIntervalWorker):
 
     def run(*args, **kwargs):
         controller = kwargs.get('controller')

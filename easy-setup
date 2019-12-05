@@ -2,7 +2,7 @@
 
 [ "${debug}" ] && set -o xtrace
 
-PYTHON3_MIN=4
+PYTHON3_MIN=6
 
 UC_ENABLED=
 LM_ENABLED=

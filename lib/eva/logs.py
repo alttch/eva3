@@ -9,7 +9,7 @@ import time
 import sys
 import os
 import threading
-from pyaltt import background_worker
+from atasker import background_worker
 
 from eva.exceptions import InvalidParameter
 
@@ -158,8 +158,10 @@ def log_get(logLevel=0, t=0, n=None):
     return _lr
 
 
-@background_worker(delay=log_cleaner_delay, on_error=eva.core.log_traceback)
-def log_cleaner(**kwargs):
+@background_worker(delay=log_cleaner_delay,
+                   on_error=eva.core.log_traceback,
+                   loop='cleaners')
+async def log_cleaner(**kwargs):
     if not _log_record_lock.acquire(timeout=eva.core.config.timeout):
         logging.critical('_t_log_cleaner locking(1) broken')
         eva.core.critical()

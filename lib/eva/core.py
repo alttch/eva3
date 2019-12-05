@@ -30,9 +30,8 @@ from eva.tools import Locker as GenericLocker
 from eva.exceptions import FunctionFailed
 from eva.exceptions import TimeoutException
 
-from pyaltt import g
-from pyaltt import FunctionCollecton
-from pyaltt import background_job
+from atasker import g, FunctionCollection, background_task, task_supervisor
+from atasker import TASK_CRITICAL
 
 from types import SimpleNamespace
 
@@ -183,10 +182,10 @@ def log_traceback(display=False, notifier=False, force=False, e=None):
 
 cvars_lock = RLocker('core')
 
-dump = FunctionCollecton(on_error=log_traceback, include_exceptions=True)
-save = FunctionCollecton(on_error=log_traceback)
-shutdown = FunctionCollecton(on_error=log_traceback)
-stop = FunctionCollecton(on_error=log_traceback)
+dump = FunctionCollection(on_error=log_traceback, include_exceptions=True)
+save = FunctionCollection(on_error=log_traceback)
+shutdown = FunctionCollection(on_error=log_traceback)
+stop = FunctionCollection(on_error=log_traceback)
 
 
 def format_db_uri(db_uri):
@@ -237,7 +236,7 @@ def suicide(**kwargs):
 def sighandler_term(signum=None, frame=None):
     if _flags.sigterm_sent: return
     _flags.sigterm_sent = True
-    background_job(suicide, daemon=True)()
+    background_task(suicide, daemon=True, priority=TASK_CRITICAL)()
     logging.info('got TERM signal, exiting')
     if config.db_update == 2:
         try:
@@ -306,6 +305,7 @@ def core_shutdown():
     stop()
     from twisted.internet import reactor
     reactor.callFromThread(reactor.stop)
+    task_supervisor.stop(wait=False)
 
 
 def create_dump(e='request', msg=''):
@@ -910,6 +910,13 @@ def init():
         signal.signal(signal.SIGINT, sighandler_int)
     else:
         signal.signal(signal.SIGINT, sighandler_term)
+
+
+def start_supervisor():
+    task_supervisor.set_thread_pool(pool_size=0)
+    task_supervisor.start()
+    task_supervisor.create_aloop('default', default=True)
+    task_supervisor.create_aloop('cleaners')
 
 
 def start(init_db_only=False):

@@ -9,8 +9,9 @@ import logging
 import eva.core
 import eva.item
 import time
+import asyncio
 
-from pyaltt import background_worker
+from atasker import background_worker
 
 
 class ActiveItemQueue(object):
@@ -46,7 +47,7 @@ class ActiveItemQueue(object):
         if self.keep_history:
             self.history_append(action)
         if action.set_pending():
-            self.q.put(action, p)
+            self.action_processor.put(action)
             return True
         return False
 
@@ -117,10 +118,13 @@ class ActiveItemQueue(object):
         self.action_cleaner_interval = eva.core.config.action_cleaner_interval
 
         self.action_cleaner = background_worker(
-            action_cleaner, delay=self.action_cleaner_interval, o=self)
+            action_cleaner,
+            delay=self.action_cleaner_interval,
+            o=self,
+            loop='cleaners')
         self.action_cleaner.start()
         self.action_processor = background_worker(
-            action_processor, queue=self.q, o=self)
+            action_processor, queue=asyncio.queues.PriorityQueue, o=self)
         self.action_processor.start()
 
     def stop(self):
@@ -149,7 +153,7 @@ def action_processor(action, **kwargs):
         eva.core.log_traceback()
 
 
-def action_cleaner(**kwargs):
+async def action_cleaner(**kwargs):
     o = kwargs.get('o')
     if not o.actions_lock.acquire(timeout=eva.core.config.timeout):
         logging.critical('ActiveItemQueue::_t_action_cleanup locking broken')

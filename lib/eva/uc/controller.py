@@ -37,7 +37,7 @@ from eva.core import db
 
 from functools import wraps
 
-from pyaltt import background_job
+from atasker import background_task
 
 units_by_id = {}
 units_by_group = {}
@@ -72,7 +72,7 @@ def handle_event(item):
     oid = item.oid
     if oid in custom_event_handlers:
         for f in custom_event_handlers.get(oid):
-            background_job(exec_event_handler)(f, item)
+            background_task(exec_event_handler)(f, item)
     return True
 
 

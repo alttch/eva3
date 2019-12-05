@@ -11,6 +11,8 @@ Complete change log: https://get.eva-ics.com/3.2.6/stable/CHANGELOG.html
 Update instructions
 ===================
 
+WARNING: Python 3.6+ is required.
+
 EVA ICS 3.2.6 can handle API calls from the previous versions, but not
 vice-versa.
 

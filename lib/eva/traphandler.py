@@ -13,7 +13,7 @@ from eva.tools import netacl_match
 
 from netaddr import IPNetwork
 from types import SimpleNamespace
-from pyaltt import background_worker
+from atasker import background_worker
 
 subscribed_items = set()
 

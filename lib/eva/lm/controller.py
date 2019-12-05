@@ -42,7 +42,7 @@ from eva.tools import parse_oid
 from eva.core import db
 
 from functools import wraps
-from pyaltt import background_job
+from atasker import background_task
 
 import rapidjson
 
@@ -1108,7 +1108,7 @@ def start():
     plc.start_processors()
     uc_pool.start()
     for i, v in remote_ucs.items():
-        background_job(connect_remote_controller, daemon=True)(v)
+        background_task(connect_remote_controller, daemon=True)(v)
     for i, v in lvars_by_full_id.items():
         v.start_processors()
     for i, v in cycles_by_id.copy().items():

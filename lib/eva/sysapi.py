@@ -14,8 +14,6 @@ import shlex
 
 import eva.core
 
-from pyaltt import background_job
-
 from functools import wraps
 
 from eva.api import api_need_master
@@ -44,8 +42,7 @@ from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
 from eva.tools import parse_function_params
 
-from pyaltt import background_worker
-from pyaltt import background_job
+from atasker import background_worker
 
 from types import SimpleNamespace
 
@@ -1300,7 +1297,7 @@ def stop():
 
 
 @background_worker
-def lock_processor(**kwargs):
+async def lock_processor(**kwargs):
     for i, v in lock_expire_time.copy().items():
         if time.time() > v:
             logging.debug('lock %s expired, releasing' % i)

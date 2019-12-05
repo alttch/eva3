@@ -27,11 +27,11 @@ try:
 except:
     pass
 
-from pyaltt import BackgroundWorker
-from pyaltt import BackgroundQueueWorker
-from pyaltt import background_worker
-from pyaltt import background_job
-from pyaltt import g
+from atasker import BackgroundIntervalWorker
+from atasker import BackgroundQueueWorker
+from atasker import background_worker
+from atasker import background_task
+from atasker import g
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
@@ -584,16 +584,17 @@ class GenericNotifier_Client(GenericNotifier):
 
 class SQLANotifier(GenericNotifier):
 
-    class HistoryCleaner(BackgroundWorker):
+    class HistoryCleaner(BackgroundIntervalWorker):
 
         def __init__(self, name=None, **kwargs):
             super().__init__(name=name,
                              interval=60,
                              on_error=eva.core.log_traceback,
                              on_error_kwargs=_ne_kw,
+                             loop='cleaners',
                              **kwargs)
 
-        def run(self, o, **kwargs):
+        async def run(self, o, **kwargs):
             dbconn = o.db()
             space = o.space if o.space is not None else ''
             logging.debug('.cleaning records older than %u sec' % o.keep)
@@ -1351,7 +1352,7 @@ class PrometheusNotifier(GenericNotifier):
 
 class GenericMQTTNotifier(GenericNotifier):
 
-    class Announcer(BackgroundWorker):
+    class Announcer(BackgroundIntervalWorker):
 
         def __init__(self, name=None, **kwargs):
             super().__init__(name=name,
@@ -1359,7 +1360,7 @@ class GenericMQTTNotifier(GenericNotifier):
                              on_error_kwargs=_ne_kw,
                              **kwargs)
 
-        def run(self, o, **kwargs):
+        async def run(self, o, **kwargs):
             if eva.core.is_shutdown_requested():
                 return False
             eva.core._flags.started.wait(timeout=60)
@@ -1668,25 +1669,25 @@ class GenericMQTTNotifier(GenericNotifier):
                 d != self.announce_msg and \
                 self.discovery_handler and \
                 not eva.core.is_setup_mode() and eva.core.is_started():
-            background_job(self.discovery_handler,
-                           daemon=True)(self.notifier_id, d)
+            background_task(self.discovery_handler,
+                            daemon=True)(self.notifier_id, d)
             return
         if t == self.api_request_topic and self.api_handler:
-            background_job(self.api_handler,
-                           daemon=True)(self.notifier_id, d,
-                                        self.send_api_response)
+            background_task(self.api_handler,
+                            daemon=True)(self.notifier_id, d,
+                                         self.send_api_response)
             return
         if t.startswith(self.pfx_api_response):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
-                background_job(self.api_callback[response_id][1],
-                               daemon=True)(d)
+                background_task(self.api_callback[response_id][1],
+                                daemon=True)(d)
                 self.finish_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
-                background_job(self.exec_custom_handler,
-                               daemon=True)(h, d, t, msg.qos, msg.retain)
+                background_task(self.exec_custom_handler,
+                                daemon=True)(h, d, t, msg.qos, msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
                 r = rapidjson.loads(d)
@@ -2193,7 +2194,7 @@ class GCP_IoT(GenericNotifier):
                     payload['params']['k'] = eva.apikey.format_key(self.apikey)
                 import eva.api
                 g.set('eva_ics_gw', 'gcpiot:' + self.notifier_id)
-                background_job(eva.api.jrpc)(p=payload)
+                background_task(eva.api.jrpc)(p=payload)
             except:
                 logging.warning(
                     '.Invalid command message from MQTT server: {}'.format(
@@ -2891,9 +2892,9 @@ def mark_leaving(n):
     notify_leave_data.add(n)
 
 
-@background_worker(delay=notifier_client_clean_delay,
+@background_worker(interval=notifier_client_clean_delay,
                    on_error=eva.core.log_traceback)
-def notifier_client_cleaner(**kwargs):
+async def notifier_client_cleaner(**kwargs):
     for k, n in notifiers.copy().items():
         if n.nt_client: n.cleanup()
 

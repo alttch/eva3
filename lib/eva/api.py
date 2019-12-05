@@ -41,7 +41,7 @@ import eva.users
 import eva.notify
 import eva.benchmark
 
-from pyaltt import g
+from atasker import g
 
 from functools import wraps
 

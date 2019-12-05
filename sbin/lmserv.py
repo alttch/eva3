@@ -47,6 +47,7 @@ product_build = 2019111501
 product_code = 'lm'
 
 eva.core.init()
+eva.core.start_supervisor()
 eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'EVA Logic Manager'
 
