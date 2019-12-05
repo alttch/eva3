@@ -813,8 +813,7 @@ class GenericCLI(GCLI):
                 parsed = None
                 while True:
                     try:
-                        parsed = shlex.split(input(self.get_prompt()),
-                                             posix=False)
+                        parsed = shlex.split(input(self.get_prompt()))
                     except EOFError:
                         print()
                         self.finish_interactive()
