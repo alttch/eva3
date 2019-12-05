@@ -13,7 +13,7 @@ Update instructions
 
 WARNING: Python 3.6+ is required.
 
-EVA ICS 3.2.6 can handle API calls from the previous versions, but not
+EVA ICS 3.2.6 can handle API calls via MQTT from the previous versions, but not
 vice-versa.
 
 It's recommended to update controllers in order:
