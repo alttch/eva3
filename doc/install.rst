@@ -22,7 +22,7 @@ System Requirements
     identify node controllers. Changing host name later will require manually
     removing/appending all static links between EVA ICS controllers.
 
-* Python version 3 (3.4+)
+* Python version 3 (3.6+)
 
 * Python virtual environment modules (python3-virtualenv)
 
