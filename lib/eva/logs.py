@@ -75,10 +75,10 @@ def init():
         tracebacks=eva.core.config.show_traceback,
         ignore='.',
         ignore_mods=['_cplogging'],
-        stdout_ignore=os.environ.get('EVA_CORE_SNLSO') == 1,
+        stdout_ignore=os.environ.get('EVA_CORE_SNLSO') == '1',
         keep_logmem=eva.core.config.keep_logmem,
         keep_exceptions=KEEP_EXCEPTIONS,
-        colorize=os.environ.get('EVA_CORE_RAW_STDOUT') != 1,
+        colorize=os.environ.get('EVA_CORE_RAW_STDOUT') != '1',
         formatter=formatter,
         syslog_formatter=logging.Formatter(eva.core.config.syslog_format)
         if eva.core.config.syslog_format else None)
