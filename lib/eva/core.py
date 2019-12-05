@@ -914,6 +914,7 @@ def init():
 
 def start_supervisor():
     task_supervisor.set_thread_pool(pool_size=0)
+    task_supervisor.timeout_critical_func = critical
     task_supervisor.start()
     task_supervisor.create_aloop('default', default=True)
     task_supervisor.create_aloop('cleaners')
