@@ -34,7 +34,6 @@ class ActiveItemQueue(object):
 
         self.action_processor = None
         self.action_cleaner_active = False
-        self.q = PriorityQueue()
 
         self.enterprise_layout = enterprise_layout
 
