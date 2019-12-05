@@ -594,7 +594,7 @@ class SQLANotifier(GenericNotifier):
                              loop='cleaners',
                              **kwargs)
 
-        async def run(self, o, **kwargs):
+        def run(self, o, **kwargs):
             dbconn = o.db()
             space = o.space if o.space is not None else ''
             logging.debug('.cleaning records older than %u sec' % o.keep)
@@ -1360,7 +1360,7 @@ class GenericMQTTNotifier(GenericNotifier):
                              on_error_kwargs=_ne_kw,
                              **kwargs)
 
-        async def run(self, o, **kwargs):
+        def run(self, o, **kwargs):
             if eva.core.is_shutdown_requested():
                 return False
             eva.core._flags.started.wait(timeout=60)
@@ -2892,7 +2892,7 @@ def mark_leaving(n):
     notify_leave_data.add(n)
 
 
-@background_worker(interval=notifier_client_clean_delay,
+@background_worker(delay=notifier_client_clean_delay,
                    on_error=eva.core.log_traceback)
 async def notifier_client_cleaner(**kwargs):
     for k, n in notifiers.copy().items():

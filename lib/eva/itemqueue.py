@@ -135,7 +135,7 @@ class ActiveItemQueue(object):
         return action.item.q_put_task(action)
 
 
-def action_processor(action, **kwargs):
+async def action_processor(action, **kwargs):
     if not action.item: return
     o = kwargs.get('o')
     logging.debug('new action to toss, uuid: %s, priority: %u' % \
