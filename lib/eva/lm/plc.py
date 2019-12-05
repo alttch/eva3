@@ -342,11 +342,10 @@ class PLC(eva.item.ActiveItem):
                 env_globals['_%u' % i] = a.argv[i - 1]
             except:
                 env_globals['_%u' % i] = ''
-        xc = eva.runner.PyThread(
-            item=a.item,
-            env_globals=env_globals,
-            bcode=eva.lm.macro_api.mbi_code,
-            mfcode=mfcode)
+        xc = eva.runner.PyThread(item=a.item,
+                                 env_globals=env_globals,
+                                 bcode=eva.lm.macro_api.mbi_code,
+                                 mfcode=mfcode)
         self.queue_lock.release()
         xc.run()
         self.action_after_run(a, xc)
@@ -394,8 +393,8 @@ class Macro(eva.item.ActiveItem):
     def __init__(self, item_id):
         super().__init__(item_id, 'lmacro')
         self.respect_layout = False
-        self.api = eva.lm.macro_api.MacroAPI(
-            pass_errors=False, send_critical=False)
+        self.api = eva.lm.macro_api.MacroAPI(pass_errors=False,
+                                             send_critical=False)
         self.pfcode = None
 
     def update_config(self, data):
@@ -446,8 +445,8 @@ class Macro(eva.item.ActiveItem):
                 return False
             try:
                 file_name = eva.core.format_xc_fname(
-                    fname=self.action_exec
-                    if self.action_exec else '{}.py'.format(self.item_id))
+                    fname=self.action_exec if self.action_exec else '{}.py'.
+                    format(self.item_id))
                 eva.core.prepare_save()
                 with open(file_name, 'w') as fd:
                     fd.write(code)
@@ -475,8 +474,11 @@ class Macro(eva.item.ActiveItem):
         if full or config or props:
             d['pass_errors'] = self.api.pass_errors
             d['send_critical'] = self.api.send_critical
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         if not notify:
             d['action_enabled'] = self.action_enabled
         else:
@@ -545,8 +547,8 @@ class Cycle(eva.item.Item):
         if 'macro_kwargs' in data:
             self.macro_kwargs = dict_from_str(data['macro_kwargs'])
         if 'on_error' in data:
-            self.on_error = eva.lm.controller.get_macro(
-                data['on_error'], pfm=True)
+            self.on_error = eva.lm.controller.get_macro(data['on_error'],
+                                                        pfm=True)
         if 'interval' in data:
             self.interval = data['interval']
         if 'ict' in data:
@@ -727,8 +729,9 @@ class Cycle(eva.item.Item):
                 if not result:
                     logging.error('cycle %s exception %s' % (self.full_id, ex))
                     if self.on_error:
-                        eva.lm.controller.exec_macro(
-                            self.on_error, argv=['exception', ex], source=self)
+                        eva.lm.controller.exec_macro(self.on_error,
+                                                     argv=['exception', ex],
+                                                     source=self)
                 elif time.perf_counter() > cycle_end:
                     logging.error('cycle %s timeout' % (self.full_id))
                     if self.on_error:
@@ -822,8 +825,11 @@ class Cycle(eva.item.Item):
                   props=False,
                   notify=False):
         d = {}
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         d['interval'] = self.interval
         if not config and not props:
             d['status'] = self.cycle_status
@@ -838,6 +844,8 @@ class Cycle(eva.item.Item):
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
+            if d['macro'].startswith('@func/'):
+                d['macro'] = '@' + d['macro'][6:]
             d['on_error'] = self.on_error.full_id if self.on_error else None
             d['macro_args'] = self.macro_args
             d['macro_kwargs'] = self.macro_kwargs
