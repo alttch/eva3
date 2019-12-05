@@ -6,8 +6,11 @@ __version__ = "3.2.6"
 import sys
 import os
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+
+dir_eva = Path(__file__).absolute().parents[1].as_posix()
+dir_lib = dir_eva + '/lib'
+sys.path.insert(0, dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
@@ -15,8 +18,6 @@ from eva.client.cli import LECLI
 from eva.client.cli import ComplGeneric
 
 import eva.client.cli
-
-dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
 
 
 class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
@@ -167,8 +168,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             opts = []
-            if not kwargs.get('ignore_p') and hasattr(
-                    kwargs.get('parsed_args'), 'p'):
+            if not kwargs.get('ignore_p') and hasattr(kwargs.get('parsed_args'),
+                                                      'p'):
                 p = kwargs.get('parsed_args').p
                 if p:
                     opts = ['-p', p]
@@ -275,11 +276,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     def add_sfa_common_functions(self):
         sp_state = self.sp.add_parser('state', help='Get item state')
-        sp_state.add_argument(
-            'i',
-            help='Item ID (specify either ID or item type)',
-            metavar='ID',
-            nargs='?').completer = self.ComplItemOID(self)
+        sp_state.add_argument('i',
+                              help='Item ID (specify either ID or item type)',
+                              metavar='ID',
+                              nargs='?').completer = self.ComplItemOID(self)
         sp_state.add_argument(
             '-p',
             '--type',
@@ -287,18 +287,19 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             metavar='TYPE',
             dest='p',
             choices=['unit', 'sensor', 'lvar', 'U', 'S', 'LV'])
-        sp_state.add_argument(
-            '-g', '--group', help='Item group', metavar='GROUP',
-            dest='g').completer = self.ComplItemGroup(self)
-        sp_state.add_argument(
-            '-y',
-            '--full',
-            help='Full information about item',
-            dest='_full',
-            action='store_true')
+        sp_state.add_argument('-g',
+                              '--group',
+                              help='Item group',
+                              metavar='GROUP',
+                              dest='g').completer = self.ComplItemGroup(self)
+        sp_state.add_argument('-y',
+                              '--full',
+                              help='Full information about item',
+                              dest='_full',
+                              action='store_true')
 
-        sp_history = self.sp.add_parser(
-            'history', help='Get item state history')
+        sp_history = self.sp.add_parser('history',
+                                        help='Get item state history')
         sp_history.add_argument(
             'i',
             help=
@@ -310,56 +311,61 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             help='Notifier to get history from (default: db_1)',
             metavar='NOTIFIER',
             dest='a')
-        sp_history.add_argument(
-            '-s', '--time-start', help='Start time', metavar='TIME', dest='s')
-        sp_history.add_argument(
-            '-e', '--time-end', help='End time', metavar='TIME', dest='e')
-        sp_history.add_argument(
-            '-l',
-            '--limit',
-            help='Records limit (doesn\'t work with fill)',
-            metavar='N',
-            dest='l')
-        sp_history.add_argument(
-            '-x',
-            '--prop',
-            help='Item state prop (status or value)',
-            metavar='PROP',
-            dest='x',
-            choices=['status', 'value', 'S', 'V'])
+        sp_history.add_argument('-s',
+                                '--time-start',
+                                help='Start time',
+                                metavar='TIME',
+                                dest='s')
+        sp_history.add_argument('-e',
+                                '--time-end',
+                                help='End time',
+                                metavar='TIME',
+                                dest='e')
+        sp_history.add_argument('-l',
+                                '--limit',
+                                help='Records limit (doesn\'t work with fill)',
+                                metavar='N',
+                                dest='l')
+        sp_history.add_argument('-x',
+                                '--prop',
+                                help='Item state prop (status or value)',
+                                metavar='PROP',
+                                dest='x',
+                                choices=['status', 'value', 'S', 'V'])
         sp_history.add_argument(
             '-w',
             '--fill',
             help='Fill (i.e. 1T - 1 min, 2H - 2 hours), requires start time',
             metavar='INTERVAL',
             dest='w')
-        sp_history.add_argument(
-            '-c',
-            '--chart-options',
-            help='Chart options',
-            metavar='OPTS',
-            dest='c')
+        sp_history.add_argument('-c',
+                                '--chart-options',
+                                help='Chart options',
+                                metavar='OPTS',
+                                dest='c')
 
     def add_sfa_edit_functions(self):
         ap_edit = self.sp.add_parser('edit', help='Edit commands')
 
-        sp_edit = ap_edit.add_subparsers(
-            dest='_func', metavar='func', help='Edit commands')
+        sp_edit = ap_edit.add_subparsers(dest='_func',
+                                         metavar='func',
+                                         help='Edit commands')
 
         self._append_edit_pvt_and_ui(sp_edit)
         self._append_edit_server_config(sp_edit)
 
     def add_sfa_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')
-        ap_remote.add_argument(
-            '-i',
-            '--controller',
-            help='Filter by controller ID',
-            metavar='CONTROLLER_ID',
-            dest='i').completer = self.ComplController(self)
-        ap_remote.add_argument(
-            '-g', '--group', help='Filter by group', metavar='GROUP',
-            dest='g').completer = self.ComplRemoteGroup(self)
+        ap_remote.add_argument('-i',
+                               '--controller',
+                               help='Filter by controller ID',
+                               metavar='CONTROLLER_ID',
+                               dest='i').completer = self.ComplController(self)
+        ap_remote.add_argument('-g',
+                               '--group',
+                               help='Filter by group',
+                               metavar='GROUP',
+                               dest='g').completer = self.ComplRemoteGroup(self)
         ap_remote.add_argument(
             '-p',
             '--type',
@@ -371,85 +377,92 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
     def add_sfa_action_functions(self):
         ap_action = self.sp.add_parser('action', help='Unit actions')
 
-        sp_action = ap_action.add_subparsers(
-            dest='_func', metavar='func', help='Action commands')
+        sp_action = ap_action.add_subparsers(dest='_func',
+                                             metavar='func',
+                                             help='Action commands')
 
-        sp_action_enable = sp_action.add_parser(
-            'enable', help='Enable unit actions')
+        sp_action_enable = sp_action.add_parser('enable',
+                                                help='Enable unit actions')
         sp_action_enable.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
-        sp_action_disable = sp_action.add_parser(
-            'disable', help='Disable unit actions')
+        sp_action_disable = sp_action.add_parser('disable',
+                                                 help='Disable unit actions')
         sp_action_disable.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
-        sp_action_exec = sp_action.add_parser(
-            'exec', help='Execute unit action')
+        sp_action_exec = sp_action.add_parser('exec',
+                                              help='Execute unit action')
         sp_action_exec.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
         sp_action_exec.add_argument('s', help='New status', metavar='STATUS')
-        sp_action_exec.add_argument(
-            '-v', '--value', help='New value', metavar='VALUE', dest='v')
-        sp_action_exec.add_argument(
-            '-p',
-            '--priority',
-            help='Action priority',
-            metavar='PRIORITY',
-            type=int,
-            dest='p')
-        sp_action_exec.add_argument(
-            '-w',
-            '--wait',
-            help='Wait for complete',
-            metavar='SEC',
-            type=float,
-            dest='w')
-        sp_action_exec.add_argument(
-            '-q',
-            '--queue-timeout',
-            help='Max queue timeout',
-            metavar='SEC',
-            type=float,
-            dest='q')
-        sp_action_exec.add_argument(
-            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+        sp_action_exec.add_argument('-v',
+                                    '--value',
+                                    help='New value',
+                                    metavar='VALUE',
+                                    dest='v')
+        sp_action_exec.add_argument('-p',
+                                    '--priority',
+                                    help='Action priority',
+                                    metavar='PRIORITY',
+                                    type=int,
+                                    dest='p')
+        sp_action_exec.add_argument('-w',
+                                    '--wait',
+                                    help='Wait for complete',
+                                    metavar='SEC',
+                                    type=float,
+                                    dest='w')
+        sp_action_exec.add_argument('-q',
+                                    '--queue-timeout',
+                                    help='Max queue timeout',
+                                    metavar='SEC',
+                                    type=float,
+                                    dest='q')
+        sp_action_exec.add_argument('-u',
+                                    '--uuid',
+                                    help='Custom action uuid',
+                                    metavar='UUID',
+                                    dest='u')
 
         sp_action_toggle = sp_action.add_parser(
             'toggle', help='Execute unit toggle action')
         sp_action_toggle.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
-        sp_action_toggle.add_argument(
-            '-p',
-            '--priority',
-            help='Action priority',
-            metavar='PRIORITY',
-            type=int,
-            dest='p')
-        sp_action_toggle.add_argument(
-            '-w',
-            '--wait',
-            help='Wait for complete',
-            metavar='SEC',
-            type=float,
-            dest='w')
-        sp_action_toggle.add_argument(
-            '-q',
-            '--queue-timeout',
-            help='Max queue timeout',
-            metavar='SEC',
-            type=float,
-            dest='q')
-        sp_action_toggle.add_argument(
-            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+        sp_action_toggle.add_argument('-p',
+                                      '--priority',
+                                      help='Action priority',
+                                      metavar='PRIORITY',
+                                      type=int,
+                                      dest='p')
+        sp_action_toggle.add_argument('-w',
+                                      '--wait',
+                                      help='Wait for complete',
+                                      metavar='SEC',
+                                      type=float,
+                                      dest='w')
+        sp_action_toggle.add_argument('-q',
+                                      '--queue-timeout',
+                                      help='Max queue timeout',
+                                      metavar='SEC',
+                                      type=float,
+                                      dest='q')
+        sp_action_toggle.add_argument('-u',
+                                      '--uuid',
+                                      help='Custom action uuid',
+                                      metavar='UUID',
+                                      dest='u')
 
-        sp_action_terminate = sp_action.add_parser(
-            'terminate', help='Terminate unit action')
+        sp_action_terminate = sp_action.add_parser('terminate',
+                                                   help='Terminate unit action')
         sp_action_terminate.add_argument(
             'i', help='Unit ID', metavar='ID',
             nargs='?').completer = self.ComplUnit(self)
-        sp_action_terminate.add_argument(
-            '-u', '--uuid', help='Action uuid', metavar='UUID', dest='u')
+        sp_action_terminate.add_argument('-u',
+                                         '--uuid',
+                                         help='Action uuid',
+                                         metavar='UUID',
+                                         dest='u')
 
         sp_action_qclean = sp_action.add_parser(
             'clear', help='Clean up unit action queue')
@@ -461,16 +474,19 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         sp_action_kill.add_argument(
             'i', help='Unit ID', metavar='ID').completer = self.ComplUnit(self)
 
-        sp_action_result = sp_action.add_parser(
-            'result', help='Get unit action results')
+        sp_action_result = sp_action.add_parser('result',
+                                                help='Get unit action results')
         sp_action_result.add_argument(
             '-i',
             '--id',
             help='Unit ID (specify either unit ID or action UUID)',
             metavar='ID',
             dest='i').completer = self.ComplUnit(self)
-        sp_action_result.add_argument(
-            '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
+        sp_action_result.add_argument('-u',
+                                      '--uuid',
+                                      help='Action UUID',
+                                      metavar='UUID',
+                                      dest='u')
         sp_action_result.add_argument(
             '-g', '--group', help='Unit group', metavar='GROUP',
             dest='g').completer = self.ComplUnitGroup(self)
@@ -484,8 +500,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     def add_sfa_macro_functions(self):
         ap_macro = self.sp.add_parser('macro', help='Macro functions')
-        sp_macro = ap_macro.add_subparsers(
-            dest='_func', metavar='func', help='Macro commands')
+        sp_macro = ap_macro.add_subparsers(dest='_func',
+                                           metavar='func',
+                                           help='Macro commands')
 
         sp_macro_list = sp_macro.add_parser('list', help='List macros')
         sp_macro_list.add_argument(
@@ -496,29 +513,33 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         sp_macro_run.add_argument(
             'i', help='Macro ID',
             metavar='ID').completer = self.ComplMacro(self)
-        sp_macro_run.add_argument(
-            '-a', '--args', help='Macro arguments', metavar='ARGS', dest='a')
+        sp_macro_run.add_argument('-a',
+                                  '--args',
+                                  help='Macro arguments',
+                                  metavar='ARGS',
+                                  dest='a')
         sp_macro_run.add_argument(
             '--kwargs',
             help='Macro keyword arguments (name=value), comma separated',
             metavar='ARGS',
             dest='kw')
-        sp_macro_run.add_argument(
-            '-p',
-            '--priority',
-            help='Action priority',
-            metavar='PRIORITY',
-            type=int,
-            dest='p')
-        sp_macro_run.add_argument(
-            '-w',
-            '--wait',
-            help='Wait for complete',
-            metavar='SEC',
-            type=float,
-            dest='w')
-        sp_macro_run.add_argument(
-            '-u', '--uuid', help='Custom action uuid', metavar='UUID', dest='u')
+        sp_macro_run.add_argument('-p',
+                                  '--priority',
+                                  help='Action priority',
+                                  metavar='PRIORITY',
+                                  type=int,
+                                  dest='p')
+        sp_macro_run.add_argument('-w',
+                                  '--wait',
+                                  help='Wait for complete',
+                                  metavar='SEC',
+                                  type=float,
+                                  dest='w')
+        sp_macro_run.add_argument('-u',
+                                  '--uuid',
+                                  help='Custom action uuid',
+                                  metavar='UUID',
+                                  dest='u')
 
         sp_macro_result = sp_macro.add_parser(
             'result', help='Get macro execution results')
@@ -528,8 +549,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             help='Macro ID (specify either macro ID or action UUID)',
             metavar='ID',
             dest='i').completer = self.ComplMacro(self, 'oid')
-        sp_macro_result.add_argument(
-            '-u', '--uuid', help='Action UUID', metavar='UUID', dest='u')
+        sp_macro_result.add_argument('-u',
+                                     '--uuid',
+                                     help='Action UUID',
+                                     metavar='UUID',
+                                     dest='u')
         sp_macro_result.add_argument(
             '-g', '--group', help='Macro group', metavar='GROUP',
             dest='g').completer = self.ComplMacroGroup(self)
@@ -543,8 +567,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     def add_sfa_cycle_functions(self):
         ap_cycle = self.sp.add_parser('cycle', help='Cycle functions')
-        sp_cycle = ap_cycle.add_subparsers(
-            dest='_func', metavar='func', help='Cycle commands')
+        sp_cycle = ap_cycle.add_subparsers(dest='_func',
+                                           metavar='func',
+                                           help='Cycle commands')
 
         sp_cycle_list = sp_cycle.add_parser('list', help='List cycles')
         sp_cycle_list.add_argument(
@@ -553,33 +578,35 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     def add_sfa_lvar_functions(self):
         sp_set = self.sp.add_parser('set', help='Set LVar state')
-        sp_set.add_argument(
-            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
-        sp_set.add_argument(
-            '-s',
-            '--status',
-            help='LVar status',
-            metavar='STATUS',
-            type=int,
-            dest='s')
-        sp_set.add_argument(
-            '-v', '--value', help='LVar value', metavar='VALUE', dest='v')
+        sp_set.add_argument('i', help='LVar ID',
+                            metavar='ID').completer = self.ComplLVAR(self)
+        sp_set.add_argument('-s',
+                            '--status',
+                            help='LVar status',
+                            metavar='STATUS',
+                            type=int,
+                            dest='s')
+        sp_set.add_argument('-v',
+                            '--value',
+                            help='LVar value',
+                            metavar='VALUE',
+                            dest='v')
 
         sp_reset = self.sp.add_parser('reset', help='Reset LVar state')
-        sp_reset.add_argument(
-            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
+        sp_reset.add_argument('i', help='LVar ID',
+                              metavar='ID').completer = self.ComplLVAR(self)
 
         sp_clear = self.sp.add_parser('clear', help='Clear LVar state')
-        sp_clear.add_argument(
-            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
+        sp_clear.add_argument('i', help='LVar ID',
+                              metavar='ID').completer = self.ComplLVAR(self)
 
         sp_toggle = self.sp.add_parser('toggle', help='Toggle LVar state')
-        sp_toggle.add_argument(
-            'i', help='LVar ID', metavar='ID').completer = self.ComplLVAR(self)
+        sp_toggle.add_argument('i', help='LVar ID',
+                               metavar='ID').completer = self.ComplLVAR(self)
 
     def add_sfa_notify_functions(self):
-        ap_notify = self.sp.add_parser(
-            'notify', help='Notify connected clients')
+        ap_notify = self.sp.add_parser('notify',
+                                       help='Notify connected clients')
         sp_notify = ap_notify.add_subparsers(
             dest='_func', metavar='func', help='Client notification commands')
 
@@ -595,8 +622,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
     def add_sfa_controller_functions(self):
         ap_controller = self.sp.add_parser(
             'controller', help='Connected controllers functions')
-        sp_controller = ap_controller.add_subparsers(
-            dest='_func', metavar='func', help='Controller commands')
+        sp_controller = ap_controller.add_subparsers(dest='_func',
+                                                     metavar='func',
+                                                     help='Controller commands')
 
         sp_controller_list = sp_controller.add_parser(
             'list', help='List connected controllers')
@@ -627,8 +655,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         sp_controller_set_prop.add_argument(
             'p', help='Config property',
             metavar='PROP').completer = self.ComplControllerProp(self)
-        sp_controller_set_prop.add_argument(
-            'v', help='Value', metavar='VAL', nargs='?')
+        sp_controller_set_prop.add_argument('v',
+                                            help='Value',
+                                            metavar='VAL',
+                                            nargs='?')
         sp_controller_set_prop.add_argument(
             '-y',
             '--save',
@@ -640,28 +670,28 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             'reload', help='Reload items from the connected controller')
         sp_controller_reload.add_argument(
             'i', help='Controller ID (or "all")',
-            metavar='ID').completer = self.ComplController(
-                self, allow_all=True)
+            metavar='ID').completer = self.ComplController(self, allow_all=True)
 
         sp_controller_append = sp_controller.add_parser(
             'append', help='Connect controller')
         sp_controller_append.add_argument(
             'u', help='Controller API URI (http[s]://host:port)', metavar='URI')
-        sp_controller_append.add_argument(
-            '-a', '--api-key', help='API key', metavar='KEY', dest='a')
-        sp_controller_append.add_argument(
-            '-x',
-            '--api-masterkey',
-            help='API masterkey',
-            metavar='MASTERKEY',
-            dest='x')
-        sp_controller_append.add_argument(
-            '-g',
-            '--group',
-            help='Force controller type group',
-            metavar='GROUP',
-            choices=['uc', 'lm'],
-            dest='g')
+        sp_controller_append.add_argument('-a',
+                                          '--api-key',
+                                          help='API key',
+                                          metavar='KEY',
+                                          dest='a')
+        sp_controller_append.add_argument('-x',
+                                          '--api-masterkey',
+                                          help='API masterkey',
+                                          metavar='MASTERKEY',
+                                          dest='x')
+        sp_controller_append.add_argument('-g',
+                                          '--group',
+                                          help='Force controller type group',
+                                          metavar='GROUP',
+                                          choices=['uc', 'lm'],
+                                          dest='g')
         sp_controller_append.add_argument(
             '-m',
             '--mqtt',
@@ -675,13 +705,12 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             metavar='SSL_VERIFY',
             dest='s',
             choices=[0, 1])
-        sp_controller_append.add_argument(
-            '-t',
-            '--timeout',
-            help='API timeout',
-            metavar='SEC',
-            dest='t',
-            type=float)
+        sp_controller_append.add_argument('-t',
+                                          '--timeout',
+                                          help='API timeout',
+                                          metavar='SEC',
+                                          dest='t',
+                                          type=float)
         sp_controller_append.add_argument(
             '-y',
             '--save',
@@ -723,26 +752,26 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         ap_cloud = self.sp.add_parser(
             'cloud',
             help='Cloud functions (requires cloud_manager=yes in sfa.ini)')
-        sp_cloud = ap_cloud.add_subparsers(
-            dest='_func', metavar='func', help='Cloud management commands')
+        sp_cloud = ap_cloud.add_subparsers(dest='_func',
+                                           metavar='func',
+                                           help='Cloud management commands')
 
         sp_cloud_deploy = sp_cloud.add_parser(
             'deploy', help='Deploy items and configuration from file')
-        sp_cloud_deploy.add_argument(
-            'f', help='Deploy file',
-            metavar='FILE').completer = self.ComplGlob(['*.yml', '*.yaml'])
+        sp_cloud_deploy.add_argument('f', help='Deploy file',
+                                     metavar='FILE').completer = self.ComplGlob(
+                                         ['*.yml', '*.yaml'])
         sp_cloud_deploy.add_argument(
             '-y',
             '--save',
             help='Save controllers\' configurations after deploy',
             dest='_save',
             action='store_true')
-        sp_cloud_deploy.add_argument(
-            '-u',
-            '--undeploy',
-            help='Undeploy old configuration first',
-            dest='und',
-            action='store_true')
+        sp_cloud_deploy.add_argument('-u',
+                                     '--undeploy',
+                                     help='Undeploy old configuration first',
+                                     dest='und',
+                                     action='store_true')
         sp_cloud_deploy.add_argument(
             '-c',
             '--config',
@@ -756,12 +785,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         sp_cloud_undeploy.add_argument(
             'f', help='Deploy file',
             metavar='FILE').completer = self.ComplGlob(['*.yml', '*.yaml'])
-        sp_cloud_undeploy.add_argument(
-            '-d',
-            '--delete-files',
-            help='Delete uploaded remote files',
-            dest="del_files",
-            action="store_true")
+        sp_cloud_undeploy.add_argument('-d',
+                                       '--delete-files',
+                                       help='Delete uploaded remote files',
+                                       dest="del_files",
+                                       action="store_true")
         sp_cloud_undeploy.add_argument(
             '-y',
             '--save',
@@ -788,8 +816,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     def undeploy(self, props):
         from eva.client import apiclient
-        return self._deploy_undeploy(
-            props, und=True, del_files=props.get('del_files', False))
+        return self._deploy_undeploy(props,
+                                     und=True,
+                                     del_files=props.get('del_files', False))
 
     @staticmethod
     def _read_uri(fname, dirname=None):
@@ -826,10 +855,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 raise Exception('Unable to parse {}: {}'.format(fname, e))
             api = props['_api']
             from functools import partial
-            call = partial(
-                api.call,
-                timeout=props.get('_timeout', self.default_timeout),
-                _debug=props.get('_debug'))
+            call = partial(api.call,
+                           timeout=props.get('_timeout', self.default_timeout),
+                           _debug=props.get('_debug'))
             code, test = call('test')
             if code != apiclient.result_ok or not test.get('ok'):
                 raise Exception(
@@ -898,9 +926,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                 try:
                                     self._read_uri(fname, dirname)
                                 except:
-                                    raise Exception(('{}: {} unable to open ' +
-                                                     'file for upload').format(
-                                                         c, fname))
+                                    raise Exception(
+                                        ('{}: {} unable to open ' +
+                                         'file for upload').format(c, fname))
             macall = partial(call, 'management_api_call')
             for c in controllers:
                 code, ctest = macall({'i': c, 'f': 'test'})
@@ -929,8 +957,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             print('Starting {}deployment of {}'.format('un' if und else '',
                                                        props['f']))
             # ===== BEFORE TASKS =====
-            print('Executing commands in before-{}deploy...'.format('un' if und
-                                                                    else ''))
+            print('Executing commands in before-{}deploy...'.format(
+                'un' if und else ''))
             for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
                 if v:
                     for a in self.dict_safe_get(
@@ -959,8 +987,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             else:
                 self._perform_undeploy(props, cfg, macall, del_files)
             # ===== AFTER TASKS =====
-            print('Executing commands in after-{}deploy...'.format('un' if und
-                                                                   else ''))
+            print('Executing commands in after-{}deploy...'.format(
+                'un' if und else ''))
             for c, v in self.dict_safe_get(cfg, 'controller', {}).items():
                 if v:
                     for a in self.dict_safe_get(
@@ -1170,10 +1198,11 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                     print('     - {} = {}'.format(prop, val))
                     code = macall({
                         'i':
-                        c,
+                            c,
                         'f':
-                        'set_{}prop'.format((
-                            tpc + '_') if tp in ['lmacro', 'lcycle'] else ''),
+                            'set_{}prop'.format((
+                                tpc +
+                                '_') if tp in ['lmacro', 'lcycle'] else ''),
                         'p': {
                             'i': i,
                             'p': prop,
@@ -1307,8 +1336,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                             file2del = None
                         if file2del:
                             remotefn = 'xc/{}/{}'.format(
-                                'lm'
-                                if tp in ['lvar', 'lmacro'] else 'uc', file2del)
+                                'lm' if tp in ['lvar', 'lmacro'] else 'uc',
+                                file2del)
                             code = macall({
                                 'i': c,
                                 'f': 'file_unlink',
@@ -1475,8 +1504,9 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_cycles':
-    ['id', 'description', 'controller_id', 'status', 'int', 'iter', 'avg'],
+    'list_cycles': [
+        'id', 'description', 'controller_id', 'status', 'int', 'iter', 'avg'
+    ],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'managed', 'proto', 'version',
         'build', 'description'

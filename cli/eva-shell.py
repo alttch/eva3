@@ -13,16 +13,15 @@ import textwrap
 
 nodename = platform.node()
 
-dir_eva = os.path.realpath(os.path.dirname(os.path.realpath(__file__)) + '/..')
-dir_backup = os.path.dirname(os.path.realpath(__file__)) + '/../backup'
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-dir_etc = os.path.dirname(os.path.realpath(__file__)) + '/../etc'
-dir_sbin = os.path.dirname(os.path.realpath(__file__)) + '/../sbin'
-dir_cli = os.path.realpath(
-    os.path.dirname(os.path.realpath(__file__)) + '/../cli')
-dir_runtime = os.path.realpath(
-    os.path.dirname(os.path.realpath(__file__)) + '/../runtime')
-sys.path.append(dir_lib)
+from pathlib import Path
+dir_eva = Path(__file__).absolute().parents[1].as_posix()
+dir_backup = dir_eva + '/backup'
+dir_lib = dir_eva + '/lib'
+dir_etc = dir_eva + '/etc'
+dir_sbin = dir_eva + '/sbin'
+dir_cli = dir_eva + '/cli'
+dir_runtime = dir_eva + '/runtime'
+sys.path.insert(0, dir_lib)
 
 dir_cwd = os.getcwd()
 
@@ -51,8 +50,8 @@ class ComplSubshellCmd(ComplGeneric):
         super().__init__(cli)
 
     def __call__(self, prefix, **kwargs):
-        shell = kwargs['parsed_args']._type if not self.for_notifier else kwargs[
-            'parsed_args'].p
+        shell = kwargs['parsed_args']._type if not self.for_notifier else \
+                kwargs['parsed_args'].p
         c = kwargs['parsed_args'].subcommand
         if shell:
             try:

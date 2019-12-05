@@ -7,8 +7,8 @@ import sys
 import os
 import getopt
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).parent.parent / 'lib').as_posix())
 
 import eva.core
 import eva.notify

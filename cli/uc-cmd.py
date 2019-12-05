@@ -6,10 +6,12 @@ __version__ = "3.2.6"
 import sys
 import os
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-dir_runtime = os.path.realpath(
-    os.path.dirname(os.path.realpath(__file__)) + '/../runtime')
-sys.path.append(dir_lib)
+from pathlib import Path
+
+dir_eva = Path(__file__).absolute().parents[1].as_posix()
+dir_lib = dir_eva + '/lib'
+dir_runtime = dir_eva + '/runtime'
+sys.path.insert(0, dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI

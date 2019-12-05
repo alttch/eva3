@@ -7,10 +7,10 @@ import sys
 import os
 import getopt
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 
-os.environ['EVA_DIR'] = os.path.dirname(os.path.realpath(__file__)) + '/..'
+os.environ['EVA_DIR'] = Path(__file__).absolute().parents[1].as_posix()
 
 import eva.core
 import eva.notify

@@ -3,10 +3,9 @@ __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.2.6"
 
-import os
 import requests
 import uuid
-import threading
+from pathlib import Path
 
 from functools import partial
 
@@ -173,8 +172,7 @@ class APIClientLocal(APIClient):
         super().__init__()
         if dir_eva is not None: _etc = dir_eva + '/etc'
         else:
-            _etc = os.path.dirname(os.path.realpath(__file__)) + \
-                    '/../../../etc'
+            _etc = (Path(__file__).absolute().parents[3] / 'etc').as_posix()
         self._product_code = product
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
         cfg.read(_etc + '/' + product + '_apikeys.ini')
