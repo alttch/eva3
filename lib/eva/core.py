@@ -213,7 +213,7 @@ def suicide(**kwargs):
 def sighandler_term(signum=None, frame=None):
     if _flags.sigterm_sent: return
     _flags.sigterm_sent = True
-    background_task(suicide, daemon=True, priority=TASK_CRITICAL)()
+    threading.Thread(target=suicide, daemon=True).start()
     logging.info('got TERM signal, exiting')
     if config.db_update == 2:
         try:
