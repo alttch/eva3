@@ -314,6 +314,7 @@ def serialize():
     proc = psutil.Process()
     d['version'] = version
     d['timeout'] = config.timeout
+    d['python'] = sys.version
     d['system_name'] = config.system_name
     d['product_name'] = product.name
     d['product_code'] = product.code
