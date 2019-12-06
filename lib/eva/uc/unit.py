@@ -18,6 +18,8 @@ from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.uc.ucitem import UCItem
 
+from atasker import background_worker, background_task
+
 status_label_off = 'OFF'
 status_label_on = 'ON'
 
@@ -37,8 +39,10 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         self.nstatus = 0
         self.nvalue = ''
         self.last_action = 0
-        self.auto_processor_active = False
-        self.auto_processor = None
+        self.auto_processor = background_worker(
+            self._run_auto_processor,
+            interval=eva.core.config.polldelay,
+            o=self)
         self.modbus_status = None
         # labels have string keys to be JSON compatible
         self.default_status_labels = {
@@ -297,9 +301,9 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             return super().set_prop(prop, val, save)
 
     def start_processors(self):
+        self.auto_processor.set_name('auto_processor:' + self.oid)
         super().start_processors()
         self.register_modbus_status_updates()
-        self.start_auto_processor()
 
     def stop_processors(self):
         super().stop_processors()
@@ -307,39 +311,22 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         self.unregister_modbus_status_updates()
 
     def start_auto_processor(self):
-        self.auto_processor_active = True
-        if (self.auto_processor and self.auto_processor.is_alive()):
-            return
-        if not self.auto_off:
-            self.auto_processor_active = False
-            return
-        self.auto_processor = threading.Thread(target = \
-                self._t_auto_processor,
-                name = '_t_auto_processor_' + self.item_id
-                )
-        self.auto_processor.start()
+        if self.auto_off and self.status > 0:
+            self.auto_processor.start()
 
     def stop_auto_processor(self):
-        if self.auto_processor_active:
-            self.auto_processor_active = False
-            self.auto_processor.join()
+        self.auto_processor.stop()
 
-    def _t_auto_processor(self):
-        logging.debug('%s auto processor started' % self.oid)
-        while self.auto_processor_active and self.auto_off:
-            time.sleep(eva.core.config.polldelay)
-            if self.last_action and \
-                    self.status != 0 and \
-                    time.time() - self.last_action > self.auto_off:
-                logging.debug('%s auto off after %u seconds' % \
-                        (self.oid, self.auto_off))
-                self.last_action = time.time()
-                eva.uc.controller.exec_unit_action(self,
-                                                   0,
-                                                   None,
-                                                   wait=eva.core.config.timeout)
-        self.auto_processor_active = False
-        logging.debug('%s auto processor stopped' % self.oid)
+    async def _run_auto_processor(self, o, **kwargs):
+        if o.last_action and \
+                o.status != 0 and \
+                time.time() - o.last_action > o.auto_off:
+            logging.debug('%s auto off after %u seconds' % \
+                    (o.oid, o.auto_off))
+            o.last_action = time.time()
+            background_task(eva.uc.controller.exec_unit_action)(
+                o, 0, None, wait=eva.core.config.timeout)
+            return False
 
     def get_action_xc(self, a):
         if self.action_exec and self.action_exec[0] == '|':
@@ -437,6 +424,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         if status is not None:
             if self.status != status: need_notify = True
             self.status = status
+            self.start_auto_processor()
         if value is not None:
             if value == '': v = ''
             else: v = value

@@ -1,3 +1,4 @@
+import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -39,7 +40,7 @@ from eva.generic import ia_status_failed
 from eva.generic import ia_status_terminated
 from eva.generic import ia_status_completed
 
-from atasker import background_worker
+from atasker import background_worker, background_task
 
 
 class Item(object):
@@ -313,7 +314,8 @@ class UpdatableItem(Item):
             self._run_update_processor)
         self.update_scheduler = background_worker(interval=1, o=self)(
             self._run_update_scheduler)
-        self.expiration_checker = None
+        self.expiration_checker = background_worker(interval=1, o=self)(
+            self._run_expiration_checker)
         self.expiration_checker_active = False
         self._updates_allowed = True
         self.update_xc = None
@@ -480,6 +482,8 @@ class UpdatableItem(Item):
     def start_processors(self):
         self.update_processor.set_name('update_processor:{}'.format(self.oid))
         self.update_scheduler.set_name('update_scheduler:{}'.format(self.oid))
+        self.expiration_checker.set_name('expiration_checker:{}'.format(
+            self.oid))
         self.subscribe_mqtt_update()
         self.start_update_processor()
         self.start_update_scheduler()
@@ -535,22 +539,11 @@ class UpdatableItem(Item):
         self.update_scheduler.stop()
 
     def start_expiration_checker(self):
-        self.expiration_checker_active = True
-        if (self.expiration_checker and \
-                self.expiration_checker.is_alive()):
-            return
-        if not self.expires:
-            self.expiration_checker_active = False
-            return
-        self.expiration_checker = threading.Thread(target = \
-                self._t_expiration_checker,
-                name = '_t_expiration_checker_' + self.oid)
-        self.expiration_checker.start()
+        if self.expires and self.status != -1:
+            self.expiration_checker.start(_interval=eva.core.config.polldelay)
 
     def stop_expiration_checker(self):
-        if self.expiration_checker_active:
-            self.expiration_checker_active = False
-            self.expiration_checker.join()
+        self.expiration_checker.stop()
 
     def updates_allowed(self):
         return self._updates_allowed
@@ -564,23 +557,18 @@ class UpdatableItem(Item):
     def update_run_args(self):
         return ()
 
-    def _t_expiration_checker(self):
-        logging.debug('%s expiration checker started' % self.oid)
-        while self.expiration_checker_active and self.expires:
-            time.sleep(eva.core.config.polldelay)
-            if self.status != -1 and \
-                    (self.status != 0 or self._expire_on_any) and \
-                    self.is_expired():
-                logging.debug('%s expired, resetting status/value' % \
-                        self.oid)
-                self.set_expired()
-                break
-        self.expiration_checker_active = False
-        logging.debug('%s expiration checker stopped' % self.oid)
+    async def _run_expiration_checker(self, o, **kwargs):
+        if o.status != -1 and \
+                (o.status != 0 or o._expire_on_any) and \
+                o.is_expired():
+            logging.debug('%s expired, resetting status/value' % \
+                    o.oid)
+            background_task(o.set_expired)()
+            return False
 
     def is_expired(self):
-        if not self.expires: return False
-        return time.time() - self.set_time > self.expires
+        return time.time() - self.set_time > self.expires \
+                if self.expires else False
 
     def set_expired(self):
         if self.status == -1 and self.value == '': return False
@@ -709,8 +697,6 @@ class UpdatableItem(Item):
                          from_mqtt=False,
                          force_notify=False,
                          update_expiration=True):
-        if update_expiration:
-            self.update_expiration()
         need_notify = False
         if status is not None and status != '':
             try:
@@ -728,6 +714,8 @@ class UpdatableItem(Item):
             if self.value != value:
                 need_notify = True
                 self.value = value
+        if update_expiration:
+            self.update_expiration()
         if need_notify or force_notify:
             self.notify(skip_subscribed_mqtt=from_mqtt)
         return True
@@ -1576,8 +1564,6 @@ class VariableItem(UpdatableItem):
             logging.debug('%s skipping update - it\'s not active' % \
                     self.oid)
             return False
-        if update_expiration:
-            self.update_expiration()
         need_notify = False
         if _status is not None:
             if self.status != _status: need_notify = True
@@ -1588,6 +1574,8 @@ class VariableItem(UpdatableItem):
             if self.status == -1 and _status is None and value != '':
                 self.status = 1
                 need_notify = True
+        if update_expiration:
+            self.update_expiration()
         if need_notify or force_notify:
             logging.debug(
                 '%s status = %u, value = "%s"' % \
@@ -1598,21 +1586,6 @@ class VariableItem(UpdatableItem):
     def is_expired(self):
         if not self.status: return False
         return super().is_expired()
-
-    # def serialize(self,
-    # full=False,
-    # config=False,
-    # info=False,
-    # props=False,
-    # notify=False):
-    # d = super().serialize(
-    # full=full, config=config, info=info, props=props, notify=notify)
-    # if notify and 'value' in d and \
-    # self.status == -1 and \
-    # self.value != '' and \
-    # self.value is not None:
-    # del d['value']
-    # return d
 
 
 def item_match(item, item_ids, groups=None):
