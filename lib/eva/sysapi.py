@@ -1282,7 +1282,7 @@ def update_config(cfg):
 def start():
     http_api = SysHTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
-    lock_processor.start(_interval=eva.core.config.polldelay)
+    lock_processor.start()
 
 
 @eva.core.stop
@@ -1291,7 +1291,8 @@ def stop():
 
 
 @background_worker
-async def lock_processor(**kwargs):
+def lock_processor(**kwargs):
+    time.sleep(eva.core.sleep_step)
     for i, v in lock_expire_time.copy().items():
         if time.time() > v:
             logging.debug('lock %s expired, releasing' % i)
