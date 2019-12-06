@@ -539,7 +539,7 @@ class UpdatableItem(Item):
         self.update_scheduler.stop()
 
     def start_expiration_checker(self):
-        if self.expires and self.status != -1:
+        if self.expires and self.status > 0:
             self.expiration_checker.start(_interval=eva.core.config.polldelay)
 
     def stop_expiration_checker(self):
