@@ -210,7 +210,7 @@ class GenericNotifier(object):
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
         self.notifier_worker = self.NotifierWorker(o=self,
-                                                   worker_name='notifier:' +
+                                                   name='notifier:' +
                                                    self.notifier_id)
         self.state_storage = None
 
@@ -619,7 +619,7 @@ class SQLANotifier(GenericNotifier):
             db_default_keep
         self._keep = keep
         self.history_cleaner = self.HistoryCleaner(
-            worker_name='history_claner:' + self.notifier_id, o=self)
+            name='history_claner:' + self.notifier_id, o=self)
         self.db_lock = threading.RLock()
         self.set_db(db_uri)
 
@@ -1470,7 +1470,7 @@ class GenericMQTTNotifier(GenericNotifier):
         # dict of tuples (topic, handler)
         self.api_callback = {}
         self.api_callback_lock = threading.RLock()
-        self.announcer = self.Announcer(worker_name='mqtt_announcer:' +
+        self.announcer = self.Announcer(name='mqtt_announcer:' +
                                         self.notifier_id,
                                         o=self,
                                         interval=self.announce_interval)
