@@ -28,6 +28,7 @@ from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import InvalidParameter
 
 from types import SimpleNamespace
+from atasker import background_task
 
 remote_ucs = {}
 remote_lms = {}
@@ -285,8 +286,10 @@ def append_uc(uri,
     api.set_uri(uri + uport)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.config.mqtt_update_default
-    u = eva.client.remote_controller.RemoteUC(
-        None, api=api, mqtt_update=mqu, static=static)
+    u = eva.client.remote_controller.RemoteUC(None,
+                                              api=api,
+                                              mqtt_update=mqu,
+                                              static=static)
     u._key = key
     if makey: u.set_prop('masterkey', makey)
     if not uc_pool.append(u): return False
@@ -355,8 +358,10 @@ def append_lm(uri,
     api.set_uri(uri + uport)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.config.mqtt_update_default
-    u = eva.client.remote_controller.RemoteLM(
-        None, api=api, mqtt_update=mqu, static=static)
+    u = eva.client.remote_controller.RemoteLM(None,
+                                              api=api,
+                                              mqtt_update=mqu,
+                                              static=static)
     u._key = key
     if makey: u.set_prop('masterkey', makey)
     if not lm_pool.append(u): return False
@@ -415,14 +420,10 @@ def serialize():
 def start():
     uc_pool.start()
     for i, v in remote_ucs.items():
-        t = threading.Thread(
-            target=connect_remote_controller, args=(uc_pool, v))
-        t.start()
+        background_task(connect_remote_controller, daemon=True)(uc_pool, v)
     lm_pool.start()
     for i, v in remote_lms.items():
-        t = threading.Thread(
-            target=connect_remote_controller, args=(lm_pool, v))
-        t.start()
+        background_task(connect_remote_controller, daemon=True)(lm_pool, v)
 
 
 def connect_remote_controller(pool, v):
