@@ -84,7 +84,7 @@ class WebSocketWorker(BackgroundWorker):
             return False
         try:
             self.pinger = WebSocketPingerWorker(daemon=True,
-                                                name='ws_pinger_' +
+                                                worker_name='ws_pinger:' +
                                                 self.controller.oid,
                                                 interval=5,
                                                 o=self.ws)
@@ -821,8 +821,8 @@ class RemoteControllerPool(object):
             if not controller.mqtt_update and controller.api._uri.startswith(
                     'http'):
                 worker = WebSocketWorker(daemon=True,
-                                         name='pool_ws_worker_{}'.format(
-                                             uuid.uuid4()),
+                                         worker_name='ws_client:' +
+                                         controller.oid,
                                          controller=controller,
                                          pool=self,
                                          o=self)
