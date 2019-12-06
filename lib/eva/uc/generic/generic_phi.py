@@ -39,6 +39,8 @@ from time import perf_counter
 
 from types import SimpleNamespace
 
+from atasker import background_worker
+
 
 class PHI(object):
     """
@@ -98,26 +100,24 @@ class PHI(object):
             self.__required = [self.__required]
         else:
             self.__required = sorted(self.__required)
-        self._is_required = SimpleNamespace(
-            aao_get=False,
-            aao_set=False,
-            action=False,
-            events=False,
-            port_get=False,
-            port_set=False,
-            status=False,
-            value=False)
-        self._has_feature = SimpleNamespace(
-            aao_get=False,
-            aao_set=False,
-            action=False,
-            cache=False,
-            events=False,
-            port_get=False,
-            port_set=False,
-            status=False,
-            universal=False,
-            value=False)
+        self._is_required = SimpleNamespace(aao_get=False,
+                                            aao_set=False,
+                                            action=False,
+                                            events=False,
+                                            port_get=False,
+                                            port_set=False,
+                                            status=False,
+                                            value=False)
+        self._has_feature = SimpleNamespace(aao_get=False,
+                                            aao_set=False,
+                                            action=False,
+                                            cache=False,
+                                            events=False,
+                                            port_get=False,
+                                            port_set=False,
+                                            status=False,
+                                            universal=False,
+                                            value=False)
         for f in self.__required:
             try:
                 setattr(self._is_required, f, True)
@@ -144,11 +144,10 @@ class PHI(object):
             self._update_interval = float(self.phi_cfg.get('update'))
         except:
             self._update_interval = 0
-        self._update_processor = None
-        self._update_scheduler = None
-        self._update_processor_active = False
-        self._update_scheduler_active = False
-        self._need_update = threading.Event()
+        self._update_processor = background_worker(event=True, o=self)(
+            self._run_update_processor)
+        self._update_scheduler = background_worker(interval=1, o=self)(
+            self._run_update_scheduler)
         self._last_update_state = None
         # benchmarking
         self.__update_count = 0
@@ -308,77 +307,28 @@ class PHI(object):
 
     def _start(self):
         if self._update_interval and 'aao_get' in self.__features:
-            self._start_update_processor()
-            self._start_update_scheduler()
+            self._update_processor.set_name('processor_{}'.format(self.oid))
+            self._update_scheduler.set_name('scheduler_{}'.format(self.oid))
+            self._update_processor.start()
+            self._update_scheduler.start(_interval=self._update_interval)
         return self.start()
 
     def _stop(self):
-        self._stop_update_processor()
-        self._stop_update_scheduler()
+        self._update_scheduler.stop()
+        self._update_processor.stop()
         return self.stop()
 
-    def _start_update_processor(self):
-        self._update_processor_active = True
-        if self._update_processor and self._update_processor.is_alive():
-            return
-        self._update_processor = threading.Thread(target = \
-                self._t_update_processor,
-                name = '_t_update_processor_' + self.oid)
-        self._update_processor.start()
+    async def _run_update_scheduler(self, o, **kwargs):
+        o.log_debug('scheduling update')
+        o._update_processor.trigger()
 
-    def _start_update_scheduler(self):
-        if eva.core.is_started():
+    def _run_update_processor(self, o, **kwargs):
+        o.log_debug('performing update')
+        try:
             self._perform_update()
-        self._update_scheduler_active = True
-        if self._update_scheduler and \
-                self._update_scheduler.is_alive():
-            return
-        if not self._update_interval:
-            self._update_scheduler_active = False
-            return
-        self._update_scheduler = threading.Thread(target = \
-                self._t_update_scheduler,
-                name = '_t_update_scheduler_' + self.oid)
-        self._update_scheduler.start()
-
-    def _stop_update_processor(self):
-        if self._update_processor_active:
-            self._update_processor_active = False
-            self._need_update.set()
-
-    def _stop_update_scheduler(self):
-        if self._update_scheduler_active:
-            self._update_scheduler_active = False
-            self._update_scheduler.join()
-
-    def _t_update_scheduler(self):
-        logging.debug('%s update scheduler started' % self.oid)
-        sleep_step = get_sleep_step()
-        while self._update_scheduler_active and self._update_interval:
-            if self._update_interval >= 1:
-                t_cont = perf_counter() + self._update_interval
-                while perf_counter() < t_cont and self._update_scheduler_active:
-                    sleep(sleep_step)
-            else:
-                sleep(self._update_interval)
-            if not self._update_scheduler_active or not self._update_interval:
-                break
-            self._need_update.set()
-        self._update_scheduler_active = False
-        logging.debug('%s update scheduler stopped' % self.oid)
-
-    def _t_update_processor(self):
-        logging.debug('%s update processor started' % self.oid)
-        while self._update_processor_active:
-            self._need_update.wait()
-            self._need_update.clear()
-            if self._update_processor_active:
-                try:
-                    self._perform_update()
-                except:
-                    self.log_error('scheduled update error')
-                    eva.core.log_traceback()
-        logging.debug('%s update processor stopped' % self.oid)
+        except:
+            o.log_error('scheduled update error')
+            eva.core.log_traceback()
 
     def _perform_update(self):
         state = self.get(timeout=get_timeout())
@@ -401,7 +351,7 @@ class PHI(object):
             handle_phi_event(self, 'scheduler', stu)
         if self.__benchmark and self.__update_count > 1 / self._update_interval:
             self.log_warning('update benchmark: {}/s'.format(
-                round(
-                    self.__update_count / (time() - self.__last_update_reset))))
+                round(self.__update_count /
+                      (time() - self.__last_update_reset))))
             self.__update_count = 0
             self.__last_update_reset = time()
