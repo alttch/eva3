@@ -47,7 +47,6 @@ product_build = 2019120502
 product_code = 'sfa'
 
 eva.core.init()
-eva.core.start_supervisor()
 eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'EVA SCADA Final Aggregator'
 
@@ -76,6 +75,7 @@ if not cfg: sys.exit(2)
 if _fork: eva.core.fork()
 eva.core.write_pid_file()
 
+eva.core.start_supervisor()
 eva.logs.start()
 
 eva.api.update_config(cfg)

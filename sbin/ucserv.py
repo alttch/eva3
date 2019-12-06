@@ -50,7 +50,6 @@ product_build = 2019120502
 product_code = 'uc'
 
 eva.core.init()
-eva.core.start_supervisor()
 
 eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'EVA Universal Controller'
@@ -80,6 +79,7 @@ if not cfg: sys.exit(2)
 if _fork: eva.core.fork()
 eva.core.write_pid_file()
 
+eva.core.start_supervisor()
 eva.logs.start()
 
 eva.traphandler.update_config(cfg)
