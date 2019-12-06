@@ -563,7 +563,7 @@ class UpdatableItem(Item):
                 o.is_expired():
             logging.debug('%s expired, resetting status/value' % \
                     o.oid)
-            background_task(o.set_expired)()
+            o.set_expired()
             return False
 
     def is_expired(self):
