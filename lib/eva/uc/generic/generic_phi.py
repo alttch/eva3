@@ -144,10 +144,8 @@ class PHI(object):
             self._update_interval = float(self.phi_cfg.get('update'))
         except:
             self._update_interval = 0
-        self._update_processor = background_worker(event=True, o=self)(
+        self._update_processor = background_worker(interval=1, o=self)(
             self._run_update_processor)
-        self._update_scheduler = background_worker(interval=1, o=self)(
-            self._run_update_scheduler)
         self._last_update_state = None
         # benchmarking
         self.__update_count = 0
@@ -309,20 +307,12 @@ class PHI(object):
         if self._update_interval and 'aao_get' in self.__features:
             self._update_processor.set_name('phi_update_processor:{}'.format(
                 self.oid))
-            self._update_scheduler.set_name('phi_update_scheduler:{}'.format(
-                self.oid))
-            self._update_processor.start()
-            self._update_scheduler.start(_interval=self._update_interval)
+            self._update_processor.start(_interval=self._update_interval)
         return self.start()
 
     def _stop(self):
-        self._update_scheduler.stop()
         self._update_processor.stop()
         return self.stop()
-
-    async def _run_update_scheduler(self, o, **kwargs):
-        o.log_debug('scheduling update')
-        o._update_processor.trigger()
 
     def _run_update_processor(self, o, **kwargs):
         o.log_debug('performing update')
