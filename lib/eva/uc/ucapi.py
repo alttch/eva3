@@ -418,7 +418,7 @@ class UC_API(GenericAPI):
         if s is not None or v is not None:
             return item.update_set_state(status=s, value=v)
         else:
-            item.need_update.set()
+            item.update_processor.trigger(force=True)
             return True, api_result_accepted
 
     @log_w

@@ -94,27 +94,28 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         if not info and not props and not config:
             d['nstatus'] = self.nstatus
             d['nvalue'] = self.nvalue
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         return d
 
     def register_modbus_status_updates(self):
         if self.modbus_status:
             try:
-                eva.uc.modbus.register_handler(
-                    self.modbus_status[1:],
-                    self.modbus_update_status,
-                    register=self.modbus_status[0])
+                eva.uc.modbus.register_handler(self.modbus_status[1:],
+                                               self.modbus_update_status,
+                                               register=self.modbus_status[0])
             except:
                 eva.core.log_traceback()
 
     def unregister_modbus_status_updates(self):
         if self.modbus_status:
             try:
-                eva.uc.modbus.unregister_handler(
-                    self.modbus_status[1:],
-                    self.modbus_update_status,
-                    register=self.modbus_status[0])
+                eva.uc.modbus.unregister_handler(self.modbus_status[1:],
+                                                 self.modbus_update_status,
+                                                 register=self.modbus_status[0])
             except:
                 eva.core.log_traceback()
 
@@ -333,19 +334,20 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                 logging.debug('%s auto off after %u seconds' % \
                         (self.oid, self.auto_off))
                 self.last_action = time.time()
-                eva.uc.controller.exec_unit_action(
-                    self, 0, None, wait=eva.core.config.timeout)
+                eva.uc.controller.exec_unit_action(self,
+                                                   0,
+                                                   None,
+                                                   wait=eva.core.config.timeout)
         self.auto_processor_active = False
         logging.debug('%s auto processor stopped' % self.oid)
 
     def get_action_xc(self, a):
         if self.action_exec and self.action_exec[0] == '|':
-            return eva.runner.DriverCommand(
-                item=self,
-                state=self.action_run_args(a),
-                timeout=self.action_timeout,
-                tki=self.term_kill_interval,
-                _uuid=a.uuid)
+            return eva.runner.DriverCommand(item=self,
+                                            state=self.action_run_args(a),
+                                            timeout=self.action_timeout,
+                                            tki=self.term_kill_interval,
+                                            _uuid=a.uuid)
         else:
             return super().get_action_xc(a)
 
@@ -378,7 +380,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
 
     def action_after_run(self, action, xc):
         self.last_action = time.time()
-        if self.update_exec_after_action: self.do_update()
+        if self.update_exec_after_action:
+            self.update_processor.trigger(force=True)
         self.enable_updates()
 
     def update_set_state(self,
@@ -415,12 +418,11 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             nvalue = None
         else:
             self.update_expiration()
-        self.set_state(
-            status=_status,
-            value=value,
-            nstatus=nstatus,
-            nvalue=nvalue,
-            from_mqtt=from_mqtt)
+        self.set_state(status=_status,
+                       value=value,
+                       nstatus=nstatus,
+                       nvalue=nvalue,
+                       from_mqtt=from_mqtt)
         self.queue_lock.release()
         return True
 
@@ -501,8 +503,10 @@ class UnitAction(eva.item.ItemAction):
             logging.critical('UnitAction::set_status locking broken')
             return False
         try:
-            result = super().set_status(
-                status=status, exitcode=exitcode, out=out, err=err)
+            result = super().set_status(status=status,
+                                        exitcode=exitcode,
+                                        out=out,
+                                        err=err)
             if not result:
                 if lock: self.unit_action_lock.release()
                 return False

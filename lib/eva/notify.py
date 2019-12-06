@@ -181,9 +181,8 @@ class GenericNotifier(object):
 
     class NotifierWorker(BackgroundQueueWorker):
 
-        def __init__(self, name=None, **kwargs):
-            super().__init__(name=name,
-                             on_error=eva.core.log_traceback,
+        def __init__(self, **kwargs):
+            super().__init__(on_error=eva.core.log_traceback,
                              on_error_kwargs=_ne_kw,
                              **kwargs)
 
@@ -211,7 +210,7 @@ class GenericNotifier(object):
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
         self.notifier_worker = self.NotifierWorker(o=self,
-                                                   name='notifier_' +
+                                                   worker_name='notifier:' +
                                                    self.notifier_id)
         self.state_storage = None
 
@@ -586,9 +585,8 @@ class SQLANotifier(GenericNotifier):
 
     class HistoryCleaner(BackgroundIntervalWorker):
 
-        def __init__(self, name=None, **kwargs):
-            super().__init__(name=name,
-                             interval=60,
+        def __init__(self, **kwargs):
+            super().__init__(interval=60,
                              on_error=eva.core.log_traceback,
                              on_error_kwargs=_ne_kw,
                              loop='cleaners',
@@ -620,9 +618,8 @@ class SQLANotifier(GenericNotifier):
         self.keep = keep if keep else \
             db_default_keep
         self._keep = keep
-        self.history_cleaner = self.HistoryCleaner(name=self.notifier_id +
-                                                   '_cleaner',
-                                                   o=self)
+        self.history_cleaner = self.HistoryCleaner(
+            worker_name='history_claner:' + self.notifier_id, o=self)
         self.db_lock = threading.RLock()
         self.set_db(db_uri)
 
@@ -1354,9 +1351,8 @@ class GenericMQTTNotifier(GenericNotifier):
 
     class Announcer(BackgroundIntervalWorker):
 
-        def __init__(self, name=None, **kwargs):
-            super().__init__(name=name,
-                             on_error=eva.core.log_traceback,
+        def __init__(self, **kwargs):
+            super().__init__(on_error=eva.core.log_traceback,
                              on_error_kwargs=_ne_kw,
                              **kwargs)
 
@@ -1474,7 +1470,8 @@ class GenericMQTTNotifier(GenericNotifier):
         # dict of tuples (topic, handler)
         self.api_callback = {}
         self.api_callback_lock = threading.RLock()
-        self.announcer = self.Announcer(name=self.notifier_id + '_announcer',
+        self.announcer = self.Announcer(worker_name='mqtt_announcer:' +
+                                        self.notifier_id,
                                         o=self,
                                         interval=self.announce_interval)
         self.handler_lock = threading.RLock()
@@ -1492,7 +1489,7 @@ class GenericMQTTNotifier(GenericNotifier):
     def on_connect(self, client, userdata, flags, rc):
         logging.debug('.%s mqtt reconnect' % self.notifier_id)
         if self.announce_interval and not self.test_only_mode:
-            self.announcer.start(_name=self.notifier_id + '_announcer')
+            self.announcer.start()
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 '.GenericMQTTNotifier::api_callback locking broken')
@@ -2894,6 +2891,7 @@ def mark_leaving(n):
 
 
 @background_worker(delay=notifier_client_clean_delay,
+                   name='notify:client_cleaner',
                    on_error=eva.core.log_traceback)
 async def notifier_client_cleaner(**kwargs):
     for k, n in notifiers.copy().items():

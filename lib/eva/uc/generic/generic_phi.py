@@ -307,8 +307,10 @@ class PHI(object):
 
     def _start(self):
         if self._update_interval and 'aao_get' in self.__features:
-            self._update_processor.set_name('processor_{}'.format(self.oid))
-            self._update_scheduler.set_name('scheduler_{}'.format(self.oid))
+            self._update_processor.set_name('phi_update_processor:{}'.format(
+                self.oid))
+            self._update_scheduler.set_name('phi_update_scheduler:{}'.format(
+                self.oid))
             self._update_processor.start()
             self._update_scheduler.start(_interval=self._update_interval)
         return self.start()
@@ -325,7 +327,7 @@ class PHI(object):
     def _run_update_processor(self, o, **kwargs):
         o.log_debug('performing update')
         try:
-            self._perform_update()
+            o._perform_update()
         except:
             o.log_error('scheduled update error')
             eva.core.log_traceback()

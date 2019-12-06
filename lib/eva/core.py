@@ -158,7 +158,10 @@ class RLocker(GenericLocker):
 
 cvars_lock = RLocker('core')
 
-log_traceback = pyaltt2.logs.log_traceback
+
+def log_traceback(*args, notifier=False, **kwargs):
+    pyaltt2.logs.log_traceback(*args, use_ignore=notifier, **kwargs)
+
 
 dump = FunctionCollection(on_error=log_traceback, include_exceptions=True)
 save = FunctionCollection(on_error=log_traceback)

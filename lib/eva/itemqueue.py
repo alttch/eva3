@@ -118,12 +118,16 @@ class ActiveItemQueue(object):
 
         self.action_cleaner = background_worker(
             action_cleaner,
+            name='primary_action_cleaner',
             delay=self.action_cleaner_interval,
             o=self,
             loop='cleaners')
         self.action_cleaner.start()
         self.action_processor = background_worker(
-            action_processor, queue=asyncio.queues.PriorityQueue, o=self)
+            action_processor,
+            name='primary_action_processor',
+            queue=asyncio.queues.PriorityQueue,
+            o=self)
         self.action_processor.start()
 
     def stop(self):

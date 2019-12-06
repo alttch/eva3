@@ -39,6 +39,8 @@ from eva.generic import ia_status_failed
 from eva.generic import ia_status_terminated
 from eva.generic import ia_status_completed
 
+from atasker import background_worker
+
 
 class Item(object):
 
@@ -122,11 +124,10 @@ class Item(object):
             d = self.serialize(notify=True)
             if for_destroy:
                 d['destroyed'] = True
-            eva.notify.notify(
-                'state',
-                data=(self, d),
-                retain=retain,
-                skip_subscribed_mqtt_item=s)
+            eva.notify.notify('state',
+                              data=(self, d),
+                              retain=retain,
+                              skip_subscribed_mqtt_item=s)
         except:
             eva.core.log_traceback()
 
@@ -291,8 +292,11 @@ class PhysicalItem(Item):
             d['loc_x'] = self.loc_x
             d['loc_y'] = self.loc_y
             d['loc_z'] = self.loc_z
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         return d
 
 
@@ -305,14 +309,13 @@ class UpdatableItem(Item):
         self.update_delay = 0
         self.update_timeout = eva.core.config.timeout
         self._update_timeout = None
-        self.update_processor = None
-        self.update_scheduler = None
+        self.update_processor = background_worker(event=True, o=self)(
+            self._run_update_processor)
+        self.update_scheduler = background_worker(interval=1, o=self)(
+            self._run_update_scheduler)
         self.expiration_checker = None
-        self.update_processor_active = False
-        self.update_scheduler_active = False
         self.expiration_checker_active = False
         self._updates_allowed = True
-        self.need_update = threading.Event()
         self.update_xc = None
         # default status: 0 - off, 1 - on, -1 - error
         self.status = 0
@@ -475,6 +478,8 @@ class UpdatableItem(Item):
             return super().set_prop(prop, val, save)
 
     def start_processors(self):
+        self.update_processor.set_name('update_processor:{}'.format(self.oid))
+        self.update_scheduler.set_name('update_scheduler:{}'.format(self.oid))
         self.subscribe_mqtt_update()
         self.start_update_processor()
         self.start_update_scheduler()
@@ -516,34 +521,18 @@ class UpdatableItem(Item):
         return True
 
     def start_update_processor(self):
-        self.update_processor_active = True
-        if self.update_processor and self.update_processor.is_alive():
-            return
-        self.update_processor = threading.Thread(target = \
-                self._t_update_processor,
-                name = '_t_update_processor_' + self.oid)
         self.update_processor.start()
 
     def stop_update_processor(self):
-        if self.update_processor_active:
-            self.update_processor_active = False
-            self.disable_updates()
-            self.need_update.set()
+        self.update_processor.stop()
 
     def start_update_scheduler(self):
-        self.update_scheduler_active = True
-        if self.update_scheduler and \
-                self.update_scheduler.is_alive():
-            return
-        if not self.update_interval:
-            self.update_scheduler_active = False
-            return
-        if eva.core.is_started() and self.updates_allowed():
-            self.need_update.set()
-        self.update_scheduler = threading.Thread(target = \
-                self._t_update_scheduler,
-                name = '_t_update_scheduler_' + self.oid)
-        self.update_scheduler.start()
+        if self.update_interval:
+            self.update_scheduler.start(_interval=self.update_interval,
+                                        _delay_before=self.update_delay)
+
+    def stop_update_scheduler(self):
+        self.update_scheduler.stop()
 
     def start_expiration_checker(self):
         self.expiration_checker_active = True
@@ -557,11 +546,6 @@ class UpdatableItem(Item):
                 self._t_expiration_checker,
                 name = '_t_expiration_checker_' + self.oid)
         self.expiration_checker.start()
-
-    def stop_update_scheduler(self):
-        if self.update_scheduler_active:
-            self.update_scheduler_active = False
-            self.update_scheduler.join()
 
     def stop_expiration_checker(self):
         if self.expiration_checker_active:
@@ -579,43 +563,6 @@ class UpdatableItem(Item):
 
     def update_run_args(self):
         return ()
-
-    def do_update(self):
-        i = 0
-        while i < self.update_delay and self.update_scheduler_active:
-            time.sleep(eva.core.sleep_step)
-            i += eva.core.sleep_step
-        if self.update_scheduler_active:
-            self.need_update.set()
-
-    def _t_update_scheduler(self):
-        logging.debug('%s update scheduler started' % self.oid)
-        while self.update_scheduler_active and self.update_interval:
-            i = 0
-            while i < self.update_interval and self.update_scheduler_active:
-                time.sleep(eva.core.sleep_step)
-                i += eva.core.sleep_step
-            if not self.update_scheduler_active or not self.update_interval:
-                break
-            if self.updates_allowed():
-                if self.update_delay:
-                    t  = threading.Thread(target = self.do_update,
-                            name = 'do_update_%s_%f' % \
-                                    (self.oid, time.time()))
-                    t.start()
-                else:
-                    self.do_update()
-        self.update_scheduler_active = False
-        logging.debug('%s update scheduler stopped' % self.oid)
-
-    def _t_update_processor(self):
-        logging.debug('%s update processor started' % self.oid)
-        while self.update_processor_active:
-            self.need_update.wait()
-            self.need_update.clear()
-            if self.update_processor_active:
-                self._perform_update()
-        logging.debug('%s update processor stopped' % self.oid)
 
     def _t_expiration_checker(self):
         logging.debug('%s expiration checker started' % self.oid)
@@ -642,9 +589,13 @@ class UpdatableItem(Item):
 
     def update(self):
         if self.updates_allowed() and not self.is_destroyed():
-            self._perform_update()
+            self.update_processor.trigger(force=True)
+
+    def _run_update_processor(self, o, **kwargs):
+        o._perform_update(**kwargs)
 
     def _perform_update(self, **kwargs):
+        logging.debug('{} updating'.format(self.oid))
         try:
             self.update_log_run()
             self.update_before_run()
@@ -662,14 +613,17 @@ class UpdatableItem(Item):
             logging.error('update %s failed' % self.oid)
             eva.core.log_traceback()
 
+    def _run_update_scheduler(self, o, **kwargs):
+        logging.debug('{} scheduling update'.format(o.oid))
+        o.update_processor.trigger()
+
     def get_update_xc(self, **kwargs):
-        return eva.runner.ExternalProcess(
-            fname=self.update_exec,
-            item=self,
-            env=self.update_env(),
-            update=True,
-            args=self.update_run_args(),
-            timeout=self.update_timeout)
+        return eva.runner.ExternalProcess(fname=self.update_exec,
+                                          item=self,
+                                          env=self.update_env(),
+                                          update=True,
+                                          args=self.update_run_args(),
+                                          timeout=self.update_timeout)
 
     def update_env(self):
         return {}
@@ -742,11 +696,10 @@ class UpdatableItem(Item):
             else:
                 v = None
             if s is not None or v is not None:
-                self.update_set_state(
-                    status=s,
-                    value=v,
-                    from_mqtt=from_mqtt,
-                    force_notify=force_notify)
+                self.update_set_state(status=s,
+                                      value=v,
+                                      from_mqtt=from_mqtt,
+                                      force_notify=force_notify)
         except:
             eva.core.log_traceback()
 
@@ -809,8 +762,11 @@ class UpdatableItem(Item):
         elif not info:
             d['status'] = self.status
             d['value'] = self.value
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         return d
 
     def item_env(self, full=True):
@@ -1059,16 +1015,19 @@ class ActiveItem(Item):
                         xc.run()
                         self.action_after_run(a, xc)
                         if xc.exitcode < 0:
-                            a.set_terminated(
-                                exitcode=xc.exitcode, out=xc.out, err=xc.err)
+                            a.set_terminated(exitcode=xc.exitcode,
+                                             out=xc.out,
+                                             err=xc.err)
                             logging.error('action %s terminated' % a.uuid)
                         elif xc.exitcode == 0:
-                            a.set_completed(
-                                exitcode=xc.exitcode, out=xc.out, err=xc.err)
+                            a.set_completed(exitcode=xc.exitcode,
+                                            out=xc.out,
+                                            err=xc.err)
                             logging.debug('action %s completed' % a.uuid)
                         else:
-                            a.set_failed(
-                                exitcode=xc.exitcode, out=xc.out, err=xc.err)
+                            a.set_failed(exitcode=xc.exitcode,
+                                         out=xc.out,
+                                         err=xc.err)
                             logging.error('action %s failed, code: %u' % \
                                     (a.uuid, xc.exitcode))
                         self.action_after_finish(a, xc)
@@ -1090,14 +1049,13 @@ class ActiveItem(Item):
         logging.debug('%s action processor stopped' % self.oid)
 
     def get_action_xc(self, a):
-        return eva.runner.ExternalProcess(
-            fname=self.action_exec,
-            item=self,
-            env=a.action_env(),
-            update=False,
-            args=self.action_run_args(a),
-            timeout=self.action_timeout,
-            tki=self.term_kill_interval)
+        return eva.runner.ExternalProcess(fname=self.action_exec,
+                                          item=self,
+                                          env=a.action_env(),
+                                          update=False,
+                                          args=self.action_run_args(a),
+                                          timeout=self.action_timeout,
+                                          tki=self.term_kill_interval)
 
     def update_config(self, data):
         if 'action_enabled' in data:
@@ -1272,8 +1230,11 @@ class ActiveItem(Item):
                 d['term_kill_interval'] = self._term_kill_interval
             elif props:
                 d['term_kill_interval'] = None
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         return d
 
     def disable_actions(self):
@@ -1383,9 +1344,8 @@ class ItemAction(GenericAction):
                     (self.uuid, ia_status_names[status]))
             if self.item.notify_events > 1 and eva.notify.is_action_subscribed(
             ):
-                t = threading.Thread(
-                    target=eva.notify.notify,
-                    args=('action', (self, self.serialize())))
+                t = threading.Thread(target=eva.notify.notify,
+                                     args=('action', (self, self.serialize())))
                 t.setDaemon(True)
                 t.start()
             return True
@@ -1572,8 +1532,11 @@ class MultiUpdate(UpdatableItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         if 'mqtt_update' in d:
             del d['mqtt_update']
         if 'expires' in d:
