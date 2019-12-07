@@ -282,7 +282,7 @@ def core_shutdown():
     stop()
     from twisted.internet import reactor
     reactor.callFromThread(reactor.stop)
-    task_supervisor.stop(wait=False)
+    task_supervisor.stop(wait=True)
 
 
 def create_dump(e='request', msg=''):
@@ -847,6 +847,7 @@ def start_supervisor():
     task_supervisor.start()
     task_supervisor.create_aloop('default', default=True)
     task_supervisor.create_aloop('cleaners')
+    task_supervisor.create_async_job_scheduler('default', default=True)
 
 
 def start(init_db_only=False):
