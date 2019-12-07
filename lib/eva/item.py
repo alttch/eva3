@@ -577,7 +577,7 @@ class UpdatableItem(Item):
 
     def update(self):
         if self.updates_allowed() and not self.is_destroyed():
-            self.update_processor.trigger(force=True)
+            self.update_processor.trigger_threadsafe(force=True)
 
     def _run_update_processor(self, o, **kwargs):
         o._perform_update(**kwargs)
@@ -603,7 +603,7 @@ class UpdatableItem(Item):
 
     def _run_update_scheduler(self, o, **kwargs):
         logging.debug('{} scheduling update'.format(o.oid))
-        o.update_processor.trigger()
+        o.update_processor.trigger_threadsafe()
 
     def get_update_xc(self, **kwargs):
         return eva.runner.ExternalProcess(fname=self.update_exec,

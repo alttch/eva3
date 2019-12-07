@@ -42,7 +42,7 @@ from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
 from eva.tools import parse_function_params
 
-from atasker import background_worker
+from atasker import task_supervisor
 
 from types import SimpleNamespace
 
@@ -54,8 +54,10 @@ import eva.users
 
 import eva.notify
 
+locks_locker = threading.RLock()
+
 locks = {}
-lock_expire_time = {}
+lock_expire_jobs = {}
 
 
 def api_need_file_management(f):
@@ -154,16 +156,30 @@ class LockAPI(object):
         """
         l, t, e = parse_api_params(kwargs, 'lte', 'S.n',
                                    {'t': eva.core.config.timeout})
-        if not l in locks:
-            locks[l] = threading.Lock()
+        with locks_locker:
+            if not l in locks:
+                lobj = threading.Lock()
+                locks[l] = lobj
         logging.debug(
                 'acquiring lock %s, timeout = %s, expires = %s' % \
                             (l, t, e))
+        lockobj = locks[l]
         if not locks[l].acquire(timeout=t):
             raise FunctionFailed('Unable to acquire lock')
         if e:
-            lock_expire_time[l] = time.time() + e
+            with locks_locker:
+                lock_expire_jobs[l] = task_supervisor.create_async_job(
+                    'cleaners',
+                    target=self._release_lock,
+                    args=(l,),
+                    number=1,
+                    timer=e)
         return True
+
+    async def _release_lock(self, lock_id):
+        logging.debug(f'auto-releasing lock {lock_id}')
+        with locks_locker:
+            locks[lock_id].release()
 
     @log_i
     @api_need_lock
@@ -178,7 +194,8 @@ class LockAPI(object):
         l = parse_api_params(kwargs, 'l', 'S')
         try:
             result = format_resource_id('lock', l)
-            result['locked'] = locks[l].locked()
+            with locks_locker:
+                result['locked'] = locks[l].locked()
             return result
         except KeyError:
             raise ResourceNotFound
@@ -201,7 +218,11 @@ class LockAPI(object):
         l = parse_api_params(kwargs, 'l', 'S')
         logging.debug('releasing lock %s' % l)
         try:
-            locks[l].release()
+            with locks_locker:
+                locks[l].release()
+                if l in lock_expire_jobs:
+                    lock_expire_jobs[l].cancel()
+                    del lock_expire_jobs[l]
             return True
         except RuntimeError:
             return True
@@ -1282,28 +1303,6 @@ def update_config(cfg):
 def start():
     http_api = SysHTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
-    lock_processor.start()
-
-
-@eva.core.stop
-def stop():
-    lock_processor.stop()
-
-
-@background_worker
-def lock_processor(**kwargs):
-    time.sleep(eva.core.sleep_step)
-    for i, v in lock_expire_time.copy().items():
-        if time.time() > v:
-            logging.debug('lock %s expired, releasing' % i)
-            try:
-                del lock_expire_time[i]
-            except:
-                logging.critical('Lock API broken')
-            try:
-                locks[i].release()
-            except:
-                pass
 
 
 api = SysAPI()

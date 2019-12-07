@@ -368,7 +368,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
     def action_after_run(self, action, xc):
         self.last_action = time.time()
         if self.update_exec_after_action:
-            self.update_processor.trigger(force=True)
+            self.update_processor.trigger_threadsafe(force=True)
         self.enable_updates()
 
     def update_set_state(self,
