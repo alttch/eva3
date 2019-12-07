@@ -178,8 +178,11 @@ class LockAPI(object):
 
     async def _release_lock(self, lock_id):
         logging.debug(f'auto-releasing lock {lock_id}')
-        with locks_locker:
-            locks[lock_id].release()
+        try:
+            with locks_locker:
+                locks[lock_id].release()
+        except:
+            pass
 
     @log_i
     @api_need_lock
@@ -219,10 +222,10 @@ class LockAPI(object):
         logging.debug('releasing lock %s' % l)
         try:
             with locks_locker:
-                locks[l].release()
                 if l in lock_expire_jobs:
                     lock_expire_jobs[l].cancel()
                     del lock_expire_jobs[l]
+                locks[l].release()
             return True
         except RuntimeError:
             return True

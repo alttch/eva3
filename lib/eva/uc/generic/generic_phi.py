@@ -39,7 +39,7 @@ from time import perf_counter
 
 from types import SimpleNamespace
 
-from atasker import background_worker
+from atasker import background_worker, task_supervisor
 
 
 class PHI(object):
@@ -144,8 +144,9 @@ class PHI(object):
             self._update_interval = float(self.phi_cfg.get('update'))
         except:
             self._update_interval = 0
-        self._update_processor = background_worker(interval=1, o=self)(
+        self._update_processor = background_worker(event=True, o=self)(
             self._run_update_processor)
+        self._update_scheduler = None
         self._last_update_state = None
         # benchmarking
         self.__update_count = 0
@@ -307,12 +308,21 @@ class PHI(object):
         if self._update_interval and 'aao_get' in self.__features:
             self._update_processor.set_name('phi_update_processor:{}'.format(
                 self.oid))
-            self._update_processor.start(_interval=self._update_interval)
+            self._update_processor.start()
+            self._update_scheduler = task_supervisor.create_async_job(
+                target=self._job_update_scheduler,
+                interval=self._update_interval)
         return self.start()
 
     def _stop(self):
+        if self._update_scheduler:
+            self._update_scheduler.cancel()
+            self._update_scheduler = None
         self._update_processor.stop()
         return self.stop()
+
+    async def _job_update_scheduler(self):
+        await self._update_processor.trigger()
 
     def _run_update_processor(self, o, **kwargs):
         o.log_debug('performing update')

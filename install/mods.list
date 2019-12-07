@@ -3,9 +3,9 @@ cryptography==2.7
 cairosvg==2.1.1
 jsonpickle==0.9.6
 requests==2.21.0
-aiosched==0.0.18
-atasker==0.6.4
-pyaltt2==0.0.30
+aiosched==0.0.22
+atasker==0.6.5
+pyaltt2==0.0.31
 argcomplete==1.9.4
 jinja2==2.10
 six==1.11.0

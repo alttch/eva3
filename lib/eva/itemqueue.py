@@ -46,7 +46,7 @@ class ActiveItemQueue(object):
         if self.keep_history:
             self.history_append(action)
         if action.set_pending():
-            self.action_processor.put(action)
+            self.action_processor.put_threadsafe(action)
             return True
         return False
 

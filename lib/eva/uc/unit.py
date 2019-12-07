@@ -18,7 +18,7 @@ from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.uc.ucitem import UCItem
 
-from atasker import background_worker, background_task
+from atasker import task_supervisor, background_task
 
 status_label_off = 'OFF'
 status_label_on = 'ON'
@@ -39,10 +39,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         self.nstatus = 0
         self.nvalue = ''
         self.last_action = 0
-        self.auto_processor = background_worker(
-            self._run_auto_processor,
-            interval=eva.core.config.polldelay,
-            o=self)
+        self.auto_processor = None
+        self.auto_processor_lock = threading.Lock()
         self.modbus_status = None
         # labels have string keys to be JSON compatible
         self.default_status_labels = {
@@ -301,7 +299,6 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             return super().set_prop(prop, val, save)
 
     def start_processors(self):
-        self.auto_processor.set_name('auto_processor:' + self.oid)
         super().start_processors()
         self.register_modbus_status_updates()
 
@@ -311,22 +308,31 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         self.unregister_modbus_status_updates()
 
     def start_auto_processor(self):
-        if self.auto_off and self.status > 0:
-            self.auto_processor.start()
+        with self.auto_processor_lock:
+            if self.auto_processor is None and \
+                    self.auto_off and self.status > 0:
+                self.auto_processor = task_supervisor.create_async_job(
+                    target=self._job_auto_processor,
+                    interval=eva.core.sleep_step)
 
     def stop_auto_processor(self):
-        self.auto_processor.stop()
+        with self.auto_processor_lock:
+            if self.auto_processor:
+                self.auto_processor.cancel()
+                self.auto_processor = None
 
-    async def _run_auto_processor(self, o, **kwargs):
-        if o.last_action and \
-                o.status != 0 and \
-                time.time() - o.last_action > o.auto_off:
-            logging.debug('%s auto off after %u seconds' % \
-                    (o.oid, o.auto_off))
-            o.last_action = time.time()
-            background_task(eva.uc.controller.exec_unit_action)(
-                o, 0, None, wait=eva.core.config.timeout)
-            return False
+    async def _job_auto_processor(self):
+        if self.last_action and \
+                self.status != 0 and \
+                time.time() - self.last_action > self.auto_off:
+            with self.auto_processor_lock:
+                logging.debug('%s auto off after %u seconds' % \
+                        (self.oid, self.auto_off))
+                self.last_action = time.time()
+                background_task(eva.uc.controller.exec_unit_action)(
+                    self, 0, None, wait=eva.core.config.timeout)
+                self.auto_processor.cancel()
+                self.auto_processor = None
 
     def get_action_xc(self, a):
         if self.action_exec and self.action_exec[0] == '|':

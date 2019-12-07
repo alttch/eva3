@@ -402,7 +402,8 @@ class GenericNotifier(object):
         data_to_send = self.format_data(subject, data)
         if not data_to_send: return None
         self.log_notify()
-        self.notifier_worker.put((subject, data_to_send, retain, unpicklable))
+        self.notifier_worker.put_threadsafe(
+            (subject, data_to_send, retain, unpicklable))
         return True
 
     def serialize(self, props=False):
@@ -618,8 +619,9 @@ class SQLANotifier(GenericNotifier):
         self.keep = keep if keep else \
             db_default_keep
         self._keep = keep
-        self.history_cleaner = self.HistoryCleaner(
-            name='history_claner:' + self.notifier_id, o=self)
+        self.history_cleaner = self.HistoryCleaner(name='history_claner:' +
+                                                   self.notifier_id,
+                                                   o=self)
         self.db_lock = threading.RLock()
         self.set_db(db_uri)
 
