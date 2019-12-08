@@ -917,7 +917,7 @@ class RemoteControllerPool(object):
         eva.core.stop.append(self.stop)
         self.action_cleaner = threading.Thread(
             target=self._t_action_cleaner,
-            name='_t_remote_uc_pool_action_cleaner')
+            name='_t_remote_pool_action_cleaner')
         self.action_cleaner_active = True
         self.action_cleaner.start()
 
