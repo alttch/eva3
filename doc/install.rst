@@ -231,6 +231,8 @@ To solve this:
       python3-pip*) in case installation script has a problems downloading /
       installing it.
 
+    * **PYTHON=python3** here you may specify custom Python executable.
+
     * **SYSTEM_SITE_PACKAGES=1** virtual environment will use system site
       packages if their versions match with requested.
 
