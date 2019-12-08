@@ -1,4 +1,3 @@
-import ipdb
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
@@ -40,7 +39,7 @@ from eva.generic import ia_status_failed
 from eva.generic import ia_status_terminated
 from eva.generic import ia_status_completed
 
-from atasker import background_worker, background_task
+from atasker import background_worker, background_task, task_supervisor
 
 
 class Item(object):
@@ -312,8 +311,8 @@ class UpdatableItem(Item):
         self._update_timeout = None
         self.update_processor = background_worker(event=True, o=self)(
             self._run_update_processor)
-        self.update_scheduler = background_worker(interval=1, o=self)(
-            self._run_update_scheduler)
+        self.update_scheduler = None
+        self.update_scheduler_lock = threading.Lock()
         self.expiration_checker = background_worker(interval=1, o=self)(
             self._run_expiration_checker)
         self.expiration_checker_active = False
@@ -481,7 +480,6 @@ class UpdatableItem(Item):
 
     def start_processors(self):
         self.update_processor.set_name('update_processor:{}'.format(self.oid))
-        self.update_scheduler.set_name('update_scheduler:{}'.format(self.oid))
         self.expiration_checker.set_name('expiration_checker:{}'.format(
             self.oid))
         self.subscribe_mqtt_update()
@@ -531,12 +529,20 @@ class UpdatableItem(Item):
         self.update_processor.stop()
 
     def start_update_scheduler(self):
-        if self.update_interval:
-            self.update_scheduler.start(_interval=self.update_interval,
-                                        _delay_before=self.update_delay)
+        with self.update_scheduler_lock:
+            if self.update_interval:
+                if self.update_scheduler:
+                    self.update_scheduler.cancel()
+                    self.update_scheduler = None
+                self.update_scheduler = task_supervisor.create_async_job(
+                    target=self._job_update_scheduler,
+                    interval=self.update_interval)
 
     def stop_update_scheduler(self):
-        self.update_scheduler.stop()
+        with self.update_scheduler_lock:
+            if self.update_scheduler:
+                self.update_scheduler.cancel()
+                self.update_scheduler = None
 
     def start_expiration_checker(self):
         if self.expires and self.status > 0:
@@ -601,9 +607,9 @@ class UpdatableItem(Item):
             logging.error('update %s failed' % self.oid)
             eva.core.log_traceback()
 
-    def _run_update_scheduler(self, o, **kwargs):
-        logging.debug('{} scheduling update'.format(o.oid))
-        o.update_processor.trigger_threadsafe()
+    async def _job_update_scheduler(self):
+        logging.debug('{} scheduling update'.format(self.oid))
+        await self.update_processor.trigger()
 
     def get_update_xc(self, **kwargs):
         return eva.runner.ExternalProcess(fname=self.update_exec,
