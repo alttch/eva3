@@ -5,7 +5,7 @@ jsonpickle==0.9.6
 requests==2.21.0
 aiosched==0.0.23
 atasker==0.6.7
-pyaltt2==0.0.32
+pyaltt2==0.0.33
 argcomplete==1.9.4
 jinja2==2.10
 six==1.11.0

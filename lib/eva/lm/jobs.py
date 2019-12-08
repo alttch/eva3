@@ -8,6 +8,7 @@ import uuid
 import eva.core
 import shlex
 import schedule
+import time
 import re
 
 from atasker import background_worker
@@ -244,7 +245,7 @@ class Job(eva.item.Item):
         return super().set_prop(prop, val, save)
 
 
-@background_worker(interval=eva.core.sleep_step,
-                   on_error=eva.core.log_traceback)
-async def scheduler(**kwargs):
+@background_worker(on_error=eva.core.log_traceback)
+def scheduler(**kwargs):
     schedule.run_pending()
+    time.sleep(eva.core.sleep_step)
