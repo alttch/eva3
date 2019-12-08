@@ -309,13 +309,13 @@ class UpdatableItem(Item):
         self.update_delay = 0
         self.update_timeout = eva.core.config.timeout
         self._update_timeout = None
-        self.update_processor = background_worker(event=True, o=self)(
-            self._run_update_processor)
+        self.update_processor = background_worker(
+            event=True, o=self,
+            on_error=eva.core.log_traceback)(self._run_update_processor)
         self.update_scheduler = None
         self.update_scheduler_lock = threading.Lock()
-        self.expiration_checker = background_worker(interval=1, o=self)(
-            self._run_expiration_checker)
-        self.expiration_checker_active = False
+        self.expiration_checker = None
+        self.expiration_checker_lock = threading.Lock()
         self._updates_allowed = True
         self.update_xc = None
         # default status: 0 - off, 1 - on, -1 - error
@@ -480,8 +480,6 @@ class UpdatableItem(Item):
 
     def start_processors(self):
         self.update_processor.set_name('update_processor:{}'.format(self.oid))
-        self.expiration_checker.set_name('expiration_checker:{}'.format(
-            self.oid))
         self.subscribe_mqtt_update()
         self.start_update_processor()
         self.start_update_scheduler()
@@ -545,11 +543,22 @@ class UpdatableItem(Item):
                 self.update_scheduler = None
 
     def start_expiration_checker(self):
-        if self.expires and self.status > 0:
-            self.expiration_checker.start(_interval=eva.core.config.polldelay)
+        with self.expiration_checker_lock:
+            if self.expires and self.status != -1 and \
+                    (self.status != 0 or self._expire_on_any):
+                if self.expiration_checker:
+                    self.expiration_checker.cancel()
+                    self.expiration_checker = None
+                self.expiration_checker = task_supervisor.create_async_job(
+                    target=self._job_expiration_checker,
+                    timer=self.expires,
+                    number=1)
 
     def stop_expiration_checker(self):
-        self.expiration_checker.stop()
+        with self.expiration_checker_lock:
+            if self.expiration_checker:
+                self.expiration_checker.cancel()
+                self.expiration_checker = None
 
     def updates_allowed(self):
         return self._updates_allowed
@@ -563,14 +572,9 @@ class UpdatableItem(Item):
     def update_run_args(self):
         return ()
 
-    async def _run_expiration_checker(self, o, **kwargs):
-        if o.status != -1 and \
-                (o.status != 0 or o._expire_on_any) and \
-                o.is_expired():
-            logging.debug('%s expired, resetting status/value' % \
-                    o.oid)
-            o.set_expired()
-            return False
+    async def _job_expiration_checker(self):
+        logging.debug(f'{self.oid} expired, resetting status/value')
+        self.set_expired()
 
     def is_expired(self):
         return time.time() - self.set_time > self.expires \
@@ -583,10 +587,10 @@ class UpdatableItem(Item):
 
     def update(self):
         if self.updates_allowed() and not self.is_destroyed():
-            self.update_processor.trigger_threadsafe(force=True)
+            self.update_processor.trigger()
 
-    def _run_update_processor(self, o, **kwargs):
-        o._perform_update(**kwargs)
+    async def _run_update_processor(self, **kwargs):
+        background_task(self._perform_update(**kwargs))
 
     def _perform_update(self, **kwargs):
         logging.debug('{} updating'.format(self.oid))

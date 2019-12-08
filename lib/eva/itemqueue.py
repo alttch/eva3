@@ -121,11 +121,13 @@ class ActiveItemQueue(object):
             name='primary_action_cleaner',
             delay=self.action_cleaner_interval,
             o=self,
+            on_error=eva.core.log_traceback,
             loop='cleaners')
         self.action_cleaner.start()
         self.action_processor = background_worker(
             action_processor,
             name='primary_action_processor',
+            on_error=eva.core.log_traceback,
             queue=asyncio.queues.PriorityQueue,
             o=self)
         self.action_processor.start()

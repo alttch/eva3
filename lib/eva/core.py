@@ -848,7 +848,7 @@ def start_supervisor():
     task_supervisor.create_aloop('default', default=True)
     task_supervisor.create_aloop('cleaners')
     task_supervisor.create_async_job_scheduler('default', default=True)
-    task_supervisor.create_async_job_scheduler('cleaners')
+    task_supervisor.create_async_job_scheduler('cleaners', aloop='cleaners')
 
 
 def start(init_db_only=False):

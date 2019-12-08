@@ -97,11 +97,10 @@ class Job(eva.item.Item):
             logging.debug('Skipping job {}'.format(self.item_id))
             return
         logging.debug('Executing job {}'.format(self.item_id))
-        a = eva.lm.controller.exec_macro(
-            macro=self.macro,
-            argv=self.macro_args,
-            kwargs=self.macro_kwargs,
-            source=self)
+        a = eva.lm.controller.exec_macro(macro=self.macro,
+                                         argv=self.macro_args,
+                                         kwargs=self.macro_kwargs,
+                                         source=self)
         if not a:
             logging.error('Job scheduler {} can not exec macro'.format(
                 self.item_id))
@@ -121,8 +120,11 @@ class Job(eva.item.Item):
         d['macro_args'] = self.macro_args
         d['macro_kwargs'] = self.macro_kwargs
         d['every'] = self.every
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         if 'group' in d: del d['group']
         if 'full_id' in d: del d['full_id']
         if full or info:
@@ -242,6 +244,7 @@ class Job(eva.item.Item):
         return super().set_prop(prop, val, save)
 
 
-@background_worker(interval=eva.core.sleep_step)
+@background_worker(interval=eva.core.sleep_step,
+                   on_error=eva.core.log_traceback)
 async def scheduler(**kwargs):
     schedule.run_pending()

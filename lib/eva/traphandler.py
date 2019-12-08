@@ -143,7 +143,7 @@ def stop():
     dispatcher.stop()
 
 
-@background_worker(name='snmp_trap_dispatcher')
+@background_worker(name='snmp_trap_dispatcher', on_error=eva.core.log_traceback)
 def dispatcher(snmpEngine, **kwargs):
     try:
         snmpEngine.transportDispatcher.runDispatcher()

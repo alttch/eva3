@@ -92,7 +92,7 @@ def is_token_alive(token):
     return token in tokens
 
 
-@background_worker(delay=60, loop='cleaners')
+@background_worker(delay=60, loop='cleaners', on_error=eva.core.log_traceback)
 async def token_cleaner(**kwargs):
 
     @tokens_lock

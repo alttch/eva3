@@ -39,7 +39,7 @@ from time import perf_counter
 
 from types import SimpleNamespace
 
-from atasker import background_worker, task_supervisor
+from atasker import background_worker, background_task, task_supervisor
 
 
 class PHI(object):
@@ -144,8 +144,9 @@ class PHI(object):
             self._update_interval = float(self.phi_cfg.get('update'))
         except:
             self._update_interval = 0
-        self._update_processor = background_worker(event=True, o=self)(
-            self._run_update_processor)
+        self._update_processor = background_worker(
+            event=True, o=self,
+            on_error=eva.core.log_traceback)(self._run_update_processor)
         self._update_scheduler = None
         self._last_update_state = None
         # benchmarking
@@ -322,17 +323,22 @@ class PHI(object):
         return self.stop()
 
     async def _job_update_scheduler(self):
+        self.log_debug('scheduling update')
         await self._update_processor.trigger()
 
-    def _run_update_processor(self, o, **kwargs):
-        o.log_debug('performing update')
+    async def _run_update_processor(self, **kwargs):
+        self._launch_update()
+
+    @background_task
+    def _launch_update(self):
         try:
-            o._perform_update()
+            self._perform_update()
         except:
-            o.log_error('scheduled update error')
+            self.log_error('update error')
             eva.core.log_traceback()
 
     def _perform_update(self):
+        self.log_debug('performing update')
         state = self.get(timeout=get_timeout())
         if not state:
             return
