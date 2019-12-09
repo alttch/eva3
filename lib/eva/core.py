@@ -851,8 +851,7 @@ def start_supervisor():
     task_supervisor.create_async_job_scheduler('cleaners', aloop='cleaners')
 
 
-def spawn(fn, *args, **kwargs):
-    return task_supervisor.thread_pool.submit(fn, *args, **kwargs)
+spawn = task_supervisor.thread_pool.submit
 
 
 def start(init_db_only=False):
