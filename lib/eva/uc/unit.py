@@ -351,6 +351,7 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         return (nstatus, nvalue)
 
     def action_before_get_task(self):
+        super().action_before_get_task()
         self.enable_updates()
 
     def action_before_run(self, action):

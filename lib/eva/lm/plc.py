@@ -256,19 +256,13 @@ class PLC(eva.item.ActiveItem):
             'action_allow_termination': False,
         })
 
-    def _t_action_processor(self):
-        logging.debug('%s action processor started' % self.full_id)
-        while self.action_processor_active:
+    def _run_action_processor(self, a, **kwargs):
+        if a.item:
             try:
-                self.current_action = None
-                self.action_before_get_task()
-                a = self.q_get_task()
-                self.action_after_get_task(a)
-                if not a or not a.item: continue
                 if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                     logging.critical('PLC::_t_action_processor locking broken')
                     eva.core.critical()
-                    continue
+                    return
                 self.current_action = a
                 if not self.action_enabled:
                     self.queue_lock.release()
@@ -305,11 +299,10 @@ class PLC(eva.item.ActiveItem):
             if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('PLC::_t_action_processor locking broken')
                 eva.core.critical()
-                continue
+                return
             self.current_action = None
             self.action_xc = None
             self.queue_lock.release()
-        logging.debug('%s action processor stopped' % self.full_id)
 
     def _t_action(self, a):
         import eva.runner

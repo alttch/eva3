@@ -775,8 +775,10 @@ class ActiveItem(Item):
         self._term_kill_interval = None
         # Lock() is REQUIRED for LM PLC (released in plc._t_action thread)
         self.queue_lock = threading.Lock()
-        self.action_processor = None
-        self.action_processor_active = False
+        self.action_processor = background_worker(q=True)(
+            self._run_action_processor)
+        self.action_processor.before_queue_get = self.action_before_get_task
+        self.action_processor.after_queue_get = self.action_after_get_task
         self.current_action = None
         self.action_xc = None
         self.mqtt_control = None
@@ -809,7 +811,7 @@ class ActiveItem(Item):
                 return False
             if action.item and not action.set_queued():
                 return False
-            self.queue.put(action)
+            self.action_processor.put_threadsafe(action)
             return True
         finally:
             self.queue_lock.release()
@@ -878,19 +880,11 @@ class ActiveItem(Item):
         super().stop_processors()
 
     def start_action_processor(self):
-        self.action_processor_active = True
-        if self.action_processor and self.action_processor.is_alive():
-            return
-        self.action_processor = threading.Thread(target =\
-                self._t_action_processor,
-                name = '_t_action_processor_' + self.oid)
+        self.action_processor.set_name('_t_action_processor_' + self.oid)
         self.action_processor.start()
 
     def stop_action_processor(self):
-        if self.action_processor_active:
-            self.action_processor_active = False
-            a = ItemAction(None)
-            self.q_put_task(a)
+        self.action_processor.stop()
 
     def subscribe_mqtt_control(self):
         if not self.mqtt_control: return False
@@ -926,7 +920,7 @@ class ActiveItem(Item):
         return ()
 
     def action_before_get_task(self):
-        pass
+        self.current_action = None
 
     def action_after_get_task(self, action):
         pass
@@ -943,20 +937,14 @@ class ActiveItem(Item):
     def mqtt_action(self, msg):
         pass
 
-    def _t_action_processor(self):
-        logging.debug('%s action processor started' % self.oid)
-        while self.action_processor_active:
+    def _run_action_processor(self, a, **kwargs):
+        if a.item:
             try:
-                self.current_action = None
-                self.action_before_get_task()
-                a = self.q_get_task()
-                self.action_after_get_task(a)
-                if not a or not a.item: continue
                 if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                     logging.critical(
-                        'ActiveItem::_t_action_processor locking broken')
+                        'ActiveItem::_run_action_processor locking broken')
                     eva.core.critical()
-                    continue
+                    return
                 # dirty fix for action_queue == 0
                 if not self.action_queue:
                     while self.q_is_task():
@@ -1016,13 +1004,12 @@ class ActiveItem(Item):
                 eva.core.log_traceback()
             if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical(
-                    'ActiveItem::_t_action_processor locking broken')
+                    'ActiveItem::_run_action_processor locking broken')
                 eva.core.critical()
-                continue
+                return
             self.current_action = None
             self.action_xc = None
             self.queue_lock.release()
-        logging.debug('%s action processor stopped' % self.oid)
 
     def get_action_xc(self, a):
         return eva.runner.ExternalProcess(fname=self.action_exec,
