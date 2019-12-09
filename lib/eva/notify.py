@@ -1489,6 +1489,8 @@ class GenericMQTTNotifier(GenericNotifier):
         self.announcer.stop()
 
     def on_connect(self, client, userdata, flags, rc):
+        if eva.core.is_shutdown_requested():
+            return
         logging.debug('.%s mqtt reconnect' % self.notifier_id)
         if self.announce_interval and not self.test_only_mode:
             self.announcer.start()
