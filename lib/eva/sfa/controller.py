@@ -420,10 +420,10 @@ def serialize():
 def start():
     uc_pool.start()
     for i, v in remote_ucs.items():
-        background_task(connect_remote_controller, daemon=True)(uc_pool, v)
+        background_task(connect_remote_controller)(uc_pool, v)
     lm_pool.start()
     for i, v in remote_lms.items():
-        background_task(connect_remote_controller, daemon=True)(lm_pool, v)
+        background_task(connect_remote_controller)(lm_pool, v)
 
 
 def connect_remote_controller(pool, v):

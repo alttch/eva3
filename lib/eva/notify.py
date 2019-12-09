@@ -1668,25 +1668,22 @@ class GenericMQTTNotifier(GenericNotifier):
                 d != self.announce_msg and \
                 self.discovery_handler and \
                 not eva.core.is_setup_mode() and eva.core.is_started():
-            background_task(self.discovery_handler,
-                            daemon=True)(self.notifier_id, d)
+            background_task(self.discovery_handler)(self.notifier_id, d)
             return
         if t == self.api_request_topic and self.api_handler:
-            background_task(self.api_handler,
-                            daemon=True)(self.notifier_id, d,
-                                         self.send_api_response)
+            background_task(self.api_handler)(self.notifier_id, d,
+                                              self.send_api_response)
             return
         if t.startswith(self.pfx_api_response):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
-                background_task(self.api_callback[response_id][1],
-                                daemon=True)(d)
+                background_task(self.api_callback[response_id][1])(d)
                 self.finish_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
-                background_task(self.exec_custom_handler,
-                                daemon=True)(h, d, t, msg.qos, msg.retain)
+                background_task(self.exec_custom_handler)(h, d, t, msg.qos,
+                                                          msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
                 r = rapidjson.loads(d)

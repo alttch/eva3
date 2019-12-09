@@ -83,8 +83,7 @@ class WebSocketWorker(BackgroundWorker):
             eva.core.critical()
             return False
         try:
-            self.pinger = WebSocketPingerWorker(daemon=True,
-                                                name='ws_pinger:' +
+            self.pinger = WebSocketPingerWorker(name='ws_pinger:' +
                                                 self.controller.oid,
                                                 interval=5,
                                                 o=self.ws)
@@ -820,9 +819,7 @@ class RemoteControllerPool(object):
             t.start()
             if not controller.mqtt_update and controller.api._uri.startswith(
                     'http'):
-                worker = WebSocketWorker(daemon=True,
-                                         name='ws_client:' +
-                                         controller.oid,
+                worker = WebSocketWorker(name='ws_client:' + controller.oid,
                                          controller=controller,
                                          pool=self,
                                          o=self)
@@ -916,8 +913,7 @@ class RemoteControllerPool(object):
             return
         eva.core.stop.append(self.stop)
         self.action_cleaner = threading.Thread(
-            target=self._t_action_cleaner,
-            name='_t_remote_pool_action_cleaner')
+            target=self._t_action_cleaner, name='_t_remote_pool_action_cleaner')
         self.action_cleaner_active = True
         self.action_cleaner.start()
 
