@@ -841,7 +841,7 @@ def init():
 
 
 def start_supervisor():
-    task_supervisor.set_thread_pool(pool_size=0, min_size=100)
+    task_supervisor.set_thread_pool(pool_size=0, min_size='max')
     task_supervisor.timeout_critical_func = critical
     task_supervisor.poll_delay = config.polldelay
     task_supervisor.start()
