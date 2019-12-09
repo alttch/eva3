@@ -37,8 +37,6 @@ from eva.core import db
 
 from functools import wraps
 
-from atasker import background_task
-
 units_by_id = {}
 units_by_group = {}
 units_by_full_id = {}
@@ -72,7 +70,7 @@ def handle_event(item):
     oid = item.oid
     if oid in custom_event_handlers:
         for f in custom_event_handlers.get(oid):
-            background_task(exec_event_handler)(f, item)
+            eva.core.spawn(exec_event_handler, f, item)
     return True
 
 

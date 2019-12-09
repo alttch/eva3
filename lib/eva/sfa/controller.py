@@ -28,7 +28,6 @@ from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import InvalidParameter
 
 from types import SimpleNamespace
-from atasker import background_task
 
 remote_ucs = {}
 remote_lms = {}
@@ -420,10 +419,10 @@ def serialize():
 def start():
     uc_pool.start()
     for i, v in remote_ucs.items():
-        background_task(connect_remote_controller)(uc_pool, v)
+        eva.core.spawn(connect_remote_controller, uc_pool, v)
     lm_pool.start()
     for i, v in remote_lms.items():
-        background_task(connect_remote_controller)(lm_pool, v)
+        eva.core.spawn(connect_remote_controller, lm_pool, v)
 
 
 def connect_remote_controller(pool, v):

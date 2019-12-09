@@ -39,7 +39,7 @@ from eva.generic import ia_status_failed
 from eva.generic import ia_status_terminated
 from eva.generic import ia_status_completed
 
-from atasker import background_worker, background_task, task_supervisor
+from atasker import background_worker, task_supervisor
 
 
 class Item(object):
@@ -570,7 +570,7 @@ class UpdatableItem(Item):
             self.update_processor.trigger()
 
     async def _run_update_processor(self, **kwargs):
-        background_task(self._perform_update(**kwargs))
+        eva.core.spawn(self._perform_update, **kwargs)
 
     def _perform_update(self, **kwargs):
         logging.debug('{} updating'.format(self.oid))

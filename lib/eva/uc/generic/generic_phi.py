@@ -39,7 +39,7 @@ from time import perf_counter
 
 from types import SimpleNamespace
 
-from atasker import background_worker, background_task, task_supervisor
+from atasker import background_worker, task_supervisor
 
 
 class PHI(object):
@@ -327,9 +327,8 @@ class PHI(object):
         await self._update_processor.trigger()
 
     async def _run_update_processor(self, **kwargs):
-        self._launch_update()
+        eva.core.spawn(self._launch_update)
 
-    @background_task
     def _launch_update(self):
         try:
             self._perform_update()

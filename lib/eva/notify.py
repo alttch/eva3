@@ -30,7 +30,6 @@ except:
 from atasker import BackgroundIntervalWorker
 from atasker import BackgroundQueueWorker
 from atasker import background_worker
-from atasker import background_task
 from atasker import g
 
 from eva.tools import format_json
@@ -305,6 +304,7 @@ class GenericNotifier(object):
     def format_data(self, subject, data):
         if not subject or not data: return None
         import eva.item
+        import eva.core
         try:
             if isinstance(data, list): data_in = data
             else: data_in = [data]
@@ -1670,21 +1670,21 @@ class GenericMQTTNotifier(GenericNotifier):
                 d != self.announce_msg and \
                 self.discovery_handler and \
                 not eva.core.is_setup_mode() and eva.core.is_started():
-            background_task(self.discovery_handler)(self.notifier_id, d)
+            eva.core.spawn(self.discovery_handler, self.notifier_id, d)
             return
         if t == self.api_request_topic and self.api_handler:
-            background_task(self.api_handler)(self.notifier_id, d,
-                                              self.send_api_response)
+            eva.core.spawn(self.api_handler, self.notifier_id, d,
+                           self.send_api_response)
             return
         if t.startswith(self.pfx_api_response):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
-                background_task(self.api_callback[response_id][1])(d)
+                eva.core.spawn(self.api_callback[response_id][1], d)
                 self.finish_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
-                background_task(self.exec_custom_handler)(h, d, t, msg.qos,
+                eva.core.spawn(self.exec_custom_handler, h, d, t, msg.qos,
                                                           msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
@@ -2192,8 +2192,9 @@ class GCP_IoT(GenericNotifier):
                     import eva.apikey
                     payload['params']['k'] = eva.apikey.format_key(self.apikey)
                 import eva.api
+                import eva.core
                 g.set('eva_ics_gw', 'gcpiot:' + self.notifier_id)
-                background_task(eva.api.jrpc)(p=payload)
+                eva.core.spawn(eva.api.jrpc, p=payload)
             except:
                 logging.warning(
                     '.Invalid command message from MQTT server: {}'.format(

@@ -24,8 +24,6 @@ from types import SimpleNamespace
 
 import threading
 
-from atasker import background_task
-
 with_ports_lock = eva.core.RLocker('uc/modbus')
 
 config = SimpleNamespace(slave={'tcp': [], 'udp': [], 'serial': []})
@@ -272,7 +270,7 @@ def modbus_slave_block(size):
                 if addr not in self.event_handlers:
                     return
                 for f in self.event_handlers[addr]:
-                    background_task(f)(addr, values)
+                    eva.core.spawn(f, addr, values)
             finally:
                 self.event_handlers_lock.release()
 

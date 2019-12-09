@@ -18,7 +18,7 @@ from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.uc.ucitem import UCItem
 
-from atasker import task_supervisor, background_task
+from atasker import task_supervisor
 
 status_label_off = 'OFF'
 status_label_on = 'ON'
@@ -316,8 +316,11 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
             logging.debug('%s auto off after %u seconds' % \
                         (self.oid, self.auto_off))
             self.last_action = time.time()
-            background_task(eva.uc.controller.exec_unit_action)(
-                self, 0, None, wait=eva.core.config.timeout)
+            eva.core.spawn(eva.uc.controller.exec_unit_action,
+                           self,
+                           0,
+                           None,
+                           wait=eva.core.config.timeout)
             self.auto_processor = None
 
     def get_action_xc(self, a):
