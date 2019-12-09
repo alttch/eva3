@@ -10,7 +10,6 @@ Pragma: no-cache
     "expires": 0,
     "mqtt_update": null,
     "set_time": 1553193500.117168,
-    "update_delay": 0,
     "update_exec": null,
     "update_interval": 0,
     "update_timeout": null
