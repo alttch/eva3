@@ -17,6 +17,7 @@ UC
    * LoRaWAN support
    * Fixed PHI update timers
    * Driver API 8: LoraWAN handlers, timeout helper
+   * item update_delay property is removed
 
 LM
 --
