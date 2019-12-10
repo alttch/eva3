@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 VERSION=3.2.6
-BUILD=2019121001
+BUILD=2019121002
 
 PYTHON3_MIN=6
 PYTHON_MINOR=$(./python3/bin/python3 --version|cut -d. -f2)
