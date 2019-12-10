@@ -11,7 +11,7 @@ import eva.item
 import time
 import asyncio
 
-from atasker import background_worker
+from neotasker import background_worker
 
 
 class ActiveItemQueue(object):

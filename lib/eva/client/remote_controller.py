@@ -19,7 +19,7 @@ import rapidjson
 import msgpack
 import uuid
 import random
-from atasker import BackgroundIntervalWorker, BackgroundWorker
+from neotasker import BackgroundIntervalWorker, BackgroundWorker
 from eva.types import CT_JSON, CT_MSGPACK
 
 # websocket.enableTrace(True)

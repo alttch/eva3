@@ -27,10 +27,10 @@ try:
 except:
     pass
 
-from atasker import BackgroundIntervalWorker
-from atasker import BackgroundQueueWorker
-from atasker import background_worker
-from atasker import g
+from neotasker import BackgroundIntervalWorker
+from neotasker import BackgroundQueueWorker
+from neotasker import background_worker
+from neotasker import g
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
@@ -2116,7 +2116,7 @@ class GCP_IoT(GenericNotifier):
         if not self.test_only_mode:
             if self.map is None:
                 self.log_error(message='map file not specified or invalid')
-            self.reset_connection.start(_delay_before=self.token_expire -
+            self.reset_connection.start(delay=self.token_expire -
                                         self.get_timeout(),
                                         o=self)
 

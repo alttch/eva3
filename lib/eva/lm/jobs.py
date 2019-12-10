@@ -11,7 +11,7 @@ import schedule
 import time
 import re
 
-from atasker import background_worker
+from neotasker import background_worker
 
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str

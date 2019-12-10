@@ -42,7 +42,7 @@ from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
 from eva.tools import parse_function_params
 
-from atasker import task_supervisor
+from neotasker import task_supervisor
 
 from types import SimpleNamespace
 

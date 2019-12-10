@@ -39,7 +39,7 @@ from time import perf_counter
 
 from types import SimpleNamespace
 
-from atasker import background_worker, task_supervisor
+from neotasker import background_worker, task_supervisor
 
 
 class PHI(object):

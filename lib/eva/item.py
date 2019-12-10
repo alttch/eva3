@@ -39,7 +39,7 @@ from eva.generic import ia_status_failed
 from eva.generic import ia_status_terminated
 from eva.generic import ia_status_completed
 
-from atasker import background_worker, task_supervisor
+from neotasker import background_worker, task_supervisor
 
 
 class Item(object):

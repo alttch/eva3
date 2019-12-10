@@ -30,8 +30,7 @@ from eva.tools import Locker as GenericLocker
 from eva.exceptions import FunctionFailed
 from eva.exceptions import TimeoutException
 
-from atasker import g, FunctionCollection, task_supervisor
-from atasker import TASK_CRITICAL
+from neotasker import g, FunctionCollection, task_supervisor
 
 import pyaltt2.logs
 
@@ -841,7 +840,7 @@ def init():
 
 
 def start_supervisor():
-    task_supervisor.set_thread_pool(pool_size=0, min_size='max')
+    task_supervisor.set_thread_pool(min_size='max')
     task_supervisor.timeout_critical_func = critical
     task_supervisor.poll_delay = config.polldelay
     task_supervisor.start()
@@ -851,7 +850,7 @@ def start_supervisor():
     task_supervisor.create_async_job_scheduler('cleaners', aloop='cleaners')
 
 
-spawn = task_supervisor.thread_pool.submit
+spawn = task_supervisor.spawn
 
 
 def start(init_db_only=False):

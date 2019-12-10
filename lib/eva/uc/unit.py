@@ -18,7 +18,7 @@ from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
 from eva.uc.ucitem import UCItem
 
-from atasker import task_supervisor
+from neotasker import task_supervisor
 
 status_label_off = 'OFF'
 status_label_on = 'ON'
