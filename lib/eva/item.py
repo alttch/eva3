@@ -1307,10 +1307,7 @@ class ItemAction(GenericAction):
                     (self.uuid, ia_status_names[status]))
             if self.item.notify_events > 1 and eva.notify.is_action_subscribed(
             ):
-                t = threading.Thread(target=eva.notify.notify,
-                                     args=('action', (self, self.serialize())))
-                t.setDaemon(True)
-                t.start()
+                eva.notify.notify('action', (self, self.serialize()))
             return True
         finally:
             self.item_action_lock.release()
