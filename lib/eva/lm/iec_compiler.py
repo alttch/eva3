@@ -158,8 +158,8 @@ def gen_code_from_sfc(sfc):
                 for t_id in b['thread']:
                     fncode = ('__thread_{} = threading.Thread(' +
                               'target=__sfc_thread_{})\n').format(t_id, t_id)
-                    fncode += ' ' * (indent + 8) + '__thread_{}.start()'.format(
-                        t_id)
+                    fncode += ' ' * (indent +
+                                     8) + '__thread_{}.start()'.format(t_id)
             elif b['type'] == 'thread_wait':
                 for t_id in b['thread']:
                     fncode = '__thread_{}.join()'.format(t_id)

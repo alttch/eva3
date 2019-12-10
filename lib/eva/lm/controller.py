@@ -305,13 +305,12 @@ def save_lvar_state(item, db=None):
     try:
         _id = item.full_id if \
                 eva.core.config.enterprise_layout else item.item_id
-        if dbconn.execute(
-                sql('update lvar_state set set_time=:t,' +
-                    ' status=:status, value=:value where id=:id'),
-                t=item.set_time,
-                status=item.status,
-                value=item.value,
-                id=_id).rowcount:
+        if dbconn.execute(sql('update lvar_state set set_time=:t,' +
+                              ' status=:status, value=:value where id=:id'),
+                          t=item.set_time,
+                          status=item.status,
+                          value=item.value,
+                          id=_id).rowcount:
             logging.debug('%s state updated in db' % item.oid)
         else:
             dbconn.execute(
@@ -345,8 +344,9 @@ def load_lvar_db_state(items, clean=False):
             return
         meta = sa.MetaData()
         t_state_history = sa.Table(
-            'lvar_state', meta, sa.Column(
-                'id', sa.String(256), primary_key=True),
+            'lvar_state', meta, sa.Column('id',
+                                          sa.String(256),
+                                          primary_key=True),
             sa.Column('set_time', sa.Numeric(20, 8)),
             sa.Column('status', sa.Integer), sa.Column('value', sa.String(256)))
         try:
@@ -493,8 +493,8 @@ def put_macro_function(fname=None, fdescr=None, i={}, o={}, fcode=None):
             if isinstance(fcode, dict):
                 f.write('# FBD\n')
                 f.write('# auto generated code, do not modify\n')
-                f.write('"""\n{}\n"""\n{}\n'.format(
-                    rapidjson.dumps(fcode), pcode))
+                f.write('"""\n{}\n"""\n{}\n'.format(rapidjson.dumps(fcode),
+                                                    pcode))
             else:
                 f.write(pcode)
         eva.core.finish_save()
@@ -529,8 +529,8 @@ def reload_macro_function(file_name=None, fname=None, rebuild=True):
         if rebuild:
             eva.lm.plc.rebuild_mfcode()
     else:
-        logging.info('Loading macro function {}'.format(file_name if file_name
-                                                        else fname))
+        logging.info('Loading macro function {}'.format(
+            file_name if file_name else fname))
         if file_name in macro_functions_m:
             omtime = macro_functions_m[file_name]
         else:
@@ -560,8 +560,8 @@ def get_macro_source(macro_id):
     if not macro:
         return None
     file_name = eva.core.format_xc_fname(
-        fname=macro.action_exec
-        if macro.action_exec else '{}.py'.format(macro.item_id))
+        fname=macro.action_exec if macro.action_exec else '{}.py'.
+        format(macro.item_id))
     if os.path.isfile(file_name):
         with open(file_name) as fd:
             code = fd.read()
@@ -1172,14 +1172,13 @@ def exec_macro(macro,
         except:
             _value = x
         _argvf.append(_value)
-    a = eva.lm.plc.MacroAction(
-        m,
-        argv=_argvf,
-        kwargs=kwargs,
-        priority=priority,
-        action_uuid=action_uuid,
-        source=source,
-        is_shutdown_func=is_shutdown_func)
+    a = eva.lm.plc.MacroAction(m,
+                               argv=_argvf,
+                               kwargs=kwargs,
+                               priority=priority,
+                               action_uuid=action_uuid,
+                               source=source,
+                               is_shutdown_func=is_shutdown_func)
     Q.put_task(a)
     if not a.processed.wait(timeout=qt):
         if a.set_dead():

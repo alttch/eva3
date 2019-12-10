@@ -39,9 +39,8 @@ class Sensor(UCItem, eva.item.VariableItem, eva.item.PhysicalItem):
             ue = False
         else:
             ue = True
-        return super().update_set_state(
-            status=status,
-            value=value,
-            from_mqtt=from_mqtt,
-            force_notify=force_notify,
-            update_expiration=ue)
+        return super().update_set_state(status=status,
+                                        value=value,
+                                        from_mqtt=from_mqtt,
+                                        force_notify=force_notify,
+                                        update_expiration=ue)

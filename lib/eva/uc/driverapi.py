@@ -77,8 +77,10 @@ def lock(l, timeout=None, expires=None):
     else:
         t = timeout
         if t > eva.core.config.timeout: t = eva.core.config.timeout
-    return eva.sysapi.api.lock(
-        eva.apikey.get_masterkey(), l='eva:phi:' + l, t=t, e=e)
+    return eva.sysapi.api.lock(eva.apikey.get_masterkey(),
+                               l='eva:phi:' + l,
+                               t=t,
+                               e=e)
 
 
 def unlock(l):
@@ -192,8 +194,8 @@ def unlink_phi_mod(mod):
     if mod.find('/') != -1 or mod == 'generic_phi': return False
     for k, p in phis.copy().items():
         if p.phi_mod_id == mod:
-            raise ResourceBusy(
-                'PHI module %s is in use, unable to unlink' % mod)
+            raise ResourceBusy('PHI module %s is in use, unable to unlink' %
+                               mod)
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
     try:
         eva.core.prepare_save()
@@ -380,8 +382,8 @@ def register_item_update(i):
             % (i.oid, phi_id))
         return False
     items_by_phi[phi_id].add(i)
-    logging.debug(
-        'item %s registered for driver updates, PHI: %s' % (i.full_id, phi_id))
+    logging.debug('item %s registered for driver updates, PHI: %s' %
+                  (i.full_id, phi_id))
     return True
 
 
@@ -678,12 +680,11 @@ def load():
         if _lpi:
             for l in _lpi:
                 try:
-                    load_driver(
-                        l['lpi_id'],
-                        l['mod'],
-                        l['phi_id'],
-                        lpi_cfg=l['cfg'],
-                        start=False)
+                    load_driver(l['lpi_id'],
+                                l['mod'],
+                                l['phi_id'],
+                                lpi_cfg=l['cfg'],
+                                start=False)
                 except Exception as e:
                     logging.error(e)
                     eva.core.log_traceback()

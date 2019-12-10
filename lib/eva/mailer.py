@@ -16,11 +16,10 @@ from eva.exceptions import FunctionFailed
 
 from types import SimpleNamespace
 
-config = SimpleNamespace(
-    sender='eva@' + platform.node(),
-    smtp_host='localhost',
-    smtp_port=25,
-    default_rcp=['root'])
+config = SimpleNamespace(sender='eva@' + platform.node(),
+                         smtp_host='localhost',
+                         smtp_port=25,
+                         default_rcp=['root'])
 
 default_port = 25
 

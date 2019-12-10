@@ -74,8 +74,10 @@ class LM_API(GenericAPI, GenericCloudAPI):
             k:
             .p: item type (must be set to lvar [LV])
         """
-        k, tp = parse_function_params(
-            kwargs, 'kp', '.S', defaults={'p': 'lvar'})
+        k, tp = parse_function_params(kwargs,
+                                      'kp',
+                                      '.S',
+                                      defaults={'p': 'lvar'})
         if apikey.check_master(k):
             if tp == 'LV' or tp == 'lvar':
                 return sorted(eva.lm.controller.lvars_by_group.keys())
@@ -110,8 +112,10 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .g: item group
             .full: return full state
         """
-        k, i, group, tp, full = parse_function_params(
-            kwargs, 'kigpY', '.sssb', defaults={'p': 'lvar'})
+        k, i, group, tp, full = parse_function_params(kwargs,
+                                                      'kigpY',
+                                                      '.sssb',
+                                                      defaults={'p': 'lvar'})
         if tp is None:
             tp = 'lvar'
         elif tp not in ['LV', 'lvar']:
@@ -299,14 +303,13 @@ class LM_API(GenericAPI, GenericCloudAPI):
         else:
             kw = {}
         return self._process_action_result(
-            eva.lm.controller.exec_macro(
-                macro=macro,
-                argv=a,
-                kwargs=kw,
-                priority=p,
-                q_timeout=q,
-                wait=w,
-                action_uuid=u))
+            eva.lm.controller.exec_macro(macro=macro,
+                                         argv=a,
+                                         kwargs=kw,
+                                         priority=p,
+                                         q_timeout=q,
+                                         wait=w,
+                                         action_uuid=u))
 
     @log_i
     def result(self, **kwargs):
@@ -663,8 +666,11 @@ class LM_API(GenericAPI, GenericCloudAPI):
         name, description, i, o, code = parse_api_params(
             kwargs, ['function', 'description', 'input', 'output', 'src'],
             'ss...')
-        fname = eva.lm.controller.put_macro_function(
-            fname=name, fdescr=description, i=i, o=o, fcode=code)
+        fname = eva.lm.controller.put_macro_function(fname=name,
+                                                     fdescr=description,
+                                                     i=i,
+                                                     o=o,
+                                                     fcode=code)
         if not fname:
             raise FunctionFailed
         return eva.lm.controller.get_macro_function(fname)
@@ -1183,8 +1189,9 @@ class LM_API(GenericAPI, GenericCloudAPI):
             save: save lvar configuration immediately
         """
         i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
-        return eva.lm.controller.create_lvar(
-            lvar_id=oid_to_id(i, 'lvar'), group=g, save=save).serialize()
+        return eva.lm.controller.create_lvar(lvar_id=oid_to_id(i, 'lvar'),
+                                             group=g,
+                                             save=save).serialize()
 
     @log_w
     @api_need_master
@@ -1255,9 +1262,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
                             result.append(v.serialize(full=True))
-        return sorted(
-            sorted(result, key=lambda k: k['oid']),
-            key=lambda k: ['controller_id'])
+        return sorted(sorted(result, key=lambda k: k['oid']),
+                      key=lambda k: ['controller_id'])
 
     @log_i
     @api_need_master
@@ -1299,13 +1305,12 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         uri, key, mqtt_update, ssl_verify, timeout, save = parse_api_params(
             kwargs, 'uamstS', 'Sssbnb')
-        c = eva.lm.controller.append_controller(
-            uri=uri,
-            key=key,
-            mqtt_update=mqtt_update,
-            ssl_verify=ssl_verify,
-            timeout=timeout,
-            save=save)
+        c = eva.lm.controller.append_controller(uri=uri,
+                                                key=key,
+                                                mqtt_update=mqtt_update,
+                                                ssl_verify=ssl_verify,
+                                                timeout=timeout,
+                                                save=save)
         if not c: raise FunctionFailed
         return c.serialize(info=True)
 
@@ -1383,9 +1388,8 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .full: get full information
         """
         full = parse_api_params(kwargs, 'Y', 'b')
-        return sorted(
-            eva.lm.extapi.serialize(full=full, config=full),
-            key=lambda k: k['id'])
+        return sorted(eva.lm.extapi.serialize(full=full, config=full),
+                      key=lambda k: k['id'])
 
     @log_d
     @api_need_master
@@ -1697,8 +1701,10 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
         elif rtp == 'controller':
             if ii:
                 if props:
-                    return super().set_controller_prop(
-                        k=k, i=ii, save=save, v=props)
+                    return super().set_controller_prop(k=k,
+                                                       i=ii,
+                                                       save=save,
+                                                       v=props)
                 else:
                     return True
         elif rtp == 'dmatrix_rule':
@@ -1754,14 +1760,14 @@ def start():
     http_api = LM_HTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
     cherrypy.tree.mount(jrpc, jrpc.api_uri)
-    cherrypy.tree.mount(
-        LM_REST_API(),
-        LM_REST_API.api_uri,
-        config={
-            '/': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
-            }
-        })
+    cherrypy.tree.mount(LM_REST_API(),
+                        LM_REST_API.api_uri,
+                        config={
+                            '/': {
+                                'request.dispatch':
+                                    cherrypy.dispatch.MethodDispatcher()
+                            }
+                        })
     eva.api.jrpc = jrpc
     eva.ei.start()
 

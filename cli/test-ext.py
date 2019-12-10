@@ -21,16 +21,16 @@ _me = 'EVA ICS LM PLC extension tester version {}'.format(__version__)
 
 ap = argparse.ArgumentParser(description=_me)
 
-ap.add_argument(
-    '-D',
-    '--debug',
-    help='Enable debug messages',
-    dest='debug',
-    action='store_true',
-    default=False)
+ap.add_argument('-D',
+                '--debug',
+                help='Enable debug messages',
+                dest='debug',
+                action='store_true',
+                default=False)
 ap.add_argument('e', metavar='EXTENSION', help='Extension to test')
-ap.add_argument(
-    'fname', metavar='TEST_FILE', help='Test scenario file (call __FUNCTION)')
+ap.add_argument('fname',
+                metavar='TEST_FILE',
+                help='Test scenario file (call __FUNCTION)')
 ap.add_argument('-c', metavar='PARAMS', help='Extension configuration params')
 
 try:

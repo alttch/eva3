@@ -50,8 +50,10 @@ from netaddr import IPNetwork
 from cryptography.fernet import Fernet
 from types import SimpleNamespace
 
-config = SimpleNamespace(
-    host=None, port=None, hosts_allow=[], hosts_allow_encrypted=[])
+config = SimpleNamespace(host=None,
+                         port=None,
+                         hosts_allow=[],
+                         hosts_allow_encrypted=[])
 
 custom_handlers = {}
 
@@ -62,8 +64,8 @@ _flags = SimpleNamespace(dispatcher_active=False)
 
 def subscribe(handler_id, func):
     custom_handlers.setdefault(handler_id, set()).add(func)
-    logging.debug(
-        'UDP API: added custom handler %s, function %s' % (handler_id, func))
+    logging.debug('UDP API: added custom handler %s, function %s' %
+                  (handler_id, func))
     return True
 
 
@@ -92,8 +94,8 @@ def exec_custom_handler(func, data, address):
 
 def update_config(cfg):
     try:
-        config.host, config.port = parse_host_port(
-            cfg.get('udpapi', 'listen'), default_port)
+        config.host, config.port = parse_host_port(cfg.get('udpapi', 'listen'),
+                                                   default_port)
         logging.debug('udpapi.listen = %s:%u' % (config.host, config.port))
     except:
         return False
@@ -143,10 +145,9 @@ def start():
     _port = config.port if config.port else default_port
     logging.info('Starting UDP API, listening at %s:%u' % (config.host, _port))
     eva.core.stop.append(stop)
-    _t = threading.Thread(
-        target=_t_dispatcher,
-        name='udpapi_t_dispatcher',
-        args=(config.host, _port))
+    _t = threading.Thread(target=_t_dispatcher,
+                          name='udpapi_t_dispatcher',
+                          args=(config.host, _port))
     _flags.dispatcher_active = True
     _t.setDaemon(True)
     _t.start()
@@ -186,8 +187,8 @@ def _t_dispatcher(host, port):
                     p, handler, dt = data.split(b'\x01', 2)
                     handler = handler.decode()
                 except:
-                    logging.warning(
-                        'UDP API: invalid custom packet from %s' % address)
+                    logging.warning('UDP API: invalid custom packet from %s' %
+                                    address)
                     continue
                 if not handler in custom_handlers or \
                         not custom_handlers.get(handler):
@@ -196,8 +197,8 @@ def _t_dispatcher(host, port):
                     continue
                 for h in custom_handlers.get(handler):
                     try:
-                        t = threading.Thread(
-                            target=exec_custom_handler, args=(h, dt, address))
+                        t = threading.Thread(target=exec_custom_handler,
+                                             args=(h, dt, address))
                         t.start()
                     except:
                         eva.core.log_traceback()

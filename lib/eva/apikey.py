@@ -426,9 +426,11 @@ def key_private(key_id):
     return None if not key_id or not key_id in keys_by_id else \
         keys_by_id[key_id].private_key
 
+
 def key_private512(key_id):
     return None if not key_id or not key_id in keys_by_id else \
         keys_by_id[key_id].private_key512
+
 
 def key_id(k):
     return 'unknown' if not k or not k in keys else keys[k].key_id

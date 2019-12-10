@@ -81,8 +81,8 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
     logging.debug('snmp trap from %s' % host)
     if config.hosts_allow:
         if not netacl_match(host, config.hosts_allow):
-            logging.warning(
-                'snmp trap from %s denied by server configuration' % host)
+            logging.warning('snmp trap from %s denied by server configuration' %
+                            host)
             return
     data = {}
     for name, val in varBinds:
@@ -104,8 +104,7 @@ def start():
         udp = importlib.import_module('pysnmp.carrier.asyncore.dgram.udp')
         ntfrcv = importlib.import_module('pysnmp.entity.rfc3413.ntfrcv')
     except:
-        logging.error(
-            'Unable to import pysnmp module')
+        logging.error('Unable to import pysnmp module')
         eva.core.log_traceback()
         return False
     try:
@@ -114,8 +113,8 @@ def start():
             entities.snmpEngine, udp.domainName + (1,),
             udp.UdpTransport().openServerMode((config.host, _port)))
     except:
-        logging.error(
-            'Can not bind SNMP handler to %s:%s' % (config.host, _port))
+        logging.error('Can not bind SNMP handler to %s:%s' %
+                      (config.host, _port))
         eva.core.log_traceback()
         return False
     logging.info('Starting SNMP trap handler, listening at %s:%u' % \

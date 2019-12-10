@@ -1685,7 +1685,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
                 eva.core.spawn(self.exec_custom_handler, h, d, t, msg.qos,
-                                                          msg.retain)
+                               msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
                 r = rapidjson.loads(d)

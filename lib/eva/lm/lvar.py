@@ -48,8 +48,8 @@ class LVar(eva.item.VariableItem):
             self.update_lock.release()
 
     def notify(self, skip_subscribed_mqtt=False, for_destroy=False):
-        super().notify(
-            skip_subscribed_mqtt=skip_subscribed_mqtt, for_destroy=for_destroy)
+        super().notify(skip_subscribed_mqtt=skip_subscribed_mqtt,
+                       for_destroy=for_destroy)
         if eva.core.config.db_update == 1:
             eva.lm.controller.save_lvar_state(self)
 
@@ -77,11 +77,10 @@ class LVar(eva.item.VariableItem):
             t = self.set_time
             _status = self.status
             _value = self.value
-            if super().update_set_state(
-                    status=status,
-                    value=value,
-                    from_mqtt=from_mqtt,
-                    force_notify=force_notify):
+            if super().update_set_state(status=status,
+                                        value=value,
+                                        from_mqtt=from_mqtt,
+                                        force_notify=force_notify):
                 if t != self.set_time:
                     self.notify(skip_subscribed_mqtt=from_mqtt)
                 self.prv_status = _status
@@ -117,8 +116,11 @@ class LVar(eva.item.VariableItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['expires'] = self.expires
         d['set_time'] = self.set_time
         return d

@@ -47,8 +47,11 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['controller_id'] = self.controller.full_id
         try:
             del d['config_changed']
@@ -84,8 +87,9 @@ class RemoteLVar(RemoteUpdatableItem):
                         need_notify = True
                 except:
                     pass
-            super().set_state_from_serialized(
-                data, from_mqtt=from_mqtt, force_notify=need_notify)
+            super().set_state_from_serialized(data,
+                                              from_mqtt=from_mqtt,
+                                              force_notify=need_notify)
         except:
             eva.core.log_traceback()
 
@@ -95,8 +99,11 @@ class RemoteLVar(RemoteUpdatableItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['expires'] = self.expires
         d['set_time'] = self.set_time
         return d
@@ -175,8 +182,11 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
         }
         if full and self.status_labels:
             d['status_labels'] = self.status_labels
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         return d
 
 
@@ -199,8 +209,11 @@ class RemoteMacro(eva.item.Item):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['controller_id'] = self.controller.full_id
         d['action_enabled'] = self.action_enabled
         return d
@@ -236,8 +249,11 @@ class RemoteCycle(RemoteUpdatableItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['controller_id'] = self.controller.full_id
         d['interval'] = self.interval
         d['iterations'] = self.iterations

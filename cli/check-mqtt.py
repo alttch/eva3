@@ -20,8 +20,9 @@ import eva.api
 _me = 'EVA ICS MQTT test version %s' % __version__
 
 ap = argparse.ArgumentParser(description=_me)
-ap.add_argument(
-    help='MQTT user:pass@host:port/space', dest='_mqtt', metavar='MQTT')
+ap.add_argument(help='MQTT user:pass@host:port/space',
+                dest='_mqtt',
+                metavar='MQTT')
 ap.add_argument('--cafile', help='CA File', dest='_ca_file', metavar='FILE')
 ap.add_argument('--cert', help='Cert file', dest='_cert_file', metavar='FILE')
 ap.add_argument('--key', help='Key File', dest='_key_file', metavar='FILE')
@@ -61,16 +62,15 @@ else:
 
 mqtt_host, mqtt_port = eva.tools.parse_host_port(mq, 1883)
 
-n = eva.notify.MQTTNotifier(
-    notifier_id='test',
-    host=mqtt_host,
-    port=mqtt_port,
-    space=space,
-    username=user if user else None,
-    password=password if password else None,
-    ca_certs=a._ca_file,
-    certfile=a._cert_file,
-    keyfile=a._key_file)
+n = eva.notify.MQTTNotifier(notifier_id='test',
+                            host=mqtt_host,
+                            port=mqtt_port,
+                            space=space,
+                            username=user if user else None,
+                            password=password if password else None,
+                            ca_certs=a._ca_file,
+                            certfile=a._cert_file,
+                            keyfile=a._key_file)
 
 if n.test():
     print('OK')

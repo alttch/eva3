@@ -10,8 +10,7 @@ import eva.core
 class UC_Queue(ActiveItemQueue):
 
     def __init__(self, queue_id, keep_history=None, default_priority=100):
-        super().__init__(
-            queue_id=queue_id,
-            keep_history=keep_history,
-            default_priority=default_priority,
-            enterprise_layout=eva.core.config.enterprise_layout)
+        super().__init__(queue_id=queue_id,
+                         keep_history=keep_history,
+                         default_priority=default_priority,
+                         enterprise_layout=eva.core.config.enterprise_layout)

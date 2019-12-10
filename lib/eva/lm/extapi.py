@@ -254,8 +254,11 @@ def load():
             data = rapidjson.loads(fd.read())
         for p in data:
             try:
-                load_ext(
-                    p['id'], p['mod'], cfg=p['cfg'], start=False, rebuild=False)
+                load_ext(p['id'],
+                         p['mod'],
+                         cfg=p['cfg'],
+                         start=False,
+                         rebuild=False)
             except Exception as e:
                 logging.error(e)
                 eva.core.log_traceback()

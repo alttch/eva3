@@ -61,9 +61,8 @@ def print_result(result):
 
 
 def print_command(cmd):
-    print('{} {}'.format(
-        colored('> ', color='white'),
-        colored(cmd, color='yellow', attrs=['bold'])))
+    print('{} {}'.format(colored('> ', color='white'),
+                         colored(cmd, color='yellow', attrs=['bold'])))
 
 
 class PHITester(object):
@@ -147,28 +146,25 @@ _me = 'EVA ICS PHI tester version {}'.format(__version__)
 
 ap = argparse.ArgumentParser(description=_me)
 
-ap.add_argument(
-    '-T',
-    '--timeout',
-    help='default PHI timeout (default: 10 sec)',
-    dest='timeout',
-    type=float,
-    metavar='TIMEOUT',
-    default=10)
-ap.add_argument(
-    '-D',
-    '--debug',
-    help='Enable debug messages',
-    dest='debug',
-    action='store_true',
-    default=False)
-ap.add_argument(
-    '-R',
-    '--raw-output',
-    help='Print raw result (no colors)',
-    dest='raw',
-    action='store_true',
-    default=False)
+ap.add_argument('-T',
+                '--timeout',
+                help='default PHI timeout (default: 10 sec)',
+                dest='timeout',
+                type=float,
+                metavar='TIMEOUT',
+                default=10)
+ap.add_argument('-D',
+                '--debug',
+                help='Enable debug messages',
+                dest='debug',
+                action='store_true',
+                default=False)
+ap.add_argument('-R',
+                '--raw-output',
+                help='Print raw result (no colors)',
+                dest='raw',
+                action='store_true',
+                default=False)
 ap.add_argument('fname', metavar='TEST_FILE', help='Test scenario file')
 
 try:

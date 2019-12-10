@@ -69,9 +69,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             help='Create notifier',
             formatter_class=argparse.RawTextHelpFormatter)
         ap_create.add_argument('i', help='Notifier ID', metavar='ID')
-        ap_create.add_argument(
-            'p',
-            help=textwrap.dedent('''
+        ap_create.add_argument('p',
+                               help=textwrap.dedent('''
         Notifier properties:
             json:http(s)://[key]@uri[#jsonrpc]
             mqtt:[username:password]@host:[port]
@@ -79,26 +78,23 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             db:db_uri
             influxdb:http(s)://uri#database
             prometheus:'''),
-            metavar='PROPS').completer = self.ComplNProto()
-        ap_create.add_argument(
-            '-s',
-            '--space',
-            help='Notification space',
-            metavar='SPACE',
-            dest='s')
-        ap_create.add_argument(
-            '-t',
-            '--timeout',
-            help='Notifier timeout',
-            metavar='SEC',
-            dest='t',
-            type=float)
-        ap_create.add_argument(
-            '-y',
-            '--enable',
-            help='Enable notifier after creation',
-            dest='y',
-            action='store_true')
+                               metavar='PROPS').completer = self.ComplNProto()
+        ap_create.add_argument('-s',
+                               '--space',
+                               help='Notification space',
+                               metavar='SPACE',
+                               dest='s')
+        ap_create.add_argument('-t',
+                               '--timeout',
+                               help='Notifier timeout',
+                               metavar='SEC',
+                               dest='t',
+                               type=float)
+        ap_create.add_argument('-y',
+                               '--enable',
+                               help='Enable notifier after creation',
+                               dest='y',
+                               action='store_true')
         ap_enable = self.sp.add_parser('enable', help='Enable notifier')
         ap_enable.add_argument(
             'i', help='Notifier ID',
@@ -128,8 +124,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             'i', help='Notifier ID',
             metavar='NOTIFIER_ID').completer = self.ComplN(self)
 
-        ap_subscribe = self.sp.add_parser(
-            'subscribe', help='Subscribe notifier')
+        ap_subscribe = self.sp.add_parser('subscribe',
+                                          help='Subscribe notifier')
         sp_subscribe = ap_subscribe.add_subparsers(
             dest='_func',
             metavar='topic',
@@ -220,8 +216,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             dest='g',
             metavar='GROUPS')
 
-        ap_unsubscribe = self.sp.add_parser(
-            'unsubscribe', help='Unsubscribe notifier')
+        ap_unsubscribe = self.sp.add_parser('unsubscribe',
+                                            help='Unsubscribe notifier')
         ap_unsubscribe.add_argument(
             's',
             help='Notification subject (if empty - unsubscribe from all)',
@@ -262,13 +258,12 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 uri, method = uri.split('#', 1)
             else:
                 method = None
-            n = eva.notify.HTTP_JSONNotifier(
-                notifier_id=notifier_id,
-                uri=uri,
-                method=method,
-                notify_key=notify_key,
-                space=space,
-                timeout=timeout)
+            n = eva.notify.HTTP_JSONNotifier(notifier_id=notifier_id,
+                                             uri=uri,
+                                             method=method,
+                                             notify_key=notify_key,
+                                             space=space,
+                                             timeout=timeout)
         elif p[0] == 'influxdb':
             u = (':'.join(p[1:])).split('/')
             if len(u) < 3: return self.local_func_result_failed
@@ -278,12 +273,11 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             else:
                 self.print_err('database not specified')
                 return self.local_func_result_failed
-            n = eva.notify.InfluxDB_Notifier(
-                notifier_id=notifier_id,
-                uri=uri,
-                db=db,
-                space=space,
-                timeout=timeout)
+            n = eva.notify.InfluxDB_Notifier(notifier_id=notifier_id,
+                                             uri=uri,
+                                             db=db,
+                                             space=space,
+                                             timeout=timeout)
         elif p[0] == 'mqtt':
             _p = ':'.join(p[1:])
             if _p.find('@') != -1:
@@ -300,29 +294,29 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 host = _p
             from eva.tools import parse_host_port
             host, port = parse_host_port(host)
-            n = eva.notify.MQTTNotifier(
-                notifier_id=notifier_id,
-                host=host,
-                port=port,
-                username=username,
-                password=password,
-                space=space,
-                timeout=timeout)
+            n = eva.notify.MQTTNotifier(notifier_id=notifier_id,
+                                        host=host,
+                                        port=port,
+                                        username=username,
+                                        password=password,
+                                        space=space,
+                                        timeout=timeout)
         elif p[0] == 'db':
             db_uri = ':'.join(p[1:])
-            n = eva.notify.SQLANotifier(
-                notifier_id=notifier_id, db_uri=db_uri, keep=None, space=space)
+            n = eva.notify.SQLANotifier(notifier_id=notifier_id,
+                                        db_uri=db_uri,
+                                        keep=None,
+                                        space=space)
         elif p[0] == 'gcpiot':
             try:
                 project, region, registry = ':'.join(p[1:]).split('/')
             except:
                 return self.local_func_result_failed
-            n = eva.notify.GCP_IoT(
-                notifier_id=notifier_id,
-                project=project,
-                region=region,
-                registry=registry,
-                timeout=timeout)
+            n = eva.notify.GCP_IoT(notifier_id=notifier_id,
+                                   project=project,
+                                   region=region,
+                                   registry=registry,
+                                   timeout=timeout)
         elif p[0] == 'prometheus':
             n = eva.notify.PrometheusNotifier(notifier_id=notifier_id)
         else:
@@ -336,9 +330,9 @@ class NotifierCLI(GenericCLI, ControllerCLI):
     def list_notifiers(self, params):
         eva.notify.load(test=False, connect=False)
         result = []
-        for i in sorted(
-                sorted(eva.notify.get_notifiers(), key=lambda k: k.notifier_id),
-                key=lambda k: k.notifier_type):
+        for i in sorted(sorted(eva.notify.get_notifiers(),
+                               key=lambda k: k.notifier_id),
+                        key=lambda k: k.notifier_type):
             n = {}
             n['id'] = i.notifier_id
             n['type'] = i.notifier_type
@@ -346,8 +340,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
             n['params'] = ''
             if isinstance(i, eva.notify.HTTP_JSONNotifier):
                 method = getattr(i, 'method', None)
-                n['params'] = 'uri: {}{} '.format(i.uri, ('#{}'.format(method)
-                                                          if method else ''))
+                n['params'] = 'uri: {}{} '.format(
+                    i.uri, ('#{}'.format(method) if method else ''))
             elif isinstance(i, eva.notify.SQLANotifier):
                 n['params'] = 'db: %s' % i.db_uri
             elif isinstance(i, eva.notify.InfluxDB_Notifier):
@@ -356,8 +350,8 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 n['params'] = '{}/{}/{}'.format(i.project, i.region, i.registry)
             elif isinstance(i, eva.notify.MQTTNotifier):
                 if i.username is not None:
-                    n['params'] = '%s%s@' % (i.username, ':*'
-                                             if i.password else '')
+                    n['params'] = '%s%s@' % (i.username,
+                                             ':*' if i.password else '')
                 n['params'] += '%s:%u' % (i.host, i.port)
                 if i.space is not None and i.space != '':
                     n['params'] += '/' + i.space
@@ -436,10 +430,10 @@ class NotifierCLI(GenericCLI, ControllerCLI):
                 v = c[a][b]
             except:
                 v = 'null'
-        print(
-            self.colored(
-                '%s.%s' % (params['i'], prop), color='blue', attrs=['bold']),
-            end='')
+        print(self.colored('%s.%s' % (params['i'], prop),
+                           color='blue',
+                           attrs=['bold']),
+              end='')
         print(' = ', end='')
         print(self.colored(v, color='yellow'))
         eva.notify.save_notifier(params['i'])
@@ -531,11 +525,10 @@ eva.core.set_product(product, '-1')
 _me = 'EVA ICS Notification System Manager CLI for %s version %s' % (
     product.upper(), __version__)
 
-cli = NotifierCLI(
-    '%s_notifier' % product,
-    _me,
-    remote_api_enabled=False,
-    prog='%s-notifier' % product)
+cli = NotifierCLI('%s_notifier' % product,
+                  _me,
+                  remote_api_enabled=False,
+                  prog='%s-notifier' % product)
 
 _api_functions = {
     'list': cli.list_notifiers,

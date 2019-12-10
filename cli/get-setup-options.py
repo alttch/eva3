@@ -32,9 +32,8 @@ eva.core.start(init_db_only=True)
 eva.apikey.load(load_from_db=True)
 eva.notify.load(test=False, connect=False)
 
-
-print('MASTERKEY=' + (eva.apikey.get_masterkey()
-                      if eva.apikey.get_masterkey() is not None else ''))
+print('MASTERKEY=' + (eva.apikey.get_masterkey(
+) if eva.apikey.get_masterkey() is not None else ''))
 print('REMOTES=', end='')
 if eva.apikey.get_masterkey():
     print(','.join(
