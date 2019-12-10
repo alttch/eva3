@@ -36,6 +36,8 @@ import eva.benchmark
 from eva.uc.controller import register_benchmark_handler
 from eva.uc.controller import unregister_benchmark_handler
 
+import time
+
 
 class PHI(GenericPHI):
 
@@ -54,6 +56,7 @@ class PHI(GenericPHI):
         self.data = {}
         for i in range(1, 17):
             self.data[str(i)] = (d, '') if self._is_required.value else d
+        self.simulate_timeout = float(self.phi_cfg.get('simulate_timeout', 0))
 
     def get_ports(self):
         return self.generate_port_list(port_max=16,
@@ -62,11 +65,20 @@ class PHI(GenericPHI):
     def get(self, port=None, cfg=None, timeout=0):
         if not port: return self.data.copy()
         try:
+            if self.simulate_timeout:
+                self._make_timeout()
             return self.data.get(str(port))
         except:
             return None
 
+    def _make_timeout(self):
+        self.log_debug('simulating timeout for {} seconds'.format(
+            self.simulate_timeout))
+        time.sleep(self.simulate_timeout)
+
     def set(self, port=None, data=None, cfg=None, timeout=0):
+        if self.simulate_timeout:
+            self._make_timeout()
         if isinstance(port, list):
             ports = port
             multi = True
