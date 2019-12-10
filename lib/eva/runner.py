@@ -15,6 +15,8 @@ import uuid
 import eva.core
 import eva.uc.driverapi
 
+import concurrent.futures
+
 default_tki_diff = 2
 
 
@@ -87,40 +89,43 @@ class DriverCommand(GenericRunner):
         else:
             self.driver_id = item.action_exec[1:]
         self.driver = eva.uc.driverapi.get_driver(self.driver_id)
-        if self.driver:
-            if update:
-                self.run_thread = threading.Thread(
-                    target=self.driver.state,
-                    args=(self._uuid, cfg, self.timeout,
-                          self.term_kill_interval, state_in))
-            else:
-                self.run_thread = threading.Thread(
-                    target=self.driver.action,
-                    args=(self._uuid, state[0], state[1], cfg, self.timeout,
-                          self.term_kill_interval))
-        else:
-            self.run_thread = None
         self.update = update
+        self.state = state
+        self.state_in = state_in
+        self.cfg = cfg
 
     def is_finished(self):
         return self.finished
 
     def run(self):
-        if self.run_thread:
-            self.run_thread.start()
-            self.run_thread.join(self.timeout)
-            if self.run_thread.is_alive():
+        if self.driver:
+            if self.update:
+                self.run_future = eva.core.spawn(self.driver.state, self._uuid,
+                                                 self.cfg, self.timeout,
+                                                 self.term_kill_interval,
+                                                 self.state_in)
+            else:
+                self.run_future = eva.core.spawn(self.driver.action, self._uuid,
+                                                 self.state[0], self.state[1],
+                                                 self.cfg, self.timeout,
+                                                 self.term_kill_interval)
+            try:
+                self.run_future.result(timeout=self.timeout)
+            except concurrent.futures.TimeoutError:
                 cmd = 'state' if self.update else 'action'
                 logging.warning('driver ' + \
                     '%s %s command timeout, sending termination signal'
                     % (self.driver.driver_id, cmd))
                 self.driver.terminate(self._uuid)
-                self.run_thread.join(self.term_kill_interval)
-                if self.run_thread.is_alive():
+                try:
+                    self.run_future.result(timeout=self.term_kill_interval)
+                except concurrent.futures.TimeoutError:
                     logging.critical('driver %s %s command timeout' %
                                      (self.driver.driver_id, cmd))
                     eva.core.critical(from_driver=True)
-                    self.run_thread.join()
+                    self.run_future.result()
+            except:
+                eva.core.log_traceback()
         else:
             logging.error('driver %s not found' % self.driver_id)
         self.finish()
@@ -170,8 +175,10 @@ class ExternalProcess(GenericRunner):
                  tki=None):
         super().__init__(timeout=timeout, tki=tki)
         if item:
-            self.xc_fname = eva.core.format_xc_fname(
-                item=item, xc_type='', update=update, fname=fname)
+            self.xc_fname = eva.core.format_xc_fname(item=item,
+                                                     xc_type='',
+                                                     update=update,
+                                                     fname=fname)
             self.args = ()
             self.env = item.item_env()
             self.args += (item.item_id,)
@@ -206,14 +213,11 @@ class ExternalProcess(GenericRunner):
 
     def launch(self):
         try:
-            self.term = threading.Thread(
-                target=self._t_term, name='runner_t_term_%f' % time.time())
-            self.xc = subprocess.Popen(
-                args=(self.xc_fname,) + self.args,
-                env=self.env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
-            self.term.start()
+            self.term = eva.core.spawn(self._t_term)
+            self.xc = subprocess.Popen(args=(self.xc_fname,) + self.args,
+                                       env=self.env,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
             return True
         except:
             self.terminate()
@@ -335,10 +339,9 @@ class PyThread(object):
                         raw_c = fd.read()
                 except:
                     raw_c = ''
-                self.code = compile(
-                    (self.mfcode.code
-                     if self.mfcode else '') + self.bcode + raw_c + '\n' + raw,
-                    self.script, 'exec')
+                self.code = compile((self.mfcode.code if self.mfcode else '') +
+                                    self.bcode + raw_c + '\n' + raw,
+                                    self.script, 'exec')
                 code_cache[self.script_file] = self.code
                 code_cache_m[self.script_file] = mtime
                 logging.debug('File %s compiled successfully' % \
