@@ -284,11 +284,7 @@ class PLC(eva.item.ActiveItem):
                                  (self.full_id, a.uuid))
                         a.set_ignored()
                     elif a.is_status_queued() and a.set_running():
-                        t = threading.Thread(target = self._t_action,
-                                name = 'macro_' + a.item.full_id + \
-                                        '_' + a.uuid,
-                                args = (a,))
-                        t.start()
+                        eva.core.spawn(self._t_action, a)
                     else:
                         self.queue_lock.release()
             except:
@@ -518,7 +514,7 @@ class Cycle(eva.item.Item):
         self.c = 0
         self.tc = 0
         self.autostart = False
-        self.cycle_thread = None
+        self.cycle_future = None
         self.cycle_enabled = False
         self.cycle_status = 0
         self.iterations = 0
@@ -755,7 +751,7 @@ class Cycle(eva.item.Item):
                     corr = tc / c - self.interval
                     c = 0
                     tc = 0
-                    threading.Thread(target=self.notify).start()
+                    eva.core.spawn(self.notify)
             else:
                 corr = 0
             prev = t
@@ -782,16 +778,19 @@ class Cycle(eva.item.Item):
         self.c = 0
         self.tc = 0
         self.cycle_enabled = True
-        self.cycle_thread = threading.Thread(target=self._t_cycle)
-        self.cycle_thread.start()
+        self.cycle_future = eva.core.spawn(self._t_cycle)
         return True
 
     def stop(self, wait=True):
-        if self.cycle_thread and self.cycle_thread.is_alive():
+        if self.cycle_future and self.cycle_future.running():
             self.cycle_status = 2
             self.notify()
             self.cycle_enabled = False
-            if wait: self.cycle_thread.join()
+            if wait:
+                try:
+                    self.cycle_future.result()
+                except:
+                    eva.core.log_traceback()
         else:
             self.cycle_enabled = False
         return True

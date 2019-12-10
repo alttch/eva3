@@ -197,9 +197,7 @@ def _t_dispatcher(host, port):
                     continue
                 for h in custom_handlers.get(handler):
                     try:
-                        t = threading.Thread(target=exec_custom_handler,
-                                             args=(h, dt, address))
-                        t.start()
+                        eva.core.spawn(exec_custom_handler, h, dt, address)
                     except:
                         eva.core.log_traceback()
                 continue

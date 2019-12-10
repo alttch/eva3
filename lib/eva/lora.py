@@ -156,9 +156,8 @@ def _t_dispatcher(host, port):
                 for i, hs in custom_handlers.items():
                     for h in hs:
                         try:
-                            t = threading.Thread(target=exec_custom_handler,
-                                                 args=(h, pk, payload, address))
-                            t.start()
+                            eva.core.spawn(exec_custom_handler, h, pk, payload,
+                                           address)
                         except:
                             eva.core.log_traceback()
         except:
