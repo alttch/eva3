@@ -327,9 +327,7 @@ class CMDAPI(object):
         _c = CMD(cmd, _args, timeout)
         logging.info('executing "%s %s", timeout = %s' % \
                 (cmd, ''.join(list(_args)), timeout))
-        t = threading.Thread(target=_c.run,
-                             name='sysapi_c_run_%f' % time.time())
-        t.start()
+        eva.core.spawn(_c.run)
         if wait:
             eva.core.wait_for(_c.xc.is_finished, wait)
         return _c.serialize()
