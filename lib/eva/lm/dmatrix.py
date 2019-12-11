@@ -223,15 +223,10 @@ class DecisionMatrix(object):
     def exec_rule_action(self, event_code, rule, item):
         rule.last_matched = time.time()
         if rule.macro:
-            t = threading.Thread(target=self.run_macro,
-                                 args=(event_code, rule, item))
-            t.start()
+            eva.core.spawn(self.run_macro, event_code, rule, item)
         if rule.chillout_time:
-            t = threading.Thread(target=self.process_chillout,
-                                 args=(rule, item))
-            t.setDaemon(True)
             rule.chillout_active = True
-            t.start()
+            eva.core.spawn(self.process_chillout, rule, item)
 
     def run_macro(self, event_code, rule, item):
         if not eva.lm.controller.exec_macro(macro=rule.macro,

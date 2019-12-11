@@ -7,7 +7,6 @@ Pragma: no-cache
 
 [
     {
-        "avg": 0.0105,
         "description": "",
         "full_id": "tests/cycle1",
         "group": "tests",
@@ -19,11 +18,9 @@ Pragma: no-cache
         "oid": "lcycle:tests/cycle1",
         "on_error": null,
         "status": 0,
-        "type": "lcycle",
-        "value": "275,0.0105,"
+        "type": "lcycle"
     },
     {
-        "avg": 0.5,
         "description": "test 2Hz cycle",
         "full_id": "tests/test1",
         "group": "tests",
@@ -35,7 +32,6 @@ Pragma: no-cache
         "oid": "lcycle:tests/test1",
         "on_error": null,
         "status": 0,
-        "type": "lcycle",
-        "value": "0,0.5000,"
+        "type": "lcycle"
     }
 ]

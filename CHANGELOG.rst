@@ -22,7 +22,9 @@ UC
 LM
 --
 
-   * Fixed cycle timers
+   * Fixed cycle timers. As new cycle algorithm has near 100% precision, "avg"
+     is not reported any longer. "value" field in API response is removed as
+     well.
 
 
 3.2.5 (2019-10-03)

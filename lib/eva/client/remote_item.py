@@ -237,11 +237,6 @@ class RemoteCycle(RemoteUpdatableItem):
                 self.iterations = int(cfg['iterations'])
             except:
                 eva.core.log_traceback()
-        if 'avg' in cfg:
-            try:
-                self.avg = int(cfg['avg'])
-            except:
-                eva.core.log_traceback()
 
     def serialize(self,
                   full=False,
@@ -257,7 +252,6 @@ class RemoteCycle(RemoteUpdatableItem):
         d['controller_id'] = self.controller.full_id
         d['interval'] = self.interval
         d['iterations'] = self.iterations
-        d['avg'] = self.avg
         return d
 
     def notify(self, retain=None, skip_subscribed_mqtt=False):
@@ -280,14 +274,6 @@ class RemoteCycle(RemoteUpdatableItem):
                     d = int(j['iterations'])
                     if self.iterations != d:
                         self.iterations = d
-                        need_notify = True
-                except:
-                    eva.core.log_traceback()
-            if 'avg' in j:
-                try:
-                    d = float(j['avg'])
-                    if self.avg != d:
-                        self.avg = d
                         need_notify = True
                 except:
                     eva.core.log_traceback()

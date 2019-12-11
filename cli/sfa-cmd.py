@@ -1505,7 +1505,7 @@ _pd_cols = {
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
     'list_cycles': [
-        'id', 'description', 'controller_id', 'status', 'int', 'iter', 'avg'
+        'id', 'description', 'controller_id', 'status', 'int', 'iter'
     ],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'managed', 'proto', 'version',

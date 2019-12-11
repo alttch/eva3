@@ -1844,7 +1844,6 @@ dict with cycle information
 .. code-block:: json
 
     {
-        "avg": 0.01,
         "description": "",
         "full_id": "tests/cycle1",
         "group": "tests",
@@ -1856,8 +1855,7 @@ dict with cycle information
         "oid": "lcycle:tests/cycle1",
         "on_error": null,
         "status": 0,
-        "type": "lcycle",
-        "value": "0,0.0100,"
+        "type": "lcycle"
     }
 
 Raises:

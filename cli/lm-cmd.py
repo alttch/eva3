@@ -839,7 +839,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='ID').completer = self.ComplCycle(self)
 
         sp_cycle_stop = sp_cycle.add_parser('reset',
-                                            help='Reset cycle stats (avg)')
+                                            help='Reset cycle stats')
         sp_cycle_stop.add_argument(
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
@@ -1328,7 +1328,7 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_cycles': ['id', 'description', 'status', 'int', 'iter', 'avg'],
+    'list_cycles': ['id', 'description', 'status', 'int', 'iter'],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
         'description'
