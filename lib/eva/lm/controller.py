@@ -69,7 +69,7 @@ remote_ucs = {}
 
 configs_to_remove = set()
 
-uc_pool = eva.client.remote_controller.RemoteUCPool()
+uc_pool = eva.client.remote_controller.RemoteUCPool(id='ucpool')
 plc = eva.lm.plc.PLC()
 Q = eva.lm.lmqueue.LM_Queue('lm_queue')
 DM = eva.lm.dmatrix.DecisionMatrix()

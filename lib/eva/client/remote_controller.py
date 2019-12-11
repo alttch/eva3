@@ -261,9 +261,7 @@ class RemoteController(eva.item.Item):
                 logging.warning(self.oid + ' requested to leave the pool')
                 if self.pool and not self.wait_for_autoremove:
                     self.wait_for_autoremove = True
-                    t = threading.Thread(target=eva.api.remove_controller,
-                                         args=(self.full_id,))
-                    t.start()
+                    eva.core.spawn(eva.api.remove_controller, self.full_id)
         except:
             eva.core.log_traceback()
 
@@ -387,9 +385,7 @@ class RemoteController(eva.item.Item):
         if not result:
             if not self.static and self.pool and not self.wait_for_autoremove:
                 self.wait_for_autoremove = True
-                t = threading.Thread(target=eva.api.remove_controller,
-                                     args=(self.full_id,))
-                t.start()
+                eva.core.spawn(eva.api.remove_controller, self.full_id)
             return False
         if not result.get('ok'):
             logging.error('Remote controller unknown access error %s' % \
@@ -448,8 +444,7 @@ class RemoteController(eva.item.Item):
         super().set_modified(save)
         self.connected = False
         if self.enabled:
-            t = threading.Thread(target=self.test)
-            t.start()
+            eva.core.spawn(self.test)
 
     def get_reload_interval(self):
         return self.reload_interval
@@ -623,8 +618,7 @@ class RemoteController(eva.item.Item):
     def destroy(self):
         super().destroy()
         if self.pool:
-            t = threading.Thread(target=self.pool.remove, args=(self.item_id,))
-            t.start()
+            eva.core.spawn(self.pool.remove, self.item_id)
 
 
 class RemoteUC(RemoteController):
@@ -727,7 +721,7 @@ class RemoteLM(RemoteController):
 
 class RemoteControllerPool(object):
 
-    def __init__(self):
+    def __init__(self, id=None):
         self.controllers = {}
         self.reload_threads = {}
         self.reload_thread_flags = {}
@@ -736,9 +730,13 @@ class RemoteControllerPool(object):
         self.item_management_lock = threading.Lock()
         self.action_history_by_id = {}
         self.action_history_lock = threading.Lock()
-        self.action_cleaner = None
-        self.action_cleaner_active = False
-        self.action_cleaner_interval = eva.core.config.action_cleaner_interval
+        self.id = id if id is not None else str(uuid.uuid4())
+        self.action_cleaner = BackgroundIntervalWorker(
+            name=f'{self.id}:action_cleaner',
+            fn=self._run_action_cleaner,
+            on_error=eva.core.log_traceback,
+            loop='cleaners',
+            delay=eva.core.config.action_cleaner_interval)
 
     def cmd(self, controller_id, command, args=None, wait=None, timeout=None):
         if controller_id not in self.controllers:
@@ -909,18 +907,13 @@ class RemoteControllerPool(object):
         return result
 
     def start(self):
-        if not eva.core.config.keep_action_history:
-            return
         eva.core.stop.append(self.stop)
-        self.action_cleaner = threading.Thread(
-            target=self._t_action_cleaner, name='_t_remote_pool_action_cleaner')
-        self.action_cleaner_active = True
-        self.action_cleaner.start()
+        if eva.core.config.keep_action_history:
+            self.action_cleaner.start()
 
     def stop(self):
-        if self.action_cleaner_active:
-            self.action_cleaner_active = False
-            self.action_cleaner.join()
+        if eva.core.config.keep_action_history:
+            self.action_cleaner.stop()
         for i, c in self.controllers.items():
             self.stop_controller_reload_thread(c.item_id, lock=False)
         for i, c in self.controllers.items():
@@ -930,32 +923,19 @@ class RemoteControllerPool(object):
                 except:
                     pass
 
-    def _t_action_cleaner(self):
-        logging.debug('uc pool action cleaner started')
-        while self.action_cleaner_active:
-            try:
-                if not self.action_history_lock.acquire(
-                        timeout=eva.core.config.timeout):
-                    logging.critical(
-                        'RemoteControllerPool::_t_action_cleaner locking broken'
-                    )
-                    eva.core.critical()
-                    continue
-                _actions = self.action_history_by_id.copy()
-                self.action_history_lock.release()
-                for u, a in _actions.items():
-                    if a['t'] < time.time(
-                    ) - eva.core.config.keep_action_history:
-                        logging.debug('action %s too old, removing' % u)
-                        self.action_history_remove(a)
-            except:
-                eva.core.log_traceback()
-            i = 0
-            while i < self.action_cleaner_interval and \
-                    self.action_cleaner_active:
-                time.sleep(eva.core.sleep_step)
-                i += eva.core.sleep_step
-        logging.debug('uc pool action cleaner stopped')
+    async def _run_action_cleaner(self, **kwargs):
+        if not self.action_history_lock.acquire(
+                timeout=eva.core.config.timeout):
+            logging.critical(
+                'RemoteControllerPool::_t_action_cleaner locking broken')
+            eva.core.critical()
+            return
+        _actions = self.action_history_by_id.copy()
+        self.action_history_lock.release()
+        for u, a in _actions.items():
+            if a['t'] < time.time() - eva.core.config.keep_action_history:
+                logging.debug('action %s too old, removing' % u)
+                self.action_history_remove(a)
 
     def action_history_append(self, a):
         if not eva.core.config.keep_action_history:
@@ -1005,8 +985,8 @@ class RemoteControllerPool(object):
 
 class RemoteUCPool(RemoteControllerPool):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.units = {}
         self.units_by_controller = {}
         self.controllers_by_unit = {}
@@ -1383,8 +1363,8 @@ class RemoteUCPool(RemoteControllerPool):
 
 class RemoteLMPool(RemoteControllerPool):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.lvars = {}
         self.lvars_by_controller = {}
         self.controllers_by_lvar = {}

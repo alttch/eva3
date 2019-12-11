@@ -34,8 +34,8 @@ remote_lms = {}
 
 configs_to_remove = set()
 
-uc_pool = eva.client.remote_controller.RemoteUCPool()
-lm_pool = eva.client.remote_controller.RemoteLMPool()
+uc_pool = eva.client.remote_controller.RemoteUCPool(id='ucpool')
+lm_pool = eva.client.remote_controller.RemoteLMPool(id='lmpool')
 
 config = SimpleNamespace(cloud_manager=False)
 
