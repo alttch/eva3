@@ -162,8 +162,8 @@ class LPI(object):
     """
 
     def delay(self, _uuid, sec):
-        t_end = time.time() + sec
-        while time.time() < t_end:
+        t_end = time.perf_counter() + sec
+        while time.perf_counter() < t_end:
             if self.need_terminate(_uuid): return False
             time.sleep(get_polldelay())
         return not self.need_terminate(_uuid)
