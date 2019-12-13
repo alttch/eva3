@@ -4,7 +4,7 @@ cairosvg==2.1.1
 jsonpickle==0.9.6
 requests==2.21.0
 aiosched==0.0.25
-neotasker==0.0.11
+neotasker==0.0.12
 pyaltt2==0.0.35
 argcomplete==1.9.4
 jinja2==2.10
