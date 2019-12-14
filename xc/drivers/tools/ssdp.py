@@ -108,7 +108,7 @@ def discover(st,
             logging.error('ssdp scan error ({}:{}:{}/{})'.format(
                 iface, addr, port, st))
 
-    _timeout = timeout if timeout else get_timeout()
+    _timeout = timeout if timeout else get_timeout() + 0.1
     req = [
         'M-SEARCH * HTTP/1.1', 'HOST: {}:{}'.format(ip, port),
         'MAN: "ssdp:discover"', 'ST: ' + st
