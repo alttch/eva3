@@ -172,7 +172,7 @@ def _t_dispatcher(host, port):
     logging.debug('UDP API dispatcher started')
     while _flags.dispatcher_active:
         try:
-            data, address = server_socket.recvfrom(256)
+            data, address = server_socket.recvfrom(4096)
             if not _flags.dispatcher_active: return
             if not data: continue
             address = address[0]
