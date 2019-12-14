@@ -124,7 +124,7 @@ def start():
         ntfrcv.NotificationReceiver(entities.snmpEngine, __cbFun)
         entities.snmpEngine.transportDispatcher.jobStarted(1)
         eva.core.stop.append(stop)
-        dispatcher.start(entities.snmpEngine)
+        dispatcher.start(engine=entities.snmpEngine)
     except:
         logging.error(
             'Failed to start SNMP trap handler. Try updating pysnmp library')
@@ -142,9 +142,9 @@ def stop():
 
 
 @background_worker(name='snmp_trap_dispatcher', on_error=eva.core.log_traceback)
-def dispatcher(snmpEngine, **kwargs):
+def dispatcher(engine, **kwargs):
     try:
-        snmpEngine.transportDispatcher.runDispatcher()
+        engine.transportDispatcher.runDispatcher()
     except:
         snmpEngine.transportDispatcher.closeDispatcher()
         logging.error('SNMP trap dispatcher crashed, restarting')
