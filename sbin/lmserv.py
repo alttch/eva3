@@ -12,6 +12,7 @@ sys.path.insert(0, (Path(__file__).parent.parent / 'lib').as_posix())
 
 import eva.core
 import eva.sysapi
+import eva.upnp
 import eva.notify
 import eva.api
 import eva.apikey
@@ -78,6 +79,8 @@ eva.core.write_pid_file()
 eva.core.start_supervisor()
 eva.logs.start()
 
+eva.upnp.update_config(cfg)
+eva.upnp.port = 1912
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
 eva.mailer.update_config(cfg)
@@ -108,6 +111,7 @@ eva.lm.controller.load_jobs()
 eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
+eva.upnp.start()
 eva.lm.lmapi.start()
 
 eva.lm.controller.start()

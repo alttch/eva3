@@ -14,6 +14,7 @@ import eva.core
 import eva.sysapi
 import eva.traphandler
 import eva.udpapi
+import eva.upnp
 import eva.lora
 import eva.notify
 import eva.api
@@ -84,6 +85,8 @@ eva.logs.start()
 
 eva.traphandler.update_config(cfg)
 eva.udpapi.update_config(cfg)
+eva.upnp.update_config(cfg)
+eva.upnp.port = 1911
 eva.lora.update_config(cfg)
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
@@ -114,6 +117,7 @@ eva.sysapi.start()
 eva.wsapi.start()
 eva.traphandler.start()
 eva.udpapi.start()
+eva.upnp.start()
 eva.lora.start()
 eva.uc.ucapi.start()
 eva.uc.controller.start()
