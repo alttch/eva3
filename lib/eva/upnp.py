@@ -330,7 +330,7 @@ def _t_dispatcher(host, port):
     logging.debug('UPnP dispatcher stopped')
 
 
-@background_worker(interval=60, on_error=eva.core.log_traceback)
+@background_worker(interval=120, on_error=eva.core.log_traceback)
 def discovery_worker(**kwargs):
     import eva.api
     from eva.core import spawn, log_traceback, is_shutdown_requested
