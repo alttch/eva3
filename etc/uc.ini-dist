@@ -72,7 +72,7 @@ layout = enterprise
 ;mqtt_update_default = eva_1:2
 
 [upnp]
-; allow uPnP discovery of this controller
+; allow UPnP discovery of this controller
 listen = 0.0.0.0
 
 [sysapi]

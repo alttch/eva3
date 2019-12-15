@@ -76,7 +76,7 @@ def update_config(cfg):
 
 def start():
     if not config.host: return False
-    logging.info('Starting uPnP response server, listening at %s:%u' %
+    logging.info('Starting UPnP response server, listening at %s:%u' %
                  (config.host, port))
     eva.core.stop.append(stop)
     _t = threading.Thread(target=_t_dispatcher,
@@ -126,7 +126,7 @@ def send_response(addr, mx=0):
         if location:
             if mx > 0:
                 time.sleep(random.uniform(0, min(5, mx)))
-            logging.debug(f'sending uPnP reply to {addr[0]}')
+            logging.debug(f'sending UPnP reply to {addr[0]}')
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.sendto(
                 response_msg.format(
@@ -136,9 +136,8 @@ def send_response(addr, mx=0):
                     build=eva.core.product.build,
                     product=eva.core.product.code).encode('utf-8'), addr)
         else:
-            logging.debug(
-                f'skipping uPnP reply to {addr[0]}, no suitable API address found'
-            )
+            logging.debug('skipping UPnP reply to ' +
+                          f'{addr[0]}, no suitable API address found')
     except:
         eva.core.log_traceback()
 
@@ -149,14 +148,14 @@ def _t_dispatcher(host, port):
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST,
                              math.ceil(eva.core.config.timeout))
     server_socket.bind((host, port))
-    logging.debug('uPnP dispatcher started')
+    logging.debug('UPnP dispatcher started')
     while _flags.dispatcher_active:
         try:
             data, addr = server_socket.recvfrom(4096)
             if not _flags.dispatcher_active: return
             if not data: continue
             address = addr[0]
-            logging.debug('uPnP packet from %s' % address)
+            logging.debug('UPnP packet from %s' % address)
             data = data.decode('utf-8').strip().replace('\r', '').split('\n')
             if not data[0].lower().startswith('m-search * http/1'): continue
             headers = {}
@@ -167,13 +166,15 @@ def _t_dispatcher(host, port):
                 except:
                     pass
             if headers.get('man') == 'ssdp:discover' and \
-                    headers.get('st') in [ 'upnp:rootdevice', 'altertech_evaics', 'altertech_evaics:' + eva.core.product.code]:
+                    headers.get('st') in \
+                        [ 'upnp:rootdevice', 'altertech_evaics',
+                                'altertech_evaics:' + eva.core.product.code]:
                 try:
                     mx = int(headers.get('mx'))
                 except:
                     mx = 0
                 eva.core.spawn(send_response, addr, mx)
         except:
-            logging.critical('uPnP dispatcher crashed, restarting')
+            logging.critical('UPnP dispatcher crashed, restarting')
             eva.core.log_traceback()
-    logging.debug('uPnP dispatcher stopped')
+    logging.debug('UPnP dispatcher stopped')
