@@ -143,6 +143,7 @@ What you get with EVA
     integrations/sonoff
     integrations/tts
     integrations/unipi
+    integrations/upnp
     integrations/yeelight
 
 .. toctree::
