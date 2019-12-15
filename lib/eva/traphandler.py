@@ -146,6 +146,6 @@ def dispatcher(engine, **kwargs):
     try:
         engine.transportDispatcher.runDispatcher()
     except:
-        snmpEngine.transportDispatcher.closeDispatcher()
+        engine.transportDispatcher.closeDispatcher()
         logging.error('SNMP trap dispatcher crashed, restarting')
         eva.core.log_traceback()
