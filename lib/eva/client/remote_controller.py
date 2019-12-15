@@ -237,7 +237,7 @@ class RemoteController(eva.item.Item):
 
     def set_connected(self, state, graceful_shutdown=False):
         if graceful_shutdown:
-            self.last_reload_time = time.time()
+            self.last_reload_time = time.perf_counter()
         self.connected = state
         if graceful_shutdown:
             logging.debug(self.oid + ' marked down')
@@ -871,7 +871,7 @@ class RemoteControllerPool(object):
             if controller.reload_interval > 0:
                 i = 0
                 while controller.last_reload_time + \
-                        controller.reload_interval > time.time() and \
+                        controller.reload_interval > time.perf_counter() and \
                         self.reload_thread_flags[controller_id]:
                     time.sleep(eva.core.sleep_step)
                     i += eva.core.sleep_step
@@ -898,7 +898,7 @@ class RemoteControllerPool(object):
             return success
         if not controller_id in self.controllers: return None
         controller = self.controllers[controller_id]
-        controller.last_reload_time = time.time()
+        controller.last_reload_time = time.perf_counter()
         if with_delay:
             time.sleep(random.randint(0, 200) / 100)
         result = controller.load_remote()
