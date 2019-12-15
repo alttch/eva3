@@ -88,6 +88,8 @@ config = SimpleNamespace(pid_file=None,
                          syslog=None,
                          syslog_format=None,
                          reactor_thread_pool=15,
+                         pool_min_size='max',
+                         pool_max_size=None,
                          user_hook=None)
 
 db_engine = SimpleNamespace(primary=None, user=None)
@@ -587,6 +589,18 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         logging.debug('server.polldelay = %s  ( %s msec )' % \
                             (config.polldelay, int(config.polldelay * 1000)))
         try:
+            config.pool_min_size = int(cfg.get('server', 'pool_min_size'))
+        except:
+            pass
+        logging.debug('server.pool_min_size = %s' % config.pool_min_size)
+        try:
+            config.pool_max_size = int(cfg.get('server', 'pool_max_size'))
+        except:
+            pass
+        logging.debug('server.pool_max_size = %s' %
+                      (config.pool_max_size
+                       if config.pool_max_size is not None else 'auto'))
+        try:
             config.reactor_thread_pool = int(
                 cfg.get('server', 'reactor_thread_pool'))
         except:
@@ -841,7 +855,8 @@ def init():
 
 
 def start_supervisor():
-    task_supervisor.set_thread_pool(min_size='max')
+    task_supervisor.set_thread_pool(min_size=config.pool_min_size,
+                                    max_size=config.pool_max_size)
     task_supervisor.timeout_critical_func = critical
     task_supervisor.poll_delay = config.polldelay
     task_supervisor.start()
