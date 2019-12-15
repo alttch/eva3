@@ -725,7 +725,7 @@ class RemoteControllerPool(object):
         self.controllers = {}
         self.reload_threads = {}
         self.reload_thread_flags = {}
-        self.websocket_threads = {}
+        self.websocket_workers = {}
         self.management_lock = threading.Lock()
         self.item_management_lock = threading.Lock()
         self.action_history_by_id = {}
@@ -821,7 +821,7 @@ class RemoteControllerPool(object):
                                          controller=controller,
                                          pool=self,
                                          o=self)
-                self.websocket_threads[controller.item_id] = worker
+                self.websocket_workers[controller.item_id] = worker
                 worker.start(controller=controller,
                              controller_id=controller.item_id)
             else:
@@ -844,10 +844,10 @@ class RemoteControllerPool(object):
             eva.core.critical()
             return False
         try:
-            if controller_id in self.websocket_threads:
+            if controller_id in self.websocket_workers:
                 try:
-                    self.websocket_threads[controller_id].stop(wait=False)
-                    del self.websocket_threads[controller_id]
+                    self.websocket_workers[controller_id].stop(wait=False)
+                    del self.websocket_workers[controller_id]
                 except:
                     eva.core.log_traceback()
             else:
@@ -902,8 +902,8 @@ class RemoteControllerPool(object):
         if with_delay:
             time.sleep(random.randint(0, 200) / 100)
         result = controller.load_remote()
-        if result and controller_id in self.websocket_threads:
-            self.websocket_threads[controller_id].need_reload_flag = True
+        if result and controller_id in self.websocket_workers:
+            self.websocket_workers[controller_id].need_reload_flag = True
         return result
 
     def start(self):
