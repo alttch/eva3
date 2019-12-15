@@ -11,7 +11,8 @@ To perform this, controllers send SSDP broadcast requests to non-standard SSDP
 UDP port *1912* for :doc:`/uc/uc` and *1917* for :doc:`/lm/lm`. Requests are
 performed on controller start and then repeated with 2-minute interval.
 
-Notes:
+Notes
+-----
 
 * To let controller be discovered by other, *listen* option must be configured
   in *[upnp]* section of controller configuration file (starting from 3.2.6 -
@@ -33,6 +34,34 @@ Notes:
 * If controllers have static IP addresses (or static leases, assigned by DHCP
   server), it's highly recommended to mark them as *static* as soon as they
   were discovered.
+
+Request example
+---------------
+
+.. code::
+
+   M-SEARCH * HTTP/1.1
+   Host: ......
+   Man: "ssdp:discover"
+   St: altertech_evaics[:uc|lm]
+
+Response
+--------
+
+.. code::
+
+   HTTP/1.1 200 OK
+   Ext:
+   Host: <hostname>
+   Location: http(s)://IP:PORT
+   EVA-version: <version>
+   EVA-build: xxxxxxxx
+   EVA-product: <uc|lm>
+   EVA-controller-id: <uc|lm>/<system name>
+   EVA-host: <system name>
+   St: altertech_evaics:<uc|lm>
+   Usn: uuid:UNIQUE_INSTALLATION_ID
+   Cache-control: max-age: 60
 
 3rd-party equipment
 ===================
