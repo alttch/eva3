@@ -246,9 +246,9 @@ def handle_discovered_controller(notifier_id, controller_id, location,
         else:
             return False
         return _append_controller(
-            'mqtt:{}:{}'.format(notifier_id, controller_id),
+            location,
             key='${}'.format(eva.core.config.default_cloud_key),
-            mqtt_update=notifier_id,
+            mqtt_update=notifier_id if location.startswith('mqtt:') else None,
             static=False)
     except:
         logging.warning('Unable to process controller, discovered from ' +
@@ -474,5 +474,5 @@ def update_config(cfg):
     eva.client.remote_controller.cloud_manager = config.cloud_manager
 
 
-eva.api.mqtt_discovery_handler = handle_discovered_controller
+eva.api.controller_discovery_handler = handle_discovered_controller
 eva.api.remove_controller = remove_controller

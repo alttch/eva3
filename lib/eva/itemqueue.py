@@ -33,7 +33,6 @@ class ActiveItemQueue(object):
         self.actions_lock = threading.RLock()
 
         self.action_processor = None
-        self.action_cleaner_active = False
 
         self.enterprise_layout = enterprise_layout
 

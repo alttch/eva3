@@ -25,7 +25,8 @@ Host: <hostname>
 Location: http(s)://IP:PORT
 EVA-version: 3.2.6
 EVA-build: xxxxxxxx
-EVA-controller: <uc|lm>
+EVA-product: <uc|lm>
+EVA-controller-id: <uc|lm>/<system name>
 EVA-host: <system name>
 St: altertech_evaics:<uc|lm>
 Usn: uuid:UNIQUE_INSTALLATION_ID
@@ -44,22 +45,30 @@ import netifaces
 import platform
 
 import eva.core
-import eva.uc.controller
 
 from eva.tools import parse_host_port
 
 from types import SimpleNamespace
+from neotasker import background_worker
 
-config = SimpleNamespace(host=None)
+config = SimpleNamespace(host=None,
+                         broadcast='239.255.255.250',
+                         discover=False,
+                         discovery_interfaces=None)
 port = 1900
+
+_data = SimpleNamespace(discover_ports=())
 
 # TODO: installation USN
 response_msg = 'HTTP/1.1 200 OK\r\n' + '\r\n'.join([
-    '{}: {}'.format(x[0], x[1]) for x in
-    [('Ext', ''), ('Host', socket.getfqdn()), ('Location', '{location}'),
-     ('EVA-version', '{version}'), ('EVA-build', '{build}'),
-     ('EVA-controller', '{product}'), ('EVA-host', '{system_name}'),
-     ('ST', 'altertech_evaics:{product}'), ('Cache-control', 'max-age: 60')]
+    '{}: {}'.format(x[0], x[1])
+    for x in [('Ext', ''), ('Host', socket.getfqdn()),
+              ('Location', '{location}'), ('EVA-version', '{version}'),
+              ('EVA-build', '{build}'), ('EVA-product', '{product}'),
+              ('EVA-controller-id',
+               '{product}/{system_name}'), ('EVA-host', '{system_name}'),
+              ('ST',
+               'altertech_evaics:{product}'), ('Cache-control', 'max-age: 60')]
 ]) + '\r\n'
 
 _flags = SimpleNamespace(dispatcher_active=False)
@@ -68,27 +77,168 @@ _flags = SimpleNamespace(dispatcher_active=False)
 def update_config(cfg):
     try:
         config.host = cfg.get('upnp', 'listen')
-        logging.debug(f'upnp.listen = {config.host}')
-        return True
     except:
-        return False
-
-
-def start():
-    if not config.host: return False
-    logging.info('Starting UPnP response server, listening at %s:%u' %
-                 (config.host, port))
-    eva.core.stop.append(stop)
-    _t = threading.Thread(target=_t_dispatcher,
-                          name='upnp_t_dispatcher',
-                          args=(config.host, port))
-    _flags.dispatcher_active = True
-    _t.setDaemon(True)
-    _t.start()
+        pass
+    logging.debug(f'upnp.listen = {config.host}')
+    # for tests only, undocumented
+    try:
+        config.broadcast = cfg.get('upnp', 'broadcast_ip')
+    except:
+        pass
+    logging.debug(f'upnp.broadcast_ip = {config.broadcast}')
+    try:
+        interfaces = cfg.get('upnp', 'discover_on')
+        if interfaces != '*':
+            config.interfaces = [x.strip() for x in interfaces.split(',')]
+        config.discover = True
+    except:
+        pass
+    logging.debug('upnp.discover_controllers = ' +
+                  ('enabled' if config.discover else 'disabled'))
+    if config.discover:
+        logging.debug('upnp.discover_on = ' +
+                      (', '.join(config.discovery_interfaces) if config.
+                       discovery_interfaces else '*'))
     return True
 
 
+# use threading until asyncio have all required features
+def discover(st,
+             ip='239.255.255.250',
+             port=1900,
+             mx=True,
+             interface=None,
+             trailing_crlf=True,
+             parse_data=True,
+             discard_headers=['Cache-control', 'Host'],
+             timeout=None):
+    """
+    Args:
+        st: service type
+        ip: multicast ip
+        port: multicast port
+        mx: use MX header (=timeout)
+        interface: network interface (None - scan all)
+        trailing_crlf: put trailing CRLF at the end of msg
+        parse_data: if False, raw data will be returned
+        discard_headers: headers to discard (if parse_data is True)
+        timeout: socket timeout (for a single interface)
+
+    Returns:
+        if data is parsed: list of dicts, where IP=equipment IP, otherwise
+        dict, where key=equipment IP addr, value=raw ssdp reply. Note: if data
+        is parsed, all variables are converted to lowercase and capitalized.
+    """
+
+    def _t_discover_on_interface(iface, addr, msg, timeout):
+        logging.debug('ssdp scan {}:{}'.format(iface, addr))
+        result = {}
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST,
+                         math.ceil(timeout))
+            s.bind((addr, 0))
+            s.settimeout(timeout)
+            s.sendto(msg, (ip, port))
+        except:
+            logging.info('ssdp unable to scan ({}:{}:{}/{})'.format(
+                iface, addr, port, st))
+            return
+        try:
+            while True:
+                data, addr = s.recvfrom(65507)
+                if addr[0] not in result:
+                    try:
+                        data = data.decode('utf-8')
+                        if parse_data:
+                            data = data.split('\r\n')
+                            if not data[0].endswith(' 200 OK'):
+                                raise Exception(
+                                    'Invalid header data from {}: {}'.format(
+                                        addr[0], data[0]))
+                            result[addr[0]] = {}
+                            for d in data[1:]:
+                                if d:
+                                    k, v = d.split(':', 1)
+                                    k = k.lower().capitalize()
+                                    if k not in discard_headers:
+                                        result[addr[0]][k] = v.lstrip()
+                        else:
+                            result[addr[0]] = data
+                    except:
+                        eva.core.log_traceback()
+        except socket.timeout:
+            pass
+        except:
+            eva.core.log_traceback()
+            logging.error('ssdp scan error ({}:{}:{}/{})'.format(
+                iface, addr, port, st))
+        return result
+
+    _timeout = timeout if timeout else eva.core.config.timeout
+    req = [
+        'M-SEARCH * HTTP/1.1', 'HOST: {}:{}'.format(ip, port),
+        'MAN: "ssdp:discover"', 'ST: ' + st
+    ]
+    if mx:
+        req += ['MX: {}'.format(_timeout)]
+    msg = ('\r\n'.join(req) + '\r\n' if trailing_crlf else '').encode('utf-8')
+    if interface:
+        its = interface if isinstance(interface, list) else [interface]
+    else:
+        its = netifaces.interfaces()
+    futures = []
+    for iface in its:
+        try:
+            inet = netifaces.ifaddresses(iface)[netifaces.AF_INET]
+            addr, broadcast = inet[0]['addr'], inet[0]['broadcast']
+        except:
+            logging.debug(
+                'ssdp scan: skipping interface {}, no ip addr or broadcast'.
+                format(iface))
+            continue
+        futures.append(
+            eva.core.spawn(_t_discover_on_interface, iface, addr, msg,
+                           _timeout))
+    result = {}
+    for f in futures:
+        try:
+            data = f.result()
+            if data:
+                result.update(data)
+        except:
+            eva.core.log_traceback()
+    if parse_data:
+        r = []
+        for i, v in result.items():
+            d = {'IP': i}
+            d.update(v)
+            r.append(d)
+        return r
+    else:
+        return result
+
+
+def start():
+    if config.host:
+        logging.info('Starting UPnP response server, listening at %s:%u' %
+                     (config.host, port))
+        eva.core.stop.append(stop)
+        _t = threading.Thread(target=_t_dispatcher,
+                              name='upnp_t_dispatcher',
+                              args=(config.host, port))
+        _flags.dispatcher_active = True
+        _t.setDaemon(True)
+        _t.start()
+    if config.discover:
+        discovery_worker.start()
+    return True
+
+
+@eva.core.stop
 def stop():
+    if config.discover:
+        discovery_worker.stop()
     _flags.dispatcher_active = False
 
 
@@ -178,3 +328,32 @@ def _t_dispatcher(host, port):
             logging.critical('UPnP dispatcher crashed, restarting')
             eva.core.log_traceback()
     logging.debug('UPnP dispatcher stopped')
+
+
+@background_worker(interval=60, on_error=eva.core.log_traceback)
+def discovery_worker(**kwargs):
+    import eva.api
+    from eva.core import spawn, log_traceback, is_shutdown_requested
+    futures = []
+    for p in _data.discover_ports:
+        logging.debug(f'Starting UPnP discovery, port {p}')
+        futures.append(
+            spawn(discover,
+                  'altertech_evaics',
+                  ip=config.broadcast,
+                  port=p,
+                  mx=False,
+                  interface=config.discovery_interfaces))
+    for f in futures:
+        try:
+            result = f.result()
+            if is_shutdown_requested():
+                break
+            for data in result:
+                controller_id = data.get('Eva-controller-id')
+                location = data.get('Location')
+                if controller_id and location:
+                    result = spawn(eva.api.controller_discovery_handler, 'UPnP',
+                                   controller_id, location).result()
+        except:
+            log_traceback()

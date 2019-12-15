@@ -892,7 +892,7 @@ def handle_discovered_controller(notifier_id, controller_id, location,
         return append_controller(location,
                                  key='${}'.format(
                                      eva.core.config.default_cloud_key),
-                                 mqtt_update=notifier_id,
+                                 mqtt_update=notifier_id if location.startswith('mqtt:') else None,
                                  static=False)
     except:
         logging.warning('Unable to process controller, discovered from ' +
@@ -1202,5 +1202,5 @@ def init():
     eva.lm.macro_api.init()
 
 
-eva.api.mqtt_discovery_handler = handle_discovered_controller
+eva.api.controller_discovery_handler = handle_discovered_controller
 eva.api.remove_controller = remove_controller

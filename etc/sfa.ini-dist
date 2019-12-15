@@ -65,6 +65,10 @@ timeout = 5
 ; default mqtt notifier for updates for new items
 ;mqtt_update_default = eva_1:2
 
+[upnp]
+; discover controllers via uPnP on all interfaces, or list, comma separated
+discover_on = *
+
 [sysapi]
 ; enable remote file management functions
 ;file_management = yes

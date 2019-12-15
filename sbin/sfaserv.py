@@ -20,6 +20,7 @@ import eva.sfa.controller
 import eva.sfa.sfapi
 import eva.logs
 import eva.sysapi
+import eva.upnp
 import eva.wsapi
 
 
@@ -80,6 +81,8 @@ eva.logs.start()
 
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
+eva.upnp.update_config(cfg)
+eva.upnp._data.discover_ports = (1911, 1912)
 
 eva.sysapi.cvars_public = True
 
@@ -105,6 +108,7 @@ eva.sfa.controller.load_remote_lms()
 eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
+eva.upnp.start()
 eva.sfa.sfapi.start()
 
 eva.sfa.controller.start()

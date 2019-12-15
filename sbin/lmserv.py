@@ -79,9 +79,10 @@ eva.core.write_pid_file()
 eva.core.start_supervisor()
 eva.logs.start()
 
+eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
 eva.upnp.port = 1912
-eva.api.update_config(cfg)
+eva.upnp._data.discover_ports = (1911,)
 eva.sysapi.update_config(cfg)
 eva.mailer.update_config(cfg)
 

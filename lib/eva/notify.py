@@ -1468,7 +1468,7 @@ class GenericMQTTNotifier(GenericNotifier):
                             '/' + eva.core.config.system_name
         import eva.api
         self.api_handler = eva.api.mqtt_api_handler
-        self.discovery_handler = eva.api.mqtt_discovery_handler
+        self.discovery_handler = eva.api.controller_discovery_handler
         # dict of tuples (topic, handler)
         self.api_callback = {}
         self.api_callback_lock = threading.RLock()

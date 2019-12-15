@@ -1413,10 +1413,11 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         super().wrap_exposed(cp_api_function)
 
 
-def mqtt_discovery_handler(notifier_id, d):
+def controller_discovery_handler(notifier_id, controller_id, location,
+                                 **kwargs):
     logging.info(
         'MQTT discovery handler got info from %s' % notifier_id + \
-        ' about %s, but no real handler registered' % d
+        ' about %s, but no real handler registered' % controller_id
     )
 
 
