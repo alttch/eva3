@@ -82,7 +82,7 @@ eva.logs.start()
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
 eva.upnp.update_config(cfg)
-eva.upnp._data.discover_ports = (1911, 1912)
+eva.upnp._data.discover_ports = (1912, 1917)
 
 eva.sysapi.cvars_public = True
 

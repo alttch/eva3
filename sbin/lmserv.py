@@ -81,8 +81,8 @@ eva.logs.start()
 
 eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
-eva.upnp.port = 1912
-eva.upnp._data.discover_ports = (1911,)
+eva.upnp.port = 1917
+eva.upnp._data.discover_ports = (1912,)
 eva.sysapi.update_config(cfg)
 eva.mailer.update_config(cfg)
 

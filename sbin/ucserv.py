@@ -87,7 +87,7 @@ eva.traphandler.update_config(cfg)
 eva.udpapi.update_config(cfg)
 eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
-eva.upnp.port = 1911
+eva.upnp.port = 1912
 eva.lora.update_config(cfg)
 eva.sysapi.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
