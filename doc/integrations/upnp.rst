@@ -43,7 +43,7 @@ Request example
    M-SEARCH * HTTP/1.1
    Host: ......
    Man: "ssdp:discover"
-   St: altertech_evaics[:uc|lm]
+   ST: altertech_evaics[:uc|lm]
 
 Response
 --------
@@ -59,8 +59,8 @@ Response
    EVA-product: <uc|lm>
    EVA-controller-id: <uc|lm>/<system name>
    EVA-host: <system name>
-   St: altertech_evaics:<uc|lm>
-   Usn: uuid:UNIQUE_INSTALLATION_ID
+   ST: altertech_evaics:<uc|lm>
+   USN: uuid:UNIQUE_INSTALLATION_ID
    Cache-control: max-age: 60
 
 3rd-party equipment

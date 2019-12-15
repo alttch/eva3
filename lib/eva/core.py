@@ -20,6 +20,7 @@ import sqlalchemy as sa
 import faulthandler
 import gzip
 import timeouter
+import uuid
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -56,7 +57,7 @@ _flags = SimpleNamespace(ignore_critical=False,
                          cvars_modified=False,
                          setup_mode=0)
 
-product = SimpleNamespace(name='', code='', build=None)
+product = SimpleNamespace(name='', code='', build=None, usn='')
 
 config = SimpleNamespace(pid_file=None,
                          log_file=None,
@@ -858,6 +859,9 @@ def start(init_db_only=False):
         from twisted.internet import reactor
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
+    product.usn = str(
+        uuid.uuid5(uuid.NAMESPACE_URL,
+                   f'eva://{config.system_name}/{product.code}'))
 
 
 def register_controller(controller):

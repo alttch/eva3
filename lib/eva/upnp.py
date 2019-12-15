@@ -28,9 +28,9 @@ EVA-build: xxxxxxxx
 EVA-product: <uc|lm>
 EVA-controller-id: <uc|lm>/<system name>
 EVA-host: <system name>
-St: altertech_evaics:<uc|lm>
-Usn: uuid:UNIQUE_INSTALLATION_ID
-Cache-control: max-age: 60
+ST: altertech_evaics:<uc|lm>
+USN: uuid:UNIQUE_INSTALLATION_ID
+Cache-Control: max-age: 60
 """
 
 import logging
@@ -59,7 +59,6 @@ port = 1900
 
 _data = SimpleNamespace(discover_ports=())
 
-# TODO: installation USN
 response_msg = 'HTTP/1.1 200 OK\r\n' + '\r\n'.join([
     '{}: {}'.format(x[0], x[1])
     for x in [('Ext', ''), ('Host', socket.getfqdn()),
@@ -67,8 +66,8 @@ response_msg = 'HTTP/1.1 200 OK\r\n' + '\r\n'.join([
               ('EVA-build', '{build}'), ('EVA-product', '{product}'),
               ('EVA-controller-id',
                '{product}/{system_name}'), ('EVA-host', '{system_name}'),
-              ('ST',
-               'altertech_evaics:{product}'), ('Cache-control', 'max-age: 60')]
+              ('ST', 'altertech_evaics:{product}'), ('USN', 'uuid:{usn}'),
+              ('Cache-Control', 'max-age: 60')]
 ]) + '\r\n'
 
 _flags = SimpleNamespace(dispatcher_active=False)
@@ -279,12 +278,13 @@ def send_response(addr, mx=0):
             logging.debug(f'sending UPnP reply to {addr[0]}')
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.sendto(
-                response_msg.format(
-                    system_name=eva.core.config.system_name,
-                    location=location,
-                    version=eva.core.version,
-                    build=eva.core.product.build,
-                    product=eva.core.product.code).encode('utf-8'), addr)
+                response_msg.format(system_name=eva.core.config.system_name,
+                                    location=location,
+                                    version=eva.core.version,
+                                    build=eva.core.product.build,
+                                    product=eva.core.product.code,
+                                    usn=eva.core.product.usn).encode('utf-8'),
+                addr)
         else:
             logging.debug('skipping UPnP reply to ' +
                           f'{addr[0]}, no suitable API address found')
