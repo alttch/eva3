@@ -1670,7 +1670,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 d != self.announce_msg and \
                 self.discovery_handler and \
                 not eva.core.is_setup_mode() and eva.core.is_started():
-            eva.core.spawn(self.discovery_handler, self.notifier_id, d)
+            eva.core.spawn(self.discovery_handler, self.notifier_id, d,
+                           f'mqtt://{self.notifier_id}:{d}')
             return
         if t == self.api_request_topic and self.api_handler:
             eva.core.spawn(self.api_handler, self.notifier_id, d,

@@ -189,7 +189,8 @@ def load_remote_lms():
         return False
 
 
-def handle_discovered_controller(notifier_id, controller_id, **kwargs):
+def handle_discovered_controller(notifier_id, controller_id, location,
+                                 **kwargs):
     if eva.core.is_shutdown_requested() or not eva.core.is_started():
         return False
     try:

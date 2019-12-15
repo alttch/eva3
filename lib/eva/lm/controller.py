@@ -854,7 +854,8 @@ def destroy_job(r_id):
         return FunctionFailed(e)
 
 
-def handle_discovered_controller(notifier_id, controller_id, **kwargs):
+def handle_discovered_controller(notifier_id, controller_id, location,
+                                 **kwargs):
     if eva.core.is_shutdown_requested() or not eva.core.is_started():
         return False
     try:
@@ -888,11 +889,11 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
         logging.info(
             'Controller {} discovered, appending (discovered from {})'.format(
                 controller_id, notifier_id))
-        return append_controller(
-            'mqtt:{}:{}'.format(notifier_id, controller_id),
-            key='${}'.format(eva.core.config.default_cloud_key),
-            mqtt_update=notifier_id,
-            static=False)
+        return append_controller(location,
+                                 key='${}'.format(
+                                     eva.core.config.default_cloud_key),
+                                 mqtt_update=notifier_id,
+                                 static=False)
     except:
         logging.warning('Unable to process controller, discovered from ' +
                         notifier_id)
