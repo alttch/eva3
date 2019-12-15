@@ -71,7 +71,7 @@ layout = enterprise
 [upnp]
 ; allow UPnP discovery of this controller
 listen = 0.0.0.0
-; discover controllers via uPnP on all interfaces, or list, comma separated
+; discover controllers via UPnP on all interfaces, or list, comma separated
 discover_on = *
 
 [sysapi]
