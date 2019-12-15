@@ -353,7 +353,7 @@ def discovery_worker(**kwargs):
                 controller_id = data.get('Eva-controller-id')
                 location = data.get('Location')
                 if controller_id and location:
-                    result = spawn(eva.api.controller_discovery_handler, 'UPnP',
-                                   controller_id, location).result()
+                    spawn(eva.api.controller_discovery_handler, 'UPnP',
+                          controller_id, location)
         except:
             log_traceback()
