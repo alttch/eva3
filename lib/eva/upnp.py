@@ -317,8 +317,8 @@ def _t_dispatcher(host, port):
                     pass
             if headers.get('man') == 'ssdp:discover' and \
                     headers.get('st') in \
-                        [ 'upnp:rootdevice', 'altertech_evaics',
-                                'altertech_evaics:' + eva.core.product.code]:
+                    [ 'upnp:rootdevice', 'altertech_evaics', 'upnp:all',
+                        'altertech_evaics:' + eva.core.product.code]:
                 try:
                     mx = int(headers.get('mx'))
                 except:
