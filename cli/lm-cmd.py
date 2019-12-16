@@ -1134,6 +1134,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
 
+        sp_controller_rescan = sp_controller.add_parser(
+            'upnp-rescan', help='Rescan controllers via UPnP')
+
     def add_lm_ext_functions(self):
         ap_ext = self.sp.add_parser('ext', help='Macro extension functions')
         sp_ext = ap_ext.add_subparsers(dest='_func',
@@ -1303,6 +1306,7 @@ _api_functions = {
     'controller:disable': 'disable_controller',
     'controller:remove': 'remove_controller',
     'controller:get': 'get_controller',
+    'controller:upnp-rescan': 'upnp_rescan_controllers',
     'ext:list': 'list_ext',
     'ext:get': 'get_ext',
     'ext:mods': 'list_ext_mods',

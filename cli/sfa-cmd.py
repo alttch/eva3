@@ -748,6 +748,9 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
 
+        sp_controller_rescan = sp_controller.add_parser(
+            'upnp-rescan', help='Rescan controllers via UPnP')
+
     def add_sfa_cloud_functions(self):
         ap_cloud = self.sp.add_parser(
             'cloud',
@@ -1480,6 +1483,7 @@ _api_functions = {
     'controller:enable': 'enable_controller',
     'controller:disable': 'disable_controller',
     'controller:remove': 'remove_controller',
+    'controller:upnp-rescan': 'upnp_rescan_controllers',
     'notify:reload': 'reload_clients',
     'notify:restart': 'notify_restart',
     'cloud:deploy': cli.deploy,
