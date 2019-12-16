@@ -39,7 +39,8 @@ from eva.generic import ia_status_failed
 from eva.generic import ia_status_terminated
 from eva.generic import ia_status_completed
 
-from neotasker import background_worker, task_supervisor
+from neotasker import task_supervisor
+from neotasker import BackgroundEventWorker, BackgroundQueueWorker
 
 
 class Item(object):
@@ -308,9 +309,10 @@ class UpdatableItem(Item):
         self.update_interval = 0
         self.update_timeout = eva.core.config.timeout
         self._update_timeout = None
-        self.update_processor = background_worker(
-            event=True, o=self,
-            on_error=eva.core.log_traceback)(self._run_update_processor)
+        self.update_processor = BackgroundEventWorker(
+            o=self,
+            on_error=eva.core.log_traceback,
+            fn=self._run_update_processor)
         self.update_scheduler = None
         self.update_scheduler_lock = threading.Lock()
         self.expiration_checker = None
@@ -775,8 +777,8 @@ class ActiveItem(Item):
         self._term_kill_interval = None
         # Lock() is REQUIRED for LM PLC (released in plc._t_action thread)
         self.queue_lock = threading.Lock()
-        self.action_processor = background_worker(q=True)(
-            self._run_action_processor)
+        self.action_processor = BackgroundQueueWorker(
+            fn=self._run_action_processor, on_error=eva.core.log_traceback)
         self.action_processor.before_queue_get = self.action_before_get_task
         self.action_processor.after_queue_get = self.action_after_get_task
         self.current_action = None

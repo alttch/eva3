@@ -39,7 +39,7 @@ from time import perf_counter
 
 from types import SimpleNamespace
 
-from neotasker import background_worker, task_supervisor
+from neotasker import BackgroundEventWorker, task_supervisor
 
 
 class PHI(object):
@@ -144,9 +144,10 @@ class PHI(object):
             self._update_interval = float(self.phi_cfg.get('update'))
         except:
             self._update_interval = 0
-        self._update_processor = background_worker(
-            event=True, o=self,
-            on_error=eva.core.log_traceback)(self._run_update_processor)
+        self._update_processor = BackgroundEventWorker(
+            o=self,
+            on_error=eva.core.log_traceback,
+            fn=self._run_update_processor)
         self._update_scheduler = None
         self._last_update_state = None
         # benchmarking

@@ -11,7 +11,7 @@ import eva.item
 import time
 import asyncio
 
-from neotasker import background_worker
+from neotasker import BackgroundIntervalWorker, BackgroundQueueWorker
 
 
 class ActiveItemQueue(object):
@@ -115,16 +115,16 @@ class ActiveItemQueue(object):
             self.keep_history = eva.core.config.keep_action_history
         self.action_cleaner_interval = eva.core.config.action_cleaner_interval
 
-        self.action_cleaner = background_worker(
-            action_cleaner,
+        self.action_cleaner = BackgroundIntervalWorker(
+            fn=action_cleaner,
             name='primary_action_cleaner',
             delay=self.action_cleaner_interval,
             o=self,
             on_error=eva.core.log_traceback,
             loop='cleaners')
         self.action_cleaner.start()
-        self.action_processor = background_worker(
-            action_processor,
+        self.action_processor = BackgroundQueueWorker(
+            fn=action_processor,
             name='primary_action_processor',
             on_error=eva.core.log_traceback,
             queue=asyncio.queues.PriorityQueue,
