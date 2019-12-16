@@ -211,7 +211,7 @@ def handle_discovered_controller(notifier_id, controller_id, location,
                         logging.debug(
                             'Controller ' +
                             '{} back online, reloading'.format(controller_id))
-                        uc_pool.reload_controller(c_id, with_delay=True)
+                        uc_pool.trigger_reload_controller(c_id, with_delay=True)
                     return True
             if ct == 'lm':
                 c = lm_pool.controllers.get(c_id)
@@ -225,7 +225,7 @@ def handle_discovered_controller(notifier_id, controller_id, location,
                         logging.debug(
                             'Controller ' +
                             '{} back online, reloading'.format(controller_id))
-                        lm_pool.reload_controller(c_id, with_delay=True)
+                        lm_pool.trigger_reload_controller(c_id, with_delay=True)
                     return True
         finally:
             controller_lock.release()

@@ -565,6 +565,8 @@ class RemoteController(eva.item.Item):
                     self.reload_interval = v
                     self.log_set(prop, v)
                     self.set_modified(save)
+                    if self.pool:
+                        self.pool.restart_controller_reload_worker(self.item_id)
                 return True
             except:
                 return False
@@ -723,8 +725,7 @@ class RemoteControllerPool(object):
 
     def __init__(self, id=None):
         self.controllers = {}
-        self.reload_threads = {}
-        self.reload_thread_flags = {}
+        self.reload_workers = {}
         self.websocket_workers = {}
         self.management_lock = threading.Lock()
         self.item_management_lock = threading.Lock()
@@ -765,7 +766,7 @@ class RemoteControllerPool(object):
                 self.controllers[controller.item_id] = controller
                 controller.pool = self
                 if controller.enabled:
-                    self.start_controller_reload_thread(controller)
+                    self.start_controller_reload_worker(controller)
                 return True
             finally:
                 self.management_lock.release()
@@ -778,7 +779,7 @@ class RemoteControllerPool(object):
             return False
         try:
             if controller_id in self.controllers:
-                self.stop_controller_reload_thread(controller_id, lock=False)
+                self.stop_controller_reload_worker(controller_id, lock=False)
                 del (self.controllers[controller_id])
                 return True
             else:
@@ -788,20 +789,32 @@ class RemoteControllerPool(object):
 
     def enable(self, controller):
         controller_id = controller.item_id
-        if controller_id not in self.reload_threads or \
-                not self.reload_threads[controller_id].is_alive():
-            self.start_controller_reload_thread(controller, lock=True)
+        if controller_id not in self.reload_workers or \
+                not self.reload_workers[controller_id].is_active():
+            self.start_controller_reload_worker(controller, lock=True)
 
     def disable(self, controller_id):
-        if controller_id in self.reload_threads and \
-                self.reload_threads[controller_id].is_alive():
-            self.stop_controller_reload_thread(controller_id)
+        if controller_id in self.reload_workers and \
+                self.reload_workers[controller_id].is_active():
+            self.stop_controller_reload_worker(controller_id)
 
-    def start_controller_reload_thread(self, controller, lock=False):
-        t = threading.Thread(target=self._t_reload_controller,
-                             name='_t_reload_controller_' +
-                             controller.item_type + '_' + controller.item_id,
-                             args=(controller.item_id,))
+    def restart_controller_reload_worker(self, controller_id):
+        worker = self.reload_workers.get(controller_id)
+        controller = self.controllers[controller_id]
+        if worker:
+            if controller.reload_interval > 0:
+                worker.restart(
+                    _interval=self.controllers[controller_id].reload_interval)
+            else:
+                worker.stop()
+
+    def start_controller_reload_worker(self, controller, lock=False):
+        w = BackgroundIntervalWorker(name='reload_controller:' +
+                                     controller.item_type + '/' +
+                                     controller.item_id,
+                                     interval=controller.reload_interval,
+                                     o=controller,
+                                     fn=self._run_reload_controller)
         if lock and \
                 not self.management_lock.acquire(
                         timeout=eva.core.config.timeout):
@@ -811,10 +824,9 @@ class RemoteControllerPool(object):
             eva.core.critical()
             return False
         try:
-            self.reload_thread_flags[controller.item_id] = True
-            self.reload_threads[controller.item_id] = t
+            self.reload_workers[controller.item_id] = w
             self.reload_controller(controller.item_id)
-            t.start()
+            w.start()
             if not controller.mqtt_update and controller.api._uri.startswith(
                     'http'):
                 worker = WebSocketWorker(name='ws_client:' + controller.oid,
@@ -822,8 +834,7 @@ class RemoteControllerPool(object):
                                          pool=self,
                                          o=self)
                 self.websocket_workers[controller.item_id] = worker
-                worker.start(controller=controller,
-                             controller_id=controller.item_id)
+                worker.start()
             else:
                 controller.register_mqtt()
         except:
@@ -835,7 +846,7 @@ class RemoteControllerPool(object):
         if data['s'] == 'state':
             self.process_state(data['d'], controller)
 
-    def stop_controller_reload_thread(self, controller_id, lock=True):
+    def stop_controller_reload_worker(self, controller_id, lock=True):
         if lock and not self.management_lock.acquire(
                 timeout=eva.core.config.timeout):
             logging.critical(
@@ -853,44 +864,34 @@ class RemoteControllerPool(object):
             else:
                 self.controllers[controller_id].unregister_mqtt()
             try:
-                if controller_id in self.reload_threads:
-                    if self.reload_threads[controller_id].is_alive():
-                        self.reload_thread_flags[controller_id] = False
-                        self.reload_threads[controller_id].join()
-                    del (self.reload_thread_flags[controller_id])
-                    del (self.reload_threads[controller_id])
+                if controller_id in self.reload_workers:
+                    self.reload_workers[controller_id].stop()
+                    del (self.reload_workers[controller_id])
             except:
                 eva.core.log_traceback()
         finally:
             if lock: self.management_lock.release()
 
-    def _t_reload_controller(self, controller_id):
-        controller = self.controllers[controller_id]
-        logging.debug('%s reload thread started' % controller.oid)
-        while self.reload_thread_flags[controller_id]:
-            if controller.reload_interval > 0:
-                i = 0
-                while controller.last_reload_time + \
-                        controller.reload_interval > time.perf_counter() and \
-                        self.reload_thread_flags[controller_id]:
-                    time.sleep(eva.core.sleep_step)
-                    i += eva.core.sleep_step
-                try:
-                    self.reload_controller(controller_id)
-                except:
-                    logging.error('%s reload error' % controller.oid)
-                    eva.core.log_traceback()
-            else:
-                time.sleep(eva.core.sleep_step)
-        logging.debug('%s reload thread stopped' % controller.oid)
-        return
+    def _run_reload_controller(self, o, **kwargs):
+        try:
+            self.reload_controller(o.item_id)
+        except:
+            logging.error('%s reload error' % o.oid)
+            eva.core.log_traceback()
 
-    def reload_controller(self, controller_id, with_delay=False):
+    def trigger_reload_controller(self, controller_id, with_delay=True):
+        if with_delay:
+            time.sleep(random.randint(0, 200) / 100)
+        worker = self.reload_workers.get(controller_id)
+        if worker:
+            worker.trigger_threadsafe()
+
+    def reload_controller(self, controller_id):
         if controller_id == 'ALL':
             success = True
             for c in self.controllers.copy():
                 try:
-                    if not self.reload_controller(c, with_delay=with_delay):
+                    if not self.reload_controller(c):
                         raise Exception('reload error')
                 except:
                     eva.core.log_traceback()
@@ -899,8 +900,6 @@ class RemoteControllerPool(object):
         if not controller_id in self.controllers: return None
         controller = self.controllers[controller_id]
         controller.last_reload_time = time.perf_counter()
-        if with_delay:
-            time.sleep(random.randint(0, 200) / 100)
         result = controller.load_remote()
         if result and controller_id in self.websocket_workers:
             self.websocket_workers[controller_id].need_reload_flag = True
@@ -915,11 +914,11 @@ class RemoteControllerPool(object):
         if eva.core.config.keep_action_history:
             self.action_cleaner.stop()
         for i, c in self.controllers.items():
-            self.stop_controller_reload_thread(c.item_id, lock=False)
+            self.stop_controller_reload_worker(c.item_id, lock=False)
         for i, c in self.controllers.items():
-            if c.item_id in self.reload_threads:
+            if c.item_id in self.reload_workers:
                 try:
-                    self.reload_threads[c.item_id].join()
+                    self.reload_workers[c.item_id].join()
                 except:
                     pass
 
@@ -1193,8 +1192,8 @@ class RemoteUCPool(RemoteControllerPool):
         self.item_management_lock.release()
         return True
 
-    def reload_controller(self, controller_id, with_delay=False):
-        result = super().reload_controller(controller_id, with_delay=with_delay)
+    def reload_controller(self, controller_id):
+        result = super().reload_controller(controller_id)
         if not result: return result
         if controller_id == 'ALL': return True
         uc = self.controllers[controller_id]
@@ -1569,8 +1568,8 @@ class RemoteLMPool(RemoteControllerPool):
         self.item_management_lock.release()
         return True
 
-    def reload_controller(self, controller_id, with_delay=False):
-        result = super().reload_controller(controller_id, with_delay=with_delay)
+    def reload_controller(self, controller_id):
+        result = super().reload_controller(controller_id)
         if not result: return result
         if controller_id == 'ALL': return True
         lm = self.controllers[controller_id]

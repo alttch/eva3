@@ -875,7 +875,7 @@ def handle_discovered_controller(notifier_id, controller_id, location,
                     logging.debug(
                         'Controller ' +
                         '{} back online, reloading'.format(controller_id))
-                    uc_pool.reload_controller(c_id, with_delay=True)
+                    uc_pool.trigger_reload_controller(c_id, with_delay=True)
                 return True
         finally:
             controller_lock.release()
@@ -889,11 +889,11 @@ def handle_discovered_controller(notifier_id, controller_id, location,
         logging.info(
             'Controller {} discovered, appending (discovered from {})'.format(
                 controller_id, notifier_id))
-        return append_controller(location,
-                                 key='${}'.format(
-                                     eva.core.config.default_cloud_key),
-                                 mqtt_update=notifier_id if location.startswith('mqtt:') else None,
-                                 static=False)
+        return append_controller(
+            location,
+            key='${}'.format(eva.core.config.default_cloud_key),
+            mqtt_update=notifier_id if location.startswith('mqtt:') else None,
+            static=False)
     except:
         logging.warning('Unable to process controller, discovered from ' +
                         notifier_id)
