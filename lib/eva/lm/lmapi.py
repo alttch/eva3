@@ -1328,7 +1328,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
         """
         i = parse_api_params(kwargs, 'i', 'S')
         controller = eva.lm.controller.get_controller(i)
-        return eva.lm.controller.uc_pool.reload_controller(controller.item_id)
+        return eva.lm.controller.uc_pool.manually_reload_controller(controller.item_id)
 
     @log_i
     @api_need_master

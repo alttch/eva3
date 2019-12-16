@@ -879,6 +879,12 @@ class RemoteControllerPool(object):
             logging.error('%s reload error' % o.oid)
             eva.core.log_traceback()
 
+    def manually_reload_controller(self, controller_id):
+        worker = self.reload_workers.get(controller_id)
+        if worker:
+            worker.trigger_threadsafe(skip=True)
+        return self.reload_controller(controller_id)
+
     def trigger_reload_controller(self, controller_id, with_delay=True):
         if with_delay:
             time.sleep(random.randint(0, 200) / 100)

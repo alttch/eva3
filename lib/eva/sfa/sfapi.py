@@ -854,15 +854,15 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             except:
                 raise InvalidParameter('controller type not specified')
             if ct == 'uc':
-                return eva.sfa.controller.uc_pool.reload_controller(ci)
+                return eva.sfa.controller.uc_pool.manually_reload_controller(ci)
             elif ct == 'lm':
-                return eva.sfa.controller.lm_pool.reload_controller(ci)
+                return eva.sfa.controller.lm_pool.manually_reload_controller(ci)
             raise InvalidParameter('controller type unknown')
         else:
             success = True
-            if not eva.sfa.controller.uc_pool.reload_controller('ALL'):
+            if not eva.sfa.controller.uc_pool.manually_reload_controller('ALL'):
                 success = False
-            if not eva.sfa.controller.lm_pool.reload_controller('ALL'):
+            if not eva.sfa.controller.lm_pool.manually_reload_controller('ALL'):
                 success = False
             if not success:
                 raise FunctionFailed
