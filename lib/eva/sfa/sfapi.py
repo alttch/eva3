@@ -870,6 +870,23 @@ class SFA_API(GenericAPI, GenericCloudAPI):
 
     @log_i
     @api_need_master
+    def upnp_rescan_controllers(self, **kwargs):
+        """
+        rescan controllers via UPnP
+
+        Args:
+            k: .master
+        """
+        parse_api_params(kwargs, '', '')
+        import eva.upnp
+        if eva.upnp.discovery_worker.is_active():
+            eva.upnp.discovery_worker.trigger_threadsafe()
+            return True
+        else:
+            return False
+
+    @log_i
+    @api_need_master
     def list_remote(self, **kwargs):
         """
         get a list of items from connected controllers
@@ -1161,6 +1178,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.matest_controller(k=k, i=ii)
             elif method == 'reload':
                 return self.reload_controller(k=k, i=ii)
+            elif method == 'upnp-rescan':
+                return self.upnp_rescan_controllers(k=k)
         elif rtp == 'core':
             if method == 'reload_clients':
                 return self.reload_clients(k=k)

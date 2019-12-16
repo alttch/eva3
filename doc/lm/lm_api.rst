@@ -1384,6 +1384,21 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** controller id
 
+.. _lmapi_upnp_rescan_controllers:
+
+upnp_rescan_controllers - rescan controllers via UPnP
+-----------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/upnp_rescan_controllers.req
+    :response: http-examples/lmapi/upnp_rescan_controllers.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
 
 .. _lmapi_cat_job:
 

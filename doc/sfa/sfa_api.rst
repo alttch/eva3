@@ -928,6 +928,21 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** controller id
 
+.. _sfapi_upnp_rescan_controllers:
+
+upnp_rescan_controllers - rescan controllers via UPnP
+-----------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/upnp_rescan_controllers.req
+    :response: http-examples/sfapi/upnp_rescan_controllers.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
 
 .. _sfapi_cat_clients:
 

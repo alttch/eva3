@@ -1330,6 +1330,23 @@ class LM_API(GenericAPI, GenericCloudAPI):
         controller = eva.lm.controller.get_controller(i)
         return eva.lm.controller.uc_pool.reload_controller(controller.item_id)
 
+    @log_i
+    @api_need_master
+    def upnp_rescan_controllers(self, **kwargs):
+        """
+        rescan controllers via UPnP
+
+        Args:
+            k: .master
+        """
+        parse_api_params(kwargs, '', '')
+        import eva.upnp
+        if eva.upnp.discovery_worker.is_active():
+            eva.upnp.discovery_worker.trigger_threadsafe()
+            return True
+        else:
+            return False
+
 
 # master functions for lmacro extension management
 
@@ -1636,6 +1653,8 @@ class LM_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.test_controller(k=k, i=ii)
             elif method == 'reload':
                 return self.reload_controller(k=k, i=ii)
+            elif method == 'upnp-rescan':
+                return self.upnp_rescan_controllers(k=k)
         elif rtp == 'lcycle':
             if ii:
                 if method == 'start':

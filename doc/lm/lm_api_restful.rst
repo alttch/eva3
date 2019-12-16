@@ -1359,6 +1359,22 @@ Parameters:
 * **API Key** API key with *master* permissions
 
 
+.. _lmapi_restful_upnp_rescan_controllers:
+
+rescan controllers via UPnP
+---------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/upnp_rescan_controllers.rest
+    :response: http-examples/lmapi/upnp_rescan_controllers.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
 .. _lmapi_restful_set_controller_prop:
 
 set controller connection parameters
