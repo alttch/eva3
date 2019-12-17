@@ -117,6 +117,32 @@
           </div>
 
           <div class="log_block">
+            <div class="log_config">
+              <select id="log_cout" class="log_count custom-select"
+                onchange="eva_sfa_log_records_max = this.value; 
+                  eva_sfa_load_log_entries(false,true)">
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+                <option value="1000">1000</option>
+                <option value="2000">2000</option>
+                <option value="5000">5000</option>
+              </select>
+              <select id="log_level" class="log_level custom-select"
+                onchange="eva_sfa_log_level = this.value;
+                    eva_sfa_set_ws_log_level(this.value);
+                    eva_sfa_load_log_entries(false,true)">
+                <option value="10">debug</option>
+                <option value="20" selected>info</option>
+                <option value="30">warning</option>
+                <option value="40">error</option>
+                <option value="50">critical</option>
+              </select>
+              <div id="log_toggle" class="log_pause" onclick="toggle_log()">
+                Pause
+              </div>
+            </div>
             <div class="nano">
               <div id="logr" class="nano-content">            
               </div>

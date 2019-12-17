@@ -672,8 +672,23 @@ a.controller_link {
 .log_block {
   
   margin: 60px 5px 40px;
-  padding-right: 15px;
   overflow: hidden;
+}
+.log_config {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 0 5px;
+  font: 14px 'TTNorms Regular';
+  color: #4d4d4d;
+}
+.log_pause, .log_resume {
+  margin-bottom: auto;
+  padding: 4px 12px;
+  background-color: #fff;
+  border: 1px solid #4d4d4d;
+  border-radius: 15px;
+  cursor: pointer;
 }
 .log_block .nano {
   border-top: 1px solid #999;
@@ -683,9 +698,13 @@ a.controller_link {
   max-height: 300px;
   margin-right: -21px!important;
 }
+.log_block .nano-pane {
+  right: 0!important;
+}
 .logentry {
   font: 12px 'TTNorms Regular';
   margin-bottom: 10px;
+  padding-right: 20px;
 }
 .logentry_color_10 {
   color: #999;
@@ -801,6 +820,7 @@ a.controller_link {
   background: #fff;
   border: none;
   border-bottom: 2px solid transparent;
+  cursor: pointer;
 }
 .mng_type:focus {
   outline: none;
@@ -808,6 +828,7 @@ a.controller_link {
 .mng_type.mng_btn_active {
   color: #0071bc;
   border-color: #0071bc;
+  cursor: auto;
 }
 .group_ctrl_holder {
   width: 100%;
@@ -818,6 +839,7 @@ a.controller_link {
 .select_ctrl {
   border-radius: 3px;
 }
+.log_count, .log_level,
 .ctrl_cur,
 .group_ctrl_holder > select {
   width: auto;
@@ -926,12 +948,21 @@ a.controller_link {
   width: calc(100% - 90px);
   min-height: 25px;
 }
+#mng_owfs .descr_block:nth-child(2),
+#mng_modbus .descr_block:nth-child(2) {
+  width: calc(100% - 70px);
+}
 .item_name, .item_priority {
   font-family: 'TTNorms Medium';
   color: #4d4d4d; 
 }
 .item_val {
   color: #008000;
+  font: 14px 'TTNorms Medium';
+}
+.item_lock, .item_retries,
+.item_delay, .item_timeout {
+  color: #4d4d4d;
   font: 14px 'TTNorms Medium';
 }
 .buttons_block {
@@ -1190,7 +1221,7 @@ input.device-error:focus {
   font: 16px 'Roboto Regular';
 }
 #modules_sys .descr_block {
-  width: calc(100% - 150px);
+  width: calc(100% - 200px);
   margin-bottom: 0;
 }
 .macro_editor {
@@ -1214,6 +1245,24 @@ input.device-error:focus {
 }
 .macro_editor .eva_sfa_popup_btn_holder {
   max-width: 100%;
+}
+
+
+.diagram_editor {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+.diagram_editor .eva_sfa_popup_content {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+.diagram_editor .eva_sfa_popup_btn_holder {
+  display: none;
 }
 
 
@@ -1244,7 +1293,25 @@ input.device-error:focus {
   padding: 3px 5px;
 }
 .custom-select {
-  background-position: right 0.5rem center; 
+  background-position: right 0.5rem center;
+  cursor: pointer;
+}
+.btn_load {
+  font: 14px 'Roboto Bold';
+  min-width: 80px;
+  height: 33px;
+  margin: 5px 0 0 0;
+  padding: 0 22px;
+  border-radius: 24px;
+  line-height: 30px;
+  cursor: pointer;
+  border: 2px solid #054a77;
+  background: #054a77;
+  color: #ffffff;
+}
+.btn_load:hover {
+  border: 2px solid #1A69A4;
+  background: #1A69A4;
 }
 
 
@@ -1319,7 +1386,7 @@ input.device-error:focus {
     width: calc(100% - 110px);
   }
   #modules_sys .descr_block {
-    width: calc(100% - 160px);
+    width: calc(100% - 220px);
   }
   #mng_lvars .descr_block {
     width: calc(50% - 20px);
@@ -1403,12 +1470,17 @@ input.device-error:focus {
     padding: 3px 10px;
   }
   #modules_sys .descr_block {
-    width: calc(100% - 170px);
+    width: calc(100% - 240px);
   }
   #mng_macros .descr_block:first-child {
     width: calc(100% - 300px);
   }
-
+  #mng_owfs .descr_block,
+  #mng_modbus .descr_block,
+  #mng_owfs .descr_block:nth-child(2),
+  #mng_modbus .descr_block:nth-child(2) {
+    width: calc(50% - 50px);
+  }
 }
 
 @media (min-width: 801px) {
