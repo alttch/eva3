@@ -56,8 +56,6 @@ timeout = 5
 ;pool_min_size = 0
 ; primary thread pool, max workers. comment to use automatic value (nCPUs * 5)
 ;pool_max_size = 100
-; reactor thread pool size (used by some utility workers)
-;reactor_thread_pool = 15
 
 ; exec commands before/after config/db save,
 ; e.g. mount -o remount,rw / (then back to ro)

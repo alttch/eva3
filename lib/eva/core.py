@@ -55,7 +55,8 @@ _flags = SimpleNamespace(ignore_critical=False,
                          started=threading.Event(),
                          shutdown_requested=False,
                          cvars_modified=False,
-                         setup_mode=0)
+                         setup_mode=0,
+                         use_reactor=False)
 
 product = SimpleNamespace(name='', code='', build=None, usn='')
 
@@ -266,8 +267,11 @@ def do_save():
 
 def block():
     _flags.started.set()
-    from twisted.internet import reactor
-    reactor.run(installSignalHandlers=False)
+    if _flags.use_reactor:
+        from twisted.internet import reactor
+        reactor.run(installSignalHandlers=False)
+    else:
+        task_supervisor.block()
 
 
 def is_shutdown_requested():
@@ -282,8 +286,9 @@ def core_shutdown():
     _flags.shutdown_requested = True
     shutdown()
     stop()
-    from twisted.internet import reactor
-    reactor.callFromThread(reactor.stop)
+    if _flags.use_reactor:
+        from twisted.internet import reactor
+        reactor.callFromThread(reactor.stop)
     task_supervisor.stop(wait=True)
 
 

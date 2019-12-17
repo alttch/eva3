@@ -55,6 +55,8 @@ eva.core.init()
 eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'EVA Universal Controller'
 
+eva.core._flags.use_reactor = True
+
 _fork = False
 _eva_ini = None
 
