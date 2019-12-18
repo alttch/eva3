@@ -248,6 +248,7 @@ a.logo::before {
   overflow-y: auto;
 }
 .collapse_btn[data-target="#lv_adv"],
+.collapse_btn[data-target="#un_adv"],
 .controllers_block .collapse_btn {
   position: relative;
   width: 100%;
@@ -259,13 +260,15 @@ a.logo::before {
   font: 16px 'TTNorms Medium';
   color: #4d4d4d;
 }
-.collapse_btn[data-target="#lv_adv"] {
+.collapse_btn[data-target="#lv_adv"],
+.collapse_btn[data-target="#un_adv"] {
   margin-top: 0;
   padding: 0 0 10px;
   font-size: 14px;
   border-bottom: none;
 }
 .collapse_btn[data-target="#lv_adv"]::before,
+.collapse_btn[data-target="#un_adv"]::before,
 .controllers_block .collapse_btn::before {
   content: "";
   position: absolute;
@@ -277,13 +280,15 @@ a.logo::before {
   transform: rotate(-90deg);
   transition: 0.2s;
 }
-.collapse_btn[data-target="#lv_adv"]::before {
+.collapse_btn[data-target="#lv_adv"]::before,
+.collapse_btn[data-target="#un_adv"]::before, {
   bottom: 12px;
   width: 12px;
   height: 8px;
   right: 2px;
 }
 .collapse_btn[data-target="#lv_adv"][aria-expanded="true"]::before,
+.collapse_btn[data-target="#un_adv"][aria-expanded="true"]::before,
 .controllers_block .collapse_btn[aria-expanded="true"]::before {
   transform: rotate(0);
 }
@@ -1313,6 +1318,9 @@ input.device-error:focus {
   border: 2px solid #1A69A4;
   background: #1A69A4;
 }
+.row-thrd {
+  margin-top: 1rem;
+}
 
 
 @media (max-width: 575px) {
@@ -1541,6 +1549,19 @@ input.device-error:focus {
     width: 40%;
     margin-right: 20px;
     margin-bottom: 0;
+  }
+  .edit_unit_dialog_window {
+    width: 640px;
+  }
+  .col-801-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+  .row-thrd {
+    margin-top: 0;
+  }
+  .edit_unit_dialog_window .eva_sfa_popup_btn_holder {
+    max-width: 620px;
   }
 
 }
