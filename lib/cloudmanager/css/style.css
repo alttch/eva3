@@ -249,6 +249,7 @@ a.logo::before {
 }
 .collapse_btn[data-target="#lv_adv"],
 .collapse_btn[data-target="#un_adv"],
+.collapse_btn[data-target="#sn_adv"],
 .controllers_block .collapse_btn {
   position: relative;
   width: 100%;
@@ -261,7 +262,8 @@ a.logo::before {
   color: #4d4d4d;
 }
 .collapse_btn[data-target="#lv_adv"],
-.collapse_btn[data-target="#un_adv"] {
+.collapse_btn[data-target="#un_adv"],
+.collapse_btn[data-target="#sn_adv"] {
   margin-top: 0;
   padding: 0 0 10px;
   font-size: 14px;
@@ -269,6 +271,7 @@ a.logo::before {
 }
 .collapse_btn[data-target="#lv_adv"]::before,
 .collapse_btn[data-target="#un_adv"]::before,
+.collapse_btn[data-target="#sn_adv"]::before,
 .controllers_block .collapse_btn::before {
   content: "";
   position: absolute;
@@ -281,7 +284,8 @@ a.logo::before {
   transition: 0.2s;
 }
 .collapse_btn[data-target="#lv_adv"]::before,
-.collapse_btn[data-target="#un_adv"]::before, {
+.collapse_btn[data-target="#un_adv"]::before,
+.collapse_btn[data-target="#sn_adv"]::before, {
   bottom: 12px;
   width: 12px;
   height: 8px;
@@ -289,6 +293,7 @@ a.logo::before {
 }
 .collapse_btn[data-target="#lv_adv"][aria-expanded="true"]::before,
 .collapse_btn[data-target="#un_adv"][aria-expanded="true"]::before,
+.collapse_btn[data-target="#sn_adv"][aria-expanded="true"]::before,
 .controllers_block .collapse_btn[aria-expanded="true"]::before {
   transform: rotate(0);
 }
@@ -1013,7 +1018,7 @@ a.controller_link {
   pointer-events: none;
 }
 #mng_sensors .descr_block {
-  width: calc(100% - 200px); 
+  width: calc(100% - 220px); 
 }
 .btn_enable, .btn_disable {
   width: 90px;
@@ -1471,7 +1476,7 @@ input.device-error:focus {
     min-height: auto;
   }
   #mng_sensors .descr_block {
-    width: calc(100% - 220px); 
+    width: calc(100% - 240px); 
   }
   .buttons_block > button {
     margin: auto 2px;
