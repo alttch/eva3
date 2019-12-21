@@ -580,14 +580,18 @@ if [ -z $SKIP_CHECK ]; then
     [ $e -ne 0 ] && exit 1
 fi
 
-PYTHON_MINOR=$(python3 --version|cut -d. -f2)
+EVA_DIR=$(dirname "$(realpath "$0")")
+cd "${EVA_DIR}" || exit 11
+
+[ -f ${EVA_DIR}/etc/venv ] && source ${EVA_DIR}/etc/venv
+
+[ -z $PYTHON ] && PYTHON=python3
+
+PYTHON_MINOR=$($PYTHON --version|cut -d. -f2)
 if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
   echo "Python 3.$PYTHON3_MIN is required"
   exit 1
 fi
-
-EVA_DIR=$(dirname "$(realpath "$0")")
-cd "${EVA_DIR}" || exit 11
 
 if [ $USE_SUPERVISOR -eq 1 ]; then
   if ! command -v supervisorctl > /dev/null; then
