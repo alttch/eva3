@@ -470,6 +470,10 @@
   background: #238CDB;
 }
 
+.table.ports-table th, .table.ports-table td {
+  padding: .25rem .5rem;
+}
+
 @media(max-width: 767px){
   .eva_sfa_popup_content {
     padding-bottom: 0;
