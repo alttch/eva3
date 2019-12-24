@@ -949,13 +949,12 @@ a.controller_link {
   word-break: break-word;
 }
 #mng_sensors .descr_block {
-  margin: 0;
+  margin-right: 0;
 }
 #mng_lvars .btn_toggle {
   display: none;
 }
 #mng_units .descr_block {
-  width: calc(100% - 90px);
   min-height: 25px;
 }
 #mng_owfs .descr_block:nth-child(2),
@@ -1016,9 +1015,6 @@ a.controller_link {
 }
 .action_btn_block > button.active {
   pointer-events: none;
-}
-#mng_sensors .descr_block {
-  width: calc(100% - 220px); 
 }
 .btn_enable, .btn_disable {
   width: 90px;
@@ -1476,7 +1472,8 @@ input.device-error:focus {
     min-height: auto;
   }
   #mng_sensors .descr_block {
-    width: calc(100% - 240px); 
+    width: calc(100% - 330px);
+    margin-bottom: 0;
   }
   .buttons_block > button {
     margin: auto 2px;
