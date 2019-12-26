@@ -864,7 +864,6 @@ class GenericHTTPNotifier(GenericNotifier):
                          timeout=timeout)
         self.ssl_verify = ssl_verify
         self.uri = uri
-        self.rs_lock = threading.RLock()
         self.username = username
         self.password = password
         self.xrargs = {'verify': self.ssl_verify}
@@ -875,13 +874,12 @@ class GenericHTTPNotifier(GenericNotifier):
 
     def rsession(self):
         n = 'notifier_{}_rsession'.format(self.notifier_id)
-        with self.rs_lock:
-            if not g.has(n):
-                c = requests.Session()
-                g.set(n, c)
-            else:
-                c = g.get(n)
-            return c
+        if not g.has(n):
+            c = requests.Session()
+            g.set(n, c)
+        else:
+            c = g.get(n)
+        return c
 
     def log_notify(self):
         logging.debug('.sending data notification to ' + \
