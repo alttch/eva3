@@ -228,7 +228,7 @@ Unit parameters
   [priority]". If you want to skip value, but keep priority, set it to null,
   i.e. "status 0 null 50".
 
-* **modbus_status**, **modbus_value** update item state from :ref`Modbus
+* **modbus_status**, **modbus_value** update item state from :ref:`Modbus
   slave<modbus_slave>` memory space.
 
 * **notify_events** 2 (default) - send notifications about all events, 1 -
