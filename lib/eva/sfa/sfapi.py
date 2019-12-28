@@ -90,7 +90,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     def management_api_call(self, **kwargs):
         if not eva.sfa.controller.config.cloud_manager:
             raise MethodNotFound
-        i, f, p = parse_api_params(kwargs, 'ifp', 'SS.')
+        i, f, p, t = parse_api_params(kwargs, 'ifpt', 'SS.n')
         controller = eva.sfa.controller.get_controller(i)
         if not controller: raise ResourceNotFound('controller')
         if isinstance(p, dict):
@@ -99,7 +99,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             params = dict_from_str(p)
         else:
             params = None
-        return controller.management_api_call(f, params)
+        return controller.management_api_call(f, params, timeout=t)
 
     @log_d
     def test(self, **kwargs):
