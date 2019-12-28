@@ -119,6 +119,19 @@ Client</api_clients>`:
 
 Response field *"message"* may contain additional information about error.
 
+Long API calls
+--------------
+
+* Long API calls should be avoided at any cost.
+
+* All critical action and command methods have an option to obtain action ID
+  and check for the result later.
+
+* If long API calls are performed between controllers (e.g. action methods with
+  *wait* param), remote controller timeout should be always greater than max.
+  expected "wait" timeout in API call, otherwise client controller will repeat
+  API calls continuously, up to max **retries** for the target controller.
+
 .. contents::
 
 .. _lmapi_cat_general:
