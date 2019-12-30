@@ -77,6 +77,19 @@ Responses
 Response body may contain additional information encoded in JSON. *{
 "result": "OK" }* and *{ "result": "ERROR" }* in body are not returned.
 
+Long API calls
+--------------
+
+* Long API calls should be avoided at any cost.
+
+* All critical action and command methods have an option to obtain action ID
+  and check for the result later.
+
+* If long API calls are performed between controllers (e.g. action methods with
+  *wait* param), remote controller timeout should be always greater than max.
+  expected "wait" timeout in API call, otherwise client controller will repeat
+  API calls continuously, up to max **retries** for the target controller.
+
 .. contents::
 
 .. _lmapi_restful_cat_general:
@@ -1359,6 +1372,22 @@ Parameters:
 * **API Key** API key with *master* permissions
 
 
+.. _lmapi_restful_upnp_rescan_controllers:
+
+rescan controllers via UPnP
+---------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/lmapi/upnp_rescan_controllers.rest
+    :response: http-examples/lmapi/upnp_rescan_controllers.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
 .. _lmapi_restful_set_controller_prop:
 
 set controller connection parameters
@@ -1750,7 +1779,7 @@ Optionally:
 rotate log file
 ---------------
 
-Equal to kill -HUP <controller_process_pid>.
+Deprecated, not required since 3.2.6
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/log_rotate.rest

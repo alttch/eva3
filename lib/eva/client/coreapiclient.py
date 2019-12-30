@@ -1,23 +1,24 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 version = __version__
 
 import eva.notify
-import base64
 import hashlib
 import uuid
 import threading
-import rapidjson
-from cryptography.fernet import Fernet
+import msgpack
+import logging
+
+import eva.crypto
 
 import eva.notify
 import eva.core
 import requests
 
-from eva.client.apiclient import APIClient
+from eva.client.apiclient import APIClient, pack_msgpack
 
 
 class CoreAPIClient(APIClient):
@@ -32,18 +33,17 @@ class CoreAPIClient(APIClient):
         def data_handler(self, data):
             self.completed.set()
             try:
-                self.code, self.body = data.split('|', 1)
-                self.code = int(self.code)
+                if data[0] != 0: raise ValueError
+                self.code = data[1]
+                self.body = data[2:]
             except:
                 self.code = 500
 
     class Response(object):
         status_code = 500
         text = ''
+        content = ''
         ok = False
-
-        def json(self):
-            return rapidjson.loads(self.text)
 
     def __init__(self):
         super().__init__()
@@ -54,10 +54,12 @@ class CoreAPIClient(APIClient):
         self.protocol_mode = 0
 
     def set_uri(self, uri):
-        # mqtt uri format: mqtt:notifier_id:type/controller
+        # mqtt uri format: mqtt://notifier_id:type/controller
         # or mqtt:type/controller or type/controller@notifier
         if uri.startswith('mqtt:'):
             n = uri[5:]
+            if n.startswith('//'):
+                n = n[2:]
             if n.find(':') != -1:
                 notifier_id, controller_id = n.split(':')
             else:
@@ -111,30 +113,54 @@ class CoreAPIClient(APIClient):
         else:
             _key_id, _key = key_id, key
         super().set_key(_key)
-        _k = base64.b64encode(hashlib.sha256(str(_key).encode()).digest())
-        self.ce = Fernet(_k)
         self._key_id = _key_id
+        self._private_key = hashlib.sha512(str(_key).encode()).digest()
 
-    def do_call_mqtt(self, payload, t):
+    def do_call_mqtt(self, payload, t, rid=None):
+        """
+        Protocol description:
+
+        API request is sent to controller MQTT API topic
+
+        Request format:
+
+        0 - 0x00, binary packet
+        1 - 0x02, protocol version
+        2 - API key ID and binary request frame (RF), combined with 0x00
+
+        RF format:
+
+        0-15    Binary hexadecimal request ID, padded
+        16-end  MessagePack request payload
+
+        API response will be sent to response_topic/{request_ID_in_hex}
+        """
         n = eva.notify.get_notifier(self._notifier_id)
         r = self.Response()
         if not n: return r
-        if isinstance(payload, dict) and 'id' in payload:
-            request_id = payload['id']
+        if rid is None:
+            rid = uuid.uuid4().bytes
         else:
-            request_id = str(uuid.uuid4())
-        data = '{}|{}'.format(request_id, rapidjson.dumps(payload))
+            if len(rid) > 16:
+                logging.error('request ID is longer than 16 bytes, aborting')
+                return r
+            rid.ljust(16, b'\x00')
+        request_id = rid.hex()
+        data = rid + pack_msgpack(payload)
         cb = self.MQTTCallback()
         n.send_api_request(
-            request_id, self._product_code + '/' + self._uri, '|{}|{}'.format(
-                self._key_id,
-                self.ce.encrypt(data.encode()).decode()), cb.data_handler)
+            request_id, self._product_code + '/' + self._uri,
+            b'\x00\x02' + self._key_id.encode() + b'\x00' +
+            eva.crypto.encrypt(data, self._private_key, key_is_hash=True),
+            cb.data_handler)
         if not cb.completed.wait(self._timeout):
             n.finish_api_request(request_id)
             raise requests.Timeout()
         if cb.code:
             try:
-                r.text = self.ce.decrypt(cb.body.encode()).decode()
+                r.content = eva.crypto.decrypt(cb.body,
+                                               self._private_key,
+                                               key_is_hash=True)
                 if cb.code == 200:
                     r.ok = True
                 r.status_code = cb.code

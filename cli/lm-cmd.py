@@ -1,17 +1,19 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import sys
 import os
 import argparse
 import textwrap
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-dir_runtime = os.path.realpath(
-    os.path.dirname(os.path.realpath(__file__)) + '/../runtime')
-sys.path.append(dir_lib)
+from pathlib import Path
+
+dir_eva = Path(__file__).absolute().parents[1].as_posix()
+dir_lib = dir_eva + '/lib'
+dir_runtime = dir_eva + '/runtime'
+sys.path.insert(0, dir_lib)
 
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
@@ -837,7 +839,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             metavar='ID').completer = self.ComplCycle(self)
 
         sp_cycle_stop = sp_cycle.add_parser('reset',
-                                            help='Reset cycle stats (avg)')
+                                            help='Reset cycle stats')
         sp_cycle_stop.add_argument(
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
@@ -1132,6 +1134,9 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='Controller ID',
             metavar='ID').completer = self.ComplController(self)
 
+        sp_controller_rescan = sp_controller.add_parser(
+            'upnp-rescan', help='Rescan controllers via UPnP')
+
     def add_lm_ext_functions(self):
         ap_ext = self.sp.add_parser('ext', help='Macro extension functions')
         sp_ext = ap_ext.add_subparsers(dest='_func',
@@ -1301,6 +1306,7 @@ _api_functions = {
     'controller:disable': 'disable_controller',
     'controller:remove': 'remove_controller',
     'controller:get': 'get_controller',
+    'controller:upnp-rescan': 'upnp_rescan_controllers',
     'ext:list': 'list_ext',
     'ext:get': 'get_ext',
     'ext:mods': 'list_ext_mods',
@@ -1326,11 +1332,12 @@ _pd_cols = {
         'nvalue'
     ],
     'list_macros': ['id', 'description', 'action_enabled'],
-    'list_cycles': ['id', 'description', 'status', 'int', 'iter', 'avg'],
+    'list_cycles': ['id', 'description', 'status', 'int', 'iter'],
     'list_controllers': [
         'id', 'type', 'enabled', 'connected', 'proto', 'version', 'build',
         'description'
     ],
+    'list_ext': ['id', 'mod'],
     'list_ext_': ['id', 'mod', 'description', 'version'],
     'list_ext_mods': ['mod', 'description', 'version', 'api'],
     'modhelp_ext': ['name', 'type', 'required', 'help']

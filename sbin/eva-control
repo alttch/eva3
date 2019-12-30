@@ -98,7 +98,7 @@ status)
       controller_cmd $2 status A || exit 1
     else
       for C in ${CS}; do
-        echo -n "${C^^}: "
+        [ "x$(eval "echo \$${C^^}_ENABLED")" == "xyes" ] && echo -n "${C^^}: "
         controller_cmd ${C} status
       done
     fi

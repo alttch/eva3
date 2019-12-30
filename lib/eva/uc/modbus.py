@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 default_delay = 0.02
 
@@ -23,8 +23,6 @@ from eva.tools import safe_int
 from types import SimpleNamespace
 
 import threading
-
-from pyaltt import background_job
 
 with_ports_lock = eva.core.RLocker('uc/modbus')
 
@@ -272,7 +270,7 @@ def modbus_slave_block(size):
                 if addr not in self.event_handlers:
                     return
                 for f in self.event_handlers[addr]:
-                    background_job(f)(addr, values)
+                    eva.core.spawn(f, addr, values)
             finally:
                 self.event_handlers_lock.release()
 
@@ -360,29 +358,30 @@ def start():
         'd': slave_di
     })
 
-    slave_store = modbus_datastore.ModbusSlaveContext(
-        di=slave_di, co=slave_co, hr=slave_hr, ir=slave_ir, zero_mode=True)
+    slave_store = modbus_datastore.ModbusSlaveContext(di=slave_di,
+                                                      co=slave_co,
+                                                      hr=slave_hr,
+                                                      ir=slave_ir,
+                                                      zero_mode=True)
 
     for v in config.slave['tcp']:
         try:
-            modbus_server.StartTcpServer(
-                modbus_datastore.ModbusServerContext(
-                    slaves={v['a']: slave_store}, single=False),
-                identity=slave_identity,
-                address=(v['h'], v['p']),
-                defer_reactor_run=True)
+            modbus_server.StartTcpServer(modbus_datastore.ModbusServerContext(
+                slaves={v['a']: slave_store}, single=False),
+                                         identity=slave_identity,
+                                         address=(v['h'], v['p']),
+                                         defer_reactor_run=True)
         except:
             logging.error('Unable to start Modbus slave tcp:{}:{}'.format(
                 v['h'], v['p']))
             eva.core.log_traceback()
     for v in config.slave['udp']:
         try:
-            modbus_server.StartUdpServer(
-                modbus_datastore.ModbusServerContext(
-                    slaves={v['a']: slave_store}, single=False),
-                identity=slave_identity,
-                address=(v['h'], v['p']),
-                defer_reactor_run=True)
+            modbus_server.StartUdpServer(modbus_datastore.ModbusServerContext(
+                slaves={v['a']: slave_store}, single=False),
+                                         identity=slave_identity,
+                                         address=(v['h'], v['p']),
+                                         defer_reactor_run=True)
         except:
             logging.error('Unable to start Modbus slave udp:{}:{}'.format(
                 v['h'], v['p']))

@@ -379,6 +379,52 @@ list of integers only. To accept extended state (*status, value* tuple or a
 list of tuples) for **set**, **value** string must be specified in
 **__required__** header list variable.
 
+Handling timeouts
+=================
+
+Starting from DriverAPI v8, timeout handling can be easily performed with
+**timeouter** library (https://github.com/alttch/timeouter). The library is
+included into EVA ICS by default and can be imported by any PHI module.
+
+When PHI is executed, timeouter library is already initialized for the running
+thread, and you may use its methods:
+
+.. code-block:: python
+
+   import timeouter as to
+   from eva.uc.driverapi import log_traceback
+
+   # .........
+
+      def get(self, port=None, cfg=None, timeout=0):
+         # Some call requires 3 seconds, abort if we will be out of time
+         if not to.has(3): return None
+         # does the same
+         if to.get() < 3: return None
+         try:
+            # .... perform some calls
+            # calculate timeout for external call:
+            # e.g. you must specify timeout for some function, which will
+            # perform 3 retries (4 total attempts) to get data from the
+            # equipment:
+            somefunc(retries=3, timeout=to.get(laps=4))
+
+            # raises eva.exceptions.TimeoutException
+            # if timeout has expired
+            to.check()
+         except:
+            log_traceback()
+            return None
+
+Parameter **timeout** for *get*/*set* functions is filled for the backward
+compatibility.
+
+.. note::
+
+   Allowed timeout is always slightly lower than specified in
+   *action_timeout*/*update_timeout*, as some part of time is used to execute
+   driver LPI code.
+
 Handling events
 ===============
 
@@ -791,6 +837,49 @@ Let's deal with an equipment which has MQTT topic *topic/POWER* with values
         # then handle PHI event
         handle_phi_event(self, 1, self.get())
 
+Working with LoRaWAN
+====================
+
+You may use EVA built-in LoRaWAN network server to receive forwarded UDP
+packets from LoRa gateways and then parse them in PHI.
+
+.. warning::
+
+    LoRa custom handlers may be started in different threads. Don't forget to
+    use locking mechanisms if required.
+
+.. code-block:: python
+
+    import eva.lora as lora
+
+    @phi_constructor
+    def __init__(self, **kwargs):
+    # ....
+
+    def start(self):
+        # subscribe to LoRa server using PHI ID as handler ID
+        lora.subscribe(__name__, self.lora_handler)
+
+    def stop(self):
+        # don't forget to unsubscribe when PHI is unloaded
+        lora.unsubscribe(__name__, self.lora_handler)
+
+    def lora_handler(self, pk, payload, address):
+        """
+        The handler gets all LoRa packet, sent to UC
+
+        Args:
+            pk: full packet payload (dict, decoded from JSON)
+            payload: RF packet payload
+            address: IP address of the gateway the packet is from
+        """
+        self.log_debug('got data: {} from {}'.format(payload, address))
+        # process the data
+        # ...
+
+It's not necessary to send *PUSH_ACK* packets back to LoRa equipment, EVA ICS
+UC handles this by itself.
+
 Working with UDP API
 ====================
 
@@ -833,7 +922,6 @@ managed by handler).
         self.log_debug('got data: {} from {}'.format(_data, address))
         # process the data
         # ...
-
 
 Discovering SSDP hardware
 =========================

@@ -1,31 +1,24 @@
-EVA ICS 3.2.4
+EVA ICS 3.2.6
 *************
 
 What's new
 ==========
 
-New features:
+- MessagePack support
 
-Complete change log: https://get.eva-ics.com/3.2.5/stable/CHANGELOG.html
+Complete change log: https://get.eva-ics.com/3.2.6/stable/CHANGELOG.html
 
 Update instructions
 ===================
 
-Install and enjoy
+WARNING: Python 3.6+ is required.
 
-Notes
-=====
+EVA ICS 3.2.6 can handle API calls via MQTT from the previous versions, but not
+vice-versa.
 
-LM PLC chill-out logic changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+It's recommended to update controllers in order:
 
-Old way:
+* nodes with UC instances
+* nodes with LM PLC instances
+* nodes with SFA instances
 
- - rule during chill-out period is completely ignored, rule match isn't checked
-   after chill-out time
-
-New way:
-
- - rule during chill-out period is ignored, however if rule event is triggered
-   during chill-out time, action is executed after chill-out period if rule
-   still matches the condition.

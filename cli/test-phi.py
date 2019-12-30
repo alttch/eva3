@@ -1,14 +1,13 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import sys
-import os
 import argparse
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 
 import eva.core
 import eva.uc.driverapi as da
@@ -62,9 +61,8 @@ def print_result(result):
 
 
 def print_command(cmd):
-    print('{} {}'.format(
-        colored('> ', color='white'),
-        colored(cmd, color='yellow', attrs=['bold'])))
+    print('{} {}'.format(colored('> ', color='white'),
+                         colored(cmd, color='yellow', attrs=['bold'])))
 
 
 class PHITester(object):
@@ -148,28 +146,25 @@ _me = 'EVA ICS PHI tester version {}'.format(__version__)
 
 ap = argparse.ArgumentParser(description=_me)
 
-ap.add_argument(
-    '-T',
-    '--timeout',
-    help='default PHI timeout (default: 10 sec)',
-    dest='timeout',
-    type=float,
-    metavar='TIMEOUT',
-    default=10)
-ap.add_argument(
-    '-D',
-    '--debug',
-    help='Enable debug messages',
-    dest='debug',
-    action='store_true',
-    default=False)
-ap.add_argument(
-    '-R',
-    '--raw-output',
-    help='Print raw result (no colors)',
-    dest='raw',
-    action='store_true',
-    default=False)
+ap.add_argument('-T',
+                '--timeout',
+                help='default PHI timeout (default: 10 sec)',
+                dest='timeout',
+                type=float,
+                metavar='TIMEOUT',
+                default=10)
+ap.add_argument('-D',
+                '--debug',
+                help='Enable debug messages',
+                dest='debug',
+                action='store_true',
+                default=False)
+ap.add_argument('-R',
+                '--raw-output',
+                help='Print raw result (no colors)',
+                dest='raw',
+                action='store_true',
+                default=False)
 ap.add_argument('fname', metavar='TEST_FILE', help='Test scenario file')
 
 try:

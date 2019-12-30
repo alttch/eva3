@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import eva.core
 import eva.runner
@@ -69,32 +69,30 @@ class UCItem(eva.item.Item):
     def register_modbus_value_updates(self):
         if self.modbus_value:
             try:
-                eva.uc.modbus.register_handler(
-                    self.modbus_value_addr,
-                    self.modbus_update_value,
-                    register=self.modbus_value_reg)
+                eva.uc.modbus.register_handler(self.modbus_value_addr,
+                                               self.modbus_update_value,
+                                               register=self.modbus_value_reg)
             except:
                 eva.core.log_traceback()
 
     def unregister_modbus_value_updates(self):
         if self.modbus_value:
             try:
-                eva.uc.modbus.unregister_handler(
-                    self.modbus_value_addr,
-                    self.modbus_update_value,
-                    register=self.modbus_value_reg)
+                eva.uc.modbus.unregister_handler(self.modbus_value_addr,
+                                                 self.modbus_update_value,
+                                                 register=self.modbus_value_reg)
             except:
                 eva.core.log_traceback()
 
     def do_notify(self, skip_subscribed_mqtt=False, for_destroy=False):
-        super().notify(
-            skip_subscribed_mqtt=skip_subscribed_mqtt, for_destroy=for_destroy)
+        super().notify(skip_subscribed_mqtt=skip_subscribed_mqtt,
+                       for_destroy=for_destroy)
         if eva.core.config.db_update == 1:
             eva.uc.controller.save_item_state(self)
 
     def notify(self, skip_subscribed_mqtt=False, for_destroy=False):
-        self.do_notify(
-            skip_subscribed_mqtt=skip_subscribed_mqtt, for_destroy=for_destroy)
+        self.do_notify(skip_subscribed_mqtt=skip_subscribed_mqtt,
+                       for_destroy=for_destroy)
         eva.uc.controller.handle_event(self)
 
     def set_prop(self, prop, val=None, save=False):
@@ -160,8 +158,8 @@ class UCItem(eva.item.Item):
                 self.modbus_value_addr = addr
                 self.modbus_value_multiplier = multiplier
                 self.modbus_value_signed = signed
-                self.modbus_update_value(addr, eva.uc.modbus.get_data(
-                    addr, reg))
+                self.modbus_update_value(addr,
+                                         eva.uc.modbus.get_data(addr, reg))
                 self.register_modbus_value_updates()
             self.log_set('modbus_value', val)
             self.set_modified(save)
@@ -455,8 +453,11 @@ class UCItem(eva.item.Item):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         if config or props:
             d['maintenance_duration'] = self.maintenance_duration
             if self.update_driver_config:
@@ -563,8 +564,11 @@ class UCItem(eva.item.Item):
         r_ixiq = False
         if condition:
             c = condition.replace(' ', '').replace('>=', '}').replace(
-                '=>', '}').replace('<=', '{').replace('=<', '{').replace(
-                    '===', '=').replace('==', '=')
+                '=>',
+                '}').replace('<=',
+                             '{').replace('=<',
+                                          '{').replace('===',
+                                                       '=').replace('==', '=')
             vals = re.split('[<>}{=]', c)
             if len(vals) not in [2, 3]:
                 raise Exception('invalid condition length')

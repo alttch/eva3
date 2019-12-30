@@ -1,17 +1,16 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import sys
-import os
 import argparse
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 
 import eva.core
 import eva.tools
@@ -21,8 +20,9 @@ import eva.api
 _me = 'EVA ICS MQTT test version %s' % __version__
 
 ap = argparse.ArgumentParser(description=_me)
-ap.add_argument(
-    help='MQTT user:pass@host:port/space', dest='_mqtt', metavar='MQTT')
+ap.add_argument(help='MQTT user:pass@host:port/space',
+                dest='_mqtt',
+                metavar='MQTT')
 ap.add_argument('--cafile', help='CA File', dest='_ca_file', metavar='FILE')
 ap.add_argument('--cert', help='Cert file', dest='_cert_file', metavar='FILE')
 ap.add_argument('--key', help='Key File', dest='_key_file', metavar='FILE')
@@ -62,16 +62,15 @@ else:
 
 mqtt_host, mqtt_port = eva.tools.parse_host_port(mq, 1883)
 
-n = eva.notify.MQTTNotifier(
-    notifier_id='test',
-    host=mqtt_host,
-    port=mqtt_port,
-    space=space,
-    username=user if user else None,
-    password=password if password else None,
-    ca_certs=a._ca_file,
-    certfile=a._cert_file,
-    keyfile=a._key_file)
+n = eva.notify.MQTTNotifier(notifier_id='test',
+                            host=mqtt_host,
+                            port=mqtt_port,
+                            space=space,
+                            username=user if user else None,
+                            password=password if password else None,
+                            ca_certs=a._ca_file,
+                            certfile=a._cert_file,
+                            keyfile=a._key_file)
 
 if n.test():
     print('OK')

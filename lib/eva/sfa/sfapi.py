@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import cherrypy
 import os
@@ -90,7 +90,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     def management_api_call(self, **kwargs):
         if not eva.sfa.controller.config.cloud_manager:
             raise MethodNotFound
-        i, f, p = parse_api_params(kwargs, 'ifp', 'SS.')
+        i, f, p, t = parse_api_params(kwargs, 'ifpt', 'SS.n')
         controller = eva.sfa.controller.get_controller(i)
         if not controller: raise ResourceNotFound('controller')
         if isinstance(p, dict):
@@ -99,7 +99,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             params = dict_from_str(p)
         else:
             params = None
-        return controller.management_api_call(f, params)
+        return controller.management_api_call(f, params, timeout=t)
 
     @log_d
     def test(self, **kwargs):
@@ -231,14 +231,13 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if not unit: raise ResourceNotFound
         elif not apikey.check(k, unit): raise AccessDenied
         return ecall(
-            eva.sfa.controller.uc_pool.action(
-                unit_id=oid_to_id(i, 'unit'),
-                status=s,
-                value=v,
-                wait=w,
-                uuid=u,
-                priority=p,
-                q=q))
+            eva.sfa.controller.uc_pool.action(unit_id=oid_to_id(i, 'unit'),
+                                              status=s,
+                                              value=v,
+                                              wait=w,
+                                              uuid=u,
+                                              priority=p,
+                                              q=q))
 
     @log_i
     def action_toggle(self, **kwargs):
@@ -266,8 +265,12 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if not unit: raise ResourceNotFound
         elif not apikey.check(k, unit): raise AccessDenied
         return ecall(
-            eva.sfa.controller.uc_pool.action_toggle(
-                unit_id=oid_to_id(i, 'unit'), wait=w, uuid=u, priority=p, q=q))
+            eva.sfa.controller.uc_pool.action_toggle(unit_id=oid_to_id(
+                i, 'unit'),
+                                                     wait=w,
+                                                     uuid=u,
+                                                     priority=p,
+                                                     q=q))
 
     @log_i
     def result(self, **kwargs):
@@ -313,12 +316,17 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             raise ResourceNotFound
         if item.item_type == 'unit':
             return ecall(
-                eva.sfa.controller.uc_pool.result(
-                    unit_id=oid_to_id(i, 'unit'), uuid=u, group=g, status=s))
+                eva.sfa.controller.uc_pool.result(unit_id=oid_to_id(i, 'unit'),
+                                                  uuid=u,
+                                                  group=g,
+                                                  status=s))
         elif item.item_type == 'lmacro':
             return ecall(
-                eva.sfa.controller.lm_pool.result(
-                    macro_id=oid_to_id(i, 'lmacro'), uuid=u, group=g, status=s))
+                eva.sfa.controller.lm_pool.result(macro_id=oid_to_id(
+                    i, 'lmacro'),
+                                                  uuid=u,
+                                                  group=g,
+                                                  status=s))
         else:
             raise ResourceNotFound
 
@@ -391,8 +399,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if not unit: raise ResourceNotFound
         elif not apikey.check(k, unit): raise AccessDenied
         result = ecall(
-            eva.sfa.controller.uc_pool.terminate(
-                unit_id=oid_to_id(i, 'unit'), uuid=u))
+            eva.sfa.controller.uc_pool.terminate(unit_id=oid_to_id(i, 'unit'),
+                                                 uuid=u))
         if result is True and i:
             return True, api_result_accepted
         else:
@@ -466,8 +474,9 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if not lvar: raise ResourceNotFound
         elif not apikey.check(k, lvar): raise AccessDenied
         return ecall(
-            eva.sfa.controller.lm_pool.set(
-                lvar_id=oid_to_id(i, 'lvar'), status=s, value=v))
+            eva.sfa.controller.lm_pool.set(lvar_id=oid_to_id(i, 'lvar'),
+                                           status=s,
+                                           value=v))
 
     @log_i
     def reset(self, **kwargs):
@@ -652,14 +661,13 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if not macro: raise ResourceNotFound
         elif not apikey.check(k, macro): raise AccessDenied
         return ecall(
-            eva.sfa.controller.lm_pool.run(
-                macro=oid_to_id(i, 'lmacro'),
-                args=a,
-                kwargs=kw,
-                priority=p,
-                q_timeout=q,
-                wait=w,
-                uuid=u))
+            eva.sfa.controller.lm_pool.run(macro=oid_to_id(i, 'lmacro'),
+                                           args=a,
+                                           kwargs=kw,
+                                           priority=p,
+                                           q_timeout=q,
+                                           wait=w,
+                                           uuid=u))
 
     @log_d
     def list_cycles(self, **kwargs):
@@ -791,24 +799,22 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         uri, group, key, makey, mqtt_update, ssl_verify, timeout, \
                 save = parse_api_params(kwargs, 'ugaxmstS', 'Sssssbnb')
         if group == 'uc' or group is None:
-            c = eva.sfa.controller.append_uc(
-                uri=uri,
-                key=key,
-                makey=makey,
-                mqtt_update=mqtt_update,
-                ssl_verify=ssl_verify,
-                timeout=timeout,
-                save=save)
+            c = eva.sfa.controller.append_uc(uri=uri,
+                                             key=key,
+                                             makey=makey,
+                                             mqtt_update=mqtt_update,
+                                             ssl_verify=ssl_verify,
+                                             timeout=timeout,
+                                             save=save)
             if c: return c.serialize(info=True)
         if group == 'lm' or group is None:
-            c = eva.sfa.controller.append_lm(
-                uri=uri,
-                key=key,
-                makey=makey,
-                mqtt_update=mqtt_update,
-                ssl_verify=ssl_verify,
-                timeout=timeout,
-                save=save)
+            c = eva.sfa.controller.append_lm(uri=uri,
+                                             key=key,
+                                             makey=makey,
+                                             mqtt_update=mqtt_update,
+                                             ssl_verify=ssl_verify,
+                                             timeout=timeout,
+                                             save=save)
             if c: return c.serialize(info=True)
         raise FunctionFailed
 
@@ -848,19 +854,36 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             except:
                 raise InvalidParameter('controller type not specified')
             if ct == 'uc':
-                return eva.sfa.controller.uc_pool.reload_controller(ci)
+                return eva.sfa.controller.uc_pool.manually_reload_controller(ci)
             elif ct == 'lm':
-                return eva.sfa.controller.lm_pool.reload_controller(ci)
+                return eva.sfa.controller.lm_pool.manually_reload_controller(ci)
             raise InvalidParameter('controller type unknown')
         else:
             success = True
-            if not eva.sfa.controller.uc_pool.reload_controller('ALL'):
+            if not eva.sfa.controller.uc_pool.manually_reload_controller('ALL'):
                 success = False
-            if not eva.sfa.controller.lm_pool.reload_controller('ALL'):
+            if not eva.sfa.controller.lm_pool.manually_reload_controller('ALL'):
                 success = False
             if not success:
                 raise FunctionFailed
             return True
+
+    @log_i
+    @api_need_master
+    def upnp_rescan_controllers(self, **kwargs):
+        """
+        rescan controllers via UPnP
+
+        Args:
+            k: .master
+        """
+        parse_api_params(kwargs, '', '')
+        import eva.upnp
+        if eva.upnp.discovery_worker.is_active():
+            eva.upnp.discovery_worker.trigger_threadsafe()
+            return True
+        else:
+            return False
 
     @log_i
     @api_need_master
@@ -944,9 +967,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                     for a, v in d.copy().items():
                         if not group or eva.item.item_match(v, [], [group]):
                             result.append(v.serialize(full=True))
-        return sorted(
-            sorted(result, key=lambda k: k['oid']),
-            key=lambda k: ['controller_id'])
+        return sorted(sorted(result, key=lambda k: k['oid']),
+                      key=lambda k: ['controller_id'])
 
     @api_need_master
     def reload_clients(self, **kwargs):
@@ -1013,8 +1035,8 @@ class SFA_HTTP_API_abstract(SFA_API, GenericHTTP_API):
                 result += self.list_cycles(k=k, g=g)
             except:
                 pass
-        return sorted(
-            sorted(result, key=lambda k: k['oid']), key=lambda k: k['type'])
+        return sorted(sorted(result, key=lambda k: k['oid']),
+                      key=lambda k: k['type'])
 
 
 class SFA_HTTP_API(SFA_HTTP_API_abstract, GenericHTTP_API):
@@ -1050,8 +1072,9 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
             if kind == 'groups':
                 return self.groups(k=k, p=rtp)
             elif kind == 'history':
-                return self.state_history(
-                    k=k, i='{}:{}'.format(rtp, ii), **props)
+                return self.state_history(k=k,
+                                          i='{}:{}'.format(rtp, ii),
+                                          **props)
             elif for_dir:
                 return self.state(k=k, p=rtp, g=ii, **props)
             else:
@@ -1155,6 +1178,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 return self.matest_controller(k=k, i=ii)
             elif method == 'reload':
                 return self.reload_controller(k=k, i=ii)
+            elif method == 'upnp-rescan':
+                return self.upnp_rescan_controllers(k=k)
         elif rtp == 'core':
             if method == 'reload_clients':
                 return self.reload_clients(k=k)
@@ -1195,8 +1220,10 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
         elif rtp == 'controller':
             if ii:
                 if props:
-                    return super().set_controller_prop(
-                        k=k, i=ii, save=save, v=props)
+                    return super().set_controller_prop(k=k,
+                                                       i=ii,
+                                                       save=save,
+                                                       v=props)
                 else:
                     return True
         raise MethodNotFound
@@ -1321,8 +1348,8 @@ def serve_json_yml(fname, dts='ui'):
             return _tool_error_response(e)
         if cas == 'json':
             try:
-                data = format_json(
-                    data, minimal=not eva.core.config.development)
+                data = format_json(data,
+                                   minimal=not eva.core.config.development)
             except:
                 return _tool_error_response(e)
             cherrypy.serving.response.headers[
@@ -1392,10 +1419,12 @@ class UI_ROOT():
     _cp_config = {'tools.j2.on': True, 'tools.jconverter.on': True}
 
     def __init__(self):
-        cherrypy.tools.j2 = cherrypy.Tool(
-            'before_handler', j2_hook, priority=100)
-        cherrypy.tools.jconverter = cherrypy.Tool(
-            'before_handler', json_yml_hook, priority=100)
+        cherrypy.tools.j2 = cherrypy.Tool('before_handler',
+                                          j2_hook,
+                                          priority=100)
+        cherrypy.tools.jconverter = cherrypy.Tool('before_handler',
+                                                  json_yml_hook,
+                                                  priority=100)
 
     @cherrypy.expose
     def index(self, **kwargs):
@@ -1450,7 +1479,8 @@ class SFA_HTTP_Root:
                     'remote controller code {}'.format(code))
             cherrypy.serving.response.headers['Content-Type'] = result[
                 'content_type']
-            return base64.b64decode(result['data'])
+            # return base64.b64decode(result['data'])
+            return result['data']
         try:
             if f.find('//') == -1: _f = 'http://' + f
             else: _f = f
@@ -1567,14 +1597,14 @@ def start():
     http_api = SFA_HTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
     cherrypy.tree.mount(jrpc, jrpc.api_uri)
-    cherrypy.tree.mount(
-        SFA_REST_API(),
-        SFA_REST_API.api_uri,
-        config={
-            '/': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
-            }
-        })
+    cherrypy.tree.mount(SFA_REST_API(),
+                        SFA_REST_API.api_uri,
+                        config={
+                            '/': {
+                                'request.dispatch':
+                                    cherrypy.dispatch.MethodDispatcher()
+                            }
+                        })
     cherrypy.tree.mount(
         SFA_HTTP_Root(),
         '/',
@@ -1589,9 +1619,9 @@ def start():
             },
             '/favicon.ico': {
                 'tools.staticfile.on':
-                True,
+                    True,
                 'tools.staticfile.filename':
-                eva.core.dir_eva + '/lib/eva/i/favicon.ico'
+                    eva.core.dir_eva + '/lib/eva/i/favicon.ico'
             }
         })
 
@@ -1600,11 +1630,12 @@ def start():
         '/ui',
         config={
             '/':
-            dict_merge({
-                'tools.sessions.on': False,
-                'tools.staticdir.dir': eva.core.dir_eva + '/ui',
-                'tools.staticdir.on': True
-            }, tiny_httpe)
+                dict_merge(
+                    {
+                        'tools.sessions.on': False,
+                        'tools.staticdir.dir': eva.core.dir_eva + '/ui',
+                        'tools.staticdir.on': True
+                    }, tiny_httpe)
         })
     eva.sfa.cloudmanager.start()
 

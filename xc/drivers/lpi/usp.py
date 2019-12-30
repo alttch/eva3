@@ -27,6 +27,7 @@ transmitting to PHIs.
 """
 
 from time import time
+import timeouter
 
 from eva.uc.drivers.lpi.generic_lpi import LPI as GenericLPI
 
@@ -36,7 +37,6 @@ from eva.tools import val_to_boolean
 class LPI(GenericLPI):
 
     def do_state(self, _uuid, cfg, timeout, tki, state_in):
-        time_start = time()
         _state_in = state_in
         if _state_in: evh = True
         else: evh = False
@@ -44,8 +44,7 @@ class LPI(GenericLPI):
         if _state_in:
             status = _state_in.get(list(_state_in)[0])
         else:
-            status = self.phi.get(
-                1, cfg=phi_cfg, timeout=timeout + time_start - time())
+            status = self.phi.get(1, cfg=phi_cfg, timeout=timeouter.get())
         if isinstance(status, dict):
             status = status.get(list(status)[0])
         if isinstance(status, tuple):
@@ -60,7 +59,6 @@ class LPI(GenericLPI):
         return
 
     def do_action(self, _uuid, status, value, cfg, timeout, tki):
-        time_start = time()
         phi_cfg = self.prepare_phi_cfg(cfg)
         if status is None:
             return self.action_result_error(_uuid, 1, 'no status provided')
@@ -76,9 +74,11 @@ class LPI(GenericLPI):
             state = status, value
         else:
             state = status
-        set_result = self.phi.set(
-            _port, state, phi_cfg, timeout=(timeout + time_start - time()))
+        set_result = self.phi.set(_port,
+                                  state,
+                                  phi_cfg,
+                                  timeout=timeouter.get())
         if set_result is False or set_result is None:
-            return self.action_result_error(
-                _uuid, msg='port %s set error' % _port)
+            return self.action_result_error(_uuid,
+                                            msg='port %s set error' % _port)
         return self.action_result_ok(_uuid)

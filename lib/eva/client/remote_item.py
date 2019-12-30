@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import eva.core
 import eva.item
@@ -47,8 +47,11 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['controller_id'] = self.controller.full_id
         try:
             del d['config_changed']
@@ -84,8 +87,9 @@ class RemoteLVar(RemoteUpdatableItem):
                         need_notify = True
                 except:
                     pass
-            super().set_state_from_serialized(
-                data, from_mqtt=from_mqtt, force_notify=need_notify)
+            super().set_state_from_serialized(data,
+                                              from_mqtt=from_mqtt,
+                                              force_notify=need_notify)
         except:
             eva.core.log_traceback()
 
@@ -95,8 +99,11 @@ class RemoteLVar(RemoteUpdatableItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['expires'] = self.expires
         d['set_time'] = self.set_time
         return d
@@ -175,8 +182,11 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
         }
         if full and self.status_labels:
             d['status_labels'] = self.status_labels
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         return d
 
 
@@ -199,8 +209,11 @@ class RemoteMacro(eva.item.Item):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['controller_id'] = self.controller.full_id
         d['action_enabled'] = self.action_enabled
         return d
@@ -224,11 +237,6 @@ class RemoteCycle(RemoteUpdatableItem):
                 self.iterations = int(cfg['iterations'])
             except:
                 eva.core.log_traceback()
-        if 'avg' in cfg:
-            try:
-                self.avg = int(cfg['avg'])
-            except:
-                eva.core.log_traceback()
 
     def serialize(self,
                   full=False,
@@ -236,12 +244,14 @@ class RemoteCycle(RemoteUpdatableItem):
                   info=False,
                   props=False,
                   notify=False):
-        d = super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify)
+        d = super().serialize(full=full,
+                              config=config,
+                              info=info,
+                              props=props,
+                              notify=notify)
         d['controller_id'] = self.controller.full_id
         d['interval'] = self.interval
         d['iterations'] = self.iterations
-        d['avg'] = self.avg
         return d
 
     def notify(self, retain=None, skip_subscribed_mqtt=False):
@@ -264,14 +274,6 @@ class RemoteCycle(RemoteUpdatableItem):
                     d = int(j['iterations'])
                     if self.iterations != d:
                         self.iterations = d
-                        need_notify = True
-                except:
-                    eva.core.log_traceback()
-            if 'avg' in j:
-                try:
-                    d = float(j['avg'])
-                    if self.avg != d:
-                        self.avg = d
                         need_notify = True
                 except:
                     eva.core.log_traceback()

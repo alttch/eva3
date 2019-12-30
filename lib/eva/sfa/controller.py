@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import glob
 import os
@@ -34,8 +34,8 @@ remote_lms = {}
 
 configs_to_remove = set()
 
-uc_pool = eva.client.remote_controller.RemoteUCPool()
-lm_pool = eva.client.remote_controller.RemoteLMPool()
+uc_pool = eva.client.remote_controller.RemoteUCPool(id='ucpool')
+lm_pool = eva.client.remote_controller.RemoteLMPool(id='lmpool')
 
 config = SimpleNamespace(cloud_manager=False)
 
@@ -189,7 +189,8 @@ def load_remote_lms():
         return False
 
 
-def handle_discovered_controller(notifier_id, controller_id, **kwargs):
+def handle_discovered_controller(notifier_id, controller_id, location,
+                                 **kwargs):
     if eva.core.is_shutdown_requested() or not eva.core.is_started():
         return False
     try:
@@ -210,7 +211,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
                         logging.debug(
                             'Controller ' +
                             '{} back online, reloading'.format(controller_id))
-                        uc_pool.reload_controller(c_id, with_delay=True)
+                        uc_pool.trigger_reload_controller(c_id, with_delay=True)
                     return True
             if ct == 'lm':
                 c = lm_pool.controllers.get(c_id)
@@ -224,7 +225,7 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
                         logging.debug(
                             'Controller ' +
                             '{} back online, reloading'.format(controller_id))
-                        lm_pool.reload_controller(c_id, with_delay=True)
+                        lm_pool.trigger_reload_controller(c_id, with_delay=True)
                     return True
         finally:
             controller_lock.release()
@@ -245,9 +246,9 @@ def handle_discovered_controller(notifier_id, controller_id, **kwargs):
         else:
             return False
         return _append_controller(
-            'mqtt:{}:{}'.format(notifier_id, controller_id),
+            location,
             key='${}'.format(eva.core.config.default_cloud_key),
-            mqtt_update=notifier_id,
+            mqtt_update=notifier_id if location.startswith('mqtt:') else None,
             static=False)
     except:
         logging.warning('Unable to process controller, discovered from ' +
@@ -285,8 +286,10 @@ def append_uc(uri,
     api.set_uri(uri + uport)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.config.mqtt_update_default
-    u = eva.client.remote_controller.RemoteUC(
-        None, api=api, mqtt_update=mqu, static=static)
+    u = eva.client.remote_controller.RemoteUC(None,
+                                              api=api,
+                                              mqtt_update=mqu,
+                                              static=static)
     u._key = key
     if makey: u.set_prop('masterkey', makey)
     if not uc_pool.append(u): return False
@@ -355,8 +358,10 @@ def append_lm(uri,
     api.set_uri(uri + uport)
     mqu = mqtt_update
     if mqu is None: mqu = eva.core.config.mqtt_update_default
-    u = eva.client.remote_controller.RemoteLM(
-        None, api=api, mqtt_update=mqu, static=static)
+    u = eva.client.remote_controller.RemoteLM(None,
+                                              api=api,
+                                              mqtt_update=mqu,
+                                              static=static)
     u._key = key
     if makey: u.set_prop('masterkey', makey)
     if not lm_pool.append(u): return False
@@ -415,14 +420,10 @@ def serialize():
 def start():
     uc_pool.start()
     for i, v in remote_ucs.items():
-        t = threading.Thread(
-            target=connect_remote_controller, args=(uc_pool, v))
-        t.start()
+        eva.core.spawn(connect_remote_controller, uc_pool, v)
     lm_pool.start()
     for i, v in remote_lms.items():
-        t = threading.Thread(
-            target=connect_remote_controller, args=(lm_pool, v))
-        t.start()
+        eva.core.spawn(connect_remote_controller, lm_pool, v)
 
 
 def connect_remote_controller(pool, v):
@@ -473,5 +474,5 @@ def update_config(cfg):
     eva.client.remote_controller.cloud_manager = config.cloud_manager
 
 
-eva.api.mqtt_discovery_handler = handle_discovered_controller
+eva.api.controller_discovery_handler = handle_discovered_controller
 eva.api.remove_controller = remove_controller

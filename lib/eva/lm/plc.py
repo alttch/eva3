@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import eva.core
 import eva.item
@@ -256,19 +256,13 @@ class PLC(eva.item.ActiveItem):
             'action_allow_termination': False,
         })
 
-    def _t_action_processor(self):
-        logging.debug('%s action processor started' % self.full_id)
-        while self.action_processor_active:
+    def _run_action_processor(self, a, **kwargs):
+        if a.item:
             try:
-                self.current_action = None
-                self.action_before_get_task()
-                a = self.q_get_task()
-                self.action_after_get_task(a)
-                if not a or not a.item: continue
                 if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                     logging.critical('PLC::_t_action_processor locking broken')
                     eva.core.critical()
-                    continue
+                    return
                 self.current_action = a
                 if not self.action_enabled:
                     self.queue_lock.release()
@@ -290,11 +284,7 @@ class PLC(eva.item.ActiveItem):
                                  (self.full_id, a.uuid))
                         a.set_ignored()
                     elif a.is_status_queued() and a.set_running():
-                        t = threading.Thread(target = self._t_action,
-                                name = 'macro_' + a.item.full_id + \
-                                        '_' + a.uuid,
-                                args = (a,))
-                        t.start()
+                        eva.core.spawn(self._t_action, a)
                     else:
                         self.queue_lock.release()
             except:
@@ -305,11 +295,10 @@ class PLC(eva.item.ActiveItem):
             if not self.queue_lock.acquire(timeout=eva.core.config.timeout):
                 logging.critical('PLC::_t_action_processor locking broken')
                 eva.core.critical()
-                continue
+                return
             self.current_action = None
             self.action_xc = None
             self.queue_lock.release()
-        logging.debug('%s action processor stopped' % self.full_id)
 
     def _t_action(self, a):
         import eva.runner
@@ -342,11 +331,10 @@ class PLC(eva.item.ActiveItem):
                 env_globals['_%u' % i] = a.argv[i - 1]
             except:
                 env_globals['_%u' % i] = ''
-        xc = eva.runner.PyThread(
-            item=a.item,
-            env_globals=env_globals,
-            bcode=eva.lm.macro_api.mbi_code,
-            mfcode=mfcode)
+        xc = eva.runner.PyThread(item=a.item,
+                                 env_globals=env_globals,
+                                 bcode=eva.lm.macro_api.mbi_code,
+                                 mfcode=mfcode)
         self.queue_lock.release()
         xc.run()
         self.action_after_run(a, xc)
@@ -394,8 +382,8 @@ class Macro(eva.item.ActiveItem):
     def __init__(self, item_id):
         super().__init__(item_id, 'lmacro')
         self.respect_layout = False
-        self.api = eva.lm.macro_api.MacroAPI(
-            pass_errors=False, send_critical=False)
+        self.api = eva.lm.macro_api.MacroAPI(pass_errors=False,
+                                             send_critical=False)
         self.pfcode = None
 
     def update_config(self, data):
@@ -446,8 +434,8 @@ class Macro(eva.item.ActiveItem):
                 return False
             try:
                 file_name = eva.core.format_xc_fname(
-                    fname=self.action_exec
-                    if self.action_exec else '{}.py'.format(self.item_id))
+                    fname=self.action_exec if self.action_exec else '{}.py'.
+                    format(self.item_id))
                 eva.core.prepare_save()
                 with open(file_name, 'w') as fd:
                     fd.write(code)
@@ -475,8 +463,11 @@ class Macro(eva.item.ActiveItem):
         if full or config or props:
             d['pass_errors'] = self.api.pass_errors
             d['send_critical'] = self.api.send_critical
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         if not notify:
             d['action_enabled'] = self.action_enabled
         else:
@@ -520,14 +511,11 @@ class Cycle(eva.item.Item):
         self.on_error = None
         self.interval = 1
         self.ict = 100
-        self.c = 0
-        self.tc = 0
         self.autostart = False
-        self.cycle_thread = None
+        self.cycle_future = None
         self.cycle_enabled = False
         self.cycle_status = 0
         self.iterations = 0
-        self.stats_lock = threading.Lock()
 
     def update_config(self, data):
         if 'macro' in data:
@@ -545,8 +533,8 @@ class Cycle(eva.item.Item):
         if 'macro_kwargs' in data:
             self.macro_kwargs = dict_from_str(data['macro_kwargs'])
         if 'on_error' in data:
-            self.on_error = eva.lm.controller.get_macro(
-                data['on_error'], pfm=True)
+            self.on_error = eva.lm.controller.get_macro(data['on_error'],
+                                                        pfm=True)
         if 'interval' in data:
             self.interval = data['interval']
         if 'ict' in data:
@@ -622,6 +610,8 @@ class Cycle(eva.item.Item):
             if val is not None:
                 if isinstance(val, list):
                     v = val
+                elif isinstance(val, tuple):
+                    v = list(val)
                 else:
                     try:
                         v = shlex.split(val)
@@ -700,80 +690,66 @@ class Cycle(eva.item.Item):
             return super().set_prop(prop, val, save)
 
     def _t_cycle(self):
-        logging.debug('%s cycle thread started' % self.full_id)
+        logging.debug('%s cycle started' % self.full_id)
         self.cycle_status = 1
         self.notify()
-        prev = None
-        c = 0
-        tc = 0
+        self.c = 0
+        scheduled = time.perf_counter()
         while self.cycle_enabled:
-            cycle_start = time.time()
-            cycle_end = cycle_start + self.interval
-            if self.macro:
-                self.iterations += 1
-                try:
-                    result = eva.lm.controller.exec_macro(
-                        self.macro,
-                        argv=self.macro_args,
-                        kwargs=self.macro_kwargs,
-                        wait=self.interval,
-                        source=self,
-                        is_shutdown_func=self.is_shutdown)
-                except Exception as e:
-                    ex = e
-                    result = None
-                if not result:
-                    logging.error('cycle %s exception %s' % (self.full_id, ex))
-                    if self.on_error:
-                        eva.lm.controller.exec_macro(
-                            self.on_error, argv=['exception', ex], source=self)
-                elif time.time() > cycle_end:
-                    logging.error('cycle %s timeout' % (self.full_id))
-                    if self.on_error:
+            try:
+                scheduled += self.interval
+                self.c += 1
+                if self.c > self.ict:
+                    self.notify()
+                    self.c = 0
+                if self.macro:
+                    self.iterations += 1
+                    try:
+                        result = eva.lm.controller.exec_macro(
+                            self.macro,
+                            argv=self.macro_args,
+                            kwargs=self.macro_kwargs,
+                            wait=self.interval,
+                            source=self,
+                            is_shutdown_func=self.is_shutdown)
+                    except Exception as e:
+                        ex = e
+                        result = None
+                    if not result:
+                        logging.error('cycle %s exception %s' %
+                                      (self.full_id, ex))
+                        if self.on_error:
+                            eva.lm.controller.exec_macro(self.on_error,
+                                                         argv=['exception', ex],
+                                                         source=self)
+                    elif time.perf_counter() > scheduled:
+                        logging.error('cycle {} timeout'.format(self.full_id))
+                        scheduled = time.perf_counter() + self.interval
+                        if self.on_error:
+                            eva.lm.controller.exec_macro(
+                                self.on_error,
+                                argv=['timeout', result.serialize()],
+                                source=self)
+                    elif not result.is_status_completed():
+                        logging.error('cycle %s exec error' % (self.full_id))
                         eva.lm.controller.exec_macro(
                             self.on_error,
-                            argv=['timeout', result.serialize()],
+                            argv=['exec_error',
+                                  result.serialize()],
                             source=self)
-                elif not result.is_status_completed():
-                    logging.error('cycle %s exec error' % (self.full_id))
-                    eva.lm.controller.exec_macro(
-                        self.on_error,
-                        argv=['exec_error', result.serialize()],
-                        source=self)
-            t = time.time()
-            if prev is not None:
-                real_interval = t - prev
-                c += 1
-                tc += real_interval
-                self.stats_lock.acquire()
-                try:
-                    self.c += 1
-                    self.tc += real_interval
-                except:
-                    self.c = 0
-                    self.tc = 0
-                self.stats_lock.release()
-                if c >= self.ict:
-                    corr = tc / c - self.interval
-                    c = 0
-                    tc = 0
-                    threading.Thread(target=self.notify).start()
-            else:
-                corr = 0
-            prev = t
-            if self.interval >= 1:
-                cycle_end -= corr
-                while time.time() < cycle_end and self.cycle_enabled:
-                    time.sleep(eva.core.sleep_step)
-            else:
-                try:
-                    time.sleep(self.interval - corr)
-                except:
-                    pass
-        logging.debug('%s cycle thread stopped' % self.full_id)
+                if self.interval >= 1:
+                    while time.perf_counter(
+                    ) < scheduled and self.cycle_enabled:
+                        time.sleep(eva.core.sleep_step)
+                else:
+                    try:
+                        time.sleep(scheduled - time.perf_counter())
+                    except:
+                        pass
+            except:
+                eva.core.log_traceback()
+        logging.debug('%s cycle stopped' % self.full_id)
         self.cycle_status = 0
-        # dirty - wait for prev. state to be sent
-        # time.sleep(eva.core.sleep_step)
         self.notify()
 
     def start(self, autostart=False):
@@ -781,29 +757,27 @@ class Cycle(eva.item.Item):
                 not self.autostart) or not self.macro or self.cycle_enabled:
             self.notify()
             return False
-        self.c = 0
-        self.tc = 0
         self.cycle_enabled = True
-        self.cycle_thread = threading.Thread(target=self._t_cycle)
-        self.cycle_thread.start()
+        self.cycle_future = eva.core.spawn(self._t_cycle)
         return True
 
     def stop(self, wait=True):
-        if self.cycle_thread and self.cycle_thread.is_alive():
+        if self.cycle_future and self.cycle_future.running():
             self.cycle_status = 2
             self.notify()
             self.cycle_enabled = False
-            if wait: self.cycle_thread.join()
+            if wait:
+                try:
+                    self.cycle_future.result()
+                except:
+                    eva.core.log_traceback()
         else:
             self.cycle_enabled = False
         return True
 
     def reset_stats(self):
-        self.stats_lock.acquire()
-        self.c = 0
-        self.tc = 0
         self.iterations = 0
-        self.stats_lock.release()
+        self.c = 0
         self.notify()
         return True
 
@@ -820,22 +794,20 @@ class Cycle(eva.item.Item):
                   props=False,
                   notify=False):
         d = {}
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         d['interval'] = self.interval
         if not config and not props:
             d['status'] = self.cycle_status
-            avg = (self.tc / self.c if self.c else self.interval)
-            itr = self.iterations
-            d['avg'] = int(avg * 10000) / 10000.0 if avg is not None else None
-            d['iterations'] = itr
-            if avg is None:
-                d['value'] = None
-            else:
-                d['value'] = '{},{:.4f},'.format(itr, avg)
+            d['iterations'] = self.iterations
         if not notify:
             d['ict'] = self.ict
             d['macro'] = self.macro.full_id if self.macro else None
+            if d['macro'].startswith('@func/'):
+                d['macro'] = '@' + d['macro'][6:]
             d['on_error'] = self.on_error.full_id if self.on_error else None
             d['macro_args'] = self.macro_args
             d['macro_kwargs'] = self.macro_kwargs

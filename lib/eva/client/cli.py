@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import argparse
 # to be compatible with argcomplete
@@ -14,6 +14,7 @@ from eva.client import apiclient
 from eva.gcli import GCLI
 
 from collections import OrderedDict
+from pathlib import Path
 
 say_bye = True
 readline_processing = True if \
@@ -42,8 +43,7 @@ default_errors = {
     apiclient.result_busy: 'resource is in use'
 }
 
-dir_eva = os.path.realpath(
-    os.path.dirname(os.path.realpath(__file__)) + '/../../..')
+dir_eva = Path(__file__).absolute().parents[3].as_posix()
 
 
 class ComplGeneric(object):
@@ -1396,10 +1396,8 @@ class ControllerCLI(object):
     def enable_controller_management_functions(self, controller_id):
         if self.apiuri:
             return
-        self.dir_sbin = os.path.realpath(
-            os.path.dirname(os.path.realpath(__file__)) + '/../../../sbin')
-        self.dir_etc = os.path.realpath(
-            os.path.dirname(os.path.realpath(__file__)) + '/../../../etc')
+        self.dir_sbin = dir_eva + '/sbin'
+        self.dir_etc = dir_eva + '/etc'
         self.add_manager_control_functions()
         if controller_id:
             self._management_controller_id = controller_id

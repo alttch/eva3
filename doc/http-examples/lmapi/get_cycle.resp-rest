@@ -6,7 +6,6 @@ Expires: 0
 Pragma: no-cache
 
 {
-    "avg": 1,
     "description": "",
     "full_id": "tests/test_cycle",
     "group": "tests",
@@ -18,6 +17,5 @@ Pragma: no-cache
     "oid": "lcycle:tests/test_cycle",
     "on_error": null,
     "status": 1,
-    "type": "lcycle",
-    "value": "1.0000"
+    "type": "lcycle"
 }

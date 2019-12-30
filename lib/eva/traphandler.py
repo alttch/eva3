@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import eva.core
 import threading
@@ -13,7 +13,7 @@ from eva.tools import netacl_match
 
 from netaddr import IPNetwork
 from types import SimpleNamespace
-from pyaltt import background_worker
+from neotasker import background_worker
 
 subscribed_items = set()
 
@@ -81,8 +81,8 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
     logging.debug('snmp trap from %s' % host)
     if config.hosts_allow:
         if not netacl_match(host, config.hosts_allow):
-            logging.warning(
-                'snmp trap from %s denied by server configuration' % host)
+            logging.warning('snmp trap from %s denied by server configuration' %
+                            host)
             return
     data = {}
     for name, val in varBinds:
@@ -90,8 +90,7 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
                 (host, name.prettyPrint(), val.prettyPrint()))
         data[name.prettyPrint()] = val.prettyPrint()
     for i in subscribed_items:
-        t = threading.Thread(target=i.process_snmp_trap, args=(host, data))
-        t.start()
+        eva.core.spawn(i.process_snmp_trap, host, data)
 
 
 def start():
@@ -104,8 +103,7 @@ def start():
         udp = importlib.import_module('pysnmp.carrier.asyncore.dgram.udp')
         ntfrcv = importlib.import_module('pysnmp.entity.rfc3413.ntfrcv')
     except:
-        logging.error(
-            'Unable to import pysnmp module')
+        logging.error('Unable to import pysnmp module')
         eva.core.log_traceback()
         return False
     try:
@@ -114,8 +112,8 @@ def start():
             entities.snmpEngine, udp.domainName + (1,),
             udp.UdpTransport().openServerMode((config.host, _port)))
     except:
-        logging.error(
-            'Can not bind SNMP handler to %s:%s' % (config.host, _port))
+        logging.error('Can not bind SNMP handler to %s:%s' %
+                      (config.host, _port))
         eva.core.log_traceback()
         return False
     logging.info('Starting SNMP trap handler, listening at %s:%u' % \
@@ -126,7 +124,7 @@ def start():
         ntfrcv.NotificationReceiver(entities.snmpEngine, __cbFun)
         entities.snmpEngine.transportDispatcher.jobStarted(1)
         eva.core.stop.append(stop)
-        dispatcher.start(entities.snmpEngine)
+        dispatcher.start()
     except:
         logging.error(
             'Failed to start SNMP trap handler. Try updating pysnmp library')
@@ -143,11 +141,11 @@ def stop():
     dispatcher.stop()
 
 
-@background_worker(name='snmp_trap_dispatcher')
-def dispatcher(snmpEngine, **kwargs):
+@background_worker(name='snmp_trap_dispatcher', on_error=eva.core.log_traceback)
+def dispatcher(**kwargs):
     try:
-        snmpEngine.transportDispatcher.runDispatcher()
+        entities.snmpEngine.transportDispatcher.runDispatcher()
     except:
-        snmpEngine.transportDispatcher.closeDispatcher()
+        entities.snmpEngine.transportDispatcher.closeDispatcher()
         logging.error('SNMP trap dispatcher crashed, restarting')
         eva.core.log_traceback()

@@ -385,8 +385,8 @@ ICS nodes via MQTT instead of HTTP:
 To use auto discovery feature, API key named *default* must be present and
 equal on all nodes.
 
-API calls via MQTT are encrypted with AES-128-CBC, this allows to use any 3rd
-party MQTT servers without any risk.
+API calls via MQTT are encrypted with strong AES256 algorithm, this allows to
+use any 3rd party MQTT servers without any risk.
 
 Optionally, controller can be a member of different clouds via different MQTT
 notifiers.

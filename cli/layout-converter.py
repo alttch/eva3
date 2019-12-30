@@ -1,21 +1,21 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import sys
 import os
 import getopt
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 
-os.environ['EVA_DIR'] = os.path.normpath(
-    os.path.dirname(os.path.realpath(__file__)) + '/..')
+os.environ['EVA_DIR'] = Path(__file__).absolute().parents[1].as_posix()
 
 import eva.core
 import eva.notify
 import eva.traphandler
+
 
 def usage(version_only=False):
     if not version_only: print()
@@ -116,7 +116,6 @@ print("""
 Starting layout conversion.
 DON'T POWER OFF THE MACHINE, DON'T STOP THE PROGRAM, DON'T DISCONNECT!
 """)
-
 
 print('Removing old configuration files')
 for o in oc:

@@ -46,9 +46,7 @@ cp_ei_root_config = {
     '/': tiny_httpe
 }
 
-cp_ei_config = {
-    '/': tiny_httpe
-    }
+cp_ei_config = {'/': tiny_httpe}
 
 for u in ['css', 'fonts', 'i', 'js', 'lib']:
     cp_ei_config['/' + u] = {
@@ -60,5 +58,6 @@ for u in ['css', 'fonts', 'i', 'js', 'lib']:
 def start():
     if not eva.api.config.ei_enabled: return
     cherrypy.tree.mount(EI_HTTP_Root(), '/', config=cp_ei_root_config)
-    cherrypy.tree.mount(
-        EI(), '/%s-ei' % eva.core.product.code, config=cp_ei_config)
+    cherrypy.tree.mount(EI(),
+                        '/%s-ei' % eva.core.product.code,
+                        config=cp_ei_config)

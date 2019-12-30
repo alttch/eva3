@@ -99,6 +99,7 @@ What you get with EVA
     item_scripts
     modbus
     owfs
+    lora
     snmp
     virtual
 
@@ -137,10 +138,12 @@ What you get with EVA
     integrations/grafana
     integrations/hue
     integrations/nanoleaf
+    integrations/roboger
     integrations/rpi
     integrations/sonoff
     integrations/tts
     integrations/unipi
+    integrations/upnp
     integrations/yeelight
 
 .. toctree::

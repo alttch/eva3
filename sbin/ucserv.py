@@ -1,19 +1,21 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import sys
 import os
 import getopt
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).parent.parent / 'lib').as_posix())
 
 import eva.core
 import eva.sysapi
 import eva.traphandler
 import eva.udpapi
+import eva.upnp
+import eva.lora
 import eva.notify
 import eva.api
 import eva.apikey
@@ -44,13 +46,16 @@ for production use uc-control only to start/stop UC
 """)
 
 
-product_build = 2019080604
+product_build = 2019121703
 
 product_code = 'uc'
 
 eva.core.init()
+
 eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'EVA Universal Controller'
+
+eva.core._flags.use_reactor = True
 
 _fork = False
 _eva_ini = None
@@ -77,11 +82,15 @@ if not cfg: sys.exit(2)
 if _fork: eva.core.fork()
 eva.core.write_pid_file()
 
+eva.core.start_supervisor()
 eva.logs.start()
 
 eva.traphandler.update_config(cfg)
 eva.udpapi.update_config(cfg)
 eva.api.update_config(cfg)
+eva.upnp.update_config(cfg)
+eva.upnp.port = 1912
+eva.lora.update_config(cfg)
 eva.sysapi.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
 
@@ -110,6 +119,8 @@ eva.sysapi.start()
 eva.wsapi.start()
 eva.traphandler.start()
 eva.udpapi.start()
+eva.upnp.start()
+eva.lora.start()
 eva.uc.ucapi.start()
 eva.uc.controller.start()
 

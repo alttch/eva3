@@ -25,7 +25,6 @@ Pragma: no-cache
         "1": "ON"
     },
     "term_kill_interval": null,
-    "update_delay": 0,
     "update_driver_config": null,
     "update_exec": null,
     "update_exec_after_action": false,

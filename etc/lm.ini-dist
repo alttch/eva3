@@ -55,8 +55,10 @@ timeout = 5
 ; layout (simple or enterprise)
 layout = enterprise
 
-; reactor thread pool size (used by some utility workers)
-;reactor_thread_pool = 15
+; primary thread pool, min workers. comment to pre-spawn all workers
+;pool_min_size = 0
+; primary thread pool, max workers. comment to use automatic value (nCPUs * 5)
+;pool_max_size = 100
 
 ; exec commands before/after config/db save,
 ; e.g. mount -o remount,rw / (then back to ro)
@@ -67,6 +69,12 @@ layout = enterprise
 
 ; default mqtt notifier for updates for new items
 ;mqtt_update_default = eva_1:2
+
+[upnp]
+; allow UPnP discovery of this controller
+listen = 0.0.0.0
+; discover controllers via UPnP on all interfaces, or list, comma separated
+discover_on = *
 
 [sysapi]
 ; enable remote file management functions

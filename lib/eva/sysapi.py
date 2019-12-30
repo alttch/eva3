@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import threading
 import cherrypy
@@ -13,8 +13,6 @@ import sys
 import shlex
 
 import eva.core
-
-from pyaltt import background_job
 
 from functools import wraps
 
@@ -44,8 +42,7 @@ from eva.exceptions import AccessDenied
 from eva.exceptions import InvalidParameter
 from eva.tools import parse_function_params
 
-from pyaltt import background_worker
-from pyaltt import background_job
+from neotasker import task_supervisor
 
 from types import SimpleNamespace
 
@@ -57,8 +54,10 @@ import eva.users
 
 import eva.notify
 
+locks_locker = threading.RLock()
+
 locks = {}
-lock_expire_time = {}
+lock_expire_jobs = {}
 
 
 def api_need_file_management(f):
@@ -157,16 +156,33 @@ class LockAPI(object):
         """
         l, t, e = parse_api_params(kwargs, 'lte', 'S.n',
                                    {'t': eva.core.config.timeout})
-        if not l in locks:
-            locks[l] = threading.Lock()
+        with locks_locker:
+            if not l in locks:
+                lobj = threading.Lock()
+                locks[l] = lobj
         logging.debug(
                 'acquiring lock %s, timeout = %s, expires = %s' % \
                             (l, t, e))
+        lockobj = locks[l]
         if not locks[l].acquire(timeout=t):
             raise FunctionFailed('Unable to acquire lock')
         if e:
-            lock_expire_time[l] = time.time() + e
+            with locks_locker:
+                lock_expire_jobs[l] = task_supervisor.create_async_job(
+                    'cleaners',
+                    target=self._release_lock,
+                    args=(l,),
+                    number=1,
+                    timer=e)
         return True
+
+    async def _release_lock(self, lock_id):
+        logging.debug(f'auto-releasing lock {lock_id}')
+        try:
+            with locks_locker:
+                locks[lock_id].release()
+        except:
+            pass
 
     @log_i
     @api_need_lock
@@ -181,7 +197,8 @@ class LockAPI(object):
         l = parse_api_params(kwargs, 'l', 'S')
         try:
             result = format_resource_id('lock', l)
-            result['locked'] = locks[l].locked()
+            with locks_locker:
+                result['locked'] = locks[l].locked()
             return result
         except KeyError:
             raise ResourceNotFound
@@ -204,7 +221,11 @@ class LockAPI(object):
         l = parse_api_params(kwargs, 'l', 'S')
         logging.debug('releasing lock %s' % l)
         try:
-            locks[l].release()
+            with locks_locker:
+                if l in lock_expire_jobs:
+                    lock_expire_jobs[l].cancel()
+                    del lock_expire_jobs[l]
+                locks[l].release()
             return True
         except RuntimeError:
             return True
@@ -306,9 +327,7 @@ class CMDAPI(object):
         _c = CMD(cmd, _args, timeout)
         logging.info('executing "%s %s", timeout = %s' % \
                 (cmd, ''.join(list(_args)), timeout))
-        t = threading.Thread(
-            target=_c.run, name='sysapi_c_run_%f' % time.time())
-        t.start()
+        eva.core.spawn(_c.run)
         if wait:
             eva.core.wait_for(_c.xc.is_finished, wait)
         return _c.serialize()
@@ -322,17 +341,12 @@ class LogAPI(object):
         """
         rotate log file
         
-        Equal to kill -HUP <controller_process_pid>.
+        Deprecated, not required since 3.2.6
 
         Args:
             k: .sysfunc=yes
         """
         parse_api_params(kwargs)
-        try:
-            eva.core.reset_log()
-        except:
-            eva.core.log_traceback()
-            raise FunctionFailed
         return True
 
     @log_d
@@ -438,6 +452,7 @@ class LogAPI(object):
             t: get log records not older than t seconds
             n: the maximum number of log records you want to obtain
         """
+        import pyaltt2.logs
         import eva.logs
         l, t, n = parse_api_params(kwargs, 'ltn', '.ii')
         if not l: l = 'i'
@@ -445,7 +460,7 @@ class LogAPI(object):
             l = int(l)
         except:
             l = eva.logs.get_log_level_by_name(l)
-        return eva.logs.log_get(logLevel=l, t=t, n=n)
+        return pyaltt2.logs.get(level=l, t=t, n=n)
 
     # don't wrap - calls other self functions
     def log(self, **kwargs):
@@ -721,10 +736,9 @@ class UserAPI(object):
             r = eva.apikey.serialized_acl(_k)
             r['dynamic'] = eva.apikey.keys[_k].dynamic
             result.append(r)
-        return sorted(
-            sorted(result, key=lambda k: k['key_id']),
-            key=lambda k: k['master'],
-            reverse=True)
+        return sorted(sorted(result, key=lambda k: k['key_id']),
+                      key=lambda k: k['master'],
+                      reverse=True)
 
     @log_w
     @api_need_master
@@ -832,8 +846,9 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
     @log_d
     @api_need_rpvt
     def rpvt(self, **kwargs):
-        k, f, ic, nocache = parse_function_params(
-            kwargs, ['k', 'f', 'ic', 'nocache'], '.S..')
+        k, f, ic, nocache = parse_function_params(kwargs,
+                                                  ['k', 'f', 'ic', 'nocache'],
+                                                  '.S..')
         if not eva.apikey.check(k, rpvt_uri=f):
             logging.warning('rpvt uri %s access forbidden' % (f))
             eva.core.log_traceback()
@@ -1193,8 +1208,8 @@ class SysHTTP_API_REST_abstract:
             if not SysAPI.create_key(self, k=k, i=ii, save=save):
                 raise FunctionFailed
             for i, v in props.items():
-                if not SysAPI.set_key_prop(
-                        self, k=k, i=ii, p=i, v=v, save=save):
+                if not SysAPI.set_key_prop(self, k=k, i=ii, p=i, v=v,
+                                           save=save):
                     raise FunctionFailed
             return self.list_key_props(k=k, i=ii)
         elif rtp == 'lock':
@@ -1227,17 +1242,15 @@ class SysHTTP_API_REST_abstract:
             else: raise ResourceNotFound
         elif rtp == 'key':
             for i, v in props.items():
-                if not SysAPI.set_key_prop(
-                        self, k=k, i=ii, p=i, v=v, save=save):
+                if not SysAPI.set_key_prop(self, k=k, i=ii, p=i, v=v,
+                                           save=save):
                     raise FunctionFailed
             return True
         elif rtp == 'notifier':
             if not 'enabled' in props:
                 raise FunctionFailed
-            return self.enable_notifier(
-                k=k, i=ii) if val_to_boolean(
-                    props.get('enabled')) else self.disable_notifier(
-                        k=k, i=ii)
+            return self.enable_notifier(k=k, i=ii) if val_to_boolean(
+                props.get('enabled')) else self.disable_notifier(k=k, i=ii)
         elif rtp == 'runtime':
             m, e = parse_api_params(props, 'me', '.b')
             if m is not None:
@@ -1291,32 +1304,10 @@ def update_config(cfg):
 def start():
     http_api = SysHTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
-    lock_processor.start(_interval=eva.core.config.polldelay)
-
-
-@eva.core.stop
-def stop():
-    lock_processor.stop()
-
-
-@background_worker
-def lock_processor(**kwargs):
-    for i, v in lock_expire_time.copy().items():
-        if time.time() > v:
-            logging.debug('lock %s expired, releasing' % i)
-            try:
-                del lock_expire_time[i]
-            except:
-                logging.critical('Lock API broken')
-            try:
-                locks[i].release()
-            except:
-                pass
 
 
 api = SysAPI()
 
-config = SimpleNamespace(
-    api_file_management_allowed=False,
-    api_setup_mode=None,
-    api_rpvt_allowed=False)
+config = SimpleNamespace(api_file_management_allowed=False,
+                         api_setup_mode=None,
+                         api_rpvt_allowed=False)

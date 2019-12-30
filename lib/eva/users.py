@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import hashlib
 import eva.core
@@ -29,10 +29,9 @@ def authenticate(user=None, password=None):
         raise AccessDenied('No login/password provided')
     dbconn = userdb()
     try:
-        r = dbconn.execute(
-            sql('select k from users where u = :u and p = :p'),
-            u=user,
-            p=crypt_password(password)).fetchone()
+        r = dbconn.execute(sql('select k from users where u = :u and p = :p'),
+                           u=user,
+                           p=crypt_password(password)).fetchone()
     except:
         eva.core.report_userdb_error()
     if not r:
@@ -62,8 +61,8 @@ def get_user(user=None):
     try:
         dbconn = userdb()
         result = []
-        row = dbconn.execute(
-            sql('select u, k from users where u=:u'), u=user).fetchone()
+        row = dbconn.execute(sql('select u, k from users where u=:u'),
+                             u=user).fetchone()
     except:
         eva.core.report_userdb_error()
     if not row: raise ResourceNotFound
@@ -76,18 +75,17 @@ def create_user(user=None, password=None, key=None):
         raise ResourceNotFound('API key')
     try:
         dbconn = userdb()
-        row = dbconn.execute(
-            sql('select k from users where u = :u'), u=user).fetchone()
+        row = dbconn.execute(sql('select k from users where u = :u'),
+                             u=user).fetchone()
     except:
         eva.core.report_userdb_error()
     if row:
         raise ResourceAlreadyExists
     try:
-        dbconn.execute(
-            sql('insert into users(u, p, k) values (:u, :p, :k)'),
-            u=user,
-            p=crypt_password(password),
-            k=key)
+        dbconn.execute(sql('insert into users(u, p, k) values (:u, :p, :k)'),
+                       u=user,
+                       p=crypt_password(password),
+                       k=key)
         logging.info('User {} created, key: {}'.format(user, key))
     except:
         eva.core.report_userdb_error()
@@ -101,10 +99,9 @@ def set_user_password(user=None, password=None):
         return None
     try:
         dbconn = userdb()
-        if dbconn.execute(
-                sql('update users set p = :p where u = :u'),
-                p=crypt_password(password),
-                u=user).rowcount:
+        if dbconn.execute(sql('update users set p = :p where u = :u'),
+                          p=crypt_password(password),
+                          u=user).rowcount:
             logging.info('user {} new password is set'.format(user))
         else:
             raise ResourceNotFound
@@ -122,9 +119,9 @@ def set_user_key(user=None, key=None):
         return None
     try:
         dbconn = userdb()
-        if dbconn.execute(
-                sql('update users set k = :k where u = :u'), k=key,
-                u=user).rowcount:
+        if dbconn.execute(sql('update users set k = :k where u = :u'),
+                          k=key,
+                          u=user).rowcount:
             logging.info('user {} key {} is set'.format(user, key))
             return True
     except:
@@ -137,8 +134,8 @@ def destroy_user(user=None):
         raise FunctionFailed
     try:
         dbconn = userdb()
-        if dbconn.execute(
-                sql('delete from users where u = :u'), u=user).rowcount:
+        if dbconn.execute(sql('delete from users where u = :u'),
+                          u=user).rowcount:
             logging.info('User {} deleted'.format(user))
         else:
             raise ResourceNotFound
@@ -168,11 +165,10 @@ def init():
 def run_hook(cmd, u, password=None):
     if not eva.core.config.user_hook:
         return True
-    p = subprocess.Popen(
-        eva.core.config.user_hook + [cmd, u],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE)
+    p = subprocess.Popen(eva.core.config.user_hook + [cmd, u],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE,
+                         stdin=subprocess.PIPE)
     if password is not None:
         p.stdin.write(password.encode())
     p.communicate()

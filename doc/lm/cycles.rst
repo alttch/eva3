@@ -61,12 +61,8 @@ Each lcycle object has the following parameters:
 * **autostart** cycle will start automatically as soon as LM PLC server is
   started
 
-* **avg** (read-only) real average cycle interval
-
-* **ict** interval correction. LM PLC will try correcting cycle interval every
-  *ict* iterations to keep it real-time as max as possible. Additionally,
-  during the correction LM PLC will replicate cycle state (iterations, avg)
-  with connected SFA nodes (cycle *status* is replicated in real-time)
+* **ict** interval notify counter. Every *ict* iterations 
+  notification is being performed.
 
 * **iterations** (read-only) cycle iterations since the last start/stats reset
 
@@ -84,9 +80,6 @@ Each lcycle object has the following parameters:
     * **1** cycle is running
     * **2** cycle got "stop" command and will stop as soon as current iteration
       finish
-
-* **value** (read-only) contains *iterations* and *avg* values, comma separated
-
 
 .. note::
 

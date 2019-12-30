@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import sys
 import platform
@@ -19,6 +19,8 @@ import inspect
 import sqlalchemy as sa
 import faulthandler
 import gzip
+import timeouter
+import uuid
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -27,10 +29,11 @@ from eva.tools import parse_host_port
 from eva.tools import Locker as GenericLocker
 
 from eva.exceptions import FunctionFailed
+from eva.exceptions import TimeoutException
 
-from pyaltt import g
-from pyaltt import FunctionCollecton
-from pyaltt import background_job
+from neotasker import g, FunctionCollection, task_supervisor
+
+import pyaltt2.logs
 
 from types import SimpleNamespace
 
@@ -47,62 +50,58 @@ cvars = {}
 
 controllers = set()
 
-_flags = SimpleNamespace(
-    ignore_critical=False,
-    sigterm_sent=False,
-    started=threading.Event(),
-    shutdown_requested=False,
-    cvars_modified=False,
-    setup_mode=0)
+_flags = SimpleNamespace(ignore_critical=False,
+                         sigterm_sent=False,
+                         started=threading.Event(),
+                         shutdown_requested=False,
+                         cvars_modified=False,
+                         setup_mode=0,
+                         use_reactor=False)
 
-product = SimpleNamespace(name='', code='', build=None)
+product = SimpleNamespace(name='', code='', build=None, usn='')
 
-config = SimpleNamespace(
-    pid_file=None,
-    log_file=None,
-    db_uri=None,
-    userdb_uri=None,
-    debug=False,
-    system_name=platform.node(),
-    controller_name=None,
-    default_cloud_key='default',
-    development=False,
-    show_traceback=False,
-    stop_on_critical='always',
-    dump_on_critical=True,
-    polldelay=0.01,
-    db_update=0,
-    keep_action_history=3600,
-    action_cleaner_interval=60,
-    notify_on_start=True,
-    keep_logmem=3600,
-    default_log_level_name='info',
-    default_log_level_id=20,
-    default_log_level=logging.INFO,
-    timeout=5,
-    exec_before_save=None,
-    exec_after_save=None,
-    mqtt_update_default=None,
-    enterprise_layout=True,
-    syslog=None,
-    syslog_format=None,
-    reactor_thread_pool=15,
-    user_hook=None)
+config = SimpleNamespace(pid_file=None,
+                         log_file=None,
+                         db_uri=None,
+                         userdb_uri=None,
+                         debug=False,
+                         system_name=platform.node(),
+                         controller_name=None,
+                         default_cloud_key='default',
+                         development=False,
+                         show_traceback=False,
+                         stop_on_critical='always',
+                         dump_on_critical=True,
+                         polldelay=0.01,
+                         db_update=0,
+                         keep_action_history=3600,
+                         action_cleaner_interval=60,
+                         notify_on_start=True,
+                         keep_logmem=3600,
+                         default_log_level_name='info',
+                         default_log_level_id=20,
+                         default_log_level=logging.INFO,
+                         timeout=5,
+                         exec_before_save=None,
+                         exec_after_save=None,
+                         mqtt_update_default=None,
+                         enterprise_layout=True,
+                         syslog=None,
+                         syslog_format=None,
+                         reactor_thread_pool=15,
+                         pool_min_size='max',
+                         pool_max_size=None,
+                         user_hook=None)
 
 db_engine = SimpleNamespace(primary=None, user=None)
 
-log_engine = SimpleNamespace(
-    logger=None, log_file_handler=None, syslog_handler=None)
+log_engine = SimpleNamespace(logger=None,
+                             log_file_handler=None,
+                             syslog_handler=None)
 
 db_pool_size = 15
 
 sleep_step = 0.1
-
-keep_exceptions = 100
-
-_exceptions = []
-
-_exception_log_lock = threading.RLock()
 
 _db_lock = threading.RLock()
 _userdb_lock = threading.RLock()
@@ -133,8 +132,8 @@ def critical(log=True, from_driver=False):
     if log: log_traceback(force=True)
     if config.dump_on_critical:
         _flags.ignore_critical = True
-        logging.critical('critical exception. dump file: %s' % create_dump(
-            'critical', caller_info))
+        logging.critical('critical exception. dump file: %s' %
+                         create_dump('critical', caller_info))
         _flags.ignore_critical = False
     if config.stop_on_critical in [
             'always', 'yes'
@@ -160,32 +159,17 @@ class RLocker(GenericLocker):
         self.critical = critical
 
 
-def log_traceback(display=False, notifier=False, force=False, e=None):
-    e_msg = traceback.format_exc()
-    if (config.show_traceback or force) and not display:
-        pfx = '.' if notifier else ''
-        logging.error(pfx + e_msg)
-    elif display:
-        print(e_msg)
-    if not _exception_log_lock.acquire(timeout=config.timeout):
-        logging.critical('log_traceback locking broken')
-        critical(log=False)
-        return
-    try:
-        e = {'t': time.strftime('%Y/%m/%d %H:%M:%S %z'), 'e': e_msg}
-        _exceptions.append(e)
-        if len(_exceptions) > keep_exceptions:
-            del _exceptions[0]
-    finally:
-        _exception_log_lock.release()
-
-
 cvars_lock = RLocker('core')
 
-dump = FunctionCollecton(on_error=log_traceback, include_exceptions=True)
-save = FunctionCollecton(on_error=log_traceback)
-shutdown = FunctionCollecton(on_error=log_traceback)
-stop = FunctionCollecton(on_error=log_traceback)
+
+def log_traceback(*args, notifier=False, **kwargs):
+    pyaltt2.logs.log_traceback(*args, use_ignore=notifier, **kwargs)
+
+
+dump = FunctionCollection(on_error=log_traceback, include_exceptions=True)
+save = FunctionCollection(on_error=log_traceback)
+shutdown = FunctionCollection(on_error=log_traceback)
+stop = FunctionCollection(on_error=log_traceback)
 
 
 def format_db_uri(db_uri):
@@ -211,19 +195,14 @@ def create_db_engine(db_uri, timeout=None):
             db_uri,
             connect_args={'timeout': timeout if timeout else config.timeout})
     else:
-        return sa.create_engine(
-            db_uri,
-            pool_size=db_pool_size,
-            max_overflow=db_pool_size * 2,
-            isolation_level='READ UNCOMMITTED')
+        return sa.create_engine(db_uri,
+                                pool_size=db_pool_size,
+                                max_overflow=db_pool_size * 2,
+                                isolation_level='READ UNCOMMITTED')
 
 
 def sighandler_hup(signum, frame):
-    logging.info('got HUP signal, rotating logs')
-    try:
-        reset_log()
-    except:
-        log_traceback()
+    logging.info('got HUP signal')
 
 
 def suicide(**kwargs):
@@ -237,7 +216,7 @@ def suicide(**kwargs):
 def sighandler_term(signum=None, frame=None):
     if _flags.sigterm_sent: return
     _flags.sigterm_sent = True
-    background_job(suicide, daemon=True)()
+    threading.Thread(target=suicide, daemon=True).start()
     logging.info('got TERM signal, exiting')
     if config.db_update == 2:
         try:
@@ -288,8 +267,11 @@ def do_save():
 
 def block():
     _flags.started.set()
-    from twisted.internet import reactor
-    reactor.run(installSignalHandlers=False)
+    if _flags.use_reactor:
+        from twisted.internet import reactor
+        reactor.run(installSignalHandlers=False)
+    else:
+        task_supervisor.block()
 
 
 def is_shutdown_requested():
@@ -304,8 +286,10 @@ def core_shutdown():
     _flags.shutdown_requested = True
     shutdown()
     stop()
-    from twisted.internet import reactor
-    reactor.callFromThread(reactor.stop)
+    if _flags.use_reactor:
+        from twisted.internet import reactor
+        reactor.callFromThread(reactor.stop)
+    task_supervisor.stop(wait=True)
 
 
 def create_dump(e='request', msg=''):
@@ -314,15 +298,16 @@ def create_dump(e='request', msg=''):
         result.update({'reason': {'event': e, 'info': str(msg)}})
         filename = dir_var + '/' + time.strftime('%Y%m%d%H%M%S') + \
                 '.dump.gz'
-        dmp = format_json(
-            result, minimal=not config.development, unpicklable=True).encode()
+        dmp = format_json(result,
+                          minimal=not config.development,
+                          unpicklable=True).encode()
         with gzip.open(filename, 'w') as fd:
             pass
         os.chmod(filename, stat.S_IRUSR | stat.S_IWUSR)
         with gzip.open(filename, 'a') as fd:
             fd.write(dmp)
-        logging.warning(
-            'dump created, file: %s, event: %s (%s)' % (filename, e, msg))
+        logging.warning('dump created, file: %s, event: %s (%s)' %
+                        (filename, e, msg))
     except:
         log_traceback()
         return None
@@ -336,6 +321,7 @@ def serialize():
     proc = psutil.Process()
     d['version'] = version
     d['timeout'] = config.timeout
+    d['python'] = sys.version
     d['system_name'] = config.system_name
     d['product_name'] = product.name
     d['product_code'] = product.code
@@ -362,12 +348,12 @@ def serialize():
     d['threads'] = {}
     d['uptime'] = int(time.time() - start_time)
     d['time'] = time.time()
-    d['exceptions'] = _exceptions
     d['fd'] = proc.open_files()
     for t in threading.enumerate().copy():
         d['threads'][t.name] = {}
         d['threads'][t.name]['daemon'] = t.daemon
         d['threads'][t.name]['alive'] = t.is_alive()
+    d.update(pyaltt2.logs.serialize())
     return d
 
 
@@ -428,58 +414,15 @@ def userdb():
         return g.userdb
 
 
-def reset_log(initial=False):
-    if log_engine.logger and not config.log_file: return
-    log_engine.logger = logging.getLogger()
-    try:
-        log_engine.log_file_handler.stream.close()
-    except:
-        pass
-    if initial:
-        for h in log_engine.logger.handlers:
-            log_engine.logger.removeHandler(h)
-    else:
-        log_engine.logger.removeHandler(log_engine.log_file_handler)
-    if not config.development:
-        formatter = logging.Formatter('%(asctime)s ' + config.system_name + \
-            '  %(levelname)s ' + product.code + ' %(threadName)s: %(message)s')
-    else:
-        formatter = logging.Formatter('%(asctime)s ' + config.system_name + \
-            ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
-            'l:%(lineno)d th:%(threadName)s :: %(message)s')
-    if config.log_file:
-        log_engine.log_file_handler = logging.FileHandler(config.log_file)
-    else:
-        from eva.logs import StdoutHandler
-        log_engine.log_file_handler = StdoutHandler()
-    log_engine.log_file_handler.setFormatter(formatter)
-    log_engine.logger.addHandler(log_engine.log_file_handler)
-    if initial:
-        from eva.logs import MemoryLogHandler
-        log_engine.logger.addHandler(MemoryLogHandler())
-        if config.syslog:
-            if config.syslog.startswith('/'):
-                syslog_addr = config.syslog
-            else:
-                addr, port = parse_host_port(config.syslog, 514)
-                if addr:
-                    syslog_addr = (addr, port)
-                else:
-                    logging.error('Invalid syslog configuration: {}'.format(
-                        config.syslog))
-                    syslog_addr = None
-            if syslog_addr:
-                log_engine.syslog_handler = logging.handlers.SysLogHandler(
-                    address=syslog_addr)
-                log_engine.syslog_handler.setFormatter(
-                    logging.Formatter(
-                        config.syslog_format.replace('%(name)s', product.code))
-                    if config.syslog_format else formatter)
-                log_engine.logger.addHandler(log_engine.syslog_handler)
-
-
 def load(fname=None, initial=False, init_log=True, check_pid=True):
-    from eva.logs import log_levels_by_name
+
+    def secure_file(f):
+        fn = dir_eva + '/' + f
+        with open(fn, 'a'):
+            pass
+        os.chmod(fn, mode=0o600)
+
+    from eva.logs import log_levels_by_name, init as init_logs
     fname_full = format_cfg_fname(fname)
     cfg = configparser.ConfigParser(inline_comment_prefixes=';')
     try:
@@ -519,7 +462,6 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.syslog_format = cfg.get('server', 'syslog_format')
             except:
                 pass
-            if init_log: reset_log(initial)
             try:
                 log_level = cfg.get('server', 'logging_level')
                 if log_level in log_levels_by_name:
@@ -530,12 +472,14 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                                                        log_level.upper())
             except:
                 pass
+            if init_log: init_logs()
             try:
                 config.development = (cfg.get('server', 'development') == 'yes')
             except:
                 config.development = False
             if config.development:
                 config.show_traceback = True
+                pyaltt2.logs.config.tracebacks = True,
                 debug_on()
                 logging.critical('DEVELOPMENT MODE STARTED')
                 config.debug = True
@@ -566,8 +510,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 pass
             logging.info('Loading server config')
             logging.debug('server.pid_file = %s' % config.pid_file)
-            logging.debug(
-                'server.logging_level = %s' % config.default_log_level_name)
+            logging.debug('server.logging_level = %s' %
+                          config.default_log_level_name)
             try:
                 config.notify_on_start = (cfg.get('server',
                                                   'notify_on_start') == 'yes')
@@ -584,8 +528,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 config.stop_on_critical = 'always'
             elif config.stop_on_critical not in ['no', 'always', 'core']:
                 stop_on_critical = 'no'
-            logging.debug(
-                'server.stop_on_critical = %s' % config.stop_on_critical)
+            logging.debug('server.stop_on_critical = %s' %
+                          config.stop_on_critical)
             try:
                 config.dump_on_critical = (cfg.get('server',
                                                    'dump_on_critical') == 'yes')
@@ -593,8 +537,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                 pass
             logging.debug('server.dump_on_critical = %s' % ('yes' \
                                         if config.dump_on_critical else 'no'))
+            prepare_save()
             try:
                 db_file = cfg.get('server', 'db_file')
+                secure_file(db_file)
             except:
                 db_file = None
             try:
@@ -605,8 +551,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             logging.debug('server.db = %s' % config.db_uri)
             try:
                 userdb_file = cfg.get('server', 'userdb_file')
+                secure_file(userdb_file)
             except:
                 userdb_file = None
+            finish_save()
             try:
                 userdb_uri = cfg.get('server', 'userdb')
             except:
@@ -646,19 +594,31 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         logging.debug('server.polldelay = %s  ( %s msec )' % \
                             (config.polldelay, int(config.polldelay * 1000)))
         try:
+            config.pool_min_size = int(cfg.get('server', 'pool_min_size'))
+        except:
+            pass
+        logging.debug('server.pool_min_size = %s' % config.pool_min_size)
+        try:
+            config.pool_max_size = int(cfg.get('server', 'pool_max_size'))
+        except:
+            pass
+        logging.debug('server.pool_max_size = %s' %
+                      (config.pool_max_size
+                       if config.pool_max_size is not None else 'auto'))
+        try:
             config.reactor_thread_pool = int(
                 cfg.get('server', 'reactor_thread_pool'))
         except:
             pass
-        logging.debug(
-            'server.reactor_thread_pool = %s' % config.reactor_thread_pool)
+        logging.debug('server.reactor_thread_pool = %s' %
+                      config.reactor_thread_pool)
         try:
             config.db_update = db_update_codes.index(
                 cfg.get('server', 'db_update'))
         except:
             pass
-        logging.debug(
-            'server.db_update = %s' % db_update_codes[config.db_update])
+        logging.debug('server.db_update = %s' %
+                      db_update_codes[config.db_update])
         try:
             config.keep_action_history = int(
                 cfg.get('server', 'keep_action_history'))
@@ -695,8 +655,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                                                  'mqtt_update_default')
         except:
             pass
-        logging.debug(
-            'server.mqtt_update_default = %s' % config.mqtt_update_default)
+        logging.debug('server.mqtt_update_default = %s' %
+                      config.mqtt_update_default)
         try:
             config.default_cloud_key = cfg.get('cloud', 'default_key')
         except:
@@ -705,7 +665,7 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         return cfg
     except:
         print('Can not read primary config %s' % fname_full)
-        log_traceback(True)
+        log_traceback(display=True)
     return False
 
 
@@ -780,15 +740,14 @@ def save_modified():
 
 
 def debug_on():
+    pyaltt2.logs.set_debug(True)
     config.debug = True
-    logging.basicConfig(level=logging.DEBUG)
-    if log_engine.logger: log_engine.logger.setLevel(logging.DEBUG)
     logging.info('Debug mode ON')
 
 
 def debug_off():
     config.debug = False
-    if log_engine.logger: log_engine.logger.setLevel(config.default_log_level)
+    pyaltt2.logs.set_debug(False)
     logging.info('Debug mode OFF')
 
 
@@ -900,15 +859,35 @@ def init():
         signal.signal(signal.SIGINT, sighandler_term)
 
 
+def start_supervisor():
+    task_supervisor.set_thread_pool(min_size=config.pool_min_size,
+                                    max_size=config.pool_max_size)
+    task_supervisor.timeout_critical_func = critical
+    task_supervisor.poll_delay = config.polldelay
+    task_supervisor.start()
+    task_supervisor.create_aloop('default', default=True)
+    task_supervisor.create_aloop('cleaners')
+    task_supervisor.create_async_job_scheduler('default', default=True)
+    task_supervisor.create_async_job_scheduler('cleaners', aloop='cleaners')
+
+
+spawn = task_supervisor.spawn
+
+
 def start(init_db_only=False):
     if not init_db_only:
         from twisted.internet import reactor
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
     set_db(config.db_uri, config.userdb_uri)
+    product.usn = str(
+        uuid.uuid5(uuid.NAMESPACE_URL,
+                   f'eva://{config.system_name}/{product.code}'))
 
 
 def register_controller(controller):
     controllers.add(controller)
 
+
+timeouter.set_default_exception_class(TimeoutException)
 
 #BD: 20.05.2017

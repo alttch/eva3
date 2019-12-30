@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import smtplib
 import platform
@@ -16,11 +16,10 @@ from eva.exceptions import FunctionFailed
 
 from types import SimpleNamespace
 
-config = SimpleNamespace(
-    sender='eva@' + platform.node(),
-    smtp_host='localhost',
-    smtp_port=25,
-    default_rcp=['root'])
+config = SimpleNamespace(sender='eva@' + platform.node(),
+                         smtp_host='localhost',
+                         smtp_port=25,
+                         default_rcp=['root'])
 
 default_port = 25
 

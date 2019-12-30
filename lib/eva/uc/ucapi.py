@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import cherrypy
 import os
@@ -252,14 +252,13 @@ class UC_API(GenericAPI):
         if s == 'toggle':
             s = 0 if item.status else 1
         return self._process_action_result(
-            eva.uc.controller.exec_unit_action(
-                unit=item,
-                nstatus=s,
-                nvalue=v,
-                priority=p,
-                q_timeout=q,
-                wait=w,
-                action_uuid=u))
+            eva.uc.controller.exec_unit_action(unit=item,
+                                               nstatus=s,
+                                               nvalue=v,
+                                               priority=p,
+                                               q_timeout=q,
+                                               wait=w,
+                                               action_uuid=u))
 
     @log_i
     def action_toggle(self, **kwargs):
@@ -288,13 +287,12 @@ class UC_API(GenericAPI):
         elif not apikey.check(k, item): raise AccessDenied
         s = 0 if item.status else 1
         return self._process_action_result(
-            eva.uc.controller.exec_unit_action(
-                unit=item,
-                nstatus=s,
-                priority=p,
-                q_timeout=q,
-                wait=w,
-                action_uuid=u))
+            eva.uc.controller.exec_unit_action(unit=item,
+                                               nstatus=s,
+                                               priority=p,
+                                               q_timeout=q,
+                                               wait=w,
+                                               action_uuid=u))
 
     @log_i
     def disable_actions(self, **kwargs):
@@ -418,7 +416,7 @@ class UC_API(GenericAPI):
         if s is not None or v is not None:
             return item.update_set_state(status=s, value=v)
         else:
-            item.need_update.set()
+            item.update_processor.trigger_threadsafe(force=True)
             return True, api_result_accepted
 
     @log_w
@@ -662,8 +660,9 @@ class UC_API(GenericAPI):
             save: save unit configuration immediately
         """
         i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
-        return eva.uc.controller.create_unit(
-            unit_id=oid_to_id(i, 'unit'), group=g, save=save).serialize()
+        return eva.uc.controller.create_unit(unit_id=oid_to_id(i, 'unit'),
+                                             group=g,
+                                             save=save).serialize()
 
     @log_i
     @api_need_master
@@ -682,8 +681,9 @@ class UC_API(GenericAPI):
             save: save sensor configuration immediately
         """
         i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
-        return eva.uc.controller.create_sensor(
-            sensor_id=oid_to_id(i, 'sensor'), group=g, save=save).serialize()
+        return eva.uc.controller.create_sensor(sensor_id=oid_to_id(i, 'sensor'),
+                                               group=g,
+                                               save=save).serialize()
 
     @log_i
     @api_need_master
@@ -702,8 +702,9 @@ class UC_API(GenericAPI):
             save: save multi-update configuration immediately
         """
         i, g, save = parse_api_params(kwargs, 'igS', 'Ssb')
-        return eva.uc.controller.create_mu(
-            mu_id=oid_to_id(i, 'mu'), group=g, save=save).serialize()
+        return eva.uc.controller.create_mu(mu_id=oid_to_id(i, 'mu'),
+                                           group=g,
+                                           save=save).serialize()
 
     @log_i
     @api_need_master
@@ -750,8 +751,10 @@ class UC_API(GenericAPI):
             save: save multi-update configuration immediately
         """
         i, n, g, save = parse_api_params(kwargs, 'ingS', 'SSsb')
-        return eva.uc.controller.clone_item(
-            item_id=i, new_item_id=n, group=g, save=save).serialize()
+        return eva.uc.controller.clone_item(item_id=i,
+                                            new_item_id=n,
+                                            group=g,
+                                            save=save).serialize()
 
     @log_i
     @api_need_master
@@ -775,8 +778,11 @@ class UC_API(GenericAPI):
         g, n, p, r, save = parse_api_params(kwargs, 'gnprS', 'SSssb')
         if (p and not r) or (r and not p):
             raise InvalidParameter('both prefixes must be specified')
-        return eva.uc.controller.clone_group(
-            group=g, new_group=n, prefix=p, new_prefix=r, save=save)
+        return eva.uc.controller.clone_group(group=g,
+                                             new_group=n,
+                                             prefix=p,
+                                             new_prefix=r,
+                                             save=save)
 
     @log_w
     @api_need_master
@@ -840,8 +846,8 @@ class UC_API(GenericAPI):
         """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
-        cfg = self._load_device_config(
-            tpl_config=tpl_config, device_tpl=device_tpl)
+        cfg = self._load_device_config(tpl_config=tpl_config,
+                                       device_tpl=device_tpl)
         _k = eva.apikey.get_masterkey()
         if cfg is None: raise ResourceNotFound
         units = cfg.get('units')
@@ -894,8 +900,8 @@ class UC_API(GenericAPI):
         """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
-        cfg = self._load_device_config(
-            tpl_config=tpl_config, device_tpl=device_tpl)
+        cfg = self._load_device_config(tpl_config=tpl_config,
+                                       device_tpl=device_tpl)
         return self._do_update_device(cfg=cfg, save=save)
 
     def _do_update_device(self,
@@ -905,8 +911,8 @@ class UC_API(GenericAPI):
                           save=False):
         _k = eva.apikey.get_masterkey()
         if cfg is None:
-            cfg = self._load_device_config(
-                tpl_config=tpl_config, device_tpl=device_tpl)
+            cfg = self._load_device_config(tpl_config=tpl_config,
+                                           device_tpl=device_tpl)
         cvars = cfg.get('cvars')
         if cvars:
             for i, v in cvars.items():
@@ -967,8 +973,8 @@ class UC_API(GenericAPI):
         """
         k, tpl_config, device_tpl, save = parse_function_params(
             kwargs, 'kctS', '..Sb')
-        cfg = self._load_device_config(
-            tpl_config=tpl_config, device_tpl=device_tpl)
+        cfg = self._load_device_config(tpl_config=tpl_config,
+                                       device_tpl=device_tpl)
         _k = eva.apikey.get_masterkey()
         if cfg is None: raise ResourceNotFound
         mu = cfg.get('mu')
@@ -1059,8 +1065,12 @@ class UC_API(GenericAPI):
             returned and port is recreated.
         """
         i, p, l, t, d, r, save = parse_api_params(kwargs, 'ipltdrS', 'SSbnnib')
-        result = eva.uc.modbus.create_modbus_port(
-            i, p, lock=l, timeout=t, delay=d, retries=r)
+        result = eva.uc.modbus.create_modbus_port(i,
+                                                  p,
+                                                  lock=l,
+                                                  timeout=t,
+                                                  delay=d,
+                                                  retries=r)
         if save: eva.uc.modbus.save()
         return True
 
@@ -1215,14 +1225,15 @@ class UC_API(GenericAPI):
                 if data.isError():
                     result.append({
                         'addr':
-                        '{}{}'.format(rtype, addr),
+                            '{}{}'.format(rtype, addr),
                         'error':
-                        str(data.message if hasattr(data, 'message') else data)
+                            str(data.message if hasattr(data, 'message'
+                                                       ) else data)
                     })
                 else:
                     cc = 1
-                    for d in data.registers if rtype in ['h',
-                                                         'i'] else data.bits:
+                    for d in data.registers if rtype in ['h', 'i'
+                                                        ] else data.bits:
                         if d is True:
                             v = 1
                         elif d is False:
@@ -1545,8 +1556,8 @@ class UC_API(GenericAPI):
                     for attr in (a if isinstance(a, list) else [a]):
                         s[attr] = bus.read(r, attr)
             result.append(s)
-        return sorted(
-            sorted(result, key=lambda k: k['path']), key=lambda k: k['type'])
+        return sorted(sorted(result, key=lambda k: k['path']),
+                      key=lambda k: k['type'])
 
     # master functions for PHI configuration
 
@@ -1627,9 +1638,8 @@ class UC_API(GenericAPI):
             full: get exntended information
         """
         full = parse_api_params(kwargs, 'Y', 'b')
-        return sorted(
-            eva.uc.driverapi.serialize_phi(full=full, config=full),
-            key=lambda k: k['id'])
+        return sorted(eva.uc.driverapi.serialize_phi(full=full, config=full),
+                      key=lambda k: k['id'])
 
     @log_i
     @api_need_master
@@ -1880,9 +1890,8 @@ class UC_API(GenericAPI):
             full: get exntended information
         """
         full = parse_api_params(kwargs, 'Y', 'b')
-        return sorted(
-            eva.uc.driverapi.serialize_lpi(full=full, config=full),
-            key=lambda k: k['id'])
+        return sorted(eva.uc.driverapi.serialize_lpi(full=full, config=full),
+                      key=lambda k: k['id'])
 
     @log_d
     @api_need_master
@@ -2103,8 +2112,11 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                         ii, slave_id, regs = ii.split('/')
                     except:
                         raise InvalidParameter
-                    return self.read_modbus_port(
-                        k=k, p=ii, s=slave_id, i=regs, **props)
+                    return self.read_modbus_port(k=k,
+                                                 p=ii,
+                                                 s=slave_id,
+                                                 i=regs,
+                                                 **props)
             else:
                 return self.list_modbus_ports(k=k)
         elif rtp == 'modbus-slave':
@@ -2213,8 +2225,11 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     ii, slave_id, regs = ii.split('/')
                 except:
                     raise InvalidParameter
-                return self.write_modbus_port(
-                    k=k, p=ii, s=slave_id, i=regs, **props)
+                return self.write_modbus_port(k=k,
+                                              p=ii,
+                                              s=slave_id,
+                                              i=regs,
+                                              **props)
         elif rtp == 'owfs':
             self.create_owfs_bus(k=k, i=ii, save=save, **props)
             return self.get_owfs_bus(k=k, i=ii)
@@ -2300,14 +2315,14 @@ def start():
     http_api = UC_HTTP_API()
     cherrypy.tree.mount(http_api, http_api.api_uri)
     cherrypy.tree.mount(jrpc, jrpc.api_uri)
-    cherrypy.tree.mount(
-        UC_REST_API(),
-        UC_REST_API.api_uri,
-        config={
-            '/': {
-                'request.dispatch': cherrypy.dispatch.MethodDispatcher()
-            }
-        })
+    cherrypy.tree.mount(UC_REST_API(),
+                        UC_REST_API.api_uri,
+                        config={
+                            '/': {
+                                'request.dispatch':
+                                    cherrypy.dispatch.MethodDispatcher()
+                            }
+                        })
     eva.api.jrpc = jrpc
     eva.ei.start()
 

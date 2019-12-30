@@ -1,9 +1,8 @@
 import sys
-import os
 import time
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 
 from eva.client.apiclient import APIClientLocal
 from eva.client.apiclient import result_ok
@@ -45,8 +44,8 @@ if result.get('log_level') < 30:
     print(
         'Warning: log level lower than "warning" may cause perfomance slow down'
     )
-api_call(
-    'destroy', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor'}, eoe=False)
+api_call('destroy', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor'},
+         eoe=False)
 api_call('destroy', {'i': 'unit:eva_benchmarks/eva_benchmark_unit'}, eoe=False)
 
 api_call('create', {'i': 'sensor:eva_benchmarks/eva_benchmark_sensor'})

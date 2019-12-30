@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import threading
 from queue import PriorityQueue
@@ -9,8 +9,9 @@ import logging
 import eva.core
 import eva.item
 import time
+import asyncio
 
-from pyaltt import background_worker
+from neotasker import BackgroundIntervalWorker, BackgroundQueueWorker
 
 
 class ActiveItemQueue(object):
@@ -32,8 +33,6 @@ class ActiveItemQueue(object):
         self.actions_lock = threading.RLock()
 
         self.action_processor = None
-        self.action_cleaner_active = False
-        self.q = PriorityQueue()
 
         self.enterprise_layout = enterprise_layout
 
@@ -46,7 +45,7 @@ class ActiveItemQueue(object):
         if self.keep_history:
             self.history_append(action)
         if action.set_pending():
-            self.q.put(action, p)
+            self.action_processor.put_threadsafe(action)
             return True
         return False
 
@@ -116,11 +115,20 @@ class ActiveItemQueue(object):
             self.keep_history = eva.core.config.keep_action_history
         self.action_cleaner_interval = eva.core.config.action_cleaner_interval
 
-        self.action_cleaner = background_worker(
-            action_cleaner, delay=self.action_cleaner_interval, o=self)
+        self.action_cleaner = BackgroundIntervalWorker(
+            fn=action_cleaner,
+            name='primary_action_cleaner',
+            delay=self.action_cleaner_interval,
+            o=self,
+            on_error=eva.core.log_traceback,
+            loop='cleaners')
         self.action_cleaner.start()
-        self.action_processor = background_worker(
-            action_processor, queue=self.q, o=self)
+        self.action_processor = BackgroundQueueWorker(
+            fn=action_processor,
+            name='primary_action_processor',
+            on_error=eva.core.log_traceback,
+            queue=asyncio.queues.PriorityQueue,
+            o=self)
         self.action_processor.start()
 
     def stop(self):
@@ -131,7 +139,7 @@ class ActiveItemQueue(object):
         return action.item.q_put_task(action)
 
 
-def action_processor(action, **kwargs):
+async def action_processor(action, **kwargs):
     if not action.item: return
     o = kwargs.get('o')
     logging.debug('new action to toss, uuid: %s, priority: %u' % \
@@ -149,7 +157,7 @@ def action_processor(action, **kwargs):
         eva.core.log_traceback()
 
 
-def action_cleaner(**kwargs):
+async def action_cleaner(**kwargs):
     o = kwargs.get('o')
     if not o.actions_lock.acquire(timeout=eva.core.config.timeout):
         logging.critical('ActiveItemQueue::_t_action_cleanup locking broken')

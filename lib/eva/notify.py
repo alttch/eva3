@@ -1,11 +1,12 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import logging
 import eva.core
 import rapidjson
+import msgpack
 import requests
 import paho.mqtt.client as mqtt
 import time
@@ -26,14 +27,17 @@ try:
 except:
     pass
 
-from pyaltt import BackgroundWorker
-from pyaltt import BackgroundQueueWorker
-from pyaltt import background_worker
-from pyaltt import background_job
-from pyaltt import g
+from neotasker import BackgroundIntervalWorker
+from neotasker import BackgroundQueueWorker
+from neotasker import background_worker
+from neotasker import g
 
 from eva.tools import format_json
 from eva.tools import val_to_boolean
+
+from eva.types import CT_JSON, CT_MSGPACK
+
+from eva.client.apiclient import pack_msgpack
 
 from ws4py.websocket import WebSocket
 
@@ -176,9 +180,8 @@ class GenericNotifier(object):
 
     class NotifierWorker(BackgroundQueueWorker):
 
-        def __init__(self, name=None, **kwargs):
-            super().__init__(name=name,
-                             on_error=eva.core.log_traceback,
+        def __init__(self, **kwargs):
+            super().__init__(on_error=eva.core.log_traceback,
                              on_error_kwargs=_ne_kw,
                              **kwargs)
 
@@ -206,7 +209,7 @@ class GenericNotifier(object):
         self.last_state_event = {}
         self.lse_lock = threading.RLock()
         self.notifier_worker = self.NotifierWorker(o=self,
-                                                   name='notifier_' +
+                                                   name='notifier:' +
                                                    self.notifier_id)
         self.state_storage = None
 
@@ -301,6 +304,7 @@ class GenericNotifier(object):
     def format_data(self, subject, data):
         if not subject or not data: return None
         import eva.item
+        import eva.core
         try:
             if isinstance(data, list): data_in = data
             else: data_in = [data]
@@ -398,7 +402,8 @@ class GenericNotifier(object):
         data_to_send = self.format_data(subject, data)
         if not data_to_send: return None
         self.log_notify()
-        self.notifier_worker.put((subject, data_to_send, retain, unpicklable))
+        self.notifier_worker.put_threadsafe(
+            (subject, data_to_send, retain, unpicklable))
         return True
 
     def serialize(self, props=False):
@@ -579,13 +584,13 @@ class GenericNotifier_Client(GenericNotifier):
 
 class SQLANotifier(GenericNotifier):
 
-    class HistoryCleaner(BackgroundWorker):
+    class HistoryCleaner(BackgroundIntervalWorker):
 
-        def __init__(self, name=None, **kwargs):
-            super().__init__(name=name,
-                             interval=60,
+        def __init__(self, **kwargs):
+            super().__init__(interval=60,
                              on_error=eva.core.log_traceback,
                              on_error_kwargs=_ne_kw,
+                             loop='cleaners',
                              **kwargs)
 
         def run(self, o, **kwargs):
@@ -614,8 +619,8 @@ class SQLANotifier(GenericNotifier):
         self.keep = keep if keep else \
             db_default_keep
         self._keep = keep
-        self.history_cleaner = self.HistoryCleaner(name=self.notifier_id +
-                                                   '_cleaner',
+        self.history_cleaner = self.HistoryCleaner(name='history_claner:' +
+                                                   self.notifier_id,
                                                    o=self)
         self.db_lock = threading.RLock()
         self.set_db(db_uri)
@@ -859,7 +864,6 @@ class GenericHTTPNotifier(GenericNotifier):
                          timeout=timeout)
         self.ssl_verify = ssl_verify
         self.uri = uri
-        self.rs_lock = threading.RLock()
         self.username = username
         self.password = password
         self.xrargs = {'verify': self.ssl_verify}
@@ -870,13 +874,12 @@ class GenericHTTPNotifier(GenericNotifier):
 
     def rsession(self):
         n = 'notifier_{}_rsession'.format(self.notifier_id)
-        with self.rs_lock:
-            if not g.has(n):
-                c = requests.Session()
-                g.set(n, c)
-            else:
-                c = g.get(n)
-            return c
+        if not g.has(n):
+            c = requests.Session()
+            g.set(n, c)
+        else:
+            c = g.get(n)
+        return c
 
     def log_notify(self):
         logging.debug('.sending data notification to ' + \
@@ -1346,11 +1349,10 @@ class PrometheusNotifier(GenericNotifier):
 
 class GenericMQTTNotifier(GenericNotifier):
 
-    class Announcer(BackgroundWorker):
+    class Announcer(BackgroundIntervalWorker):
 
-        def __init__(self, name=None, **kwargs):
-            super().__init__(name=name,
-                             on_error=eva.core.log_traceback,
+        def __init__(self, **kwargs):
+            super().__init__(on_error=eva.core.log_traceback,
                              on_error_kwargs=_ne_kw,
                              **kwargs)
 
@@ -1464,11 +1466,12 @@ class GenericMQTTNotifier(GenericNotifier):
                             '/' + eva.core.config.system_name
         import eva.api
         self.api_handler = eva.api.mqtt_api_handler
-        self.discovery_handler = eva.api.mqtt_discovery_handler
+        self.discovery_handler = eva.api.controller_discovery_handler
         # dict of tuples (topic, handler)
         self.api_callback = {}
         self.api_callback_lock = threading.RLock()
-        self.announcer = self.Announcer(name=self.notifier_id + '_announcer',
+        self.announcer = self.Announcer(name='mqtt_announcer:' +
+                                        self.notifier_id,
                                         o=self,
                                         interval=self.announce_interval)
         self.handler_lock = threading.RLock()
@@ -1484,9 +1487,11 @@ class GenericMQTTNotifier(GenericNotifier):
         self.announcer.stop()
 
     def on_connect(self, client, userdata, flags, rc):
+        if eva.core.is_shutdown_requested():
+            return
         logging.debug('.%s mqtt reconnect' % self.notifier_id)
         if self.announce_interval and not self.test_only_mode:
-            self.announcer.start(_name=self.notifier_id + '_announcer')
+            self.announcer.start()
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
                 '.GenericMQTTNotifier::api_callback locking broken')
@@ -1652,7 +1657,8 @@ class GenericMQTTNotifier(GenericNotifier):
         if not self.enabled: return
         t = msg.topic
         try:
-            d = msg.payload.decode()
+            d = msg.payload if msg.payload.startswith(
+                b'\x00') else msg.payload.decode()
         except:
             logging.warning('.Invalid message from MQTT server: {}'.format(
                 msg.payload))
@@ -1662,31 +1668,30 @@ class GenericMQTTNotifier(GenericNotifier):
                 d != self.announce_msg and \
                 self.discovery_handler and \
                 not eva.core.is_setup_mode() and eva.core.is_started():
-            background_job(self.discovery_handler,
-                           daemon=True)(self.notifier_id, d)
+            eva.core.spawn(self.discovery_handler, self.notifier_id, d,
+                           f'mqtt://{self.notifier_id}:{d}')
             return
         if t == self.api_request_topic and self.api_handler:
-            background_job(self.api_handler,
-                           daemon=True)(self.notifier_id, d,
-                                        self.send_api_response)
+            eva.core.spawn(self.api_handler, self.notifier_id, d,
+                           self.send_api_response)
             return
         if t.startswith(self.pfx_api_response):
             response_id = t.split('/')[-1]
             if response_id in self.api_callback:
-                background_job(self.api_callback[response_id][1],
-                               daemon=True)(d)
+                eva.core.spawn(self.api_callback[response_id][1], d)
                 self.finish_api_request(response_id)
                 return
         if t in self.custom_handlers:
             for h in self.custom_handlers.get(t):
-                background_job(self.exec_custom_handler,
-                               daemon=True)(h, d, t, msg.qos, msg.retain)
+                eva.core.spawn(self.exec_custom_handler, h, d, t, msg.qos,
+                               msg.retain)
         if self.collect_logs and t == self.log_topic:
             try:
                 r = rapidjson.loads(d)
                 if r['h'] != eva.core.config.system_name or \
                         r['p'] != eva.core.product.code:
-                    eva.logs.log_append(rd=r, skip_mqtt=True)
+                    import pyaltt2.logs
+                    pyaltt2.logs.append(rd=r, skip_mqtt=True)
             except:
                 eva.core.log_traceback(notifier=True)
         elif t in self.items_to_update_by_topic:
@@ -2110,7 +2115,7 @@ class GCP_IoT(GenericNotifier):
         if not self.test_only_mode:
             if self.map is None:
                 self.log_error(message='map file not specified or invalid')
-            self.reset_connection.start(_delay_before=self.token_expire -
+            self.reset_connection.start(delay=self.token_expire -
                                         self.get_timeout(),
                                         o=self)
 
@@ -2186,8 +2191,9 @@ class GCP_IoT(GenericNotifier):
                     import eva.apikey
                     payload['params']['k'] = eva.apikey.format_key(self.apikey)
                 import eva.api
+                import eva.core
                 g.set('eva_ics_gw', 'gcpiot:' + self.notifier_id)
-                background_job(eva.api.jrpc)(p=payload)
+                eva.core.spawn(eva.api.jrpc, p=payload)
             except:
                 logging.warning(
                     '.Invalid command message from MQTT server: {}'.format(
@@ -2383,9 +2389,18 @@ class GCP_IoT(GenericNotifier):
 
 class WSNotifier_Client(GenericNotifier_Client):
 
-    def __init__(self, notifier_id=None, apikey=None, token=None, ws=None):
+    def __init__(self,
+                 notifier_id=None,
+                 apikey=None,
+                 token=None,
+                 ws=None,
+                 ct=CT_JSON):
         super().__init__(notifier_id, 'ws', apikey, token)
         self.ws = ws
+        pm = {'s': 'pong'}
+        self.ws.pong_message = rapidjson.dumps(
+            pm) if ct == CT_JSON else pack_msgpack(pm)
+        self.ct = ct
         if self.ws:
             self.ws.notifier = self
             self.connected = True
@@ -2395,7 +2410,11 @@ class WSNotifier_Client(GenericNotifier_Client):
             try:
                 msg = {'s': subject, 'd': data}
                 logging.debug('.notifying WS %s' % self.notifier_id)
-                self.ws.send(format_json(msg, unpicklable=unpicklable))
+                if self.ct == CT_JSON:
+                    data = format_json(msg, unpicklable=unpicklable)
+                else:
+                    data = pack_msgpack(msg)
+                self.ws.send(data, binary=self.ct == CT_MSGPACK)
             except:
                 eva.core.log_traceback(notifier=True)
 
@@ -2435,13 +2454,17 @@ class NWebSocket(WebSocket):
     def received_message(self, message):
         s_all = ['#']
         try:
-            data = rapidjson.loads(message.data.decode())
+            if self.notifier.ct == CT_MSGPACK:
+                data = msgpack.loads(message.data, raw=False)
+            else:
+                data = rapidjson.loads(message.data.decode())
             subject = data['s']
             if subject == 'bye':
                 self.close()
                 return
             elif subject == 'ping':
-                self.send('{"s":"pong"}')
+                self.send(self.pong_message,
+                          binary=self.notifier.ct == CT_MSGPACK)
             elif subject == 'u' and self.notifier:
                 topic = data['t']
                 if isinstance(topic, list):
@@ -2653,7 +2676,7 @@ def get_notifier_fnames():
     return glob.glob(fnames)
 
 
-def load(test=True, connect=True):
+def load(test=True, connect=False):
     logging.info('Loading notifiers')
     notifiers.clear()
     try:
@@ -2813,8 +2836,8 @@ def start():
     notifier_client_cleaner.start()
     th = []
     for i, n in notifiers.copy().items():
-        if n.enabled: n.start()
-        th.append(threading.Thread(target=n.start, daemon=True))
+        if n.enabled:
+            th.append(threading.Thread(target=n.start, daemon=True))
     time_start = time.time()
     [t.start() for t in th]
     while time_start + eva.core.config.timeout > time.time():
@@ -2869,8 +2892,9 @@ def mark_leaving(n):
 
 
 @background_worker(delay=notifier_client_clean_delay,
+                   name='notify:client_cleaner',
                    on_error=eva.core.log_traceback)
-def notifier_client_cleaner(**kwargs):
+async def notifier_client_cleaner(**kwargs):
     for k, n in notifiers.copy().items():
         if n.nt_client: n.cleanup()
 

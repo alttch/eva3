@@ -1,11 +1,33 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
-import os
 import requests
 import uuid
+from pathlib import Path
+
+from functools import partial
+
+
+def pack_msgpack(data):
+    p = msgpack.Packer(use_bin_type=True)
+    return p.pack(data)
+
+
+try:
+    import msgpack
+    CONTENT_TYPE = 'application/msgpack'
+    pack = pack_msgpack
+    unpack = partial(msgpack.loads, raw=False)
+except:
+    CONTENT_TYPE = 'application/json'
+    try:
+        import rapidjson as json
+    except:
+        import json
+    pack = json.dumps
+    unpack = json.loads
 
 version = __version__
 
@@ -67,12 +89,12 @@ class APIClient(object):
     def ssl_verify(self, v):
         self._ssl_verify = v
 
-    def do_call_http(self, payload, t):
-        return requests.post(
-            self._uri + '/jrpc',
-            json=payload,
-            timeout=t,
-            verify=self._ssl_verify)
+    def do_call_http(self, payload, t, rid=None):
+        return requests.post(self._uri + '/jrpc',
+                             data=pack(payload),
+                             timeout=t,
+                             verify=self._ssl_verify,
+                             headers={'Content-Type': CONTENT_TYPE})
 
     def call(self,
              func,
@@ -91,10 +113,16 @@ class APIClient(object):
             p = {}
         if self._key is not None and 'k' not in p:
             p['k'] = self._key
-        cid = call_id if call_id else str(uuid.uuid4())
+        if call_id is not None:
+            cid = call_id
+            rid = str(call_id).encode()
+        else:
+            u = uuid.uuid4()
+            cid = str(u)
+            rid = u.bytes
         payload = {'jsonrpc': '2.0', 'method': func, 'params': p, 'id': cid}
         try:
-            r = self.do_call(payload, t)
+            r = self.do_call(payload, t, rid=rid)
         except requests.Timeout:
             return (result_server_timeout, {}) if \
                     not _return_raw else (-1, {})
@@ -105,10 +133,10 @@ class APIClient(object):
             return (result_server_error, {}) if \
                     not _return_raw else (-2, {})
         if _return_raw:
-            return r.status_code, r.text
+            return r.status_code, r.content
         if not r.ok:
             try:
-                result = r.json()
+                result = unpack(r.content)
             except:
                 result = {}
             if r.status_code in [400, 403, 404, 405, 409, 500]:
@@ -116,7 +144,7 @@ class APIClient(object):
             else:
                 return result_unknown_error, {}
         try:
-            result = r.json()
+            result = unpack(r.content)
             if not isinstance(result, dict) or \
                 result.get('jsonrpc' != '2.0') or \
                 result.get('id') != cid:
@@ -131,7 +159,7 @@ class APIClient(object):
                 import traceback
                 print('Result:')
                 print('-' * 80)
-                print(r.text)
+                print(r.content)
                 print('-' * 80)
                 print(traceback.format_exc())
             return (result_bad_data, r.text)
@@ -144,8 +172,7 @@ class APIClientLocal(APIClient):
         super().__init__()
         if dir_eva is not None: _etc = dir_eva + '/etc'
         else:
-            _etc = os.path.dirname(os.path.realpath(__file__)) + \
-                    '/../../../etc'
+            _etc = (Path(__file__).absolute().parents[3] / 'etc').as_posix()
         self._product_code = product
         cfg = configparser.ConfigParser(inline_comment_prefixes=';')
         cfg.read(_etc + '/' + product + '_apikeys.ini')

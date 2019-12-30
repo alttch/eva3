@@ -1,16 +1,16 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import sys
 import os
 import getopt
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).absolute().parents[1] / 'lib').as_posix())
 
-os.environ['EVA_DIR'] = os.path.dirname(os.path.realpath(__file__)) + '/..'
+os.environ['EVA_DIR'] = Path(__file__).absolute().parents[1].as_posix()
 
 import eva.core
 import eva.notify
@@ -32,9 +32,8 @@ eva.core.start(init_db_only=True)
 eva.apikey.load(load_from_db=True)
 eva.notify.load(test=False, connect=False)
 
-
-print('MASTERKEY=' + (eva.apikey.get_masterkey()
-                      if eva.apikey.get_masterkey() is not None else ''))
+print('MASTERKEY=' + (eva.apikey.get_masterkey(
+) if eva.apikey.get_masterkey() is not None else ''))
 print('REMOTES=', end='')
 if eva.apikey.get_masterkey():
     print(','.join(

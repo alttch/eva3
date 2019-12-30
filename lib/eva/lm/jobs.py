@@ -1,16 +1,17 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import logging
 import uuid
 import eva.core
 import shlex
 import schedule
+import time
 import re
 
-from pyaltt import background_worker
+from neotasker import background_worker
 
 from eva.tools import val_to_boolean
 from eva.tools import dict_from_str
@@ -97,11 +98,10 @@ class Job(eva.item.Item):
             logging.debug('Skipping job {}'.format(self.item_id))
             return
         logging.debug('Executing job {}'.format(self.item_id))
-        a = eva.lm.controller.exec_macro(
-            macro=self.macro,
-            argv=self.macro_args,
-            kwargs=self.macro_kwargs,
-            source=self)
+        a = eva.lm.controller.exec_macro(macro=self.macro,
+                                         argv=self.macro_args,
+                                         kwargs=self.macro_kwargs,
+                                         source=self)
         if not a:
             logging.error('Job scheduler {} can not exec macro'.format(
                 self.item_id))
@@ -121,8 +121,11 @@ class Job(eva.item.Item):
         d['macro_args'] = self.macro_args
         d['macro_kwargs'] = self.macro_kwargs
         d['every'] = self.every
-        d.update(super().serialize(
-            full=full, config=config, info=info, props=props, notify=notify))
+        d.update(super().serialize(full=full,
+                                   config=config,
+                                   info=info,
+                                   props=props,
+                                   notify=notify))
         if 'group' in d: del d['group']
         if 'full_id' in d: del d['full_id']
         if full or info:
@@ -218,6 +221,8 @@ class Job(eva.item.Item):
             if val is not None:
                 if isinstance(val, list):
                     v = val
+                elif isinstance(val, tuple):
+                    v = list(val)
                 else:
                     try:
                         v = shlex.split(val)
@@ -240,6 +245,7 @@ class Job(eva.item.Item):
         return super().set_prop(prop, val, save)
 
 
-@background_worker(interval=eva.core.sleep_step)
+@background_worker(on_error=eva.core.log_traceback)
 def scheduler(**kwargs):
     schedule.run_pending()
+    time.sleep(eva.core.sleep_step)

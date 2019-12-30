@@ -1,8 +1,35 @@
 EVA ICS CHANGELOG
 *****************
 
-3.2.5 (TBA)
+3.3.0 (TBA)
 ===========
+
+Common
+------
+
+   * MessagePack support, internal API calls changed to msgpack
+   * MQTT inter-connect API encryption strength increased to AES256
+   * Core workers are now async to improve system performance
+   * Controller auto-discovery in local network via UPnP
+
+UC
+--
+
+   * LoRaWAN support
+   * Fixed PHI update timers
+   * Driver API 8: LoraWAN handlers, timeout helper
+   * item "update_delay" property is removed
+
+LM
+--
+
+   * Fixed cycle timers. As new cycle algorithm has near 100% precision, "avg"
+     is not reported any longer. "value" field in API response is removed as
+     well.
+
+
+3.2.5 (2019-10-03)
+==================
 
 Common
 ------
@@ -20,6 +47,7 @@ Cloud manager
 -------------
 
     * First public beta
+
 
 3.2.4 (2019-07-30)
 ==================

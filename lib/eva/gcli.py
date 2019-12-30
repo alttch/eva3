@@ -50,10 +50,10 @@ class GCLI(object):
         if not self.can_colorize():
             return str(text)
         return neotermcolor.colored(text,
-                            color=color,
-                            on_color=on_color,
-                            attrs=attrs,
-                            readline_safe=rlsafe)
+                                    color=color,
+                                    on_color=on_color,
+                                    attrs=attrs,
+                                    readline_safe=rlsafe)
 
     def start_interactive(self):
         self.reset_argcomplete()

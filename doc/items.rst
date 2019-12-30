@@ -174,10 +174,6 @@ Unit parameters
   for passive update of the item. Set 0 to disable passive updates. Minimum
   step is 0.1 sec.
 
-* **update_delay** integer value, delay (in seconds) before the next call of
-  the passive update, may be used to avoid multiple update scripts of different
-  items run simultaneously.
-
 * **update_timeout** integer, value, time (seconds) in which the script of the
   passive update should finish its work or it will be terminated.
 
@@ -232,7 +228,7 @@ Unit parameters
   [priority]". If you want to skip value, but keep priority, set it to null,
   i.e. "status 0 null 50".
 
-* **modbus_status**, **modbus_value** update item state from :ref`Modbus
+* **modbus_status**, **modbus_value** update item state from :ref:`Modbus
   slave<modbus_slave>` memory space.
 
 * **notify_events** 2 (default) - send notifications about all events, 1 -

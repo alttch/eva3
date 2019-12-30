@@ -58,6 +58,10 @@ timeout = 5
 ; layout (simple or enterprise)
 layout = enterprise
 
+; primary thread pool, min workers. comment to pre-spawn all workers
+;pool_min_size = 0
+; primary thread pool, max workers. comment to use automatic value (nCPUs * 5)
+;pool_max_size = 100
 ; reactor thread pool size (used by Modbus slave and some utility workers)
 ;reactor_thread_pool = 15
 
@@ -70,6 +74,10 @@ layout = enterprise
 
 ; default mqtt notifier for updates for new items
 ;mqtt_update_default = eva_1:2
+
+[upnp]
+; allow UPnP discovery of this controller
+listen = 0.0.0.0
 
 [sysapi]
 ; enable remote file management functions
@@ -104,6 +112,10 @@ listen = 127.0.0.1:162
 community = eva
 ; hosts, allowed to send snmp traps
 hosts_allow = 127.0.0.0/8
+
+[lorawan]
+;listen = 0.0.0.0:1700
+;hosts_allow = 0.0.0.0/0
 
 [udpapi]
 ; udp api

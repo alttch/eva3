@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 __api__ = 5
 
 import importlib
@@ -254,8 +254,11 @@ def load():
             data = rapidjson.loads(fd.read())
         for p in data:
             try:
-                load_ext(
-                    p['id'], p['mod'], cfg=p['cfg'], start=False, rebuild=False)
+                load_ext(p['id'],
+                         p['mod'],
+                         cfg=p['cfg'],
+                         start=False,
+                         rebuild=False)
             except Exception as e:
                 logging.error(e)
                 eva.core.log_traceback()

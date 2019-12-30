@@ -22,7 +22,7 @@ System Requirements
     identify node controllers. Changing host name later will require manually
     removing/appending all static links between EVA ICS controllers.
 
-* Python version 3 (3.4+)
+* Python version 3 (3.6+)
 
 * Python virtual environment modules (python3-virtualenv)
 
@@ -231,6 +231,8 @@ To solve this:
       python3-pip*) in case installation script has a problems downloading /
       installing it.
 
+    * **PYTHON=python3** here you may specify custom Python executable.
+
     * **SYSTEM_SITE_PACKAGES=1** virtual environment will use system site
       packages if their versions match with requested.
 
@@ -309,7 +311,7 @@ Updating
 .. warning::
 
     Before updating from the previous version, read `update
-    manifest <https://github.com/alttch/eva3/blob/3.2.4/UPDATE.rst>`_.
+    manifest <https://github.com/alttch/eva3/blob/3.2.5/UPDATE.rst>`_.
 
 Using EVA Shell
 ---------------
@@ -341,7 +343,7 @@ Using system shell
 
     curl -s <UPDATE_SCRIPT_URL> | bash /dev/stdin
     #e.g.
-    #curl -s https://get.eva-ics.com/3.2.4/stable/update.sh | bash /dev/stdin
+    #curl -s https://get.eva-ics.com/3.2.5/stable/update.sh | bash /dev/stdin
 
 * If updating from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if

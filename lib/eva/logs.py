@@ -1,30 +1,23 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import logging
 import eva.core
 import time
 import sys
 import os
-import threading
-from pyaltt import background_worker
+
+import pyaltt2.logs
 
 from eva.exceptions import InvalidParameter
 
 from types import SimpleNamespace
-from neotermcolor import colored
 
 from functools import partial
 
-_log_records = []
-
-_flags = SimpleNamespace(mute=False)
-
-log_cleaner_delay = 60
-
-_log_record_lock = threading.RLock()
+KEEP_EXCEPTIONS = 100
 
 log_levels_by_name = {
     'debug': 10,
@@ -34,13 +27,7 @@ log_levels_by_name = {
     'critical': 50
 }
 
-log_levels_by_id = {
-    10: 'debug',
-    20: 'info',
-    30: 'warning',
-    40: 'error',
-    50: 'critical'
-}
+log_levels_by_id = {v: k for k, v in log_levels_by_name.items()}
 
 
 def get_log_level_by_name(l):
@@ -63,128 +50,44 @@ def get_log_level_by_id(l):
     return level
 
 
-class StdoutHandler(logging.StreamHandler):
-
-    def __init__(self):
-        self.colorize = sys.stdout.isatty(
-        ) and not os.environ.get('EVA_CORE_RAW_STDOUT')
-        self.suppress_notifier_logs = os.environ.get('EVA_CORE_SNLSO')
-        self.cfunc = {
-            10: partial(colored, color='grey', attrs=['bold']),
-            30: partial(colored, color='yellow'),
-            40: partial(colored, color='red'),
-            50: partial(colored, color='red', attrs=['bold'])
-        }
-        super().__init__(sys.stdout)
-
-    def emit(self, record):
-        if not self.suppress_notifier_logs or not record.getMessage(
-        ).startswith('.'):
-            super().emit(record)
-
-    def format(self, record):
-        if self.colorize:
-            r = super().format(record)
-            cfunc = self.cfunc.get(record.levelno)
-            return cfunc(r) if cfunc else r
-        else:
-            return super().format(record)
+def handle_append(rd, **kwargs):
+    import eva.notify
+    eva.notify.notify('log', [rd], **kwargs)
 
 
-class MemoryLogHandler(logging.Handler):
-
-    def emit(self, record):
-        log_append(record)
-
-
-def log_append(record=None, rd=None, skip_mqtt=False):
-    if record:
-        _r = {}
-        _r['t'] = record.created
-        _r['msg'] = record.getMessage()
-        _r['l'] = record.levelno
-        _r['th'] = record.threadName
-        _r['mod'] = record.module
-        _r['h'] = eva.core.config.system_name
-        _r['p'] = eva.core.product.code
-    elif rd:
-        _r = rd
-    else:
-        return
-    if not _flags.mute and _r['msg'] and _r['msg'][0] != '.' and \
-            _r['mod'] != '_cplogging':
-        if not _log_record_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical('log_append locking broken')
-            eva.core.critical()
-            return
-        try:
-            _log_records.append(_r)
-        except:
-            eva.core.log_traceback()
-        finally:
-            _log_record_lock.release()
-        eva.notify.notify('log', [_r], skip_mqtt=skip_mqtt)
-
-
-def mute():
-    _flags.mute = True
-
-
-def unmute():
-    _flags.mute = False
+def init():
+    formatter = logging.Formatter(('%(asctime)s ' + \
+            eva.core.config.system_name + \
+        ' %(levelname)s f:%(filename)s mod:%(module)s fn:%(funcName)s ' + \
+        'l:%(lineno)d th:%(threadName)s :: %(message)s') if \
+            eva.core.config.development else \
+            ('%(asctime)s ' + eva.core.config.system_name + \
+            '  %(levelname)s ' + eva.core.product.code + \
+            ' %(threadName)s: %(message)s'))
+    pyaltt2.logs.handle_append = handle_append
+    pyaltt2.logs.init(
+        name=eva.core.product.code,
+        host=eva.core.config.system_name,
+        log_file=eva.core.config.log_file,
+        log_stdout=1 if os.environ.get('EVA_CORE_LOG_STDOUT') else 0,
+        syslog=eva.core.config.syslog,
+        level=eva.core.config.default_log_level_id,
+        tracebacks=eva.core.config.show_traceback,
+        ignore='.',
+        ignore_mods=['_cplogging'],
+        stdout_ignore=os.environ.get('EVA_CORE_SNLSO') == '1',
+        keep_logmem=eva.core.config.keep_logmem,
+        keep_exceptions=KEEP_EXCEPTIONS,
+        colorize=os.environ.get('EVA_CORE_RAW_STDOUT') != '1',
+        formatter=formatter,
+        syslog_formatter=logging.Formatter(eva.core.config.syslog_format)
+        if eva.core.config.syslog_format else None)
 
 
 def start():
-    log_cleaner.start()
+    pyaltt2.logs.start()
 
 
 @eva.core.stop
 def stop():
-    log_cleaner.stop()
-
-
-def log_get(logLevel=0, t=0, n=None):
-    _lr = []
-    if n:
-        max_entries = n
-    else:
-        max_entries = 100
-    if max_entries > 10000: max_entries = 10000
-    if t:
-        _t = time.time() - t
-    else:
-        _t = 0
-    if logLevel is None: _ll = 0
-    else: _ll = logLevel
-    for r in reversed(_log_records):
-        if r['t'] > _t and r['l'] >= _ll:
-            _lr = [r] + _lr
-            if len(_lr) >= max_entries:
-                break
-    return _lr
-
-
-@background_worker(delay=log_cleaner_delay, on_error=eva.core.log_traceback)
-def log_cleaner(**kwargs):
-    if not _log_record_lock.acquire(timeout=eva.core.config.timeout):
-        logging.critical('_t_log_cleaner locking(1) broken')
-        eva.core.critical()
-        return
-    try:
-        _l = _log_records.copy()
-    except:
-        eva.core.log_traceback()
-    finally:
-        _log_record_lock.release()
-    for l in _l:
-        if time.time() - l['t'] > eva.core.config.keep_logmem:
-            if not _log_record_lock.acquire(timeout=eva.core.config.timeout):
-                logging.critical('_t_log_cleaner locking(1) broken')
-                eva.core.critical()
-                break
-            try:
-                _log_records.remove(l)
-            except:
-                eva.core.log_traceback()
-            finally:
-                _log_record_lock.release()
+    pyaltt2.logs.stop()

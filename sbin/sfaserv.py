@@ -1,14 +1,14 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import sys
 import os
 import getopt
 
-dir_lib = os.path.dirname(os.path.realpath(__file__)) + '/../lib'
-sys.path.append(dir_lib)
+from pathlib import Path
+sys.path.insert(0, (Path(__file__).parent.parent / 'lib').as_posix())
 
 import eva.core
 import eva.notify
@@ -20,6 +20,7 @@ import eva.sfa.controller
 import eva.sfa.sfapi
 import eva.logs
 import eva.sysapi
+import eva.upnp
 import eva.wsapi
 
 
@@ -42,7 +43,7 @@ for production use sfa-control only to start/stop SFA
 """)
 
 
-product_build = 2019080604
+product_build = 2019121703
 
 product_code = 'sfa'
 
@@ -75,10 +76,13 @@ if not cfg: sys.exit(2)
 if _fork: eva.core.fork()
 eva.core.write_pid_file()
 
+eva.core.start_supervisor()
 eva.logs.start()
 
 eva.api.update_config(cfg)
 eva.sysapi.update_config(cfg)
+eva.upnp.update_config(cfg)
+eva.upnp._data.discover_ports = (1912, 1917)
 
 eva.sysapi.cvars_public = True
 
@@ -104,6 +108,7 @@ eva.sfa.controller.load_remote_lms()
 eva.api.init()
 eva.sysapi.start()
 eva.wsapi.start()
+eva.upnp.start()
 eva.sfa.sfapi.start()
 
 eva.sfa.controller.start()

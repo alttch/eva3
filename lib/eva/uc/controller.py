@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import glob
 import os
@@ -37,8 +37,6 @@ from eva.core import db
 
 from functools import wraps
 
-from pyaltt import background_job
-
 units_by_id = {}
 units_by_group = {}
 units_by_full_id = {}
@@ -72,7 +70,7 @@ def handle_event(item):
     oid = item.oid
     if oid in custom_event_handlers:
         for f in custom_event_handlers.get(oid):
-            background_job(exec_event_handler)(f, item)
+            eva.core.spawn(exec_event_handler, f, item)
     return True
 
 
@@ -89,8 +87,8 @@ def register_event_handler(item_id, func):
     item = get_item(item_id)
     if not item: return False
     custom_event_handlers.setdefault(item.oid, set()).add(func)
-    logging.info(
-        'added custom event handler for %s, function %s' % (item.oid, func))
+    logging.info('added custom event handler for %s, function %s' %
+                 (item.oid, func))
     return True
 
 
@@ -265,12 +263,11 @@ def save_item_state(item, db=None):
     try:
         _id = item.full_id if \
                 eva.core.config.enterprise_layout else item.item_id
-        if dbconn.execute(
-                sql('update state set status=:status, value=:value where id=:id'
-                   ),
-                status=item.status,
-                value=item.value,
-                id=_id).rowcount:
+        if dbconn.execute(sql(
+                'update state set status=:status, value=:value where id=:id'),
+                          status=item.status,
+                          value=item.value,
+                          id=_id).rowcount:
             logging.debug('{} state updated in db'.format(item.oid))
         else:
             tp = ''
@@ -278,13 +275,12 @@ def save_item_state(item, db=None):
                 tp = 'U'
             elif item.item_type == 'sensor':
                 tp = 'S'
-            dbconn.execute(
-                sql('insert into state (id, tp, status, value) ' +
-                    'values(:id, :tp, :status, :value)'),
-                id=_id,
-                tp=tp,
-                status=item.status,
-                value=item.value)
+            dbconn.execute(sql('insert into state (id, tp, status, value) ' +
+                               'values(:id, :tp, :status, :value)'),
+                           id=_id,
+                           tp=tp,
+                           status=item.status,
+                           value=item.value)
             logging.debug('{} state inserted into db'.format(item.oid))
         return True
     except:
@@ -464,20 +460,29 @@ def create_item(item_id, item_type, group=None, start=True, save=False):
 
 @with_item_lock
 def create_unit(unit_id, group=None, save=False):
-    return create_item(
-        item_id=unit_id, item_type='U', group=group, start=True, save=save)
+    return create_item(item_id=unit_id,
+                       item_type='U',
+                       group=group,
+                       start=True,
+                       save=save)
 
 
 @with_item_lock
 def create_sensor(sensor_id, group=None, save=False):
-    return create_item(
-        item_id=sensor_id, item_type='S', group=group, start=True, save=save)
+    return create_item(item_id=sensor_id,
+                       item_type='S',
+                       group=group,
+                       start=True,
+                       save=save)
 
 
 @with_item_lock
 def create_mu(mu_id, group=None, save=False):
-    return create_item(
-        item_id=mu_id, item_type='MU', group=group, start=True, save=save)
+    return create_item(item_id=mu_id,
+                       item_type='MU',
+                       group=group,
+                       start=True,
+                       save=save)
 
 
 @with_item_lock
@@ -738,8 +743,10 @@ def exec_mqtt_unit_action(unit, msg):
         logging.debug('mqtt cmd msg status = %s' % status)
         logging.debug('mqtt cmd msg value = "%s"' % value)
         logging.debug('mqtt cmd msg priority = "%s"' % priority)
-        exec_unit_action(
-            unit=unit, nstatus=status, nvalue=value, priority=priority)
+        exec_unit_action(unit=unit,
+                         nstatus=status,
+                         nvalue=value,
+                         priority=priority)
         return
     except:
         logging.error('%s got bad mqtt action msg' % unit.full_id)

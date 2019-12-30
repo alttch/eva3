@@ -1,7 +1,7 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "3.2.5"
+__version__ = "3.3.0"
 
 import logging
 
@@ -56,6 +56,10 @@ class MethodNotImplemented(GenericException):
     def __str__(self):
         msg = super().__str__()
         return msg if msg else 'Method not implemented'
+
+
+class TimeoutException(GenericException):
+    pass
 
 
 def ecall(eresult):

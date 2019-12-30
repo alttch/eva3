@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-[ ${debug} ] && set -o xtrace
+[ "${debug}" ] && set -o xtrace
 
-PYTHON3_MIN=4
+PYTHON3_MIN=6
 
 UC_ENABLED=
 LM_ENABLED=
@@ -106,29 +106,28 @@ function option_error {
 function start_controller() {
     if [ $USE_SUPERVISOR -eq 1 ]; then
       supervisorctl update || return 5
-      supervisorctl start eva-$1 > /dev/null 2>&1
-      supervisorctl start watchdog-eva-$1 > /dev/null 2>&1
+      supervisorctl start "eva-$1" > /dev/null 2>&1
+      supervisorctl start "watchdog-eva-$1" > /dev/null 2>&1
     else
-      ./sbin/$1-control start || return 5
+      "./sbin/$1-control" start || return 5
     fi
     I=0
     sleep 0.5
-    ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
+    ./sbin/eva-tinyapi -C "$1" -F test > /dev/null 2>&1
     R=$?
     if [ $R -eq 9 ]; then
         echo " configs missing!"
         return 1
     fi
-    echo -n "$1: ." | tr "a-z" "A-Z"
+    echo -n "$1: ." | tr "[:lower:]" "[:upper:]"
     while [ $R -ne 0 ]; do
-        if [ $I -gt ${MAX_START_WAIT} ]; then
+        if [ $((I++)) -gt ${MAX_START_WAIT} ]; then
             echo " failed to start!"
             return 2
         fi
-        I=`expr $I + 1`
         sleep 0.5
         echo -n "."
-        ./sbin/eva-tinyapi -C $1 -F test > /dev/null 2>&1
+        ./sbin/eva-tinyapi -C "$1" -F test > /dev/null 2>&1
         R=$?
     done
     echo " started"
@@ -136,127 +135,124 @@ function start_controller() {
 }
 
 function save_controller_state {
-    ./sbin/eva-tinyapi -C $1 -F save > /dev/null 2>&1 || return 1
+    ./sbin/eva-tinyapi -C "$1" -F save > /dev/null 2>&1 || return 1
 }
 
 function create_operator_key {
     local P=$1
-    ./sbin/eva-tinyapi -C $P -F list_key_props i=operator > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    if ./sbin/eva-tinyapi -C "$P" -F list_key_props i=operator > /dev/null 2>&1; then
         echo "Key 'operator' already exists, recreating"
-        ./sbin/eva-tinyapi -C $P -F destroy_key i=operator > /dev/null 2>&1 || return 1
+        ./sbin/eva-tinyapi -C "$P" -F destroy_key i=operator > /dev/null 2>&1 || return 1
     fi
-    ./sbin/eva-tinyapi -C $P -F create_key \
+    ./sbin/eva-tinyapi -C "$P" -F create_key \
         i=operator > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
-        i=operator p=key v=$OPKEY > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
+        i=operator p=key v="$OPKEY" > /dev/null 2>&1 || return 1
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
         i=operator p=groups v='#' > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
         i=operator p=pvt v='#' > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
         i=operator p=allow v=lock > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
         i=operator p=sysfunc v=1 > /dev/null 2>&1 || return 1
     return 0
 }
 
 function create_operator_user {
     local P=$1
-    ./sbin/eva-tinyapi -C $P -F destroy_user u=operator > /dev/null 2>&1
-    ./sbin/eva-tinyapi -C $P -F create_user \
-        u=operator p=${OPPASSWD} a=operator > /dev/null 2>&1 || return 1
+    ./sbin/eva-tinyapi -C "$P" -F destroy_user u=operator > /dev/null 2>&1
+    ./sbin/eva-tinyapi -C "$P" -F create_user \
+        u=operator p="${OPPASSWD}" a=operator > /dev/null 2>&1 || return 1
     return 0
 }
 
 function create_default_key {
     local P=$1
     local ALLOW=$2
-     ./sbin/eva-tinyapi -C $P -F list_key_props i=default > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    if ./sbin/eva-tinyapi -C "$P" -F list_key_props i=default > /dev/null 2>&1; then
         echo "Key 'default' already exists, recreating"
-        ./sbin/eva-tinyapi -C $P -F destroy_key i=default > /dev/null 2>&1 || return 1
+        ./sbin/eva-tinyapi -C "$P" -F destroy_key i=default > /dev/null 2>&1 || return 1
     fi
-    ./sbin/eva-tinyapi -C $P -F create_key \
+    ./sbin/eva-tinyapi -C "$P" -F create_key \
         i=default > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
-        i=default p=key v=$DEFAULTKEY > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
+        i=default p=key v="$DEFAULTKEY" > /dev/null 2>&1 || return 1
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
         i=default p=groups v='#' > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
-        i=default p=allow v=$ALLOW > /dev/null 2>&1 || return 1
-    ./sbin/eva-tinyapi -C $P -F set_key_prop \
-        i=default p=hosts_allow v=$REMOTES > /dev/null 2>&1 || return 1
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
+        i=default p=allow v="$ALLOW" > /dev/null 2>&1 || return 1
+    ./sbin/eva-tinyapi -C "$P" -F set_key_prop \
+        i=default p=hosts_allow v="$REMOTES" > /dev/null 2>&1 || return 1
     return 0
 }
 
 function create_notifier {
     local T=$1
     local BATCH=
-    if [ "x$MQTT_HOST" != "x" ]; then
+    if [ "$MQTT_HOST" ]; then
         echo "Creating notifier for ${T}"
         local sp=
-        [ "x${MQTT_SPACE}" != "x" ] && local sp="-s ${MQTT_SPACE}"
+        [ "${MQTT_SPACE}" ] && local sp="-s ${MQTT_SPACE}"
         local auth=
-        [ "x$MQTT_USER" != "x" ] && local auth="${MQTT_USER}"
-        [ "x$MQTT_PASSWORD" != "x" ] && local auth="$auth:${MQTT_PASSWORD}"
-        [ "x$auth" != "x" ] && auth="${auth}@"
+        [ "$MQTT_USER" ] && local auth="${MQTT_USER}"
+        [ "$MQTT_PASSWORD" ] && local auth="$auth:${MQTT_PASSWORD}"
+        [ "$auth" ] && auth="${auth}@"
         local port=
-        [ "x${MQTT_PORT}" != "x" ] && port=":${MQTT_PORT}"
+        [ "${MQTT_PORT}" ] && port=":${MQTT_PORT}"
         BATCH="create eva_1 mqtt:${auth}${MQTT_HOST}${port} ${sp} -y"
-        if [ "x$MQTT_CAFILE" != "x" ]; then
+        if [ "$MQTT_CAFILE" ]; then
             BATCH="$BATCH;set eva_1 ca_certs $MQTT_CAFILE"
         fi
-        if [ "x$MQTT_CERT" != "x" ]; then
+        if [ "$MQTT_CERT" ]; then
             BATCH="$BATCH;set eva_1 certfile $MQTT_CERT"
         fi
-        if [ "x$MQTT_KEY" != "x" ]; then
+        if [ "$MQTT_KEY" ]; then
             BATCH="$BATCH;set eva_1 keyfile $MQTT_KEY"
         fi
         BATCH="$BATCH;subscribe state eva_1 -p '#' -g '#'"
         BATCH="$BATCH;subscribe log eva_1"
         BATCH="$BATCH;subscribe server eva_1"
-        if [ "x$MQTT_ANNOUNCE_ENABLED" == "x1" ]; then
+        if [ $MQTT_ANNOUNCE_ENABLED -eq 1 ]; then
             BATCH="$BATCH;set eva_1 api_enabled 1"
             BATCH="$BATCH;set eva_1 announce_interval 30"
         fi
-        [ "x$MQTT_DISCOVERY_ENABLED" == "x1" ] && [ $T != 'uc' ] && BATCH="$BATCH;set eva_1 discovery_enabled 1"
-        [ "x$MQTT_NO_RETAIN" == "x1" ] && BATCH="$BATCH;set eva_1 retain_enabled 0"
+        [ $MQTT_DISCOVERY_ENABLED -eq 1 ] && [ "$T" != 'uc' ] && \
+           BATCH="$BATCH;set eva_1 discovery_enabled 1"
+        [ "$MQTT_NO_RETAIN" = "1" ] && BATCH="$BATCH;set eva_1 retain_enabled 0"
         BATCH="$BATCH;test eva_1"
-        if [ "x$T" = "xsfa" ]; then
-            [ "x$BATCH" != "x" ] && BATCH="$BATCH;"
+        if [ "$T" = "sfa" ]; then
+            [ "$BATCH" ] && BATCH="$BATCH;"
             BATCH="${BATCH}set eva_1 collect_logs 1"
         fi
     fi
-    [ "x${BATCH}" = "x" ] && return 0
-    echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
+    [ -z "${BATCH}" ] && return 0
+    echo "$BATCH" | "./bin/$T-notifier" -R --exec-batch=stdin
     return $?
 }
 
 function create_db_notifier {
     local T=$1
     local BATCH="create db_1 db:runtime/db/sfa_history.db -y;subscribe state db_1 -p '#' -g '#'"
-    echo $BATCH | ./bin/$T-notifier -R --exec-batch=stdin
+    echo "$BATCH" | "./bin/$T-notifier" -R --exec-batch=stdin
     return $?
 }
 
 function check_required_exec {
     local p=$1
     echo -n "Checking $p => "
-    RESULT=`which $p 2>&1`
-    if [ $? != 0 ]; then
+    if ! RESULT=$(command -v "$p" 2>&1); then
         echo "Missing! Please install"
         return 1
     fi
-    echo ${RESULT}
+    echo "${RESULT}"
     return 0
 }
 
 function setup_supervisor_onboot {
   [ $USE_SUPERVISOR -eq 1 ] || return 0
   cp -vf ./etc/supervisor/conf.d/eva-onboot.conf /etc/supervisor/conf.d/ || return 1
-  local d=`echo ${EVA_DIR}|sed 's/\\//\\\\\\//g'`
-  sed -i "s/\\/opt\\/eva/${d}/g" /etc/supervisor/conf.d/eva-onboot.conf || return 2
+  sed -i "s|/opt/eva|${EVA_DIR}|g" /etc/supervisor/conf.d/eva-onboot.conf || return 2
   return 0
 }
 
@@ -264,17 +260,16 @@ function setup_supervisor {
   local p=$1
   local u=$2
   [ $USE_SUPERVISOR -eq 1 ] || return 0
-  cp -vf ./etc/supervisor/conf.d/eva-${p}.conf /etc/supervisor/conf.d/ || return 1
-  if [ $SUPERVISOR_SET_LOG_STDOUT ]; then
-    sed -i 's/^\(\[program:eva-.*\]\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' /etc/supervisor/conf.d/eva-${p}.conf
-    sed -i 's/\(events=TICK_60\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' /etc/supervisor/conf.d/eva-${p}.conf
+  cp -vf "./etc/supervisor/conf.d/eva-${p}.conf" /etc/supervisor/conf.d/ || return 1
+  if [ "$SUPERVISOR_SET_LOG_STDOUT" ]; then
+    sed -i 's/^\(\[program:eva-.*\]\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' "/etc/supervisor/conf.d/eva-${p}.conf"
+    sed -i 's/\(events=TICK_60\)/\1\nstdout_logfile=\/dev\/fd\/1\nstdout_logfile_maxbytes=0\nstderr_logfile=\/dev\/fd\/2\nstderr_logfile_maxbytes=0/g' "/etc/supervisor/conf.d/eva-${p}.conf"
   fi
-  local d=`echo ${EVA_DIR}|sed 's/\\//\\\\\\//g'`
-  sed -i "s/\\/opt\\/eva/${d}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 2
-  if [ "x$u" != "xroot" ]; then
-    sed -i "s/^;user=.*/user=${u}/g" /etc/supervisor/conf.d/eva-${p}.conf || return 4
+  sed -i "s|/opt/eva|${EVA_DIR}|g" "/etc/supervisor/conf.d/eva-${p}.conf" || return 2
+  if [ "$u" != "root" ]; then
+    sed -i "s/^;user=.*/user=${u}/g" "/etc/supervisor/conf.d/eva-${p}.conf" || return 4
   fi
-  echo `echo ${p}|tr "a-z" "A-Z"`_SUPERVISOR_PROGRAM=eva-${p} >> ./etc/eva_servers
+  echo "$(echo "${p}"|tr "[:lower:]" "[:upper:]")_SUPERVISOR_PROGRAM=eva-${p}" >> ./etc/eva_servers
   return 0
 }
 
@@ -284,20 +279,20 @@ function askYN {
         return
     fi
     local v=
-    if [ "x$2" == "xN" ]; then
+    if [ "$2" == "N" ]; then
       local default=N
       local default_val=0
     else
       local default=Y
       local default_val=1
     fi
-    while [ "x$v" == "x" ]; do
+    while [ -z "$v" ]; do
         local P="$1 (Y/N, default ${default})? "
-        read -p "${P}" a
-        if [ "x$a" = "x" ]; then
+        read -rp "${P}" a
+        if [ -z "$a" ]; then
             v=${default_val}
-            echo -en "\033[1A\033[2K"
-            echo ${P}${default}
+            echo -en "\\033[1A\\033[2K"
+            echo "${P}${default}"
         else
             case $a in
                 y|Y)
@@ -313,69 +308,67 @@ function askYN {
 }
 
 function askMQTT {
-    while [ 1 ]; do
+    while true; do
         if [ $INTERACTIVE -eq 1 ]; then
             echo -n "MQTT host, required for cloud setup (use empty value to skip MQTT connection for now): "
-            read MQTT_HOST
-            if [ "x${MQTT_HOST}"  = "x" ]; then
+            read -r MQTT_HOST
+            if [ -z "${MQTT_HOST}" ]; then
                 return
             fi
             echo -n "MQTT port [1883]: "
-            read MQTT_PORT
-            [ "x${MQTT_PORT}" = "x" ] && MQTT_PORT=1883
+            read -r MQTT_PORT
+            [ -z "${MQTT_PORT}" ] && MQTT_PORT=1883
             MQTT_USER=
             echo -n "MQTT user (empty for none): "
-            read MQTT_USER
+            read -r MQTT_USER
             MQTT_PASSWORD=
-            if [ "x$MQTT_USER" != "x" ]; then
+            if [ "$MQTT_USER" ]; then
                 echo -n "MQTT password (empty for none): "
-                read -s MQTT_PASSWORD
+                read -rs MQTT_PASSWORD
                 echo
             fi
             echo -n "MQTT space (empty for the root hive): "
-            read MQTT_SPACE
+            read -r MQTT_SPACE
             askYN "Enable MQTT SSL" N
             MQTT_CAFILE=
-            if [ $VALUE == "1" ]; then
-                while [ 1 ]; do
+            if [ "$VALUE" = "1" ]; then
+                while true; do
                     echo -n "MQTT CA file ($DEFAULT_CA_FILE): "
-                    read MQTT_CAFILE
-                    [ "x$MQTT_CAFILE" == "x" ] && MQTT_CAFILE=$DEFAULT_CA_FILE
+                    read -r MQTT_CAFILE
+                    [ -z "$MQTT_CAFILE" ] && MQTT_CAFILE=$DEFAULT_CA_FILE
                     if [ ! -f "$MQTT_CAFILE" ]; then
                         echo "No such file: $MQTT_CAFILE"
                     else
                         break
                     fi
                 done
-                while [ 1 ]; do
+                while true; do
                     echo -n "MQTT cert file (empty for none): "
-                    read MQTT_CERT
-                    [ "x$MQTT_CERT" == "x" ] || [ -f "$MQTT_CERT" ] ; break
+                    read -r MQTT_CERT
+                    [ -z "$MQTT_CERT" ] || [ -f "$MQTT_CERT" ] ; break
                 done
-                if [ "x$MQTT_CERT" != "x" ]; then
-                    while [ 1 ]; do
+                if [ "$MQTT_CERT" ]; then
+                    while true; do
                         echo -n "MQTT key file (empty for none): "
-                        read MQTT_KEY
-                        [ "x$MQTT_KEY" == "x" ] || [ -f "$MQTT_KEY" ] ; break
+                        read -r MQTT_KEY
+                        [ -z "$MQTT_KEY" ] || [ -f "$MQTT_KEY" ] ; break
                     done
                 fi
             fi
         else
-            if [ "x${MQTT_HOST}"  = "x" ]; then
+            if [ -z "${MQTT_HOST}" ]; then
                 return
             fi
         fi
-        local s="test"
-        [ "x${MQTT_SPACE}" != "x" ] && local s="${MQTT_SPACE}/test"
         SSL_OPTS=
-        if [ "x$MQTT_CAFILE" != "x" ]; then
+        if [ "$MQTT_CAFILE" ]; then
             SSL_OPTS="--cafile $MQTT_CAFILE"
-            [ "x$MQTT_CERT" != "x" ] && SSL_OPTS="$SSL_OPTS --cert $MQTT_CERT"
-            [ "x$MQTT_KEY" != "x" ] && SSL_OPTS="$SSL_OPTS --key $MQTT_KEY"
+            [ "$MQTT_CERT" ] && SSL_OPTS="$SSL_OPTS --cert $MQTT_CERT"
+            [ "$MQTT_KEY" ] && SSL_OPTS="$SSL_OPTS --key $MQTT_KEY"
         fi
-        ./sbin/check-mqtt ${SSL_OPTS} \
-            ${MQTT_USER}:${MQTT_PASSWORD}@${MQTT_HOST}:${MQTT_PORT}/${MQTT_SPACE} > /dev/null 2>&1
-        if [ $? -ne 0 ]; then
+        if ! ./sbin/check-mqtt ${SSL_OPTS} \
+            "${MQTT_USER}:${MQTT_PASSWORD}@${MQTT_HOST}:${MQTT_PORT}/${MQTT_SPACE}" > /dev/null 2>&1
+          then
             if [ ${INTERACTIVE} -ne 1 ]; then
                 echo "MQTT test failed"
                 exit 5
@@ -398,16 +391,14 @@ function askMQTT {
 function askUser {
     USER=$2
     [ $INTERACTIVE -ne 1 ] && return
-    while [ 1 ]; do
+    while true; do
         echo -n "$1 [$2]: "
-        read u
-        if [ "x$u" == "x" ]; then
+        read -r u
+        if [ -z "$u" ]; then
             u=$2
         fi
-        id $u > /dev/null 2>&1
-        if [ $? -eq 0 ]; then
-            su - $u -c "ls" > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
+        if id "$u" > /dev/null 2>&1; then
+            if su - "$u" -c "ls" > /dev/null 2>&1; then
                 USER=$u
                 return
             fi
@@ -427,43 +418,43 @@ do
         ;;
         --mqtt)
             M=$2
-            echo "x$M" |grep '@' > /dev/null
-            if [ $? -eq 0 ]; then
-                MQTT_AUTH=`echo $M|cut -d@ -f1`
-                MQTT_USER=`echo $MQTT_AUTH|cut -d: -f1`
-                echo "x$MQTT_AUTH" |grep ':' > /dev/null && MQTT_PASSWORD=`echo $M|cut -d@ -f1|cut -d: -f2`
+            if ! (echo "$M"|grep '@' > /dev/null); then
+                MQTT_AUTH=$(echo "$M"|cut -d@ -f1)
+                MQTT_USER=$(echo "$MQTT_AUTH"|cut -d: -f1)
+                ( echo "$MQTT_AUTH" |grep ':' ) > /dev/null && \
+                    MQTT_PASSWORD=$(echo "$M"|cut -d@ -f1|cut -d: -f2)
             fi
-            MQTT_HOST=`echo $M|cut -d@ -f2|cut -d: -f1|cut -d/ -f1`
-            MQTT_PORT=`echo $M|cut -d@ -f2 |cut -d/ -f1|awk -F: '{ print $2 }'`
-            [ "x$MQTT_PORT" = "x" ] && MQTT_PORT=1883
-            echo "x$M" |grep '/' > /dev/null && MQTT_SPACE=`echo $M|cut -d/ -f2-`
+            MQTT_HOST=$(echo "$M"|cut -d@ -f2|cut -d: -f1|cut -d/ -f1)
+            MQTT_PORT=$(echo "$M"|cut -d@ -f2 |cut -d/ -f1|awk -F: '{ print $2 }')
+            [ -z "$MQTT_PORT" ] && MQTT_PORT=1883
+            ( echo "$M" |grep '/' > /dev/null ) && MQTT_SPACE=$(echo "$M"|cut -d/ -f2-)
             shift
             shift
         ;;
         --mqtt-cafile)
-            MQTT_CAFILE=$2
-            if [ ! -f $2 ]; then
+            if [ ! -f "$2" ]; then
                 echo "No such MQTT CA file: $2"
                 exit 5
             fi
+            MQTT_CAFILE=$2
             shift
             shift
         ;;
         --mqtt-cert)
-            MQTT_CERT=$2
-            if [ ! -f $2 ]; then
+            if [ ! -f "$2" ]; then
                 echo "No such MQTT cert file: $2"
                 exit 5
             fi
+            MQTT_CERT=$2
             shift
             shift
         ;;
         --mqtt-key)
-            MQTT_KEY=$2
-            if [ ! -f $2 ]; then
+            if [ ! -f "$2" ]; then
                 echo "No such MQTT key file: $2"
                 exit 5
             fi
+            MQTT_KEY=$2
             shift
             shift
         ;;
@@ -574,34 +565,36 @@ do
     esac
 done
 
-if [ "x$SKIP_ROOT" != "x1" ] && [ "x`id -u`" != "x0" ]; then
+if [ $SKIP_ROOT -ne 1 ] && [ "$(id -u)" != "0" ]; then
     echo "Please run this script as root"
     exit 1
 fi
 
 trap on_exit exit
 
-if [ ! $SKIP_CHECK ]; then
+if [ -z $SKIP_CHECK ]; then
     e=0
     for r in ${REQUIRED}; do
-        check_required_exec $r || e=1
+        check_required_exec "$r" || e=1
     done
     [ $e -ne 0 ] && exit 1
 fi
 
-PYTHON_MINOR=`python3 --version|cut -d. -f2`
-if [ $PYTHON_MINOR -lt $PYTHON3_MIN ]; then
+EVA_DIR=$(dirname "$(realpath "$0")")
+cd "${EVA_DIR}" || exit 11
+
+[ -f ${EVA_DIR}/etc/venv ] && source ${EVA_DIR}/etc/venv
+
+[ -z $PYTHON ] && PYTHON=python3
+
+PYTHON_MINOR=$($PYTHON --version|cut -d. -f2)
+if [ "$PYTHON_MINOR" -lt "$PYTHON3_MIN" ]; then
   echo "Python 3.$PYTHON3_MIN is required"
   exit 1
 fi
 
-D=`realpath $0`
-EVA_DIR=`dirname ${D}`
-cd ${EVA_DIR}
-
 if [ $USE_SUPERVISOR -eq 1 ]; then
-  which supervisorctl > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
+  if ! command -v supervisorctl > /dev/null; then
     echo "Error: supervisorctl not found"
     exit 12
   fi
@@ -611,7 +604,7 @@ if [ $USE_SUPERVISOR -eq 1 ]; then
   fi
 fi
 
-if [ "x${DEPLOY_FILE}" != "x" ] && [ ! -f ${DEPLOY_FILE} ]; then
+if [ "${DEPLOY_FILE}" ] && [ ! -f "${DEPLOY_FILE}" ]; then
     echo "Error: ${DEPLOY_FILE} not found"
     exit 11
 fi
@@ -622,18 +615,18 @@ if [ -f ./etc/eva_servers ] && [ $CLEAR -ne 1 ]; then
     echo "Installed system detected"
     source ./etc/eva_servers
     source ./etc/easy_setup
-    [ "x$UC_ENABLED" == 'xyes' ] && PRD=uc
-    [ "x$LM_ENABLED" == 'xyes' ] && PRD=lm
-    [ "x$SFA_ENABLED" == 'xyes' ] && PRD=sfa
+    [ "$UC_ENABLED" == "yes" ] && PRD=uc
+    [ "$LM_ENABLED" == "yes" ] && PRD=lm
+    [ "$SFA_ENABLED" == "yes" ] && PRD=sfa
     echo "Will use settings from $PRD"
-    eval "`./sbin/get-setup-options $PRD|grep -A999 ^MASTERKEY`" || exit 1
+    eval "$(./sbin/get-setup-options $PRD|grep -A999 ^MASTERKEY)" || exit 1
     APPEND=1
 fi
 
-[ $MASTERKEY ] || MASTERKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
-[ $DEFAULTKEY ] || DEFAULTKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
-[ $OPKEY ] || OPKEY=`(tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null`
-[ $OPPASSWD ] || OPPASSWD=`(tr -cd '[:alnum:]' < /dev/urandom | head -c16) 2>/dev/null`
+[ "$MASTERKEY" ] || MASTERKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
+[ "$DEFAULTKEY" ] || DEFAULTKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
+[ "$OPKEY" ] || OPKEY=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c64) 2>/dev/null)
+[ "$OPPASSWD" ] || OPPASSWD=$( (tr -cd '[:alnum:]' < /dev/urandom | head -c16) 2>/dev/null)
 
 if [ $INTERACTIVE -eq 1 ]; then
     echo
@@ -650,7 +643,7 @@ both <component>.ini and <component>_apikeys.ini.
 
 Press ENTER to continue easy-setup, Ctrl+C to abort.
 EOF
-    read
+    read -r
     echo
 fi
 
@@ -669,7 +662,7 @@ fi
 
 # check mods, build venv
 
-if [ ! $SKIP_CHECK ]; then
+if [ -z $SKIP_CHECK ]; then
     echo "Building VENV"
     ./install/build-venv || exit 1
     echo
@@ -677,8 +670,7 @@ fi
 
 # ASK SOME QUESTIONS
 
-which supervisorctl > /dev/null 2>&1
-if [ $? -eq 0 ] && [ -d /etc/supervisor/conf.d ]; then
+if command -v supervisorctl > /dev/null && [ -d /etc/supervisor/conf.d ]; then
   askYN "Supervisor daemon detected. Use it instead of standard startup" N
   [ $VALUE == "1" ] && USE_SUPERVISOR=1
 fi
@@ -688,9 +680,9 @@ if [ $APPEND -ne 1 ]; then
     askYN "Should this node grant API access for the remote instances"
     [ $VALUE == "0" ] && REMOTES="127.0.0.1"
     askMQTT
-elif [ ! $MQTT_HOST ]; then
+elif [ ! "$MQTT_HOST" ]; then
   askMQTT
-  [ $MQTT_HOST ] && APPEND_MQTT=1
+  [ "$MQTT_HOST" ] && APPEND_MQTT=1
   echo
 fi
 
@@ -707,13 +699,12 @@ fi
 
 # INSTALL UC
 
-if [ "x$UC_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
+if [ "$UC_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
     echo
     askYN "Install EVA Universal Controller on this host"
     [ $VALUE == "1" ] && INSTALL_UC=1
 elif [ $APPEND_MQTT -eq 1 ]; then
-  ./bin/uc-notifier config eva_1 > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
+  if ! ./bin/uc-notifier config eva_1 > /dev/null 2>&1; then
     echo "Setting up MQTT for UC"
     ./sbin/uc-control stop || exit 1
     create_notifier uc || exit 1
@@ -731,15 +722,13 @@ if [ $INSTALL_UC -eq 1 ]; then
     bash install/install-uc || exit 1
     echo "UC_ENABLED=yes" >> etc/eva_servers
     echo
-    askUser "Enter the user account to run under (root is recommended for UC)" ${DEFAULT_USER}
-    id ${USER} > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    askUser "Enter the user account to run under (root is recommended for UC)" "${DEFAULT_USER}"
+    if ! id "${USER}" > /dev/null 2>&1; then
         echo "Invalid user: ${USER}"
         exit 2
     fi
     if [ $SKIP_ROOT -ne 1 ]; then
-      su - ${USER} -c "ls" > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
+      if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
           echo "User ${USER} has no valid shell set"
           exit 2
       fi
@@ -758,13 +747,12 @@ EOF
     chmod 600 etc/uc_apikeys.ini
     create_notifier uc || exit 1
     UC_USER=${USER}
-    if [ "x$USER" != "xroot" ]; then
+    if [ "$USER" != "root" ]; then
         chmod 777 runtime/db
-        ./install/set-run-under-user uc ${USER} || exit 1
+        ./install/set-run-under-user uc "${USER}" || exit 1
     fi
-    setup_supervisor uc ${USER} || exit 2
-    start_controller uc || exit 3
-    if [ $? != 0 ]; then
+    setup_supervisor uc "${USER}" || exit 2
+    if ! start_controller uc; then
         echo "Unable to test UC"
         ./sbin/eva-control stop
         exit 5
@@ -778,12 +766,11 @@ fi
 
 # INSTALL LM
 
-if [ "x$LM_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
+if [ "$LM_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
     askYN "Install EVA Logical Manager PLC on this host"
     [ $VALUE == "1" ] && INSTALL_LM=1
 elif [ $APPEND_MQTT -eq 1 ]; then
-  ./bin/lm-notifier config eva_1 > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
+  if ! ./bin/lm-notifier config eva_1 > /dev/null 2>&1; then
     echo "Setting up MQTT for LM PLC"
     ./sbin/lm-control stop || exit 1
     create_notifier lm || exit 1
@@ -801,15 +788,13 @@ if [ $INSTALL_LM -eq 1 ]; then
     bash install/install-lm || exit 1
     echo "LM_ENABLED=yes" >> etc/eva_servers
     echo
-    askUser "Enter the user account to run under (use root only if you are sure)" ${DEFAULT_USER}
-    id ${USER} > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
+    if ! id "${USER}" > /dev/null 2>&1; then
         echo "Invalid user: ${USER}"
         exit 2
     fi
     if [ $SKIP_ROOT -ne 1 ]; then
-      su - ${USER} -c "ls" > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
+      if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
           echo "User ${USER} has no valid shell set"
           exit 2
       fi
@@ -828,13 +813,12 @@ EOF
     chmod 600 etc/lm_apikeys.ini
     create_notifier lm || exit 1
     LM_USER=${USER}
-    if [ "x$USER" != "xroot" ]; then
+    if [ "$USER" != "root" ]; then
         chmod 777 runtime/db
-        ./install/set-run-under-user lm ${USER} || exit 1
+        ./install/set-run-under-user lm "${USER}" || exit 1
     fi
-    setup_supervisor lm ${USER} || exit 2
-    start_controller lm || exit 3
-    if [ $? != 0 ]; then
+    setup_supervisor lm "${USER}" || exit 2
+    if ! start_controller lm; then
         echo "Unable to test LM"
         ./sbin/eva-control stop
         exit 5
@@ -845,18 +829,16 @@ EOF
     save_controller_state lm || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to LM PLC"
-        SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|jq -Mr .system`
+        SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
         ./sbin/eva-tinyapi -C lm -F setup_mode setup=1 > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C lm -F remove_controller i=${SNAME} > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C lm -F append_controller \
-            u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1
-        if [ $? != 0 ]; then
+        ./sbin/eva-tinyapi -C lm -F remove_controller i="${SNAME}" > /dev/null 2>&1
+        if ! ./sbin/eva-tinyapi -C lm -F append_controller \
+            u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1; then
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
         fi
-        ./sbin/eva-tinyapi -C lm -F setup_mode setup=0 > /dev/null 2>&1
-        if [ $? != 0 ]; then
+        if ! ./sbin/eva-tinyapi -C lm -F setup_mode setup=0 > /dev/null 2>&1; then
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
@@ -867,12 +849,11 @@ fi
 
 # INSTALL SFA
 
-if [ "x$SFA_ENABLED" != "xyes" ] || [ $FORCE -eq 1 ]; then
+if [ "$SFA_ENABLED" != "yes" ] || [ $FORCE -eq 1 ]; then
     askYN "Install SCADA Final Aggregator on this host"
     [ $VALUE == "1" ] && INSTALL_SFA=1
 elif [ $APPEND_MQTT -eq 1 ]; then
-  ./bin/sfa-notifier config eva_1 > /dev/null 2>&1
-  if [ $? -ne 0 ]; then
+  if ! ./bin/sfa-notifier config eva_1 > /dev/null 2>&1; then
     echo "Setting up MQTT for SFA"
     ./sbin/sfa-control stop || exit 1
     create_notifier sfa || exit 1
@@ -892,15 +873,13 @@ if [ $INSTALL_SFA -eq 1 ]; then
     [ $VALUE == "1" ] && CLOUDMANAGER=1
     echo "SFA_ENABLED=yes" >> etc/eva_servers
     echo
-    askUser "Enter the user account to run under (use root only if you are sure)" ${DEFAULT_USER}
-    id ${USER} > /dev/null 2>&1
-    if [ $? -ne 0 ]; then
+    askUser "Enter the user account to run under (use root only if you are sure)" "${DEFAULT_USER}"
+    if ! id "${USER}" > /dev/null 2>&1; then
         echo "Invalid user: ${USER}"
         exit 2
     fi
     if [ $SKIP_ROOT -ne 1 ]; then
-      su - ${USER} -c "ls" > /dev/null 2>&1
-      if [ $? -ne 0 ]; then
+      if ! su - "${USER}" -c "ls" > /dev/null 2>&1; then
           echo "User ${USER} has no valid shell set"
           exit 2
       fi
@@ -921,13 +900,12 @@ EOF
     create_notifier sfa || exit 1
     create_db_notifier sfa || exit 1
     SFA_USER=${USER}
-    if [ "x$USER" != "xroot" ]; then
+    if [ "$USER" != "root" ]; then
         chmod 777 runtime/db
-        ./install/set-run-under-user sfa ${USER} || exit 1
+        ./install/set-run-under-user sfa "${USER}" || exit 1
     fi
-    setup_supervisor sfa ${USER} || exit 2
-    start_controller sfa || exit 3
-    if [ $? != 0 ]; then
+    setup_supervisor sfa "${USER}" || exit 2
+    if ! start_controller sfa; then
         echo "Unable to test SFA"
         ./sbin/eva-control stop
         exit 5
@@ -940,26 +918,23 @@ EOF
     save_controller_state sfa || exit 23
     if [ $LINK -eq 1 ] && [ $INSTALL_UC -eq 1 ]; then
         echo "Linking local UC to SFA"
-        SNAME=uc/`./sbin/eva-tinyapi -C uc -F test|jq -Mr .system`
+        SNAME=uc/$(./sbin/eva-tinyapi -C uc -F test|jq -Mr .system)
         ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C sfa -F remove_controller i=${SNAME} > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=uc u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1
-        if [ $? != 0 ]; then
+        ./sbin/eva-tinyapi -C sfa -F remove_controller i="${SNAME}" > /dev/null 2>&1
+        if ! ./sbin/eva-tinyapi -C sfa -F append_controller \
+            g=uc u=http://localhost:8812 a=\$default save=1 > /dev/null 2>&1; then
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
         fi
-        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1
-        if [ $? != 0 ]; then
+        if ! ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1; then
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
         fi
         if [ $CLOUDMANAGER -eq 1 ]; then
-          ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
-              i=${SNAME} p=masterkey v=\$masterkey save=1 > /dev/null 2>&1
-          if [ $? != 0 ]; then
+          if ! ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
+              i="${SNAME}" p=masterkey v=\$masterkey save=1 > /dev/null 2>&1; then
               echo "Management API linking failed!"
               ./sbin/eva-control stop
               exit 5
@@ -968,26 +943,23 @@ EOF
     fi
     if [ $LINK -eq 1 ] && [ $INSTALL_LM -eq 1 ]; then
         echo "Linking local LM PLC to SFA"
-        SNAME=lm/`./sbin/eva-tinyapi -C lm -F test|jq -Mr .system`
+        SNAME=lm/$(./sbin/eva-tinyapi -C lm -F test|jq -Mr .system)
         ./sbin/eva-tinyapi -C sfa -F setup_mode setup=1 > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C sfa -F remove_controller i=${SNAME} > /dev/null 2>&1
-        ./sbin/eva-tinyapi -C sfa -F append_controller \
-            g=lm u=http://localhost:8817 a=\$default save=1 > /dev/null 2>&1
-        if [ $? != 0 ]; then
+        ./sbin/eva-tinyapi -C sfa -F remove_controller i="${SNAME}" > /dev/null 2>&1
+        if ! ./sbin/eva-tinyapi -C sfa -F append_controller \
+            g=lm u=http://localhost:8817 a=\$default save=1 > /dev/null 2>&1; then
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
         fi
-        ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1
-        if [ $? != 0 ]; then
+        if ! ./sbin/eva-tinyapi -C sfa -F setup_mode setup=0 > /dev/null 2>&1; then
             echo "Linking failed!"
             ./sbin/eva-control stop
             exit 5
         fi
         if [ $CLOUDMANAGER -eq 1 ]; then
-          ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
-              i=${SNAME} p=masterkey v=\$masterkey save=1 > /dev/null 2>&1
-          if [ $? != 0 ]; then
+          if ! ./sbin/eva-tinyapi -C sfa -F set_controller_prop \
+              i="${SNAME}" p=masterkey v=\$masterkey save=1 > /dev/null 2>&1; then
               echo "Management API linking failed!"
               ./sbin/eva-control stop
               exit 5
@@ -1010,22 +982,22 @@ fi
 
 USERS=
 
-[ "x${UC_USER}" != "x" ] && [ "x${UC_USER}" != "xroot" ] && USERS="${USERS} ${UC_USER}"
-[ "x${LM_USER}" != "x" ] && [ "x${LM_USER}" != "xroot" ] && USERS="${USERS} ${LM_USER}"
-[ "x${SFA_USER}" != "x" ] && [ "x${SFA_USER}" != "xroot" ] && USERS="${USERS} ${SFA_USER}"
+[ "${UC_USER}" ] && [ "${UC_USER}" != "root" ] && USERS="${USERS} ${UC_USER}"
+[ "${LM_USER}" ] && [ "${LM_USER}" != "root" ] && USERS="${USERS} ${LM_USER}"
+[ "${SFA_USER}" ] && [ "${SFA_USER}" != "root" ] && USERS="${USERS} ${SFA_USER}"
 
 X=
 
 for u in ${USERS}; do
-    if [ "x$X" != "x" ] && [ "x$X" != "x$u" ]; then
+    if [ "$X" ] && [ "$X" != "$u" ]; then
         X=
         break
     fi
     X=$u
 done
 
-if [ "x$X" != "x" ]; then
-    chown ${X} runtime/db
+if [ "$X" ]; then
+    chown "${X}" runtime/db
     chmod 700 runtime/db
 fi
 
@@ -1034,7 +1006,7 @@ ln -sf eva bin/eva-shell
 if [ $APPEND_MQTT -ne 1 ]; then
   echo "Setup completed!"
   echo
-  echo "EVA ICS v`./sbin/eva-tinyapi -V` build `./sbin/eva-tinyapi -B`"
+  echo "EVA ICS v$(./sbin/eva-tinyapi -V) build $(./sbin/eva-tinyapi -B)"
   echo
   echo "MASTERKEY: ${MASTERKEY}"
   echo "Controller default key: ${DEFAULTKEY}"
@@ -1053,11 +1025,11 @@ chmod 700 backup
 echo "MQTT_DISCOVERY_ENABLED=$MQTT_DISCOVERY_ENABLED" > ./etc/easy_setup
 echo "LINK=$LINK" >> ./etc/easy_setup
 
-if [ "x${DEPLOY_FILE}" != "x" ]; then
-  P=`realpath ${DEPLOY_FILE}`
-  cd `dirname ${P}`
-  ${EVA_DIR}/bin/eva-shell sfa cloud deploy `basename ${DEPLOY_FILE}` -u -y
-  cd ${EVA_DIR}
+if [ "${DEPLOY_FILE}" ]; then
+  P=$(realpath "${DEPLOY_FILE}")
+  cd "$(dirname "${P}")" || exit 12
+  "${EVA_DIR}"/bin/eva-shell sfa cloud deploy "$(basename "$DEPLOY_FILE")" -u -y
+  cd "${EVA_DIR}" || exit 12
 fi
 
 if [ $BENCHMARK -eq 1 ]; then

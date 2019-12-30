@@ -29,7 +29,7 @@ class CloudManager():
 
 cp_cm_config = {}
 
-for u in ['css', 'fonts', 'i', 'images', 'js', 'lib']:
+for u in ['css', 'fonts', 'images', 'js', 'lib']:
     cp_cm_config['/' + u] = {
         'tools.staticdir.dir': eva.core.dir_lib + '/cloudmanager/' + u,
         'tools.staticdir.on': True
@@ -39,5 +39,4 @@ for u in ['css', 'fonts', 'i', 'images', 'js', 'lib']:
 def start():
     # return
     if not eva.sfa.controller.config.cloud_manager: return
-    cherrypy.tree.mount(
-        CloudManager(), '/cloudmanager', config=cp_cm_config)
+    cherrypy.tree.mount(CloudManager(), '/cloudmanager', config=cp_cm_config)
