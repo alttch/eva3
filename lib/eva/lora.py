@@ -154,9 +154,9 @@ def _t_dispatcher(host, port):
             except:
                 logging.warning('LoRa invalid JSON from {}'.format(address))
                 try:
-                    logging.debug('Packet object: '.format(dt))
+                    logging.debug('Packet object: {}'.format(dt))
                 except:
-                    logging.debug('Packet: '.format(data))
+                    logging.debug('Packet: {}'.format(data))
                 eva.core.log_traceback()
                 continue
             server_socket.sendto(b'\x02' + data[1:3] + b'\x01', addr)
@@ -165,7 +165,8 @@ def _t_dispatcher(host, port):
             except:
                 if 'stat' in jdt:
                     logging.debug('LoRa gateway stats for {} ({}): {}'.format(
-                        address, binascii.b2a_hex(data[4:12]).decode(), dt))
+                        address,
+                        binascii.b2a_hex(data[4:12]).decode(), dt))
                     continue
                 logging.warning('LoRa invalid packet from {}'.format(address))
                 logging.debug(dt)
