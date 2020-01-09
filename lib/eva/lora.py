@@ -160,30 +160,26 @@ def _t_dispatcher(host, port):
                 eva.core.log_traceback()
                 continue
             server_socket.sendto(b'\x02' + data[1:3] + b'\x01', addr)
-            try:
+            if 'stat' in jdt:
+                logging.debug('LoRa gateway stats for {} ({}): {}'.format(
+                    address,
+                    binascii.b2a_hex(data[4:12]).decode(), dt))
+            if 'rxpk' in jdt:
                 rxpk = jdt['rxpk']
-            except:
-                if 'stat' in jdt:
-                    logging.debug('LoRa gateway stats for {} ({}): {}'.format(
-                        address,
-                        binascii.b2a_hex(data[4:12]).decode(), dt))
-                    continue
-                logging.warning('LoRa invalid packet from {}'.format(address))
-                logging.debug(dt)
-                continue
-            for pk in rxpk if isinstance(rxpk, list) else [rxpk]:
-                try:
-                    payload = base64.b64decode(pk['data'])
-                except:
-                    logging.warning('LoRa invalid pk from {}'.format(address))
-                    continue
-                for i, hs in custom_handlers.items():
-                    for h in hs:
-                        try:
-                            eva.core.spawn(exec_custom_handler, h, pk, payload,
-                                           address)
-                        except:
-                            eva.core.log_traceback()
+                for pk in rxpk if isinstance(rxpk, list) else [rxpk]:
+                    try:
+                        payload = base64.b64decode(pk['data'])
+                    except:
+                        logging.warning(
+                            'LoRa invalid pk from {}'.format(address))
+                        continue
+                    for i, hs in custom_handlers.items():
+                        for h in hs:
+                            try:
+                                eva.core.spawn(exec_custom_handler, h, pk,
+                                               payload, address)
+                            except:
+                                eva.core.log_traceback()
         except:
             logging.critical('LoRa dispatcher crashed, restarting')
             eva.core.log_traceback()
