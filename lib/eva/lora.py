@@ -10,6 +10,7 @@ import logging
 import threading
 import socket
 import base64
+import binascii
 
 import eva.core
 import eva.uc.controller
@@ -130,23 +131,45 @@ def _t_dispatcher(host, port):
                     ' from %s denied by server configuration' % \
                             address)
                 continue
-            if len(data) < 13:
-                logging.warning('LoRa invalid packet from {}'.format(address))
+            if len(data) < 12:
+                logging.debug('Lora invalid packet from {}'.format(address))
+                logging.debug(data)
+                continue
             if data[0] != 2:
                 logging.warning(
                     'LoRa packet from {}, protocol {} is not supported'.format(
                         address, data[0]))
+            if data[3] == 2:
+                logging.debug('LoRa PULL_DATA from {}'.format(address))
+                server_socket.sendto(b'\x02' + data[1:3] + b'\x04', addr)
+                continue
             if data[3] != 0:
                 logging.debug(
                     'LoRa packet from {}: packets of type {} are not supported'.
-                    format(addres, data[3]))
+                    format(address, data[3]))
                 continue
             try:
-                rxpk = rapidjson.loads(data[12:].decode())['rxpk']
+                dt = data[12:].decode()
+                jdt = rapidjson.loads(dt)
             except:
                 logging.warning('LoRa invalid JSON from {}'.format(address))
+                try:
+                    logging.debug('Packet object: '.format(dt))
+                except:
+                    logging.debug('Packet: '.format(data))
+                eva.core.log_traceback()
                 continue
             server_socket.sendto(b'\x02' + data[1:3] + b'\x01', addr)
+            try:
+                rxpk = jdt['rxpk']
+            except:
+                if 'stat' in jdt:
+                    logging.debug('LoRa gateway stats for {} ({}): {}'.format(
+                        address, binascii.b2a_hex(data[4:12]).decode(), dt))
+                    continue
+                logging.warning('LoRa invalid packet from {}'.format(address))
+                logging.debug(dt)
+                continue
             for pk in rxpk if isinstance(rxpk, list) else [rxpk]:
                 try:
                     payload = base64.b64decode(pk['data'])
