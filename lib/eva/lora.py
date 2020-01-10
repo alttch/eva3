@@ -11,6 +11,8 @@ import threading
 import socket
 import base64
 import binascii
+import time
+import struct
 
 import eva.core
 import eva.uc.controller
@@ -23,9 +25,16 @@ from eva import apikey
 from netaddr import IPNetwork
 from types import SimpleNamespace
 
-config = SimpleNamespace(host=None, port=None, hosts_allow=[])
+config = SimpleNamespace(host=None,
+                         port=None,
+                         hosts_allow=[],
+                         home_netid=1,
+                         _devaddr=1,
+                         _joinonce=0)
 
 custom_handlers = {}
+
+devaddrs = {}
 
 default_port = 1700
 
@@ -124,7 +133,8 @@ def _t_dispatcher(host, port):
             if not _flags.dispatcher_active: return
             if not data: continue
             address = addr[0]
-            logging.debug('LoRa server packet from %s' % address)
+            logging.debug('LoRa server packet from {}:{}'.format(
+                addr[0], addr[1]))
             if not check_access(address, data):
                 logging.warning(
                     'LoRa packet' +
@@ -173,13 +183,61 @@ def _t_dispatcher(host, port):
                         logging.warning(
                             'LoRa invalid pk from {}'.format(address))
                         continue
-                    for i, hs in custom_handlers.items():
-                        for h in hs:
-                            try:
-                                eva.core.spawn(exec_custom_handler, h, pk,
-                                               payload, address)
-                            except:
-                                eva.core.log_traceback()
+                    mhdr = payload[0]
+                    macpayload = payload[1:-4]
+                    mic = payload[-4:]
+                    if mhdr == 0:
+                        appeui = binascii.b2a_hex(
+                            macpayload[:8][::-1]).decode().upper()
+                        deveui = binascii.b2a_hex(
+                            macpayload[8:16][::-1]).decode().upper()
+                        if deveui in devaddrs:
+                            devaddr = devaddrs[deveui]['a']
+                            devaddrs[deveui]['t'] = time.time()
+                        else:
+                            devaddr = config._devaddr
+                            config._devaddr += 1
+                            devaddrs[deveui] = {'t': time.time(), 'a': devaddr}
+                        logging.info(
+                            'LoRa: registerting device {} => {}'.format(
+                                deveui,
+                                hex(devaddr)[2:]))
+                        print(pk)
+                        config._joinonce += 1
+                        if config._joinonce > 16777215:
+                            config._joinonce = 1
+                        rpayload = b'\x20' + struct.pack(
+                            '<L', config._joinonce)[:3] + struct.pack(
+                                '<L', config.home_netid)[:3] + struct.pack(
+                                    '<L', devaddr) + b'\x80\x00'
+                        rpl = base64.b64encode(rpayload).decode()
+                        rpk = {
+                            'imme': True,
+                            'freq': pk['freq'],
+                            'rfch': pk['rfch'],
+                            'modu': pk['modu'],
+                            'datr': pk['datr'],
+                            'codr': pk['codr'],
+                            'tmst': int(time.time()),
+                            # 'powe': 14,
+                            # 'ipol': False,
+                            'size': len(rpl),
+                            'data': rpl
+                        }
+                        buf = b'\x02' + data[1:3] + b'\x03' +\
+                            rapidjson.dumps({
+                                'txpk': rpk
+                            }).encode()
+                        print(buf)
+                        server_socket.sendto(buf, addr)
+                    else:
+                        for i, hs in custom_handlers.items():
+                            for h in hs:
+                                try:
+                                    eva.core.spawn(exec_custom_handler, h, pk,
+                                                   payload, address)
+                                except:
+                                    eva.core.log_traceback()
         except:
             logging.critical('LoRa dispatcher crashed, restarting')
             eva.core.log_traceback()
