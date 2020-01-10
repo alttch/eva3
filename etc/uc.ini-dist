@@ -113,10 +113,6 @@ community = eva
 ; hosts, allowed to send snmp traps
 hosts_allow = 127.0.0.0/8
 
-[lorawan]
-;listen = 0.0.0.0:1700
-;hosts_allow = 0.0.0.0/0
-
 [udpapi]
 ; udp api
 listen = 127.0.0.1:8881

@@ -99,7 +99,6 @@ What you get with EVA
     item_scripts
     modbus
     owfs
-    lora
     snmp
     virtual
 
