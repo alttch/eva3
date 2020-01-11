@@ -77,7 +77,7 @@ type:
    # assign driver to sensors
    eva uc driver assign sensor:env/temp1 A123456789123456.default -c port=temp -y
    eva uc driver assign sensor:env/gas1 A123456789123456.default -c port=gas -y
-   # done.the driver will update sensors as soon as it receive telemetry
+   # done. the driver will update sensors as soon as it receive telemetry
    # from LoRa network server
 
 Now go back to LoRaWAN network server web interface, open *Backends->Handlers*
