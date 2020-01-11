@@ -1290,7 +1290,7 @@ If called as RESTful, the whole request body is used as a payload (except fields
 
 Parameters:
 
-* **API Key** valid API key
+* **API Key** masterkey or a key with the write permission on "phi" group
 
 
 .. _ucapi_restful_set_phi_prop:

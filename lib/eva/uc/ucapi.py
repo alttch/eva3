@@ -430,7 +430,7 @@ class UC_API(GenericAPI):
         (except fields "k", "save", "kind" and "method", which are reserved)
 
         Args:
-            k:
+            k: masterkey or a key with the write permission on "phi" group
             .i: PHI id
             .p: state payload, sent to PHI as-is
         """

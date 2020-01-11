@@ -1264,7 +1264,7 @@ If called as RESTful, the whole request body is used as a payload (except fields
 
 Parameters:
 
-* **k** valid API key
+* **k** masterkey or a key with the write permission on "phi" group
 * **i** PHI id
 * **p** state payload, sent to PHI as-is
 
