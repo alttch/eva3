@@ -466,16 +466,26 @@ def check(k,
     if _k.master: return True
     if sysfunc and not _k.sysfunc: return False
     if item:
+        # check access to PHI
         try:
-            grp = item.group
-        except:
-            grp = 'nogroup'
-        if not eva.item.item_match(item, _k.item_ids, _k.groups):
-            if ro_op:
-                if not eva.item.item_match(item, _k.item_ids_ro, _k.groups_ro):
-                    return False
-            else:
+            if ('#' not in _k.item_ids and item.phi_id not in _k.item_ids) or \
+                    ('#' not in _k.groups and 'phi' not in _k.groups):
                 return False
+        except:
+            pass
+        # check access to regular item
+        else:
+            try:
+                grp = item.group
+            except:
+                grp = 'nogroup'
+            if not eva.item.item_match(item, _k.item_ids, _k.groups):
+                if ro_op:
+                    if not eva.item.item_match(item, _k.item_ids_ro,
+                                               _k.groups_ro):
+                        return False
+                else:
+                    return False
     if allow:
         for a in allow:
             if not a in _k.allow: return False

@@ -1275,6 +1275,24 @@ Optionally:
 * **save** save driver configuration after successful call
 
 
+.. _ucapi_restful_push_phi_state:
+
+push state to PHI module
+------------------------
+
+Allows to perform update of PHI ports by external application.
+
+If called as RESTful, the whole request body is used as a payload (except fields "k", "save", "kind" and "method", which are reserved)
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/push_phi_state.rest
+    :response: http-examples/ucapi/push_phi_state.resp-rest
+
+Parameters:
+
+* **API Key** valid API key
+
+
 .. _ucapi_restful_set_phi_prop:
 
 set PHI configuration property

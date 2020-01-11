@@ -37,6 +37,7 @@ the next fields are processed by controller, so make them exactly as required
  * **events** event processing
  * **port_get** get single port data
  * **port_set** set single port data
+ * **push** accept state payload via *push_phi_state* API method
  * **status** process item status
  * **value** process item values
 
@@ -450,6 +451,30 @@ minimized amount of additional PHI.get() calls.
 
 Value *-1* can be used to set unit error status, value *False* to set sensor
 error status.
+
+State push
+----------
+
+External applications can push state directly to PHI module. The module should
+handle state push by itself, calling *handle_phi_event* for each modified port
+if required.
+
+Application calls *push_phi_state* method (see UC API doc), providing state
+payload, which should be parsed and processed by PHI module. The following
+method should be implemented:
+
+.. code-block:: python
+
+    class PHI(GenericPHI):
+
+        # class code
+
+      def push_state(self, payload):
+         # process payload, return True if OK, False if failed
+         return True
+
+The method receives external state payload as-is. State payload can be in any
+format, acceptable by PHI.
 
 SNMP traps
 ----------

@@ -419,6 +419,27 @@ class UC_API(GenericAPI):
             item.update_processor.trigger_threadsafe(force=True)
             return True, api_result_accepted
 
+    @log_i
+    def push_phi_state(self, **kwargs):
+        """
+        push state to PHI module
+
+        Allows to perform update of PHI ports by external application.
+
+        If called as RESTful, the whole request body is used as a payload
+        (except fields "k", "save", "kind" and "method", which are reserved)
+
+        Args:
+            k:
+            .i: PHI id
+            .p: state payload, sent to PHI as-is
+        """
+        k, i, p = parse_function_params(kwargs, 'kip', '.sR')
+        phi = eva.uc.driverapi.get_phi(i)
+        if not phi: raise ResourceNotFound
+        elif not apikey.check(k, phi): raise AccessDenied
+        return phi.push_state(payload=p)
+
     @log_w
     def kill(self, **kwargs):
         """
@@ -2172,10 +2193,14 @@ class UC_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     return self.update(k=k, i=ii, **props)
         elif rtp == 'phi':
             if ii:
+                if '/' in ii:
+                    ii, method = ii.split('/', 1)
                 if method == 'test':
                     return self.test_phi(k=k, i=ii, **props)
                 elif method == 'exec':
                     return self.exec_phi(k=k, i=ii, **props)
+                elif method == 'state':
+                    return self.push_phi_state(k=k, i=ii, p=props)
         elif rtp == 'modbus':
             if ii:
                 if method == 'test':

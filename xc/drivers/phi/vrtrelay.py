@@ -1,15 +1,15 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2019 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.3.2"
+__version__ = "1.3.3"
 __description__ = "Emulates 16-port relay"
 
 __equipment__ = 'virtual'
-__api__ = 5
+__api__ = 8
 __required__ = ['port_get', 'port_set', 'action']
 __mods_required__ = []
 __lpi_default__ = 'basic'
-__features__ = ['aao_set', 'aao_get']
+__features__ = ['aao_set', 'aao_get', 'push']
 __config_help__ = [{
     'name': 'default_status',
     'help': 'ports status on load (default: 0)',
@@ -107,6 +107,24 @@ class PHI(GenericPHI):
         if self.phi_cfg.get('event_on_set'):
             handle_phi_event(self, port, self.data)
         return True
+
+    def push_state(self, payload):
+        if payload == 'test':
+            return True
+        else:
+            for port, v in payload.items():
+                try:
+                    val = int(v)
+                    if val < -1 or val > 1:
+                        raise ValueError(f'Invalid port value {port} = {val}')
+                    if port in self.data:
+                        self.data[port] = val
+                    else:
+                        raise LookupError(f'Port {port} not found')
+                except:
+                    log_traceback()
+                    return False
+            return True
 
     def test(self, cmd=None):
         if cmd == 'self':

@@ -5,7 +5,7 @@ __version__ = "3.3.0"
 __description__ = "Generic PHI, don't use"
 
 __equipment__ = 'abstract'
-__api__ = 5
+__api__ = 8
 __required__ = []
 __mods_required__ = []
 __lpi_default__ = None
@@ -23,6 +23,7 @@ documentation.
 import logging
 import threading
 import sys
+import rapidjson
 
 import eva.core
 
@@ -177,6 +178,9 @@ class PHI(object):
     def set(self, port=None, data=None, cfg=None, timeout=0):
         return False
 
+    def load_json(self, s):
+        return rapidjson.loads(s)
+
     def handle_event(self):
         pass
 
@@ -251,6 +255,10 @@ class PHI(object):
 
     def exec(self, cmd=None, args=None):
         return 'not implemented'
+
+    def push_state(self, payload=None):
+        self.log_warning('push_state not implemented')
+        return False
 
     def test(self, cmd=None):
         return 'FAILED'
