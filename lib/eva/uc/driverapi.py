@@ -90,7 +90,7 @@ def unlock(l):
 
 
 @with_drivers_lock
-def handle_phi_event(phi, port, data):
+def handle_phi_event(phi, port=None, data=None):
     if not data: return
     iph = items_by_phi.get(phi.phi_id)
     if iph:
