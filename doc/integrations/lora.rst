@@ -66,7 +66,7 @@ type:
    # download PHI module
    eva uc phi download https://get.eva-ics.com/phi/sensors/lora/lora_rak7204.py
    # load PHI module inside EVA UC. we'll use sensor DevEUI as module id
-   eva uc phi load A123456789123456 lora_rak7204 -y
+   eva uc phi load A123456789123456 lora_rak7204
    # PHI provides an access to all ports of RAK7204. In this example we'll use
    # ports "temp" (temperature) and "gas" (gas resistance)
    eva uc create sensor:env/temp1
@@ -75,10 +75,11 @@ type:
    eva uc update sensor:env/temp1 -s1
    eva uc update sensor:env/gas1 -s1
    # assign driver to sensors
-   eva uc driver assign sensor:env/temp1 A123456789123456.default -c port=temp -y
-   eva uc driver assign sensor:env/gas1 A123456789123456.default -c port=gas -y
-   # done. the driver will update sensors as soon as it receive telemetry
-   # from LoRa network server
+   eva uc driver assign sensor:env/temp1 A123456789123456.default -c port=temp
+   eva uc driver assign sensor:env/gas1 A123456789123456.default -c port=gas
+   # done. The driver will update sensors as soon as it receive telemetry
+   # from LoRa network server. Let's save controller config:
+   eva uc save
 
 Now go back to LoRaWAN network server web interface, open *Backends->Handlers*
 and create "eva" application. Make sure "data" and "deveui" fields are
