@@ -472,9 +472,7 @@ def check(k,
                     ('#' not in _k.groups and 'phi' not in _k.groups):
                 return False
         except:
-            pass
         # check access to regular item
-        else:
             try:
                 grp = item.group
             except:

@@ -136,6 +136,7 @@ What you get with EVA
     integrations/gcp
     integrations/grafana
     integrations/hue
+    integrations/lora
     integrations/nanoleaf
     integrations/roboger
     integrations/rpi
