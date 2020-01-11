@@ -57,7 +57,7 @@ class PHI(GenericPHI):
     def get(self, port=None, cfg=None, timeout=0):
         if not port: return self.data
         try:
-            return self.data.get(str(port))
+            return self.data[str(port)]
         except:
             return None
 
