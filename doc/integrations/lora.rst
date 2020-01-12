@@ -20,7 +20,7 @@ Hardware
 
 To connect LoRaWAN sensors, you need LoRa gateway and LoRa network server
 installed. For both tests and production we use `MikroTik LoRa products
-<https://mikrotik.com/products/group/lora-products>`_ but you may use any
+<https://mikrotik.com/products/group/lora-products>`_, but you may use any
 gateway, available on the market.
 
 Network server
