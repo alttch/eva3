@@ -98,6 +98,9 @@ don't forget to configure connector authentication. EVA ICS API key should have
 either permission to all items or to items with group "phi" and item id
 "A123456789123456" (PHI id we are going to push data in).
 
+.. figure:: lora-images/connector_auth.png
+    :scale: 75%
+
 Append sensor to network server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
