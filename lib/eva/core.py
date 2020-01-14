@@ -128,6 +128,8 @@ CS_EVENT_API = 2
 
 corescript_globals = {
     'print': logging.info,
+    'logging': logging,
+    'time': time,
     'CS_EVENT_STATE': CS_EVENT_STATE,
     'CS_EVENT_API': CS_EVENT_API
 }
@@ -172,6 +174,8 @@ class RLocker(GenericLocker):
 
 
 cvars_lock = RLocker('core')
+
+corescript_lock = RLocker('core')
 
 
 def log_traceback(*args, notifier=False, **kwargs):
@@ -901,14 +905,18 @@ def start(init_db_only=False):
     product.usn = str(
         uuid.uuid5(uuid.NAMESPACE_URL,
                    f'eva://{config.system_name}/{product.code}'))
-    reload_corescript_dir()
+    reload_corescripts()
     update_corescript_globals({'product': product, 'apikey': eva.apikey})
 
 
-def reload_corescript_dir():
+@corescript_lock
+def reload_corescripts():
+    cs = [
+        os.path.basename(f)
+        for f in glob.glob(f'{dir_xc}/{product.code}/cs/*.py')
+    ]
     corescripts.clear()
-    for f in glob.glob(f'{dir_xc}/{product.code}/cs/*.py'):
-        corescripts.append(os.path.basename(f))
+    corescripts.extend(sorted(cs))
 
 
 def update_corescript_globals(data):
@@ -916,13 +924,17 @@ def update_corescript_globals(data):
 
 
 def exec_corescripts(event=None, env_globals={}):
+    spawn(_t_exec_corescripts, event=event, env_globals=env_globals)
+
+
+def _t_exec_corescripts(event=None, env_globals={}):
     import eva.runner
     d = env_globals.copy()
     d['event'] = event
     d.update(corescript_globals)
     logging.debug('executing core scripts, event type={}'.format(event.type))
     for c in corescripts.copy():
-        spawn(eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run)
+        eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run()
 
 
 def register_controller(controller):

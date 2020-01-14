@@ -171,6 +171,8 @@ if [ -f ./etc/sfa.ini ]; then
   ./sbin/eva-update-tables sfa || exit 1
 fi
 
+(cd xc && ln -sf ../runtime/xc/sfa) || exit 1
+
 echo "- Cleaning up"
 
 rm -rf _update
