@@ -1186,6 +1186,10 @@ class SysHTTP_API_REST_abstract:
                 return self.shutdown_core(k=k)
             else:
                 raise MethodNotFound
+        elif rtp == 'corescript' or rtp.startswith('corescript/'):
+            eva.core.exec_corescripts(event=SimpleNamespace(
+                type=eva.core.CS_EVENT_API, uri=ii, payload=props, k=k))
+            return True
         elif rtp == 'token':
             return self.login(k=k, **props)
         elif rtp == 'key':

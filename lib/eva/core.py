@@ -122,7 +122,15 @@ dir_runtime = dir_eva + '/runtime'
 start_time = time.time()
 
 corescripts = []
-corescript_globals = {'print': logging.info}
+
+CS_EVENT_STATE = 1
+CS_EVENT_API = 2
+
+corescript_globals = {
+    'print': logging.info,
+    'CS_EVENT_STATE': CS_EVENT_STATE,
+    'CS_EVENT_API': CS_EVENT_API
+}
 
 
 def critical(log=True, from_driver=False):
@@ -912,8 +920,9 @@ def exec_corescripts(event=None, env_globals={}):
     d = env_globals.copy()
     d['event'] = event
     d.update(corescript_globals)
+    logging.debug('executing core scripts, event type={}'.format(event.type))
     for c in corescripts.copy():
-        spawn(eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run())
+        spawn(eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run)
 
 
 def register_controller(controller):
