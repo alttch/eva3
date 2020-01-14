@@ -284,7 +284,8 @@ class PyThread(object):
                  script=None,
                  env_globals=None,
                  bcode=None,
-                 mfcode=None):
+                 mfcode=None,
+                 subdir=None):
         self.pfcode = None
         if item:
             if item.action_exec:
@@ -298,8 +299,9 @@ class PyThread(object):
         else:
             sfile = script
         self.script = sfile
-        self.script_file = eva.core.format_xc_fname(fname=sfile)
-        self.common_file = eva.core.format_xc_fname(fname='common.py')
+        self.script_file = eva.core.format_xc_fname(fname=sfile, subdir=subdir)
+        self.common_file = eva.core.format_xc_fname(fname='common.py',
+                                                    subdir=subdir)
         self.env_globals = env_globals
         self.code = None
         self.out = None

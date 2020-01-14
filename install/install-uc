@@ -27,6 +27,7 @@ mkdir -p ./runtime/tpl || exit 1
 touch runtime/db/uc.db || exit 1
 mkdir -p ./runtime/xc || exit 1
 mkdir -p ./runtime/xc/uc || exit 1
+mkdir -p ./runtime/xc/uc/cs || exit 1
 mkdir -p ./xc/cmd || exit 1
 mkdir -p ./xc/drivers/phi || exit 1
 mkdir -p ./xc/drivers/lpi || exit 1

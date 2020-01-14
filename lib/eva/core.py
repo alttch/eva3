@@ -21,6 +21,7 @@ import faulthandler
 import gzip
 import timeouter
 import uuid
+import glob
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -119,6 +120,9 @@ dir_lib = dir_eva + '/lib'
 dir_runtime = dir_eva + '/runtime'
 
 start_time = time.time()
+
+corescripts = []
+corescript_globals = {'print': logging.info}
 
 
 def critical(log=True, from_driver=False):
@@ -797,8 +801,14 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
 
 
-def format_xc_fname(item=None, xc_type='', fname=None, update=False):
+def format_xc_fname(item=None,
+                    xc_type='',
+                    fname=None,
+                    update=False,
+                    subdir=None):
     path = dir_xc + '/' + product.code
+    if subdir:
+        path += '/' + subdir
     if fname:
         return fname if fname[0] == '/' else path + '/' + fname
     if not item: return None
@@ -875,6 +885,7 @@ spawn = task_supervisor.spawn
 
 
 def start(init_db_only=False):
+    import eva.apikey
     if not init_db_only:
         from twisted.internet import reactor
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
@@ -882,6 +893,27 @@ def start(init_db_only=False):
     product.usn = str(
         uuid.uuid5(uuid.NAMESPACE_URL,
                    f'eva://{config.system_name}/{product.code}'))
+    reload_corescript_dir()
+    update_corescript_globals({'product': product, 'apikey': eva.apikey})
+
+
+def reload_corescript_dir():
+    corescripts.clear()
+    for f in glob.glob(f'{dir_xc}/{product.code}/cs/*.py'):
+        corescripts.append(os.path.basename(f))
+
+
+def update_corescript_globals(data):
+    corescript_globals.update(data)
+
+
+def exec_corescripts(event=None, env_globals={}):
+    import eva.runner
+    d = env_globals.copy()
+    d['event'] = event
+    d.update(corescript_globals)
+    for c in corescripts.copy():
+        spawn(eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run())
 
 
 def register_controller(controller):

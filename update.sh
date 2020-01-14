@@ -16,8 +16,10 @@ OBS=""
 
 UC_NEW_CFG=""
 UC_NEW_CFG_L=""
+UC_NEW_DIR="runtime/xc/uc/cs"
 LM_NEW_CFG=""
-LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d"
+LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d runtime/xc/lm/cs"
+SFA_NEW_DIR="runtime/xc/sfa/cs"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
     echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"
@@ -103,10 +105,24 @@ for f in ${LM_NEW_CFG}; do
     fi
 done
 
+for f in ${UC_NEW_DIR}; do
+    mkdir -p "$f"
+    if [ "$UC_USER" ]; then
+        chown "${UC_USER}" "$f"
+    fi
+done
+
 for f in ${LM_NEW_DIR}; do
     mkdir -p "$f"
     if [ "$LM_USER" ]; then
         chown "${LM_USER}" "$f"
+    fi
+done
+
+for f in ${SFA_NEW_DIR}; do
+    mkdir -p "$f"
+    if [ "$SFA_USER" ]; then
+        chown "${SFA_USER}" "$f"
     fi
 done
 

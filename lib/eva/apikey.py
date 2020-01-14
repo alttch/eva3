@@ -405,6 +405,8 @@ def load(fname=None, load_from_db=True):
             keys_by_id.update(_keys_from_db_by_id)
         if not config.masterkey:
             logging.warning('no masterkey in this configuration')
+        else:
+            eva.core.update_corescript_globals({'masterkey': config.masterkey})
         return True
     except:
         logging.error('Unable to load API keys')
@@ -472,7 +474,7 @@ def check(k,
                     ('#' not in _k.groups and 'phi' not in _k.groups):
                 return False
         except:
-        # check access to regular item
+            # check access to regular item
             try:
                 grp = item.group
             except:

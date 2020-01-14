@@ -1267,6 +1267,7 @@ class GenericHTTP_API_abstract:
                 self._expose(f, a)
             if set_api_uri:
                 self.api_uri = data['uri']
+            eva.core.update_corescript_globals(self.__exposed)
         except:
             eva.core.critical()
 
