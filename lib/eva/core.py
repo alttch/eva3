@@ -56,6 +56,7 @@ _flags = SimpleNamespace(ignore_critical=False,
                          started=threading.Event(),
                          shutdown_requested=False,
                          cvars_modified=False,
+                         corescript_topics_modified=False,
                          setup_mode=0,
                          use_reactor=False)
 
@@ -122,6 +123,8 @@ dir_runtime = dir_eva + '/runtime'
 start_time = time.time()
 
 corescripts = []
+
+corescript_topics = []
 
 CS_EVENT_STATE = 1
 CS_EVENT_API = 2
@@ -719,11 +722,29 @@ def save_cvars(fname=None):
     try:
         with open(fname_full, 'w') as fd:
             fd.write(format_json(cvars, minimal=False))
+        return True
     except:
         logging.error('can not save custom vars into %s' % fname_full)
         log_traceback()
         return False
-    return True
+
+
+@corescript_lock
+def save_corescript_topics(fname=None):
+    fname_full = format_cfg_fname(fname,
+                                  'cs',
+                                  ext='json',
+                                  runtime=True)
+    logging.info('Saving corescript config to %s' % fname_full)
+    try:
+        with open(fname_full, 'w') as fd:
+            fd.write(
+                format_json({'mqtt-topics': corescript_topics}, minimal=False))
+        return True
+    except:
+        logging.error('can not save corescript config to %s' % fname_full)
+        log_traceback()
+        return False
 
 
 @cvars_lock
@@ -753,7 +774,9 @@ def set_cvar(var, value=None):
 
 @save
 def save_modified():
-    return save_cvars() if _flags.cvars_modified else True
+    return (save_cvars() if _flags.cvars_modified else True) \
+        and (save_corescript_topics() if \
+        _flags.corescript_topics_modified else True)
 
 
 def debug_on():

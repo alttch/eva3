@@ -14,11 +14,12 @@ fi
 
 OBS=""
 
-UC_NEW_CFG=""
+UC_NEW_CFG="runtime/xc/uc_cs.json"
 UC_NEW_CFG_L=""
 UC_NEW_DIR="runtime/xc/uc/cs"
-LM_NEW_CFG=""
+LM_NEW_CFG="runtime/xc/lm_cs.json"
 LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d runtime/xc/lm/cs"
+SFA_NEW_CFG="runtime/xc/sfa_cs.json"
 SFA_NEW_DIR="runtime/xc/sfa/cs"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
@@ -102,6 +103,13 @@ for f in ${LM_NEW_CFG}; do
     [ ! -f "$f" ] && echo "{}" > $f
     if [ "$LM_USER" ]; then
         chown "${LM_USER}" "$f"
+    fi
+done
+
+for f in ${SFA_NEW_CFG}; do
+    [ ! -f $f ] && echo "{}" > $f
+    if [ "$SFA_USER" ]; then
+        chown "${SFA_USER}" "$f"
     fi
 done
 
