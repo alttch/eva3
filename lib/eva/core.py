@@ -129,6 +129,7 @@ CS_EVENT_API = 2
 corescript_globals = {
     'print': logging.info,
     'logging': logging,
+    'json': rapidjson,
     'time': time,
     'CS_EVENT_STATE': CS_EVENT_STATE,
     'CS_EVENT_API': CS_EVENT_API
