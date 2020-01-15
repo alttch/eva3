@@ -18,6 +18,9 @@ import ssl
 import uuid
 import threading
 import sqlalchemy as sa
+import pyaltt2.logs
+
+from pyaltt2.converters import mq_topic_match
 
 from sqlalchemy import text as sql
 
@@ -1662,45 +1665,48 @@ class GenericMQTTNotifier(GenericNotifier):
         except:
             logging.warning('.Invalid message from MQTT server: {}'.format(
                 msg.payload))
-            eva.core.log_traceback()
+            eva.core.log_traceback(notifier=True)
             return
-        if t == self.announce_topic and \
-                d != self.announce_msg and \
-                self.discovery_handler and \
-                not eva.core.is_setup_mode() and eva.core.is_started():
-            eva.core.spawn(self.discovery_handler, self.notifier_id, d,
-                           f'mqtt://{self.notifier_id}:{d}')
-            return
-        if t == self.api_request_topic and self.api_handler:
-            eva.core.spawn(self.api_handler, self.notifier_id, d,
-                           self.send_api_response)
-            return
-        if t.startswith(self.pfx_api_response):
-            response_id = t.split('/')[-1]
-            if response_id in self.api_callback:
-                eva.core.spawn(self.api_callback[response_id][1], d)
-                self.finish_api_request(response_id)
+        try:
+            if t == self.announce_topic and \
+                    d != self.announce_msg and \
+                    self.discovery_handler and \
+                    not eva.core.is_setup_mode() and eva.core.is_started():
+                eva.core.spawn(self.discovery_handler, self.notifier_id, d,
+                               f'mqtt://{self.notifier_id}:{d}')
                 return
-        if t in self.custom_handlers:
-            for h in self.custom_handlers.get(t):
+            if t == self.api_request_topic and self.api_handler:
+                eva.core.spawn(self.api_handler, self.notifier_id, d,
+                               self.send_api_response)
+                return
+            if t.startswith(self.pfx_api_response):
+                response_id = t.split('/')[-1]
+                if response_id in self.api_callback:
+                    eva.core.spawn(self.api_callback[response_id][1], d)
+                    self.finish_api_request(response_id)
+                    return
+            hte = set()
+            for ct in self.custom_handlers:
+                if mq_topic_match(t, ct):
+                    for h in self.custom_handlers.get(ct, []):
+                        hte.add(h)
+            for h in hte:
                 eva.core.spawn(self.exec_custom_handler, h, d, t, msg.qos,
                                msg.retain)
-        if self.collect_logs and t == self.log_topic:
-            try:
+            if self.collect_logs and t == self.log_topic:
                 r = rapidjson.loads(d)
                 if r['h'] != eva.core.config.system_name or \
                         r['p'] != eva.core.product.code:
-                    import pyaltt2.logs
                     pyaltt2.logs.append(rd=r, skip_mqtt=True)
-            except:
-                eva.core.log_traceback(notifier=True)
-        elif t in self.items_to_update_by_topic:
-            i = self.items_to_update_by_topic[t]
-            i.mqtt_set_state(t[0 if not self.space else len(self.space) + 1:],
-                             d)
-        elif t in self.items_to_control_by_topic:
-            i = self.items_to_control_by_topic[t]
-            i.mqtt_action(msg=d)
+            elif t in self.items_to_update_by_topic:
+                i = self.items_to_update_by_topic[t]
+                i.mqtt_set_state(
+                    t[0 if not self.space else len(self.space) + 1:], d)
+            elif t in self.items_to_control_by_topic:
+                i = self.items_to_control_by_topic[t]
+                i.mqtt_action(msg=d)
+        except:
+            eva.core.log_traceback(notifier=True)
 
     def on_publish_msg(self, client, userdata, mid):
         logging.debug('.Notification data #%u delivered to %s:%u' %
@@ -2851,6 +2857,7 @@ def start():
                 break
         if can_break: break
         time.sleep(eva.core.sleep_step)
+    eva.core.register_corescript_topics()
 
 
 @eva.core.stop
