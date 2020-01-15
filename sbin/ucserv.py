@@ -95,6 +95,7 @@ eva.uc.modbus.update_config(cfg)
 eva.core.start()
 eva.core.register_controller(eva.uc.controller)
 eva.core.load_cvars()
+eva.core.load_corescripts()
 
 eva.apikey.allows = ['cmd', 'lock', 'device']
 eva.apikey.init()

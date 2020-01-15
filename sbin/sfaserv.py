@@ -89,6 +89,7 @@ eva.sysapi.cvars_public = True
 eva.core.start()
 eva.core.register_controller(eva.sfa.controller)
 eva.core.load_cvars()
+eva.core.load_corescripts()
 
 eva.apikey.allows = ['cmd', 'lock']
 eva.apikey.init()
