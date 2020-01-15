@@ -602,7 +602,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='Template name',
             metavar='TPL').completer = self.ComplDeviceTPL(self)
 
-        self._append_edit_server_config(sp_edit)
+        self._append_edit_common(sp_edit)
 
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')

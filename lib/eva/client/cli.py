@@ -99,6 +99,18 @@ class ComplUser(ComplGeneric):
             yield v['user']
 
 
+class ComplCoreScript(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        import glob
+        result = []
+        files = glob.glob(f'{dir_eva}/xc/{self.cli.product}/cs/*.py')
+        for f in files:
+            if os.path.isfile(f):
+                result.append(os.path.basename(f[:-3]))
+        return result
+
+
 class GenericCLI(GCLI):
 
     def __init__(self, product, name, prog=None, remote_api_enabled=True):
@@ -1379,9 +1391,14 @@ class ControllerCLI(object):
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
 
-    def _append_edit_server_config(self, parser):
+    def _append_edit_common(self, parser):
         sp_edit_server_config = parser.add_parser(
             'server-config', help='Edit server configuration')
+        sp_edit_corescript = parser.add_parser('corescript',
+                                               help='Edit core scripts')
+        sp_edit_corescript.add_argument(
+            'i', help='Core script name',
+            metavar='NAME').completer = ComplCoreScript(self)
 
     def edit_server_config(self, params):
         if self.apiuri:
@@ -1390,6 +1407,20 @@ class ControllerCLI(object):
         editor = os.environ.get('EDITOR', 'vi')
         code = os.system('{} {}/{}.ini'.format(editor, self.dir_etc,
                                                self._management_controller_id))
+        return self.local_func_result_ok if \
+                not code else self.local_func_result_failed
+
+    def edit_corescript(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        editor = os.environ.get('EDITOR', 'vi')
+        fname = params['i']
+        if fname.endswith('.py'): fname = fname[:-3]
+        code = os.system('{} {}/xc/{}/cs/{}.py'.format(editor, dir_eva,
+                                                       self.product, fname))
+        code = 0
+        code = 0
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
 
@@ -1408,7 +1439,8 @@ class ControllerCLI(object):
             'server:status': self.status_controller,
             'server:reload': 'shutdown_core',
             'server:launch': self.launch_controller,
-            'edit:server-config': self.edit_server_config
+            'edit:server-config': self.edit_server_config,
+            'edit:corescript': self.edit_corescript
         })
 
     @staticmethod

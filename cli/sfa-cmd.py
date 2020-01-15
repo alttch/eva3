@@ -352,7 +352,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                                          help='Edit commands')
 
         self._append_edit_pvt_and_ui(sp_edit)
-        self._append_edit_server_config(sp_edit)
+        self._append_edit_common(sp_edit)
 
     def add_sfa_remote_functions(self):
         ap_remote = self.sp.add_parser('remote', help='List remote items')
