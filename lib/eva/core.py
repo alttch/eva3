@@ -949,8 +949,13 @@ def start(init_db_only=False):
 
 
 def handle_corescript_mqtt_event(d, t, qos, retain):
+    if t:
+        ts = t.split('/')
+    else:
+        ts = []
     exec_corescripts(event=SimpleNamespace(
-        type=CS_EVENT_MQTT, topic=t, data=d, qos=qos, retain=retain))
+        type=CS_EVENT_MQTT, topic=t, topic_p=ts, data=d, qos=qos,
+        retain=retain))
 
 
 @corescript_lock

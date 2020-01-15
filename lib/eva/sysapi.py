@@ -1194,9 +1194,9 @@ class SysHTTP_API_REST_abstract:
                 uri_p = ii.split('/')
             eva.core.exec_corescripts(
                 event=SimpleNamespace(type=eva.core.CS_EVENT_API,
-                                      uri=ii,
-                                      uri_p=uri_p,
-                                      payload=props,
+                                      topic=ii,
+                                      topic_p=uri_p,
+                                      data=props,
                                       k=k))
             return True
         elif rtp == 'token':
