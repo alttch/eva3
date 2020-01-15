@@ -405,6 +405,13 @@ class GenericCLI(GCLI):
                     datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
                 result.append(d)
             return result
+        elif api_func == 'list_corescripts':
+            import time
+            result = []
+            for d in data.copy():
+                d['modified'] = time.ctime(d['modified'])
+                result.append(d)
+            return result
         else:
             return data
 
@@ -1391,11 +1398,25 @@ class ControllerCLI(object):
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
 
+        ap_corescript = self.sp.add_parser('corescript',
+                                           help='Controller core scripts')
+        sp_corescript = ap_corescript.add_subparsers(
+            dest='_func', metavar='func', help='Core script commands')
+
+        sp_edit = sp_corescript.add_parser('edit', help='Edit core script')
+        sp_edit.add_argument('i', help='Core script name',
+                             metavar='NAME').completer = ComplCoreScript(self)
+
+        sp_list = sp_corescript.add_parser('list', help='List core scripts')
+
+        if 'corescript' not in self.arg_sections:
+            self.arg_sections.append('corescript')
+
     def _append_edit_common(self, parser):
         sp_edit_server_config = parser.add_parser(
             'server-config', help='Edit server configuration')
         sp_edit_corescript = parser.add_parser('corescript',
-                                               help='Edit core scripts')
+                                               help='Edit core script')
         sp_edit_corescript.add_argument(
             'i', help='Core script name',
             metavar='NAME').completer = ComplCoreScript(self)
@@ -1424,6 +1445,23 @@ class ControllerCLI(object):
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
 
+    def list_corescripts(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        import glob
+        files = glob.glob('{}/xc/{}/cs/*.py'.format(
+            dir_eva,
+            self.product,
+        ))
+        result = []
+        for f in files:
+            result.append({
+                'name': os.path.basename(f)[:-3],
+                'modified': os.path.getmtime(f)
+            })
+        return 0, sorted(result, key=lambda k: k['name'])
+
     def enable_controller_management_functions(self, controller_id):
         if self.apiuri:
             return
@@ -1440,7 +1478,9 @@ class ControllerCLI(object):
             'server:reload': 'shutdown_core',
             'server:launch': self.launch_controller,
             'edit:server-config': self.edit_server_config,
-            'edit:corescript': self.edit_corescript
+            'edit:corescript': self.edit_corescript,
+            'corescript:list': self.list_corescripts,
+            'corescript:edit': self.edit_corescript
         })
 
     @staticmethod
