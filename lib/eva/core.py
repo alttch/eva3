@@ -980,6 +980,11 @@ def register_corescript_topics():
 
 
 @corescript_lock
+def get_corescript_topics():
+    return cs_data.topics.copy()
+
+
+@corescript_lock
 def reload_corescripts():
     cs = [
         os.path.basename(f)

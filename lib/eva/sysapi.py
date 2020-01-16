@@ -608,6 +608,15 @@ class FileAPI(object):
             raise FunctionFailed
 
 
+class CSAPI(object):
+
+    @log_i
+    @api_need_master
+    def list_cs_mqtt_topics(self, **kwargs):
+        parse_api_params(kwargs)
+        return eva.core.get_corescript_topics()
+
+
 class UserAPI(object):
 
     @log_w
@@ -835,7 +844,7 @@ class UserAPI(object):
         return eva.apikey.delete_api_key(i)
 
 
-class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
+class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     def __init__(self):
         super().__init__()
@@ -1167,6 +1176,9 @@ class SysHTTP_API_REST_abstract:
                 return self.list_notifiers(k=k)
         elif rtp == 'runtime':
             return self.file_get(k=k, i=ii)
+        elif rtp == 'corescript':
+            if ii == 'mqtt-topics':
+                return self.list_cs_mqtt_topics(k=k)
         elif rtp == 'user':
             if ii:
                 return self.get_user(k=k, u=ii)
