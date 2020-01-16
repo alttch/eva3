@@ -51,6 +51,7 @@ What you get with EVA
   organized, queued and safely executed with :doc:`/uc/uc`
 * easily collect data from the hardware using :ref:`MQTT<mqtt_>` or
   :ref:`snmp_traps` with the built-in SNMP trap handler server
+* quickly customize configurations with :doc:`/corescript`
 * collect data from your microcontrollers with a simple :doc:`UDP
   API</uc/uc_udp_api>`
 * test and monitor the initial setup with controllers' EI web interfaces
@@ -76,6 +77,7 @@ What you get with EVA
     What's new <changelog>
     security
     notifiers
+    corescript
     cli
     tutorial/tutorial
     faq

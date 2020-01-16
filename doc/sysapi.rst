@@ -915,3 +915,76 @@ Parameters:
 * **k** API key with *master* permissions
 * **i** relative path (without first slash)
 
+
+.. _sysapi_cat_corescript:
+
+Core scripts
+============
+
+
+
+.. _sysapi_list_corescript_mqtt_topics:
+
+list_corescript_mqtt_topics - List MQTT topics core scripts react on
+--------------------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_corescript_mqtt_topics.req
+    :response: http-examples/sysapi/list_corescript_mqtt_topics.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _sysapi_reload_corescripts:
+
+reload_corescripts - Reload core scripts if some was added or deleted
+---------------------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/reload_corescripts.req
+    :response: http-examples/sysapi/reload_corescripts.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+
+.. _sysapi_subscribe_corescripts_mqtt:
+
+subscribe_corescripts_mqtt - Subscribe core scripts to MQTT topic
+-----------------------------------------------------------------
+
+The method subscribes core scripts to topic of default MQTT notifier (eva_1). To specify another notifier, set topic as <notifer_id>:<topic>
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/subscribe_corescripts_mqtt.req
+    :response: http-examples/sysapi/subscribe_corescripts_mqtt.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **t** MQTT topic ("+" and "#" masks are supported)
+* **q** MQTT topic QoS
+* **save** Save core script config after modification
+
+.. _sysapi_unsubscribe_corescripts_mqtt:
+
+unsubscribe_corescripts_mqtt - Unsubscribe core scripts from MQTT topic
+-----------------------------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/unsubscribe_corescripts_mqtt.req
+    :response: http-examples/sysapi/unsubscribe_corescripts_mqtt.resp
+
+Parameters:
+
+* **k** API key with *master* permissions
+* **t** MQTT topic ("+" and "#" masks are allowed)
+* **save** Save core script config after modification
+

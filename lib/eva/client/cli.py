@@ -1429,7 +1429,10 @@ class ControllerCLI(object):
 
         sp_sub_mqtt = sp_corescript.add_parser(
             'mqtt-subscribe', help='Subscribe core scripts to MQTT topic')
-        sp_sub_mqtt.add_argument('t', help='MQTT topic', metavar='TOPIC')
+        sp_sub_mqtt.add_argument(
+            't',
+            help='MQTT topic (for default notifier) or <notifier_id>:<topic>',
+            metavar='TOPIC')
         sp_sub_mqtt.add_argument('-q',
                                  '--qos',
                                  dest='q',

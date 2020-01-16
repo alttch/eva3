@@ -641,9 +641,12 @@ class CSAPI(object):
         """
         Subscribe core scripts to MQTT topic
 
+        The method subscribes core scripts to topic of default MQTT notifier
+        (eva_1). To specify another notifier, set topic as <notifer_id>:<topic>
+
         Args:
             k: .master
-            t: MQTT topic ("+" and "#" masks are allowed)
+            t: MQTT topic ("+" and "#" masks are supported)
             q: MQTT topic QoS
             save: Save core script config after modification
         """
@@ -658,7 +661,7 @@ class CSAPI(object):
     @api_need_master
     def unsubscribe_corescripts_mqtt(self, **kwargs):
         """
-        Unsubscribe core scripts to MQTT topic
+        Unsubscribe core scripts from MQTT topic
 
         Args:
             k: .master
