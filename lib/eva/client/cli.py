@@ -154,6 +154,9 @@ class GenericCLI(GCLI):
                 'list_keys': [
                     'key_id', 'dynamic', 'master', 'sysfunc', 'allow'
                 ],
+                'list_corescript_mqtt_topics': [
+                    'topic', 'qos'
+                ],
                 'list_users': ['user', 'key_id'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
                 'log_get_': [
@@ -405,7 +408,7 @@ class GenericCLI(GCLI):
                     datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
                 result.append(d)
             return result
-        elif api_func == 'list_cs_mqtt_topics':
+        elif api_func == 'list_corescript_mqtt_topics':
             return sorted(data, key=lambda k: k['topic'])
         elif api_func == 'list_corescripts':
             import time
