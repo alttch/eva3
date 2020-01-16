@@ -37,7 +37,7 @@ vehicle to quickly implement:
 
 * Simple automation tasks without :doc:`/lm/lm`.
 
-* Writing custom API methods and extending EVA ICS functionality.
+* Custom API methods and extending EVA ICS functionality.
 
 Core script globals and functions
 =================================
