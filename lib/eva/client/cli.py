@@ -1419,6 +1419,15 @@ class ControllerCLI(object):
         sp_list_mqtt = sp_corescript.add_parser(
             'mqtt-topics', help='List subscribed mqtt topics')
 
+        sp_sub_mqtt = sp_corescript.add_parser(
+            'mqtt-subscribe', help='Subscribe core scripts to MQTT topic')
+        sp_sub_mqtt.add_argument('t', help='MQTT topic', metavar='TOPIC')
+        sp_sub_mqtt.add_argument('-q', '--qos', dest='q', help='MQTT QoS', metavar='QoS', type=int)
+
+        sp_unsub_mqtt = sp_corescript.add_parser(
+            'mqtt-unsubscribe', help='Unsubscribe core scripts from MQTT topic')
+        sp_unsub_mqtt.add_argument('t', help='MQTT topic', metavar='TOPIC')
+
         sp_reload = sp_corescript.add_parser('reload',
                                              help='Reload core scripts')
 
@@ -1521,7 +1530,9 @@ class ControllerCLI(object):
             'corescript:edit': self.edit_corescript,
             'corescript:delete': self.delete_corescript,
             'corescript:reload': 'reload_corescripts',
-            'corescript:mqtt-topics': 'list_corescript_mqtt_topics'
+            'corescript:mqtt-topics': 'list_corescript_mqtt_topics',
+            'corescript:mqtt-subscribe': 'subscribe_corescripts_mqtt',
+            'corescript:mqtt-unsubscribe': 'unsubscribe_corescripts_mqtt'
         })
 
     @staticmethod

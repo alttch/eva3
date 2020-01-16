@@ -1001,6 +1001,7 @@ def corescript_mqtt_subscribe(topic, qos=None):
         n.handler_append(topic, handle_corescript_mqtt_event, qos)
         cs_data.topics.append({'topic': topic, 'qos': qos})
         _flags.cs_modified = True
+        return True
     except:
         log_traceback()
         return False

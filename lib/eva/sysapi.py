@@ -623,6 +623,21 @@ class CSAPI(object):
         eva.core.reload_corescripts()
         return True
 
+    @log_i
+    @api_need_master
+    def subscribe_corescripts_mqtt(self, **kwargs):
+        t, q = parse_api_params(kwargs, 'tq', 'Si')
+        if q is None: q = 1
+        elif q < 0 or q > 2:
+            raise InvalidParameter('q should be 0..2')
+        return eva.core.corescript_mqtt_subscribe(t, q)
+
+    @log_i
+    @api_need_master
+    def unsubscribe_corescripts_mqtt(self, **kwargs):
+        t = parse_api_params(kwargs, 't', 'S')
+        return eva.core.corescript_mqtt_unsubscribe(t)
+
 
 class UserAPI(object):
 
@@ -1208,6 +1223,10 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'corescript':
             if method == 'reload':
                 return self.reload_corescripts(k=k)
+            elif method == 'mqtt-subscribe':
+                return self.subscribe_corescripts_mqtt(k=k, **props)
+            elif method == 'mqtt-unsubscribe':
+                return self.unsubscribe_corescripts_mqtt(k=k, **props)
         elif rtp == 'cs' or rtp.startswith('cs/'):
             if ii is None:
                 ii = ''
