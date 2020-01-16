@@ -124,6 +124,8 @@ start_time = time.time()
 
 cs_data = SimpleNamespace(corescripts=[], topics=[])
 
+cs_shared_namespace = SimpleNamespace()
+
 CS_EVENT_STATE = 1
 CS_EVENT_API = 2
 CS_EVENT_MQTT = 3
@@ -133,6 +135,7 @@ corescript_globals = {
     'logging': logging,
     'json': rapidjson,
     'time': time,
+    'g': cs_shared_namespace,
     'CS_EVENT_STATE': CS_EVENT_STATE,
     'CS_EVENT_API': CS_EVENT_API,
     'CS_EVENT_MQTT': CS_EVENT_MQTT

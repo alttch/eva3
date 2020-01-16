@@ -51,6 +51,8 @@ Core script globals and functions
 
 * **event** event info name space
 
+* **g** special name space, shared across all core scripts
+
 * **masterkey** controller master key
 
 * **product** controller info name space:
