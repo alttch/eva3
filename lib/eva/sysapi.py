@@ -613,12 +613,24 @@ class CSAPI(object):
     @log_i
     @api_need_master
     def list_corescript_mqtt_topics(self, **kwargs):
+        """
+        List MQTT topics core scripts react on
+
+        Args:
+            k: .master
+        """
         parse_api_params(kwargs)
         return eva.core.get_corescript_topics()
 
     @log_i
     @api_need_master
     def reload_corescripts(self, **kwargs):
+        """
+        Reload core scripts if some was added or deleted
+
+        Args:
+            k: .master
+        """
         parse_api_params(kwargs)
         eva.core.reload_corescripts()
         return True
@@ -626,17 +638,36 @@ class CSAPI(object):
     @log_i
     @api_need_master
     def subscribe_corescripts_mqtt(self, **kwargs):
-        t, q = parse_api_params(kwargs, 'tq', 'Si')
+        """
+        Subscribe core scripts to MQTT topic
+
+        Args:
+            k: .master
+            t: MQTT topic ("+" and "#" masks are allowed)
+            q: MQTT topic QoS
+            save: Save core script config after modification
+        """
+        t, q, save = parse_api_params(kwargs, 'tqS', 'Sib')
         if q is None: q = 1
         elif q < 0 or q > 2:
             raise InvalidParameter('q should be 0..2')
-        return eva.core.corescript_mqtt_subscribe(t, q)
+        return eva.core.corescript_mqtt_subscribe(
+            t, q) and (eva.core.save_cs() if save else True)
 
     @log_i
     @api_need_master
     def unsubscribe_corescripts_mqtt(self, **kwargs):
-        t = parse_api_params(kwargs, 't', 'S')
-        return eva.core.corescript_mqtt_unsubscribe(t)
+        """
+        Unsubscribe core scripts to MQTT topic
+
+        Args:
+            k: .master
+            t: MQTT topic ("+" and "#" masks are allowed)
+            save: Save core script config after modification
+        """
+        t, save = parse_api_params(kwargs, 'tS', 'Sb')
+        return eva.core.corescript_mqtt_unsubscribe(t) and (eva.core.save_cs()
+                                                            if save else True)
 
 
 class UserAPI(object):

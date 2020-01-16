@@ -154,9 +154,7 @@ class GenericCLI(GCLI):
                 'list_keys': [
                     'key_id', 'dynamic', 'master', 'sysfunc', 'allow'
                 ],
-                'list_corescript_mqtt_topics': [
-                    'topic', 'qos'
-                ],
+                'list_corescript_mqtt_topics': ['topic', 'qos'],
                 'list_users': ['user', 'key_id'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
                 'log_get_': [
@@ -1310,6 +1308,13 @@ class GenericCLI(GCLI):
 
 class ControllerCLI(object):
 
+    class ComplCSMQTT(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(['corescript', 'mqtt-topics'])
+            if code: return True
+            return sorted([v['topic'] for v in data])
+
     def __init__(self):
         self.management_controller_id = None
 
@@ -1425,11 +1430,28 @@ class ControllerCLI(object):
         sp_sub_mqtt = sp_corescript.add_parser(
             'mqtt-subscribe', help='Subscribe core scripts to MQTT topic')
         sp_sub_mqtt.add_argument('t', help='MQTT topic', metavar='TOPIC')
-        sp_sub_mqtt.add_argument('-q', '--qos', dest='q', help='MQTT QoS', metavar='QoS', type=int)
+        sp_sub_mqtt.add_argument('-q',
+                                 '--qos',
+                                 dest='q',
+                                 help='MQTT QoS',
+                                 metavar='QoS',
+                                 type=int)
+        sp_sub_mqtt.add_argument('-y',
+                                 '--save',
+                                 help='Save core script config after set',
+                                 dest='_save',
+                                 action='store_true')
 
         sp_unsub_mqtt = sp_corescript.add_parser(
             'mqtt-unsubscribe', help='Unsubscribe core scripts from MQTT topic')
-        sp_unsub_mqtt.add_argument('t', help='MQTT topic', metavar='TOPIC')
+        sp_unsub_mqtt.add_argument(
+            't', help='MQTT topic',
+            metavar='TOPIC').completer = self.ComplCSMQTT(self)
+        sp_unsub_mqtt.add_argument('-y',
+                                   '--save',
+                                   help='Save core script config after set',
+                                   dest='_save',
+                                   action='store_true')
 
         sp_reload = sp_corescript.add_parser('reload',
                                              help='Reload core scripts')
