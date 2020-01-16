@@ -11,6 +11,7 @@ Common
    * MQTT inter-connect API encryption strength increased to AES256
    * Core workers are now async to improve system performance
    * Controller auto-discovery in local network via UPnP
+   * Core scripts
 
 UC
 --
