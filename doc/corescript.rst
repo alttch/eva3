@@ -18,8 +18,8 @@ What are EVA ICS core scripts
 
 * Code of the special file **common.py** is included in all core scripts.
 
-What are core script for
-========================
+What are core scripts for
+=========================
 
 Core script is not recommended for the enterprise-level configurations, it's a
 vehicle to quickly implement:
@@ -77,7 +77,7 @@ API event
 
 .. code-block:: python
 
-  event.type == CS_EVENT_API:
+  event.type == CS_EVENT_API
 
 * **event.topic** relative API URI without method prefix (e.g. *tests/test1* for
   */r/cs/tests/test1*)
@@ -98,7 +98,7 @@ MQTT event
 
 .. code-block:: python
 
-  event.type == CS_EVENT_MQTT:
+  event.type == CS_EVENT_MQTT
 
 * **event.topic** MQTT topic
 * **event.topic_p** topic split by '/' (list object)
