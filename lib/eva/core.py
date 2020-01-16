@@ -992,6 +992,7 @@ def reload_corescripts():
     ]
     cs_data.corescripts.clear()
     cs_data.corescripts.extend(sorted(cs))
+    logging.info('Core scripts reloaded, {} files found'.format(len(cs)))
 
 
 def update_corescript_globals(data):

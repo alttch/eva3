@@ -612,9 +612,16 @@ class CSAPI(object):
 
     @log_i
     @api_need_master
-    def list_cs_mqtt_topics(self, **kwargs):
+    def list_corescript_mqtt_topics(self, **kwargs):
         parse_api_params(kwargs)
         return eva.core.get_corescript_topics()
+
+    @log_i
+    @api_need_master
+    def reload_corescripts(self, **kwargs):
+        parse_api_params(kwargs)
+        eva.core.reload_corescripts()
+        return True
 
 
 class UserAPI(object):
@@ -1178,7 +1185,7 @@ class SysHTTP_API_REST_abstract:
             return self.file_get(k=k, i=ii)
         elif rtp == 'corescript':
             if ii == 'mqtt-topics':
-                return self.list_cs_mqtt_topics(k=k)
+                return self.list_corescript_mqtt_topics(k=k)
         elif rtp == 'user':
             if ii:
                 return self.get_user(k=k, u=ii)
@@ -1198,6 +1205,9 @@ class SysHTTP_API_REST_abstract:
                 return self.shutdown_core(k=k)
             else:
                 raise MethodNotFound
+        elif rtp == 'corescript':
+            if method == 'reload':
+                return self.reload_corescripts(k=k)
         elif rtp == 'cs' or rtp.startswith('cs/'):
             if ii is None:
                 ii = ''

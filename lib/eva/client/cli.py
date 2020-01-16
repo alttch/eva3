@@ -406,7 +406,7 @@ class GenericCLI(GCLI):
                 result.append(d)
             return result
         elif api_func == 'list_cs_mqtt_topics':
-            return sorted(data, key = lambda k: k['topic'])
+            return sorted(data, key=lambda k: k['topic'])
         elif api_func == 'list_corescripts':
             import time
             result = []
@@ -1411,8 +1411,11 @@ class ControllerCLI(object):
 
         sp_list = sp_corescript.add_parser('list', help='List core scripts')
 
-        sp_list_mqtt = sp_corescript.add_parser('mqtt-topics',
-                                           help='List subscribed mqtt topics')
+        sp_list_mqtt = sp_corescript.add_parser(
+            'mqtt-topics', help='List subscribed mqtt topics')
+
+        sp_reload = sp_corescript.add_parser('reload',
+                                             help='Reload core scripts')
 
         if 'corescript' not in self.arg_sections:
             self.arg_sections.append('corescript')
@@ -1486,7 +1489,8 @@ class ControllerCLI(object):
             'edit:corescript': self.edit_corescript,
             'corescript:list': self.list_corescripts,
             'corescript:edit': self.edit_corescript,
-            'corescript:mqtt-topics': 'list_cs_mqtt_topics'
+            'corescript:reload': 'reload_corescripts',
+            'corescript:mqtt-topics': 'list_corescript_mqtt_topics'
         })
 
     @staticmethod
