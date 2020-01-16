@@ -838,8 +838,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
 
-        sp_cycle_stop = sp_cycle.add_parser('reset',
-                                            help='Reset cycle stats')
+        sp_cycle_stop = sp_cycle.add_parser('reset', help='Reset cycle stats')
         sp_cycle_stop.add_argument(
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
@@ -1241,10 +1240,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
             with open(fname) as fd:
                 code = fd.read()
             compile(code, fname, 'exec')
+            return self.local_func_result_ok
         except Exception as e:
             self.print_err('Macro code error: ' + str(e))
             return self.local_func_result_failed
-        return self.local_func_result_ok
 
 
 _me = 'EVA ICS LM CLI version %s' % __version__

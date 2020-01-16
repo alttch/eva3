@@ -1451,12 +1451,21 @@ class ControllerCLI(object):
         editor = os.environ.get('EDITOR', 'vi')
         fname = params['i']
         if fname.endswith('.py'): fname = fname[:-3]
-        code = os.system('{} {}/xc/{}/cs/{}.py'.format(editor, dir_eva,
-                                                       self.product, fname))
-        code = 0
-        code = 0
-        return self.local_func_result_ok if \
-                not code else self.local_func_result_failed
+        fname = '{}/xc/{}/cs/{}.py'.format(dir_eva, self.product, fname)
+        need_reload = not os.path.exists(fname)
+        if os.system(f'{editor} {fname}'):
+            return self.local_func_result_failed
+        try:
+            with open(fname) as fd:
+                code = fd.read()
+            compile(code, fname, 'exec')
+        except Exception as e:
+            self.print_err('Core script code error: ' + str(e))
+            return self.local_func_result_failed
+        if need_reload:
+            return self.call(args=['corescript', 'reload'])
+        else:
+            return self.local_func_result_ok
 
     def delete_corescript(self, params):
         if self.apiuri:
