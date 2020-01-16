@@ -1405,6 +1405,11 @@ class ControllerCLI(object):
         sp_corescript = ap_corescript.add_subparsers(
             dest='_func', metavar='func', help='Core script commands')
 
+        sp_delete = sp_corescript.add_parser('delete',
+                                             help='Delete core script')
+        sp_delete.add_argument('i', help='Core script name',
+                               metavar='NAME').completer = ComplCoreScript(self)
+
         sp_edit = sp_corescript.add_parser('edit', help='Edit core script')
         sp_edit.add_argument('i', help='Core script name',
                              metavar='NAME').completer = ComplCoreScript(self)
@@ -1453,6 +1458,22 @@ class ControllerCLI(object):
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
 
+    def delete_corescript(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        fname = params['i']
+        if fname.endswith('.py'): fname = fname[:-3]
+        fname = '{}/xc/{}/cs/{}.py'.format(
+            dir_eva, self.product,
+            fname.replace('/', '').replace('..', ''))
+        try:
+            os.unlink(fname)
+        except:
+            print(f'Unable to delete core script file {fname}')
+            return self.local_func_result_failed
+        return self.call(args=['corescript', 'reload'])
+
     def list_corescripts(self, params):
         if self.apiuri:
             self.print_local_only()
@@ -1489,6 +1510,7 @@ class ControllerCLI(object):
             'edit:corescript': self.edit_corescript,
             'corescript:list': self.list_corescripts,
             'corescript:edit': self.edit_corescript,
+            'corescript:delete': self.delete_corescript,
             'corescript:reload': 'reload_corescripts',
             'corescript:mqtt-topics': 'list_corescript_mqtt_topics'
         })
