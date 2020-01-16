@@ -746,6 +746,7 @@ def save_cvars(fname=None):
         logging.error('can not save custom vars into %s' % fname_full)
         log_traceback()
         return False
+    _flags.cvars_modified = False
 
 
 @corescript_lock
@@ -761,6 +762,7 @@ def save_cs(fname=None):
         logging.error('can not save corescript config to %s' % fname_full)
         log_traceback()
         return False
+    _flags.cs_modified = False
 
 
 @cvars_lock
@@ -977,6 +979,55 @@ def register_corescript_topics():
         except:
             logging.error(f'Unable to register corescript topic {t}')
             log_traceback()
+
+
+@corescript_lock
+def corescript_mqtt_subscribe(topic, qos=None):
+    import eva.notify
+    if qos is None: qos = 1
+    for t in cs_data.topics:
+        if topic == t['topic']:
+            logging.error(f'Core script mqtt topic already subscribed: {topic}')
+            return False
+    try:
+        if ':' in topic:
+            notifier_id, topic = topic.split(':', 1)
+            n = eva.notify.get_notifier(notifier_id, get_default=False)
+        else:
+            n = eva.notify.get_notifier(get_default=True)
+        if not n:
+            logging.error(f'Notifier not found')
+            raise LookupError
+        n.handler_append(topic, handle_corescript_mqtt_event, qos)
+        cs_data.topics.append({'topic': topic, 'qos': qos})
+        _flags.cs_modified = True
+    except:
+        log_traceback()
+        return False
+
+
+@corescript_lock
+def corescript_mqtt_unsubscribe(topic):
+    import eva.notify
+    for t in cs_data.topics:
+        if topic == t['topic']:
+            try:
+                if ':' in topic:
+                    notifier_id, topic = topic.split(':', 1)
+                    n = eva.notify.get_notifier(notifier_id, get_default=False)
+                else:
+                    n = eva.notify.get_notifier(get_default=True)
+                if not n:
+                    logging.error(f'Notifier not found')
+                    raise LookupError
+                n.handler_remove(topic, handle_corescript_mqtt_event)
+                cs_data.topics.remove(t)
+                _flags.cs_modified = True
+                return True
+            except:
+                log_traceback()
+                return False
+    return False
 
 
 @corescript_lock
