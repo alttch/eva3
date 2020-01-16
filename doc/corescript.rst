@@ -1,6 +1,14 @@
 Core scripts
 ************
 
+.. note::
+
+   Core scripts are generally unsafe, can crash the controller and should be
+   written/used with care and only in cases, when there's no alternative
+   standard safe solution.
+
+.. contents::
+
 What are EVA ICS core scripts
 =============================
 
@@ -30,12 +38,6 @@ vehicle to quickly implement:
 * Simple automation tasks without :doc:`/lm/lm`.
 
 * Writing custom API methods and extending EVA ICS functionality.
-
-.. note::
-
-   Core scripts are generally unsafe, can crash the controller and should be
-   written/used with care and only in cases, when there's no alternative
-   standard safe solution.
 
 Core script globals and functions
 =================================
