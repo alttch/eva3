@@ -1045,6 +1045,10 @@ def reload_corescripts():
         os.path.basename(f)
         for f in glob.glob(f'{dir_xc}/{product.code}/cs/*.py')
     ]
+    try:
+        cs.delete('common.py')
+    except:
+        pass
     cs_data.corescripts.clear()
     cs_data.corescripts.extend(sorted(cs))
     logging.info('Core scripts reloaded, {} files found'.format(len(cs)))
