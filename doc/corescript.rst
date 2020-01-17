@@ -16,8 +16,8 @@ What are EVA ICS core scripts
   controller and are launched on particular events.
 
 * Core scripts are similar to web server modules, where request and response
-  data is being processed by the chain of module libraries. In EVA ICS core
-  script chains process events.
+  data are processed by the chain of module libraries. In EVA ICS core script
+  chains process events.
 
 * All core scripts are always executed on all events. Core scripts are executed
   by alphabetical order, one by one.
@@ -29,15 +29,15 @@ What are EVA ICS core scripts
 What are core scripts for
 =========================
 
-Core script is not recommended for the enterprise-level configurations, it's a
-vehicle to quickly implement:
+Core scripts are not recommended for the enterprise-level configurations, it's
+a vehicle to quickly implement:
 
-* Data collection from HTTP/POST and :ref:`MQTT <mqtt_>`, without :doc:`drivers
-  </drivers>`.
+* data collection from HTTP/POST and :ref:`MQTT <mqtt_>`, without :doc:`drivers
+  </drivers>`
 
-* Simple automation tasks without :doc:`/lm/lm`.
+* simple automation tasks without :doc:`/lm/lm`
 
-* Custom API methods and extending EVA ICS functionality.
+* custom API methods and extensions of EVA ICS functionality.
 
 Core script globals and functions
 =================================
