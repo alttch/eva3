@@ -44,7 +44,9 @@ Core script globals and functions
 
 * All API functions of current controller are directly available to call
 
-* *print* function is mapped to *logging.info*
+* **print** function is mapped to *logging.info*
+
+* **spawn(func, \*args, \*\*kwargs)** run function in background as a controller thread
 
 * *logging*, *time*, *json (rapidjson)* and *eva.apikey* modules are imported
   by default.
@@ -69,6 +71,9 @@ script was called for:
 State event
 -----------
 
+Triggered when any item (unit, sensor or lvar) changes its state (status or
+value).
+
 .. code-block:: python
 
    event.type == CS_EVENT_STATE
@@ -78,6 +83,8 @@ State event
 
 API event
 ---------
+
+Triggered when HTTP/POST request is performed on */r/cs/somepath*.
 
 .. code-block:: python
 
@@ -99,6 +106,13 @@ API event
 
 MQTT event
 ----------
+
+Triggered when MQTT message is received and its topic matches subscribed.
+
+To let core scripts react to MQTT events, they must be subscribed to MQTT
+topics, either with SYS API method *subscribe_corescript_mqtt* or with "eva
+<controller> corescript mqtt-subscribe <topic>" console command ("+" and "#"
+MQTT masks are supported).
 
 .. code-block:: python
 
@@ -162,9 +176,3 @@ Core script code should be always started with "if", checking event type:
       s=1,
       v=json.loads(event.data)['temperature'])
 
-.. note::
-
-   To let core scripts react to MQTT events, they must be subscribed to MQTT
-   topics, either with SYS API method *subscribe_corescript_mqtt* or with "eva
-   <controller> corescript mqtt-subscribe <topic>" console command ("+" and "#"
-   MQTT masks are supported).
