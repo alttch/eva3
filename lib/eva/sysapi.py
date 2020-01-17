@@ -648,7 +648,7 @@ class CSAPI(object):
             k: .master
             t: MQTT topic ("+" and "#" masks are supported)
             q: MQTT topic QoS
-            save: Save core script config after modification
+            save: save core script config after modification
         """
         t, q, save = parse_api_params(kwargs, 'tqS', 'Sib')
         if q is None: q = 1
@@ -666,7 +666,7 @@ class CSAPI(object):
         Args:
             k: .master
             t: MQTT topic ("+" and "#" masks are allowed)
-            save: Save core script config after modification
+            save: save core script config after modification
         """
         t, save = parse_api_params(kwargs, 'tS', 'Sb')
         return eva.core.corescript_mqtt_unsubscribe(t) and (eva.core.save_cs()
