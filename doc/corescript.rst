@@ -165,6 +165,6 @@ Core script code should be always started with "if", checking event type:
 .. note::
 
    To let core scripts react to MQTT events, they must be subscribed to MQTT
-   topics, either with SYS API method *subscribe_corescript_mqtt** or with "eva
+   topics, either with SYS API method *subscribe_corescript_mqtt* or with "eva
    <controller> corescript mqtt-subscribe <topic>" console command ("+" and "#"
    MQTT masks are supported).
