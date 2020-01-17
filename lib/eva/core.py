@@ -51,6 +51,8 @@ cvars = {}
 
 controllers = set()
 
+spawn = task_supervisor.spawn
+
 _flags = SimpleNamespace(ignore_critical=False,
                          sigterm_sent=False,
                          started=threading.Event(),
@@ -135,6 +137,7 @@ corescript_globals = {
     'logging': logging,
     'json': rapidjson,
     'time': time,
+    'spawn': spawn,
     'g': cs_shared_namespace,
     'CS_EVENT_STATE': CS_EVENT_STATE,
     'CS_EVENT_API': CS_EVENT_API,
@@ -936,9 +939,6 @@ def start_supervisor():
     task_supervisor.create_aloop('cleaners')
     task_supervisor.create_async_job_scheduler('default', default=True)
     task_supervisor.create_async_job_scheduler('cleaners', aloop='cleaners')
-
-
-spawn = task_supervisor.spawn
 
 
 def start(init_db_only=False):
