@@ -157,7 +157,7 @@ Core script code should be always started with "if", checking event type:
      event.data dict instead - it contains "fixed" state snapshot. Actual item
      state can be modified while core script is running.
 
-   * In core scripts, item state value is always string
+   * In core scripts, item state value is always a string
 
 .. code-block:: python
 
