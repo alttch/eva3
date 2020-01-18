@@ -25,6 +25,7 @@ If newer Python version installed not system-wide:
 * Download *build-venv* from 3.3.0:
   https://raw.githubusercontent.com/alttch/eva3/3.3.0/install/build-venv
 * Put it to /opt/eva/install/ directory
+* chmod +x /opt/eva/install/build-venv
 * put PYTHON=/path/to/python to /opt/eva/etc/venv
 * Follow the first list of instructions and rebuild EVA ICS venv
 
