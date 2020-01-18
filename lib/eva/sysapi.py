@@ -341,7 +341,7 @@ class LogAPI(object):
         """
         rotate log file
         
-        Deprecated, not required since 3.2.6
+        Deprecated, not required since 3.3.0
 
         Args:
             k: .sysfunc=yes

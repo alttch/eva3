@@ -74,7 +74,7 @@ layout = enterprise
 ; allow UPnP discovery of this controller
 listen = 0.0.0.0
 ; discover controllers via UPnP on all interfaces, or list, comma separated
-discover_on = *
+discover_on = all
 
 [sysapi]
 ; enable remote file management functions

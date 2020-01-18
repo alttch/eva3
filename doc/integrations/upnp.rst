@@ -15,12 +15,12 @@ Notes
 -----
 
 * To let controller be discovered by other, *listen* option must be configured
-  in *[upnp]* section of controller configuration file (starting from 3.2.6 -
+  in *[upnp]* section of controller configuration file (starting from 3.3.0 -
   enabled by default).
 
 * To let controller (LM PLC or :doc:`SFA</sfa/sfa>`) discover others,
   *discover_on* option must be set in *[upnp]* section of controller
-  configuration file either to "\*" (scan all interfaces) or to the list of
+  configuration file either to "all" (scan all interfaces) or to the list of
   network interfaces (comma separated).
 
 * To let controller connect to the discovered one, both must have equal
