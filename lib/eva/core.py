@@ -732,7 +732,7 @@ def load_corescripts(fname=None):
     cs_data.topics.clear()
     try:
         with open(fname_full) as fd:
-            cs_data.topics = rapidjson.loads(fd.read())['mqtt-topics']
+            cs_data.topics = rapidjson.loads(fd.read()).get('mqtt-topics', [])
         return True
     except:
         logging.error('can not load corescript config from %s' % fname_full)
