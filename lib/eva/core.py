@@ -248,7 +248,7 @@ def sighandler_term(signum=None, frame=None):
         try:
             do_save()
         except:
-            eva.core.log_traceback()
+            log_traceback()
     core_shutdown()
     unlink_pid_file()
     logging.info('EVA core shut down')
