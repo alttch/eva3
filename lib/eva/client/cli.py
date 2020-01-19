@@ -585,7 +585,6 @@ class GenericCLI(GCLI):
         sp_log = ap_log.add_subparsers(dest='_func',
                                        metavar='func',
                                        help='Log commands')
-        sp_log_rotate = sp_log.add_parser('rotate', help='Rotate logs')
         sp_log_debug = sp_log.add_parser('debug', help='Send debug message')
         sp_log_debug.add_argument('m', help='Message', metavar='MSG')
         ap_dump = self.sp.add_parser('dump', help='Dump memory (for debugging)')
