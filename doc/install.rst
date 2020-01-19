@@ -66,7 +66,7 @@ Optional modules (can be disabled in :ref:`venv<install_venv>` configuration):
 
 .. important::
 
-   Make sure host temp directory has enough free space to build missing Python
+   Make sure host temp directory has enough free space to build required Python
    modules. You may change temp directory location by setting TMPDIR
    environment variable.
 
