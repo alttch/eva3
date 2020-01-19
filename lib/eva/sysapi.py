@@ -1153,7 +1153,7 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         parse_api_params(kwargs)
         os.system('touch {}/{}_reload'.format(eva.core.dir_var,
                                               eva.core.product.code))
-        background_job(eva.core.sighandler_term)()
+        threading.Thread(target=eva.core.sighandler_term).run()
         return True, api_result_accepted
 
     @log_w
