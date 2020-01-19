@@ -173,7 +173,8 @@ class PHI(object):
         self._cache_data = None
 
     def get(self, port=None, cfg=None, timeout=0):
-        return None, None if self._is_required.value else None
+        return None, None if \
+                self._is_required.value and self._is_required.status else None
 
     def set(self, port=None, data=None, cfg=None, timeout=0):
         return False
