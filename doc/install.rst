@@ -64,6 +64,12 @@ Optional modules (can be disabled in :ref:`venv<install_venv>` configuration):
 * **pysnmp** required for SNMP client/server functions
 * **pillow** required for :doc:`SFA PVT</sfa/sfa_pvt>` image processing
 
+.. important::
+
+   Make sure host temp directory has enough free space to build missing Python
+   modules. You may change temp directory location by setting TMPDIR
+   environment variable.
+
 Using installer
 ===============
 
