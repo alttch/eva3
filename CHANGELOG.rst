@@ -27,6 +27,7 @@ LM
    * Fixed cycle timers. As new cycle algorithm has near 100% precision, "avg"
      is not reported any longer. "value" field in API response is removed as
      well.
+   * Extension API v6: persistent data storage
 
 
 3.2.5 (2019-10-03)
