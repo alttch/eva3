@@ -209,7 +209,7 @@ Persistent data
 ---------------
 
 Special dict variable **self.data** is used to keep extension persistent data.
-This data is being automatically saved on controller stop or when **save** API
+This data is automatically saved on controller stop or when **save** API
 / CLI command is called and automatically loaded on controller start.
 
 Requirements:
