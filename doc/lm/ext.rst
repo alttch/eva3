@@ -205,6 +205,44 @@ If the constructor faces a problem (i.e. parsing a config or checking
 required modules) it may set *self.ready=False* to abort controller loading the
 extension.
 
+Persistent data
+---------------
+
+Special dict variable **self.data** is used to keep extension persistent data.
+This data is being automatically saved on controller stop or when **save** API
+/ CLI command is called and automatically loaded on controller start.
+
+Requirements:
+
+* **self.data** should always be a dict
+
+* dict keys, as well as keys of the sub-dicts must be strings
+
+* data is stored in JSON format, so should contain only numbers, strings and
+  booleans, lists and dicts
+
+* it's highly recommended to use *self.data_lock* before accessing *self.data*
+
+* to tell controller that data is modified and should be saved, set
+  *self.data_modified* to *True*
+
+Code example:
+
+.. code-block:: python
+
+   # read data
+   with self.data_lock:
+      value = data.get('key')
+
+   # write data
+   with self.data_lock:
+      data['key'] = 'value'
+      self.data_modified = True
+
+.. warning::
+
+   When extesion is unloaded, its data file is deleted
+
 Exceptions
 ----------
 

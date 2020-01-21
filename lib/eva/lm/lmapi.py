@@ -1388,7 +1388,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .i: extension ID
         """
         i = parse_api_params(kwargs, 'i', 'S')
-        eva.lm.extapi.unload_ext(i)
+        eva.lm.extapi.unload_ext(i, remove_data=True)
         if eva.core.config.db_update == 1: eva.lm.extapi.save()
         return True
 

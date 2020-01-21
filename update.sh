@@ -18,7 +18,7 @@ UC_NEW_CFG="runtime/uc_cs.json"
 UC_NEW_CFG_L=""
 UC_NEW_DIR="runtime/xc/uc/cs"
 LM_NEW_CFG="runtime/lm_cs.json"
-LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d runtime/xc/lm/cs"
+LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d runtime/xc/lm/cs runtime/lm_ext_data.d"
 SFA_NEW_CFG="runtime/sfa_cs.json"
 SFA_NEW_DIR="runtime/xc/sfa/cs"
 
@@ -126,6 +126,8 @@ for f in ${LM_NEW_DIR}; do
         chown "${LM_USER}" "$f"
     fi
 done
+
+chmod 700 ./runtime/lm_ext_data.d || exit 1
 
 for f in ${SFA_NEW_DIR}; do
     mkdir -p "$f"

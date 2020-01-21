@@ -3,7 +3,7 @@ __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 __description__ = "Generic macro extension, don't use"
-__api__ = 4
+__api__ = 6
 __mods_required__ = []
 
 __id__ = 'generic'
@@ -19,9 +19,13 @@ the extension code or to EVA ICS documentation.
 """
 
 import logging
+import threading
 import sys
 
 from eva.lm.extapi import critical
+from eva.lm.extapi import load_data
+from eva.lm.extapi import save_data
+from eva.lm.extapi import log_traceback
 
 
 class LMExt(object):
@@ -53,6 +57,9 @@ class LMExt(object):
             self.__iec_functions = {}
         self.ext_id = None  # set by extapi on load
         if kwargs.get('info_only'): return
+        self.data = {}
+        self.data_lock = threading.RLock()
+        self.data_modified = True
         self.ready = True
 
     def start(self):
@@ -60,6 +67,24 @@ class LMExt(object):
 
     def stop(self):
         return True
+
+    def load(self):
+        try:
+            load_data(self)
+        except FileNotFoundError:
+            self.log_debug('no ext data file')
+        except:
+            self.log_error('unable to load ext data')
+            log_traceback()
+
+    def save(self):
+        if self.data_modified:
+            try:
+                save_data(self)
+                self.data_modified = False
+            except:
+                self.log_error('unable to save ext data')
+                log_traceback()
 
     def serialize(self, full=False, config=False, helpinfo=None):
         d = {}
