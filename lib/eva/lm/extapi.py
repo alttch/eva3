@@ -145,8 +145,7 @@ def list_mods():
             try:
                 d = {}
                 exec(code, d)
-                if d['f']:
-                    result.append(d['s'])
+                result.append(d['s'])
             except:
                 eva.core.log_traceback()
                 pass
@@ -170,12 +169,6 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
         logging.info('Extension loaded %s v%s, author: %s, license: %s' %
                      (ext_mod_id, _version, _author, _license))
         logging.debug('%s: %s' % (ext_mod_id, _description))
-        if not _functions:
-            logging.error(
-                'Unable to activate extension %s: ' % ext_mod_id + \
-                'does not provide any functions'
-                )
-            raise FunctionFailed('ext module does not provide any functions')
         if _api > __api__:
             logging.error(
                 'Unable to activate extension %s: ' % ext_mod_id + \
