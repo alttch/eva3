@@ -102,7 +102,6 @@ class LMExt(GenericExt):
 
     @ext_constructor
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         try:
             provider = self.cfg.get('p')
             if not provider:

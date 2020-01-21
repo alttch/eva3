@@ -75,7 +75,6 @@ class LMExt(GenericExt):
 
     @ext_constructor
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         try:
             try:
                 mod = importlib.import_module('pyrpush')
