@@ -6,7 +6,7 @@ What's new
 
 - New core, faster inter-connect protocols
 - UPnP controller discovery in local networks
-  Core scripts engine
+- Core scripts engine
 
 Complete change log: https://get.eva-ics.com/3.3.0/stable/CHANGELOG.html
 
