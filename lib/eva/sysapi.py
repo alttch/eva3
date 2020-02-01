@@ -244,13 +244,20 @@ cmd_status_terminated = 4
 cmd_status_names = ['created', 'running', 'completed', 'failed', 'terminated']
 
 
+class DummyRunner:
+
+    @staticmethod
+    def is_finished():
+        return False
+
+
 class CMD(object):
 
     def __init__(self, cmd, args=None, timeout=None, tki=None):
         self.cmd = fname_remove_unsafe(cmd)
         self.args = args if args else ()
         self.timeout = timeout if timeout else eva.core.config.timeout
-        self.xc = None
+        self.xc = DummyRunner()
         self.status = cmd_status_created
         self.time = {'created': time.time()}
 
