@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -99,6 +99,18 @@ class ComplUser(ComplGeneric):
             yield v['user']
 
 
+class ComplCoreScript(ComplGeneric):
+
+    def __call__(self, prefix, **kwargs):
+        import glob
+        result = []
+        files = glob.glob(f'{dir_eva}/xc/{self.cli.product}/cs/*.py')
+        for f in files:
+            if os.path.isfile(f):
+                result.append(os.path.basename(f[:-3]))
+        return result
+
+
 class GenericCLI(GCLI):
 
     def __init__(self, product, name, prog=None, remote_api_enabled=True):
@@ -142,6 +154,7 @@ class GenericCLI(GCLI):
                 'list_keys': [
                     'key_id', 'dynamic', 'master', 'sysfunc', 'allow'
                 ],
+                'list_corescript_mqtt_topics': ['topic', 'qos'],
                 'list_users': ['user', 'key_id'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
                 'log_get_': [
@@ -393,6 +406,15 @@ class GenericCLI(GCLI):
                     datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
                 result.append(d)
             return result
+        elif api_func == 'list_corescript_mqtt_topics':
+            return sorted(data, key=lambda k: k['topic'])
+        elif api_func == 'list_corescripts':
+            import time
+            result = []
+            for d in data.copy():
+                d['modified'] = time.ctime(d['modified'])
+                result.append(d)
+            return result
         else:
             return data
 
@@ -563,7 +585,6 @@ class GenericCLI(GCLI):
         sp_log = ap_log.add_subparsers(dest='_func',
                                        metavar='func',
                                        help='Log commands')
-        sp_log_rotate = sp_log.add_parser('rotate', help='Rotate logs')
         sp_log_debug = sp_log.add_parser('debug', help='Send debug message')
         sp_log_debug.add_argument('m', help='Message', metavar='MSG')
         ap_dump = self.sp.add_parser('dump', help='Dump memory (for debugging)')
@@ -1286,6 +1307,13 @@ class GenericCLI(GCLI):
 
 class ControllerCLI(object):
 
+    class ComplCSMQTT(ComplGeneric):
+
+        def __call__(self, prefix, **kwargs):
+            code, data = self.cli.call(['corescript', 'mqtt-topics'])
+            if code: return True
+            return sorted([v['topic'] for v in data])
+
     def __init__(self):
         self.management_controller_id = None
 
@@ -1379,9 +1407,68 @@ class ControllerCLI(object):
         if 'server' not in self.arg_sections:
             self.arg_sections.append('server')
 
-    def _append_edit_server_config(self, parser):
+        ap_corescript = self.sp.add_parser('corescript',
+                                           help='Controller core scripts')
+        sp_corescript = ap_corescript.add_subparsers(
+            dest='_func', metavar='func', help='Core script commands')
+
+        sp_delete = sp_corescript.add_parser('delete',
+                                             help='Delete core script')
+        sp_delete.add_argument('i', help='Core script name',
+                               metavar='NAME').completer = ComplCoreScript(self)
+
+        sp_edit = sp_corescript.add_parser('edit', help='Edit core script')
+        sp_edit.add_argument('i', help='Core script name',
+                             metavar='NAME').completer = ComplCoreScript(self)
+
+        sp_list = sp_corescript.add_parser('list', help='List core scripts')
+
+        sp_list_mqtt = sp_corescript.add_parser(
+            'mqtt-topics', help='List subscribed mqtt topics')
+
+        sp_sub_mqtt = sp_corescript.add_parser(
+            'mqtt-subscribe', help='Subscribe core scripts to MQTT topic')
+        sp_sub_mqtt.add_argument(
+            't',
+            help='MQTT topic (for default notifier) or <notifier_id>:<topic>',
+            metavar='TOPIC')
+        sp_sub_mqtt.add_argument('-q',
+                                 '--qos',
+                                 dest='q',
+                                 help='MQTT QoS',
+                                 metavar='QoS',
+                                 type=int)
+        sp_sub_mqtt.add_argument('-y',
+                                 '--save',
+                                 help='Save core script config after set',
+                                 dest='_save',
+                                 action='store_true')
+
+        sp_unsub_mqtt = sp_corescript.add_parser(
+            'mqtt-unsubscribe', help='Unsubscribe core scripts from MQTT topic')
+        sp_unsub_mqtt.add_argument(
+            't', help='MQTT topic',
+            metavar='TOPIC').completer = self.ComplCSMQTT(self)
+        sp_unsub_mqtt.add_argument('-y',
+                                   '--save',
+                                   help='Save core script config after set',
+                                   dest='_save',
+                                   action='store_true')
+
+        sp_reload = sp_corescript.add_parser('reload',
+                                             help='Reload core scripts')
+
+        if 'corescript' not in self.arg_sections:
+            self.arg_sections.append('corescript')
+
+    def _append_edit_common(self, parser):
         sp_edit_server_config = parser.add_parser(
             'server-config', help='Edit server configuration')
+        sp_edit_corescript = parser.add_parser('corescript',
+                                               help='Edit core script')
+        sp_edit_corescript.add_argument(
+            'i', help='Core script name',
+            metavar='NAME').completer = ComplCoreScript(self)
 
     def edit_server_config(self, params):
         if self.apiuri:
@@ -1392,6 +1479,62 @@ class ControllerCLI(object):
                                                self._management_controller_id))
         return self.local_func_result_ok if \
                 not code else self.local_func_result_failed
+
+    def edit_corescript(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        editor = os.environ.get('EDITOR', 'vi')
+        fname = params['i']
+        if fname.endswith('.py'): fname = fname[:-3]
+        fname = '{}/xc/{}/cs/{}.py'.format(dir_eva, self.product, fname)
+        need_reload = not os.path.exists(fname)
+        if os.system(f'{editor} {fname}'):
+            return self.local_func_result_failed
+        try:
+            with open(fname) as fd:
+                code = fd.read()
+            compile(code, fname, 'exec')
+        except Exception as e:
+            self.print_err('Core script code error: ' + str(e))
+            return self.local_func_result_failed
+        if need_reload:
+            return self.call(args=['corescript', 'reload'])
+        else:
+            return self.local_func_result_ok
+
+    def delete_corescript(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        fname = params['i']
+        if fname.endswith('.py'): fname = fname[:-3]
+        fname = '{}/xc/{}/cs/{}.py'.format(
+            dir_eva, self.product,
+            fname.replace('/', '').replace('..', ''))
+        try:
+            os.unlink(fname)
+        except:
+            print(f'Unable to delete core script file {fname}')
+            return self.local_func_result_failed
+        return self.call(args=['corescript', 'reload'])
+
+    def list_corescripts(self, params):
+        if self.apiuri:
+            self.print_local_only()
+            return self.local_func_result_failed
+        import glob
+        files = glob.glob('{}/xc/{}/cs/*.py'.format(
+            dir_eva,
+            self.product,
+        ))
+        result = []
+        for f in files:
+            result.append({
+                'name': os.path.basename(f)[:-3],
+                'modified': os.path.getmtime(f)
+            })
+        return 0, sorted(result, key=lambda k: k['name'])
 
     def enable_controller_management_functions(self, controller_id):
         if self.apiuri:
@@ -1408,7 +1551,15 @@ class ControllerCLI(object):
             'server:status': self.status_controller,
             'server:reload': 'shutdown_core',
             'server:launch': self.launch_controller,
-            'edit:server-config': self.edit_server_config
+            'edit:server-config': self.edit_server_config,
+            'edit:corescript': self.edit_corescript,
+            'corescript:list': self.list_corescripts,
+            'corescript:edit': self.edit_corescript,
+            'corescript:delete': self.delete_corescript,
+            'corescript:reload': 'reload_corescripts',
+            'corescript:mqtt-topics': 'list_corescript_mqtt_topics',
+            'corescript:mqtt-subscribe': 'subscribe_corescripts_mqtt',
+            'corescript:mqtt-unsubscribe': 'unsubscribe_corescripts_mqtt'
         })
 
     @staticmethod

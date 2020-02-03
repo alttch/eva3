@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -15,7 +15,6 @@ import eva.sysapi
 import eva.traphandler
 import eva.udpapi
 import eva.upnp
-import eva.lora
 import eva.notify
 import eva.api
 import eva.apikey
@@ -46,7 +45,7 @@ for production use uc-control only to start/stop UC
 """)
 
 
-product_build = 2019121703
+product_build = 2020013101
 
 product_code = 'uc'
 
@@ -90,13 +89,13 @@ eva.udpapi.update_config(cfg)
 eva.api.update_config(cfg)
 eva.upnp.update_config(cfg)
 eva.upnp.port = 1912
-eva.lora.update_config(cfg)
 eva.sysapi.update_config(cfg)
 eva.uc.modbus.update_config(cfg)
 
 eva.core.start()
 eva.core.register_controller(eva.uc.controller)
 eva.core.load_cvars()
+eva.core.load_corescripts()
 
 eva.apikey.allows = ['cmd', 'lock', 'device']
 eva.apikey.init()
@@ -120,7 +119,6 @@ eva.wsapi.start()
 eva.traphandler.start()
 eva.udpapi.start()
 eva.upnp.start()
-eva.lora.start()
 eva.uc.ucapi.start()
 eva.uc.controller.start()
 

@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -43,7 +43,7 @@ for production use sfa-control only to start/stop SFA
 """)
 
 
-product_build = 2019121703
+product_build = 2020013101
 
 product_code = 'sfa'
 
@@ -89,6 +89,7 @@ eva.sysapi.cvars_public = True
 eva.core.start()
 eva.core.register_controller(eva.sfa.controller)
 eva.core.load_cvars()
+eva.core.load_corescripts()
 
 eva.apikey.allows = ['cmd', 'lock']
 eva.apikey.init()

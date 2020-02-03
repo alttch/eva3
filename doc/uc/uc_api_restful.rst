@@ -1275,6 +1275,24 @@ Optionally:
 * **save** save driver configuration after successful call
 
 
+.. _ucapi_restful_push_phi_state:
+
+push state to PHI module
+------------------------
+
+Allows to perform update of PHI ports by external application.
+
+If called as RESTful, the whole request body is used as a payload (except fields "k", "save", "kind" and "method", which are reserved)
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/push_phi_state.rest
+    :response: http-examples/ucapi/push_phi_state.resp-rest
+
+Parameters:
+
+* **API Key** masterkey or a key with the write permission on "phi" group
+
+
 .. _ucapi_restful_set_phi_prop:
 
 set PHI configuration property
@@ -2251,5 +2269,82 @@ get file contents from runtime folder
 Parameters:
 
 * **API Key** API key with *master* permissions
+
+
+
+.. _ucapi_restful_cat_corescript:
+
+Core scripts
+============
+
+
+
+.. _ucapi_restful_list_corescript_mqtt_topics:
+
+List MQTT topics core scripts react on
+--------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/list_corescript_mqtt_topics.rest
+    :response: http-examples/sysapi/list_corescript_mqtt_topics.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_reload_corescripts:
+
+Reload core scripts if some was added or deleted
+------------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/reload_corescripts.rest
+    :response: http-examples/sysapi/reload_corescripts.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+
+
+.. _ucapi_restful_subscribe_corescripts_mqtt:
+
+Subscribe core scripts to MQTT topic
+------------------------------------
+
+The method subscribes core scripts to topic of default MQTT notifier (eva_1). To specify another notifier, set topic as <notifer_id>:<topic>
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/subscribe_corescripts_mqtt.rest
+    :response: http-examples/sysapi/subscribe_corescripts_mqtt.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+* **t** MQTT topic ("+" and "#" masks are supported)
+* **q** MQTT topic QoS
+* **save** Save core script config after modification
+
+
+.. _ucapi_restful_unsubscribe_corescripts_mqtt:
+
+Unsubscribe core scripts from MQTT topic
+----------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/unsubscribe_corescripts_mqtt.rest
+    :response: http-examples/sysapi/unsubscribe_corescripts_mqtt.resp-rest
+
+Parameters:
+
+* **API Key** API key with *master* permissions
+* **t** MQTT topic ("+" and "#" masks are allowed)
+* **save** Save core script config after modification
 
 

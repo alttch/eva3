@@ -64,6 +64,12 @@ Optional modules (can be disabled in :ref:`venv<install_venv>` configuration):
 * **pysnmp** required for SNMP client/server functions
 * **pillow** required for :doc:`SFA PVT</sfa/sfa_pvt>` image processing
 
+.. important::
+
+   Make sure host temp directory has enough free space to build required Python
+   modules. You may change temp directory location by setting TMPDIR
+   environment variable.
+
 Using installer
 ===============
 
@@ -311,7 +317,7 @@ Updating
 .. warning::
 
     Before updating from the previous version, read `update
-    manifest <https://github.com/alttch/eva3/blob/3.2.5/UPDATE.rst>`_.
+    manifest <https://github.com/alttch/eva3/blob/3.3.0/UPDATE.rst>`_.
 
 Using EVA Shell
 ---------------
@@ -343,7 +349,7 @@ Using system shell
 
     curl -s <UPDATE_SCRIPT_URL> | bash /dev/stdin
     #e.g.
-    #curl -s https://get.eva-ics.com/3.2.5/stable/update.sh | bash /dev/stdin
+    #curl -s https://get.eva-ics.com/3.3.0/stable/update.sh | bash /dev/stdin
 
 * If updating from 3.0.2 or below, you may also want to enable controller
   watchdog (copy *etc/watchdog-dist* to *etc/watchdog* and edit the options if

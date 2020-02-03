@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "1.2.6"
 __description__ = "Text-to-speech via ttsbroker"
@@ -102,7 +102,6 @@ class LMExt(GenericExt):
 
     @ext_constructor
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
         try:
             provider = self.cfg.get('p')
             if not provider:

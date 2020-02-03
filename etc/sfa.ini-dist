@@ -69,7 +69,7 @@ timeout = 5
 
 [upnp]
 ; discover controllers via UPnP on all interfaces, or list, comma separated
-discover_on = *
+discover_on = all
 
 [sysapi]
 ; enable remote file management functions

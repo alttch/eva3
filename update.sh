@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 VERSION=3.3.0
-BUILD=2019121703
+BUILD=2020013101
 
 PYTHON3_MIN=6
 PYTHON_MINOR=$(./python3/bin/python3 --version|cut -d. -f2)
@@ -14,10 +14,13 @@ fi
 
 OBS=""
 
-UC_NEW_CFG=""
+UC_NEW_CFG="runtime/uc_cs.json"
 UC_NEW_CFG_L=""
-LM_NEW_CFG=""
-LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d"
+UC_NEW_DIR="runtime/xc/uc/cs"
+LM_NEW_CFG="runtime/lm_cs.json"
+LM_NEW_DIR="runtime/xc/lm/functions runtime/lm_job.d runtime/xc/lm/cs runtime/lm_ext_data.d"
+SFA_NEW_CFG="runtime/sfa_cs.json"
+SFA_NEW_DIR="runtime/xc/sfa/cs"
 
 if [ ! -d runtime ] || [ ! -f etc/eva_servers ]; then
     echo "Runtime and configs not found. Please run the script in the folder where EVA ICS is already installed"
@@ -103,10 +106,33 @@ for f in ${LM_NEW_CFG}; do
     fi
 done
 
+for f in ${SFA_NEW_CFG}; do
+    [ ! -f $f ] && echo "{}" > $f
+    if [ "$SFA_USER" ]; then
+        chown "${SFA_USER}" "$f"
+    fi
+done
+
+for f in ${UC_NEW_DIR}; do
+    mkdir -p "$f"
+    if [ "$UC_USER" ]; then
+        chown "${UC_USER}" "$f"
+    fi
+done
+
 for f in ${LM_NEW_DIR}; do
     mkdir -p "$f"
     if [ "$LM_USER" ]; then
         chown "${LM_USER}" "$f"
+    fi
+done
+
+chmod 700 ./runtime/lm_ext_data.d || exit 1
+
+for f in ${SFA_NEW_DIR}; do
+    mkdir -p "$f"
+    if [ "$SFA_USER" ]; then
+        chown "${SFA_USER}" "$f"
     fi
 done
 
@@ -154,6 +180,8 @@ fi
 if [ -f ./etc/sfa.ini ]; then
   ./sbin/eva-update-tables sfa || exit 1
 fi
+
+(cd xc && ln -sf ../runtime/xc/sfa) || exit 1
 
 echo "- Cleaning up"
 

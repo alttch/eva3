@@ -1,15 +1,15 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.0"
+__version__ = "1.2.1"
 __description__ = "Emulates virtual sensors"
 
 __equipment__ = 'virtual'
-__api__ = 4
+__api__ = 8
 __required__ = ['port_get', 'value']
 __mods_required__ = []
 __lpi_default__ = 'sensor'
-__features__ = ['aao_get']
+__features__ = ['aao_get', 'push']
 __config_help__ = [{
     'name': 'default_value',
     'help': 'sensors value on load (default: None)',
@@ -50,15 +50,31 @@ class PHI(GenericPHI):
             self.data[str(i)] = d
 
     def get_ports(self):
-        return self.generate_port_list(
-            port_min=1000, port_max=1010, description='virtual sensor port #{}')
+        return self.generate_port_list(port_min=1000,
+                                       port_max=1010,
+                                       description='virtual sensor port #{}')
 
     def get(self, port=None, cfg=None, timeout=0):
         if not port: return self.data
         try:
-            return self.data.get(str(port))
+            return self.data[str(port)]
         except:
             return None
+
+    def push_state(self, payload):
+        if payload == 'test':
+            return True
+        else:
+            for port, v in payload.items():
+                try:
+                    if port in self.data:
+                        self.data[port] = v
+                    else:
+                        raise LookupError(f'Port {port} not found')
+                except:
+                    log_traceback()
+                    return False
+            return True
 
     def test(self, cmd=None):
         if cmd == 'self':
@@ -76,8 +92,8 @@ class PHI(GenericPHI):
                 self.data[port] = val
             except:
                 self.data[port] = val
-            self.log_debug(
-                '%s test completed, set port %s=%s' % (self.phi_id, port, val))
+            self.log_debug('%s test completed, set port %s=%s' %
+                           (self.phi_id, port, val))
             if self.phi_cfg.get('event_on_test_set'):
                 handle_phi_event(self, port, self.data)
             return self.data

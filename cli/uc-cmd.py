@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -602,7 +602,7 @@ class UC_CLI(GenericCLI, ControllerCLI):
             'i', help='Template name',
             metavar='TPL').completer = self.ComplDeviceTPL(self)
 
-        self._append_edit_server_config(sp_edit)
+        self._append_edit_common(sp_edit)
 
     def add_uc_configure_functions(self):
         sp_list = self.sp.add_parser('list', help='List items')

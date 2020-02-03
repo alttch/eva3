@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -1388,7 +1388,7 @@ class LM_API(GenericAPI, GenericCloudAPI):
             .i: extension ID
         """
         i = parse_api_params(kwargs, 'i', 'S')
-        eva.lm.extapi.unload_ext(i)
+        eva.lm.extapi.unload_ext(i, remove_data=True)
         if eva.core.config.db_update == 1: eva.lm.extapi.save()
         return True
 

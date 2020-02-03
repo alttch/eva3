@@ -1249,6 +1249,25 @@ Optionally:
 * **x** interface to perform discover on
 * **w** max time for the operation
 
+.. _ucapi_push_phi_state:
+
+push_phi_state - push state to PHI module
+-----------------------------------------
+
+Allows to perform update of PHI ports by external application.
+
+If called as RESTful, the whole request body is used as a payload (except fields "k", "save", "kind" and "method", which are reserved)
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/ucapi/push_phi_state.req
+    :response: http-examples/ucapi/push_phi_state.resp
+
+Parameters:
+
+* **k** masterkey or a key with the write permission on "phi" group
+* **i** PHI id
+* **p** state payload, sent to PHI as-is
+
 .. _ucapi_put_phi_mod:
 
 put_phi_mod - upload PHI module

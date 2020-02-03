@@ -7,6 +7,7 @@ Type=forking
 User=root
 WorkingDirectory=/opt/eva
 ExecStart=/opt/eva/sbin/eva-control start
+ExecStop=/opt/eva/sbin/eva-control stop
 Restart=no
 TimeoutStartSec=180
 

@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -405,6 +405,7 @@ def load(fname=None, load_from_db=True):
             keys_by_id.update(_keys_from_db_by_id)
         if not config.masterkey:
             logging.warning('no masterkey in this configuration')
+        eva.core.update_corescript_globals({'masterkey': config.masterkey})
         return True
     except:
         logging.error('Unable to load API keys')
@@ -466,16 +467,24 @@ def check(k,
     if _k.master: return True
     if sysfunc and not _k.sysfunc: return False
     if item:
+        # check access to PHI
         try:
-            grp = item.group
-        except:
-            grp = 'nogroup'
-        if not eva.item.item_match(item, _k.item_ids, _k.groups):
-            if ro_op:
-                if not eva.item.item_match(item, _k.item_ids_ro, _k.groups_ro):
-                    return False
-            else:
+            if ('#' not in _k.item_ids and item.phi_id not in _k.item_ids) or \
+                    ('#' not in _k.groups and 'phi' not in _k.groups):
                 return False
+        except:
+            # check access to regular item
+            try:
+                grp = item.group
+            except:
+                grp = 'nogroup'
+            if not eva.item.item_match(item, _k.item_ids, _k.groups):
+                if ro_op:
+                    if not eva.item.item_match(item, _k.item_ids_ro,
+                                               _k.groups_ro):
+                        return False
+                else:
+                    return False
     if allow:
         for a in allow:
             if not a in _k.allow: return False

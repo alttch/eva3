@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -1267,6 +1267,7 @@ class GenericHTTP_API_abstract:
                 self._expose(f, a)
             if set_api_uri:
                 self.api_uri = data['uri']
+            eva.core.update_corescript_globals(self.__exposed)
         except:
             eva.core.critical()
 

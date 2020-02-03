@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -21,6 +21,7 @@ import faulthandler
 import gzip
 import timeouter
 import uuid
+import glob
 
 from eva.tools import format_json
 from eva.tools import wait_for as _wait_for
@@ -50,11 +51,14 @@ cvars = {}
 
 controllers = set()
 
+spawn = task_supervisor.spawn
+
 _flags = SimpleNamespace(ignore_critical=False,
                          sigterm_sent=False,
                          started=threading.Event(),
                          shutdown_requested=False,
                          cvars_modified=False,
+                         cs_modified=False,
                          setup_mode=0,
                          use_reactor=False)
 
@@ -120,6 +124,26 @@ dir_runtime = dir_eva + '/runtime'
 
 start_time = time.time()
 
+cs_data = SimpleNamespace(corescripts=[], topics=[])
+
+cs_shared_namespace = SimpleNamespace()
+
+CS_EVENT_STATE = 1
+CS_EVENT_API = 2
+CS_EVENT_MQTT = 3
+
+corescript_globals = {
+    'print': logging.info,
+    'logging': logging,
+    'json': rapidjson,
+    'time': time,
+    'spawn': spawn,
+    'g': cs_shared_namespace,
+    'CS_EVENT_STATE': CS_EVENT_STATE,
+    'CS_EVENT_API': CS_EVENT_API,
+    'CS_EVENT_MQTT': CS_EVENT_MQTT
+}
+
 
 def critical(log=True, from_driver=False):
     if _flags.ignore_critical: return
@@ -160,6 +184,8 @@ class RLocker(GenericLocker):
 
 
 cvars_lock = RLocker('core')
+
+corescript_lock = RLocker('core')
 
 
 def log_traceback(*args, notifier=False, **kwargs):
@@ -222,7 +248,7 @@ def sighandler_term(signum=None, frame=None):
         try:
             do_save()
         except:
-            eva.core.log_traceback()
+            log_traceback()
     core_shutdown()
     unlink_pid_file()
     logging.info('EVA core shut down')
@@ -695,6 +721,25 @@ def load_cvars(fname=None):
     return True
 
 
+@corescript_lock
+def load_corescripts(fname=None):
+    reload_corescripts()
+    fname_full = format_cfg_fname(fname, 'cs', ext='json', runtime=True)
+    if not fname_full:
+        logging.warning('No file or product specified,' + \
+                            ' skipping loading corescript config')
+        return False
+    cs_data.topics.clear()
+    try:
+        with open(fname_full) as fd:
+            cs_data.topics = rapidjson.loads(fd.read()).get('mqtt-topics', [])
+        return True
+    except:
+        logging.error('can not load corescript config from %s' % fname_full)
+        log_traceback()
+        return False
+
+
 @cvars_lock
 def save_cvars(fname=None):
     fname_full = format_cfg_fname(fname, 'cvars', ext='json', runtime=True)
@@ -702,11 +747,28 @@ def save_cvars(fname=None):
     try:
         with open(fname_full, 'w') as fd:
             fd.write(format_json(cvars, minimal=False))
+        return True
     except:
         logging.error('can not save custom vars into %s' % fname_full)
         log_traceback()
         return False
-    return True
+    _flags.cvars_modified = False
+
+
+@corescript_lock
+def save_cs(fname=None):
+    fname_full = format_cfg_fname(fname, 'cs', ext='json', runtime=True)
+    logging.info('Saving corescript config to %s' % fname_full)
+    try:
+        with open(fname_full, 'w') as fd:
+            fd.write(format_json({'mqtt-topics': cs_data.topics},
+                                 minimal=False))
+        return True
+    except:
+        logging.error('can not save corescript config to %s' % fname_full)
+        log_traceback()
+        return False
+    _flags.cs_modified = False
 
 
 @cvars_lock
@@ -736,7 +798,9 @@ def set_cvar(var, value=None):
 
 @save
 def save_modified():
-    return save_cvars() if _flags.cvars_modified else True
+    return (save_cvars() if _flags.cvars_modified else True) \
+        and (save_cs() if \
+        _flags.cs_modified else True)
 
 
 def debug_on():
@@ -797,8 +861,14 @@ def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
     return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
 
 
-def format_xc_fname(item=None, xc_type='', fname=None, update=False):
+def format_xc_fname(item=None,
+                    xc_type='',
+                    fname=None,
+                    update=False,
+                    subdir=None):
     path = dir_xc + '/' + product.code
+    if subdir:
+        path += '/' + subdir
     if fname:
         return fname if fname[0] == '/' else path + '/' + fname
     if not item: return None
@@ -871,10 +941,8 @@ def start_supervisor():
     task_supervisor.create_async_job_scheduler('cleaners', aloop='cleaners')
 
 
-spawn = task_supervisor.spawn
-
-
 def start(init_db_only=False):
+    import eva.apikey
     if not init_db_only:
         from twisted.internet import reactor
         reactor.suggestThreadPoolSize(config.reactor_thread_pool)
@@ -882,6 +950,126 @@ def start(init_db_only=False):
     product.usn = str(
         uuid.uuid5(uuid.NAMESPACE_URL,
                    f'eva://{config.system_name}/{product.code}'))
+    update_corescript_globals({'product': product, 'apikey': eva.apikey})
+
+
+def handle_corescript_mqtt_event(d, t, qos, retain):
+    if t:
+        ts = t.split('/')
+    else:
+        ts = []
+    exec_corescripts(event=SimpleNamespace(
+        type=CS_EVENT_MQTT, topic=t, topic_p=ts, data=d, qos=qos,
+        retain=retain))
+
+
+@corescript_lock
+def register_corescript_topics():
+    import eva.notify
+    for nt in cs_data.topics:
+        try:
+            t = nt['topic']
+            qos = nt.get('qos', 1)
+            if ':' in t:
+                notifier_id, topic = t.split(':', 1)
+                n = eva.notify.get_notifier(notifier_id, get_default=False)
+            else:
+                n = eva.notify.get_notifier(get_default=True)
+                topic = t
+            if not n:
+                raise LookupError(f('Notifier {notifier_id}'))
+            n.handler_append(topic, handle_corescript_mqtt_event, qos)
+        except:
+            logging.error(f'Unable to register corescript topic {t}')
+            log_traceback()
+
+
+@corescript_lock
+def corescript_mqtt_subscribe(topic, qos=None):
+    import eva.notify
+    if qos is None: qos = 1
+    for t in cs_data.topics:
+        if topic == t['topic']:
+            logging.error(f'Core script mqtt topic already subscribed: {topic}')
+            return False
+    try:
+        if ':' in topic:
+            notifier_id, topic = topic.split(':', 1)
+            n = eva.notify.get_notifier(notifier_id, get_default=False)
+        else:
+            n = eva.notify.get_notifier(get_default=True)
+        if not n:
+            logging.error(f'Notifier not found')
+            raise LookupError
+        n.handler_append(topic, handle_corescript_mqtt_event, qos)
+        cs_data.topics.append({'topic': topic, 'qos': qos})
+        _flags.cs_modified = True
+        return True
+    except:
+        log_traceback()
+        return False
+
+
+@corescript_lock
+def corescript_mqtt_unsubscribe(topic):
+    import eva.notify
+    for t in cs_data.topics:
+        if topic == t['topic']:
+            try:
+                if ':' in topic:
+                    notifier_id, topic = topic.split(':', 1)
+                    n = eva.notify.get_notifier(notifier_id, get_default=False)
+                else:
+                    n = eva.notify.get_notifier(get_default=True)
+                if not n:
+                    logging.error(f'Notifier not found')
+                    raise LookupError
+                n.handler_remove(topic, handle_corescript_mqtt_event)
+                cs_data.topics.remove(t)
+                _flags.cs_modified = True
+                return True
+            except:
+                log_traceback()
+                return False
+    return False
+
+
+@corescript_lock
+def get_corescript_topics():
+    return cs_data.topics.copy()
+
+
+@corescript_lock
+def reload_corescripts():
+    cs = [
+        os.path.basename(f)
+        for f in glob.glob(f'{dir_xc}/{product.code}/cs/*.py')
+    ]
+    try:
+        cs.delete('common.py')
+    except:
+        pass
+    cs_data.corescripts.clear()
+    cs_data.corescripts.extend(sorted(cs))
+    logging.info('Core scripts reloaded, {} files found'.format(len(cs)))
+
+
+def update_corescript_globals(data):
+    corescript_globals.update(data)
+
+
+def exec_corescripts(event=None, env_globals={}):
+    spawn(_t_exec_corescripts, event=event, env_globals=env_globals)
+
+
+def _t_exec_corescripts(event=None, env_globals={}):
+    import eva.runner
+    d = env_globals.copy()
+    d['event'] = event
+    d.update(corescript_globals)
+    logging.debug('executing core scripts, event type={}'.format(event.type))
+    for c in cs_data.corescripts.copy():
+        eva.runner.PyThread(script=c, env_globals=d, subdir='cs').run()
 
 
 def register_controller(controller):

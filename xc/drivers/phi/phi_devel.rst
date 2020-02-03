@@ -37,6 +37,7 @@ the next fields are processed by controller, so make them exactly as required
  * **events** event processing
  * **port_get** get single port data
  * **port_set** set single port data
+ * **push** accept state payload via *push_phi_state* API method
  * **status** process item status
  * **value** process item values
 
@@ -451,6 +452,30 @@ minimized amount of additional PHI.get() calls.
 Value *-1* can be used to set unit error status, value *False* to set sensor
 error status.
 
+State push
+----------
+
+External applications can push state directly to PHI module. The module should
+handle state push by itself, calling *handle_phi_event* for each modified port
+if required.
+
+Application calls *push_phi_state* method (see UC API doc), providing state
+payload, which should be parsed and processed by PHI module. The following
+method should be implemented:
+
+.. code-block:: python
+
+    class PHI(GenericPHI):
+
+        # class code
+
+      def push_state(self, payload):
+         # process payload, return True if OK, False if failed
+         return True
+
+The method receives external state payload as-is. State payload can be in any
+format, acceptable by PHI.
+
 SNMP traps
 ----------
 
@@ -836,49 +861,6 @@ Let's deal with an equipment which has MQTT topic *topic/POWER* with values
         self.current_status['1'] = 1 if data == 'ON' else 0
         # then handle PHI event
         handle_phi_event(self, 1, self.get())
-
-Working with LoRaWAN
-====================
-
-You may use EVA built-in LoRaWAN network server to receive forwarded UDP
-packets from LoRa gateways and then parse them in PHI.
-
-.. warning::
-
-    LoRa custom handlers may be started in different threads. Don't forget to
-    use locking mechanisms if required.
-
-.. code-block:: python
-
-    import eva.lora as lora
-
-    @phi_constructor
-    def __init__(self, **kwargs):
-    # ....
-
-    def start(self):
-        # subscribe to LoRa server using PHI ID as handler ID
-        lora.subscribe(__name__, self.lora_handler)
-
-    def stop(self):
-        # don't forget to unsubscribe when PHI is unloaded
-        lora.unsubscribe(__name__, self.lora_handler)
-
-    def lora_handler(self, pk, payload, address):
-        """
-        The handler gets all LoRa packet, sent to UC
-
-        Args:
-            pk: full packet payload (dict, decoded from JSON)
-            payload: RF packet payload
-            address: IP address of the gateway the packet is from
-        """
-        self.log_debug('got data: {} from {}'.format(payload, address))
-        # process the data
-        # ...
-
-It's not necessary to send *PUSH_ACK* packets back to LoRa equipment, EVA ICS
-UC handles this by itself.
 
 Working with UDP API
 ====================

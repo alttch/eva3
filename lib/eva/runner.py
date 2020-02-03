@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -284,7 +284,8 @@ class PyThread(object):
                  script=None,
                  env_globals=None,
                  bcode=None,
-                 mfcode=None):
+                 mfcode=None,
+                 subdir=None):
         self.pfcode = None
         if item:
             if item.action_exec:
@@ -298,8 +299,9 @@ class PyThread(object):
         else:
             sfile = script
         self.script = sfile
-        self.script_file = eva.core.format_xc_fname(fname=sfile)
-        self.common_file = eva.core.format_xc_fname(fname='common.py')
+        self.script_file = eva.core.format_xc_fname(fname=sfile, subdir=subdir)
+        self.common_file = eva.core.format_xc_fname(fname='common.py',
+                                                    subdir=subdir)
         self.env_globals = env_globals
         self.code = None
         self.out = None

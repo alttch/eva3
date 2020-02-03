@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 __api__ = 8
@@ -90,7 +90,7 @@ def unlock(l):
 
 
 @with_drivers_lock
-def handle_phi_event(phi, port, data):
+def handle_phi_event(phi, port=None, data=None):
     if not data: return
     iph = items_by_phi.get(phi.phi_id)
     if iph:

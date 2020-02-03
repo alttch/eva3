@@ -1,23 +1,24 @@
 EVA ICS CHANGELOG
 *****************
 
-3.3.0 (TBA)
+3.3.0 (2019-02-07)
 ===========
 
 Common
 ------
 
-   * MessagePack support, internal API calls changed to msgpack
+   * Faster node interconnect protocol (via msgpack)
    * MQTT inter-connect API encryption strength increased to AES256
    * Core workers are now async to improve system performance
    * Controller auto-discovery in local network via UPnP
+   * Core scripts
 
 UC
 --
 
-   * LoRaWAN support
    * Fixed PHI update timers
-   * Driver API 8: LoraWAN handlers, timeout helper
+   * push_phi_state API method
+   * Driver API 8: timeout helper, PHI state push
    * item "update_delay" property is removed
 
 LM
@@ -26,6 +27,7 @@ LM
    * Fixed cycle timers. As new cycle algorithm has near 100% precision, "avg"
      is not reported any longer. "value" field in API response is removed as
      well.
+   * Extension API v6: persistent data storage
 
 
 3.2.5 (2019-10-03)

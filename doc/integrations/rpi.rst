@@ -40,7 +40,7 @@ Raspberry Pi GPIO can be used with ready-to-use `EVA ICS PHIs
 <https://www.eva-ics.com/phi>`_. All GPIO PHIs require *gpiozero* Python
 module, so instal it first.
 
-Put *gpiozero* to *EXTRA* var in /opt/eva/etc/venv, then run
+Put "gpiozero pigpio RPi.GPIO"  to *EXTRA* var in /opt/eva/etc/venv, then run
 
 .. code:: shell
 

@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -18,6 +18,9 @@ import ssl
 import uuid
 import threading
 import sqlalchemy as sa
+import pyaltt2.logs
+
+from pyaltt2.converters import mq_topic_match
 
 from sqlalchemy import text as sql
 
@@ -1494,38 +1497,48 @@ class GenericMQTTNotifier(GenericNotifier):
             self.announcer.start()
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
-                '.GenericMQTTNotifier::api_callback locking broken')
+                '.GenericMQTTNotifier::on_connect locking broken')
             eva.core.critical()
             return False
         try:
+            if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
+                logging.critical(
+                    '.GenericMQTTNotifier::on_connect locking (2) broken')
+                eva.core.critical()
+                return False
+            custom_handlers = self.custom_handlers.copy()
+            custom_handlers_qos = self.custom_handlers_qos.copy()
+        finally:
+            self.handler_lock.release()
+        try:
             for i, v in self.api_callback.items():
                 client.subscribe(v[0], qos=self.qos['system'])
-                logging.debug('%s resubscribed to %s q%u API response' % \
+                logging.debug('.%s resubscribed to %s q%u API response' % \
                         (self.notifier_id, i, self.qos['system']))
             for i, v in self.items_to_update_by_topic.copy().items():
                 client.subscribe(i, qos=v.mqtt_update_qos)
-                logging.debug('%s resubscribed to %s q%u topic' % \
+                logging.debug('.%s resubscribed to %s q%u topic' % \
                         (self.notifier_id, i, v.mqtt_update_qos))
             for i, v in self.items_to_control_by_topic.copy().items():
                 client.subscribe(i, qos=v.mqtt_control_qos)
-                logging.debug('%s resubscribed to %s q%u control' % \
+                logging.debug('.%s resubscribed to %s q%u control' % \
                         (self.notifier_id, i, v.mqtt_control_qos))
-            for i in list(self.custom_handlers):
-                qos = self.custom_handlers_qos.get(i)
+            for i in list(custom_handlers):
+                qos = custom_handlers_qos.get(i)
                 client.subscribe(i, qos=qos)
-                logging.debug('%s resubscribed to %s q%u custom' % \
+                logging.debug('.%s resubscribed to %s q%u custom' % \
                         (self.notifier_id, i, qos))
             if self.collect_logs:
                 client.subscribe(self.log_topic, qos=self.qos['log'])
-                logging.debug('%s subscribed to %s' % \
+                logging.debug('.%s subscribed to %s' % \
                         (self.notifier_id, self.log_topic))
             if self.api_enabled:
                 client.subscribe(self.api_request_topic, qos=self.qos['system'])
-                logging.debug('%s subscribed to %s' % \
+                logging.debug('.%s subscribed to %s' % \
                         (self.notifier_id, self.api_request_topic))
             if self.discovery_enabled:
                 client.subscribe(self.announce_topic, qos=self.qos['system'])
-                logging.debug('%s subscribed to %s' % \
+                logging.debug('.%s subscribed to %s' % \
                         (self.notifier_id, self.announce_topic))
         except:
             eva.core.log_traceback(notifier=True)
@@ -1535,7 +1548,7 @@ class GenericMQTTNotifier(GenericNotifier):
     def handler_append(self, topic, func, qos=None):
         if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
-                'GenericMQTTNotifier::handler_append locking broken')
+                '.GenericMQTTNotifier::handler_append locking broken')
             eva.core.critical()
             return False
         try:
@@ -1546,10 +1559,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 self.custom_handlers[_topic] = set()
                 self.custom_handlers_qos[_topic] = qos
                 self.mq.subscribe(_topic, qos=qos)
-                logging.debug('%s subscribed to %s for handler' %
+                logging.debug('.%s subscribed to %s for handler' %
                               (self.notifier_id, _topic))
             self.custom_handlers[_topic].add(func)
-            logging.debug('%s new handler for topic %s: %s' %
+            logging.debug('.%s new handler for topic %s: %s' %
                           (self.notifier_id, _topic, func))
         finally:
             self.handler_lock.release()
@@ -1557,7 +1570,7 @@ class GenericMQTTNotifier(GenericNotifier):
     def handler_remove(self, topic, func):
         if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical(
-                'GenericMQTTNotifier::handler_remove locking broken')
+                '.GenericMQTTNotifier::handler_remove locking broken')
             eva.core.critical()
             return False
         try:
@@ -1565,7 +1578,7 @@ class GenericMQTTNotifier(GenericNotifier):
                     self.space is not None else topic
             if _topic in self.custom_handlers:
                 self.custom_handlers[_topic].remove(func)
-                logging.debug('%s removed handler for topic %s: %s' %
+                logging.debug('.%s removed handler for topic %s: %s' %
                               (self.notifier_id, _topic, func))
             if not self.custom_handlers.get(_topic):
                 self.mq.unsubscribe(_topic)
@@ -1577,13 +1590,13 @@ class GenericMQTTNotifier(GenericNotifier):
                     del self.custom_handlers_qos[_topic]
                 except:
                     pass
-                logging.debug('%s unsubscribed from %s, last handler left' %
+                logging.debug('.%s unsubscribed from %s, last handler left' %
                               (self.notifier_id, _topic))
         finally:
             self.handler_lock.release()
 
     def update_item_append(self, item):
-        logging.debug('%s subscribing to %s updates' % \
+        logging.debug('.%s subscribing to %s updates' % \
                 (self.notifier_id, item.oid))
         self.items_to_update.add(item)
         for t in item.mqtt_update_topics:
@@ -1591,24 +1604,24 @@ class GenericMQTTNotifier(GenericNotifier):
                     item.full_id + (('/' + t) if t else '')
             self.items_to_update_by_topic[topic] = item
             self.mq.subscribe(topic, qos=item.mqtt_update_qos)
-            logging.debug('%s subscribed to %s q%u topic' %
+            logging.debug('.%s subscribed to %s q%u topic' %
                           (self.notifier_id, topic, item.mqtt_update_qos))
         return True
 
     def control_item_append(self, item):
-        logging.debug('%s subscribing to %s control' % \
+        logging.debug('.%s subscribing to %s control' % \
                 (self.notifier_id, item.oid))
         topic_control = self.pfx + item.item_type + '/' +\
                 item.full_id + '/control'
         self.items_to_control.add(item)
         self.items_to_control_by_topic[topic_control] = item
         self.mq.subscribe(topic_control, qos=item.mqtt_control_qos)
-        logging.debug('%s subscribed to %s q%u topic' %
+        logging.debug('.%s subscribed to %s q%u topic' %
                       (self.notifier_id, topic_control, item.mqtt_control_qos))
         return True
 
     def update_item_remove(self, item):
-        logging.debug('%s unsubscribing from %s updates' % \
+        logging.debug('.%s unsubscribing from %s updates' % \
                 (self.notifier_id, item.oid))
         if item not in self.items_to_update: return False
         try:
@@ -1616,7 +1629,7 @@ class GenericMQTTNotifier(GenericNotifier):
                 topic = self.pfx + item.item_type + '/' + \
                         item.full_id + (('/' + t) if t else '')
                 self.mq.unsubscribe(topic)
-                logging.debug('%s unsubscribed from %s updates' %
+                logging.debug('.%s unsubscribed from %s updates' %
                               (self.notifier_id, topic))
                 del self.items_to_update_by_topic[topic]
             self.items_to_update.remove(item)
@@ -1625,7 +1638,7 @@ class GenericMQTTNotifier(GenericNotifier):
         return True
 
     def control_item_remove(self, item):
-        logging.debug('%s unsubscribing from %s control' % \
+        logging.debug('.%s unsubscribing from %s control' % \
                 (self.notifier_id, item.oid))
         if item not in self.items_to_control: return False
         topic_control = self.pfx + item.item_type + '/' +\
@@ -1649,7 +1662,7 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             func(d, t, qos, retain)
         except:
-            logging.error('Unable to process topic ' + \
+            logging.error('.Unable to process topic ' + \
                             '%s with custom handler %s' % (t, func))
             eva.core.log_traceback(notifier=True)
 
@@ -1662,45 +1675,56 @@ class GenericMQTTNotifier(GenericNotifier):
         except:
             logging.warning('.Invalid message from MQTT server: {}'.format(
                 msg.payload))
-            eva.core.log_traceback()
+            eva.core.log_traceback(notifier=True)
             return
-        if t == self.announce_topic and \
-                d != self.announce_msg and \
-                self.discovery_handler and \
-                not eva.core.is_setup_mode() and eva.core.is_started():
-            eva.core.spawn(self.discovery_handler, self.notifier_id, d,
-                           f'mqtt://{self.notifier_id}:{d}')
-            return
-        if t == self.api_request_topic and self.api_handler:
-            eva.core.spawn(self.api_handler, self.notifier_id, d,
-                           self.send_api_response)
-            return
-        if t.startswith(self.pfx_api_response):
-            response_id = t.split('/')[-1]
-            if response_id in self.api_callback:
-                eva.core.spawn(self.api_callback[response_id][1], d)
-                self.finish_api_request(response_id)
+        try:
+            if t == self.announce_topic and \
+                    d != self.announce_msg and \
+                    self.discovery_handler and \
+                    not eva.core.is_setup_mode() and eva.core.is_started():
+                eva.core.spawn(self.discovery_handler, self.notifier_id, d,
+                               f'mqtt://{self.notifier_id}:{d}')
                 return
-        if t in self.custom_handlers:
-            for h in self.custom_handlers.get(t):
+            if t == self.api_request_topic and self.api_handler:
+                eva.core.spawn(self.api_handler, self.notifier_id, d,
+                               self.send_api_response)
+                return
+            if t.startswith(self.pfx_api_response):
+                response_id = t.split('/')[-1]
+                if response_id in self.api_callback:
+                    eva.core.spawn(self.api_callback[response_id][1], d)
+                    self.finish_api_request(response_id)
+                    return
+            hte = set()
+            if not self.handler_lock.acquire(timeout=eva.core.config.timeout):
+                logging.critical(
+                    '.GenericMQTTNotifier::on_message locking broken')
+                eva.core.critical()
+                return False
+            try:
+                for ct in self.custom_handlers:
+                    if mq_topic_match(t, ct):
+                        for h in self.custom_handlers.get(ct, []):
+                            hte.add(h)
+            finally:
+                self.handler_lock.release()
+            for h in hte:
                 eva.core.spawn(self.exec_custom_handler, h, d, t, msg.qos,
                                msg.retain)
-        if self.collect_logs and t == self.log_topic:
-            try:
+            if self.collect_logs and t == self.log_topic:
                 r = rapidjson.loads(d)
                 if r['h'] != eva.core.config.system_name or \
                         r['p'] != eva.core.product.code:
-                    import pyaltt2.logs
                     pyaltt2.logs.append(rd=r, skip_mqtt=True)
-            except:
-                eva.core.log_traceback(notifier=True)
-        elif t in self.items_to_update_by_topic:
-            i = self.items_to_update_by_topic[t]
-            i.mqtt_set_state(t[0 if not self.space else len(self.space) + 1:],
-                             d)
-        elif t in self.items_to_control_by_topic:
-            i = self.items_to_control_by_topic[t]
-            i.mqtt_action(msg=d)
+            elif t in self.items_to_update_by_topic:
+                i = self.items_to_update_by_topic[t]
+                i.mqtt_set_state(
+                    t[0 if not self.space else len(self.space) + 1:], d)
+            elif t in self.items_to_control_by_topic:
+                i = self.items_to_control_by_topic[t]
+                i.mqtt_action(msg=d)
+        except:
+            eva.core.log_traceback(notifier=True)
 
     def on_publish_msg(self, client, userdata, mid):
         logging.debug('.Notification data #%u delivered to %s:%u' %
@@ -2773,6 +2797,9 @@ def notify(subject,
         except:
             eva.core.log_traceback(notifier=True)
     else:
+        if subject == 'state':
+            eva.core.exec_corescripts(event=SimpleNamespace(
+                type=eva.core.CS_EVENT_STATE, source=data[0], data=data[1]))
         for i in list(notifiers):
             try:
                 if notifiers[i].can_notify():
@@ -2848,6 +2875,7 @@ def start():
                 break
         if can_break: break
         time.sleep(eva.core.sleep_step)
+    eva.core.register_corescript_topics()
 
 
 @eva.core.stop

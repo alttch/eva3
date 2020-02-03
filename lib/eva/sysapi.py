@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -341,7 +341,7 @@ class LogAPI(object):
         """
         rotate log file
         
-        Deprecated, not required since 3.2.6
+        Deprecated, not required since 3.3.0
 
         Args:
             k: .sysfunc=yes
@@ -608,6 +608,71 @@ class FileAPI(object):
             raise FunctionFailed
 
 
+class CSAPI(object):
+
+    @log_i
+    @api_need_master
+    def list_corescript_mqtt_topics(self, **kwargs):
+        """
+        List MQTT topics core scripts react on
+
+        Args:
+            k: .master
+        """
+        parse_api_params(kwargs)
+        return eva.core.get_corescript_topics()
+
+    @log_i
+    @api_need_master
+    def reload_corescripts(self, **kwargs):
+        """
+        Reload core scripts if some was added or deleted
+
+        Args:
+            k: .master
+        """
+        parse_api_params(kwargs)
+        eva.core.reload_corescripts()
+        return True
+
+    @log_i
+    @api_need_master
+    def subscribe_corescripts_mqtt(self, **kwargs):
+        """
+        Subscribe core scripts to MQTT topic
+
+        The method subscribes core scripts to topic of default MQTT notifier
+        (eva_1). To specify another notifier, set topic as <notifer_id>:<topic>
+
+        Args:
+            k: .master
+            t: MQTT topic ("+" and "#" masks are supported)
+            q: MQTT topic QoS
+            save: save core script config after modification
+        """
+        t, q, save = parse_api_params(kwargs, 'tqS', 'Sib')
+        if q is None: q = 1
+        elif q < 0 or q > 2:
+            raise InvalidParameter('q should be 0..2')
+        return eva.core.corescript_mqtt_subscribe(
+            t, q) and (eva.core.save_cs() if save else True)
+
+    @log_i
+    @api_need_master
+    def unsubscribe_corescripts_mqtt(self, **kwargs):
+        """
+        Unsubscribe core scripts from MQTT topic
+
+        Args:
+            k: .master
+            t: MQTT topic ("+" and "#" masks are allowed)
+            save: save core script config after modification
+        """
+        t, save = parse_api_params(kwargs, 'tS', 'Sb')
+        return eva.core.corescript_mqtt_unsubscribe(t) and (eva.core.save_cs()
+                                                            if save else True)
+
+
 class UserAPI(object):
 
     @log_w
@@ -835,7 +900,7 @@ class UserAPI(object):
         return eva.apikey.delete_api_key(i)
 
 
-class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
+class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
 
     def __init__(self):
         super().__init__()
@@ -1088,7 +1153,7 @@ class SysAPI(LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
         parse_api_params(kwargs)
         os.system('touch {}/{}_reload'.format(eva.core.dir_var,
                                               eva.core.product.code))
-        background_job(eva.core.sighandler_term)()
+        threading.Thread(target=eva.core.sighandler_term).run()
         return True, api_result_accepted
 
     @log_w
@@ -1167,6 +1232,9 @@ class SysHTTP_API_REST_abstract:
                 return self.list_notifiers(k=k)
         elif rtp == 'runtime':
             return self.file_get(k=k, i=ii)
+        elif rtp == 'corescript':
+            if ii == 'mqtt-topics':
+                return self.list_corescript_mqtt_topics(k=k)
         elif rtp == 'user':
             if ii:
                 return self.get_user(k=k, u=ii)
@@ -1186,6 +1254,26 @@ class SysHTTP_API_REST_abstract:
                 return self.shutdown_core(k=k)
             else:
                 raise MethodNotFound
+        elif rtp == 'corescript':
+            if method == 'reload':
+                return self.reload_corescripts(k=k)
+            elif method == 'mqtt-subscribe':
+                return self.subscribe_corescripts_mqtt(k=k, **props)
+            elif method == 'mqtt-unsubscribe':
+                return self.unsubscribe_corescripts_mqtt(k=k, **props)
+        elif rtp == 'cs' or rtp.startswith('cs/'):
+            if ii is None:
+                ii = ''
+                uri_p = []
+            else:
+                uri_p = ii.split('/')
+            eva.core.exec_corescripts(
+                event=SimpleNamespace(type=eva.core.CS_EVENT_API,
+                                      topic=ii,
+                                      topic_p=uri_p,
+                                      data=props,
+                                      k=k))
+            return True
         elif rtp == 'token':
             return self.login(k=k, **props)
         elif rtp == 'key':

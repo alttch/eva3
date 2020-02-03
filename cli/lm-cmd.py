@@ -1,5 +1,5 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
 
@@ -838,8 +838,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
 
-        sp_cycle_stop = sp_cycle.add_parser('reset',
-                                            help='Reset cycle stats')
+        sp_cycle_stop = sp_cycle.add_parser('reset', help='Reset cycle stats')
         sp_cycle_stop.add_argument(
             'i', help='Cycle ID',
             metavar='ID').completer = self.ComplCycle(self)
@@ -861,7 +860,7 @@ class LM_CLI(GenericCLI, ControllerCLI):
                                    metavar='ID').completer = self.ComplMacro(
                                        self, with_common=True)
 
-        self._append_edit_server_config(sp_edit)
+        self._append_edit_common(sp_edit)
 
     def add_lm_rule_functions(self):
         ap_rule = self.sp.add_parser('rule', help='Decision-making rules')
@@ -1241,10 +1240,10 @@ class LM_CLI(GenericCLI, ControllerCLI):
             with open(fname) as fd:
                 code = fd.read()
             compile(code, fname, 'exec')
+            return self.local_func_result_ok
         except Exception as e:
             self.print_err('Macro code error: ' + str(e))
             return self.local_func_result_failed
-        return self.local_func_result_ok
 
 
 _me = 'EVA ICS LM CLI version %s' % __version__

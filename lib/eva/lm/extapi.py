@@ -1,8 +1,8 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
-__copyright__ = "Copyright (C) 2012-2019 Altertech Group"
+__copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
 __version__ = "3.3.0"
-__api__ = 5
+__api__ = 6
 
 import importlib
 import logging
@@ -63,6 +63,18 @@ def ext_constructor(f):
         f(self, *args, **kwargs)
 
     return do
+
+
+def load_data(ext):
+    datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext.ext_id}.json'
+    with open(datapath) as fh:
+        ext.data = rapidjson.loads(fh.read())
+
+
+def save_data(ext):
+    datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext.ext_id}.json'
+    with open(datapath, 'w') as fh:
+        fh.write(rapidjson.dumps(ext.data))
 
 
 # internal functions
@@ -145,8 +157,7 @@ def list_mods():
             try:
                 d = {}
                 exec(code, d)
-                if d['f']:
-                    result.append(d['s'])
+                result.append(d['s'])
             except:
                 eva.core.log_traceback()
                 pass
@@ -170,12 +181,6 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
         logging.info('Extension loaded %s v%s, author: %s, license: %s' %
                      (ext_mod_id, _version, _author, _license))
         logging.debug('%s: %s' % (ext_mod_id, _description))
-        if not _functions:
-            logging.error(
-                'Unable to activate extension %s: ' % ext_mod_id + \
-                'does not provide any functions'
-                )
-            raise FunctionFailed('ext module does not provide any functions')
         if _api > __api__:
             logging.error(
                 'Unable to activate extension %s: ' % ext_mod_id + \
@@ -192,19 +197,24 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
     if ext_id in exts:
         exts[ext_id].stop()
     exts[ext_id] = ext
+    ext.load()
     if start: ext.start()
     if rebuild: rebuild_env()
     return ext
 
 
 @with_exts_lock
-def unload_ext(ext_id):
+def unload_ext(ext_id, remove_data=False):
     ext = get_ext(ext_id)
     if ext is None: raise ResourceNotFound
     try:
         ext.stop()
         del exts[ext_id]
         rebuild_env()
+        if remove_data:
+            datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext_id}.json'
+            if os.path.isfile(datapath):
+                os.unlink(datapath)
         return True
     except:
         eva.core.log_traceback()
@@ -271,10 +281,17 @@ def load():
 
 
 @eva.core.save
+@with_exts_lock
 def save():
     try:
         with open(eva.core.dir_runtime + '/lm_extensions.json', 'w') as fd:
             fd.write(format_json(serialize(config=True), minimal=False))
+        for k, p in exts.items():
+            try:
+                p.save()
+            except:
+                logging.error(f'unable to save ext data for {p.ext_id}')
+                log_traceback()
         return True
     except Exception as e:
         logging.error('unable to save ext config: {}'.format(e))
@@ -282,6 +299,7 @@ def save():
         return False
 
 
+@with_exts_lock
 def start():
     for k, p in exts.items():
         try:

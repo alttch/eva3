@@ -1,0 +1,3 @@
+GET /r/corescript/mqtt-topics HTTP/1.1
+Host: localhost:8812
+X-Auth-Key: mykey
