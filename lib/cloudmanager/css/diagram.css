@@ -1,0 +1,207 @@
+div.mxWindow {
+    -webkit-box-shadow: 3px 3px 12px #C0C0C0;
+    -moz-box-shadow: 3px 3px 12px #C0C0C0;
+    box-shadow: 3px 3px 12px #C0C0C0;
+    border: 6px solid #176080;
+    position: absolute;
+    overflow: hidden;
+    border-radius: 22px;
+    background-color: #EEEE !important;
+    z-index: 1;
+}
+
+table.mxWindow {
+    background-color: #EEEE !important;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: Arial;
+    font-size: 8pt;
+    padding-top: 30px;
+}
+
+table.Edit {
+    border-spacing: 10px;
+}
+
+td.mxWindowTitle {
+    background: #ffffff;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 24px;
+    color: #0094DB !important;
+    font-weight: bold;
+    overflow: hidden;
+    height: 13px;
+    padding: 2px;
+    padding-top: 15px;
+    padding-bottom: 6px;
+}
+
+div.mxWindowPane {
+    overflow: hidden;
+    position: relative;
+    background-color: #ffffff;
+}
+
+td.mxWindowPane {
+    font-family: Arial;
+    font-size: 10pt;
+    background-color: #ffffff;
+    padding-top: 15px;
+}
+
+td.mxWindowPane table.Edit td {
+    vertical-align: top;
+    padding: 0px;
+    font-family: Arial;
+    font-size: 13pt;
+    color: #4D4D4D;
+}
+
+td.mxWindowPane input, td.mxWindowPane select, td.mxWindowPane textarea, td.mxWindowPane radio {
+    border-color: #CCCCCC;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 12px;
+    font-family: Arial;
+    font-size: 11pt;
+    padding-left: 8px;
+    margin-right: 30px;
+    height: 30px;
+    width: 100%;
+}
+
+td.mxWindowPane input:focus {
+    border-color: #0094DB;
+}
+
+td.mxWindowPane button {
+    font-family: Arial;
+    font-size: 13pt;
+    padding: 2px;
+    float: left;
+    width: 79px;
+    height: 41px;
+    border-radius: 15px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+td.mxWindowPane table.Edit td.but {
+    display: flex;
+    padding-top: 20px;
+    height: 71px;
+    width: 178px;
+    margin-left: auto;
+}
+
+td.mxWindowPane button.can {
+    color: #989898 !important;
+    border-color: #989898;
+    /*margin: 5px;*/
+}
+
+td.mxWindowPane button.ok {
+    background: #1A76D7 !important;
+    border-color: #1A76D7;
+    color: #ffffff;
+    /*margin: 5px;*/
+}
+
+img.mxToolbarItem {
+    margin-right: 6px;
+    margin-bottom: 6px;
+    border-width: 1px;
+}
+
+select.mxToolbarCombo {
+    vertical-align: top;
+    border-style: inset;
+    border-width: 2px;
+}
+
+div.mxToolbarComboContainer {
+    padding: 2px;
+}
+
+img.mxToolbarMode {
+    margin: 2px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+    border-width: 0px;
+}
+
+img.mxToolbarModeSelected {
+    margin: 0px;
+    margin-right: 2px;
+    margin-bottom: 2px;
+    border-width: 2px;
+    border-style: inset;
+}
+
+div.mxTooltip {
+    -webkit-box-shadow: 3px 3px 12px #C0C0C0;
+    -moz-box-shadow: 3px 3px 12px #C0C0C0;
+    box-shadow: 3px 3px 12px #C0C0C0;
+    background: #FFFFCC;
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
+    font-family: Arial;
+    font-size: 8pt;
+    position: absolute;
+    cursor: default;
+    padding: 4px;
+    color: black;
+}
+
+div.mxPopupMenu {
+    -webkit-box-shadow: 3px 3px 12px #C0C0C0;
+    -moz-box-shadow: 3px 3px 12px #C0C0C0;
+    box-shadow: 3px 3px 12px #C0C0C0;
+    background: url(data:image/gif;base64,R0lGODlhGgAUAIAAAOzs7PDw8CH5BAAAAAAALAAAAAAaABQAAAIijI+py70Ao5y02lud3lzhD4ZUR5aPiKajyZbqq7YyB9dhAQA7);
+    _background: url('../images/window.gif');
+    position: absolute;
+    border-style: solid;
+    border-width: 1px;
+    border-color: black;
+}
+
+table.mxPopupMenu {
+    border-collapse: collapse;
+    margin-top: 1px;
+    margin-bottom: 1px;
+}
+
+tr.mxPopupMenuItem {
+    color: black;
+    cursor: pointer;
+}
+
+tr.mxPopupMenuItemHover {
+    background-color: #000066;
+    color: #FFFFFF;
+    cursor: pointer;
+}
+
+td.mxPopupMenuItem {
+    padding: 2px 30px 2px 10px;
+    white-space: nowrap;
+    font-family: Arial;
+    font-size: 8pt;
+}
+
+td.mxPopupMenuIcon {
+    background-color: #D0D0D0;
+    padding: 2px 4px 2px 4px;
+}
+
+.mxDisabled {
+    opacity: 0.2 !important;
+    cursor: default !important;
+}
+
+img.mxToolbarMode {
+    width: 90px;
+}
