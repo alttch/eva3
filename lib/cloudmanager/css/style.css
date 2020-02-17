@@ -1324,6 +1324,42 @@ input.device-error:focus {
 }
 
 
+.toolbar_container {
+    position:absolute;
+    top:0px;
+    left:0px;
+    right:0px;
+    height:48px;
+    max-height:48px;
+    padding:6px;
+    background-color: #193E5C;
+    white-space:nowrap;
+    overflow:hidden;
+    z-index: 1002;
+}
+.sidebar_container {
+    position:absolute;
+    top:48px;
+    left:0px;
+    bottom:0px;
+    width:140px;
+    padding:10px;
+    overflow-x: auto;
+    z-index: 1001;
+}
+.graph_container {
+    position:absolute;
+    top: 0;
+    left:120px;
+    right: 0;
+    bottom: 0;
+    background: #fff;
+    border-left: ridge;
+    overflow: auto;
+    z-index: 1001;
+}
+
+
 @media (max-width: 575px) {
   .row-schf,
   #d_rule_cond_eq,
