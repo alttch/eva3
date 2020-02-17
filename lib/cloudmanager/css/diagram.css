@@ -52,8 +52,8 @@ td.mxWindowPane {
 }
 
 td.mxWindowPane table.Edit td {
-    vertical-align: top;
-    padding: 0px;
+    /*vertical-align: top;*/
+    padding: 1px;
     font-family: Arial;
     font-size: 13pt;
     color: #4D4D4D;
@@ -74,6 +74,7 @@ td.mxWindowPane input, td.mxWindowPane select, td.mxWindowPane textarea, td.mxWi
 
 td.mxWindowPane input:focus {
     border-color: #0094DB;
+    outline: none;
 }
 
 td.mxWindowPane button {
@@ -204,4 +205,26 @@ td.mxPopupMenuIcon {
 
 img.mxToolbarMode {
     width: 90px;
+    z-index: 1005 !important;
+}
+
+
+.group_sidebar {}
+.group_sidebar_header {
+    position: relative;
+    margin: 2px 0;
+    font-weight: bold;
+    cursor: pointer;
+}
+.group_sidebar_header::before {
+    content: '>';
+    position: absolute;
+    left: 90px;
+    top: 2px;
+    transition: .3s;
+    transform: rotate(90deg);
+}
+.group_sidebar_header.collapsed::before {
+    transform: rotate(0);
+    top: 0;
 }
