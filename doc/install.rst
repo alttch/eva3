@@ -493,9 +493,6 @@ Our final config for all of this should look like:
         ssl_certificate /opt/eva/etc/eva.crt;
         ssl_certificate_key /opt/eva/etc/eva.key;
         ssl_session_timeout  1m;
-        ssl_protocols  SSLv3 TLSv1;
-        ssl_ciphers  HIGH:!aNULL:!MD5;  
-        ssl_prefer_server_ciphers   on; 
 
         # proxy for HTTP
         location / {
