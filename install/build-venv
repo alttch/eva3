@@ -24,7 +24,7 @@ if [ ! -f ${EVA_DIR}/python3/bin/pip3 ]; then
   ${PYTHON} -m venv ${O_PIP} ${O_SSITE} ${EVA_DIR}/python3 || exit 2
   source ${EVA_DIR}/python3/bin/activate
   if [ ! "$USE_SYSTEM_PIP" ]; then
-    ( curl https://bootstrap.pypa.io/get-pip.py | ./python3/bin/python3 ) || exit 3
+    ( curl https://bootstrap.pypa.io/get-pip.py | ${EVA_DIR}/python3/bin/python3 ) || exit 3
   else
     pip3 install ${PIP_EXTRA_OPTIONS} wheel setuptools || exit 3
   fi
