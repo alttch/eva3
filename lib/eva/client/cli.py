@@ -1491,6 +1491,8 @@ class ControllerCLI(object):
         need_reload = not os.path.exists(fname)
         if os.system(f'{editor} {fname}'):
             return self.local_func_result_failed
+        if not os.path.isfile(fname):
+            return self.local_func_result_empty
         try:
             with open(fname) as fd:
                 code = fd.read()
