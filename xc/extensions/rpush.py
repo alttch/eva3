@@ -1,31 +1,27 @@
 __author__ = "Altertech Group, https://www.altertech.com/"
 __copyright__ = "Copyright (C) 2012-2020 Altertech Group"
 __license__ = "Apache License 2.0"
-__version__ = "1.2.1"
+__version__ = "1.3.0"
 __description__ = "Push client for Roboger"
 __api__ = 5
 __mods_required__ = ['pyrpush']
 
 __config_help__ = [{
-    'name':
-    'cf',
-    'help':
-    'Config file (default: /usr/local/etc/roboger_push.ini)',
-    'type':
-    'str',
-    'required':
-    False
+    'name': 'cf',
+    'help': 'Config file (default: /usr/local/etc/roboger_push.ini)',
+    'type': 'str',
+    'required': False
 }]
 
 __functions__ = {
     'push(media_file=None, **kwargs)':
-    'Push message (calls pyrpush.Client.push)'
+        'Push message (calls pyrpush.Client.push)'
 }
 
 __iec_functions__ = {
     'push': {
         'description':
-        'push message to Roboger server',
+            'push message to Roboger server',
         'var_in': [{
             'var': 'msg',
             'description': 'message text'
@@ -42,8 +38,8 @@ __iec_functions__ = {
             'var': 'location',
             'description': 'event location'
         }, {
-            'var': 'keywords',
-            'description': 'keywords, comma separated'
+            'var': 'tag',
+            'description': 'event tag'
         }, {
             'var': 'level',
             'description': 'event level'
