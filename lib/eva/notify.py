@@ -220,7 +220,7 @@ class GenericNotifier(object):
                              o=o,
                              **kwargs)
 
-        def run(self, o, **kwargs):
+        async def run(self, o, **kwargs):
             e = o.is_subscribed('state')
             if o.can_notify() and e:
                 if self.need_notify:
@@ -228,12 +228,17 @@ class GenericNotifier(object):
                         o.notifier_id))
                     import eva.core
                     for c in eva.core.controllers:
+                        dts = []
                         for i, v in c._get_all_items().items():
                             if e.item_types and ('#' in e.item_types
                                             or v.item_type in e.item_types) \
-                                            and eva.item.item_match(v, e.item_ids,
-                                                    e.groups):
-                                o.notify('state', (v, v.serialize(notify=True)))
+                                            and eva.item.item_match(v,
+                                                    e.item_ids, e.groups):
+                                dts.append(v.serialize(notify=True))
+                        if dts:
+                            await o.notifier_worker.put(
+                                ('state', dts, False, False))
+
                 else:
                     self.need_notify = True
 
@@ -258,11 +263,11 @@ class GenericNotifier(object):
         self.lse_lock = threading.RLock()
         self.notifier_worker = self.NotifierWorker(o=self,
                                                    name='notifier:' +
-                                                   self.notifier_id)
+                                                   self.notifier_id + ':queue')
         if self.interval:
             self.scheduled_notify_worker = self.ScheduledNotifyWorker(
                 o=self,
-                name='notifier:' + self.notifier_id,
+                name='notifier:' + self.notifier_id + ':scheduled',
                 interval=self.interval)
         self.state_storage = None
 
@@ -414,7 +419,7 @@ class GenericNotifier(object):
                             else:
                                 need_notify = True
                             if need_notify:
-                                self.last_state_event[d.item_id] = dts
+                                self.last_state_event[d.oid] = dts
                                 fdata.append(dts)
                         except:
                             eva.core.log_traceback(notifier=True)
