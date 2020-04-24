@@ -1,6 +1,21 @@
 EVA ICS CHANGELOG
 *****************
 
+3.3.1 (TBA)
+===========
+
+Common
+------
+
+    * "interval" notifier property allows to schedule item state telemetry
+      notifications with the specified time interval.
+
+UC
+--
+
+    * Added enable flag in API and CLI to enable unit actions / sensor updates
+      right after creation.
+
 3.3.0 (2020-02-05)
 ==================
 
