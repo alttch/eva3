@@ -582,6 +582,7 @@ Parameters:
 Optionally:
 
 * **g** item group
+* **e** enabled actions/updates
 * **save** save multi-update configuration immediately
 
 .. _ucapi_create_mu:
@@ -624,6 +625,7 @@ Parameters:
 Optionally:
 
 * **g** sensor group
+* **e** enabled updates
 * **save** save sensor configuration immediately
 
 .. _ucapi_create_unit:
@@ -645,6 +647,7 @@ Parameters:
 Optionally:
 
 * **g** unit group
+* **e** enabled actions
 * **save** save unit configuration immediately
 
 .. _ucapi_destroy:
