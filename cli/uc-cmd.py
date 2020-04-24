@@ -662,6 +662,11 @@ class UC_CLI(GenericCLI, ControllerCLI):
         ap_create.add_argument(
             'i', help='Item OID (type:group/id)',
             metavar='OID').completer = self.ComplItemOIDType()
+        ap_create.add_argument('-E',
+                               '--enable',
+                               help='Enable item actions/updates',
+                               dest='e',
+                               action='store_true')
         ap_create.add_argument('-y',
                                '--save',
                                help='Save item config after creation',

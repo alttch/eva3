@@ -1877,7 +1877,7 @@ Optionally:
 rotate log file
 ---------------
 
-Deprecated, not required since 3.2.6
+Deprecated, not required since 3.3.0
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sysapi/log_rotate.rest
@@ -2327,7 +2327,7 @@ Parameters:
 * **API Key** API key with *master* permissions
 * **t** MQTT topic ("+" and "#" masks are supported)
 * **q** MQTT topic QoS
-* **save** Save core script config after modification
+* **save** save core script config after modification
 
 
 .. _ucapi_restful_unsubscribe_corescripts_mqtt:
@@ -2345,6 +2345,6 @@ Parameters:
 
 * **API Key** API key with *master* permissions
 * **t** MQTT topic ("+" and "#" masks are allowed)
-* **save** Save core script config after modification
+* **save** save core script config after modification
 
 

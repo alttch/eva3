@@ -85,7 +85,8 @@ def exec_event_handler(func, item):
 @with_event_handler_lock
 def register_event_handler(item_id, func):
     item = get_item(item_id)
-    if not item: return False
+    if not item:
+        return False
     custom_event_handlers.setdefault(item.oid, set()).add(func)
     logging.info('added custom event handler for %s, function %s' %
                  (item.oid, func))
@@ -95,7 +96,8 @@ def register_event_handler(item_id, func):
 @with_event_handler_lock
 def unregister_event_handler(item_id, func):
     item = get_item(item_id)
-    if not item: return False
+    if not item:
+        return False
     try:
         custom_event_handlers[item.oid].remove(func)
         logging.debug('removed custom event handler for %s, function %s' %
@@ -143,14 +145,16 @@ def _get_all_items():
 
 @with_item_lock
 def get_item(item_id):
-    if not item_id: return None
+    if not item_id:
+        return None
     if is_oid(item_id):
         tp, i = parse_oid(item_id)
     else:
         i = item_id
     item = None
     if i.find('/') > -1:
-        if i in items_by_full_id: item = items_by_full_id[i]
+        if i in items_by_full_id:
+            item = items_by_full_id[i]
     elif not eva.core.config.enterprise_layout and i in items_by_id:
         item = items_by_id[i]
     return None if item and is_oid(item_id) and item.item_type != tp else item
@@ -158,11 +162,14 @@ def get_item(item_id):
 
 @with_item_lock
 def get_unit(unit_id):
-    if not unit_id: return None
-    if is_oid(unit_id) and oid_type(unit_id) != 'unit': return None
+    if not unit_id:
+        return None
+    if is_oid(unit_id) and oid_type(unit_id) != 'unit':
+        return None
     i = oid_to_id(unit_id)
     if i.find('/') > -1:
-        if i in units_by_full_id: return units_by_full_id[i]
+        if i in units_by_full_id:
+            return units_by_full_id[i]
     elif not eva.core.config.enterprise_layout and i in units_by_id:
         return units_by_id[i]
     return None
@@ -170,8 +177,10 @@ def get_unit(unit_id):
 
 @with_item_lock
 def get_sensor(sensor_id):
-    if not sensor_id: return None
-    if is_oid(sensor_id) and oid_type(sensor_id) != 'sensor': return None
+    if not sensor_id:
+        return None
+    if is_oid(sensor_id) and oid_type(sensor_id) != 'sensor':
+        return None
     i = oid_to_id(sensor_id)
     if i.find('/') > -1:
         if i in sensors_by_full_id:
@@ -183,11 +192,14 @@ def get_sensor(sensor_id):
 
 @with_item_lock
 def get_mu(mu_id):
-    if not mu_id: return None
-    if is_oid(mu_id) and oid_type(mu_id) != 'mu': return None
+    if not mu_id:
+        return None
+    if is_oid(mu_id) and oid_type(mu_id) != 'mu':
+        return None
     i = oid_to_id(mu_id)
     if i.find('/') > -1:
-        if i in mu_by_full_id: return mu_by_full_id[i]
+        if i in mu_by_full_id:
+            return mu_by_full_id[i]
     elif not eva.core.config.enterprise_layout and i in mu_by_id:
         return mu_by_id[i]
     return None
@@ -196,7 +208,8 @@ def get_mu(mu_id):
 @with_item_lock
 def append_item(item, start=False, load=True):
     try:
-        if load and not item.load(): return False
+        if load and not item.load():
+            return False
     except:
         eva.core.log_traceback()
         return False
@@ -219,7 +232,8 @@ def append_item(item, start=False, load=True):
         items_by_id[item.item_id] = item
     items_by_group.setdefault(item.group, {})[item.item_id] = item
     items_by_full_id[item.full_id] = item
-    if start: item.start_processors()
+    if start:
+        item.start_processors()
     logging.debug('+ %s %s' % (item.item_type, item.item_id))
     return True
 
@@ -320,7 +334,8 @@ def load_db_state(items, item_type, clean=False):
             tp=item_type)
         while True:
             d = r.fetchone()
-            if not d: break
+            if not d:
+                break
             if d.id in items.keys():
                 try:
                     items[d.id].status = int(d.status)
@@ -419,7 +434,8 @@ def load_sensors(start=False):
 
 @with_item_lock
 def create_item(item_id, item_type, group=None, start=True, save=False):
-    if not item_id: raise InvalidParameter('item id not specified')
+    if not item_id:
+        raise InvalidParameter('item id not specified')
     if group and item_id.find('/') != -1:
         raise InvalidParameter(
             'Unable to create item: invalid symbols in ID {}'.format(item_id))
@@ -453,27 +469,36 @@ def create_item(item_id, item_type, group=None, start=True, save=False):
         cfg['mqtt_update'] = eva.core.config.mqtt_update_default
     item.update_config(cfg)
     append_item(item, start=start, load=False)
-    if save: item.save()
+    if save:
+        item.save()
     logging.info('created new %s %s' % (item.item_type, item.full_id))
     return item
 
 
 @with_item_lock
-def create_unit(unit_id, group=None, save=False):
-    return create_item(item_id=unit_id,
+def create_unit(unit_id, group=None, enabled=None, save=False):
+    unit = create_item(item_id=unit_id,
                        item_type='U',
                        group=group,
-                       start=True,
-                       save=save)
+                       start=False,
+                       save=save and not enabled)
+    if enabled:
+        unit.set_prop('action_enabled', True, save=save)
+    unit.start_processors()
+    return unit
 
 
 @with_item_lock
-def create_sensor(sensor_id, group=None, save=False):
-    return create_item(item_id=sensor_id,
-                       item_type='S',
-                       group=group,
-                       start=True,
-                       save=save)
+def create_sensor(sensor_id, group=None, enabled=None, save=False):
+    sensor = create_item(item_id=sensor_id,
+                         item_type='S',
+                         group=group,
+                         start=False,
+                         save=save)
+    if enabled:
+        sensor.update_set_state(status=1)
+    sensor.start_processors()
+    return sensor
 
 
 @with_item_lock
@@ -510,9 +535,11 @@ def clone_item(item_id, new_item_id=None, group=None, save=False):
         _g = '/'.join(_ni.split('/')[:-1])
     ni = create_item(ni_id, i.item_type, _g, start=False, save=False)
     cfg = i.serialize(props=True)
-    if 'description' in cfg: del cfg['description']
+    if 'description' in cfg:
+        del cfg['description']
     ni.update_config(cfg)
-    if save: ni.save()
+    if save:
+        ni.save()
     ni.start_processors()
     return ni
 
@@ -520,11 +547,13 @@ def clone_item(item_id, new_item_id=None, group=None, save=False):
 @with_item_lock
 def clone_group(group = None, new_group = None,\
         prefix = None, new_prefix = None, save = False):
-    if not group or not group in items_by_group: raise ResourceNotFound
+    if not group or not group in items_by_group:
+        raise ResourceNotFound
     to_clone = []
     for i in items_by_group[group].copy():
         io = get_item(group + '/' + i)
-        if io.item_type not in ['unit', 'sensor']: continue
+        if io.item_type not in ['unit', 'sensor']:
+            continue
         new_id = io.item_id
         if prefix and new_prefix:
             if i[:len(prefix)] == prefix:
@@ -540,7 +569,8 @@ def clone_group(group = None, new_group = None,\
 
 @with_item_lock
 def destroy_group(group=None):
-    if group is None or group not in items_by_group: raise ResourceNotFound
+    if group is None or group not in items_by_group:
+        raise ResourceNotFound
     for i in items_by_group[group].copy():
         destroy_item('{}/{}'.format(group, i))
     return True
@@ -551,7 +581,8 @@ def destroy_item(item):
     try:
         if isinstance(item, str):
             i = get_item(item)
-            if not i: raise ResourceNotFound
+            if not i:
+                raise ResourceNotFound
         else:
             i = item
         if not eva.core.config.enterprise_layout:
@@ -618,7 +649,8 @@ def load_mu(start=False):
             u.get_item_func = get_item
             if u.load():
                 append_item(u, start=False)
-                if start: u.start_processors()
+                if start:
+                    u.start_processors()
         return True
     except:
         logging.error('multi updates load error')
@@ -718,10 +750,12 @@ def start():
 @eva.core.stop
 def stop():
     # save modified items on exit, for db_update = 2 save() is called by core
-    if eva.core.config.db_update == 1: save()
+    if eva.core.config.db_update == 1:
+        save()
     for i, v in items_by_full_id.copy().items():
         v.stop_processors()
-    if Q: Q.stop()
+    if Q:
+        Q.stop()
     eva.uc.driverapi.stop()
     eva.uc.modbus.stop()
     eva.uc.owfs.stop()
@@ -738,7 +772,8 @@ def exec_mqtt_unit_action(unit, msg):
             value = cmd[1]
         if len(cmd) > 2:
             priority = int(cmd[2])
-        if value == 'None': value = None
+        if value == 'None':
+            value = None
         logging.debug('mqtt cmd msg unit = %s' % unit.full_id)
         logging.debug('mqtt cmd msg status = %s' % status)
         logging.debug('mqtt cmd msg value = "%s"' % value)
@@ -764,21 +799,26 @@ def exec_unit_action(unit,
         u = get_unit(unit)
     else:
         u = unit
-    if not u: return None
+    if not u:
+        return None
     _s = None
     try:
         _s = int(nstatus)
     except:
         _s = u.status_by_label(nstatus)
-    if _s is None: return None
-    if q_timeout: qt = q_timeout
-    else: qt = eva.core.config.timeout
+    if _s is None:
+        return None
+    if q_timeout:
+        qt = q_timeout
+    else:
+        qt = eva.core.config.timeout
     a = u.create_action(_s, nvalue, priority, action_uuid)
     Q.put_task(a)
     if not a.processed.wait(timeout=qt):
         if a.set_dead():
             return a
-    if wait: a.finished.wait(timeout=wait)
+    if wait:
+        a.finished.wait(timeout=wait)
     return a
 
 
