@@ -86,24 +86,36 @@ class EventItem(Event):
 
     def __init__(self, subject, items, groups, item_types):
         super().__init__(subject=subject)
-        if isinstance(groups, list): self.groups = groups
-        elif groups: self.groups = [groups]
-        else: self.groups = []
-        if isinstance(item_types, list): self.item_types = item_types
-        elif item_types: self.item_types = [item_types]
-        else: self.item_types = []
+        if isinstance(groups, list):
+            self.groups = groups
+        elif groups:
+            self.groups = [groups]
+        else:
+            self.groups = []
+        if isinstance(item_types, list):
+            self.item_types = item_types
+        elif item_types:
+            self.item_types = [item_types]
+        else:
+            self.item_types = []
         self.item_ids = set()
         if isinstance(items, list):
             for i in items:
-                if isinstance(i, str): self.item_ids.add(i)
-                else: self.item_ids.add(i.item_id)
+                if isinstance(i, str):
+                    self.item_ids.add(i)
+                else:
+                    self.item_ids.add(i.item_id)
         else:
-            if isinstance(items, str): self.item_ids.add(items)
-            elif items: self.item_ids.add(items.item_id)
+            if isinstance(items, str):
+                self.item_ids.add(items)
+            elif items:
+                self.item_ids.add(items.item_id)
 
     def append_item(self, item):
-        if isinstance(item, str): self.item_ids.add(item)
-        else: self.item_ids.add(item.item_id)
+        if isinstance(item, str):
+            self.item_ids.add(item)
+        else:
+            self.item_ids.add(item.item_id)
 
     def remove_item(self, item):
         if isinstance(item, str):
@@ -128,9 +140,12 @@ class EventItem(Event):
 
     def serialize(self):
         d = {}
-        if self.item_ids: d['items'] = list(self.item_ids)
-        if self.groups: d['groups'] = self.groups
-        if self.item_types: d['types'] = self.item_types
+        if self.item_ids:
+            d['items'] = list(self.item_ids)
+        if self.groups:
+            d['groups'] = self.groups
+        if self.item_types:
+            d['types'] = self.item_types
         d.update(super().serialize())
         return d
 
@@ -152,7 +167,8 @@ class EventAction(EventItem):
 
     def serialize(self):
         d = {}
-        if self.action_status: d['action_status'] = self.action_status
+        if self.action_status:
+            d['action_status'] = self.action_status
         d.update(super().serialize())
         return d
 
@@ -168,7 +184,8 @@ class EventLog(Event):
 
     def serialize(self):
         d = {}
-        if (self.log_level): d['level'] = self.log_level
+        if (self.log_level):
+            d['level'] = self.log_level
         d.update(super().serialize())
         return d
 
@@ -194,14 +211,42 @@ class GenericNotifier(object):
                                 retain=event[2],
                                 unpicklable=event[3])
 
+    class ScheduledNotifyWorker(BackgroundIntervalWorker):
+
+        def __init__(self, o, **kwargs):
+            self.need_notify = False
+            super().__init__(on_error=eva.core.log_traceback,
+                             on_error_kwargs=_ne_kw,
+                             o=o,
+                             **kwargs)
+
+        def run(self, o, **kwargs):
+            e = o.is_subscribed('state')
+            if o.can_notify() and e:
+                if self.need_notify:
+                    logging.debug('.{} sending scheduled notifications'.format(
+                        o.notifier_id))
+                    import eva.core
+                    for c in eva.core.controllers:
+                        for i, v in c._get_all_items().items():
+                            if e.item_types and ('#' in e.item_types
+                                            or v.item_type in e.item_types) \
+                                            and eva.item.item_match(v, e.item_ids,
+                                                    e.groups):
+                                o.notify('state', (v, v.serialize(notify=True)))
+                else:
+                    self.need_notify = True
+
     def __init__(self,
                  notifier_id,
                  notifier_type=None,
                  space=None,
+                 interval=None,
                  timeout=None):
         self.notifier_id = notifier_id
         self.notifier_type = notifier_type
         self.space = space
+        self.interval = interval
         self.events = set()
         self.timeout = timeout
         self.enabled = False
@@ -214,6 +259,11 @@ class GenericNotifier(object):
         self.notifier_worker = self.NotifierWorker(o=self,
                                                    name='notifier:' +
                                                    self.notifier_id)
+        if self.interval:
+            self.scheduled_notify_worker = self.ScheduledNotifyWorker(
+                o=self,
+                name='notifier:' + self.notifier_id,
+                interval=self.interval)
         self.state_storage = None
 
     def subscribe(self,
@@ -225,11 +275,13 @@ class GenericNotifier(object):
                   log_level=None):
         _e = self.is_subscribed(subject)
         if subject == 'state':
-            if _e: self.events.remove(_e)
+            if _e:
+                self.events.remove(_e)
             e = EventState(items=items, groups=groups, item_types=item_types)
             self.events.add(e)
         elif subject == 'action':
-            if _e: self.events.remove(_e)
+            if _e:
+                self.events.remove(_e)
             e = EventAction(items=items,
                             groups=groups,
                             item_types=item_types,
@@ -257,7 +309,8 @@ class GenericNotifier(object):
 
     def is_subscribed(self, subject):
         for e in self.events.copy():
-            if e.subject == subject: return e
+            if e.subject == subject:
+                return e
         return None
 
     def unsubscribe(self, subject):
@@ -269,51 +322,64 @@ class GenericNotifier(object):
                 self.events = []
             else:
                 for e in self.events.copy():
-                    if e.subject == subject: self.events.remove(e)
+                    if e.subject == subject:
+                        self.events.remove(e)
         return True
 
     def subscribe_item(self, subject, item):
         if subject == '#' or subject == 'action':
             e = self.is_subscribed('action')
-            if e: e.append_item(item)
+            if e:
+                e.append_item(item)
         if subject == '#' or subject == 'state':
             e = self.is_subscribed('state')
-            if e: e.append_item(item)
+            if e:
+                e.append_item(item)
 
     def subscribe_group(self, subject, item):
         if subject == '#' or subject == 'action':
             e = self.is_subscribed('action')
-            if e: e.append_group(item)
+            if e:
+                e.append_group(item)
         if subject == '#' or subject == 'state':
             e = self.is_subscribed('state')
-            if e: e.append_group(item)
+            if e:
+                e.append_group(item)
 
     def unsubscribe_item(self, subject, item):
         if subject == '#' or subject == 'action':
             e = self.is_subscribed('action')
-            if e: e.remove_item(item)
+            if e:
+                e.remove_item(item)
         if subject == '#' or subject == 'state':
             e = self.is_subscribed('state')
-            if e: e.remove_item(item)
+            if e:
+                e.remove_item(item)
 
     def unsubscribe_group(self, subject, item):
         if subject == '#' or subject == 'action':
             e = self.is_subscribed('action')
-            if e: e.remove_group(item)
+            if e:
+                e.remove_group(item)
         if subject == '#' or subject == 'state':
             e = self.is_subscribed('state')
-            if e: e.remove_group(item)
+            if e:
+                e.remove_group(item)
 
     def format_data(self, subject, data):
-        if not subject or not data: return None
+        if not subject or not data:
+            return None
         import eva.item
         import eva.core
         try:
-            if isinstance(data, list): data_in = data
-            else: data_in = [data]
+            if isinstance(data, list):
+                data_in = data
+            else:
+                data_in = [data]
             fdata = None
             e = self.is_subscribed(subject)
-            if not e: return None
+            if not e:
+                return None
             if subject == 'log':
                 fdata = []
                 for d in data_in:
@@ -394,16 +460,22 @@ class GenericNotifier(object):
         self.connect()
         if not self.test_only_mode:
             self.notifier_worker.start()
+            if self.interval:
+                self.scheduled_notify_worker.start()
 
     def stop(self):
         if not self.test_only_mode:
             self.notifier_worker.stop()
+            if self.interval:
+                self.scheduled_notify_worker.stop()
         self.disconnect()
 
     def notify(self, subject, data, unpicklable=False, retain=False):
-        if not self.can_notify(): return False
+        if not self.can_notify():
+            return False
         data_to_send = self.format_data(subject, data)
-        if not data_to_send: return None
+        if not data_to_send:
+            return None
         self.log_notify()
         self.notifier_worker.put_threadsafe(
             (subject, data_to_send, retain, unpicklable))
@@ -418,11 +490,15 @@ class GenericNotifier(object):
                 d['events'] = []
                 for e in self.events.copy():
                     d['events'].append(e.serialize())
-        if self.space or props: d['space'] = self.space
+        if self.space or props:
+            d['space'] = self.space
+        if self.interval or props:
+            d['interval'] = self.interval
         if self._skip_test is not None or props:
             d['skip_test'] = self._skip_test
         d['enabled'] = self.enabled
-        if self.timeout or props: d['timeout'] = self.timeout
+        if self.timeout or props:
+            d['timeout'] = self.timeout
         return d
 
     def set_prop(self, prop, value):
@@ -431,7 +507,8 @@ class GenericNotifier(object):
                 self.enabled = False
                 return True
             val = val_to_boolean(value)
-            if val is None: return False
+            if val is None:
+                return False
             self.enabled = val
             return True
         if prop == 'skip_test':
@@ -439,11 +516,21 @@ class GenericNotifier(object):
                 self._skip_test = None
                 return True
             val = val_to_boolean(value)
-            if val is None: return False
+            if val is None:
+                return False
             self._skip_test = val
             return True
         elif prop == 'space':
             self.space = value
+            return True
+        elif prop == 'interval':
+            if not value:
+                self.interval = None
+                return True
+            try:
+                self.interval = float(value)
+            except:
+                return False
             return True
         elif prop == 'timeout':
             if not value:
@@ -519,8 +606,10 @@ class GenericNotifier_Client(GenericNotifier):
                  notifier_subtype=None,
                  apikey=None,
                  token=None):
-        if not notifier_id: _id = str(uuid.uuid4())
-        else: _id = notifier_id
+        if not notifier_id:
+            _id = str(uuid.uuid4())
+        else:
+            _id = notifier_id
         _tp = 'client'
         if notifier_subtype:
             _tp += notifier_subtype
@@ -534,7 +623,8 @@ class GenericNotifier_Client(GenericNotifier):
         self.subscribe('server')
 
     def format_data(self, subject, data):
-        if not subject or not data: return None
+        if not subject or not data:
+            return None
         from eva import apikey
         if apikey.check(self.apikey, master=True):
             return super().format_data(subject, data)
@@ -543,8 +633,10 @@ class GenericNotifier_Client(GenericNotifier):
                 return None
             else:
                 return super().format_data(subject, data)
-        if isinstance(data, list): data_in = data
-        else: data_in = [data]
+        if isinstance(data, list):
+            data_in = data
+        else:
+            data_in = [data]
         fdata = []
         if subject == 'state':
             for d in data_in:
@@ -613,11 +705,17 @@ class SQLANotifier(GenericNotifier):
                     oid=r.oid,
                     maxt=r.maxt)
 
-    def __init__(self, notifier_id, db_uri=None, keep=None, space=None):
+    def __init__(self,
+                 notifier_id,
+                 db_uri=None,
+                 keep=None,
+                 space=None,
+                 interval=None):
         notifier_type = 'db'
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
-                         space=space)
+                         space=space,
+                         interval=interval)
         self.state_storage = 'sql'
         self.keep = keep if keep else \
             db_default_keep
@@ -638,7 +736,8 @@ class SQLANotifier(GenericNotifier):
                                                    timeout=self.timeout)
 
     def test(self):
-        if self.connected: return True
+        if self.connected:
+            return True
         self.connect()
         return self.connected
 
@@ -816,7 +915,8 @@ class SQLANotifier(GenericNotifier):
 
     def set_prop(self, prop, value):
         if prop == 'db':
-            if value is None or value == '': return False
+            if value is None or value == '':
+                return False
             self.set_db(value)
             return True
         elif prop == 'keep':
@@ -840,8 +940,10 @@ class SQLANotifier(GenericNotifier):
 
     def serialize(self, props=False):
         d = super().serialize(props)
-        if self._keep or props: d['keep'] = self._keep
-        if self._db or props: d['db'] = self._db
+        if self._keep or props:
+            d['keep'] = self._keep
+        if self._db or props:
+            d['db'] = self._db
         return d
 
     def disconnect(self):
@@ -857,13 +959,16 @@ class GenericHTTPNotifier(GenericNotifier):
                  username=None,
                  password=None,
                  space=None,
+                 interval=None,
                  timeout=None,
                  ssl_verify=True):
         notifier_type = 'http'
-        if notifier_subtype: notifier_type += '-' + notifier_subtype
+        if notifier_subtype:
+            notifier_type += '-' + notifier_subtype
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
                          space=space,
+                         interval=interval,
                          timeout=timeout)
         self.ssl_verify = ssl_verify
         self.uri = uri
@@ -898,14 +1003,17 @@ class GenericHTTPNotifier(GenericNotifier):
         if (self.ssl_verify is not None and \
                 self.ssl_verify is not True) or props:
             d['ssl_verify'] = self.ssl_verify
-        if self.username or props: d['username'] = self.username
-        if self.password or props: d['password'] = self.password
+        if self.username or props:
+            d['username'] = self.username
+        if self.password or props:
+            d['password'] = self.password
         d.update(super().serialize(props=props))
         return d
 
     def set_prop(self, prop, value):
         if prop == 'uri':
-            if value is None: return False
+            if value is None:
+                return False
             self.uri = value
             return True
         elif prop == 'username':
@@ -919,7 +1027,8 @@ class GenericHTTPNotifier(GenericNotifier):
                 self.ssl_verify = None
                 return True
             val = val_to_boolean(value)
-            if val is None: return False
+            if val is None:
+                return False
             self.ssl_verify = val
             return True
         return super().set_prop(prop, value)
@@ -935,6 +1044,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                  method=None,
                  notify_key=None,
                  space=None,
+                 interval=None,
                  timeout=None,
                  ssl_verify=True):
         super().__init__(notifier_id=notifier_id,
@@ -944,6 +1054,7 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                          username=username,
                          password=password,
                          space=space,
+                         interval=interval,
                          timeout=timeout)
         self.method = method
         self.notify_key = notify_key
@@ -952,8 +1063,10 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
         from eva import apikey
         d = {'subject': subject}
         key = apikey.format_key(self.notify_key)
-        if key: d['k'] = key
-        if self.space: d['space'] = self.space
+        if key:
+            d['k'] = key
+        if self.space:
+            d['space'] = self.space
         if self.method == 'jsonrpc':
             data_ts = []
             for dd in data:
@@ -1017,7 +1130,8 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
                                      json=data_ts,
                                      timeout=self.get_timeout(),
                                      **self.xrargs)
-            if not r.ok: return False
+            if not r.ok:
+                return False
             result = r.json()
             if self.method == 'jsonrpc':
                 if result.get('jsonrpc') != '2.0' or \
@@ -1032,8 +1146,10 @@ class HTTP_JSONNotifier(GenericHTTPNotifier):
 
     def serialize(self, props=False):
         d = {}
-        if self.method or props: d['method'] = self.method
-        if self.notify_key or props: d['notify_key'] = self.notify_key
+        if self.method or props:
+            d['method'] = self.method
+        if self.notify_key or props:
+            d['notify_key'] = self.notify_key
         d.update(super().serialize(props=props))
         return d
 
@@ -1062,6 +1178,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                  method=None,
                  notify_key=None,
                  space=None,
+                 interval=None,
                  timeout=None,
                  ssl_verify=True):
         super().__init__(notifier_id=notifier_id,
@@ -1070,6 +1187,7 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
                          username=username,
                          password=password,
                          space=space,
+                         interval=interval,
                          timeout=timeout)
         self.method = method
         self.notify_key = notify_key
@@ -1205,7 +1323,8 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
 
     def test(self):
         self.connect()
-        if self.db is None: return False
+        if self.db is None:
+            return False
         space = self.space if self.space is not None else ''
         try:
             logging.debug('.Testing influxdb notifier %s (%s)' % \
@@ -1223,7 +1342,8 @@ class InfluxDB_Notifier(GenericHTTPNotifier):
 
     def serialize(self, props=False):
         d = {}
-        if self.method or props: d['method'] = self.method
+        if self.method or props:
+            d['method'] = self.method
         d['db'] = self.db
         d.update(super().serialize(props=props))
         return d
@@ -1323,6 +1443,8 @@ class PrometheusNotifier(GenericNotifier):
         elif prop == 'password':
             self.password = value
             return True
+        elif prop == 'interval':
+            return False
         return super().set_prop(prop, value)
 
     def serialize(self, props=False):
@@ -1331,6 +1453,10 @@ class PrometheusNotifier(GenericNotifier):
             del d['timeout']
         d['username'] = self.username
         d['password'] = self.password
+        try:
+            del d['interval']
+        except:
+            pass
         return d
 
     def can_notify(self):
@@ -1373,6 +1499,7 @@ class GenericMQTTNotifier(GenericNotifier):
                  host,
                  port=None,
                  space=None,
+                 interval=None,
                  username=None,
                  password=None,
                  qos=None,
@@ -1390,10 +1517,13 @@ class GenericMQTTNotifier(GenericNotifier):
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
                          space=space,
+                         interval=interval,
                          timeout=timeout)
         self.host = host
-        if port: self.port = port
-        else: self.port = 1883
+        if port:
+            self.port = port
+        else:
+            self.port = 1883
         self._port = port
         try:
             self.keepalive = int(keepalive)
@@ -1496,8 +1626,7 @@ class GenericMQTTNotifier(GenericNotifier):
         if self.announce_interval and not self.test_only_mode:
             self.announcer.start()
         if not self.api_callback_lock.acquire(timeout=eva.core.config.timeout):
-            logging.critical(
-                '.GenericMQTTNotifier::on_connect locking broken')
+            logging.critical('.GenericMQTTNotifier::on_connect locking broken')
             eva.core.critical()
             return False
         try:
@@ -1552,7 +1681,8 @@ class GenericMQTTNotifier(GenericNotifier):
             eva.core.critical()
             return False
         try:
-            if qos is None: qos = 1
+            if qos is None:
+                qos = 1
             _topic = self.space + '/' + topic if \
                     self.space is not None else topic
             if not self.custom_handlers.get(_topic):
@@ -1623,7 +1753,8 @@ class GenericMQTTNotifier(GenericNotifier):
     def update_item_remove(self, item):
         logging.debug('.%s unsubscribing from %s updates' % \
                 (self.notifier_id, item.oid))
-        if item not in self.items_to_update: return False
+        if item not in self.items_to_update:
+            return False
         try:
             for t in item.mqtt_update_topics:
                 topic = self.pfx + item.item_type + '/' + \
@@ -1640,7 +1771,8 @@ class GenericMQTTNotifier(GenericNotifier):
     def control_item_remove(self, item):
         logging.debug('.%s unsubscribing from %s control' % \
                 (self.notifier_id, item.oid))
-        if item not in self.items_to_control: return False
+        if item not in self.items_to_control:
+            return False
         topic_control = self.pfx + item.item_type + '/' +\
                 item.full_id + '/control'
         self.mq.unsubscribe(topic_control)
@@ -1667,7 +1799,8 @@ class GenericMQTTNotifier(GenericNotifier):
             eva.core.log_traceback(notifier=True)
 
     def on_message(self, client, userdata, msg):
-        if not self.enabled: return
+        if not self.enabled:
+            return
         t = msg.topic
         try:
             d = msg.payload if msg.payload.startswith(
@@ -1734,7 +1867,8 @@ class GenericMQTTNotifier(GenericNotifier):
         try:
             if self.mq._state != mqtt.mqtt_cs_connected:
                 self.mq.loop_stop()
-                if self.test_only_mode: self.mq.enable_logger()
+                if self.test_only_mode:
+                    self.mq.enable_logger()
                 self.mq.connect(host=self.host,
                                 port=self.port,
                                 keepalive=self.keepalive)
@@ -1753,8 +1887,10 @@ class GenericMQTTNotifier(GenericNotifier):
         else:
             qos = 1
         if subject == 'state':
-            if retain is not None and self.retain_enabled: _retain = retain
-            else: _retain = True if self.retain_enabled else False
+            if retain is not None and self.retain_enabled:
+                _retain = retain
+            else:
+                _retain = True if self.retain_enabled else False
             for i in data:
                 if i.get('destroyed'):
                     dts = ''
@@ -1773,8 +1909,10 @@ class GenericMQTTNotifier(GenericNotifier):
                                 qos,
                                 retain=_retain)
         elif subject == 'action':
-            if retain is not None and self.retain_enabled: _retain = retain
-            else: _retain = False
+            if retain is not None and self.retain_enabled:
+                _retain = retain
+            else:
+                _retain = False
             for i in data:
                 i['t'] = time.time()
                 i['c'] = eva.core.config.controller_name
@@ -1783,8 +1921,10 @@ class GenericMQTTNotifier(GenericNotifier):
                     format_json(i, unpicklable=unpicklable),
                     qos, retain = _retain)
         elif subject == 'log':
-            if retain is not None and self.retain_enabled: _retain = retain
-            else: _retain = False
+            if retain is not None and self.retain_enabled:
+                _retain = retain
+            else:
+                _retain = False
             for i in data:
                 i['t'] = time.time()
                 i['c'] = eva.core.config.controller_name
@@ -1793,8 +1933,10 @@ class GenericMQTTNotifier(GenericNotifier):
                                 qos,
                                 retain=_retain)
         elif subject == 'server':
-            if retain is not None and self.retain_enabled: _retain = retain
-            else: _retain = False
+            if retain is not None and self.retain_enabled:
+                _retain = retain
+            else:
+                _retain = False
             for i in data:
                 if not isinstance(i, dict):
                     i = {'e': i}
@@ -1811,8 +1953,10 @@ class GenericMQTTNotifier(GenericNotifier):
             _data = data
         else:
             _data = [data]
-        if retain is not None: _retain = retain
-        else: _retain = False
+        if retain is not None:
+            _retain = retain
+        else:
+            _retain = False
         for d in _data:
             if isinstance(d, dict):
                 _d = format_json(data, unpicklable=False)
@@ -1830,7 +1974,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 return False
 
     def send_api_response(self, call_id, data):
-        if not self.api_enabled: return False
+        if not self.api_enabled:
+            return False
         self.mq.publish(self.api_response_topic + '/' + call_id,
                         data,
                         self.qos['system'],
@@ -1900,21 +2045,32 @@ class GenericMQTTNotifier(GenericNotifier):
 
     def serialize(self, props=False):
         d = {}
-        if self.host or props: d['host'] = self.host
-        if self._port or props: d['port'] = self._port
-        if self.username or props: d['username'] = self.username
-        if self.password or props: d['password'] = self.password
-        if self._qos or props: d['qos'] = self._qos
-        if self._keepalive or props: d['keepalive'] = self._keepalive
-        if self.collect_logs or props: d['collect_logs'] = self.collect_logs
-        if self.api_enabled or props: d['api_enabled'] = self.api_enabled
+        if self.host or props:
+            d['host'] = self.host
+        if self._port or props:
+            d['port'] = self._port
+        if self.username or props:
+            d['username'] = self.username
+        if self.password or props:
+            d['password'] = self.password
+        if self._qos or props:
+            d['qos'] = self._qos
+        if self._keepalive or props:
+            d['keepalive'] = self._keepalive
+        if self.collect_logs or props:
+            d['collect_logs'] = self.collect_logs
+        if self.api_enabled or props:
+            d['api_enabled'] = self.api_enabled
         if self.discovery_enabled or props:
             d['discovery_enabled'] = self.discovery_enabled
         if self.announce_interval or props:
             d['announce_interval'] = self.announce_interval
-        if self.ca_certs or props: d['ca_certs'] = self.ca_certs
-        if self.certfile or props: d['certfile'] = self.certfile
-        if self.keyfile or props: d['keyfile'] = self.keyfile
+        if self.ca_certs or props:
+            d['ca_certs'] = self.ca_certs
+        if self.certfile or props:
+            d['certfile'] = self.certfile
+        if self.keyfile or props:
+            d['keyfile'] = self.keyfile
         d['retain_enabled'] = self.retain_enabled
         d.update(super().serialize(props=props))
         return d
@@ -1940,7 +2096,8 @@ class GenericMQTTNotifier(GenericNotifier):
                     announce_interval = float(value)
                 except:
                     return False
-            if announce_interval < 0: return False
+            if announce_interval < 0:
+                return False
             self.announce_interval = announce_interval
             return True
         elif prop == 'ca_certs':
@@ -1971,7 +2128,8 @@ class GenericMQTTNotifier(GenericNotifier):
                 return False
             return True
         elif prop == 'host':
-            if not value: return False
+            if not value:
+                return False
             self.host = value
             return True
         elif prop == 'port':
@@ -2000,7 +2158,8 @@ class GenericMQTTNotifier(GenericNotifier):
             return True
         elif prop == 'retain_enabled':
             v = val_to_boolean(value)
-            if v is None: return False
+            if v is None:
+                return False
             self.retain_enabled = v
             return True
         elif prop == 'qos':
@@ -2011,12 +2170,14 @@ class GenericMQTTNotifier(GenericNotifier):
                 val = int(value)
             except:
                 return False
-            if not 0 <= val <= 2: return False
+            if not 0 <= val <= 2:
+                return False
             self._qos = {'action': val, 'state': val, 'log': val, 'system': val}
             return True
         elif prop[:4] == 'qos.':
             q = prop[4:]
-            if not q in ['action', 'state', 'log', 'system']: return False
+            if not q in ['action', 'state', 'log', 'system']:
+                return False
             if not value:
                 if self._qos and q in self._qos:
                     del self._qos[q]
@@ -2025,8 +2186,10 @@ class GenericMQTTNotifier(GenericNotifier):
                 val = int(value)
             except:
                 return False
-            if not 0 <= val <= 2: return False
-            if not self._qos: self._qos = {}
+            if not 0 <= val <= 2:
+                return False
+            if not self._qos:
+                self._qos = {}
             self._qos[q] = val
             return True
         else:
@@ -2040,6 +2203,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                  host,
                  port=None,
                  space=None,
+                 interval=None,
                  username=None,
                  password=None,
                  qos=None,
@@ -2057,6 +2221,7 @@ class MQTTNotifier(GenericMQTTNotifier):
                          host=host,
                          port=port,
                          space=space,
+                         interval=interval,
                          username=username,
                          password=password,
                          qos=qos,
@@ -2078,6 +2243,7 @@ class GCP_IoT(GenericNotifier):
                  notifier_id,
                  keepalive=None,
                  timeout=None,
+                 interval=None,
                  apikey=None,
                  ca_certs=None,
                  keyfile=None,
@@ -2090,7 +2256,8 @@ class GCP_IoT(GenericNotifier):
         notifier_type = 'gcpiot'
         super().__init__(notifier_id=notifier_id,
                          notifier_type=notifier_type,
-                         timeout=timeout)
+                         timeout=timeout,
+                         interval=interval)
         try:
             self.keepalive = int(keepalive)
         except:
@@ -2144,7 +2311,8 @@ class GCP_IoT(GenericNotifier):
                                         o=self)
 
     def stop(self):
-        if not self.test_only_mode: self.reset_connection.stop()
+        if not self.test_only_mode:
+            self.reset_connection.stop()
         super().stop()
 
     def disconnect(self, full=True, lock=True):
@@ -2153,12 +2321,14 @@ class GCP_IoT(GenericNotifier):
                 self.log_error(message='disconnect failed')
                 return False
         try:
-            if full: super().disconnect()
+            if full:
+                super().disconnect()
             if self.mq:
                 self.mq.loop_stop()
                 self.mq.disconnect()
         finally:
-            if lock: self.lock.release()
+            if lock:
+                self.lock.release()
 
     def create_jwt(self):
         token = {
@@ -2188,7 +2358,8 @@ class GCP_IoT(GenericNotifier):
         if t == self.error_topic:
             self.log_error(message=d)
             return
-        if not self.enabled: return
+        if not self.enabled:
+            return
         x = t.split('/')
         if 'commands' in x:
             dev = x[2]
@@ -2250,7 +2421,8 @@ class GCP_IoT(GenericNotifier):
                                    password=self.create_jwt())
                 mq.on_connect = self.on_connect
                 mq.on_message = self.on_message
-                if self.test_only_mode: mq.enable_logger()
+                if self.test_only_mode:
+                    mq.enable_logger()
             if first_connect or mq._state != mqtt.mqtt_cs_connected:
                 if not first_connect:
                     mq.loop_stop()
@@ -2264,7 +2436,8 @@ class GCP_IoT(GenericNotifier):
                 time.sleep(3)
                 for i in self.map:
                     mq.subscribe('/devices/{}/commands/#'.format(i))
-                if reconnect: self.disconnect(full=False, lock=False)
+                if reconnect:
+                    self.disconnect(full=False, lock=False)
                 self.mq = mq
             return True
         except:
@@ -2335,15 +2508,24 @@ class GCP_IoT(GenericNotifier):
 
     def serialize(self, props=False):
         d = {}
-        if self._keepalive or props: d['keepalive'] = self._keepalive
-        if self.apikey or props: d['apikey'] = self.apikey
-        if self.ca_certs or props: d['ca_certs'] = self.ca_certs
-        if self.keyfile or props: d['keyfile'] = self.keyfile
-        if self.mapfile or props: d['mapfile'] = self.mapfile
-        if self.project or props: d['project'] = self.project
-        if self.region or props: d['region'] = self.region
-        if self.registry or props: d['registry'] = self.registry
-        if self._token_expire or props: d['token_expire'] = self._token_expire
+        if self._keepalive or props:
+            d['keepalive'] = self._keepalive
+        if self.apikey or props:
+            d['apikey'] = self.apikey
+        if self.ca_certs or props:
+            d['ca_certs'] = self.ca_certs
+        if self.keyfile or props:
+            d['keyfile'] = self.keyfile
+        if self.mapfile or props:
+            d['mapfile'] = self.mapfile
+        if self.project or props:
+            d['project'] = self.project
+        if self.region or props:
+            d['region'] = self.region
+        if self.registry or props:
+            d['registry'] = self.registry
+        if self._token_expire or props:
+            d['token_expire'] = self._token_expire
         d.update(super().serialize(props=props))
         if 'space' in d:
             del d['space']
@@ -2498,16 +2680,26 @@ class NWebSocket(WebSocket):
                     self.notifier.unsubscribe(topic)
                 return
             elif self.notifier:
-                if 'l' in data: log_level = int(data['l'])
-                else: log_level = 20
-                if 'i' in data: items = data['i']
-                else: items = s_all
-                if 'g' in data: groups = data['g']
-                else: groups = s_all
-                if 'tp' in data: item_types = data['tp']
-                else: item_types = s_all
-                if 'a' in data: action_status = data['a']
-                else: action_status = s_all
+                if 'l' in data:
+                    log_level = int(data['l'])
+                else:
+                    log_level = 20
+                if 'i' in data:
+                    items = data['i']
+                else:
+                    items = s_all
+                if 'g' in data:
+                    groups = data['g']
+                else:
+                    groups = s_all
+                if 'tp' in data:
+                    item_types = data['tp']
+                else:
+                    item_types = s_all
+                if 'a' in data:
+                    action_status = data['a']
+                else:
+                    action_status = s_all
                 self.notifier.subscribe(subject,
                                         items=items,
                                         groups=groups,
@@ -2541,7 +2733,8 @@ def remove_notifier(notifier_id):
 
 
 def load_notifier(notifier_id, fname=None, test=True, connect=True):
-    if not notifier_id and not fname: return None
+    if not notifier_id and not fname:
+        return None
     if not fname:
         notifier_fname = eva.core.format_cfg_fname('%s_notify.d/%s.json' % \
                 (eva.core.product.code, notifier_id), runtime = True)
@@ -2568,6 +2761,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         qos = ncfg.get('qos')
         keepalive = ncfg.get('keepalive')
         timeout = ncfg.get('timeout')
+        interval = ncfg.get('interval')
         collect_logs = ncfg.get('collect_logs', False)
         api_enabled = ncfg.get('api_enabled', False)
         discovery_enabled = ncfg.get('discovery_enabled', False)
@@ -2577,6 +2771,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                          host=host,
                          port=port,
                          space=space,
+                         interval=interval,
                          username=username,
                          password=password,
                          qos=qos,
@@ -2593,6 +2788,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
     elif ncfg['type'] == 'gcpiot':
         keepalive = ncfg.get('keepalive')
         timeout = ncfg.get('timeout')
+        interval = ncfg.get('interval')
         token_expire = ncfg.get('token_expire')
         ca_certs = ncfg.get('ca_certs')
         keyfile = ncfg.get('keyfile')
@@ -2604,6 +2800,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         n = GCP_IoT(_notifier_id,
                     keepalive=keepalive,
                     timeout=timeout,
+                    interval=interval,
                     apikey=apikey,
                     ca_certs=ca_certs,
                     keyfile=keyfile,
@@ -2616,13 +2813,19 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         db = ncfg.get('db')
         keep = ncfg.get('keep')
         space = ncfg.get('space')
-        n = SQLANotifier(_notifier_id, db_uri=db, keep=keep, space=space)
+        interval = ncfg.get('interval')
+        n = SQLANotifier(_notifier_id,
+                         db_uri=db,
+                         keep=keep,
+                         space=space,
+                         interval=interval)
     elif ncfg['type'] == 'http-json':
         space = ncfg.get('space')
         ssl_verify = ncfg.get('ssl_verify')
         uri = ncfg.get('uri')
         notify_key = ncfg.get('notify_key')
         timeout = ncfg.get('timeout')
+        interval = ncfg.get('interval')
         method = ncfg.get('method')
         username = ncfg.get('username')
         password = ncfg.get('password')
@@ -2634,6 +2837,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                               method=method,
                               notify_key=notify_key,
                               space=space,
+                              interval=interval,
                               timeout=timeout)
     elif ncfg['type'] == 'influxdb':
         space = ncfg.get('space')
@@ -2641,6 +2845,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
         ssl_verify = ncfg.get('ssl_verify')
         uri = ncfg.get('uri')
         timeout = ncfg.get('timeout')
+        interval = ncfg.get('interval')
         method = ncfg.get('method')
         username = ncfg.get('username')
         password = ncfg.get('password')
@@ -2652,6 +2857,7 @@ def load_notifier(notifier_id, fname=None, test=True, connect=True):
                               password=password,
                               method=method,
                               space=space,
+                              interval=interval,
                               timeout=timeout)
     elif ncfg['type'] == 'prometheus':
         space = ncfg.get('space')
@@ -2710,7 +2916,8 @@ def load(test=True, connect=False):
                                   fname=notifier_fname,
                                   test=test,
                                   connect=connect)
-                if not n: raise Exception('Notifier load error')
+                if not n:
+                    raise Exception('Notifier load error')
                 notifiers[n.notifier_id] = n
                 logging.debug('+ notifier %s' % n.notifier_id)
             except:
@@ -2730,7 +2937,8 @@ def load(test=True, connect=False):
 
 
 def serialize(notifier_id=None):
-    if notifier_id: return notifiers[notifier_id].serialize()
+    if notifier_id:
+        return notifiers[notifier_id].serialize()
     d = {}
     for i, n in notifiers.copy().items():
         d[i] = n.serialize()
@@ -2764,7 +2972,8 @@ def save(notifier_id=None):
                 logging.error('can not save notifier\'s config for %s' % i)
     else:
         for i, n in notifiers.copy().items():
-            if i and not n.nt_client: save(i)
+            if i and not n.nt_client:
+                save(i)
 
 
 def __push_notification(notifier, subject, data, retain):
@@ -2824,7 +3033,8 @@ def get_default_notifier():
 
 
 def get_stats_notifier(notifier_id):
-    if notifier_id is None: return get_notifier(default_stats_notifier_id)
+    if notifier_id is None:
+        return get_notifier(default_stats_notifier_id)
     n = get_notifier(notifier_id)
     return n if n and n.state_storage else None
 
@@ -2855,7 +3065,8 @@ def unsubscribe_group(group, subject='#', notifier_id=None):
 
 @eva.core.dump
 def dump(notifier_id=None):
-    if notifier_id: return notifiers[notifier_id].serialize()
+    if notifier_id:
+        return notifiers[notifier_id].serialize()
     return serialize()
 
 
@@ -2873,7 +3084,8 @@ def start():
             if t.is_alive():
                 can_break = False
                 break
-        if can_break: break
+        if can_break:
+            break
         time.sleep(eva.core.sleep_step)
     eva.core.register_corescript_topics()
 
@@ -2892,7 +3104,8 @@ def is_action_subscribed():
 def reload_clients():
     logging.warning('sending reload event to clients')
     for k, n in notifiers.copy().items():
-        if n.nt_client: n.send_reload()
+        if n.nt_client:
+            n.send_reload()
 
 
 @eva.core.shutdown
@@ -2900,7 +3113,8 @@ def notify_restart():
     logging.warning('sending server restart event')
     notify('server', 'restart')
     # make sure event is queued
-    if eva.core.is_shutdown_requested(): time.sleep(0.2)
+    if eva.core.is_shutdown_requested():
+        time.sleep(0.2)
 
 
 @eva.core.shutdown
@@ -2924,7 +3138,8 @@ def mark_leaving(n):
                    on_error=eva.core.log_traceback)
 async def notifier_client_cleaner(**kwargs):
     for k, n in notifiers.copy().items():
-        if n.nt_client: n.cleanup()
+        if n.nt_client:
+            n.cleanup()
 
 
 def init():

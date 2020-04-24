@@ -155,12 +155,14 @@ controller.
 
 Except for endpoint configuration, notifiers have some additional params:
 
-* **skip_test** if "true", the endpoint won't be tested at the controller start
-  (the controller keeps the notifier active but puts error into the log)
-* **notify_key** notification key for custom http endpoints
 * **collect_logs** this should be set to "true" for :doc:`/sfa/sfa`
   :ref:`MQTT<mqtt_>` notifiers if you want to collect the logs of other
   controllers and have the records available locally in SFA.
+* **interval** when set, notifier will send subscribed item states with the
+  specified interval
+* **notify_key** notification key for custom http endpoints
+* **skip_test** if "true", the endpoint won't be tested at the controller start
+  (the controller keeps the notifier active but puts error into the log)
 
 Subscribing the notifier to events
 ----------------------------------
@@ -489,6 +491,11 @@ Then you can downsample metrics of the required item, e.g. let's downsample
 After, you can tell :ref:`state_history <sfapi_state_history>` SFA API function
 to select metrics from *daily* retention policy, specifying additional
 parameter *o={ "rp": "daily" }*.
+
+.. note::
+
+    It's recommended to set notifier interval property, to properly handle
+    states for the rarely updated items.
 
 .. _prometheus_:
 
