@@ -71,12 +71,14 @@ def lock(l, timeout=None, expires=None):
         e = eva.core.config.timeout
     else:
         e = expires
-        if e > eva.core.config.timeout: e = eva.core.config.timeout
+        if e > eva.core.config.timeout:
+            e = eva.core.config.timeout
     if timeout is None:
         t = eva.core.config.timeout
     else:
         t = timeout
-        if t > eva.core.config.timeout: t = eva.core.config.timeout
+        if t > eva.core.config.timeout:
+            t = eva.core.config.timeout
     return eva.sysapi.api.lock(eva.apikey.get_masterkey(),
                                l='eva:phi:' + l,
                                t=t,
@@ -91,7 +93,8 @@ def unlock(l):
 
 @with_drivers_lock
 def handle_phi_event(phi, port=None, data=None):
-    if not data: return
+    if not data:
+        return
     iph = items_by_phi.get(phi.phi_id)
     if iph:
         for i in iph:
@@ -145,8 +148,10 @@ def lpi_constructor(f):
 
 def _gen_phi_map(phi_id, pmap, action_map=False):
     g = {}
-    if action_map: prop = 'action'
-    else: prop = 'update'
+    if action_map:
+        prop = 'action'
+    else:
+        prop = 'update'
     for i in pmap:
         if hasattr(i, prop + '_exec') and \
             hasattr(i, prop + '_driver_config') and \
@@ -178,7 +183,8 @@ def get_map(phi_id=None, action_map=False):
         result = {}
         ibp = items_by_phi.copy()
         if phi_id:
-            if not phi_id in ibp: return None
+            if not phi_id in ibp:
+                return None
             return _gen_phi_map(phi_id, ibp[phi_id], action_map)
         for k, v in ibp.items():
             result.update(_gen_phi_map(k, v, action_map))
@@ -190,7 +196,8 @@ def get_map(phi_id=None, action_map=False):
 
 @with_drivers_lock
 def unlink_phi_mod(mod):
-    if mod.find('/') != -1 or mod == 'generic_phi': return False
+    if mod.find('/') != -1 or mod == 'generic_phi':
+        return False
     for k, p in phis.copy().items():
         if p.phi_mod_id == mod:
             raise ResourceBusy('PHI module %s is in use, unable to unlink' %
@@ -207,7 +214,8 @@ def unlink_phi_mod(mod):
 
 
 def put_phi_mod(mod, content, force=False):
-    if mod.find('/') != -1: raise InvalidParameter('Invalid module file name')
+    if mod.find('/') != -1:
+        raise InvalidParameter('Invalid module file name')
     if mod == 'generic_phi':
         raise ResourceAlreadyExists('generic PHI can not be overriden')
     fname = '{}/drivers/phi/{}.py'.format(eva.core.dir_xc, mod)
@@ -418,7 +426,8 @@ def update_item(i, data):
 
 @with_drivers_lock
 def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
-    if not phi_id: raise InvalidParameter('PHI id not specified')
+    if not phi_id:
+        raise InvalidParameter('PHI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", phi_id):
         raise InvalidParameter('PHI %s id contains forbidden symbols' % phi_id)
     try:
@@ -478,7 +487,8 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
     if get_phi(phi_id) is None:
         raise ResourceNotFound(
             'Unable to load LPI, unknown PHI: {}'.format(phi_id))
-    if not lpi_id: raise InvalidParameter('LPI id not specified')
+    if not lpi_id:
+        raise InvalidParameter('LPI id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", lpi_id):
         raise InvalidParameter(
             'LPI {} id contains forbidden symbols'.format(lpi_id))
@@ -535,7 +545,8 @@ def set_phi_prop(phi_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
     phi = get_phi(phi_id)
-    if not phi: raise ResourceNotFound
+    if not phi:
+        raise ResourceNotFound
     cfg = phi.phi_cfg
     phi_mod_id = phi.phi_mod_id
     if p and not isinstance(v, dict):
@@ -549,7 +560,8 @@ def set_phi_prop(phi_id, p, v):
                     del cfg[prop]
                 except:
                     pass
-    if v is None: del cfg[p]
+    if v is None:
+        del cfg[p]
     phi = load_phi(phi_id, phi_mod_id, cfg, start=True)
     if phi:
         phis[phi_id] = phi
@@ -559,7 +571,8 @@ def set_phi_prop(phi_id, p, v):
 @with_drivers_lock
 def unload_phi(phi_id):
     phi = get_phi(phi_id)
-    if phi is None: raise ResourceNotFound
+    if phi is None:
+        raise ResourceNotFound
     for k, l in drivers.copy().items():
         if l.phi_id == phi_id:
             if l.lpi_id == 'default':
@@ -583,7 +596,8 @@ def set_driver_prop(driver_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
     lpi = get_driver(driver_id)
-    if not lpi: raise ResourceNotFound
+    if not lpi:
+        raise ResourceNotFound
     cfg = lpi.lpi_cfg
     if p and not isinstance(v, dict):
         cfg[p] = v
@@ -596,7 +610,8 @@ def set_driver_prop(driver_id, p, v):
                     del cfg[prop]
                 except:
                     pass
-    if v is None: del cfg[p]
+    if v is None:
+        del cfg[p]
     lpi = load_driver(lpi.lpi_id, lpi.lpi_mod_id, lpi.phi_id, cfg, start=True)
     if lpi:
         drivers[driver_id] = lpi
@@ -606,7 +621,8 @@ def set_driver_prop(driver_id, p, v):
 @with_drivers_lock
 def unload_driver(driver_id):
     lpi = get_driver(driver_id)
-    if lpi is None: raise ResourceNotFound
+    if lpi is None:
+        raise ResourceNotFound
     err = None
     for i in items_by_phi[lpi.phi_id]:
         if i.update_exec and i.update_exec[1:] == driver_id:
