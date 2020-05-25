@@ -166,7 +166,8 @@ def list_mods():
 
 @with_exts_lock
 def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
-    if not ext_id: raise InvalidParameter('ext id not specified')
+    if not ext_id:
+        raise InvalidParameter('ext id not specified')
     if not re.match("^[A-Za-z0-9_-]*$", ext_id):
         raise InvalidParameter('ext %s id contains forbidden symbols' % ext_id)
     try:
@@ -198,15 +199,18 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
         exts[ext_id].stop()
     exts[ext_id] = ext
     ext.load()
-    if start: ext.start()
-    if rebuild: rebuild_env()
+    if start:
+        ext.start()
+    if rebuild:
+        rebuild_env()
     return ext
 
 
 @with_exts_lock
 def unload_ext(ext_id, remove_data=False):
     ext = get_ext(ext_id)
-    if ext is None: raise ResourceNotFound
+    if ext is None:
+        raise ResourceNotFound
     try:
         ext.stop()
         del exts[ext_id]
@@ -239,14 +243,16 @@ def set_ext_prop(ext_id, p, v):
     if not p and not isinstance(v, dict):
         raise InvalidParameter('property not specified')
     ext = get_ext(ext_id)
-    if not ext: raise ResourceNotFound
+    if not ext:
+        raise ResourceNotFound
     cfg = ext.cfg
     mod_id = ext.mod_id
     if p and not isinstance(v, dict):
         cfg[p] = v
     else:
         cfg.update(v)
-    if v is None: del cfg[p]
+    if v is None:
+        del cfg[p]
     ext = load_ext(ext_id, mod_id, cfg)
     if ext:
         exts[ext_id] = ext

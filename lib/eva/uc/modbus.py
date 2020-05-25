@@ -148,7 +148,8 @@ def get_port(port_id, timeout=None):
             'unable to acquire modbus port {}, '.format(port_id) + \
                 'commands execution time may exceed the limit')
         return None
-    if not port: return None
+    if not port:
+        return None
     result = port.acquire()
     return port if result else result
 
@@ -426,7 +427,8 @@ class ModbusPort(object):
         except:
             self.timeout = eva.core.config.timeout - 1
             self._timeout = None
-            if self.timeout < 1: self.timeout = 1
+            if self.timeout < 1:
+                self.timeout = 1
         try:
             self.delay = float(kwargs.get('delay'))
         except:
@@ -436,7 +438,8 @@ class ModbusPort(object):
         except:
             self.retries = 0
         self.tries = self.retries + 1
-        if self.tries < 0: self.tries = 1
+        if self.tries < 0:
+            self.tries = 1
         self.params = params
         self.client = None
         self.client_type = None
@@ -485,7 +488,8 @@ class ModbusPort(object):
                 self.client_type = p[0]
 
     def acquire(self):
-        if not self.client: return False
+        if not self.client:
+            return False
         if self.lock and not self.locker.acquire(
                 timeout=eva.core.config.timeout):
             return 0
@@ -493,53 +497,61 @@ class ModbusPort(object):
         if self.client.is_socket_open():
             return True
         else:
-            if self.lock: self.locker.release()
+            if self.lock:
+                self.locker.release()
             return False
 
     def release(self):
-        if self.lock: self.locker.release()
+        if self.lock:
+            self.locker.release()
         return True
 
     def read_coils(self, address, count=1, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.read_coils(address, count, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def read_discrete_inputs(self, address, count=1, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.read_discrete_inputs(address, count, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def write_coil(self, address, value, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.write_coil(address, value, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def write_coils(self, address, values, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.write_coils(address, values, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def write_register(self, address, value, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.write_register(address, value, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def write_registers(self, address, values, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.write_registers(address, values, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def read_holding_registers(self, address, count=1, **kwargs):
@@ -547,28 +559,32 @@ class ModbusPort(object):
             self.sleep()
             result = self.client.read_holding_registers(address, count,
                                                         **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def read_input_registers(self, address, count=1, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.read_input_registers(address, count, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def readwrite_registers(self, *args, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.readwrite_registers(*args, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def mask_write_register(self, *args, **kwargs):
         for i in range(self.tries):
             self.sleep()
             result = self.client.mask_write_register(*args, **kwargs)
-            if not result.isError(): break
+            if not result.isError():
+                break
         return result
 
     def sleep(self):
@@ -590,7 +606,8 @@ class ModbusPort(object):
 
     def stop(self):
         try:
-            if self.client: self.client.close()
+            if self.client:
+                self.client.close()
         except:
             eva.core.log_traceback()
 
@@ -600,7 +617,8 @@ def append_ip_slave(c, proto):
         a, h = c.split(',')
         host, port = parse_host_port(h, 502)
         a = safe_int(a)
-        if not host: raise Exception
+        if not host:
+            raise Exception
         config.slave[proto].append({'a': a, 'h': host, 'p': port})
         logging.debug('modbus.slave.{} = {}.{}:{}'.format(
             proto, hex(a), host, port))

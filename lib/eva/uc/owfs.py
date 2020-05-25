@@ -52,7 +52,8 @@ def get_bus(bus_id, timeout=None):
             'unable to acquire owfs bus {}, '.format(bus_id) + \
                 'commands execution time may exceed the limit')
         return None
-    if not bus: return None
+    if not bus:
+        return None
     result = bus.acquire()
     return bus if result else result
 
@@ -176,7 +177,8 @@ class OWFSBus(object):
         except:
             self.timeout = eva.core.config.timeout - 1
             self._timeout = None
-            if self.timeout < 1: self.timeout = 1
+            if self.timeout < 1:
+                self.timeout = 1
         try:
             self.delay = float(kwargs.get('delay'))
         except:
@@ -186,7 +188,8 @@ class OWFSBus(object):
         except:
             self.retries = 0
         self.tries = self.retries + 1
-        if self.tries < 0: self.tries = 1
+        if self.tries < 0:
+            self.tries = 1
         self.location = location
         self.locker = threading.Lock()
         self.last_action = 0
@@ -200,13 +203,15 @@ class OWFSBus(object):
                                    location)
 
     def acquire(self):
-        if not self._ow or not self._ow.initialized: return False
+        if not self._ow or not self._ow.initialized:
+            return False
         return 0 if self.lock and \
                 not self.locker.acquire(
                         timeout=eva.core.config.timeout) else True
 
     def release(self):
-        if self.lock: self.locker.release()
+        if self.lock:
+            self.locker.release()
         return True
 
     def read(self, path, attr):
@@ -214,7 +219,8 @@ class OWFSBus(object):
             self.sleep()
             try:
                 result = self._ow.get(path + '/' + attr)
-                if result is not None: return result
+                if result is not None:
+                    return result
             except:
                 pass
         return None
@@ -225,7 +231,8 @@ class OWFSBus(object):
             try:
                 val = str(value)
                 result = self._ow.set(path + '/' + attr, val)
-                if result == len(val): return True
+                if result == len(val):
+                    return True
             except:
                 pass
         return False
@@ -249,6 +256,7 @@ class OWFSBus(object):
 
     def stop(self):
         try:
-            if self._ow: self._ow.finish()
+            if self._ow:
+                self._ow.finish()
         except:
             eva.core.log_traceback()
