@@ -18,9 +18,13 @@ from eva.exceptions import FunctionFailed
 from eva.exceptions import InvalidParameter
 from eva.exceptions import ResourceNotFound
 
+from types import SimpleNamespace
+
 with_ports_lock = eva.core.RLocker('uc/owfs')
 
 owbus = {}
+
+_d = SimpleNamespace(modified=False)
 
 # public functions
 
@@ -106,6 +110,7 @@ def create_owfs_bus(bus_id, location, **kwargs):
         if bus_id in owbus:
             owbus[bus_id].stop()
         owbus[bus_id] = bus
+        set_modified()
         logging.info('owfs bus {} : {}'.format(bus_id, location))
         return True
 
@@ -116,6 +121,7 @@ def destroy_owfs_bus(bus_id):
         owbus[bus_id].stop()
         try:
             del owbus[bus_id]
+            set_modified()
         except:
             pass
         return True
@@ -135,6 +141,7 @@ def load():
                 create_owfs_bus(p['id'], p['location'], **d)
             except Exception as e:
                 logging.error(e)
+        _d.modified = False
     except:
         logging.error('unable to load uc_owfs.json')
         eva.core.log_traceback()
@@ -147,6 +154,7 @@ def save():
     try:
         with open(eva.core.dir_runtime + '/uc_owfs.json', 'w') as fd:
             fd.write(format_json(serialize(config=True)))
+        _d.modified = False
     except:
         logging.error('unable to save owfs bus config')
         eva.core.log_traceback()
@@ -161,7 +169,7 @@ def start():
 def stop():
     for k, p in owbus.copy().items():
         p.stop()
-    if eva.core.config.db_update != 0:
+    if eva.core.config.db_update != 0 and _d.modified:
         save()
 
 
@@ -260,3 +268,7 @@ class OWFSBus(object):
                 self._ow.finish()
         except:
             eva.core.log_traceback()
+
+
+def set_modified():
+    _d.modified = True

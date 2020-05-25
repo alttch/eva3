@@ -21,6 +21,7 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceBusy
 from eva.exceptions import ResourceAlreadyExists
+from types import SimpleNamespace
 
 exts = {}
 env = {}
@@ -28,6 +29,8 @@ env = {}
 iec_functions = {}
 
 with_exts_lock = eva.core.RLocker('lm/extapi')
+
+_d = SimpleNamespace(modified=False)
 
 # extension functions
 
@@ -198,6 +201,7 @@ def load_ext(ext_id, ext_mod_id, cfg=None, start=True, rebuild=True):
     if ext_id in exts:
         exts[ext_id].stop()
     exts[ext_id] = ext
+    set_modified()
     ext.load()
     if start:
         ext.start()
@@ -214,6 +218,7 @@ def unload_ext(ext_id, remove_data=False):
     try:
         ext.stop()
         del exts[ext_id]
+        set_modified()
         rebuild_env()
         if remove_data:
             datapath = f'{eva.core.dir_runtime}/lm_ext_data.d/{ext_id}.json'
@@ -255,7 +260,6 @@ def set_ext_prop(ext_id, p, v):
         del cfg[p]
     ext = load_ext(ext_id, mod_id, cfg)
     if ext:
-        exts[ext_id] = ext
         return True
 
 
@@ -278,6 +282,7 @@ def load():
             except Exception as e:
                 logging.error(e)
                 eva.core.log_traceback()
+        _d.modified = False
         rebuild_env()
         return True
     except Exception as e:
@@ -292,6 +297,7 @@ def save():
     try:
         with open(eva.core.dir_runtime + '/lm_extensions.json', 'w') as fd:
             fd.write(format_json(serialize(config=True), minimal=False))
+        _d.modified = False
         for k, p in exts.items():
             try:
                 p.save()
@@ -324,5 +330,9 @@ def stop():
         except Exception as e:
             logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()
-    if eva.core.config.db_update != 0:
+    if eva.core.config.db_update != 0 and _d.modified:
         save()
+
+
+def set_modified():
+    _d.modified = True
