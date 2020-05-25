@@ -35,6 +35,8 @@ slave_registers = {}
 
 ports = {}
 
+_d = SimpleNamespace(modified=False)
+
 # public functions
 
 
@@ -202,6 +204,7 @@ def create_modbus_port(port_id, params, **kwargs):
         if port_id in ports:
             ports[port_id].stop()
         ports[port_id] = p
+        set_modified()
         logging.info('created modbus port {} : {}'.format(port_id, params))
         return True
 
@@ -212,6 +215,7 @@ def destroy_modbus_port(port_id):
         ports[port_id].stop()
         try:
             del ports[port_id]
+            set_modified()
         except:
             pass
         return True
@@ -231,6 +235,7 @@ def load():
                 create_modbus_port(p['id'], p['params'], **d)
             except Exception as e:
                 logging.error(e)
+        _d.modified = False
     except:
         logging.error('unable to load uc_modbus.json')
         eva.core.log_traceback()
@@ -243,6 +248,7 @@ def save():
     try:
         with open(eva.core.dir_runtime + '/uc_modbus.json', 'w') as fd:
             fd.write(format_json(serialize(config=True)))
+        _d.modified = False
     except:
         logging.error('unable to save modbus ports config')
         eva.core.log_traceback()
@@ -411,7 +417,7 @@ def start():
 def stop():
     for k, p in ports.copy().items():
         p.stop()
-    if eva.core.config.db_update != 0:
+    if eva.core.config.db_update != 0 and _d.modified:
         save()
 
 
@@ -665,3 +671,7 @@ def update_config(cfg):
                 append_serial_slave(cfg.get('modbus', c))
     except:
         pass
+
+
+def set_modified():
+    _d.modified = True

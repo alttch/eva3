@@ -23,6 +23,7 @@ from eva.exceptions import ResourceAlreadyExists
 from eva.exceptions import MethodNotImplemented
 
 from functools import wraps
+from types import SimpleNamespace
 
 phis = {}
 drivers = {}
@@ -32,6 +33,8 @@ shared_namespaces = {}
 
 with_drivers_lock = eva.core.RLocker('uc/driverapi')
 with_shared_namespaces_lock = eva.core.RLocker('uc/driverapi/shared_namespaces')
+
+_d = SimpleNamespace(modified=False)
 
 # public API functions, may be imported into PHI and LPI
 
@@ -469,6 +472,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
         except:
             eva.core.log_traceback()
     phis[phi_id] = phi
+    set_modified()
     if not phi_id in items_by_phi:
         items_by_phi[phi_id] = set()
     if start:
@@ -532,6 +536,7 @@ def load_driver(lpi_id, lpi_mod_id, phi_id, lpi_cfg=None, start=True):
         except:
             eva.core.log_traceback()
     drivers[lpi.driver_id] = lpi
+    set_modified()
     if start:
         try:
             lpi._start()
@@ -564,7 +569,6 @@ def set_phi_prop(phi_id, p, v):
         del cfg[p]
     phi = load_phi(phi_id, phi_mod_id, cfg, start=True)
     if phi:
-        phis[phi_id] = phi
         return True
 
 
@@ -588,6 +592,7 @@ def unload_phi(phi_id):
     except:
         eva.core.log_traceback()
     del phis[phi_id]
+    set_modified()
     return True
 
 
@@ -614,7 +619,6 @@ def set_driver_prop(driver_id, p, v):
         del cfg[p]
     lpi = load_driver(lpi.lpi_id, lpi.lpi_mod_id, lpi.phi_id, cfg, start=True)
     if lpi:
-        drivers[driver_id] = lpi
         return True
 
 
@@ -637,6 +641,7 @@ def unload_driver(driver_id):
     except:
         eva.core.log_traceback()
     del drivers[lpi.driver_id]
+    set_modified()
     return True
 
 
@@ -703,6 +708,7 @@ def load():
                 except Exception as e:
                     logging.error(e)
                     eva.core.log_traceback()
+        _d.modified = False
         return True
     except Exception as e:
         logging.error('unable to load uc_drivers.json: {}'.format(e))
@@ -715,6 +721,7 @@ def save():
     try:
         with open(eva.core.dir_runtime + '/uc_drivers.json', 'w') as fd:
             fd.write(format_json(serialize(config=True), minimal=False))
+        _d.modified = False
         return True
     except Exception as e:
         logging.error('unable to save drivers config: {}'.format(e))
@@ -751,7 +758,7 @@ def stop():
         except Exception as e:
             logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()
-    if eva.core.config.db_update != 0:
+    if eva.core.config.db_update != 0 and _d.modified:
         save()
 
 
@@ -783,3 +790,7 @@ def get_shared_namespace(namespace_id):
     if namespace_id not in shared_namespaces:
         shared_namespaces[namespace_id] = NS()
     return shared_namespaces[namespace_id]
+
+
+def set_modified():
+    _d.modified = True
