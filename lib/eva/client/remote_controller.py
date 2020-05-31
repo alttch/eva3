@@ -33,6 +33,9 @@ ws_ping_message = eva.client.apiclient.pack_msgpack({'s': 'ping'})
 
 class WebSocketPingerWorker(BackgroundIntervalWorker):
 
+    def __init__(self, **kwargs):
+        super().__init__(on_error=eva.core.log_traceback, **kwargs)
+
     def run(*args, **kwargs):
         controller = kwargs.get('controller')
         try:
