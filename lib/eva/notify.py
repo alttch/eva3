@@ -470,9 +470,9 @@ class GenericNotifier(object):
 
     def stop(self):
         if not self.test_only_mode:
-            self.notifier_worker.stop()
+            self.notifier_worker.stop(wait=False)
             if self.interval:
-                self.scheduled_notify_worker.stop()
+                self.scheduled_notify_worker.stop(wait=False)
         self.disconnect()
 
     def notify(self, subject, data, unpicklable=False, retain=False):
