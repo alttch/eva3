@@ -645,6 +645,7 @@ def unload_driver(driver_id):
     return True
 
 
+@with_drivers_lock
 def serialize(full=False, config=False):
     return {
         'phi': serialize_phi(full=full, config=config),
@@ -718,15 +719,16 @@ def load():
 
 @eva.core.save
 def save():
-    try:
-        with open(eva.core.dir_runtime + '/uc_drivers.json', 'w') as fd:
-            fd.write(format_json(serialize(config=True), minimal=False))
-        _d.modified = False
-        return True
-    except Exception as e:
-        logging.error('unable to save drivers config: {}'.format(e))
-        eva.core.log_traceback()
-        return False
+    if _d.modified:
+        try:
+            with open(eva.core.dir_runtime + '/uc_drivers.json', 'w') as fd:
+                fd.write(format_json(serialize(config=True), minimal=False))
+            _d.modified = False
+            return True
+        except Exception as e:
+            logging.error('unable to save drivers config: {}'.format(e))
+            eva.core.log_traceback()
+            return False
 
 
 def start():
@@ -758,7 +760,7 @@ def stop():
         except Exception as e:
             logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()
-    if eva.core.config.db_update != 0 and _d.modified:
+    if eva.core.config.db_update != 0:
         save()
 
 

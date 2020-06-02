@@ -294,20 +294,21 @@ def load():
 @eva.core.save
 @with_exts_lock
 def save():
-    try:
-        with open(eva.core.dir_runtime + '/lm_extensions.json', 'w') as fd:
-            fd.write(format_json(serialize(config=True), minimal=False))
-        _d.modified = False
-        for k, p in exts.items():
-            try:
-                p.save()
-            except:
-                logging.error(f'unable to save ext data for {p.ext_id}')
-                log_traceback()
-        return True
-    except Exception as e:
-        logging.error('unable to save ext config: {}'.format(e))
-        eva.core.log_traceback()
+    if _d.modified:
+        try:
+            with open(eva.core.dir_runtime + '/lm_extensions.json', 'w') as fd:
+                fd.write(format_json(serialize(config=True), minimal=False))
+            _d.modified = False
+            for k, p in exts.items():
+                try:
+                    p.save()
+                except:
+                    logging.error(f'unable to save ext data for {p.ext_id}')
+                    log_traceback()
+            return True
+        except Exception as e:
+            logging.error('unable to save ext config: {}'.format(e))
+            eva.core.log_traceback()
         return False
 
 
@@ -330,7 +331,7 @@ def stop():
         except Exception as e:
             logging.error('unable to stop {}: {}'.format(k, e))
             eva.core.log_traceback()
-    if eva.core.config.db_update != 0 and _d.modified:
+    if eva.core.config.db_update != 0:
         save()
 
 
