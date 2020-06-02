@@ -286,7 +286,7 @@ def load():
         rebuild_env()
         return True
     except Exception as e:
-        logging.error('unable to load uc_drivers.json: {}'.format(e))
+        logging.error('unable to load lm_extensions.json: {}'.format(e))
         eva.core.log_traceback()
         return False
 
