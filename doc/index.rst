@@ -80,6 +80,7 @@ What you get with EVA
     corescript
     cli
     tutorial/tutorial
+    iac
     faq
     highload
 
