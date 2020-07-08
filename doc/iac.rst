@@ -14,8 +14,8 @@ Deployment is possible only on :doc:`SFA</sfa/sfa>` servers.
 .. note::
 
     To allow deployment, SFA must have child controllers connected in
-    management mode (controller master key should be set). Also, cloud manager
-    feature should be enabled in SFA configuration file.
+    management mode (connected controllers master keys should be set). Also,
+    cloud manager feature should be enabled in SFA configuration file.
 
 .. contents::
 
