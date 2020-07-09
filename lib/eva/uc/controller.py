@@ -739,16 +739,17 @@ def serialize_actions():
 def start():
     eva.uc.owfs.start()
     eva.uc.modbus.start()
-    eva.uc.driverapi.start()
     Q.start()
     logging.info('UC action queue started')
     for i, v in items_by_full_id.items():
         v.start_processors()
+    eva.uc.driverapi.start()
 
 
 @with_item_lock
 @eva.core.stop
 def stop():
+    eva.uc.driverapi.stop()
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.config.db_update == 1:
         save()
@@ -756,7 +757,6 @@ def stop():
         v.stop_processors()
     if Q:
         Q.stop()
-    eva.uc.driverapi.stop()
     eva.uc.modbus.stop()
     eva.uc.owfs.stop()
 
