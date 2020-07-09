@@ -478,6 +478,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     if start:
         try:
             phi._start()
+            phi._start_processors()
         except:
             eva.core.log_traceback()
     ld = phi.get_default_lpi()
@@ -743,6 +744,15 @@ def start():
             p._start()
         except Exception as e:
             logging.error('unable to start {}: {}'.format(k, e))
+            eva.core.log_traceback()
+
+
+def start_processors():
+    for k, p in phis.items():
+        try:
+            p._start_processors()
+        except Exception as e:
+            logging.error('unable to start processors {}: {}'.format(k, e))
             eva.core.log_traceback()
 
 
