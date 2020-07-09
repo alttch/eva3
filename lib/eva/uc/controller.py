@@ -737,8 +737,8 @@ def serialize_actions():
 
 @with_item_lock
 def start():
-    eva.uc.owfs.start()
     eva.uc.modbus.start()
+    eva.uc.owfs.start()
     eva.uc.driverapi.start()
     Q.start()
     logging.info('UC action queue started')
@@ -750,7 +750,7 @@ def start():
 @with_item_lock
 @eva.core.stop
 def stop():
-    eva.uc.driverapi.stop()
+    eva.uc.driverapi.stop_processors()
     # save modified items on exit, for db_update = 2 save() is called by core
     if eva.core.config.db_update == 1:
         save()
@@ -758,8 +758,9 @@ def stop():
         v.stop_processors()
     if Q:
         Q.stop()
-    eva.uc.modbus.stop()
+    eva.uc.driverapi.stop()
     eva.uc.owfs.stop()
+    eva.uc.modbus.stop()
 
 
 def exec_mqtt_unit_action(unit, msg):

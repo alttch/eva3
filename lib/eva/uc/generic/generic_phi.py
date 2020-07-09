@@ -334,7 +334,6 @@ class PHI(object):
         self._update_processor.stop()
 
     def _stop(self):
-        self._stop_processors()
         return self.stop()
 
     async def _job_update_scheduler(self):
