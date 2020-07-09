@@ -316,6 +316,9 @@ class PHI(object):
         return result
 
     def _start(self):
+        return self.start()
+
+    def _start_processors(self):
         if self._update_interval and 'aao_get' in self.__features:
             self._update_processor.set_name('phi_update_processor:{}'.format(
                 self.oid))
@@ -323,13 +326,15 @@ class PHI(object):
             self._update_scheduler = task_supervisor.create_async_job(
                 target=self._job_update_scheduler,
                 interval=self._update_interval)
-        return self.start()
 
-    def _stop(self):
+    def _stop_processors(self):
         if self._update_scheduler:
             self._update_scheduler.cancel()
             self._update_scheduler = None
         self._update_processor.stop()
+
+    def _stop(self):
+        self._stop_processors()
         return self.stop()
 
     async def _job_update_scheduler(self):
