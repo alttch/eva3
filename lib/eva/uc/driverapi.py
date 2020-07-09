@@ -755,6 +755,13 @@ def start_processors():
             logging.error('unable to start processors {}: {}'.format(k, e))
             eva.core.log_traceback()
 
+def stop_processors():
+    for k, p in phis.items():
+        try:
+            p._stop_processors()
+        except Exception as e:
+            logging.error('unable to stop processors {}: {}'.format(k, e))
+            eva.core.log_traceback()
 
 @with_drivers_lock
 def stop():
