@@ -468,6 +468,7 @@ def load_phi(phi_id, phi_mod_id, phi_cfg=None, start=True):
     phi.oid = 'phi:uc/%s/%s' % (eva.core.config.system_name, phi_id)
     if phi_id in phis:
         try:
+            phis[phi_id]._stop_processors()
             phis[phi_id]._stop()
         except:
             eva.core.log_traceback()
@@ -585,6 +586,7 @@ def unload_phi(phi_id):
     if items_by_phi[phi_id]:
         raise ResourceBusy('Unable to unload PHI %s, it is in use' % (phi_id))
     try:
+        phi._stop_processors()
         phi._stop()
     except:
         eva.core.log_traceback()
