@@ -146,14 +146,16 @@ corescript_globals = {
 
 
 def critical(log=True, from_driver=False):
-    if _flags.ignore_critical: return
+    if _flags.ignore_critical:
+        return
     try:
         caller = inspect.getouterframes(inspect.currentframe(), 2)[1]
         caller_info = '%s:%s %s' % (caller.filename, caller.lineno,
                                     caller.function)
     except:
         caller_info = ''
-    if log: log_traceback(force=True)
+    if log:
+        log_traceback(force=True)
     if config.dump_on_critical:
         _flags.ignore_critical = True
         logging.critical('critical exception. dump file: %s' %
@@ -199,7 +201,8 @@ stop = FunctionCollection(on_error=log_traceback)
 
 
 def format_db_uri(db_uri):
-    if not db_uri: return None
+    if not db_uri:
+        return None
     _db_uri = db_uri
     if _db_uri.startswith('sqlite:///'):
         _db_uri = _db_uri[10:]
@@ -215,7 +218,8 @@ def format_db_uri(db_uri):
 
 
 def create_db_engine(db_uri, timeout=None):
-    if not db_uri: return None
+    if not db_uri:
+        return None
     if db_uri.startswith('sqlite:///'):
         return sa.create_engine(
             db_uri,
@@ -240,7 +244,8 @@ def suicide(**kwargs):
 
 
 def sighandler_term(signum=None, frame=None):
-    if _flags.sigterm_sent: return
+    if _flags.sigterm_sent:
+        return
     _flags.sigterm_sent = True
     threading.Thread(target=suicide, daemon=True).start()
     logging.info('got TERM signal, exiting')
@@ -259,7 +264,8 @@ def sighandler_int(signum, frame):
 
 
 def prepare_save():
-    if not config.exec_before_save: return True
+    if not config.exec_before_save:
+        return True
     logging.debug('executing before save command "%s"' % \
         config.exec_before_save)
     code = os.system(config.exec_before_save)
@@ -271,7 +277,8 @@ def prepare_save():
 
 
 def finish_save():
-    if not config.exec_after_save: return True
+    if not config.exec_after_save:
+        return True
     logging.debug('executing after save command "%s"' % \
         config.exec_after_save)
     code = os.system(config.exec_after_save)
@@ -461,7 +468,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             except:
                 pass
             try:
-                if not check_pid: raise Exception('no check required')
+                if not check_pid:
+                    raise Exception('no check required')
                 with open(config.pid_file) as fd:
                     pid = int(fd.readline().strip())
                 p = psutil.Process(pid)
@@ -498,7 +506,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                                                        log_level.upper())
             except:
                 pass
-            if init_log: init_logs()
+            if init_log:
+                init_logs()
             try:
                 config.development = (cfg.get('server', 'development') == 'yes')
             except:
@@ -520,9 +529,11 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                     if os.environ.get('EVA_CORE_DEBUG'):
                         config.debug = True
                         config.show_traceback = True
+                        pyaltt2.logs.config.tracebacks = True,
                     else:
                         config.debug = (cfg.get('server', 'debug') == 'yes')
-                    if config.debug: debug_on()
+                    if config.debug:
+                        debug_on()
                 except:
                     pass
                 if not config.debug:
@@ -572,7 +583,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             try:
                 db_uri = cfg.get('server', 'db')
             except:
-                if db_file: db_uri = db_file
+                if db_file:
+                    db_uri = db_file
             config.db_uri = format_db_uri(db_uri)
             logging.debug('server.db = %s' % config.db_uri)
             try:
@@ -584,8 +596,10 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             try:
                 userdb_uri = cfg.get('server', 'userdb')
             except:
-                if userdb_file: userdb_uri = userdb_file
-                else: userdb_uri = None
+                if userdb_file:
+                    userdb_uri = userdb_file
+                else:
+                    userdb_uri = None
             if userdb_uri:
                 config.userdb_uri = format_db_uri(userdb_uri)
             else:
@@ -615,7 +629,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
             config.timeout = float(cfg.get('server', 'timeout'))
         except:
             pass
-        if not config.polldelay: config.polldelay = 0.01
+        if not config.polldelay:
+            config.polldelay = 0.01
         logging.debug('server.timeout = %s' % config.timeout)
         logging.debug('server.polldelay = %s  ( %s msec )' % \
                             (config.polldelay, int(config.polldelay * 1000)))
@@ -705,7 +720,8 @@ def load_cvars(fname=None):
     cvars.clear()
     env.clear()
     env.update(os.environ.copy())
-    if not 'PATH' in env: env['PATH'] = ''
+    if not 'PATH' in env:
+        env['PATH'] = ''
     env['PATH'] = '%s/bin:%s/xbin:' % (dir_eva, dir_eva) + env['PATH']
     logging.info('Loading custom vars from %s' % fname_full)
     try:
@@ -781,7 +797,8 @@ def get_cvar(var=None):
 
 @cvars_lock
 def set_cvar(var, value=None):
-    if not var: return False
+    if not var:
+        return False
     if value is not None:
         cvars[str(var)] = str(value)
     elif var not in cvars:
@@ -791,8 +808,10 @@ def set_cvar(var, value=None):
             del cvars[str(var)]
         except:
             return False
-    if config.db_update == 1: save_cvars()
-    else: _flags.cvars_modified = True
+    if config.db_update == 1:
+        save_cvars()
+    else:
+        _flags.cvars_modified = True
     return True
 
 
@@ -854,10 +873,14 @@ def unlink_pid_file():
 
 
 def wait_for(func, wait_timeout=None, delay=None, wait_for_false=False):
-    if wait_timeout: t = wait_timeout
-    else: t = config.timeout
-    if delay: p = delay
-    else: p = config.polldelay
+    if wait_timeout:
+        t = wait_timeout
+    else:
+        t = config.timeout
+    if delay:
+        p = delay
+    else:
+        p = config.polldelay
     return _wait_for(func, t, p, wait_for_false, is_shutdown_requested)
 
 
@@ -871,21 +894,29 @@ def format_xc_fname(item=None,
         path += '/' + subdir
     if fname:
         return fname if fname[0] == '/' else path + '/' + fname
-    if not item: return None
+    if not item:
+        return None
     fname = item.item_id
-    if update: fname += '_update'
-    if xc_type: fname += '.' + xc_type
+    if update:
+        fname += '_update'
+    if xc_type:
+        fname += '.' + xc_type
     return path + '/' + fname
 
 
 def format_cfg_fname(fname, cfg=None, ext='ini', path=None, runtime=False):
-    if path: _path = path
+    if path:
+        _path = path
     else:
-        if runtime: _path = dir_runtime
-        else: _path = dir_etc
+        if runtime:
+            _path = dir_runtime
+        else:
+            _path = dir_etc
     if not fname:
-        if cfg: sfx = '_' + cfg
-        else: sfx = ''
+        if cfg:
+            sfx = '_' + cfg
+        else:
+            sfx = ''
         if product.code:
             return '%s/%s%s.%s' % (_path, product.code, sfx, ext)
         else:
@@ -987,7 +1018,8 @@ def register_corescript_topics():
 @corescript_lock
 def corescript_mqtt_subscribe(topic, qos=None):
     import eva.notify
-    if qos is None: qos = 1
+    if qos is None:
+        qos = 1
     for t in cs_data.topics:
         if topic == t['topic']:
             logging.error(f'Core script mqtt topic already subscribed: {topic}')
