@@ -1588,7 +1588,6 @@ Deploys the :ref:`device<device>` from the specified template.
 Parameters:
 
 * **API Key** API key with *allow=device* permissions
-* **t** device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without extension)
 
 Optionally:
 
