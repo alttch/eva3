@@ -901,22 +901,26 @@ class SQLANotifier(GenericNotifier):
             self.connected = False
 
     def send_notification(self, subject, data, retain=None, unpicklable=False):
-        if subject == 'state':
-            t = time.time()
-            for d in data:
-                v = d['value'] if 'value' in d and \
-                        d['value'] != '' else None
-                space = self.space if self.space is not None else ''
-                dbconn = self.db()
-                dbconn.execute(
-                    sql('insert into state_history (space, t, oid, status, ' +
+        dbconn = self.db()
+        dbt = dbconn.begin()
+        try:
+            if subject == 'state':
+                t = time.time()
+                for d in data:
+                    v = d['value'] if 'value' in d and \
+                            d['value'] != '' else None
+                    space = self.space if self.space is not None else ''
+                    dbconn.execute(sql(
+                        'insert into state_history (space, t, oid, status, ' +
                         'value) values (:space, :t, :oid, :status, :value)'),
-                    space=space,
-                    t=t,
-                    oid=d['oid'],
-                    status=d['status'],
-                    value=v)
-        return True
+                                   space=space,
+                                   t=t,
+                                   oid=d['oid'],
+                                   status=d['status'],
+                                   value=v)
+            return True
+        finally:
+            dbt.commit()
 
     def set_prop(self, prop, value):
         if prop == 'db':
