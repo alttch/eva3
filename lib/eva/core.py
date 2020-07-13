@@ -529,7 +529,6 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                     if os.environ.get('EVA_CORE_DEBUG'):
                         config.debug = True
                         config.show_traceback = True
-                        pyaltt2.logs.config.tracebacks = True,
                     else:
                         config.debug = (cfg.get('server', 'debug') == 'yes')
                     if config.debug:
@@ -540,6 +539,8 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
                     logging.basicConfig(level=config.default_log_level)
                     if log_engine.logger:
                         log_engine.logger.setLevel(config.default_log_level)
+            if config.show_traceback:
+                pyaltt2.logs.config.tracebacks = True
             try:
                 config.system_name = cfg.get('server', 'name')
                 update_controller_name()
