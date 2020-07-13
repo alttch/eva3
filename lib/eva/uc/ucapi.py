@@ -889,7 +889,7 @@ class UC_API(GenericAPI):
 
         Args:
             k: .allow=device
-            t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
+            .t: device template (*runtime/tpl/<TEMPLATE>.yml|yaml|json*, without
                 extension)
 
         Optional:
