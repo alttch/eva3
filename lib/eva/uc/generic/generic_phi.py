@@ -24,6 +24,7 @@ import logging
 import threading
 import sys
 import rapidjson
+import timeouter as to
 
 import eva.core
 
@@ -352,6 +353,7 @@ class PHI(object):
 
     def _perform_update(self):
         self.log_debug('performing update')
+        to.init(timeout=get_timeout())
         state = self.get(timeout=get_timeout())
         if not state:
             return
@@ -376,3 +378,7 @@ class PHI(object):
                       (time() - self.__last_update_reset))))
             self.__update_count = 0
             self.__last_update_reset = time()
+
+    def _test(self, cmd=None):
+        to.init(timeout=get_timeout())
+        return self.test(cmd=cmd)
