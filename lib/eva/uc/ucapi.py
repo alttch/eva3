@@ -1733,7 +1733,7 @@ class UC_API(GenericAPI):
         phi = eva.uc.driverapi.get_phi(i)
         if not phi:
             raise ResourceNotFound
-        result = phi.test(c)
+        result = phi._test(c)
         if result is None or result is False:
             raise FunctionFailed('test failed')
         if isinstance(result, dict):
