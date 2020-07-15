@@ -3144,8 +3144,10 @@ def mark_leaving(n):
 
 @background_worker(delay=notifier_client_clean_delay,
                    name='notify:client_cleaner',
+                   loop='cleaners',
                    on_error=eva.core.log_traceback)
 async def notifier_client_cleaner(**kwargs):
+    logging.debug('cleaning notifiers')
     for k, n in notifiers.copy().items():
         if n.nt_client:
             n.cleanup()

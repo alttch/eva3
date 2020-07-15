@@ -85,7 +85,7 @@ def init():
 
 
 def start():
-    pyaltt2.logs.start()
+    pyaltt2.logs.start(loop='cleaners')
 
 
 @eva.core.stop
