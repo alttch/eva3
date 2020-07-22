@@ -1,10 +1,10 @@
 MS Active Directory authentication
 **********************************
 
-To authenticate EVA ICS users, `Microsoft Active directory
+To authenticate EVA ICS users, `Microsoft Active Directory
 <https://en.wikipedia.org/wiki/Active_Directory>`_ can be used.
 
-Active directory support is not configured by default.
+Active Directory support is not configured by default.
 
 System setup
 ============
@@ -51,7 +51,7 @@ Restart the controller
 
     eva sfa server restart
 
-Active directory configuration
+Active Directory configuration
 ==============================
 
 Log into Active Directory domain controller, open *Active Directory Users and
