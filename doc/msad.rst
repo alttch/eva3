@@ -91,7 +91,7 @@ Key prefixes
 ------------
 
 if *key_prefix* is specified in the controller configuration file, EVA ICS will
-look for API key with id *key_prefix:AD security group*, e.g.
+look for API key with id *{key_prefix}{AD security group}*, e.g.
 
 * key_prefix = msad\_
 

@@ -51,17 +51,21 @@ def msad_authenticate(username, password):
                                                credentials=dict(
                                                    username=username,
                                                    password=password)):
-            cns = {}
+            cn = None
+            ou = None
             for el in grp.split(','):
                 try:
                     name, value = el.split('=')
-                    cns[name] = value
+                    if name == 'CN':
+                        cn = value
+                    elif name == 'OU':
+                        ou = value
+                    if cn and ou:
+                        break
                 except:
                     pass
-            if cns.get('OU') == _d.msad_ou:
-                key = cns.get('CN')
-                if key:
-                    return _d.msad_key_prefix + key
+            if ou == _d.msad_ou and cn:
+                return _d.msad_key_prefix + cn
     except:
         logging.error('Unable to access active directory')
         eva.core.log_traceback()
