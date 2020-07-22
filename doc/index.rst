@@ -121,6 +121,7 @@ What you get with EVA
     sfa/sfa_templates
     sfa/sfa_pvt
     api_tokens
+    Active Directory support <msad>
     evahi
     EVA JS Framework <https://github.com/alttch/eva-js-framework>
 

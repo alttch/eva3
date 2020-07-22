@@ -1,0 +1,95 @@
+MS Active Directory authentication
+**********************************
+
+To authenticate EVA ICS users, `Microsoft Active directory
+<https://en.wikipedia.org/wiki/Active_Directory>`_ can be used.
+
+Active directory support is not configured by default.
+
+System setup
+============
+
+Install LDAP and SASL2 development libraries
+
+.. code:: shell
+
+    apt-get install libsasl2-dev libldap2-dev libssl-dev
+
+Append **easyad** module to EVA ICS Python venv (*/opt/eva/etc/venv*) extras
+
+.. code:: ini
+
+    EXTRA="easyad==1.0.9"
+
+Rebuild EVA ICS venv
+
+.. code:: shell
+
+    /opt/eva/install/build-venv
+
+EVA Controller configuration
+============================
+
+Put the following block in controller configuration (e.g. for
+:doc:`SFA</sfa/sfa>` edit */opt/eva/etc/sfa.ini*)
+
+.. code:: ini
+
+    [msad]
+    host = ad.yourdomain.com
+    domain = yourdomain.com
+    key_prefix =
+    ou = EVA
+    ;ca = /path/to/ca-file.crt
+
+Host and domain should always be specified. Default key prefix is empty,
+default organization unit is *EVA*. CA file is not used by default.
+
+Restart the controller
+
+.. code:: shell
+
+    eva sfa server restart
+
+Active directory configuration
+==============================
+
+Log into Active Directory domain controller, open *Active Directory Users and
+Computers* and create organization unit (default - *EVA*)
+
+.. figure:: msad_ou.png
+    :scale: 70%
+    :alt: create AD OU
+
+Create security groups inside organization unit. Group name should match EVA
+ICS API key ID
+
+.. figure:: msad_group.png
+    :scale: 70%
+    :alt: create AD group
+
+Usage
+=====
+
+Authentication
+--------------
+
+After OU security group is assigned to Active Directory user, its credentials
+can be immediately used for authentication in EVA ICS. It's not necessary to
+create user in EVA ICS controller.
+
+If user with the same login exists in EVA ICS controller, local user has higher
+priority. If the provided password doesn't match local, the local record is
+ignored and attempt to authenticate via Active Directory is performed.
+
+Key prefixes
+------------
+
+if *key_prefix* is specified in the controller configuration file, EVA ICS will
+look for API key with id *key_prefix:AD security group*, e.g.
+
+* key_prefix = msad\_
+
+* user has assigned security group EVA/operator
+
+* EVA ICS controller API key should have id *msad_operator*

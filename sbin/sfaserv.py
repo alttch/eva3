@@ -96,6 +96,7 @@ eva.apikey.init()
 eva.apikey.load()
 
 eva.users.init()
+eva.users.update_config(cfg)
 
 eva.notify.init()
 eva.notify.load()
