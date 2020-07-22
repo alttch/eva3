@@ -43,7 +43,7 @@ Put the following block in controller configuration (e.g. for
     ;ca = /path/to/ca-file.crt
 
 Host and domain should always be specified. Default key prefix is empty,
-default organization unit is *EVA*. CA file is not used by default.
+default organizational unit is *EVA*. CA file is not used by default.
 
 Restart the controller
 
@@ -55,13 +55,13 @@ Active Directory configuration
 ==============================
 
 Log into Active Directory domain controller, open *Active Directory Users and
-Computers* and create organization unit (default - *EVA*)
+Computers* and create organizational unit (default - *EVA*)
 
 .. figure:: msad_ou.png
     :scale: 70%
     :alt: create AD OU
 
-Create security groups inside organization unit. Group name should match EVA
+Create security groups inside organizational unit. Group name should match EVA
 ICS API key ID
 
 .. figure:: msad_group.png
