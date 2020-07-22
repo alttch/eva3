@@ -68,6 +68,11 @@ ICS API key ID
     :scale: 70%
     :alt: create AD group
 
+Assign security group to domain user. Only one OU security group should be
+assigned. If more security groups are assigned, EVA ICS always use the first
+one. If API key with such ID doesn't exist, authentication attempt is
+considered as failed, despite user has more authentication groups assigned.
+
 Usage
 =====
 
