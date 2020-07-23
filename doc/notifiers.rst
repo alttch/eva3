@@ -612,6 +612,8 @@ Configure EVA ICS, e.g. let's create notifier for :doc:`/uc/uc`:
     # set API key if you plan to execute commands
     # you may use use $key_id to specify key id instead of API key itself
     set gcpiot apikey $default
+    # enable notifier
+    enable gcpiot
     # restart controller
     server restart
 
