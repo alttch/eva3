@@ -67,6 +67,14 @@ timeout = 5
 ; default mqtt notifier for updates for new items
 ;mqtt_update_default = eva_1:2
 
+;[msad]
+; user authentication via MS Active Directory
+;host = ad.yourdomain.com
+;domain = yourdomain.com
+;key_prefix =
+;ou = EVA
+;ca = /path/to/ca-file.crt
+
 [upnp]
 ; discover controllers via UPnP on all interfaces, or list, comma separated
 discover_on = all

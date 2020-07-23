@@ -70,6 +70,14 @@ layout = enterprise
 ; default mqtt notifier for updates for new items
 ;mqtt_update_default = eva_1:2
 
+;[msad]
+; user authentication via MS Active Directory
+;host = ad.yourdomain.com
+;domain = yourdomain.com
+;key_prefix =
+;ou = EVA
+;ca = /path/to/ca-file.crt
+
 [upnp]
 ; allow UPnP discovery of this controller
 listen = 0.0.0.0
