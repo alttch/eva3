@@ -2396,8 +2396,7 @@ class GCP_IoT(GenericNotifier):
                     payload['params']['k'] = eva.apikey.format_key(self.apikey)
                 import eva.api
                 import eva.core
-                g.set('eva_ics_gw', 'gcpiot:' + self.notifier_id)
-                eva.core.spawn(eva.api.jrpc, p=payload)
+                eva.core.spawn(self._call_jrpc, payload)
             except:
                 logging.warning(
                     '.Invalid command message from MQTT server: {}'.format(
@@ -2405,6 +2404,10 @@ class GCP_IoT(GenericNotifier):
                 import eva.core
                 eva.core.log_traceback()
                 return
+
+    def _call_jrpc(self, payload):
+        g.set('eva_ics_gw', 'gcpiot:' + self.notifier_id)
+        eva.api.jrpc(p=payload)
 
     def check_connection(self, reconnect=False):
         if self.map is None:
