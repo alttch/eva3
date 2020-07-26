@@ -95,6 +95,22 @@ def api_need_master(f):
     return do
 
 
+def init_api_call(**kwargs):
+    g.set('aci', kwargs)
+
+
+def get_aci(field, default=None):
+    return g.get('aci', {}).get(field, default)
+
+
+def set_aci(field, value):
+    try:
+        g.get('aci')[field] = value
+    except TypeError:
+        logging.error('Working with non-inialized API call')
+        eva.core.log_traceback()
+
+
 def http_api_result(result, env):
     result = {'result': result}
     if env:
@@ -172,7 +188,8 @@ def restful_parse_params(*args, **kwargs):
         l = args[-1]
         if l.find('@') != -1:
             l, kind = l.split('@', 1)
-        if ii: ii += '/'
+        if ii:
+            ii += '/'
         ii += l
     else:
         ii = None
@@ -180,10 +197,14 @@ def restful_parse_params(*args, **kwargs):
     kind = kwargs.get('kind', kind)
     method = kwargs.get('method')
     for_dir = cherrypy.request.path_info.endswith('/')
-    if 'k' in kwargs: del kwargs['k']
-    if 'save' in kwargs: del kwargs['save']
-    if 'kind' in kwargs: del kwargs['kind']
-    if 'method' in kwargs: del kwargs['method']
+    if 'k' in kwargs:
+        del kwargs['k']
+    if 'save' in kwargs:
+        del kwargs['save']
+    if 'kind' in kwargs:
+        del kwargs['kind']
+    if 'method' in kwargs:
+        del kwargs['method']
     return k, ii, save, kind, method, for_dir, kwargs
 
 
@@ -392,7 +413,7 @@ class API_Logger(object):
 
     def log_api_request(self, func, params, logger, fp_hide):
         msg = 'API request '
-        auth = self.get_auth(func, params)
+        auth, ki = self.get_auth(func, params)
         info = self.prepare_info(func, params, fp_hide)
         if auth:
             msg += auth + ':'
@@ -407,19 +428,31 @@ class API_Logger(object):
             else:
                 msg += info
         logger(msg)
+        # extended API call logging
+        gw = get_aci('gw', 'http')
+        auth = get_aci('auth', 'key')
+        u = get_aci('u')
+        utp = get_aci('utp')
+        ip = http_real_ip(get_gw=True, ip_only=True)
+        # log API call into DB
+        print(gw, auth, u, utp, ki, func, params)
 
     def __call__(self, func, params, logger, fp_hide):
         self.log_api_request(func.__name__, params.copy(), logger, fp_hide)
 
     def prepare_info(self, func, p, fp_hide):
         # if not eva.core.config.development:
-        if 'k' in p: del p['k']
+        if 'k' in p:
+            del p['k']
         if func.startswith('set_') or func.endswith('_set'):
             fp = p.get('p')
-            if fp in ['key', 'masterkey', 'password']: p[fp] = '<hidden>'
+            if fp in ['key', 'masterkey', 'password']:
+                p[fp] = '<hidden>'
         elif func == 'login':
-            if 'p' in p: p['p'] = '<hidden>'
-            if 'a' in p: p['a'] = '<hidden>'
+            if 'p' in p:
+                p['p'] = '<hidden>'
+            if 'a' in p:
+                p['a'] = '<hidden>'
         fplist = fp_hide.get(func)
         if fplist:
             for fp in fplist:
@@ -430,39 +463,42 @@ class API_Logger(object):
         return p
 
     def get_auth(self, func, params):
-        return apikey.key_id(params.get('k'))
+        ki = apikey.key_id(params.get('k'))
+        return ki, ki
 
 
 class HTTP_API_Logger(API_Logger):
 
     def get_auth(self, func, params):
-        return http_remote_info(params.get('k'))
+        ki = apikey.key_id(params.get('k'))
+        return f'{ki}@{http_real_ip(get_gw=True)}', ki
 
 
 def cp_check_perm(api_key=None, path_info=None):
     k = api_key if api_key else cp_client_key()
     path = path_info if path_info is not None else \
             cherrypy.serving.request.path_info
-    if k is not None: cherrypy.serving.request.params['k'] = k
+    if k is not None:
+        cherrypy.serving.request.params['k'] = k
     # pass login and info
-    if path in ['/login', '/info', '/token']: return
-    if apikey.check(k, ip=http_real_ip()): return
+    if path in ['/login', '/info', '/token']:
+        return
+    if apikey.check(k, ip=http_real_ip()):
+        return
     raise cp_forbidden_key()
 
 
-def http_real_ip(get_gw=False):
-    if get_gw and g.has('eva_ics_gw'):
-        return 'gateway/' + g.get('eva_ics_gw')
+def http_real_ip(get_gw=False, ip_only=False):
+    if get_gw:
+        gw = get_aci('gw')
+        if gw:
+            return None if ip_only else 'gateway/' + gw
     if config.use_x_real_ip and 'X-Real-IP' in cherrypy.request.headers and \
             cherrypy.request.headers['X-Real-IP']!='':
         ip = cherrypy.request.headers['X-Real-IP']
     else:
         ip = cherrypy.request.remote.ip
     return ip
-
-
-def http_remote_info(k=None):
-    return '%s@%s' % (apikey.key_id(k), http_real_ip(get_gw=True))
 
 
 def cp_json_pre():
@@ -554,7 +590,8 @@ class GenericAPI(object):
 
     @staticmethod
     def _process_action_result(a):
-        if not a: raise ResourceNotFound('item found, option')
+        if not a:
+            raise ResourceNotFound('item found, option')
         if a.is_status_dead():
             raise FunctionFailed('{} is dead'.format(a.uuid))
         return a.serialize()
@@ -578,7 +615,8 @@ class GenericAPI(object):
             raise ResourceNotFound(i)
         if is_oid(i):
             _t, iid = parse_oid(i)
-            if item and item.item_type != _t: raise ResourceNotFound(i)
+            if item and item.item_type != _t:
+                raise ResourceNotFound(i)
         return eva.item.get_state_history(a=a,
                                           oid=item.oid if item else i,
                                           t_start=s,
@@ -601,21 +639,25 @@ class GenericAPI(object):
             result = []
             if i:
                 item_id = oid_to_id(i, rtp)
-                if item_id is None: raise ResourceNotFound
+                if item_id is None:
+                    raise ResourceNotFound
                 ar = None
                 item = self.controller.get_item(rtp + ':' + item_id)
-                if not apikey.check(k, item, ro_op=True): raise ResourceNotFound
+                if not apikey.check(k, item, ro_op=True):
+                    raise ResourceNotFound
                 if item_id.find('/') > -1:
                     if item_id in self.controller.Q.actions_by_item_full_id:
                         ar = self.controller.Q.actions_by_item_full_id[item_id]
                 else:
                     if item_id in self.controller.Q.actions_by_item_id:
                         ar = self.controller.Q.actions_by_item_id[item_id]
-                if ar is None: return []
+                if ar is None:
+                    return []
             else:
                 ar = self.controller.Q.actions
             for a in ar:
-                if not apikey.check(k, a.item, ro_op=True): continue
+                if not apikey.check(k, a.item, ro_op=True):
+                    continue
                 if g and \
                         not eva.item.item_match(a.item, [], [ g ]):
                     continue
@@ -639,7 +681,8 @@ class GenericAPI(object):
             if not item.set_prop(prop, value, False):
                 raise FunctionFailed('{}.{} = {} unable to set'.format(
                     item.oid, prop, value))
-        if save: item.save()
+        if save:
+            item.save()
         return True
 
     def __init__(self):
@@ -697,7 +740,8 @@ class GenericAPI(object):
                 for k, v in eva.benchmark.intervals.items():
                     s = v.get('s')
                     e = v.get('e')
-                    if s is None or e is None: continue
+                    if s is None or e is None:
+                        continue
                     intervals.append(e - s)
                 try:
                     result['benchmark_crt'] = sum(intervals) / float(
@@ -781,7 +825,8 @@ class GenericAPI(object):
         def format_result(result, prop, c=None):
             if c is None:
                 return result
-            if not prop: prop = 'value'
+            if not prop:
+                prop = 'value'
             line = c.get('type', 'line')
             fmt = c.get('out', 'svg')
             chart_t = c.get('tf', '%Y-%m-%d %H:%M')
@@ -851,7 +896,8 @@ class GenericAPI(object):
             if c:
                 try:
                     c = dict_from_str(c)
-                    if not isinstance(c, dict): raise Exception
+                    if not isinstance(c, dict):
+                        raise Exception
                 except:
                     raise InvalidParameter('chart options are invalid')
             else:
@@ -900,7 +946,8 @@ class GenericAPI(object):
                         rk = i + '/value'
                         result[tt][rk] = r['value'][z]
                         result_keys.add(rk)
-            if not result_keys: return {}
+            if not result_keys:
+                return {}
             merged_result = {'t': []}
             for tt in sorted(result):
                 merged_result['t'].append(tt)
@@ -1000,10 +1047,10 @@ class GenericAPI(object):
             if not token:
                 raise FunctionFailed('token generation error')
             return {'key': apikey.key_id(k), 'token': token}
-        key = eva.users.authenticate(u, p)
+        key, utp = eva.users.authenticate(u, p)
         if not apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
             raise AccessDenied
-        token = tokens.append_token(key, u)
+        token = tokens.append_token(key, u, utp)
         if not token:
             raise FunctionFailed('token generation error')
         return {'user': u, 'key': key, 'token': token}
@@ -1082,8 +1129,10 @@ class GenericCloudAPI(object):
         i = parse_api_params(kwargs, 'i', 'S')
         c = self.controller.get_controller(i)
         result = c.test()
-        if result: return True
-        else: raise FunctionFailed('{}: test failed'.format(c.full_id))
+        if result:
+            return True
+        else:
+            raise FunctionFailed('{}: test failed'.format(c.full_id))
 
     @log_i
     @api_need_master
@@ -1172,7 +1221,8 @@ def jsonify(value):
 
 def cp_jsonrpc_handler(*args, **kwargs):
     response = cherrypy.serving.response
-    if response.status == 401: return
+    if response.status == 401:
+        return
     value = cherrypy.serving.request._json_inner_handler(*args, **kwargs)
     if value is None:
         cherrypy.serving.response.status = 202
@@ -1189,18 +1239,23 @@ def cp_jsonrpc_handler(*args, **kwargs):
 
 
 def _http_client_key(_k=None, from_cookie=False):
-    if _k: return _k
+    if _k:
+        return _k
     k = cherrypy.request.headers.get('X-Auth-Key')
-    if k: return k
+    if k:
+        return k
     if 'k' in cherrypy.serving.request.params:
         k = cherrypy.serving.request.params['k']
-    if k: return k
+    if k:
+        return k
     if from_cookie:
         k = cherrypy.serving.request.cookie.get('auth')
-        if k: k = k.value
+        if k:
+            k = k.value
         if k and not k.startswith('token:'):
             k = None
-    if k: return k
+    if k:
+        return k
     k = eva.apikey.key_by_ip_address(http_real_ip())
     return k
 
@@ -1209,6 +1264,9 @@ def key_token_parse(k):
     token = tokens.get_token(k)
     if not token:
         raise AccessDenied('Invalid token')
+    set_aci('auth', 'token')
+    set_aci('u', token['u'])
+    set_aci('utp', token['utp'])
     return apikey.key_by_id(token['ki'])
 
 
@@ -1283,6 +1341,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
         self._cp_config = api_cp_config.copy()
         if api_uri:
             self.api_uri = api_uri
+        self._cp_config['tools.init_call.on'] = True
         self._cp_config['tools.jsonrpc_pre.on'] = True
         self._cp_config['tools.json_out.on'] = True,
         self._cp_config['tools.json_out.handler'] = cp_jsonrpc_handler
@@ -1309,7 +1368,8 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
             try:
                 p = pp.get('params', {})
                 method = pp.get('method')
-                if not method: raise FunctionFailed('API method not defined')
+                if not method:
+                    raise FunctionFailed('API method not defined')
                 f = self._get_api_function(method)
                 if not f:
                     raise MethodNotFound
@@ -1407,6 +1467,7 @@ class GenericHTTP_API(GenericAPI, GenericHTTP_API_abstract):
         GenericAPI.__init__(self)
         GenericHTTP_API_abstract.__init__(self)
         self._cp_config = api_cp_config.copy()
+        self._cp_config['tools.init_call.on'] = True
         self._cp_config['tools.auth.on'] = True
         self._cp_config['tools.json_pre.on'] = True
 
@@ -1463,7 +1524,7 @@ def mqtt_api_handler(notifier_id, data, callback):
                 logging.warning('MQTT API: invalid JSON data or API key from ' +
                                 notifier_id)
                 raise
-        g.set('eva_ics_gw', 'mqtt:' + notifier_id)
+        init_api_call(gw='mqtt:' + notifier_id)
         try:
             response = jrpc(p=payload)
         except:
@@ -1487,7 +1548,8 @@ def mqtt_api_handler(notifier_id, data, callback):
 
 
 def start():
-    if not config.host: return False
+    if not config.host:
+        return False
     cherrypy.server.unsubscribe()
     logging.info('HTTP API listening at at %s:%s' % \
             (config.host, config.port))
@@ -1526,6 +1588,9 @@ def stop():
 
 
 def init():
+    cherrypy.tools.init_call = cherrypy.Tool('before_handler',
+                                             init_api_call,
+                                             priority=5)
     cherrypy.tools.json_pre = cherrypy.Tool('before_handler',
                                             cp_json_pre,
                                             priority=10)

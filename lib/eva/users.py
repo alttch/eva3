@@ -87,7 +87,7 @@ def authenticate(user=None, password=None):
     except:
         eva.core.report_userdb_error()
     if r:
-        return r.k
+        return r.k, None
     else:
         k = msad_authenticate(user, password)
         if k is None:
@@ -95,7 +95,7 @@ def authenticate(user=None, password=None):
         else:
             logging.debug(
                 f'user {user} authenticated via active directory, key id: {k}')
-            return k
+            return k, 'msad'
 
 
 def list_users():
