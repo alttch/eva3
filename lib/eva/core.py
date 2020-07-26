@@ -68,6 +68,7 @@ config = SimpleNamespace(pid_file=None,
                          log_file=None,
                          db_uri=None,
                          userdb_uri=None,
+                         keep_api_log=0,
                          debug=False,
                          system_name=platform.node(),
                          controller_name=None,
@@ -360,6 +361,7 @@ def serialize():
     d['product_code'] = product.code
     d['product_build'] = product.build
     d['keep_logmem'] = config.keep_logmem
+    d['keep_api_log'] = config.keep_api_log
     d['keep_action_history'] = config.keep_action_history
     d['action_cleaner_interval'] = config.action_cleaner_interval
     d['debug'] = config.debug
@@ -682,6 +684,11 @@ def load(fname=None, initial=False, init_log=True, check_pid=True):
         except:
             pass
         logging.debug('server.keep_logmem = %s sec' % config.keep_logmem)
+        try:
+            config.keep_api_log = int(cfg.get('server', 'keep_api_log'))
+        except:
+            pass
+        logging.debug('server.keep_api_log = %s sec' % config.keep_api_log)
         try:
             config.exec_before_save = cfg.get('server', 'exec_before_save')
         except:

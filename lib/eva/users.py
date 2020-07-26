@@ -6,8 +6,10 @@ __version__ = "3.3.0"
 import hashlib
 import eva.core
 import logging
+import rapidjson
 import sqlalchemy as sa
 import subprocess
+import time
 
 from eva import apikey
 from eva.core import userdb
@@ -96,6 +98,50 @@ def authenticate(user=None, password=None):
             logging.debug(
                 f'user {user} authenticated via active directory, key id: {k}')
             return k, 'msad'
+
+
+def api_log_insert(call_id,
+                   gw=None,
+                   auth=None,
+                   u=None,
+                   utp=None,
+                   ki=None,
+                   func=None,
+                   params=None):
+    dbconn = userdb()
+    dbt = dbconn.begin()
+    try:
+        dbconn.execute(sql(
+            'insert into api_log(id, t, gw, auth, u, utp, ki, func, params) '
+            'values (:i, :t, :gw, :auth, :u, :utp, :ki, :func, :params)'),
+                       i=call_id,
+                       t=time.time(),
+                       gw=gw,
+                       auth=auth,
+                       u=u,
+                       utp=utp,
+                       ki=ki,
+                       func=func,
+                       params=rapidjson.dumps(params)[:512])
+        dbt.commit()
+    except:
+        logging.error('Unable to insert API call info into DB')
+        eva.core.log_traceback()
+
+
+def api_log_status(call_id, status=None):
+    dbconn = userdb()
+    dbt = dbconn.begin()
+    try:
+        dbconn.execute(
+            sql('update api_log set tf=:tf, status=:status where id=:i'),
+            i=call_id,
+            tf=time.time(),
+            status=status)
+        dbt.commit()
+    except:
+        logging.error('Unable to insert API call info into DB')
+        eva.core.log_traceback()
 
 
 def list_users():
@@ -218,6 +264,18 @@ def init():
                        sa.Column('u', sa.String(64), primary_key=True),
                        sa.Column('p', sa.String(64)),
                        sa.Column('k', sa.String(64)))
+    t_api_log = sa.Table('api_log', meta,
+                         sa.Column('id', sa.String(36), primary_key=True),
+                         sa.Column('t', sa.Numeric(20, 8), nullable=False),
+                         sa.Column('tf', sa.Numeric(20, 8)),
+                         sa.Column('gw', sa.String(128)),
+                         sa.Column('auth', sa.String(128)),
+                         sa.Column('u', sa.String(128)),
+                         sa.Column('utp', sa.String(32)),
+                         sa.Column('ki', sa.String(128)),
+                         sa.Column('func', sa.String(128)),
+                         sa.Column('params', sa.String(512)),
+                         sa.Column('status', sa.String(32)))
     try:
         meta.create_all(dbconn)
     except:

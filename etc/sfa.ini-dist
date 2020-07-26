@@ -39,6 +39,8 @@ keep_action_history = 86400
 action_cleaner_interval = 60
 ; keep memory log in seconds
 keep_logmem = 86400
+; keep extended API call log in user db in seconds (0 = disable logging)
+;keep_api_log = 0
 ; debug mode
 debug = no
 ; show error traceback

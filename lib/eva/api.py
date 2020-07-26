@@ -40,6 +40,7 @@ from eva.exceptions import MethodNotImplemented
 import eva.users
 import eva.notify
 import eva.benchmark
+import uuid
 
 from neotasker import g
 
@@ -96,7 +97,17 @@ def api_need_master(f):
 
 
 def init_api_call(**kwargs):
-    g.set('aci', kwargs)
+    aci = kwargs.copy() if kwargs else {}
+    if eva.core.config.keep_api_log:
+        aci['id'] = str(uuid.uuid4())
+    g.set('aci', aci)
+
+
+def log_api_call_result(status):
+    if eva.core.config.keep_api_log:
+        call_id = get_aci('id')
+        if call_id:
+            eva.users.api_log_status(call_id, status)
 
 
 def get_aci(field, default=None):
@@ -216,28 +227,42 @@ def generic_web_api_method(f):
     @wraps(f)
     def do(*args, **kwargs):
         try:
-            return jsonify(f(*args, **kwargs))
+            result = jsonify(f(*args, **kwargs))
+            log_api_call_result('OK')
+            return result
         except InvalidParameter as e:
+            log_api_call_result('InvalidParameter')
             eva.core.log_traceback()
             raise cp_bad_request(e)
         except MethodNotImplemented as e:
+            log_api_call_result('MethodNotImplemented')
             raise cp_bad_request(e)
         except TypeError as e:
+            log_api_call_result('TypeError')
             eva.core.log_traceback()
             raise cp_bad_request()
         except ResourceNotFound as e:
+            log_api_call_result('ResourceNotFound')
             eva.core.log_traceback()
             raise cp_api_404(e)
         except MethodNotFound as e:
+            log_api_call_result('MethodNotFound')
             eva.core.log_traceback()
             raise cp_api_405(e)
-        except (ResourceAlreadyExists, ResourceBusy) as e:
+        except ResourceAlreadyExists as e:
+            log_api_call_result('ResourceAlreadyExists')
+            eva.core.log_traceback()
+            raise cp_api_409(e)
+        except ResourceBusy as e:
+            log_api_call_result('ResourceBusy')
             eva.core.log_traceback()
             raise cp_api_409(e)
         except AccessDenied as e:
+            log_api_call_result('AccessDenied')
             eva.core.log_traceback()
             raise cp_forbidden_key(e)
         except FunctionFailed as e:
+            log_api_call_result('FunctionFailed')
             eva.core.log_traceback()
             raise cp_api_error(e)
 
@@ -429,13 +454,15 @@ class API_Logger(object):
                 msg += info
         logger(msg)
         # extended API call logging
-        gw = get_aci('gw', 'http')
-        auth = get_aci('auth', 'key')
-        u = get_aci('u')
-        utp = get_aci('utp')
-        ip = http_real_ip(get_gw=True, ip_only=True)
-        # log API call into DB
-        print(gw, auth, u, utp, ki, func, params)
+        if eva.core.config.keep_api_log:
+            i = get_aci('id')
+            gw = get_aci('gw', 'http')
+            auth = get_aci('auth', 'key')
+            u = get_aci('u')
+            utp = get_aci('utp')
+            ip = http_real_ip(get_gw=True, ip_only=True)
+            # log API call into DB
+            eva.users.api_log_insert(i, gw, auth, u, utp, ki, func, params)
 
     def __call__(self, func, params, logger, fp_hide):
         self.log_api_request(func.__name__, params.copy(), logger, fp_hide)
@@ -1413,24 +1440,32 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                 elif res is None:
                     raise ResourceNotFound
                 r = {'jsonrpc': '2.0', 'result': res, 'id': req_id}
+                log_api_call_result('OK')
             except ResourceNotFound as e:
+                log_api_call_result('ResourceNotFound')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_not_found, e)
             except AccessDenied as e:
+                log_api_call_result('AccessDenied')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_forbidden, e)
             except MethodNotFound as e:
+                log_api_call_result('MethodNotFound')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_func_unknown, e)
             except InvalidParameter as e:
+                log_api_call_result('InvalidParameter')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_invalid_params, e)
             except MethodNotImplemented as e:
+                log_api_call_result('MethodNotImplemented')
                 r = format_error(apiclient.result_not_implemented, e)
             except ResourceAlreadyExists as e:
+                log_api_call_result('ResourceAlreadyExists')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_already_exists, e)
             except ResourceBusy as e:
+                log_api_call_result('ResourceBusy')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_busy, e)
             except EvaHIAuthenticationRequired:
@@ -1439,6 +1474,7 @@ class JSON_RPC_API_abstract(GenericHTTP_API_abstract):
                     'WWW-Authenticate'] = 'Basic realm="?"'
                 return ''
             except Exception as e:
+                log_api_call_result('FunctionFailed')
                 eva.core.log_traceback()
                 r = format_error(apiclient.result_func_failed, e)
             if req_id:
