@@ -436,7 +436,7 @@ def update_config(cfg):
 
 class API_Logger(object):
 
-    def log_api_request(self, func, params, logger, fp_hide):
+    def log_api_request(self, func, params, logger, fp_hide, debug=False):
         msg = 'API request '
         auth, ki = self.get_auth(func, params)
         info = self.prepare_info(func, params, fp_hide)
@@ -454,7 +454,7 @@ class API_Logger(object):
                 msg += info
         logger(msg)
         # extended API call logging
-        if eva.core.config.keep_api_log:
+        if not debug and eva.core.config.keep_api_log:
             i = get_aci('id')
             gw = get_aci('gw', 'http')
             auth = get_aci('auth', 'key')
@@ -463,8 +463,9 @@ class API_Logger(object):
             ip = http_real_ip(get_gw=True, ip_only=True)
             eva.users.api_log_insert(i, gw, ip, auth, u, utp, ki, func, params)
 
-    def __call__(self, func, params, logger, fp_hide):
-        self.log_api_request(func.__name__, params.copy(), logger, fp_hide)
+    def __call__(self, func, params, logger, fp_hide, debug=False):
+        self.log_api_request(func.__name__, params.copy(), logger, fp_hide,
+                             debug)
 
     def prepare_info(self, func, p, fp_hide):
         # if not eva.core.config.development:
@@ -586,7 +587,11 @@ def log_d(f):
 
     @wraps(f)
     def do(self, *args, **kwargs):
-        self.log_api_call(f, kwargs, logging.debug, self._fp_hide_in_log)
+        self.log_api_call(f,
+                          kwargs,
+                          logging.debug,
+                          self._fp_hide_in_log,
+                          debug=True)
         return f(self, *args, **kwargs)
 
     return do
