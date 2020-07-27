@@ -102,6 +102,7 @@ def authenticate(user=None, password=None):
 
 def api_log_insert(call_id,
                    gw=None,
+                   ip=None,
                    auth=None,
                    u=None,
                    utp=None,
@@ -112,11 +113,12 @@ def api_log_insert(call_id,
     dbt = dbconn.begin()
     try:
         dbconn.execute(sql(
-            'insert into api_log(id, t, gw, auth, u, utp, ki, func, params) '
-            'values (:i, :t, :gw, :auth, :u, :utp, :ki, :func, :params)'),
+            'insert into api_log(id, t, gw, ip, auth, u, utp, ki, func, params)'
+            ' values (:i, :t, :gw, :ip, :auth, :u, :utp, :ki, :func, :params)'),
                        i=call_id,
                        t=time.time(),
                        gw=gw,
+                       ip=ip,
                        auth=auth,
                        u=u,
                        utp=utp,
@@ -269,6 +271,7 @@ def init():
                          sa.Column('t', sa.Numeric(20, 8), nullable=False),
                          sa.Column('tf', sa.Numeric(20, 8)),
                          sa.Column('gw', sa.String(128)),
+                         sa.Column('ip', sa.String(45)),
                          sa.Column('auth', sa.String(128)),
                          sa.Column('u', sa.String(128)),
                          sa.Column('utp', sa.String(32)),

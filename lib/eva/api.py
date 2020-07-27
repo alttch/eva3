@@ -461,8 +461,7 @@ class API_Logger(object):
             u = get_aci('u')
             utp = get_aci('utp')
             ip = http_real_ip(get_gw=True, ip_only=True)
-            # log API call into DB
-            eva.users.api_log_insert(i, gw, auth, u, utp, ki, func, params)
+            eva.users.api_log_insert(i, gw, ip, auth, u, utp, ki, func, params)
 
     def __call__(self, func, params, logger, fp_hide):
         self.log_api_request(func.__name__, params.copy(), logger, fp_hide)
