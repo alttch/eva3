@@ -207,11 +207,14 @@ def api_log_get(t_start=None, t_end=None, limit=None, time_format=None, f=None):
         for z in ('u', 'utp', 'status'):
             if z in f and f[z] == '':
                 f[z] = None
-    cond, qkw = format_sql_condition(f,
-                                     qkw,
-                                     fields=('gw', 'ip', 'auth', 'u', 'utp',
-                                             'ki', 'func', 'status'),
-                                     cond=cond)
+    try:
+        cond, qkw = format_sql_condition(f,
+                                         qkw,
+                                         fields=('gw', 'ip', 'auth', 'u', 'utp',
+                                                 'ki', 'func', 'status'),
+                                         cond=cond)
+    except ValueError as e:
+        raise ValueError(f'Invalid filter: {e}')
     if limit is None:
         cond += ' order by t asc'
     else:

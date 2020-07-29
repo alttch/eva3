@@ -57,7 +57,8 @@ class ComplCVAR(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('cvar all')
-        if code: return True
+        if code:
+            return True
         return data.keys()
 
 
@@ -65,7 +66,8 @@ class ComplKey(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('key list')
-        if code: return True
+        if code:
+            return True
         for v in data:
             yield v['key_id']
 
@@ -74,7 +76,8 @@ class ComplKeyDynamic(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('key list')
-        if code: return True
+        if code:
+            return True
         for v in data:
             if v.get('dynamic'):
                 yield v['key_id']
@@ -85,7 +88,8 @@ class ComplKeyProp(ComplGeneric):
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call(
             ['key', 'props', kwargs.get('parsed_args').i])
-        if code: return True
+        if code:
+            return True
         result = list(data.keys())
         return result
 
@@ -94,7 +98,8 @@ class ComplUser(ComplGeneric):
 
     def __call__(self, prefix, **kwargs):
         code, data = self.cli.call('user list')
-        if code: return True
+        if code:
+            return True
         for v in data:
             yield v['user']
 
@@ -138,6 +143,7 @@ class GenericCLI(GCLI):
                 'file:create': 'file_put',
                 'file:upload': 'file_put',
                 'file:mod': 'file_set_exec',
+                'log:api': 'api_log_get',
                 'key:list': 'list_keys',
                 'key:create': 'create_key',
                 'key:props': 'list_key_props',
@@ -157,6 +163,10 @@ class GenericCLI(GCLI):
                 'list_corescript_mqtt_topics': ['topic', 'qos'],
                 'list_users': ['user', 'key_id'],
                 'log_get': ['time', 'host', 'p', 'level', 'message'],
+                'api_log_get': [
+                    'time', 'gw', 'ip', 'auth', 'u', 'utp', 'ki', 'func',
+                    'params'
+                ],
                 'log_get_': [
                     'time', 'host', 'p', 'level', 'mod', 'thread', 'message'
                 ]
@@ -176,7 +186,8 @@ class GenericCLI(GCLI):
         self.setup_parser()
 
     def get_prompt(self):
-        if self.prompt: return self.prompt
+        if self.prompt:
+            return self.prompt
         prompt = self.default_prompt
         ppeva = '' if not parent_shell_name else \
                 self.colored(parent_shell_name,
@@ -277,11 +288,16 @@ class GenericCLI(GCLI):
                             pass
                     elif i == '-F' or i == '--client-ini-file':
                         c = self.parse_ini(v)
-                        if 'uri' in c: self.apiuri = c.get('uri')
-                        if 'key' in c: self.apikey = c.get('key')
-                        if 'timeout' in c: self.timeout = c.get('timeout')
-                        if 'debug' in c: self.debug = c.get('debug')
-                        if 'json' in c: self.in_json = c.get('json')
+                        if 'uri' in c:
+                            self.apiuri = c.get('uri')
+                        if 'key' in c:
+                            self.apikey = c.get('key')
+                        if 'timeout' in c:
+                            self.timeout = c.get('timeout')
+                        if 'debug' in c:
+                            self.debug = c.get('debug')
+                        if 'json' in c:
+                            self.in_json = c.get('json')
                         if 'raw' in c:
                             self.always_suppress_colors = c.get('raw')
         except:
@@ -327,10 +343,12 @@ class GenericCLI(GCLI):
         return l if l else level
 
     def get_log_level_code(self, name):
-        if not isinstance(name, str): return name
+        if not isinstance(name, str):
+            return name
         n = str.upper(name)
         for l, v in self.log_levels.items():
-            if n[0] == v[0]: return l
+            if n[0] == v[0]:
+                return l
         return name
 
     def format_log_str(self, r, res):
@@ -406,6 +424,14 @@ class GenericCLI(GCLI):
                     datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
                 result.append(d)
             return result
+        elif api_func == 'api_log_get':
+            from datetime import datetime
+            result = []
+            for d in data:
+                d['time'] = datetime.strftime(
+                    datetime.fromtimestamp(d.pop('t')), '%Y-%m-%d %T')
+                result.append(d)
+            return result
         elif api_func == 'list_corescript_mqtt_topics':
             return sorted(data, key=lambda k: k['topic'])
         elif api_func == 'list_corescripts':
@@ -434,9 +460,11 @@ class GenericCLI(GCLI):
             out = None
             err = None
             indentsp = self.fancy_indentsp.get(api_func)
-            if not indentsp: indentsp = 10
+            if not indentsp:
+                indentsp = 10
             for v in sorted(_result.keys()):
-                if v == 'ok' and api_func not in ['test']: continue
+                if v == 'ok' and api_func not in ['test']:
+                    continue
                 if v == 'help':
                     if not indent:
                         h = _result[v]
@@ -619,6 +647,28 @@ class GenericCLI(GCLI):
                                 dest='_full_display',
                                 action='store_true')
 
+        sp_log_api = sp_log.add_parser('api', help='Get API call log')
+        sp_log_api.add_argument('-s',
+                                '--time-start',
+                                help='Start time',
+                                metavar='TIME',
+                                dest='s')
+        sp_log_api.add_argument('-e',
+                                '--time-end',
+                                help='End time',
+                                metavar='TIME',
+                                dest='e')
+        sp_log_api.add_argument('-n',
+                                '--limit',
+                                help='Records limit (doesn\'t work with fill)',
+                                metavar='N',
+                                dest='n')
+        sp_log_api.add_argument('-f',
+                                '--filter',
+                                help='Filter (field=value[,field=value...])',
+                                metavar='FILTER',
+                                dest='f')
+
     def _add_cvar_functions(self):
         ap_cvar = self.sp.add_parser('cvar', help='CVAR functions')
         sp_cvar = ap_cvar.add_subparsers(dest='_func',
@@ -782,7 +832,8 @@ class GenericCLI(GCLI):
             'u', help='User login', metavar='LOGIN').completer = ComplUser(self)
 
     def start_interactive(self, reset_sst=True):
-        if reset_sst: globals()['shell_switch_to'] = None
+        if reset_sst:
+            globals()['shell_switch_to'] = None
         super().start_interactive()
 
     def prepare_run(self, api_func, params, a):
@@ -815,7 +866,8 @@ class GenericCLI(GCLI):
                         self.suppress_colors = False
                     except:
                         code = 90
-                    if code and self.batch_stop_on_err: return code
+                    if code and self.batch_stop_on_err:
+                        return code
             except:
                 print('Unable to open %s' % self.batch_file)
                 return 90
@@ -844,7 +896,8 @@ class GenericCLI(GCLI):
                         pass
                     except:
                         self.print_err('parse error')
-                    if parsed: break
+                    if parsed:
+                        break
                     self.setup_parser()
                 cmds = [[]]
                 cix = 0
@@ -865,8 +918,10 @@ class GenericCLI(GCLI):
                 repeat_delay = 0
                 for i in range(0, len(cmds)):
                     d = cmds[i]
-                    if i and i < len(cmds): print()
-                    if not d: continue
+                    if i and i < len(cmds):
+                        print()
+                    if not d:
+                        continue
                     if d[0] in ['q', 'quit', 'exit', 'bye'] or \
                             (d[0] in ['..', '/'] and parent_shell_name):
                         self.finish_interactive()
@@ -940,25 +995,30 @@ class GenericCLI(GCLI):
                     elif d[0] == 'top':
                         try:
                             top = distutils.spawn.find_executable('htop')
-                            if not top: top = 'top'
-                            if os.system(top): raise Exception('exec error')
+                            if not top:
+                                top = 'top'
+                            if os.system(top):
+                                raise Exception('exec error')
                         except:
                             self.print_err('Failed to run system "%s" command' %
                                            top)
                     elif d[0] == 'w':
                         try:
-                            if os.system('w'): raise Exception('exec error')
+                            if os.system('w'):
+                                raise Exception('exec error')
                         except:
                             self.print_err('Failed to run system "w" command')
                     elif d[0] == 'date':
                         try:
-                            if os.system('date'): raise Exception('exec error')
+                            if os.system('date'):
+                                raise Exception('exec error')
                         except:
                             self.print_err(
                                 'Failed to run system "date" command')
                     elif d[0] == 'cls':
                         try:
-                            if os.system('clear'): raise Exception('exec error')
+                            if os.system('clear'):
+                                raise Exception('exec error')
                         except:
                             self.print_err(
                                 'Failed to run system "clear" command')
@@ -967,7 +1027,8 @@ class GenericCLI(GCLI):
                         shell = os.environ.get('SHELL')
                         if shell is None:
                             shell = distutils.spawn.find_executable('bash')
-                            if not shell: shell = 'sh'
+                            if not shell:
+                                shell = 'sh'
                         try:
                             os.system(shell)
                         except:
@@ -1019,7 +1080,8 @@ class GenericCLI(GCLI):
                         except:
                             pass
                         full_cmds.append(opts + d)
-                        if cmd_title: cmd_title += '; '
+                        if cmd_title:
+                            cmd_title += '; '
                         cmd_title += ' '.join(d)
                 try:
                     while True:
@@ -1040,7 +1102,8 @@ class GenericCLI(GCLI):
                                 print()
                         if self.debug:
                             self.print_debug('\nCode: %s' % code)
-                        if not repeat_delay: break
+                        if not repeat_delay:
+                            break
                         time_to_sleep = repeat_delay - \
                                 time.time() + start_time
                         if time_to_sleep > repeat_delay:
@@ -1122,7 +1185,8 @@ class GenericCLI(GCLI):
             debug = c.get('debug')
         else:
             debug = False
-        if getattr(a, '_debug', False): debug = a._debug
+        if getattr(a, '_debug', False):
+            debug = a._debug
         api_func = self.get_api_func(itype, func)
         if not api_func:
             self.ap.print_help()
@@ -1131,7 +1195,8 @@ class GenericCLI(GCLI):
             apiuri = c.get('uri')
         else:
             apiuri = None
-        if getattr(a, '_api_uri', None): apiuri = a._api_uri
+        if getattr(a, '_api_uri', None):
+            apiuri = a._api_uri
         if 'key' in c:
             apikey = c.get('key')
         else:
@@ -1169,7 +1234,8 @@ class GenericCLI(GCLI):
         if getattr(a, '_force', False):
             params['force'] = 1
         code = self.prepare_run(api_func, params, a)
-        if code: return code
+        if code:
+            return code
         if 'timeout' in c:
             timeout = c.get('timeout')
         else:
@@ -1199,7 +1265,8 @@ class GenericCLI(GCLI):
             code, result = api_func(params)
         if return_result:
             return code, result
-        if not isinstance(api_func, str): api_func = api_func.__name__
+        if not isinstance(api_func, str):
+            api_func = api_func.__name__
         if code != apiclient.result_ok:
             if debug and self.remote_api_enabled:
                 self.print_debug('API result code: %u' % code)
@@ -1211,7 +1278,8 @@ class GenericCLI(GCLI):
                     self.print_failed_result(result)
             if code == apiclient.result_func_unknown and not debug:
                 self.ap.print_help()
-            if code > 100: code -= 100
+            if code > 100:
+                code -= 100
             return code
         else:
             if a._output_file and code == apiclient.result_ok:
@@ -1311,7 +1379,8 @@ class ControllerCLI(object):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call(['corescript', 'mqtt-topics'])
-            if code: return True
+            if code:
+                return True
             return sorted([v['topic'] for v in data])
 
     def __init__(self):
@@ -1486,7 +1555,8 @@ class ControllerCLI(object):
             return self.local_func_result_failed
         editor = os.environ.get('EDITOR', 'vi')
         fname = params['i']
-        if fname.endswith('.py'): fname = fname[:-3]
+        if fname.endswith('.py'):
+            fname = fname[:-3]
         fname = '{}/xc/{}/cs/{}.py'.format(dir_eva, self.product, fname)
         need_reload = not os.path.exists(fname)
         if os.system(f'{editor} {fname}'):
@@ -1510,7 +1580,8 @@ class ControllerCLI(object):
             self.print_local_only()
             return self.local_func_result_failed
         fname = params['i']
-        if fname.endswith('.py'): fname = fname[:-3]
+        if fname.endswith('.py'):
+            fname = fname[:-3]
         fname = '{}/xc/{}/cs/{}.py'.format(
             dir_eva, self.product,
             fname.replace('/', '').replace('..', ''))
