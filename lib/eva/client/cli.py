@@ -452,7 +452,7 @@ class GenericCLI(GCLI):
                            api_func,
                            itype,
                            indent=0,
-                           print_ok=True):
+                           print_ok=True, a=None):
         if result and isinstance(result, dict):
             _result = self.prepare_result_dict(result, api_func, itype)
             rprinted = False
@@ -485,7 +485,7 @@ class GenericCLI(GCLI):
                                 self.colored('  {}', color='yellow')) %
                                max(map(len, _result))).format(v, ''))
                         self.fancy_print_result(_result[v], api_func, itype,
-                                                indent + 1)
+                                                indent + 1, a=a)
                     else:
                         if indent:
                             print(' ' * (indent * indentsp),
@@ -538,10 +538,11 @@ class GenericCLI(GCLI):
                         t[i] = self.list_to_str(c).replace('\n', ' ')
                 table.append(t)
             if table:
+                print(a)
                 header, rows = rapidtables.format_table(
                     table,
                     rapidtables.FORMAT_GENERATOR,
-                    max_column_width=120 if api_func == 'log_get' else None)
+                    max_column_width=120 if api_func == 'log_get' and (not a or a._full_display is False) else None)
                 print(self.colored(header, color='blue', attrs=[]))
                 print(self.colored('-' * len(header), color='grey', attrs=[]))
                 for r, res in zip(rows, table):
@@ -1329,7 +1330,7 @@ class GenericCLI(GCLI):
             self.fancy_print_result(result,
                                     api_func,
                                     itype,
-                                    print_ok=code == apiclient.result_ok)
+                                    print_ok=code == apiclient.result_ok, a=a)
         return code
 
     def print_tdf(self, result_in, time_field):
