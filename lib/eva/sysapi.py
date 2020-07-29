@@ -695,7 +695,7 @@ class UserAPI(object):
     @log_d
     def api_log_get(self, **kwargs):
         """
-        Get API call log
+        get API call log
 
         * API call with master permission returns all records requested
 
@@ -712,7 +712,7 @@ class UserAPI(object):
             s: start time (timestamp or ISO or e.g. 1D for -1 day)
             e: end time (timestamp or ISO or e.g. 1D for -1 day)
             n: records limit
-            t: time format("iso" or "raw" for unix timestamp, default is "raw")
+            t: time format ("iso" or "raw" for unix timestamp, default is "raw")
             f: record filter (requires API key with master permission)
 
         Returns:
