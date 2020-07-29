@@ -10,6 +10,7 @@ Common
     * "interval" notifier property allows to schedule item state telemetry
       notifications with the specified time interval.
     * MS Active Directory authentication support
+    * extended API logging, "api_log_get" SYS API function
 
 UC
 --
