@@ -918,9 +918,11 @@ class SQLANotifier(GenericNotifier):
                                    oid=d['oid'],
                                    status=d['status'],
                                    value=v)
-            return True
-        finally:
             dbt.commit()
+            return True
+        except:
+            dbt.rollback()
+            raise
 
     def set_prop(self, prop, value):
         if prop == 'db':

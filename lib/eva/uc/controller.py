@@ -258,8 +258,11 @@ def save():
                 configs_to_remove.remove(v.get_fname())
             except:
                 pass
-    finally:
         dbt.commit()
+    except:
+        dbt.rollback()
+        raise
+    finally:
         if eva.core.config.db_update != 1:
             db.close()
     for f in configs_to_remove:
