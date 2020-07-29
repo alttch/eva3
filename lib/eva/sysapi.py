@@ -370,7 +370,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.debug(m)
+        if m:
+            logging.debug(m)
         return True
 
     @log_d
@@ -387,7 +388,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.info(m)
+        if m:
+            logging.info(m)
         return True
 
     @log_d
@@ -404,7 +406,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.warning(m)
+        if m:
+            logging.warning(m)
         return True
 
     @log_d
@@ -421,7 +424,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.error(m)
+        if m:
+            logging.error(m)
         return True
 
     @log_d
@@ -438,7 +442,8 @@ class LogAPI(object):
             m: message text
         """
         m = parse_api_params(kwargs, 'm', '.')
-        if m: logging.critical(m)
+        if m:
+            logging.critical(m)
         return True
 
     @log_d
@@ -462,7 +467,8 @@ class LogAPI(object):
         import pyaltt2.logs
         import eva.logs
         l, t, n = parse_api_params(kwargs, 'ltn', '.ii')
-        if not l: l = 'i'
+        if not l:
+            l = 'i'
         try:
             l = int(l)
         except:
@@ -602,8 +608,10 @@ class FileAPI(object):
         if not os.path.isfile(eva.core.dir_runtime + '/' + i):
             raise self._file_not_found(i)
         try:
-            if e: perm = 0o755
-            else: perm = 0o644
+            if e:
+                perm = 0o755
+            else:
+                perm = 0o644
             eva.core.prepare_save()
             try:
                 os.chmod(eva.core.dir_runtime + '/' + i, perm)
@@ -658,7 +666,8 @@ class CSAPI(object):
             save: save core script config after modification
         """
         t, q, save = parse_api_params(kwargs, 'tqS', 'Sib')
-        if q is None: q = 1
+        if q is None:
+            q = 1
         elif q < 0 or q > 2:
             raise InvalidParameter('q should be 0..2')
         return eva.core.corescript_mqtt_subscribe(
@@ -681,6 +690,50 @@ class CSAPI(object):
 
 
 class UserAPI(object):
+
+    @log_d
+    def api_log_get(self, **kwargs):
+        """
+        Get API call log
+
+        * API call with sysfunc permission returns all records requested
+
+        * API call with other API key returns records for the specified key
+          only
+
+        * API call with an authentication token returns records for the
+          current authorized user
+
+        Args:
+            k: any valid API key
+
+        Optional:
+            s: start time (timestamp or ISO or e.g. 1D for -1 day)
+            e: end time (timestamp or ISO or e.g. 1D for -1 day)
+            l: records limit
+            t: time format("iso" or "raw" for unix timestamp, default is "raw")
+            f: record filter (requires API key with sysfunc permission)
+
+        Returns:
+            List of API calls
+
+        Record filter should be specified either as string (k1=val1,k2=val2) or
+        as a dict. Valid fields are:
+
+        * gw: filter by API gateway
+
+        * ip: filter by caller IP
+
+        * auth: filter by authentication type
+
+        * u: filter by user
+
+        * utp: filter by user type
+
+        * ki: filter by API key ID
+
+        * func: filter by API function
+        """
 
     @log_w
     @api_need_master
@@ -872,7 +925,8 @@ class UserAPI(object):
         i, p, v, save = parse_api_params(kwargs, 'ipvS', 'SS.b')
         tokens.remove_token(key_id=i)
         key = eva.apikey.keys_by_id.get(i)
-        if not key: raise ResourceNotFound
+        if not key:
+            raise ResourceNotFound
         return key.set_prop(p, v, save)
 
     @log_w
@@ -927,8 +981,10 @@ class SysAPI(CSAPI, LockAPI, CMDAPI, LogAPI, FileAPI, UserAPI, GenericAPI):
             raise AccessDenied
         try:
             import requests
-            if f.find('//') == -1: _f = 'http://' + f
-            else: _f = f
+            if f.find('//') == -1:
+                _f = 'http://' + f
+            else:
+                _f = f
             r = requests.get(_f, timeout=eva.core.config.timeout)
         except:
             eva.core.log_traceback()
@@ -1185,7 +1241,8 @@ class SysHTTP_API_abstract(SysAPI):
 
     def dump(self, **kwargs):
         fname = super().dump(**kwargs)
-        if not fname: raise FunctionFailed
+        if not fname:
+            raise FunctionFailed
         return {'file': fname}
 
     def get_cvar(self, **kwargs):
@@ -1291,7 +1348,8 @@ class SysHTTP_API_REST_abstract:
         elif rtp == 'log':
             return self.log(k=k, l=ii, **props)
         elif rtp == 'cmd':
-            if not ii: raise ResourceNotFound
+            if not ii:
+                raise ResourceNotFound
             return self.cmd(k=k, c=ii, **props)
         raise MethodNotFound
 
@@ -1333,8 +1391,10 @@ class SysHTTP_API_REST_abstract:
                 if not self.setup_mode(k=k, setup=props['setup']):
                     raise FunctionFailed
                 success = True
-            if success: return True
-            else: raise ResourceNotFound
+            if success:
+                return True
+            else:
+                raise ResourceNotFound
         elif rtp == 'key':
             for i, v in props.items():
                 if not SysAPI.set_key_prop(self, k=k, i=ii, p=i, v=v,
