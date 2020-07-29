@@ -206,6 +206,8 @@ Record filter should be specified either as string (k1=val1,k2=val2) or as a dic
 
 * func: filter by API function
 
+* params: filter by API call params (matches if field contains value)
+
 * status: filter by API call status
 
 

@@ -738,6 +738,8 @@ class UserAPI(object):
 
         * func: filter by API function
 
+        * params: filter by API call params (matches if field contains value)
+
         * status: filter by API call status
         """
         k, s, e, n, t, f = parse_function_params(kwargs, 'ksentf', 'S..i..')

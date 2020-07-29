@@ -214,6 +214,12 @@ def api_log_get(t_start=None, t_end=None, limit=None, time_format=None, f=None):
         for z in ('u', 'utp', 'status'):
             if z in f and f[z] == '':
                 f[z] = None
+    if 'params' in f:
+        condp = 'params like :params'
+        qkw['params'] = f'%{f["params"]}%'
+        del f['params']
+    else:
+        condp = None
     try:
         cond, qkw = format_sql_condition(f,
                                          qkw,
@@ -222,6 +228,10 @@ def api_log_get(t_start=None, t_end=None, limit=None, time_format=None, f=None):
                                          cond=cond)
     except ValueError as e:
         raise ValueError(f'Invalid filter: {e}')
+    if condp:
+        if cond: cond += ' and '
+        else: cond = 'where '
+        cond += condp
     if limit is None:
         cond += ' order by t asc'
     else:
