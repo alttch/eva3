@@ -115,6 +115,7 @@ eva.sfa.sfapi.start()
 
 eva.sfa.controller.start()
 
+eva.users.start()
 eva.tokens.start()
 eva.api.start()
 
