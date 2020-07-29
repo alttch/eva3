@@ -22,6 +22,8 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceAlreadyExists
 
+from neotasker import background_worker
+
 from pyaltt2.db import format_condition as format_sql_condition
 
 from types import SimpleNamespace
@@ -29,6 +31,8 @@ from types import SimpleNamespace
 from eva.tools import fmt_time
 
 _d = SimpleNamespace(msad=None, msad_ou='EVA', msad_key_prefix='')
+
+api_log_clean_delay = 60
 
 
 def msad_init(host, domain, ca=None, key_prefix=None, ou=None):
@@ -132,6 +136,7 @@ def api_log_insert(call_id,
                        params=rapidjson.dumps(params)[:512])
         dbt.commit()
     except:
+        dbt.rollback()
         logging.error('Unable to insert API call info into DB')
         eva.core.log_traceback()
 
@@ -147,6 +152,7 @@ def api_log_set_status(call_id, status=None):
             status=status)
         dbt.commit()
     except:
+        dbt.rollback()
         logging.error('Unable to update API call info in DB')
         eva.core.log_traceback()
 
@@ -167,6 +173,7 @@ def api_log_update(call_id, **kwargs):
             dbconn.execute(sql(f'update api_log set {cond} where id=:i'), **qkw)
             dbt.commit()
         except:
+            dbt.rollback()
             logging.error('Unable to update API call info in DB')
             eva.core.log_traceback()
 
@@ -419,3 +426,31 @@ def run_hook(cmd, u, password=None):
     if exitcode:
         raise FunctionFailed('user hook exited with code {}'.format(exitcode))
     return True
+
+
+def start():
+    if eva.core.config.keep_api_log:
+        api_log_cleaner.start()
+
+
+@eva.core.stop
+def stop():
+    if eva.core.config.keep_api_log:
+        api_log_cleaner.stop()
+
+
+@background_worker(delay=api_log_clean_delay,
+                   name='users:api_log_cleaner',
+                   loop='cleaners',
+                   on_error=eva.core.log_traceback)
+def api_log_cleaner(**kwargs):
+    logging.debug('cleaning API log')
+    dbconn = userdb()
+    dbt = dbconn.begin()
+    try:
+        dbconn.execute(sql('delete from api_log where t < :t'),
+                       t=time.time() - eva.core.config.keep_api_log)
+        dbt.commit()
+    except:
+        dbt.rollback()
+        raise
