@@ -19,6 +19,8 @@ from eva.tools import format_json
 from eva.tools import val_to_boolean
 from eva.tools import is_oid
 from eva.tools import parse_oid
+from eva.tools import fmt_time
+from eva.tools import _p_periods
 # from evacpp.evacpp import GenericAction
 from eva.generic import GenericAction
 
@@ -1591,13 +1593,6 @@ def item_match(item, item_ids, groups=None):
     return False
 
 
-_p_periods = {
-    'S': 1,
-    'T': 60,
-    'H': 3600,
-    'D': 86400,
-    'W': 604800,
-}
 
 # val_prefixes = {
 # 'k': 1000,
@@ -1654,11 +1649,6 @@ def get_state_history(a=None,
     import math
     from datetime import datetime
 
-    def fmt_time(t):
-        try:
-            return time.time() - _p_periods.get(t[-1]) * int(t[:-1])
-        except:
-            return t
 
     if oid is None: raise ResourceNotFound
     n = eva.notify.get_stats_notifier(a)

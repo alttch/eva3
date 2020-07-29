@@ -107,7 +107,7 @@ def log_api_call_result(status):
     if eva.core.config.keep_api_log:
         call_id = get_aci('id')
         if call_id:
-            eva.users.api_log_status(call_id, status)
+            eva.users.api_log_set_status(call_id, status)
 
 
 def get_aci(field, default=None):
@@ -1084,6 +1084,10 @@ class GenericAPI(object):
         token = tokens.append_token(key, u, utp)
         if not token:
             raise FunctionFailed('token generation error')
+        if eva.core.config.keep_api_log:
+            call_id = get_aci('id')
+            if call_id:
+                eva.users.api_log_update(call_id, ki=key, u=u, utp=utp)
         return {'user': u, 'key': key, 'token': token}
 
     @log_d

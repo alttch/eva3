@@ -10,6 +10,7 @@ import rapidjson
 import sqlalchemy as sa
 import subprocess
 import time
+from datetime import datetime
 
 from eva import apikey
 from eva.core import userdb
@@ -21,7 +22,11 @@ from eva.exceptions import ResourceNotFound
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceAlreadyExists
 
+from pyaltt2.db import format_condition as format_sql_condition
+
 from types import SimpleNamespace
+
+from eva.tools import fmt_time
 
 _d = SimpleNamespace(msad=None, msad_ou='EVA', msad_key_prefix='')
 
@@ -131,7 +136,7 @@ def api_log_insert(call_id,
         eva.core.log_traceback()
 
 
-def api_log_status(call_id, status=None):
+def api_log_set_status(call_id, status=None):
     dbconn = userdb()
     dbt = dbconn.begin()
     try:
@@ -142,8 +147,90 @@ def api_log_status(call_id, status=None):
             status=status)
         dbt.commit()
     except:
-        logging.error('Unable to insert API call info into DB')
+        logging.error('Unable to update API call info in DB')
         eva.core.log_traceback()
+
+
+def api_log_update(call_id, **kwargs):
+    # unsafe, make sure kwargs keys are not coming from outside
+    cond = ''
+    qkw = {'i': call_id}
+    for k, v in kwargs.items():
+        if cond:
+            cond += ','
+        cond += f'{k}=:{k}'
+        qkw[k] = v
+    if cond:
+        dbconn = userdb()
+        dbt = dbconn.begin()
+        try:
+            dbconn.execute(sql(f'update api_log set {cond} where id=:i'), **qkw)
+            dbt.commit()
+        except:
+            logging.error('Unable to update API call info in DB')
+            eva.core.log_traceback()
+
+
+def api_log_get(t_start=None, t_end=None, limit=None, time_format=None, f=None):
+    t_start = fmt_time(t_start)
+    t_end = fmt_time(t_end)
+    qkw = {}
+    if t_start or t_end:
+        cond = 'where ('
+        if t_start is not None:
+            try:
+                t_start = float(t_start)
+            except:
+                try:
+                    t_start = dateutil.parser.parse(t_start).timestamp()
+                except:
+                    raise ValueError('start time format is uknown')
+            cond += 't >= :t_start'
+            qkw['t_start'] = t_start
+        if t_end is not None:
+            try:
+                t_end = float(t_end)
+            except:
+                try:
+                    t_end = dateutil.parser.parse(t_end).timestamp()
+                except:
+                    raise ValueError('end time format is uknown')
+            if t_start is not None:
+                cond += ' and '
+            cond += 't <= :t_end'
+            qkw['t_end'] = t_end
+        cond += ')'
+    else:
+        cond = ''
+    if f:
+        # make sure some empty fields are null
+        for z in ('u', 'utp', 'status'):
+            if z in f and f[z] == '':
+                f[z] = None
+    cond, qkw = format_sql_condition(f,
+                                     qkw,
+                                     fields=('gw', 'ip', 'auth', 'u', 'utp',
+                                             'ki', 'func', 'status'),
+                                     cond=cond)
+    if limit is None:
+        cond += ' order by t asc'
+    else:
+        cond += f' order by t desc limit {limit}'
+    result = [
+        dict(r) for r in userdb().execute(
+            sql('select id, t, tf, gw, ip, auth, u, utp, ki,'
+                f' func, params, status from api_log {cond}'), **
+            qkw).fetchall()
+    ]
+    if limit is not None:
+        result = sorted(result, key=lambda k: k['t'])
+    if time_format == 'iso':
+        import pytz
+        tz = pytz.timezone(time.tzname[0])
+        for r in result:
+            r['t'] = datetime.fromtimestamp(r['t'], tz).isoformat()
+            r['tf'] = datetime.fromtimestamp(r['tf'], tz).isoformat()
+    return result
 
 
 def list_users():

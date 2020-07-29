@@ -64,9 +64,11 @@ def fname_remove_unsafe(fname):
 
 # throws exception
 def dict_from_str(s):
-    if not isinstance(s, str): return s
+    if not isinstance(s, str):
+        return s
     result = {}
-    if not s: return result
+    if not s:
+        return result
     vals = s.split(',')
     for v in vals:
         name, value = v.split('=')
@@ -83,7 +85,8 @@ def dict_from_str(s):
         if isinstance(value, str):
             try:
                 value = float(value)
-                if value == int(value): value = int(value)
+                if value == int(value):
+                    value = int(value)
             except:
                 pass
         result[name] = value
@@ -91,13 +94,15 @@ def dict_from_str(s):
 
 
 def arr_from_str(s):
-    if not isinstance(s, str) or s.find('|') == -1: return s
+    if not isinstance(s, str) or s.find('|') == -1:
+        return s
     result = []
     vals = s.split('|')
     for v in vals:
         try:
             _v = float(v)
-            if _v == int(_v): _v = int(_v)
+            if _v == int(_v):
+                _v = int(_v)
         except:
             _v = v
         result.append(_v)
@@ -255,13 +260,15 @@ def parse_function_params(params,
         elif required == 'b':
             if value is not None:
                 val = val_to_boolean(value)
-                if val is None: raise e(err.format(n, value, 'boolean'))
+                if val is None:
+                    raise e(err.format(n, value, 'boolean'))
                 result += (val,)
             else:
                 result += (None,)
         elif required == 'B':
             val = val_to_boolean(value)
-            if val is None: raise e(err.format(n, value, 'boolean'))
+            if val is None:
+                raise e(err.format(n, value, 'boolean'))
             result += (val,)
         elif required == 'D':
             if not isinstance(value, dict):
@@ -281,10 +288,12 @@ def parse_function_params(params,
             result += (value,)
         elif required == 'o':
             if value is not None:
-                if not is_oid(value): raise e(err.format(n, value, 'oid'))
+                if not is_oid(value):
+                    raise e(err.format(n, value, 'oid'))
             result += (value,)
         elif required == 'O':
-            if not is_oid(value): raise e(err.format(n, value, 'oid'))
+            if not is_oid(value):
+                raise e(err.format(n, value, 'oid'))
             result += (value,)
         else:
             raise e('Parameter parser internal error')
@@ -292,12 +301,14 @@ def parse_function_params(params,
 
 
 def is_oid(oid):
-    if oid is None or not isinstance(oid, str): return False
+    if oid is None or not isinstance(oid, str):
+        return False
     return oid.find(':') != -1
 
 
 def parse_oid(oid):
-    if oid is None or not isinstance(oid, str): return None, None
+    if oid is None or not isinstance(oid, str):
+        return None, None
     try:
         tp, i = oid.split(':')
     except:
@@ -306,16 +317,20 @@ def parse_oid(oid):
 
 
 def oid_type(oid):
-    if oid is None or not isinstance(oid, str): return None
+    if oid is None or not isinstance(oid, str):
+        return None
     tp, i = parse_oid(oid)
     return tp
 
 
 def oid_to_id(oid, required=None):
-    if not is_oid(oid): return oid
+    if not is_oid(oid):
+        return oid
     tp, i = parse_oid(oid)
-    if tp is None or i is None: return None
-    if required and tp != required: return None
+    if tp is None or i is None:
+        return None
+    if required and tp != required:
+        return None
     return i
 
 
@@ -365,7 +380,8 @@ def dict_merge(*args):
 
 def format_modbus_value(val):
     try:
-        if val[0] not in ['h', 'c']: return None, None, None, None
+        if val[0] not in ['h', 'c']:
+            return None, None, None, None
         if val.find('*') != -1:
             addr, multiplier = val[1:].split('*', 1)
             try:
@@ -393,3 +409,19 @@ def format_modbus_value(val):
         return val[0], addr, multiplier, signed
     except:
         return None, None, None, None
+
+
+_p_periods = {
+    'S': 1,
+    'T': 60,
+    'H': 3600,
+    'D': 86400,
+    'W': 604800,
+}
+
+
+def fmt_time(t):
+    try:
+        return time.time() - _p_periods.get(t[-1]) * int(t[:-1])
+    except:
+        return t

@@ -40,12 +40,7 @@ def append_token(key_id, user=None, utp=None):
         i += 1
         if i > 3:
             return False
-    tokens[token] = {
-        'u': user,
-        'ki': key_id,
-        'utp': utp if utp is not None else 'local',
-        't': time.time()
-    }
+    tokens[token] = {'u': user, 'ki': key_id, 'utp': utp, 't': time.time()}
     logging.debug('{} added. user: {}, key id: {}'.format(
         token[:12], user, key_id))
     return token

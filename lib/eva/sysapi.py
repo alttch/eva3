@@ -34,6 +34,7 @@ from eva.api import api_result_accepted
 from eva.tools import format_json
 from eva.tools import fname_remove_unsafe
 from eva.tools import val_to_boolean
+from eva.tools import dict_from_str
 
 from eva.exceptions import FunctionFailed
 from eva.exceptions import ResourceNotFound
@@ -696,7 +697,7 @@ class UserAPI(object):
         """
         Get API call log
 
-        * API call with sysfunc permission returns all records requested
+        * API call with master permission returns all records requested
 
         * API call with other API key returns records for the specified key
           only
@@ -710,12 +711,15 @@ class UserAPI(object):
         Optional:
             s: start time (timestamp or ISO or e.g. 1D for -1 day)
             e: end time (timestamp or ISO or e.g. 1D for -1 day)
-            l: records limit
+            n: records limit
             t: time format("iso" or "raw" for unix timestamp, default is "raw")
-            f: record filter (requires API key with sysfunc permission)
+            f: record filter (requires API key with master permission)
 
         Returns:
             List of API calls
+
+        Note: API call params are returned as string and can be invalid JSON
+        data as they're always truncated to 512 symbols in log database
 
         Record filter should be specified either as string (k1=val1,k2=val2) or
         as a dict. Valid fields are:
@@ -733,7 +737,36 @@ class UserAPI(object):
         * ki: filter by API key ID
 
         * func: filter by API function
+
+        * status: filter by API call status
         """
+        k, s, e, n, t, f = parse_function_params(kwargs, 'ksentf', 'S..i..')
+        if f is not None:
+            if isinstance(f, str):
+                try:
+                    f = dict_from_str(f)
+                except:
+                    raise InvalidParameter('Unable to parse filter')
+            elif not isinstance(f, dict):
+                raise InvalidParameter('f should be dict or str')
+        else:
+            f = {}
+        # force record filter if not master
+        if not eva.apikey.check(k, master=True):
+            from eva.api import get_aci
+            u = get_aci('u')
+            if u is not None:
+                f['u'] = u
+                f['utp'] = get_aci('utp')
+            f['ki'] = eva.apikey.key_id(k)
+        try:
+            return eva.users.api_log_get(t_start=s,
+                                         t_end=e,
+                                         limit=n,
+                                         time_format=t,
+                                         f=f)
+        except Exception as e:
+            raise FunctionFailed(e)
 
     @log_w
     @api_need_master
@@ -1277,6 +1310,8 @@ class SysHTTP_API_REST_abstract:
     def GET(self, rtp, k, ii, save, kind, method, for_dir, props):
         if rtp == 'core':
             return self.test(k=k)
+        elif rtp == 'core@apilog':
+            return self.api_log_get(k=k, **props)
         elif rtp == 'cvar':
             return self.get_cvar(k=k, i=ii)
         elif rtp == 'lock':
