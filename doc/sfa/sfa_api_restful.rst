@@ -1245,6 +1245,43 @@ Parameters:
 * **m** message text
 
 
+.. _sfapi_restful_log_get:
+
+get records from the controller log
+-----------------------------------
+
+Log records are stored in the controllers’ memory until restart or the time (keep_logmem) specified in controller configuration passes.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_get.rest
+    :response: http-examples/sysapi/log_get.resp-rest
+
+Parameters:
+
+* **API Key** API key with *sysfunc=yes* permissions
+
+Optionally:
+
+* **t** get log records not older than t seconds
+* **n** the maximum number of log records you want to obtain
+
+
+.. _sfapi_restful_log_rotate:
+
+rotate log file
+---------------
+
+Deprecated, not required since 3.3.0
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_rotate.rest
+    :response: http-examples/sysapi/log_rotate.resp-rest
+
+Parameters:
+
+* **API Key** API key with *sysfunc=yes* permissions
+
+
 .. _sfapi_restful_api_log_get:
 
 get API call log
@@ -1297,43 +1334,6 @@ Record filter should be specified either as string (k1=val1,k2=val2) or as a dic
 * params: filter by API call params (matches if field contains value)
 
 * status: filter by API call status
-
-
-.. _sfapi_restful_log_get:
-
-get records from the controller log
------------------------------------
-
-Log records are stored in the controllers’ memory until restart or the time (keep_logmem) specified in controller configuration passes.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_get.rest
-    :response: http-examples/sysapi/log_get.resp-rest
-
-Parameters:
-
-* **API Key** API key with *sysfunc=yes* permissions
-
-Optionally:
-
-* **t** get log records not older than t seconds
-* **n** the maximum number of log records you want to obtain
-
-
-.. _sfapi_restful_log_rotate:
-
-rotate log file
----------------
-
-Deprecated, not required since 3.3.0
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_rotate.rest
-    :response: http-examples/sysapi/log_rotate.resp-rest
-
-Parameters:
-
-* **API Key** API key with *sysfunc=yes* permissions
 
 
 

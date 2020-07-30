@@ -499,6 +499,42 @@ Parameters:
 * **k** API key with *sysfunc=yes* permissions
 * **m** message text
 
+.. _sysapi_log_get:
+
+log_get - get records from the controller log
+---------------------------------------------
+
+Log records are stored in the controllers’ memory until restart or the time (keep_logmem) specified in controller configuration passes.
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_get.req
+    :response: http-examples/sysapi/log_get.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+
+Optionally:
+
+* **l** log level (10 - debug, 20 - info, 30 - warning, 40 - error, 50 - critical)
+* **t** get log records not older than t seconds
+* **n** the maximum number of log records you want to obtain
+
+.. _sysapi_log_rotate:
+
+log_rotate - rotate log file
+----------------------------
+
+Deprecated, not required since 3.3.0
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/log_rotate.req
+    :response: http-examples/sysapi/log_rotate.resp
+
+Parameters:
+
+* **k** API key with *sysfunc=yes* permissions
+
 .. _sysapi_api_log_get:
 
 api_log_get - get API call log
@@ -551,42 +587,6 @@ Record filter should be specified either as string (k1=val1,k2=val2) or as a dic
 * params: filter by API call params (matches if field contains value)
 
 * status: filter by API call status
-
-.. _sysapi_log_get:
-
-log_get - get records from the controller log
----------------------------------------------
-
-Log records are stored in the controllers’ memory until restart or the time (keep_logmem) specified in controller configuration passes.
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_get.req
-    :response: http-examples/sysapi/log_get.resp
-
-Parameters:
-
-* **k** API key with *sysfunc=yes* permissions
-
-Optionally:
-
-* **l** log level (10 - debug, 20 - info, 30 - warning, 40 - error, 50 - critical)
-* **t** get log records not older than t seconds
-* **n** the maximum number of log records you want to obtain
-
-.. _sysapi_log_rotate:
-
-log_rotate - rotate log file
-----------------------------
-
-Deprecated, not required since 3.3.0
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/log_rotate.req
-    :response: http-examples/sysapi/log_rotate.resp
-
-Parameters:
-
-* **k** API key with *sysfunc=yes* permissions
 
 
 .. _sysapi_cat_keys:
