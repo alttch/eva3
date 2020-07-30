@@ -491,6 +491,8 @@ class API_Logger(object):
 
     def get_auth(self, func, params):
         ki = apikey.key_id(params.get('k'))
+        if ki:
+            set_aci('ki', ki)
         return ki, ki
 
 
@@ -498,6 +500,8 @@ class HTTP_API_Logger(API_Logger):
 
     def get_auth(self, func, params):
         ki = apikey.key_id(params.get('k'))
+        if ki:
+            set_aci('ki', ki)
         return f'{ki}@{http_real_ip(get_gw=True)}', ki
 
 
@@ -1077,7 +1081,7 @@ class GenericAPI(object):
             token = tokens.append_token(ki)
             if not token:
                 raise FunctionFailed('token generation error')
-            return {'key': apikey.key_id(k), 'token': token}
+            return {'key': ki, 'token': token}
         key, utp = eva.users.authenticate(u, p)
         if not apikey.check(apikey.key_by_id(key), ip=http_real_ip()):
             raise AccessDenied
@@ -1105,8 +1109,6 @@ class GenericAPI(object):
         k = parse_function_params(kwargs, 'k', '.')
         if k.startswith('token:'):
             tokens.remove_token(k)
-        # else:
-        # tokens.remove_token(key_id=apikey.key_id(k))
         return True
 
 
