@@ -2646,6 +2646,9 @@ class WSNotifier_Client(GenericNotifier_Client):
     def send_reload(self):
         self.send_notification('reload', 'asap')
 
+    def send_supervisor_event(self, subject, data=None):
+        self.send_notification(f'supervisor.{subject}', data)
+
     def is_client_dead(self):
         if self.ws:
             return self.ws.terminated
@@ -3125,6 +3128,13 @@ def reload_clients():
     for k, n in _get_notifiers_copy().items():
         if n.nt_client:
             n.send_reload()
+
+
+def supervisor_event(subject, data=None):
+    logging.warning(f'sending supervisor event "{subject}" to clients')
+    for k, n in _get_notifiers_copy().items():
+        if n.nt_client:
+            n.send_supervisor_event(subject, data)
 
 
 @eva.core.shutdown
