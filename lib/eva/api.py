@@ -1094,7 +1094,7 @@ class GenericAPI(object):
                 eva.users.api_log_update(call_id, ki=key, u=u, utp=utp)
         return {'user': u, 'key': key, 'token': token}
 
-    @log_d
+    @log_i
     def logout(self, **kwargs):
         """
         log out and purge authentication token
@@ -1106,8 +1106,8 @@ class GenericAPI(object):
         """
         if not tokens.is_enabled():
             raise FunctionFailed('Session tokens are disabled')
-        k = parse_function_params(kwargs, 'k', '.')
-        if k.startswith('token:'):
+        k = get_aci('token')
+        if k:
             tokens.remove_token(k)
         return True
 
@@ -1302,6 +1302,7 @@ def key_token_parse(k):
     if not token:
         raise AccessDenied('Invalid token')
     set_aci('auth', 'token')
+    set_aci('token', k)
     set_aci('u', token['u'])
     set_aci('utp', token['utp'])
     return apikey.key_by_id(token['ki'])

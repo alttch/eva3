@@ -65,6 +65,7 @@ def remove_token(token=None, user=None, key_id=None):
                     remove_token(token)
         return True
     except:
+        eva.core.log_traceback()
         return False
 
 
