@@ -71,6 +71,11 @@ notify_leave_data = set()
 with_notify_lock = eva.core.RLocker('notify')
 
 
+@with_notify_lock
+def _get_notifiers_copy():
+    return notifiers.copy()
+
+
 class Event(object):
 
     def __init__(self, subject):
@@ -2942,7 +2947,7 @@ def load(test=True, connect=False):
         eva.core.log_traceback(notifier=True)
         return False
     # exec custom load for notifiers
-    for i, n in notifiers.copy().items():
+    for i, n in _get_notifiers_copy().items():
         try:
             n.load_config()
         except:
@@ -2954,7 +2959,7 @@ def serialize(notifier_id=None):
     if notifier_id:
         return notifiers[notifier_id].serialize()
     d = {}
-    for i, n in notifiers.copy().items():
+    for i, n in _get_notifiers_copy().items():
         d[i] = n.serialize()
     return d
 
@@ -2985,7 +2990,7 @@ def save(notifier_id=None):
             except:
                 logging.error('can not save notifier\'s config for %s' % i)
     else:
-        for i, n in notifiers.copy().items():
+        for i, n in _get_notifiers_copy().items():
             if i and not n.nt_client:
                 save(i)
 
@@ -3055,7 +3060,7 @@ def get_stats_notifier(notifier_id):
 
 def get_notifiers():
     result = []
-    for i, n in notifiers.copy().items():
+    for i, n in _get_notifiers_copy().items():
         if not n.nt_client:
             result.append(n)
     return result
@@ -3065,7 +3070,7 @@ def unsubscribe_item(item, subject='#', notifier_id=None):
     if notifier_id:
         notifiers[notifier_id].unsubscribe_item(subject, item)
     else:
-        for i in notifiers.copy():
+        for i in _get_notifiers_copy():
             unsubscribe_item(item, subject, i)
 
 
@@ -3073,7 +3078,7 @@ def unsubscribe_group(group, subject='#', notifier_id=None):
     if notifier_id:
         notifiers[notifier_id].unsubscribe_group(subject, group)
     else:
-        for i in notifiers.copy():
+        for i in _get_notifiers_copy():
             unsubscribe_group(group, subject, i)
 
 
@@ -3087,7 +3092,7 @@ def dump(notifier_id=None):
 def start():
     notifier_client_cleaner.start()
     th = []
-    for i, n in notifiers.copy().items():
+    for i, n in _get_notifiers_copy().items():
         if n.enabled:
             th.append(threading.Thread(target=n.start, daemon=True))
     time_start = time.time()
@@ -3106,7 +3111,7 @@ def start():
 
 @eva.core.stop
 def stop():
-    for i, n in notifiers.copy().items():
+    for i, n in _get_notifiers_copy().items():
         n.stop()
     notifier_client_cleaner.stop()
 
@@ -3117,7 +3122,7 @@ def is_action_subscribed():
 
 def reload_clients():
     logging.warning('sending reload event to clients')
-    for k, n in notifiers.copy().items():
+    for k, n in _get_notifiers_copy().items():
         if n.nt_client:
             n.send_reload()
 
@@ -3153,7 +3158,7 @@ def mark_leaving(n):
                    on_error=eva.core.log_traceback)
 async def notifier_client_cleaner(**kwargs):
     logging.debug('cleaning notifiers')
-    for k, n in notifiers.copy().items():
+    for k, n in _get_notifiers_copy().items():
         if n.nt_client:
             n.cleanup()
 
