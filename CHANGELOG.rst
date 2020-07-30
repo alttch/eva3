@@ -7,6 +7,7 @@ EVA ICS CHANGELOG
 Common
 ------
 
+    * fix: auth tokens are now always correctly destroyed at logout
     * "interval" notifier property allows to schedule item state telemetry
       notifications with the specified time interval.
     * MS Active Directory authentication support
@@ -15,7 +16,7 @@ Common
 UC
 --
 
-    * Added enable flag in API and CLI to enable unit actions / sensor updates
+    * Added "enable" flag in API and CLI to enable unit actions / sensor updates
       right after creation.
 
 3.3.0 (2020-02-05)
