@@ -68,7 +68,8 @@ class LVar(eva.item.VariableItem):
                          value=None,
                          from_mqtt=False,
                          force_notify=False):
-        if not self.status and status != 1: return False
+        if not self.status and status != 1:
+            return False
         if not self.update_lock.acquire(timeout=eva.core.config.timeout):
             logging.critical('LVar::update_set_state locking broken')
             eva.core.critical()
@@ -93,7 +94,8 @@ class LVar(eva.item.VariableItem):
 
     def set_prop(self, prop, val=None, save=False):
         if super().set_prop(prop=prop, val=val, save=save):
-            if prop == 'expires': self.notify()
+            if prop == 'expires':
+                self.notify()
             return True
         return False
 

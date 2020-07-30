@@ -50,7 +50,8 @@ result_not_implemented = 14  # 400
 
 # copy of eva.tools.parse_host_port to avoid unnecesseary imports
 def parse_host_port(hp, default_port):
-    if hp.find(':') == -1: return (hp, default_port)
+    if hp.find(':') == -1:
+        return (hp, default_port)
     try:
         host, port = hp.split(':')
         port = int(port)
@@ -105,8 +106,10 @@ class APIClient(object):
              _debug=False):
         if not self._uri or not self._product_code:
             return result_not_ready, {}
-        if timeout: t = timeout
-        else: t = self._timeout
+        if timeout:
+            t = timeout
+        else:
+            t = self._timeout
         if params:
             p = params.copy()
         else:
@@ -170,7 +173,8 @@ class APIClientLocal(APIClient):
     def __init__(self, product, dir_eva=None):
         import configparser
         super().__init__()
-        if dir_eva is not None: _etc = dir_eva + '/etc'
+        if dir_eva is not None:
+            _etc = dir_eva + '/etc'
         else:
             _etc = (Path(__file__).absolute().parents[3] / 'etc').as_posix()
         self._product_code = product
@@ -207,7 +211,8 @@ class APIClientLocal(APIClient):
         if h:
             try:
                 host, port = parse_host_port(h, default_port)
-                if host == '0.0.0.0': host = '127.0.0.1'
+                if host == '0.0.0.0':
+                    host = '127.0.0.1'
                 self._uri = pfx + host + ':' + str(port)
             except:
                 pass

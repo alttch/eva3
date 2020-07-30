@@ -203,8 +203,10 @@ except:
     sys.exit(5)
 
 for i in range(len(code)):
-    if code[i] == 'debug\n': code[i] = 'debug()\n'
-    elif code[i] == 'nodebug\n': code[i] = 'nodebug()\n'
+    if code[i] == 'debug\n':
+        code[i] = 'debug()\n'
+    elif code[i] == 'nodebug\n':
+        code[i] = 'nodebug()\n'
 
 exec(''.join(code), d)
 da.stop()

@@ -80,7 +80,8 @@ class LPI(object):
 
     def get_item_cmap(self, cfg):
         port = cfg.get(self.io_label)
-        if not isinstance(port, list): port = [port]
+        if not isinstance(port, list):
+            port = [port]
         return {'port': port}
 
     def serialize(self, full=False, config=False, helpinfo=None):
@@ -131,7 +132,8 @@ class LPI(object):
     """
 
     def need_invert(self, port):
-        if not isinstance(port, str) or port[:2] != 'i:': return port, False
+        if not isinstance(port, str) or port[:2] != 'i:':
+            return port, False
         return port[2:], True
 
     """
@@ -164,7 +166,8 @@ class LPI(object):
     def delay(self, _uuid, sec):
         t_end = time.perf_counter() + sec
         while time.perf_counter() < t_end:
-            if self.need_terminate(_uuid): return False
+            if self.need_terminate(_uuid):
+                return False
             time.sleep(get_polldelay())
         return not self.need_terminate(_uuid)
 
@@ -258,7 +261,8 @@ class LPI(object):
         self.__help = mod.__help__
         self.io_label = self.lpi_cfg.get('io_label') if self.lpi_cfg.get(
             'io_label') else 'port'
-        if kwargs.get('info_only'): return
+        if kwargs.get('info_only'):
+            return
         self.ready = True
 
     """
@@ -275,7 +279,8 @@ class LPI(object):
             _tki = tki
         else:
             _tki = get_timeout() - self.default_tki_diff
-            if _tki < 0: _tki = 0
+            if _tki < 0:
+                _tki = 0
         if not self.phi:
             self.log_error('no PHI assigned')
             return None
@@ -297,7 +302,8 @@ class LPI(object):
             _tki = tki
         else:
             _tki = get_timeout() - self.default_tki_diff
-            if _tki < 0: _tki = 0
+            if _tki < 0:
+                _tki = 0
         if not self.phi:
             self.log_error('no PHI assigned')
             return None

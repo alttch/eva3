@@ -92,7 +92,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             raise MethodNotFound
         i, f, p, t = parse_api_params(kwargs, 'ifpt', 'SS.n')
         controller = eva.sfa.controller.get_controller(i)
-        if not controller: raise ResourceNotFound('controller')
+        if not controller:
+            raise ResourceNotFound('controller')
         if isinstance(p, dict):
             params = p
         elif isinstance(p, str):
@@ -146,7 +147,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         else:
             _tp = tp
             _i = i
-        if not _tp: raise ResourceNotFound
+        if not _tp:
+            raise ResourceNotFound
         if _tp == 'U' or _tp == 'unit':
             gi = eva.sfa.controller.uc_pool.units
         elif _tp == 'S' or _tp == 'sensor':
@@ -161,8 +163,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             else:
                 raise ResourceNotFound
         result = []
-        if isinstance(group, list): _group = group
-        else: _group = str(group).split(',')
+        if isinstance(group, list):
+            _group = group
+        else:
+            _group = str(group).split(',')
         for i, v in gi.copy().items():
             if apikey.check(k, v, ro_op=True) and \
                     (not group or \
@@ -183,7 +187,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             .p: item type (unit [U], sensor [S] or lvar [LV])
         """
         k, tp, group = parse_api_params(kwargs, 'kpg', '.Ss')
-        if not tp: return []
+        if not tp:
+            return []
         if tp == 'U' or tp == 'unit':
             gi = eva.sfa.controller.uc_pool.units
         elif tp == 'S' or tp == 'sensor':
@@ -226,10 +231,13 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i, s, v, w, u, p, q = parse_function_params(kwargs, 'kisvwupq',
                                                        '.sR.nsin')
-        if v is not None: v = str(v)
+        if v is not None:
+            v = str(v)
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit: raise ResourceNotFound
-        elif not apikey.check(k, unit): raise AccessDenied
+        if not unit:
+            raise ResourceNotFound
+        elif not apikey.check(k, unit):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.action(unit_id=oid_to_id(i, 'unit'),
                                               status=s,
@@ -262,8 +270,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i, w, u, p, q = parse_function_params(kwargs, 'kiwupq', '.snsin')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit: raise ResourceNotFound
-        elif not apikey.check(k, unit): raise AccessDenied
+        if not unit:
+            raise ResourceNotFound
+        elif not apikey.check(k, unit):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.action_toggle(unit_id=oid_to_id(
                 i, 'unit'),
@@ -301,7 +311,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                 item = eva.sfa.controller.uc_pool.get_unit(a['i'])
             else:
                 a = eva.sfa.controller.lm_pool.action_history_get(u)
-                if not a: raise ResourceNotFound
+                if not a:
+                    raise ResourceNotFound
                 item = eva.sfa.controller.lm_pool.get_macro(a['i'])
         elif i:
             if is_oid(i):
@@ -343,8 +354,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit: raise ResourceNotFound
-        elif not apikey.check(k, unit): raise AccessDenied
+        if not unit:
+            raise ResourceNotFound
+        elif not apikey.check(k, unit):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.disable_actions(
                 unit_id=oid_to_id(i, 'unit')))
@@ -362,8 +375,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit: raise ResourceNotFound
-        elif not apikey.check(k, unit): raise AccessDenied
+        if not unit:
+            raise ResourceNotFound
+        elif not apikey.check(k, unit):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.enable_actions(
                 unit_id=oid_to_id(i, 'unit')))
@@ -396,8 +411,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             unit = eva.sfa.controller.uc_pool.get_unit(a['i'])
         else:
             raise ResourceNotFound
-        if not unit: raise ResourceNotFound
-        elif not apikey.check(k, unit): raise AccessDenied
+        if not unit:
+            raise ResourceNotFound
+        elif not apikey.check(k, unit):
+            raise AccessDenied
         result = ecall(
             eva.sfa.controller.uc_pool.terminate(unit_id=oid_to_id(i, 'unit'),
                                                  uuid=u))
@@ -425,8 +442,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit: raise ResourceNotFound
-        elif not apikey.check(k, unit): raise AccessDenied
+        if not unit:
+            raise ResourceNotFound
+        elif not apikey.check(k, unit):
+            raise AccessDenied
         result = ecall(
             eva.sfa.controller.uc_pool.kill(unit_id=oid_to_id(i, 'unit')))
         if result is True:
@@ -448,8 +467,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         unit = eva.sfa.controller.uc_pool.get_unit(oid_to_id(i, 'unit'))
-        if not unit: raise ResourceNotFound
-        elif not apikey.check(k, unit): raise AccessDenied
+        if not unit:
+            raise ResourceNotFound
+        elif not apikey.check(k, unit):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.uc_pool.q_clean(unit_id=oid_to_id(i, 'unit')))
 
@@ -469,10 +490,13 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             v: lvar value
         """
         k, i, s, v, = parse_function_params(kwargs, 'kisv', '.si.')
-        if v is not None: v = str(v)
+        if v is not None:
+            v = str(v)
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar: raise ResourceNotFound
-        elif not apikey.check(k, lvar): raise AccessDenied
+        if not lvar:
+            raise ResourceNotFound
+        elif not apikey.check(k, lvar):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.set(lvar_id=oid_to_id(i, 'lvar'),
                                            status=s,
@@ -493,8 +517,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar: raise ResourceNotFound
-        elif not apikey.check(k, lvar): raise AccessDenied
+        if not lvar:
+            raise ResourceNotFound
+        elif not apikey.check(k, lvar):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.reset(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -513,8 +539,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar: raise ResourceNotFound
-        elif not apikey.check(k, lvar): raise AccessDenied
+        if not lvar:
+            raise ResourceNotFound
+        elif not apikey.check(k, lvar):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -533,8 +561,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar: raise ResourceNotFound
-        elif not apikey.check(k, lvar): raise AccessDenied
+        if not lvar:
+            raise ResourceNotFound
+        elif not apikey.check(k, lvar):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.toggle(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -552,8 +582,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar: raise ResourceNotFound
-        elif not apikey.check(k, lvar): raise AccessDenied
+        if not lvar:
+            raise ResourceNotFound
+        elif not apikey.check(k, lvar):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.increment(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -571,8 +603,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, i = parse_function_params(kwargs, 'ki', '.s')
         lvar = eva.sfa.controller.lm_pool.get_lvar(oid_to_id(i, 'lvar'))
-        if not lvar: raise ResourceNotFound
-        elif not apikey.check(k, lvar): raise AccessDenied
+        if not lvar:
+            raise ResourceNotFound
+        elif not apikey.check(k, lvar):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.decrement(lvar_id=oid_to_id(i, 'lvar')))
 
@@ -658,8 +692,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k, i, a, kw, w, u, p, q = parse_function_params(kwargs, 'kiaKwupq',
                                                         '.s..nsin')
         macro = eva.sfa.controller.lm_pool.get_macro(oid_to_id(i, 'lmacro'))
-        if not macro: raise ResourceNotFound
-        elif not apikey.check(k, macro): raise AccessDenied
+        if not macro:
+            raise ResourceNotFound
+        elif not apikey.check(k, macro):
+            raise AccessDenied
         return ecall(
             eva.sfa.controller.lm_pool.run(macro=oid_to_id(i, 'lmacro'),
                                            args=a,
@@ -685,8 +721,10 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         k, controller_id, group = parse_function_params(kwargs, 'kig', '.ss')
         result = []
-        if isinstance(group, list): _group = group
-        else: _group = str(group).split(',')
+        if isinstance(group, list):
+            _group = group
+        else:
+            _group = str(group).split(',')
         if not controller_id:
             for c, d in \
                 eva.sfa.controller.lm_pool.cycles_by_controller.copy().items():
@@ -698,7 +736,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         else:
             if controller_id.find('/') != -1:
                 c = controller_id.split('/')
-                if len(c) > 2 or c[0] != 'lm': return None
+                if len(c) > 2 or c[0] != 'lm':
+                    return None
                 c_id = c[1]
             else:
                 c_id = controller_id
@@ -806,7 +845,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                                              ssl_verify=ssl_verify,
                                              timeout=timeout,
                                              save=save)
-            if c: return c.serialize(info=True)
+            if c:
+                return c.serialize(info=True)
         if group == 'lm' or group is None:
             c = eva.sfa.controller.append_lm(uri=uri,
                                              key=key,
@@ -815,7 +855,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                                              ssl_verify=ssl_verify,
                                              timeout=timeout,
                                              save=save)
-            if c: return c.serialize(info=True)
+            if c:
+                return c.serialize(info=True)
         raise FunctionFailed
 
     @log_i
@@ -908,7 +949,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         items_lm = []
         if i:
             controller = eva.sfa.controller.get_controller(i)
-            if not controller: return None
+            if not controller:
+                return None
             c_id = controller.item_id
             c_fid = controller.full_id
             c_t = controller.group
@@ -1021,10 +1063,12 @@ class SFA_HTTP_API_abstract(SFA_API, GenericHTTP_API):
     def state_all(self, **kwargs):
         k, p, g = parse_function_params(kwargs, 'kpg', '...')
         result = []
-        if p is None: _p = ['U', 'S', 'LV']
+        if p is None:
+            _p = ['U', 'S', 'LV']
         else:
             _p = p
-            if not _p: return []
+            if not _p:
+                return []
         for tp in _p:
             try:
                 result += self.state(k=k, p=tp, g=g, full=True)
@@ -1147,7 +1191,8 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
         elif rtp == 'lmacro':
             if method == "run":
                 a = self.run(k=k, i=ii, **props)
-                if not a: raise FunctionFailed
+                if not a:
+                    raise FunctionFailed
                 set_restful_response_location(a['uuid'], 'action')
                 return a
         elif rtp == 'lvar':
@@ -1440,7 +1485,8 @@ class SFA_HTTP_Root:
     @cherrypy.expose
     def index(self, **kwargs):
         q = cherrypy.request.query_string
-        if q: q = '?' + q
+        if q:
+            q = '?' + q
         raise cherrypy.HTTPRedirect('/ui/' + q)
 
     def _no_cache(self):
@@ -1454,7 +1500,8 @@ class SFA_HTTP_Root:
     def rpvt(self, k=None, f=None, ic=None, nocache=None):
         _k = cp_client_key(k, from_cookie=True)
         _r = '%s@%s' % (apikey.key_id(_k), http_real_ip())
-        if f is None: return _tool_error_response('uri not provided', code=400)
+        if f is None:
+            return _tool_error_response('uri not provided', code=400)
         if not apikey.check(_k, rpvt_uri=f, ip=http_real_ip()):
             logging.warning('rpvt %s uri %s access forbidden' % (_r, f))
             raise cp_forbidden_key()
@@ -1482,8 +1529,10 @@ class SFA_HTTP_Root:
             # return base64.b64decode(result['data'])
             return result['data']
         try:
-            if f.find('//') == -1: _f = 'http://' + f
-            else: _f = f
+            if f.find('//') == -1:
+                _f = 'http://' + f
+            else:
+                _f = f
             r = requests.get(_f, timeout=eva.core.config.timeout)
         except:
             raise cp_api_error()
@@ -1492,7 +1541,8 @@ class SFA_HTTP_Root:
         ctype = r.headers.get('Content-Type')
         if ctype:
             cherrypy.serving.response.headers['Content-Type'] = ctype
-        if nocache: self._no_cache()
+        if nocache:
+            self._no_cache()
         result = r.content
         if ic:
             try:
@@ -1533,11 +1583,13 @@ class SFA_HTTP_Root:
         _f_alt = None
         if c:
             fls = [x for x in glob.glob(_f) if os.path.isfile(x)]
-            if not fls: raise cp_api_404()
+            if not fls:
+                raise cp_api_404()
             if c == 'newest':
                 _f = max(fls, key=os.path.getmtime)
                 fls.remove(_f)
-                if fls: _f_alt = max(fls, key=os.path.getmtime)
+                if fls:
+                    _f_alt = max(fls, key=os.path.getmtime)
             elif c == 'oldest':
                 _f = min(fls, key=os.path.getmtime)
             elif c == 'list':
@@ -1552,7 +1604,8 @@ class SFA_HTTP_Root:
                         }
                     })
                 cherrypy.response.headers['Content-Type'] = 'application/json'
-                if nocache: self._no_cache()
+                if nocache:
+                    self._no_cache()
                 logging.info('pvt %s file list %s' % (_r, f))
                 return format_json(sorted(l, key=lambda k: k['name'])).encode()
             else:
@@ -1565,7 +1618,8 @@ class SFA_HTTP_Root:
                     x = int(x)
                     y = int(y)
                     q = int(q)
-                    if os.path.getsize(_f) > 10000000: raise
+                    if os.path.getsize(_f) > 10000000:
+                        raise
                     from PIL import Image
                     try:
                         image = Image.open(_f)
@@ -1578,7 +1632,8 @@ class SFA_HTTP_Root:
                         image.thumbnail((x, y))
                         result = image.tobytes(fmt, 'RGB', q)
                     cherrypy.response.headers['Content-Type'] = 'image/' + fmt
-                    if nocache: self._no_cache()
+                    if nocache:
+                        self._no_cache()
                     logging.info('pvt %s file access %s' % (_r, f))
                     return result
                 else:
@@ -1588,7 +1643,8 @@ class SFA_HTTP_Root:
             except:
                 eva.core.log_taceback()
                 raise cp_api_error()
-        if nocache: self._no_cache()
+        if nocache:
+            self._no_cache()
         logging.info('pvt %s file access %s' % (_r, f))
         return serve_file(_f)
 

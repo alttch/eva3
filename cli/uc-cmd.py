@@ -34,7 +34,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 fld = 'oid'
             if p:
                 code, data = self.cli.call(['state', '-p', p])
-                if code: return True
+                if code:
+                    return True
                 result = set()
                 for v in data:
                     result.add(v[fld])
@@ -55,7 +56,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 return True
             code, data = self.cli.call(
                 ['state', '-p', kwargs.get('parsed_args').p])
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -70,7 +72,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
                 if p:
                     opts = ['-p', p]
             code, data = self.cli.call(['list'] + opts)
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -80,7 +83,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p unit')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 if prefix.startswith('unit:'):
@@ -96,7 +100,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p unit')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -106,7 +111,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('device templates')
-            if code: return True
+            if code:
+                return True
             result = []
             for v in data:
                 result.append(v['name'])
@@ -118,7 +124,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['config', 'props',
                  kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -132,7 +139,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('modbus list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -142,7 +150,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('owfs list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -156,7 +165,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('phi list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'] + (':' if self.for_driver else ''))
@@ -166,7 +176,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('driver list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['id'])
@@ -176,7 +187,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('phi mods')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['mod'])
@@ -186,7 +198,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('lpi mods')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['mod'])
@@ -196,7 +209,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('phi mods')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['mod'])
@@ -208,7 +222,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['phi', 'test',
                  kwargs.get('parsed_args').i, 'help'])
-            if code or not isinstance(data, dict): return True
+            if code or not isinstance(data, dict):
+                return True
             result = set()
             result.add('self')
             for d in data.keys():
@@ -222,7 +237,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
             code, data = self.cli.call(
                 ['phi', 'exec',
                  kwargs.get('parsed_args').i, 'help'])
-            if code or not isinstance(data, dict): return True
+            if code or not isinstance(data, dict):
+                return True
             result = set()
             result.add('self')
             for d in data.keys():
@@ -284,7 +300,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
         result = []
         for d in data.copy():
             if api_func == 'scan_owfs_bus':
-                if 'attrs' in d: del d['attrs']
+                if 'attrs' in d:
+                    del d['attrs']
             elif itype == 'action':
                 from datetime import datetime
                 d['time'] = datetime.fromtimestamp(
@@ -1348,7 +1365,8 @@ class UC_CLI(GenericCLI, ControllerCLI):
 _me = 'EVA ICS UC CLI version %s' % __version__
 
 prog = os.path.basename(__file__)[:-3]
-if prog == 'eva-shell': prog = 'eva uc'
+if prog == 'eva-shell':
+    prog = 'eva uc'
 
 cli = UC_CLI('uc', _me, prog=prog)
 

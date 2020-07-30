@@ -56,7 +56,8 @@ class LMExt(object):
         except:
             self.__iec_functions = {}
         self.ext_id = None  # set by extapi on load
-        if kwargs.get('info_only'): return
+        if kwargs.get('info_only'):
+            return
         self.data = {}
         self.data_lock = threading.RLock()
         self.data_modified = True

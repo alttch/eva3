@@ -47,7 +47,8 @@ class UCMultiUpdate(eva.item.MultiUpdate):
                 i2u = []
                 for i in val:
                     item = eva.uc.controller.get_item(i)
-                    if not item or item in i2u: return False
+                    if not item or item in i2u:
+                        return False
                     i2u.append(item)
                 self.items_to_update = i2u
                 self.log_set(prop, ','.join(val))
@@ -57,7 +58,8 @@ class UCMultiUpdate(eva.item.MultiUpdate):
             i2u = []
             for i in item_ids:
                 item = eva.uc.controller.get_item(i)
-                if not item or item in i2u: return False
+                if not item or item in i2u:
+                    return False
                 i2u.append(item)
             self.items_to_update = i2u
             self.log_set(prop, val)

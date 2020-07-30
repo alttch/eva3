@@ -229,8 +229,10 @@ def api_log_get(t_start=None, t_end=None, limit=None, time_format=None, f=None):
     except ValueError as e:
         raise ValueError(f'Invalid filter: {e}')
     if condp:
-        if cond: cond += ' and '
-        else: cond = 'where '
+        if cond:
+            cond += ' and '
+        else:
+            cond = 'where '
         cond += condp
     if limit is None:
         cond += ' order by t asc'

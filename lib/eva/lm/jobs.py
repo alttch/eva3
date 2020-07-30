@@ -126,8 +126,10 @@ class Job(eva.item.Item):
                                    info=info,
                                    props=props,
                                    notify=notify))
-        if 'group' in d: del d['group']
-        if 'full_id' in d: del d['full_id']
+        if 'group' in d:
+            del d['group']
+        if 'full_id' in d:
+            del d['full_id']
         if full or info:
             d['last'] = self.last_action
         return d

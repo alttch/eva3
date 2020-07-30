@@ -38,5 +38,6 @@ for u in ['css', 'fonts', 'images', 'js', 'lib']:
 
 def start():
     # return
-    if not eva.sfa.controller.config.cloud_manager: return
+    if not eva.sfa.controller.config.cloud_manager:
+        return
     cherrypy.tree.mount(CloudManager(), '/cloudmanager', config=cp_cm_config)

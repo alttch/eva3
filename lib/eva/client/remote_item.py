@@ -24,7 +24,9 @@ class RemoteUpdatableItem(eva.item.UpdatableItem):
         self.mqtt_update_topics = ['']
         self.allow_mqtt_updates_from_controllers = True
 
-    def notify(self, retain=None, skip_subscribed_mqtt=False,
+    def notify(self,
+               retain=None,
+               skip_subscribed_mqtt=False,
                for_destroy=False):
         super().notify(skip_subscribed_mqtt=True, for_destroy=for_destroy)
 
@@ -139,8 +141,10 @@ class RemoteUnit(RemoteUpdatableItem, eva.item.PhysicalItem):
                 eva.core.log_traceback()
                 return False
         if nvalue is not None:
-            if nvalue == '': nv = ''
-            else: nv = nvalue
+            if nvalue == '':
+                nv = ''
+            else:
+                nv = nvalue
             if self.nvalue != nv:
                 self.nvalue = nv
                 need_notify = True

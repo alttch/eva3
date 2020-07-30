@@ -19,7 +19,8 @@ import eva.traphandler
 
 
 def usage(version_only=False):
-    if not version_only: print()
+    if not version_only:
+        print()
     print('%s version %s build %s ' % \
             (
                 'EVA table update',
@@ -27,7 +28,8 @@ def usage(version_only=False):
                 eva.core.product.build
             )
         )
-    if version_only: return
+    if version_only:
+        return
     print("""Usage: update-tables <uc|lm>
 
 Updates EVA ICS database tables.
@@ -52,7 +54,8 @@ product_build = -1
 
 try:
     p = sys.argv[1]
-    if p not in ['uc', 'lm', 'sfa']: raise Exception('wrong product selected')
+    if p not in ['uc', 'lm', 'sfa']:
+        raise Exception('wrong product selected')
 except:
     usage()
     sys.exit(99)
@@ -64,7 +67,8 @@ eva.core.set_product(product_code, product_build)
 eva.core.product.name = 'table update'
 
 cfg = eva.core.load(initial=True, init_log=False)
-if not cfg: sys.exit(2)
+if not cfg:
+    sys.exit(2)
 eva.core.start()
 dbconn = eva.core.userdb()
 

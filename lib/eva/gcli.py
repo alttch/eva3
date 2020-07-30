@@ -45,7 +45,11 @@ class GCLI(object):
         self.argcomplete = None
         self.parse_primary_args()
 
-    def colored(self, text, color=None, on_color=None, attrs=None,
+    def colored(self,
+                text,
+                color=None,
+                on_color=None,
+                attrs=None,
                 rlsafe=False):
         if not self.can_colorize():
             return str(text)
@@ -70,7 +74,8 @@ class GCLI(object):
 
     def finish_interactive(self):
         self.save_readline()
-        if self.say_bye: print('Bye')
+        if self.say_bye:
+            print('Bye')
 
     def save_readline(self):
         if self.readline_processing:
@@ -243,7 +248,8 @@ class GCLI(object):
         out = None
         err = None
         indentsp = self.fancy_indentsp.get(api_func, itype)
-        if not indentsp: indentsp = 10
+        if not indentsp:
+            indentsp = 10
         for v in sorted(_result.keys()):
             if isinstance(_result[v], dict):
                 if indent:

@@ -201,7 +201,8 @@ def append_macro_function(file_name, rebuild=True):
                 })
         macro_functions[fname] = result
         macro_function_codes[fname] = src_code
-        if rebuild: rebuild_mfcode()
+        if rebuild:
+            rebuild_mfcode()
         return True
     except Exception as e:
         raise FunctionFailed(e)
@@ -213,7 +214,8 @@ def remove_macro_function(file_name, rebuild=True):
     if fname in macro_functions:
         del macro_functions[fname]
         del macro_function_codes[fname]
-        if rebuild: rebuild_mfcode()
+        if rebuild:
+            rebuild_mfcode()
         return True
     else:
         return False
@@ -449,7 +451,9 @@ class Macro(eva.item.ActiveItem):
                 return False
         return super().set_prop(prop, val, save)
 
-    def notify(self, retain=None, skip_subscribed_mqtt=False,
+    def notify(self,
+               retain=None,
+               skip_subscribed_mqtt=False,
                for_destroy=False):
         pass
 
@@ -678,7 +682,8 @@ class Cycle(eva.item.Item):
         elif prop == 'autostart':
             try:
                 autostart = val_to_boolean(val)
-                if autostart is None: raise ('Invalid val')
+                if autostart is None:
+                    raise ('Invalid val')
             except:
                 return False
             if self.autostart != autostart:

@@ -28,12 +28,16 @@ class GenericRunner(object):
         self.out = None
         self.err = None
         self.exitcode = -15
-        if tki: self.term_kill_interval = tki
+        if tki:
+            self.term_kill_interval = tki
         else:
             self.term_kill_interval = eva.core.config.timeout - default_tki_diff
-        if self.term_kill_interval < 0: self.term_kill_interval = 0
-        if timeout: self.timeout = timeout
-        else: self.timeout = eva.core.config.timeout
+        if self.term_kill_interval < 0:
+            self.term_kill_interval = 0
+        if timeout:
+            self.timeout = timeout
+        else:
+            self.timeout = eva.core.config.timeout
 
     def get_cvars(self, item=None):
         cvars = eva.core.cvars.copy()
@@ -74,11 +78,14 @@ class DriverCommand(GenericRunner):
         cfg.update(self.get_cvars(item))
         cfg.update(item.item_env(full=False))
         if update:
-            if item.update_driver_config: cfg.update(item.update_driver_config)
+            if item.update_driver_config:
+                cfg.update(item.update_driver_config)
         else:
-            if item.action_driver_config: cfg.update(item.action_driver_config)
+            if item.action_driver_config:
+                cfg.update(item.action_driver_config)
         self.result = None
-        if env: cfg.update(env)
+        if env:
+            cfg.update(env)
         self.finished = False
         if _uuid:
             self._uuid = _uuid
@@ -188,8 +195,10 @@ class ExternalProcess(GenericRunner):
             self.env = {}
             self.xc_fname = fname
             self.args = ()
-        if args: self.args += args
-        if env: self.env.update(env)
+        if args:
+            self.args += args
+        if env:
+            self.env.update(env)
         self.env.update(eva.core.env)
         self.env.update(self.get_cvars(item))
         self.termflag = threading.Event()
@@ -202,8 +211,10 @@ class ExternalProcess(GenericRunner):
         return self.xc.poll() is not None
 
     def wait(self, timeout=None):
-        if timeout: t = timeout
-        else: t = eva.core.config.timeout
+        if timeout:
+            t = timeout
+        else:
+            t = eva.core.config.timeout
         return self.finished.wait(t)
 
     def run(self):
@@ -240,7 +251,8 @@ class ExternalProcess(GenericRunner):
     def _t_term(self):
         self.termflag.wait()
         self.termflag.clear()
-        if self.xc.poll() is not None: return
+        if self.xc.poll() is not None:
+            return
         try:
             pp = psutil.Process(self.xc.pid)
         except:
@@ -363,7 +375,8 @@ class PyThread(object):
 
     def run(self):
         if not self.code:
-            if not self.compile(): return False
+            if not self.compile():
+                return False
         try:
             exec(self.code, self.env_globals)
             self.exitcode = 0

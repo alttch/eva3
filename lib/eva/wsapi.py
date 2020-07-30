@@ -21,7 +21,8 @@ class WS_API(object):
     @cherrypy.expose
     def default(self, k=None, c=CT_JSON):
         _k = cp_client_key(k)
-        if not apikey.check(_k, ip=http_real_ip()): raise cp_forbidden_key()
+        if not apikey.check(_k, ip=http_real_ip()):
+            raise cp_forbidden_key()
         handler = cherrypy.request.ws_handler
         token = k if isinstance(k, str) and k.startswith('token:') else None
         client = WSNotifier_Client('ws_' + eva.core.product.code + '_' + \

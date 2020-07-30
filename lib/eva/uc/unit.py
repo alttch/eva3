@@ -50,7 +50,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
         self.status_labels = self.default_status_labels.copy()
 
     def status_by_label(self, label):
-        if label is None: return None
+        if label is None:
+            return None
         for k, v in self.status_labels.copy().items():
             if v.lower() == label.lower():
                 try:
@@ -123,11 +124,16 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
 
     def modbus_update_status(self, addr, values):
         v = values[0]
-        if v is True: v = 1
-        elif v is False: v = 0
+        if v is True:
+            v = 1
+        elif v is False:
+            v = 0
         self.update_set_state(status=v)
 
-    def create_action(self, nstatus, nvalue='', priority=None,
+    def create_action(self,
+                      nstatus,
+                      nvalue='',
+                      priority=None,
                       action_uuid=None):
         return UnitAction(self, nstatus, nvalue, priority, action_uuid)
 
@@ -187,12 +193,14 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                 self.set_modified(save)
                 return True
         elif prop == 'modbus_status':
-            if self.modbus_status == val: return True
+            if self.modbus_status == val:
+                return True
             if val is None:
                 self.unregister_modbus_status_updates()
                 self.modbus_status = None
             else:
-                if val[0] not in ['h', 'c']: return False
+                if val[0] not in ['h', 'c']:
+                    return False
                 try:
                     addr = safe_int(val[1:])
                     if addr > eva.uc.modbus.slave_reg_max or addr < 0:
@@ -255,7 +263,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                     auto_off = float(val)
                 except:
                     return False
-            if auto_off < 0: return False
+            if auto_off < 0:
+                return False
             if self.auto_off != auto_off:
                 self.auto_off = auto_off
                 self.log_set(prop, auto_off)
@@ -288,7 +297,8 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                     self.log_set('status_labels[' + s + ']', val)
                     self.set_modified(save)
             else:
-                if not s in self.status_labels: return False
+                if not s in self.status_labels:
+                    return False
                 del self.status_labels[s]
             return True
         else:
@@ -372,14 +382,17 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                          value=None,
                          from_mqtt=False,
                          force_notify=False):
-        if self._destroyed: return False
+        if self._destroyed:
+            return False
         if self.is_maintenance_mode():
             logging.info('Ignoring {} update in maintenance mode'.format(
                 self.oid))
             return False
         try:
-            if status is not None: _status = int(status)
-            else: _status = None
+            if status is not None:
+                _status = int(status)
+            else:
+                _status = None
         except:
             logging.error('update %s returned invalid data' % self.oid)
             eva.core.log_traceback()
@@ -415,24 +428,33 @@ class Unit(UCItem, eva.item.UpdatableItem, eva.item.ActiveItem,
                   nstatus=None,
                   nvalue=None,
                   from_mqtt=False):
-        if self._destroyed: return False
+        if self._destroyed:
+            return False
         need_notify = False
         if status is not None:
-            if self.status != status: need_notify = True
+            if self.status != status:
+                need_notify = True
             self.status = status
             self.start_auto_processor()
         if value is not None:
-            if value == '': v = ''
-            else: v = value
-            if self.value != v: need_notify = True
+            if value == '':
+                v = ''
+            else:
+                v = value
+            if self.value != v:
+                need_notify = True
             self.value = v
         if nstatus is not None:
-            if self.nstatus != nstatus: need_notify = True
+            if self.nstatus != nstatus:
+                need_notify = True
             self.nstatus = nstatus
         if nvalue is not None:
-            if nvalue == '': nv = ''
-            else: nv = nvalue
-            if self.nvalue != nv: need_notify = True
+            if nvalue == '':
+                nv = ''
+            else:
+                nv = nvalue
+            if self.nvalue != nv:
+                need_notify = True
             self.nvalue = nv
         if need_notify:
             logging.debug(
@@ -492,7 +514,8 @@ class UnitAction(eva.item.ItemAction):
                                         out=out,
                                         err=err)
             if not result:
-                if lock: self.unit_action_lock.release()
+                if lock:
+                    self.unit_action_lock.release()
                 return False
             if self.is_status_running():
                 self.item.set_state(nstatus=self.nstatus, nvalue=self.nvalue)
@@ -515,8 +538,10 @@ class UnitAction(eva.item.ItemAction):
             self.unit_action_lock.release()
 
     def action_env(self):
-        if self.nvalue is not None: nvalue = self.nvalue
-        else: nvalue = ''
+        if self.nvalue is not None:
+            nvalue = self.nvalue
+        else:
+            nvalue = ''
         e = {'EVA_NSTATUS': str(self.nstatus), 'EVA_NVALUE': str(nvalue)}
         e.update(super().action_env())
         return e

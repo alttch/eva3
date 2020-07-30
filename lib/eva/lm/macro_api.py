@@ -87,7 +87,8 @@ def set_shared(name, value=None):
         return None
     try:
         if value is None:
-            if name in _shared: del _shared[name]
+            if name in _shared:
+                del _shared[name]
         else:
             _shared[name] = value
         return True
@@ -551,7 +552,8 @@ class MacroAPI(object):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
             raise ResourceNotFound
-        if lvar.value == '': return default
+        if lvar.value == '':
+            return default
         try:
             v = float(lvar.value)
         except:
@@ -634,7 +636,8 @@ class MacroAPI(object):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             raise ResourceNotFound
-        if unit.value == '': return default
+        if unit.value == '':
+            return default
         try:
             v = float(unit.value)
         except:
@@ -662,7 +665,8 @@ class MacroAPI(object):
         unit = eva.lm.controller.uc_pool.get_unit(oid_to_id(unit_id, 'unit'))
         if not unit:
             raise ResourceNotFound
-        if unit.nvalue == '': return default
+        if unit.nvalue == '':
+            return default
         try:
             v = float(unit.nvalue)
         except:
@@ -726,7 +730,8 @@ class MacroAPI(object):
             oid_to_id(sensor_id, 'sensor'))
         if not sensor:
             raise ResourceNotFound
-        if sensor.value == '': return default
+        if sensor.value == '':
+            return default
         try:
             v = float(sensor.value)
         except:
@@ -750,8 +755,10 @@ class MacroAPI(object):
         lvar = eva.lm.controller.get_lvar(lvar_id)
         if not lvar:
             raise ResourceNotFound
-        if value is None: v = ''
-        else: v = str(value)
+        if value is None:
+            v = ''
+        else:
+            v = str(value)
         result = lvar.update_set_state(value=v)
         if not result:
             raise FunctionFailed('lvar set error: %s, value = "%s"' % \
@@ -1043,7 +1050,11 @@ class MacroAPI(object):
                            uuid=uuid,
                            priority=priority)
 
-    def action_stop(self, unit_id, value=None, wait=0, uuid=None,
+    def action_stop(self,
+                    unit_id,
+                    value=None,
+                    wait=0,
+                    uuid=None,
                     priority=None):
         """
         stop unit
@@ -1315,7 +1326,8 @@ class MacroAPI(object):
         """
         try:
             fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
-            if not fls: return None
+            if not fls:
+                return None
             return open(min(fls, key=os.path.getmtime), mode)
         except:
             raise FunctionFailed('file open error')
@@ -1338,15 +1350,19 @@ class MacroAPI(object):
         """
         try:
             fls = [x for x in glob.glob(mask) if os.path.isfile(x)]
-            if not fls: return None
+            if not fls:
+                return None
             _f = max(fls, key=os.path.getmtime)
             fls.remove(_f)
-            if fls: _f_alt = max(fls, key=os.path.getmtime)
-            else: _f_alt = None
+            if fls:
+                _f_alt = max(fls, key=os.path.getmtime)
+            else:
+                _f_alt = None
             try:
                 o = open(_f, mode)
             except:
-                if not alt or not _f_alt: raise
+                if not alt or not _f_alt:
+                    raise
                 o = open(_f_alt, mode)
             return o
         except:

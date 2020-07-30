@@ -94,7 +94,8 @@ def __cbFun(snmpEngine, stateReference, contextEngineId, contextName, varBinds,
 
 
 def start():
-    if not config.host: return False
+    if not config.host:
+        return False
     _port = config.port if config.port else default_port
     _community = config.community if config.community else default_community
     try:

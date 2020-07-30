@@ -40,8 +40,10 @@ class ActiveItemQueue(object):
         self.action_processor = None
 
     def put_task(self, action, priority=None):
-        if priority: p = priority
-        else: p = self.default_priority
+        if priority:
+            p = priority
+        else:
+            p = self.default_priority
         if self.keep_history:
             self.history_append(action)
         if action.set_pending():
@@ -140,7 +142,8 @@ class ActiveItemQueue(object):
 
 
 async def action_processor(action, **kwargs):
-    if not action.item: return
+    if not action.item:
+        return
     o = kwargs.get('o')
     logging.debug('new action to toss, uuid: %s, priority: %u' % \
             (action.uuid, action.priority))

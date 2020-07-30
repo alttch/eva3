@@ -56,7 +56,8 @@ for u in ['css', 'fonts', 'i', 'js', 'lib']:
 
 
 def start():
-    if not eva.api.config.ei_enabled: return
+    if not eva.api.config.ei_enabled:
+        return
     cherrypy.tree.mount(EI_HTTP_Root(), '/', config=cp_ei_root_config)
     cherrypy.tree.mount(EI(),
                         '/%s-ei' % eva.core.product.code,

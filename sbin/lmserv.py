@@ -25,7 +25,8 @@ import eva.mailer
 
 
 def usage(version_only=False):
-    if not version_only: print()
+    if not version_only:
+        print()
     print('%s version %s build %s ' % \
             (
                 eva.core.product.name,
@@ -33,7 +34,8 @@ def usage(version_only=False):
                 eva.core.product.build
             )
         )
-    if version_only: return
+    if version_only:
+        return
     print("""Usage: lmserv.py [-f config_file ] [-d]
 
  -f config_file     start with an alternative config file
@@ -61,8 +63,10 @@ except:
     sys.exit(4)
 
 for o, a in optlist:
-    if o == '-d': _fork = True
-    if o == '-f': _eva_ini = a
+    if o == '-d':
+        _fork = True
+    if o == '-f':
+        _eva_ini = a
     if o == '-V':
         usage(version_only=True)
         sys.exit()
@@ -71,9 +75,11 @@ for o, a in optlist:
         sys.exit()
 
 cfg = eva.core.load(fname=_eva_ini, initial=True)
-if not cfg: sys.exit(2)
+if not cfg:
+    sys.exit(2)
 
-if _fork: eva.core.fork()
+if _fork:
+    eva.core.fork()
 eva.core.write_pid_file()
 
 eva.core.start_supervisor()

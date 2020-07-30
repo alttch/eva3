@@ -65,11 +65,15 @@ def send(subject=None, text=None, rcp=None):
         FunctionFailed: mail is not sent
     """
 
-    if subject is None: s = ''
-    else: s = subject
+    if subject is None:
+        s = ''
+    else:
+        s = subject
 
-    if text is None: t = s
-    else: t = text
+    if text is None:
+        t = s
+    else:
+        t = text
 
     if not rcp:
         if not config.default_rcp:
@@ -78,8 +82,10 @@ def send(subject=None, text=None, rcp=None):
         else:
             _rcp = config.default_rcp
     else:
-        if isinstance(_rcp, str): _rcp = [rcp]
-        else: _rcp = rcp
+        if isinstance(_rcp, str):
+            _rcp = [rcp]
+        else:
+            _rcp = rcp
 
     try:
         msg = MIMEText(t)

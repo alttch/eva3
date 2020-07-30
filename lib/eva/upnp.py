@@ -302,12 +302,15 @@ def _t_dispatcher(host, port):
     while _flags.dispatcher_active:
         try:
             data, addr = server_socket.recvfrom(4096)
-            if not _flags.dispatcher_active: return
-            if not data: continue
+            if not _flags.dispatcher_active:
+                return
+            if not data:
+                continue
             address = addr[0]
             logging.debug('UPnP packet from %s' % address)
             data = data.decode('utf-8').strip().replace('\r', '').split('\n')
-            if not data[0].lower().startswith('m-search * http/1'): continue
+            if not data[0].lower().startswith('m-search * http/1'):
+                continue
             headers = {}
             for d in data[1:]:
                 try:

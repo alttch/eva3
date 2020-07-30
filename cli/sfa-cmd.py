@@ -24,7 +24,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
     @staticmethod
     def dict_safe_get(d, key, default):
-        if d is None: return default
+        if d is None:
+            return default
         result = d.get(key)
         return default if result is None else result
 
@@ -40,7 +41,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 fld = 'oid'
             if p:
                 code, data = self.cli.call(['state', '-p', p])
-                if code: return True
+                if code:
+                    return True
                 result = set()
                 for v in data:
                     result.add(v[fld])
@@ -56,7 +58,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 return True
             code, data = self.cli.call(
                 ['state', '-p', kwargs.get('parsed_args').p])
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -66,7 +69,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p unit')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 if prefix.startswith('unit:'):
@@ -82,7 +86,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p unit')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -92,7 +97,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('state -p lvar')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 if prefix.startswith('lvar:'):
@@ -112,7 +118,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('macro list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v[self.field])
@@ -122,7 +129,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('macro list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -132,7 +140,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('cycle list')
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -146,7 +155,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 
         def __call__(self, prefix, **kwargs):
             code, data = self.cli.call('controller list')
-            if code: return True
+            if code:
+                return True
             result = set()
             if self.allow_all:
                 result.add('all')
@@ -160,7 +170,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             code, data = self.cli.call(
                 ['controller', 'props',
                  kwargs.get('parsed_args').i])
-            if code: return True
+            if code:
+                return True
             result = list(data.keys())
             return result
 
@@ -174,7 +185,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 if p:
                     opts = ['-p', p]
             code, data = self.cli.call(['remote'] + opts)
-            if code: return True
+            if code:
+                return True
             result = set()
             for v in data:
                 result.add(v['group'])
@@ -849,8 +861,10 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
                 from eva.tools import dict_from_str
                 fname = props.get('f')
                 v = props.get('c')
-                if v: v = dict_from_str(v)
-                else: v = {}
+                if v:
+                    v = dict_from_str(v)
+                else:
+                    v = {}
                 dirname = os.path.dirname(fname)
                 tpl = jinja2.Template(self._read_uri(fname))
                 cfg = yaml.load(tpl.render(v))
@@ -1455,7 +1469,8 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
 _me = 'EVA ICS SFA CLI version %s' % __version__
 
 prog = os.path.basename(__file__)[:-3]
-if prog == 'eva-shell': prog = 'eva sfa'
+if prog == 'eva-shell':
+    prog = 'eva sfa'
 
 cli = SFA_CLI('sfa', _me, prog=prog)
 
