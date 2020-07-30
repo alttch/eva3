@@ -157,60 +157,6 @@ Optionally:
 * **t** maximum time of command execution. If the command fails to finish within the specified time (in sec), it will be terminated
 
 
-.. _ucapi_restful_api_log_get:
-
-get API call log
-----------------
-
-* API call with master permission returns all records requested
-
-* API call with other API key returns records for the specified key   only
-
-* API call with an authentication token returns records for the   current authorized user
-
-..  http:example:: curl wget httpie python-requests
-    :request: http-examples/sysapi/api_log_get.rest
-    :response: http-examples/sysapi/api_log_get.resp-rest
-
-Parameters:
-
-* **API Key** any valid API key
-
-Optionally:
-
-* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
-* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
-* **n** records limit
-* **t** time format ("iso" or "raw" for unix timestamp, default is "raw")
-* **f** record filter (requires API key with master permission)
-
-Returns:
-
-List of API calls
-
-Note: API call params are returned as string and can be invalid JSON data as they're always truncated to 512 symbols in log database
-
-Record filter should be specified either as string (k1=val1,k2=val2) or as a dict. Valid fields are:
-
-* gw: filter by API gateway
-
-* ip: filter by caller IP
-
-* auth: filter by authentication type
-
-* u: filter by user
-
-* utp: filter by user type
-
-* ki: filter by API key ID
-
-* func: filter by API function
-
-* params: filter by API call params (matches if field contains value)
-
-* status: filter by API call status
-
-
 .. _ucapi_restful_shutdown_core:
 
 shutdown the controller
@@ -1902,6 +1848,60 @@ Parameters:
 
 * **API Key** API key with *sysfunc=yes* permissions
 * **m** message text
+
+
+.. _ucapi_restful_api_log_get:
+
+get API call log
+----------------
+
+* API call with master permission returns all records requested
+
+* API call with other API key returns records for the specified key   only
+
+* API call with an authentication token returns records for the   current authorized user
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sysapi/api_log_get.rest
+    :response: http-examples/sysapi/api_log_get.resp-rest
+
+Parameters:
+
+* **API Key** any valid API key
+
+Optionally:
+
+* **s** start time (timestamp or ISO or e.g. 1D for -1 day)
+* **e** end time (timestamp or ISO or e.g. 1D for -1 day)
+* **n** records limit
+* **t** time format ("iso" or "raw" for unix timestamp, default is "raw")
+* **f** record filter (requires API key with master permission)
+
+Returns:
+
+List of API calls
+
+Note: API call params are returned as string and can be invalid JSON data as they're always truncated to 512 symbols in log database
+
+Record filter should be specified either as string (k1=val1,k2=val2) or as a dict. Valid fields are:
+
+* gw: filter by API gateway
+
+* ip: filter by caller IP
+
+* auth: filter by authentication type
+
+* u: filter by user
+
+* utp: filter by user type
+
+* ki: filter by API key ID
+
+* func: filter by API function
+
+* params: filter by API call params (matches if field contains value)
+
+* status: filter by API call status
 
 
 .. _ucapi_restful_log_get:
