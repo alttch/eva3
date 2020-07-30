@@ -38,7 +38,7 @@ keys = {}
 keys_by_id = {}
 
 allows = []
-all_allows = ['cmd', 'lock', 'device']
+all_allows = ['cmd', 'lock', 'device', 'supervisor']
 
 keys_to_delete = set()
 
@@ -103,7 +103,8 @@ class APIKey(object):
             return True
         elif prop == 'sysfunc':
             val = val_to_boolean(value)
-            if val is None: return False
+            if val is None:
+                return False
             if self.sysfunc != val:
                 self.sysfunc = val
                 self.set_modified(save)
@@ -438,14 +439,16 @@ def key_id(k):
 
 
 def key_by_ip_address(ip=None):
-    if not ip: return None
+    if not ip:
+        return None
     for k, key in keys.copy().items():
         if netacl_match(ip, key.hosts_assign):
             return k
 
 
 def format_key(k):
-    if not k: return None
+    if not k:
+        return None
     return key_by_id(k[1:]) if k[0] == '$' else k
 
 
@@ -460,12 +463,15 @@ def check(k,
           ro_op=False):
     if eva.core.is_setup_mode():
         return True
-    if not k or not k in keys or (master and not keys[k].master): return False
+    if not k or not k in keys or (master and not keys[k].master):
+        return False
     _k = keys[k]
     if ip and not netacl_match(ip, _k.hosts_allow):
         return False
-    if _k.master: return True
-    if sysfunc and not _k.sysfunc: return False
+    if _k.master:
+        return True
+    if sysfunc and not _k.sysfunc:
+        return False
     if item:
         # check access to PHI
         try:
@@ -487,12 +493,15 @@ def check(k,
                     return False
     if allow:
         for a in allow:
-            if not a in _k.allow: return False
+            if not a in _k.allow:
+                return False
     if pvt_file:
-        if '#' in _k.pvt_files or pvt_file in _k.pvt_files: return True
+        if '#' in _k.pvt_files or pvt_file in _k.pvt_files:
+            return True
         for d in _k.pvt_files:
             p = d.find('#')
-            if p > -1 and d[:p] == pvt_file[:p]: return True
+            if p > -1 and d[:p] == pvt_file[:p]:
+                return True
             if d.find('+') > -1:
                 g1 = d.split('/')
                 g2 = pvt_file.split('/')
@@ -502,17 +511,20 @@ def check(k,
                         if g1[i] != '+' and g1[i] != g2[i]:
                             match = False
                             break
-                    if match: return True
+                    if match:
+                        return True
         return False
     if rpvt_uri:
         if rpvt_uri.find('//') != -1 and rpvt_uri[:3] not in ['uc/', 'lm/']:
             r = rpvt_uri.split('//', 1)[1]
         else:
             r = rpvt_uri
-        if '#' in _k.rpvt_uris or r in _k.rpvt_uris: return True
+        if '#' in _k.rpvt_uris or r in _k.rpvt_uris:
+            return True
         for d in _k.rpvt_uris:
             p = d.find('#')
-            if p > -1 and d[:p] == r[:p]: return True
+            if p > -1 and d[:p] == r[:p]:
+                return True
             if d.find('+') > -1:
                 g1 = d.split('/')
                 g2 = r.split('/')
@@ -522,7 +534,8 @@ def check(k,
                         if g1[i] != '+' and g1[i] != g2[i]:
                             match = False
                             break
-                    if match: return True
+                    if match:
+                        return True
         return False
     return True
 
@@ -543,14 +556,17 @@ def serialized_acl(k):
     _k = keys[k]
     r['key_id'] = _k.key_id
     r['master'] = _k.master or setup_on
-    if _k.master or setup_on: return r
+    if _k.master or setup_on:
+        return r
     r['sysfunc'] = _k.sysfunc
     r['items'] = _k.item_ids
     r['groups'] = _k.groups
     r['items_ro'] = _k.item_ids_ro
     r['groups_ro'] = _k.groups_ro
-    if _k.pvt_files: r['pvt'] = _k.pvt_files
-    if _k.rpvt_uris: r['rpvt'] = _k.rpvt_uris
+    if _k.pvt_files:
+        r['pvt'] = _k.pvt_files
+    if _k.rpvt_uris:
+        r['rpvt'] = _k.rpvt_uris
     r['allow'] = {}
     for a in allows:
         r['allow'][a] = True if a in _k.allow else False
@@ -558,8 +574,10 @@ def serialized_acl(k):
 
 
 def add_api_key(key_id=None, save=False):
-    if key_id is None: raise FunctionFailed
-    if key_id in keys_by_id: raise ResourceAlreadyExists
+    if key_id is None:
+        raise FunctionFailed
+    if key_id in keys_by_id:
+        raise ResourceAlreadyExists
     key_value = gen_random_str(length=64)
     key = APIKey(key_value, key_id)
     key.master = False
@@ -632,7 +650,8 @@ def load_keys_from_db():
         result = dbconn.execute(sql('select * from apikeys'))
         while True:
             r = result.fetchone()
-            if not r: break
+            if not r:
+                break
             key = APIKey(r.k, r.k_id)
             key.sysfunc = True if val_to_boolean(r.s) else False
             for i, v in {
