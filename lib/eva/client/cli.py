@@ -542,7 +542,6 @@ class GenericCLI(GCLI):
                         t[i] = self.list_to_str(c).replace('\n', ' ')
                 table.append(t)
             if table:
-                print(a)
                 header, rows = rapidtables.format_table(
                     table,
                     rapidtables.FORMAT_GENERATOR,
