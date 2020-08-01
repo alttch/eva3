@@ -18,6 +18,7 @@ except:
     pass
 
 from io import BytesIO
+from functools import wraps
 
 from cherrypy.lib.static import serve_file
 from eva.tools import format_json
@@ -77,6 +78,56 @@ import eva.sfa.cloudmanager
 import eva.sysapi
 
 api = None
+"""
+supervisor lock
+
+can be either None (not locked) or dict with fields
+
+o=dict(u, utp, ki) # lock owner
+l=<None|'u'|'k'>
+c=<None|'u'|'k'>
+"""
+supervisor_lock = None
+
+with_supervisor_lock = eva.core.RLocker('sfa/sfapi')
+
+
+def api_need_supervisor(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not eva.apikey.check(kwargs.get('k'), allow=['supervisor']):
+            raise AccessDenied
+        return f(*args, **kwargs)
+
+    return do
+
+
+def api_need_supervisor_pass(f):
+
+    @wraps(f)
+    def do(*args, **kwargs):
+        if not can_pass_supervisor_lock(kwargs.get('k')):
+            raise AccessDenied('server is locked by supervisor')
+        return f(*args, **kwargs)
+
+    return do
+
+
+@with_supervisor_lock
+def can_pass_supervisor_lock(k, op='l'):
+    if supervisor_lock is None or apikey.check_master(k):
+        return True
+    else:
+        ltp = supervisor_lock[op]
+        if ltp is None and apikey.check(k, allow=['supervisor']):
+            return True
+        elif ltp == 'k' and apikey.key_id(k) == supervisor_lock['o']['ki']:
+            return True
+        elif ltp == 'u' and eva.api.get_aci('u') == supervisor_lock['o'].get('u') and \
+                eva.api.get_aci('utp') == supervisor_lock['o'].get('utp'):
+            return True
+    return False
 
 
 class SFA_API(GenericAPI, GenericCloudAPI):
@@ -84,6 +135,92 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     def __init__(self):
         self.controller = eva.sfa.controller
         super().__init__()
+
+    @log_i
+    @api_need_supervisor
+    def supervisor_message(self, **kwargs):
+        """
+        send broadcast message
+
+        Args:
+            k: API key with allow=supervisor
+            m: message text
+        """
+        m = parse_api_params(kwargs, 'm', 'S')
+        eva.notify.supervisor_event(subject='message',
+                                    data={
+                                        'sender':
+                                            '{}/{}'.format(
+                                                eva.api.get_aci('ki'),
+                                                eva.api.get_aci('u')),
+                                        'text':
+                                            m
+                                    })
+        return True
+
+    @log_w
+    @api_need_supervisor
+    @with_supervisor_lock
+    def supervisor_lock(self, **kwargs):
+        """
+        create supervisor API lock
+
+        Args:
+            k: API key with allow=supervisor
+            l: lock type (null = any supervisor can pass, u = only owner can
+                pass, k = all users with owner's API key can pass
+            c: unlock/override type (same as lock type)
+            u: lock user (requires master key)
+            a: lock API key ID (requires master key)
+        """
+        k, l, c, u, a = parse_function_params(kwargs, 'klcua', '.....')
+        if not can_pass_supervisor_lock(k, op='c'):
+            raise AccessDenied(
+                'supervisor lock is already set, unable to override')
+        if (u or a or p) and not apikey.check_master(k):
+            raise AccessDenied(
+                'master key required to set user or API key lock')
+        if l not in [None, 'k', 'u']:
+            raise InvalidParameter('l = <null|k|u>')
+        if c not in [None, 'k', 'u']:
+            raise InvalidParameter('c = <null|k|u>')
+        utp = None
+        if not u:
+            u = eva.api.get_aci('u')
+            utp = eva.api.get_aci('utp')
+        elif '/' in u:
+            utp, u = u.split('/', 1)
+        else:
+            utp = None
+        if not a:
+            a = eva.api.get_aci('ki')
+        if (l == 'u' or c == 'u') and not u:
+            raise FunctionFailed(
+                'lock type "user" is requested but user is not set')
+        supervisor_lock = {'o': {'u': u, 'utp': utp, 'ki': a}, 'l': l, 'c': c}
+        eva.notify.supervisor_event(subject='lock', data=supervisor_lock)
+        return True
+
+    @log_w
+    @api_need_supervisor
+    @with_supervisor_lock
+    def supervisor_unlock(self, **kwargs):
+        """
+        create supervisor API lock
+
+        API key should have permission to clear existing supervisor lock
+
+        Args:
+            k: API key with allow=supervisor
+        Returns:
+            Successful result is returned if lock is either cleared or not set
+        """
+        k = parse_function_params(kwargs, 'k', '.')
+        if not can_pass_supervisor_lock(k, op='c'):
+            raise AccessDenied
+        supervisor_lock = None
+        eva.notify.supervisor_event(subject='unlock')
+        return True
 
     @log_i
     @api_need_master
@@ -120,6 +257,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k, icvars = parse_function_params(kwargs, ['k', 'icvars'], '.b')
         result = super().test(k=k)[1]
         result['cloud_manager'] = eva.sfa.controller.config.cloud_manager
+        # not need to lock object as only pointer is required
+        result['supervisor_lock'] = supervisor_lock
         if (icvars):
             result['cvars'] = eva.core.get_cvar()
         return True, result
@@ -206,6 +345,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return sorted(result)
 
     @log_i
+    @api_need_supervisor_pass
     def action(self, **kwargs):
         """
         create unit control action
@@ -248,6 +388,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                                               q=q))
 
     @log_i
+    @api_need_supervisor_pass
     def action_toggle(self, **kwargs):
         """
         toggle unit status
@@ -342,6 +483,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             raise ResourceNotFound
 
     @log_i
+    @api_need_supervisor_pass
     def disable_actions(self, **kwargs):
         """
         disable unit actions
@@ -363,6 +505,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                 unit_id=oid_to_id(i, 'unit')))
 
     @log_i
+    @api_need_supervisor_pass
     def enable_actions(self, **kwargs):
         """
         enable unit actions
@@ -384,6 +527,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                 unit_id=oid_to_id(i, 'unit')))
 
     @log_w
+    @api_need_supervisor_pass
     def terminate(self, **kwargs):
         """
         terminate action execution
@@ -424,6 +568,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             return result
 
     @log_w
+    @api_need_supervisor_pass
     def kill(self, **kwargs):
         """
         kill unit actions
@@ -455,6 +600,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return True, result
 
     @log_w
+    @api_need_supervisor_pass
     def q_clean(self, **kwargs):
         """
         clean action queue of unit
@@ -475,6 +621,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             eva.sfa.controller.uc_pool.q_clean(unit_id=oid_to_id(i, 'unit')))
 
     @log_i
+    @api_need_supervisor_pass
     def set(self, **kwargs):
         """
         set lvar state
@@ -503,6 +650,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
                                            value=v))
 
     @log_i
+    @api_need_supervisor_pass
     def reset(self, **kwargs):
         """
         reset lvar state
@@ -525,6 +673,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             eva.sfa.controller.lm_pool.reset(lvar_id=oid_to_id(i, 'lvar')))
 
     @log_i
+    @api_need_supervisor_pass
     def clear(self, **kwargs):
         """
         clear lvar state
@@ -547,6 +696,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             eva.sfa.controller.lm_pool.clear(lvar_id=oid_to_id(i, 'lvar')))
 
     @log_i
+    @api_need_supervisor_pass
     def toggle(self, **kwargs):
         """
         clear lvar state
@@ -569,6 +719,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             eva.sfa.controller.lm_pool.toggle(lvar_id=oid_to_id(i, 'lvar')))
 
     @log_i
+    @api_need_supervisor_pass
     def increment(self, **kwargs):
         """
         increment lvar value
@@ -590,6 +741,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             eva.sfa.controller.lm_pool.increment(lvar_id=oid_to_id(i, 'lvar')))
 
     @log_i
+    @api_need_supervisor_pass
     def decrement(self, **kwargs):
         """
         decrement lvar value
@@ -671,6 +823,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         return sorted(result)
 
     @log_i
+    @api_need_supervisor_pass
     def run(self, **kwargs):
         """
         execute macro
