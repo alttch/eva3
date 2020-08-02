@@ -87,7 +87,7 @@ o=dict(u, utp, ki) # lock owner
 l=<None|'u'|'k'>
 c=<None|'u'|'k'>
 """
-supervisor_lock = None
+supervisor_lock = {}
 
 with_supervisor_lock = eva.core.RLocker('sfa/sfapi')
 
@@ -124,7 +124,8 @@ def can_pass_supervisor_lock(k, op='l'):
             return True
         elif ltp == 'k' and apikey.key_id(k) == supervisor_lock['o']['ki']:
             return True
-        elif ltp == 'u' and eva.api.get_aci('u') == supervisor_lock['o'].get('u') and \
+        elif ltp == 'u' and eva.api.get_aci('u') == \
+                supervisor_lock['o'].get('u') and \
                 eva.api.get_aci('utp') == supervisor_lock['o'].get('utp'):
             return True
     return False
@@ -177,7 +178,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if not can_pass_supervisor_lock(k, op='c'):
             raise AccessDenied(
                 'supervisor lock is already set, unable to override')
-        if (u or a or p) and not apikey.check_master(k):
+        if (u or a) and not apikey.check_master(k):
             raise AccessDenied(
                 'master key required to set user or API key lock')
         if l not in [None, 'k', 'u']:
@@ -197,7 +198,16 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         if (l == 'u' or c == 'u') and not u:
             raise FunctionFailed(
                 'lock type "user" is requested but user is not set')
-        supervisor_lock = {'o': {'u': u, 'utp': utp, 'ki': a}, 'l': l, 'c': c}
+        supervisor_lock.clear()
+        supervisor_lock.update({
+            'o': {
+                'u': u,
+                'utp': utp,
+                'ki': a
+            },
+            'l': l,
+            'c': c
+        })
         eva.notify.supervisor_event(subject='lock', data=supervisor_lock)
         return True
 
@@ -218,7 +228,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         k = parse_function_params(kwargs, 'k', '.')
         if not can_pass_supervisor_lock(k, op='c'):
             raise AccessDenied
-        supervisor_lock = None
+        supervisor_lock.clear()
         eva.notify.supervisor_event(subject='unlock')
         return True
 
@@ -258,7 +268,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         result = super().test(k=k)[1]
         result['cloud_manager'] = eva.sfa.controller.config.cloud_manager
         # not need to lock object as only pointer is required
-        result['supervisor_lock'] = supervisor_lock
+        result['supervisor_lock'] = supervisor_lock if supervisor_lock else None
         if (icvars):
             result['cvars'] = eva.core.get_cvar()
         return True, result
