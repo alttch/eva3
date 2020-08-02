@@ -116,7 +116,7 @@ def api_need_supervisor_pass(f):
 
 @with_supervisor_lock
 def can_pass_supervisor_lock(k, op='l'):
-    if supervisor_lock is None or apikey.check_master(k):
+    if not supervisor_lock or apikey.check_master(k):
         return True
     else:
         ltp = supervisor_lock[op]
