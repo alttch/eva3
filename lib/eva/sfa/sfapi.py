@@ -171,31 +171,29 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             l: lock type (null = any supervisor can pass, u = only owner can
                 pass, k = all users with owner's API key can pass
             c: unlock/override type (same as lock type)
-            u: lock user (requires master key). To specify user type, e.g. MS
-                Active Directory user: msad/user
+            u: lock user (requires master key)
+            p: user type (null for local, "msad" for Active Directory etc.)
             a: lock API key ID (requires master key)
         """
-        k, l, c, u, a = parse_function_params(kwargs, 'klcua', '.....')
+        k, l, c, u, p, a = parse_function_params(kwargs, 'klcupa', '......')
         if not can_pass_supervisor_lock(k, op='c'):
             raise AccessDenied(
                 'supervisor lock is already set, unable to override')
-        if (u or a) and not apikey.check_master(k):
+        if (u or a or p) and not apikey.check_master(k):
             raise AccessDenied(
                 'master key required to set user or API key lock')
         if l not in [None, 'k', 'u']:
             raise InvalidParameter('l = <null|k|u>')
         if c not in [None, 'k', 'u']:
             raise InvalidParameter('c = <null|k|u>')
-        utp = None
         if not u:
             u = eva.api.get_aci('u')
-            utp = eva.api.get_aci('utp')
-        elif '/' in u:
-            utp, u = u.split('/', 1)
-        else:
-            utp = None
+        if not p:
+            p = eva.api.get_aci('utp')
         if not a:
             a = eva.api.get_aci('ki')
+        if p and not u:
+            raise InvalidParameter('user type is specified but no user login')
         if (l == 'u' or c == 'u') and not u:
             raise FunctionFailed(
                 'lock type "user" is requested but user is not set')
@@ -203,7 +201,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         supervisor_lock.update({
             'o': {
                 'u': u,
-                'utp': utp,
+                'utp': p,
                 'key': a
             },
             'l': l,
@@ -1422,9 +1420,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                     if 'o' in kw:
                         kw['u'] = kw['o'].get('u')
                         kw['a'] = kw['o'].get('key')
-                        utp = kw['o'].get('utp')
-                        if utp:
-                            kw['u'] = f'{utp}{kw["u"]}'
+                        kw['p'] = kw['o'].get('utp')
                         del kw['o']
                     if not self.supervisor_lock(k=k, **kw):
                         raise FunctionFailed
