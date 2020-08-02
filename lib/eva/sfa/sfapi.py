@@ -171,7 +171,8 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             l: lock type (null = any supervisor can pass, u = only owner can
                 pass, k = all users with owner's API key can pass
             c: unlock/override type (same as lock type)
-            u: lock user (requires master key)
+            u: lock user (requires master key). To specify user type, e.g. MS
+                Active Directory user: msad/user
             a: lock API key ID (requires master key)
         """
         k, l, c, u, a = parse_function_params(kwargs, 'klcua', '.....')
