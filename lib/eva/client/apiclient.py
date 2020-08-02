@@ -98,6 +98,7 @@ class APIClient(object):
                              headers={'Content-Type': CONTENT_TYPE})
 
     def login(self, login, password):
+        self._key = None
         code, data = self.call('login', {'u': login, 'p': password})
         if code == result_ok:
             self._key = data.get('token')
