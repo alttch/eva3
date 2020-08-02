@@ -97,6 +97,18 @@ class APIClient(object):
                              verify=self._ssl_verify,
                              headers={'Content-Type': CONTENT_TYPE})
 
+    def login(self, login, password):
+        code, data = self.call('login', {'u': login, 'p': password})
+        if code == result_ok:
+            self._key = data.get('token')
+        return code, data
+
+    def logout(self):
+        code, data = self.call('logout')
+        if code == result_ok:
+            self._key = None
+        return code, data
+
     def call(self,
              func,
              params=None,
