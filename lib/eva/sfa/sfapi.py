@@ -83,7 +83,7 @@ supervisor lock
 
 can be either None (not locked) or dict with fields
 
-o=dict(u, utp, ki) # lock owner
+o=dict(u, utp, key) # lock owner
 l=<None|'u'|'k'>
 c=<None|'u'|'k'>
 """
@@ -122,7 +122,7 @@ def can_pass_supervisor_lock(k, op='l'):
         ltp = supervisor_lock[op]
         if ltp is None and apikey.check(k, allow=['supervisor']):
             return True
-        elif ltp == 'k' and apikey.key_id(k) == supervisor_lock['o']['ki']:
+        elif ltp == 'k' and apikey.key_id(k) == supervisor_lock['o']['key']:
             return True
         elif ltp == 'u' and eva.api.get_aci('u') == \
                 supervisor_lock['o'].get('u') and \
@@ -204,7 +204,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             'o': {
                 'u': u,
                 'utp': utp,
-                'ki': a
+                'key': a
             },
             'l': l,
             'c': c
@@ -1413,6 +1413,24 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
     @generic_web_api_method
     @restful_api_method
     def PATCH(self, rtp, k, ii, save, kind, method, for_dir, props):
+        if rtp == 'core':
+            if 'supervisor_lock' in props:
+                kw = props['supervisor_lock']
+                if kw is None:
+                    self.supervisor_unlock(k=k)
+                else:
+                    if 'o' in kw:
+                        kw['u'] = kw['o'].get('u')
+                        kw['a'] = kw['o'].get('key')
+                        utp = kw['o'].get('utp')
+                        if utp:
+                            kw['u'] = f'{utp}{kw["u"]}'
+                        del kw['o']
+                    if not self.supervisor_lock(k=k, **kw):
+                        raise FunctionFailed
+                del props['supervisor_lock']
+                if not props:
+                    return True
         try:
             return super().PATCH(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
