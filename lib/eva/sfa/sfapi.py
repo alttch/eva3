@@ -268,7 +268,9 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         result = super().test(k=k)[1]
         result['cloud_manager'] = eva.sfa.controller.config.cloud_manager
         # not need to lock object as only pointer is required
-        result['supervisor_lock'] = supervisor_lock if supervisor_lock else None
+        result['supervisor_lock'] = supervisor_lock
+        if not result['supervisor_lock']:
+            result['supervisor_lock'] = None
         if (icvars):
             result['cvars'] = eva.core.get_cvar()
         return True, result
