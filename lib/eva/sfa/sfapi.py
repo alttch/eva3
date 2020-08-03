@@ -150,12 +150,11 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         m = parse_api_params(kwargs, 'm', 'S')
         eva.notify.supervisor_event(subject='message',
                                     data={
-                                        'sender':
-                                            '{}/{}'.format(
-                                                eva.api.get_aci('ki'),
-                                                eva.api.get_aci('u')),
-                                        'text':
-                                            m
+                                        'sender': {
+                                            'key_id': eva.api.get_aci('ki'),
+                                            'u': eva.api.get_aci('u')
+                                        },
+                                        'text': m
                                     })
         return True
 
