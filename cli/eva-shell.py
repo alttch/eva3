@@ -42,6 +42,8 @@ import eva.client.cli
 from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import ComplGeneric
+from eva.client.cli import ComplUser
+from eva.client.cli import ComplKey
 
 
 class ComplSubshellCmd(ComplGeneric):

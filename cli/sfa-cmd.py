@@ -16,6 +16,8 @@ from eva.client.cli import GenericCLI
 from eva.client.cli import ControllerCLI
 from eva.client.cli import LECLI
 from eva.client.cli import ComplGeneric
+from eva.client.cli import ComplUser
+from eva.client.cli import ComplKey
 
 import eva.client.cli
 
@@ -283,6 +285,7 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         self.add_sfa_edit_functions()
         self.add_sfa_lvar_functions()
         self.add_sfa_notify_functions()
+        self.add_sfa_supervisor_functions()
         self.add_sfa_controller_functions()
         self.add_sfa_cloud_functions()
 
@@ -630,6 +633,52 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
             'Notify connected clients about the server restart ' + \
                     'without actual restarting'
         )
+
+    def add_sfa_supervisor_functions(self):
+        ap_supervisor = self.sp.add_parser('supervisor',
+                                           help='Supervisor functions')
+        sp_supervisor = ap_supervisor.add_subparsers(dest='_func',
+                                                     metavar='func',
+                                                     help='Supervisor commands')
+
+        sp_supervisor_lock = sp_supervisor.add_parser(
+            'lock', help='Set supervisor lock')
+        sp_supervisor_lock.add_argument(
+            '-u', '--user', help='Lock owner user', dest='u',
+            metavar='LOGIN').completer = ComplUser(self)
+        sp_supervisor_lock.add_argument('-p',
+                                        '--user-type',
+                                        help='Lock owner user type (e.g. msad)',
+                                        metavar='TYPE',
+                                        dest='p')
+        sp_supervisor_lock.add_argument('-a',
+                                        '--key-id',
+                                        help='Lock owner API key (ID)',
+                                        metavar='ID',
+                                        dest='a').completer = ComplKey(self)
+        sp_supervisor_lock.add_argument(
+            '-l',
+            '--lock-scope',
+            help='Lock scope (default: all supervisors)',
+            choices=['u', 'k'],
+            metavar='SCOPE',
+            dest='l')
+        sp_supervisor_lock.add_argument(
+            '-c',
+            '--unlock-scope',
+            help='Unlock scope (default: all supervisors)',
+            choices=['u', 'k'],
+            metavar='SCOPE',
+            dest='c')
+
+        sp_supervisor_unlock = sp_supervisor.add_parser(
+            'unlock', help='Clear supervisor lock')
+
+        sp_supervisor_message = sp_supervisor.add_parser(
+            'message', help='Send broadcast message')
+        sp_supervisor_message.add_argument('m',
+                                           help='Message text',
+                                           metavar='Text to send')
 
     def add_sfa_controller_functions(self):
         ap_controller = self.sp.add_parser(
@@ -1541,7 +1590,7 @@ _always_json = []
 cli.always_json += _always_json
 cli.always_print += ['action', 'action_toggle', 'run', 'cmd']
 cli.arg_sections += [
-    'action', 'macro', 'cycle', 'notify', 'controller', 'cloud'
+    'action', 'macro', 'cycle', 'notify', 'controller', 'cloud', 'supervisor'
 ]
 cli.api_cmds_timeout_correction = ['cmd', 'action', 'run']
 cli.set_api_functions(_api_functions)
