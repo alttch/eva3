@@ -30,6 +30,8 @@ To set user scope ("u"), API call must be performed with valid user token. Lock
 owner is set automatically using API call access data (key / user). Users with
 master key can override lock owner, setting lock user and key ID to any values.
 
+Supervisor lock is automatically cleared when the server is restarted.
+
 .. note::
 
     Users with master key are not affected with supervisor locks in any way and
