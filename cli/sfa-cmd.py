@@ -679,6 +679,14 @@ class SFA_CLI(GenericCLI, ControllerCLI, LECLI):
         sp_supervisor_message.add_argument('m',
                                            help='Message text',
                                            metavar='Text to send')
+        sp_supervisor_message.add_argument(
+            '-u', '--user', help='Sender user', dest='u',
+            metavar='LOGIN').completer = ComplUser(self)
+        sp_supervisor_message.add_argument('-a',
+                                        '--key-id',
+                                        help='Sender API key',
+                                        metavar='ID',
+                                        dest='a').completer = ComplKey(self)
 
     def add_sfa_controller_functions(self):
         ap_controller = self.sp.add_parser(

@@ -775,6 +775,8 @@ Parameters:
 
 * **k** API key with *allow=supervisor* permissions
 * **m** message text
+* **u** message sender user (requires master key)
+* **a** message sender API key (requires master key)
 
 
 .. _sfapi_cat_remotes:

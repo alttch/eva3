@@ -146,13 +146,30 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         Args:
             k: .allow=supervisor
             m: message text
+            .u: message sender user (requires master key)
+            .a: message sender API key (requires master key)
+
+        Restful:
+            If master key is used, sender can be overriden with "sender"
+            argument, which should be a dictionary and contain:
+
+            * u = message sender user
+
+            * key_id = message sender API key ID
         """
-        m = parse_api_params(kwargs, 'm', 'S')
+        k, m, u, a = parse_function_params(kwargs, 'kmua', '.S..')
+        if (u or a) and not apikey.check_master(k):
+            raise AccessDenied(
+                'master key required to override user or API key sender info')
+        if not u:
+            u = eva.api.get_aci('u')
+        if not a:
+            a = eva.api.get_aci('ki')
         eva.notify.supervisor_event(subject='message',
                                     data={
                                         'sender': {
-                                            'key_id': eva.api.get_aci('ki'),
-                                            'u': eva.api.get_aci('u')
+                                            'key_id': a,
+                                            'u': u
                                         },
                                         'text': m
                                     })
@@ -1356,6 +1373,13 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
     def POST(self, rtp, k, ii, save, kind, method, for_dir, props):
         if rtp == 'core':
             if method == 'supervisor_message':
+                if 'sender' in props:
+                    sender = props['sender']
+                    if 'u' in sender:
+                        props['u'] = sender['u']
+                    if 'key_id' in sender:
+                        props['a'] = sender['key_id']
+                    del props['sender']
                 return self.supervisor_message(k=k, **props)
         try:
             return super().POST(rtp, k, ii, save, kind, method, for_dir, props)

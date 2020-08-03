@@ -815,6 +815,14 @@ Parameters:
 * **API Key** API key with *allow=supervisor* permissions
 * **m** message text
 
+Notes:
+
+If master key is used, sender can be overriden with "sender" argument, which should be a dictionary and contain:
+
+* u = message sender user
+
+* key_id = message sender API key ID
+
 
 
 .. _sfapi_restful_cat_remotes:
