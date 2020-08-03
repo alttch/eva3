@@ -714,6 +714,69 @@ Optionally:
 * **i** filter by controller
 
 
+.. _sfapi_cat_supervisor:
+
+Supervisor functions
+====================
+
+
+
+.. _sfapi_supervisor_lock:
+
+supervisor_lock - set supervisor API lock
+-----------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/supervisor_lock.req
+    :response: http-examples/sfapi/supervisor_lock.resp
+
+Parameters:
+
+* **k** API key with *allow=supervisor* permissions
+* **l** lock scope (null = any supervisor can pass, u = only owner can pass, k = all users with owner's API key can pass
+* **c** unlock/override scope (same as lock type)
+* **u** lock user (requires master key)
+* **p** user type (null for local, "msad" for Active Directory etc.)
+* **a** lock API key ID (requires master key)
+
+.. _sfapi_supervisor_unlock:
+
+supervisor_unlock - clear supervisor API lock
+---------------------------------------------
+
+API key should have permission to clear existing supervisor lock
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/supervisor_unlock.req
+    :response: http-examples/sfapi/supervisor_unlock.resp
+
+Parameters:
+
+* **k** API key with *allow=supervisor* permissions
+
+Returns:
+
+Successful result is returned if lock is either cleared or not set
+
+.. _sfapi_supervisor_message:
+
+supervisor_message - send broadcast message
+-------------------------------------------
+
+
+
+..  http:example:: curl wget httpie python-requests
+    :request: http-examples/sfapi/supervisor_message.req
+    :response: http-examples/sfapi/supervisor_message.resp
+
+Parameters:
+
+* **k** API key with *allow=supervisor* permissions
+* **m** message text
+
+
 .. _sfapi_cat_remotes:
 
 Remote controllers

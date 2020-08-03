@@ -144,7 +144,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         send broadcast message
 
         Args:
-            k: API key with allow=supervisor
+            k: .allow=supervisor
             m: message text
         """
         m = parse_api_params(kwargs, 'm', 'S')
@@ -163,16 +163,36 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     @with_supervisor_lock
     def supervisor_lock(self, **kwargs):
         """
-        create supervisor API lock
+        set supervisor API lock
 
         Args:
-            k: API key with allow=supervisor
-            l: lock type (null = any supervisor can pass, u = only owner can
+            k: .allow=supervisor
+            .l: lock scope (null = any supervisor can pass, u = only owner can
                 pass, k = all users with owner's API key can pass
-            c: unlock/override type (same as lock type)
-            u: lock user (requires master key)
-            p: user type (null for local, "msad" for Active Directory etc.)
-            a: lock API key ID (requires master key)
+            .c: unlock/override scope (same as lock type)
+            .u: lock user (requires master key)
+            .p: user type (null for local, "msad" for Active Directory etc.)
+            .a: lock API key ID (requires master key)
+
+        Restful:
+            supervisor_lock should be a dictionary. If the dictionary is empty,
+            default lock is set.
+
+            * attribute "l" = "<k|u>" sets lock scope (key / user)
+
+            * attribute "c" = "<k|u>" set unlock/override scope
+
+            attribute "o" overrides lock owner (master key is required) with
+                sub-attributes:
+
+                * "u" = user
+
+                * "utp" = user type (null for local, "msad" for Active
+                    Directory etc.)
+
+                * "key_id" = API key ID
+
+
         """
         k, l, c, u, p, a = parse_function_params(kwargs, 'klcupa', '......')
         if not can_pass_supervisor_lock(k, op='c'):
@@ -214,12 +234,12 @@ class SFA_API(GenericAPI, GenericCloudAPI):
     @with_supervisor_lock
     def supervisor_unlock(self, **kwargs):
         """
-        create supervisor API lock
+        clear supervisor API lock
 
         API key should have permission to clear existing supervisor lock
 
         Args:
-            k: API key with allow=supervisor
+            k: .allow=supervisor
         Returns:
             Successful result is returned if lock is either cleared or not set
         """
