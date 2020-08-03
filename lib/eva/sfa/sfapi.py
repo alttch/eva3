@@ -1332,6 +1332,9 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
     @generic_web_api_method
     @restful_api_method
     def POST(self, rtp, k, ii, save, kind, method, for_dir, props):
+        if rtp == 'core':
+            if method == 'supervisor_message':
+                return self.supervisor_message(k=k, **props)
         try:
             return super().POST(rtp, k, ii, save, kind, method, for_dir, props)
         except MethodNotFound:
