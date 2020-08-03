@@ -726,7 +726,7 @@ Supervisor functions
 supervisor_lock - set supervisor API lock
 -----------------------------------------
 
-
+When supervisor lock is set, SFA API functions become read-only for all users, except users in the lock scope.
 
 ..  http:example:: curl wget httpie python-requests
     :request: http-examples/sfapi/supervisor_lock.req

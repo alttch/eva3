@@ -165,6 +165,9 @@ class SFA_API(GenericAPI, GenericCloudAPI):
         """
         set supervisor API lock
 
+        When supervisor lock is set, SFA API functions become read-only for all
+        users, except users in the lock scope.
+
         Args:
             k: .allow=supervisor
             .l: lock scope (null = any supervisor can pass, u = only owner can
