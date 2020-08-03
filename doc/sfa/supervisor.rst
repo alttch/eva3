@@ -1,9 +1,8 @@
 Supervisors
 ***********
 
-Starting from 3.3.1 :doc:`/sfa/sfa/` API keys can have special permission
-*allow=supervisor*, which makes key owner or a user assigned to it, a
-supervisor user and provides the following features:
+Starting from 3.3.1 :doc:`/sfa/sfa/` API keys can have a special permission
+*allow=supervisor*, which provides the following features:
 
 API locks
 =========
