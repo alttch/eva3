@@ -122,7 +122,7 @@ def can_pass_supervisor_lock(k, op='l'):
         ltp = supervisor_lock[op]
         if ltp is None and apikey.check(k, allow=['supervisor']):
             return True
-        elif ltp == 'k' and apikey.key_id(k) == supervisor_lock['o']['key']:
+        elif ltp == 'k' and apikey.key_id(k) == supervisor_lock['o']['key_id']:
             return True
         elif ltp == 'u' and eva.api.get_aci('u') == \
                 supervisor_lock['o'].get('u') and \
@@ -202,7 +202,7 @@ class SFA_API(GenericAPI, GenericCloudAPI):
             'o': {
                 'u': u,
                 'utp': p,
-                'key': a
+                'key_id': a
             },
             'l': l,
             'c': c
@@ -1419,7 +1419,7 @@ class SFA_REST_API(eva.sysapi.SysHTTP_API_abstract,
                 else:
                     if 'o' in kw:
                         kw['u'] = kw['o'].get('u')
-                        kw['a'] = kw['o'].get('key')
+                        kw['a'] = kw['o'].get('key_id')
                         kw['p'] = kw['o'].get('utp')
                         del kw['o']
                     if not self.supervisor_lock(k=k, **kw):
