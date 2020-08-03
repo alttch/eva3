@@ -42,6 +42,11 @@ message or informational popup can be displayed for logged in users.
 When supervisor lock is cleared, :ref:`js_framework` receives an event
 *supervisor.unlock*.
 
+.. note::
+
+    To let EVA JS framework receive supervisor events, it should be updated to
+    version 0.3.7 or above.
+
 Broadcast messages
 ==================
 
